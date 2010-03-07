@@ -91,6 +91,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	public void jobProgress(JobInfo info, String progressMessage,
 			double percentComplete) {
+		if (info==null){
+			return;
+		}
 		info.setComplete(false);
 		info.setPercentComplete(percentComplete);
 		info.setProgressMessage(progressMessage);
@@ -98,6 +101,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public void jobComplete(JobInfo info) {
+		if (info==null){
+			return;
+		}
 		info.setComplete(true);
 		info.setPercentComplete(1);
 		info.setProgressMessage("Job complete");
@@ -106,6 +112,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public void jobError(JobInfo info, String errorMessage) {
+		if (info==null){
+			return;
+		}
 		jobComplete(info);
 		info.setErrorMessage("Job failed: " + errorMessage);
 		JobRegistry.get().updateInfo(info);

@@ -11,6 +11,7 @@
 			</fileset>-->
 			<!-- dump this too-->
 			<!--to change in a sec-->
+			<antcall target="prepare-war"></antcall>
 			<zipfileset dir="${project.gwt.build.dir}" prefix="">
 				<include name="**/*" />
 			</zipfileset>
@@ -53,23 +54,7 @@
 		<delete file="${deploy.j2ee-server.deploy.dir}/${ant.project.name}.ear" />
 		<delete dir="${deploy.j2ee-server.deploy.dir}/${ant.project.name}.ear" />
 	</target>
-
-	<target name="hot-deploy" description="WARs the Task" depends="build-dependencies,compile">
-		<!--the ear-->
-		<mkdir dir="${j2ee-server.unear.target}" />
-		<copy todir="${j2ee-server.unear.target}" preservelastmodified="true">
-			<fileset refid="project.ear.libs.1" />
-			<fileset refid="project.ear.libs.2" />
-			<fileset refid="alcina.ear.exports" />
-			<fileset refid="alcina.ear.dependencies" />
-		</copy>
-		<copy todir="${j2ee-server.unear.target}/META-INF" preservelastmodified="true">
-			<fileset dir="${project.ear-inf.dir}/META-INF">
-			</fileset>
-			<fileset file="${project.ear-inf.dir}/application.xml">
-			</fileset>
-		</copy>
-		<!--prepare gwt/www-->
+	<target name="prepare-war">
 		<mkdir dir="${project.gwt.build.dir}" />
 		<mkdir dir="${project.gwt.client.imgs.2.tgt}" />
 		<mkdir dir="${project.gwt.client.imgs.1.tgt}" />
@@ -87,6 +72,24 @@
 				<include name="**/*" />
 			</fileset>
 		</copy>
+	</target>
+	<target name="hot-deploy" description="WARs the Task" depends="build-dependencies,compile">
+		<!--the ear-->
+		<mkdir dir="${j2ee-server.unear.target}" />
+		<copy todir="${j2ee-server.unear.target}" preservelastmodified="true">
+			<fileset refid="project.ear.libs.1" />
+			<fileset refid="project.ear.libs.2" />
+			<fileset refid="alcina.ear.exports" />
+			<fileset refid="alcina.ear.dependencies" />
+		</copy>
+		<copy todir="${j2ee-server.unear.target}/META-INF" preservelastmodified="true">
+			<fileset dir="${project.ear-inf.dir}/META-INF">
+			</fileset>
+			<fileset file="${project.ear-inf.dir}/application.xml">
+			</fileset>
+		</copy>
+		<!--prepare gwt/www-->
+		<antcall target="prepare-war"></antcall>
 
 		<!--the war-->
 		<mkdir dir="${j2ee-server.unwar.target}" />
@@ -132,10 +135,10 @@
 	<!-- needed so gwt can see the compiled annotations, if any, from client source-->
 	<target name="compile-client" depends="compile">
 		<mkdir dir="${project.client.bin.dir}" />
-		<javac debug="on" srcdir="${project.client.src.dir}" destdir="${project.client.bin.dir}" >
+		<javac debug="on" srcdir="${project.client.src.dir}" destdir="${project.client.bin.dir}">
 			<classpath>
 				<path refid="project.classpath" />
-				
+
 				<!-- because of being fancy with entity layer remote interfaces, make sure we can see 'em-->
 				<pathelement path="${project.build.dir}" />
 				<fileset dir="${project.client.lib.dir}">
@@ -160,6 +163,7 @@
 				<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
 			</classpath>
 			<jvmarg value="-Xmx600M" />
+			<jvmarg value="-Xss2M" />
 			<arg line=" -style ${gwt.codestyle}" />
 			<arg line="${project.gwt.compile.flags}" />
 			<arg value="${project.gwt.module.name}" />
