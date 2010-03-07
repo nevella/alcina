@@ -5,13 +5,14 @@
 	<target name="make-war" description="Create the {project.modules.description} WAR" depends="compile">
 		<mkdir dir="${project.dist.dir}" />
 		<delete file="${project.dist.dir}/${ant.project.name}.war" />
+		<antcall target="prepare-war">
+		</antcall>
 		<war destfile="${project.dist.dir}/${ant.project.name}.war" webxml="${project.web-inf.dir}/web.xml">
 			<!--<fileset dir="${project.web-inf.dir}">
 				<exclude name="WEB-INF/web.xml" />
 			</fileset>-->
 			<!-- dump this too-->
 			<!--to change in a sec-->
-			<antcall target="prepare-war"></antcall>
 			<zipfileset dir="${project.gwt.build.dir}" prefix="">
 				<include name="**/*" />
 			</zipfileset>
@@ -89,7 +90,8 @@
 			</fileset>
 		</copy>
 		<!--prepare gwt/www-->
-		<antcall target="prepare-war"></antcall>
+		<antcall target="prepare-war">
+		</antcall>
 
 		<!--the war-->
 		<mkdir dir="${j2ee-server.unwar.target}" />
