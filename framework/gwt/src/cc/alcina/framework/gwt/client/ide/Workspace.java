@@ -1,0 +1,403 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.gwt.client.ide;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.VetoableActionEvent;
+import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
+import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSource;
+import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSupport;
+import cc.alcina.framework.common.client.actions.instances.CancelAction;
+import cc.alcina.framework.common.client.actions.instances.CloneAction;
+import cc.alcina.framework.common.client.actions.instances.CreateAction;
+import cc.alcina.framework.common.client.actions.instances.DeleteAction;
+import cc.alcina.framework.common.client.actions.instances.EditAction;
+import cc.alcina.framework.common.client.actions.instances.ViewAction;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
+import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
+import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
+import cc.alcina.framework.gwt.client.ide.node.DomainNode;
+import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;
+import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
+import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
+import cc.alcina.framework.gwt.client.ide.provider.ViewProvider;
+import cc.alcina.framework.gwt.client.logic.OkCallback;
+import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
+
+import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.TreeItem;
+import com.google.gwt.user.client.ui.Widget;
+
+/**
+ * Hooks up the various navigation views and the editor widget
+ * 
+ * @author nreddel@barnet.com.au
+ * 
+ */
+public class Workspace implements HasLayoutInfo, VetoableActionListener,VetoableActionSource {
+	private WSVisualModel visualModel;
+
+	protected SimpleWorkspaceVisualiser visualiser;
+
+	public SimpleWorkspaceVisualiser getVisualiser() {
+		return this.visualiser;
+	}
+	private VetoableActionSupport vetoableActionSupport = new VetoableActionSupport();
+	public void addVetoableActionListener(VetoableActionListener listener) {
+		this.vetoableActionSupport.addVetoableActionListener(listener);
+	}
+
+	public void fireVetoableActionEvent(VetoableActionEvent event) {
+		this.vetoableActionSupport.fireVetoableActionEvent(event);
+	}
+
+	public void removeAllListeners() {
+		this.vetoableActionSupport.removeAllListeners();
+	}
+
+	public void removeVetoableActionListener(VetoableActionListener listener) {
+		this.vetoableActionSupport.removeVetoableActionListener(listener);
+	}
+	private ContentViewFactory viewFactory;
+
+	private Map<Class<? extends VetoableAction>, ViewProvider> viewProviderMap = new HashMap<Class<? extends VetoableAction>, ViewProvider>();
+
+	public Workspace() {
+		this.visualModel = new WSVisualModel();
+		this.viewFactory = new ContentViewFactory();
+		viewFactory.setCancelButton(true);
+	}
+
+	public LayoutInfo getLayoutInfo() {
+		return new LayoutInfo() {
+			@Override
+			public void afterLayout() {
+				redraw();
+			}
+
+			@Override
+			public Iterator<Widget> getLayoutWidgets() {
+				if (visualiser != null) {
+				return visualiser.getLayoutInfo().getLayoutWidgets();
+				}
+				return new ArrayList<Widget>().iterator();
+			}
+
+			@Override
+			public Iterator<Widget> getWidgetsToResize() {
+				ArrayList<Widget> l = new ArrayList<Widget>();
+				if (visualiser != null) {
+					l.add(visualiser.getVerticalPanel());
+				}
+				return l.iterator();
+			}
+		};
+	}
+
+	public ContentViewFactory getViewFactory() {
+		return this.viewFactory;
+	}
+
+	public WSVisualModel getVisualModel() {
+		return this.visualModel;
+	}
+
+	public void redraw() {
+		if (visualiser == null) {
+			return;
+		}
+		visualiser.resetHsbPos();
+//		visualiser.getViewHolder().showStack(
+//				visualiser.getViewHolder().getSelectedIndex(), true);
+	}
+
+	public void registerViewProvider(ViewProvider v,
+			Class<? extends VetoableAction> actionClass) {
+		viewProviderMap.put(actionClass, v);
+	}
+
+	public void setViewFactory(ContentViewFactory viewFactory) {
+		this.viewFactory = viewFactory;
+	}
+
+	public void setVisualModel(WSVisualModel visualModel) {
+		this.visualModel = visualModel;
+	}
+
+	public void showView(WorkspaceView view) {
+		int widgetIndex = visualiser.getViewHolder().getWidgetIndex(view);
+		visualiser.getViewHolder().showStack(widgetIndex);
+	}
+	@SuppressWarnings("unchecked")
+	public void vetoableAction(final VetoableActionEvent evt) {
+		if (evt.getAction().getClass() == CancelAction.class) {
+			visualiser.setContentWidget(new Label("Action cancelled"));
+			fireVetoableActionEvent(evt);
+			return;
+		}
+		Object obj = evt.getSource();
+		Collection colln = null;
+		Object singleObj = null;
+		Class clazz = null;
+		if (obj instanceof CollectionProviderNode) {
+			colln = ((CollectionProviderNode) obj).getVisibleItemObjects();
+			clazz = ((CollectionProviderNode) obj).getCollectionProvider()
+					.getCollectionClass();
+		} else if (obj instanceof DomainNode) {
+			singleObj = ((DomainNode) obj).getUserObject();
+			clazz = singleObj.getClass();
+		} else if (obj instanceof ActionDisplayNode) {
+			singleObj = ((ActionDisplayNode) obj).getAction();
+		} else if (obj != null && (obj instanceof Collection)) {
+			Collection c = (Collection) obj;
+			if (c.size() == 1) {
+				singleObj = c.iterator().next();
+				// quite possibly a provisional object
+				// if (singleObj instanceof HasIdAndLocalId) {
+				// HasIdAndLocalId hili = (HasIdAndLocalId) singleObj;
+				// singleObj = TransformManager.get().getObject(hili);
+				// }
+				// but provisionalobj.equals(domain)=true
+				TreeItem item = visualiser.selectNodeForObject(singleObj, true);
+				if (item != null) {
+					clazz = singleObj.getClass();
+				}
+			}
+		}
+		if (colln != null && colln.size() == 1) {
+			singleObj = colln.iterator().next();
+		}
+		boolean autoSave = PropertiesProvider.getGeneralProperties()
+				.isAutoSave();
+		if (singleObj instanceof VetoableAction) {
+			Widget view = getViewForAction((VetoableAction) singleObj);
+			visualiser.setContentWidget(view);
+			fireVetoableActionEvent(evt);
+			return;
+		}
+		if (singleObj instanceof HasIdAndLocalId) {
+			HasIdAndLocalId hili = (HasIdAndLocalId) singleObj;
+			singleObj=TransformManager.get().getObject(hili);
+			
+		}
+		if (singleObj != null) {
+			if (evt.getAction().getClass() == ViewAction.class) {
+				ViewActionHandler vah = (ViewActionHandler) Registry.get()
+						.instantiateSingleOrNull(ViewActionHandler.class,
+								singleObj.getClass());
+				if (vah != null) {
+					visualiser.setContentWidget(vah.createWidget(singleObj));
+				} else {
+					PaneWrapperWithObjects view = viewFactory.createBeanView(
+							singleObj, false, this, autoSave, false);
+					visualiser.setContentWidget(view);
+					Widget widge = viewFactory
+							.createExtraActionsWidget(singleObj);
+					if (widge != null) {
+						view.add(widge);
+					}
+				}
+				fireVetoableActionEvent(evt);
+				return;
+			} else if (evt.getAction().getClass() == EditAction.class) {
+				Widget view = viewFactory.createBeanView(singleObj, true, this,
+						autoSave, false);
+				visualiser.setContentWidget(view);
+				fireVetoableActionEvent(evt);
+				return;
+			} else if (evt.getAction().getClass() == DeleteAction.class) {
+				if (WorkspaceDeletionChecker.enabled){
+					if (!getDeletionChecker().checkPropertyRefs((HasIdAndLocalId) singleObj)){
+						return;
+					}
+				}
+				final Object objCopy = singleObj;
+				ClientLayerLocator.get().clientBase().confirm(
+						"Are you sure you want to delete the selected object",
+						new OkCallback() {
+							public void ok() {
+								TransformManager.get().deleteObject(
+										(HasIdAndLocalId) objCopy);
+								visualiser
+										.setContentWidget(new HorizontalPanel());
+								fireVetoableActionEvent(new VetoableActionEvent(objCopy, evt.getAction()));
+							}
+						});
+				return;
+			} else if (evt.getAction().getClass() == CloneAction.class) {
+				HasIdAndLocalId newObj = TransformManager.get().clone(
+						(HasIdAndLocalId) singleObj);
+				handleParentLinks(obj, newObj);
+				TextProvider.get().setDecorated(true);
+				String newName = TextProvider.get().getObjectName(newObj)
+						+ " (copy)";
+				TextProvider.get().setDecorated(false);
+				TextProvider.get().setObjectName(newObj, newName);
+				Widget view = viewFactory.createBeanView(newObj, true, this,
+						autoSave, false);
+				visualiser.setContentWidget(view);
+				fireVetoableActionEvent(new VetoableActionEvent(newObj, evt.getAction()));
+				return;
+			}
+		}
+		if (colln != null) {
+			if (evt.getAction().getClass() == ViewAction.class) {
+				Widget view = viewFactory.createMultipleBeanView(colln, clazz,
+						false, this, autoSave, false);
+				visualiser.setContentWidget(view);
+				fireVetoableActionEvent(evt);
+				return;
+			} else if (evt.getAction().getClass() == EditAction.class) {
+				Widget view = viewFactory.createMultipleBeanView(colln, clazz,
+						true, this, autoSave, false);
+				visualiser.setContentWidget(view);
+				fireVetoableActionEvent(evt);
+				return;
+			}
+		}
+		if (evt.getAction().getClass() == CreateAction.class) {
+			HasIdAndLocalId newObj = autoSave ? TransformManager.get()
+					.createDomainObject(clazz) : TransformManager.get()
+					.createProvisionalObject(clazz);
+			handleParentLinks(obj, newObj);
+			PaneWrapperWithObjects view = viewFactory.createBeanView(newObj,
+					true, this, autoSave, false);
+			TextProvider.get().setDecorated(false);
+			String tdn = ClientReflector.get().beanInfoForClass(clazz)
+					.getTypeDisplayName();
+			TextProvider.get().setDecorated(true);
+			TextProvider.get().setObjectName(newObj, "New " + tdn);
+			visualiser.setContentWidget(view);
+			fireVetoableActionEvent(new VetoableActionEvent(newObj, evt.getAction()));
+		}
+	}
+	
+	private WorkspaceDeletionChecker deletionChecker = new WorkspaceDeletionChecker();
+
+	protected SimpleWorkspaceVisualiser createVisualiser() {
+		return new SimpleWorkspaceVisualiser(visualModel, this);
+	}
+
+	public void visualise(ComplexPanel container) {
+		if (visualiser != null) {
+			container.remove(visualiser);
+		}
+		this.visualiser = createVisualiser();
+		container.add(visualiser);
+	}
+
+	protected void handleParentLinks(Object node, HasIdAndLocalId newObj) {
+		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
+			DomainNode dn = (DomainNode) node;
+			node = dn.getParentItem();
+		}
+		if (node instanceof ProvidesParenting) {
+			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
+					.getPropertyCollectionProvider();
+			if (pcp != null) {
+				ClientPropertyReflector propertyReflector = pcp
+						.getPropertyReflector();
+				String propertyName = propertyReflector.getAnnotation(
+						Association.class).propertyName();
+				CommonLocator.get().propertyAccessor().setPropertyValue(
+						newObj, propertyName, pcp.getDomainObject());
+			}
+		}
+	}
+
+	protected Widget getViewForAction(VetoableAction action) {
+		return viewProviderMap.get(action.getClass()).getViewForObject(action);
+	}
+
+	public void setDeletionChecker(WorkspaceDeletionChecker deletionChecker) {
+		this.deletionChecker = deletionChecker;
+	}
+
+	public WorkspaceDeletionChecker getDeletionChecker() {
+		return deletionChecker;
+	}
+
+	public static class WSVisualModel {
+		private List<WorkspaceView> views = new ArrayList<WorkspaceView>();
+
+		private String viewAreaClassName = "";
+
+		private boolean toolbarVisible = true;
+
+		private Widget contentWidget;
+
+		private List<VetoableAction> toolbarActions = new ArrayList<VetoableAction>();
+
+		public Widget getContentWidget() {
+			return this.contentWidget;
+		}
+
+		public List<VetoableAction> getToolbarActions() {
+			return this.toolbarActions;
+		}
+
+		public String getViewAreaClassName() {
+			return viewAreaClassName;
+		}
+
+		public List<WorkspaceView> getViews() {
+			return this.views;
+		}
+
+		public boolean isToolbarVisible() {
+			return this.toolbarVisible;
+		}
+
+		public void setContentWidget(Widget contentWidget) {
+			this.contentWidget = contentWidget;
+		}
+
+		public void setToolbarActions(List<VetoableAction> toolbarActions) {
+			this.toolbarActions = toolbarActions;
+		}
+
+		public void setToolbarVisible(boolean toolbarVisible) {
+			this.toolbarVisible = toolbarVisible;
+		}
+
+		public void setViewAreaClassName(String viewAreaClassName) {
+			this.viewAreaClassName = viewAreaClassName;
+		}
+
+		public void setViews(List<WorkspaceView> views) {
+			this.views = views;
+		}
+	}
+
+	
+}

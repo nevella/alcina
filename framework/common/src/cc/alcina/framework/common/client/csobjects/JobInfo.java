@@ -1,0 +1,105 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.common.client.csobjects;
+
+import java.io.Serializable;
+import java.util.Date;
+
+/**
+ *
+ * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ */
+
+ public class JobInfo implements Serializable{
+	private long threadId;
+
+	private Date startTime;
+
+	private Date endTime;
+
+	private String progressMessage = "...pending";
+
+	private String jobName;
+
+	private double percentComplete;
+
+	private boolean complete;
+
+	private String errorMessage;
+
+	public Date getEndTime() {
+		return endTime;
+	}
+
+	public String getErrorMessage() {
+		return this.errorMessage;
+	}
+
+	public String getJobName() {
+		return this.jobName;
+	}
+
+	public double getPercentComplete() {
+		return this.percentComplete;
+	}
+
+	public String getProgressMessage() {
+		return this.progressMessage;
+	}
+
+	public Date getStartTime() {
+		return startTime;
+	}
+
+	public long getThreadId() {
+		return this.threadId;
+	}
+
+	public boolean isComplete() {
+		return this.complete;
+	}
+
+	public void setComplete(boolean complete) {
+		this.complete = complete;
+	}
+
+	public void setEndTime(Date endTime) {
+		this.endTime = endTime;
+	}
+
+	public void setErrorMessage(String errorMessage) {
+		this.errorMessage = errorMessage;
+	}
+
+	public void setJobName(String jobName) {
+		this.jobName = jobName;
+	}
+
+	public void setPercentComplete(double pctComplete) {
+		this.percentComplete = pctComplete;
+	}
+
+	public void setProgressMessage(String progressMessage) {
+		this.progressMessage = progressMessage;
+	}
+
+	public void setStartTime(Date startTime) {
+		this.startTime = startTime;
+	}
+
+	public void setThreadId(long threadId) {
+		this.threadId = threadId;
+	}
+}

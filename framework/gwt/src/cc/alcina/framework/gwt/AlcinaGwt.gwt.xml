@@ -1,0 +1,6 @@
+<module>
+      <inherits name='cc.alcina.framework.common.AlcinaCommon'/>
+      <stylesheet src='Alcina.css' />
+      <public path="public" />
+      <source path="client" />
+</module>

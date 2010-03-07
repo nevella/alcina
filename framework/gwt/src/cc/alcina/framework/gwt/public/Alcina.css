@@ -1,0 +1,1216 @@
+/* General & Main Containers ######################################################### */
+	/* Top-level containers */ /* reset the gwt body etc definition */
+body,table td,select {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 100%;
+}
+
+body {
+	text-align: left;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 0.75em;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	color: #333333;
+	background: #f6f6f6;
+	line-height: 1.4em;
+}
+
+div.alcina-TopContainer {
+	min-width: 980px;
+}
+
+div.alcina-Header {
+	background: #217d4d url(_pix/bg-header.jpg) 0 0 repeat-x;
+	height: 67px;
+	position: relative;
+}
+
+/* Main content-area containers */
+div.alcina-MainContent {
+	margin: 20px 0;
+}
+
+div.alcina-MainContent .alcina-ContentLeft
+	{
+	width: 200px;
+	float: left;
+	font-size: 0.9em;
+	border-bottom: 1px solid #78a3b6;
+}
+
+div.alcina-MainContentLeft {
+	margin-right: 10px;
+}
+
+div.alcina-MainContent div.alcina-ContentRight {
+	width: 85%;
+	float: left;
+	border: 1px solid #cecece;
+	margin-right: 20px;
+	margin-left: 25px;
+	background: #ffffff;
+	display: inline;
+}
+
+div.alcina-MainContent div.alcina-NoLayoutContentRight {
+	border: 1px solid #cecece;
+	margin-right: 20px;
+	margin-left: 225px;
+	background: #ffffff;
+	display: block;
+	min-height: 350px;
+}
+.alcina-ContentLeft .gwt-StackPanelContent {
+	background: #ffffff;
+	border-right: 1px solid #78a3b6;
+	border-top: 1px solid #78a3b6;
+	minimum-height: 250px;
+}
+
+.alcina-ContentLeft .gwt-StackPanelItem a {
+	border-top: 1px solid #78a3b6;
+	border-right: 1px solid #78a3b6;
+	display: block;
+	padding: 6px;
+	color: #104860;
+	line-height: 1em;
+	text-decoration: none;
+}
+
+.alcina-ContentLeft .gwt-StackPanelItem {
+	background: #b3d6e4 url(_pix/bg-tabs-left-blue-down.gif) right top
+		repeat-x;
+}
+
+.alcina-ContentLeft .gwt-StackPanelItem-selected {
+	background: #b3d6e4 url(_pix/bg-tabs-left-blue-up.gif) right top
+		repeat-x;
+}
+
+.alcina-ContentLeft .gwt-StackPanelItem a:hover {
+	color: #104860;
+	text-decoration: underline;
+}
+
+div.alcina-ContentLeft div input.small,table.alcina-ContentLeft div input.small
+	{
+	width: 90px;
+}
+div.alcina-MainContent.content-100pc-lhs {
+	margin-top: 0px;
+	margin-bottom: 0px;
+}
+/* Main menu */
+table.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a,table.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:active,table.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a:visited,table.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:hover
+	{
+	background-color: #104860;
+	font-weight: bold;
+	white-space: nowrap;
+}
+
+table.mainTabPanel .alcina-MainMenu {
+	background: #73b8d4 url(_pix/bg-nav.gif) bottom left repeat-x;
+	height: 28px;
+	border-top: 1px solid #b9deec;
+	border-bottom: 4px solid #104860;
+}
+
+.alcina-MainMenu a,.alcina-MainMenu a:link,.alcina-MainMenu a:visited,.alcina-MainMenu a:active
+	{
+	padding: 7px 15px 7px 15px;
+	color: #ffffff;
+	display: block;
+	text-decoration: none;
+	line-height: 1em;
+	background-image: url(_pix/bg-border-nav.gif);
+	background-repeat: repeat-y;
+	font-size: 1.15em;
+	white-space: nowrap;
+}
+
+.alcina-MainMenu .gwt-TabBarItem a,.alcina-MainMenu .gwt-TabBarItem a:active,.alcina-MainMenu .gwt-TabBarItem a:visited
+	{
+	background-position: right bottom;
+}
+
+.alcina-ContentRight {
+	min-height: 350px;
+}
+
+.alcina-MainMenuRight .gwt-Label {
+	line-height: 1em;
+	padding: 8px 15px 7px 15px;
+	color: white;
+}
+
+.alcina-MainMenuRight a,.alcina-MainMenuRight a:active,.alcina-MainMenuRight a:visited
+	{
+	background-position: left bottom;
+	float: right;
+}
+
+.alcina-MainMenu a:hover {
+	background-color: #4f94b4;
+	color: #ffffff;
+}
+
+.mainTabPanel {
+	width: 100%;
+}
+
+table.mainTabPanel .gwt-TabPanelBottom {
+	border: none;
+}
+
+table.mainTabPanel .gwt-TabPanelBottom {
+	border: none;
+}
+
+table.mainTabPanel .gwt-TabBar .gwt-TabBarFirst {
+	width: 0px;
+}
+
+table.mainTabPanel .gwt-TabBar .gwt-TabBarItem {
+	margin-left: 0px;
+	background-color: transparent;
+	font-weight: normal;
+	padding: 0px;
+}
+
+.alcina-MainMenu {
+	width: 100%;
+}
+
+/* Other content container */
+div.alcina-ContentFrame {
+	padding-left: 20px;
+	padding-right: 20px;
+}
+
+/* Breadcrumb/sub-title bar*/
+div.alcina-BreadcrumbBar {
+	height: 22px;
+	background: url(_pix/bg-breadcrumb.gif) 0 0 repeat-x;
+	font-size: 0.9em;
+	line-height: 0.9em;
+	border-bottom: 1px solid #cecece;
+}
+
+div.alcina-BreadcrumbBar.tlr-borders {
+	border: 1px solid #cecece;
+	border-bottom: none;
+}
+
+div.alcina-BreadcrumbBar div.right {
+	float: right;
+	padding-left:3px;
+	background: url(_pix/bg-seperator-toolbar.gif) left bottom repeat-y;
+}
+div.alcina-BreadcrumbBar div.right a.button,div.alcina-BreadcrumbBar div.right a.dropdown{
+	padding: 6px 8px;
+	display:block;
+	color:#505050;
+	padding-right: 16px;
+}
+div.alcina-BreadcrumbBar div.right a.dropdown{
+	background: url(_pix/breadcrumb-dropdown.png) right bottom repeat-y;
+	
+}
+div.alcina-BreadcrumbBar div a.dropdown:hover{
+	background: url(_pix/breadcrumb-dropdown-over.png) right bottom repeat-y;
+}
+div.alcina-BreadcrumbBar div a.button:hover,div.alcina-BreadcrumbBar div a.dropdown:hover{
+	background-color: #f4f4f4;
+}
+.gwt-ToggleButton-up-hovering.maximise{
+	background-position: 0 -513px;
+}
+div.alcina-BreadcrumbBar div.maximise {
+	width: 14px;
+	text-align: center;
+	padding: 4px 4px 3px 6px;
+	border: none;
+}
+
+div.alcina-BreadcrumbBar p.date {
+	border-left: 1px solid #CDCDCD;
+	float: right;
+	margin: 0;
+	padding: 6px 8px;
+	text-align: center;
+	width: 100px;
+}
+
+.alcina-BreadcrumbBar a:link,.alcina-BreadcrumbBar a:visited,.alcina-BreadcrumbBar a:active
+	{
+	color: #717171;
+	text-decoration: none;
+}
+
+.alcina-BreadcrumbBar a:hover,.link-black a:hover {
+	text-decoration: underline;
+}
+
+div.alcina-BreadcrumbBar p.breadcrumb {
+	padding: 6px 8px;
+	margin: 0;
+	float: left;
+	color: rgb(113, 113, 113);
+}
+
+div.alcina-BreadcrumbBar p.breadcrumb-next {
+	padding: 6px 15px 6px 8px;
+	background: url(_pix/bg-breadcrumb-next.gif) right top no-repeat;
+	margin: 0;
+	float: left;
+	color: rgb(113, 113, 113);
+}
+/** footer **/
+div.alcina-Footer {
+	background: #104860 url(_pix/footer-logo.gif) right center no-repeat;
+	padding: 10px;
+	color: #6b93a3;
+	margin-top: 10px;
+}
+
+/** gwt overrides **/
+div.gwt-Hyperlink {
+	display: inline;
+}
+
+.gwt-PushButton {
+	display: inline;
+}
+
+.gwt-TabPanelBottom {
+	padding: 0px;
+}
+
+/* Headlines ######################################################### */
+h2 {
+	padding: 0 0 3px 0;
+	margin: 0;
+	font-size: 1.15em;
+	font-weight: bold;
+	line-height: 1.5em;
+}
+
+h1 {
+	padding: 0 0 3px 0;
+	margin: 0;
+	font-size: 1.25em;
+	font-weight: bold;
+	line-height: 1.7em;
+}
+
+/* Links ######################################################### */
+a,a:link,a:visited,a:active {
+	color: #227e4d;
+	text-decoration: underline
+}
+
+a:hover {
+	color: #104860;
+	cursor: pointer;
+}
+
+.alcina-Footer a:link,.alcina-Footer a:visited,.alcina-Footer a:active {
+	color: #c7d7dd;
+	text-decoration: underline
+}
+
+.alcina-Footer a:hover {
+	color: #ffffff;
+}
+
+.link-black a:link,.link-black a:visited,.link-black a:active {
+	color: #000;
+	text-decoration: none;
+}
+
+.alcina-NoHistory {
+	cursor: pointer;
+}
+
+/* Buttons ######################################################### */
+a.button-grey,a.button-grey:active,a.button-grey:visited,a.button-grey.disabled:hover
+	{
+	background: #e9e9e9;
+	border: 1px solid #cdcdcd;
+	color: #333333;
+	padding: 5px;
+	margin-right: 6px;
+	display: block;
+	float: left;
+	text-decoration: none;
+	line-height: 1em;
+}
+
+a.button-grey.disabled,a.button-grey.disabled:hover {
+	color: #777777;
+}
+
+.alcina-ToolbarSmall a.button-grey,.alcina-ToolbarSmall a.button-grey:active,.alcina-ToolbarSmall a.button-grey:visited
+	{
+	background: #e9e9e9;
+	border: 1px solid #cdcdcd;
+	color: #333333;
+	padding: 3px;
+	margin-right: 5px;
+	display: block;
+	float: left;
+	text-decoration: none;
+	line-height: 1em;
+}
+
+.alcina-ToolbarSmall a.button-grey:hover {
+	padding: 3px;
+}
+
+a.button-grey:hover,.alcina-ToolbarSmall a.button-grey:hover {
+	color: #333333;
+	background: #ffffff url(_pix/bg-button-large-grey.gif) bottom left
+		repeat-x;
+	border-left: 1px solid #ffffff;
+	border-top: 1px solid #ffffff;
+	border-right: 1px solid #919191;
+	border-bottom: 1px solid #919191;
+}
+
+/* Button icons */
+a.b-viewing-options span {
+	background: url(_pix/icon-viewing-options.gif) 0 0 no-repeat;
+	padding-left: 20px;
+}
+
+a.b-options-small span {
+	background: url(_pix/icon-options-small.gif) 1px 2px no-repeat;
+	padding-left: 15px;
+}
+
+a.b-delete-small span {
+	background: url(_pix/icon-delete-small.gif) 1px 2px no-repeat;
+	padding-left: 15px;
+}
+
+a.b-color-small span {
+	background: url(_pix/icon-color-small.gif) 1px 2px no-repeat;
+	padding-left: 15px;
+}
+
+a.b-share-small span {
+	background: url(_pix/icon-share-small.gif) 1px 2px no-repeat;
+	padding-left: 15px;
+}
+
+a.b-save span {
+	background: url(_pix/icon-save.gif) 0 0 no-repeat;
+	padding-left: 20px;
+}
+
+a.b-add span {
+	background: url(_pix/icon-add.gif) 0 0 no-repeat;
+	padding-left: 20px;
+}
+
+a.b-tree span {
+	background: url(_pix/icon-tree.gif) 0 0 no-repeat;
+	padding-left: 20px;
+}
+
+a.b-link span {
+	background: url(_pix/icon-link.gif) 0 0 no-repeat;
+	padding-left: 20px;
+}
+
+a.b-return span {
+	background: url(_pix/icon-return.gif) 0 0 no-repeat;
+	padding-left: 20px;
+}
+
+a.b-print span {
+	background: url(_pix/icon-print.gif) 0 0 no-repeat;
+	padding-left: 20px;
+}
+
+a.b-previous-page span {
+	background: url(_pix/icon-prev.gif) left 2px no-repeat;
+	padding-left: 12px;
+}
+
+a.b-next-page span {
+	background: url(_pix/icon-next.gif) right 2px no-repeat;
+	padding-right: 12px;
+}
+
+.alcina-Button {
+	margin-right: 10px;
+}
+
+div input.button-submit {
+	margin-left: 4px;
+	/*padding-top: 1px;
+	padding-bottom: 2px;
+	too much padding - check for IE as well*/
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+
+/* General element styles */
+	/* Fonts & Text ######################################################### */
+.font-grey {
+	color: #717171;
+}
+
+p {
+	margin: 0;
+	padding: 0 0 15px 0;
+}
+
+img {
+	border: 0;
+}
+
+/* Forms ######################################################### */
+form {
+	padding: 0;
+	margin: 0;
+}
+
+input,select,textarea {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 1em;
+}
+
+input.button-submit,button.button-submit {
+	background: #78a3b6 url(_pix/bg-button-blue.gif) left top repeat;
+	border: 1px solid #114a62;
+	font-family: Arial, Helvetica, sans-serif;
+	margin: 0;
+	padding-top: 0;
+	padding-bottom: 1px;
+	color: #ffffff;
+	cursor: pointer;
+	font-size: 0.9em;
+	/*safari-compat
+	*/
+	height: 18px;
+}
+
+.alcina-FormSection {
+	font-weight: bold;
+	border-bottom: 1px solid #CECECE;
+}
+
+/* Misc ######################################################### */
+.clearfix:after {
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both;
+	visibility: hidden;
+}
+
+.clearfix {
+	display: inline-block;
+}
+.invisible{
+	visibility: hidden;
+}
+.clearfix {
+	display: block;
+}
+.cursor-pointer{
+	cursor: pointer;
+}
+* html .clearfix {
+	height: 1px;
+}
+
+.float-left {
+	float: left;
+}
+
+.float-right {
+	float: right;
+}
+
+.clear {
+	clear: both;
+}
+
+.center {
+	text-align: center;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.inline {
+	display: inline;
+}
+
+.block {
+	display: block;
+}
+.none{
+	display: none;	
+}
+.padRightPt5em {
+	padding-right: 0.5em;
+}
+
+.pad-15 {
+	padding: 15px;
+}
+.pad-5 {
+	padding: 5px;
+}
+div.pad-top-0{
+	padding-top: 0px;
+}
+.pad-lbr-15 {
+	padding: 0px 15px 15px 15px;
+}
+
+.pad-left-15 {
+	padding-left: 15px;
+}
+
+.pad-left-5 {
+	padding-left: 5px;
+}
+.pad-right-5 {
+	padding-right: 5px;
+}
+.pad-left-45 {
+	padding-left: 45px;
+}
+
+.pad-bottom-15 {
+	padding-bottom: 15px;
+}
+
+.pad-bottom-5 {
+	padding-bottom: 5px;
+}
+
+.margin-top-15 {
+	margin-top: 15px;
+}
+
+.margin-0 {
+	margin: 0px;
+}
+
+.nowrap {
+	white-space: nowrap;
+}
+/** Specific alcina elements (misc) **/
+.alcina-BuildVersion {
+	color: white;
+	font-size: .9em;
+}
+/* DatePicker ######################################################### */
+.gwittir-Calendar {
+	background-color: white;
+	border: 1px solid black;
+	font-size: 80%;
+	cursor: defaut;
+}
+
+.gwittir-Calendar .day {
+	border-bottom: 1px solid black;
+	color: white;
+	background-color: rgb(120, 163, 182);
+}
+
+.gwittir-Calendar .date {
+	border-bottom: 1px solid gray;
+	cursor: pointer;
+}
+
+.gwittir-Calendar .empty {
+	background-color: #AAAAAA;
+}
+
+.gwittir-DatePicker {
+	font-size: 80%;
+	background-color: white;
+}
+
+.gwittir-DatePicker .gwittir-Calendar {
+	width: 100%;
+	font-size: 100%;
+}
+
+.gwittir-PopupDatePicker {
+	width: 105px;
+}
+
+.gwittir-DatePicker .gwittir-Calendar .date {
+	text-align: center;
+}
+
+/* Tables ######################################################### */
+table.home,div.alcina-GeneralContentHolder,div.wizard {
+	width: 100%;
+	border: 1px solid #cdcdcd;
+	background: #fff;
+}
+
+div.alcina-GeneralContent {
+	padding: 10px;
+	width: auto;
+}
+
+div.alcina-ContentMessage {
+	text-align: center;
+	padding-top: 50px;
+}
+
+table.colour-chooser {
+	background-color: #666666;
+	padding: 1px;
+}
+
+/** components used in annotation-based rendering **/ /** Chooser **/
+div.alcina-Chooser div.pop-down {
+	position: absolute;
+	border: 2px solid #CECECE;
+	padding: 2px;
+	background: white;
+}
+
+div.alcina-Chooser div.pop-down .group-heading {
+	font-size: 1.0em;
+}
+
+div.alcina-Chooser .group-heading {
+	font-size: 1.1em;
+	font-weight: bold;
+	padding: .3em;
+	padding-bottom: .1em;
+}
+div.alcina-Chooser .chooser-item{
+	padding-right: .5em;	
+}
+div.alcina-Chooser .chooser-item.selected{
+	background-color:#A8D3E6;
+}
+div.alcina-Chooser  div.hint {
+	background-color: #f8f8f8;
+	border-bottom: 1px solid grey;
+}
+div.hint{
+	color: #666666;
+	font-style: italic;
+	
+}
+div.alcina-Chooser input.chooser-text {
+	border: 1px solid #CECECE;
+	padding: 1px 1px 1px 1px;
+	width: 80%;
+}
+
+/** SELECTOR **/
+table.alcina-SelectorFrame {
+	border: 1px solid #cdcdcd;
+	background-color: white;
+}
+
+table.gwittir-GridForm table.alcina-SelectorFrame td {
+	padding: 0px;
+}
+
+div.alcina-Selector {
+	width: 250px;
+	height: 138px;
+}
+div.alcina-Selector .scroller{
+	height: 115px;	
+}
+div.alcina-Selector input.alcina-Filter {
+	width: 200px;
+}
+
+div.alcina-Selector div.alcina-FilterHolder {
+	background-color: transparent;
+}
+
+div.alcina-Selector.available {
+	border-right: 1px solid #cdcdcd;
+}
+
+.alcina-SelectorFrame div.header {
+	font-weight: bold;
+	padding: 1px;
+	padding-left: 10px;
+	border-bottom: 1px solid #cdcdcd;
+}
+
+.alcina-SelectorFrame div.header.available {
+	color: #666666;
+	background: transparent url(_pix/bg-breadcrumb.gif) repeat-x scroll 0 0;
+	border-right: 1px solid #cdcdcd;
+}
+
+div.alcina-Selector div.header.selected {
+	color: #333333;
+}
+
+div.alcina-Selector ul {
+	margin-left: 10px;
+}
+
+div.alcina-Selector div.select-item-container {
+	padding-left: 4px;
+}
+
+div.alcina-Selector a    ,div.alcina-Selector a:link,div.alcina-Selector a:visited
+	{
+	color: black;
+	text-decoration: none;
+}
+
+div.alcina-BeanPanel div.alcina-BreadcrumbBar.font-grey {
+	color: #505050;
+	font-weight: bold
+}
+
+/*Object tree rendering */
+div.alcina-ObjectTree .customiser {
+	margin-bottom: 15px;
+}
+div.alcina-ObjectTree .hint{
+	color:#717171;
+	font-style: italic;
+	padding-top: 5px;
+}
+div.alcina-ObjectTree {
+	border: 1px solid #cdcdcd;
+	background-color: white;
+	font-size: 0.9em;
+	padding-left: 10px;
+	padding-bottom: 10px;
+}
+
+div.alcina-ObjectTree.no-border {
+	border: none;
+}
+
+div.alcina-ObjectTree.no-bottom {
+	border-bottom: none;
+}
+
+div.alcina-ObjectTree .level-1 {
+	font-weight: bold;
+	padding-left: 10px;
+}
+
+div.alcina-ObjectTree .level-2 {
+	padding-right: 6px;
+	vertical-align: bottom;
+}
+div.alcina-ObjectTree .level-2-widget {
+	padding-right: 12px;
+	vertical-align: bottom;
+}
+
+div.alcina-ObjectTree input[type="text"] {
+	background: #FFFFFF url(_pix/icon-magnify.gif) no-repeat scroll 3px 2px;
+	border: 1px solid #CECECE;
+	padding: 1px 1px 1px 15px;
+	width: 200px;
+}
+
+div.alcina-ObjectTree .results-table {
+	width: 100%;
+}
+div.alcina-ObjectTree .alcina-Selector .group-heading{
+	color: #717171;
+	background-color:#f4f4f4;
+}
+
+/**SEARCH-RESULTS TABLES*/
+table.results-table {
+	width: 100%;
+}
+
+/****ERROR MESSAGES
+*/
+.gwittir-ValidationPopup {
+	font-size: 0.9em;
+	color: #ff7777;
+}
+
+.gwittir-ValidationPopup.dateChooser, .gwittir-ValidationPopup.withBkg {
+	border: 1px solid rgb(206, 206, 206);
+	padding: 1px 4px 1px 4px;
+	background-color: white;
+}
+
+.gwittir-ValidationPopup-right {
+	padding-left: 10px;
+	padding-top: 3px;
+}
+
+.gwittir-ServerValidation {
+	background: #FFFFFF url(_pix/wait.gif) no-repeat scroll 3px 2px;
+	padding-left: 25px;
+	color: black;
+}
+
+.login-error, .error {
+	color: #ff3333;
+}
+
+
+/** Filter widget **/
+input.alcina-Filter {
+	background: #FFFFFF url(_pix/icon-magnify.gif) no-repeat scroll 3px 2px;
+	border: 1px solid #CECECE;
+	width: 85%;
+	padding: 1px 1px 1px 15px;
+}
+
+div.alcina-FilterHolder {
+	background-color: #DFDFDF;
+	padding: 1px 5px 1px 2px;
+	border-bottom: 1px solid #CECECE;
+}
+div.alcina-FilterHolder.inlineFilter  {
+	display:inline;background:none; border:none;
+}
+.inlineFilter input.alcina-Filter {
+	width: auto;
+}
+input.alcina-FilterHint {
+	color: #666666;
+	font-style: italic;
+}
+.alcina-Filter-collapse{
+	float:right;
+	margin-top:5px;	
+}
+
+/** Colour chooser **/
+div.alcina-CustomiserColour {
+	width: 12px;
+	height: 12px;
+	border: 1px solid #666666;
+}
+/** Wizard **/
+div.alcina-Wizard div.wizard-form {
+	padding: 10px 10px 5px 10px;
+}
+
+div.alcina-Wizard div.wizard-toolbar {
+	padding-left: 200px;
+	padding-top: 20px;
+	padding-bottom: 10px;
+	background-color: white;
+}
+
+div.alcina-Wizard .h2 {
+	font-size: 1.15em;
+	font-weight: bold;
+	line-height: 1.3em;
+	padding-bottom: 15px;
+	color: #227e4d;
+}
+div.alcina-Wizard .comment{
+	padding-left:10px;	
+}
+
+/*Toolbars*/
+div.toolbar {
+	background: #dfdfdf;
+	border-bottom: 1px solid #cecece;
+}
+
+div.alcina-ToolbarSmall {
+	padding: 5px;
+}
+
+div.table-toolbar {
+	border-top: 1px solid #cecece;
+	border-left: 1px solid #cecece;
+	border-right: 1px solid #cecece;
+	font-size: 0.9em;
+	border-bottom: none;
+	background-color: #f6f6f6;
+	padding-left: 30px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+div.table-toolbar a.button-grey,div.table-toolbar a.button-grey:active,div.table-toolbar a.button-grey:visited,div.table-toolbar a.button-grey:hover
+	{
+	margin-left: 20px;
+}
+
+div.toolbar div.group {
+	padding: 6px 0 6px 6px;
+	background: url(_pix/bg-seperator-toolbar.gif) right bottom repeat-y;
+	display: block;
+	float: left;
+}
+
+
+div.toolbar div.group.float-right {
+	float: right;
+}
+
+
+/** status area **/
+div.alcina-Status {
+	color: #338e5d;
+	font-weight: bold;
+	padding: 2px 5px 2px 5px;
+	position: absolute;
+	z-order: 1;
+	border-width: 2px;
+	background-color: #FFFF99;
+	border-color: #FFFF99;
+	border-style: solid;
+	-moz-border-radius: 0.5em;
+  	border-radius: 0.5em;
+    -webkit-border-radius: 0.5em;
+	
+}
+div.alcina-Status.icy{
+	color: #FFFFFF;
+	background-color: #9999FF;
+}
+
+/** workspace **/
+.alcina-WorkspaceContent {
+	margin-left: 4%;
+
+}
+.alcina-WorkspaceContent .alcina-BreadcrumbBar{
+	margin-top:4px;
+}
+div.alcina-MainContent div.workspaceViews.alcina-ContentLeft{
+	border-bottom:none;	
+}
+/** bean panel **/
+.alcina-BeanPanel {
+	padding: 20px;
+}
+
+.alcina-ChildBean{
+	border: 1px solid #CECECE;
+	padding: 1px 4px 1px 4px;
+}
+.alcina-GeneralContent .alcina-BeanPanel {
+	padding-top: 10px;
+}
+.alcina-BeanPanel div.alcina-BreadcrumbBar{
+	border: 1px solid #cecece;
+	margin-bottom:10px;
+}
+.alcina-BeanPanel .alcina-SavePanel {
+	margin-top: 10px;
+}
+.alcina-BeanPanel .last5{
+	padding:5px 0 5px 0;
+}
+/** gwittir overrides **/
+.gwittir-PopupDatePicker input.calendarText, div.alcina-ObjectTree  input.calendarText {
+	border: 1px solid #CECECE;
+	padding: 1px 4px 1px 4px;
+	width: 70px;
+	background: none;
+}
+.gwittir-PopupDatePicker .calendarIcon, div.alcina-ObjectTree .calendarIcon{
+	margin-left: 4px;	
+}
+table.gwittir-BoundTable {
+	border: 1px solid #CECECE;
+}
+
+table.gwittir-BoundTable .rowHandleCheckbox {
+	padding: 0px 5px 0px 5px;
+}
+
+table.gwittir-BoundTable,table.gwittir-GridForm {
+	font-size: 0.9em;
+}
+
+table.gwittir-BoundTable td,table.gwittir-GridForm td {
+	padding: 2px 12px 2px 2px;
+	border: none;
+	color: #222222;
+	vertical-align: top;
+}
+
+table.gwittir-BoundTable .no-content {
+	padding: 15px;
+	text-align: center;
+}
+
+table.gwittir-GridForm td.label {
+	font-weight: bold;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+table.gwittir-GridForm td.label.multiline-field {
+	vertical-align: top;
+}
+table.gwittir-BoundTable tr.even {
+	background-color: white;
+}
+
+table.gwittir-BoundTable tr.odd {
+	background-color: #F0F0FE;
+}
+
+table.gwittir-BoundTable tr.header td.first {
+	background: none;
+}
+
+table.gwittir-BoundTable tr.header td.ascending div {
+	background: transparent url(_pix/bg-ascending.gif) no-repeat scroll left
+		center;
+	padding-left: 10px;
+}
+
+table.gwittir-BoundTable tr.header td.descending div {
+	background: transparent url(_pix/bg-descending.gif) no-repeat scroll
+		left center;
+	padding-left: 10px;
+}
+
+table.gwittir-BoundTable tr.header td {
+	background: transparent url(_pix/bg-seperator-toolbar.gif) repeat-y
+		scroll left bottom;
+	white-space: nowrap;
+	color: #505050;
+	font-weight: bold;
+	padding: 0px 8px 0px 4px;
+	height: 16px;
+	vertical-align: middle;
+	border-bottom: 1px solid #CECECE;
+}
+
+table.gwittir-BoundTable tr.header.sort td {
+	cursor: pointer;
+}
+
+table.gwittir-BoundTable tr.header {
+	background:  #f4f4f4 url(_pix/bg-breadcrumb.gif) repeat-x scroll 0 0;
+	border-left: 1px solid #CECECE;
+	line-height: 0.9em;
+	position: relative;
+}
+
+.gwittir-ValidationPopup .gwt-Label {
+	color: red;
+}
+
+/** logging, notification **/
+.logbox {
+	height: 200px;
+	border: 1px solid #CECECE;
+	padding: 2px;
+	margin: 3px;
+	background-color: #FFFFEE;
+}
+
+.logboxpre {
+	font-family: Courier New, Courier, monospace;
+	font-size: 1.3em;
+	color: #000000;
+}
+.alcina-Notification.wide{
+	width: 650px;	
+}
+.alcina-Notification.medium{
+	width: 350px;	
+}
+.alcina-Notification.narrow{
+	width: 230px;	
+}
+.alcina-Notification a, .alcina-Notification a:active, .alcina-Notification a:link{
+	color:#1111cc;
+}
+.alcina-Notification .text{
+	padding-left:0px;
+	padding-right:10px;
+	
+}
+.alcina-Notification .info, .alcina-Notification .warning{
+	text-align: left;
+	}
+.alcina-Notification .errorOops{
+	font-weight: bold;
+	text-align: left;
+}
+.alcina-Notification .errorSub{
+	padding: 6px 0 6px 0px;
+}
+
+/** alcina-ActionProgress **/
+.alcina-ActionProgress {
+	border: 1px solid #cecece;
+	background: white;
+	margin: 10px 10px 20px 25px;
+	padding: 10px;
+	
+}
+.alcina-ActionProgress .bar {
+	width: 200px;
+	height: 3px;
+	border: solid 1px #777777;
+	margin-top: 6px;
+}
+.alcina-ActionProgress .bar .progress {
+	height: 3px;
+	background-color: #5F8FC3;
+}
+.alcina-ActionProgress .error{
+	color: #ff3333;	
+}
+.alcina-ActionProgress .caption{
+	font-weight: bold;
+	padding-right: 6px;
+	color: #414141;
+}
+/** Misc components **/
+.inlineTabDisplay .gwt-TabBarItem,.inlineTabDisplay .gwt-HTML
+	{
+	display: inline;
+}
+.inlineTabDisplay .gwt-HTML{
+	padding-right:1em;
+}
+.inlineTabDisplay  .gwt-TabBar .gwt-TabBarItem-selected a {
+	background: #A8D3E6 none repeat scroll 0 0;
+	cursor: default;
+	font-weight: normal;
+}
+.alcina-report{
+	border: 1px solid #CECECE;
+	padding: 5px;
+}
+.alcina-expandableLabel a, .alcina-expandableLabel a:link,.alcina-expandableLabel a:visited,.alcina-expandableLabel a:active{
+	text-decoration: none;
+}
+
+/** Rich text **/
+.alcina-richTextToolbarBkg{
+ background: #e3e8f3 url(images/hborder.png) repeat-x 0px -2003px;
+ /*gwt-std img*/
+}
+.gwt-RichTextArea{
+	height: 150px;	
+}
+div.max .gwt-RichTextArea{
+	height: 440px;	
+}
+ 

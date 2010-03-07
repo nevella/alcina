@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="project-distro-build" basedir="." default="">
+	<import file="project-build.xml" />
+
+	<target name="make-war" description="Create the {project.modules.description} WAR" depends="compile">
+		<mkdir dir="${project.dist.dir}" />
+		<delete file="${project.dist.dir}/${ant.project.name}.war" />
+		<war destfile="${project.dist.dir}/${ant.project.name}.war" webxml="${project.web-inf.dir}/web.xml">
+			<!--<fileset dir="${project.web-inf.dir}">
+				<exclude name="WEB-INF/web.xml" />
+			</fileset>-->
+			<!-- dump this too-->
+			<!--to change in a sec-->
+			<zipfileset dir="${project.gwt.build.dir}" prefix="">
+				<include name="**/*" />
+			</zipfileset>
+
+			<zipfileset dir="${project.src.dir}" prefix="WEB-INF/classes">
+				<patternset refid="project.war.resource.exports" />
+			</zipfileset>
+			<lib dir="${project.war.lib.dir}">
+				<patternset refid="project.war.libs" />
+			</lib>
+			<lib refid="project.war.dependencies" />
+
+			<lib refid="alcina.war.exports" />
+			<lib refid="alcina.war.dependencies" />
+			<classes dir="${project.build.dir}">
+				<include name="**/*.class" />
+			</classes>
+		</war>
+	</target>
+
+	<target name="make-ear" description="EARs the Task" depends="make-war">
+		<delete file="${project.dist.dir}/${ant.project.name}.ear" />
+		<ear destfile="${project.dist.dir}/${ant.project.name}.ear" appxml="${project.ear-inf.dir}/application.xml">
+			<fileset dir="dist">
+				<include name="**/*.war" />
+			</fileset>
+			<metainf dir="${project.ear-inf.dir}/META-INF">
+			</metainf>
+			<fileset refid="project.ear.libs.1" />
+			<fileset refid="project.ear.libs.2" />
+			<fileset refid="alcina.ear.exports" />
+			<fileset refid="alcina.ear.dependencies" />
+		</ear>
+	</target>
+	<target name="deploy" description="Deploy the ear to the j2ee server" depends="make-ear">
+		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
+		</copy>
+	</target>
+	<target name="undeploy" description="Undeploy ear from server">
+		<delete file="${deploy.j2ee-server.deploy.dir}/${ant.project.name}.ear" />
+		<delete dir="${deploy.j2ee-server.deploy.dir}/${ant.project.name}.ear" />
+	</target>
+
+	<target name="hot-deploy" description="WARs the Task" depends="build-dependencies,compile">
+		<!--the ear-->
+		<mkdir dir="${j2ee-server.unear.target}" />
+		<copy todir="${j2ee-server.unear.target}" preservelastmodified="true">
+			<fileset refid="project.ear.libs.1" />
+			<fileset refid="project.ear.libs.2" />
+			<fileset refid="alcina.ear.exports" />
+			<fileset refid="alcina.ear.dependencies" />
+		</copy>
+		<copy todir="${j2ee-server.unear.target}/META-INF" preservelastmodified="true">
+			<fileset dir="${project.ear-inf.dir}/META-INF">
+			</fileset>
+			<fileset file="${project.ear-inf.dir}/application.xml">
+			</fileset>
+		</copy>
+		<!--prepare gwt/www-->
+		<mkdir dir="${project.gwt.build.dir}" />
+		<mkdir dir="${project.gwt.client.imgs.2.tgt}" />
+		<mkdir dir="${project.gwt.client.imgs.1.tgt}" />
+		<copy todir="${project.gwt.build.dir}" file="${project.gwt.client.css.1}" />
+		<copy todir="${project.gwt.build.dir}" file="${project.gwt.client.css.2}" />
+		<copy todir="${project.gwt.build.dir}" file="${project.gwt.client.html}" />
+		<copy todir="${project.gwt.build.dir}" file="${framework.gwt.client.css.1}" />
+		<copy todir="${project.gwt.client.imgs.1.tgt}">
+			<fileset dir="${project.gwt.client.imgs.1}">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		<copy todir="${project.gwt.client.imgs.2.tgt}">
+			<fileset dir="${project.gwt.client.imgs.2}">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+
+		<!--the war-->
+		<mkdir dir="${j2ee-server.unwar.target}" />
+		<copy todir="${j2ee-server.unwar.target}" preservelastmodified="true">
+			<fileset dir="${project.gwt.build.dir}">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+		<copy todir="${j2ee-server.unwar.target}/WEB-INF/classes" preservelastmodified="true">
+			<fileset dir="${project.src.dir}">
+				<patternset refid="project.war.resource.exports" />
+			</fileset>
+			<fileset dir="${project.build.dir}">
+				<include name="**/*.class" />
+			</fileset>
+		</copy>
+		<copy todir="${j2ee-server.unwar.target}/WEB-INF/lib" preservelastmodified="true">
+			<fileset dir="${project.war.lib.dir}">
+				<patternset refid="project.war.libs" />
+			</fileset>
+			<fileset refid="project.war.dependencies" />
+			<fileset refid="alcina.war.exports" />
+			<fileset refid="alcina.war.dependencies" />
+		</copy>
+		<copy file="${project.web-inf.dir}/web.xml" todir="${j2ee-server.unwar.target}/WEB-INF" preservelastmodified="true">
+
+		</copy>
+	</target>
+
+	<target name="hot-deploy-restart" description="xx" depends="hot-deploy">
+		<touch file="${j2ee-server.unear.target}/META-INF/application.xml" />
+	</target>
+	<target name="patch-module" unless="isdev">
+		<copy file="${project.gwt.module.file}" tofile="${project.gwt.module.file}.copy" />
+		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.1}" />
+		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.2}" />
+		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.3}" />
+	</target>
+	<target name="unpatch-module" unless="isdev">
+		<copy file="${project.gwt.module.file}.copy" tofile="${project.gwt.module.file}" />
+		<delete file="${project.gwt.module.file}.copy" />
+	</target>
+	<!-- needed so gwt can see the compiled annotations, if any, from client source-->
+	<target name="compile-client" depends="compile">
+		<mkdir dir="${project.client.bin.dir}" />
+		<javac debug="on" srcdir="${project.client.src.dir}" destdir="${project.client.bin.dir}" >
+			<classpath>
+				<path refid="project.classpath" />
+				
+				<!-- because of being fancy with entity layer remote interfaces, make sure we can see 'em-->
+				<pathelement path="${project.build.dir}" />
+				<fileset dir="${project.client.lib.dir}">
+					<include name="*.jar" />
+				</fileset>
+			</classpath>
+		</javac>
+	</target>
+	<target name="compile-gwt" description="Compile the GWT app" depends="compile-client">
+		<condition property="isdev">
+			<istrue value="${developer}" />
+		</condition>
+		<antcall target="patch-module" />
+		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
+			<classpath>
+				<pathelement path="${project.gwt.classpath.src}" />
+				<pathelement path="${project.gwt.classpath.bin}" />
+				<pathelement path="${project.gwt.classpath.lib}" />
+				<pathelement path="${framework.gwt.classpath.src}" />
+				<pathelement path="${framework.gwt.classpath.bin}" />
+				<pathelement path="${framework.gwt.classpath.lib}" />
+				<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
+			</classpath>
+			<jvmarg value="-Xmx600M" />
+			<arg line=" -style ${gwt.codestyle}" />
+			<arg line="${project.gwt.compile.flags}" />
+			<arg value="${project.gwt.module.name}" />
+		</java>
+		<antcall target="unpatch-module" />
+	</target>
+	<target name="devmode" description="Run development mode" depends="compile,compile-client">
+		<java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
+			<classpath>
+				<pathelement location="src" />
+				<path refid="project.gwt.classpath" />
+			</classpath>
+			<jvmarg value="-Xmx600M" />
+			<arg value="-startupUrl" />
+			<arg value="${project.gwt.dev.startup.url}" />
+			<!--<arg line="-logLevel SPAM" />-->
+			<arg value="${project.gwt.module.name}" />
+		</java>
+	</target>
+	<target name="deployAndGwt" description="JARs the Task" depends="compile,compile-gwt,make-ear">
+		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${dist.dir}/${ant.project.name}.ear">
+		</copy>
+	</target>
+	<target name="hot-deploy-and-gwt-and-restart" description="WARs the Task" depends="compile-gwt,hot-deploy-restart">
+	</target>
+	<target name="hot-deploy-and-gwt-no-restart" description="WARs the Task" depends="compile-gwt,hot-deploy">
+	</target>
+</project>

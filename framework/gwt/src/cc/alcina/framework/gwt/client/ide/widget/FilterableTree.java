@@ -1,0 +1,292 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.gwt.client.ide.widget;
+
+
+import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
+import cc.alcina.framework.gwt.client.widget.VisualFilterable;
+import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
+
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.logical.shared.SelectionEvent;
+import com.google.gwt.event.logical.shared.SelectionHandler;
+import com.google.gwt.i18n.client.LocaleInfo;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.ui.Tree;
+import com.google.gwt.user.client.ui.TreeItem;
+
+/**
+ * @author nreddel@barnet.com.au
+ * 
+ */
+public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
+		VisualFilterableWithFirst {
+	private boolean lastWasKeyDown;
+
+	private TreeItem lastSelected;
+
+	private static final int OTHER_KEY_DOWN = 63233;
+
+	private static final int OTHER_KEY_LEFT = 63234;
+
+	private static final int OTHER_KEY_RIGHT = 63235;
+
+	private static final int OTHER_KEY_UP = 63232;
+
+	private static int standardizeKeycode(int code) {
+		switch (code) {
+		case OTHER_KEY_DOWN:
+			code = KeyCodes.KEY_DOWN;
+			break;
+		case OTHER_KEY_RIGHT:
+			code = KeyCodes.KEY_RIGHT;
+			break;
+		case OTHER_KEY_UP:
+			code = KeyCodes.KEY_UP;
+			break;
+		case OTHER_KEY_LEFT:
+			code = KeyCodes.KEY_LEFT;
+			break;
+		}
+		if (LocaleInfo.getCurrentLocale().isRTL()) {
+			if (code == KeyCodes.KEY_RIGHT) {
+				code = KeyCodes.KEY_LEFT;
+			} else if (code == KeyCodes.KEY_LEFT) {
+				code = KeyCodes.KEY_RIGHT;
+			}
+		}
+		return code;
+	}
+
+	boolean lastKeyWasUp = false;
+
+	boolean lastKeyWasDown = false;
+
+	public FilterableTree() {
+		super();
+		addSelectionHandler(this);
+	}
+
+	public void collapseToFirstLevel() {
+		TreeItem item = getSelectedItem();
+		new TreeNodeWalker().walk(this, new Callback<TreeItem>() {
+			public void callback(TreeItem target) {
+				boolean open = target.getParentItem() == null;
+				target.setState(open);
+			}
+		});
+		if (item != null) {
+			setSelectedItem(item, false);
+			ensureSelectedItemVisible();
+		}
+	}
+
+	public void expandAll() {
+		expandAll(99);
+	}
+
+	public void expandAll(int depth) {
+		for (int i = 0; i < getItemCount(); i++) {
+			expandAll(getItem(i), depth - 1);
+		}
+	}
+
+	public boolean filter(String filterText) {
+		boolean b = false;
+		filterText = filterText == null ? null : filterText.toLowerCase();
+		for (int i = 0; i < getItemCount(); i++) {
+			TreeItem child = getItem(i);
+			if (child instanceof VisualFilterable) {
+				VisualFilterable vf = (VisualFilterable) child;
+				b |= vf.filter(filterText);
+			}
+		}
+		if (getSelectedItem() != null && !getSelectedItem().isVisible()) {
+			lastSelected = null;
+			setSelectedItem(null);
+		}
+		resetKeyMemory();
+		if (filterText.length() == 0) {
+			collapseToFirstLevel();
+		}
+		return b;
+	}
+
+	public void moveToFirst() {
+		int visibleCount = 0;
+		TreeItem visibleChild = null;
+		for (int i = 0; i < getItemCount(); i++) {
+			TreeItem child = getItem(i);
+			if (child.isVisible()) {
+				visibleCount++;
+				if (visibleChild == null) {
+					visibleChild = child;
+				}
+			}
+		}
+		if (visibleChild != null) {
+			if (visibleCount == 1) {
+				selectVisibleChild(visibleChild);
+			} else {
+				setSelectedItem(visibleChild);
+				setFocus(true);
+			}
+		}
+	}
+
+	@Override
+	public void onBrowserEvent(Event event) {
+		int eventType = DOM.eventGetType(event);
+		switch (eventType) {
+		case Event.ONKEYDOWN: {
+			keyboardNavigation(event);
+			lastWasKeyDown = true;
+			break;
+		}
+		case Event.ONKEYPRESS: {
+			if (!lastWasKeyDown) {
+				keyboardNavigation(event);
+			}
+			lastWasKeyDown = false;
+			break;
+		}
+		}
+		super.onBrowserEvent(event);
+	}
+
+	public void onSelection(SelectionEvent<TreeItem> event) {
+		TreeItem item = event.getSelectedItem();
+		TreeItem lastSelCopy = lastSelected;
+		lastSelected = item;
+		if (item.isVisible() == false) {
+			if (lastSelCopy != null) {
+				if (lastKeyWasDown) {
+					lastKeyWasDown = false;
+					TreeItem visibleChild = findVisibleChild(lastSelCopy, 1);
+					if (visibleChild != null) {
+						setSelectedItem(visibleChild);
+					} else {
+						setSelectedItem(lastSelCopy);
+					}
+				}
+				if (lastKeyWasUp) {
+					lastKeyWasUp = false;
+					TreeItem visibleChild = findVisibleChild(lastSelCopy, -1);
+					if (visibleChild != null) {
+						setSelectedItem(visibleChild);
+					} else {
+						setSelectedItem(lastSelCopy);
+					}
+				}
+			}
+		}
+	}
+
+	private void expandAll(TreeItem ti, int depth) {
+		ti.setState(true);
+		if (depth > 0) {
+			for (int i = 0; i < ti.getChildCount(); i++) {
+				expandAll(ti.getChild(i), depth - 1);
+			}
+		}
+	}
+
+	private TreeItem findDeepestOpenChild(TreeItem item) {
+		if (!item.getState()) {
+			return item;
+		}
+		return findDeepestOpenChild(item.getChild(item.getChildCount() - 1));
+	}
+
+	private TreeItem findVisibleChild(TreeItem item, int direction) {
+		TreeItem parent = item.getParentItem();
+		if (parent == null) {
+			return null;
+		}
+		while (true) {
+			item = getNextNode(item, null, direction);
+			if (item == null) {
+				return null;
+			}
+			if (item.isVisible()) {
+				return item;
+			}
+		}
+	}
+
+	private TreeItem getNextNode(TreeItem item, TreeItem child, int direction) {
+		if (item == null) {
+			return null;
+		}
+		if (direction == 1) {
+			if (item.getState()) {
+				int childIndex = (child == null) ? -1 : item
+						.getChildIndex(child);
+				if (childIndex < item.getChildCount() - 1) {
+					return item.getChild(childIndex + 1);
+				}
+			}
+			return getNextNode(item.getParentItem(), item, direction);
+		} else {
+			int childIndex = item.getParentItem().getChildIndex(item);
+			if (childIndex > 0) {
+				return findDeepestOpenChild(item.getParentItem().getChild(
+						childIndex - 1));
+			}
+			return item.getParentItem();
+		}
+	}
+
+	private void keyboardNavigation(Event event) {
+		// Handle keyboard events if keyboard navigation is enabled
+		resetKeyMemory();
+		TreeItem curSelection = getSelectedItem();
+		if (isKeyboardNavigationEnabled(curSelection)) {
+			int code = DOM.eventGetKeyCode(event);
+			switch (standardizeKeycode(code)) {
+			case KeyCodes.KEY_UP: {
+				lastKeyWasUp = true;
+				break;
+			}
+			case KeyCodes.KEY_DOWN: {
+				lastKeyWasDown = true;
+				break;
+			}
+			default: {
+				return;
+			}
+			}
+		}
+	}
+
+	private void resetKeyMemory() {
+		lastKeyWasUp = false;
+		lastKeyWasDown = false;
+	}
+
+	private boolean selectVisibleChild(TreeItem item) {
+		for (int i = 0; i < item.getChildCount(); i++) {
+			TreeItem child = item.getChild(i);
+			if (child.isVisible()) {
+				return selectVisibleChild(child);
+			}
+		}
+		setSelectedItem(item);
+		setFocus(true);
+		return true;
+	}
+}

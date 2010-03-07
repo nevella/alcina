@@ -1,0 +1,93 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.common.client.util;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+
+@SuppressWarnings("unchecked")
+/**
+ *
+ * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ */
+
+ public class DomainObjectCloner extends CloneHelper {
+	
+	@Override
+	protected boolean deepProperty(Class c, String propertyName) {
+		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
+		if (bi == null) {
+			return false;
+		}
+		ClientPropertyReflector pr = bi.getPropertyReflectors().get(propertyName);
+		if (pr == null) {
+			return false;
+		}
+		DomainPropertyInfo dpi = pr.getAnnotation(DomainPropertyInfo.class);
+		return dpi == null ? false : dpi.cloneForDuplication();
+	}
+
+	private Set<String> ignorePns = new HashSet<String>(Arrays
+			.asList(new String[] { "id", "localId", "lastModificationDate",
+					"lastModificationUser", "creationDate", "creationUser",
+					"versionNumber" }));
+
+	protected boolean ignore(Class clazz, String propertyName, Object obj) {
+		if(ignorePns.contains(propertyName)){
+			return true;
+		}
+		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(clazz);
+		if (bi == null) {
+			return true;
+		}
+		ClientPropertyReflector pr = bi.getPropertyReflectors().get(propertyName);
+		if (pr == null) {
+			return true;
+		}
+		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
+		PropertyPermissions pp = pr
+		.getAnnotation(PropertyPermissions.class);
+		return !PermissionsManager.get()
+		.checkEffectivePropertyPermission(op, pp, obj,
+				false);
+	}
+	private List provisionalObjects = new ArrayList();
+	public List getProvisionalObjects() {
+		return this.provisionalObjects;
+	}
+	protected <T> T newInstance(T o) {
+		Class clazz = o.getClass();
+		if (o instanceof HasIdAndLocalId) {
+			HasIdAndLocalId obj = TransformManager.get().createProvisionalObject(clazz);
+			provisionalObjects.add(obj);
+			return (T) obj;
+		} else {
+			return super.newInstance(o);
+		}
+	}
+}

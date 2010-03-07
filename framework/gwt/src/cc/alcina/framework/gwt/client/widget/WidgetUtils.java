@@ -1,0 +1,613 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.gwt.client.widget;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+
+import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
+import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
+import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo.LayoutInfo;
+
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.BodyElement;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.DeferredCommand;
+import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTMLTable;
+import com.google.gwt.user.client.ui.HasWidgets;
+import com.google.gwt.user.client.ui.HorizontalSplitPanel;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.PopupPanel;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.TabPanel;
+import com.google.gwt.user.client.ui.TextArea;
+import com.google.gwt.user.client.ui.TreeItem;
+import com.google.gwt.user.client.ui.UIObject;
+import com.google.gwt.user.client.ui.VerticalSplitPanel;
+import com.google.gwt.user.client.ui.Widget;
+
+/**
+ *
+ * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ */
+
+ public class WidgetUtils {
+	public static void populateListFromEnum(ListBox box, Object[] objs) {
+		for (Object obj : objs) {
+			String k = obj.toString();
+			String friendly = k.toLowerCase().replace('_', ' ');
+			box.addItem(friendly, k);
+		}
+	}
+
+	// TODO - check all calls here either the cp implements haschildhandlers, or
+	// explain why t'hell not...(doesn't add handlers to the child widgets would be a good reason)
+	public static void clearChildren(ComplexPanel cp) {
+		for (int i = cp.getWidgetCount() - 1; i >= 0; i--) {
+			Widget widget = cp.getWidget(i);
+			cp.remove(i);
+		}
+		if (cp instanceof HasChildHandlers) {
+			HasChildHandlers hch = (HasChildHandlers) cp;
+			hch.detachHandlers();
+		}
+	}
+
+	public static void setColumnVisibility(HTMLTable table, int column,
+			boolean visible) {
+		int rows = table.getRowCount();
+		for (int row = 0; row < rows; row++) {
+			UIObject.setVisible(table.getCellFormatter()
+					.getElement(row, column), visible);
+		}
+	}
+
+	public static Widget getPositioningParent(Widget widget) {
+		while (widget.getParent() != null) {
+			String pos = getComputedStyle(widget.getElement(), "position");
+			if (pos != null
+					&& (pos.equals("relative") || pos.equals("absolute"))) {
+				return widget;
+			}
+			widget = widget.getParent();
+		}
+		return widget;// root panel
+	}
+
+	public static ComplexPanel complexChildOrSelf(Widget w) {
+		if (w instanceof ComplexPanel) {
+			return (ComplexPanel) w;
+		}
+		if (w instanceof SimplePanel) {
+			return complexChildOrSelf(((SimplePanel) w).getWidget());
+		}
+		return RootPanel.get();
+	}
+
+	public static native String getComputedStyle(Element elt,
+			String attributeName)/*-{
+		if (elt.currentStyle){
+		return elt.currentStyle[attributeName];
+		}
+		if ($wnd.getComputedStyle){
+		return $wnd.getComputedStyle(elt,null)[attributeName];
+		}
+	}-*/;
+
+	public static void clearChildren(TabPanel tp) {
+		for (int i = tp.getWidgetCount() - 1; i >= 0; i--) {
+			tp.remove(i);
+		}
+	}
+
+	public static List<Widget> allChildren(HasWidgets p) {
+		List<Widget> widgets = new ArrayList<Widget>();
+		if (p instanceof Widget) {
+			widgets.add((Widget) p);
+		}
+		Iterator<Widget> iterator = p.iterator();
+		while (iterator.hasNext()) {
+			Widget w = iterator.next();
+			if (w instanceof HasWidgets) {
+				widgets.addAll(allChildren((HasWidgets) w));
+			} else {
+				widgets.add(w);
+			}
+		}
+		return widgets;
+	}
+
+	private static int getBestOffsetHeight(Element e) {
+		return getBestOffsetHeight(e, false);
+	}
+
+	private static int getBestOffsetHeight(Element e, boolean parentPass) {
+		int h = e.getPropertyInt("offsetHeight");
+		if (h != 0 || e.getParentElement() == null) {
+			return h;
+		}
+		if (e.getFirstChildElement() == null && !parentPass) {
+			return getBestOffsetHeight(e, true);
+		}
+		return getBestOffsetHeight(parentPass ? e.getParentElement() : e
+				.getFirstChildElement(), parentPass);
+	}
+
+	private static int getBestOffsetWidth(Element e) {
+		return getBestOffsetWidth(e, false);
+	}
+
+	private static int getBestOffsetWidth(Element e, boolean parentPass) {
+		int h = e.getPropertyInt("offsetWidth");
+		if (h != 0 || e.getParentElement() == null) {
+			return h;
+		}
+		if (e.getFirstChildElement() == null && !parentPass) {
+			return getBestOffsetWidth(e, true);
+		}
+		return getBestOffsetWidth(parentPass ? e.getParentElement() : e
+				.getFirstChildElement(), parentPass);
+	}
+
+	private static boolean debug = false;
+
+	public static void resizeUsingInfo(int containerHeight, int containerWidth,
+			Iterator<Widget> widgets, int parentAdjustHeight,
+			int parentAdjustWidth) {
+		while (widgets.hasNext()) {
+			Widget widget = widgets.next();
+			if (!widget.isVisible()) {
+				continue;
+			}
+			int availableHeight = containerHeight;
+			int availableWidth = containerWidth;
+			if (widget instanceof HasLayoutInfo) {
+				if (debug) {
+					GWT.log(CommonUtils.format("%1: ", CommonUtils
+							.simpleClassName(widget.getClass())), null);
+				}
+				LayoutInfo info = ((HasLayoutInfo) widget).getLayoutInfo();
+				info.beforeLayout();
+				if (info.to100percentOfAvailableHeight()
+						|| info.to100percentOfAvailableWidth()) {
+					int usedHeight = 0;
+					int usedWidth = 0;
+					Widget parent = widget.getParent();
+					Iterator<Widget> childIterator = null;
+					availableHeight = info.useBestOffsetForParentHeight() ? getBestOffsetHeight(
+							parent.getElement(), true)
+							: containerHeight;
+					availableHeight = Math
+							.min(availableHeight, containerHeight);
+					availableWidth = info.useBestOffsetForParentWidth() ? getBestOffsetWidth(
+							parent.getElement(), true)
+							: containerWidth;
+					availableWidth = Math.min(availableWidth, containerWidth);
+					if (parent instanceof HasLayoutInfo) {
+						childIterator = ((HasLayoutInfo) parent)
+								.getLayoutInfo().getLayoutWidgets();
+					} else if (parent instanceof HasWidgets) {
+						childIterator = ((HasWidgets) parent).iterator();
+					}
+					boolean ignoreChildrenForHeight = info
+							.to100percentOfAvailableHeight()
+							&& (parent instanceof HorizontalSplitPanel || info
+									.ignoreSiblingsForHeight());
+					boolean ignoreChildrenForWidth = info
+							.to100percentOfAvailableWidth()
+							&& (parent instanceof VerticalSplitPanel || info
+									.ignoreSiblingsForWidth());
+					if (childIterator != null) {
+						while (childIterator.hasNext()) {
+							Widget cw = childIterator.next();
+							if (cw != widget && cw.isVisible()) {
+								if (!ignoreChildrenForHeight) {
+									usedHeight += getBestOffsetHeight(cw
+											.getElement());
+								}
+								if (!ignoreChildrenForWidth) {
+									usedWidth += getBestOffsetWidth(cw
+											.getElement());
+								}
+							}
+						}
+					}
+					if (info.to100percentOfAvailableHeight()) {
+						availableHeight = availableHeight - usedHeight
+								- parentAdjustHeight - info.getAdjustHeight();
+						if (debug) {
+							GWT.log(CommonUtils.format("%1: %2 - comp %3",
+									CommonUtils.simpleClassName(widget
+											.getClass()), availableHeight,
+									containerHeight), null);
+						}
+						if (availableHeight >= 0) {
+							widget.setHeight((availableHeight) + "px");
+						} else {
+							int j = 1;
+						}
+					}
+					if (info.to100percentOfAvailableWidth()) {
+						availableWidth = availableWidth - usedWidth
+								- parentAdjustWidth - info.getAdjustWidth();
+						if (availableWidth >= 0) {
+							widget.setWidth((availableWidth) + "px");
+						} else {
+							int j = 1;
+						}
+					}
+				}
+				Iterator<Widget> toResize = info.getWidgetsToResize();
+				while (toResize.hasNext()) {
+					toResize.next().setHeight(containerHeight + "px");
+				}
+				resizeUsingInfo(availableHeight, availableWidth, info
+						.getLayoutWidgets(), info.getClientAdjustHeight(), info
+						.getClientAdjustWidth());
+				info.afterLayout();
+			}// haslayoutinfo
+			else if (widget instanceof HasWidgets) {
+				resizeUsingInfo(availableHeight, availableWidth,
+						((HasWidgets) widget).iterator(), 0, 0);
+			}
+		}// while
+	}
+
+	public static void resizeUsingInfo(Widget w) {
+		resizeUsingInfo(getBestOffsetHeight(w.getElement()),
+				getBestOffsetWidth(w.getElement()), w);
+	}
+
+	public static void resizeUsingInfo(int availableHeight, int availableWidth,
+			Widget w) {
+		resizeUsingInfo(availableHeight, availableWidth, Arrays.asList(
+				new Widget[] { w }).iterator(), 0, 0);
+	}
+
+	public static String stripStructuralTags(String html) {
+		Element elt = Document.get().createDivElement();
+		elt.setInnerHTML(html);
+		boolean loopOk = true;
+		while (loopOk) {
+			loopOk = false;
+			if (elt.getChildNodes().getLength() == 1) {
+				Node child = elt.getChildNodes().getItem(0);
+				if (child.getNodeType() == Node.ELEMENT_NODE) {
+					Element childElt = (Element) child;
+					String tag = childElt.getTagName().toLowerCase();
+					if (tag.equals("div") || tag.equals("p")) {
+						elt = childElt;
+						loopOk = true;
+					}
+				}
+			}
+		}
+		return elt.getInnerHTML();
+	}
+
+	public static boolean isAncestorOf(Element ancestor, Node possibleChild) {
+		Element stop = RootPanel.get().getElement();
+		while (possibleChild != null && possibleChild != stop) {
+			if (possibleChild == ancestor) {
+				return true;
+			}
+			possibleChild = possibleChild.getParentNode();
+		}
+		return false;
+	}
+
+	public static void replace(Widget current, Widget newWidget) {
+		ComplexPanel cp = (ComplexPanel) current.getParent();
+		int index = cp.getWidgetIndex(current);
+		cp.remove(index);
+		if (cp instanceof FlowPanel) {
+			FlowPanel fp = (FlowPanel) cp;
+			fp.insert(newWidget, index);
+		}
+	}
+
+	public static void setOpacity(Widget w, int opacityPercent) {
+		com.google.gwt.user.client.Element e = w.getElement();
+		String opacity = opacityPercent == 100 ? "1.0" : "0."
+				+ CommonUtils.padTwo(opacityPercent);
+		DOM.setStyleAttribute(e, "opacity", opacity);
+		DOM.setStyleAttribute(e, "mozOpacity", opacity);
+		DOM.setStyleAttribute(e, "filter", " alpha(opacity=" + opacityPercent
+				+ ")");
+	}
+
+	public static void scrollIntoView(Element e) {
+		DOM.scrollIntoView((com.google.gwt.user.client.Element) e);
+		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
+		int y2 = y1 + Window.getClientHeight();
+		int absoluteTop = e.getAbsoluteTop();
+		if (absoluteTop < y1 || absoluteTop > y2) {
+			BodyElement body = Document.get().getBody();
+			body.setPropertyInt("scrollTop", (Math.max(0, absoluteTop - 10)));
+		}
+	}
+
+	public static void scrollBodyTo(int y) {
+		BodyElement body = Document.get().getBody();
+		body.setPropertyInt("scrollTop", y);
+	}
+
+	private static List<Widget> hiddenWidgets;
+
+	private static List<Widget> morphedWidgets;// hsps and vsps
+
+	private static List<ElementLayout> elementLayouts;
+
+	public static void maximiseWidget(Widget widget) {
+		restoreFromMaximise();
+		hiddenWidgets = new ArrayList<Widget>();
+		morphedWidgets = new ArrayList<Widget>();
+		elementLayouts = new ArrayList<ElementLayout>();
+		Element e = widget.getElement();
+		while (widget.getParent() != null) {
+			Widget parent = widget.getParent();
+			if (parent instanceof HorizontalSplitPanel
+					|| parent instanceof VerticalSplitPanel) {
+				morphSplitPanel(parent, widget, false);
+			}
+			if (parent instanceof HasWidgets && !(parent instanceof TabPanel)) {
+				HasWidgets hw = (HasWidgets) parent;
+				for (Iterator<Widget> itr = hw.iterator(); itr.hasNext();) {
+					Widget w = itr.next();
+					if (w != widget && w.isVisible()) {
+						hiddenWidgets.add(w);
+						w.setVisible(false);
+					}
+				}
+			}
+			widget = widget.getParent();
+		}
+		while (e.getParentElement() != RootPanel.get().getElement()) {
+			ElementLayout layout = new ElementLayout(e);
+			elementLayouts.add(layout);
+			layout.maximise();
+			e = e.getParentElement();
+		}
+	}
+
+	private static class ElementLayout {
+		private String position;
+
+		private String height;
+
+		private String width;
+
+		// ff3.5, at least
+		private String overflow;
+
+		private final Element element;
+
+		public ElementLayout(Element element) {
+			this.element = element;
+		}
+
+		void maximise() {
+			position = element.getStyle().getProperty("position");
+			width = element.getStyle().getProperty("width");
+			height = element.getStyle().getProperty("height");
+			overflow = element.getStyle().getProperty("overflow");
+			element.getStyle().setProperty("position", "");
+			element.getStyle().setProperty("width", "");
+			element.getStyle().setProperty("height", "");
+			element.getStyle().setProperty("overflow", "");
+		}
+
+		void restore() {
+			element.getStyle().setProperty("position", position);
+			element.getStyle().setProperty("width", width);
+			element.getStyle().setProperty("height", height);
+			element.getStyle().setProperty("overflow", overflow);
+		}
+	}
+
+	private static void morphSplitPanel(Widget splitPanel, Widget keepChild,
+			boolean restore) {
+		final String zeroSize = "0px";
+		boolean hsp = (splitPanel instanceof HorizontalSplitPanel);
+		com.google.gwt.user.client.Element root, splitter, container0, container1, contained0, contained1, keepDisplaying;
+		root = (com.google.gwt.user.client.Element) splitPanel.getElement()
+				.getChildNodes().getItem(0);
+		String str = root.getString();
+		NodeList<Node> childNodes = root.getChildNodes();
+		container0 = (com.google.gwt.user.client.Element) childNodes.getItem(0);
+		splitter = (com.google.gwt.user.client.Element) childNodes.getItem(1);
+		container1 = (com.google.gwt.user.client.Element) childNodes.getItem(2);
+		contained0 = (com.google.gwt.user.client.Element) container0
+				.getChildNodes().getItem(0);
+		contained1 = (com.google.gwt.user.client.Element) container1
+				.getChildNodes().getItem(0);
+		int splitPos = hsp ? container0.getOffsetWidth() : container0
+				.getOffsetHeight();
+		String display = restore ? "" : "none";
+		String position = restore ? "absolute" : "";
+		splitter.getStyle().setProperty("display", display);
+		container0.getStyle().setProperty("display", display);
+		container1.getStyle().setProperty("display", display);
+		container0.getStyle().setProperty("position", position);
+		container1.getStyle().setProperty("position", position);
+		if (!restore) {
+			keepDisplaying = contained0 == keepChild.getElement() ? container0
+					: container1;
+			keepDisplaying.getStyle().setProperty("display", "");
+			morphedWidgets.add(splitPanel);
+			root.setPropertyInt(SPLIT_PANEL_RESTORE_PROP, splitPos);
+		} else {
+			splitPos = root.getPropertyInt(SPLIT_PANEL_RESTORE_PROP);
+			if (hsp) {
+				((HorizontalSplitPanel) splitPanel).setSplitPosition(splitPos
+						+ "px");
+			} else {
+				((VerticalSplitPanel) splitPanel).setSplitPosition(splitPos
+						+ "px");
+			}
+		}
+	}
+
+	private static final String SPLIT_PANEL_RESTORE_PROP = "_split_panel_restore";
+
+	public static void restoreFromMaximise() {
+		if (hiddenWidgets == null) {
+			return;
+		}
+		// reverse order for webkit/gecko and (??)
+		for (int i = elementLayouts.size() - 1; i >= 0; i--) {
+			ElementLayout layout = elementLayouts.get(i);
+			layout.restore();
+		}
+		for (Widget w : morphedWidgets) {
+			morphSplitPanel(w, null, true);
+		}
+		for (Widget w : hiddenWidgets) {
+			w.setVisible(true);
+		}
+		hiddenWidgets = null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <W extends Widget> W getParentWidget(Widget w,
+			Class<W> widgetClass) {
+		while (w != null) {
+			if (w.getClass() == widgetClass) {
+				return (W) w;
+			}
+			w = w.getParent();
+		}
+		return null;
+	}
+
+	public static void ensureNodeDebugIds(TreeItem root, final String prefix) {
+		TreeNodeWalker tnw = new TreeNodeWalker();
+		tnw.walk(root, new Callback<TreeItem>() {
+			public void callback(TreeItem target) {
+				target.ensureDebugId(prefix);
+			}
+		});
+	}
+
+	public static Element getParentElement(Element elt, String tagName) {
+		while (elt != null) {
+			if (elt.getTagName().equalsIgnoreCase(tagName)) {
+				return elt;
+			}
+			elt = elt.getParentElement();
+		}
+		return null;
+	}
+
+	private static final String HTML_BLOCKS = ",ADDRESS,BLOCKQUOTE,DIV,DL,H1,H2,H3,H4,H5,"
+			+ "H6,IFRAME,ILAYER,LAYER,OL,TABLE,TR,UL,TD,P,HR,BR,LI,";
+
+	static boolean isBlockHTMLElementSimplistic(Element e) {
+		return HTML_BLOCKS.contains("," + e.getTagName() + ",");
+	}
+
+	public static Element getContainingBlock(Node n) {
+		while (n != null) {
+			if (n.getNodeType() == Node.ELEMENT_NODE
+					&& isBlockHTMLElementSimplistic((Element) n)) {
+				return (Element) n;
+			}
+			n = n.getParentNode();
+		}
+		return null;
+	}
+
+	public static void setCssVisibility(Widget widget, boolean visible) {
+		widget.getElement().getStyle().setProperty("visibility",
+				visible ? "visible" : "hidden");
+	}
+
+	public static void squelchCurrentEvent() {
+		Event currentEvent = Event.getCurrentEvent();
+		currentEvent.stopPropagation();
+		currentEvent.preventDefault();
+	}
+
+	public static boolean currentEventHasModifier() {
+		Event currentEvent = Event.getCurrentEvent();
+		return currentEvent.getAltKey() || currentEvent.getShiftKey()
+				|| currentEvent.getCtrlKey() || currentEvent.getMetaKey();
+	}
+
+	public static boolean isNewTabModifier() {
+		Event event = Event.getCurrentEvent();
+		return BrowserMod.getOperatingSystem().equals("Macintosh") ? event
+				.getMetaKey() : event.getCtrlKey();
+	}
+
+	public static void copyTextToClipboard(String text) {
+		FlowPanel fp = new FlowPanel();
+		TextArea ta = new TextArea();
+		ta.setSize("600px", "300px");
+		ta.setText(text);
+		fp.add(ta);
+		PopupPanel pp = new PopupPanel();
+		pp.add(fp);
+		pp.setAnimationEnabled(false);
+		pp.show();
+		ta.setSelectionRange(0, text.length());
+		copy();
+		pp.hide();
+	}
+
+	private static native void copy() /*-{
+		$doc.execCommand("Copy");
+	}-*/;
+
+	public static NativeEvent createZeroClick() {
+		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
+				false, false);
+	}
+
+	// TODO - actually Widget.fireEvent() would be much better here - duh...
+	// nah - this is the right way
+	public static void fireClickOnHandler(final HasClickHandlers source,
+			final ClickHandler handler) {
+		final HandlerRegistration handlerRegistration = source
+				.addClickHandler(handler);
+		DeferredCommand.addCommand(new Command() {
+			public void execute() {
+				NativeEvent event = createZeroClick();
+				DomEvent.fireNativeEvent(event, source);
+				handlerRegistration.removeHandler();
+			}
+		});
+	}
+}

@@ -1,0 +1,235 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.entity;
+
+import java.io.StringWriter;
+import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
+import org.apache.log4j.PatternLayout;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
+
+@SuppressWarnings("unchecked")
+/**
+ *
+ * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ */
+
+ public class MetricLogging {
+	public static Logger metricLogger = Logger.getLogger(MetricLogging.class);
+
+	private Logger perThreadLogger;
+
+	private Map<String, Long> metricStartTimes;
+
+	private Map<String, Long> metricStartTimesThreadIds;
+
+	private Map<String, Long> ticksSum;
+
+	private Map<String, Long> ticks;
+
+	private Map<String, Long> sum;
+
+	private Map<String, Long> averageCount;
+
+	private Long parentThreadId;
+
+	private Long thisLoggerThreadId = null;
+
+	private Set<String> terminated;
+
+	private Map<String, String> keyToKeyWithParents;
+
+	private WriterAccessWriterAppender wa;
+
+	private static Map<Long, WeakReference<MetricLogging>> threadIdLoggingMap = new HashMap<Long, WeakReference<MetricLogging>>();
+
+	public static final String LOG_CONTEXT_THREAD_ID = "threadId";
+
+	public static boolean useLog4j = true;
+
+	private boolean muted = false;
+
+	private static ThreadLocal TL = new ThreadLocal() {
+		protected synchronized Object initialValue() {
+			MetricLogging metricLogging = new MetricLogging();
+			metricLogging.reset();
+			return metricLogging;
+		}
+	};
+
+	public static boolean muteLowPriority = true;
+
+	public static MetricLogging get() {
+		MetricLogging m = (MetricLogging) TL.get();
+		long tid = Thread.currentThread().getId();
+		threadIdLoggingMap.put(tid, new WeakReference(m));
+		if (m.parentThreadId != null) {
+			return threadIdLoggingMap.get(m.parentThreadId).get();
+		} else {
+			return m;
+		}
+	}
+
+	public static void resetChildThreadMetricLogger(long parentThreadId) {
+		MetricLogging m = (MetricLogging) TL.get();
+		m.reset();
+		m.parentThreadId = parentThreadId;
+		if (useLog4j) {
+			MDC.put(LOG_CONTEXT_THREAD_ID, parentThreadId);
+		}
+	}
+
+	private MetricLogging() {
+	}
+
+	public void average(String key) {
+		if (averageCount.containsKey(key)) {
+			String message = CommonUtils.format("Metric: %1 avg %2ms", key, sum
+					.get(key)
+					/ averageCount.get(key));
+			System.out.println(message);
+		}
+	}
+
+	public void end(String key) {
+		end(key, "");
+	}
+
+	public void end(String key, String extraInfo) {
+		key = keyWithParents(key, true);
+		if (!metricStartTimes.containsKey(key) && !ticksSum.containsKey(key)) {
+			System.out.println("Warning - metric end without start - " + key);
+			return;
+		}
+		long elapsed = ticksSum.containsKey(key) ? ticksSum.get(key) / 1000000
+				: System.currentTimeMillis() - metricStartTimes.get(key);
+		ticksSum.remove(key);
+		String message = CommonUtils.format("Metric: %1 - %2 ms%3", key,
+				elapsed, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
+						+ extraInfo);
+		if (useLog4j) {
+			if (!muted) {
+				metricLogger.debug(message);
+				perThreadLogger.info(message);
+			}
+		} else {
+			System.out.println(message);
+		}
+		if (!averageCount.containsKey(key)) {
+			averageCount.put(key, 0L);
+			sum.put(key, 0L);
+		}
+		averageCount.put(key, averageCount.get(key) + 1);
+		sum.put(key, sum.get(key) + elapsed);
+		terminated.add(key);
+	}
+
+	public void endTicks(String key) {
+		long cn = System.nanoTime();
+		key = keyWithParents(key, false);
+		if (!ticksSum.containsKey(key)) {
+			ticksSum.put(key, 0L);
+		}
+		ticksSum.put(key, ticksSum.get(key) + (cn - ticks.get(key)));
+	}
+
+	public String getPerThreadLog() {
+		return wa.getWriterAccess().toString();
+	}
+
+	public void lowPriorityEnd(String key) {
+		if (!muteLowPriority) {
+			end(key);
+		}
+	}
+
+	public void lowPriorityStart(String key) {
+		if (!muteLowPriority) {
+			start(key);
+		}
+	}
+
+	public void mute() {
+		muted = true;
+	}
+
+	public void reset() {
+		muted = false;
+		if (useLog4j) {
+			MDC.put(LOG_CONTEXT_THREAD_ID, getCurrentThreadId());
+			perThreadLogger = Logger.getLogger(getClass().getName() + "-"
+					+ getCurrentThreadId());
+			perThreadLogger.removeAllAppenders();
+			perThreadLogger.setAdditivity(false);
+			wa = new WriterAccessWriterAppender();
+			wa.setWriter(new StringWriter());
+			wa.setLayout(new PatternLayout("%-5p [%c{1}] %m%n"));
+			wa.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
+			perThreadLogger.addAppender(wa);
+			parentThreadId = null;
+			thisLoggerThreadId = getCurrentThreadId();
+		}
+		metricStartTimes = new LinkedHashMap<String, Long>();
+		metricStartTimesThreadIds = new LinkedHashMap<String, Long>();
+		sum = new HashMap<String, Long>();
+		averageCount = new HashMap<String, Long>();
+		keyToKeyWithParents = new HashMap<String, String>();
+		ticks = new HashMap<String, Long>();
+		ticksSum = new HashMap<String, Long>();
+		terminated = new HashSet<String>();
+	}
+
+	public void start(String key) {
+		key = keyWithParents(key, false);
+		metricStartTimes.put(key, System.currentTimeMillis());
+		metricStartTimesThreadIds.put(key, getCurrentThreadId());
+	}
+
+	public void startTicks(String key) {
+		key = keyWithParents(key, false);
+		ticks.put(key, System.nanoTime());
+	}
+
+	private Long getCurrentThreadId() {
+		return Thread.currentThread().getId();
+	}
+
+	private String keyWithParents(String key, boolean end) {
+		if (end) {
+			return keyToKeyWithParents.get(key);
+		}
+		String withParents = "";
+		for (String parentKey : metricStartTimes.keySet()) {
+			Long tid = metricStartTimesThreadIds.get(parentKey);
+			if (!terminated.contains(parentKey)
+					&& (tid.equals(thisLoggerThreadId) || tid
+							.equals(getCurrentThreadId()))) {
+				withParents = parentKey + "/";
+			}
+		}
+		withParents += key;
+		keyToKeyWithParents.put(key, withParents);
+		return withParents;
+	}
+}

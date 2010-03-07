@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="framework-paths" basedir=".">
+	<path id="framework.common.lib.path">
+		<fileset dir="${framework.common.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${framework.entity.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${framework.gwt.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	<fileset dir="${alcina.home}/dist" id="alcina.ear.exports">
+		<include name="alcina-entity.jar" />
+		<include name="alcina-entity-impl.jar" />
+	</fileset>
+	<fileset dir="${alcina.home}/lib/framework/gwt" id="alcina.ear.dependencies">
+		<include name="gwittir-core-0.4.4.jar" />
+		<include name="gwt-user.jar" />
+	</fileset>
+	<fileset dir="${alcina.home}/dist" id="alcina.war.exports">
+		<include name="alcina-server.jar" />
+	</fileset>
+	<fileset dir="${alcina.home}/lib/framework/gwt" id="alcina.war.dependencies">
+		<exclude name="*.*" />
+	</fileset>
+	<path id="framework.servlet.lib.path">
+		<fileset dir="${framework.servlet.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	<path id="framework.impl.jboss-hibernate.lib.path">
+		<fileset dir="${framework.impl.jboss-hibernate.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	<path id="project.gwt.classpath">
+		<pathelement path="${project.gwt.classpath.src}" />
+		<pathelement path="${project.gwt.classpath.bin}" />
+		<pathelement path="${project.gwt.classpath.lib}" />
+		<pathelement path="${framework.gwt.classpath.src}" />
+		<pathelement path="${framework.gwt.classpath.bin}" />
+		<pathelement path="${framework.gwt.classpath.lib}" />
+		<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
+	</path>
+
+</project>

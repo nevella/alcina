@@ -1,0 +1,5 @@
+<module>
+	<inherits name='com.google.gwt.gears.Gears' />
+	<public path="public" />
+	<source path="client" />
+</module>

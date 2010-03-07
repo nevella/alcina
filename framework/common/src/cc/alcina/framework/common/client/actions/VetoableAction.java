@@ -1,0 +1,81 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.common.client.actions;
+
+import java.util.List;
+
+import cc.alcina.framework.common.client.logic.Vetoer;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.permissions.Permissible;
+
+
+/**
+ *
+ * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ */
+
+ public class VetoableAction implements Permissible {
+	private String displayName;
+
+	private String cssClassName;
+
+	public VetoableAction() {
+	}
+
+	public VetoableAction(String displayName, String actionName) {
+		this(displayName, actionName, null);
+	}
+
+	public VetoableAction(String displayName, String actionName,
+			String cssClassName) {
+		this.actionName = actionName;
+		this.displayName = displayName;
+		this.cssClassName = cssClassName;
+	}
+
+	private String actionName;
+
+	public String getActionName() {
+		return this.actionName;
+	}
+
+	public void setActionName(String actionName) {
+		this.actionName = actionName;
+	}
+
+	public String getDisplayName() {
+		return displayName != null ? displayName : getActionName();
+	}
+
+	public String getCssClassName() {
+		return cssClassName;
+	}
+
+	public String getActionGroupName() {
+		return null;
+	}
+
+	public List<Vetoer> getDefaultVetoers() {
+		return null;
+	}
+
+	public AccessLevel accessLevel() {
+		return AccessLevel.LOGGED_IN;
+	}
+
+	public String rule() {
+		return null;
+	}
+}

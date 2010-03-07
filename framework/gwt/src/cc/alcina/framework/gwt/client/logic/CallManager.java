@@ -1,0 +1,104 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.gwt.client.logic;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import cc.alcina.framework.common.client.logic.StateListenable;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
+/**
+ *
+ * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ */
+
+ public class CallManager extends StateListenable {
+	private ArrayList<AsyncCallback> cancelled;
+
+	private Map<AsyncCallback, String> displayTexts;
+
+	private ArrayList<AsyncCallback> running;
+
+	private CallManager() {
+		super();
+		cancelled = new ArrayList<AsyncCallback>();
+		displayTexts = new HashMap<AsyncCallback, String>();
+		running = new ArrayList<AsyncCallback>();
+	}
+
+	private static CallManager theInstance;
+
+	public static CallManager get() {
+		if (theInstance == null) {
+			theInstance = new CallManager();
+		}
+		return theInstance;
+	}
+
+	public void appShutdown() {
+		theInstance = null;
+	}
+
+	public boolean isCancelled(AsyncCallback ac) {
+		boolean yep = cancelled.contains(ac);
+		remove(ac);
+		return yep;
+	}
+
+	public boolean isRunning(AsyncCallback ac) {
+		return running.contains(ac) && !cancelled.contains(ac);
+	}
+
+	public void cancel(AsyncCallback runningSearch) {
+		cancelled.add(runningSearch);
+		updateDisplay();
+	}
+
+	public void register(AsyncCallback callback, String displayText) {
+		running.add(callback);
+		displayTexts.put(callback, displayText);
+		updateDisplay();
+	}
+
+	private void remove(AsyncCallback callback) {
+		cancelled.remove(callback);
+		running.remove(callback);
+		displayTexts.remove(callback);
+		updateDisplay();
+	}
+
+	private void updateDisplay() {
+		String message = null;
+		if (running.size() != 0) {
+			message = displayTexts.get(running.get(running.size() - 1));
+		}
+		fireStateChanged(message);
+	}
+	@SuppressWarnings("unchecked")
+	public void clear() {
+		ArrayList<AsyncCallback> clone = (ArrayList<AsyncCallback>) running
+				.clone();
+		for (AsyncCallback asyncCallback : clone) {
+			remove(asyncCallback);
+		}
+	}
+
+	public void completed(AsyncCallback ac) {
+		remove(ac);
+	}
+}

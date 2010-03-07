@@ -1,0 +1,63 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.gwt.client.widget;
+
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.InlineHTML;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.Widget;
+
+/**
+ *
+ * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ */
+
+ public class UsefulWidgetFactory {
+
+	public static Widget mediumTitleWidget(String title) {
+		FlowPanel fp = new FlowPanel();
+		fp.setStyleName("medium-title");
+		Label l = new HTML(title);
+		l.setStyleName("");
+		fp.add(l);
+		return fp;
+	}
+	public static Widget lowTitleWidget(String title) {
+		FlowPanel fp = new FlowPanel();
+		fp.setStyleName("low-title");
+		Label l = new HTML(title);
+		l.setStyleName("");
+		fp.add(l);
+		return fp;
+	}
+
+	public static Widget boldInline(String text) {
+		return new InlineHTML("<b>" + text + "</b>");
+	}
+	public static Widget italicInline(String text) {
+		return new InlineHTML("<i>" + text + "</i>");
+	}
+	public static HTML createEmptyLabel() {
+		return new HTML("&nbsp;");
+	}
+	public static InlineHTML createSpacer(int spaces) {
+		String s = "";
+		for (; spaces > 0; spaces--) {
+			s += "&nbsp;";
+		}
+		return new InlineHTML(s);
+	}
+}

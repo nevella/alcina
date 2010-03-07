@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="framework/common/src"/>
+	<classpathentry kind="src" path="framework/entity/src"/>
+	<classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>
+	<classpathentry kind="src" path="framework/gwt/src"/>
+	<classpathentry kind="src" path="framework/servlet/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/framework/common/ejb3-persistence.jar"/>
+	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/jsr173_api.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/log4j-1.2.6.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar"/>
+	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-all.jar"/>
+	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs.jar"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwittir-core-0.4.4.jar"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwt-gears-noredist.jar"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwt-servlet.jar"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5-20081002.jar"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

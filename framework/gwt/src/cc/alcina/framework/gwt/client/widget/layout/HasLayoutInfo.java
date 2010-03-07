@@ -1,0 +1,88 @@
+/* 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package cc.alcina.framework.gwt.client.widget.layout;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import com.google.gwt.user.client.ui.Widget;
+
+/**
+ *
+ * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ */
+
+ public interface HasLayoutInfo {
+	public LayoutInfo getLayoutInfo();
+
+	public static class LayoutInfo {
+		public Iterator<Widget> getLayoutWidgets() {
+			return new ArrayList<Widget>().iterator();
+		}
+
+		/**
+		 * These will be resized to fit...?
+		 */
+		public Iterator<Widget> getWidgetsToResize() {
+			return new ArrayList<Widget>().iterator();
+		}
+
+		public int getClientAdjustHeight() {
+			return 0;
+		}
+
+		public int getAdjustHeight() {
+			return 0;
+		}
+
+		public int getClientAdjustWidth() {
+			return 0;
+		}
+
+		public boolean to100percentOfAvailableHeight() {
+			return false;
+		}
+
+		public boolean to100percentOfAvailableWidth() {
+			return false;
+		}
+
+		public boolean ignoreSiblingsForHeight() {
+			return false;
+		}
+
+		public boolean ignoreSiblingsForWidth() {
+			return false;
+		}
+
+		public boolean useBestOffsetForParentHeight() {
+			return true;
+		}
+
+		public boolean useBestOffsetForParentWidth() {
+			return true;
+		}
+
+		public void afterLayout() {
+		}
+
+		public void beforeLayout() {
+		}
+
+		public int getAdjustWidth() {
+			return 0;
+		}
+	}
+}
