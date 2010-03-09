@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import java.beans.Introspector;
@@ -38,6 +37,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.PersistentSingleton;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -49,6 +49,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
 import cc.alcina.framework.common.client.logic.permissions.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.wrappedobject.WrapperInfo;
@@ -74,8 +75,7 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
+public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	private static final String PRECACHE_ENTITIES = "precache entities";
 
 	private static final String FLUSH_TRANSFORMS = "flush transforms";
@@ -168,8 +168,24 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 	public <T extends GwtPersistableObject> WrappedObject<T> getObjectWrapperForUser(
 			Class<T> c, long id) throws Exception {
 		fixPermissionsManager();
-		return EntityLayerLocator.get().wrappedObjectProvider()
-				.getObjectWrapperForUser(c, id, getEntityManager());
+		WrappedObject<T> wrapper = EntityLayerLocator.get()
+				.wrappedObjectProvider().getObjectWrapperForUser(c, id,
+						getEntityManager());
+		checkWrappedObjectAccess(wrapper, c);
+		return wrapper;
+	}
+
+	protected void checkWrappedObjectAccess(WrappedObject wrapper, Class clazz)
+			throws PermissionsException {
+		if (!PersistentSingleton.class.isAssignableFrom(clazz)
+				&& wrapper != null
+				&& wrapper.getUser().getId() != PermissionsManager.get()
+						.getUserId()) {
+			throw new PermissionsException(CommonUtils.format(
+					"Permissions exception: "
+							+ "access denied to object  %1 for user %2",
+					wrapper.getId(), PermissionsManager.get().getUserId()));
+		}
 	}
 
 	public long log(String message, String componentKey) {
@@ -223,8 +239,8 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 	public void setField(Class clazz, Long id, String key, Object value)
 			throws Exception {
 		Object inst = getEntityManager().find(clazz, id);
-		PropertyDescriptor descriptor = SEUtilities.descriptorByName(clazz,
-				key);
+		PropertyDescriptor descriptor = SEUtilities
+				.descriptorByName(clazz, key);
 		descriptor.getWriteMethod().invoke(inst, value);
 		getEntityManager().merge(inst);
 	}
@@ -409,16 +425,17 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 					WrapperInfo info = pd.getReadMethod().getAnnotation(
 							WrapperInfo.class);
 					if (info != null) {
-						PropertyDescriptor idpd = SEUtilities
-								.descriptorByName(wrapper.getClass(), info
-										.idPropertyName());
+						PropertyDescriptor idpd = SEUtilities.descriptorByName(
+								wrapper.getClass(), info.idPropertyName());
 						Long wrapperId = (Long) idpd.getReadMethod().invoke(
 								wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (wrapperId != null) {
 							Class<? extends GwtPersistableObject> pType = (Class<? extends GwtPersistableObject>) pd
 									.getPropertyType();
-							Object unwrapped = ((WrappedObject) getObjectWrapperForUser(
-									pType, wrapperId)).getObject();
+							WrappedObject wrappedObject = (WrappedObject) getObjectWrapperForUser(
+									pType, wrapperId);
+							checkWrappedObjectAccess(wrappedObject, pType);
+							Object unwrapped = wrappedObject.getObject();
 							pd.getWriteMethod().invoke(wrapper, unwrapped);
 						}
 					}
@@ -443,9 +460,8 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 					WrapperInfo info = pd.getReadMethod().getAnnotation(
 							WrapperInfo.class);
 					if (info != null) {
-						PropertyDescriptor idpd = SEUtilities
-								.descriptorByName(wrapper.getClass(), info
-										.idPropertyName());
+						PropertyDescriptor idpd = SEUtilities.descriptorByName(
+								wrapper.getClass(), info.idPropertyName());
 						Long wrapperId = (Long) idpd.getReadMethod().invoke(
 								wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (wrapperId != null) {

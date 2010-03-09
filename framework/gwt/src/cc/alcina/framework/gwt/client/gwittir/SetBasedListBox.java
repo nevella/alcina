@@ -513,7 +513,7 @@ public class SetBasedListBox extends AbstractBoundWidget implements HasFocus,
 
 		public void refreshOptions() {
 			Collection<HasId> collection = TransformManager.get()
-					.getDomainObjects().getCollection(domainClass);
+					.getCollection(domainClass);
 			ArrayList options = new ArrayList();
 			if (filter == null) {
 				options.addAll(collection);

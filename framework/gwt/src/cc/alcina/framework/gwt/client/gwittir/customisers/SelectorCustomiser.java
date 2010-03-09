@@ -233,7 +233,7 @@ public class SelectorCustomiser implements Customiser {
 		protected Map createObjectMap() {
 			Map result = new HashMap();
 			Collection<HasId> collection = TransformManager.get()
-					.getDomainObjects().getCollection(selectionObjectClass);
+					.getCollection(selectionObjectClass);
 			result.put("", filterAvailableObjects(collection));
 			return result;
 		}

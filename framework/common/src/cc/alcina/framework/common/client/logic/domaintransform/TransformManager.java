@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.beans.PropertyChangeEvent;
@@ -69,23 +68,25 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter.DefaultFilter;
+import cc.alcina.framework.gwt.client.ide.provider.DefaultCollectionFilter;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 /**
  * TODO - abstract parts out to ClientTransformManager
  * 
  * @author nreddel@barnet.com.au
- *
+ * 
  */
 @SuppressWarnings("unchecked")
-//unchecked because reflection is always going to involve a lot of casting...alas
-public class TransformManager implements PropertyChangeListener,
-		ObjectLookup, CollectionModificationSource {
+// unchecked because reflection is always going to involve a lot of
+// casting...alas
+public class TransformManager implements PropertyChangeListener, ObjectLookup,
+		CollectionModificationSource {
 	private static final String UNSPECIFIC_PROPERTY_CHANGE = "---";
 
 	public static final String ID_FIELD_NAME = "id";
@@ -197,7 +198,7 @@ public class TransformManager implements PropertyChangeListener,
 			throw new WrappedRuntimeException(e);
 		}
 	}
-	
+
 	public void consume(DataTransformEvent evt) {
 		HasIdAndLocalId obj = null;
 		if (evt.getTransformType() != TransformType.CREATE_OBJECT) {
@@ -247,15 +248,15 @@ public class TransformManager implements PropertyChangeListener,
 		// add and removeref will not cause a property change, so no transform
 		// removal
 		case ADD_REF_TO_COLLECTION:
-			((Set) CommonLocator.get().propertyAccessor().getPropertyValue(
-					obj, evt.getPropertyName())).add(tgt);
+			((Set) CommonLocator.get().propertyAccessor().getPropertyValue(obj,
+					evt.getPropertyName())).add(tgt);
 			objectModified(obj, evt, false);
 			updateAssociation(evt, obj, tgt, false, false);
 			collectionChanged(obj, tgt);
 			break;
 		case REMOVE_REF_FROM_COLLECTION:
-			((Set) CommonLocator.get().propertyAccessor().getPropertyValue(
-					obj, evt.getPropertyName())).remove(tgt);
+			((Set) CommonLocator.get().propertyAccessor().getPropertyValue(obj,
+					evt.getPropertyName())).remove(tgt);
 			updateAssociation(evt, obj, tgt, true, false);
 			collectionChanged(obj, tgt);
 			break;
@@ -282,8 +283,9 @@ public class TransformManager implements PropertyChangeListener,
 			}
 			break;
 		default:
-			throw new WrappedRuntimeException("Transform type not implemented: "
-					+ evt.getTransformType(), SuggestedAction.NOTIFY_WARNING);
+			throw new WrappedRuntimeException(
+					"Transform type not implemented: " + evt.getTransformType(),
+					SuggestedAction.NOTIFY_WARNING);
 		}
 	}
 
@@ -331,7 +333,7 @@ public class TransformManager implements PropertyChangeListener,
 		registerProvisionalObject(newInstance);
 		return newInstance;
 	}
-	
+
 	public void deregisterObject(HasIdAndLocalId hili) {
 		if (domainObjects != null) {
 			removeAssociations(hili);
@@ -345,7 +347,7 @@ public class TransformManager implements PropertyChangeListener,
 	public void deregisterProvisionalObject(Object o) {
 		deregisterProvisionalObjects(CommonUtils.wrapInCollection(o));
 	}
-	
+
 	public void deregisterProvisionalObjects(Collection c) {
 		provisionalObjects.removeAll(c);
 		for (Object b : c) {
@@ -366,13 +368,13 @@ public class TransformManager implements PropertyChangeListener,
 		Collection<V> c = getDomainObjects().getCollection(clazz);
 		return c.isEmpty() ? null : c.iterator().next();
 	}
-	
+
 	public <V extends HasIdAndLocalId> List<V> filter(Class<V> clazz,
 			CollectionFilter<V> filter) {
 		List<V> result = new ArrayList<V>(getDomainObjects().getCollection(
 				clazz));
 		if (filter != null) {
-			result = DefaultFilter.filter(result, filter);
+			result = DefaultCollectionFilter.filter(result, filter);
 		}
 		if (!result.isEmpty() && result.get(0) instanceof Comparable) {
 			Collections.sort((List) result);
@@ -419,7 +421,7 @@ public class TransformManager implements PropertyChangeListener,
 		}
 		return null;
 	}
-	
+
 	public HasIdAndLocalId getObject(DataTransformEvent dte) {
 		HasIdAndLocalId obj = CommonLocator.get().objectLookup()
 				.getObject(dte.getObjectClass(), dte.getObjectId(),
@@ -427,7 +429,7 @@ public class TransformManager implements PropertyChangeListener,
 		dte.setSource(obj);
 		return obj;
 	}
-	
+
 	public <T extends HasIdAndLocalId> T getObject(T hili) {
 		return (T) CommonLocator.get().objectLookup().getObject(
 				hili.getClass(), hili.getId(), hili.getLocalId());
@@ -444,7 +446,7 @@ public class TransformManager implements PropertyChangeListener,
 	public boolean resolveMissingObject(DataTransformEvent evt) {
 		return isReplayingRemoteEvent();
 	}
-	
+
 	public Object getTargetObject(DataTransformEvent evt, boolean oldValue) {
 		if (evt.getNewValue() != null || evt.getValueClass() == null) {
 			if (evt.getNewValue() instanceof HasIdAndLocalId) {
@@ -535,7 +537,7 @@ public class TransformManager implements PropertyChangeListener,
 	}
 
 	private Map<Class, Boolean> requiresEditPrep = new HashMap<Class, Boolean>();
-	
+
 	public Collection prepareForEditing(HasIdAndLocalId domainObject,
 			boolean autoSave) {
 		List children = new ArrayList();
@@ -621,8 +623,34 @@ public class TransformManager implements PropertyChangeListener,
 		return children;
 	}
 
-	// can be called multiple times - transforms will be removed after the first
-	
+	/**
+	 * <p>
+	 * Can be called multiple times - transforms will be removed after the first
+	 * </p>
+	 * <p>
+	 * <b>Note</b> - Make sure you change an existing object reference to the
+	 * returned value if you're going to make further changes to the (now
+	 * promoted) object - e.g.
+	 * </p>
+	 * <code>
+	 * mm.wrapper=TransformManager.get().promoteToDomainObject(mm.wrapper);
+	 * mm.wrapper.setSaved(true);
+	 * </code>
+	 * <p>
+	 * <i>not</i>
+	 * </p>
+	 * <code>
+	 * TransformManager.get().promoteToDomainObject(mm.wrapper);
+	 * mm.wrapper.setSaved(true);
+	 * </code>
+	 * <p>
+	 * </p>
+	 * 
+	 * @param o
+	 *            - the object to be promoted
+	 * @return the newly promoted object, if it implements HasIdAndLocalId,
+	 *         otherwise null
+	 */
 	public <T extends Object> T promoteToDomainObject(T o) {
 		promoteToDomain(CommonUtils.wrapInCollection(o), true);
 		if (o instanceof HasIdAndLocalId) {
@@ -645,7 +673,7 @@ public class TransformManager implements PropertyChangeListener,
 		}
 		return false;
 	}
-	
+
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (ignorePropertyChanges
 				|| UNSPECIFIC_PROPERTY_CHANGE.equals(evt.getPropertyName())) {
@@ -785,7 +813,7 @@ public class TransformManager implements PropertyChangeListener,
 			domainObjects.mapObject(hili);
 		}
 	}
-	
+
 	public void registerProvisionalObject(Object o) {
 		Collection c = CommonUtils.wrapInCollection(o);
 		provisionalObjects.addAll(c);
@@ -874,8 +902,8 @@ public class TransformManager implements PropertyChangeListener,
 		for (ClientPropertyReflector pr : prs) {
 			DataTransformEvent dte = new DataTransformEvent();
 			dte.setPropertyName(pr.getPropertyName());
-			if (!ClientReflector.get().isStandardJavaClass(
-					pr.getPropertyType())) {
+			if (!ClientReflector.get()
+					.isStandardJavaClass(pr.getPropertyType())) {
 				Object object = CommonLocator.get().propertyAccessor()
 						.getPropertyValue(hili, pr.getPropertyName());
 				if (object != null && !(object instanceof Collection)) {
@@ -896,7 +924,7 @@ public class TransformManager implements PropertyChangeListener,
 			DataTransformEvent evt, String propertyName, Object change) {
 		return true;
 	}
-	
+
 	protected Enum getTargetEnumValue(DataTransformEvent evt) {
 		if (evt.getNewValue() instanceof Enum) {
 			return (Enum) evt.getNewValue();
@@ -934,7 +962,7 @@ public class TransformManager implements PropertyChangeListener,
 		}
 		return false;
 	}
-	
+
 	protected void promoteToDomain(Collection objects, boolean deregister) {
 		try {
 			CollectionModificationSupport.queue(true);
@@ -996,7 +1024,7 @@ public class TransformManager implements PropertyChangeListener,
 		transforms.remove(evt);
 		getTransformsByCommitType(evt.getCommitType()).remove(evt);
 	}
-	
+
 	protected void removeTransformsForObjects(Collection c) {
 		Set<DataTransformEvent> trs = (Set<DataTransformEvent>) TransformManager
 				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
@@ -1007,7 +1035,7 @@ public class TransformManager implements PropertyChangeListener,
 			}
 		}
 	}
-	
+
 	protected void updateAssociation(DataTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt, boolean remove,
 			boolean collectionPropertyChange) {
@@ -1078,7 +1106,7 @@ public class TransformManager implements PropertyChangeListener,
 		CommonLocator.get().propertyAccessor().setPropertyValue(
 				objectWithCollection, collectionPropertyName, c);
 	}
-	
+
 	public void serializeDomainObjects(ClientInstance clientInstance)
 			throws Exception {
 		Map<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>> idMap = domainObjects.idMap;
@@ -1088,6 +1116,10 @@ public class TransformManager implements PropertyChangeListener,
 			objCopy.put(clazz, values);
 		}
 		new ClientDteWorker(objCopy, clientInstance).start();
+	}
+
+	public <T> Collection<T> getCollection(Class<T> clazz) {
+		return getDomainObjects().getCollection(clazz);
 	}
 
 	public static abstract class ClientWorker {
@@ -1193,7 +1225,6 @@ public class TransformManager implements PropertyChangeListener,
 		}
 
 		@Override
-		
 		protected void performIteration() {
 			Class clazz = objCopy.keySet().iterator().next();
 			List values = objCopy.get(clazz);
@@ -1295,8 +1326,8 @@ public class TransformManager implements PropertyChangeListener,
 				deregisterObject(hili);
 			}
 		}
-		
-		public <T> Collection<T> getCollection(Class<T> clazz) {
+
+		<T> Collection<T> getCollection(Class<T> clazz) {
 			ensureCollections(clazz);
 			return (Collection<T>) collnMap.get(clazz);
 		}
@@ -1304,7 +1335,7 @@ public class TransformManager implements PropertyChangeListener,
 		public Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> getCollnMap() {
 			return this.collnMap;
 		}
-		
+
 		public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 				long id, long localId) {
 			if (idMap.get(c) == null) {
@@ -1525,8 +1556,8 @@ public class TransformManager implements PropertyChangeListener,
 						if (pl != null) {
 							DataTransformRequest dtr = new DataTransformRequest();
 							dtr.setItems(item.getTransforms());
-							dtr.setClientInstance(ClientLayerLocator.get().clientBase()
-									.getClientInstance());
+							dtr.setClientInstance(ClientLayerLocator.get()
+									.clientBase().getClientInstance());
 							dtr
 									.setDataTransformRequestType(DataTransformRequestType.CLIENT_SYNC);
 							pl.persistableTransform(dtr);
@@ -1545,7 +1576,8 @@ public class TransformManager implements PropertyChangeListener,
 
 				public void onFailure(Throwable caught) {
 					cleanup();
-					ClientLayerLocator.get().clientBase().onUncaughtException(caught);
+					ClientLayerLocator.get().clientBase().onUncaughtException(
+							caught);
 				}
 
 				private void cleanup() {

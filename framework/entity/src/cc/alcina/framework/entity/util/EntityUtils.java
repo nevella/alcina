@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.util;
 
 import java.util.ArrayList;
@@ -35,15 +34,21 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 import cc.alcina.framework.entity.util.GraphCloner.PermissibleFieldFilter;
 
-
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class EntityUtils {
+public class EntityUtils {
 	public static String longListToIdClause(Long[] longs) {
 		return longListToIdClause(Arrays.asList(longs));
+	}
+
+	public static String hasIdListToIdClause(Collection<? extends HasId> hasIds) {
+		List<Long> ids = new ArrayList<Long>();
+		for (HasId hasId : hasIds) {
+			ids.add(hasId.getId());
+		}
+		return longListToIdClause(ids);
 	}
 
 	public static List<Long> idClauseToLongArray(String str) {
@@ -57,8 +62,6 @@ import cc.alcina.framework.entity.util.GraphCloner.PermissibleFieldFilter;
 		}
 		return result;
 	}
-
-	
 
 	public static String longListToIdClause(Collection<Long> longs) {
 		StringBuffer sb = new StringBuffer();
@@ -126,8 +129,9 @@ import cc.alcina.framework.entity.util.GraphCloner.PermissibleFieldFilter;
 
 	public <T> T detachedClone(T source, boolean useCache,
 			InstantiateImplCallback callback) {
-		DetachedEntityCache cache = useCache?null:new DetachedEntityCache();
-		CloneFilter filter = EntityLayerLocator.get().jpaImplementation().getResolvingFilter(callback,cache);
+		DetachedEntityCache cache = useCache ? null : new DetachedEntityCache();
+		CloneFilter filter = EntityLayerLocator.get().jpaImplementation()
+				.getResolvingFilter(callback, cache);
 		try {
 			return new GraphCloner(new PermissibleFieldFilter(), filter).clone(
 					source, null);

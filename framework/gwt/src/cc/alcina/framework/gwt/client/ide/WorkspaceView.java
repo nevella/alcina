@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide;
 
 import java.util.ArrayList;
@@ -71,11 +70,10 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Bindable;
 
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class WorkspaceView extends Composite implements HasName,
+public class WorkspaceView extends Composite implements HasName,
 		VetoableActionSource, HasLayoutInfo {
 	protected static final StandardDataImages images = GWT
 			.create(StandardDataImages.class);
@@ -377,8 +375,8 @@ import com.totsp.gwittir.client.beans.Bindable;
 		@SuppressWarnings("unchecked")
 		protected <C> CollectionProviderNode getBasicCollectionNode(
 				String name, Class<C> clazz, ImageResource imageResource) {
-			Collection domainCollection = TransformManager.get()
-					.getDomainObjects().getCollection(clazz);
+			Collection domainCollection = TransformManager.get().getCollection(
+					clazz);
 			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
 					domainCollection, clazz);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
@@ -392,8 +390,8 @@ import com.totsp.gwittir.client.beans.Bindable;
 		protected <C> CollectionProviderNode getFilteredCollectionNode(
 				String name, Class<C> clazz, ImageResource imageResource,
 				CollectionFilter cf) {
-			Collection domainCollection = TransformManager.get()
-					.getDomainObjects().getCollection(clazz);
+			Collection domainCollection = TransformManager.get().getCollection(
+					clazz);
 			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
 					domainCollection, clazz);
 			provider.setFilter(cf);

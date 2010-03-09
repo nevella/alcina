@@ -14,9 +14,6 @@
 
 package cc.alcina.framework.gwt.client.ide.provider;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  *
@@ -25,29 +22,6 @@ import java.util.List;
 
  public interface CollectionFilter<T> {
 	public boolean allow(T o);
-
-	public static class DefaultFilter {
-		public static <V> List<V> filter(Collection<? extends V> collection,
-				CollectionFilter<V> filter) {
-			ArrayList<V> result = new ArrayList<V>();
-			for (V v : collection) {
-				if (filter.allow(v)) {
-					result.add(v);
-				}
-			}
-			return result;
-		}
-
-		public static <V> V singleNodeFilter(
-				Collection<? extends V> collection, CollectionFilter<V> filter) {
-			for (V v : collection) {
-				if (filter.allow(v)) {
-					return v;
-				}
-			}
-			return null;
-		}
-	}
 
 	public interface ModelAssistedCollectionFilter<T> extends
 			CollectionFilter<T> {
