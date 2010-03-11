@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.stdlayout;
 
 import java.util.ArrayList;
@@ -30,11 +29,10 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Composite;
 
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public abstract class MainCmpBase extends Composite implements
+public abstract class MainCmpBase extends Composite implements
 		BeforeSelectionHandler<Integer>, SelectionHandler<Integer>,
 		ValueChangeHandler<String> {
 	protected abstract void initButtons();
@@ -66,7 +64,6 @@ import com.google.gwt.user.client.ui.Composite;
 		tabPanel.addSelectionHandler(this);
 		this.resetTabs();
 		initWidget(tabPanel);
-		this.historyHandlerRegistration = History.addValueChangeHandler(this);
 	}
 
 	public boolean showTab(String tabToken) {
@@ -85,6 +82,12 @@ import com.google.gwt.user.client.ui.Composite;
 	}
 
 	public abstract void resetTabs();
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		this.historyHandlerRegistration = History.addValueChangeHandler(this);
+	}
 
 	@Override
 	protected void onDetach() {

@@ -85,7 +85,6 @@ import com.totsp.gwittir.client.beans.Bindable;
 		return AccessLevel.DEVELOPER;
 	}
 	public String rule() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 }

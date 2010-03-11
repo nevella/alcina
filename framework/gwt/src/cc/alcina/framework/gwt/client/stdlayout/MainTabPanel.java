@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.stdlayout;
 
 import java.beans.PropertyChangeEvent;
@@ -27,6 +26,8 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.gwt.client.widget.BaseTab;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
+import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
+import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.user.client.ui.DockPanel;
@@ -40,11 +41,10 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class MainTabPanel extends TabPanel {
+public class MainTabPanel extends TabPanel {
 	private HorizontalPanel bp;
 
 	private FlowPanel toolbarHolder = new FlowPanel();
@@ -105,9 +105,9 @@ import com.google.gwt.user.client.ui.Widget;
 				.setStyleName("content alcina-ContentFrame alcina-MainContent");
 		vp.add(noTabContentHolder);
 		vp.setWidth("100%");
-		addSelectionHandler(new SelectionHandler<Integer>() {
-			public void onSelection(SelectionEvent<Integer> event) {
-				int tabIndex = event.getSelectedItem();
+		addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
+			public void onBeforeSelection(BeforeSelectionEvent<Integer> event) {
+				int tabIndex = event.getItem();
 				getDeckPanel().setVisible(tabIndex >= 0);
 				noTabContentHolder.setVisible(tabIndex == -1);
 			}
