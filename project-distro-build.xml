@@ -129,6 +129,7 @@
 		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.1}" />
 		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.2}" />
 		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.3}" />
+		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.4}" />
 	</target>
 	<target name="unpatch-module" unless="isdev">
 		<copy file="${project.gwt.module.file}.copy" tofile="${project.gwt.module.file}" />
