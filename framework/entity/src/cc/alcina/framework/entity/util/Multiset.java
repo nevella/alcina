@@ -21,7 +21,7 @@ import java.util.Set;
 /**
  * Here because GWT RPC doesn't like this to be client-viz
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  * @param <K>
  * @param <V>

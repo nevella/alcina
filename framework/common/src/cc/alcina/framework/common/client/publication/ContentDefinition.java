@@ -15,7 +15,7 @@
 package cc.alcina.framework.common.client.publication;
 /**
  * Marker interface for publication content
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public interface ContentDefinition {

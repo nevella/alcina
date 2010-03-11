@@ -22,7 +22,7 @@ import com.google.gwt.user.client.Cookies;
 
 /**
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * <p>Basic session support for the (possibly offline) client</p>
  * 
  * Logic:

@@ -11,20 +11,20 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.CommonLocator;
 
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class ClientPropertyReflector implements Comparable<ClientPropertyReflector> {
+public class ClientPropertyReflector implements
+		Comparable<ClientPropertyReflector> {
 	private final Map<Class, Object> annotations;
 
 	private final String propertyName;
@@ -48,6 +48,7 @@ import java.util.Map;
 	public VisualiserInfo getGwPropertyInfo() {
 		return (VisualiserInfo) annotations.get(VisualiserInfo.class);
 	}
+
 	@SuppressWarnings("unchecked")
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
 		return (A) annotations.get(annotationClass);
@@ -76,5 +77,15 @@ import java.util.Map;
 
 	public Class getPropertyType() {
 		return propertyType;
+	}
+
+	public Object getPropertyValue(Object bean) {
+		return CommonLocator.get().propertyAccessor().getPropertyValue(bean,
+				getPropertyName());
+	}
+
+	public void setPropertyValue(Object bean, Object newValue) {
+		CommonLocator.get().propertyAccessor().setPropertyValue(bean,
+				getPropertyName(), newValue);
 	}
 }

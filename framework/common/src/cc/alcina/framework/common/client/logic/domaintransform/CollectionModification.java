@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.ArrayList;
@@ -23,7 +22,7 @@ import java.util.List;
  * Signals to listeners (collection nodes) that they should recalc their
  * collections
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class CollectionModification {
@@ -103,8 +102,12 @@ public class CollectionModification {
 
 		private static List<SupportEvent> queuedEvents = null;
 
-		public static void queue(boolean queue) {
-			if (queuedEvents != null) {
+		private static int queueDepth = 0;
+
+		public static void queue(boolean push) {
+			queueDepth += push ? 1 : -1;
+			queueDepth = Math.max(queueDepth, 0);
+			if (queueDepth == 0 && queuedEvents != null) {
 				List<SupportEvent> queueCopy = queuedEvents;
 				queuedEvents = null;
 				for (SupportEvent supportEvent : queueCopy) {
@@ -112,7 +115,7 @@ public class CollectionModification {
 							.fireCollectionModificationEvent(supportEvent.event);
 				}
 			}
-			if (queue) {
+			if (queueDepth != 0 && queuedEvents == null) {
 				queuedEvents = new ArrayList<SupportEvent>();
 			}
 		}

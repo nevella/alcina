@@ -20,7 +20,7 @@ import com.google.gwt.user.client.DOM;
 /**
  * 
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  * @param <T>
  *            - user object

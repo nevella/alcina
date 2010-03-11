@@ -15,7 +15,7 @@
 package cc.alcina.framework.common.client.actions;
 /**
  * Marker interface, asks the client to call synchronous server performer
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public interface SynchronousAction {

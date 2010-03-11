@@ -18,7 +18,7 @@ import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Image;
 /**
  * Images specific to the current app
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public abstract class ImageProvider {

@@ -33,7 +33,7 @@ import com.totsp.gwittir.client.beans.Property;
 /**
  * Not thread-safe - but then again, should only be used by one thread
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @SuppressWarnings("unchecked")

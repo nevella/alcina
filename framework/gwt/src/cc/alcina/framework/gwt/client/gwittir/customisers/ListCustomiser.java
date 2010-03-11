@@ -28,7 +28,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @ClientInstantiable

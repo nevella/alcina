@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * To prevent classloader problems if we were to have the same for server/ejb
  * layer
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class ServerLayerRegistry extends Registry {

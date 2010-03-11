@@ -25,7 +25,7 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
  * Also available to the server layer - although some methods should not be
  * called from there
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class EntityLayerLocator {

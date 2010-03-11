@@ -16,7 +16,7 @@ package cc.alcina.framework.entity.entityaccess;
 /**
  * Marker to stop precipitate fixing of permissions manager (with associated unwanted java_assist domain objects
  * Hopefully we'll get rid of this "fix" soon
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public interface HandlesPermissionsManager {

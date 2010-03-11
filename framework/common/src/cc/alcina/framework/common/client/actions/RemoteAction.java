@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 /**
  * Marker subclass, to be run on the server
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @AuthenticationRequired(permission = @Permission(access = AccessLevel.ADMIN))

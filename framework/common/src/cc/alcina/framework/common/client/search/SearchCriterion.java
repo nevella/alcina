@@ -121,7 +121,7 @@ public class SearchCriterion extends BaseBindable implements
 	 * Order should really be defined in OrderCriterion subclass, but easier
 	 * here
 	 * 
-	 * @author nreddel@barnet.com.au
+	 * @author nick@alcina.cc
 	 * 
 	 */
 	public enum Direction {

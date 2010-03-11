@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.common.client.logic.reflection.wrappedobject;
+package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -21,10 +21,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
 @Target( { ElementType.METHOD })
+@ClientVisible
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
@@ -33,5 +35,6 @@ import java.lang.annotation.Target;
  public @interface WrapperInfo {
 	 String idPropertyName();
 	 String toStringPropertyName() default "";
+	 //TODO - currently not implemented. Question is: should it be?
 	 boolean cascadeDelete() default true;
 }

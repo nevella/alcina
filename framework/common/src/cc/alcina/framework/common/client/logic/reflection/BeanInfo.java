@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * To be applied at the class level Also functions as an GwtClientInstantiable
  * annotation
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)

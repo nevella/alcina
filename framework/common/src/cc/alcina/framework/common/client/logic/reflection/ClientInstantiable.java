@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 /**
  * marker interface - make this class instantiable on the client 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 @Retention(RetentionPolicy.RUNTIME)

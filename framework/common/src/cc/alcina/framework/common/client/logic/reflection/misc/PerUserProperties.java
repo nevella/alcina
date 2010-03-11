@@ -17,7 +17,7 @@ package cc.alcina.framework.common.client.logic.reflection.misc;
 
 /**
  * Marker for server-side preloading
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 

@@ -39,7 +39,7 @@ import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 /**
  * a fair bit of overlap with tltm - should clean up
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @SuppressWarnings("unchecked")

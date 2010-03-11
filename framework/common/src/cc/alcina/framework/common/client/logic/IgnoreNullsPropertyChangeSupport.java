@@ -18,7 +18,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 /**
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class IgnoreNullsPropertyChangeSupport extends PropertyChangeSupport {

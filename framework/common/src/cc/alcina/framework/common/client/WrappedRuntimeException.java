@@ -18,7 +18,7 @@ package cc.alcina.framework.common.client;
  * Design pattern: wrap non-runtime exceptions in this class, with a suggested
  * upper-level handling action
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class WrappedRuntimeException extends RuntimeException {

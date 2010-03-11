@@ -55,7 +55,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 
 /**
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class ResourceUtilities {

@@ -30,7 +30,7 @@ import com.google.gwt.user.client.ui.Label;
 /**
  * Support for localisations. Defaults to a simple provider
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class TextProvider {

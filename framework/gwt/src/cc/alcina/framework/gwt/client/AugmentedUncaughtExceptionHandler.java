@@ -28,7 +28,7 @@ import com.google.gwt.user.client.Window;
 /**
  * Better stacktrace etc support for IE
  * 
- * @author nreddel@barnet.com.au TODO
+ * @author nick@alcina.cc TODO
  */
 public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 	private static UncaughtExceptionHandler handler;

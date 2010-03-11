@@ -15,7 +15,7 @@
 package cc.alcina.framework.common.client.entity;
 /**
  * Indicates there should only be one persistent instance, shared for all users
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public interface PersistentSingleton {

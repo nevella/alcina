@@ -15,7 +15,7 @@
 package cc.alcina.framework.common.client.publication;
 /**
  * Marker interface for second stage of the publication process
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  *Note - these will want to be xmlroot elt, jaxb registered, because they will be jaxb-serialised for transform
  */

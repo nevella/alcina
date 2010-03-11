@@ -17,7 +17,7 @@ package cc.alcina.framework.common.client.actions;
 import com.totsp.gwittir.client.beans.Bindable;
 /**
  * Limits serialization options for gwt serialization generator 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public interface RemoteParameters extends Bindable {

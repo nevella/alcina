@@ -18,7 +18,7 @@ import java.io.Serializable;
 
 /**
  * Marker subclass, to be run on the server
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public class RemoteActionWithParameters<T extends RemoteParameters> extends RemoteAction implements Serializable{

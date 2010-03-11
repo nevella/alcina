@@ -15,7 +15,7 @@
 package cc.alcina.framework.common.client.util;
 /**
  * When a collection needs a string representation as "All of me"
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public interface HasPluralToString {

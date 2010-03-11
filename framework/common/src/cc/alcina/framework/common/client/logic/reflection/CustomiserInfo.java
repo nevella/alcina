@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 /**
  * To be applied at the class or field level
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)

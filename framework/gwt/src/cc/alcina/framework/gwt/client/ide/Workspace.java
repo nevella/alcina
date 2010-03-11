@@ -61,7 +61,7 @@ import com.google.gwt.user.client.ui.Widget;
 /**
  * Hooks up the various navigation views and the editor widget
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class Workspace implements HasLayoutInfo, VetoableActionListener,VetoableActionSource {

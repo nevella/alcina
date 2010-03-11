@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 /**
  * Marker interface for registry
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class AuthenticatedWebMethod extends VetoableAction {

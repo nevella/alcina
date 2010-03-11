@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 /**
  * To be applied at the class or field level
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)

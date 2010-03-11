@@ -30,7 +30,7 @@ import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 
 /**
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,

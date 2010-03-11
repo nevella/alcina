@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.actions.instances;
 
 /**
  * Specific to an object. E.g. "change password" for a user object
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public class NonstandardObjectAction extends RequiresTargetAction {

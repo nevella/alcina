@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 /**
  * TODO: change the "result" to DTEs
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class ObjectCacheItemResult implements Serializable {

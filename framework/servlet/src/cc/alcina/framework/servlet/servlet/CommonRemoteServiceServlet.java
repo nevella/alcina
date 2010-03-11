@@ -82,7 +82,7 @@ import com.google.gwt.user.server.rpc.UnexpectedException;
  * Tests (todo) for transform persistence: invalid clientauth multiple
  * simultaneous (identical clientinstance, non-) cross-server-restart
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @SuppressWarnings("unchecked")

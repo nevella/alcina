@@ -60,6 +60,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
+import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector.HasAnnotationCallback;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
@@ -79,7 +81,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 /**
  * TODO - abstract parts out to ClientTransformManager
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @SuppressWarnings("unchecked")
@@ -644,6 +646,11 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	 * mm.wrapper.setSaved(true);
 	 * </code>
 	 * <p>
+	 * 
+	 * Generally, though, you'll want to do all the modifications on the
+	 * provisional object so that CollectionModificationListeners on the
+	 * TransformManager will receive the domain object with all changes applied.
+	 * 
 	 * </p>
 	 * 
 	 * @param o
@@ -652,7 +659,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	 *         otherwise null
 	 */
 	public <T extends Object> T promoteToDomainObject(T o) {
-		promoteToDomain(CommonUtils.wrapInCollection(o), true);
+		promoteToDomain(CommonUtils.wrapInCollection(o),true);
 		if (o instanceof HasIdAndLocalId) {
 			return (T) getObject((HasIdAndLocalId) o);
 		}
@@ -1737,5 +1744,76 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 
 	public interface PersistableTransformListener {
 		public void persistableTransform(DataTransformRequest dtr);
+	}
+
+	/**
+	 * Useful series of actions when persisting a HasIdAndLocalId with
+	 * references to a WrappedObject
+	 * 
+	 * @param referrer
+	 */
+	public void persistWrappedObjectReferrer(final HasIdAndLocalId referrer,
+			boolean onlyLocalGraph) {
+		final ClientBeanReflector beanReflector = ClientReflector.get()
+				.beanInfoForClass(referrer.getClass());
+		beanReflector.iterateForPropertyWithAnnotation(WrapperInfo.class,
+				new HasAnnotationCallback<WrapperInfo>() {
+					public void callback(WrapperInfo annotation,
+							ClientPropertyReflector propertyReflector) {
+						GwtPersistableObject obj = (GwtPersistableObject) propertyReflector
+								.getPropertyValue(referrer);
+						CommonLocator.get().propertyAccessor()
+								.setPropertyValue(referrer,
+										annotation.toStringPropertyName(),
+										obj.toString());
+					}
+				});
+		HasIdAndLocalId target = referrer;
+		if (getProvisionalObjects().contains(referrer)) {
+			try {
+				CollectionModificationSupport.queue(true);
+				final HasIdAndLocalId promoted = promoteToDomainObject(
+						referrer);
+				target = promoted;
+				// copy, because at the moment wrapped refs don't get handled by
+				// the TM
+				HasAnnotationCallback<WrapperInfo> callback = new HasAnnotationCallback<WrapperInfo>() {
+					public void callback(WrapperInfo annotation,
+							ClientPropertyReflector propertyReflector) {
+						propertyReflector.setPropertyValue(promoted,
+								propertyReflector.getPropertyValue(referrer));
+					}
+				};
+				beanReflector.iterateForPropertyWithAnnotation(
+						WrapperInfo.class, callback);
+			} finally {
+				CollectionModificationSupport.queue(false);
+			}
+		}
+		final HasIdAndLocalId finalTarget = target;
+		HasAnnotationCallback<WrapperInfo> callback = new HasAnnotationCallback<WrapperInfo>() {
+			public void callback(final WrapperInfo annotation,
+					final ClientPropertyReflector propertyReflector) {
+				GwtPersistableObject persistableObject = (GwtPersistableObject) propertyReflector
+						.getPropertyValue(finalTarget);
+				AsyncCallback<Long> savedCallback = new AsyncCallback<Long>() {
+					public void onFailure(Throwable caught) {
+						throw new WrappedRuntimeException(caught);
+					}
+
+					public void onSuccess(Long result) {
+						CommonLocator.get().propertyAccessor()
+								.setPropertyValue(finalTarget,
+										annotation.idPropertyName(), result);
+					}
+				};
+				ClientLayerLocator.get().commonRemoteServiceAsync().persist(
+						persistableObject, savedCallback);
+			}
+		};
+		if (!onlyLocalGraph) {
+			beanReflector.iterateForPropertyWithAnnotation(WrapperInfo.class,
+					callback);
+		}
 	}
 }

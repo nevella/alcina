@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
  * class/id/instance would be depth 2
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 @SuppressWarnings("unchecked")

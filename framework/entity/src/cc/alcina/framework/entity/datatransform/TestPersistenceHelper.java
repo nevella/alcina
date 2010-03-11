@@ -40,7 +40,7 @@ import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 /**
  * j2se, but no ref to tltm
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 @SuppressWarnings("unchecked")

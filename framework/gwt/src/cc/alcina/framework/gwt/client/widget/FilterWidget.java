@@ -33,7 +33,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.TextBox;
 /**
  * TODO - the "wrappedenterhandler" ClickHandler should be changed to SelectedValueHandler<String>
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public class FilterWidget extends Composite implements KeyUpHandler,

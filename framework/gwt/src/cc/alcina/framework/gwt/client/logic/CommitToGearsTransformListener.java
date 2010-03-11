@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformListener;
 /**
  * For a more serious gears-based system. 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public class CommitToGearsTransformListener implements DataTransformListener {

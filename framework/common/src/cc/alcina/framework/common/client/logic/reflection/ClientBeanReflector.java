@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
@@ -30,13 +29,13 @@ import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
 
 /**
  * Loosely follows beaninfo/propertydescriptor
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  * 
  */
 public class ClientBeanReflector {
@@ -57,8 +56,9 @@ public class ClientBeanReflector {
 						|| actionClass == EditAction.class
 						|| actionClass == ViewAction.class
 						|| actionClass == DeleteAction.class;
-				if (noPermissionsCheck||PermissionsManager.get().isPermissible(
-						new AnnotatedPermissible(action.permission()))) {
+				if (noPermissionsCheck
+						|| PermissionsManager.get().isPermissible(
+								new AnnotatedPermissible(action.permission()))) {
 					result.add(actionClass);
 				}
 			}
@@ -69,6 +69,7 @@ public class ClientBeanReflector {
 	public BeanInfo getGwBeanInfo() {
 		return (BeanInfo) annotations.get(BeanInfo.class);
 	}
+
 	@SuppressWarnings("unchecked")
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
 		return (A) annotations.get(annotationClass);
@@ -114,5 +115,25 @@ public class ClientBeanReflector {
 	public String getDisplayNamePropertyName() {
 		String dnpn = getGwBeanInfo().displayNamePropertyName();
 		return (dnpn == null) ? "id" : dnpn;
+	}
+
+	/**
+	 * Convenience method
+	 * 
+	 * @param annotationClass
+	 * @param callback
+	 */
+	public <A extends Annotation> void iterateForPropertyWithAnnotation(
+			Class<A> annotationClass, HasAnnotationCallback<A> callback) {
+		for (ClientPropertyReflector propertyReflector : getPropertyReflectors()
+				.values()) {
+			A annotation = propertyReflector.getAnnotation(annotationClass);
+			if (annotation != null) {
+				callback.callback(annotation,propertyReflector);
+			}
+		}
+	}
+	public static interface HasAnnotationCallback<A extends Annotation>{
+		public void callback(A annotation, ClientPropertyReflector propertyReflector);
 	}
 }

@@ -17,7 +17,7 @@ package cc.alcina.framework.gwt.client.widget.handlers;
 import com.google.gwt.event.shared.HandlerRegistration;
 /**
  * Convenience interface for long-running widgets which listen to their children
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  *
  */
 public interface HasChildHandlers {

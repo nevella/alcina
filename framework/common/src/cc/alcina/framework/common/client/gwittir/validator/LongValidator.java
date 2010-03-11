@@ -20,7 +20,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 /**
  * 
- * @author nreddel@barnet.com.au
+ * @author nick@alcina.cc
  */
 public class LongValidator implements Validator {
 	public static final LongValidator INSTANCE = new LongValidator();
