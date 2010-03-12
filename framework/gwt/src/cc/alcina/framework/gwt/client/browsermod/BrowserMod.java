@@ -15,7 +15,6 @@
  */
 package cc.alcina.framework.gwt.client.browsermod;
 
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.user.client.Window;
@@ -26,22 +25,18 @@ import com.google.gwt.user.client.Window;
  * 
  * @author Miroslav Pokorny (mP)
  * 
- * Altered - Nick Reddel, trimmed everything down to basic UA stuff (to avoid jar dependency) 
- * fixed a few incorrectly-ordered arguments
+ *         Altered - Nick Reddel, trimmed everything down to basic UA stuff (to
+ *         avoid jar dependency) fixed a few incorrectly-ordered arguments
  */
 public class BrowserMod {
-	
-
 	/**
 	 * Retrieves the window object for the current page.
 	 * 
 	 * @return The window
 	 */
 	public static native JavaScriptObject getWindow() /*-{
-														return $wnd;
-														}-*/;
-
-	
+		return $wnd;
+	}-*/;
 
 	/**
 	 * Scrolls the top left of the window to the position denoted by the given
@@ -53,8 +48,8 @@ public class BrowserMod {
 	 *            The vertical offset in pixels
 	 */
 	public static native void scrollTo(final int x, final int y)/*-{
-																$wnd.scroll( x, y );
-																}-*/;
+		$wnd.scroll( x, y );
+	}-*/;
 
 	/**
 	 * Returns the contextPath of this web application, this concept is
@@ -82,8 +77,8 @@ public class BrowserMod {
 	 * @return The width in pixels
 	 */
 	public native static int getAvailableScreenWidth()/*-{
-														return $wnd.screen.availWidth;
-														}-*/;
+		return $wnd.screen.availWidth;
+	}-*/;
 
 	/**
 	 * Returns the available screen area within the browser
@@ -91,10 +86,8 @@ public class BrowserMod {
 	 * @return The height in pixels.
 	 */
 	public native static int getAvailableScreenHeight()/*-{
-														return $wnd.screen.availHeight;
-														}-*/;
-
-	
+		return $wnd.screen.availHeight;
+	}-*/;
 
 	public static boolean isInternetExplorer() {
 		return getUserAgent().indexOf(Constants.INTERNET_EXPLORER_USER_AGENT) != -1
@@ -122,6 +115,10 @@ public class BrowserMod {
 		return getUserAgent().indexOf(Constants.SAFARI_USER_AGENT) != -1
 				&& !isOpera();
 	}
+	public static boolean isChrome() {
+		return getUserAgent().indexOf(Constants.CHROME_USER_AGENT) != -1
+				&& !isOpera();
+	}
 
 	/**
 	 * Retrieves the userAgent of the browser
@@ -129,8 +126,8 @@ public class BrowserMod {
 	 * @return the reported user agent
 	 */
 	public static native String getUserAgent()/*-{
-												return $wnd.navigator.userAgent;
-												}-*/;
+		return $wnd.navigator.userAgent;
+	}-*/;
 
 	/**
 	 * Returns the host operating system that the browser is running under.
@@ -160,8 +157,7 @@ public class BrowserMod {
 	 * @return true if the browser is operating in quirks mode otherwise returns
 	 *         false
 	 */
-	native static public boolean isQuirksMode()/*-{        
-												return "BackCompat" == $doc.compatMode;
-												}-*/;
-
+	native static public boolean isQuirksMode()/*-{
+		return "BackCompat" == $doc.compatMode;
+	}-*/;
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet.servlet;
 
 import java.beans.XMLEncoder;
@@ -128,7 +127,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	protected void doUnexpectedFailure(Throwable e) {
-		if (e.getClass().getName().equals("org.apache.catalina.connector.ClientAbortException")) {
+		if (e.getClass().getName().equals(
+				"org.apache.catalina.connector.ClientAbortException")) {
 			getLogger().debug("Client RPC call aborted by client");
 			return;
 		}
@@ -145,11 +145,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return logger;
 	}
 
-	public Long logClientError(String exceptionToString, String token) {
+	public Long logClientError(String exceptionToString) {
 		return ServerLayerLocator.get().commonPersistenceProvider()
-				.getCommonPersistence().log(
-						(token == null ? "" : "Token: " + token + "\n  ")
-								+ exceptionToString,
+				.getCommonPersistence().log(exceptionToString,
 						LogMessageType.CLIENT_EXCEPTION.toString());
 	}
 
@@ -240,7 +238,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				WrappedRuntimeException e = new WrappedRuntimeException(
 						"Permission denied for action " + o,
 						SuggestedAction.NOTIFY_WARNING);
-				EntityLayerLocator.get().log(LogMessageType.TRANSFORM_EXCEPTION,
+				EntityLayerLocator.get().log(
+						LogMessageType.TRANSFORM_EXCEPTION,
 						"Data transform permissions exception", e);
 				throw e;
 			}

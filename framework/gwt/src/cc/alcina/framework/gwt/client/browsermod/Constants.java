@@ -34,6 +34,8 @@ package cc.alcina.framework.gwt.client.browsermod;
 	final static String OPERA_USER_AGENT = "Opera";
 
 	final static String SAFARI_USER_AGENT = "WebKit";
+	
+	final static String CHROME_USER_AGENT = "Chrome/";
 
 	final static String STRICT_DOCTYPE = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">";
 

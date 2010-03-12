@@ -4,5 +4,6 @@
 	<inherits name='com.googlecode.gwtx.Java' />
 	<inherits name='com.totsp.gwittir.Gwittir' />
 	<inherits name='com.totsp.gwittir.LoggingDisabled' />
+	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
 	<source path="client" />
 </module>

@@ -58,7 +58,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 
 	public LoginResponseBean hello();
 
-	public Long logClientError(String exceptionToString, String token);
+	public Long logClientError(String exceptionToString);
 
 	public LoginResponseBean login(LoginBean loginBean);
 

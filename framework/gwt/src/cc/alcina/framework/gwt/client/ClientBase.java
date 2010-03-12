@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.actions.VetoableActionEvent;
 import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponseBean;
+import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
@@ -51,12 +52,14 @@ import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
@@ -453,4 +456,23 @@ public abstract class ClientBase implements EntryPoint,
 	public boolean isDialogAnimationEnabled() {
 		return dialogAnimationEnabled;
 	}
+
+	public String extraInfoForExceptionText() {
+		return "\n\nUser agent: " + BrowserMod.getUserAgent()
+				+ "\n\nHistory token: " + History.getToken();
+	}
+
+	protected Throwable possiblyWrapJavascriptException(Throwable e) {
+			if (e instanceof JavaScriptException) {
+				JavaScriptException je = (JavaScriptException) e;
+				String errorText = je.getMessage();
+	//			if (BrowserMod.isChrome()){
+	//				errorText+="\n\nStacktrace: "+je.get
+	//			}
+				errorText += extraInfoForExceptionText();
+				e = new WebException("(Wrapped javascript exception) : "
+						+ errorText);
+			}
+			return e;
+		}
 }

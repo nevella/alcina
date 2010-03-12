@@ -49,7 +49,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 	public void hello(AsyncCallback callback);
 
-	public void logClientError(String exceptionToString, String token,
+	public void logClientError(String exceptionToString, 
 			AsyncCallback<Long> callback);
 
 	public void login(LoginBean loginBean, AsyncCallback callback);
