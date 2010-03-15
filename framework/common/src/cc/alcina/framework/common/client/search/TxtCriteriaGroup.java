@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class TxtCriteriaGroup extends CriteriaGroup {
+ public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 	public TxtCriteriaGroup() {
 		super();
 		setDisplayName("Text");

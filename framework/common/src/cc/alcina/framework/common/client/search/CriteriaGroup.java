@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import java.util.Collection;
@@ -25,12 +24,13 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.HasTreeRenderingInfo;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-
 
 @BeanInfo(displayNamePropertyName = "displayName")
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
@@ -38,21 +38,15 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class CriteriaGroup extends BaseBindable implements HasTreeRenderingInfo {
+public class CriteriaGroup<SC extends SearchCriterion> extends BaseBindable
+		implements TreeRenderable {
 	private transient String displayName;
 
 	private FilterCombinator combinator = FilterCombinator.AND;
 
-	protected transient boolean userVisible = true;
+	private Set<SC> criteria = new LinkedHashSet<SC>();
 
-	private Set<SearchCriterion> criteria = new LinkedHashSet<SearchCriterion>();
-
-	private transient Class<?> entityClass;
-
-	private transient boolean renderable = true;
-
-	private transient CollectionProvider collectionProvider;
+	private transient Class entityClass;
 
 	public CriteriaGroup() {
 	}
@@ -61,8 +55,18 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		return null;
 	}
 
-	public void addCriterion(SearchCriterion criterion) {
+	public void addCriterion(SC criterion) {
 		criteria.add(criterion);
+	}
+
+	public <S extends SearchCriterion> S ensureCriterion(S criterion) {
+		for (SC sc : getCriteria()) {
+			if (sc.getClass() == criterion.getClass()) {
+				return (S) sc;
+			}
+		}
+		addCriterion((SC) criterion);
+		return criterion;
 	}
 
 	/*
@@ -100,7 +104,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		return combinator;
 	}
 
-	public Set<SearchCriterion> getCriteria() {
+	public Set<SC> getCriteria() {
 		return this.criteria;
 	}
 
@@ -108,55 +112,16 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		return displayName;
 	}
 
-	public Class<?> getEntityClass() {
+	public Class getEntityClass() {
 		return this.entityClass;
-	}
-
-	public String hint() {
-		return null;
-	}
-
-	public boolean isRenderable() {
-		return renderable;
-	}
-
-	public boolean isUserVisible() {
-		return this.userVisible;
-	}
-
-	public Collection<? extends HasTreeRenderingInfo> renderableChildren() {
-		return getCriteria();
-	}
-
-	public String renderablePropertyName() {
-		return null;
-	}
-
-	public boolean renderChildrenHorizontally() {
-		return true;
-	}
-
-	public String renderCss() {
-		return "sub-head";
-	}
-
-	public BoundWidgetProvider renderCustomiser() {
-		return null;
-	}
-
-	public RenderInstruction renderInstruction() {
-		if (!renderable || !userVisible) {
-			return RenderInstruction.NO_RENDER;
-		}
-		return RenderInstruction.AS_TITLE;
 	}
 
 	public void setCombinator(FilterCombinator combinator) {
 		this.combinator = combinator;
 	}
 
-	public void setCriteria(Set<SearchCriterion> criteria) {
-		Set<SearchCriterion> old_criteria = this.criteria;
+	public void setCriteria(Set<SC> criteria) {
+		Set<SC> old_criteria = this.criteria;
 		this.criteria = criteria;
 		propertyChangeSupport.firePropertyChange("criteria", old_criteria,
 				criteria);
@@ -166,69 +131,53 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		this.displayName = displayName;
 	}
 
-	public void setEntityClass(Class<?> entityClass) {
+	public void setEntityClass(Class entityClass) {
 		this.entityClass = entityClass;
 	}
 
-	public void setRenderable(boolean noRender) {
-		this.renderable = noRender;
+	public String toHtml() {
+		return asString(true, true);
 	}
 
-	public String toHtml() {
-		if (criteria.size() == 0) {
-			return "";
-		}
-		String result = CommonUtils.isNullOrEmpty(getDisplayName()) ? ""
-				: CommonUtils.pluralise(CommonUtils
-						.capitaliseFirst(getDisplayName()), criteria)
-						+ ": ";
-		int ct = 0;
-		Set<String> searchCriterionHtmlSet = new HashSet<String>();
-		for (SearchCriterion searchCriterion : criteria) {
-			String searchCriterionHtml = searchCriterion.toHtml();
-			if (searchCriterionHtmlSet.contains(searchCriterionHtml)) {
-				continue;
-			}
-			searchCriterionHtmlSet.add(searchCriterionHtml);
-			if (ct++ != 0) {
-				result += " " + combinator.toString().toLowerCase() + " ";
-			}
-			result += searchCriterionHtml;
-		}
-		return result;
-	}
 	@SuppressWarnings("unchecked")
-	public <T extends SearchCriterion> T soleCriterion(){
-		return (T) criteria.iterator().next();
+	public <S extends SearchCriterion> S soleCriterion() {
+		return (S) criteria.iterator().next();
 	}
-	public void toSoleCriterion(SearchCriterion criterion) {
+
+	public void toSoleCriterion(SC criterion) {
 		criteria.clear();
 		criteria.add(criterion);
 	}
 
-	public String toString() {
+	public String asString(boolean withGroupName, boolean asHtml) {
 		if (criteria.size() == 0) {
 			return "";
 		}
-		String result = CommonUtils.isNullOrEmpty(getDisplayName()) ? ""
-				: CommonUtils.pluralise(CommonUtils
-						.capitaliseFirst(getDisplayName()), criteria)
-						+ ": ";
+		String displayName = CommonUtils.isNullOrEmpty(getDisplayName())
+				|| !withGroupName ? "" : CommonUtils.pluralise(CommonUtils
+				.capitaliseFirst(getDisplayName()), criteria)
+				+ ": ";
+		String result = "";
 		int ct = 0;
-		for (SearchCriterion searchCriterion : criteria) {
-			if (ct++ != 0) {
-				result += " " + combinator.toString().toLowerCase() + " ";
+		Set<String> duplicateDisplayTextCriterionSet = new HashSet<String>();
+		for (SC searchCriterion : criteria) {
+			String scString = asHtml ? searchCriterion.toHtml()
+					: searchCriterion.toString();
+			if (duplicateDisplayTextCriterionSet.contains(scString)) {
+				continue;
 			}
-			result += searchCriterion.toString();
+			duplicateDisplayTextCriterionSet.add(scString);
+			if (scString != null && scString.length() > 0) {
+				if (ct++ != 0) {
+					result += " " + combinator.toString().toLowerCase() + " ";
+				}
+				result += scString;
+			}
 		}
-		return result;
+		return result.length() == 0 ? result : displayName + result;
 	}
 
-	public void putCollectionProvider(CollectionProvider collectionProvider) {
-		this.collectionProvider = collectionProvider;
-	}
-
-	public CollectionProvider collectionProvider() {
-		return collectionProvider;
+	public String toString() {
+		return asString(true, false);
 	}
 }

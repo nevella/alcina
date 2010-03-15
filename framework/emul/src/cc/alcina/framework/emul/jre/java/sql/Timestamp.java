@@ -125,10 +125,14 @@ public class Timestamp extends java.util.Date {
 
 
   public int compareTo(Timestamp o) {
-    int delta = (int) (getTime() - o.getTime());
-    return delta == 0 ? getNanos() - o.getNanos() : delta;
+	  //this seems to be wrong - when the delta is > integer.max_value 
+	  // also, god only knows what casting neg.longs to ints does in gwt
+//    int delta = (int) (getTime() - o.getTime());
+//    return delta == 0 ? getNanos() - o.getNanos() : delta;
+	  long delta = getTime() - o.getTime();
+	  return delta==0?getNanos() - o.getNanos():delta<0?-1:1;
   }
-
+  
   @Override
   public boolean equals(Object ts) {
     // Timestamps can't be compared to java.util.Date

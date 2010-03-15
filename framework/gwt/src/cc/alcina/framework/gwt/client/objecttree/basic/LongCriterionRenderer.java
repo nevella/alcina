@@ -11,16 +11,21 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+package cc.alcina.framework.gwt.client.objecttree.basic;
 
-package cc.alcina.framework.entity.annotation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.search.EnumCriterion;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public @interface CheckSecurity {
-	public boolean checked() default false;
-	public String checkedBy() default "";
-	public String reviewedBy() default "";
+@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = EnumCriterion.class)
+public class LongCriterionRenderer extends
+		SearchCriterionRenderer<EnumCriterion> {
+	@Override
+	public String renderablePropertyName() {
+		return "value";
+	}
 }

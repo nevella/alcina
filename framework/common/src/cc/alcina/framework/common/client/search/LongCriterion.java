@@ -49,8 +49,5 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		return result;
 	}
 
-	@Override
-	public String renderablePropertyName() {
-		return "longText";
-	}
+	
 }

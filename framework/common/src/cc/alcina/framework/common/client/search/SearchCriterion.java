@@ -11,10 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
-
-import java.util.Collection;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -23,17 +20,14 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
-import cc.alcina.framework.gwt.client.gwittir.HasTreeRenderingInfo;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
-
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 @BeanInfo(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-public class SearchCriterion extends BaseBindable implements
-		HasTreeRenderingInfo {
-	//TODO: great big injection hole here -  should be checked server-side
+public class SearchCriterion extends BaseBindable implements TreeRenderable {
+	// TODO: great big injection hole here - should be checked server-side
 	private String targetPropertyName;
 
 	private Direction direction = Direction.ASCENDING;
@@ -64,41 +58,12 @@ public class SearchCriterion extends BaseBindable implements
 		return this.direction;
 	}
 
-	// $name, $displayName, $table, $sql = "", $criteriaParameter = ""
 	public String getDisplayName() {
 		return this.displayName;
 	}
 
 	public String getTargetPropertyName() {
 		return targetPropertyName;
-	}
-
-	public String hint() {
-		return null;
-	}
-
-	public Collection<? extends HasTreeRenderingInfo> renderableChildren() {
-		return null;
-	}
-
-	public String renderablePropertyName() {
-		return null;
-	}
-
-	public boolean renderChildrenHorizontally() {
-		return false;
-	}
-
-	public String renderCss() {
-		return null;
-	}
-
-	public BoundWidgetProvider renderCustomiser() {
-		return null;
-	}
-
-	public RenderInstruction renderInstruction() {
-		return RenderInstruction.AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD;
 	}
 
 	public void setDirection(Direction direction) {

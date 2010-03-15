@@ -11,8 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
-
 package cc.alcina.framework.gwt.client.widget;
 
 import java.beans.PropertyChangeEvent;
@@ -33,13 +31,11 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
 import com.totsp.gwittir.client.validator.ValidationException;
 
-
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class RelativePopupValidationFeedback extends AbstractValidationFeedback {
+public class RelativePopupValidationFeedback extends AbstractValidationFeedback {
 	public static final int LEFT = 1;
 
 	public static final int TOP = 2;
@@ -56,6 +52,10 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 	private String css;
 
+	public void addCssBackground() {
+		css = (css == null ? "" : css + " ") + "withBkg";
+	}
+
 	/** Creates a new instance of PopupValidationFeedback */
 	public RelativePopupValidationFeedback(int position) {
 		this.position = position;
@@ -68,6 +68,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 			super.onDetach();
 		}
 	}
+
 	@SuppressWarnings("unchecked")
 	public void handleException(Object source, ValidationException exception) {
 		final Widget w = (Widget) source;

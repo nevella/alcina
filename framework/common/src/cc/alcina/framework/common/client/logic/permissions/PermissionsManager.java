@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import java.beans.PropertyChangeEvent;
@@ -44,15 +43,17 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.datatransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 @SuppressWarnings("unchecked")
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class PermissionsManager extends BaseBindable implements Vetoer,
+public class PermissionsManager extends BaseBindable implements Vetoer,
 		DataTransformListener {
 	private LoginState loginState = LoginState.NOT_LOGGED_IN;
 
@@ -88,7 +89,9 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 	}
 
 	private IUser user;
+
 	private IUser instantiatedUser;
+
 	protected IUser getInstantiatedUser() {
 		return this.instantiatedUser;
 	}
@@ -313,9 +316,11 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 	public boolean isMemberOfGroup(String groupName) {
 		return getUserGroups().containsKey(groupName);
 	}
-	private boolean allPermissible=false;
+
+	private boolean allPermissible = false;
+
 	public boolean isPermissible(Object o, Permissible p) {
-		if (allPermissible){
+		if (allPermissible) {
 			return true;
 		}
 		if (p.accessLevel().equals(AccessLevel.GROUP)) {
@@ -442,7 +447,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 			}
 		}
 		this.user = user;
-		this.instantiatedUser=user;
+		this.instantiatedUser = user;
 		if (this.user != null) {
 			this.userId = user.getId();
 		}
@@ -530,6 +535,19 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 		public abstract String getRuleName();
 	}
 
+	/**
+	 * <p>
+	 * Note - make sure the environment is ready before
+	 * instantiating i.e. servlet layer:
+	 * </p>
+	 * <code>
+	 * ObjectPersistenceHelper.get();
+		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
+		</code>
+	 * 
+	 * @author nick@alcina.cc
+	 * 
+	 */
 	public static class RegistryPermissionsExtension implements
 			PermissionsExtension {
 		Map<Class, PermissionsExtensionForClass> extensionMapForClass = new HashMap<Class, PermissionsExtensionForClass>();

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.datatransform;
 
 import java.beans.IntrospectionException;
@@ -58,13 +57,13 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 @SuppressWarnings("unchecked")
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class ThreadlocalTransformManager extends TransformManager implements
+public class ThreadlocalTransformManager extends TransformManager implements
 		PropertyAccessor, ObjectLookup, ClassLookup {
 	private static ThreadLocal getTTL = new ThreadLocal() {
 		protected synchronized Object initialValue() {
@@ -76,6 +75,13 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 	public static TransformManager ttmInstance() {
 		return new ThreadlocalTransformManager();
+	}
+
+	/**
+	 * Convenience "override" of TransformManager.get()
+	 */
+	public static ThreadlocalTransformManager get() {
+		return (ThreadlocalTransformManager) TransformManager.get();
 	}
 
 	Set<HasIdAndLocalId> modifiedObjects = new HashSet<HasIdAndLocalId>();
@@ -272,9 +278,9 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 			if (GwtPersistableObject.class.isAssignableFrom(c)) {
 				try {
 					Class okClass = c;
-					T wofu = (T) EntityLayerLocator.get().wrappedObjectProvider()
-							.getWrappedObjectForUser(okClass, id,
-									getEntityManager());
+					T wofu = (T) EntityLayerLocator.get()
+							.wrappedObjectProvider().getWrappedObjectForUser(
+									okClass, id, getEntityManager());
 					return (T) wofu;
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
@@ -307,8 +313,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 		}
 		HasIdAndLocalId hili = (HasIdAndLocalId) bean;
 		try {
-			return SEUtilities
-					.descriptorByName(bean.getClass(), propertyName)
+			return SEUtilities.descriptorByName(bean.getClass(), propertyName)
 					.getReadMethod().invoke(bean);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -491,8 +496,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 					.commonPersistenceProvider().getCommonPersistence();
 			String message = "Reconstitute hili map - clientInstance: "
 					+ clientInstance.getId();
-//			System.out.println(message);
-//			cp.log(message, LogMessageType.INFO.toString());
+			// System.out.println(message);
+			// cp.log(message, LogMessageType.INFO.toString());
 			String dteName = cp.getImplementation(
 					DataTransformEventPersistent.class).getSimpleName();
 			MetricLogging.get().start(message);
@@ -522,7 +527,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 			if (hili == null) {
 				hili = (HasIdAndLocalId) evt.getObjectClass().newInstance();
 			} else {
-				hili = EntityLayerLocator.get().jpaImplementation().getInstantiatedObject(hili);
+				hili = EntityLayerLocator.get().jpaImplementation()
+						.getInstantiatedObject(hili);
 			}
 			ObjectPermissions op = hili.getClass().getAnnotation(
 					ObjectPermissions.class);

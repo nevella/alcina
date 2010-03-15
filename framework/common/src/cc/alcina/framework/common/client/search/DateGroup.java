@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class DateGroup extends CriteriaGroup {
+ public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 	public DateGroup() {
 		super();
 		setCombinator(FilterCombinator.AND);
@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		this();
 		CommonUtils.roundDate(fromDate, false);
 		CommonUtils.roundDate(toDate, true);
-		DateCriterion dc = new DateCriterion("From", propertyName,
+		AbstractDateCriterion dc = new DateCriterion("From", propertyName,
 				Direction.ASCENDING);
 		dc.setDate(fromDate);
 		addCriterion(dc);

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
@@ -21,15 +20,16 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class EnumCriteriaGroup<E extends Enum> extends CriteriaGroup {
+public class EnumCriteriaGroup<E extends Enum> extends
+		CriteriaGroup<EnumCriterion<E>> {
 	public EnumCriteriaGroup() {
 		super();
 		setDisplayName("");
 	}
+
 	@Override
 	public String getDisplayName() {
-		if (getCriteria().isEmpty()){
+		if (getCriteria().isEmpty()) {
 			return "";
 		}
 		return getCriteria().iterator().next().getDisplayName();

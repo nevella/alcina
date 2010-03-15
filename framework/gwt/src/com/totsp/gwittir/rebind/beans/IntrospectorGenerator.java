@@ -181,6 +181,9 @@ public class IntrospectorGenerator extends Generator {
 		if (filter == null) {
 			return false;
 		}
+		if (type.getName().startsWith("DecisionDateSinceCriterio")){
+			int j=3;
+		}
 		String pName = type.getPackage().getName();
 		for (String s : filter.getApprovedPackageRoots()) {
 			if (pName.startsWith(s)) {

@@ -65,11 +65,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		return result;
 	}
 
-	@Override
-	public String renderablePropertyName() {
-		return "text";
-	}
-
+	
 	public void setTxtCriterionType(TxtCriterionType txtCriterionType) {
 		this.txtCriterionType = txtCriterionType;
 	}

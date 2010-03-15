@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
 import java.util.ArrayList;
@@ -23,14 +22,14 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class Registry {
+public class Registry {
 	public static final String MARKER_RESOURCE = "registry.properties";
 
 	protected HashMap<Class, Map<Class, List<Class>>> registry;
@@ -65,19 +64,34 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public Class lookupSingle(Class registryPoint, Class targetObject) {
+		return lookupSingle(registryPoint, targetObject, false);
+	}
+
+	public Class lookupSingle(Class registryPoint, Class targetObject,
+			boolean errorOnNull) {
 		List<Class> lookup = lookup(true, registryPoint, targetObject);
-		return lookup.size() > 0 ? lookup.get(0) : null;
+		Class result = lookup.size() > 0 ? lookup.get(0) : null;
+		if (result == null && errorOnNull) {
+			throw new RuntimeException(CommonUtils.format(
+					"Could not find lookup - %1:%2", CommonUtils
+							.classSimpleName(registryPoint), CommonUtils
+							.classSimpleName(targetObject)));
+		}
+		return result;
 	}
-	public Object instantiateSingleOrNull(Class registryPoint, Class targetObject) {
-		List<Class> lookup = lookup(true, registryPoint, targetObject,true);
-		return lookup.size() > 0 ? instantiateSingle(registryPoint,targetObject) : null;
+
+	public Object instantiateSingleOrNull(Class registryPoint,
+			Class targetObject) {
+		List<Class> lookup = lookup(true, registryPoint, targetObject, true);
+		return lookup.size() > 0 ? instantiateSingle(registryPoint,
+				targetObject) : null;
 	}
+
 	@SuppressWarnings("unchecked")
 	public Object instantiateSingle(Class registryPoint, Class targetObject) {
 		Class lookupSingle = lookupSingle(registryPoint, targetObject);
 		try {
-			return CommonLocator.get().classLookup()
-					.newInstance(lookupSingle);
+			return CommonLocator.get().classLookup().newInstance(lookupSingle);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -86,10 +100,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	public List<Class> lookup(Class registryPoint) {
 		return lookup(false, registryPoint, void.class);
 	}
+
 	public List<Class> lookup(boolean mostSpecificTarget, Class registryPoint,
 			Class targetObject) {
 		return lookup(mostSpecificTarget, registryPoint, targetObject, false);
 	}
+
 	public List<Class> lookup(boolean mostSpecificTarget, Class registryPoint,
 			Class targetObject, boolean notRequired) {
 		// superclasschain
@@ -105,7 +121,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		List<Class> result = new ArrayList<Class>();
 		Map<Class, List<Class>> map = registry.get(registryPoint);
 		if (map == null) {
-			if (notRequired){
+			if (notRequired) {
 				return new ArrayList<Class>(0);
 			}
 			throw new RuntimeException(CommonUtils.format(

@@ -11,16 +11,15 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+package cc.alcina.framework.gwt.client.objecttree;
 
-package cc.alcina.framework.entity.annotation;
+import com.totsp.gwittir.client.beans.Bindable;
 
 /**
+ * @author nick@alcina.cc
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public @interface CheckSecurity {
-	public boolean checked() default false;
-	public String checkedBy() default "";
-	public String reviewedBy() default "";
+public interface TreeRenderable extends Bindable{
+	public String getDisplayName();
 }

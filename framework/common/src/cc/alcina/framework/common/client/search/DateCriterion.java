@@ -14,7 +14,6 @@
 
 package cc.alcina.framework.common.client.search;
 
-import java.util.Date;
 
 
 /**
@@ -22,7 +21,7 @@ import java.util.Date;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class DateCriterion extends SearchCriterion {
+ public class DateCriterion extends AbstractDateCriterion {
 	public DateCriterion() {
 	}
 	public DateCriterion(String displayName, String propertyName,
@@ -31,33 +30,18 @@ import java.util.Date;
 		setDirection(direction);
 	}
 
-	private Date date;
-
 	@Override
 	@SuppressWarnings("unchecked")
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
-		if (date==null){
+		if (getDate()==null){
 			return result;
 		}
 		result.eql = "t."+getTargetPropertyName()
 				+ (getDirection() == Direction.ASCENDING ? ">=" : "<") + " ? ";
-		result.parameters.add(date);
+		result.parameters.add(getDate());
 		return result;
 	}
 
-	public void setDate(Date date) {
-		Date old_date = this.date;
-		this.date = date;
-		propertyChangeSupport.firePropertyChange("date", old_date, date);
-	}
-
-	public Date getDate() {
-		return date;
-	}
-
-	@Override
-	public String renderablePropertyName() {
-		return "date";
-	}
+	
 }

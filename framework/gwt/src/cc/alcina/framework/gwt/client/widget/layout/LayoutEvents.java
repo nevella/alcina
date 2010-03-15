@@ -11,18 +11,19 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.layout;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.DeferredCommand;
+
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class LayoutEvents {
+public class LayoutEvents {
 	private LayoutEvents() {
 		super();
 		listeners = new ArrayList<LayoutEventListener>();
@@ -93,5 +94,13 @@ import java.util.List;
 		} finally {
 			firingEvents.remove(event.getEventType());
 		}
+	}
+
+	public void deferRequiresGlobalRelayout() {
+		DeferredCommand.addCommand(new Command() {
+			public void execute() {
+				fireRequiresGlobalRelayout();
+			}
+		});
 	}
 }

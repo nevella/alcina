@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class LongCriteriaGroup extends CriteriaGroup {
+ public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
 	public LongCriteriaGroup() {
 		super();
 		setDisplayName("Long");

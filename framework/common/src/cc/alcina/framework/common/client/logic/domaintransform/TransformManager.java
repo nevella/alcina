@@ -167,6 +167,10 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				listener, listenedClass, filteringListener);
 	}
 
+	public boolean currentTransformIsDuringCreationRequest() {
+		return currentEvent.getObjectLocalId()!=0;
+	}
+
 	/**
 	 * Order must be: local (>bean), containerupdater, localstorage,
 	 * remotestorage By default, transform manager handles the first two itself
@@ -201,7 +205,10 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		}
 	}
 
+	private DataTransformEvent currentEvent;
+
 	public void consume(DataTransformEvent evt) {
+		currentEvent = evt;
 		HasIdAndLocalId obj = null;
 		if (evt.getTransformType() != TransformType.CREATE_OBJECT) {
 			obj = getObject(evt);
@@ -289,6 +296,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 					"Transform type not implemented: " + evt.getTransformType(),
 					SuggestedAction.NOTIFY_WARNING);
 		}
+		currentEvent=null;
 	}
 
 	public void convertToTargetObject(DataTransformEvent evt) {
@@ -659,7 +667,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	 *         otherwise null
 	 */
 	public <T extends Object> T promoteToDomainObject(T o) {
-		promoteToDomain(CommonUtils.wrapInCollection(o),true);
+		promoteToDomain(CommonUtils.wrapInCollection(o), true);
 		if (o instanceof HasIdAndLocalId) {
 			return (T) getObject((HasIdAndLocalId) o);
 		}
@@ -1772,8 +1780,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		if (getProvisionalObjects().contains(referrer)) {
 			try {
 				CollectionModificationSupport.queue(true);
-				final HasIdAndLocalId promoted = promoteToDomainObject(
-						referrer);
+				final HasIdAndLocalId promoted = promoteToDomainObject(referrer);
 				target = promoted;
 				// copy, because at the moment wrapped refs don't get handled by
 				// the TM

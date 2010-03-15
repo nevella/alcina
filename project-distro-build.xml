@@ -59,10 +59,10 @@
 		<mkdir dir="${project.gwt.build.dir}" />
 		<mkdir dir="${project.gwt.client.imgs.2.tgt}" />
 		<mkdir dir="${project.gwt.client.imgs.1.tgt}" />
-		<copy todir="${project.gwt.build.dir}" file="${project.gwt.client.css.1}" />
-		<copy todir="${project.gwt.build.dir}" file="${project.gwt.client.css.2}" />
+		<copy todir="${project.gwt.build.dir}/${project.gwt.module.name}" file="${project.gwt.client.css.1}" />
+		<copy todir="${project.gwt.build.dir}/${project.gwt.module.name}" file="${project.gwt.client.css.2}" />
 		<copy todir="${project.gwt.build.dir}" file="${project.gwt.client.html}" />
-		<copy todir="${project.gwt.build.dir}" file="${framework.gwt.client.css.1}" />
+		<copy todir="${project.gwt.build.dir}/${project.gwt.module.name}" file="${framework.gwt.client.css.1}" />
 		<copy todir="${project.gwt.client.imgs.1.tgt}">
 			<fileset dir="${project.gwt.client.imgs.1}">
 				<include name="**/*" />

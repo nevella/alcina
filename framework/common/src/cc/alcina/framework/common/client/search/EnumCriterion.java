@@ -11,20 +11,17 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
+public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull {
 	private boolean withNull;
 
@@ -52,11 +49,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 			result.parameters.add(valueAsString() ? value.toString() : value);
 		}
 		return result;
-	}
-
-	@Override
-	public String renderablePropertyName() {
-		return "value";
 	}
 
 	@XmlTransient

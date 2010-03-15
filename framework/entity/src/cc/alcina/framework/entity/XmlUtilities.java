@@ -171,7 +171,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		return null;
 	}
 
-	public static Node getFragmentSurroundedByBlocks(Node node) {
+	public static Range getRangeSurroundedByBlocks(Node node) {
 		Element element = getParentElementWithTagName(node, "*", true);
 		Element prev = element;
 		Element next = element;
@@ -194,9 +194,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		Range r = ((DocumentRange) element.getOwnerDocument()).createRange();
 		r.setStart(prev, 0);
 		r.setEndAfter(next);
-		DocumentFragment frag = r.cloneContents();
-		r.detach();
-		return frag;
+		return r;
 	}
 
 	public static Element getParentElementWithTagName(Node n, String tagName) {
@@ -866,5 +864,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 			}
 		}
 		return found;
+	}
+
+	public static Range nodeToRange(Node container) {
+		Range r = ((DocumentRange)container.getOwnerDocument()).createRange();
+		r.setStart(container, 0);
+		r.setEndAfter(container);
+		return r;
 	}
 }

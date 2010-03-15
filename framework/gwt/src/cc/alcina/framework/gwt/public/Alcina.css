@@ -457,7 +457,6 @@ div input.button-submit {
 	padding-top: 0px;
 	padding-bottom: 0px;
 }
-
 /* General element styles */
 	/* Fonts & Text ######################################################### */
 .font-grey {
@@ -548,6 +547,9 @@ input.button-submit,button.button-submit {
 .bold {
 	font-weight: bold;
 }
+.italic {
+	font-style: italic;
+}
 
 .inline {
 	display: inline;
@@ -605,6 +607,10 @@ div.pad-top-0{
 .margin-0 {
 	margin: 0px;
 }
+.margin-left-45 {
+	margin-left: 45px;
+}
+
 
 .nowrap {
 	white-space: nowrap;
@@ -614,46 +620,7 @@ div.pad-top-0{
 	color: white;
 	font-size: .9em;
 }
-/* DatePicker ######################################################### */
-.gwittir-Calendar {
-	background-color: white;
-	border: 1px solid black;
-	font-size: 80%;
-	cursor: defaut;
-}
 
-.gwittir-Calendar .day {
-	border-bottom: 1px solid black;
-	color: white;
-	background-color: rgb(120, 163, 182);
-}
-
-.gwittir-Calendar .date {
-	border-bottom: 1px solid gray;
-	cursor: pointer;
-}
-
-.gwittir-Calendar .empty {
-	background-color: #AAAAAA;
-}
-
-.gwittir-DatePicker {
-	font-size: 80%;
-	background-color: white;
-}
-
-.gwittir-DatePicker .gwittir-Calendar {
-	width: 100%;
-	font-size: 100%;
-}
-
-.gwittir-PopupDatePicker {
-	width: 105px;
-}
-
-.gwittir-DatePicker .gwittir-Calendar .date {
-	text-align: center;
-}
 
 /* Tables ######################################################### */
 table.home,div.alcina-GeneralContentHolder,div.wizard {
@@ -784,6 +751,12 @@ div.alcina-BeanPanel div.alcina-BreadcrumbBar.font-grey {
 /*Object tree rendering */
 div.alcina-ObjectTree .customiser {
 	margin-bottom: 15px;
+}
+div.alcina-ObjectTree .gwt-TextBox.customiser {
+	margin-bottom: 0px;
+}
+div.alcina-ObjectTree td.td0{
+	padding-right:15px;
 }
 div.alcina-ObjectTree .hint{
 	color:#717171;
@@ -1020,16 +993,18 @@ div.alcina-MainContent div.workspaceViews.alcina-ContentLeft{
 .alcina-BeanPanel .last5{
 	padding:5px 0 5px 0;
 }
-/** gwittir overrides **/
-.gwittir-PopupDatePicker input.calendarText, div.alcina-ObjectTree  input.calendarText {
+/** Date picker (now gwt) stuff **/
+input.calendarText.alcina-DateBox, div.alcina-ObjectTree  input.gwt-DateBox.alcina-DateBox {
 	border: 1px solid #CECECE;
 	padding: 1px 4px 1px 4px;
-	width: 70px;
+	width: 100px;
 	background: none;
+	margin-right:10px;
 }
-.gwittir-PopupDatePicker .calendarIcon, div.alcina-ObjectTree .calendarIcon{
-	margin-left: 4px;	
+div.alcina-ObjectTree  input.gwt-DateBox.alcina-DateBox.dateBoxFormatError{
+	background: rgb(255, 204, 204);
 }
+/** gwittir overrides **/
 table.gwittir-BoundTable {
 	border: 1px solid #CECECE;
 }
@@ -1182,12 +1157,14 @@ table.gwittir-BoundTable tr.header {
 	color: #414141;
 }
 /** Misc components **/
-.inlineTabDisplay .gwt-TabBarItem,.inlineTabDisplay .gwt-HTML
-	{
-	display: inline;
+.inlineTabDisplay .gwt-TabBar .gwt-TabBarItem
+{
+	display: inline-block;
+	text-align: left;
 }
 .inlineTabDisplay .gwt-HTML{
 	padding-right:1em;
+	display: inline;
 }
 .inlineTabDisplay  .gwt-TabBar .gwt-TabBarItem-selected a {
 	background: #A8D3E6 none repeat scroll 0 0;

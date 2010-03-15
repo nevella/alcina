@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir;
 
 import java.io.Serializable;
@@ -86,14 +85,41 @@ import com.totsp.gwittir.client.validator.Validator;
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
+public class GwittirBridge implements PropertyAccessor {
+	public static final Validator DATE_TEXT_VALIDATOR = new Validator() {
+		public static final transient String ERR_FMT = "Dates must be "
+				+ "entered in the following format: dd/mm/yyyy";
 
- public class GwittirBridge implements PropertyAccessor {
+		public static final transient String ERR_INVALID = "The date entered does not exist";
+
+		@SuppressWarnings("deprecation")
+		public Object validate(Object value) throws ValidationException {
+			if (value == null) {
+				throw new ValidationException(ERR_FMT);
+			}
+			String sValue = value.toString();
+			String[] splits = sValue.split("/");
+			if (splits.length != 3) {
+				throw new ValidationException(ERR_FMT);
+			}
+			try {
+				Date result = new Date(Integer.parseInt(splits[2]) - 1900,
+						Integer.parseInt(splits[1]) - 1, Integer
+								.parseInt(splits[0]));
+				return result;
+			} catch (Exception e) {
+				throw new ValidationException(ERR_INVALID);
+			}
+		}
+	};
+
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
 	{
 		validatorMap.put(Integer.class, IntegerValidator.INSTANCE);
 		validatorMap.put(int.class, IntegerValidator.INSTANCE);
 		validatorMap.put(Long.class, LongValidator.INSTANCE);
 		validatorMap.put(long.class, LongValidator.INSTANCE);
+		validatorMap.put(Date.class, DATE_TEXT_VALIDATOR);
 	}
 
 	private Map<Class, BeanDescriptor> descriptorClassLookup = new HashMap<Class, BeanDescriptor>();
@@ -168,7 +194,7 @@ import com.totsp.gwittir.client.validator.Validator;
 			BoundWidgetTypeFactory {
 		public BoundWidgetTypeFactorySimpleGenerator() {
 			super(true);
-			add(Date.class, PopupDatePickerWithText.PROVIDER);
+			add(Date.class, DateBox.PROVIDER);
 		}
 
 		public BoundWidgetProvider getWidgetProvider(Class type) {
@@ -189,33 +215,6 @@ import com.totsp.gwittir.client.validator.Validator;
 	}
 
 	private List<String> ignoreProperties;
-
-	public static final Validator DATE_TEXT_VALIDATOR = new Validator() {
-		public static final transient String ERR_FMT = "Dates must be "
-				+ "entered in the following format: dd/mm/yyyy";
-
-		public static final transient String ERR_INVALID = "The date entered does not exist";
-
-		@SuppressWarnings("deprecation")
-		public Object validate(Object value) throws ValidationException {
-			if (value == null) {
-				throw new ValidationException(ERR_FMT);
-			}
-			String sValue = value.toString();
-			String[] splits = sValue.split("/");
-			if (splits.length != 3) {
-				throw new ValidationException(ERR_FMT);
-			}
-			try {
-				Date result = new Date(Integer.parseInt(splits[2]) - 1900,
-						Integer.parseInt(splits[1]) - 1, Integer
-								.parseInt(splits[0]));
-				return result;
-			} catch (Exception e) {
-				throw new ValidationException(ERR_INVALID);
-			}
-		}
-	};
 
 	public Field getField(Class c, String propertyName,
 			boolean editableWidgets, boolean multiple) {
@@ -337,7 +336,7 @@ import com.totsp.gwittir.client.validator.Validator;
 	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple, String propertyName) {
-		factory.add(Date.class, PopupDatePickerWithText.PROVIDER);
+		factory.add(Date.class, DateBox.PROVIDER);
 		List<Field> fields = new ArrayList<Field>();
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				obj.getClass());

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import java.io.Serializable;
@@ -27,8 +26,9 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.HasTreeRenderingInfo;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
@@ -38,9 +38,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class SearchDefinition extends GwtPersistableObject implements
-		Serializable, HasTreeRenderingInfo, ContentDefinition {
+public class SearchDefinition extends GwtPersistableObject implements
+		Serializable, TreeRenderable, ContentDefinition {
 	transient final String orderJoin = ", ";
 
 	private int resultsPerPage;
@@ -69,13 +68,11 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 	public static final transient int LARGE_SEARCH = 0xFF0000;
 
-	public CollectionProvider collectionProvider() {
-		return null;
-	}
 	@SuppressWarnings("unchecked")
 	public <C extends CriteriaGroup> C criteriaGroup(Class<C> clazz) {
 		return (C) cgs.get(clazz);
 	}
+
 	@SuppressWarnings("unchecked")
 	public EqlWithParameters eql(boolean withOrderClause) {
 		EqlWithParameters ewp = new EqlWithParameters();
@@ -109,15 +106,12 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	public String filterDescription(boolean html) {
 		StringBuffer result = new StringBuffer();
 		for (CriteriaGroup criteriaGroup : criteriaGroups) {
-			if (criteriaGroup.isUserVisible()) {
-				String s = html ? criteriaGroup.toHtml() : criteriaGroup
-						.toString();
-				if (!CommonUtils.isNullOrEmpty(s)) {
-					if (result.length() != 0) {
-						result.append(", ");
-					}
-					result.append(s);
+			String s = html ? criteriaGroup.toHtml() : criteriaGroup.toString();
+			if (!CommonUtils.isNullOrEmpty(s)) {
+				if (result.length() != 0) {
+					result.append(", ");
 				}
+				result.append(s);
 			}
 		}
 		return (result.length() == 0) ? defaultFilterDescription : result
@@ -160,10 +154,6 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		return this.resultsPerPage;
 	}
 
-	public String hint() {
-		return null;
-	}
-
 	public String idEqlPrefix() {
 		return null;
 	}
@@ -171,19 +161,18 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	public String orderDescription(boolean html) {
 		StringBuffer result = new StringBuffer();
 		for (OrderGroup orderGroup : orderGroups) {
-			if (orderGroup.isUserVisible()) {
-				String s = (html ? orderGroup.toHtml() : orderGroup.toString())
-						.trim();
-				if (!CommonUtils.isNullOrEmpty(s)) {
-					if (result.length() != 0) {
-						result.append(", ");
-					}
-					result.append(s);
+			String s = (html ? orderGroup.toHtml() : orderGroup.toString())
+					.trim();
+			if (!CommonUtils.isNullOrEmpty(s)) {
+				if (result.length() != 0) {
+					result.append(", ");
 				}
+				result.append(s);
 			}
 		}
 		return result.toString();
 	}
+
 	@SuppressWarnings("unchecked")
 	public <C extends OrderGroup> C orderGroup(Class<C> clazz) {
 		return (C) ogs.get(clazz);
@@ -196,39 +185,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		return propertyName;
 	}
 
-	public void renderable(List<Class<? extends CriteriaGroup>> renderables) {
-		boolean show = renderables.isEmpty();
-		for (CriteriaGroup cg : criteriaGroups) {
-			cg.setRenderable(show);
-		}
-		for (Class<? extends CriteriaGroup> clazz : renderables) {
-			criteriaGroup(clazz).setRenderable(true);
-		}
-	}
-
-	public Collection<? extends HasTreeRenderingInfo> renderableChildren() {
-		return getCriteriaGroups();
-	}
-
-	public String renderablePropertyName() {
-		return null;
-	}
-
-	public boolean renderChildrenHorizontally() {
-		return false;
-	}
-
-	public String renderCss() {
-		return "search-def-panel";
-	}
-
-	public BoundWidgetProvider renderCustomiser() {
-		return null;
-	}
-
-	public RenderInstruction renderInstruction() {
-		return RenderInstruction.IGNORE_AND_DESCEND;
-	}
+	
 
 	public void resetLookups() {
 		cgs.clear();

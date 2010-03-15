@@ -11,62 +11,86 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.objecttree;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.search.HasWithNull;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.BoundWidgetTypeFactorySimpleGenerator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.ListBoxEnumProvider;
-import cc.alcina.framework.gwt.client.gwittir.HasTreeRenderingInfo.RenderInstruction;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
+import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class ObjectTreeRenderer {
+public class ObjectTreeRenderer {
 	private OnetimeBoundWidget op;
 
 	protected BoundWidgetTypeFactory factory = new BoundWidgetTypeFactorySimpleGenerator();
 
-	public ComplexPanel render(HasTreeRenderingInfo root) {
+	protected Map<Widget, TreeRenderer> customiserRendererMap = new HashMap<Widget, TreeRenderer>();
+
+	protected Map<Widget, TreeRenderer> level1RendererMap = new HashMap<Widget, TreeRenderer>();
+
+	public ComplexPanel render(TreeRenderable root) {
+		return render(root, new RenderContext());
+	}
+
+	public ComplexPanel render(TreeRenderable root, RenderContext renderContext) {
 		this.op = new OnetimeBoundWidget();
-		renderToPanel(root, op, 0, true);
+		renderContext.setRootRenderable(root);
+		renderToPanel(root, op, 0, true, renderContext);
 		op.getBinding().bind();
 		op.getBinding().setLeft();
 		op.setStyleName("alcina-ObjectTree");
 		return op;
 	}
+
 	@SuppressWarnings("unchecked")
-	protected void renderToPanel(HasTreeRenderingInfo node, ComplexPanel cp,
-			int depth, boolean soleChild) {
+	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
+			int depth, boolean soleChild, RenderContext renderContext) {
+		TreeRenderer node = TreeRenderingInfoProvider.get().getForRenderable(
+				renderable);
 		if (depth == 0 && node.renderCss() != null) {
 			cp.setStyleName(node.renderCss());
 		}
 		boolean widgetsAdded = false;
-		Collection<? extends HasTreeRenderingInfo> children = node
-				.renderableChildren();
+		Collection<? extends TreeRenderer> children = node.renderableChildren();
 		// title
 		AbstractBoundWidget customiserWidget = null;
-		if (node.renderInstruction() != RenderInstruction.NO_RENDER) {
-			customiserWidget = node.renderCustomiser() == null ? null
-					: (AbstractBoundWidget) node.renderCustomiser().get();
+		RenderInstruction renderInstruction = node.renderInstruction();
+		IsRenderableFilter renderableFilter = renderContext
+				.getRenderableFilter();
+		if (renderableFilter != null
+				&& !renderableFilter.isRenderable(renderable)) {
+			renderInstruction = RenderInstruction.NO_RENDER;
 		}
-		switch (node.renderInstruction()) {
+		if (renderInstruction != RenderInstruction.NO_RENDER) {
+			customiserWidget = node.renderCustomiser(renderContext) == null ? null
+					: (AbstractBoundWidget) node
+							.renderCustomiser(renderContext).get();
+		}
+		customiserRendererMap.put(customiserWidget, node);
+		switch (renderInstruction) {
 		case NO_RENDER:
 			return;
 		case AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD:
@@ -75,30 +99,33 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 			}
 		case AS_TITLE:
 		case AS_WIDGET:
-			String displayName = node.getDisplayName();
+			String displayName = renderable.getDisplayName();
 			if (displayName != null) {
 				Label label = TextProvider.get().getInlineLabel(
 						TextProvider.get().getUiObjectText(
 								node.getClass(),
-								TextProvider.DISPLAY_NAME+"-"+displayName,
+								TextProvider.DISPLAY_NAME + "-" + displayName,
 								CommonUtils
 										.upperCaseFirstLetterOnly(displayName)
 										+ ": "));
 				label.setStyleName("level-"
 						+ ((soleChild) ? Math.max(1, depth - 1) : depth));
 				cp.add(label);
+				if (depth == 1) {
+					level1RendererMap.put(label, node);
+				}
 				widgetsAdded = true;
 			}
 		}
 		if (customiserWidget != null) {
 			// note - must be responsible for own detach - cleanup
-			customiserWidget.setModel(node);
+			customiserWidget.setModel(renderable);
 			if (node.renderCss() != null) {
 				customiserWidget.addStyleName(node.renderCss());
 			}
-			if (node.hint() != null) {
+			if (node.hint(renderContext) != null) {
 				FlowPanel fp2 = new FlowPanel();
-				Label label = new Label(node.hint());
+				Label label = new Label(node.hint(renderContext));
 				label.setStyleName("hint");
 				fp2.add(customiserWidget);
 				fp2.add(label);
@@ -113,9 +140,13 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 		if (node.renderInstruction() == RenderInstruction.AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD
 				|| node.renderInstruction() == RenderInstruction.AS_WIDGET) {
 			String propertyName = node.renderablePropertyName();
-			Class type = GwittirBridge.get().getProperty(node, propertyName).getType();
-			Field f = GwittirBridge.get().getField(node.getClass(),
+			Class type = GwittirBridge.get().getProperty(renderable,
+					propertyName).getType();
+			Field f = GwittirBridge.get().getField(renderable.getClass(),
 					propertyName, true, false);
+			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
+					RelativePopupValidationFeedback.BOTTOM);
+			vf.addCssBackground();
 			if (f.getCellProvider() instanceof ListBoxEnumProvider
 					&& node instanceof HasWithNull) {
 				((ListBoxEnumProvider) f.getCellProvider())
@@ -124,12 +155,13 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 			AbstractBoundWidget bw = (AbstractBoundWidget) f.getCellProvider()
 					.get();
 			op.getBinding().getChildren().add(
-					new Binding(bw, "value", null, null, node, propertyName,
-							null, null));
+					new Binding(bw, "value", f.getValidator(),
+							f.getFeedback() != null ? vf : null, renderable,
+							propertyName, null, null));
 			if (node.renderCss() != null) {
 				bw.setStyleName(node.renderCss());
 			}
-			bw.setStyleName("level-"
+			bw.addStyleName("level-"
 					+ ((soleChild) ? Math.max(1, depth - 1) : depth)
 					+ "-widget");
 			cp.add(bw);
@@ -149,9 +181,11 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 			if (childPanel != cp) {
 				cp.add(childPanel);
 			}
-			for (HasTreeRenderingInfo child : node.renderableChildren()) {
+			Collection<? extends TreeRenderable> childRenderables = node
+					.renderableChildren();
+			for (TreeRenderable child : childRenderables) {
 				renderToPanel(child, childPanel, depth + 1, node
-						.renderableChildren().size() == 1);
+						.renderableChildren().size() == 1, renderContext);
 			}
 		}
 		return;
