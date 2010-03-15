@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ParameterisedValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
+import cc.alcina.framework.common.client.gwittir.validator.ShortDateValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.HasId;
 import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
@@ -86,40 +87,13 @@ import com.totsp.gwittir.client.validator.Validator;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 public class GwittirBridge implements PropertyAccessor {
-	public static final Validator DATE_TEXT_VALIDATOR = new Validator() {
-		public static final transient String ERR_FMT = "Dates must be "
-				+ "entered in the following format: dd/mm/yyyy";
-
-		public static final transient String ERR_INVALID = "The date entered does not exist";
-
-		@SuppressWarnings("deprecation")
-		public Object validate(Object value) throws ValidationException {
-			if (value == null) {
-				throw new ValidationException(ERR_FMT);
-			}
-			String sValue = value.toString();
-			String[] splits = sValue.split("/");
-			if (splits.length != 3) {
-				throw new ValidationException(ERR_FMT);
-			}
-			try {
-				Date result = new Date(Integer.parseInt(splits[2]) - 1900,
-						Integer.parseInt(splits[1]) - 1, Integer
-								.parseInt(splits[0]));
-				return result;
-			} catch (Exception e) {
-				throw new ValidationException(ERR_INVALID);
-			}
-		}
-	};
-
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
 	{
 		validatorMap.put(Integer.class, IntegerValidator.INSTANCE);
 		validatorMap.put(int.class, IntegerValidator.INSTANCE);
 		validatorMap.put(Long.class, LongValidator.INSTANCE);
 		validatorMap.put(long.class, LongValidator.INSTANCE);
-		validatorMap.put(Date.class, DATE_TEXT_VALIDATOR);
+		validatorMap.put(Date.class, ShortDateValidator.INSTANCE);
 	}
 
 	private Map<Class, BeanDescriptor> descriptorClassLookup = new HashMap<Class, BeanDescriptor>();

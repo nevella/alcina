@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import java.util.Collection;
@@ -19,25 +18,28 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 /**
- *
+ * 
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public interface HasIdAndLocalId extends HasId {
+public interface HasIdAndLocalId extends HasId {
 	public long getLocalId();
 
 	public void setLocalId(long localId);
-	public static class HiliComparator implements Comparator<HasIdAndLocalId>{
+
+	public static class HiliComparator implements Comparator<HasIdAndLocalId> {
 		public static final HiliComparator INSTANCE = new HiliComparator();
+
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			if (o1 == null) {
 				return o2 == null ? 0 : -1;
 			}
-			return o2 == null?1:new Long(o1.getId()).compareTo(o2.getId());
+			return o2 == null ? 1 : new Long(o1.getId()).compareTo(o2.getId());
 		}
-		
 	}
+
 	public static class HiliHelper {
 		public static boolean equals(HasIdAndLocalId o1, Object o2) {
 			if (o1.getId() == 0 && o1.getLocalId() == 0) {
@@ -52,12 +54,24 @@ import java.util.Set;
 			return false;
 		}
 
-		public static Set<Long> toIdSet(Collection<? extends HasIdAndLocalId> hilis) {
+		public static Set<Long> toIdSet(
+				Collection<? extends HasIdAndLocalId> hilis) {
 			Set<Long> result = new LinkedHashSet<Long>();
 			for (HasIdAndLocalId hili : hilis) {
 				result.add(hili.getId());
 			}
 			return result;
+		}
+
+		public static String asDomainPoint(HasId hi) {
+			if (hi instanceof HasIdAndLocalId) {
+				HasIdAndLocalId hili = (HasIdAndLocalId) hi;
+				return CommonUtils.format("Hili: %1 : %2 / %3", CommonUtils
+						.simpleClassName(hili.getClass()), hili.getId(), hili
+						.getLocalId());
+			}
+			return CommonUtils.format("HasId: %1 : %2 ", CommonUtils
+					.simpleClassName(hi.getClass()), hi.getId());
 		}
 	}
 }

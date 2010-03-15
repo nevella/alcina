@@ -47,10 +47,14 @@ import cc.alcina.framework.common.client.logic.domaintransform.DataTransformResp
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
+import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -171,20 +175,45 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		WrappedObject<T> wrapper = EntityLayerLocator.get()
 				.wrappedObjectProvider().getObjectWrapperForUser(c, id,
 						getEntityManager());
-		checkWrappedObjectAccess(wrapper, c);
+		checkWrappedObjectAccess(null, wrapper, c);
 		return wrapper;
 	}
 
-	protected void checkWrappedObjectAccess(WrappedObject wrapper, Class clazz)
-			throws PermissionsException {
+	protected void checkWrappedObjectAccess(HasId wrapper,
+			WrappedObject wrapped, Class clazz) throws PermissionsException {
 		if (!PersistentSingleton.class.isAssignableFrom(clazz)
-				&& wrapper != null
-				&& wrapper.getUser().getId() != PermissionsManager.get()
+				&& wrapped != null
+				&& wrapped.getUser().getId() != PermissionsManager.get()
 						.getUserId()) {
+			if (wrapper != null) {
+				if (wrapper instanceof IVersionableOwnable) {
+					IVersionableOwnable ivo = (IVersionableOwnable) wrapper;
+					if (ivo.getOwner().getId() == wrapped.getUser().getId()) {
+						return;// permitted
+					}
+				}
+			}
+			if (PermissionsManager.get().isPermissible(new Permissible() {
+				public String rule() {
+					return null;
+				}
+
+				public AccessLevel accessLevel() {
+					return AccessLevel.ADMIN;
+				}
+			})) {
+				System.err
+						.println(CommonUtils
+								.format(
+										"Warn - allowing access to %1 : %2 only via admin override",
+										HiliHelper.asDomainPoint(wrapper),
+										HiliHelper.asDomainPoint(wrapped)));
+				return;// permitted
+			}
 			throw new PermissionsException(CommonUtils.format(
 					"Permissions exception: "
 							+ "access denied to object  %1 for user %2",
-					wrapper.getId(), PermissionsManager.get().getUserId()));
+					wrapped.getId(), PermissionsManager.get().getUserId()));
 		}
 	}
 
@@ -418,6 +447,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	public HasId unwrap(HasId wrapper) {
 		try {
+			fixPermissionsManager();
 			PropertyDescriptor[] pds = Introspector.getBeanInfo(
 					wrapper.getClass()).getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
@@ -432,9 +462,12 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 						if (wrapperId != null) {
 							Class<? extends GwtPersistableObject> pType = (Class<? extends GwtPersistableObject>) pd
 									.getPropertyType();
-							WrappedObject wrappedObject = (WrappedObject) getObjectWrapperForUser(
-									pType, wrapperId);
-							checkWrappedObjectAccess(wrappedObject, pType);
+							WrappedObject wrappedObject = EntityLayerLocator
+									.get().wrappedObjectProvider()
+									.getObjectWrapperForUser(pType, wrapperId,
+											getEntityManager());
+							checkWrappedObjectAccess(wrapper, wrappedObject,
+									pType);
 							Object unwrapped = wrappedObject.getObject();
 							pd.getWriteMethod().invoke(wrapper, unwrapped);
 						}

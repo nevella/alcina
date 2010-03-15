@@ -18,6 +18,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Date;
 
+import cc.alcina.framework.common.client.gwittir.validator.ShortDateValidator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
@@ -89,7 +90,7 @@ public class PopupDatePickerWithText extends AbstractBoundWidget implements
 				RelativePopupValidationFeedback.BOTTOM);
 		pvf.setCss("dateChooser");
 		Binding b = new Binding(textBox, "value",
-				GwittirBridge.DATE_TEXT_VALIDATOR, pvf, base, "value", null,
+				ShortDateValidator.INSTANCE, pvf, base, "value", null,
 				null);
 		b.setLeft();
 		b.bind();
