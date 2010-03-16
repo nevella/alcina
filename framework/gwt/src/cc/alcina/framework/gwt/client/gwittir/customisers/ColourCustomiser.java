@@ -33,7 +33,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  public class ColourCustomiser implements Customiser {
 	public static final String DEFAULT_COLOUR = "defaultColour";
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		NamedParameter p = NamedParameter.Support.getParameter(
 				info.parameters(), DEFAULT_COLOUR);
@@ -56,7 +56,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	}
 
 	public static class ColourWidget extends
-			AbstractBoundWidget<String, String> {
+			AbstractBoundWidget< String> {
 		private String colour;
 
 		private FlowPanel fp;

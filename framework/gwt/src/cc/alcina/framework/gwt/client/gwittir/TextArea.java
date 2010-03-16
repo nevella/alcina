@@ -43,7 +43,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class TextArea<B> extends AbstractBoundWidget<B, String> implements
+ public class TextArea<B> extends AbstractBoundWidget< String> implements
 		HasFocus, HasEnabled, SourcesKeyboardEvents, SourcesClickEvents,
 		MultilineWidget ,Focusable{
 	private com.google.gwt.user.client.ui.TextArea base = new com.google.gwt.user.client.ui.TextArea();
@@ -69,7 +69,6 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 	public TextArea(final boolean updateOnKeypress) {
 		final TextArea instance = this;
 		old = base.getText();
-		this.setRenderer(new ToStringRenderer());
 		this.setComparator(SimpleComparator.INSTANCE);
 		if (updateOnKeypress) {
 			this.addKeyboardListener(new KeyboardListener() {
@@ -268,10 +267,9 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 		this.base.setTitle(title);
 	}
 
-	public void setValue(B value) {
+	public void setValue(String value) {
 		String old = this.getValue();
-		this.setText(this.getRenderer() != null ? this.getRenderer().render(
-				value) : "" + value);
+		this.setText(value);
 		if (this.getValue() != old
 				&& (this.getValue() == null || (this.getValue() != null && !this
 						.getValue().equals(old)))) {
@@ -295,10 +293,6 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 		super.setModel(model);
 	}
 
-	@SuppressWarnings("unchecked")
-	public void setRenderer(Renderer renderer) {
-		super.setRenderer(renderer);
-	}
 
 	public void setAction(Action action) {
 		super.setAction(action);

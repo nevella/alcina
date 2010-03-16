@@ -41,7 +41,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.apache.xerces.parsers.DOMParser;
 import org.w3c.dom.Document;
-import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;

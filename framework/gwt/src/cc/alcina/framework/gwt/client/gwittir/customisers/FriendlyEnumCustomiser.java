@@ -28,7 +28,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  */
 
  public class FriendlyEnumCustomiser implements Customiser {
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		return GwittirBridge.FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE;
 	}

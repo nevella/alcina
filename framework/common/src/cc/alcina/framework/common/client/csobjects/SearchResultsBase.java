@@ -20,14 +20,12 @@ import java.util.List;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-import com.totsp.gwittir.client.beans.Bindable;
-
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class SearchResultsBase<B extends Bindable> implements Serializable{
+ public class SearchResultsBase<B extends SearchResult> implements Serializable{
 	private String log = "";
 	private int totalResultCount;
 	private int pageNumber;

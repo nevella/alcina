@@ -14,10 +14,8 @@
 package cc.alcina.framework.common.client.search;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,10 +25,6 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
-
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 //
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)

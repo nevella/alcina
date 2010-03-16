@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customisers;
 
 import java.util.ArrayList;
@@ -24,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Label;
@@ -37,11 +37,10 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class ClassLookupCustomiser implements Customiser {
+public class ClassLookupCustomiser implements Customiser {
 	public static final String REGISTRY_POINT = "REGISTRY_POINT";
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		return new RendererClassProvider(editable, NamedParameter.Support
 				.getParameter(info.parameters(), REGISTRY_POINT).classValue());
@@ -60,15 +59,14 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		public BoundWidget get() {
 			ClassShortnameRenderer renderer = new ClassShortnameRenderer();
 			if (!editable) {
-				Label label = new Label();
+				RenderingLabel<Class> label = new RenderingLabel<Class>();
 				label.setRenderer(renderer);
 				return label;
 			}
 			List<Class> lookup = Registry.get().lookup(registryPoint);
 			lookup = new ArrayList<Class>(lookup);
 			Collections.sort(lookup, new RendererComparator(renderer));
-			lookup.add(0,null);
-			
+			lookup.add(0, null);
 			ListBox listBox = new ListBox();
 			listBox.setOptions(lookup);
 			listBox.setRenderer(renderer);
@@ -77,7 +75,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	}
 
 	public static class ClassShortnameRenderer implements
-			Renderer<String, Class> {
+			Renderer<Class, String> {
 		public String render(Class clazz) {
 			return clazz == null ? "----" : CommonUtils.simpleClassName(clazz);
 		}
@@ -86,7 +84,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	public static class RendererComparator implements Comparator {
 		private final Renderer renderer;
 
-		public RendererComparator(Renderer<? extends Comparable, ?> renderer) {
+		public RendererComparator(Renderer<?, ? extends Comparable> renderer) {
 			this.renderer = renderer;
 		}
 

@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @SuppressWarnings("all")
 public class RegistryLocationImpl implements RegistryLocation {

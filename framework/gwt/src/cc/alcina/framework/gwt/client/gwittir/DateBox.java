@@ -12,7 +12,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-public class DateBox extends AbstractBoundWidget<Date, String> implements
+public class DateBox extends AbstractBoundWidget<String> implements
 		ValueChangeHandler {
 	public static final BoundWidgetProvider PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
@@ -56,11 +56,17 @@ public class DateBox extends AbstractBoundWidget<Date, String> implements
 		oldText = getValue();
 		changes.firePropertyChange("value", old, this.getValue());
 	}
-	private void fireChangesFromBase(){
+
+	private void fireChangesFromBase() {
 		changes.firePropertyChange("value", oldText, getValue());
 		oldText = getValue();
 	}
+
 	public void onValueChange(ValueChangeEvent event) {
 		fireChangesFromBase();
+	}
+
+	public void setValue(String value) {
+		// TODO Auto-generated method stub
 	}
 }

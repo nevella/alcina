@@ -22,14 +22,14 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 
 import com.google.gwt.user.client.ui.TreeItem;
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class DomainCollectionProviderNode<T extends Bindable> extends
+ public class DomainCollectionProviderNode<T extends SourcesPropertyChangeEvents> extends
 		DomainNode<T> implements CollectionModificationListener,
 		ProvidesParenting {
 	protected CollectionRenderingSupport support = null;

@@ -36,7 +36,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 	public static final String LINES = "lines";
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		NamedParameter param = NamedParameter.Support.getParameter(info
 				.parameters(), WIDTH);

@@ -40,7 +40,7 @@ import cc.alcina.framework.entity.gwtsynth.GwtReflectionScanner.ScanInfo;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
 import com.google.gwt.user.rebind.SourceWriter;
-import com.totsp.gwittir.rebind.beans.IntrospectorIgnore;
+import com.totsp.gwittir.client.beans.annotations.Omit;
 @SuppressWarnings("unchecked")
 /**
  *
@@ -177,7 +177,7 @@ import com.totsp.gwittir.rebind.beans.IntrospectorIgnore;
 				String annArray = "";
 				boolean ignore = false;
 				for (Annotation a : annotations) {
-					if (a.annotationType() == IntrospectorIgnore.class) {
+					if (a.annotationType() == Omit.class) {
 						ignore = true;
 					}
 				}
@@ -187,7 +187,7 @@ import com.totsp.gwittir.rebind.beans.IntrospectorIgnore;
 				sw.println("{");
 				sw.indent();
 				for (Annotation a : annotations) {
-					if (a.annotationType() == IntrospectorIgnore.class) {
+					if (a.annotationType() == Omit.class) {
 						ignore = true;
 					}
 					if (!a.annotationType().isAnnotationPresent(

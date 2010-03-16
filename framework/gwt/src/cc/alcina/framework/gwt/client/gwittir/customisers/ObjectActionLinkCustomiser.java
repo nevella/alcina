@@ -43,7 +43,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 public class ObjectActionLinkCustomiser implements Customiser {
 	public static final String ACTION_CLASS = "actionClass";
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		List<VetoableAction> actions = new ArrayList<VetoableAction>();
 		for (NamedParameter p : info.parameters()) {

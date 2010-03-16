@@ -37,7 +37,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	};
 
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class clazz,
+	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, CustomiserInfo info) {
 		return (editable) ? EDITABLE_PASSWORD_PROVIDER
 				: GwittirBridge.NOWRAP_LABEL_PROVIDER;

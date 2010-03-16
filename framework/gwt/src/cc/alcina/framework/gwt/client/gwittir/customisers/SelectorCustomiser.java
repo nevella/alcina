@@ -62,7 +62,7 @@ public class SelectorCustomiser implements Customiser {
 
 	public static final String MAX_SELECTED_ITEMS = "maxSelectedItems";
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class clazz,
+	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, CustomiserInfo info) {
 		if (editable) {
 			CollectionFilter filter = null;

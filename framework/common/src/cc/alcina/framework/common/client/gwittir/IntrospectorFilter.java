@@ -12,7 +12,7 @@
  * the License.
  */
 
-package com.totsp.gwittir.rebind.beans;
+package cc.alcina.framework.common.client.gwittir;
 
 import java.util.Collection;
 

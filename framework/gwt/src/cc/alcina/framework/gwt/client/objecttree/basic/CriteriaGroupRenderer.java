@@ -17,14 +17,8 @@ import java.util.Collection;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
-import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
-import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
-
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = CriteriaGroup.class)
 /**

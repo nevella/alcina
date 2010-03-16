@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.TreeItem;
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  *
@@ -69,13 +69,13 @@ import com.totsp.gwittir.client.beans.Bindable;
 		theInstance = nodeFactory;
 	}
 
-	private Set<Bindable> childlessBindables = new HashSet<Bindable>();
+	private Set<SourcesPropertyChangeEvents> childlessBindables = new HashSet<SourcesPropertyChangeEvents>();
 	@SuppressWarnings("unchecked")
-	protected DomainNode createDomainNode(Bindable domainObject) {
+	protected DomainNode createDomainNode(SourcesPropertyChangeEvents domainObject) {
 		return new DomainNode(domainObject);
 	}
 
-	public DomainNode getNodeForDomainObject(Bindable domainObject) {
+	public DomainNode getNodeForDomainObject(SourcesPropertyChangeEvents domainObject) {
 		DomainNode dn = createDomainNode(domainObject);
 		if (childlessBindables.contains(domainObject.getClass())) {
 			return dn;

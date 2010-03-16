@@ -43,7 +43,7 @@ public class ListCustomiser implements Customiser {
 
 	public static final String NO_NULL = "noNull";
 	@SuppressWarnings("unchecked")
-	public BoundWidgetProvider getRenderer(boolean editable, Class clazz,
+	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, CustomiserInfo info) {
 		if (editable) {
 			CollectionFilter filter = null;

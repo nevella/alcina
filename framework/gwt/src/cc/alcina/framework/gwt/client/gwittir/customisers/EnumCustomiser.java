@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.ListBoxEnumProvider;
+import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Label;
@@ -42,7 +43,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 	public static final String RENDERER_CLASS = "renderer-class";
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		NamedParameter parameter = NamedParameter.Support.getParameter(info
 				.parameters(), ENUM_CLASS);
@@ -65,7 +66,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		}
 		return editable ? provider : new BoundWidgetProvider() {
 			public BoundWidget get() {
-				Label label = new Label();
+				RenderingLabel<Enum> label = new RenderingLabel<Enum>();
 				if (renderer != null) {
 					label.setRenderer(renderer);
 				}

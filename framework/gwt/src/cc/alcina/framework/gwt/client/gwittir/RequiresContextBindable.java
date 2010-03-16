@@ -14,13 +14,13 @@
 
 package cc.alcina.framework.gwt.client.gwittir;
 
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public interface RequiresContextBindable<V extends Bindable> {
+ public interface RequiresContextBindable<V extends SourcesPropertyChangeEvents> {
 	public void setBindable(V bindable);
 }

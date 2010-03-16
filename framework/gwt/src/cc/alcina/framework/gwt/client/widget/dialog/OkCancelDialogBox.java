@@ -89,6 +89,7 @@ import com.totsp.gwittir.client.beans.Binding;
 				if (!checkValid()) {
 					return;
 				}
+				okButton.setEnabled(false);
 				VetoableAction action = new VetoableAction();
 				action.setActionName(OK_ACTION);
 				OkCancelDialogBox.this.hide();

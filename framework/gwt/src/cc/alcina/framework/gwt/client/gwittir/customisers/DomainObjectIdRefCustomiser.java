@@ -31,7 +31,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  public class DomainObjectIdRefCustomiser implements Customiser {
 	public static final String TARGET_CLASS = "targetClass";
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		return new DomainObjectIdRefProvider(NamedParameter.Support.getParameter(
 				info.parameters(), TARGET_CLASS).classValue());

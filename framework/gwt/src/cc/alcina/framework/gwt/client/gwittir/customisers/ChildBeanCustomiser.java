@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.gwt.client.gwittir.GridForm;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
@@ -32,7 +33,6 @@ import com.google.gwt.user.client.ui.Label;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.table.Field;
-import com.totsp.gwittir.client.ui.table.GridForm;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
@@ -44,7 +44,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  */
 
  public class ChildBeanCustomiser implements Customiser {
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		return new ChildBeanRenderer(editable, objectClass);
 	}

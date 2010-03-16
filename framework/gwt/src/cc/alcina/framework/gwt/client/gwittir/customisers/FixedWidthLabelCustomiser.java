@@ -34,7 +34,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 	public static final String SHOW_NEWLINES_AS_HTML_BREAKS = "showNewlinesAsBreaks";
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		NamedParameter p = NamedParameter.Support.getParameter(info
 				.parameters(), MAX_WIDTH);

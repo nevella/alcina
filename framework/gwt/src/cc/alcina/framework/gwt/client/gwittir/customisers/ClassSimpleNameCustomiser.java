@@ -28,7 +28,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  */
 
  public class ClassSimpleNameCustomiser implements Customiser {
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		return GwittirBridge.CLASS_SIMPLE_NAME_PROVIDER;
 	}

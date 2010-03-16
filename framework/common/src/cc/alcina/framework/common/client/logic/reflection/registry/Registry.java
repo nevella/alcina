@@ -22,8 +22,6 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
  * 

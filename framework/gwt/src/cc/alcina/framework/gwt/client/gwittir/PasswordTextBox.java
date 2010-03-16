@@ -32,7 +32,6 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.SimpleComparator;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 @SuppressWarnings("deprecation")
 /**
@@ -40,7 +39,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class PasswordTextBox<B> extends AbstractBoundWidget<B, String>
+ public class PasswordTextBox<B> extends AbstractBoundWidget< String>
 		implements HasFocus, HasEnabled, SourcesKeyboardEvents,
 		SourcesClickEvents {
 	private com.google.gwt.user.client.ui.PasswordTextBox base = new com.google.gwt.user.client.ui.PasswordTextBox();
@@ -58,7 +57,6 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 	public PasswordTextBox(final boolean updateOnKeypress) {
 		final PasswordTextBox instance = this;
 		old = base.getText();
-		this.setRenderer(new ToStringRenderer());
 		this.setComparator(SimpleComparator.INSTANCE);
 		if (updateOnKeypress) {
 			this.addKeyboardListener(new KeyboardListener() {
@@ -286,10 +284,9 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 		this.base.setTitle(title);
 	}
 
-	public void setValue(B value) {
+	public void setValue(String value) {
 		String old = this.getValue();
-		this.setText(this.getRenderer() != null ? this.getRenderer().render(
-				value) : "" + value);
+		this.setText( "" + value);
 		if (this.getValue() != old
 				&& (this.getValue() == null || (this.getValue() != null && !this
 						.getValue().equals(old)))) {
@@ -316,10 +313,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 	public void setModel(Object model) {
 		super.setModel(model);
 	}
-	@SuppressWarnings("unchecked")
-	public void setRenderer(Renderer renderer) {
-		super.setRenderer(renderer);
-	}
+	
 
 	public void setAction(Action action) {
 		super.setAction(action);

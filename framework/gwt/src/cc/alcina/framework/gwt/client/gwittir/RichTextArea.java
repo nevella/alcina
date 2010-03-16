@@ -36,7 +36,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class RichTextArea extends AbstractBoundWidget<String, String> implements
+ public class RichTextArea extends AbstractBoundWidget<String> implements
 		HasFocus ,Focusable{
 	public void addFocusListener(FocusListener listener) {
 		this.base.addFocusListener(listener);
@@ -70,7 +70,6 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 	@SuppressWarnings("unchecked")
 	public RichTextArea() {
 		old = base.getHTML();
-		this.setRenderer(new ToStringRenderer());
 		this.setComparator(SimpleComparator.INSTANCE);
 		this.base.addFocusListener(new FocusListener() {
 			public void onFocus(Widget sender) {

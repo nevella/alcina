@@ -17,13 +17,12 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
-import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 @ClientInstantiable
 /**
@@ -34,7 +33,7 @@ public class RenderedLabelCustomiser implements Customiser {
 	public static final String RENDERER_CLASS = "RENDERER_CLASS";
 	public static final String WIDGET_CSS_CLASS = "WIDGET_CSS_CLASS";
 
-	public BoundWidgetProvider getRenderer(boolean editable, Class objectClass,
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		NamedParameter p = NamedParameter.Support.getParameter(info
 				.parameters(), RENDERER_CLASS);
@@ -55,7 +54,7 @@ public class RenderedLabelCustomiser implements Customiser {
 		}
 
 		public BoundWidget get() {
-			Label label = new Label();
+			RenderingLabel label = new RenderingLabel();
 			label.setRenderer((Renderer) CommonLocator.get().classLookup()
 					.newInstance(rendererClass));
 			if (widgetCssClass!=null){

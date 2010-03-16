@@ -16,13 +16,13 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
+@Introspectable
  public class BaseBindable extends BaseSourcesPropertyChangeEvents implements
-		Bindable, Serializable {
+		 Serializable {
 }

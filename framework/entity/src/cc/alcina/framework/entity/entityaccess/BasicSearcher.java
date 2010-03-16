@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 		return this.entityManager;
 	}
 	@SuppressWarnings("unchecked")
+	
 	public SearchResultsBase search(SearchDefinition def, int pageNumber,
 			EntityManager entityManager) {
 		this.entityManager = entityManager;

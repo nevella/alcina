@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity;
 
 import java.awt.Graphics2D;
@@ -52,7 +51,6 @@ import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
 
 /**
  * @author nick@alcina.cc
@@ -126,13 +124,17 @@ public class ResourceUtilities {
 				+ ".Bundle", Locale.getDefault(), clazz.getClassLoader());
 		return b.getString(propertyName);
 	}
-	public static interface BeanInfoHelper{
+
+	public static interface BeanInfoHelper {
 		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
 	}
+
 	private static BeanInfoHelper helper;
-	public static void registerBeanInfoHelper(BeanInfoHelper theHelper){
-		helper=theHelper;
+
+	public static void registerBeanInfoHelper(BeanInfoHelper theHelper) {
+		helper = theHelper;
 	}
+
 	/**
 	 * Retrieves the BeanInfo for a Class
 	 */
@@ -140,13 +142,23 @@ public class ResourceUtilities {
 		BeanInfo beanInfo = null;
 		try {
 			beanInfo = Introspector.getBeanInfo(cls);
-			if (helper!=null){
-				beanInfo=helper.postProcessBeanInfo(beanInfo);
+			if (helper != null) {
+				beanInfo = helper.postProcessBeanInfo(beanInfo);
 			}
 		} catch (IntrospectionException ex) {
 			ex.printStackTrace();
 		}
 		return beanInfo;
+	}
+
+	public static void copyFile(File in, File out) throws IOException {
+		if (!out.exists()) {
+			out.getParentFile().mkdirs();
+			out.createNewFile();
+		}
+		FileInputStream ins = new FileInputStream(in);
+		writeStreamToStream(ins, new FileOutputStream(out));
+		ins.close();
 	}
 
 	public static OutputStream scaleImage(InputStream in, int width,
@@ -230,6 +242,7 @@ public class ResourceUtilities {
 		return copyBeanProperties(srcBean, tgtBean, methodFilterAnnotation,
 				cloneCollections, new ArrayList<String>());
 	}
+
 	@SuppressWarnings("unchecked")
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
 			Class methodFilterAnnotation, boolean cloneCollections,

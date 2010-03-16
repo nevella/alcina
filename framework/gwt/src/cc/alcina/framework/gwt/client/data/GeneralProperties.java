@@ -31,8 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties;
 import cc.alcina.framework.gwt.client.gwittir.customisers.TextAreaCustomiser;
 
-import com.totsp.gwittir.client.beans.Bindable;
-
 @BeanInfo(displayInfo = @DisplayInfo(name = "Developer"), displayNamePropertyName = "id")
 @XmlRootElement
 @RegistryLocations(value = {
@@ -43,7 +41,7 @@ import com.totsp.gwittir.client.beans.Bindable;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class GeneralProperties extends GwtPersistableObject implements Bindable {
+ public class GeneralProperties extends GwtPersistableObject  {
 	public static final transient String PROPERTY_TRANSIENT_CSS = "transientCss";
 
 	public static final transient String PROPERTY_PERSISTENT_CSS = "persistentCss";

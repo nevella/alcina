@@ -29,6 +29,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ParameterisedValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
@@ -56,6 +57,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.gwittir.SetBasedListBox.DomainListBox;
 import cc.alcina.framework.gwt.client.gwittir.customisers.Customiser;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
+import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
@@ -76,9 +78,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
-import com.totsp.gwittir.client.validator.CompositeValidator;
 import com.totsp.gwittir.client.validator.IntegerValidator;
-import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
 @SuppressWarnings("unchecked")
@@ -273,7 +273,7 @@ public class GwittirBridge implements PropertyAccessor {
 					customiser = (Customiser) ClientReflector.get()
 							.newInstance(customiserInfo.customiserClass(), 0);
 				}
-				bwp = customiser.getRenderer(fieldEditable, domainType,
+				bwp = customiser.getProvider(fieldEditable, domainType,
 						multiple, customiserInfo);
 			}
 			if (bwp != null) {
@@ -461,7 +461,7 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public static final BoundWidgetProvider COLL_DN_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
-			Label label = new Label();
+			RenderingLabel label = new RenderingLabel();
 			label.setRenderer(CollectionDisplayNameRenderer.INSTANCE);
 			return label;
 		}
@@ -477,7 +477,7 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public static final BoundWidgetProvider YES_NO_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
-			Label label = new Label();
+			RenderingLabel label = new RenderingLabel();
 			label.setWordWrap(false);
 			label.setRenderer(YES_NO_RENDERER);
 			return label;
@@ -486,7 +486,7 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public static final BoundWidgetProvider CLASS_SIMPLE_NAME_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
-			Label label = new Label();
+			RenderingLabel label = new RenderingLabel();
 			label.setWordWrap(false);
 			label.setRenderer(CLASS_SIMPLE_NAME_RENDERER);
 			return label;
@@ -507,7 +507,7 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public static final BoundWidgetProvider AU_DATE_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
-			Label label = new Label();
+			RenderingLabel label = new RenderingLabel();
 			label.setWordWrap(false);
 			label.setRenderer(DATE_TIME_RENDERER);
 			return label;
@@ -526,6 +526,13 @@ public class GwittirBridge implements PropertyAccessor {
 		public Object render(Object o) {
 			Date d = (Date) o;
 			return d == null ? "" : CommonUtils.formatDate(d,
+					DateStyle.AU_DATE_SLASH);
+		}
+	};
+	public static final Renderer DATE_SLASH_RENDERER_WITH_NULL = new Renderer() {
+		public Object render(Object o) {
+			Date d = (Date) o;
+			return d == null ? null : CommonUtils.formatDate(d,
 					DateStyle.AU_DATE_SLASH);
 		}
 	};
@@ -696,7 +703,7 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 
 		public BoundWidget get() {
-			Label label = new Label();
+			RenderingLabel label = new RenderingLabel();
 			label.setRenderer(new DisplayNameIdRefRenderer(targetObjectClass));
 			return label;
 		}
@@ -704,7 +711,7 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public static final BoundWidgetProvider DN_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
-			Label label = new Label();
+			RenderingLabel label = new RenderingLabel();
 			label.setRenderer(DisplayNameRenderer.INSTANCE);
 			return label;
 		}
@@ -820,14 +827,11 @@ public class GwittirBridge implements PropertyAccessor {
 			return renderer;
 		}
 	}
-
-	public static final ToStringRenderer TO_STRING_RENDERER_INSTANCE = new ToStringRenderer();
-
-	public static class FriendlyEnumRenderer extends ToStringRenderer {
+	public static class FriendlyEnumRenderer extends FlexibleToStringRenderer {
 		public static final FriendlyEnumRenderer INSTANCE = new FriendlyEnumRenderer();
 
 		@Override
-		public Object render(Object o) {
+		public String render(Object o) {
 			if (o == null) {
 				return "-- any --";
 			}
@@ -835,11 +839,11 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	}
 
-	public static class TitleCaseEnumRenderer extends ToStringRenderer {
+	public static class TitleCaseEnumRenderer extends FlexibleToStringRenderer {
 		public static final TitleCaseEnumRenderer INSTANCE = new TitleCaseEnumRenderer();
 
 		@Override
-		public Object render(Object o) {
+		public String render(Object o) {
 			if (o == null) {
 				return "-- Any --";
 			}
@@ -852,16 +856,16 @@ public class GwittirBridge implements PropertyAccessor {
 	public static class FriendlyEnumLabelProvider implements
 			BoundWidgetProvider {
 		public BoundWidget get() {
-			Label label = new Label();
+			RenderingLabel label = new RenderingLabel();
 			label.setRenderer(FriendlyEnumRenderer.INSTANCE);
 			return label;
 		}
 	}
 
-	public static class DisplayNameRenderer extends ToStringRenderer {
+	public static class DisplayNameRenderer extends FlexibleToStringRenderer {
 		public static final DisplayNameRenderer INSTANCE = new DisplayNameRenderer();
 
-		public Object render(Object o) {
+		public String render(Object o) {
 			if (o == null) {
 				return "(Undefined)";
 			}
@@ -870,14 +874,14 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	}
 
-	static class DisplayNameIdRefRenderer extends ToStringRenderer {
+	static class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
 		private final Class targetClass;
 
 		public DisplayNameIdRefRenderer(Class targetClass) {
 			this.targetClass = targetClass;
 		}
 
-		public Object render(Object o) {
+		public String render(Object o) {
 			if (o == null) {
 				return "0";
 			}
@@ -893,10 +897,10 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	}
 
-	static class CollectionDisplayNameRenderer extends ToStringRenderer {
+	static class CollectionDisplayNameRenderer extends FlexibleToStringRenderer {
 		static final CollectionDisplayNameRenderer INSTANCE = new CollectionDisplayNameRenderer();
 
-		public Object render(Object o) {
+		public String render(Object o) {
 			if (o == null || !(o instanceof Collection)) {
 				return "(Undefined)";
 			}

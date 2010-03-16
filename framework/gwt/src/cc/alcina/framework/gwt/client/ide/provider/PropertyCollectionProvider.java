@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  *
@@ -37,7 +37,7 @@ import com.totsp.gwittir.client.beans.Bindable;
 		PropertyChangeListener {
 	private CollectionFilter<E> filter;
 
-	private final Bindable domainObject;
+	private final SourcesPropertyChangeEvents domainObject;
 
 	private final ClientPropertyReflector propertyReflector;
 
@@ -45,7 +45,7 @@ import com.totsp.gwittir.client.beans.Bindable;
 		this.filter = filter;
 	}
 
-	public PropertyCollectionProvider(Bindable domainObject,
+	public PropertyCollectionProvider(SourcesPropertyChangeEvents domainObject,
 			ClientPropertyReflector propertyReflector) {
 		this.domainObject = domainObject;
 		this.propertyReflector = propertyReflector;
@@ -103,7 +103,7 @@ import com.totsp.gwittir.client.beans.Bindable;
 						getDomainObject()));
 	}
 
-	public Bindable getDomainObject() {
+	public SourcesPropertyChangeEvents getDomainObject() {
 		return domainObject;
 	}
 

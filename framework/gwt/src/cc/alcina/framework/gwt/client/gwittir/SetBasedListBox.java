@@ -56,9 +56,10 @@ import com.google.gwt.user.client.ui.SourcesChangeEvents;
 import com.google.gwt.user.client.ui.SourcesFocusEvents;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.log.Logger;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
 import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.SimpleComparator;
@@ -68,7 +69,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
  *
  */
 @SuppressWarnings({"unchecked","deprecation"})
-public class SetBasedListBox extends AbstractBoundWidget implements HasFocus,
+public class SetBasedListBox extends AbstractBoundCollectionWidget implements HasFocus,
 		SourcesFocusEvents, SourcesChangeEvents,HasEnabled {
 	public static final String VALUE_PROPERTY_NAME = "value";
 
@@ -89,7 +90,7 @@ public class SetBasedListBox extends AbstractBoundWidget implements HasFocus,
 	public SetBasedListBox() {
 		super();
 		this.base = new com.google.gwt.user.client.ui.ListBox();
-		this.setRenderer(new ToStringRenderer());
+		this.setRenderer( ToStringRenderer.INSTANCE);
 		this.setComparator(SimpleComparator.INSTANCE);
 		this.base.addClickListener(new ClickListener() {
 			public void onClick(Widget sender) {
@@ -520,7 +521,7 @@ public class SetBasedListBox extends AbstractBoundWidget implements HasFocus,
 			} else {
 				if (filter instanceof RequiresContextBindable) {
 					((RequiresContextBindable) filter)
-							.setBindable((Bindable) getModel());
+							.setBindable((SourcesPropertyChangeEvents) getModel());
 				}
 				Iterator itr = collection.iterator();
 				while (itr.hasNext()) {

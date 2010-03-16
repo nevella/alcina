@@ -26,8 +26,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
-import com.totsp.gwittir.client.beans.Introspectable;
 import com.totsp.gwittir.client.beans.Property;
 
 /**
@@ -64,7 +64,7 @@ public class CloneHelper {
 			return o;
 		} else if (o instanceof Collection) {
 			return deepCollectionClone((Collection) o);
-		} else if (o instanceof Introspectable) {
+		} else if (GwittirUtils.isIntrospectable(o.getClass())) {
 			return deepBeanClone(o);
 		} else {
 			return o;

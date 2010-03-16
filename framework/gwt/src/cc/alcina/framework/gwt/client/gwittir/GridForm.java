@@ -17,10 +17,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package com.totsp.gwittir.client.ui.table;
+package cc.alcina.framework.gwt.client.gwittir;
 
-
-import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.customisers.MultilineWidget;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
@@ -31,16 +29,36 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.action.BindingAction;
-import com.totsp.gwittir.client.beans.Bindable;
 import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.HasDefaultBinding;
+import com.totsp.gwittir.client.ui.table.AbstractTableWidget;
+import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 /**
  * 
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
+ * @author Nick Reddel
+ *         <p>
+ *         Changes to gwittir.GridForm:
+ *         </p>
+ *         <ul>
+ *         <li>
+ *         Render labels as HTML, not Label (basically to support in-app
+ *         localisation buttons)</li>
+ *         <li>
+ *         Add the "directSetModelDisabled" code, which is necessary for the
+ *         ChildBean customiser (essentially nested grid forms)</li>
+ *         <li>
+ *         Implement HasBinding (necessary for PaneWrapperWithObjects factory
+ *         binding)</li>
+ *         <li>Add debugIds and multline rendering prettiness to the render
+ *         method</li>
+ *         </ul>
+ * 
  */
 public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		HasBinding {
@@ -58,17 +76,17 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		public void execute(BoundWidget model) {
 		}
 
-		public void unbind(BoundWidget widget) {
+		public void set(BoundWidget widget) {
 			try {
-				((GridForm) widget).unbind();
+				((GridForm) widget).set();
 			} catch (ClassCastException cce) {
 				throw new RuntimeException(cce);
 			}
 		}
 
-		public void set(BoundWidget widget) {
+		public void unbind(BoundWidget widget) {
 			try {
-				((GridForm) widget).set();
+				((GridForm) widget).unbind();
 			} catch (ClassCastException cce) {
 				throw new RuntimeException(cce);
 			}
@@ -77,15 +95,13 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 
 	private Binding binding = new Binding();
 
-	public Binding getBinding() {
-		return this.binding;
-	}
-
 	private FlexTable base = new FlexTable();
 
 	private Field[] fields;
 
 	private int columns = 1;
+
+	private boolean directSetModelDisabled = false;
 
 	/** Creates a new instance of GridForm */
 	public GridForm(Field[] fields) {
@@ -118,8 +134,38 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		this.binding.bind();
 	}
 
+	public Binding getBinding() {
+		return this.binding;
+	}
+
 	public Object getValue() {
 		return this.getModel();
+	}
+
+	public boolean isDirectSetModelDisabled() {
+		return directSetModelDisabled;
+	}
+
+	public void set() {
+		this.binding.setLeft();
+	}
+
+	public void setDirectSetModelDisabled(boolean directSetModelDisabled) {
+		this.directSetModelDisabled = directSetModelDisabled;
+	}
+
+	public void setModel(Object model) {
+		setModel(model, true);
+	}
+
+	public void setValue(Object value) {
+		Object old = this.getModel();
+		this.setModel(value, false);
+		this.changes.firePropertyChange("value", old, value);
+	}
+
+	public void unbind() {
+		this.binding.unbind();
 	}
 
 	private void render() {
@@ -136,7 +182,7 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 					continue;
 				}
 				Widget widget = (Widget) this.createWidget(this.binding, field,
-						(Bindable) this.getValue());
+						(SourcesPropertyChangeEvents) this.getValue());
 				widget
 						.ensureDebugId(AlcinaDebugIds.GRID_FORM_FIELD_DEBUG_PREFIX
 								+ field.getPropertyName());
@@ -173,39 +219,11 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		}
 	}
 
-	public void set() {
-		this.binding.setLeft();
-	}
-
-	private boolean directSetModelDisabled = false;
-
-	public void setModel(Object model) {
-		setModel(model, true);
-	}
-
 	private void setModel(Object model, boolean direct) {
 		if (direct && directSetModelDisabled) {
 			return;
 		}
 		super.setModel(model);
 		this.render();
-	}
-
-	public void setValue(Object value) {
-		Object old = this.getModel();
-		this.setModel(value, false);
-		this.changes.firePropertyChange("value", old, value);
-	}
-
-	public void unbind() {
-		this.binding.unbind();
-	}
-
-	public void setDirectSetModelDisabled(boolean directSetModelDisabled) {
-		this.directSetModelDisabled = directSetModelDisabled;
-	}
-
-	public boolean isDirectSetModelDisabled() {
-		return directSetModelDisabled;
 	}
 }

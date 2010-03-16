@@ -29,7 +29,7 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 @SuppressWarnings("unchecked")
 /**
  *
@@ -193,7 +193,7 @@ import com.totsp.gwittir.client.beans.Bindable;
 			for (; i2 < nextCommon[1]; i2++) {
 				//if there were an "insertItem" on the tree API, this'd be where we'd use it...
 				item.addItem(NodeFactory.get().getNodeForDomainObject(
-						(Bindable) currentObjects.get(i2)));
+						(SourcesPropertyChangeEvents) currentObjects.get(i2)));
 			}
 			i1++;
 			i2++;

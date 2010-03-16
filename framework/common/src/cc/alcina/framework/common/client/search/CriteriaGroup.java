@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.common.client.search;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -25,12 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
-
-import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @BeanInfo(displayNamePropertyName = "displayName")
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)

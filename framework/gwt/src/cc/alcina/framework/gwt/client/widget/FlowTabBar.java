@@ -40,12 +40,15 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.SourcesClickEvents;
+import com.google.gwt.user.client.ui.TabListener;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
  * Mostly lifted from GWT TabBar class
  */
+@SuppressWarnings("deprecation")
 public class FlowTabBar extends Composite implements
 		HasBeforeSelectionHandlers<Integer>, HasSelectionHandlers<Integer>,
 		ClickHandler,KeyDownHandler {

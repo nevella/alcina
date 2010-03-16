@@ -11,34 +11,38 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.widget.WidgetUtils;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.ListBox;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.TextBox;
-import com.totsp.gwittir.client.validator.CompositeValidator;
 import com.totsp.gwittir.client.validator.Validator;
+
 @SuppressWarnings("unchecked")
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class GwittirUtils {
+public class GwittirUtils {
 	public static void refreshEmptyTextBoxes(Binding binding) {
 		TransformManager.get().setIgnorePropertyChanges(true);
 		List<Binding> l = binding.getChildren();
@@ -149,7 +153,8 @@ import com.totsp.gwittir.client.validator.Validator;
 		listBox.setOptions(options);
 		return listBox;
 	}
-	public static void disableChildren(HasWidgets w){
+
+	public static void disableChildren(HasWidgets w) {
 		List<Widget> allChildren = WidgetUtils.allChildren(w);
 		for (Widget widget : allChildren) {
 			System.out.println(CommonUtils.classSimpleName(widget.getClass()));
@@ -164,6 +169,21 @@ import com.totsp.gwittir.client.validator.Validator;
 				System.out.println("---disabled");
 			}
 		}
-		
+	}
+
+	/**
+	 * Note: no support for (deprecated) Instantiable and Bindable interfaces if on server
+	 */
+	public static boolean isIntrospectable(Class clazz) {
+		if (GWT.isScript()) {
+			return ClientReflector.get().beanInfoForClass(clazz) != null;
+		}
+		ClassLookup cl = CommonLocator.get().classLookup();
+		while (clazz != Object.class) {
+			if (cl.getAnnotationForClass(clazz, Introspectable.class) != null) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

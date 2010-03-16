@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package com.totsp.gwittir.client.ui.table;
+package cc.alcina.framework.gwt.client.gwittir;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -29,10 +29,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import cc.alcina.framework.gwt.client.gwittir.CollectionDataProvider;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.DOM;
@@ -54,7 +50,7 @@ import com.google.gwt.user.client.ui.SourcesTableEvents;
 import com.google.gwt.user.client.ui.TableListener;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.action.Action;
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Introspector;
 import com.totsp.gwittir.client.beans.Property;
@@ -67,16 +63,47 @@ import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Button;
 import com.totsp.gwittir.client.ui.Label;
+import com.totsp.gwittir.client.ui.table.AbstractTableWidget;
+import com.totsp.gwittir.client.ui.table.DataProvider;
+import com.totsp.gwittir.client.ui.table.Field;
+import com.totsp.gwittir.client.ui.table.HasChunks;
+import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import com.totsp.gwittir.client.util.ListSorter;
 
 /**
- * This is an option-rich table for use with objects implementing the Bindable
- * interfaces.
+ * This is an option-rich table for use with objects implementing the
+ * SourcesPropertyChangeEvents interfaces.
  * 
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
- * @see com.totsp.gwittir.client.beans.Bindable
+ * @see com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents
+ * @author Nick Reddel
+ *         <p>
+ *         <b>Changes from gwittir.BoundTable</b>
+ *         </p>
+ *         <ul>
+ *         <li>
+ *         changed to protected: allRowsHandle, columns, masks, rowHandles,
+ *         shiftDown, table, widgetCache , addRow(),
+ *         <li>
+ *         add: HANDLES_AS_CHECKBOXES, searchingMessage, noContentMessage,
+ *         sortedColumn
+ *         <li>
+ *         method changes:
+ *         <ul>
+ *         <li>
+ *         ordering in init() {works better with the logic, i think}
+ *         <li>init(int) - support for handlesAsCheckboxes
+ *         <li>renderAll() - support for searchingmessage, nocontentmessage,
+ *         labels as HTML (see GridForm). <br>
+ *         Also show hide navrow if <=1 chunk, and render with display=none
+ *         until the end (keep browser from reflowing unnecessarily)
+ *         <li>first(), next(), previous(), last() - ignore if this.inChunk ==
+ *         true (otherwise we get errors on setchunk when people press things twice)
+ *         <li>Visual hints (up/down arrows) to indicate column sort status
+ *         </ul>
+ *         </ul>
  */
 @SuppressWarnings( { "unchecked", "deprecation" })
 public class BoundTable extends AbstractTableWidget implements HasChunks,
@@ -286,8 +313,8 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	 * @param cols
 	 *            The Column objects for the table.
 	 * @param value
-	 *            A collection containing Bindable objects to render in the
-	 *            table.
+	 *            A collection containing SourcesPropertyChangeEvents objects to
+	 *            render in the table.
 	 */
 	public BoundTable(int masks, Field[] cols, Collection value) {
 		super();
@@ -308,8 +335,8 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	 * @param cols
 	 *            The Column objects for the table.
 	 * @param value
-	 *            A collection containing Bindable objects to render in the
-	 *            table.
+	 *            A collection containing SourcesPropertyChangeEvents objects to
+	 *            render in the table.
 	 */
 	public BoundTable(int masks, BoundWidgetTypeFactory typeFactory,
 			Field[] cols, Collection value) {
@@ -397,12 +424,12 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	}
 
 	/**
-	 * Adds a new Bindable object to the table.
+	 * Adds a new SourcesPropertyChangeEvents object to the table.
 	 * 
 	 * @param o
-	 *            An object of type Bindable.
+	 *            An object of type SourcesPropertyChangeEvents.
 	 */
-	public void add(Bindable o) {
+	public void add(SourcesPropertyChangeEvents o) {
 		if (this.value.add(o)) {
 			this.addRow(o);
 		}
@@ -412,11 +439,11 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	 * Adds a colleciton of Bindables to the table
 	 * 
 	 * @param c
-	 *            A collection containing Bindable objects.
+	 *            A collection containing SourcesPropertyChangeEvents objects.
 	 */
 	public void add(Collection c) {
 		for (Iterator it = c.iterator(); it.hasNext();) {
-			this.add((Bindable) it.next());
+			this.add((SourcesPropertyChangeEvents) it.next());
 		}
 	}
 
@@ -455,7 +482,7 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 		this.addKeyBinding(binding, (Object) this);
 	}
 
-	protected void addRow(final Bindable o) {
+	protected void addRow(final SourcesPropertyChangeEvents o) {
 		int row = table.getRowCount();
 		if (((((masks & BoundTable.HEADER_MASK) > 0) && (row >= 2)) || (((masks & BoundTable.HEADER_MASK) == 0) && (row >= 1)))
 				&& ((masks & BoundTable.SPACER_ROW_MASK) > 0)) {
@@ -765,7 +792,7 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	}
 
 	protected BoundWidget createCellWidget(Binding rowBinding, int colIndex,
-			Bindable target) {
+			SourcesPropertyChangeEvents target) {
 		final BoundWidget widget;
 		Field col = this.columns[colIndex];
 		BoundWidget[] rowWidgets = (BoundWidget[]) widgetCache.get(target);
@@ -784,7 +811,7 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 			} else {
 				final Property p = GwittirBridge.get().getProperty(target,
 						col.getPropertyName());
-				widget = this.factory.getWidgetProvider(col.getPropertyName(),
+				widget = (BoundWidget)this.factory.getWidgetProvider(col.getPropertyName(),
 						p.getType()).get();
 				// TODO Figure out some way to make this read only.
 			}
@@ -870,6 +897,9 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	 * used.
 	 */
 	public void first() {
+		if (this.inChunk) {
+			return;
+		}
 		this.currentChunk = 0;
 		this.provider.getChunk(this, this.getCurrentChunk());
 		this.inChunk = true;
@@ -1205,7 +1235,7 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 		Integer realIndex = this.calculateRowToObjectOffset(new Integer(row));
 		// GWT.log( "RealIndex: "+ realIndex, null );
 		int i = 0;
-		Bindable o = null;
+		SourcesPropertyChangeEvents o = null;
 		for (Iterator it = this.topBinding.getChildren().iterator(); it
 				.hasNext(); i++) {
 			if (realIndex.intValue() == i) {
@@ -1216,7 +1246,7 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 				it.next();
 			}
 		}
-		BoundWidget widget = this.factory.getWidgetProvider(
+		BoundWidget widget = (BoundWidget)this.factory.getWidgetProvider(
 				Introspector.INSTANCE.resolveClass(o)).get();
 		widget.setModel(o);
 		this.table.insertRow(row + 1);
@@ -1231,6 +1261,9 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	 * Causes the table to render the last chunk of data.
 	 */
 	public void last() {
+		if (this.inChunk) {
+			return;
+		}
 		if ((this.numberOfChunks - 1) >= 0) {
 			this.currentChunk = this.numberOfChunks - 1;
 			this.provider.getChunk(this, currentChunk);
@@ -1267,7 +1300,9 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	 * Causes the table to render the next chunk of data.
 	 */
 	public void next() {
-		// GWT.log("Next invoked. NOC: " + this.numberOfChunks, null);
+		if (this.inChunk) {
+			return;
+		}
 		if ((this.currentChunk + 1) < this.numberOfChunks) {
 			this.provider.getChunk(this, ++currentChunk);
 			this.inChunk = true;
@@ -1291,6 +1326,9 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	 * Causes teh table to render the previous chunk of data.
 	 */
 	public void previous() {
+		if (this.inChunk) {
+			return;
+		}
 		if ((this.getCurrentChunk() - 1) >= 0) {
 			this.provider.getChunk(this, --currentChunk);
 			inChunk = true;
@@ -1345,7 +1383,7 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 		}
 		for (Iterator it = (this.value == null) ? null : this.value.iterator(); (it != null)
 				&& it.hasNext();) {
-			this.addRow((Bindable) it.next());
+			this.addRow((SourcesPropertyChangeEvents) it.next());
 		}
 		if ((this.provider != null)
 				&& ((this.masks & BoundTable.SCROLL_MASK) == 0)
@@ -1409,14 +1447,15 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 	 * METHOD MUST BE CALLED ASYNCRONOUSLY.
 	 * 
 	 * @param c
-	 *            The next requested chunk of Bindable objects.
+	 *            The next requested chunk of SourcesPropertyChangeEvents
+	 *            objects.
 	 */
 	public void setChunk(Collection c) {
 		if (!this.inChunk) {
 			throw new RuntimeException(
 					"This method MUST becalled asyncronously!");
 			// edge - if a user presses the 'next' button twice
-			// disabling for now
+			// now handled with an inchunk check for all nav actions
 		}
 		if ((masks & BoundTable.SCROLL_MASK) > 0) {
 			this.add(c);
@@ -1477,8 +1516,8 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 		this.clearSelectedRows();
 		for (Iterator it = this.topBinding.getChildren().iterator(); it
 				.hasNext(); i++) {
-			Bindable b = ((Binding) ((Binding) it.next()).getChildren().get(0))
-					.getRight().object;
+			SourcesPropertyChangeEvents b = ((Binding) ((Binding) it.next())
+					.getChildren().get(0)).getRight().object;
 			if (selected.contains(b)) {
 				this.setSelectedRow(calculateObjectToRowOffset(i));
 				if (this.table.getWidget(calculateObjectToRowOffset(i), 0) instanceof HasFocus) {

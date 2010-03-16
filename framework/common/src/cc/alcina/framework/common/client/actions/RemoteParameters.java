@@ -14,11 +14,12 @@
 
 package cc.alcina.framework.common.client.actions;
 
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 /**
  * Limits serialization options for gwt serialization generator 
  * @author nick@alcina.cc
  *
  */
-public interface RemoteParameters extends Bindable {
+
+public interface RemoteParameters extends SourcesPropertyChangeEvents {
 }

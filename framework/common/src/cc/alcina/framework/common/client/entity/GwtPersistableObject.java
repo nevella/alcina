@@ -22,14 +22,15 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class GwtPersistableObject implements Bindable,HasIdAndLocalId, Permissible {
+@Introspectable
+ public class GwtPersistableObject implements SourcesPropertyChangeEvents,HasIdAndLocalId, Permissible {
 	long id;
 	long localId;
 	public long getId() {

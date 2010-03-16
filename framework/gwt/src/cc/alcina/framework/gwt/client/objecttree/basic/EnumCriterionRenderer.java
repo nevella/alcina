@@ -15,7 +15,6 @@ package cc.alcina.framework.gwt.client.objecttree.basic;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.EnumCriterion;
-import cc.alcina.framework.common.client.search.LongCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**

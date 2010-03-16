@@ -18,12 +18,11 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.search.LocalSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.BoundTable;
 import cc.alcina.framework.gwt.client.gwittir.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderingInfoProvider;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.InputButton;
 
@@ -35,7 +34,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.table.BoundTable;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 

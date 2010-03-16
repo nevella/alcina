@@ -15,6 +15,7 @@
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.actions.RemoteParameters;
+import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 
 
@@ -23,7 +24,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public abstract class SingleTableSearchDefinition extends SearchDefinition
+ public abstract class SingleTableSearchDefinition<R extends SearchResult> extends SearchDefinition
 		implements RemoteParameters {
 	public SingleTableSearchDefinition() {
 		init();
@@ -38,13 +39,13 @@ import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 	private String orderPropertyName;
 
 	
-	private transient Class resultClass;
+	private transient Class<R> resultClass;
 
-	public void setResultClass(Class resultClass) {
+	public void setResultClass(Class<R> resultClass) {
 		this.resultClass = resultClass;
 	}
 
-	public Class getResultClass() {
+	public Class<R> getResultClass() {
 		return resultClass;
 	}
 

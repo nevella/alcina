@@ -12,7 +12,7 @@
  * the License.
  */
 
-package com.totsp.gwittir.client.ui.table;
+package cc.alcina.framework.gwt.client.widget.complex;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.BoundTable;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 
@@ -29,9 +30,11 @@ import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Bindable;
 import com.totsp.gwittir.client.beans.Property;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.table.DataProvider;
+import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 @SuppressWarnings("unchecked")
@@ -45,7 +48,7 @@ public class FastROBoundTable extends BoundTable {
 		super(mask, factory, fields, provider);
 	}
 
-	protected BoundWidget createCellWidget(int colIndex, Bindable target) {
+	protected BoundWidget createCellWidget(int colIndex, SourcesPropertyChangeEvents target) {
 		final BoundWidget widget;
 		Field col = this.columns[colIndex];
 		if (!wpMap.containsKey(col.getPropertyName())) {
@@ -83,8 +86,8 @@ public class FastROBoundTable extends BoundTable {
 		return this.selectedObjects;
 	}
 
-	@Override
-	protected void addRow(final Bindable o) {
+	//@Override
+	protected void addRow(final SourcesPropertyChangeEvents o) {
 		int row = table.getRowCount();
 		final CheckBox handle;
 		int startColumn = 0;

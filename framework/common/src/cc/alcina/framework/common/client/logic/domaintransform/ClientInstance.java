@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
@@ -24,8 +23,7 @@ import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
-import com.totsp.gwittir.client.beans.Introspectable;
-
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @MappedSuperclass
 @ClientInstantiable
@@ -33,38 +31,48 @@ import com.totsp.gwittir.client.beans.Introspectable;
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public abstract class ClientInstance implements HasIUser,HasIdAndLocalId,Serializable,Introspectable{
+@Introspectable
+public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
+		Serializable {
 	private long id;
+
 	private long localId;
+
 	private Date helloDate;
+
 	private Integer auth;
+
 	public Integer getAuth() {
 		return auth;
 	}
+
 	public Date getHelloDate() {
 		return helloDate;
 	}
+
 	@Transient
 	public long getId() {
 		return id;
 	}
+
 	@Transient
 	public long getLocalId() {
 		return this.localId;
 	}
+
 	public void setAuth(Integer auth) {
 		this.auth = auth;
 	}
+
 	public void setHelloDate(Date helloDate) {
 		this.helloDate = helloDate;
 	}
+
 	public void setId(long id) {
 		this.id = id;
 	}
+
 	public void setLocalId(long localId) {
 		this.localId = localId;
 	}
-	
-	
 }

@@ -19,13 +19,14 @@ import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.Hyperlink;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-@SuppressWarnings("deprecation")
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.ToStringRenderer;
 /**
  *
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
-
- public class BoundHyperlink extends AbstractBoundWidget {
+@SuppressWarnings("deprecation")
+ public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 	protected com.google.gwt.user.client.ui.Hyperlink base;
 	private Element anchorElem;
 	private boolean asHtml;
@@ -92,8 +93,8 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 		return retValue;
 	}
 
-	public Object getValue() {
-		return this.base.getText().length() == 0 ? null : this.base.getText();
+	public T getValue() {
+		return value;
 	}
 
 	public boolean isVisible() {
@@ -141,10 +142,12 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 	public void setTitle(String title) {
 		this.base.setTitle(title);
 	}
+	private T value;
 	@SuppressWarnings("unchecked")
-	public void setValue(Object value) {
+	public void setValue(T value) {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();
+		this.value=value;
 		String renderedString = this.getRenderer() != null ? (String) this.getRenderer()
 				.render(value) : value == null ? "" : value.toString();
 		if (isAsHtml()){
@@ -179,6 +182,27 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 	}
 	public boolean isAsHtml() {
 		return asHtml;
+	}
+	@SuppressWarnings("unchecked")
+	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
+
+	/**
+	 * Get the value of renderer
+	 * 
+	 * @return the value of renderer
+	 */
+	public Renderer<T, String> getRenderer() {
+		return this.renderer;
+	}
+
+	/**
+	 * Set the value of renderer
+	 * 
+	 * @param newrenderer
+	 *            new value of renderer
+	 */
+	public void setRenderer(Renderer<T, String> newrenderer) {
+		this.renderer = newrenderer;
 	}
 
 }

@@ -67,7 +67,7 @@ import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.Bindable;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * 
@@ -307,7 +307,7 @@ public class WorkspaceView extends Composite implements HasName,
 			Object obj = null;
 			if (item instanceof DomainNode) {
 				DomainNode dn = (DomainNode) item;
-				Bindable userObject = dn.getUserObject();
+				SourcesPropertyChangeEvents userObject = dn.getUserObject();
 				obj = userObject;
 				domainClass = userObject.getClass();
 				ClientBeanReflector info = ClientReflector.get()

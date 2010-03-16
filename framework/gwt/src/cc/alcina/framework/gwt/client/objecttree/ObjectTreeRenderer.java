@@ -36,7 +36,6 @@ import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
-import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 /**
  * 

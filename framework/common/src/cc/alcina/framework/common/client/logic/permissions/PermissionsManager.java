@@ -43,8 +43,6 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.datatransform.ObjectPersistenceHelper;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 

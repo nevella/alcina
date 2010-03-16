@@ -15,6 +15,7 @@
 package cc.alcina.framework.gwt.client.gwittir;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,7 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 @SuppressWarnings("deprecation")
 /**
@@ -32,17 +34,17 @@ import com.totsp.gwittir.client.ui.Renderer;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class RadioButtonList<B, V> extends AbstractBoundWidget<B, V> implements
+ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		ClickListener {
-	Map<String, V> labelMap = new HashMap<String, V>();
+	Map<String, T> labelMap = new HashMap<String, T>();
 
-	Map<V, RadioButton> radioMap = new HashMap<V, RadioButton>();
+	Map<T, RadioButton> radioMap = new HashMap<T, RadioButton>();
 
 	private FlowPanel fp;
 
-	private final Collection<V> values;
+	private final Collection<T> values;
 
-	private final Renderer<String, V> renderer;
+	private final Renderer<T,String> renderer;
 
 	private final String groupName;
 
@@ -53,7 +55,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 		Grid grid = new Grid((int) Math.ceil((double) values.size()
 				/ (double) getColumnCount()), getColumnCount());
 		int x=0, y=0;
-		for (V o : values) {
+		for (T o : values) {
 			String displayText = renderer.render(o);
 			labelMap.put(displayText, o);
 			RadioButton rb = new RadioButton(groupName, displayText);
@@ -68,8 +70,8 @@ import com.totsp.gwittir.client.ui.Renderer;
 		fp.add(grid);
 	}
 
-	public RadioButtonList(String groupName, Collection<V> values,
-			Renderer<String, V> renderer) {
+	public RadioButtonList(String groupName, Collection<T> values,
+			Renderer<T,String> renderer) {
 		this.groupName = groupName;
 		this.values = values;
 		this.renderer = renderer;
@@ -78,9 +80,9 @@ import com.totsp.gwittir.client.ui.Renderer;
 		initWidget(fp);
 	}
 
-	public V getValue() {
-		Set<V> keySet = radioMap.keySet();
-		for (V object : keySet) {
+	public T getValue() {
+		Set<T> keySet = radioMap.keySet();
+		for (T object : keySet) {
 			if (radioMap.get(object).isChecked()) {
 				return object;
 			}
@@ -88,11 +90,11 @@ import com.totsp.gwittir.client.ui.Renderer;
 		return null;
 	}
 
-	private B lastValue;
+	private T lastValue;
 
-	public void setValue(B value) {
-		Set<V> keySet = radioMap.keySet();
-		for (V object : keySet) {
+	public void setValue(T value) {
+		Set<T> keySet = radioMap.keySet();
+		for (T object : keySet) {
 			radioMap.get(object).setChecked(object.equals(value));
 		}
 		if ( value != lastValue) {
@@ -103,10 +105,10 @@ import com.totsp.gwittir.client.ui.Renderer;
 	}
 	@SuppressWarnings("unchecked")
 	public void onClick(Widget sender) {
-		Set<V> keySet = radioMap.keySet();
-		for (V object : keySet) {
+		Set<T> keySet = radioMap.keySet();
+		for (T object : keySet) {
 			if (radioMap.get(object).equals(sender)) {
-				setValue((B) object);
+				setValue((T) object);
 			}
 		}
 	}
@@ -119,4 +121,6 @@ import com.totsp.gwittir.client.ui.Renderer;
 	public int getColumnCount() {
 		return columnCount;
 	}
+
+	
 }

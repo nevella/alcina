@@ -28,7 +28,6 @@ import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.TreeItem;
-import com.totsp.gwittir.client.beans.Bindable;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
@@ -36,7 +35,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
  */
 
- public class DomainNode<T extends Bindable> extends FilterableTreeItem
+ public class DomainNode<T extends SourcesPropertyChangeEvents> extends FilterableTreeItem
 		implements PropertyChangeListener, DetachListener {
 	private String displayName;
 
