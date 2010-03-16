@@ -179,10 +179,11 @@ public class GwittirUtils {
 			return ClientReflector.get().beanInfoForClass(clazz) != null;
 		}
 		ClassLookup cl = CommonLocator.get().classLookup();
-		while (clazz != Object.class) {
+		while (clazz!=null && clazz != Object.class) {
 			if (cl.getAnnotationForClass(clazz, Introspectable.class) != null) {
 				return true;
 			}
+			clazz=clazz.getSuperclass();
 		}
 		return false;
 	}
