@@ -19,7 +19,7 @@ import com.google.gwt.core.client.UnsafeNativeLong;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class SimpleStringParser {

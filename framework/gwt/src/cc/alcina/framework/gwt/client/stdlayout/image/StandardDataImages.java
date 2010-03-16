@@ -20,7 +20,7 @@ import com.google.gwt.user.client.ui.Tree.Resources;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface StandardDataImages extends ClientBundle, Resources {

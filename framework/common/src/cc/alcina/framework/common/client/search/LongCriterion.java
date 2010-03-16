@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class LongCriterion extends SearchCriterion {

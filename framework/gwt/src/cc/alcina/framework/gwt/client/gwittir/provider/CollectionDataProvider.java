@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.provider;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 import com.google.gwt.user.client.Timer;
 import com.totsp.gwittir.client.beans.Property;
@@ -34,7 +35,7 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class CollectionDataProvider implements SortableDataProvider {

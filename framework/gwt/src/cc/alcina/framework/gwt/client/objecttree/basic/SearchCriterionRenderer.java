@@ -23,7 +23,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 @RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = SearchCriterion.class)
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class SearchCriterionRenderer<T extends SearchCriterion> extends BasicRenderer<T> {
 	public Collection<? extends TreeRenderable> renderableChildren() {

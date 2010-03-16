@@ -20,7 +20,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 @Introspectable
  public class BaseBindable extends BaseSourcesPropertyChangeEvents implements

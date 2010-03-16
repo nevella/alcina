@@ -26,13 +26,13 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 
 @MappedSuperclass
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public abstract class ClassRef implements Serializable,HasIdAndLocalId {

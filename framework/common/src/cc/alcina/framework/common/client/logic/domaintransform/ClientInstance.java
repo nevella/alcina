@@ -19,8 +19,8 @@ import java.util.Date;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
@@ -29,7 +29,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 @ClientInstantiable
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 @Introspectable
 public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,

@@ -19,15 +19,15 @@ import java.util.Date;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
-import cc.alcina.framework.common.client.logic.permissions.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 
 
 @MappedSuperclass
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public abstract class DataTransformEventPersistent extends DataTransformEvent

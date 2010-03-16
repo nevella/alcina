@@ -17,7 +17,7 @@ package cc.alcina.framework.gwt.client.browsermod;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class Constants {

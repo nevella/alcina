@@ -18,7 +18,7 @@ import com.google.gwt.dom.client.Document;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class LiWidget extends Para{

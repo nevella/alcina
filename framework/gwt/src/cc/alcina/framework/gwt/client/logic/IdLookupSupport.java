@@ -18,12 +18,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.logic.permissions.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class IdLookupSupport<V extends HasId> {

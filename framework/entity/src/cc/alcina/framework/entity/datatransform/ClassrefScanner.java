@@ -27,8 +27,8 @@ import javax.persistence.EntityManager;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -40,7 +40,7 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ClassrefScanner extends CachingScanner {

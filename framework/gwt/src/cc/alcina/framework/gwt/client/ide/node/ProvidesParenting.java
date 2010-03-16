@@ -19,7 +19,7 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface ProvidesParenting {

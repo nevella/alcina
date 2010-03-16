@@ -49,7 +49,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
  */
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class EncryptionUtils {

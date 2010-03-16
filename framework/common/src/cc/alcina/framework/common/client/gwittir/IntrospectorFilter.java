@@ -16,7 +16,12 @@ package cc.alcina.framework.common.client.gwittir;
 
 import java.util.Collection;
 
-public interface IntrospectorFilter {
+/**
+ *
+ * @author Nick Reddel
+ */
+
+ public interface IntrospectorFilter {
 	public Collection<String> getApprovedPackageRoots();
 	public Collection<String> getApprovedClassNames();
 }

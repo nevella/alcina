@@ -16,13 +16,13 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ObjectCacheItemSpec implements Serializable {

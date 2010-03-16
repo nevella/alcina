@@ -26,7 +26,7 @@ import com.totsp.gwittir.client.beans.Method;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface ClassLookup {

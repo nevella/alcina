@@ -34,13 +34,14 @@ import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ParameterisedValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ShortDateValidator;
+import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.permissions.HasId;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -54,27 +55,24 @@ import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.gwt.client.gwittir.SetBasedListBox.DomainListBox;
-import cc.alcina.framework.gwt.client.gwittir.customisers.Customiser;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
+import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
+import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
+import cc.alcina.framework.gwt.client.gwittir.provider.FriendlyEnumLabelProvider;
+import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider;
+import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
+import cc.alcina.framework.gwt.client.gwittir.renderer.ClassSimpleNameRenderer;
+import cc.alcina.framework.gwt.client.gwittir.renderer.CollectionDisplayNameRenderer;
+import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
+import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
 import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
-import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.InlineHTML;
-import com.google.gwt.user.client.ui.InlineLabel;
-import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Introspector;
 import com.totsp.gwittir.client.beans.Property;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
@@ -84,7 +82,7 @@ import com.totsp.gwittir.client.validator.Validator;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class GwittirBridge implements PropertyAccessor {
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
@@ -385,87 +383,7 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	}
 
-	public interface HasMaxWidth {
-		public int getMaxWidth();
-
-		public boolean isForceColumnWidth();
-	}
-
-	public static class ExpandableDomainNodeCollectionLabelProvider implements
-			BoundWidgetProvider, HasMaxWidth {
-		private final int maxWidth;
-
-		private final boolean forceColumnWidth;
-
-		public ExpandableDomainNodeCollectionLabelProvider(int maxWidth,
-				boolean forceColumnWidth) {
-			this.maxWidth = maxWidth;
-			this.forceColumnWidth = forceColumnWidth;
-		}
-
-		public BoundWidget get() {
-			return new ExpandableLabel(maxWidth);
-		}
-
-		public int getMaxWidth() {
-			return maxWidth;
-		}
-
-		public boolean isForceColumnWidth() {
-			return forceColumnWidth;
-		}
-	};
-
-	public static class ExpandableStringLabelProvider implements
-			BoundWidgetProvider, HasMaxWidth {
-		private final int maxWidth;
-
-		private final boolean forceColumnWidth;
-
-		private final boolean showNewlinesAsBreaks;
-
-		public ExpandableStringLabelProvider(int maxWidth,
-				boolean forceColumnWidth, boolean showNewlinesAsBreaks) {
-			this.maxWidth = maxWidth;
-			this.forceColumnWidth = forceColumnWidth;
-			this.showNewlinesAsBreaks = showNewlinesAsBreaks;
-		}
-
-		public BoundWidget get() {
-			ExpandableLabel label = new ExpandableLabel(maxWidth);
-			label.setShowNewlinesAsBreaks(showNewlinesAsBreaks);
-			return label;
-		}
-
-		public int getMaxWidth() {
-			return maxWidth;
-		}
-
-		public boolean isForceColumnWidth() {
-			return forceColumnWidth;
-		}
-	};
-
-	public static class FixedWidthLabelProvider extends
-			ExpandableStringLabelProvider {
-		public FixedWidthLabelProvider(int maxWidth,
-				boolean showNewlinesAsBreaks) {
-			super(maxWidth, true, showNewlinesAsBreaks);
-		}
-
-		@Override
-		public BoundWidget get() {
-			return new Label();
-		}
-	}
-
-	public static final BoundWidgetProvider COLL_DN_LABEL_PROVIDER = new BoundWidgetProvider() {
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			label.setRenderer(CollectionDisplayNameRenderer.INSTANCE);
-			return label;
-		}
-	};
+	
 
 	public static final BoundWidgetProvider NOWRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
@@ -484,26 +402,7 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	};
 
-	public static final BoundWidgetProvider CLASS_SIMPLE_NAME_PROVIDER = new BoundWidgetProvider() {
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			label.setWordWrap(false);
-			label.setRenderer(CLASS_SIMPLE_NAME_RENDERER);
-			return label;
-		}
-	};
 
-	public static final Renderer CLASS_SIMPLE_NAME_RENDERER = new ClassSimpleNameRenderer();
-
-	public static class ClassSimpleNameRenderer implements Renderer {
-		public Object render(Object o) {
-			if (o == null) {
-				return null;
-			}
-			String s = o.toString();
-			return s.substring(s.lastIndexOf('.') + 1);
-		}
-	};
 
 	public static final BoundWidgetProvider AU_DATE_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
@@ -522,13 +421,8 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	};
 
-	public static final Renderer DATE_SLASH_RENDERER = new Renderer() {
-		public Object render(Object o) {
-			Date d = (Date) o;
-			return d == null ? "" : CommonUtils.formatDate(d,
-					DateStyle.AU_DATE_SLASH);
-		}
-	};
+	
+
 	public static final Renderer DATE_SLASH_RENDERER_WITH_NULL = new Renderer() {
 		public Object render(Object o) {
 			Date d = (Date) o;
@@ -546,169 +440,6 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public static final int MAX_EXPANDABLE_LABEL_LENGTH = 50;
 
-	// TODO - make the expansion lazy (can be a big hit...) - and, in fact, a
-	// popup style would generally be prettier/nicer/lighter-weight
-	public static class ExpandableLabel extends AbstractBoundWidget {
-		private FlowPanel fp;
-
-		private boolean showNewlinesAsBreaks;
-
-		public boolean isShowNewlinesAsBreaks() {
-			return this.showNewlinesAsBreaks;
-		}
-
-		public void setShowNewlinesAsBreaks(boolean showNewlinesAsBreaks) {
-			this.showNewlinesAsBreaks = showNewlinesAsBreaks;
-		}
-
-		private boolean showHideAtEnd;
-
-		private Link hideLink;
-
-		private boolean hiding;
-
-		private final int maxLength;
-
-		public ExpandableLabel(int maxLength) {
-			this.maxLength = maxLength;
-			this.fp = new FlowPanel();
-			initWidget(fp);
-			fp.setStyleName("alcina-expandableLabel");
-		}
-
-		public Object getValue() {
-			return null;
-		}
-
-		List<Widget> hiddenWidgets = new ArrayList<Widget>();
-
-		private InlineLabel dots;
-
-		private InlineHTML space;
-
-		private Link showLink;
-
-		private int getMaxLength() {
-			return maxLength;
-		}
-
-		public void setValue(Object o) {
-			fp.clear();
-			if (o == null) {
-				// fp.add(new InlineLabel("[Undefined]"));
-				return;
-			}
-			if (o instanceof Collection) {
-				ArrayList l = new ArrayList((Collection) o);
-				Collections.sort(l);
-				int strlen = 0;
-				for (Object object : l) {
-					InlineLabel comma = new InlineLabel(", ");
-					if (strlen > 0) {
-						fp.add(comma);
-						strlen += 2;
-					}
-					String name = ClientReflector.get().displayNameForObject(
-							object);
-					InlineLabel label = new InlineLabel(name);
-					if (strlen > getMaxLength()) {
-						comma.setVisible(false);
-						label.setVisible(false);
-						hiddenWidgets.add(comma);
-						hiddenWidgets.add(label);
-					}
-					strlen += name.length();
-					fp.add(label);
-				}
-			} else {
-				String s = o.toString();
-				if (isShowNewlinesAsBreaks()) {
-					s = s.replace("\n", "<br>\n");
-				}
-				int maxC = getMaxLength();
-				int y1 = s.indexOf(">", maxC);
-				int y2 = s.indexOf("<", maxC);
-				if (y1 < y2 && y1 != -1) {
-					maxC = y1 + 1;
-				}
-				String vis = CommonUtils.trimToWsChars(s, maxC);
-				com.google.gwt.user.client.ui.Label label;
-				if (s.length() == vis.length()) {
-					label = isShowNewlinesAsBreaks() ? new InlineHTML(s)
-							: new InlineLabel(s);
-					fp.add(label);
-				} else {
-					label = isShowNewlinesAsBreaks() ? new InlineHTML(vis)
-							: new InlineLabel(vis);
-					fp.add(label);
-					String notVis = s.substring(vis.length());
-					label = isShowNewlinesAsBreaks() ? new InlineHTML(notVis)
-							: new InlineLabel(notVis);
-					label.setVisible(false);
-					fp.add(label);
-					hiddenWidgets.add(label);
-				}
-			}
-			if (hiddenWidgets.size() != 0) {
-				this.dots = new InlineLabel("...");
-				this.space = new InlineHTML("&nbsp;");
-				fp.add(dots);
-				this.hiding = true;
-				this.showLink = new Link("[more]");
-				this.hideLink = new Link("[less]");
-				if (isShowHideAtEnd()) {
-					fp.add(space);
-					fp.add(hideLink);
-				} else {
-					fp.insert(hideLink, 0);
-					fp.add(space);
-				}
-				hideLink.setVisible(false);
-				space.setVisible(false);
-				fp.add(showLink);
-				hideLink.addClickHandler(showHideListener);
-				showLink.addClickHandler(showHideListener);
-			}
-		}
-
-		public void setShowHideAtEnd(boolean showHideAtEnd) {
-			this.showHideAtEnd = showHideAtEnd;
-		}
-
-		public boolean isShowHideAtEnd() {
-			return showHideAtEnd;
-		}
-
-		ClickHandler showHideListener = new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				Widget sender = (Widget) event.getSource();
-				hiding = !hiding;
-				for (Widget w : hiddenWidgets) {
-					w.setVisible(!hiding);
-				}
-				hideLink.setVisible(!hiding);
-				space.setVisible(!hiding);
-				showLink.setVisible(hiding);
-				dots.setVisible(hiding);
-			}
-		};
-	}
-
-	public static class DomainObjectIdRefProvider implements
-			BoundWidgetProvider {
-		private final Class targetObjectClass;
-
-		public DomainObjectIdRefProvider(Class targetObjectClass) {
-			this.targetObjectClass = targetObjectClass;
-		}
-
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			label.setRenderer(new DisplayNameIdRefRenderer(targetObjectClass));
-			return label;
-		}
-	}
-
 	public static final BoundWidgetProvider DN_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
@@ -717,205 +448,7 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	};
 
-	public static final class ListBoxCollectionProvider implements
-			BoundWidgetProvider {
-		private final Class clazz;
-
-		private final boolean propertyIsCollection;
-
-		private final boolean noNullOption;
-
-		private CollectionFilter filter;
-
-		public ListBoxCollectionProvider(Class clazz,
-				boolean propertyIsCollection) {
-			this(clazz, propertyIsCollection, false);
-		}
-
-		public ListBoxCollectionProvider(Class clazz,
-				boolean propertyIsCollection, boolean noNullOption) {
-			this.clazz = clazz;
-			this.propertyIsCollection = propertyIsCollection;
-			this.noNullOption = noNullOption;
-		}
-
-		public DomainListBox get() {
-			DomainListBox listBox = new DomainListBox(clazz, filter,
-					!propertyIsCollection && !noNullOption);
-			listBox.setRenderer(DisplayNameRenderer.INSTANCE);
-			listBox.setComparator(EqualsComparator.INSTANCE);
-			listBox.setMultipleSelect(propertyIsCollection);
-			return listBox;
-		}
-
-		public void setFilter(CollectionFilter filter) {
-			this.filter = filter;
-		}
-
-		public CollectionFilter getFilter() {
-			return filter;
-		}
-	}
-
-	public static class ListBoxEnumProvider implements BoundWidgetProvider {
-		private final Class<? extends Enum> clazz;
-
-		private List<Enum> hiddenValues = new ArrayList<Enum>();
-
-		private boolean withNull;
-
-		private boolean multiple;
-
-		private Renderer renderer = FriendlyEnumRenderer.INSTANCE;
-
-		public ListBoxEnumProvider(Class<? extends Enum> clazz) {
-			this(clazz, false);
-		}
-
-		public ListBoxEnumProvider(Class<? extends Enum> clazz, boolean withNull) {
-			this.clazz = clazz;
-			this.setWithNull(withNull);
-		}
-
-		public BoundWidget get() {
-			SetBasedListBox listBox = new SetBasedListBox();
-			Enum[] enumValues = clazz.getEnumConstants();
-			List options = new ArrayList(Arrays.asList(enumValues));
-			for (Enum e : hiddenValues) {
-				options.remove(e);
-			}
-			if (isWithNull()) {
-				options.add(0, null);
-			}
-			listBox.setRenderer(getRenderer());
-			listBox.setComparator(EqualsComparator.INSTANCE);
-			listBox.setSortOptions(false);
-			listBox.setOptions(options);
-			listBox.setMultipleSelect(multiple);
-			return listBox;
-		}
-
-		public void setHiddenValues(List<Enum> hiddenValues) {
-			this.hiddenValues = hiddenValues;
-		}
-
-		public List<Enum> getHiddenValues() {
-			return hiddenValues;
-		}
-
-		public void setWithNull(boolean withNull) {
-			this.withNull = withNull;
-		}
-
-		public boolean isWithNull() {
-			return withNull;
-		}
-
-		public void setMultiple(boolean multiple) {
-			this.multiple = multiple;
-		}
-
-		public boolean isMultiple() {
-			return multiple;
-		}
-
-		public void setRenderer(Renderer renderer) {
-			this.renderer = renderer;
-		}
-
-		public Renderer getRenderer() {
-			return renderer;
-		}
-	}
-	public static class FriendlyEnumRenderer extends FlexibleToStringRenderer {
-		public static final FriendlyEnumRenderer INSTANCE = new FriendlyEnumRenderer();
-
-		@Override
-		public String render(Object o) {
-			if (o == null) {
-				return "-- any --";
-			}
-			return CommonUtils.friendlyConstant(o);
-		}
-	}
-
-	public static class TitleCaseEnumRenderer extends FlexibleToStringRenderer {
-		public static final TitleCaseEnumRenderer INSTANCE = new TitleCaseEnumRenderer();
-
-		@Override
-		public String render(Object o) {
-			if (o == null) {
-				return "-- Any --";
-			}
-			return CommonUtils.titleCase(CommonUtils.friendlyConstant(o));
-		}
-	}
-
 	public static final BoundWidgetProvider FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE = new FriendlyEnumLabelProvider();
-
-	public static class FriendlyEnumLabelProvider implements
-			BoundWidgetProvider {
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			label.setRenderer(FriendlyEnumRenderer.INSTANCE);
-			return label;
-		}
-	}
-
-	public static class DisplayNameRenderer extends FlexibleToStringRenderer {
-		public static final DisplayNameRenderer INSTANCE = new DisplayNameRenderer();
-
-		public String render(Object o) {
-			if (o == null) {
-				return "(Undefined)";
-			}
-			String dn = ClientReflector.get().displayNameForObject(o);
-			return (dn == null) ? super.render(o) : dn;
-		}
-	}
-
-	static class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
-		private final Class targetClass;
-
-		public DisplayNameIdRefRenderer(Class targetClass) {
-			this.targetClass = targetClass;
-		}
-
-		public String render(Object o) {
-			if (o == null) {
-				return "0";
-			}
-			Long id = (Long) o;
-			HasIdAndLocalId object = CommonLocator.get().objectLookup()
-					.getObject(targetClass, id, 0);
-			String dn = null;
-			if (object != null) {
-				return ClientReflector.get().displayNameForObject(object);
-			} else {
-				return "(" + id + ")";
-			}
-		}
-	}
-
-	static class CollectionDisplayNameRenderer extends FlexibleToStringRenderer {
-		static final CollectionDisplayNameRenderer INSTANCE = new CollectionDisplayNameRenderer();
-
-		public String render(Object o) {
-			if (o == null || !(o instanceof Collection)) {
-				return "(Undefined)";
-			}
-			String result = "";
-			ArrayList l = new ArrayList((Collection) o);
-			Collections.sort(l);
-			for (Object object : l) {
-				if (result.length() != 0) {
-					result += ", ";
-				}
-				result += ClientReflector.get().displayNameForObject(object);
-			}
-			return result;
-		}
-	}
 
 	/** note - not transitive...uh, it's a gwittir thing **/
 	public static class EqualsComparator implements Comparator {
@@ -927,6 +460,19 @@ public class GwittirBridge implements PropertyAccessor {
 			}
 			return o1.equals(o2) ? 0 : -1;
 		}
+	}
+	@ClientInstantiable
+	public static class IdComparator implements Comparator<HasId> {
+		public static final EqualsComparator INSTANCE = new EqualsComparator();
+
+		public int compare(HasId o1, HasId o2) {
+			if (o1 == null) {
+				return o2 == null ? 0 : -1;
+			}
+			return new Long(o1.getId()).compareTo(o2.getId());
+		}
+
+		
 	}
 
 	static class SimpleComparatorWithNull implements Comparator, Serializable {

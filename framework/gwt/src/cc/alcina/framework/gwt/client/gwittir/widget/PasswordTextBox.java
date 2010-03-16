@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Comparator;
 
@@ -36,7 +36,7 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 @SuppressWarnings("deprecation")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class PasswordTextBox<B> extends AbstractBoundWidget< String>

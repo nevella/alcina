@@ -19,7 +19,7 @@ import cc.alcina.framework.entity.datatransform.ThreadlocalTransformManager.Hili
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class DataTransformLayerWrapper {

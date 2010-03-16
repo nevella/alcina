@@ -20,7 +20,7 @@ import java.util.Date;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface ActionLogItem extends Serializable{

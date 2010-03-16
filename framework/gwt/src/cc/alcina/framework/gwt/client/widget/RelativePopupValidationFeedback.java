@@ -33,7 +33,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class RelativePopupValidationFeedback extends AbstractValidationFeedback {
 	public static final int LEFT = 1;

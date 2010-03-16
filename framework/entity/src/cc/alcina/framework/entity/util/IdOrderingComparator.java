@@ -17,12 +17,12 @@ package cc.alcina.framework.entity.util;
 import java.util.Comparator;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.permissions.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class IdOrderingComparator implements Comparator<HasId> {

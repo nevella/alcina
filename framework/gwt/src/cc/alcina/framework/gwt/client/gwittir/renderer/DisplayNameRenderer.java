@@ -11,15 +11,23 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-package cc.alcina.framework.common.client.logic.permissions;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
- public interface HasVersionNumber {
-	public int getVersionNumber();
-	public void setVersionNumber(int versionNumber);
+ public class DisplayNameRenderer extends FlexibleToStringRenderer {
+	public static final DisplayNameRenderer INSTANCE = new DisplayNameRenderer();
+
+	public String render(Object o) {
+		if (o == null) {
+			return "(Undefined)";
+		}
+		String dn = ClientReflector.get().displayNameForObject(o);
+		return (dn == null) ? super.render(o) : dn;
+	}
 }

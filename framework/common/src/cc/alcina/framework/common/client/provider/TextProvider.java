@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.provider;
 
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;

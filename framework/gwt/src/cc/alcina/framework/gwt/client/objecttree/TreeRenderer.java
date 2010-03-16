@@ -30,7 +30,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  * 
  * umm...now I'm not convinced neither. ok, all detached...
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public interface TreeRenderer<T extends TreeRenderable> {
 	public CollectionProvider collectionProvider(RenderContext context);

@@ -24,7 +24,7 @@ import com.google.gwt.user.client.ui.FlexTable.FlexCellFormatter;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class ObjectTreeGridRenderer extends ObjectTreeRenderer {
 	protected FlexTable ft = new FlexTable();

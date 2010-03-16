@@ -24,7 +24,7 @@ import com.totsp.gwittir.client.validator.Validator;
 @ClientInstantiable
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class EmailAddressValidator implements Validator {

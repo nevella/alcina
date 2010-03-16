@@ -23,7 +23,7 @@ import cc.alcina.framework.entity.datatransform.EntityLayerLocator;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class DbAppender extends AppenderSkeleton {

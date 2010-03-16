@@ -26,7 +26,7 @@ import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler.LooseTarge
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class LooseActionRegistry {

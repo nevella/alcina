@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -30,7 +30,7 @@ import com.google.gwt.http.client.URL;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class AlcinaHistory {

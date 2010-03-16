@@ -23,7 +23,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ServerLayerLocator {

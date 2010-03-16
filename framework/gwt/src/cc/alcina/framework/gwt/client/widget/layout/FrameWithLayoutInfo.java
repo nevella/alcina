@@ -19,7 +19,7 @@ import com.google.gwt.user.client.ui.Frame;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class FrameWithLayoutInfo extends Frame implements HasLayoutInfo {

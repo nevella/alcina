@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface ServerValidatorHandler<T extends ServerValidator> {

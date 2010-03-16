@@ -25,10 +25,10 @@ import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
-import cc.alcina.framework.common.client.logic.permissions.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.entity.datatransform.DataTransformLayerWrapper;
@@ -39,7 +39,7 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface CommonPersistenceLocal {

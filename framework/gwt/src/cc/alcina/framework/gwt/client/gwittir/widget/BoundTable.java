@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -29,6 +29,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.HasBinding;
+import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.DOM;

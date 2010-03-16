@@ -22,9 +22,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.gwittir.BoundTable;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTable;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
@@ -47,7 +47,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class SearchViewProvider implements ViewProvider {

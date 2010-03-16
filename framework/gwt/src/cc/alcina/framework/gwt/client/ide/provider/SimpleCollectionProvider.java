@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class SimpleCollectionProvider<E> implements CollectionProvider<E>,

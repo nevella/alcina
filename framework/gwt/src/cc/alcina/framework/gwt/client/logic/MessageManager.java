@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.StateListenable;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class MessageManager extends StateListenable {

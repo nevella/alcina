@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
+import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import java.lang.annotation.Annotation;
 
 @SuppressWarnings("all")

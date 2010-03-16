@@ -18,7 +18,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class FlowPanelWithLayoutInfo extends FlowPanel implements HasLayoutInfo {

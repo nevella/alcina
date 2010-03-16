@@ -19,7 +19,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 @RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = TxtCriterion.class)
 public class TxtCriterionRenderer extends

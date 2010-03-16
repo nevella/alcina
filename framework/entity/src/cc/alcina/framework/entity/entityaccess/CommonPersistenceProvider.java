@@ -18,7 +18,7 @@ package cc.alcina.framework.entity.entityaccess;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface CommonPersistenceProvider {

@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 @BeanInfo(displayNamePropertyName = "displayName")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {

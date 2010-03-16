@@ -21,7 +21,7 @@ import com.google.gwt.user.client.ui.AbstractImagePrototype;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class DataImageProvider {

@@ -22,7 +22,7 @@ import com.google.gwt.user.client.ui.TextBoxBase;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class EnterAsClickKeyboardListener implements KeyPressHandler {

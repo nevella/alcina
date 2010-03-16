@@ -46,7 +46,7 @@ import com.google.gwt.user.rebind.SourceWriter;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class GwtReflectionScanner {

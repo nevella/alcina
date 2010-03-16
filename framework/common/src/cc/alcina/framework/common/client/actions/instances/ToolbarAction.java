@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 @ClientInstantiable
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public abstract class ToolbarAction extends VetoableAction {

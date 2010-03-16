@@ -19,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 
 
 /**

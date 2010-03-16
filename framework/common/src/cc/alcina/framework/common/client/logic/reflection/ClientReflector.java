@@ -33,7 +33,7 @@ import com.totsp.gwittir.client.beans.Property;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ClientReflector implements ClassLookup {

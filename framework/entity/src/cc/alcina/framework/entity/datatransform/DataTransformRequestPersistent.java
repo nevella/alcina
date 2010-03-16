@@ -17,14 +17,14 @@ package cc.alcina.framework.entity.datatransform;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
-import cc.alcina.framework.common.client.logic.permissions.HasId;
 
 
 @MappedSuperclass
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public abstract class DataTransformRequestPersistent extends

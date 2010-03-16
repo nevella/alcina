@@ -12,14 +12,14 @@
  * the License.
  */
 
-package cc.alcina.framework.common.client.logic.permissions;
+package cc.alcina.framework.common.client.logic.domain;
 
 import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface HasId extends Serializable {

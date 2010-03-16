@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public abstract class SingleTableSearchDefinition<R extends SearchResult> extends SearchDefinition

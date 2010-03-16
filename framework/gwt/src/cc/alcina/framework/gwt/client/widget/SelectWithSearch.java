@@ -58,7 +58,7 @@ import com.google.gwt.user.client.ui.Widget;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class SelectWithSearch<G extends Comparable, T extends Comparable>

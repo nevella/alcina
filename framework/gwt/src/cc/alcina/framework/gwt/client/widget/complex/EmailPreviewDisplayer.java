@@ -27,7 +27,7 @@ import com.google.gwt.user.client.ui.Label;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class EmailPreviewDisplayer extends Composite {

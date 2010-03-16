@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 @Retention(RetentionPolicy.RUNTIME)
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public @interface AuthenticationRequired {

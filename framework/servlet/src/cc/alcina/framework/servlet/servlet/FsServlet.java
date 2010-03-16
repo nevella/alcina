@@ -32,7 +32,7 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public abstract class FsServlet extends HttpServlet {

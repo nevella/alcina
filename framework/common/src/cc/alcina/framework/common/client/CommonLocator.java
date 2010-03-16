@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.URLComponentEncoder;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class CommonLocator {

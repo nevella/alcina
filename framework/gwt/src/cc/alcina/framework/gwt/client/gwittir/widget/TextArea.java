@@ -12,11 +12,11 @@
  * the License.
  */
 
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Comparator;
 
-import cc.alcina.framework.gwt.client.gwittir.customisers.MultilineWidget;
+import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.ChangeListener;
@@ -40,7 +40,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 @SuppressWarnings("deprecation")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class TextArea<B> extends AbstractBoundWidget< String> implements

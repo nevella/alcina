@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.widget;
 
 
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -33,7 +33,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 @SuppressWarnings("deprecation")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class RichTextArea extends AbstractBoundWidget<String> implements

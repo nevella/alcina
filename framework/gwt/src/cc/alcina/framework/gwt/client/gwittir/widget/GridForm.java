@@ -17,9 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import cc.alcina.framework.gwt.client.gwittir.customisers.MultilineWidget;
+import cc.alcina.framework.gwt.client.gwittir.HasBinding;
+import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
 import com.google.gwt.event.dom.client.ClickEvent;

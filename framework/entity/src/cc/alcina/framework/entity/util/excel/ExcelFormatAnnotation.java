@@ -24,7 +24,7 @@ import java.lang.annotation.RetentionPolicy;
 @Documented
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public @interface ExcelFormatAnnotation {

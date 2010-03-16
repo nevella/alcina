@@ -17,7 +17,7 @@ package cc.alcina.framework.common.client.publication;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface DeliveryModel {

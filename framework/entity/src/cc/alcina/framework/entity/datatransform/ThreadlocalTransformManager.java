@@ -34,6 +34,8 @@ import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
@@ -44,8 +46,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.Dat
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.permissions.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
@@ -61,7 +61,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class ThreadlocalTransformManager extends TransformManager implements
 		PropertyAccessor, ObjectLookup, ClassLookup {

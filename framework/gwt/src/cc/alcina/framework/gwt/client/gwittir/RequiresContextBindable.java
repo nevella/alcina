@@ -18,7 +18,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface RequiresContextBindable<V extends SourcesPropertyChangeEvents> {

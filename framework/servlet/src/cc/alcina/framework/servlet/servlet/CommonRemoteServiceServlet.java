@@ -40,6 +40,7 @@ import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
@@ -51,7 +52,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.Dat
 import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest.DataTransformRequestType;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;

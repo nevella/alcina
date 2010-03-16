@@ -32,7 +32,7 @@ import cc.alcina.framework.entity.XmlUtilities;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ExcelExporter {

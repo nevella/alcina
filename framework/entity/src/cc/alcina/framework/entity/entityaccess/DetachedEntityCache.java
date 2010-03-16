@@ -22,12 +22,12 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class DetachedEntityCache {

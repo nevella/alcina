@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.search.HasWithNull;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.BoundWidgetTypeFactorySimpleGenerator;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.ListBoxEnumProvider;
+import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
@@ -39,7 +39,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class ObjectTreeRenderer {
 	private OnetimeBoundWidget op;
@@ -151,8 +151,13 @@ public class ObjectTreeRenderer {
 				((ListBoxEnumProvider) f.getCellProvider())
 						.setWithNull(((HasWithNull) node).isWithNull());
 			}
-			AbstractBoundWidget bw = (AbstractBoundWidget) f.getCellProvider()
-					.get();
+			AbstractBoundWidget bw = null;
+			try {
+				bw=(AbstractBoundWidget) f.getCellProvider()
+						.get();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			op.getBinding().getChildren().add(
 					new Binding(bw, "value", f.getValidator(),
 							f.getFeedback() != null ? vf : null, renderable,

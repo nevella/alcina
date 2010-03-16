@@ -30,7 +30,7 @@ import com.google.gwt.user.client.ui.Composite;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public abstract class MainCmpBase extends Composite implements
 		BeforeSelectionHandler<Integer>, SelectionHandler<Integer>,

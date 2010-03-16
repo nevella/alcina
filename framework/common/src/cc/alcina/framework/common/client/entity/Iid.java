@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface Iid {

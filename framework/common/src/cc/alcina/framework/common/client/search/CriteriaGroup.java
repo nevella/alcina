@@ -30,7 +30,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class CriteriaGroup<SC extends SearchCriterion> extends BaseBindable
 		implements TreeRenderable {

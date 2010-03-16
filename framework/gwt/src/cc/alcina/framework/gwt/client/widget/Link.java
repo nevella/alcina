@@ -28,7 +28,7 @@ import com.totsp.gwittir.client.ui.HasEnabled;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class Link<T> extends Widget implements HasHTML, HasEnabled,

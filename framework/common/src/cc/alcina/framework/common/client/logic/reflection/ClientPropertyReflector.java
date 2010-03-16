@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class ClientPropertyReflector implements
 		Comparable<ClientPropertyReflector> {

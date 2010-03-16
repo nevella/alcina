@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface RequiresHttpRequest {

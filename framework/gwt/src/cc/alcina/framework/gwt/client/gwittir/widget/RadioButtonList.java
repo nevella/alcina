@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -31,7 +31,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 @SuppressWarnings("deprecation")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class RadioButtonList<T> extends AbstractBoundWidget<T> implements

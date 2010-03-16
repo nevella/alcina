@@ -28,7 +28,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
-import cc.alcina.framework.common.client.logic.permissions.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.datatransform.EntityLayerLocator;
 import cc.alcina.framework.entity.util.JaxbUtils;
@@ -36,7 +36,7 @@ import cc.alcina.framework.entity.util.JaxbUtils;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface WrappedObject<T extends GwtPersistableObject> extends HasId {

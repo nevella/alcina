@@ -18,7 +18,7 @@ import java.lang.annotation.Annotation;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface PropertyAccessor {

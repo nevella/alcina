@@ -31,7 +31,7 @@ import com.google.gwt.user.client.ui.TreeItem;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class DataTree extends FilterableTree implements ExtraTreeEventSource,

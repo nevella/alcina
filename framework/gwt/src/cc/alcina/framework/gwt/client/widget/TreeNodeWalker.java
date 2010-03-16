@@ -23,7 +23,7 @@ import com.google.gwt.user.client.ui.TreeItem;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class TreeNodeWalker {

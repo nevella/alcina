@@ -44,7 +44,7 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class GwtReflectionGenerator {

@@ -12,17 +12,17 @@
  * the License.
  */
 
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.provider;
 
 
-import cc.alcina.framework.gwt.client.gwittir.customisers.SelectorCustomiser.BoundSelector;
+import cc.alcina.framework.gwt.client.gwittir.customiser.SelectorCustomiser.BoundSelector;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class SelectorProvider implements BoundWidgetProvider {

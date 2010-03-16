@@ -24,7 +24,7 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ThreadedPermissionsManager extends PermissionsManager {

@@ -19,7 +19,7 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface CommonRemoteServletProvider {

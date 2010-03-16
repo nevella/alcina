@@ -32,8 +32,8 @@ import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -41,13 +41,13 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.gwittir.BoundTable;
-import cc.alcina.framework.gwt.client.gwittir.CollectionDataProvider;
-import cc.alcina.framework.gwt.client.gwittir.GridForm;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.HasMaxWidth;
+import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
+import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTable;
+import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
@@ -84,7 +84,7 @@ import com.totsp.gwittir.client.validator.Validator;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ContentViewFactory {

@@ -23,6 +23,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
+import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 import cc.alcina.framework.gwt.client.widget.WidgetUtils;
 
 import com.google.gwt.core.client.GWT;
@@ -40,7 +42,7 @@ import com.totsp.gwittir.client.validator.Validator;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class GwittirUtils {
 	public static void refreshEmptyTextBoxes(Binding binding) {

@@ -22,7 +22,7 @@ import com.google.gwt.resources.client.ImageResource;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ActionDisplayNode extends ContainerNode {

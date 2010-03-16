@@ -33,7 +33,7 @@ import cc.alcina.framework.entity.SEUtilities;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class DownloadServlet extends HttpServlet {

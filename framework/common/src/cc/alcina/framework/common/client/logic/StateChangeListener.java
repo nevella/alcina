@@ -18,7 +18,7 @@ import java.util.EventListener;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface StateChangeListener extends EventListener{

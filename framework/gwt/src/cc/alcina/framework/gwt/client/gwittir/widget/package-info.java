@@ -3,4 +3,4 @@
  * @author nick@alcina.cc
  *
  */
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.widget;

@@ -29,7 +29,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class Para extends Widget implements HasClickHandlers,

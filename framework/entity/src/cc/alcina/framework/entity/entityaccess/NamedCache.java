@@ -21,7 +21,7 @@ import org.apache.commons.collections.map.LRUMap;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class NamedCache {

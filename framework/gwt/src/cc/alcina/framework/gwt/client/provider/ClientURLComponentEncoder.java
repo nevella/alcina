@@ -21,7 +21,7 @@ import com.google.gwt.http.client.URL;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ClientURLComponentEncoder implements URLComponentEncoder {

@@ -18,8 +18,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -27,7 +27,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 @Introspectable
  public class GwtPersistableObject implements SourcesPropertyChangeEvents,HasIdAndLocalId, Permissible {

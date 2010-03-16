@@ -18,7 +18,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class NonDynamicServerValidator extends ServerValidator {

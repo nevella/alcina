@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.logic.permissions;
+package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public interface HasIdAndLocalId extends HasId {
 	public long getLocalId();

@@ -26,13 +26,13 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.permissions.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 
 import com.totsp.gwittir.client.beans.Converter;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class CommonUtils {

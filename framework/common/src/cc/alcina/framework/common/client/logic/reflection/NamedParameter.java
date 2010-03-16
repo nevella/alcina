@@ -18,12 +18,14 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import cc.alcina.framework.common.client.CommonLocator;
+
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public @interface NamedParameter {
@@ -41,6 +43,28 @@ import java.lang.annotation.RetentionPolicy;
 				if (np.name().equals(name)) {
 					return np;
 				}
+			}
+			return null;
+		}
+		public static int intValue(NamedParameter[] parameters, String name, int defaultValue) {
+			NamedParameter p = Support.getParameter(parameters, name);
+			if (p!=null){
+				return p.intValue();
+			}
+			return defaultValue;
+		}
+		public static boolean booleanValue(NamedParameter[] parameters, String name) {
+			NamedParameter p = Support.getParameter(parameters, name);
+			if (p!=null){
+				return p.booleanValue();
+			}
+			return false;
+		}
+		public static <T> T instantiateClass(NamedParameter[] parameters, String name){
+			NamedParameter p = Support.getParameter(parameters, name);
+			if (p!=null && p.classValue()!=null){
+				return (T) CommonLocator.get().classLookup()
+				.newInstance(p.classValue(), 0);
 			}
 			return null;
 		}

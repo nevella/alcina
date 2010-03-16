@@ -48,7 +48,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class SimpleGearsTransformPersistence implements StateChangeListener,

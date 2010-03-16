@@ -16,13 +16,13 @@ package cc.alcina.framework.common.client.publication;
 
 import java.util.Date;
 
-import cc.alcina.framework.common.client.logic.permissions.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface Publication extends HasId{

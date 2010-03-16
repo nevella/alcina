@@ -19,7 +19,7 @@ import java.util.Comparator;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class CollectionSizeComparator implements Comparator<Collection>{

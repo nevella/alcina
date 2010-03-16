@@ -29,9 +29,9 @@ import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -71,7 +71,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class WorkspaceView extends Composite implements HasName,
 		VetoableActionSource, HasLayoutInfo {

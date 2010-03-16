@@ -16,7 +16,7 @@ package cc.alcina.framework.entity.util.excel;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public enum ExcelDatatype {

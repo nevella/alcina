@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @BeanInfo(displayNamePropertyName = "displayName")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {

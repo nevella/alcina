@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class LocalActionWithParameters<T> extends VetoableAction {

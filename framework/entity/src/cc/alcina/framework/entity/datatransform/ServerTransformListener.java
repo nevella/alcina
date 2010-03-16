@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.Dat
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class ServerTransformListener implements DataTransformListener {

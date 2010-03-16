@@ -25,7 +25,7 @@ import javax.swing.SwingConstants;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class GraphicsUtilities implements SwingConstants {

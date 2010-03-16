@@ -1,8 +1,8 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import java.lang.annotation.Annotation;
-
+import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import java.lang.annotation.Annotation;
 
 @SuppressWarnings("all")
 public class PermissionImpl implements Permission {

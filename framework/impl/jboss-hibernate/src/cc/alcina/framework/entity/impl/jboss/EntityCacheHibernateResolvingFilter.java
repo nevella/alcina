@@ -22,7 +22,7 @@ import org.hibernate.collection.PersistentSet;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.util.GraphCloner;
 import cc.alcina.framework.entity.util.GraphCloner.ClassFieldPair;
@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class EntityCacheHibernateResolvingFilter extends

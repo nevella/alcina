@@ -21,7 +21,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class HasChildHandlersSupport implements HasChildHandlers {

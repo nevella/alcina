@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface VetoableActionHandler {

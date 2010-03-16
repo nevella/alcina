@@ -14,11 +14,11 @@
 
 package cc.alcina.framework.gwt.client.gwittir;
 
-import cc.alcina.framework.gwt.client.gwittir.customisers.Customiser;
+import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface HasCustomiser<T> {

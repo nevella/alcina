@@ -28,7 +28,7 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class JBossSupport {

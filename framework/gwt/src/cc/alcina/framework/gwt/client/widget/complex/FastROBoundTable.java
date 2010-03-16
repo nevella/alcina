@@ -20,9 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.BoundTable;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTable;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -38,7 +38,12 @@ import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 @SuppressWarnings("unchecked")
-public class FastROBoundTable extends BoundTable {
+/**
+ *
+ * @author Nick Reddel
+ */
+
+ public class FastROBoundTable extends BoundTable {
 	Map<String, BoundWidgetProvider> wpMap = new HashMap<String, BoundWidgetProvider>();
 
 	Map<String, Property> pMap = new HashMap<String, Property>();

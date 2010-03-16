@@ -20,7 +20,7 @@ import java.util.List;
 @SuppressWarnings("unchecked")
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {

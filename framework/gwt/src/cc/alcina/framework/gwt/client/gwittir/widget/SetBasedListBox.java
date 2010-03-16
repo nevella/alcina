@@ -11,8 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
-package cc.alcina.framework.gwt.client.gwittir;
+package cc.alcina.framework.gwt.client.gwittir.widget;
 
 /*
  * ListBox.java
@@ -41,10 +40,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.permissions.HasId;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 
 import com.google.gwt.user.client.ui.ChangeListener;
@@ -68,9 +68,9 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 /**
  *
  */
-@SuppressWarnings({"unchecked","deprecation"})
-public class SetBasedListBox extends AbstractBoundCollectionWidget implements HasFocus,
-		SourcesFocusEvents, SourcesChangeEvents,HasEnabled {
+@SuppressWarnings( { "unchecked", "deprecation" })
+public class SetBasedListBox extends AbstractBoundCollectionWidget implements
+		HasFocus, SourcesFocusEvents, SourcesChangeEvents, HasEnabled {
 	public static final String VALUE_PROPERTY_NAME = "value";
 
 	private static final Logger LOGGER = Logger.getLogger(SetBasedListBox.class
@@ -84,13 +84,13 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements Ha
 
 	private Vector changeListeners = new Vector();
 
-	private boolean sortOptions = true;
+	private boolean sortOptionsByToString = true;
 
 	/** Creates a new instance of ListBox */
 	public SetBasedListBox() {
 		super();
 		this.base = new com.google.gwt.user.client.ui.ListBox();
-		this.setRenderer( ToStringRenderer.INSTANCE);
+		this.setRenderer(ToStringRenderer.INSTANCE);
 		this.setComparator(SimpleComparator.INSTANCE);
 		this.base.addClickListener(new ClickListener() {
 			public void onClick(Widget sender) {
@@ -203,7 +203,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements Ha
 		ArrayList newSelected = new ArrayList();
 		TextProvider.get().setDecorated(false);
 		TextProvider.get().setTrimmed(true);
-		if (isSortOptions()) {
+		if (isSortOptionsByToString()) {
 			options = CommonUtils.sortByStringValue(options);
 		}
 		for (Iterator it = options.iterator(); it.hasNext();) {
@@ -478,12 +478,12 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements Ha
 		fireChangeListeners();
 	}
 
-	public void setSortOptions(boolean sortOptions) {
-		this.sortOptions = sortOptions;
+	public void setSortOptionsByToString(boolean sortOptions) {
+		this.sortOptionsByToString = sortOptions;
 	}
 
-	public boolean isSortOptions() {
-		return sortOptions;
+	public boolean isSortOptionsByToString() {
+		return sortOptionsByToString;
 	}
 
 	public static class DomainListBox extends SetBasedListBox {
@@ -531,8 +531,15 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements Ha
 					}
 				}
 			}
-			if (!options.isEmpty() && options.get(0) instanceof Comparable) {
-				Collections.sort(options);
+			if (!isSortOptionsByToString()) {
+				if (getComparator() != null) {
+					Collections.sort(options, getComparator());
+				} else {
+					if (!options.isEmpty()
+							&& options.get(0) instanceof Comparable) {
+						Collections.sort(options);
+					}
+				}
 			}
 			if (hasNullOption) {
 				options.add(0, null);

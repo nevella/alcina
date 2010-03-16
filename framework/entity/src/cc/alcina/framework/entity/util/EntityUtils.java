@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.permissions.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.entity.datatransform.EntityLayerLocator;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
@@ -36,7 +36,7 @@ import cc.alcina.framework.entity.util.GraphCloner.PermissibleFieldFilter;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class EntityUtils {
 	public static String longListToIdClause(Long[] longs) {
@@ -44,11 +44,16 @@ public class EntityUtils {
 	}
 
 	public static String hasIdListToIdClause(Collection<? extends HasId> hasIds) {
+		return longListToIdClause(hasIdListToIdList(hasIds));
+	}
+
+	public static List<Long> hasIdListToIdList(
+			Collection<? extends HasId> hasIds) {
 		List<Long> ids = new ArrayList<Long>();
 		for (HasId hasId : hasIds) {
 			ids.add(hasId.getId());
 		}
-		return longListToIdClause(ids);
+		return ids;
 	}
 
 	public static List<Long> idClauseToLongArray(String str) {

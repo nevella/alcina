@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  * 
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 public class RenderContext {
 	public Map<String, Object> properties = new HashMap<String, Object>();

@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties;
-import cc.alcina.framework.gwt.client.gwittir.customisers.TextAreaCustomiser;
+import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 @BeanInfo(displayInfo = @DisplayInfo(name = "Developer"), displayNamePropertyName = "id")
 @XmlRootElement
@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.client.gwittir.customisers.TextAreaCustomiser;
 		@RegistryLocation(registryPoint = PerUserProperties.class) })
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class GeneralProperties extends GwtPersistableObject  {

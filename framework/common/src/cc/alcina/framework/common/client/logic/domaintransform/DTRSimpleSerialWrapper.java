@@ -29,14 +29,14 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.gwittir.customisers.TextAreaCustomiser;
+import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 
 @BeanInfo(displayNamePropertyName = "id")
 @XmlRootElement
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class DTRSimpleSerialWrapper extends BaseBindable implements

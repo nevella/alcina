@@ -20,7 +20,7 @@ import com.google.gwt.dom.client.NodeList;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public class GWTDOMUtils {

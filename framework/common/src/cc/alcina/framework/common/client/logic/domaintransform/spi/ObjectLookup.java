@@ -14,11 +14,11 @@
 
 package cc.alcina.framework.common.client.logic.domaintransform.spi;
 
-import cc.alcina.framework.common.client.logic.permissions.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public interface ObjectLookup {

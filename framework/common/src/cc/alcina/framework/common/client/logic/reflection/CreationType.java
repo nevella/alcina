@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 /**
  *
- * @author <a href="mailto:nick@alcina.cc">Nick Reddel</a>
+ * @author Nick Reddel
  */
 
  public enum CreationType{
