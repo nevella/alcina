@@ -330,7 +330,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		T newInstance = CommonLocator.get().classLookup().newInstance(
 				objectClass, localId);
 		newInstance.setLocalId(localId);
-		registerObject(newInstance);
+		registerDomainObject(newInstance);
 		return newInstance;
 	}
 
@@ -784,7 +784,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		}
 	}
 
-	public void registerDomainObjects(DomainObjectHolder h) {
+	public void registerDomainObjectsInHolder(DomainObjectHolder h) {
 		if (this.domainObjects != null) {
 			domainObjects.removeListeners();
 		}
@@ -817,7 +817,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	// a bit roundabout, but to ensure compatibility with the event system
 	// essentially registers a synthesised object, then replaces it in the
 	// mapping with the real one
-	public void registerObject(HasIdAndLocalId hili) {
+	public void registerDomainObject(HasIdAndLocalId hili) {
 		synthesiseCreateObjectEvent(hili.getClass(), hili.getId(), hili
 				.getLocalId());
 		if (domainObjects != null) {

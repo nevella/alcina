@@ -89,7 +89,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		implements CommonRemoteService {
 	/**
 	 * the instance used by the server layer when acting as a client to the ejb
-	 * layer
+	 * layer. Note - this must be set on webapp startup
 	 */
 	public static ClientInstance serverAsClientInstance;
 

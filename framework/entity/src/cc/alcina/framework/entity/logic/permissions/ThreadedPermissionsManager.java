@@ -15,6 +15,7 @@
 package cc.alcina.framework.entity.logic.permissions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.entity.datatransform.EntityLayerLocator;
@@ -80,5 +81,8 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 				}
 			}
 		}
+	}
+	public static ThreadedPermissionsManager cast(){
+		return (ThreadedPermissionsManager) PermissionsManager.get();
 	}
 }

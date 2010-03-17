@@ -281,8 +281,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		try {
 			fixPermissionsManager(true);
 			ObjectPersistenceHelper.get();
-			ThreadlocalTransformManager tm = (ThreadlocalTransformManager) TransformManager
-					.get();
+			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 			// We know this is thread-local, so we can clear the tm transforms
 			tm.resetTltm(locatorMap);
 			tm.setEntityManager(getEntityManager());
@@ -565,8 +564,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		fixPermissionsManager();
 		ObjectPersistenceHelper.get();
 		long t1 = System.currentTimeMillis();
-		ThreadlocalTransformManager tm = (ThreadlocalTransformManager) TransformManager
-				.get();
+		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 		tm.setEntityManager(getEntityManager());
 		List<ObjectCacheItemResult> cache = tm.cache(specs);
 		cache = new EntityUtils().detachedClone(cache);

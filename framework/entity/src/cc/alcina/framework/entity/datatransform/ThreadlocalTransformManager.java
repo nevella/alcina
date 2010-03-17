@@ -81,7 +81,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	 * Convenience "override" of TransformManager.get()
 	 */
 	public static ThreadlocalTransformManager get() {
-		return (ThreadlocalTransformManager) TransformManager.get();
+		return ThreadlocalTransformManager.cast();
 	}
 
 	Set<HasIdAndLocalId> modifiedObjects = new HashSet<HasIdAndLocalId>();
@@ -160,7 +160,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = newInstance(objectClass, localId);
-		registerObject(newInstance);
+		registerDomainObject(newInstance);
 		return newInstance;
 	}
 
@@ -369,7 +369,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	// NOTE - doesn't register children (unlike client)
-	public void registerObject(HasIdAndLocalId hili) {
+	public void registerDomainObject(HasIdAndLocalId hili) {
 		synthesiseCreateObjectEvent(hili.getClass(), hili.getId(), hili
 				.getLocalId());
 		if (hili instanceof SourcesPropertyChangeEvents) {
@@ -630,5 +630,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	public static class HiliLocatorMap extends HashMap<Long, HiliLocator> {
+	}
+
+	public static ThreadlocalTransformManager cast() {
+		return (ThreadlocalTransformManager) TransformManager.get();
 	}
 }

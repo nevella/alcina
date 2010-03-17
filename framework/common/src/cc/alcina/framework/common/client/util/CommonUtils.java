@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
@@ -29,21 +28,21 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 
 import com.totsp.gwittir.client.beans.Converter;
+
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
-
- public class CommonUtils {
+public class CommonUtils {
 	public static final String XML_PI = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
 	// for GWT reflection gets, this gets used...a lot
 	public static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
-	public static final String[] MONTH_NAMES = { "invalid", "January", "February",
-			"March", "April", "May", "June", "July", "August", "September",
-			"October", "November", "December" };
+	public static final String[] MONTH_NAMES = { "invalid", "January",
+			"February", "March", "April", "May", "June", "July", "August",
+			"September", "October", "November", "December" };
 
 	public static final String[] DAY_NAMES = { "Sunday", "Monday", "Tuesday",
 			"Wednesday", "Thursday", "Friday", "Saturday" };
@@ -91,6 +90,7 @@ import com.totsp.gwittir.client.beans.Converter;
 		}
 		return o2 == null ? 1 : o1.compareTo(o2);
 	}
+
 	public static boolean containsWithNull(Object obj, String lcText) {
 		if (obj == null || lcText == null) {
 			return false;
@@ -124,6 +124,18 @@ import com.totsp.gwittir.client.beans.Converter;
 				strs[i] = args[Integer.parseInt(s.substring(0, 1)) - 1]
 						+ s.substring(1);
 			}
+		}
+		return join(strs, "");
+	}
+
+	public static String formatJ(String source, Object... args) {
+		boolean modSource = source.endsWith("%s");
+		String s2 = modSource ? source + "." : source;
+		String[] strs = s2.split("%s");
+		String s;
+		for (int i = 1; i < strs.length; i++) {
+			strs[i] = args[i - 1]
+					+ ((modSource && i == strs.length - 1) ? "" : strs[i]);
 		}
 		return join(strs, "");
 	}
@@ -255,6 +267,7 @@ import com.totsp.gwittir.client.beans.Converter;
 		return isNullOrEmpty(s) ? null : s.substring(0, 1).toLowerCase()
 				+ (s.length() == 1 ? "" : s.substring(1));
 	}
+
 	public static Collection intersection(Collection c1, Collection c2) {
 		ArrayList result = new ArrayList();
 		for (Object o : c1) {
@@ -324,11 +337,22 @@ import com.totsp.gwittir.client.beans.Converter;
 	}
 
 	public static String padString(String input, int length, char padChar) {
+		input = input == null ? "(null)" : input;
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < length - input.length(); i++) {
 			sb.append(padChar);
 		}
 		sb.append(input);
+		return sb.toString();
+	}
+
+	public static String padStringLeft(String input, int length, char padChar) {
+		input = input == null ? "(null)" : input;
+		StringBuffer sb = new StringBuffer();
+		sb.append(input);
+		for (int i = 0; i < length - input.length(); i++) {
+			sb.append(padChar);
+		}
 		return sb.toString();
 	}
 
@@ -445,7 +469,7 @@ import com.totsp.gwittir.client.beans.Converter;
 
 	public static String trimToWsChars(String s, int maxChars,
 			boolean withDotDot) {
-		if (s==null||s.length() <= maxChars) {
+		if (s == null || s.length() <= maxChars) {
 			return s;
 		}
 		if (maxChars < 0) {
@@ -542,5 +566,17 @@ import com.totsp.gwittir.client.beans.Converter;
 			last = iterator.next();
 		}
 		return last;
+	}
+
+	public static void addIfNotNull(List l, Object o) {
+		if (o != null) {
+			l.add(o);
+		}
+	}
+
+	public static void putIfKeyNotNull(Map m, Object k, Object v) {
+		if (k != null) {
+			m.put(k, v);
+		}
 	}
 }

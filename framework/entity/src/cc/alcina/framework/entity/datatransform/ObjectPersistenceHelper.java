@@ -83,7 +83,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	public void setPropertyValue(Object bean, String propertyName, Object value) {
-		((ThreadlocalTransformManager) TransformManager.get())
+		(ThreadlocalTransformManager.cast())
 				.setPropertyValue(bean, propertyName, value);
 	}
 
@@ -97,7 +97,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	public Object getPropertyValue(Object bean, String propertyName) {
-		return ((ThreadlocalTransformManager) TransformManager.get())
+		return (ThreadlocalTransformManager.cast())
 				.getPropertyValue(bean, propertyName);
 	}
 
@@ -171,7 +171,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	public <T> T newInstance(Class<T> clazz, long localId) {
-		return ((ThreadlocalTransformManager) TransformManager.get())
+		return (ThreadlocalTransformManager.cast())
 				.newInstance(clazz, localId);
 	}
 
