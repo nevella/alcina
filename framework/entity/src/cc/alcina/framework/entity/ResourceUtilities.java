@@ -45,7 +45,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -342,7 +342,7 @@ public class ResourceUtilities {
 	}
 
 	public static void writeStringToFileGz(String s, File f) throws IOException {
-		OutputStreamWriter fw = new OutputStreamWriter(new ZipOutputStream(
+		OutputStreamWriter fw = new OutputStreamWriter(new GZIPOutputStream(
 				new FileOutputStream(f)), "UTF-8");
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
