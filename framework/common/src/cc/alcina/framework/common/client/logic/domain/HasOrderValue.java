@@ -19,7 +19,7 @@ public interface HasOrderValue extends HasId{
 			if (o2==null){
 				return 1;
 			}
-			int r = new Integer(o1.getOrderValue()).compareTo( o2
+			int r = CommonUtils.compareWithNullMinusOne(o1.getOrderValue(), o2
 					.getOrderValue());
 			if (r != 0) {
 				return r;
