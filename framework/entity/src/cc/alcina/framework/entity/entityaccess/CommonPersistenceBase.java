@@ -88,6 +88,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	private static final String TRANSFORM_FIRE = "transform - fire";
 
+	private static final int PRECACHE_RQ_SIZE = 125;
+
 	private static Map<Long, Integer> clientInstanceAuthMap = new HashMap<Long, Integer>();
 
 	public ClientInstance createClientInstance() {
@@ -392,11 +394,19 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				storageClass = getImplementation(WrappedObject.class);
 			}
 			if (storageClass != null) {
-				getEntityManager().createQuery(
-						String.format("from %s where id in %s", storageClass
-								.getSimpleName(), EntityUtils
-								.longListToIdClause(entry.getValue())))
-						.getResultList();
+				List<Long> ids = new ArrayList<Long>(entry.getValue());
+				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
+					List<Long> idsSlice = new ArrayList<Long>();
+					int sliceEnd = Math.min(ids.size() - i, PRECACHE_RQ_SIZE);
+					for (int j = 0; j < sliceEnd; j++) {
+						idsSlice.add(ids.get(i + j));
+					}
+					getEntityManager().createQuery(
+							String.format("from %s where id in %s",
+									storageClass.getSimpleName(), EntityUtils
+											.longListToIdClause(idsSlice)))
+							.getResultList();
+				}
 			}
 		}
 	}
