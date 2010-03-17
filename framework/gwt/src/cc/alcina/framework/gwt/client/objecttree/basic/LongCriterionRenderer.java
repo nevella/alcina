@@ -14,16 +14,16 @@
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.search.EnumCriterion;
+import cc.alcina.framework.common.client.search.LongCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = EnumCriterion.class)
+@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = LongCriterion.class)
 public class LongCriterionRenderer extends
-		SearchCriterionRenderer<EnumCriterion> {
+		SearchCriterionRenderer<LongCriterion> {
 	@Override
 	public String renderablePropertyName() {
 		return "value";

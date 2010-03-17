@@ -11,43 +11,34 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class LongCriterion extends SearchCriterion {
-	private String longText;
-
-	public void setLongText(String longText) {
-		this.longText = longText;
-	}
-
-	public String getLongText() {
-		return longText;
-	}
+public class LongCriterion extends SearchCriterion {
+	private Long value;
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
-		if (CommonUtils.isNullOrEmpty(longText)) {
+		if (value == null) {
 			return result;
 		}
-		try {
-			Long l = Long.parseLong(longText);
-			result.eql = "t." + getTargetPropertyName() + " =  ? ";
-			result.parameters.add(l);
-		} catch (Exception e) {
-		}
-	
+		result.eql = "t." + getTargetPropertyName() + " =  ? ";
+		result.parameters.add(value);
 		return result;
 	}
 
-	
+	public void setValue(Long value) {
+		this.value = value;
+	}
+
+	public Long getValue() {
+		return value;
+	}
 }

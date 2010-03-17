@@ -186,6 +186,11 @@ public class CommonUtils {
 			return format("%4, %1.%2.%3", padTwo(date.getDate()), padTwo(date
 					.getMonth() + 1), padTwo(date.getYear() + 1900),
 					DAY_NAMES[date.getDay()]);
+		case TIMESTAMP:
+			return format("%3%2%1_%4%5%6_%7", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
+					padTwo(date.getHours()), padTwo(date.getMinutes()),
+					padTwo(date.getSeconds()), date.getTime() % 1000);
 		}
 		return date.toString();
 	}
@@ -519,7 +524,7 @@ public class CommonUtils {
 	public enum DateStyle {
 		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_TIME, AU_DATE_TIME_HUMAN,
 		AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT, AU_LONG_DAY,
-		AU_SHORT_MONTH, AU_DATE_SLASH_MONTH
+		AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP
 	}
 
 	public static String tabify(String value, int charsPerLine, int tabCount) {
