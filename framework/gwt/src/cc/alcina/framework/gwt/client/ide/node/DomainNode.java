@@ -11,12 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.node;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -31,12 +31,11 @@ import com.google.gwt.user.client.ui.TreeItem;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class DomainNode<T extends SourcesPropertyChangeEvents> extends FilterableTreeItem
-		implements PropertyChangeListener, DetachListener {
+public class DomainNode<T extends SourcesPropertyChangeEvents> extends
+		FilterableTreeItem implements PropertyChangeListener, DetachListener {
 	private String displayName;
 
 	public String getDisplayName() {
@@ -71,9 +70,21 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 		refreshFromObject();
 	}
 
+	@Override
+	protected boolean satisfiesFilter(String filterText) {
+		if (super.satisfiesFilter(filterText)) {
+			return true;
+		}
+		if (getUserObject() instanceof HasId) {
+			return String.valueOf(((HasId) getUserObject()).getId()).equals(
+					filterText);
+		}
+		return false;
+	}
+
 	public void removeListeners() {
 		T object = getUserObject();
-		if (object instanceof HasGeneratedDisplayName){
+		if (object instanceof HasGeneratedDisplayName) {
 			return;
 		}
 		ClientBeanReflector info = ClientReflector.get().beanInfoForClass(
