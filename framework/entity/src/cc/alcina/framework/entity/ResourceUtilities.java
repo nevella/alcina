@@ -49,6 +49,8 @@ import java.util.ResourceBundle;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
+import org.apache.tools.zip.ZipOutputStream;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -335,6 +337,14 @@ public class ResourceUtilities {
 	public static void writeStringToFile(String s, File f) throws IOException {
 		OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(f),
 				"UTF-8");
+		BufferedWriter bw = new BufferedWriter(fw);
+		bw.write(s);
+		bw.close();
+	}
+
+	public static void writeStringToFileGz(String s, File f) throws IOException {
+		OutputStreamWriter fw = new OutputStreamWriter(new ZipOutputStream(
+				new FileOutputStream(f)), "UTF-8");
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.close();

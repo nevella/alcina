@@ -387,7 +387,7 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public static final BoundWidgetProvider NOWRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
-			Label label = new Label();
+			RenderingLabel label = new RenderingLabel();
 			label.setWordWrap(false);
 			return label;
 		}

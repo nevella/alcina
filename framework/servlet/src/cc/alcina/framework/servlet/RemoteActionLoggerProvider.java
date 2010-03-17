@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet;
 
 import java.io.StringWriter;
@@ -29,13 +28,11 @@ import org.apache.log4j.WriterAppender;
 
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class RemoteActionLoggerProvider {
+public class RemoteActionLoggerProvider {
 	class ClassAndThreadToken {
 		private final Class clazz;
 
@@ -77,9 +74,9 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 			Logger logger = finishedLoggers.get(clazz).remove(0);
 			resetAppenders(logger);
 		}
-		 Logger l = makeNewLoggerInstance(clazz.getName() + "-" + logCounter++);
-		 runningLoggers.put(token,l);
-		 return l;
+		Logger l = makeNewLoggerInstance(clazz.getName() + "-" + logCounter++);
+		runningLoggers.put(token, l);
+		return l;
 	}
 
 	public static void resetAppenders(Logger logger) {
@@ -91,6 +88,21 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 		logger.addAppender(wa);
 	}
 
+	public String resetLogBuffer(Class clazz) throws Exception {
+		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
+		if (runningLoggers.containsKey(token)) {
+			Logger logger = runningLoggers.remove(token);
+			StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
+					.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
+					.getWriterAccess();
+			((WriterAccessWriterAppender) logger
+					.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
+					.resetWriter();
+			return writerAccess.toString();
+		}
+		return null;
+	}
+
 	public String closeLogger(Class clazz) {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
 		if (runningLoggers.containsKey(token)) {
@@ -100,7 +112,8 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 			}
 			finishedLoggers.get(clazz).add(logger);
 			StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
-					.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY)).getWriterAccess();
+					.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
+					.getWriterAccess();
 			return writerAccess.toString();
 		} else {
 			return null;
@@ -120,7 +133,6 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 		logger.setLevel(Level.INFO);
 		logger.setAdditivity(false);
 		logger.addAppender(new ConsoleAppender(l));
-		
 		return logger;
 	}
 }

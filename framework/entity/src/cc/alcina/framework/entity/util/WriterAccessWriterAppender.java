@@ -31,7 +31,10 @@ import org.apache.log4j.WriterAppender;
 	public Writer getWriterAccess() {
 		return this.writerAccess;
 	}
-
+	public void resetWriter() throws Exception{
+		Writer newWriter = writerAccess.getClass().newInstance();
+		setWriter(newWriter);
+	}
 	@Override
 	public synchronized void setWriter(Writer writer) {
 		this.writerAccess = writer;
