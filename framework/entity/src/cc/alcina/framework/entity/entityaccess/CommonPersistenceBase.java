@@ -87,8 +87,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	private static final String PERSIST_TRANSFORMS = "persist transforms";
 
 	private static final String TRANSFORM_FIRE = "transform - fire";
-
-	private static final int PRECACHE_RQ_SIZE = 125;
+	//note - this'll be the stack depth of the eql ast processor
+	private static final int PRECACHE_RQ_SIZE = 250;
 
 	private static Map<Long, Integer> clientInstanceAuthMap = new HashMap<Long, Integer>();
 
