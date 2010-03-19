@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import java.util.ArrayList;
@@ -21,12 +20,14 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo.LayoutInfo;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
@@ -44,6 +45,7 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLTable;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.HorizontalSplitPanel;
@@ -59,11 +61,10 @@ import com.google.gwt.user.client.ui.VerticalSplitPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class WidgetUtils {
+public class WidgetUtils {
 	public static void populateListFromEnum(ListBox box, Object[] objs) {
 		for (Object obj : objs) {
 			String k = obj.toString();
@@ -73,7 +74,8 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	// TODO - check all calls here either the cp implements haschildhandlers, or
-	// explain why t'hell not...(doesn't add handlers to the child widgets would be a good reason)
+	// explain why t'hell not...(doesn't add handlers to the child widgets would
+	// be a good reason)
 	public static void clearChildren(ComplexPanel cp) {
 		for (int i = cp.getWidgetCount() - 1; i >= 0; i--) {
 			Widget widget = cp.getWidget(i);
@@ -583,7 +585,25 @@ import com.google.gwt.user.client.ui.Widget;
 		pp.setAnimationEnabled(false);
 		pp.show();
 		ta.setSelectionRange(0, text.length());
-		copy();
+		try {
+			copy();
+		} catch (JavaScriptException e) {
+			pp.hide();
+			if (e.getMessage().contains("NS_ERROR_XPC_NOT_ENOUGH_ARGS")) {
+				ClientLayerLocator
+						.get()
+						.clientBase()
+						.showMessage(
+								new HTML(
+										"<div class='info'>Sorry, clipboard operations"
+												+ " are disabled by Mozilla/Firefox"
+												+ " security settings. <br><br> Please see "
+												+ "<a href='http://www.mozilla.org/editor/midasdemo/securityprefs.html'>"
+												+ "http://www.mozilla.org/editor/midasdemo/securityprefs.html</a></div> "));
+			}else{
+				throw e;
+			}
+		}
 		pp.hide();
 	}
 
