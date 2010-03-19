@@ -11,41 +11,37 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.widget;
-
 
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.richtext.RichTextToolbar;
 
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.user.client.Event;
+import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.FocusHandler;
+import com.google.gwt.event.dom.client.HasAllFocusHandlers;
+import com.google.gwt.event.dom.client.HasAllKeyHandlers;
+import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.dom.client.KeyDownHandler;
+import com.google.gwt.event.dom.client.KeyPressHandler;
+import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.Focusable;
-import com.google.gwt.user.client.ui.HasFocus;
-import com.google.gwt.user.client.ui.KeyboardListener;
-import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.SimpleComparator;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
-@SuppressWarnings("deprecation")
+
 /**
  *
  * @author Nick Reddel
  */
-
- public class RichTextArea extends AbstractBoundWidget<String> implements
-		HasFocus ,Focusable{
-	public void addFocusListener(FocusListener listener) {
-		this.base.addFocusListener(listener);
-	}
-
-	public void removeFocusListener(FocusListener listener) {
-		this.base.removeFocusListener(listener);
-	}
-
+public class RichTextArea extends AbstractBoundWidget<String> implements
+		Focusable, HasAllKeyHandlers, HasAllFocusHandlers, HasClickHandlers {
 	public void setFocus(boolean focused) {
 		this.base.setFocus(focused);
 	}
@@ -67,31 +63,28 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 	}
 
 	private String old;
+
 	@SuppressWarnings("unchecked")
 	public RichTextArea() {
 		old = base.getHTML();
 		this.setComparator(SimpleComparator.INSTANCE);
-		this.base.addFocusListener(new FocusListener() {
-			public void onFocus(Widget sender) {
-			}
-
-			public void onLostFocus(Widget sender) {
+		this.base.addBlurHandler(new BlurHandler() {
+			public void onBlur(BlurEvent event) {
 				ClientLayerLocator.get().clientBase().log("lostfocus");
-				Event evt = Event.getCurrentEvent();
-				if (evt != null) {
-					Element elt = Event.getCurrentEvent().getTarget();
-					String str = elt.getString();
-					if (WidgetUtils.isAncestorOf(toolbar.getElement(), elt)) {
-						return;
-					}
+				EventTarget eventTarget = event.getNativeEvent()
+						.getEventTarget();
+				Element elt = Element.as(eventTarget);
+				String str = elt.getString();
+				if (WidgetUtils.isAncestorOf(toolbar.getElement(), elt)) {
+					return;
 				}
 				changes.firePropertyChange("value", old, getValue());
 			}
 		});
-		this.base.addKeyboardListener(new KeyboardListener() {
-			public void onKeyUp(Widget sender, char keyCode, int modifiers) {
-				if (keyCode == 'M'
-						&& (modifiers & KeyboardListener.MODIFIER_CTRL) != 0) {
+		this.base.addKeyUpHandler(new KeyUpHandler() {
+			public void onKeyUp(KeyUpEvent event) {
+				int keyCode = event.getNativeKeyCode();
+				if (keyCode == 'M' && event.isControlKeyDown()) {
 					if (maximised) {
 						RichTextArea.this.removeStyleName("max");
 						WidgetUtils.restoreFromMaximise();
@@ -102,14 +95,6 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 					maximised = !maximised;
 				}
 			}
-
-			public void onKeyPress(Widget sender, char keyCode, int modifiers) {
-				// TODO Auto-generated method stub
-			}
-
-			public void onKeyDown(Widget sender, char keyCode, int modifiers) {
-				// TODO Auto-generated method stub
-			}
 		});
 		FlowPanel fp = new FlowPanel();
 		FlowPanel tbHolder = new FlowPanel();
@@ -119,7 +104,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 		fp.add(base);
 		super.initWidget(fp);
 	}
-	
+
 	private boolean maximised = false;
 
 	public String getValue() {
@@ -139,17 +124,11 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 		super.onDetach();
 	}
 
-	public void addKeyboardListener(KeyboardListener listener) {
-		this.base.addKeyboardListener(listener);
-	}
 
 	public int getTabIndex() {
 		return this.base.getTabIndex();
 	}
 
-	public void removeKeyboardListener(KeyboardListener listener) {
-		this.base.removeKeyboardListener(listener);
-	}
 
 	public void setAccessKey(char key) {
 		this.base.setAccessKey(key);
@@ -157,5 +136,29 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 	public void setTabIndex(int index) {
 		this.base.setTabIndex(index);
+	}
+
+	public HandlerRegistration addBlurHandler(BlurHandler handler) {
+		return this.base.addBlurHandler(handler);
+	}
+
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return this.base.addClickHandler(handler);
+	}
+
+	public HandlerRegistration addFocusHandler(FocusHandler handler) {
+		return this.base.addFocusHandler(handler);
+	}
+
+	public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
+		return this.base.addKeyDownHandler(handler);
+	}
+
+	public HandlerRegistration addKeyPressHandler(KeyPressHandler handler) {
+		return this.base.addKeyPressHandler(handler);
+	}
+
+	public HandlerRegistration addKeyUpHandler(KeyUpHandler handler) {
+		return this.base.addKeyUpHandler(handler);
 	}
 }

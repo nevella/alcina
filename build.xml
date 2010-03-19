@@ -57,6 +57,9 @@
 			<metainf dir="${framework.entity.base.dir}/META-INF" />
 			<fileset dir="${framework.entity.build.dir}">
 				<include name="**/*.*" />
+				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
+				<exclude name="${framework.remote.interface.class}" />
+				<exclude name="${framework.remote.asyncinterface.class}" />
 			</fileset>
 			<!-- give the server handy access to stylesheets for print, static serving etc -->
 			<fileset dir="${framework.gwt.src.dir}">
@@ -92,13 +95,8 @@
 		<delete file="${framework.dist.dir}/${ant.project.name}-servlet.jar" />
 		<copy todir="${framework.servlet.build.dir}">
 			<fileset dir="${framework.servlet.base.dir}/src">
-				<!--changme to .cc-->
-				<include name="au/**/*.*" />
-				<!-- note, the alcina-servlet.jar only contains resources -->
-				<!-- gwt/rpc server-side insists that the servlet superclasses come from -->
-				<!-- the same classloader (jar) as the servlet -->
-				<!-- easiest to just put all classes conceptually in this jar -->
-				<!--  in the app servlet jar instead -->
+				<include name="cc/**/*.*" />
+
 				<exclude name="**/*.java" />
 				<exclude name="**/*.class" />
 			</fileset>
@@ -107,7 +105,10 @@
 			<metainf dir="${framework.servlet.base.dir}/META-INF" />
 			<fileset dir="${framework.servlet.build.dir}">
 				<include name="**/*.*" />
-
+			</fileset>
+			<fileset dir="${framework.entity.build.dir}">
+				<include name="${framework.remote.interface.class}" />
+				<include name="${framework.remote.asyncinterface.class}" />
 			</fileset>
 		</jar>
 
