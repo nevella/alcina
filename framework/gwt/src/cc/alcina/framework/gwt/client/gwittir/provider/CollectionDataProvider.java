@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
 import java.util.ArrayList;
@@ -32,13 +31,13 @@ import com.google.gwt.user.client.Timer;
 import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.ui.table.HasChunks;
 import com.totsp.gwittir.client.ui.table.SortableDataProvider;
+
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
-
- public class CollectionDataProvider implements SortableDataProvider {
+public class CollectionDataProvider implements SortableDataProvider {
 	private final Collection c;
 
 	private int pageSize = 50;
@@ -117,7 +116,10 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 			return;
 			// non sortable column
 		}
-		init(table);
+		// allow for pre-attach sorting
+		if (table != null) {
+			init(table);
+		}
 	}
 
 	protected Comparator getComparator(String propertyName, ArrayList keys) {
