@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -27,11 +26,10 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.HasEnabled;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class Link<T> extends Widget implements HasHTML, HasEnabled,
+public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		HasClickHandlers {
 	protected Element anchorElem;
 
@@ -104,7 +102,9 @@ import com.totsp.gwittir.client.ui.HasEnabled;
 	@Override
 	public void onBrowserEvent(Event event) {
 		if (DOM.eventGetType(event) == Event.ONCLICK) {
-			DOM.eventPreventDefault(event);
+			if (!WidgetUtils.isNewTabModifier()) {
+				DOM.eventPreventDefault(event);
+			}
 			if (enabled) {
 				super.onBrowserEvent(event);
 			}

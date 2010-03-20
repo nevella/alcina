@@ -103,6 +103,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		}
 		return db.newDocument();
 	}
+	public static int getDepth(Node n){
+		int depth=0;
+		while (n.getParentNode()!=null){
+			depth++;
+			n=n.getParentNode();
+		}
+		return depth;
+	}
 
 	public static String elementNamesToLowerCase(String s) {
 		StringBuffer sb = new StringBuffer();

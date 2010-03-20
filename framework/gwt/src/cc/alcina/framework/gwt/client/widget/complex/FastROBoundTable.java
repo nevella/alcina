@@ -24,6 +24,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTable;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Element;
@@ -77,6 +78,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 					.setValue(p.getAccessorMethod().invoke(target,
 							CommonUtils.EMPTY_OBJECT_ARRAY));
 		} catch (Exception e) {
+			GWT.log("Exception creating cell widget",e);
 		}
 		return widget;
 	}
@@ -91,7 +93,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 		return this.selectedObjects;
 	}
 
-	//@Override
+	@Override
 	protected void addRow(final SourcesPropertyChangeEvents o) {
 		int row = table.getRowCount();
 		final CheckBox handle;
