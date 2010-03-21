@@ -41,6 +41,9 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.ext.GeneratorContext;
+import com.google.gwt.core.ext.TreeLogger;
+import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 @SuppressWarnings("unchecked")
@@ -49,26 +52,26 @@ import com.google.gwt.user.rebind.SourceWriter;
  * @author Nick Reddel
  */
 
- public class GwtReflectionScanner {
+ public class ClientReflectionScanner {
 	boolean printOnly = true;
 
 	private Map<Class, Set<RegistryLocation>> gwtRegisteringClasses = new HashMap<Class, Set<RegistryLocation>>();
 
-	public GwtReflectionScanner() {
+	public ClientReflectionScanner() {
 	}
 
 	public void scan(ScanInfo info, Collection<String> classNames,
 			Collection<String> ignore) throws Exception {
 		scan(info, classNames, ignore, null, false);
 	}
-
+	
 	public void scan(ScanInfo info, Collection<String> classNames,
 			Collection<String> ignore, String packageRoot,
 			boolean childReflector) throws Exception {
 		ListeningRegistry lr = new ListeningRegistry();
 		lr.packageRoot=packageRoot;
 		new RegistryScanner().scan(classNames, ignore, lr);
-		GwtReflectionGenerator rs = new GwtReflectionGenerator();
+		ClientReflectionGenerator rs = new ClientReflectionGenerator();
 		List<String> reflectorImports = new ArrayList<String>();
 		List<String> domainImports = new ArrayList<String>();
 		List<Class> reflectableClasses = new ArrayList<Class>();
@@ -126,9 +129,9 @@ import com.google.gwt.user.rebind.SourceWriter;
 				StringWriter sw = new StringWriter();
 				PrintWriter pw = new PrintWriter(sw);
 				SourceWriter srcW = factory.createSourceWriter(pw);
-				rs.generateAnnotationImplementation(
-						(Class<? extends Annotation>) c, srcW, simpleName
-								+ info.getAnnotationImplSuffix());
+//				rs.generateAnnotationImplementation(
+//						(Class<? extends Annotation>) c, srcW, simpleName
+//								+ info.getAnnotationImplSuffix());
 				StringWriter s2 = new StringWriter();
 				s2.write(sw.toString().replaceFirst("public class",
 						"@SuppressWarnings(\"all\")\npublic class"));
@@ -186,9 +189,9 @@ import com.google.gwt.user.rebind.SourceWriter;
 			}
 			StringWriter sw = new StringWriter();
 			PrintWriter pw = new PrintWriter(sw);
-			SourceWriter srcW = domainFactory.createSourceWriter(pw);
-			rs.procDomain(reflectableClasses, instantiableClasses, srcW,
-					ann2impl, gwtRegisteringClasses, childReflector,info);
+//			SourceWriter srcW = domainFactory.createSourceWriter(pw);
+//			rs.procDomain(reflectableClasses, instantiableClasses, srcW,
+//					ann2impl, gwtRegisteringClasses, childReflector,info);
 			processResult(sw, info.getDomainReflectorPath() + "/"
 					+ info.getDomainReflectorClassName() + ".java");
 		}
