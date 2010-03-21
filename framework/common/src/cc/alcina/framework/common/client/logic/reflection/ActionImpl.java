@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.Action;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.Action;
 
 @SuppressWarnings("all")
 public class ActionImpl implements Action {

@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.objecttree;
 
 import java.util.Collection;
 
+import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -65,4 +66,6 @@ public interface TreeRenderer<T extends TreeRenderable> {
 		AS_WIDGET, AS_TITLE, AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD,
 		IGNORE_AND_DESCEND, NO_RENDER
 	}
+
+	public CollectionFilter collectionFilter();
 }

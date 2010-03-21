@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 
 @SuppressWarnings("all")
 public class CustomiserInfoImpl implements CustomiserInfo {

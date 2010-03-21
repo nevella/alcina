@@ -1001,6 +1001,9 @@ input.calendarText.alcina-DateBox, div.alcina-ObjectTree  input.gwt-DateBox.alci
 	background: none;
 	margin-right:10px;
 }
+div.alcina-ObjectTree select{
+	margin-right:10px;
+}
 div.alcina-ObjectTree  input.gwt-DateBox.alcina-DateBox.dateBoxFormatError{
 	background: rgb(255, 204, 204);
 }

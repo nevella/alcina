@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
@@ -28,24 +27,31 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.Introspector;
+import com.totsp.gwittir.client.beans.IntrospectorFactory;
 import com.totsp.gwittir.client.beans.Property;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ClientReflector implements ClassLookup {
+public class ClientReflector implements ClassLookup {
 	private static ClientReflector domainReflector;
 
-	public static boolean defined() {
-		return domainReflector != null;
+	public static boolean isDefined() {
+		return GWT.isClient();
 	}
 
+	/**
+	 * Because ClientReflector is used from server code as well (via
+	 * TransformManager), we don't use a public static final INSTANCE generated
+	 * instance (see defined())
+	 */
 	public static ClientReflector get() {
 		if (domainReflector == null) {
-			throw new RuntimeException("Domain reflector not defined");
+			domainReflector = ClientReflectorFactory.create();
 		}
 		return domainReflector;
 	}
@@ -95,16 +101,17 @@ import com.totsp.gwittir.client.beans.Property;
 
 	public Class getClassForName(String fqn) {
 		Class clazz = forNameMap.get(fqn);
-		if (clazz!=null){
+		if (clazz != null) {
 			return clazz;
 		}
-		throw new RuntimeException("Class "+fqn+" not reflect-instantiable");
+		throw new RuntimeException("Class " + fqn + " not reflect-instantiable");
 	}
 
 	public Class getPropertyType(Class clazz, String propertyName) {
 		return GwittirBridge.get().getPropertyForClass(clazz, propertyName)
 				.getType();
 	}
+
 	@SuppressWarnings("unchecked")
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		if (!templateInstances.containsKey(clazz)) {
@@ -116,7 +123,7 @@ import com.totsp.gwittir.client.beans.Property;
 
 	public boolean isInstantiableClass(Class clazz) {
 		try {
-			if (stdAndPrimitives.contains(clazz)){
+			if (stdAndPrimitives.contains(clazz)) {
 				return false;
 			}
 			getClassForName(clazz.getName());
@@ -145,27 +152,35 @@ import com.totsp.gwittir.client.beans.Property;
 		}
 	}
 
-	protected Map<String,Class> stdClassMap = new HashMap<String, Class>();
+	protected Map<String, Class> stdClassMap = new HashMap<String, Class>();
 	{
-		Class[] stds = {Long.class,Double.class,Float.class,Short.class,Byte.class,Integer.class,Boolean.class,Character.class,Date.class,String.class};
+		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
+				Byte.class, Integer.class, Boolean.class, Character.class,
+				Date.class, String.class };
 		for (Class std : stds) {
 			stdClassMap.put(std.getName(), std);
 		}
 	}
-	protected Map<String,Class> primitiveClassMap = new HashMap<String, Class>();
+
+	protected Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
 	{
-		Class[] prims = {long.class,int.class,short.class,char.class,byte.class,boolean.class,double.class,float.class};
+		Class[] prims = { long.class, int.class, short.class, char.class,
+				byte.class, boolean.class, double.class, float.class };
 		for (Class prim : prims) {
 			primitiveClassMap.put(prim.getName(), prim);
 		}
 	}
-	protected Map<String,Class> stdAndPrimitivesMap = new HashMap<String, Class>();
+
+	protected Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
 	{
 		stdAndPrimitivesMap.putAll(stdClassMap);
 		stdAndPrimitivesMap.putAll(primitiveClassMap);
 	}
-	protected Set<Class> stdAndPrimitives = new HashSet< Class>(stdAndPrimitivesMap.values());
-	protected Map<String,Class> forNameMap = new HashMap<String, Class>();
+
+	protected Set<Class> stdAndPrimitives = new HashSet<Class>(
+			stdAndPrimitivesMap.values());
+
+	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
 	{
 		forNameMap.putAll(stdAndPrimitivesMap);
 	}
@@ -175,11 +190,11 @@ import com.totsp.gwittir.client.beans.Property;
 				clazz);
 		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
 		for (Property p : descriptor.getProperties()) {
-			if (p.getMutatorMethod()==null){
+			if (p.getMutatorMethod() == null) {
 				continue;
 			}
 			infos.add(new PropertyInfoLite(p.getType(), p.getName(), p
-					.getAccessorMethod(),clazz));
+					.getAccessorMethod(), clazz));
 		}
 		return infos;
 	}

@@ -1,9 +1,10 @@
 <module>
-      <!-- Inherit the core Web Toolkit stuff.                        -->
+	<!-- Inherit the core Web Toolkit stuff.                        -->
 	<inherits name='com.google.gwt.user.User' />
 	<inherits name='com.googlecode.gwtx.Java' />
 	<inherits name='com.totsp.gwittir.Gwittir' />
 	<inherits name='com.totsp.gwittir.LoggingDisabled' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
+	<inherits name='cc.alcina.framework.common.ClientReflector' />
 	<source path="client" />
 </module>

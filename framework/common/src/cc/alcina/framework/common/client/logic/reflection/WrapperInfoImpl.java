@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 
 @SuppressWarnings("all")
 public class WrapperInfoImpl implements WrapperInfo {

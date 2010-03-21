@@ -28,6 +28,9 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	public EnumCriterion() {
 	}
 
+	/**
+	 * If the enum is serialised in the db as a string, set to true
+	 */
 	protected boolean valueAsString() {
 		return false;
 	}

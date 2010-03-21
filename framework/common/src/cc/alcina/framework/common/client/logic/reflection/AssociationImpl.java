@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.Association;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.Association;
 
 @SuppressWarnings("all")
 public class AssociationImpl implements Association {

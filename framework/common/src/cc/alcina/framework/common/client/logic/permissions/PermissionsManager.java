@@ -262,7 +262,6 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public Map<String, ? extends IGroup> getUserGroups() {
 		return getUserGroups(user);
 	}
-
 	public Map<String, ? extends IGroup> getUserGroups(IUser user) {
 		if (groupMap != null) {
 			return groupMap;

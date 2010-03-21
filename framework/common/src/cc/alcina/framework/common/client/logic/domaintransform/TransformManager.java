@@ -1443,7 +1443,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				// }
 			}
 			boolean lookupCreated = registerChildren.containsKey(clazz);
-			if (ClientReflector.defined()
+			if (ClientReflector.isDefined()
 					&& (!registerChildren.containsKey(clazz) || registerChildren
 							.get(clazz))) {
 				boolean shouldMapChildren = lookupCreated;

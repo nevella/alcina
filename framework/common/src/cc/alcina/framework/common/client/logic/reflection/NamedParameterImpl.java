@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 
 @SuppressWarnings("all")
 public class NamedParameterImpl implements NamedParameter {

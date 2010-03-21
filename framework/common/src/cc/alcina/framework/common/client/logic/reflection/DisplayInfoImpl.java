@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 
 @SuppressWarnings("all")
 public class DisplayInfoImpl implements DisplayInfo {

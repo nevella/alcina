@@ -383,6 +383,9 @@ public class CommonUtils {
 			// language...)
 			return s;
 		}
+		if (s.endsWith("s")){
+			return s;
+		}
 		if (s.endsWith("y")) {
 			return s.substring(0, s.length() - 1) + "ies";
 		}

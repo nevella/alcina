@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
@@ -31,6 +32,10 @@ public abstract class BasicRenderer<T extends TreeRenderable> implements
 	private T renderable;
 
 	public CollectionProvider collectionProvider(RenderContext context) {
+		return null;
+	}
+
+	public CollectionFilter collectionFilter() {
 		return null;
 	}
 

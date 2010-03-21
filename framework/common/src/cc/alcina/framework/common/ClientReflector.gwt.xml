@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<module>
+	<source path="client" />
+	<generate-with class="cc.alcina.framework.entity.gwtsynth.ClientReflectionGenerator">
+		<when-type-assignable class="cc.alcina.framework.common.client.logic.reflection.ClientReflector" />
+	</generate-with>
+
+</module>

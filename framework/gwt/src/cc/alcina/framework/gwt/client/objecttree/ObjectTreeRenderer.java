@@ -17,11 +17,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.search.HasWithNull;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.BoundWidgetTypeFactorySimpleGenerator;
+import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
@@ -151,12 +153,16 @@ public class ObjectTreeRenderer {
 				((ListBoxEnumProvider) f.getCellProvider())
 						.setWithNull(((HasWithNull) node).isWithNull());
 			}
+			if (f.getCellProvider() instanceof ListBoxCollectionProvider && node.collectionFilter()!=null){
+				ListBoxCollectionProvider lbcp = (ListBoxCollectionProvider) f.getCellProvider();
+				lbcp.setFilter(node.collectionFilter());
+			}
 			AbstractBoundWidget bw = null;
 			try {
-				bw=(AbstractBoundWidget) f.getCellProvider()
-						.get();
+				bw = (AbstractBoundWidget) f.getCellProvider().get();
 			} catch (Exception e) {
-				e.printStackTrace();
+				throw new WrappedRuntimeException(
+						"Exception rendering object tree", e);
 			}
 			op.getBinding().getChildren().add(
 					new Binding(bw, "value", f.getValidator(),

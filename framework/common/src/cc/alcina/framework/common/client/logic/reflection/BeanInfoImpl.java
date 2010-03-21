@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 
 @SuppressWarnings("all")
 public class BeanInfoImpl implements BeanInfo {

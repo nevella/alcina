@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.ValidatorInfo;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.ValidatorInfo;
 
 @SuppressWarnings("all")
 public class ValidatorInfoImpl implements ValidatorInfo {

@@ -166,6 +166,9 @@ public class CriteriaGroup<SC extends SearchCriterion> extends BaseBindable
 					result += " " + combinator.toString().toLowerCase() + " ";
 				}
 				result += scString;
+				if (searchCriterion instanceof SelfNamingCriterion){
+					displayName="";
+				}
 			}
 		}
 		return result.length() == 0 ? result : displayName + result;

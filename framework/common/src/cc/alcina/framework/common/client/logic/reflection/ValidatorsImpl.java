@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.Validators;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.Validators;
 
 @SuppressWarnings("all")
 public class ValidatorsImpl implements Validators {

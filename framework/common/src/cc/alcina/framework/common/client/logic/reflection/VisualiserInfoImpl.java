@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 
 @SuppressWarnings("all")
 public class VisualiserInfoImpl implements VisualiserInfo {

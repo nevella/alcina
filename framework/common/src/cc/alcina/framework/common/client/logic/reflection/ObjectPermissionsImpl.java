@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 
 @SuppressWarnings("all")
 public class ObjectPermissionsImpl implements ObjectPermissions {

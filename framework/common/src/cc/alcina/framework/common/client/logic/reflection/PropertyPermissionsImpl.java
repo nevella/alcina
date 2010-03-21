@@ -1,7 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import java.lang.annotation.Annotation;
+import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 
 @SuppressWarnings("all")
 public class PropertyPermissionsImpl implements PropertyPermissions {

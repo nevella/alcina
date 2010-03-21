@@ -84,8 +84,13 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 	@XmlTransient
 	public Class getRefClass() {
 		if (this.refClass == null && this.refClassName != null) {
-			this.refClass = CommonLocator.get().classLookup()
-					.getClassForName(this.refClassName);
+			try {
+				this.refClass = CommonLocator.get().classLookup()
+						.getClassForName(this.refClassName);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		return this.refClass;
 	}
