@@ -39,9 +39,14 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	public boolean equals(Object obj) {
 		if (obj instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) obj;
-			return (hili.getId() == getId()
-					&& hili.getLocalId() == getLocalId() && hili.getClass()
-					.equals(getClass()));
+			if (hili.getClass().equals(getClass())) {
+				return false;
+			}
+			if (getId() != 0 || getLocalId() != 0) {
+				return (hili.getId() == getId() && hili.getLocalId() == getLocalId());
+			} else {
+				return this == obj;
+			}
 		}
 		return false;
 	}
