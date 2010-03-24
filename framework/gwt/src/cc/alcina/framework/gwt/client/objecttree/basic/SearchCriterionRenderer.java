@@ -25,7 +25,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
  *
  * @author Nick Reddel
  */
-public class SearchCriterionRenderer<T extends SearchCriterion> extends BasicRenderer<T> {
+public class SearchCriterionRenderer<T extends SearchCriterion> extends AbstractRenderer<T> {
 	public Collection<? extends TreeRenderable> renderableChildren() {
 		return null;
 	}

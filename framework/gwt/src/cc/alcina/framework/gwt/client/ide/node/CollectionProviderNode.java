@@ -40,7 +40,11 @@ import com.google.gwt.user.client.ui.TreeItem;
 		setCollectionProvider(collectionProvider);
 		setHTML(imageItemHTML(getImagePrototype(), title));
 	}
-
+	public CollectionProviderNode(CollectionProvider collectionProvider,
+			String title, ImageResource imageResource, boolean volatileOrder) {
+		this(collectionProvider, title, imageResource);
+		this.support.setVolatileOrder(volatileOrder);
+	}
 	public void removeItem(TreeItem item) {
 		super.removeItem(item);
 		support.removeItem(item);

@@ -14,6 +14,8 @@
 
 package cc.alcina.framework.common.client.search;
 
+import java.util.Date;
+
 
 
 /**
@@ -39,7 +41,10 @@ package cc.alcina.framework.common.client.search;
 		}
 		result.eql = "t."+getTargetPropertyName()
 				+ (getDirection() == Direction.ASCENDING ? ">=" : "<") + " ? ";
-		result.parameters.add(getDate());
+		//round up if it's to...assume we're talking whole days here
+		Date d = new Date(getDate().getTime()+(long)(getDirection()==Direction.ASCENDING?0:86400*1000));
+		
+		result.parameters.add(d);
 		return result;
 	}
 

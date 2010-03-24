@@ -14,6 +14,8 @@
 
 package cc.alcina.framework.gwt.client.widget;
 
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
+
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Window;

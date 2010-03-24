@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.actions.VetoableActionEvent;
 import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;

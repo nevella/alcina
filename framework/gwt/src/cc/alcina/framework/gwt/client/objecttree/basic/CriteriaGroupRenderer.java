@@ -26,7 +26,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
  * @author Nick Reddel
  */
 public class CriteriaGroupRenderer<T extends CriteriaGroup> extends
-		BasicRenderer<T> {
+		AbstractRenderer<T> {
 	public Collection<? extends TreeRenderable> renderableChildren() {
 		return getRenderable().getCriteria();
 	}

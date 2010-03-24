@@ -1,0 +1,231 @@
+package cc.alcina.framework.gwt.client.util;
+
+import cc.alcina.framework.gwt.client.objecttree.RenderContext;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
+
+import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.Widget;
+
+public class RelativePopupPositioning {
+	public static final String RENDER_CONTEXT_BOUNDING_PARENT = "RENDER_CONTEXT_BOUNDING_PARENT";
+
+	public static void setCurrentBoundingParent(Widget boundingParent) {
+		RenderContext.current().set(RENDER_CONTEXT_BOUNDING_PARENT,
+				boundingParent);
+	}
+
+	public static Widget getCurrentBoundingParent() {
+		return RenderContext.current().get(RENDER_CONTEXT_BOUNDING_PARENT);
+	}
+
+	enum AxisType {
+		NEG, CENTER, POS
+	}
+
+	private static int INVALID = -99999;
+
+	enum AxisCoordinate {
+		H_LEFT {
+			@Override
+			public boolean isVertical() {
+				return false;
+			}
+
+			@Override
+			public AxisType axisType() {
+				return AxisType.NEG;
+			}
+		},
+		H_CENTER {
+			@Override
+			public AxisType axisType() {
+				return AxisType.CENTER;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return false;
+			}
+		},
+		H_RIGHT {
+			@Override
+			public AxisType axisType() {
+				return AxisType.POS;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return false;
+			}
+		},
+		V_TOP {
+			@Override
+			public AxisType axisType() {
+				return AxisType.NEG;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return true;
+			}
+		},
+		V_CENTER {
+			@Override
+			public AxisType axisType() {
+				return AxisType.CENTER;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return true;
+			}
+		},
+		V_BOTTOM {
+			@Override
+			public AxisType axisType() {
+				return AxisType.POS;
+			}
+
+			@Override
+			public boolean isVertical() {
+				return true;
+			}
+		};
+		int fit(int relX, int relY, int bw, int bh, int relW, int relH,
+				int ppW, int ppH, AxisCoordinate favour,
+				boolean wrappingRelativeTo, boolean force) {
+			int relC = relX;
+			int bDim = bw;
+			int relDim = relW;
+			int ppDim = ppW;
+			if (isVertical()) {
+				relC = relY;
+				bDim = bh;
+				relDim = relH;
+				ppDim = ppH;
+			}
+			int result = 0;
+			switch (axisType()) {
+			case NEG:
+				result = relC - ppDim + (wrappingRelativeTo ? relDim : 0);
+				break;
+			case POS:
+				result = relC + (wrappingRelativeTo ? 0 : relDim);
+				break;
+			case CENTER:
+				if (favour.axisType() != null) {
+					switch (favour.axisType()) {
+					case NEG:
+						result = 0;
+						break;
+					case POS:
+						result = bDim - ppDim;
+						break;
+					}
+				} else {
+					result = INVALID;
+				}
+			}
+			if (result < 0 || result + ppDim > bDim) {
+				result = INVALID;
+			}
+			if (force && result == INVALID) {
+				result = relC + (wrappingRelativeTo ? 0 : relDim);// pos;
+			}
+			return result;
+		}
+
+		abstract AxisType axisType();
+
+		abstract boolean isVertical();
+	}
+
+	public static class RelativePopupAxis {
+		public final AxisCoordinate[] freeAxis;
+
+		public final AxisCoordinate fixedAxis;
+
+		private RelativePopupAxis(AxisCoordinate[] freeAxis,
+				AxisCoordinate fixedAxis) {
+			this.freeAxis = freeAxis;
+			this.fixedAxis = fixedAxis;
+		}
+	}
+
+	public static final RelativePopupAxis BOTTOM_RTL = new RelativePopupAxis(
+			new AxisCoordinate[] { AxisCoordinate.H_RIGHT,
+					AxisCoordinate.H_CENTER, AxisCoordinate.H_LEFT },
+			AxisCoordinate.V_BOTTOM);
+
+	public static final RelativePopupAxis BOTTOM_LTR = new RelativePopupAxis(
+			new AxisCoordinate[] { AxisCoordinate.H_LEFT,
+					AxisCoordinate.H_CENTER, AxisCoordinate.H_RIGHT },
+			AxisCoordinate.V_BOTTOM);
+	public static void showPopup( Widget relativeToWidget,
+			 Widget widgetToShow,
+			 Widget boundingWidget,  RelativePopupAxis axis) {
+		showPopup(relativeToWidget, widgetToShow, boundingWidget, new RelativePopupAxis[]{axis});
+	}
+	public static void showPopup(final Widget relativeToWidget,
+			final Widget widgetToShow,
+			final Widget boundingWidget, final RelativePopupAxis[] axes) {
+		final RelativePopupPanel rpp = new RelativePopupPanel(true);
+		rpp.setAnimationEnabled(true);
+		rpp.setWidget(widgetToShow);
+		final Widget positioningWidget = WidgetUtils
+				.getPositioningParent(relativeToWidget);
+		ComplexPanel cp = WidgetUtils.complexChildOrSelf(positioningWidget);
+		rpp.setPositioningContainer(cp);
+		rpp.setPopupPositionAndShow(new PositionCallback() {
+			public void setPosition(int offsetWidth, int offsetHeight) {
+				int x = relativeToWidget.getAbsoluteLeft();
+				int y = relativeToWidget.getAbsoluteTop();
+				if (!(positioningWidget instanceof RootPanel)) {
+					x -= positioningWidget.getAbsoluteLeft();
+					y -= positioningWidget.getAbsoluteTop();
+				}
+				int fixedAxisOffset = INVALID;
+				int freeAxisOffset = INVALID;
+				AxisCoordinate fixedAxis = null;
+				AxisCoordinate freeAxis = null;
+				int bw = boundingWidget.getOffsetWidth();
+				int bh = boundingWidget.getOffsetHeight();
+				int relW = relativeToWidget.getOffsetWidth();
+				int relH = relativeToWidget.getOffsetHeight();
+				for (RelativePopupAxis axis : axes) {
+					fixedAxis = axis.fixedAxis;
+					fixedAxisOffset = fixedAxis.fit(x, y, bw, bh, relW, relH,
+							offsetWidth, offsetHeight, null, false, false);
+					if (fixedAxisOffset == INVALID) {
+						continue;
+					}
+					AxisCoordinate last = null;
+					for (int i = 0; i < 2; i++) {
+						freeAxis = axis.freeAxis[i];
+						freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW, relH,
+								offsetWidth, offsetHeight, last, true, false);
+						if (freeAxisOffset != INVALID) {
+							break;
+						}
+						last = freeAxis;
+					}
+				}
+				// always fall back to the first axis
+				if (fixedAxisOffset == INVALID || freeAxisOffset == INVALID) {
+					RelativePopupAxis axis = axes[0];
+					fixedAxis = axis.fixedAxis;
+					fixedAxisOffset = fixedAxis.fit(x, y, bw, bh, relW, relH,
+							offsetWidth, offsetHeight, null, false, true);
+					freeAxis = axis.freeAxis[0];
+					freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW, relH,
+							offsetWidth, offsetHeight, null, true, true);
+				}
+				x=fixedAxis.isVertical()?freeAxisOffset:fixedAxisOffset;
+				y=freeAxis.isVertical()?freeAxisOffset:fixedAxisOffset;
+				rpp.setPopupPosition(x, y);
+			}
+		});
+	}
+}

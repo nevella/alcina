@@ -28,9 +28,13 @@ import com.google.gwt.user.client.ui.FlexTable.FlexCellFormatter;
  */
 public class ObjectTreeGridRenderer extends ObjectTreeRenderer {
 	protected FlexTable ft = new FlexTable();
-	protected Map<Integer, Widget> customiserRows = new LinkedHashMap<Integer, Widget>();
+
+	protected Map<Integer, Widget> level1Rows = new LinkedHashMap<Integer, Widget>();
+
 	protected Map<Integer, TreeRenderer> level1RendererRows = new LinkedHashMap<Integer, TreeRenderer>();
+
 	protected FlexCellFormatter cellFormatter;
+
 	protected int colCountMax;
 
 	// a fair bit of hackery here - but, heck, it works
@@ -38,21 +42,20 @@ public class ObjectTreeGridRenderer extends ObjectTreeRenderer {
 			int depth, boolean soleChild, RenderContext renderContext) {
 		super.renderToPanel(renderable, cp, depth, soleChild, renderContext);
 		if (depth == 0) {
-			cellFormatter = (FlexCellFormatter) ft
-					.getCellFormatter();
+			cellFormatter = (FlexCellFormatter) ft.getCellFormatter();
 			int widgetCount = cp.getWidgetCount();
 			colCountMax = 0;
 			int level1WidgetIndex = -1;
 			int row = -1;
 			int col = 0;
-			
 			for (int i = 0; i < widgetCount; i++) {
-				Widget w = cp.getWidget(0);
+				Widget w = cp.getWidget(0);// we'll be removing widgets, so
+				// we'll always be looking at (0)
 				if (w.getStyleName().contains("level-1")) {
 					level1WidgetIndex = i;
 					row++;
 					col = 0;
-					level1RendererRows.put(row, level1RendererMap.get(w));
+					level1RendererRows.put(row, level1LabelMap.get(w));
 				} else {
 					colCountMax = Math.max(colCountMax, i - level1WidgetIndex);
 				}
@@ -63,13 +66,14 @@ public class ObjectTreeGridRenderer extends ObjectTreeRenderer {
 					cellFormatter.setStyleName(row, col, "td0");
 				}
 				boolean isCustomiser = w.getStyleName().contains("customiser");
-				if (col == 1 && isCustomiser) {
-					cellFormatter.setVerticalAlignment(row, 0,
-							HasVerticalAlignment.ALIGN_TOP);
-					if (!level1RendererRows.get(row).isSingleLineCustomiser(
-							renderContext)) {
-						customiserRows.put(row, w);
+				if (col == 1) {// && isCustomiser) {
+					if (isCustomiser
+							&& level1RendererRows.get(row)
+									.isSingleLineCustomiser()) {
+						cellFormatter.setVerticalAlignment(row, 0,
+								HasVerticalAlignment.ALIGN_TOP);
 					}
+					level1Rows.put(row, w);
 				}
 				// note, at this point, getWidget(0) is the _next_ widget
 				boolean nextWidgetIsNewRow = i == widgetCount - 1

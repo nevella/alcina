@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
-import cc.alcina.framework.gwt.client.widget.WidgetUtils;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.HasWidgets;

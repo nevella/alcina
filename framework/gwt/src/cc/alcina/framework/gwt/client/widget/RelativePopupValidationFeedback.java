@@ -18,6 +18,7 @@ import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;

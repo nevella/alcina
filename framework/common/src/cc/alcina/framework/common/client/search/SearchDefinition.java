@@ -103,7 +103,7 @@ public class SearchDefinition extends GwtPersistableObject implements
 			String s = html ? criteriaGroup.toHtml() : criteriaGroup.toString();
 			if (!CommonUtils.isNullOrEmpty(s)) {
 				if (result.length() != 0) {
-					result.append(", ");
+					result.append("; ");
 				}
 				result.append(s);
 			}
@@ -229,8 +229,8 @@ public class SearchDefinition extends GwtPersistableObject implements
 	}
 
 	public String toHtml() {
-		return CommonUtils.format("%1 - order by %2", filterDescription(true),
-				orderDescription(true));
+		return CommonUtils.format("%3%1 - order by %2", filterDescription(true),
+				orderDescription(true),CommonUtils.isNullOrEmpty(getName())?"":"<b>"+getName()+"</b> - ");
 	}
 
 	@Override

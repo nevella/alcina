@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.widget.WidgetUtils;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.richtext.RichTextToolbar;
 
 import com.google.gwt.dom.client.Element;

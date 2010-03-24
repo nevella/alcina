@@ -67,7 +67,10 @@ public class SearchCriterion extends BaseBindable implements TreeRenderable {
 	}
 
 	public void setDirection(Direction direction) {
+		Direction old_direction = this.direction;
 		this.direction = direction;
+		propertyChangeSupport.firePropertyChange("direction", old_direction,
+				direction);
 	}
 
 	public void setDisplayName(String displayName) {
@@ -83,8 +86,8 @@ public class SearchCriterion extends BaseBindable implements TreeRenderable {
 	}
 
 	/**
-	 * Order should really be defined in OrderCriterion subclass, but easier
-	 * here
+	 * Can also apply to things like date criteria, not just order - so leave
+	 * here rather than in OrderCriterion
 	 * 
 	 * @author nick@alcina.cc
 	 * 

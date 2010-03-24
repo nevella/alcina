@@ -11,14 +11,15 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class OrderCriterion extends SearchCriterion {
-	
+public class OrderCriterion extends SearchCriterion {
+	public String addDirection(String criterionName) {
+		return criterionName == null || getDirection() == Direction.ASCENDING ? criterionName
+				: criterionName + " (reverse)";
+	}
 }

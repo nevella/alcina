@@ -15,7 +15,8 @@ package cc.alcina.framework.gwt.client.gwittir.provider;
 
 import java.util.Comparator;
 
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.EqualsComparator;
+import cc.alcina.framework.gwt.client.gwittir.Comparators;
+import cc.alcina.framework.gwt.client.gwittir.Comparators.EqualsComparator;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox.DomainListBox;
@@ -61,7 +62,7 @@ public  class ListBoxCollectionProvider implements
 				!propertyIsCollection && !noNullOption);
 		listBox.setRenderer(renderer == null ? DisplayNameRenderer.INSTANCE
 				: renderer);
-		listBox.setComparator(comparator==null?EqualsComparator.INSTANCE:comparator);
+		listBox.setComparator(comparator==null?Comparators.EqualsComparator.INSTANCE:comparator);
 		listBox.setSortOptionsByToString(comparator==null);
 		listBox.setMultipleSelect(propertyIsCollection);
 		return listBox;

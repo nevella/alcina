@@ -11,11 +11,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Date;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -27,11 +27,13 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
- *
+ * This class is a bit hacked, to support Gwittir validation (if we just had it
+ * as an ABW<Date>, validation errors would never get to the Gwittir validation
+ * s/s). It requires an incoming DateToLongString converter, and an outgoing ShortDate validator 
+ * 
  * @author Nick Reddel
  */
-
- public class DateBox extends AbstractBoundWidget<String> implements
+public class DateBox extends AbstractBoundWidget<String> implements
 		ValueChangeHandler {
 	public static final BoundWidgetProvider PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
@@ -85,7 +87,17 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		fireChangesFromBase();
 	}
 
+	/**
+	 * Should always be setting a stringified long
+	 */
 	public void setValue(String value) {
-		// TODO Auto-generated method stub
+		if (value != null) {
+			try {
+				long l = Long.parseLong(value);
+				setValue(new Date(l));
+			} catch (Exception e) {
+				GWT.log("Setting illegal datebox string value - " + value);
+			}
+		}
 	}
 }

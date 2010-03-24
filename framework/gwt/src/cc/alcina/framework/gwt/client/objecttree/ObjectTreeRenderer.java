@@ -35,6 +35,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.beans.BindingBuilder;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
@@ -48,9 +49,9 @@ public class ObjectTreeRenderer {
 
 	protected BoundWidgetTypeFactory factory = new BoundWidgetTypeFactorySimpleGenerator();
 
-	protected Map<Widget, TreeRenderer> customiserRendererMap = new HashMap<Widget, TreeRenderer>();
+	protected Map<Widget, TreeRenderer> level1ContentRendererMap = new HashMap<Widget, TreeRenderer>();
 
-	protected Map<Widget, TreeRenderer> level1RendererMap = new HashMap<Widget, TreeRenderer>();
+	protected Map<Widget, TreeRenderer> level1LabelMap = new HashMap<Widget, TreeRenderer>();
 
 	public ComplexPanel render(TreeRenderable root) {
 		return render(root, new RenderContext());
@@ -70,7 +71,7 @@ public class ObjectTreeRenderer {
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
 			int depth, boolean soleChild, RenderContext renderContext) {
 		TreeRenderer node = TreeRenderingInfoProvider.get().getForRenderable(
-				renderable);
+				renderable, renderContext);
 		if (depth == 0 && node.renderCss() != null) {
 			cp.setStyleName(node.renderCss());
 		}
@@ -86,11 +87,10 @@ public class ObjectTreeRenderer {
 			renderInstruction = RenderInstruction.NO_RENDER;
 		}
 		if (renderInstruction != RenderInstruction.NO_RENDER) {
-			customiserWidget = node.renderCustomiser(renderContext) == null ? null
-					: (AbstractBoundWidget) node
-							.renderCustomiser(renderContext).get();
+			customiserWidget = node.renderCustomiser() == null ? null
+					: (AbstractBoundWidget) node.renderCustomiser().get();
 		}
-		customiserRendererMap.put(customiserWidget, node);
+		level1ContentRendererMap.put(customiserWidget, node);
 		switch (renderInstruction) {
 		case NO_RENDER:
 			return;
@@ -113,7 +113,7 @@ public class ObjectTreeRenderer {
 						+ ((soleChild) ? Math.max(1, depth - 1) : depth));
 				cp.add(label);
 				if (depth == 1) {
-					level1RendererMap.put(label, node);
+					level1LabelMap.put(label, node);
 				}
 				widgetsAdded = true;
 			}
@@ -124,13 +124,13 @@ public class ObjectTreeRenderer {
 			if (node.renderCss() != null) {
 				customiserWidget.addStyleName(node.renderCss());
 			}
-			if (node.hint(renderContext) != null) {
+			if (node.hint() != null) {
 				FlowPanel fp2 = new FlowPanel();
-				Label label = new Label(node.hint(renderContext));
+				Label label = new Label(node.hint());
 				label.setStyleName("hint");
 				fp2.add(customiserWidget);
 				fp2.add(label);
-				fp2.addStyleName("customiser");
+				fp2.addStyleName("customiser ");
 				cp.add(fp2);
 			} else {
 				customiserWidget.addStyleName("customiser");
@@ -153,8 +153,10 @@ public class ObjectTreeRenderer {
 				((ListBoxEnumProvider) f.getCellProvider())
 						.setWithNull(((HasWithNull) node).isWithNull());
 			}
-			if (f.getCellProvider() instanceof ListBoxCollectionProvider && node.collectionFilter()!=null){
-				ListBoxCollectionProvider lbcp = (ListBoxCollectionProvider) f.getCellProvider();
+			if (f.getCellProvider() instanceof ListBoxCollectionProvider
+					&& node.collectionFilter() != null) {
+				ListBoxCollectionProvider lbcp = (ListBoxCollectionProvider) f
+						.getCellProvider();
 				lbcp.setFilter(node.collectionFilter());
 			}
 			AbstractBoundWidget bw = null;
@@ -164,10 +166,12 @@ public class ObjectTreeRenderer {
 				throw new WrappedRuntimeException(
 						"Exception rendering object tree", e);
 			}
-			op.getBinding().getChildren().add(
-					new Binding(bw, "value", f.getValidator(),
-							f.getFeedback() != null ? vf : null, renderable,
-							propertyName, null, null));
+			Binding binding = BindingBuilder.bind(bw).onLeftProperty("value")
+					.validateLeftWith(f.getValidator()).notifiedWithLeft(
+							f.getFeedback() != null ? vf : null).toRight(
+							renderable).onRightProperty(propertyName)
+					.convertRightWith(f.getConverter()).toBinding();
+			op.getBinding().getChildren().add(binding);
 			if (node.renderCss() != null) {
 				bw.setStyleName(node.renderCss());
 			}
@@ -189,6 +193,7 @@ public class ObjectTreeRenderer {
 				}
 			}
 			if (childPanel != cp) {
+				level1ContentRendererMap.put(childPanel, node);
 				cp.add(childPanel);
 			}
 			Collection<? extends TreeRenderable> childRenderables = node

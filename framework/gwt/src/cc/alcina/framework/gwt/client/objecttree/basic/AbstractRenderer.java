@@ -27,31 +27,39 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  * 
  */
 @ClientInstantiable
-public abstract class BasicRenderer<T extends TreeRenderable> implements
+public abstract class AbstractRenderer<T extends TreeRenderable> implements
 		TreeRenderer<T> {
 	private T renderable;
-
-	public CollectionProvider collectionProvider(RenderContext context) {
-		return null;
-	}
+	private RenderContext context;
 
 	public CollectionFilter collectionFilter() {
 		return null;
 	}
+	public CollectionProvider collectionProvider() {
+		return null;
+	}
 
 	public String emptyChildText() {
-		return "";
+		return "(not set)";
+	}
+
+	public RenderContext getContext() {
+		return context;
 	}
 
 	public T getRenderable() {
 		return this.renderable;
 	}
 
-	public String hint(RenderContext context) {
+	public String hint() {
 		return null;
 	}
 
-	public boolean isSingleLineCustomiser(RenderContext context) {
+	public boolean isAlwaysExpanded() {
+		return false;
+	}
+
+	public boolean isSingleLineCustomiser() {
 		return false;
 	}
 
@@ -71,7 +79,7 @@ public abstract class BasicRenderer<T extends TreeRenderable> implements
 		return null;
 	}
 
-	public BoundWidgetProvider renderCustomiser(RenderContext renderContext) {
+	public BoundWidgetProvider renderCustomiser() {
 		return null;
 	}
 
@@ -81,6 +89,10 @@ public abstract class BasicRenderer<T extends TreeRenderable> implements
 
 	public String section() {
 		return null;
+	}
+
+	public void setContext(RenderContext context) {
+		this.context = context;
 	}
 
 	public void setRenderable(T renderable) {

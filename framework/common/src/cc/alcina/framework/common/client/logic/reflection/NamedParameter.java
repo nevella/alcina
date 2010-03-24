@@ -68,5 +68,12 @@ import cc.alcina.framework.common.client.CommonLocator;
 			}
 			return null;
 		}
+		public static String stringValue(NamedParameter[] parameters, String name, String defaultValue) {
+			NamedParameter p = Support.getParameter(parameters, name);
+			if (p!=null){
+				return p.stringValue();
+			}
+			return defaultValue;
+		}
 	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
@@ -21,17 +20,22 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class SearchResultsBase<B extends SearchResult> implements Serializable{
+public class SearchResultsBase<B extends SearchResult> implements Serializable {
 	private String log = "";
+
 	private int totalResultCount;
+
 	private int pageNumber;
+
 	private int pageResultCount;
+
 	SearchDefinition searchDefinition;
+
 	private List<B> results;
+
 	public SearchResultsBase() {
 		super();
 	}
@@ -50,11 +54,15 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	public String getResultsDescriptionHtml() {
 		SearchDefinition def = getSearchDefinition();
-		String template = "You are on page %1 of %2 with %3 results for %4. "
-				+ "Order by %5.";
-		String noResultsTemplate = "No results were returned for %4. ";
+		String template = "You are on page %1 of %2 with %3 results for: %4. "
+				+ "%5.";
+		String noResultsTemplate = "No results were returned for: %4. ";
 		String tplt = (totalResultCount == 0) ? noResultsTemplate : template;
 		String searchDef = def.filterDescription(true);
+		if (!CommonUtils.isNullOrEmpty(def.getName())) {
+			searchDef = "<span class='alcina-SearchDefinitionName'>"
+					+ def.getName() + "</span> - " + searchDef;
+		}
 		String orderDef = def.orderDescription(true);
 		return CommonUtils.format(tplt, pageNumber, pageCount(),
 				totalResultCount, searchDef, orderDef);
@@ -73,7 +81,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public int pageCount() {
-		return (int) Math.floor(((double)(totalResultCount - 1))
+		return (int) Math.floor(((double) (totalResultCount - 1))
 				/ getSearchDefinition().getResultsPerPage()) + 1;
 	}
 

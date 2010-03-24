@@ -13,15 +13,28 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 /**
  * 
  * @author Nick Reddel
  */
 public class OrderGroup extends CriteriaGroup<OrderCriterion> {
-	public OrderCriterion fromSoleCriterion() {
+	@XmlTransient
+	public OrderCriterion getSoleCriterion() {
 		if (getCriteria().iterator().hasNext()) {
 			return getCriteria().iterator().next();
 		}
 		return null;
+	}
+
+	public void setSoleCriterion(OrderCriterion soleCriterion) {
+		OrderCriterion old_soleCriterion = getSoleCriterion();
+		getCriteria().clear();
+		if (soleCriterion != null) {
+			getCriteria().add(soleCriterion);
+		}
+		propertyChangeSupport.firePropertyChange("soleCriterion",
+				old_soleCriterion, soleCriterion);
 	}
 }

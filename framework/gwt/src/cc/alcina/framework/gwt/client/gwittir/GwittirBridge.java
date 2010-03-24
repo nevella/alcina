@@ -13,8 +13,8 @@
  */
 package cc.alcina.framework.gwt.client.gwittir;
 
-import java.io.Serializable;
 import java.lang.annotation.Annotation;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,18 +30,17 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
+import cc.alcina.framework.common.client.gwittir.validator.DateToLongStringConverter;
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ParameterisedValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ShortDateValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -60,18 +59,16 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeColle
 import cc.alcina.framework.gwt.client.gwittir.provider.FriendlyEnumLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
-import cc.alcina.framework.gwt.client.gwittir.renderer.ClassSimpleNameRenderer;
-import cc.alcina.framework.gwt.client.gwittir.renderer.CollectionDisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
 import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.Introspector;
 import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -288,7 +285,7 @@ public class GwittirBridge implements PropertyAccessor {
 							.getPropertyName(), vf);
 				}
 				return new Field(pr.getPropertyName(), TextProvider.get()
-						.getLabelText(c, pr), bwp, validator, vf);
+						.getLabelText(c, pr), bwp, validator, vf,getDefaultConverter(p.getType()));
 			}
 		} else if (beanInfo.allPropertiesVisualisable()
 				&& PermissionsManager.get().checkEffectivePropertyPermission(
@@ -300,11 +297,16 @@ public class GwittirBridge implements PropertyAccessor {
 			vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
 			return new Field(pr.getPropertyName(), TextProvider.get()
 					.getLabelText(c, pr), bwp, getValidator(p.getType(), obj,
-					pr.getPropertyName(), vf), vf);
+					pr.getPropertyName(), vf), vf,getDefaultConverter(p.getType()));
 		}
 		return null;
 	}
-
+	public static Converter getDefaultConverter(Class propertyType){
+		if (propertyType==Date.class||propertyType==Timestamp.class){
+			return DateToLongStringConverter.INSTANCE;
+		}
+		return null;
+	}
 	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple, String propertyName) {
@@ -330,7 +332,7 @@ public class GwittirBridge implements PropertyAccessor {
 				fields.add(f);
 			}
 		}
-		Collections.sort(fields, new PrFieldComparator(bi));
+		Collections.sort(fields, new FieldDisplayNameComparator(bi));
 		return (Field[]) fields.toArray(new Field[fields.size()]);
 	}
 
@@ -450,61 +452,12 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public static final BoundWidgetProvider FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE = new FriendlyEnumLabelProvider();
 
-	/** note - not transitive...uh, it's a gwittir thing **/
-	public static class EqualsComparator implements Comparator {
-		public static final EqualsComparator INSTANCE = new EqualsComparator();
+	
 
-		public int compare(Object o1, Object o2) {
-			if (o1 == null) {
-				return o2 == null ? 0 : -1;
-			}
-			return o1.equals(o2) ? 0 : -1;
-		}
-	}
-	@ClientInstantiable
-	public static class IdComparator implements Comparator<HasId> {
-		public static final EqualsComparator INSTANCE = new EqualsComparator();
-
-		public int compare(HasId o1, HasId o2) {
-			if (o1 == null) {
-				return o2 == null ? 0 : -1;
-			}
-			return new Long(o1.getId()).compareTo(o2.getId());
-		}
-
-		
-	}
-
-	static class SimpleComparatorWithNull implements Comparator, Serializable {
-		static final SimpleComparatorWithNull INSTANCE = new SimpleComparatorWithNull();
-
-		private SimpleComparatorWithNull() {
-		}
-
-		public int compare(Object o1, Object o2) {
-			if (o1 == null && o2 == null) {
-				return 0;
-			}
-			if (o1 instanceof Comparable && o2 instanceof Comparable) {
-				return ((Comparable) o1).compareTo(o2);
-			}
-			if ((o1 == o2) || ((o1 != null) && (o2 != null) && o1.equals(o2))) {
-				return 0;
-			} else if ((o1 != null) && (o2 != null)) {
-				return (o1 instanceof HasIdAndLocalId) ? -1 : o1.toString()
-						.compareTo(o2.toString());
-			} else if ((o1 != null) && (o2 == null)) {
-				return +1;
-			} else {
-				return -1;
-			}
-		}
-	}
-
-	class PrFieldComparator implements Comparator<Field> {
+	class FieldDisplayNameComparator implements Comparator<Field> {
 		private final ClientBeanReflector bi;
 
-		PrFieldComparator(ClientBeanReflector bi) {
+		FieldDisplayNameComparator(ClientBeanReflector bi) {
 			this.bi = bi;
 		}
 

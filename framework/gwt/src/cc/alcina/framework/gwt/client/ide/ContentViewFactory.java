@@ -52,10 +52,10 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
-import cc.alcina.framework.gwt.client.widget.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.complex.FastROBoundTable;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
@@ -249,14 +249,7 @@ import com.totsp.gwittir.client.validator.Validator;
 		if (!noCaption) {
 			cp.add(createMultiCaption(beanClass, cp));
 		}
-		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
-						editable, true);
-		int mask = BoundTable.HEADER_MASK | BoundTable.SORT_MASK;
-		CollectionDataProvider cdp = new CollectionDataProvider(beans);
-		BoundTable table = editable ? new BoundTable(mask, factory, fields, cdp)
-				: new NiceWidthBoundTable(mask, factory, fields, cdp);
+		BoundTable table = createTable(beans, editable, tableMask, bean);
 		cp.add(table);
 		cp.setBoundWidget(table);
 		if (editable && !autoSave) {
@@ -267,6 +260,19 @@ import com.totsp.gwittir.client.validator.Validator;
 			cp.setObjects(beans);
 		}
 		return cp;
+	}
+
+	public BoundTable createTable(Collection beans, boolean editable,
+			int tableMask, Object templateBean) {
+		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
+		Field[] fields = GwittirBridge.get()
+				.fieldsForReflectedObjectAndSetupWidgetFactory(templateBean, factory,
+						editable, true);
+		int mask = tableMask|BoundTable.HEADER_MASK | BoundTable.SORT_MASK;
+		CollectionDataProvider cdp = new CollectionDataProvider(beans);
+		BoundTable table = editable ? new BoundTable(mask, factory, fields, cdp)
+				: new NiceWidthBoundTable(mask, factory, fields, cdp);
+		return table;
 	}
 
 	public static class ActionTableHolder extends Composite {
@@ -366,7 +372,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 		public NiceWidthBoundTable(int mask, BoundWidgetTypeFactory factory,
 				Field[] fields, DataProvider provider) {
-			super(mask, factory, fields, provider);
+			super(mask|BoundTable.NO_SELECT_CELL_MASK|BoundTable.NO_SELECT_COL_MASK|BoundTable.NO_SELECT_ROW_MASK, factory, fields, provider);
 		}
 
 		@Override

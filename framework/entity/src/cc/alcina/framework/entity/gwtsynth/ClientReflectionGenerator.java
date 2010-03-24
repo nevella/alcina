@@ -60,7 +60,10 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
 
 @SuppressWarnings("unchecked")
 /**
- *
+ * Currently, it's a schemozzle - this was originally a standalone generator, so there's a mishmash
+ * of usages of JVM vs GWT reflection - 
+ * it does, however, work, it's acceptably fast, it can be beautified later
+ * 
  * @author Nick Reddel
  */
 public class ClientReflectionGenerator extends Generator {
@@ -288,7 +291,7 @@ public class ClientReflectionGenerator extends Generator {
 		}
 	}
 
-	private  Class forName(JType type) throws ClassNotFoundException {
+	private Class forName(JType type) throws ClassNotFoundException {
 		String name = type.getQualifiedBinaryName();
 		return Class.forName(name);
 	}

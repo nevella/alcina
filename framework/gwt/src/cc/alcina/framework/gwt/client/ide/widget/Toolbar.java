@@ -28,8 +28,8 @@ import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableAct
 import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSupport;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.StyledAWidget;
-import cc.alcina.framework.gwt.client.widget.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlersSupport;
 

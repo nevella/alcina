@@ -21,12 +21,13 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * 
  */
 public class TreeRenderingInfoProvider {
-	public TreeRenderer getForRenderable(TreeRenderable renderable) {
+	public TreeRenderer getForRenderable(TreeRenderable renderable,RenderContext context) {
 		Class rendererClass = Registry.get().lookupSingle(TreeRenderer.class,
 				renderable.getClass(),true);
 		TreeRenderer renderer = (TreeRenderer)CommonLocator.get().classLookup().newInstance(
 				rendererClass);
 		renderer.setRenderable(renderable);
+		renderer.setContext(context);
 		return renderer;
 	}
 

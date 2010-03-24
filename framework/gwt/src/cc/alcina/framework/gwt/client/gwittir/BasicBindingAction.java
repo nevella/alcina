@@ -23,23 +23,22 @@ import com.totsp.gwittir.client.ui.BoundWidget;
  * @author Nick Reddel
  */
 
- public abstract class BasicBindingAction implements BindingAction{
+ public abstract class BasicBindingAction<T extends BoundWidget<?>> implements BindingAction<T>{
 	protected Binding binding = new Binding();
 
 	public Binding getBinding() {
 		return this.binding;
 	}
-
-	public void bind(BoundWidget widget) {
+	public void bind(T widget) {
 		binding.bind();
 	}
 
-	public void execute(BoundWidget model) {
+	public void execute(T model) {
 	}
 
 	
 
-	public void unbind(BoundWidget widget) {
+	public void unbind(T widget) {
 		binding.unbind();
 		binding.getChildren().clear();
 	}

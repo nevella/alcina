@@ -400,7 +400,10 @@ public class CommonUtils {
 		d.setSeconds(up ? 59 : 0);
 		return d;
 	}
-
+	@SuppressWarnings("deprecation")
+	public static int getYear(Date d){
+		return d.getYear()+1900;
+	}
 	public static <T extends Collection> T shallowCollectionClone(T coll) {
 		try {
 			T c = null;

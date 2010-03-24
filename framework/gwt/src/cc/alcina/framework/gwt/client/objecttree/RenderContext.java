@@ -16,13 +16,21 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gwt.user.client.ui.Widget;
+
 /**
  * 
  * @author Nick Reddel
  */
 public class RenderContext {
 	public Map<String, Object> properties = new HashMap<String, Object>();
-
+	private static RenderContext current;
+	public static RenderContext current(){
+		return current;
+	}
+	public static void reset(){
+		current = new RenderContext();
+	}
 	private TreeRenderable rootRenderable = null;
 
 	private IsRenderableFilter renderableFilter = null;
@@ -61,5 +69,8 @@ public class RenderContext {
 
 	public String getString(String key) {
 		return (String) properties.get(key);
+	}
+	public <T> T get(String key) {
+		return (T) properties.get(key);
 	}
 }

@@ -167,7 +167,7 @@ public class WorkspaceView extends Composite implements HasName,
 				}
 			});
 			filter.getHolder().add(collapse);
-			this.dataTree = new DataTree();
+			this.dataTree = createTree();
 			dataTree.ensureDebugId(DataTree.DEBUG_ID);
 			dataTree.addExtraTreeEventListener(this);
 			filter.registerFilterable(dataTree);
@@ -181,7 +181,9 @@ public class WorkspaceView extends Composite implements HasName,
 			resetTree();
 			initWidget(fp);
 		}
-
+		protected DataTree createTree(){
+			return new DataTree();
+		}
 		public DataTree getDataTree() {
 			return this.dataTree;
 		}

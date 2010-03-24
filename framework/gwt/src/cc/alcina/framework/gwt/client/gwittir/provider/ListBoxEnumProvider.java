@@ -17,7 +17,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.EqualsComparator;
+import cc.alcina.framework.gwt.client.gwittir.Comparators;
+import cc.alcina.framework.gwt.client.gwittir.Comparators.EqualsComparator;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 
@@ -61,7 +62,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 			options.add(0, null);
 		}
 		listBox.setRenderer(getRenderer());
-		listBox.setComparator(EqualsComparator.INSTANCE);
+		listBox.setComparator(Comparators.EqualsComparator.INSTANCE);
 		listBox.setSortOptionsByToString(false);
 		listBox.setOptions(options);
 		listBox.setMultipleSelect(multiple);

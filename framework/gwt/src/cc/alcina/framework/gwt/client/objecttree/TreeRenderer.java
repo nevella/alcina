@@ -34,15 +34,17 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  * @author Nick Reddel
  */
 public interface TreeRenderer<T extends TreeRenderable> {
-	public CollectionProvider collectionProvider(RenderContext context);
+	public CollectionProvider collectionProvider();
 
 	public String emptyChildText();
 
 	public T getRenderable();
 
-	public String hint(RenderContext context);
+	public String hint();
 
-	public boolean isSingleLineCustomiser(RenderContext context);
+	public boolean isAlwaysExpanded();
+
+	public boolean isSingleLineCustomiser();
 
 	public Collection<? extends TreeRenderable> renderableChildren();
 
@@ -54,7 +56,7 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public String renderableText();
 
-	public BoundWidgetProvider renderCustomiser(RenderContext context);
+	public BoundWidgetProvider renderCustomiser();
 
 	public RenderInstruction renderInstruction();
 
@@ -68,4 +70,8 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	}
 
 	public CollectionFilter collectionFilter();
+
+	public RenderContext getContext();
+
+	public void setContext(RenderContext context);
 }

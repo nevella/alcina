@@ -11,22 +11,22 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.Collection;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class UniqueInCollectionValidator implements Validator {
+public class UniqueInCollectionValidator implements Validator {
 	private final Collection c;
 
 	private final String propertyName;
@@ -46,8 +46,14 @@ import com.totsp.gwittir.client.validator.Validator;
 		}
 		for (Object o : c) {
 			if (o != sourceObject
-					&& value.equals(CommonLocator.get().propertyAccessor().getPropertyValue(o,
-							propertyName))) {
+					&& value.equals(CommonLocator.get().propertyAccessor()
+							.getPropertyValue(o, propertyName))) {
+				if (o instanceof HasIdAndLocalId
+						&& sourceObject instanceof HasIdAndLocalId) {
+					if (HiliHelper.equals((HasIdAndLocalId) o, sourceObject)) {
+						continue;
+					}
+				}
 				throw new ValidationException(
 						"Item is does not have unique identifying property",
 						UniqueInCollectionValidator.class);

@@ -39,9 +39,9 @@ import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObje
 import cc.alcina.framework.gwt.client.ide.widget.ActionProgress;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.Link;
-import cc.alcina.framework.gwt.client.widget.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlersSupport;
 
 import com.google.gwt.event.dom.client.ClickEvent;

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.node;
 
 import java.util.ArrayList;
@@ -30,13 +29,13 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
-
- public class CollectionRenderingSupport implements
+public class CollectionRenderingSupport implements
 		CollectionModificationListener, ProvidesParenting {
 	public static boolean REDRAW_CHILDREN_ON_ORDER_CHANGE = false;
 
@@ -100,7 +99,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 	}
 
 	public void onDetach() {
-		if(collectionProvider!=null){
+		if (collectionProvider != null) {
 			collectionProvider.removeCollectionModificationListener(this);
 			collectionProvider.onDetach();
 		}
@@ -191,13 +190,22 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 				this.item.removeItem(existingObjects.get(existingList.get(i1)));
 			}
 			for (; i2 < nextCommon[1]; i2++) {
-				//if there were an "insertItem" on the tree API, this'd be where we'd use it...
-				item.addItem(NodeFactory.get().getNodeForDomainObject(
+				// if there were an "insertItem" on the tree API, this'd be
+				// where we'd use it...
+				item.addItem(getNodeFactory().getNodeForDomainObject(
 						(SourcesPropertyChangeEvents) currentObjects.get(i2)));
 			}
 			i1++;
 			i2++;
 		}
+	}
+
+	protected NodeFactory getNodeFactory() {
+		if (item.getTree() instanceof NodeFactoryProvider) {
+			NodeFactoryProvider nfp = (NodeFactoryProvider) item.getTree();
+			return nfp.getNodeFactory();
+		}
+		return NodeFactory.get();
 	}
 
 	public void removeItem(TreeItem item) {
@@ -216,6 +224,10 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 		this.volatileOrder = volatileOrder;
 	}
 
+	/**
+	 * Slightly misnamed - basically forces a complete redraw on any refresh() -
+	 * i.e. any collection change, or a direct call
+	 */
 	public boolean isVolatileOrder() {
 		return volatileOrder;
 	}
@@ -230,6 +242,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 		public TreeItem getChild(int index);
 
 		public int getChildCount();
+
+		public Tree getTree();
 	}
 
 	public static class TreeOrItemTreeItem implements TreeOrItem {
@@ -258,6 +272,10 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 		public TreeOrItemTreeItem(TreeItem item) {
 			this.item = item;
 		}
+
+		public Tree getTree() {
+			return item.getTree();
+		}
 	}
 
 	public static class TreeOrItemTree implements TreeOrItem {
@@ -285,6 +303,10 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 		public TreeOrItemTree(Tree tree) {
 			this.tree = tree;
+		}
+
+		public Tree getTree() {
+			return tree;
 		}
 	}
 }

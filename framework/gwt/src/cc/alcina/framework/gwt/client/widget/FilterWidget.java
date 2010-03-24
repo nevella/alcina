@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client.widget;
 
 
 import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;

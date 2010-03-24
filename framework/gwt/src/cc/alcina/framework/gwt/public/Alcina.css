@@ -500,7 +500,8 @@ input.button-submit,button.button-submit {
 
 .alcina-FormSection {
 	font-weight: bold;
-	border-bottom: 1px solid #CECECE;
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
 }
 
 /* Misc ######################################################### */
@@ -614,6 +615,9 @@ div.pad-top-0{
 
 .nowrap {
 	white-space: nowrap;
+}
+.relative{
+	position: relative;
 }
 /** Specific alcina elements (misc) **/
 .alcina-BuildVersion {
@@ -812,7 +816,10 @@ div.alcina-ObjectTree .alcina-Selector .group-heading{
 table.results-table {
 	width: 100%;
 }
-
+.alcina-SearchDefinitionName{
+	font-weight: bold;
+	color: #444444;
+}
 /****ERROR MESSAGES
 */
 .gwittir-ValidationPopup {

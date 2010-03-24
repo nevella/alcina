@@ -13,9 +13,12 @@
  */
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
@@ -26,9 +29,17 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
  * @author Nick Reddel
  */
 
- public class SearchDefinitionRenderer extends BasicRenderer<SearchDefinition> {
+ public class SearchDefinitionRenderer extends AbstractRenderer<SearchDefinition> {
+	public static final String RENDER_ORDER_GROUPS = "RENDER_ORDER_GROUPS";
 	public Collection<? extends TreeRenderable> renderableChildren() {
+		if (getContext().isBoolean(RENDER_ORDER_GROUPS)){
+			List<CriteriaGroup> allCgs = new ArrayList<CriteriaGroup>();
+			allCgs.addAll(getRenderable().getCriteriaGroups());
+			allCgs.addAll(getRenderable().getOrderGroups());
+			return allCgs;
+		}else{
 		return getRenderable().getCriteriaGroups();
+		}
 	}
 
 	@Override
