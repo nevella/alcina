@@ -68,7 +68,7 @@ public class ObjectTreeGridRenderer extends ObjectTreeRenderer {
 				boolean isCustomiser = w.getStyleName().contains("customiser");
 				if (col == 1) {// && isCustomiser) {
 					if (isCustomiser
-							&& level1RendererRows.get(row)
+							&& !level1RendererRows.get(row)
 									.isSingleLineCustomiser()) {
 						cellFormatter.setVerticalAlignment(row, 0,
 								HasVerticalAlignment.ALIGN_TOP);

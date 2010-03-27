@@ -93,6 +93,15 @@ public class RelativePopupPositioning {
 				return true;
 			}
 		};
+		/**
+		 * The logic's doesn't quite seem to map here - but it does really. If "wrapping relative to" - e.g. free axis of BOTTOM_LTR
+		 * then 
+		 * left is popup-left aligned to relative-to-widget-left
+		 * right same.
+		 * If not (fixed axis), in example 
+		 * bottom == popup-top aligned to relative-bottom
+		 * 
+		 */
 		int fit(int relX, int relY, int bw, int bh, int relW, int relH,
 				int ppW, int ppH, AxisCoordinate favour,
 				boolean wrappingRelativeTo, boolean force) {
@@ -109,19 +118,19 @@ public class RelativePopupPositioning {
 			int result = 0;
 			switch (axisType()) {
 			case NEG:
-				result = relC - ppDim + (wrappingRelativeTo ? relDim : 0);
+				result = wrappingRelativeTo?relC:relC - ppDim ;
 				break;
 			case POS:
-				result = relC + (wrappingRelativeTo ? 0 : relDim);
+				result =wrappingRelativeTo? relC + relDim - ppDim:relC+relDim;
 				break;
-			case CENTER:
+			case CENTER: //wrappingRelativeTo == true
 				if (favour.axisType() != null) {
 					switch (favour.axisType()) {
 					case NEG:
-						result = 0;
+						result = bDim-ppDim;//make as close to "left-align" as poss
 						break;
 					case POS:
-						result = bDim - ppDim;
+						result = 0;//as close to 'right-align' as poss
 						break;
 					}
 				} else {
@@ -132,7 +141,7 @@ public class RelativePopupPositioning {
 				result = INVALID;
 			}
 			if (force && result == INVALID) {
-				result = relC + (wrappingRelativeTo ? 0 : relDim);// pos;
+				result = relC + (wrappingRelativeTo ? 0 : relDim);
 			}
 			return result;
 		}
@@ -163,12 +172,12 @@ public class RelativePopupPositioning {
 			new AxisCoordinate[] { AxisCoordinate.H_LEFT,
 					AxisCoordinate.H_CENTER, AxisCoordinate.H_RIGHT },
 			AxisCoordinate.V_BOTTOM);
-	public static void showPopup( Widget relativeToWidget,
+	public static RelativePopupPanel showPopup( Widget relativeToWidget,
 			 Widget widgetToShow,
 			 Widget boundingWidget,  RelativePopupAxis axis) {
-		showPopup(relativeToWidget, widgetToShow, boundingWidget, new RelativePopupAxis[]{axis});
+		return showPopup(relativeToWidget, widgetToShow, boundingWidget, new RelativePopupAxis[]{axis});
 	}
-	public static void showPopup(final Widget relativeToWidget,
+	public static RelativePopupPanel showPopup(final Widget relativeToWidget,
 			final Widget widgetToShow,
 			final Widget boundingWidget, final RelativePopupAxis[] axes) {
 		final RelativePopupPanel rpp = new RelativePopupPanel(true);
@@ -227,5 +236,6 @@ public class RelativePopupPositioning {
 				rpp.setPopupPosition(x, y);
 			}
 		});
+		return rpp;
 	}
 }

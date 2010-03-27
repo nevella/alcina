@@ -11,12 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -98,15 +98,19 @@ public class SelectorCustomiser implements Customiser {
 			}
 		}
 	}
-	 static final BoundWidgetProvider COLL_DN_LABEL_PROVIDER = new BoundWidgetProvider() {
+
+	static final BoundWidgetProvider COLL_DN_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
 			label.setRenderer(CollectionDisplayNameRenderer.INSTANCE);
 			return label;
 		}
 	};
+
 	public static class BoundSelector extends AbstractBoundWidget implements
 			ClickHandler, MultilineWidget {
+		private static final int MAX_SINGLE_LINE_CHARS = 42;
+
 		public static final String VALUE_PROPERTY_NAME = "value";
 
 		protected Class selectionObjectClass;
@@ -182,7 +186,7 @@ public class SelectorCustomiser implements Customiser {
 			customiseLeftWidget();
 			Map<String, List> tmpSearchMap = new HashMap<String, List>();
 			tmpSearchMap.put("", new ArrayList());
-			Widget searchWidget = search.createWidget(tmpSearchMap, this, 30);
+			Widget searchWidget = search.createWidget(tmpSearchMap, this, MAX_SINGLE_LINE_CHARS);
 			search.getScroller().setHeight("");
 			search.getScroller().setStyleName("scroller");
 			grid.setWidget(1, 0, searchWidget);
@@ -194,7 +198,7 @@ public class SelectorCustomiser implements Customiser {
 			Map<String, List> resultMap = new HashMap<String, List>();
 			resultMap.put("", new ArrayList());
 			Widget resultsWidget = results.createWidget(resultMap,
-					resultsClickListener, 30);
+					resultsClickListener, MAX_SINGLE_LINE_CHARS);
 			if (isMultipleSelect()) {
 				results.getFilter().addStyleName("invisible");
 			}
@@ -273,7 +277,12 @@ public class SelectorCustomiser implements Customiser {
 			clearItems();
 			if (value instanceof Collection) {
 				ArrayList c = new ArrayList((Collection) value);
-				Collections.sort(c);
+				Comparator comparator = getComparator();
+				if (comparator == null) {
+					Collections.sort(c);
+				} else {
+					Collections.sort(c, comparator);
+				}
 				for (Object o : c) {
 					addItem(o);
 				}

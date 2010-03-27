@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import java.util.ArrayList;
@@ -24,7 +23,9 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
@@ -52,6 +53,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
@@ -61,8 +63,7 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public class SelectWithSearch<G extends Comparable, T extends Comparable>
+public class SelectWithSearch<G extends Comparable, T extends Comparable>
 		implements VisualFilterable, FocusHandler, HasLayoutInfo, BlurHandler {
 	private static final int DELAY_TO_CHECK_FOR_CLOSING = 400;
 
@@ -98,13 +99,15 @@ import com.google.gwt.user.client.ui.Widget;
 
 	boolean waitingToFocus = false;
 
-	private PositionablePopDown flowPanelForFocusPanel;
+	private FlowPanel panelForPopup;
 
 	private boolean closingOnClick = false;
 
 	private Set selectedItems = new HashSet();
 
 	private long lastClosingClickMillis;// ie doesn't do these linearly -
+
+	private String popdownStyleName;
 
 	private int charWidth;
 
@@ -184,7 +187,9 @@ import com.google.gwt.user.client.ui.Widget;
 			public void onClick(ClickEvent event) {
 				closingOnClick = true;
 				log("closing on click", null);
-				flowPanelForFocusPanel.setVisible(false);
+				if (relativePopupPanel!=null){
+					relativePopupPanel.hide();
+				}
 				lastClosingClickMillis = System.currentTimeMillis();
 				log("closing on click finished", null);
 				closingOnClick = false;
@@ -203,11 +208,11 @@ import com.google.gwt.user.client.ui.Widget;
 		holder.add(filter);
 		if (popdown) {
 			this.focusPanel = new FocusPanel();
-			flowPanelForFocusPanel = new PositionablePopDown();
-			flowPanelForFocusPanel.setVisible(false);
-			flowPanelForFocusPanel.addStyleName("pop-down");
-			flowPanelForFocusPanel.add(scroller);
-			focusPanel.add(flowPanelForFocusPanel);
+			panelForPopup = new FlowPanel();
+			panelForPopup.setVisible(false);
+			panelForPopup.addStyleName("pop-down");
+			panelForPopup.add(scroller);
+			focusPanel.add(panelForPopup);
 			focusPanel.addFocusHandler(this);
 			focusPanel.addBlurHandler(this);
 			filter.getTextBox().addFocusHandler(this);
@@ -236,6 +241,8 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	SelectableNavigation selectableNavigation = new SelectableNavigation();
+
+	private RelativePopupPanel relativePopupPanel;
 
 	class SelectableNavigation implements KeyUpHandler, KeyDownHandler {
 		private int selectedIndex = -1;
@@ -448,7 +455,7 @@ import com.google.gwt.user.client.ui.Widget;
 		Widget sender = (Widget) event.getSource();
 		int i = 0;
 		log("gained focus, flowPanelForFocusPanel vis:"
-				+ flowPanelForFocusPanel.isVisible() + "-widget:"
+				+ panelForPopup.isVisible() + "-widget:"
 				+ sender.getClass().getName(), null);
 		checkShowPopup();
 		waitingToFocus = true;
@@ -463,8 +470,8 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	public void onBlur(BlurEvent event) {
-		log("lost focus, fp vis:" + flowPanelForFocusPanel.isVisible()
-				+ "-widget:" + event.getSource().getClass().getName(), null);
+		log("lost focus, fp vis:" + panelForPopup.isVisible() + "-widget:"
+				+ event.getSource().getClass().getName(), null);
 		if (!waitingToFocus) {
 			new Timer() {
 				@Override
@@ -472,7 +479,7 @@ import com.google.gwt.user.client.ui.Widget;
 					log("lost focus timer", null);
 					if (!waitingToFocus) {
 						log("not waiting - lost focus-butc", null);
-						flowPanelForFocusPanel.setVisible(false);
+						panelForPopup.setVisible(false);
 					}
 				}
 			}.schedule(250);
@@ -584,7 +591,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 	// TODO:hcdim
 	void checkShowPopup() {
-		if (!flowPanelForFocusPanel.isVisible()
+		if (!panelForPopup.isVisible()
 				&& !closingOnClick
 				&& System.currentTimeMillis() - lastClosingClickMillis > DELAY_TO_CHECK_FOR_CLOSING) {
 			log("running check show popup", null);
@@ -595,10 +602,13 @@ import com.google.gwt.user.client.ui.Widget;
 					setItemMap(lazyData.data);
 				}
 			}
-			flowPanelForFocusPanel.setHeight("12em");
-			flowPanelForFocusPanel.setPosition(200, 200);
+			if (popdownStyleName!=null){
+				panelForPopup.addStyleName(popdownStyleName);
+			}
+			panelForPopup.setVisible(true);
 			filter(filter.getTextBox().getText());
-			flowPanelForFocusPanel.setVisible(true);
+			this.relativePopupPanel = RelativePopupPositioning.showPopup(filter, panelForPopup, RootPanel
+					.get(), RelativePopupPositioning.BOTTOM_LTR);
 		}
 	}
 
@@ -644,11 +654,13 @@ import com.google.gwt.user.client.ui.Widget;
 			this.ownerLabel = ownerLabel;
 			String text = CommonUtils.singularOrPluralToString(item) + sep;
 			filterableText = text.toLowerCase();
-			if (text.length() < charWidth) {
+//			if (text.length() < charWidth) {
+			//this is just too hacky - use mouseover highlight to differentiate instead
+			
 				setHTML("<span style='white-space:nowrap'>" + text + "</span> ");
-			} else {
-				setHTML("<br />" + text + "<br />");
-			}
+//			} else {
+//				setHTML("<br />" + text + "<br />");
+//			}
 			setStyleName("chooser-item");
 		}
 
@@ -715,72 +727,17 @@ import com.google.gwt.user.client.ui.Widget;
 		}
 	}
 
-	class PositionablePopDown extends FlowPanel {
-		public void setPopupPosition(int left, int top) {
-			if (left < 0) {
-				left = 0;
-			}
-			if (top < 0) {
-				top = 0;
-			}
-			left -= Document.get().getBodyOffsetLeft();
-			top -= Document.get().getBodyOffsetTop();
-			Element elem = getElement();
-			DOM.setStyleAttribute(elem, "left", left + "px");
-			DOM.setStyleAttribute(elem, "top", top + "px");
-		}
-
-		public void setPosition(int offsetWidth, int offsetHeight) {
-			TextBox box = filter.getTextBox();
-			int textBoxOffsetWidth = box.getOffsetWidth();
-			int offsetWidthDiff = offsetWidth - textBoxOffsetWidth;
-			int left;
-			left = box.getAbsoluteLeft();
-			if (absoluteContainers != null) {
-				for (Widget w : absoluteContainers) {
-					left -= w.getAbsoluteLeft();
-				}
-			}
-			if (offsetWidthDiff > 0) {
-				int windowRight = Window.getClientWidth()
-						+ Window.getScrollLeft();
-				int windowLeft = Window.getScrollLeft();
-				int distanceToWindowRight = windowRight - left;
-				int distanceFromWindowLeft = left - windowLeft;
-				if (distanceToWindowRight < offsetWidth
-						&& distanceFromWindowLeft >= offsetWidthDiff
-						&& absoluteContainers == null) {
-					left -= offsetWidthDiff;
-				}
-			}
-			int top = box.getAbsoluteTop();
-			if (absoluteContainers != null) {
-				for (Widget w : absoluteContainers) {
-					top -= w.getAbsoluteTop();
-				}
-				top += getTopAdjust();
-			}
-			int windowTop = Window.getScrollTop();
-			int windowBottom = Window.getScrollTop() + Window.getClientHeight();
-			int distanceFromWindowTop = top - windowTop;
-			int distanceToWindowBottom = windowBottom
-					- (top + box.getOffsetHeight());
-			if (distanceToWindowBottom < offsetHeight
-					&& distanceFromWindowTop >= offsetHeight
-					&& absoluteContainers == null) {
-				top -= offsetHeight;
-			} else {
-				top += box.getOffsetHeight();
-			}
-			setPopupPosition(left, top);
-			setWidth(offsetWidth + "px");
-			setHeight(offsetHeight + "px");
-		}
-	}
-
 	public void clearFilterText() {
 		getFilter().getTextBox().setText("");
 		selectableNavigation.clear();
 		filter("");
+	}
+
+	public void setPopdownStyleName(String popdownStyleName) {
+		this.popdownStyleName = popdownStyleName;
+	}
+
+	public String getPopdownStyleName() {
+		return popdownStyleName;
 	}
 }

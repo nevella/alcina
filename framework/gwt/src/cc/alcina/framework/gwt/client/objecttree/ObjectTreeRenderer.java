@@ -124,16 +124,17 @@ public class ObjectTreeRenderer {
 			if (node.renderCss() != null) {
 				customiserWidget.addStyleName(node.renderCss());
 			}
+			String customiserStyleName = node.isSingleLineCustomiser()?"single-line-customiser":"customiser";
 			if (node.hint() != null) {
 				FlowPanel fp2 = new FlowPanel();
 				Label label = new Label(node.hint());
 				label.setStyleName("hint");
 				fp2.add(customiserWidget);
 				fp2.add(label);
-				fp2.addStyleName("customiser ");
+				fp2.addStyleName(customiserStyleName);
 				cp.add(fp2);
 			} else {
-				customiserWidget.addStyleName("customiser");
+				customiserWidget.addStyleName(customiserStyleName);
 				cp.add(customiserWidget);
 			}
 			return;
