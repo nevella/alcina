@@ -859,7 +859,7 @@ input.alcina-Filter {
 	border: 1px solid #CECECE;
 	width: 85%;
 	padding: 1px 1px 1px 15px;
-	height: 12px;
+	height: 14px;
 }
 
 div.alcina-FilterHolder {
@@ -1182,6 +1182,8 @@ table.gwittir-BoundTable tr.header {
 {
 	display: inline-block;
 	text-align: left;
+	zoom:1;
+	display: inline\9
 }
 .inlineTabDisplay .gwt-HTML{
 	padding-right:1em;
