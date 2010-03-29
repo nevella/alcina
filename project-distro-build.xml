@@ -104,6 +104,9 @@
 			<fileset dir="${project.src.dir}">
 				<patternset refid="project.war.resource.exports" />
 			</fileset>
+			<fileset dir="${project.client.src.dir}">
+				<patternset refid="project.war.resource.exports" />
+			</fileset>
 			<fileset dir="${project.build.dir}">
 				<include name="**/*.class" />
 			</fileset>
