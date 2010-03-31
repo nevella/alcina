@@ -13,27 +13,26 @@
  */
 package cc.alcina.framework.common.client.entity;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
+import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.permissions.HasOwner;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
-
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 /**
  * 
  * @author Nick Reddel
  */
 public class GwtPersistableObject extends BaseBindable implements
-		HasIdAndLocalId, Permissible {
-	long id;
+		HasIdAndLocalId, Permissible, HasOwner {
+	private long id;
 
-	long localId;
+	private long localId;
+
+	private transient IUser owner;
 
 	public long getId() {
 		return this.id;
@@ -65,5 +64,18 @@ public class GwtPersistableObject extends BaseBindable implements
 
 	public String rule() {
 		return null;
+	}
+
+	public void setOwner(IUser owner) {
+		this.owner = owner;
+	}
+
+	/**
+	 * This will only be used for permissions checking server-side, no need to
+	 * send to the client
+	 */
+	@XmlTransient
+	public IUser getOwner() {
+		return owner;
 	}
 }

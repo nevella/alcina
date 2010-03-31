@@ -11,19 +11,16 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface IVersionableOwnable extends IVersionable {
-	public IUser getOwner();
-
+public interface IVersionableOwnable extends IVersionable, HasOwner {
 	public IGroup getOwnerGroup();
+
 	public void setOwner(IUser owner);
+
 	public void setOwnerGroup(IGroup ownerGroup);
 }

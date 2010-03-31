@@ -344,10 +344,10 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 				permitted = true;
 			}
 			if (isLoggedIn()) {
-				if (o instanceof IVersionableOwnable) {
-					IVersionableOwnable ivo = (IVersionableOwnable) o;
-					if (ivo.getOwner() == null
-							|| ivo.getOwner().equals(instantiatedUser)) {
+				if (o instanceof HasOwner) {
+					HasOwner hasOwner = (HasOwner) o;
+					if (hasOwner.getOwner() == null
+							|| hasOwner.getOwner().equals(instantiatedUser)) {
 						permitted = true;
 					}
 				}
