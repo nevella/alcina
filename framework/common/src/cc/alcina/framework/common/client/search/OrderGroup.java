@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlTransient;
  * 
  * @author Nick Reddel
  */
-public class OrderGroup extends CriteriaGroup<OrderCriterion> {
+public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
 	@XmlTransient
 	public OrderCriterion getSoleCriterion() {
 		if (getCriteria().iterator().hasNext()) {
@@ -37,4 +37,12 @@ public class OrderGroup extends CriteriaGroup<OrderCriterion> {
 		propertyChangeSupport.firePropertyChange("soleCriterion",
 				old_soleCriterion, soleCriterion);
 	}
+	@Override
+	/**
+	 * Either subclass, or rely on property mappings. No real risk of information leakage 'ere
+	 */
+	public String validatePermissions() {
+		return null;
+	}
+
 }

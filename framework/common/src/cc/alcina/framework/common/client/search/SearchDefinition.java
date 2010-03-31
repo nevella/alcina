@@ -14,12 +14,17 @@
 package cc.alcina.framework.common.client.search;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -32,8 +37,9 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
  *
  * @author Nick Reddel
  */
-public class SearchDefinition extends GwtPersistableObject implements
-		Serializable, TreeRenderable, ContentDefinition {
+public abstract class SearchDefinition extends GwtPersistableObject implements
+		Serializable, TreeRenderable, ContentDefinition,
+		HasPermissionsValidation {
 	transient final String orderJoin = ", ";
 
 	private int resultsPerPage;
@@ -80,6 +86,9 @@ public class SearchDefinition extends GwtPersistableObject implements
 		sb.append("\n WHERE ");
 		int ct = 0;
 		for (CriteriaGroup cg : getCriteriaGroups()) {
+			if (!PermissionsManager.get().isPermissible(cg)){
+				continue;
+			}
 			EqlWithParameters ewp2 = cg.eql();
 			if (CommonUtils.isNullOrEmpty(ewp2.eql)) {
 				continue;
@@ -136,6 +145,11 @@ public class SearchDefinition extends GwtPersistableObject implements
 		return this.orderGroups;
 	}
 
+	/**
+	 * Note - there's a slight risk of "injection" here...if truly concerned,
+	 * subclass validatePermissions()
+	 * @return the property name for "order by" in an eql query, if any
+	 */
 	public String getOrderName() {
 		return this.orderName;
 	}
@@ -178,8 +192,6 @@ public class SearchDefinition extends GwtPersistableObject implements
 		}
 		return propertyName;
 	}
-
-	
 
 	public void resetLookups() {
 		cgs.clear();
@@ -229,13 +241,15 @@ public class SearchDefinition extends GwtPersistableObject implements
 	}
 
 	public String toHtml() {
-		return CommonUtils.format("%3%1 - order by %2", filterDescription(true),
-				orderDescription(true),CommonUtils.isNullOrEmpty(getName())?"":"<b>"+getName()+"</b> - ");
+		return CommonUtils.format("%3%1 - %2", filterDescription(true),
+				orderDescription(true),
+				CommonUtils.isNullOrEmpty(getName()) ? "" : "<b>" + getName()
+						+ "</b> - ");
 	}
 
 	@Override
 	public String toString() {
-		return CommonUtils.format("%1 - order by %2", filterDescription(false),
+		return CommonUtils.format("%1 - %2", filterDescription(false),
 				orderDescription(false));
 	}
 
@@ -251,5 +265,26 @@ public class SearchDefinition extends GwtPersistableObject implements
 	protected void putOrderGroup(OrderGroup og) {
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
+	}
+
+	public String validatePermissions() {
+		resetLookups();
+		mapCriteriaToPropertyNames();
+		List<CriteriaGroup> children = new ArrayList<CriteriaGroup>();
+		children.addAll(getCriteriaGroups());
+		children.addAll(getOrderGroups());
+		return DefaultValidation.validatePermissions(this, children);
+	}
+
+	public void mapCriteriaToPropertyNames() {
+		CriterionPropertyNameMappings crMappings = CommonLocator.get()
+				.classLookup().getAnnotationForClass(getClass(),
+						CriterionPropertyNameMappings.class);
+		if (crMappings != null) {
+			for (CriterionPropertyNameMapping mapping : crMappings.value()) {
+				criteriaGroup(mapping.criteriaGroupClass()).map(
+						mapping.criterionClass(), mapping.propertyName());
+			}
+		}
 	}
 }

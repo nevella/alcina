@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
+
 /**
  *
  * @author Nick Reddel
@@ -34,6 +36,8 @@ import java.util.Map;
 	private String url;
 
 	private List<DocumentationNode> children = new ArrayList<DocumentationNode>();
+	
+	private List<String> labels = new ArrayList<String>();
 
 	public DocumentationNode() {
 	}
@@ -107,5 +111,29 @@ import java.util.Map;
 
 	public List<DocumentationNode> getChildren() {
 		return children;
+	}
+	public DocumentationNode cloneWithFilter(CollectionFilter<DocumentationNode> filter){
+		if (!filter.allow(this)){
+			return null;
+		}
+		DocumentationNode copy = new DocumentationNode();
+		copy.setContent(getContent());
+		copy.setId(getId());
+		copy.setLastModified(getLastModified());
+		copy.setTitle(getTitle());
+		copy.setUrl(getUrl());
+		for(DocumentationNode child:getChildren()){
+			DocumentationNode childCopy = child.cloneWithFilter(filter);
+			if (childCopy!=null){
+				copy.getChildren().add(childCopy);
+			}
+		}
+		return copy;
+	}
+	public void setLabels(List<String> labels) {
+		this.labels = labels;
+	}
+	public List<String> getLabels() {
+		return labels;
 	}
 }

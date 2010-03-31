@@ -14,6 +14,7 @@
 
 package cc.alcina.framework.common.client.search;
 
+import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 
 @BeanInfo(displayNamePropertyName = "displayName")
@@ -21,21 +22,47 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  *
  * @author Nick Reddel
  */
-
+@PermissibleChildClasses({TxtCriterion.class})
  public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 	public TxtCriteriaGroup() {
 		super();
 		setDisplayName("Text");
 	}
 
-	public TxtCriteriaGroup( String propertyName,
+	public TxtCriteriaGroup( 
 			String displayName) {
 		this();
 		TxtCriterion tc = new TxtCriterion();
-		tc.setTargetPropertyName(propertyName);
 		tc.setDisplayName(displayName);
 		setDisplayName(displayName);
 		
 		getCriteria().add(tc);
+	}
+	/**
+	 * for multiple tcgs, mapping to different properties
+	 * @author nick@alcina.cc
+	 *
+	 */
+	public static class TxtCriteriaGroup2 extends TxtCriteriaGroup {
+
+		public TxtCriteriaGroup2() {
+			super();
+		}
+
+		public TxtCriteriaGroup2(String displayName) {
+			super(displayName);
+		}
+		
+	}
+	public static class TxtCriteriaGroup3 extends TxtCriteriaGroup {
+
+		public TxtCriteriaGroup3() {
+			super();
+		}
+
+		public TxtCriteriaGroup3(String displayName) {
+			super(displayName);
+		}
+		
 	}
 }

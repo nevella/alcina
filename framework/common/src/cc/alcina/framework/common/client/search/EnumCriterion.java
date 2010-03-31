@@ -35,9 +35,8 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		return false;
 	}
 
-	public EnumCriterion(String propertyName, String criteriaDisplayName,
-			boolean withNull) {
-		super(criteriaDisplayName, propertyName);
+	public EnumCriterion(String criteriaDisplayName, boolean withNull) {
+		super(criteriaDisplayName);
 		this.withNull = withNull;
 	}
 

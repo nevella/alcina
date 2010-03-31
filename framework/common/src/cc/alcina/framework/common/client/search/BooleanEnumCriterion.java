@@ -10,9 +10,9 @@ public abstract class BooleanEnumCriterion extends
 		super();
 	}
 
-	public BooleanEnumCriterion(String propertyName,
+	public BooleanEnumCriterion(
 			String criteriaDisplayName, boolean withNull) {
-		super(propertyName, criteriaDisplayName, withNull);
+		super( criteriaDisplayName, withNull);
 	}
 
 	@Override

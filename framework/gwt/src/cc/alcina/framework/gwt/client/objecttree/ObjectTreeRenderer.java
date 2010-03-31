@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.permissions.Permissible;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.search.HasWithNull;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -70,6 +72,12 @@ public class ObjectTreeRenderer {
 	@SuppressWarnings("unchecked")
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
 			int depth, boolean soleChild, RenderContext renderContext) {
+		if (renderable instanceof Permissible) {
+			Permissible permissible = (Permissible) renderable;
+			if (!PermissionsManager.get().isPermissible(permissible)){
+				return;
+			}
+		}
 		TreeRenderer node = TreeRenderingInfoProvider.get().getForRenderable(
 				renderable, renderContext);
 		if (depth == 0 && node.renderCss() != null) {

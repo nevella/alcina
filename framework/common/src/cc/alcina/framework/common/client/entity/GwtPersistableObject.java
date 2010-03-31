@@ -60,7 +60,7 @@ public class GwtPersistableObject extends BaseBindable implements
 	}
 
 	public AccessLevel accessLevel() {
-		return AccessLevel.DEVELOPER;
+		return AccessLevel.ADMIN;
 	}
 
 	public String rule() {

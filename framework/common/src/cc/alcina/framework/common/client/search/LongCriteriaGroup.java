@@ -14,6 +14,7 @@
 
 package cc.alcina.framework.common.client.search;
 
+import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 
 @BeanInfo(displayNamePropertyName = "displayName")
@@ -21,17 +22,16 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  *
  * @author Nick Reddel
  */
-
+@PermissibleChildClasses( { LongCriterion.class })
  public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
 	public LongCriteriaGroup() {
 		super();
 		setDisplayName("Long");
 	}
 
-	public LongCriteriaGroup(String propertyName, String displayName) {
+	public LongCriteriaGroup( String displayName) {
 		this();
 		LongCriterion lc = new LongCriterion();
-		lc.setTargetPropertyName(propertyName);
 		lc.setDisplayName(displayName);
 		setDisplayName(displayName);
 		getCriteria().add(lc);

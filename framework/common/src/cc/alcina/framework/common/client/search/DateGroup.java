@@ -11,42 +11,50 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import java.util.Date;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 @BeanInfo(displayNamePropertyName = "displayName")
 /**
  *
  * @author Nick Reddel
  */
-
- public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
+public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 	public DateGroup() {
 		super();
 		setCombinator(FilterCombinator.AND);
 		setDisplayName("Date");
 	}
 
-
-	public DateGroup(String propertyName, Date fromDate, Date toDate) {
+	public DateGroup(Date fromDate, Date toDate) {
 		this();
 		CommonUtils.roundDate(fromDate, false);
 		CommonUtils.roundDate(toDate, true);
-		AbstractDateCriterion dc = new DateCriterion("From", propertyName,
+		AbstractDateCriterion dc = new DateCriterion("From",
 				Direction.ASCENDING);
 		dc.setDate(fromDate);
 		addCriterion(dc);
-		dc = new DateCriterion("To", propertyName,
-				Direction.DESCENDING);
+		dc = new DateCriterion("To", Direction.DESCENDING);
 		dc.setDate(toDate);
 		addCriterion(dc);
+	}
+
+	@Override
+	public String validatePermissions() {
+		try {
+			for (AbstractDateCriterion adc : getCriteria()) {
+				adc.toString();
+			}
+		} catch (Exception e) {
+			return "Access not permitted: (not date criterion)";
+		}
+		return null;
 	}
 }

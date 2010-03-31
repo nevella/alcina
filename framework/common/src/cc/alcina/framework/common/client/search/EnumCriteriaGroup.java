@@ -34,4 +34,15 @@ public class EnumCriteriaGroup<E extends Enum> extends
 		}
 		return getCriteria().iterator().next().getDisplayName();
 	}
+	@Override
+	public String validatePermissions() {
+		try {
+			for (EnumCriterion ec : getCriteria()) {
+				ec.toString();
+			}
+		} catch (Exception e) {
+			return "Access not permitted: (not enum criterion)";
+		}
+		return null;//either subclass, or rely on property mappings
+	}
 }

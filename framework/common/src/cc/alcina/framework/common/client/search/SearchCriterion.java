@@ -26,9 +26,10 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 @BeanInfo(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-public class SearchCriterion extends BaseBindable implements TreeRenderable {
+public abstract class SearchCriterion extends BaseBindable implements TreeRenderable {
 	// TODO: great big injection hole here - should be checked server-side
-	private String targetPropertyName;
+	//FIXED: - transient, and set in the server validation phase
+	private transient String targetPropertyName;
 
 	private Direction direction = Direction.ASCENDING;
 
@@ -38,13 +39,10 @@ public class SearchCriterion extends BaseBindable implements TreeRenderable {
 	}
 
 	public SearchCriterion(String displayName) {
-		this(displayName, null);
+		this.displayName = displayName;
 	}
 
-	public SearchCriterion(String displayName, String propertyName) {
-		this.displayName = displayName;
-		this.targetPropertyName = propertyName;
-	}
+	
 
 	public CollectionProvider collectionProvider() {
 		return null;

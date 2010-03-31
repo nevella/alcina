@@ -26,9 +26,9 @@ import java.util.Date;
  public class DateCriterion extends AbstractDateCriterion {
 	public DateCriterion() {
 	}
-	public DateCriterion(String displayName, String propertyName,
+	public DateCriterion(String displayName,
 			Direction direction) {
-		super(displayName, propertyName);
+		super(displayName);
 		setDirection(direction);
 	}
 

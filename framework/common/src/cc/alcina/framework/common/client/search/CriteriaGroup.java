@@ -19,6 +19,11 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
+import cc.alcina.framework.common.client.logic.permissions.Permissible;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation.DefaultValidation;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
@@ -32,8 +37,9 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
  *
  * @author Nick Reddel
  */
-public class CriteriaGroup<SC extends SearchCriterion> extends BaseBindable
-		implements TreeRenderable {
+public abstract class CriteriaGroup<SC extends SearchCriterion> extends
+		BaseBindable implements TreeRenderable, Permissible,
+		HasPermissionsValidation {
 	private transient String displayName;
 
 	private FilterCombinator combinator = FilterCombinator.AND;
@@ -166,8 +172,8 @@ public class CriteriaGroup<SC extends SearchCriterion> extends BaseBindable
 					result += " " + combinator.toString().toLowerCase() + " ";
 				}
 				result += scString;
-				if (searchCriterion instanceof SelfNamingCriterion){
-					displayName="";
+				if (searchCriterion instanceof SelfNamingCriterion) {
+					displayName = "";
 				}
 			}
 		}
@@ -176,5 +182,33 @@ public class CriteriaGroup<SC extends SearchCriterion> extends BaseBindable
 
 	public String toString() {
 		return asString(true, false);
+	}
+
+	public AccessLevel accessLevel() {
+		return AccessLevel.EVERYONE;
+	}
+
+	public String rule() {
+		return "";
+	}
+
+	public String validatePermissions() {
+		if (!PermissionsManager.get().isPermissible(this)){
+			return null;//won't be used in search anyway
+		}
+		return DefaultValidation.validatePermissions(this, getCriteria());
+	}
+
+	/**
+	 * To disallow injection attacks here, the criteria/property name mapping
+	 * only happens server-side
+	 */
+	public void map(Class<? extends SearchCriterion> scClass,
+			String propertyName) {
+		for (SC sc : getCriteria()) {
+			if (sc.getClass() == scClass) {
+				sc.setTargetPropertyName(propertyName);
+			}
+		}
 	}
 }

@@ -11,17 +11,15 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import java.util.Date;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class AbstractDateCriterion extends SearchCriterion {
+public class AbstractDateCriterion extends SearchCriterion {
 	private Date date;
 
 	public AbstractDateCriterion() {
@@ -31,17 +29,14 @@ import java.util.Date;
 	public AbstractDateCriterion(Date date) {
 		setDate(date);
 	}
-	public AbstractDateCriterion(String displayName,Date date) {
+
+	public AbstractDateCriterion(String displayName, Date date) {
 		this(displayName);
 		setDate(date);
 	}
 
 	public AbstractDateCriterion(String displayName) {
 		super(displayName);
-	}
-
-	public AbstractDateCriterion(String displayName, String propertyName) {
-		super(displayName, propertyName);
 	}
 
 	public void setDate(Date date) {
