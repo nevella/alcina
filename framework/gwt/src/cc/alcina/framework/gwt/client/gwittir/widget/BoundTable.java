@@ -104,7 +104,8 @@ import com.totsp.gwittir.client.util.ListSorter;
  *         Also show hide navrow if <=1 chunk, and render with display=none
  *         until the end (keep browser from reflowing unnecessarily)
  *         <li>first(), next(), previous(), last() - ignore if this.inChunk ==
- *         true (otherwise we get errors on setchunk when people press things twice)
+ *         true (otherwise we get errors on setchunk when people press things
+ *         twice)
  *         <li>Visual hints (up/down arrows) to indicate column sort status
  *         </ul>
  *         </ul>
@@ -815,8 +816,8 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 			} else {
 				final Property p = GwittirBridge.get().getProperty(target,
 						col.getPropertyName());
-				widget = (BoundWidget)this.factory.getWidgetProvider(col.getPropertyName(),
-						p.getType()).get();
+				widget = (BoundWidget) this.factory.getWidgetProvider(
+						col.getPropertyName(), p.getType()).get();
 				// TODO Figure out some way to make this read only.
 			}
 			rowWidgets[colIndex] = widget;
@@ -1158,7 +1159,8 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 					handleSelect(true, row, cell);
 				}
 				if (((masks & BoundTable.SORT_MASK) > 0)
-						&& ((masks & BoundTable.HEADER_MASK) > 0) && (row == 0)) {
+						&& ((masks & BoundTable.HEADER_MASK) > 0) && (row == 0)
+						&& !(BoundTable.this.value == null || BoundTable.this.value.isEmpty())) {
 					sortColumn(cell - startColumn);
 				}
 			}
@@ -1250,7 +1252,7 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 				it.next();
 			}
 		}
-		BoundWidget widget = (BoundWidget)this.factory.getWidgetProvider(
+		BoundWidget widget = (BoundWidget) this.factory.getWidgetProvider(
 				Introspector.INSTANCE.resolveClass(o)).get();
 		widget.setModel(o);
 		this.table.insertRow(row + 1);
@@ -1630,28 +1632,28 @@ public class BoundTable extends AbstractTableWidget implements HasChunks,
 				}
 			}
 		} else { // if ((this.masks & BoundTable.NO_SELECT_ROW_MASK) == 0) {
-//			if (this.selectedRowLastIndex != -1) {
-//				this.getRowFormatter().setStyleName(this.selectedRowLastIndex,
-//						this.selectedRowLastStyle);
-//				if ((this.masks & BoundTable.INSERT_WIDGET_MASK) > 0) {
-//					this.removeNestedWidget(this.selectedRowLastIndex);
-//					if (this.selectedRowLastIndex < row) {
-//						row--;
-//					}
-//				}
-//			}
-//			String currentStyle = table.getRowFormatter().getStyleName(row);
-//			if ((currentStyle == null) || !currentStyle.equals("selected")) {
-//				this.selectedRowLastStyle = currentStyle;
-//			}
-//			if ((this.selectedRowLastStyle == null)
-//					|| (this.selectedRowLastStyle.length() == 0)) {
-//				this.selectedRowLastStyle = BoundTable.DEFAULT_STYLE;
-//			}
-//			table.getRowFormatter().setStyleName(row, "selected");
-//			if ((this.masks & BoundTable.INSERT_WIDGET_MASK) > 0) {
-//				this.insertNestedWidget(row);
-//			}
+			// if (this.selectedRowLastIndex != -1) {
+			// this.getRowFormatter().setStyleName(this.selectedRowLastIndex,
+			// this.selectedRowLastStyle);
+			// if ((this.masks & BoundTable.INSERT_WIDGET_MASK) > 0) {
+			// this.removeNestedWidget(this.selectedRowLastIndex);
+			// if (this.selectedRowLastIndex < row) {
+			// row--;
+			// }
+			// }
+			// }
+			// String currentStyle = table.getRowFormatter().getStyleName(row);
+			// if ((currentStyle == null) || !currentStyle.equals("selected")) {
+			// this.selectedRowLastStyle = currentStyle;
+			// }
+			// if ((this.selectedRowLastStyle == null)
+			// || (this.selectedRowLastStyle.length() == 0)) {
+			// this.selectedRowLastStyle = BoundTable.DEFAULT_STYLE;
+			// }
+			// table.getRowFormatter().setStyleName(row, "selected");
+			// if ((this.masks & BoundTable.INSERT_WIDGET_MASK) > 0) {
+			// this.insertNestedWidget(row);
+			// }
 		}
 		this.selectedRowLastIndex = (this.selectedRowLastIndex == row) ? (-1)
 				: row;

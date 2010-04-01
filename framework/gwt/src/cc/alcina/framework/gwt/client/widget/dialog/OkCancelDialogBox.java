@@ -48,6 +48,8 @@ import com.totsp.gwittir.client.beans.Binding;
 
 	protected final Widget widget;
 
+	protected  VetoableActionListener vetoableActionListener;
+
 	public OkCancelDialogBox(String title, Widget widget,
 			final VetoableActionListener l) {
 		this(title, widget, l, HasHorizontalAlignment.ALIGN_CENTER);
@@ -65,9 +67,10 @@ import com.totsp.gwittir.client.beans.Binding;
 		okButton.setFocus(true);
 	}
 	public OkCancelDialogBox(String title, Widget widget,
-			final VetoableActionListener l,
+			 VetoableActionListener listener,
 			HorizontalAlignmentConstant widgetAlign) {
 		this.widget = widget;
+		this.vetoableActionListener = listener;
 		setText(title);
 		setAnimationEnabled(showAnimated());
 		VerticalPanel vp = new VerticalPanel();
@@ -80,22 +83,13 @@ import com.totsp.gwittir.client.beans.Binding;
 				VetoableAction action = new VetoableAction();
 				action.setActionName(CANCEL_ACTION);
 				OkCancelDialogBox.this.hide();
-				l.vetoableAction(new VetoableActionEvent(this, action));
+				vetoableActionListener.vetoableAction(new VetoableActionEvent(this, action));
 			}
 		});
 		okButton = new Button(getOKButtonName());
 		okButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				if (!checkValid()) {
-					return;
-				}
-				okButton.setEnabled(false);
-				VetoableAction action = new VetoableAction();
-				action.setActionName(OK_ACTION);
-				OkCancelDialogBox.this.hide();
-				if (l != null) {
-					l.vetoableAction(new VetoableActionEvent(this, action));
-				}
+				onOkButtonClicked();
 			}
 		});
 		hp.add(okButton);
@@ -111,7 +105,18 @@ import com.totsp.gwittir.client.beans.Binding;
 		adjustDisplay();
 		center();
 	}
-
+	protected void onOkButtonClicked(){
+		if (!checkValid()) {
+			return;
+		}
+		okButton.setEnabled(false);
+		VetoableAction action = new VetoableAction();
+		action.setActionName(OK_ACTION);
+		OkCancelDialogBox.this.hide();
+		if (vetoableActionListener != null) {
+			vetoableActionListener.vetoableAction(new VetoableActionEvent(this, action));
+		}
+	}
 	// for subclasses
 	protected void adjustDisplay() {
 	}
