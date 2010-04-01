@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.beans.PropertyChangeEvent;
@@ -39,14 +38,14 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.HTMLTable.CellFormatter;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ActionProgress extends Composite implements
+public class ActionProgress extends Composite implements
 		SourcesPropertyChangeEvents {
 	private static final String CANCELLED = " - Cancelled";
 
@@ -126,12 +125,23 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 	private Timer timer;
 
+	private final AsyncCallback<JobInfo> completionCallback;
+
+	public void minimal() {
+		CellFormatter cf = grid.getCellFormatter();
+		cf.setVisible(0, 0, false);
+		cf.setVisible(0, 1, false);
+		cf.setVisible(1, 0, false);
+		cf.setVisible(1, 1, false);
+		fp.addStyleName("minimal");
+	}
+
 	private void cancelJob() {
 		cancelLink.setVisible(false);
 		cancellingStatusMessage.setText(" - Cancelling...");
 		cancellingStatusMessage.setVisible(true);
-		ClientLayerLocator.get().commonRemoteServiceAsync().pollJobStatus(getId(),
-				true, new AsyncCallback<JobInfo>() {
+		ClientLayerLocator.get().commonRemoteServiceAsync().pollJobStatus(
+				getId(), true, new AsyncCallback<JobInfo>() {
 					public void onFailure(Throwable e) {
 						cancellingStatusMessage.setText(" - Error cancelling");
 						throw new WrappedRuntimeException(e);
@@ -145,7 +155,23 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 	}
 
 	public ActionProgress(final Long id) {
+		this(id, null);
+	}
+
+	private int maxConnectionFailure = 2;
+
+	public int getMaxConnectionFailure() {
+		return this.maxConnectionFailure;
+	}
+
+	public void setMaxConnectionFailure(int maxConnectionFailure) {
+		this.maxConnectionFailure = maxConnectionFailure;
+	}
+
+	public ActionProgress(final Long id,
+			AsyncCallback<JobInfo> completionCallback) {
 		this.id = id;
+		this.completionCallback = completionCallback;
 		this.fp = new FlowPanel();
 		fp.setStyleName("alcina-ActionProgress");
 		grid = new Grid(4, 2);
@@ -153,7 +179,9 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 		FlowPanel jobNCancel = new FlowPanel();
 		jobNCancel.add(jobName);
 		jobName.setStyleName("pad-right-5");
-		this.cancelLink = new Link("(Cancel)", new ClickHandler(){public void onClick(ClickEvent event){Widget sender = (Widget)event.getSource();
+		this.cancelLink = new Link("(Cancel)", new ClickHandler() {
+			public void onClick(ClickEvent event) {
+				Widget sender = (Widget) event.getSource();
 				cancelJob();
 			}
 		});
@@ -184,22 +212,33 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 				AsyncCallback<JobInfo> callback = new AsyncCallback<JobInfo>() {
 					public void onFailure(Throwable caught) {
 						checking = false;
-						stopTimer();
-						ClientLayerLocator.get().clientBase().showError(caught);
+						if (maxConnectionFailure-- <= 0) {
+							stopTimer();
+							ClientLayerLocator.get().clientBase().showError(
+									caught);
+							if (ActionProgress.this.completionCallback != null) {
+								ActionProgress.this.completionCallback
+										.onFailure(caught);
+							}
+						}
 					}
 
 					public void onSuccess(JobInfo info) {
 						checking = false;
 						if (info.isComplete()) {
 							stopTimer();
+							if (ActionProgress.this.completionCallback != null) {
+								ActionProgress.this.completionCallback
+										.onSuccess(info);
+							}
 						}
 						setJobInfo(info);
 						forceFirePropertyChange("Updated");
 					}
 				};
 				if (!checking) {
-					ClientLayerLocator.get().commonRemoteServiceAsync().pollJobStatus(
-							id, false, callback);
+					ClientLayerLocator.get().commonRemoteServiceAsync()
+							.pollJobStatus(id, false, callback);
 					checking = true;
 				}
 			}
@@ -283,12 +322,14 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 			startTimer();
 		}
 	}
+
 	private void stopTimer() {
 		stopped = true;
-		timer.cancel();		
+		timer.cancel();
 	}
+
 	private void startTimer() {
 		stopped = false;
-		timer.scheduleRepeating(REFRESH_DELAY_MS);		
+		timer.scheduleRepeating(REFRESH_DELAY_MS);
 	}
 }

@@ -101,14 +101,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public void jobComplete(JobInfo info) {
-		if (info==null){
-			return;
-		}
-		info.setComplete(true);
-		info.setPercentComplete(1);
-		info.setProgressMessage("Job complete");
-		info.setEndTime(new Date());
-		updateInfo(info);
+		jobComplete(info,"Job complete");
 	}
 
 	public void jobError(JobInfo info, String errorMessage) {
@@ -137,5 +130,16 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 			}
 		}
 		return runningJobids;
+	}
+
+	public void jobComplete(JobInfo info, String message) {
+		if (info==null){
+			return;
+		}
+		info.setComplete(true);
+		info.setPercentComplete(1);
+		info.setProgressMessage(message);
+		info.setEndTime(new Date());
+		updateInfo(info);		
 	}
 }

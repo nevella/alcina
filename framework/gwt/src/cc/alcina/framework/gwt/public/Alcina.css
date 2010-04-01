@@ -1157,7 +1157,11 @@ table.gwittir-BoundTable tr.header {
 	background: white;
 	margin: 10px 10px 20px 25px;
 	padding: 10px;
-	
+}
+.alcina-ActionProgress.minimal{
+	border: none;
+	margin: 2px;
+	padding: 0px;
 }
 .alcina-ActionProgress .bar {
 	width: 200px;
