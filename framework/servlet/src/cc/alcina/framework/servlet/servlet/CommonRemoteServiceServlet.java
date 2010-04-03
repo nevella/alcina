@@ -44,12 +44,12 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest.DataTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -57,15 +57,15 @@ import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.actions.RequiresHttpRequest;
-import cc.alcina.framework.entity.datatransform.DataTransformLayerWrapper;
-import cc.alcina.framework.entity.datatransform.DataTransformRequestPersistent;
+import cc.alcina.framework.entity.datatransform.DomainTransformLayerWrapper;
+import cc.alcina.framework.entity.datatransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.datatransform.EntityLayerLocator;
 import cc.alcina.framework.entity.datatransform.ThreadlocalTransformManager.HiliLocatorMap;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.servlet.CookieHelper;
-import cc.alcina.framework.servlet.ServerLayerLocator;
-import cc.alcina.framework.servlet.ServerLayerRegistry;
+import cc.alcina.framework.servlet.ServletLayerLocator;
+import cc.alcina.framework.servlet.ServletLayerRegistry;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -105,19 +105,19 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException {
-		return ServerLayerLocator.get().commonPersistenceProvider()
+		return ServletLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().validate(validators);
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
-		return ServerLayerLocator.get().commonPersistenceProvider()
+		return ServletLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().search(def, pageNumber);
 	}
 
 	public <G extends GwtPersistableObject> Long persist(G gwpo)
 			throws WebException {
 		try {
-			return ServerLayerLocator.get().commonPersistenceProvider()
+			return ServletLayerLocator.get().commonPersistenceProvider()
 					.getCommonPersistence().persist(gwpo);
 		} catch (Exception e) {
 			logger.warn(e);
@@ -146,7 +146,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	public Long logClientError(String exceptionToString) {
-		return ServerLayerLocator.get().commonPersistenceProvider()
+		return ServletLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().log(exceptionToString,
 						LogMessageType.CLIENT_EXCEPTION.toString());
 	}
@@ -159,26 +159,26 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 * TODO - this should probably be integrated more with {transform} - why is
 	 * the server layer so special? just another client
 	 */
-	public DataTransformResponse transformFromServerLayer(
-			boolean persistTransforms) throws DataTransformException {
-		DataTransformRequest request = new DataTransformRequest();
+	public DomainTransformResponse transformFromServerLayer(
+			boolean persistTransforms) throws DomainTransformException {
+		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
 		request.setClientInstance(serverAsClientInstance);
 		request.setRequestId(nextTransformRequestId());
-		ArrayList<DataTransformEvent> items = new ArrayList<DataTransformEvent>(
+		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
 				TransformManager.get().getTransformsByCommitType(
 						CommitType.TO_LOCAL_BEAN));
 		if (items.isEmpty()) {
 			return null;
 		}
-		for (DataTransformEvent dte : items) {
+		for (DomainTransformEvent dte : items) {
 			dte.setCommitType(CommitType.TO_REMOTE_STORAGE);
 		}
 		request.setItems(items);
 		try {
 			((ThreadedPermissionsManager) PermissionsManager.get())
 					.pushSystemUser();
-			DataTransformLayerWrapper wrapper = ServerLayerLocator.get()
+			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 					.commonPersistenceProvider().getCommonPersistence()
 					.transform(request, map, persistTransforms, false);
 			return wrapper.response;
@@ -186,8 +186,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logger.info("data transform problem - user "
 					+ PermissionsManager.get().getUserName());
 			logger.info(request);
-			if (e instanceof DataTransformException) {
-				throw ((DataTransformException) e);
+			if (e instanceof DomainTransformException) {
+				throw ((DomainTransformException) e);
 			} else {
 				throw new WrappedRuntimeException(e);
 			}
@@ -196,8 +196,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	public DataTransformResponse transform(DataTransformRequest request)
-			throws DataTransformException {
+	public DomainTransformResponse transform(DomainTransformRequest request)
+			throws DomainTransformException {
 		Long clientInstanceId = request.getClientInstance().getId();
 		synchronized (clientInstanceLocatorMap) {
 			if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
@@ -209,7 +209,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.get(clientInstanceId);
 		synchronized (locatorMap) {
 			try {
-				DataTransformLayerWrapper wrapper = ServerLayerLocator.get()
+				DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 						.commonPersistenceProvider().getCommonPersistence()
 						.transform(request, locatorMap, true, true);
 				// not necessary if ejb layer is local
@@ -220,8 +220,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				logger.info("data transform problem - user "
 						+ PermissionsManager.get().getUserName());
 				logger.info(request.toStringForError());
-				if (e instanceof DataTransformException) {
-					throw ((DataTransformException) e);
+				if (e instanceof DomainTransformException) {
+					throw ((DomainTransformException) e);
 				} else {
 					throw new WrappedRuntimeException(e);
 				}
@@ -249,7 +249,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
-		return ServerLayerLocator.get().commonPersistenceProvider()
+		return ServletLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().listLogItemsForClass(
 						action.getClass().getName(), count);
 	}
@@ -343,7 +343,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 		}
 		msg += "Stacktrace:\t " + sw.toString();
-		CommonPersistenceLocal cpl = ServerLayerLocator.get()
+		CommonPersistenceLocal cpl = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
 		cpl.log(msg, LogMessageType.RPC_EXCEPTION.toString());
 	}
@@ -352,7 +352,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws WebException {
 		try {
 			Class<T> clazz = (Class<T>) Class.forName(className);
-			return ServerLayerLocator.get().commonPersistenceProvider()
+			return ServletLayerLocator.get().commonPersistenceProvider()
 					.getCommonPersistence().getItemById(clazz, id, true, false);
 		} catch (Exception e) {
 			throw new WebException(e.getMessage());
@@ -368,7 +368,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public Long performAction(final RemoteAction action,
 			final boolean persistentLog) {
 		checkAnnotatedPermissions(action);
-		final RemoteActionPerformer performer = (RemoteActionPerformer) ServerLayerRegistry
+		final RemoteActionPerformer performer = (RemoteActionPerformer) ServletLayerRegistry
 				.get().instantiateSingle(RemoteActionPerformer.class,
 						action.getClass());
 		final PermissionsManager pm = PermissionsManager.get();
@@ -383,7 +383,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				result.setActionClass(action.getClass());
 				result.setActionDate(new Date());
 				if (persistentLog) {
-					ServerLayerLocator.get().commonPersistenceProvider()
+					ServletLayerLocator.get().commonPersistenceProvider()
 							.getCommonPersistence().logActionItem(result);
 				}
 			}
@@ -396,7 +396,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public ActionLogItem performActionAndWait(final RemoteAction action)
 			throws WebException {
 		checkAnnotatedPermissions(action);
-		RemoteActionPerformer performer = (RemoteActionPerformer) ServerLayerRegistry
+		RemoteActionPerformer performer = (RemoteActionPerformer) ServletLayerRegistry
 				.get().instantiateSingle(RemoteActionPerformer.class,
 						action.getClass());
 		ActionLogItem result = null;
@@ -409,7 +409,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			if (result != null) {
 				result.setActionClass(action.getClass());
 				result.setActionDate(new Date());
-				ServerLayerLocator.get().commonPersistenceProvider()
+				ServletLayerLocator.get().commonPersistenceProvider()
 						.getCommonPersistence().logActionItem(result);
 			}
 			return result;
@@ -436,7 +436,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws WebException {
 		try {
-			return ServerLayerLocator.get().commonPersistenceProvider()
+			return ServletLayerLocator.get().commonPersistenceProvider()
 					.getCommonPersistence().cache(specs);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -453,18 +453,18 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public void persistOfflineTransforms(
 			List<DTRSimpleSerialWrapper> uncommitted, Logger logger)
 			throws WebException {
-		CommonPersistenceLocal cp = ServerLayerLocator.get()
+		CommonPersistenceLocal cp = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
 		try {
 			Class<? extends ClientInstance> clientInstanceClass = cp
 					.getImplementation(ClientInstance.class);
-			Class<? extends DataTransformRequestPersistent> dtrClass = cp
-					.getImplementation(DataTransformRequestPersistent.class);
+			Class<? extends DomainTransformRequestPersistent> dtrClass = cp
+					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
 			for (DTRSimpleSerialWrapper wr : uncommitted) {
 				long clientInstanceId = wr.getClientInstanceId();
 				int requestId = (int) wr.getRequestId();
-				DataTransformRequest alreadyWritten = cp
+				DomainTransformRequest alreadyWritten = cp
 						.getItemByKeyValueKeyValue(dtrClass,
 								"clientInstance.id", clientInstanceId,
 								"requestId", requestId);
@@ -476,9 +476,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					}
 					continue;
 				}
-				DataTransformRequest rq = new DataTransformRequest();
+				DomainTransformRequest rq = new DomainTransformRequest();
 				rq
-						.setDataTransformRequestType(DataTransformRequestType.CLIENT_STARTUP_FROM_OFFLINE);
+						.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_STARTUP_FROM_OFFLINE);
 				ClientInstance clientInstance = clientInstanceClass
 						.newInstance();
 				clientInstance.setAuth(wr.getClientInstanceAuth());

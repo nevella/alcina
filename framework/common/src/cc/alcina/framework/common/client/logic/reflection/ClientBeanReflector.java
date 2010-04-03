@@ -21,7 +21,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
@@ -44,12 +44,12 @@ public class ClientBeanReflector {
 		return this.beanClass;
 	}
 
-	public List<Class<? extends VetoableAction>> getActions() {
-		List<Class<? extends VetoableAction>> result = new ArrayList<Class<? extends VetoableAction>>();
+	public List<Class<? extends PermissibleAction>> getActions() {
+		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
 		ObjectActions actions = getGwBeanInfo().actions();
 		if (actions != null) {
 			for (Action action : actions.value()) {
-				Class<? extends VetoableAction> actionClass = action
+				Class<? extends PermissibleAction> actionClass = action
 						.actionClass();
 				boolean noPermissionsCheck = actionClass == CreateAction.class
 						|| actionClass == EditAction.class

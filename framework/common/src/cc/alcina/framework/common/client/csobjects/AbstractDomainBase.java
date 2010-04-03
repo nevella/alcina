@@ -10,7 +10,7 @@ import javax.persistence.Transient;
 import javax.persistence.Version;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.logic.IgnoreNullsPropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -37,26 +37,14 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof HasIdAndLocalId) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) obj;
-			if (!hili.getClass().equals(getClass())) {
-				return false;
-			}
-			if (getId() != 0 || getLocalId() != 0) {
-				return (hili.getId() == getId() && hili.getLocalId() == getLocalId());
-			} else {
-				return this == obj;
-			}
-		}
-		return false;
+		return HiliHelper.equals(this, obj);
 	}
 
 	/**
-	 * Hack - note that the old/newvalues of the propertychangeevent should
-	 * !not! be read. For listeners on collection properties
+	 * Useful for collection listeners - a "check the kids" thing
 	 */
 	public void forceFirePropertyChange(String name) {
-		this.propertyChangeSupport.firePropertyChange(name, false, true);
+		((MutablePropertyChangeSupport)this.propertyChangeSupport).forceFirePropertyChange(name);
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Id", orderingHint = 900), visible = @Permission(access = AccessLevel.ADMIN))

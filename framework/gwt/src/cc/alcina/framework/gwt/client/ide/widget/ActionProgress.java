@@ -20,7 +20,7 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
-import cc.alcina.framework.common.client.logic.IgnoreNullsPropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -49,7 +49,7 @@ public class ActionProgress extends Composite implements
 		SourcesPropertyChangeEvents {
 	private static final String CANCELLED = " - Cancelled";
 
-	protected transient IgnoreNullsPropertyChangeSupport propertyChangeSupport = new IgnoreNullsPropertyChangeSupport(
+	protected transient MutablePropertyChangeSupport propertyChangeSupport = new MutablePropertyChangeSupport(
 			this);
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {

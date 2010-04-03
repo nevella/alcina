@@ -30,9 +30,9 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.Vetoer;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
@@ -52,7 +52,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  * @author Nick Reddel
  */
 public class PermissionsManager extends BaseBindable implements Vetoer,
-		DataTransformListener {
+		DomainTransformListener {
 	private LoginState loginState = LoginState.NOT_LOGGED_IN;
 
 	private OnlineState onlineState = OnlineState.ONLINE;
@@ -206,8 +206,8 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		newThreadInstance.onlineState = onlineState;
 	}
 
-	public void dataTransform(DataTransformEvent evt)
-			throws DataTransformException {
+	public void domainTransform(DomainTransformEvent evt)
+			throws DomainTransformException {
 		if (evt.getSource() instanceof IGroup) {
 			groupMap = null;
 		}

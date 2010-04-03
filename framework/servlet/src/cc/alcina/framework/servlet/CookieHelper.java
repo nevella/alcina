@@ -101,7 +101,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 			Cookie cookie = new Cookie(IID, iid);
 			cookie.setMaxAge(86400*365*10);
 			addToRqAndRsp(request, response, cookie);
-			CommonPersistenceLocal up = ServerLayerLocator.get()
+			CommonPersistenceLocal up = ServletLayerLocator.get()
 					.commonPersistenceProvider().getCommonPersistence();
 			up.updateIid(iid, null, false);
 		}
@@ -117,7 +117,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 	public void setRememberMeCookie(HttpServletRequest request,
 			HttpServletResponse response, boolean rememberMe) {
 		if (rememberMe) {
-			CommonPersistenceLocal up = ServerLayerLocator.get()
+			CommonPersistenceLocal up = ServletLayerLocator.get()
 					.commonPersistenceProvider().getCommonPersistence();
 			up.updateIid(getIid(request, response), PermissionsManager.get()
 					.getUserName(), rememberMe);
@@ -132,7 +132,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 		String rem = getCookieValueByName(request, response, REMEMBER_ME);
 		boolean b = Boolean.valueOf(rem);
 		if (b) {
-			CommonPersistenceLocal up = ServerLayerLocator.get()
+			CommonPersistenceLocal up = ServletLayerLocator.get()
 					.commonPersistenceProvider().getCommonPersistence();
 			Iid iid = up.getIidByKey(getIid(request, null));
 			return (iid.getRememberMeUser() != null) ? iid.getRememberMeUser()
@@ -143,7 +143,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 
 	public void clearRemembermeCookie(HttpServletRequest request,
 			HttpServletResponse response) {
-		CommonPersistenceLocal up = ServerLayerLocator.get()
+		CommonPersistenceLocal up = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
 		up.updateIid(getIid(request, response), PermissionsManager.get()
 				.getUserName(), false);

@@ -11,21 +11,23 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.gwt.client.objecttree.basic;
+package cc.alcina.framework.common.client.logic.domaintransform;
 
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.search.LongCriterion;
-import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
+import java.io.Serializable;
 
-/**
- * 
- * @author Nick Reddel
- */
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetClass = LongCriterion.class)
-public class LongCriterionRenderer extends
-		SearchCriterionRenderer<LongCriterion> {
-	@Override
-	public String renderablePropertyName() {
-		return "value";
+public class DomainTransformRuntimeException extends RuntimeException
+		implements Serializable {
+	private DomainTransformEvent event;
+
+	public DomainTransformRuntimeException(String message) {
+		super(message);
+	}
+
+	public void setEvent(DomainTransformEvent event) {
+		this.event = event;
+	}
+
+	public DomainTransformEvent getEvent() {
+		return event;
 	}
 }

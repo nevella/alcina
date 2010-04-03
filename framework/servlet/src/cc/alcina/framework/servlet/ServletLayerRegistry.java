@@ -24,14 +24,14 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * @author nick@alcina.cc
  * 
  */
-public class ServerLayerRegistry extends Registry {
-	public ServerLayerRegistry() {
+public class ServletLayerRegistry extends Registry {
+	public ServletLayerRegistry() {
 		super();
 	}
 
-	private static ServerLayerRegistry theInstance = new ServerLayerRegistry();
+	private static ServletLayerRegistry theInstance = new ServletLayerRegistry();
 
-	public static ServerLayerRegistry get() {
+	public static ServletLayerRegistry get() {
 		return theInstance;
 	}
 

@@ -17,7 +17,7 @@ package cc.alcina.framework.servlet.servlet;
 import java.util.Arrays;
 import java.util.List;
 
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.Vetoer;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 
@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
  * @author nick@alcina.cc
  * 
  */
-public class AuthenticatedWebMethod extends VetoableAction {
+public class AuthenticatedWebMethod extends PermissibleAction {
 	@Override
 	public String getDisplayName() {
 		return "AuthenticatedWebMethod";

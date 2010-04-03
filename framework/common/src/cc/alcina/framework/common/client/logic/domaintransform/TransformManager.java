@@ -36,17 +36,13 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
-import cc.alcina.framework.common.client.logic.IgnoreNullsPropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformListener;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformSupport;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest.DataTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
@@ -109,13 +105,13 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 
 	protected TransformManagerCache cache;
 
-	final Set<DataTransformEvent> transforms = new LinkedHashSet<DataTransformEvent>();
+	final Set<DomainTransformEvent> transforms = new LinkedHashSet<DomainTransformEvent>();
 
-	final Map<CommitType, LinkedHashSet<DataTransformEvent>> transformsByType = new HashMap<CommitType, LinkedHashSet<DataTransformEvent>>();
+	final Map<CommitType, LinkedHashSet<DomainTransformEvent>> transformsByType = new HashMap<CommitType, LinkedHashSet<DomainTransformEvent>>();
 
 	private PersistableTransformListener persistableTransformListener;
 
-	protected DataTransformSupport transformListenerSupport;
+	protected DomainTransformSupport transformListenerSupport;
 
 	private static TransformManager theInstance;
 
@@ -144,7 +140,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 
 	protected TransformManager() {
 		cache = new TransformManagerCache();
-		this.transformListenerSupport = new DataTransformSupport();
+		this.transformListenerSupport = new DomainTransformSupport();
 		this.collectionModificationSupport = new CollectionModificationSupport();
 	}
 
@@ -175,8 +171,8 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	 * Order must be: local (>bean), containerupdater, localstorage,
 	 * remotestorage By default, transform manager handles the first two itself
 	 */
-	public void addDataTransformListener(DataTransformListener listener) {
-		this.transformListenerSupport.addDataTransformListener(listener);
+	public void addDataTransformListener(DomainTransformListener listener) {
+		this.transformListenerSupport.addDomainTransformListener(listener);
 	}
 
 	public void clearUserObjects() {
@@ -185,7 +181,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		domainObjects = null;
 	}
 
-	public void addTransform(DataTransformEvent evt) {
+	public void addTransform(DomainTransformEvent evt) {
 		transforms.add(evt);
 		getTransformsByCommitType(evt.getCommitType()).add(evt);
 	}
@@ -205,9 +201,9 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		}
 	}
 
-	private DataTransformEvent currentEvent;
+	private DomainTransformEvent currentEvent;
 
-	public void consume(DataTransformEvent evt) {
+	public void consume(DomainTransformEvent evt) {
 		currentEvent = evt;
 		HasIdAndLocalId obj = null;
 		if (evt.getTransformType() != TransformType.CREATE_OBJECT) {
@@ -299,7 +295,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		currentEvent=null;
 	}
 
-	public void convertToTargetObject(DataTransformEvent evt) {
+	public void convertToTargetObject(DomainTransformEvent evt) {
 		Object value = evt.getNewValue();
 		if (value == null) {
 			return;
@@ -398,13 +394,13 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				.fireCollectionModificationEvent(event);
 	}
 
-	public void fireDataTransform(DataTransformEvent event)
-			throws DataTransformException {
-		this.transformListenerSupport.fireDataTransform(event);
+	public void fireDataTransform(DomainTransformEvent event)
+			throws DomainTransformException {
+		this.transformListenerSupport.fireDomainTransform(event);
 	}
 
-	public DataTransformEvent deleteObject(HasIdAndLocalId hili) {
-		DataTransformEvent dte = new DataTransformEvent();
+	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
+		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setObjectId(hili.getId());
 		dte.setObjectLocalId(hili.getLocalId());
 		dte.setObjectClass(hili.getClass());
@@ -412,8 +408,8 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		try {
 			fireDataTransform(dte);
 			return dte;
-		} catch (DataTransformException e) {
-			DataTransformRuntimeException dtre = new DataTransformRuntimeException(
+		} catch (DomainTransformException e) {
+			DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
 					e.getMessage());
 			dtre.setEvent(e.getEvent());
 			throw dtre;
@@ -432,7 +428,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		return null;
 	}
 
-	public HasIdAndLocalId getObject(DataTransformEvent dte) {
+	public HasIdAndLocalId getObject(DomainTransformEvent dte) {
 		HasIdAndLocalId obj = CommonLocator.get().objectLookup()
 				.getObject(dte.getObjectClass(), dte.getObjectId(),
 						dte.getObjectLocalId());
@@ -453,11 +449,11 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		return null;
 	}
 
-	public boolean resolveMissingObject(DataTransformEvent evt) {
+	public boolean resolveMissingObject(DomainTransformEvent evt) {
 		return isReplayingRemoteEvent();
 	}
 
-	public Object getTargetObject(DataTransformEvent evt, boolean oldValue) {
+	public Object getTargetObject(DomainTransformEvent evt, boolean oldValue) {
 		if (evt.getNewValue() != null || evt.getValueClass() == null) {
 			if (evt.getNewValue() instanceof HasIdAndLocalId) {
 				HasIdAndLocalId hili = CommonLocator.get().objectLookup()
@@ -511,14 +507,14 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				SuggestedAction.NOTIFY_ERROR);
 	}
 
-	public Set<DataTransformEvent> getTransforms() {
+	public Set<DomainTransformEvent> getTransforms() {
 		return this.transforms;
 	}
 
-	public LinkedHashSet<DataTransformEvent> getTransformsByCommitType(
+	public LinkedHashSet<DomainTransformEvent> getTransformsByCommitType(
 			CommitType ct) {
 		if (transformsByType.get(ct) == null) {
-			transformsByType.put(ct, new LinkedHashSet<DataTransformEvent>());
+			transformsByType.put(ct, new LinkedHashSet<DomainTransformEvent>());
 		}
 		return transformsByType.get(ct);
 	}
@@ -679,9 +675,9 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	}
 
 	public boolean dirty(Collection provisionalObjects) {
-		Collection<DataTransformEvent> trs = TransformManager.get()
+		Collection<DomainTransformEvent> trs = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		for (DataTransformEvent dte : trs) {
+		for (DomainTransformEvent dte : trs) {
 			if (provisionalObjects.contains(dte.getSource())) {
 				return true;
 			}
@@ -694,8 +690,8 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				|| UNSPECIFIC_PROPERTY_CHANGE.equals(evt.getPropertyName())) {
 			return;
 		}
-		List<DataTransformEvent> transforms = new ArrayList<DataTransformEvent>();
-		DataTransformEvent dte = createTransformFromPropertyChange(evt);
+		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
+		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
 		convertToTargetObject(dte);
 		if (dte.getNewValue() == null) {
 			dte.setTransformType(TransformType.NULL_PROPERTY_REF);
@@ -763,12 +759,12 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		} else {
 			transforms.add(dte);
 		}
-		for (DataTransformEvent dataTransformEvent : transforms) {
+		for (DomainTransformEvent dataTransformEvent : transforms) {
 			addTransform(dataTransformEvent);
 			try {
 				fireDataTransform(dataTransformEvent);
-			} catch (DataTransformException e) {
-				DataTransformRuntimeException dtre = new DataTransformRuntimeException(
+			} catch (DomainTransformException e) {
+				DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
 						e.getMessage());
 				dtre.setEvent(e.getEvent());
 				throw dtre;
@@ -797,7 +793,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		if (id != 0) {
 			return;
 		}
-		DataTransformEvent dte = new DataTransformEvent();
+		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setSource(null);
 		dte.setObjectId(id);
 		dte.setObjectLocalId(localId);
@@ -806,8 +802,8 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		addTransform(dte);
 		try {
 			fireDataTransform(dte);
-		} catch (DataTransformException e) {
-			DataTransformRuntimeException dtre = new DataTransformRuntimeException(
+		} catch (DomainTransformException e) {
+			DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
 					e.getMessage());
 			dtre.setEvent(e.getEvent());
 			throw dtre;
@@ -847,15 +843,15 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				.removeCollectionModificationListener(listener);
 	}
 
-	public void removeDataTransformListener(DataTransformListener listener) {
-		this.transformListenerSupport.removeDataTransformListener(listener);
+	public void removeDataTransformListener(DomainTransformListener listener) {
+		this.transformListenerSupport.removeDomainTransformListener(listener);
 	}
 
-	public void replayRemoteEvents(Collection<DataTransformEvent> evts,
+	public void replayRemoteEvents(Collection<DomainTransformEvent> evts,
 			boolean fireTransforms) {
 		try {
 			setReplayingRemoteEvent(true);
-			for (DataTransformEvent dte : evts) {
+			for (DomainTransformEvent dte : evts) {
 				consume(dte);
 				if (dte.getTransformType() == TransformType.CREATE_OBJECT
 						&& dte.getObjectId() == 0
@@ -867,7 +863,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 					fireDataTransform(dte);
 				}
 			}
-		} catch (DataTransformException e) {
+		} catch (DomainTransformException e) {
 			// shouldn't happen
 			throw new WrappedRuntimeException(e);
 		} finally {
@@ -883,7 +879,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		this.replayingRemoteEvent = replayingRemoteEvent;
 	}
 
-	public void setTransformCommitType(DataTransformEvent evt, CommitType ct) {
+	public void setTransformCommitType(DomainTransformEvent evt, CommitType ct) {
 		getTransformsByCommitType(evt.getCommitType()).remove(evt);
 		evt.setCommitType(ct);
 		getTransformsByCommitType(evt.getCommitType()).add(evt);
@@ -894,9 +890,9 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		addDataTransformListener(new ContainerUpdateTransformHandler());
 	}
 
-	private DataTransformEvent createTransformFromPropertyChange(
+	private DomainTransformEvent createTransformFromPropertyChange(
 			PropertyChangeEvent evt) {
-		DataTransformEvent dte = new DataTransformEvent();
+		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setSource(evt.getSource());
 		dte.setOldValue(evt.getOldValue());
 		dte.setNewValue(evt.getNewValue());
@@ -915,7 +911,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		for (ClientPropertyReflector pr : prs) {
-			DataTransformEvent dte = new DataTransformEvent();
+			DomainTransformEvent dte = new DomainTransformEvent();
 			dte.setPropertyName(pr.getPropertyName());
 			if (!ClientReflector.get()
 					.isStandardJavaClass(pr.getPropertyType())) {
@@ -936,11 +932,11 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	 * @param tgt
 	 */
 	protected boolean checkPermissions(HasIdAndLocalId eventTarget,
-			DataTransformEvent evt, String propertyName, Object change) {
+			DomainTransformEvent evt, String propertyName, Object change) {
 		return true;
 	}
 
-	protected Enum getTargetEnumValue(DataTransformEvent evt) {
+	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
 		if (evt.getNewValue() instanceof Enum) {
 			return (Enum) evt.getNewValue();
 		}
@@ -962,15 +958,15 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	 * @param hili
 	 * @param evt
 	 */
-	protected void objectModified(HasIdAndLocalId hili, DataTransformEvent evt,
+	protected void objectModified(HasIdAndLocalId hili, DomainTransformEvent evt,
 			boolean targetObject) {
 	}
 
 	public boolean hasUnsavedChanges(Object object) {
 		Collection objects = CommonUtils.wrapInCollection(object);
-		Collection<DataTransformEvent> trs = TransformManager.get()
+		Collection<DomainTransformEvent> trs = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		for (DataTransformEvent dte : trs) {
+		for (DomainTransformEvent dte : trs) {
 			if (objects.contains(dte.getSource())) {
 				return true;
 			}
@@ -1005,11 +1001,11 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 							hili.getLocalId());
 				}
 			}
-			Collection<DataTransformEvent> trs = TransformManager.get()
+			Collection<DomainTransformEvent> trs = TransformManager.get()
 					.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 			trs = (Set) ((LinkedHashSet) trs).clone();
 			TransformManager.get().deregisterProvisionalObjects(objects);
-			for (DataTransformEvent dte : trs) {
+			for (DomainTransformEvent dte : trs) {
 				if (objects.contains(dte.getSource())) {
 					if (dte.getTransformType() == TransformType.ADD_REF_TO_COLLECTION
 							|| dte.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION) {
@@ -1035,23 +1031,23 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		}
 	}
 
-	protected void removeTransform(DataTransformEvent evt) {
+	protected void removeTransform(DomainTransformEvent evt) {
 		transforms.remove(evt);
 		getTransformsByCommitType(evt.getCommitType()).remove(evt);
 	}
 
 	protected void removeTransformsForObjects(Collection c) {
-		Set<DataTransformEvent> trs = (Set<DataTransformEvent>) TransformManager
+		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) TransformManager
 				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
 				.clone();
-		for (DataTransformEvent dte : trs) {
+		for (DomainTransformEvent dte : trs) {
 			if (c.contains(dte.getSource())) {
 				removeTransform(dte);
 			}
 		}
 	}
 
-	protected void updateAssociation(DataTransformEvent evt,
+	protected void updateAssociation(DomainTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt, boolean remove,
 			boolean collectionPropertyChange) {
 		Association assoc = obj == null ? null : CommonLocator.get()
@@ -1068,7 +1064,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				: TransformType.ADD_REF_TO_COLLECTION)
 				: remove ? TransformType.NULL_PROPERTY_REF
 						: TransformType.CHANGE_PROPERTY_REF;
-		evt = new DataTransformEvent();
+		evt = new DomainTransformEvent();
 		evt.setTransformType(tt);
 		// No! Only should check one end of the relation for permissions
 		// checkPermissions(hTgt, evt, assoc.propertyName());
@@ -1208,11 +1204,11 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	}
 
 	class ClientDteWorker extends ClientWorker {
-		List<DataTransformEvent> creates = new ArrayList<DataTransformEvent>();
+		List<DomainTransformEvent> creates = new ArrayList<DomainTransformEvent>();
 
-		List<DataTransformEvent> mods = new ArrayList<DataTransformEvent>();
+		List<DomainTransformEvent> mods = new ArrayList<DomainTransformEvent>();
 
-		DataTransformRequest dtr = new DataTransformRequest();
+		DomainTransformRequest dtr = new DomainTransformRequest();
 
 		private final Map<Class, List> objCopy;
 
@@ -1229,7 +1225,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 			dtr.getItems().addAll(mods);
 			dtr.setClientInstance(clientInstance);
 			dtr
-					.setDataTransformRequestType(DataTransformRequestType.CLIENT_OBJECT_LOAD);
+					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
 			ClientBase clientBase = ClientLayerLocator.get().clientBase();
 			getPersistableTransformListener().persistableTransform(dtr);
 		}
@@ -1261,9 +1257,9 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 			}
 			lastPassIterationsPerformed = values.size();
 			try {
-				List<DataTransformEvent> dtes = objectsToDtes(values, clazz,
+				List<DomainTransformEvent> dtes = objectsToDtes(values, clazz,
 						false);
-				for (DataTransformEvent dte : dtes) {
+				for (DomainTransformEvent dte : dtes) {
 					if (dte.getTransformType() == TransformType.CREATE_OBJECT) {
 						creates.add(dte);
 					} else {
@@ -1488,8 +1484,8 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	}
 
 	static class ContainerUpdateTransformHandler implements
-			DataTransformListener {
-		public void dataTransform(DataTransformEvent evt) {
+			DomainTransformListener {
+		public void domainTransform(DomainTransformEvent evt) {
 			if (evt.getCommitType() == CommitType.TO_LOCAL_GRAPH) {
 				TransformManager tm = TransformManager.get();
 				switch (evt.getTransformType()) {
@@ -1505,8 +1501,8 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		}
 	}
 
-	static class EditCommitTransformHandler implements DataTransformListener {
-		public void dataTransform(DataTransformEvent evt) {
+	static class EditCommitTransformHandler implements DomainTransformListener {
+		public void domainTransform(DomainTransformEvent evt) {
 			if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
 				TransformManager tm = TransformManager.get();
 				if (tm.getProvisionalObjects().contains(evt.getSource())) {
@@ -1555,7 +1551,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 					ClientLayerLocator.get().clientBase().log(
 							"Cache load/deser.: " + (t2 - t1));
 					cleanup();
-					IgnoreNullsPropertyChangeSupport.mute_all = true;
+					MutablePropertyChangeSupport.setMuteAll(true);
 					for (ObjectCacheItemResult item : result) {
 						// ObjectRef ref = item.getItemSpec().getObjectRef();
 						// HasIdAndLocalId hili = getObject(ref.getClassRef()
@@ -1569,16 +1565,16 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 						replayRemoteEvents(item.getTransforms(), fireTransforms);
 						PersistableTransformListener pl = getPersistableTransformListener();
 						if (pl != null) {
-							DataTransformRequest dtr = new DataTransformRequest();
+							DomainTransformRequest dtr = new DomainTransformRequest();
 							dtr.setItems(item.getTransforms());
 							dtr.setClientInstance(ClientLayerLocator.get()
 									.clientBase().getClientInstance());
 							dtr
-									.setDataTransformRequestType(DataTransformRequestType.CLIENT_SYNC);
+									.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 							pl.persistableTransform(dtr);
 						}
 					}
-					IgnoreNullsPropertyChangeSupport.mute_all = false;
+					MutablePropertyChangeSupport.setMuteAll(false);
 					Object[] spec2 = new Object[4];
 					System.arraycopy(spec, 0, spec2, 0, 3);
 					spec2[3] = true;
@@ -1632,7 +1628,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 						propertyName, null);
 	}
 
-	public List<DataTransformEvent> objectsToDtes(List objects, Class clazz,
+	public List<DomainTransformEvent> objectsToDtes(List objects, Class clazz,
 			boolean asObjectSpec) throws Exception {
 		ClassLookup classLookup = CommonLocator.get().classLookup();
 		List<PropertyInfoLite> pds = classLookup.getWritableProperties(clazz);
@@ -1661,14 +1657,14 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				}
 			}
 		}
-		List<DataTransformEvent> dtes = new ArrayList<DataTransformEvent>();
+		List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
 		if (CommonUtils.simpleClassName(clazz).contains("SerializationHelper")) {
 			int j = 2;
 		}
 		for (Object o : objects) {
 			Object[] arr = asObjectSpec ? (Object[]) o : null;
 			HasIdAndLocalId hili = asObjectSpec ? null : (HasIdAndLocalId) o;
-			DataTransformEvent dte = new DataTransformEvent();
+			DomainTransformEvent dte = new DomainTransformEvent();
 			dte.setSource(null);
 			Long id = asObjectSpec ? (Long) arr[0] : hili.getId();
 			dte.setObjectId(id);
@@ -1695,7 +1691,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 						Iterator itr = ((Set) value).iterator();
 						for (; itr.hasNext();) {
 							Object o2 = itr.next();
-							dte = new DataTransformEvent();
+							dte = new DomainTransformEvent();
 							dte.setObjectId(id);
 							dte.setObjectClass(clazz);
 							dte.setPropertyName(propertyName);
@@ -1717,7 +1713,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 						}
 					}
 				} else {
-					dte = new DataTransformEvent();
+					dte = new DomainTransformEvent();
 					dte.setObjectId(id);
 					dte.setObjectClass(clazz);
 					if (value instanceof Timestamp) {
@@ -1751,7 +1747,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	}
 
 	public interface PersistableTransformListener {
-		public void persistableTransform(DataTransformRequest dtr);
+		public void persistableTransform(DomainTransformRequest dtr);
 	}
 
 	/**

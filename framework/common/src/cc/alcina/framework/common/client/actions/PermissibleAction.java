@@ -26,19 +26,19 @@ import cc.alcina.framework.common.client.logic.permissions.Permissible;
  * @author Nick Reddel
  */
 
- public class VetoableAction implements Permissible {
+ public class PermissibleAction implements Permissible {
 	private String displayName;
 
 	private String cssClassName;
 
-	public VetoableAction() {
+	public PermissibleAction() {
 	}
 
-	public VetoableAction(String displayName, String actionName) {
+	public PermissibleAction(String displayName, String actionName) {
 		this(displayName, actionName, null);
 	}
 
-	public VetoableAction(String displayName, String actionName,
+	public PermissibleAction(String displayName, String actionName,
 			String cssClassName) {
 		this.actionName = actionName;
 		this.displayName = displayName;

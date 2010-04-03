@@ -15,25 +15,25 @@
 package cc.alcina.framework.entity.datatransform;
 
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformListener;
 
 /**
  *
  * @author Nick Reddel
  */
 
- public class ServerTransformListener implements DataTransformListener {
-	public void dataTransform(DataTransformEvent evt)
-			throws DataTransformException {
+ public class ServerTransformListener implements DomainTransformListener {
+	public void domainTransform(DomainTransformEvent evt)
+			throws DomainTransformException {
 		if (evt.getCommitType() == CommitType.TO_REMOTE_STORAGE) {
 			TransformManager tm = TransformManager.get();
 			try {
 				tm.consume(evt);
 			} catch (Exception e) {
-				 DataTransformException dte = new DataTransformException(e);
+				 DomainTransformException dte = new DomainTransformException(e);
 				 dte.setEvent(evt);
 				 System.out.println("Direct cause:");
 				 System.out.println(evt);

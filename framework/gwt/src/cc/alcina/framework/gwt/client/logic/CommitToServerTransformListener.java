@@ -24,14 +24,14 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.StateListenable;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformListener;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest.DataTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
@@ -46,14 +46,14 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 
  public class CommitToServerTransformListener extends StateListenable implements
-		DataTransformListener {
+		DomainTransformListener {
 	public static final int DELAY_MS = 100;
 
-	private List<DataTransformEvent> transformQueue;
+	private List<DomainTransformEvent> transformQueue;
 
-	private List<DataTransformRequest> priorRequestsWithoutResponse = new ArrayList<DataTransformRequest>();
+	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
 
-	public List<DataTransformRequest> getPriorRequestsWithoutResponse() {
+	public List<DomainTransformRequest> getPriorRequestsWithoutResponse() {
 		return this.priorRequestsWithoutResponse;
 	}
 
@@ -80,10 +80,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 	}
 
 	private void resetQueue() {
-		transformQueue = new ArrayList<DataTransformEvent>();
+		transformQueue = new ArrayList<DomainTransformEvent>();
 	}
 
-	public void dataTransform(DataTransformEvent evt) {
+	public void domainTransform(DomainTransformEvent evt) {
 		if (evt.getCommitType() == CommitType.TO_REMOTE_STORAGE) {
 			TransformManager tm = TransformManager.get();
 			if (tm.isReplayingRemoteEvent()) {
@@ -123,9 +123,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 	private Map<Long, Long> localToServerIds = new HashMap<Long, Long>();
 
-	 ArrayList<DataTransformEvent> synthesisedEvents;
+	 ArrayList<DomainTransformEvent> synthesisedEvents;
 
-	public ArrayList<DataTransformEvent> getSynthesisedEvents() {
+	public ArrayList<DomainTransformEvent> getSynthesisedEvents() {
 		return this.synthesisedEvents;
 	}
 
@@ -142,17 +142,17 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 			queueingFinishedTimer.cancel();
 		}
 		queueingFinishedTimer = null;
-		final DataTransformRequest dtr = new DataTransformRequest();
+		final DomainTransformRequest dtr = new DomainTransformRequest();
 		dtr.getPriorRequestsWithoutResponse().addAll(
 				priorRequestsWithoutResponse);
 		dtr.setRequestId(localRequestId++);
 		
 		dtr.setClientInstance(clientInstance);
 		dtr.getItems().addAll(transformQueue);
-		dtr.setDataTransformRequestType(DataTransformRequestType.TO_REMOTE);
+		dtr.setDomainTransformRequestType(DomainTransformRequestType.TO_REMOTE);
 		updateTransformQueueVersions();
 		resetQueue();
-		AsyncCallback<DataTransformResponse> callback = new AsyncCallback<DataTransformResponse>() {
+		AsyncCallback<DomainTransformResponse> callback = new AsyncCallback<DomainTransformResponse>() {
 			public void onFailure(Throwable caught) {
 				if (!suppressErrors) {
 					throw new WrappedRuntimeException(caught);
@@ -160,18 +160,18 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 				fireStateChanged(ERROR);
 			}
 
-			public void onSuccess(DataTransformResponse response) {
+			public void onSuccess(DomainTransformResponse response) {
 				PermissionsManager.get().setOnlineState(OnlineState.ONLINE);
 				TransformManager tm = TransformManager.get();
 				tm.setReplayingRemoteEvent(true);
 				try {
-					 synthesisedEvents = new ArrayList<DataTransformEvent>();
-					for (DataTransformEvent dte : response
+					 synthesisedEvents = new ArrayList<DomainTransformEvent>();
+					for (DomainTransformEvent dte : response
 							.getEventsToUseForClientUpdate()) {
 						long id = dte.getGeneratedServerId() != 0 ? dte
 								.getGeneratedServerId() : dte.getObjectId();
 						if (dte.getGeneratedServerId() != 0) {
-							DataTransformEvent idEvt = new DataTransformEvent();
+							DomainTransformEvent idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectLocalId(dte.getObjectLocalId());
 							idEvt
@@ -181,7 +181,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 									.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 							idEvt.setNewStringValue(String.valueOf(id));
 							synthesisedEvents.add(idEvt);
-							idEvt = new DataTransformEvent();
+							idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectId(id);
 							idEvt
@@ -194,7 +194,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 							localToServerIds.put(dte.getObjectLocalId(), id);
 						}
 						if (dte.getObjectVersionNumber() != 0) {
-							DataTransformEvent idEvt = new DataTransformEvent();
+							DomainTransformEvent idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectId(id);
 							idEvt
@@ -207,20 +207,20 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 							synthesisedEvents.add(idEvt);
 						}
 					}
-					for (DataTransformEvent dte : synthesisedEvents) {
+					for (DomainTransformEvent dte : synthesisedEvents) {
 						try {
 							tm.consume(dte);
 							tm.fireDataTransform(dte);// this notifies
 							// gears?
 							// well, definitely notifies clients who need to
 							// know chanages were committed
-						} catch (DataTransformException e) {
+						} catch (DomainTransformException e) {
 							// shouldn't happen
 							throw new WrappedRuntimeException(e);
 						}
 					}
-					List<DataTransformEvent> items = dtr.getItems();
-					for (DataTransformEvent evt : items) {
+					List<DomainTransformEvent> items = dtr.getItems();
+					for (DomainTransformEvent evt : items) {
 						TransformManager.get().setTransformCommitType(evt,
 								CommitType.ALL_COMMITTED);
 					}

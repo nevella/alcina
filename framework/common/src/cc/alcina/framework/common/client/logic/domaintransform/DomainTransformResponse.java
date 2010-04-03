@@ -23,26 +23,26 @@ import java.util.List;
  * @author Nick Reddel
  */
 
- public class DataTransformResponse implements Serializable {
+ public class DomainTransformResponse implements Serializable {
 	private long requestId;
 
-	public enum DataTransformResponseResult {
+	public enum DomainTransformResponseResult {
 		OK, FAILURE
 	}
 
-	private DataTransformResponseResult result = DataTransformResponseResult.OK;
+	private DomainTransformResponseResult result = DomainTransformResponseResult.OK;
 
-	private List<DataTransformEvent> eventsToUseForClientUpdate = new ArrayList<DataTransformEvent>();
+	private List<DomainTransformEvent> eventsToUseForClientUpdate = new ArrayList<DomainTransformEvent>();
 
-	public DataTransformResponseResult getResult() {
+	public DomainTransformResponseResult getResult() {
 		return this.result;
 	}
 
-	public void setResult(DataTransformResponseResult result) {
+	public void setResult(DomainTransformResponseResult result) {
 		this.result = result;
 	}
 
-	public List<DataTransformEvent> getEventsToUseForClientUpdate() {
+	public List<DomainTransformEvent> getEventsToUseForClientUpdate() {
 		return eventsToUseForClientUpdate;
 	}
 

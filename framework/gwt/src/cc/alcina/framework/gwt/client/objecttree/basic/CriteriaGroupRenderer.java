@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = CriteriaGroup.class)
+@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetClass = CriteriaGroup.class)
 /**
  *
  * @author Nick Reddel

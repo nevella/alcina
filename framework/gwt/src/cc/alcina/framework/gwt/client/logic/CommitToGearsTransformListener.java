@@ -15,16 +15,16 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformListener;
 /**
  * For a more serious gears-based system. 
  * @author nick@alcina.cc
  *
  */
-public class CommitToGearsTransformListener implements DataTransformListener {
-	public void dataTransform(DataTransformEvent evt) {
+public class CommitToGearsTransformListener implements DomainTransformListener {
+	public void domainTransform(DomainTransformEvent evt) {
 		if (evt.getCommitType() == CommitType.TO_LOCAL_STORAGE) {
 			TransformManager tm = TransformManager.get();
 			String pn = evt.getPropertyName();

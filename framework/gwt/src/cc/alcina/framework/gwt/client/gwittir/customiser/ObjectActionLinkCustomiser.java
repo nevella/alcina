@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -45,11 +45,11 @@ public class ObjectActionLinkCustomiser implements Customiser {
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
-		List<VetoableAction> actions = new ArrayList<VetoableAction>();
+		List<PermissibleAction> actions = new ArrayList<PermissibleAction>();
 		for (NamedParameter p : info.parameters()) {
 			if (p.name().equals(ACTION_CLASS)) {
 				Class c = p.classValue();
-				actions.add((VetoableAction) CommonLocator.get()
+				actions.add((PermissibleAction) CommonLocator.get()
 						.classLookup().newInstance(c));
 			}
 		}
@@ -72,10 +72,10 @@ public class ObjectActionLinkCustomiser implements Customiser {
 			return null;
 		}
 
-		public void setVetoableActions(List<VetoableAction> vetoableActions) {
+		public void setVetoableActions(List<PermissibleAction> vetoableActions) {
 			this.vetoableActions = vetoableActions;
-			for (VetoableAction a : vetoableActions) {
-				Link<VetoableAction> hl = new Link<VetoableAction>(a
+			for (PermissibleAction a : vetoableActions) {
+				Link<PermissibleAction> hl = new Link<PermissibleAction>(a
 						.getDisplayName(), actionCl);
 				hl.setWordWrap(false);
 				hl.setUserObject(a);
@@ -87,24 +87,24 @@ public class ObjectActionLinkCustomiser implements Customiser {
 		private ClickHandler actionCl = new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				Widget sender = (Widget) event.getSource();
-				VetoableAction a = ((Link<VetoableAction>) sender)
+				PermissibleAction a = ((Link<PermissibleAction>) sender)
 						.getUserObject();
 				LooseActionRegistry.get().performForTargetActionAndObject(a,
 						getModel());
 			}
 		};
 
-		public List<VetoableAction> getVetoableActions() {
+		public List<PermissibleAction> getVetoableActions() {
 			return vetoableActions;
 		}
 
-		private List<VetoableAction> vetoableActions;
+		private List<PermissibleAction> vetoableActions;
 	}
 
 	public static class ObjectActionLinkProvider implements BoundWidgetProvider {
-		private final List<VetoableAction> actions;
+		private final List<PermissibleAction> actions;
 
-		public ObjectActionLinkProvider(List<VetoableAction> actions) {
+		public ObjectActionLinkProvider(List<PermissibleAction> actions) {
 			this.actions = actions;
 		}
 

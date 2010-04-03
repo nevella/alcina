@@ -12,36 +12,31 @@
  * the License.
  */
 
-package cc.alcina.framework.common.client.actions;
+package cc.alcina.framework.entity.datatransform;
 
+import javax.persistence.MappedSuperclass;
+import javax.persistence.Transient;
+
+import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+
+
+@MappedSuperclass
 /**
  *
  * @author Nick Reddel
  */
 
- public class VetoableActionEvent {
-	private Object source;
-	private Object parameters;
-	private final VetoableAction action;
+ public abstract class DomainTransformRequestPersistent extends
+		DomainTransformRequest implements HasId{
+	private long id;
 
-	public VetoableAction getAction() {
-		return this.action;
+	public abstract void wrap(DomainTransformRequest dtr);
+	public void setId(long id) {
+		this.id = id;
 	}
-
-	public VetoableActionEvent(Object source, VetoableAction action) {
-		this.source = source;
-		this.action = action;
-	}
-
-	public Object getSource() {
-		return this.source;
-	}
-
-	public void setParameters(Object parameters) {
-		this.parameters = parameters;
-	}
-
-	public Object getParameters() {
-		return parameters;
+	@Transient
+	public long getId() {
+		return id;
 	}
 }

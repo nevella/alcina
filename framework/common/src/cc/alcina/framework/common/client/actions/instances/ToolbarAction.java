@@ -14,7 +14,7 @@
 
 package cc.alcina.framework.common.client.actions.instances;
 
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 @ClientInstantiable
@@ -23,5 +23,5 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  * @author Nick Reddel
  */
 
- public abstract class ToolbarAction extends VetoableAction {
+ public abstract class ToolbarAction extends PermissibleAction {
 }

@@ -26,10 +26,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest.DataTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.ClientWorker;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.PersistableTransformListener;
 import cc.alcina.framework.common.client.util.Callback;
@@ -146,9 +146,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 	public void stateChanged(Object source, String newState) {
 		if (newState == CommitToServerTransformListener.COMMITTING) {
-			List<DataTransformRequest> rqs = commitToServerTransformListener
+			List<DomainTransformRequest> rqs = commitToServerTransformListener
 					.getPriorRequestsWithoutResponse();
-			for (DataTransformRequest rq : rqs) {
+			for (DomainTransformRequest rq : rqs) {
 				int requestId = rq.getRequestId();
 				if (!persistedTransforms.containsKey(requestId)
 						&& !rq.getItems().isEmpty()) {
@@ -159,10 +159,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 				}
 			}
 		} else if (newState == CommitToServerTransformListener.COMMITTED) {
-			List<DataTransformRequest> rqs = commitToServerTransformListener
+			List<DomainTransformRequest> rqs = commitToServerTransformListener
 					.getPriorRequestsWithoutResponse();
 			Set<Integer> removeIds = new HashSet(persistedTransforms.keySet());
-			for (DataTransformRequest rq : rqs) {
+			for (DomainTransformRequest rq : rqs) {
 				removeIds.remove(rq.getRequestId());
 			}
 			for (Integer i : removeIds) {
@@ -170,12 +170,12 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 				transformPersisted(wrapper);
 				persistedTransforms.remove(i);
 			}
-			DataTransformRequest rq = new DataTransformRequest();
+			DomainTransformRequest rq = new DomainTransformRequest();
 			rq.setClientInstance(commitToServerTransformListener.getClientInstance());
 			rq
-					.setDataTransformRequestType(DataTransformRequestType.CLIENT_SYNC);
+					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 			rq.setRequestId(0);
-			rq.setItems(new ArrayList<DataTransformEvent>(
+			rq.setItems(new ArrayList<DomainTransformEvent>(
 					commitToServerTransformListener.getSynthesisedEvents()));
 			DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(rq);
 			persist(wrapper);
@@ -216,11 +216,11 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 									Long.toString(wrapper.getRequestId()),
 									Long.toString(wrapper
 											.getClientInstanceAuth()),
-									wrapper.getDataTransformRequestType()
+									wrapper.getDomainTransformRequestType()
 											.toString(),
 									closing ? null : ClientSession.get()
 											.getSessionId() });
-			if (wrapper.getDataTransformRequestType() == DataTransformRequestType.CLIENT_OBJECT_LOAD) {
+			if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
 				clearPersistedClient(commitToServerTransformListener
 						.getClientInstance());
 			}
@@ -270,19 +270,19 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 	}
 
 	private List<DTRSimpleSerialWrapper> getTransforms(
-			DataTransformRequestType type) throws Exception {
-		return getTransforms(new DataTransformRequestType[] { type });
+			DomainTransformRequestType type) throws Exception {
+		return getTransforms(new DomainTransformRequestType[] { type });
 	}
 
 	private Long clientInstanceIdForGet = null;
 
 	public List<DTRSimpleSerialWrapper> getTransforms(
-			DataTransformRequestType[] types) throws Exception {
+			DomainTransformRequestType[] types) throws Exception {
 		Object[] params = { "id", Integer.class, "transform", String.class,
 				"timestamp", Long.class, "user_id", Long.class,
 				"clientInstance_id", Long.class, "request_id", Integer.class,
 				"clientInstance_auth", Integer.class, "transform_request_type",
-				DataTransformRequestType.class };
+				DomainTransformRequestType.class };
 		List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
 		String sql = "select * from TransformRequests ";
 		for (int i = 0; i < types.length; i++) {
@@ -306,7 +306,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 					(Long) map.get("clientInstance_id"), (Integer) map
 							.get("request_id"), (Integer) map
 							.get("clientInstance_auth"),
-					(DataTransformRequestType) map
+					(DomainTransformRequestType) map
 							.get("transform_request_type"));
 			transforms.add(wr);
 		}
@@ -320,7 +320,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 			return;
 		}
 		try {
-			final List<DTRSimpleSerialWrapper> uncommitted = getTransforms(DataTransformRequestType.TO_REMOTE);
+			final List<DTRSimpleSerialWrapper> uncommitted = getTransforms(DomainTransformRequestType.TO_REMOTE);
 			if (!uncommitted.isEmpty()) {
 				final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
 						"Saving unsaved work from previous session", null);
@@ -378,7 +378,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 	private boolean closing = false;
 
-	public void persistableTransform(DataTransformRequest dtr) {
+	public void persistableTransform(DomainTransformRequest dtr) {
 		if (!dtr.getItems().isEmpty()) {
 			if (!closing) {
 				new DTRAsyncSerializer(dtr).start();
@@ -395,9 +395,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 		StringBuffer sb = new StringBuffer();
 
-		private List<DataTransformEvent> items;
+		private List<DomainTransformEvent> items;
 
-		public DTRAsyncSerializer(DataTransformRequest dtr) {
+		public DTRAsyncSerializer(DomainTransformRequest dtr) {
 			super(1000, 200);
 			wrapper = new DTRSimpleSerialWrapper(dtr, true);
 			items = dtr.getItems();
@@ -460,7 +460,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 				showOfflineLimitMessage();
 				return transforms;
 			}
-			List<DTRSimpleSerialWrapper> loads = getTransforms(DataTransformRequestType.CLIENT_OBJECT_LOAD);
+			List<DTRSimpleSerialWrapper> loads = getTransforms(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
 			if (loads.size() == 0) {
 				// should never happen (or very rarely)
 				showUnableToLoadOfflineMessage();
@@ -478,10 +478,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 			modifySessionIdOfTransforms(clientInstanceIdForGet, ClientSession
 					.get().getSessionId());
 			transforms.add(loadWrapper);
-			transforms.addAll(getTransforms(new DataTransformRequestType[] {
-					DataTransformRequestType.TO_REMOTE_COMPLETED,
-					DataTransformRequestType.TO_REMOTE,
-					DataTransformRequestType.CLIENT_SYNC }));
+			transforms.addAll(getTransforms(new DomainTransformRequestType[] {
+					DomainTransformRequestType.TO_REMOTE_COMPLETED,
+					DomainTransformRequestType.TO_REMOTE,
+					DomainTransformRequestType.CLIENT_SYNC }));
 			clientInstanceIdForGet = null;
 			return transforms;
 		} catch (Exception e) {

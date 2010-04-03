@@ -18,7 +18,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.Workspace.WSVisualModel;
 import cc.alcina.framework.gwt.client.ide.WorkspaceView.DataTreeView;
@@ -68,7 +69,7 @@ import com.google.gwt.user.client.ui.Widget;
 	 * @param model
 	 */
 	public SimpleWorkspaceVisualiser(WSVisualModel model,
-			VetoableActionListener actionListener) {
+			PermissibleActionEvent.PermissibleActionListener actionListener) {
 		this.model = model;
 		this.verticalPanel = new Resize100Vp();
 		this.hsp = new HorizontalSplitPanel();

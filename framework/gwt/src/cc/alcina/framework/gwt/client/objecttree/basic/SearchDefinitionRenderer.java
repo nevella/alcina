@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = SearchDefinition.class)
+@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetClass = SearchDefinition.class)
 /**
  *
  * @author Nick Reddel

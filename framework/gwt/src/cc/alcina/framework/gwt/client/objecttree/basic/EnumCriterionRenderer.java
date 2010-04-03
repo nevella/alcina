@@ -21,7 +21,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = EnumCriterion.class)
+@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetClass = EnumCriterion.class)
 public class EnumCriterionRenderer<T extends EnumCriterion> extends
 		SearchCriterionRenderer<T> {
 	@Override

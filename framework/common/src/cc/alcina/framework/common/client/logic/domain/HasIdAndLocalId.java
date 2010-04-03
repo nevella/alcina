@@ -21,27 +21,28 @@ import java.util.Set;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
+ * Base interface for classes which can be handled by the
+ * {@link cc.alcina.framework.common.client.logic.domaintransform.TransformManager
+ * TransformManager }. Note that the only id type supported is <code>long</code>
+ * .
  * 
  * @author Nick Reddel
  */
 public interface HasIdAndLocalId extends HasId {
+	/**
+	 * Used for object referencing within a client domain. Generated from a
+	 * thread-safe increment counter (one counter per domain, not
+	 * per-object-type.
+	 */
 	public long getLocalId();
 
 	public void setLocalId(long localId);
 
-	public static class HiliComparator implements Comparator<HasIdAndLocalId> {
-		public static final HiliComparator INSTANCE = new HiliComparator();
-
-		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
-			if (o1 == null) {
-				return o2 == null ? 0 : -1;
-			}
-			return o2 == null ? 1 : new Long(o1.getId()).compareTo(o2.getId());
-		}
-	}
-
 	public static class HiliHelper {
 		public static boolean equals(HasIdAndLocalId o1, Object o2) {
+			if (o1==null){
+				return o2==null;
+			}
 			if (o1.getId() == 0 && o1.getLocalId() == 0) {
 				return o1 == o2;
 			}

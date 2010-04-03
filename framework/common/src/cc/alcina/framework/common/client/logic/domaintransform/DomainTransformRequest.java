@@ -30,20 +30,20 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
  * @author Nick Reddel
  */
 
- public class DataTransformRequest implements Serializable {
-	private List<DataTransformEvent> items = new ArrayList<DataTransformEvent>();
+ public class DomainTransformRequest implements Serializable {
+	private List<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>();
 
-	public void setItems(List<DataTransformEvent> items) {
+	public void setItems(List<DomainTransformEvent> items) {
 		this.items = items;
 	}
 
-	private List<DataTransformRequest> priorRequestsWithoutResponse = new ArrayList<DataTransformRequest>();
+	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
 
 	private int requestId;
 
 	private ClientInstance clientInstance;
 
-	private DataTransformRequestType dataTransformRequestType;
+	private DomainTransformRequestType domainTransformRequestType;
 
 	@Transient
 	public ClientInstance getClientInstance() {
@@ -51,7 +51,7 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 	}
 
 	@Transient
-	public List<DataTransformEvent> getItems() {
+	public List<DomainTransformEvent> getItems() {
 		return items;
 	}
 
@@ -59,7 +59,7 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 	 * Persistence defined in app subclass
 	 */
 	@Transient
-	public List<DataTransformRequest> getPriorRequestsWithoutResponse() {
+	public List<DomainTransformRequest> getPriorRequestsWithoutResponse() {
 		return this.priorRequestsWithoutResponse;
 	}
 
@@ -79,7 +79,7 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 		StringBuffer sb2 = new StringBuffer();
 		StringBuffer sb1 = new StringBuffer();
 		int i = 0;
-		for (DataTransformEvent dte : items) {
+		for (DomainTransformEvent dte : items) {
 			if (++i % 200 == 0) {
 				sb2.append(sb1.toString());
 				sb1 = new StringBuffer();
@@ -91,15 +91,15 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 	}
 
 	public String toStringForError() {
-		List<DataTransformRequest> dtrs = new ArrayList<DataTransformRequest>();
+		List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
 		dtrs.addAll(getPriorRequestsWithoutResponse());
 		dtrs.add(this);
 		StringBuffer sb = new StringBuffer();
-		for (DataTransformRequest dtr : dtrs) {
+		for (DomainTransformRequest dtr : dtrs) {
 			sb.append("----");
 			sb.append(dtr.getRequestId());
-			List<DataTransformEvent> items = dtr.getItems();
-			for (DataTransformEvent dte : items) {
+			List<DomainTransformEvent> items = dtr.getItems();
+			for (DomainTransformEvent dte : items) {
 				String s2 = "\t" + dte.toString().replace("\n", "\n\t") + "\n";
 				sb.append(s2);
 			}
@@ -110,22 +110,22 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 	public void fromString(String eventsStr) {
 		SimpleStringParser p = new SimpleStringParser(eventsStr);
 		String s;
-		while ((s = p.read(DataTransformEvent.DATA_TRANSFORM_EVENT_MARKER,
-				DataTransformEvent.DATA_TRANSFORM_EVENT_MARKER, true, false)) != null) {
-			items.add(DataTransformEvent.fromString(s));
+		while ((s = p.read(DomainTransformEvent.DATA_TRANSFORM_EVENT_MARKER,
+				DomainTransformEvent.DATA_TRANSFORM_EVENT_MARKER, true, false)) != null) {
+			items.add(DomainTransformEvent.fromString(s));
 		}
 	}
 
-	public void setDataTransformRequestType(
-			DataTransformRequestType dataTransformRequestType) {
-		this.dataTransformRequestType = dataTransformRequestType;
+	public void setDomainTransformRequestType(
+			DomainTransformRequestType domainTransformRequestType) {
+		this.domainTransformRequestType = domainTransformRequestType;
 	}
 
-	public DataTransformRequestType getDataTransformRequestType() {
-		return dataTransformRequestType;
+	public DomainTransformRequestType getDomainTransformRequestType() {
+		return domainTransformRequestType;
 	}
 
-	public enum DataTransformRequestType {
+	public enum DomainTransformRequestType {
 		TO_REMOTE, CLIENT_OBJECT_LOAD, CLIENT_SYNC,TO_REMOTE_COMPLETED,CLIENT_STARTUP_FROM_OFFLINE
 	}
 }

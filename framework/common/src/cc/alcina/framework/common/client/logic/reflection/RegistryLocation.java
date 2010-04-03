@@ -34,6 +34,10 @@ import java.lang.annotation.Target;
 
  public @interface RegistryLocation {
 	Class registryPoint();
-	Class targetObject() default void.class;
+	Class targetClass() default void.class;
 	boolean j2seOnly() default true;
+	/**
+	 * Allows overriding of default registrees (lower values override)
+	 */
+	int priority() default 10;
 }

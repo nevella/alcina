@@ -6,12 +6,12 @@ import javax.servlet.Servlet;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.servlet.ServerLayerLocator;
+import cc.alcina.framework.servlet.ServletLayerLocator;
 
 public abstract class AppLifecycleServletBase extends GenericServlet{
 	protected void createServletTransformClientInstance() {
 		ThreadedPermissionsManager.cast().pushSystemUser();
-		ClientInstance serverAsClientInstance = ServerLayerLocator.get()
+		ClientInstance serverAsClientInstance = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence()
 				.createClientInstance();
 		CommonRemoteServiceServlet.serverAsClientInstance = serverAsClientInstance;

@@ -21,7 +21,7 @@ import java.beans.PropertyChangeSupport;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.logic.IgnoreNullsPropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -32,7 +32,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
  public class BaseSourcesPropertyChangeEvents implements
 		SourcesPropertyChangeEvents {
-	protected transient PropertyChangeSupport propertyChangeSupport = new IgnoreNullsPropertyChangeSupport(
+	protected transient PropertyChangeSupport propertyChangeSupport = new MutablePropertyChangeSupport(
 			this);
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {

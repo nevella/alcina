@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 
 
-@RegistryLocation(registryPoint = Searcher.class, targetObject = SearchDefinition.class)
+@RegistryLocation(registryPoint = Searcher.class, targetClass = SearchDefinition.class)
 /**
  *
  * @author Nick Reddel

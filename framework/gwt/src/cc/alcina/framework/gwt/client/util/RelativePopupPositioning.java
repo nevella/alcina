@@ -177,13 +177,23 @@ public class RelativePopupPositioning {
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis) {
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget,
-				new RelativePopupAxis[] { axis });
+				new RelativePopupAxis[] { axis }, null);
+	}
+
+	public static RelativePopupPanel showPopup(Widget relativeToWidget,
+			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis,
+			String panelStyleName) {
+		return showPopup(relativeToWidget, widgetToShow, boundingWidget,
+				new RelativePopupAxis[] { axis }, panelStyleName);
 	}
 
 	public static RelativePopupPanel showPopup(final Widget relativeToWidget,
 			final Widget widgetToShow, final Widget boundingWidget,
-			final RelativePopupAxis[] axes) {
+			final RelativePopupAxis[] axes, String panelStyleName) {
 		final RelativePopupPanel rpp = new RelativePopupPanel(true);
+		if (panelStyleName != null) {
+			rpp.addStyleName(panelStyleName);
+		}
 		rpp.setAnimationEnabled(true);
 		rpp.setWidget(widgetToShow);
 		final Widget positioningWidget = WidgetUtils

@@ -21,7 +21,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetObject = TxtCriterion.class)
+@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetClass = TxtCriterion.class)
 public class TxtCriterionRenderer extends
 		SearchCriterionRenderer<TxtCriterion> {
 	@Override

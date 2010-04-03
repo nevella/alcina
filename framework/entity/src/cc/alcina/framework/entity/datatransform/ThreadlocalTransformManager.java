@@ -37,12 +37,12 @@ import cc.alcina.framework.common.client.entity.GwtPersistableObject;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
@@ -86,14 +86,14 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	Set<HasIdAndLocalId> modifiedObjects = new HashSet<HasIdAndLocalId>();
 
-	private static List<DataTransformListener> threadLocalListeners = new ArrayList<DataTransformListener>();
+	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
 
 	public static void addThreadLocalDataTransformListener(
-			DataTransformListener listener) {
+			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
 	}
 
-	List<DataTransformEvent> modificationEvents = new ArrayList<DataTransformEvent>();
+	List<DomainTransformEvent> modificationEvents = new ArrayList<DomainTransformEvent>();
 
 	private ClientInstance clientInstance;
 
@@ -152,7 +152,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	/**
 	 * TODO - ignore collection mods to collection properties with the @OneToMany annotation
 	 */
-	public void consume(DataTransformEvent evt) {
+	public void consume(DomainTransformEvent evt) {
 		super.consume(evt);
 	}
 
@@ -165,8 +165,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	public DataTransformEvent deleteObject(HasIdAndLocalId hili) {
-		DataTransformEvent event = super.deleteObject(hili);
+	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
+		DomainTransformEvent event = super.deleteObject(hili);
 		addTransform(event);
 		return event;
 	}
@@ -253,7 +253,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return entityManager;
 	}
 
-	public List<DataTransformEvent> getModificationEvents() {
+	public List<DomainTransformEvent> getModificationEvents() {
 		return this.modificationEvents;
 	}
 
@@ -382,11 +382,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		this.userSessionHiliMap = locatorMap;
 		localIdToEntityMap = new HashMap<Long, HasIdAndLocalId>();
 		modifiedObjects = new HashSet<HasIdAndLocalId>();
-		modificationEvents = new ArrayList<DataTransformEvent>();
+		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
 		clearTransforms();
 		addDataTransformListener(new ServerTransformListener());
-		for (DataTransformListener listener : threadLocalListeners) {
+		for (DomainTransformListener listener : threadLocalListeners) {
 			addDataTransformListener(listener);
 		}
 	}
@@ -463,24 +463,24 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	private void checkPropertyReadAccessAndThrow(HasIdAndLocalId hili,
-			String propertyName, DataTransformEvent evt)
-			throws DataTransformException, IntrospectionException {
+			String propertyName, DomainTransformEvent evt)
+			throws DomainTransformException, IntrospectionException {
 		if (!checkPropertyAccess(hili, propertyName, true)) {
-			throw new DataTransformException(new Exception(
+			throw new DomainTransformException(new Exception(
 					"Permission denied : write - object/property " + evt));
 		}
 	}
 
 	private boolean checkPropertyWriteAccessAndThrow(HasIdAndLocalId hili,
-			String propertyName, DataTransformEvent evt)
-			throws DataTransformException, IntrospectionException {
+			String propertyName, DomainTransformEvent evt)
+			throws DomainTransformException, IntrospectionException {
 		if (!checkPropertyAccess(hili, propertyName, false)) {
 			DomainPropertyInfo ann = getAnnotationForProperty(hili.getClass(),
 					DomainPropertyInfo.class, propertyName);
 			if (ann != null && ann.silentFailOnIllegalWrites()) {
 				return false;
 			}
-			throw new DataTransformException(new Exception(
+			throw new DomainTransformException(new Exception(
 					"Permission denied : write - object/property " + evt));
 		}
 		return true;
@@ -499,9 +499,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			// System.out.println(message);
 			// cp.log(message, LogMessageType.INFO.toString());
 			String dteName = cp.getImplementation(
-					DataTransformEventPersistent.class).getSimpleName();
+					DomainTransformEventPersistent.class).getSimpleName();
 			MetricLogging.get().start(message);
-			List<? extends DataTransformEvent> dtes = getEntityManager()
+			List<? extends DomainTransformEvent> dtes = getEntityManager()
 					.createQuery(
 							"from "
 									+ dteName
@@ -512,7 +512,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 							TransformType.CREATE_OBJECT).getResultList();
 			// force non-empty
 			userSessionHiliMap.put((long) -1, null);
-			for (DataTransformEvent dte : dtes) {
+			for (DomainTransformEvent dte : dtes) {
 				userSessionHiliMap.put(dte.getObjectLocalId(), new HiliLocator(
 						null, dte.getObjectId()));
 			}
@@ -522,7 +522,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	protected boolean checkPermissions(HasIdAndLocalId hili,
-			DataTransformEvent evt, String propertyName, Object change) {
+			DomainTransformEvent evt, String propertyName, Object change) {
 		try {
 			if (hili == null) {
 				hili = (HasIdAndLocalId) evt.getObjectClass().newInstance();
@@ -549,13 +549,13 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				return checkPropertyWriteAccessAndThrow(hili, propertyName, evt);
 			case CREATE_OBJECT:
 				if (!PermissionsManager.get().isPermissible(hili, op.create())) {
-					throw new DataTransformException(new Exception(
+					throw new DomainTransformException(new Exception(
 							"Permission denied : create - object " + evt));
 				}
 				break;
 			case DELETE_OBJECT:
 				if (!PermissionsManager.get().isPermissible(hili, op.delete())) {
-					throw new DataTransformException(new Exception(
+					throw new DomainTransformException(new Exception(
 							"Permission denied : delete - object " + evt));
 				}
 				break;
@@ -563,8 +563,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			// TODO:3.2, check r/w access for bean for add/remove ref
 			// check r/w access for bean for all
 		} catch (Exception e) {
-			if (e instanceof DataTransformException) {
-				DataTransformException dtex = (DataTransformException) e;
+			if (e instanceof DomainTransformException) {
+				DomainTransformException dtex = (DomainTransformException) e;
 				dtex.setEvent(evt);
 				evt.setSource(hili);
 				evt.setPropertyName(propertyName);
@@ -577,12 +577,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	protected Enum getTargetEnumValue(DataTransformEvent evt) {
+	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
 		return ObjectPersistenceHelper.get().getTargetEnumValue(evt);
 	}
 
 	@Override
-	protected void objectModified(HasIdAndLocalId hili, DataTransformEvent evt,
+	protected void objectModified(HasIdAndLocalId hili, DomainTransformEvent evt,
 			boolean targetObject) {
 		boolean addToResults = false;
 		if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
@@ -607,7 +607,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	@Override
 	// No need for property changes here
 	// TODO - isn't this a huge hit?
-	protected void updateAssociation(DataTransformEvent evt,
+	protected void updateAssociation(DomainTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt, boolean remove,
 			boolean collectionPropertyChange) {
 		ManyToMany manyToMany = CommonLocator.get().propertyAccessor()

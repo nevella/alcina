@@ -36,7 +36,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 		String userName = (String) rq.getSession().getAttribute(
 				SESSION_ATTR_USERNAME);
 		if (userName != null) {
-			CommonPersistenceLocal up = ServerLayerLocator.get().commonPersistenceProvider()
+			CommonPersistenceLocal up = ServletLayerLocator.get().commonPersistenceProvider()
 					.getCommonPersistence();
 			IUser user = up.getUserByName(userName,true);
 			if (user!=null){
@@ -53,7 +53,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 
 	static void resetPermissions() {
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
-		CommonPersistenceLocal up = ServerLayerLocator.get().commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal up = ServletLayerLocator.get().commonPersistenceProvider().getCommonPersistence();
 		PermissionsManager.get().setUser(up.getSystemUser(true));
 	}
 

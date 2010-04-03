@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.widget.ActionProgress;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
@@ -105,7 +105,7 @@ import com.google.gwt.user.client.ui.Widget;
 				.maxButton(wrapper));
 	}
 
-	public static class ShowActionsViewProviderAction extends VetoableAction {
+	public static class ShowActionsViewProviderAction extends PermissibleAction {
 		@Override
 		public String getDisplayName() {
 			return "Show running jobs";

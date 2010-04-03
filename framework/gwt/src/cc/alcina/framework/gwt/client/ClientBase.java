@@ -26,15 +26,15 @@ import java.util.Map;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
-import cc.alcina.framework.common.client.actions.VetoableActionEvent;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponseBean;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.spi.LogWriter;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -398,7 +398,7 @@ public abstract class ClientBase implements EntryPoint,
 		getCommonRemoteService().logout(callback);
 	}
 
-	public void transform(DataTransformRequest request, AsyncCallback callback) {
+	public void transform(DomainTransformRequest request, AsyncCallback callback) {
 		getCommonRemoteService().transform(request, callback);
 	}
 
@@ -419,8 +419,8 @@ public abstract class ClientBase implements EntryPoint,
 
 	public void confirm(String msg, final OkCallback callback) {
 		new OkCancelDialogBox("Confirmation", new Label(msg),
-				new VetoableActionListener() {
-					public void vetoableAction(VetoableActionEvent evt) {
+				new PermissibleActionEvent.PermissibleActionListener() {
+					public void vetoableAction(PermissibleActionEvent evt) {
 						if (evt.getAction().getActionName().equals(
 								OkCancelDialogBox.OK_ACTION)) {
 							callback.ok();

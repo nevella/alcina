@@ -22,12 +22,12 @@ import java.util.List;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.actions.VetoableAction;
-import cc.alcina.framework.common.client.actions.VetoableActionEvent;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSource;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSupport;
-import cc.alcina.framework.common.client.actions.VetoableActionHandler.DefaultVetoableActionHandler;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
+import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
@@ -95,7 +95,7 @@ import com.totsp.gwittir.client.validator.Validator;
 	private boolean noCaption;
 
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
-			VetoableActionListener actionListener, boolean autoSave,
+			PermissibleActionEvent.PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				bean.getClass());
@@ -163,8 +163,8 @@ import com.totsp.gwittir.client.validator.Validator;
 			return null;
 		}
 		FlowPanel fp = null;
-		for (Class<? extends VetoableAction> c : bi.getActions()) {
-			final VetoableAction v = CommonLocator.get().classLookup()
+		for (Class<? extends PermissibleAction> c : bi.getActions()) {
+			final PermissibleAction v = CommonLocator.get().classLookup()
 					.getTemplateInstance(c);
 			if (v instanceof NonstandardObjectAction) {
 				if (fp == null) {
@@ -174,11 +174,11 @@ import com.totsp.gwittir.client.validator.Validator;
 							.get().getUiObjectText(getClass(), "Extra actions",
 									"Extra actions")));
 				}
-				BlockLink<VetoableAction> nhd = new BlockLink<VetoableAction>();
+				BlockLink<PermissibleAction> nhd = new BlockLink<PermissibleAction>();
 				nhd.setUserObject(v);
 				nhd.addClickHandler(new ClickHandler() {
 					public void onClick(ClickEvent event) {
-						DefaultVetoableActionHandler.handleAction(v, bean);
+						DefaultPermissibleActionHandler.handleAction(v, bean);
 					}
 				});
 				nhd.setText(v.getDisplayName());
@@ -219,7 +219,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 	public PaneWrapperWithObjects createMultipleBeanView(Collection beans,
 			Class beanClass, boolean editable,
-			VetoableActionListener actionListener, boolean autoSave,
+			PermissibleActionEvent.PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
 		return createMultipleBeanView(beans, beanClass, editable,
 				actionListener, autoSave, doNotClone, 0);
@@ -227,7 +227,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 	public PaneWrapperWithObjects createMultipleBeanView(Collection beans,
 			Class beanClass, boolean editable,
-			VetoableActionListener actionListener, boolean autoSave,
+			PermissibleActionEvent.PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone, int tableMask) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				beanClass);
@@ -292,8 +292,8 @@ import com.totsp.gwittir.client.validator.Validator;
 
 	public ActionTableHolder createActionTable(Collection beans,
 			Class beanClass, Converter converter,
-			Collection<VetoableAction> actions,
-			VetoableActionListener listener, boolean withObjectActions,
+			Collection<PermissibleAction> actions,
+			PermissibleActionEvent.PermissibleActionListener listener, boolean withObjectActions,
 			boolean multiple) {
 		ActionTableHolder holder = new ActionTableHolder();
 		FlowPanel fp = holder.fp;
@@ -319,7 +319,7 @@ import com.totsp.gwittir.client.validator.Validator;
 				fields, cp);
 		table.addStyleName("results-table");
 		if (actions != null && !actions.isEmpty()) {
-			Toolbar tb = createToolbar(new ArrayList<VetoableAction>(actions));
+			Toolbar tb = createToolbar(new ArrayList<PermissibleAction>(actions));
 			tb.addVetoableActionListener(listener);
 			fp.add(tb);
 		}
@@ -329,7 +329,7 @@ import com.totsp.gwittir.client.validator.Validator;
 	}
 
 	private PaneWrapperWithObjects createPaneWrapper(
-			VetoableActionListener actionListener) {
+			PermissibleActionEvent.PermissibleActionListener actionListener) {
 		PaneWrapperWithObjects vp = new PaneWrapperWithObjects();
 		vp.setStyleName("alcina-BeanPanel");
 		if (actionListener != null) {
@@ -434,7 +434,7 @@ import com.totsp.gwittir.client.validator.Validator;
 	}
 
 	public static class PaneWrapperWithObjects extends FlowPanel implements
-			ClickHandler, VetoableActionSource {
+			ClickHandler, PermissibleActionEvent.PermissibleActionSource {
 		private Validator beanValidator;
 
 		private boolean alwaysDisallowOkIfInvalid;
@@ -482,7 +482,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 		private boolean provisionalObjects;
 
-		VetoableActionSupport support = new VetoableActionSupport();
+		PermissibleActionEvent.PermissibleActionSupport support = new PermissibleActionEvent.PermissibleActionSupport();
 
 		private Button saveButton;
 
@@ -490,11 +490,11 @@ import com.totsp.gwittir.client.validator.Validator;
 			return this.saveButton;
 		}
 
-		public void addVetoableActionListener(VetoableActionListener listener) {
+		public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 			this.support.addVetoableActionListener(listener);
 		}
 
-		public void fireVetoableActionEvent(VetoableActionEvent event) {
+		public void fireVetoableActionEvent(PermissibleActionEvent event) {
 			this.support.fireVetoableActionEvent(event);
 		}
 
@@ -581,7 +581,7 @@ import com.totsp.gwittir.client.validator.Validator;
 					TransformManager.get()
 							.deregisterProvisionalObjects(objects);
 				}
-				final VetoableActionEvent action = new VetoableActionEvent(
+				final PermissibleActionEvent action = new PermissibleActionEvent(
 						initialObjects, ClientReflector.get().newInstance(
 								CancelAction.class));
 				DeferredCommand.addCommand(new Command() {
@@ -596,7 +596,7 @@ import com.totsp.gwittir.client.validator.Validator;
 			if (isProvisionalObjects()) {
 				TransformManager.get().promoteToDomainObject(objects);
 			}
-			final VetoableActionEvent action = new VetoableActionEvent(
+			final PermissibleActionEvent action = new PermissibleActionEvent(
 					initialObjects, ClientReflector.get().newInstance(
 							ViewAction.class));
 			DeferredCommand.addCommand(new Command() {
@@ -614,7 +614,7 @@ import com.totsp.gwittir.client.validator.Validator;
 			}
 		}
 
-		public void removeVetoableActionListener(VetoableActionListener listener) {
+		public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 			this.support.removeVetoableActionListener(listener);
 		}
 
@@ -683,7 +683,7 @@ import com.totsp.gwittir.client.validator.Validator;
 		}
 	}
 
-	public Toolbar createToolbar(List<VetoableAction> actions) {
+	public Toolbar createToolbar(List<PermissibleAction> actions) {
 		Toolbar tb = new Toolbar();
 		tb.setAsButton(true);
 		tb.setActions(actions);
@@ -693,7 +693,7 @@ import com.totsp.gwittir.client.validator.Validator;
 	}
 
 	public void popupEdit(Object bean, String title,
-			final VetoableActionListener okListener) {
+			final PermissibleActionEvent.PermissibleActionListener okListener) {
 		FlowPanel fp = new FlowPanel();
 		final DialogBox dialog = new GlassDialogBox();
 		dialog.setText(title);
@@ -701,8 +701,8 @@ import com.totsp.gwittir.client.validator.Validator;
 		setNoCaption(true);
 		setCancelButton(true);
 		PaneWrapperWithObjects view = createBeanView(bean, true,
-				new VetoableActionListener() {
-					public void vetoableAction(VetoableActionEvent evt) {
+				new PermissibleActionEvent.PermissibleActionListener() {
+					public void vetoableAction(PermissibleActionEvent evt) {
 						dialog.hide();
 						if (evt.getAction().getClass() == ViewAction.class) {
 							okListener.vetoableAction(evt);

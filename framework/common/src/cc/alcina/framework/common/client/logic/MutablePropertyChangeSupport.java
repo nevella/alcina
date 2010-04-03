@@ -21,12 +21,12 @@ import java.beans.PropertyChangeSupport;
  * @author nick@alcina.cc
  * 
  */
-public class IgnoreNullsPropertyChangeSupport extends PropertyChangeSupport {
-	public static boolean mute_all = false;
+public class MutablePropertyChangeSupport extends PropertyChangeSupport {
+	private static boolean muteAll = false;
 
 	private boolean hasListeners = false;
 
-	public IgnoreNullsPropertyChangeSupport(Object sourceBean) {
+	public MutablePropertyChangeSupport(Object sourceBean) {
 		super(sourceBean);
 	}
 
@@ -54,7 +54,7 @@ public class IgnoreNullsPropertyChangeSupport extends PropertyChangeSupport {
 	@Override
 	public void firePropertyChange(String propertyName, Object oldValue,
 			Object newValue) {
-		if (mute_all||!hasListeners || (oldValue == null && newValue == null)) {
+		if (isMuteAll()||!hasListeners || (oldValue == null && newValue == null)) {
 			return;
 		}
 		super.firePropertyChange(propertyName, oldValue, newValue);
@@ -65,6 +65,17 @@ public class IgnoreNullsPropertyChangeSupport extends PropertyChangeSupport {
 	 * !not! be read. For listeners on collection properties
 	 */
 	public void forceFirePropertyChange(String name) {
-		this.firePropertyChange(name, false, true);
+		if (isMuteAll()||!hasListeners){
+			return;
+		}
+		super.firePropertyChange(name, null, null);
+	}
+
+	public static void setMuteAll(boolean muteAll) {
+		MutablePropertyChangeSupport.muteAll = muteAll;
+	}
+
+	public static boolean isMuteAll() {
+		return muteAll;
 	}
 }

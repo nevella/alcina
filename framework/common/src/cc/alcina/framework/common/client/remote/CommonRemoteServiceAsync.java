@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.entity.GwtPersistableObject;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -66,7 +66,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 	public void search(SearchDefinition def, int pageNumber,
 			AsyncCallback<SearchResultsBase> callback);
 
-	public void transform(DataTransformRequest request, AsyncCallback callback);
+	public void transform(DomainTransformRequest request, AsyncCallback callback);
 
 	public void validateOnServer(List<ServerValidator> validators,
 			AsyncCallback<List<ServerValidator>> callback);

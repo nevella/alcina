@@ -23,11 +23,11 @@ import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.SynchronousAction;
-import cc.alcina.framework.common.client.actions.VetoableAction;
-import cc.alcina.framework.common.client.actions.VetoableActionEvent;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSource;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSupport;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -63,7 +63,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 
- public class ActionViewProvider implements ViewProvider, VetoableActionListener {
+ public class ActionViewProvider implements ViewProvider, PermissibleActionEvent.PermissibleActionListener {
 	private PaneWrapper wrapper;
 
 	public Widget getViewForObject(Object obj) {
@@ -78,7 +78,7 @@ import com.google.gwt.user.client.ui.Widget;
 		return wrapper;
 	}
 
-	private Widget createCaption(VetoableAction action) {
+	private Widget createCaption(PermissibleAction action) {
 		List<SimpleHistoryEventInfo> history = Arrays
 				.asList(new SimpleHistoryEventInfo[] {
 						new SimpleHistoryEventInfo("Action"),
@@ -297,20 +297,20 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	static class PaneWrapper extends FlowPanel implements ClickHandler,
-			VetoableActionSource {
-		private VetoableAction action;
+			PermissibleActionEvent.PermissibleActionSource {
+		private PermissibleAction action;
 
-		VetoableActionSupport support = new VetoableActionSupport();
+		PermissibleActionEvent.PermissibleActionSupport support = new PermissibleActionEvent.PermissibleActionSupport();
 
-		public void addVetoableActionListener(VetoableActionListener listener) {
+		public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 			this.support.addVetoableActionListener(listener);
 		}
 
-		public void fireVetoableActionEvent(VetoableActionEvent event) {
+		public void fireVetoableActionEvent(PermissibleActionEvent event) {
 			this.support.fireVetoableActionEvent(event);
 		}
 
-		public void removeVetoableActionListener(VetoableActionListener listener) {
+		public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 			this.support.removeVetoableActionListener(listener);
 		}
 
@@ -321,22 +321,22 @@ import com.google.gwt.user.client.ui.Widget;
 			this.saveButton = saveButton;
 		}
 
-		public void setAction(VetoableAction action) {
+		public void setAction(PermissibleAction action) {
 			this.action = action;
 		}
 
-		public VetoableAction getAction() {
+		public PermissibleAction getAction() {
 			return action;
 		}
 
 		public void onClick(ClickEvent event) {
-			VetoableActionEvent action = new VetoableActionEvent(this.action,
+			PermissibleActionEvent action = new PermissibleActionEvent(this.action,
 					ClientReflector.get().newInstance(ViewAction.class));
 			fireVetoableActionEvent(action);
 		}
 	}
 
-	public void vetoableAction(VetoableActionEvent evt) {
+	public void vetoableAction(PermissibleActionEvent evt) {
 		// no response at the mo'
 	}
 }

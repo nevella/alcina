@@ -26,16 +26,16 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
  * @author Nick Reddel
  */
 
- public class ServerLayerLocator {
-	private ServerLayerLocator() {
+ public class ServletLayerLocator {
+	private ServletLayerLocator() {
 		super();
 	}
 
-	private static ServerLayerLocator theInstance;
+	private static ServletLayerLocator theInstance;
 
-	public static ServerLayerLocator get() {
+	public static ServletLayerLocator get() {
 		if (theInstance == null) {
-			theInstance = new ServerLayerLocator();
+			theInstance = new ServletLayerLocator();
 		}
 		return theInstance;
 	}

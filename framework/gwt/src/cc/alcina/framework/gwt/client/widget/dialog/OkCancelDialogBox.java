@@ -15,9 +15,9 @@
 package cc.alcina.framework.gwt.client.widget.dialog;
 
 
-import cc.alcina.framework.common.client.actions.VetoableAction;
-import cc.alcina.framework.common.client.actions.VetoableActionEvent;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
@@ -48,10 +48,10 @@ import com.totsp.gwittir.client.beans.Binding;
 
 	protected final Widget widget;
 
-	protected  VetoableActionListener vetoableActionListener;
+	protected  PermissibleActionEvent.PermissibleActionListener vetoableActionListener;
 
 	public OkCancelDialogBox(String title, Widget widget,
-			final VetoableActionListener l) {
+			final PermissibleActionEvent.PermissibleActionListener l) {
 		this(title, widget, l, HasHorizontalAlignment.ALIGN_CENTER);
 	}
 
@@ -67,7 +67,7 @@ import com.totsp.gwittir.client.beans.Binding;
 		okButton.setFocus(true);
 	}
 	public OkCancelDialogBox(String title, Widget widget,
-			 VetoableActionListener listener,
+			 PermissibleActionEvent.PermissibleActionListener listener,
 			HorizontalAlignmentConstant widgetAlign) {
 		this.widget = widget;
 		this.vetoableActionListener = listener;
@@ -80,10 +80,10 @@ import com.totsp.gwittir.client.beans.Binding;
 		cancelButton = new Button("Cancel");
 		cancelButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				VetoableAction action = new VetoableAction();
+				PermissibleAction action = new PermissibleAction();
 				action.setActionName(CANCEL_ACTION);
 				OkCancelDialogBox.this.hide();
-				vetoableActionListener.vetoableAction(new VetoableActionEvent(this, action));
+				vetoableActionListener.vetoableAction(new PermissibleActionEvent(this, action));
 			}
 		});
 		okButton = new Button(getOKButtonName());
@@ -110,11 +110,11 @@ import com.totsp.gwittir.client.beans.Binding;
 			return;
 		}
 		okButton.setEnabled(false);
-		VetoableAction action = new VetoableAction();
+		PermissibleAction action = new PermissibleAction();
 		action.setActionName(OK_ACTION);
 		OkCancelDialogBox.this.hide();
 		if (vetoableActionListener != null) {
-			vetoableActionListener.vetoableAction(new VetoableActionEvent(this, action));
+			vetoableActionListener.vetoableAction(new PermissibleActionEvent(this, action));
 		}
 	}
 	// for subclasses
@@ -151,7 +151,7 @@ import com.totsp.gwittir.client.beans.Binding;
 		protected final Binding binding;
 
 		public SaveWithValidatorDialogBox(String title, Widget widget,
-				VetoableActionListener l,
+				PermissibleActionEvent.PermissibleActionListener l,
 				HorizontalAlignmentConstant widgetAlign, Binding binding) {
 			super(title, widget, l, widgetAlign);
 			this.binding = binding;

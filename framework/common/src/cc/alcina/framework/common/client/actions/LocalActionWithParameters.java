@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
  * @author Nick Reddel
  */
 
- public class LocalActionWithParameters<T> extends VetoableAction {
+ public class LocalActionWithParameters<T> extends PermissibleAction {
 	public LocalActionWithParameters() {
 	}
 

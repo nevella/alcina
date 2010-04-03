@@ -22,11 +22,11 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.actions.VetoableAction;
-import cc.alcina.framework.common.client.actions.VetoableActionEvent;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSource;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSupport;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.CloneAction;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
@@ -64,7 +64,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author nick@alcina.cc
  * 
  */
-public class Workspace implements HasLayoutInfo, VetoableActionListener,VetoableActionSource {
+public class Workspace implements HasLayoutInfo, PermissibleActionEvent.PermissibleActionListener,PermissibleActionEvent.PermissibleActionSource {
 	private WSVisualModel visualModel;
 
 	protected SimpleWorkspaceVisualiser visualiser;
@@ -72,12 +72,12 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 	public SimpleWorkspaceVisualiser getVisualiser() {
 		return this.visualiser;
 	}
-	private VetoableActionSupport vetoableActionSupport = new VetoableActionSupport();
-	public void addVetoableActionListener(VetoableActionListener listener) {
+	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
+	public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
-	public void fireVetoableActionEvent(VetoableActionEvent event) {
+	public void fireVetoableActionEvent(PermissibleActionEvent event) {
 		this.vetoableActionSupport.fireVetoableActionEvent(event);
 	}
 
@@ -85,12 +85,12 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 		this.vetoableActionSupport.removeAllListeners();
 	}
 
-	public void removeVetoableActionListener(VetoableActionListener listener) {
+	public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 	private ContentViewFactory viewFactory;
 
-	private Map<Class<? extends VetoableAction>, ViewProvider> viewProviderMap = new HashMap<Class<? extends VetoableAction>, ViewProvider>();
+	private Map<Class<? extends PermissibleAction>, ViewProvider> viewProviderMap = new HashMap<Class<? extends PermissibleAction>, ViewProvider>();
 
 	public Workspace() {
 		this.visualModel = new WSVisualModel();
@@ -142,7 +142,7 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 	}
 
 	public void registerViewProvider(ViewProvider v,
-			Class<? extends VetoableAction> actionClass) {
+			Class<? extends PermissibleAction> actionClass) {
 		viewProviderMap.put(actionClass, v);
 	}
 
@@ -159,7 +159,7 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 		visualiser.getViewHolder().showStack(widgetIndex);
 	}
 	@SuppressWarnings("unchecked")
-	public void vetoableAction(final VetoableActionEvent evt) {
+	public void vetoableAction(final PermissibleActionEvent evt) {
 		if (evt.getAction().getClass() == CancelAction.class) {
 			visualiser.setContentWidget(new Label("Action cancelled"));
 			fireVetoableActionEvent(evt);
@@ -199,8 +199,8 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 		}
 		boolean autoSave = PropertiesProvider.getGeneralProperties()
 				.isAutoSave();
-		if (singleObj instanceof VetoableAction) {
-			Widget view = getViewForAction((VetoableAction) singleObj);
+		if (singleObj instanceof PermissibleAction) {
+			Widget view = getViewForAction((PermissibleAction) singleObj);
 			visualiser.setContentWidget(view);
 			fireVetoableActionEvent(evt);
 			return;
@@ -250,7 +250,7 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 										(HasIdAndLocalId) objCopy);
 								visualiser
 										.setContentWidget(new HorizontalPanel());
-								fireVetoableActionEvent(new VetoableActionEvent(objCopy, evt.getAction()));
+								fireVetoableActionEvent(new PermissibleActionEvent(objCopy, evt.getAction()));
 							}
 						});
 				return;
@@ -266,7 +266,7 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 				Widget view = viewFactory.createBeanView(newObj, true, this,
 						autoSave, false);
 				visualiser.setContentWidget(view);
-				fireVetoableActionEvent(new VetoableActionEvent(newObj, evt.getAction()));
+				fireVetoableActionEvent(new PermissibleActionEvent(newObj, evt.getAction()));
 				return;
 			}
 		}
@@ -298,7 +298,7 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 			TextProvider.get().setDecorated(true);
 			TextProvider.get().setObjectName(newObj, "New " + tdn);
 			visualiser.setContentWidget(view);
-			fireVetoableActionEvent(new VetoableActionEvent(newObj, evt.getAction()));
+			fireVetoableActionEvent(new PermissibleActionEvent(newObj, evt.getAction()));
 		}
 	}
 	
@@ -335,7 +335,7 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 		}
 	}
 
-	protected Widget getViewForAction(VetoableAction action) {
+	protected Widget getViewForAction(PermissibleAction action) {
 		return viewProviderMap.get(action.getClass()).getViewForObject(action);
 	}
 
@@ -356,13 +356,13 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 
 		private Widget contentWidget;
 
-		private List<VetoableAction> toolbarActions = new ArrayList<VetoableAction>();
+		private List<PermissibleAction> toolbarActions = new ArrayList<PermissibleAction>();
 
 		public Widget getContentWidget() {
 			return this.contentWidget;
 		}
 
-		public List<VetoableAction> getToolbarActions() {
+		public List<PermissibleAction> getToolbarActions() {
 			return this.toolbarActions;
 		}
 
@@ -382,7 +382,7 @@ public class Workspace implements HasLayoutInfo, VetoableActionListener,Vetoable
 			this.contentWidget = contentWidget;
 		}
 
-		public void setToolbarActions(List<VetoableAction> toolbarActions) {
+		public void setToolbarActions(List<PermissibleAction> toolbarActions) {
 			this.toolbarActions = toolbarActions;
 		}
 

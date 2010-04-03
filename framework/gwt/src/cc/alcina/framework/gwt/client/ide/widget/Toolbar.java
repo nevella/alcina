@@ -21,11 +21,11 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.actions.ActionGroup;
-import cc.alcina.framework.common.client.actions.VetoableAction;
-import cc.alcina.framework.common.client.actions.VetoableActionEvent;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSource;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSupport;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -47,7 +47,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 
- public class Toolbar extends Composite implements VetoableActionSource,
+ public class Toolbar extends Composite implements PermissibleActionEvent.PermissibleActionSource,
 		ClickHandler, HasChildHandlers {
 	public void addHandler(HandlerRegistration registration) {
 		this.hasChildHandlersSupport.addHandler(registration);
@@ -69,9 +69,9 @@ import com.google.gwt.user.client.ui.Widget;
 		return this.hasChildHandlersSupport.toString();
 	}
 
-	private List<VetoableAction> actions;
+	private List<PermissibleAction> actions;
 
-	private Map<Class<? extends VetoableAction>, ToolbarButton> actionButtons;
+	private Map<Class<? extends PermissibleAction>, ToolbarButton> actionButtons;
 
 	private FlowPanel panel;
 
@@ -79,7 +79,7 @@ import com.google.gwt.user.client.ui.Widget;
 		return this.panel;
 	}
 
-	private VetoableActionSupport vetoableActionSupport;
+	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport;
 
 	private List<ActionGroup> actionGroups;
 
@@ -87,21 +87,21 @@ import com.google.gwt.user.client.ui.Widget;
 
 	private boolean asButton;
 
-	private Map<VetoableAction, ToolbarButton> actionButtonsByAction;
+	private Map<PermissibleAction, ToolbarButton> actionButtonsByAction;
 
 	private HasChildHandlersSupport hasChildHandlersSupport;
 
 	public Toolbar() {
 		this.hasChildHandlersSupport = new HasChildHandlersSupport();
 		this.panel = new FlowPanel();
-		this.actions = new ArrayList<VetoableAction>();
+		this.actions = new ArrayList<PermissibleAction>();
 		panel.setStyleName("toolbar clearfix");
-		this.vetoableActionSupport = new VetoableActionSupport();
+		this.vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
 		initWidget(panel);
 		redraw();
 	}
 
-	public void addVetoableActionListener(VetoableActionListener listener) {
+	public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
@@ -119,11 +119,11 @@ import com.google.gwt.user.client.ui.Widget;
 		return actionGroups;
 	}
 
-	public List<VetoableAction> getActions() {
+	public List<PermissibleAction> getActions() {
 		return this.actions;
 	}
 
-	public ToolbarButton getButtonForAction(VetoableAction action) {
+	public ToolbarButton getButtonForAction(PermissibleAction action) {
 		List<Widget> kids = WidgetUtils.allChildren(panel);
 		for (Widget widget : kids) {
 			if (widget instanceof ToolbarButton) {
@@ -151,7 +151,7 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	public void processAvailableActions(
-			List<Class<? extends VetoableAction>> avActions) {
+			List<Class<? extends PermissibleAction>> avActions) {
 		if (actionButtons == null) {
 			return;
 		}
@@ -159,7 +159,7 @@ import com.google.gwt.user.client.ui.Widget;
 		for (ToolbarButton toolbarButton : buttons) {
 			toolbarButton.setEnabled(false);
 		}
-		for (Class<? extends VetoableAction> actionClass : avActions) {
+		for (Class<? extends PermissibleAction> actionClass : avActions) {
 			ToolbarButton tb = actionButtons.get(actionClass);
 			if (tb != null) {
 				tb.setEnabled(true);
@@ -170,8 +170,8 @@ import com.google.gwt.user.client.ui.Widget;
 	protected void redraw() {
 		WidgetUtils.clearChildren(panel);
 		hasChildHandlersSupport.detachHandlers();
-		actionButtons = new HashMap<Class<? extends VetoableAction>, ToolbarButton>();
-		actionButtonsByAction = new HashMap<VetoableAction, ToolbarButton>();
+		actionButtons = new HashMap<Class<? extends PermissibleAction>, ToolbarButton>();
+		actionButtonsByAction = new HashMap<PermissibleAction, ToolbarButton>();
 		boolean hasActionGroups = actionGroups != null
 				&& actionGroups.size() != 0;
 		if (hasActionGroups) {
@@ -182,7 +182,7 @@ import com.google.gwt.user.client.ui.Widget;
 				if (g.isRightAligned()) {
 					fp.addStyleName("float-right");
 				}
-				for (VetoableAction action : g.actions) {
+				for (PermissibleAction action : g.actions) {
 					ToolbarButton button = new ToolbarButton(action, asButton);
 					hasChildHandlersSupport.addHandler(button
 							.addClickHandler(this));
@@ -201,7 +201,7 @@ import com.google.gwt.user.client.ui.Widget;
 				panel.add(fp);
 			}
 		} else {
-			for (VetoableAction action : actions) {
+			for (PermissibleAction action : actions) {
 				ToolbarButton button = new ToolbarButton(action, asButton);
 				hasChildHandlersSupport
 						.addHandler(button.addClickHandler(this));
@@ -219,7 +219,7 @@ import com.google.gwt.user.client.ui.Widget;
 		}
 	}
 
-	public void removeVetoableActionListener(VetoableActionListener listener) {
+	public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
@@ -228,7 +228,7 @@ import com.google.gwt.user.client.ui.Widget;
 		redraw();
 	}
 
-	public void setActions(List<VetoableAction> actions) {
+	public void setActions(List<PermissibleAction> actions) {
 		this.actions = actions;
 		redraw();
 	}
@@ -255,7 +255,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 	public static class ToolbarButton extends Composite implements
 			HasClickHandlers {
-		private final VetoableAction action;
+		private final PermissibleAction action;
 
 		private StyledAWidget aWidget;
 
@@ -263,12 +263,12 @@ import com.google.gwt.user.client.ui.Widget;
 
 		private final boolean asButton;
 
-		public ToolbarButton(VetoableAction action) {
+		public ToolbarButton(PermissibleAction action) {
 			this(action, false);
 		}
 
 		// TODO-gwt2: check all calls
-		public ToolbarButton(VetoableAction action, boolean asButton) {
+		public ToolbarButton(PermissibleAction action, boolean asButton) {
 			this.asButton = asButton;
 			Widget w = null;
 			if (asButton) {
@@ -327,7 +327,7 @@ import com.google.gwt.user.client.ui.Widget;
 			}
 		}
 
-		public VetoableAction getAction() {
+		public PermissibleAction getAction() {
 			return this.action;
 		}
 
@@ -345,7 +345,7 @@ import com.google.gwt.user.client.ui.Widget;
 		if (sender.getParent() instanceof ToolbarButton) {
 			ToolbarButton tb = (ToolbarButton) sender.getParent();
 			vetoableActionSupport
-					.fireVetoableActionEvent(new VetoableActionEvent(sender, tb
+					.fireVetoableActionEvent(new PermissibleActionEvent(sender, tb
 							.getAction()));
 		}
 	}

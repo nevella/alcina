@@ -32,9 +32,12 @@ public class Registry {
 
 	protected HashMap<Class, Map<Class, List<Class>>> registry;
 
+	protected HashMap<Class, Map<Class, Integer>> targetPriority;
+
 	protected Registry() {
 		super();
 		registry = new HashMap<Class, Map<Class, List<Class>>>();
+		targetPriority = new HashMap<Class, Map<Class, Integer>>();
 	}
 
 	private static Registry theInstance = new Registry();
@@ -48,17 +51,31 @@ public class Registry {
 	}
 
 	public void register(Class registeringClass, RegistryLocation info) {
-		Map<Class, List<Class>> pointMap = registry.get(info.registryPoint());
+		Class registryPoint = info.registryPoint();
+		Map<Class, List<Class>> pointMap = registry.get(registryPoint);
+		Map<Class, Integer> pointPriority = targetPriority.get(registryPoint);
 		if (pointMap == null) {
 			pointMap = new HashMap<Class, List<Class>>();
-			registry.put(info.registryPoint(), pointMap);
+			pointPriority = new HashMap<Class, Integer>();
+			registry.put(registryPoint, pointMap);
+			targetPriority.put(registryPoint, pointPriority);
 		}
-		List<Class> registered = pointMap.get(info.targetObject());
+		List<Class> registered = pointMap.get(info.targetClass());
 		if (registered == null) {
 			registered = new ArrayList<Class>();
-			pointMap.put(info.targetObject(), registered);
+			pointMap.put(info.targetClass(), registered);
+		}
+		if (registered.size() == 1 && registryPoint != void.class) {
+			Integer currentPriority = pointPriority.get(info.targetClass());
+			int infoPriority = info.priority();
+			if (currentPriority > infoPriority) {
+				registered.clear();
+			}else{
+				return;
+			}
 		}
 		registered.add(registeringClass);
+		pointPriority.put(info.targetClass(), info.priority());
 	}
 
 	public Class lookupSingle(Class registryPoint, Class targetObject) {

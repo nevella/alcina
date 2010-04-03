@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 
 
 /**
@@ -34,7 +34,7 @@ public class ObjectCacheItemResult implements Serializable {
 
 	private Set<? extends HasIdAndLocalId> result;
 
-	private List<DataTransformEvent> transforms = new ArrayList<DataTransformEvent>();
+	private List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
 
 	public ObjectCacheItemResult() {
 	}
@@ -61,11 +61,11 @@ public class ObjectCacheItemResult implements Serializable {
 		this.result = result;
 	}
 
-	public void setTransforms(List<DataTransformEvent> transforms) {
+	public void setTransforms(List<DomainTransformEvent> transforms) {
 		this.transforms = transforms;
 	}
 
-	public List<DataTransformEvent> getTransforms() {
+	public List<DomainTransformEvent> getTransforms() {
 		return transforms;
 	}
 }

@@ -24,15 +24,15 @@ import java.util.List;
  */
 
  public class ActionGroup {
-	public List<VetoableAction> actions = new ArrayList<VetoableAction>();
+	public List<PermissibleAction> actions = new ArrayList<PermissibleAction>();
 
 	private final boolean rightAligned;
 
-	public ActionGroup(VetoableAction[] actions) {
+	public ActionGroup(PermissibleAction[] actions) {
 		this(actions, false);
 	}
 
-	public ActionGroup(VetoableAction[] actions, boolean rightAligned) {
+	public ActionGroup(PermissibleAction[] actions, boolean rightAligned) {
 		this.rightAligned = rightAligned;
 		this.actions.addAll(Arrays.asList(actions));
 	}

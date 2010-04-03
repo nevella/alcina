@@ -18,7 +18,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 
 
@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
  */
 
  public @interface Action {
-	public Class<? extends VetoableAction> actionClass() ;
+	public Class<? extends PermissibleAction> actionClass() ;
 	public Permission permission() default @Permission(access=AccessLevel.ADMIN);
 	
 }

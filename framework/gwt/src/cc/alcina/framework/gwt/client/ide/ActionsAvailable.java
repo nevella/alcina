@@ -17,7 +17,7 @@ package cc.alcina.framework.gwt.client.ide;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 
 
 /**
@@ -33,9 +33,9 @@ import cc.alcina.framework.common.client.actions.VetoableAction;
 	public static class ActionsAvailableEvent {
 		private final Object source;
 
-		private final List<VetoableAction> actions;
+		private final List<PermissibleAction> actions;
 
-		public ActionsAvailableEvent(Object source, List<VetoableAction> actions) {
+		public ActionsAvailableEvent(Object source, List<PermissibleAction> actions) {
 			this.source = source;
 			this.actions = actions;
 		}
@@ -44,7 +44,7 @@ import cc.alcina.framework.common.client.actions.VetoableAction;
 			return this.source;
 		}
 
-		public List<VetoableAction> getActions() {
+		public List<PermissibleAction> getActions() {
 			return this.actions;
 		}
 	}

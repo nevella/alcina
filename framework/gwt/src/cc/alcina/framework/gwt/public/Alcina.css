@@ -287,6 +287,10 @@ div.gwt-Hyperlink {
 .gwt-TabPanelBottom {
 	padding: 0px;
 }
+.gwt-PopupPanel.noBorder{
+	border: none;
+	padding: 0;
+}
 
 /* Headlines ######################################################### */
 h2 {

@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * 
  */
 @AuthenticationRequired(permission = @Permission(access = AccessLevel.ADMIN))
-public class RemoteAction extends VetoableAction implements Serializable {
+public class RemoteAction extends PermissibleAction implements Serializable {
 	public RemoteAction() {
 	}
 

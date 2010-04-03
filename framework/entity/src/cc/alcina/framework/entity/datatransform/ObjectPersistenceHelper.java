@@ -25,7 +25,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
@@ -175,7 +175,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 				.newInstance(clazz, localId);
 	}
 
-	protected Enum getTargetEnumValue(DataTransformEvent evt) {
+	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
 		if (Enum.class.isAssignableFrom(evt.getValueClass())) {
 			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
 		}

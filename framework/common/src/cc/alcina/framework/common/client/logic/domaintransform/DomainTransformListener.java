@@ -11,18 +11,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+package cc.alcina.framework.common.client.logic.domaintransform;
 
-package cc.alcina.framework.entity.datatransform;
-
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformResponse;
-import cc.alcina.framework.entity.datatransform.ThreadlocalTransformManager.HiliLocatorMap;
-
-/**
- *
- * @author Nick Reddel
- */
-
- public class DataTransformLayerWrapper {
-	public DataTransformResponse response;
-	public HiliLocatorMap locatorMap;
+public interface DomainTransformListener {
+	public void domainTransform(DomainTransformEvent evt)
+			throws DomainTransformException;
 }

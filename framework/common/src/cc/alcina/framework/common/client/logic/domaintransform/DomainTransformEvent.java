@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
  * @author Nick Reddel
  */
 
- public class DataTransformEvent implements Serializable {
+ public class DomainTransformEvent implements Serializable {
 	private static final String TGT = "tgt: ";
 
 	private static final String STRING_VALUE = "string value: ";
@@ -308,8 +308,8 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 	}
 
 	// TODO- fix the read newstring (\\\\n would be a prob...)
-	public static DataTransformEvent fromString(String s) {
-		DataTransformEvent dte = new DataTransformEvent();
+	public static DomainTransformEvent fromString(String s) {
+		DomainTransformEvent dte = new DomainTransformEvent();
 		SimpleStringParser p = new SimpleStringParser(s);
 		String i = p.read(SRC, ",");
 		dte.setObjectClass(classFromName(i));

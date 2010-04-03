@@ -17,9 +17,9 @@ package cc.alcina.framework.gwt.client.widget;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.actions.VetoableAction;
-import cc.alcina.framework.common.client.actions.VetoableActionEvent;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -32,7 +32,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 
- public abstract class Wizard<M> implements VetoableActionListener {
+ public abstract class Wizard<M> implements PermissibleActionEvent.PermissibleActionListener {
 	private static final String NEXT = "next";
 
 	private static final String PREVIOUS = "previous";
@@ -57,15 +57,15 @@ import com.google.gwt.user.client.ui.Widget;
 
 	private Toolbar toolbar;
 
-	private VetoableAction nextPage = new VetoableAction("Next >", NEXT);
+	private PermissibleAction nextPage = new PermissibleAction("Next >", NEXT);
 
-	private VetoableAction previousPage = new VetoableAction("< Back", PREVIOUS);
+	private PermissibleAction previousPage = new PermissibleAction("< Back", PREVIOUS);
 
-	private VetoableAction finished = new VetoableAction("Finish", FINISH);
+	private PermissibleAction finished = new PermissibleAction("Finish", FINISH);
 
-	private VetoableAction cancel = new VetoableAction("Cancel", CANCEL);
+	private PermissibleAction cancel = new PermissibleAction("Cancel", CANCEL);
 
-	protected ArrayList<VetoableAction> actions;
+	protected ArrayList<PermissibleAction> actions;
 
 	protected boolean canCancel() {
 		return true;
@@ -118,7 +118,7 @@ import com.google.gwt.user.client.ui.Widget;
 		if (allButtonsEnabled) {
 			return;
 		}
-		for (VetoableAction action : actions) {
+		for (PermissibleAction action : actions) {
 			ToolbarButton tb = toolbar.getButtonForAction(action);
 			if (tb != null) {
 				if (action == nextPage || action == finished) {
@@ -129,7 +129,7 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	private void renderButtonsPane(FlowPanel fp) {
-		actions = new ArrayList<VetoableAction>();
+		actions = new ArrayList<PermissibleAction>();
 		if (canMoveBack()) {
 			actions.add(previousPage);
 		}
@@ -201,7 +201,7 @@ import com.google.gwt.user.client.ui.Widget;
 		this.titleIsBreadcrumbBar = titleIsBreadcrumbBar;
 	}
 
-	public void vetoableAction(VetoableActionEvent evt) {
+	public void vetoableAction(PermissibleActionEvent evt) {
 		if (evt.getAction() == nextPage) {
 			if (beforeMoveToPage(pageIndex + 1)) {
 				pageIndex++;

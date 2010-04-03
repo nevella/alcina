@@ -15,9 +15,9 @@
 package cc.alcina.framework.gwt.client.widget.dialog;
 
 
-import cc.alcina.framework.common.client.actions.VetoableAction;
-import cc.alcina.framework.common.client.actions.VetoableActionEvent;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -41,15 +41,15 @@ import com.google.gwt.user.client.ui.Label;
 
 	private Button retryButton;
 
-	public CancellableRemoteDialog(String msg, VetoableActionListener l) {
+	public CancellableRemoteDialog(String msg, PermissibleActionEvent.PermissibleActionListener l) {
 		if (l == null) {
-			l = new VetoableActionListener() {
-				public void vetoableAction(VetoableActionEvent evt) {
+			l = new PermissibleActionEvent.PermissibleActionListener() {
+				public void vetoableAction(PermissibleActionEvent evt) {
 					CancellableRemoteDialog.this.hide();
 				}
 			};
 		}
-		final VetoableActionListener lCopy = l;
+		final PermissibleActionEvent.PermissibleActionListener lCopy = l;
 		setText("Please wait...");
 		setAnimationEnabled(true);
 		Grid grr = new Grid(2, 1);
@@ -63,9 +63,9 @@ import com.google.gwt.user.client.ui.Label;
 		setRetryButton(new Button("Retry"));
 		cancelButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				VetoableAction action = new VetoableAction();
+				PermissibleAction action = new PermissibleAction();
 				action.setActionName(CANCEL_ACTION);
-				lCopy.vetoableAction(new VetoableActionEvent(this, action));
+				lCopy.vetoableAction(new PermissibleActionEvent(this, action));
 			}
 		});
 		grr.setWidget(0, 0, statusLabel);

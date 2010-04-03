@@ -17,7 +17,7 @@ package cc.alcina.framework.gwt.client.ide.provider;
 import java.util.List;
 
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -98,7 +98,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 		this.withoutParameters = withoutParameters;
 	}
 
-	private Widget createCaption(VetoableAction action) {
+	private Widget createCaption(PermissibleAction action) {
 		BreadcrumbBar bar = new BreadcrumbBar(action.getDisplayName());
 		bar.addStyleName("tlr-borders");
 		return bar;

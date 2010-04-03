@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest.DataTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -55,16 +55,16 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 	private int clientInstanceAuth;
 
-	private DataTransformRequestType dataTransformRequestType;
+	private DomainTransformRequestType domainTransformRequestType;
 
 	public DTRSimpleSerialWrapper() {
 	}
 
-	public DTRSimpleSerialWrapper(DataTransformRequest request) {
+	public DTRSimpleSerialWrapper(DomainTransformRequest request) {
 		this(request, false);
 	}
 
-	public DTRSimpleSerialWrapper(DataTransformRequest request, boolean async) {
+	public DTRSimpleSerialWrapper(DomainTransformRequest request, boolean async) {
 		this.timestamp = new Date().getTime();
 		this.userId = PermissionsManager.get().getUserId();
 		if (!async) {
@@ -79,7 +79,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 		this.requestId = request.getRequestId();
 		Integer auth = request.getClientInstance().getAuth();
 		this.clientInstanceAuth = auth == null ? 0 : auth;
-		this.dataTransformRequestType = request.getDataTransformRequestType();
+		this.domainTransformRequestType = request.getDomainTransformRequestType();
 	}
 
 	@Override
@@ -89,13 +89,13 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 				+ "timestamp: %5\n" + "userId: %6\n"
 				+ "dataTransformRequestType: %7\n" + "text:\n%8\n",
 				clientInstanceAuth, clientInstanceId, id, requestId, timestamp,
-				userId, dataTransformRequestType, text);
+				userId, domainTransformRequestType, text);
 	}
 
 	public DTRSimpleSerialWrapper(int id, String text, long timestamp,
 			long userId, long clientInstanceId, int requestId,
 			int clientInstanceAuth,
-			DataTransformRequestType dataTransformRequestType) {
+			DomainTransformRequestType dataTransformRequestType) {
 		this.text = text;
 		this.timestamp = timestamp;
 		this.userId = userId;
@@ -103,7 +103,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 		this.id = id;
 		this.requestId = requestId;
 		this.clientInstanceAuth = clientInstanceAuth;
-		this.dataTransformRequestType = dataTransformRequestType;
+		this.domainTransformRequestType = dataTransformRequestType;
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance auth", orderingHint = 30))
@@ -116,8 +116,8 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 		return this.clientInstanceId;
 	}
 
-	public DataTransformRequestType getDataTransformRequestType() {
-		return dataTransformRequestType;
+	public DomainTransformRequestType getDomainTransformRequestType() {
+		return domainTransformRequestType;
 	}
 
 	public int getId() {
@@ -159,12 +159,12 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 				old_clientInstanceId, clientInstanceId);
 	}
 
-	public void setDataTransformRequestType(
-			DataTransformRequestType dataTransformRequestType) {
-		DataTransformRequestType old_dataTransformRequestType = this.dataTransformRequestType;
-		this.dataTransformRequestType = dataTransformRequestType;
-		propertyChangeSupport.firePropertyChange("dataTransformRequestType",
-				old_dataTransformRequestType, dataTransformRequestType);
+	public void setDomainTransformRequestType(
+			DomainTransformRequestType domainTransformRequestType) {
+		DomainTransformRequestType old_domainTransformRequestType = this.domainTransformRequestType;
+		this.domainTransformRequestType = domainTransformRequestType;
+		propertyChangeSupport.firePropertyChange("domainTransformRequestType",
+				old_domainTransformRequestType, domainTransformRequestType);
 	}
 
 	public void setId(int id) {

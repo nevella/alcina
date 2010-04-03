@@ -20,7 +20,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 
 
@@ -30,17 +30,17 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
  * @author Nick Reddel
  */
 
- public abstract class DataTransformEventPersistent extends DataTransformEvent
+ public abstract class DomainTransformEventPersistent extends DomainTransformEvent
 		implements HasId {
 	private long id;
 
-	private DataTransformRequestPersistent dataTransformRequestPersistent;
+	private DomainTransformRequestPersistent dataTransformRequestPersistent;
 
 	private Date serverCommitDate;
 
 	// persistence in app subclass
 	@Transient
-	public DataTransformRequestPersistent getDataTransformRequestPersistent() {
+	public DomainTransformRequestPersistent getDataTransformRequestPersistent() {
 		return dataTransformRequestPersistent;
 	}
 
@@ -57,7 +57,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 	public abstract IUser getUser();
 
 	public void setDataTransformRequestPersistent(
-			DataTransformRequestPersistent dataTransformRequestPersistent) {
+			DomainTransformRequestPersistent dataTransformRequestPersistent) {
 		this.dataTransformRequestPersistent = dataTransformRequestPersistent;
 	}
 
@@ -71,5 +71,5 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 
 	public abstract void setUser(IUser user);
 
-	public abstract void wrap(DataTransformEvent evt);
+	public abstract void wrap(DomainTransformEvent evt);
 }

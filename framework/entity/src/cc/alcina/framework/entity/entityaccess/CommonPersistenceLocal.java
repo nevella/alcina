@@ -27,11 +27,11 @@ import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.entity.datatransform.DataTransformLayerWrapper;
+import cc.alcina.framework.entity.datatransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.datatransform.ThreadlocalTransformManager.HiliLocatorMap;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
@@ -102,10 +102,10 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 	public void setField(Class clazz, Long id, String key, Object value)
 			throws Exception;
 
-	public DataTransformLayerWrapper transform(DataTransformRequest request,
+	public DomainTransformLayerWrapper transform(DomainTransformRequest request,
 			HiliLocatorMap locatorMap, boolean persistTransforms,
 			boolean possiblyReconstitueLocalIdMap)
-			throws DataTransformException;
+			throws DomainTransformException;
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers);
 

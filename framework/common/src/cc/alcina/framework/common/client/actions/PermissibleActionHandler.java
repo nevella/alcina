@@ -12,31 +12,24 @@
  * the License.
  */
 
-package cc.alcina.framework.entity.datatransform;
+package cc.alcina.framework.common.client.actions;
 
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
-
-import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 
-@MappedSuperclass
 /**
  *
  * @author Nick Reddel
  */
 
- public abstract class DataTransformRequestPersistent extends
-		DataTransformRequest implements HasId{
-	private long id;
+ public interface PermissibleActionHandler {
+	public void handleAction(PermissibleAction action, Object target);
 
-	public abstract void wrap(DataTransformRequest dtr);
-	public void setId(long id) {
-		this.id = id;
-	}
-	@Transient
-	public long getId() {
-		return id;
+	public static class DefaultPermissibleActionHandler {
+		public static void handleAction(PermissibleAction action, Object target) {
+			PermissibleActionHandler handler = (PermissibleActionHandler)Registry.get().instantiateSingle(PermissibleActionHandler.class,
+					action.getClass());
+			handler.handleAction(action, target);
+		}
 	}
 }

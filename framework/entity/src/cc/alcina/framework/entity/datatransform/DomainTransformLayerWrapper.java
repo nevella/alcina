@@ -12,24 +12,17 @@
  * the License.
  */
 
-package cc.alcina.framework.common.client.actions;
+package cc.alcina.framework.entity.datatransform;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.entity.datatransform.ThreadlocalTransformManager.HiliLocatorMap;
 
 /**
  *
  * @author Nick Reddel
  */
 
- public interface VetoableActionHandler {
-	public void handleAction(VetoableAction action, Object target);
-
-	public static class DefaultVetoableActionHandler {
-		public static void handleAction(VetoableAction action, Object target) {
-			VetoableActionHandler handler = (VetoableActionHandler)Registry.get().instantiateSingle(VetoableActionHandler.class,
-					action.getClass());
-			handler.handleAction(action, target);
-		}
-	}
+ public class DomainTransformLayerWrapper {
+	public DomainTransformResponse response;
+	public HiliLocatorMap locatorMap;
 }

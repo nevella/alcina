@@ -132,8 +132,6 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 
 	private String separatorText = " ";
 
-	private Widget[] absoluteContainers;
-
 	private ShowHintStrategy showHintStrategy;
 
 	// additional problem with ff
@@ -486,10 +484,6 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 		}
 	}
 
-	public void setAbsoluteContainers(Widget[] widgets) {
-		this.absoluteContainers = widgets;
-	}
-
 	public void setEnterHandler(ClickHandler enterHandler) {
 		this.enterHandler = enterHandler;
 	}
@@ -608,7 +602,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			panelForPopup.setVisible(true);
 			filter(filter.getTextBox().getText());
 			this.relativePopupPanel = RelativePopupPositioning.showPopup(filter, panelForPopup, RootPanel
-					.get(), RelativePopupPositioning.BOTTOM_LTR);
+					.get(), RelativePopupPositioning.BOTTOM_LTR,"noBorder");
 		}
 	}
 

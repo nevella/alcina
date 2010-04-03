@@ -20,11 +20,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.actions.VetoableAction;
-import cc.alcina.framework.common.client.actions.VetoableActionEvent;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSource;
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionSupport;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
@@ -74,7 +74,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  * @author Nick Reddel
  */
 public class WorkspaceView extends Composite implements HasName,
-		VetoableActionSource, HasLayoutInfo {
+		PermissibleActionEvent.PermissibleActionSource, HasLayoutInfo {
 	protected static final StandardDataImages images = GWT
 			.create(StandardDataImages.class);
 
@@ -86,7 +86,7 @@ public class WorkspaceView extends Composite implements HasName,
 
 	private Widget widget;
 
-	private VetoableActionSupport vetoableActionSupport = new VetoableActionSupport();
+	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
 
 	public WorkspaceView() {
 	}
@@ -97,11 +97,11 @@ public class WorkspaceView extends Composite implements HasName,
 		initWidget(widget);
 	}
 
-	public void addVetoableActionListener(VetoableActionListener listener) {
+	public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
-	public void fireVetoableActionEvent(VetoableActionEvent event) {
+	public void fireVetoableActionEvent(PermissibleActionEvent event) {
 		this.vetoableActionSupport.fireVetoableActionEvent(event);
 	}
 
@@ -117,7 +117,7 @@ public class WorkspaceView extends Composite implements HasName,
 		return this.widget;
 	}
 
-	public void removeVetoableActionListener(VetoableActionListener listener) {
+	public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
@@ -130,7 +130,7 @@ public class WorkspaceView extends Composite implements HasName,
 	}
 
 	public static abstract class DataTreeView extends WorkspaceView implements
-			ExtraTreeEventListener, VetoableActionListener, HasLayoutInfo,
+			ExtraTreeEventListener, PermissibleActionEvent.PermissibleActionListener, HasLayoutInfo,
 			SelectionHandler<TreeItem> {
 		private boolean showCollapseButton;
 
@@ -225,16 +225,16 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		public void onExtraTreeEvent(ExtraTreeEventEvent evt) {
-			List<Class<? extends VetoableAction>> actions = getAvailableActions(evt
+			List<Class<? extends PermissibleAction>> actions = getAvailableActions(evt
 					.getSource());
 			boolean canEdit = actions.contains(EditAction.class);
 			if (actions.contains(ViewAction.class)
 					&& evt.getType() == ETEType.DBL_CLICK) {
-				Class<? extends VetoableAction> actionClass = canEdit
+				Class<? extends PermissibleAction> actionClass = canEdit
 						&& (allowEditCollections || evt.getSource()
 								.getUserObject() instanceof HasIdAndLocalId) ? EditAction.class
 						: ViewAction.class;
-				vetoableAction(new VetoableActionEvent(evt.getSource(),
+				vetoableAction(new PermissibleActionEvent(evt.getSource(),
 						ClientReflector.get().newInstance(actionClass)));
 			}
 		}
@@ -248,11 +248,11 @@ public class WorkspaceView extends Composite implements HasName,
 			if (!item.isVisible()) {
 				return;
 			}
-			List<Class<? extends VetoableAction>> actions = getAvailableActions(item);
+			List<Class<? extends PermissibleAction>> actions = getAvailableActions(item);
 			toolbar.processAvailableActions(actions);
 			if (actions.contains(ViewAction.class)
 					&& (item instanceof DomainNode || item instanceof ActionDisplayNode)) {
-				fireVetoableActionEvent(new VetoableActionEvent(item,
+				fireVetoableActionEvent(new PermissibleActionEvent(item,
 						ClientReflector.get().newInstance(ViewAction.class)));
 			}
 		}
@@ -293,18 +293,18 @@ public class WorkspaceView extends Composite implements HasName,
 			filter.getTextBox().setFocus(true);
 		}
 
-		public void vetoableAction(VetoableActionEvent evt) {
+		public void vetoableAction(PermissibleActionEvent evt) {
 			TreeItem item = dataTree.getSelectedItem();
-			fireVetoableActionEvent(new VetoableActionEvent(item, evt
+			fireVetoableActionEvent(new PermissibleActionEvent(item, evt
 					.getAction()));
 			if (evt.getAction().getClass() == DeleteAction.class) {
 				onTreeItemSelected(item);
 			}
 		}
 
-		protected List<Class<? extends VetoableAction>> getAvailableActions(
+		protected List<Class<? extends PermissibleAction>> getAvailableActions(
 				TreeItem item) {
-			List<Class<? extends VetoableAction>> actions = new ArrayList<Class<? extends VetoableAction>>();
+			List<Class<? extends PermissibleAction>> actions = new ArrayList<Class<? extends PermissibleAction>>();
 			Class domainClass = null;
 			Object obj = null;
 			if (item instanceof DomainNode) {
@@ -322,7 +322,7 @@ public class WorkspaceView extends Composite implements HasName,
 				int size = cpn.getCollectionProvider().getCollection().size();
 				ClientBeanReflector info = ClientReflector.get()
 						.beanInfoForClass(domainClass);
-				List<Class<? extends VetoableAction>> availableActions = info
+				List<Class<? extends PermissibleAction>> availableActions = info
 						.getActions();
 				if (availableActions.contains(CreateAction.class)) {
 					actions.add(CreateAction.class);
@@ -337,7 +337,7 @@ public class WorkspaceView extends Composite implements HasName,
 			}
 			if (item instanceof ActionDisplayNode) {
 				if (PermissionsManager.get().isPermissible(
-						(VetoableAction) item.getUserObject())) {
+						(PermissibleAction) item.getUserObject())) {
 					actions.add(ViewAction.class);
 				}
 			}
@@ -347,9 +347,9 @@ public class WorkspaceView extends Composite implements HasName,
 								ObjectPermissions.class);
 				op = op == null ? PermissionsManager.get()
 						.getDefaultObjectPermissions() : op;
-				for (Iterator<Class<? extends VetoableAction>> itr = actions
+				for (Iterator<Class<? extends PermissibleAction>> itr = actions
 						.iterator(); itr.hasNext();) {
-					Class<? extends VetoableAction> actionClass = itr.next();
+					Class<? extends PermissibleAction> actionClass = itr.next();
 					Permission p = null;
 					if (actionClass == CreateAction.class) {
 						p = op.create();

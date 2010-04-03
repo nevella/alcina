@@ -29,9 +29,9 @@ import cc.alcina.framework.common.client.entity.GwtPersistableObject;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransformResponse;
-import cc.alcina.framework.common.client.logic.domaintransform.DataTransform.DataTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -84,8 +84,8 @@ import com.google.gwt.user.client.rpc.RemoteService;
 	public SearchResultsBase search(SearchDefinition def, int pageNumber);
 
 	@AuthenticationRequired
-	public DataTransformResponse transform(DataTransformRequest request)
-			throws DataTransformException;
+	public DomainTransformResponse transform(DomainTransformRequest request)
+			throws DomainTransformException;
 
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException;

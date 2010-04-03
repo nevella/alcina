@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler.LooseTargetedActionHandler;
 
@@ -59,7 +59,7 @@ import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler.LooseTarge
 		return actionHandlers.get(name);
 	}
 	@SuppressWarnings("unchecked")
-	public void performForTargetActionAndObject(VetoableAction action, Object target) {
+	public void performForTargetActionAndObject(PermissibleAction action, Object target) {
 		LooseTargetedActionHandler handler = (LooseTargetedActionHandler) Registry
 				.get().instantiateSingle(action.getClass(),
 						target.getClass());

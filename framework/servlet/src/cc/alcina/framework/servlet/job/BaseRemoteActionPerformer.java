@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.servlet.ServerLayerLocator;
+import cc.alcina.framework.servlet.ServletLayerLocator;
 
 
 public abstract class BaseRemoteActionPerformer {
@@ -38,7 +38,7 @@ public abstract class BaseRemoteActionPerformer {
 						message), progress);
 	}
 	protected void startJob(){
-		logger = ServerLayerLocator.get().remoteActionLoggerProvider()
+		logger = ServletLayerLocator.get().remoteActionLoggerProvider()
 		.getLogger(this.getClass());
 		jobInfo = JobRegistry.get().startJob(getClass(),
 				SEUtilities.friendlyClassName(getClass()), null);

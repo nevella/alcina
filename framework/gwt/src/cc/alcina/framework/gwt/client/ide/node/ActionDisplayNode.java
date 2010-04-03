@@ -15,7 +15,7 @@
 package cc.alcina.framework.gwt.client.ide.node;
 
 
-import cc.alcina.framework.common.client.actions.VetoableAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.resources.client.ImageResource;
@@ -33,7 +33,7 @@ import com.google.gwt.resources.client.ImageResource;
 	protected void onEnsureDebugId(String baseID) {
 		ensureDebugId(getElement(),CommonUtils.simpleClassName(getAction().getClass()));
 	}
-	public VetoableAction getAction() {
-		return (VetoableAction) getUserObject();
+	public PermissibleAction getAction() {
+		return (PermissibleAction) getUserObject();
 	}
 }

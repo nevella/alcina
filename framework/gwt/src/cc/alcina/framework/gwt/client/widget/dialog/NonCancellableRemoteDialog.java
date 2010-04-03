@@ -14,7 +14,8 @@
 
 package cc.alcina.framework.gwt.client.widget.dialog;
 
-import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
 
 /**
  *
@@ -26,7 +27,7 @@ import cc.alcina.framework.common.client.actions.VetoableActionExtra.VetoableAct
 	public NonCancellableRemoteDialog(String msg){
 		this(msg,null);
 	}
-	public NonCancellableRemoteDialog(String msg, VetoableActionListener l) {
+	public NonCancellableRemoteDialog(String msg, PermissibleActionEvent.PermissibleActionListener l) {
 		super(msg, l);
 		cancelButton.setVisible(false);
 	}
