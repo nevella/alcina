@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.entity.datatransform;
+package cc.alcina.framework.entity.domaintransform;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;

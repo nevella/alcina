@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.entity.datatransform;
+package cc.alcina.framework.entity.domaintransform;
 
 import java.util.Date;
 
@@ -34,14 +34,14 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 		implements HasId {
 	private long id;
 
-	private DomainTransformRequestPersistent dataTransformRequestPersistent;
+	private DomainTransformRequestPersistent domainTransformRequestPersistent;
 
 	private Date serverCommitDate;
 
 	// persistence in app subclass
 	@Transient
-	public DomainTransformRequestPersistent getDataTransformRequestPersistent() {
-		return dataTransformRequestPersistent;
+	public DomainTransformRequestPersistent getDomainTransformRequestPersistent() {
+		return domainTransformRequestPersistent;
 	}
 
 	@Transient
@@ -56,9 +56,9 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 	@Transient
 	public abstract IUser getUser();
 
-	public void setDataTransformRequestPersistent(
-			DomainTransformRequestPersistent dataTransformRequestPersistent) {
-		this.dataTransformRequestPersistent = dataTransformRequestPersistent;
+	public void setDomainTransformRequestPersistent(
+			DomainTransformRequestPersistent domainTransformRequestPersistent) {
+		this.domainTransformRequestPersistent = domainTransformRequestPersistent;
 	}
 
 	public void setId(long id) {

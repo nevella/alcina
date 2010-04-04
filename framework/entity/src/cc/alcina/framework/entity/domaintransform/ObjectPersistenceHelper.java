@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.entity.datatransform;
+package cc.alcina.framework.entity.domaintransform;
 
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -33,31 +33,33 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 
 
 /**
- * j2se, but no ref to tltm
+ * a fair bit of overlap with tltm - should clean up
  * 
  * @author nick@alcina.cc
  * 
  */
 @SuppressWarnings("unchecked")
-public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
+public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		PropertyAccessor, CurrentUtcDateProvider {
-	private TestPersistenceHelper() {
+	// Initialises this. Note - not a thread-specific singleton,
+	// any thread (client) specific work delegated to tltm
+	private ObjectPersistenceHelper() {
 		super();
+		TransformManager.register(ThreadlocalTransformManager.ttmInstance());
 		CommonLocator.get().registerClassLookup(this);
 		CommonLocator.get().registerObjectLookup(this);
 		CommonLocator.get().registerPropertyAccessor(this);
 	}
 
-	private static TestPersistenceHelper theInstance;
+	private static ObjectPersistenceHelper theInstance;
 
-	public static TestPersistenceHelper get() {
+	public static ObjectPersistenceHelper get() {
 		if (theInstance == null) {
-			theInstance = new TestPersistenceHelper();
+			theInstance = new ObjectPersistenceHelper();
 		}
 		return theInstance;
 	}
@@ -81,7 +83,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	public void setPropertyValue(Object bean, String propertyName, Object value) {
-		SEUtilities.setPropertyValue(bean, propertyName, value);
+		(ThreadlocalTransformManager.cast())
+				.setPropertyValue(bean, propertyName, value);
 	}
 
 	public <T extends HasIdAndLocalId> T  getObject(T bean) {
@@ -94,7 +97,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	public Object getPropertyValue(Object bean, String propertyName) {
-		return SEUtilities.getPropertyValue(bean, propertyName);
+		return (ThreadlocalTransformManager.cast())
+				.getPropertyValue(bean, propertyName);
 	}
 
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
@@ -167,14 +171,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	public <T> T newInstance(Class<T> clazz, long localId) {
-		try {
-			HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz.newInstance();
-			newInstance.setLocalId(localId);
-			return (T) newInstance;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		
+		return (ThreadlocalTransformManager.cast())
+				.newInstance(clazz, localId);
 	}
 
 	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
@@ -210,15 +208,15 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				Class<?> propertyType = pd.getPropertyType();
+				if (pd.getWriteMethod()==null){
+					continue;
+				}
 				if (propertyType.isInterface()&&propertyType!=Set.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
 					propertyType = CommonLocator.get()
 							.implementationLookup().getImplementation(
 									propertyType);
-				}
-				if (propertyType==null){
-					int k=3;
 				}
 				infos.add(new PropertyInfoLite(propertyType, pd
 						.getName(),null,clazz));
@@ -227,5 +225,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+		
 	}
 }

@@ -210,7 +210,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 					for (DomainTransformEvent dte : synthesisedEvents) {
 						try {
 							tm.consume(dte);
-							tm.fireDataTransform(dte);// this notifies
+							tm.fireDomainTransform(dte);// this notifies
 							// gears?
 							// well, definitely notifies clients who need to
 							// know chanages were committed

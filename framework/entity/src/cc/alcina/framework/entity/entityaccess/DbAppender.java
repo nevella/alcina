@@ -18,7 +18,7 @@ import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Layout;
 import org.apache.log4j.spi.LoggingEvent;
 
-import cc.alcina.framework.entity.datatransform.EntityLayerLocator;
+import cc.alcina.framework.entity.domaintransform.EntityLayerLocator;
 
 
 /**

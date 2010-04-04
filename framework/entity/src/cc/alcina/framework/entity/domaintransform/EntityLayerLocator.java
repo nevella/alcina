@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.entity.datatransform;
+package cc.alcina.framework.entity.domaintransform;
 
 import org.apache.log4j.Logger;
 

@@ -30,7 +30,7 @@ import javax.xml.bind.Unmarshaller;
 import cc.alcina.framework.common.client.entity.GwtPersistableObject;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.entity.datatransform.EntityLayerLocator;
+import cc.alcina.framework.entity.domaintransform.EntityLayerLocator;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
 

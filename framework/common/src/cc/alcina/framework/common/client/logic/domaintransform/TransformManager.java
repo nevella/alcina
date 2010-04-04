@@ -171,7 +171,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	 * Order must be: local (>bean), containerupdater, localstorage,
 	 * remotestorage By default, transform manager handles the first two itself
 	 */
-	public void addDataTransformListener(DomainTransformListener listener) {
+	public void addDomainTransformListener(DomainTransformListener listener) {
 		this.transformListenerSupport.addDomainTransformListener(listener);
 	}
 
@@ -394,7 +394,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				.fireCollectionModificationEvent(event);
 	}
 
-	public void fireDataTransform(DomainTransformEvent event)
+	public void fireDomainTransform(DomainTransformEvent event)
 			throws DomainTransformException {
 		this.transformListenerSupport.fireDomainTransform(event);
 	}
@@ -406,7 +406,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		dte.setObjectClass(hili.getClass());
 		dte.setTransformType(TransformType.DELETE_OBJECT);
 		try {
-			fireDataTransform(dte);
+			fireDomainTransform(dte);
 			return dte;
 		} catch (DomainTransformException e) {
 			DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
@@ -759,10 +759,10 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		} else {
 			transforms.add(dte);
 		}
-		for (DomainTransformEvent dataTransformEvent : transforms) {
-			addTransform(dataTransformEvent);
+		for (DomainTransformEvent domainTransformEvent : transforms) {
+			addTransform(domainTransformEvent);
 			try {
-				fireDataTransform(dataTransformEvent);
+				fireDomainTransform(domainTransformEvent);
 			} catch (DomainTransformException e) {
 				DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
 						e.getMessage());
@@ -801,7 +801,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		dte.setTransformType(TransformType.CREATE_OBJECT);
 		addTransform(dte);
 		try {
-			fireDataTransform(dte);
+			fireDomainTransform(dte);
 		} catch (DomainTransformException e) {
 			DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
 					e.getMessage());
@@ -843,7 +843,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				.removeCollectionModificationListener(listener);
 	}
 
-	public void removeDataTransformListener(DomainTransformListener listener) {
+	public void removeDomainTransformListener(DomainTransformListener listener) {
 		this.transformListenerSupport.removeDomainTransformListener(listener);
 	}
 
@@ -860,7 +860,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 							.getObjectLocalId());
 				}
 				if (fireTransforms) {
-					fireDataTransform(dte);
+					fireDomainTransform(dte);
 				}
 			}
 		} catch (DomainTransformException e) {
@@ -886,8 +886,8 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	}
 
 	public void setupClientListeners() {
-		addDataTransformListener(new EditCommitTransformHandler());
-		addDataTransformListener(new ContainerUpdateTransformHandler());
+		addDomainTransformListener(new EditCommitTransformHandler());
+		addDomainTransformListener(new ContainerUpdateTransformHandler());
 	}
 
 	private DomainTransformEvent createTransformFromPropertyChange(
@@ -1014,7 +1014,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 							// ways
 							// yet.
 							//
-							TransformManager.get().fireDataTransform(dte);
+							TransformManager.get().fireDomainTransform(dte);
 						} catch (Exception e) {
 							throw new WrappedRuntimeException(e);
 						}

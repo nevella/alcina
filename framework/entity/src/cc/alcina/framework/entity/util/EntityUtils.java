@@ -28,7 +28,7 @@ import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.entity.datatransform.EntityLayerLocator;
+import cc.alcina.framework.entity.domaintransform.EntityLayerLocator;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;

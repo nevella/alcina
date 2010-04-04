@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.entity.datatransform;
+package cc.alcina.framework.entity.domaintransform;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -88,7 +88,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
 
-	public static void addThreadLocalDataTransformListener(
+	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
 	}
@@ -385,9 +385,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
 		clearTransforms();
-		addDataTransformListener(new ServerTransformListener());
+		addDomainTransformListener(new ServerTransformListener());
 		for (DomainTransformListener listener : threadLocalListeners) {
-			addDataTransformListener(listener);
+			addDomainTransformListener(listener);
 		}
 	}
 
@@ -506,7 +506,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 							"from "
 									+ dteName
 									+ " dte "
-									+ " where dte.dataTransformRequestPersistent.clientInstance.id = ?"
+									+ " where dte.domainTransformRequestPersistent.clientInstance.id = ?"
 									+ " and dte.objectLocalId!=0 and dte.transformType = ?")
 					.setParameter(1, clientInstance.getId()).setParameter(2,
 							TransformType.CREATE_OBJECT).getResultList();

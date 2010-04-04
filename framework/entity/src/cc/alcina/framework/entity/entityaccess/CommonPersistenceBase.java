@@ -61,13 +61,13 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.datatransform.DomainTransformEventPersistent;
-import cc.alcina.framework.entity.datatransform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.datatransform.DomainTransformRequestPersistent;
-import cc.alcina.framework.entity.datatransform.EntityLayerLocator;
-import cc.alcina.framework.entity.datatransform.ObjectPersistenceHelper;
-import cc.alcina.framework.entity.datatransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.datatransform.ThreadlocalTransformManager.HiliLocatorMap;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
+import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.domaintransform.EntityLayerLocator;
+import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocatorMap;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.GraphCloner;
@@ -329,7 +329,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				MetricLogging.get().lowPriorityEnd(PRECACHE_ENTITIES);
 				MetricLogging.get().lowPriorityStart(TRANSFORM_FIRE);
 				for (DomainTransformEvent dte : items) {
-					tm.fireDataTransform(dte);
+					tm.fireDomainTransform(dte);
 				}
 				MetricLogging.get().lowPriorityEnd(TRANSFORM_FIRE);
 				MetricLogging.get().lowPriorityStart(PERSIST_TRANSFORMS);
@@ -353,7 +353,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 									dtep.getObjectLocalId()).getId());
 						}
 						dtep.setServerCommitDate(new Date());
-						dtep.setDataTransformRequestPersistent(dtrp);
+						dtep.setDomainTransformRequestPersistent(dtrp);
 						dtrp.getItems().add(dtep);
 					}
 				}

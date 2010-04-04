@@ -95,7 +95,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 	public DTRSimpleSerialWrapper(int id, String text, long timestamp,
 			long userId, long clientInstanceId, int requestId,
 			int clientInstanceAuth,
-			DomainTransformRequestType dataTransformRequestType) {
+			DomainTransformRequestType domainTransformRequestType) {
 		this.text = text;
 		this.timestamp = timestamp;
 		this.userId = userId;
@@ -103,7 +103,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 		this.id = id;
 		this.requestId = requestId;
 		this.clientInstanceAuth = clientInstanceAuth;
-		this.domainTransformRequestType = dataTransformRequestType;
+		this.domainTransformRequestType = domainTransformRequestType;
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance auth", orderingHint = 30))

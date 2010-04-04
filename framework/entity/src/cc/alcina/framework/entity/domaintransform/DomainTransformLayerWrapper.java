@@ -12,21 +12,17 @@
  * the License.
  */
 
-package cc.alcina.framework.entity.datatransform;
+package cc.alcina.framework.entity.domaintransform;
+
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocatorMap;
 
 /**
  *
  * @author Nick Reddel
  */
 
- public class EsqlUtils {
-	public static String idArrToIn(Long[] ids){
-		StringBuffer result = new StringBuffer("(-1");
-		for (Long long1 : ids) {
-			result.append(", ");
-			result.append(long1.toString());
-		}
-		result.append(") ");
-		return result.toString();
-	}
+ public class DomainTransformLayerWrapper {
+	public DomainTransformResponse response;
+	public HiliLocatorMap locatorMap;
 }

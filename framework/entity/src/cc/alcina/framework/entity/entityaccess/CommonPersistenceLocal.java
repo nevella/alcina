@@ -31,8 +31,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.entity.datatransform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.datatransform.ThreadlocalTransformManager.HiliLocatorMap;
+import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocatorMap;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 
