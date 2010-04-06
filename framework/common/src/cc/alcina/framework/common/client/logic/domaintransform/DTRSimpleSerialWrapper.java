@@ -87,7 +87,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 		return CommonUtils.format(" clientInstanceAuth: %1\n"
 				+ "clientInstanceId: %2\n" + "id: %3\n" + "requestId: %4\n"
 				+ "timestamp: %5\n" + "userId: %6\n"
-				+ "dataTransformRequestType: %7\n" + "text:\n%8\n",
+				+ "DomainTransformRequestType: %7\n" + "text:\n%8\n",
 				clientInstanceAuth, clientInstanceId, id, requestId, timestamp,
 				userId, domainTransformRequestType, text);
 	}

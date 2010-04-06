@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Package xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.eclipse.org/uml2/3.0.0/UML" xmi:id="_tPK0ID-BEd-waKqRwcgnBA" name="domain interaction">
+  <elementImport xmi:id="_tRRs8D-BEd-waKqRwcgnBA">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Boolean"/>
+  </elementImport>
+  <elementImport xmi:id="_tRkA0D-BEd-waKqRwcgnBA">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+  </elementImport>
+  <elementImport xmi:id="_tRkA0T-BEd-waKqRwcgnBA">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#UnlimitedNatural"/>
+  </elementImport>
+  <elementImport xmi:id="_tRkA0j-BEd-waKqRwcgnBA">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+  </elementImport>
+  <packagedElement xmi:type="uml:Component" xmi:id="_wnQxUD-BEd-waKqRwcgnBA" name="Server domain" clientDependency="_XJ64sEFMEd-bpvHy3bocAQ _HcRtkEFsEd-bpvHy3bocAQ">
+    <interfaceRealization xmi:id="_XJ64sEFMEd-bpvHy3bocAQ" supplier="_XIn4MEFMEd-bpvHy3bocAQ" client="_wnQxUD-BEd-waKqRwcgnBA" contract="_XIn4MEFMEd-bpvHy3bocAQ"/>
+    <interfaceRealization xmi:id="_HcRtkEFsEd-bpvHy3bocAQ" supplier="_Hb4sAEFsEd-bpvHy3bocAQ" client="_wnQxUD-BEd-waKqRwcgnBA" contract="_Hb4sAEFsEd-bpvHy3bocAQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Component" xmi:id="_KVdN0D-CEd-waKqRwcgnBA" name="Client domain" clientDependency="_HOpooEFpEd-bpvHy3bocAQ _TfnrAEFpEd-bpvHy3bocAQ _RWHggEFsEd-bpvHy3bocAQ _M-XnsEFtEd-bpvHy3bocAQ _-mCPMEF3Ed-bpvHy3bocAQ">
+    <interfaceRealization xmi:id="_RWHggEFsEd-bpvHy3bocAQ" supplier="_RVnKMEFsEd-bpvHy3bocAQ" client="_KVdN0D-CEd-waKqRwcgnBA" contract="_RVnKMEFsEd-bpvHy3bocAQ"/>
+    <interfaceRealization xmi:id="_M-XnsEFtEd-bpvHy3bocAQ" supplier="_M9_NMEFtEd-bpvHy3bocAQ" client="_KVdN0D-CEd-waKqRwcgnBA" contract="_M9_NMEFtEd-bpvHy3bocAQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Interface" xmi:id="_XIn4MEFMEd-bpvHy3bocAQ" name="RPC: transform"/>
+  <packagedElement xmi:type="uml:Usage" xmi:id="_HOpooEFpEd-bpvHy3bocAQ" client="_KVdN0D-CEd-waKqRwcgnBA"/>
+  <packagedElement xmi:type="uml:Usage" xmi:id="_TfnrAEFpEd-bpvHy3bocAQ" supplier="_XIn4MEFMEd-bpvHy3bocAQ" client="_KVdN0D-CEd-waKqRwcgnBA"/>
+  <packagedElement xmi:type="uml:Component" xmi:id="_jSDXEEFrEd-bpvHy3bocAQ" name="Client app" clientDependency="_OnTJ0EFsEd-bpvHy3bocAQ _bcWJoEFsEd-bpvHy3bocAQ _XrVgsEFtEd-bpvHy3bocAQ"/>
+  <packagedElement xmi:type="uml:Interface" xmi:id="_Hb4sAEFsEd-bpvHy3bocAQ" name="RPC (any object graph)"/>
+  <packagedElement xmi:type="uml:Usage" xmi:id="_OnTJ0EFsEd-bpvHy3bocAQ" supplier="_Hb4sAEFsEd-bpvHy3bocAQ" client="_jSDXEEFrEd-bpvHy3bocAQ"/>
+  <packagedElement xmi:type="uml:Interface" xmi:id="_RVnKMEFsEd-bpvHy3bocAQ" name="registerObjects()"/>
+  <packagedElement xmi:type="uml:Usage" xmi:id="_bcWJoEFsEd-bpvHy3bocAQ" supplier="_RVnKMEFsEd-bpvHy3bocAQ" client="_jSDXEEFrEd-bpvHy3bocAQ"/>
+  <packagedElement xmi:type="uml:Component" xmi:id="_eLKgUEFsEd-bpvHy3bocAQ" name="Gwittir/GwittirBridge" clientDependency="_R7WfEEFtEd-bpvHy3bocAQ _U7J4EEFtEd-bpvHy3bocAQ">
+    <interfaceRealization xmi:id="_U7J4EEFtEd-bpvHy3bocAQ" supplier="_U6wPcEFtEd-bpvHy3bocAQ" client="_eLKgUEFsEd-bpvHy3bocAQ" contract="_U6wPcEFtEd-bpvHy3bocAQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Component" xmi:id="_tqeuAEFsEd-bpvHy3bocAQ" name="Editable object views" clientDependency="_7LauAEFtEd-bpvHy3bocAQ"/>
+  <packagedElement xmi:type="uml:Interface" xmi:id="_M9_NMEFtEd-bpvHy3bocAQ" name="Object lookup"/>
+  <packagedElement xmi:type="uml:Usage" xmi:id="_R7WfEEFtEd-bpvHy3bocAQ" supplier="_M9_NMEFtEd-bpvHy3bocAQ" client="_eLKgUEFsEd-bpvHy3bocAQ"/>
+  <packagedElement xmi:type="uml:Interface" xmi:id="_U6wPcEFtEd-bpvHy3bocAQ" name="create editable view"/>
+  <packagedElement xmi:type="uml:Usage" xmi:id="_XrVgsEFtEd-bpvHy3bocAQ" supplier="_U6wPcEFtEd-bpvHy3bocAQ" client="_jSDXEEFrEd-bpvHy3bocAQ"/>
+  <packagedElement xmi:type="uml:Component" xmi:id="_4EVoUEFtEd-bpvHy3bocAQ" name="Data objects" clientDependency="_6j6dkEF3Ed-bpvHy3bocAQ">
+    <interfaceRealization xmi:id="_6j6dkEF3Ed-bpvHy3bocAQ" supplier="_6jdKkEF3Ed-bpvHy3bocAQ" client="_4EVoUEFtEd-bpvHy3bocAQ" contract="_6jdKkEF3Ed-bpvHy3bocAQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Dependency" xmi:id="_7LauAEFtEd-bpvHy3bocAQ" name="created by" supplier="_eLKgUEFsEd-bpvHy3bocAQ" client="_tqeuAEFsEd-bpvHy3bocAQ"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_wWHz4EF3Ed-bpvHy3bocAQ" name="bidi property binding" memberEnd="_wWHz4UF3Ed-bpvHy3bocAQ _wWIa8UF3Ed-bpvHy3bocAQ">
+    <ownedEnd xmi:id="_wWHz4UF3Ed-bpvHy3bocAQ" name="src" type="_4EVoUEFtEd-bpvHy3bocAQ" association="_wWHz4EF3Ed-bpvHy3bocAQ">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_wWIa8EF3Ed-bpvHy3bocAQ" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_wWHz4kF3Ed-bpvHy3bocAQ" value="1"/>
+    </ownedEnd>
+    <ownedEnd xmi:id="_wWIa8UF3Ed-bpvHy3bocAQ" name="dst" type="_tqeuAEFsEd-bpvHy3bocAQ" association="_wWHz4EF3Ed-bpvHy3bocAQ">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_wWIa80F3Ed-bpvHy3bocAQ" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_wWIa8kF3Ed-bpvHy3bocAQ" value="1"/>
+    </ownedEnd>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Interface" xmi:id="_6jdKkEF3Ed-bpvHy3bocAQ" name="property change events"/>
+  <packagedElement xmi:type="uml:Usage" xmi:id="_-mCPMEF3Ed-bpvHy3bocAQ" supplier="_6jdKkEF3Ed-bpvHy3bocAQ" client="_KVdN0D-CEd-waKqRwcgnBA"/>
+</uml:Package>

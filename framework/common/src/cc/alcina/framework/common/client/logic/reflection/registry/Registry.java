@@ -60,13 +60,14 @@ public class Registry {
 			registry.put(registryPoint, pointMap);
 			targetPriority.put(registryPoint, pointPriority);
 		}
-		List<Class> registered = pointMap.get(info.targetClass());
+		Class targetClass = info.targetClass();
+		List<Class> registered = pointMap.get(targetClass);
 		if (registered == null) {
 			registered = new ArrayList<Class>();
-			pointMap.put(info.targetClass(), registered);
+			pointMap.put(targetClass, registered);
 		}
-		if (registered.size() == 1 && registryPoint != void.class) {
-			Integer currentPriority = pointPriority.get(info.targetClass());
+		if (registered.size() == 1 && targetClass != void.class) {
+			Integer currentPriority = pointPriority.get(targetClass);
 			int infoPriority = info.priority();
 			if (currentPriority > infoPriority) {
 				registered.clear();
@@ -75,7 +76,7 @@ public class Registry {
 			}
 		}
 		registered.add(registeringClass);
-		pointPriority.put(info.targetClass(), info.priority());
+		pointPriority.put(targetClass, info.priority());
 	}
 
 	public Class lookupSingle(Class registryPoint, Class targetObject) {

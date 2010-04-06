@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.registry;
 
 import java.io.File;
@@ -28,7 +27,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
-
 /*
  * Considered, as per seam etc, use javaassist to avoid loading every class in the app here...
  * But the caching idea works better, because we need to check method annotations etc...and simpler
@@ -38,8 +36,7 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
  *
  * @author Nick Reddel
  */
-
- public class RegistryScanner extends CachingScanner {
+public class RegistryScanner extends CachingScanner {
 	private Registry toRegistry;
 
 	public void scan(Collection<String> classNames, Collection<String> ignore,
@@ -79,10 +76,6 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
 				return;
 			}
 		}
-		if (className.contains("JadePr")){
-			int k=3;
-		}
-		// System.out.println(className);
 		Set<Annotation> sca = AnnotationUtils.getSuperclassAnnotations(c);
 		Set<RegistryLocation> rls = AnnotationUtils.filterAnnotations(sca,
 				RegistryLocation.class);

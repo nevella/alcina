@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -112,6 +114,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		return displayName;
 	}
 
+	@XmlTransient
 	public Class getEntityClass() {
 		return this.entityClass;
 	}
@@ -193,8 +196,8 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 	}
 
 	public String validatePermissions() {
-		if (!PermissionsManager.get().isPermissible(this)){
-			return null;//won't be used in search anyway
+		if (!PermissionsManager.get().isPermissible(this)) {
+			return null;// won't be used in search anyway
 		}
 		return DefaultValidation.validatePermissions(this, getCriteria());
 	}

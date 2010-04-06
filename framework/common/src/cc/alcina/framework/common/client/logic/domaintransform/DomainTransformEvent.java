@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 	private static final String SRC = "src: ";
 
-	public static final String DATA_TRANSFORM_EVENT_MARKER = "\nDataTransformEvent: ";
+	public static final String DATA_TRANSFORM_EVENT_MARKER = "\nDomainTransformEvent: ";
 
 	private String propertyName;
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Package xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.eclipse.org/uml2/3.0.0/UML" xmi:id="_EOVNEEF7Ed-bpvHy3bocAQ">
+  <packagedElement xmi:type="uml:Interaction" xmi:id="_F4-J8EF7Ed-bpvHy3bocAQ" name="Interaction">
+    <lifeline xmi:id="_GeTEkEF7Ed-bpvHy3bocAQ" name="a" coveredBy="_Nml88EF7Ed-bpvHy3bocAQ _WjXDoUF7Ed-bpvHy3bocAQ _WjWckEF7Ed-bpvHy3bocAQ _WjXDpEF7Ed-bpvHy3bocAQ"/>
+    <lifeline xmi:id="_HBpCMEF7Ed-bpvHy3bocAQ" name="b" coveredBy="_KUer8EF7Ed-bpvHy3bocAQ _QAjd8EF7Ed-bpvHy3bocAQ _WjXDokF7Ed-bpvHy3bocAQ _WjXDoEF7Ed-bpvHy3bocAQ _WjXDo0F7Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:StateInvariant" xmi:id="_KUer8EF7Ed-bpvHy3bocAQ" name="StateInvariant" covered="_HBpCMEF7Ed-bpvHy3bocAQ">
+      <invariant xmi:id="_KUrgQEF7Ed-bpvHy3bocAQ" name="State"/>
+    </fragment>
+    <fragment xmi:type="uml:ActionExecutionSpecification" xmi:id="_Nml88EF7Ed-bpvHy3bocAQ" covered="_GeTEkEF7Ed-bpvHy3bocAQ" action="_Nml88UF7Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:ActionExecutionSpecification" xmi:id="_QAjd8EF7Ed-bpvHy3bocAQ" covered="_HBpCMEF7Ed-bpvHy3bocAQ" action="_QAjd8UF7Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_WjWckEF7Ed-bpvHy3bocAQ" name="invocation-1-start" covered="_GeTEkEF7Ed-bpvHy3bocAQ" message="_WjXqsEF7Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_WjXDoEF7Ed-bpvHy3bocAQ" name="execution-1-start" covered="_HBpCMEF7Ed-bpvHy3bocAQ" message="_WjXqsEF7Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:BehaviorExecutionSpecification" xmi:id="_WjXDoUF7Ed-bpvHy3bocAQ" name="invocation-1-body" covered="_GeTEkEF7Ed-bpvHy3bocAQ" start="_WjWckEF7Ed-bpvHy3bocAQ" finish="_WjXDpEF7Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:BehaviorExecutionSpecification" xmi:id="_WjXDokF7Ed-bpvHy3bocAQ" name="execution-1-body" covered="_HBpCMEF7Ed-bpvHy3bocAQ" start="_WjXDoEF7Ed-bpvHy3bocAQ" finish="_WjXDo0F7Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_WjXDo0F7Ed-bpvHy3bocAQ" name="execution-1-finish" covered="_HBpCMEF7Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_WjXDpEF7Ed-bpvHy3bocAQ" name="invocation-1-finish" covered="_GeTEkEF7Ed-bpvHy3bocAQ"/>
+    <action xmi:type="uml:OpaqueAction" xmi:id="_Nml88UF7Ed-bpvHy3bocAQ" name="Action"/>
+    <action xmi:type="uml:OpaqueAction" xmi:id="_QAjd8UF7Ed-bpvHy3bocAQ" name="Action"/>
+    <message xmi:id="_WjXqsEF7Ed-bpvHy3bocAQ" name="Message" receiveEvent="_WjXDoEF7Ed-bpvHy3bocAQ" sendEvent="_WjWckEF7Ed-bpvHy3bocAQ"/>
+  </packagedElement>
+</uml:Package>

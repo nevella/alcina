@@ -1,2 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<uml:Package xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.eclipse.org/uml2/3.0.0/UML" xmi:id="_G1f2cD90Ed-waKqRwcgnBA"/>
+<uml:Package xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.eclipse.org/uml2/3.0.0/UML" xmi:id="_G1f2cD90Ed-waKqRwcgnBA">
+  <packagedElement xmi:type="uml:Interaction" xmi:id="_ffGW8EF4Ed-bpvHy3bocAQ" name="Client Handshake">
+    <lifeline xmi:id="_kz2OEEF4Ed-bpvHy3bocAQ" name="Client application" coveredBy="_VZ1sQkF6Ed-bpvHy3bocAQ _VZ1sQEF6Ed-bpvHy3bocAQ _VZ2TUUF6Ed-bpvHy3bocAQ"/>
+    <lifeline xmi:id="_stAisEF4Ed-bpvHy3bocAQ" name="Local storage" coveredBy="_VZ1sQ0F6Ed-bpvHy3bocAQ _VZ1sQUF6Ed-bpvHy3bocAQ _VZ2TUEF6Ed-bpvHy3bocAQ"/>
+    <lifeline xmi:id="_uvEhEEF4Ed-bpvHy3bocAQ" name="Servlet layer"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_VZ1sQEF6Ed-bpvHy3bocAQ" name="invocation-6-start" covered="_kz2OEEF4Ed-bpvHy3bocAQ" message="_VZ26YEF6Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_VZ1sQUF6Ed-bpvHy3bocAQ" name="execution-6-start" covered="_stAisEF4Ed-bpvHy3bocAQ" message="_VZ26YEF6Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:BehaviorExecutionSpecification" xmi:id="_VZ1sQkF6Ed-bpvHy3bocAQ" name="invocation-6-body" covered="_kz2OEEF4Ed-bpvHy3bocAQ" start="_VZ1sQEF6Ed-bpvHy3bocAQ" finish="_VZ2TUUF6Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:BehaviorExecutionSpecification" xmi:id="_VZ1sQ0F6Ed-bpvHy3bocAQ" name="execution-6-body" covered="_stAisEF4Ed-bpvHy3bocAQ" start="_VZ1sQUF6Ed-bpvHy3bocAQ" finish="_VZ2TUEF6Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_VZ2TUEF6Ed-bpvHy3bocAQ" name="execution-6-finish" covered="_stAisEF4Ed-bpvHy3bocAQ"/>
+    <fragment xmi:type="uml:MessageOccurrenceSpecification" xmi:id="_VZ2TUUF6Ed-bpvHy3bocAQ" name="invocation-6-finish" covered="_kz2OEEF4Ed-bpvHy3bocAQ"/>
+    <message xmi:id="_y4wTQEF4Ed-bpvHy3bocAQ"/>
+    <message xmi:id="_5jFdQEF4Ed-bpvHy3bocAQ" name="Load app"/>
+    <message xmi:id="_FpvQkEF6Ed-bpvHy3bocAQ" name="Message"/>
+    <message xmi:id="_GJfusEF6Ed-bpvHy3bocAQ" name="Message1"/>
+    <message xmi:id="_G_C2oEF6Ed-bpvHy3bocAQ" name="Message2"/>
+    <message xmi:id="_VZ26YEF6Ed-bpvHy3bocAQ" name="Message3" receiveEvent="_VZ1sQUF6Ed-bpvHy3bocAQ" sendEvent="_VZ1sQEF6Ed-bpvHy3bocAQ"/>
+  </packagedElement>
+</uml:Package>
