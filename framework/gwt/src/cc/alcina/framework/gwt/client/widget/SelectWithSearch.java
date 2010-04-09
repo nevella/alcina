@@ -185,7 +185,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			public void onClick(ClickEvent event) {
 				closingOnClick = true;
 				log("closing on click", null);
-				if (relativePopupPanel!=null){
+				if (relativePopupPanel != null) {
 					relativePopupPanel.hide();
 				}
 				lastClosingClickMillis = System.currentTimeMillis();
@@ -200,19 +200,14 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 				: new ScrollPanel100pcHeight(fp);
 		if (!isFlowLayout()) {
 			scroller.setSize("100%", "100%");
-			holder.setHeight(holderHeight);
 		}
 		holder.setStyleName("alcina-Chooser");
 		holder.add(filter);
 		if (popdown) {
-			this.focusPanel = new FocusPanel();
 			panelForPopup = new FlowPanel();
-			panelForPopup.setVisible(false);
 			panelForPopup.addStyleName("pop-down");
+			panelForPopup.setHeight(holderHeight);
 			panelForPopup.add(scroller);
-			focusPanel.add(panelForPopup);
-			focusPanel.addFocusHandler(this);
-			focusPanel.addBlurHandler(this);
 			filter.getTextBox().addFocusHandler(this);
 			filter.getTextBox().addBlurHandler(this);
 			filter.getTextBox().addClickHandler(new ClickHandler() {
@@ -231,8 +226,10 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 					}
 				}
 			});
-			holder.add(focusPanel);
 		} else {
+			if (!isFlowLayout()) {
+				holder.setHeight(holderHeight);
+			}
 			holder.add(scroller);
 		}
 		return holder;
@@ -407,8 +404,9 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 		return new LayoutInfo() {
 			@Override
 			public Iterator<Widget> getLayoutWidgets() {
-				return Arrays.asList(new Widget[] { focusPanel, holder })
-						.iterator();
+				return Arrays.asList(
+						popdown ? new Widget[] {} : new Widget[] { focusPanel,
+								holder }).iterator();
 			}
 		};
 	}
@@ -452,9 +450,9 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	public void onFocus(FocusEvent event) {
 		Widget sender = (Widget) event.getSource();
 		int i = 0;
-		log("gained focus, flowPanelForFocusPanel vis:"
-				+ panelForPopup.isVisible() + "-widget:"
-				+ sender.getClass().getName(), null);
+//		log("gained focus, flowPanelForFocusPanel vis:"
+//				+ panelForPopup.isVisible() + "-widget:"
+//				+ sender.getClass().getName(), null);
 		checkShowPopup();
 		waitingToFocus = true;
 		new Timer() {
@@ -468,16 +466,19 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	}
 
 	public void onBlur(BlurEvent event) {
-		log("lost focus, fp vis:" + panelForPopup.isVisible() + "-widget:"
-				+ event.getSource().getClass().getName(), null);
+//		log("lost focus, fp vis:" + panelForPopup.isVisible() + "-widget:"
+//				+ event.getSource().getClass().getName(), null);
 		if (!waitingToFocus) {
 			new Timer() {
 				@Override
 				public void run() {
-					log("lost focus timer", null);
+//					log("lost focus timer", null);
 					if (!waitingToFocus) {
-						log("not waiting - lost focus-butc", null);
-						panelForPopup.setVisible(false);
+//						log("not waiting - lost focus-butc", null);
+						if ((relativePopupPanel == null || relativePopupPanel
+								.getParent() == null)){
+							relativePopupPanel.hide();
+						}
 					}
 				}
 			}.schedule(250);
@@ -585,7 +586,8 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 
 	// TODO:hcdim
 	void checkShowPopup() {
-		if (!panelForPopup.isVisible()
+		if ((this.relativePopupPanel == null || this.relativePopupPanel
+				.getParent() == null)
 				&& !closingOnClick
 				&& System.currentTimeMillis() - lastClosingClickMillis > DELAY_TO_CHECK_FOR_CLOSING) {
 			log("running check show popup", null);
@@ -596,13 +598,13 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 					setItemMap(lazyData.data);
 				}
 			}
-			if (popdownStyleName!=null){
+			if (popdownStyleName != null) {
 				panelForPopup.addStyleName(popdownStyleName);
 			}
-			panelForPopup.setVisible(true);
 			filter(filter.getTextBox().getText());
-			this.relativePopupPanel = RelativePopupPositioning.showPopup(filter, panelForPopup, RootPanel
-					.get(), RelativePopupPositioning.BOTTOM_LTR,"noBorder");
+			this.relativePopupPanel = RelativePopupPositioning.showPopup(
+					filter, panelForPopup, RootPanel.get(),
+					RelativePopupPositioning.BOTTOM_LTR, "noBorder");
 		}
 	}
 
@@ -648,13 +650,13 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			this.ownerLabel = ownerLabel;
 			String text = CommonUtils.singularOrPluralToString(item) + sep;
 			filterableText = text.toLowerCase();
-//			if (text.length() < charWidth) {
-			//this is just too hacky - use mouseover highlight to differentiate instead
-			
-				setHTML("<span style='white-space:nowrap'>" + text + "</span> ");
-//			} else {
-//				setHTML("<br />" + text + "<br />");
-//			}
+			// if (text.length() < charWidth) {
+			// this is just too hacky - use mouseover highlight to differentiate
+			// instead
+			setHTML("<span style='white-space:nowrap'>" + text + "</span> ");
+			// } else {
+			// setHTML("<br />" + text + "<br />");
+			// }
 			setStyleName("chooser-item");
 		}
 
