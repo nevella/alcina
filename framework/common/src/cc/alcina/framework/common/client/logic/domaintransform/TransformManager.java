@@ -784,7 +784,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		if (this.domainObjects != null) {
 			domainObjects.removeListeners();
 		}
-		this.domainObjects = new MapObjectLookup(this, h.topLevelObjects());
+		this.domainObjects = new MapObjectLookup(this, h.registerableDomainObjects());
 		ClassRef.add(h.getClassRefs());
 	}
 

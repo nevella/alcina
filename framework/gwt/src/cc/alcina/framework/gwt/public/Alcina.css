@@ -1112,7 +1112,13 @@ table.gwittir-BoundTable tr.header {
 .gwittir-ValidationPopup .gwt-Label {
 	color: red;
 }
-
+/** editable overlay **/
+table.gwittir-BoundTable td.editableOver{
+	background-color: #F4F4F4;
+	cursor: pointer;
+	border: 1px solid #A0A0D0;
+	padding: 1px 11px 1px 1px;
+}
 /** logging, notification **/
 .logbox {
 	height: 200px;

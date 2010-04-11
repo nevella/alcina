@@ -191,6 +191,38 @@ public class GwittirBridge implements PropertyAccessor {
 				SIMPLE_FACTORY, null);
 	}
 
+	public boolean isFieldEditable(Class c, String propertyName) {
+		Object obj = ClientReflector.get().getTemplateInstance(c);
+		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
+		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
+				.values();
+		BeanInfo beanInfo = bi.getAnnotation(BeanInfo.class);
+		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
+		ClientPropertyReflector pr = bi.getPropertyReflectors().get(
+				propertyName);
+		Property p = getProperty(obj, pr.getPropertyName());
+		if (pr != null && pr.getGwPropertyInfo() != null) {
+			PropertyPermissions pp = pr
+					.getAnnotation(PropertyPermissions.class);
+			VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
+			Association association = pr.getAnnotation(Association.class);
+			boolean fieldVisible = PermissionsManager.get()
+					.checkEffectivePropertyPermission(op, pp, obj, true)
+					&& visualiserInfo != null
+					&& PermissionsManager.get().isPermissible(obj,
+							visualiserInfo.visible())
+					&& ((visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_AS_PROPERTY) != 0);
+			if (!fieldVisible) {
+				return false;
+			}
+			boolean propertyIsCollection = (p.getType() == Set.class);
+			return PermissionsManager.get().checkEffectivePropertyPermission(
+					op, pp, obj, false)
+					&& ((visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_RO) == 0);
+		}
+		return false;
+	}
+
 	public Field getField(Class c, String propertyName,
 			boolean editableWidgets, boolean multiple,
 			BoundWidgetTypeFactory factory, Object obj) {
@@ -285,7 +317,8 @@ public class GwittirBridge implements PropertyAccessor {
 							.getPropertyName(), vf);
 				}
 				return new Field(pr.getPropertyName(), TextProvider.get()
-						.getLabelText(c, pr), bwp, validator, vf,getDefaultConverter(p.getType()));
+						.getLabelText(c, pr), bwp, validator, vf,
+						getDefaultConverter(p.getType()));
 			}
 		} else if (beanInfo.allPropertiesVisualisable()
 				&& PermissionsManager.get().checkEffectivePropertyPermission(
@@ -297,16 +330,19 @@ public class GwittirBridge implements PropertyAccessor {
 			vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
 			return new Field(pr.getPropertyName(), TextProvider.get()
 					.getLabelText(c, pr), bwp, getValidator(p.getType(), obj,
-					pr.getPropertyName(), vf), vf,getDefaultConverter(p.getType()));
+					pr.getPropertyName(), vf), vf, getDefaultConverter(p
+					.getType()));
 		}
 		return null;
 	}
-	public static Converter getDefaultConverter(Class propertyType){
-		if (propertyType==Date.class||propertyType==Timestamp.class){
+
+	public static Converter getDefaultConverter(Class propertyType) {
+		if (propertyType == Date.class || propertyType == Timestamp.class) {
 			return DateToLongStringConverter.INSTANCE;
 		}
 		return null;
 	}
+
 	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple, String propertyName) {
@@ -385,8 +421,6 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	}
 
-	
-
 	public static final BoundWidgetProvider NOWRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
@@ -404,8 +438,6 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	};
 
-
-
 	public static final BoundWidgetProvider AU_DATE_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
@@ -422,8 +454,6 @@ public class GwittirBridge implements PropertyAccessor {
 					DateStyle.AU_DATE_TIME);
 		}
 	};
-
-	
 
 	public static final Renderer DATE_SLASH_RENDERER_WITH_NULL = new Renderer() {
 		public Object render(Object o) {
@@ -451,8 +481,6 @@ public class GwittirBridge implements PropertyAccessor {
 	};
 
 	public static final BoundWidgetProvider FRIENDLY_ENUM_LABEL_PROVIDER_INSTANCE = new FriendlyEnumLabelProvider();
-
-	
 
 	class FieldDisplayNameComparator implements Comparator<Field> {
 		private final ClientBeanReflector bi;

@@ -186,7 +186,8 @@ public class SelectorCustomiser implements Customiser {
 			customiseLeftWidget();
 			Map<String, List> tmpSearchMap = new HashMap<String, List>();
 			tmpSearchMap.put("", new ArrayList());
-			Widget searchWidget = search.createWidget(tmpSearchMap, this, MAX_SINGLE_LINE_CHARS);
+			Widget searchWidget = search.createWidget(tmpSearchMap, this,
+					MAX_SINGLE_LINE_CHARS);
 			search.getScroller().setHeight("");
 			search.getScroller().setStyleName("scroller");
 			grid.setWidget(1, 0, searchWidget);
@@ -287,7 +288,9 @@ public class SelectorCustomiser implements Customiser {
 					addItem(o);
 				}
 			} else {
-				addItem(value);
+				if (value != null) {
+					addItem(value);
+				}
 			}
 			if (((List) search.getItemMap().values().iterator().next())
 					.isEmpty()) {

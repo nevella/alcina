@@ -23,6 +23,6 @@ import java.util.Set;
  */
 
  public interface DomainObjectHolder {
-	public List topLevelObjects();
+	public List registerableDomainObjects();
 	public Set<ClassRef> getClassRefs();
 }

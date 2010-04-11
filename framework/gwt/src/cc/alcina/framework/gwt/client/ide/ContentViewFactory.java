@@ -46,7 +46,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundTable;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
@@ -249,7 +249,7 @@ import com.totsp.gwittir.client.validator.Validator;
 		if (!noCaption) {
 			cp.add(createMultiCaption(beanClass, cp));
 		}
-		BoundTable table = createTable(beans, editable, tableMask, bean);
+		BoundTableExt table = createTable(beans, editable, tableMask, bean);
 		cp.add(table);
 		cp.setBoundWidget(table);
 		if (editable && !autoSave) {
@@ -262,15 +262,15 @@ import com.totsp.gwittir.client.validator.Validator;
 		return cp;
 	}
 
-	public BoundTable createTable(Collection beans, boolean editable,
+	public BoundTableExt createTable(Collection beans, boolean editable,
 			int tableMask, Object templateBean) {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		Field[] fields = GwittirBridge.get()
 				.fieldsForReflectedObjectAndSetupWidgetFactory(templateBean, factory,
 						editable, true);
-		int mask = tableMask|BoundTable.HEADER_MASK | BoundTable.SORT_MASK;
+		int mask = tableMask|BoundTableExt.HEADER_MASK | BoundTableExt.SORT_MASK;
 		CollectionDataProvider cdp = new CollectionDataProvider(beans);
-		BoundTable table = editable ? new BoundTable(mask, factory, fields, cdp)
+		BoundTableExt table = editable ? new BoundTableExt(mask, factory, fields, cdp)
 				: new NiceWidthBoundTable(mask, factory, fields, cdp);
 		return table;
 	}
@@ -305,14 +305,14 @@ import com.totsp.gwittir.client.validator.Validator;
 		Field[] fields = GwittirBridge.get()
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
 						false, true);
-		int mask = BoundTable.HEADER_MASK | BoundTable.NO_NAV_ROW_MASK
-				| BoundTable.NO_SELECT_ROW_MASK;
+		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK
+				| BoundTableExt.NO_SELECT_ROW_MASK;
 		if (withObjectActions) {
-			mask |= BoundTable.ROW_HANDLE_MASK
-					| BoundTable.HANDLES_AS_CHECKBOXES;
+			mask |= BoundTableExt.ROW_HANDLE_MASK
+					| BoundTableExt.HANDLES_AS_CHECKBOXES;
 		}
 		if (multiple) {
-			mask |= BoundTable.MULTIROWSELECT_MASK;
+			mask |= BoundTableExt.MULTIROWSELECT_MASK;
 		}
 		CollectionDataProvider cp = new CollectionDataProvider(beans);
 		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, factory,
@@ -372,7 +372,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 		public NiceWidthBoundTable(int mask, BoundWidgetTypeFactory factory,
 				Field[] fields, DataProvider provider) {
-			super(mask|BoundTable.NO_SELECT_CELL_MASK|BoundTable.NO_SELECT_COL_MASK|BoundTable.NO_SELECT_ROW_MASK, factory, fields, provider);
+			super(mask|BoundTableExt.NO_SELECT_CELL_MASK|BoundTableExt.NO_SELECT_COL_MASK|BoundTableExt.NO_SELECT_ROW_MASK, factory, fields, provider);
 		}
 
 		@Override

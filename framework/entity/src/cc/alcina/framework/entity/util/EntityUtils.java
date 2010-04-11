@@ -95,7 +95,7 @@ public class EntityUtils {
 		sb.append(" (");
 		for (String str : strs) {
 			sb.append(sb.length() == 2 ? "'" : ", '");
-			sb.append(str);
+			sb.append(str.replace("'"	, "''"));
 			sb.append("'");
 		}
 		sb.append(") ");

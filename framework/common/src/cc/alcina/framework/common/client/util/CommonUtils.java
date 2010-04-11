@@ -578,6 +578,16 @@ public class CommonUtils {
 		}
 		return last;
 	}
+	public static <T> T get(Iterator<T> iterator, int index) {
+		T last = null;
+		while (iterator.hasNext()) {
+			last = iterator.next();
+			if (index--==0){
+				return last;
+			}
+		}
+		return null;
+	}
 
 	public static void addIfNotNull(List l, Object o) {
 		if (o != null) {

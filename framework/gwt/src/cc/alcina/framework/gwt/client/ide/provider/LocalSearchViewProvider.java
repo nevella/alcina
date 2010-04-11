@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.search.LocalSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundTable;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
@@ -147,8 +147,8 @@ public class LocalSearchViewProvider implements ViewProvider {
 					.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
 							factory, false, true);
 			GwittirBridge.get().setIgnoreProperties(null);
-			int mask = BoundTable.HEADER_MASK;
-			mask = mask | BoundTable.SORT_MASK;
+			int mask = BoundTableExt.HEADER_MASK;
+			mask = mask | BoundTableExt.SORT_MASK;
 			mask = addTableMasks(mask);
 			CollectionDataProvider dp = new CollectionDataProvider(def.search());
 			this.table = new NiceWidthBoundTable(mask, factory, fields, dp);

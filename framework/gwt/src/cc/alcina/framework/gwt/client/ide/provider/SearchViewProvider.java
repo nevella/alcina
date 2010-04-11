@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundTable;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
@@ -187,9 +187,9 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 					.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
 							factory, false, true);
 			GwittirBridge.get().setIgnoreProperties(null);
-			int mask = BoundTable.HEADER_MASK;
+			int mask = BoundTableExt.HEADER_MASK;
 			if (def.isOrderable()) {
-				mask = mask | BoundTable.SORT_MASK;
+				mask = mask | BoundTableExt.SORT_MASK;
 			}
 			mask = addTableMasks(mask);
 			SearchDataProvider dp = new SearchDataProvider(def,
