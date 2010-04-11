@@ -276,21 +276,26 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 
 		private RowCol getRowCol(DomEvent event) {
-			com.google.gwt.dom.client.Element elt = Element.as(event
-					.getNativeEvent().getEventTarget());
-			Element tableElt = table.getElement();
-			com.google.gwt.dom.client.Element tr = null;
-			com.google.gwt.dom.client.Element td = null;
-			while (elt!=null && elt != tableElt) {
-				if (elt.getTagName().equalsIgnoreCase("td")) {
-					td = elt;
+			try {
+				com.google.gwt.dom.client.Element elt = Element.as(event
+						.getNativeEvent().getEventTarget());
+				Element tableElt = table.getElement();
+				com.google.gwt.dom.client.Element tr = null;
+				com.google.gwt.dom.client.Element td = null;
+				while (elt!=null && elt != tableElt) {
+					if (elt.getTagName().equalsIgnoreCase("td")) {
+						td = elt;
+					}
+					if (elt.getTagName().equalsIgnoreCase("tr")) {
+						tr = elt;
+					}
+					elt = elt.getParentElement();
 				}
-				if (elt.getTagName().equalsIgnoreCase("tr")) {
-					tr = elt;
-				}
-				elt = elt.getParentElement();
+				return new RowCol(indexInParent(tr), indexInParent(td));
+			} catch (Exception e) {
+				// messy but effective
+				return new RowCol(-1, -1);
 			}
-			return new RowCol(indexInParent(tr), indexInParent(td));
 		}
 
 		private int indexInParent(com.google.gwt.dom.client.Element elt) {
