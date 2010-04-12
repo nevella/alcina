@@ -583,8 +583,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				try {
 					KeyboardController.INSTANCE.register(kb, task);
 				} catch (KeyBindingException kbe) {
-					BoundTableExt.LOG.log(Level.DEBUG, "Unable to register" + kb,
-							kbe);
+					BoundTableExt.LOG.log(Level.DEBUG, "Unable to register"
+							+ kb, kbe);
 				}
 			}
 		}
@@ -1095,7 +1095,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.masks = masksValue;
 		this.factory = (this.factory == null) ? new BoundWidgetTypeFactory(true)
 				: this.factory;
-		if (((this.masks & BoundTableExt.SORT_MASK) > 0) && (this.columns != null)) {
+		if (((this.masks & BoundTableExt.SORT_MASK) > 0)
+				&& (this.columns != null)) {
 			this.ascending = new boolean[this.columns.length];
 		}
 		if ((this.masks & BoundTableExt.MULTIROWSELECT_MASK) > 0) {
@@ -1159,8 +1160,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					handleSelect(true, row, cell);
 				}
 				if (((masks & BoundTableExt.SORT_MASK) > 0)
-						&& ((masks & BoundTableExt.HEADER_MASK) > 0) && (row == 0)
-						&& !(BoundTableExt.this.value == null || BoundTableExt.this.value.isEmpty())) {
+						&& ((masks & BoundTableExt.HEADER_MASK) > 0)
+						&& (row == 0)
+						&& !(BoundTableExt.this.value == null || BoundTableExt.this.value
+								.isEmpty())) {
 					sortColumn(cell - startColumn);
 				}
 			}
@@ -1211,7 +1214,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				KeyBinding kb = (KeyBinding) entry.getKey();
 				Object execute = entry.getValue();
 				if (newActive) {
-					BoundTableExt.LOG.log(Level.SPAM, "Registering " + kb, null);
+					BoundTableExt.LOG
+							.log(Level.SPAM, "Registering " + kb, null);
 					try {
 						if (execute instanceof Task) {
 							KeyboardController.INSTANCE.register(kb,
@@ -1229,8 +1233,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					}
 				} else {
 					boolean result = KeyboardController.INSTANCE.unregister(kb);
-					BoundTableExt.LOG.log(Level.SPAM, "Unregistering " + kb + " "
-							+ result, null);
+					BoundTableExt.LOG.log(Level.SPAM, "Unregistering " + kb
+							+ " " + result, null);
 				}
 			}
 		});
@@ -1373,14 +1377,25 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				this.table.setWidget(0, i + startColumn, new HTML(
 						this.columns[i].getLabel()));
 			}
-			this.table.getRowFormatter().setStyleName(0, "header");
-			if ((this.masks & BoundTableExt.SORT_MASK) > 0) {
-				this.table.getRowFormatter().addStyleName(0, "sort");
+			if (this.provider instanceof SortableDataProvider
+					&& (this.masks & BoundTableExt.SORT_MASK) > 0) {
+				SortableDataProvider sdp = (SortableDataProvider) this.provider;
+				String[] sortableProperties = sdp.getSortableProperties();
+				for (int i = 0; (i < sortableProperties.length); i++) {
+					for (int index = 0; index < this.columns.length; index++) {
+						if (sortableProperties[i].equals(this.columns[index]
+								.getPropertyName())) {
+							this.table.getCellFormatter().addStyleName(0,
+									index + startColumn, "sortable");
+						}
+					}
+				}
 			}
+			this.table.getRowFormatter().setStyleName(0, "header");
 		}
 		if (sortedColumn != -1) {
 			if ((this.masks & BoundTableExt.HEADER_MASK) > 0) {
-				table.getCellFormatter().setStyleName(
+				table.getCellFormatter().addStyleName(
 						0,
 						sortedColumn + startColumn,
 						this.ascending[sortedColumn] ? "ascending"

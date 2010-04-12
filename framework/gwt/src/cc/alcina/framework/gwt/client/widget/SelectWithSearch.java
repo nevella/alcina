@@ -605,6 +605,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			this.relativePopupPanel = RelativePopupPositioning.showPopup(
 					filter, panelForPopup, RootPanel.get(),
 					RelativePopupPositioning.BOTTOM_LTR, "noBorder");
+			this.relativePopupPanel.setWidth(this.relativePopupPanel.getOffsetWidth()+"px");
 		}
 	}
 

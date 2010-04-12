@@ -1094,11 +1094,9 @@ table.gwittir-BoundTable tr.header td {
 	vertical-align: middle;
 	border-bottom: 1px solid #CECECE;
 }
-table.gwittir-BoundTable tr.header td:hover {
+table.gwittir-BoundTable tr.header td.sortable:hover {
 	background-color:#D0D0D0;
 	color: #202020;
-}
-table.gwittir-BoundTable tr.header.sort td {
 	cursor: pointer;
 }
 

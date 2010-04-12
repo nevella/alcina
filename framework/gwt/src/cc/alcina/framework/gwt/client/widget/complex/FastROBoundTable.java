@@ -47,6 +47,7 @@ import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Element;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Widget;
@@ -182,7 +183,7 @@ public class FastROBoundTable extends BoundTableExt {
 		ROFlexTable table = new ROFlexTable();
 		return table;
 	}
-
+//this actually duplicates a lot of stuff in HTMLTable - 
 	private class EditOverlayHandler implements ClickHandler, MouseOutHandler,
 			MouseOverHandler, MouseMoveHandler {
 		Map<Integer, Boolean> editableColumns = new HashMap<Integer, Boolean>();
@@ -192,6 +193,7 @@ public class FastROBoundTable extends BoundTableExt {
 		RowCol lastRowCol;
 
 		public EditOverlayHandler(Class tableObjectClass) {
+			editableColumns.put(-1,false);
 			int i = 0;
 			if ((masks & BoundTableExt.ROW_HANDLE_MASK) > 0) {
 				editableColumns.put(i++,false);
@@ -348,6 +350,10 @@ public class FastROBoundTable extends BoundTableExt {
 
 		protected boolean internalClearCell(Element td, boolean clearInnerHTML) {
 			return false;
+		}
+		@Override
+		public Element getEventTargetCell(Event event) {
+			return super.getEventTargetCell(event);
 		}
 	}
 
