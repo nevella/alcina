@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.ClientWorker;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.OldPlaintextProtocolHandler;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
@@ -38,27 +39,12 @@ import com.google.gwt.gears.client.database.ResultSet;
  *
  * @author Nick Reddel
  */
-public class GearsTransformPersistence extends
-		AbstractTransformPersistence {
-	private static AbstractTransformPersistence theInstance;
-
-	public static AbstractTransformPersistence get() {
-		if (theInstance == null) {
-			theInstance = new GearsTransformPersistence();
-		}
-		return theInstance;
-	}
-
+public class GearsTransformPersistence extends TransformPersistence {
 	private Factory factory;
 
 	private Database db;
 
-	private GearsTransformPersistence() {
-		super();
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+	public GearsTransformPersistence() {
 	}
 
 	public void clearPersistedClient(ClientInstance exceptFor) {
@@ -73,7 +59,6 @@ public class GearsTransformPersistence extends
 		}
 	}
 
-
 	@Override
 	protected List<DTRSimpleSerialWrapper> getTransforms(
 			DomainTransformRequestType[] types) throws Exception {
@@ -81,7 +66,8 @@ public class GearsTransformPersistence extends
 				"timestamp", Long.class, "user_id", Long.class,
 				"clientInstance_id", Long.class, "request_id", Integer.class,
 				"clientInstance_auth", Integer.class, "transform_request_type",
-				DomainTransformRequestType.class };
+				DomainTransformRequestType.class, "transform_event_protocol",
+				String.class };
 		List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
 		String sql = "select * from TransformRequests ";
 		for (int i = 0; i < types.length; i++) {
@@ -104,7 +90,8 @@ public class GearsTransformPersistence extends
 							.get("request_id"), (Integer) map
 							.get("clientInstance_auth"),
 					(DomainTransformRequestType) map
-							.get("transform_request_type"));
+							.get("transform_request_type"), (String) map
+							.get("transform_event_protocol"));
 			transforms.add(wr);
 		}
 		rs.close();
@@ -164,7 +151,17 @@ public class GearsTransformPersistence extends
 					.execute("update TransformRequests set transform_request_type='TO_REMOTE'");
 		} catch (Exception e) {
 		}
-		
+		try {
+			db
+					.execute("ALTER TABLE TransformRequests add column transform_event_protocol nvarchar(255)");
+			// TODO - remove june 2010
+			db
+					.execute(CommonUtils
+							.formatJ(
+									"update TransformRequests set transform_event_protocol='%s'",
+									OldPlaintextProtocolHandler.VERSION));
+		} catch (Exception e) {
+		}
 	}
 
 	private int getFieldIndex(ResultSet rs, String fieldName) throws Exception {
@@ -204,10 +201,6 @@ public class GearsTransformPersistence extends
 		return result;
 	}
 
-
-
-	
-
 	protected void clearPersisted() {
 		try {
 			db.execute("DELETE from TransformRequests");
@@ -218,13 +211,16 @@ public class GearsTransformPersistence extends
 
 	protected void persist(DTRSimpleSerialWrapper wrapper) {
 		try {
+			if (wrapper.getProtocolVersion()==null){
+				throw new Exception("wrapper must have protocol version");
+			}
 			db
 					.execute(
 							"INSERT INTO TransformRequests "
 									+ "(transform, timestamp,"
 									+ "user_id,clientInstance_id"
 									+ ",request_id,clientInstance_auth,"
-									+ "transform_request_type) VALUES (?, ?,?,?,?,?,?)",
+									+ "transform_request_type,transform_event_protocol) VALUES (?, ?,?,?,?,?,?,?)",
 							new String[] {
 									wrapper.getText(),
 									Long.toString(wrapper.getTimestamp()),
@@ -236,7 +232,7 @@ public class GearsTransformPersistence extends
 									Long.toString(wrapper
 											.getClientInstanceAuth()),
 									wrapper.getDomainTransformRequestType()
-											.toString() });
+											.toString(),wrapper.getProtocolVersion() });
 			if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
 				clearPersistedClient(getCommitToStorageTransformListener()
 						.getClientInstance());

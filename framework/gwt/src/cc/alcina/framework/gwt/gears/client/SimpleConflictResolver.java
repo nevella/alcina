@@ -49,13 +49,13 @@ import com.google.gwt.user.client.ui.Widget;
 
 	private List<DTRSimpleSerialWrapper> uncommitted;
 
-	private AbstractTransformPersistence abstractTransformPersistence;
+	private TransformPersistence abstractTransformPersistence;
 
 	private Callback completionCallback;
 
 	public void resolve(List<DTRSimpleSerialWrapper> uncommitted,
 			Throwable caught,
-			AbstractTransformPersistence abstractTransformPersistence,
+			TransformPersistence abstractTransformPersistence,
 			Callback cb) {
 		this.uncommitted = uncommitted;
 		this.caught = caught;

@@ -11,12 +11,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.Date;
 
 import javax.xml.bind.annotation.XmlRootElement;
+
+import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
@@ -31,15 +32,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
-
 @BeanInfo(displayNamePropertyName = "id")
 @XmlRootElement
 /**
  *
  * @author Nick Reddel
  */
-
- public class DTRSimpleSerialWrapper extends BaseBindable implements
+public class DTRSimpleSerialWrapper extends BaseBindable implements
 		RemoteParameters {
 	private int id;
 
@@ -54,6 +53,8 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 	private int requestId;
 
 	private int clientInstanceAuth;
+
+	private String protocolVersion;
 
 	private DomainTransformRequestType domainTransformRequestType;
 
@@ -74,12 +75,15 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 			ClientLayerLocator.get().clientBase().metricLogEnd(
 					"DTRSimpleSerialWrapper-tostr");
 		} else {
+			//text set async
 		}
 		this.clientInstanceId = request.getClientInstance().getId();
 		this.requestId = request.getRequestId();
 		Integer auth = request.getClientInstance().getAuth();
 		this.clientInstanceAuth = auth == null ? 0 : auth;
-		this.domainTransformRequestType = request.getDomainTransformRequestType();
+		this.domainTransformRequestType = request
+				.getDomainTransformRequestType();
+		this.protocolVersion=request.getProtocolVersion();
 	}
 
 	@Override
@@ -95,7 +99,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 	public DTRSimpleSerialWrapper(int id, String text, long timestamp,
 			long userId, long clientInstanceId, int requestId,
 			int clientInstanceAuth,
-			DomainTransformRequestType domainTransformRequestType) {
+			DomainTransformRequestType domainTransformRequestType, String protocolVersion) {
 		this.text = text;
 		this.timestamp = timestamp;
 		this.userId = userId;
@@ -104,6 +108,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 		this.requestId = requestId;
 		this.clientInstanceAuth = clientInstanceAuth;
 		this.domainTransformRequestType = domainTransformRequestType;
+		this.protocolVersion = protocolVersion;
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance auth", orderingHint = 30))
@@ -195,5 +200,16 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 		long old_userId = this.userId;
 		this.userId = userId;
 		propertyChangeSupport.firePropertyChange("userId", old_userId, userId);
+	}
+
+	public void setProtocolVersion(String protocolVersion) {
+		String old_protocolVersion = this.protocolVersion;
+		this.protocolVersion = protocolVersion;
+		propertyChangeSupport.firePropertyChange("protocolVersion",
+				old_protocolVersion, protocolVersion);
+	}
+
+	public String getProtocolVersion() {
+		return protocolVersion;
 	}
 }

@@ -7,10 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.gwt.gears.client.GearsException;
-import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
@@ -20,14 +16,22 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.ClientWorker;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.PersistableTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
-public abstract class AbstractTransformPersistence implements
+import com.google.gwt.gears.client.GearsException;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
+public abstract class TransformPersistence implements
 		StateChangeListener, PersistableTransformListener {
+	
 	private DTESerializationPolicy serializationPolicy;
 
 	private boolean localStorageInstalled = false;
@@ -66,6 +70,7 @@ public abstract class AbstractTransformPersistence implements
 				int requestId = rq.getRequestId();
 				if (!getPersistedTransforms().containsKey(requestId)
 						&& !rq.getItems().isEmpty()) {
+					rq.setProtocolVersion(getSerializationPolicy().getTransformPersistenceProtocol());
 					DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(
 							rq);
 					persist(wrapper);
@@ -95,6 +100,7 @@ public abstract class AbstractTransformPersistence implements
 			rq.setItems(new ArrayList<DomainTransformEvent>(
 					getCommitToStorageTransformListener()
 							.getSynthesisedEvents()));
+			rq.setProtocolVersion(getSerializationPolicy().getTransformPersistenceProtocol());
 			DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(rq);
 			persist(wrapper);
 		}
@@ -141,7 +147,7 @@ public abstract class AbstractTransformPersistence implements
 					public void onFailure(Throwable caught) {
 						hideDialog();
 						new SimpleConflictResolver().resolve(uncommitted,
-								caught, AbstractTransformPersistence.this, cb);
+								caught, TransformPersistence.this, cb);
 					}
 
 					public void onSuccess(Void result) {
@@ -198,8 +204,9 @@ public abstract class AbstractTransformPersistence implements
 			int max = Math.min(index + iterationCount, items.size());
 			StringBuffer sb2 = new StringBuffer();
 			lastPassIterationsPerformed = max - index;
+			DTRProtocolHandler handler = new DTRProtocolSerializer().getHandler(PlaintextProtocolHandler.VERSION);
 			for (; index < max; index++) {
-				items.get(index).appendTo(sb2);
+				handler.appendTo(items.get(index),sb2);
 			}
 			sb.append(sb2.toString());
 		}

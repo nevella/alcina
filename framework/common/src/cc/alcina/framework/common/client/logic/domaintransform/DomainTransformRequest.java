@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
@@ -21,21 +20,16 @@ import java.util.List;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
-
 
 @MappedSuperclass
 /**
  *
  * @author Nick Reddel
  */
-
- public class DomainTransformRequest implements Serializable {
+public class DomainTransformRequest implements Serializable {
 	private List<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>();
-
-	public void setItems(List<DomainTransformEvent> items) {
-		this.items = items;
-	}
 
 	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
 
@@ -45,9 +39,20 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 	private DomainTransformRequestType domainTransformRequestType;
 
+	private String protocolVersion;
+
+	public void fromString(String eventsStr) {
+		new DTRProtocolSerializer().deserialize(this, getProtocolVersion(),
+				eventsStr);
+	}
+
 	@Transient
 	public ClientInstance getClientInstance() {
 		return clientInstance;
+	}
+
+	public DomainTransformRequestType getDomainTransformRequestType() {
+		return domainTransformRequestType;
 	}
 
 	@Transient
@@ -63,6 +68,11 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 		return this.priorRequestsWithoutResponse;
 	}
 
+	@Transient
+	public String getProtocolVersion() {
+		return protocolVersion;
+	}
+
 	public int getRequestId() {
 		return requestId;
 	}
@@ -71,23 +81,26 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 		this.clientInstance = clientInstance;
 	}
 
+	public void setDomainTransformRequestType(
+			DomainTransformRequestType domainTransformRequestType) {
+		this.domainTransformRequestType = domainTransformRequestType;
+	}
+
+	public void setItems(List<DomainTransformEvent> items) {
+		this.items = items;
+	}
+
+	public void setProtocolVersion(String protocolVersion) {
+		this.protocolVersion = protocolVersion;
+	}
+
 	public void setRequestId(int eventId) {
 		this.requestId = eventId;
 	}
 
 	public String toString() {
-		StringBuffer sb2 = new StringBuffer();
-		StringBuffer sb1 = new StringBuffer();
-		int i = 0;
-		for (DomainTransformEvent dte : items) {
-			if (++i % 200 == 0) {
-				sb2.append(sb1.toString());
-				sb1 = new StringBuffer();
-			}
-			dte.appendTo(sb1);
-		}
-		sb2.append(sb1.toString());
-		return sb2.toString();
+		return new DTRProtocolSerializer()
+				.serialize(this, getProtocolVersion());
 	}
 
 	public String toStringForError() {
@@ -107,25 +120,8 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 		return sb.toString();
 	}
 
-	public void fromString(String eventsStr) {
-		SimpleStringParser p = new SimpleStringParser(eventsStr);
-		String s;
-		while ((s = p.read(DomainTransformEvent.DATA_TRANSFORM_EVENT_MARKER,
-				DomainTransformEvent.DATA_TRANSFORM_EVENT_MARKER, true, false)) != null) {
-			items.add(DomainTransformEvent.fromString(s));
-		}
-	}
-
-	public void setDomainTransformRequestType(
-			DomainTransformRequestType domainTransformRequestType) {
-		this.domainTransformRequestType = domainTransformRequestType;
-	}
-
-	public DomainTransformRequestType getDomainTransformRequestType() {
-		return domainTransformRequestType;
-	}
-
 	public enum DomainTransformRequestType {
-		TO_REMOTE, CLIENT_OBJECT_LOAD, CLIENT_SYNC,TO_REMOTE_COMPLETED,CLIENT_STARTUP_FROM_OFFLINE
+		TO_REMOTE, CLIENT_OBJECT_LOAD, CLIENT_SYNC, TO_REMOTE_COMPLETED,
+		CLIENT_STARTUP_FROM_OFFLINE
 	}
 }

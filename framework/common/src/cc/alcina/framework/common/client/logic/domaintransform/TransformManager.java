@@ -164,7 +164,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	}
 
 	public boolean currentTransformIsDuringCreationRequest() {
-		return currentEvent.getObjectLocalId()!=0;
+		return currentEvent.getObjectLocalId() != 0;
 	}
 
 	/**
@@ -292,7 +292,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 					"Transform type not implemented: " + evt.getTransformType(),
 					SuggestedAction.NOTIFY_WARNING);
 		}
-		currentEvent=null;
+		currentEvent = null;
 	}
 
 	public void convertToTargetObject(DomainTransformEvent evt) {
@@ -784,7 +784,8 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		if (this.domainObjects != null) {
 			domainObjects.removeListeners();
 		}
-		this.domainObjects = new MapObjectLookup(this, h.registerableDomainObjects());
+		this.domainObjects = new MapObjectLookup(this, h
+				.registerableDomainObjects());
 		ClassRef.add(h.getClassRefs());
 	}
 
@@ -958,8 +959,8 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 	 * @param hili
 	 * @param evt
 	 */
-	protected void objectModified(HasIdAndLocalId hili, DomainTransformEvent evt,
-			boolean targetObject) {
+	protected void objectModified(HasIdAndLocalId hili,
+			DomainTransformEvent evt, boolean targetObject) {
 	}
 
 	public boolean hasUnsavedChanges(Object object) {
@@ -1227,6 +1228,9 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 			dtr
 					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
 			ClientBase clientBase = ClientLayerLocator.get().clientBase();
+			dtr.setProtocolVersion(ClientLayerLocator.get()
+					.transformPersistence().getSerializationPolicy()
+					.getInitialObjectPersistenceProtocol());
 			getPersistableTransformListener().persistableTransform(dtr);
 		}
 
@@ -1571,6 +1575,10 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 									.clientBase().getClientInstance());
 							dtr
 									.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
+							dtr.setProtocolVersion(ClientLayerLocator.get()
+									.transformPersistence()
+									.getSerializationPolicy()
+									.getTransformPersistenceProtocol());
 							pl.persistableTransform(dtr);
 						}
 					}
