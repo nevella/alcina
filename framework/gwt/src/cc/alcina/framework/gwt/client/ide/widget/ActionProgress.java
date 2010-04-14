@@ -233,7 +233,7 @@ public class ActionProgress extends Composite implements
 							}
 						}
 						setJobInfo(info);
-						forceFirePropertyChange("Updated");
+						fireNullPropertyChange("Updated");
 					}
 				};
 				if (!checking) {
@@ -257,8 +257,8 @@ public class ActionProgress extends Composite implements
 		super.onDetach();
 	}
 
-	public void forceFirePropertyChange(String name) {
-		this.propertyChangeSupport.forceFirePropertyChange(name);
+	public void fireNullPropertyChange(String name) {
+		this.propertyChangeSupport.fireNullPropertyChange(name);
 	}
 
 	private int row = 0;

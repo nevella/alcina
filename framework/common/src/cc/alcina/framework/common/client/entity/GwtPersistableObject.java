@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.entity;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
+import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
@@ -54,8 +55,8 @@ public class GwtPersistableObject extends BaseBindable implements
 	 * Hack - note that the old/newvalues of the propertychangeevent should
 	 * !not! be read. For listeners on collection properties
 	 */
-	public void forceFirePropertyChange(String name) {
-		this.propertyChangeSupport.firePropertyChange(name, false, true);
+	public void fireNullPropertyChange(String name) {
+		((MutablePropertyChangeSupport)this.propertyChangeSupport).fireNullPropertyChange(name);
 	}
 
 	public AccessLevel accessLevel() {

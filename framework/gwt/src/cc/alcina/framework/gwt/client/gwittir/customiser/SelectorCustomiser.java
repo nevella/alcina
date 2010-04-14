@@ -280,7 +280,12 @@ public class SelectorCustomiser implements Customiser {
 				ArrayList c = new ArrayList((Collection) value);
 				Comparator comparator = getComparator();
 				if (comparator == null) {
-					Collections.sort(c);
+					if (!c.isEmpty()) {
+						Object o = c.get(0);
+						if (c instanceof Comparable) {
+							Collections.sort(c);
+						}
+					}
 				} else {
 					Collections.sort(c, comparator);
 				}

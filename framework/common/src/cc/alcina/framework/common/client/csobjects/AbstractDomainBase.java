@@ -43,8 +43,8 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	/**
 	 * Useful for collection listeners - a "check the kids" thing
 	 */
-	public void forceFirePropertyChange(String name) {
-		((MutablePropertyChangeSupport)this.propertyChangeSupport).forceFirePropertyChange(name);
+	public void fireNullPropertyChange(String name) {
+		((MutablePropertyChangeSupport)this.propertyChangeSupport).fireNullPropertyChange(name);
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Id", orderingHint = 900), visible = @Permission(access = AccessLevel.ADMIN))

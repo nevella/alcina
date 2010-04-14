@@ -1742,7 +1742,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 		// changes won't be noticed unless we do this
 		if (obj instanceof GwtPersistableObject) {
 			((GwtPersistableObject) obj)
-					.forceFirePropertyChange(UNSPECIFIC_PROPERTY_CHANGE);
+					.fireNullPropertyChange(UNSPECIFIC_PROPERTY_CHANGE);
 		}
 	}
 

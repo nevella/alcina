@@ -64,7 +64,7 @@ public class MutablePropertyChangeSupport extends PropertyChangeSupport {
 	 * Hack - note that the old/newvalues of the propertychangeevent should
 	 * !not! be read. For listeners on collection properties
 	 */
-	public void forceFirePropertyChange(String name) {
+	public void fireNullPropertyChange(String name) {
 		if (isMuteAll()||!hasListeners){
 			return;
 		}
