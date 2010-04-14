@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
  public class ServerTransformListener implements DomainTransformListener {
 	public void domainTransform(DomainTransformEvent evt)
 			throws DomainTransformException {
-		if (evt.getCommitType() == CommitType.TO_REMOTE_STORAGE) {
+		if (evt.getCommitType() == CommitType.TO_STORAGE) {
 			TransformManager tm = TransformManager.get();
 			try {
 				tm.consume(evt);

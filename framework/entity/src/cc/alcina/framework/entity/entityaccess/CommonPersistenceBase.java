@@ -112,12 +112,17 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		}
 	}
 
-	// hibernate
 	public void bulkDelete(Class clazz, Collection<Long> ids) {
-		getEntityManager().createQuery(
-				String.format("delete %s where id in %s ", clazz
-						.getSimpleName(), EntityUtils.longListToIdClause(ids)))
-				.executeUpdate();
+		if (!EntityLayerLocator.get().jpaImplementation().bulkDelete(
+				getEntityManager(), clazz, ids)) {
+			List<Object> resultList = getEntityManager().createQuery(
+					String.format("from %s where id in %s ", clazz
+							.getSimpleName(), EntityUtils
+							.longListToIdClause(ids))).getResultList();
+			for (Object object : resultList) {
+				getEntityManager().remove(object);
+			}
+		}
 	}
 
 	public abstract <A> Class<? extends A> getImplementation(Class<A> clazz);
@@ -281,9 +286,9 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		getEntityManager().merge(inst);
 	}
 
-	public DomainTransformLayerWrapper transform(DomainTransformRequest request,
-			HiliLocatorMap locatorMap, boolean persistTransforms,
-			boolean possiblyReconstitueLocalIdMap)
+	public DomainTransformLayerWrapper transform(
+			DomainTransformRequest request, HiliLocatorMap locatorMap,
+			boolean persistTransforms, boolean possiblyReconstitueLocalIdMap)
 			throws DomainTransformException {
 		try {
 			fixPermissionsManager(true);
@@ -297,7 +302,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			if (persistentClientInstance.getAuth() != null
 					&& !(persistentClientInstance.getAuth().equals(request
 							.getClientInstance().getAuth()))) {
-				throw new DomainTransformException("Invalid client instance auth");
+				throw new DomainTransformException(
+						"Invalid client instance auth");
 			}
 			tm.setClientInstance(persistentClientInstance);
 			if (locatorMap != null && possiblyReconstitueLocalIdMap

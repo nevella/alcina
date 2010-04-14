@@ -11,24 +11,37 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
+
+import java.util.Collection;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface JPAImplementation {
-
+public interface JPAImplementation {
 	boolean isLazyInitialisationException(Exception e);
 
 	public <T> T getInstantiatedObject(T object);
 
-	public CloneFilter getResolvingFilter(InstantiateImplCallback callback, DetachedEntityCache cache);
-	
+	public CloneFilter getResolvingFilter(InstantiateImplCallback callback,
+			DetachedEntityCache cache);
+
+	/**
+	 * return false if no optimisation
+	 */
+	public boolean bulkDelete(EntityManager em, Class clazz,
+			Collection<Long> ids);
+
+	public boolean isCacheDisabled();
+
+	public void setCacheDisabled(boolean cacheDisabled);
+
+	public void cache(Query query);
 }

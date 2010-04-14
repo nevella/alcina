@@ -11,40 +11,61 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.gears.client;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.user.client.Cookies;
+import com.google.gwt.user.client.Timer;
 
 /**
  * 
  * @author nick@alcina.cc
- * <p>Basic session support for the (possibly offline) client</p>
+ *         <p>
+ *         Basic session support for the (possibly offline) client
+ *         </p>
  * 
- * Logic:
- * <ul>
- * <li>Each client (browser "process", pace chrome) has a unique sessionId</li>
- * <li>Persistent dtrs are tagged with the session id</li>
- * <li>For simplicity, only one offline instance (tab) can be run per sessionId 
- * (one per sessionId/clientInstanceId combo would be possible, but probably confusin
- * to users)</li>
- * <li>Sessions are marked in the persistence db on object save, and released (set to null) on window close.
- * If the window closes unexpectedly, the session marker will not 
- * </ul>
+ *         Logic:
+ *         <ul>
+ *         <li>Each client (browser "process", pace chrome) has a storage
+ *         session</li>
+ *         <li>For simplicity, only one offline instance (tab) can be run per
+ *         browser instance (one per clientInstanceId would be possible, but
+ *         probably confusin to users)</li>
+ *         <li>Also, the save_initial function is only called once (first time)
+ *         per session - saves on wear'n'tear</li>
+ *         <li>Tabs communicate via cookies n timers</li>
+ *         </ul>
  * 
  */
 public class ClientSession {
-	private static final String CLIENT_SESSION_ID = "persistence_client_session_id";
+	private static final String STORAGE_SESSION_COOKIE_NAME = ClientSession.class
+			.getName()
+			+ ".storage-session";
+
+	private static final String HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME = ClientSession.class
+			.getName()
+			+ ".initial-objects-persisted";
 
 	private ClientSession() {
 		super();
+		Map<Long, Long> m = parseCookie();
+		Long maxTabId=m.isEmpty()?0:CommonUtils.last(m.keySet().iterator());
+		tabId=maxTabId+1;
+		updateCookie();
+		new Timer() {
+			@Override
+			public void run() {
+				updateCookie();
+			}
+		}.scheduleRepeating(2000);
 	}
-	static final double TWO_PWR_28_DBL = 0x10000000;
 	private static ClientSession theInstance;
+
+	private long tabId;
 
 	public static ClientSession get() {
 		if (theInstance == null) {
@@ -56,18 +77,52 @@ public class ClientSession {
 	public void appShutdown() {
 		theInstance = null;
 	}
-	public void initSession(){
-		String cookie = Cookies.getCookie(CLIENT_SESSION_ID);
-		if (cookie==null){
-			Cookies.setCookie(CLIENT_SESSION_ID, String.valueOf((int)(Math.random()*TWO_PWR_28_DBL)));
+
+
+	protected void updateCookie() {
+		Map<Long, Long> m = parseCookie();
+		m.put(tabId, System.currentTimeMillis());
+		StringBuilder sb = new StringBuilder();
+		for (Long k : m.keySet()) {
+			sb.append(k);
+			sb.append(",");
+			sb.append(m.get(k));
+			sb.append(",");
 		}
+		Cookies.setCookie(STORAGE_SESSION_COOKIE_NAME, sb.toString());
 	}
-	public String getSessionId(){
-		 String cookie = Cookies.getCookie(CLIENT_SESSION_ID);
-		 if (cookie==null){
-			 throw new WrappedRuntimeException("Session not initialized", SuggestedAction.NOTIFY_WARNING);
-		 }
-		 return cookie;
+
+	protected Map<Long, Long> parseCookie() {
+		Map<Long, Long> result = new LinkedHashMap<Long, Long>();
+		String s = Cookies.getCookie(STORAGE_SESSION_COOKIE_NAME);
+		if (s != null) {
+			String[] split = s.split(",");
+			for (int i = 0; i < split.length; i += 2) {
+				result.put(Long.parseLong(split[i]), Long
+						.parseLong(split[i + 1]));
+			}
+		}
+		return result;
+	}
+
+	public boolean isSoleOpenTab() {
+		long l = System.currentTimeMillis();
+		Map<Long, Long> m = parseCookie();
+		for (Long k : m.keySet()) {
+			if (k != tabId && (l - m.get(k)) < 3000) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public void setInitialObjectsPersisted(boolean initialObjectsPersisted) {
+		Cookies.setCookie(HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME,String.valueOf(initialObjectsPersisted));
+	}
+
+	public boolean isInitialObjectsPersisted() {
+		String s=Cookies.getCookie(HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME);
+		return s!=null && Boolean.valueOf(s);
 	}
 	
 }

@@ -582,6 +582,9 @@ div.pad-top-0{
 .pad-lbr-15 {
 	padding: 0px 15px 15px 15px;
 }
+.pad-tb-1em {
+	padding: 1em 0 1em 0;
+}
 
 .pad-left-15 {
 	padding-left: 15px;

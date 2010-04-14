@@ -109,16 +109,7 @@ public class EntityUtils {
 		}
 	}
 
-	public void enableHibernateDebug(boolean debug) {
-		if (debug) {
-			Logger logger = Logger.getLogger("org.hibernate");
-			logger.setLevel(Level.DEBUG);
-			logger.addAppender(new ConsoleAppender(new PatternLayout(
-					"%-5p [%c{1}] %m%n")));
-		} else {
-			Logger.getLogger("org.hibernate").setLevel(Level.WARN);
-		}
-	}
+	
 
 	public <T> T detachedClone(T source, InstantiateImplCallback callback) {
 		return detachedClone(source, false, callback);

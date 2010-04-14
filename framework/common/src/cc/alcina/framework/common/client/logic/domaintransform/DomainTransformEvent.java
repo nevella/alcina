@@ -317,10 +317,12 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 		dte.setObjectLocalId(p.readLong("", "\n"));
 		String pName = p.read(PARAMS, ",");
 		dte.setPropertyName(pName.equals("null") ? null : pName);
-		dte.setCommitType(CommitType.valueOf(p.read("", ",")));
+		String commitTypeStr = p.read("", ",");
+		commitTypeStr = commitTypeStr.equals("TO_REMOTE_STORAGE")?"TO_STORAGE":commitTypeStr;
+		dte.setCommitType(CommitType.valueOf(commitTypeStr));
 		// TODO - temporary compat
 		if (p.indexOf(",") < p.indexOf("\n")) {
-			dte.setTransformType(TransformType.valueOf(p.read("", ",")));
+			dte.setTransformType(TransformType.valueOf(commitTypeStr));
 			long utcTime = p.readLong("", "\n");
 			dte.setUtcDate(new Date(utcTime));
 		} else {

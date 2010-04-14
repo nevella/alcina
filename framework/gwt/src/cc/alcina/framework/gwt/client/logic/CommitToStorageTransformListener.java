@@ -45,7 +45,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * @author Nick Reddel
  */
 
- public class CommitToServerTransformListener extends StateListenable implements
+ public class CommitToStorageTransformListener extends StateListenable implements
 		DomainTransformListener {
 	public static final int DELAY_MS = 100;
 
@@ -75,7 +75,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 	private ClientInstance clientInstance;
 
-	public CommitToServerTransformListener() {
+	public CommitToStorageTransformListener() {
 		resetQueue();
 	}
 
@@ -84,7 +84,13 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 	}
 
 	public void domainTransform(DomainTransformEvent evt) {
-		if (evt.getCommitType() == CommitType.TO_REMOTE_STORAGE) {
+		if (evt.getCommitType() == CommitType.TO_STORAGE) {
+			String pn = evt.getPropertyName();
+			if (pn != null
+					&& (pn.equals(TransformManager.ID_FIELD_NAME) || pn
+							.equals(TransformManager.LOCAL_ID_FIELD_NAME))) {
+				return;
+			}
 			TransformManager tm = TransformManager.get();
 			if (tm.isReplayingRemoteEvent()) {
 				return;

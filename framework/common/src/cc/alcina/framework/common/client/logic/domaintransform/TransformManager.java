@@ -277,7 +277,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 				hili.setId(evt.getObjectId());
 			}
 			evt.setObjectId(hili.getId());
-			if (evt.getCommitType() == CommitType.TO_REMOTE_STORAGE) {
+			if (evt.getCommitType() == CommitType.TO_STORAGE) {
 				objectModified(hili, evt, false);
 			}
 			if (domainObjects != null) {
@@ -1496,7 +1496,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 					tm.consume(evt);
 					break;
 				}
-				tm.setTransformCommitType(evt, CommitType.TO_LOCAL_STORAGE);
+				tm.setTransformCommitType(evt, CommitType.TO_STORAGE);
 			}
 		}
 	}

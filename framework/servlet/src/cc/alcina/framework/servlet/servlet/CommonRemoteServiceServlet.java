@@ -172,7 +172,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return null;
 		}
 		for (DomainTransformEvent dte : items) {
-			dte.setCommitType(CommitType.TO_REMOTE_STORAGE);
+			dte.setCommitType(CommitType.TO_STORAGE);
 		}
 		request.setItems(items);
 		try {

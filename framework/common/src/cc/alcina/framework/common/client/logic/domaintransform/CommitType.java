@@ -11,12 +11,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 /**
- * NOTE: remote storage can mean either client>server or server>client - just from outside
+ * NOTE:  storage can mean either client>server or server>client - just
+ * from outside
+ * ??que??
  */
 public enum CommitType {
-	TO_LOCAL_BEAN,TO_LOCAL_GRAPH,TO_LOCAL_STORAGE,TO_REMOTE_STORAGE, ALL_COMMITTED
+	TO_LOCAL_BEAN, TO_LOCAL_GRAPH, TO_STORAGE, ALL_COMMITTED
 }

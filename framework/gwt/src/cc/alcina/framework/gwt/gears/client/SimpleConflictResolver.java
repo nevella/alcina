@@ -49,17 +49,17 @@ import com.google.gwt.user.client.ui.Widget;
 
 	private List<DTRSimpleSerialWrapper> uncommitted;
 
-	private SimpleGearsTransformPersistence simpleGearsTransformPersistence;
+	private AbstractTransformPersistence abstractTransformPersistence;
 
 	private Callback completionCallback;
 
 	public void resolve(List<DTRSimpleSerialWrapper> uncommitted,
 			Throwable caught,
-			SimpleGearsTransformPersistence simpleGearsTransformPersistence,
+			AbstractTransformPersistence abstractTransformPersistence,
 			Callback cb) {
 		this.uncommitted = uncommitted;
 		this.caught = caught;
-		this.simpleGearsTransformPersistence = simpleGearsTransformPersistence;
+		this.abstractTransformPersistence = abstractTransformPersistence;
 		this.completionCallback = cb;
 		dialog = new GlassDialogBox();
 		dialog.setText("Conflicts saving offline work");
@@ -160,7 +160,7 @@ import com.google.gwt.user.client.ui.Widget;
 				if (Window.confirm(TextProvider.get().getUiObjectText(
 						SimpleConflictResolver.class, "discard-confirmation",
 						"Are you sure you want to discard your changes?"))) {
-					simpleGearsTransformPersistence.clearPersisted();
+					abstractTransformPersistence.clearPersisted();
 					Window.alert(TextProvider.get().getUiObjectText(
 							SimpleConflictResolver.class, "discard-complete",
 							"Changes discarded"));

@@ -11,27 +11,41 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.impl.jboss;
+
+import java.util.Collection;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import org.hibernate.LazyInitializationException;
 import org.hibernate.proxy.HibernateProxy;
 
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public class JPAHibernateImpl implements JPAImplementation {
+	private boolean cacheDisabled;
 
- public class JPAHibernateImpl implements JPAImplementation {
+	public boolean isCacheDisabled() {
+		return this.cacheDisabled;
+	}
+
+	public void setCacheDisabled(boolean cacheDisabled) {
+		this.cacheDisabled = cacheDisabled;
+	}
+
 	public boolean isLazyInitialisationException(Exception e) {
 		return e instanceof LazyInitializationException;
 	}
+
 	@SuppressWarnings("unchecked")
 	public <T> T getInstantiatedObject(T object) {
 		if (object instanceof HibernateProxy) {
@@ -40,11 +54,28 @@ import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 		}
 		return object;
 	}
-	public CloneFilter getResolvingFilter(InstantiateImplCallback callback,DetachedEntityCache cache){
-		EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(callback);
-		if (cache!=null){
+
+	public CloneFilter getResolvingFilter(InstantiateImplCallback callback,
+			DetachedEntityCache cache) {
+		EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(
+				callback);
+		if (cache != null) {
 			filter.setCache(cache);
 		}
 		return filter;
+	}
+
+	public boolean bulkDelete(EntityManager em, Class clazz,
+			Collection<Long> ids) {
+		em.createQuery(
+				String.format("delete %s where id in %s ", clazz
+						.getSimpleName(), EntityUtils.longListToIdClause(ids)))
+				.executeUpdate();
+		return true;
+	}
+
+	public void cache(Query query) {
+		query.setHint("org.hibernate.cacheable", true);
+		
 	}
 }
