@@ -122,4 +122,6 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 			Long id,CloneFilter fieldFilter, CloneFilter dataFilter);
 
 	public void bulkDelete(Class clazz, Collection<Long> ids);
+
+	public <T extends HasId> T ensurePersistent(T obj);
 }

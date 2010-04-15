@@ -44,6 +44,8 @@ public abstract class TransformPersistence implements
 
 	private Long clientInstanceIdForGet = null;
 
+	private static TransformPersistence transformPersistence;
+
 	public void setSerializationPolicy(
 			DTESerializationPolicy serializationPolicy) {
 		this.serializationPolicy = serializationPolicy;
@@ -121,6 +123,13 @@ public abstract class TransformPersistence implements
 	}
 
 	public void persistableTransform(DomainTransformRequest dtr) {
+		if (dtr.getDomainTransformRequestType()==DomainTransformRequestType.CLIENT_OBJECT_LOAD){
+			dtr.setProtocolVersion(getSerializationPolicy()
+					.getInitialObjectPersistenceProtocol());
+		}else{
+			dtr.setProtocolVersion(getSerializationPolicy()
+					.getTransformPersistenceProtocol());
+		}
 		if (!dtr.getItems().isEmpty()) {
 			if (!closing) {
 				new DTRAsyncSerializer(dtr).start();
@@ -297,5 +306,13 @@ setCommitToStorageTransformListener(commitToServerTransformListener);
 
 	protected Long getClientInstanceIdForGet() {
 		return clientInstanceIdForGet;
+	}
+
+	public static void registerTransformPersistence(TransformPersistence transformPersistence) {
+		TransformPersistence.transformPersistence = transformPersistence;
+	}
+
+	public static TransformPersistence get() {
+		return transformPersistence;
 	}
 }

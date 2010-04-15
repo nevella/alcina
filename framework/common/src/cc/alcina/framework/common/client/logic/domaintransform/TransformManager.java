@@ -1228,9 +1228,7 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 			dtr
 					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
 			ClientBase clientBase = ClientLayerLocator.get().clientBase();
-			dtr.setProtocolVersion(ClientLayerLocator.get()
-					.transformPersistence().getSerializationPolicy()
-					.getInitialObjectPersistenceProtocol());
+			
 			getPersistableTransformListener().persistableTransform(dtr);
 		}
 
@@ -1575,10 +1573,6 @@ public class TransformManager implements PropertyChangeListener, ObjectLookup,
 									.clientBase().getClientInstance());
 							dtr
 									.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
-							dtr.setProtocolVersion(ClientLayerLocator.get()
-									.transformPersistence()
-									.getSerializationPolicy()
-									.getTransformPersistenceProtocol());
 							pl.persistableTransform(dtr);
 						}
 					}

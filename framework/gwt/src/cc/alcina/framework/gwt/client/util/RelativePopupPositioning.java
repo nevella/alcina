@@ -177,27 +177,28 @@ public class RelativePopupPositioning {
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis) {
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget,
-				new RelativePopupAxis[] { axis }, null);
+				new RelativePopupAxis[] { axis }, null, null,true);
 	}
 
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis,
 			String panelStyleName) {
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget,
-				new RelativePopupAxis[] { axis }, panelStyleName);
+				new RelativePopupAxis[] { axis }, panelStyleName, null,true);
 	}
 
 	public static RelativePopupPanel showPopup(final Widget relativeToWidget,
 			final Widget widgetToShow, final Widget boundingWidget,
-			final RelativePopupAxis[] axes, String panelStyleName) {
+			final RelativePopupAxis[] axes, String panelStyleName,
+			Widget relativeContainer, boolean animationEnabled) {
 		final RelativePopupPanel rpp = new RelativePopupPanel(true);
 		if (panelStyleName != null) {
 			rpp.addStyleName(panelStyleName);
 		}
-		rpp.setAnimationEnabled(true);
+		rpp.setAnimationEnabled(animationEnabled);
 		rpp.setWidget(widgetToShow);
-		final Widget positioningWidget = WidgetUtils
-				.getPositioningParent(relativeToWidget);
+		final Widget positioningWidget = relativeContainer != null ? relativeContainer
+				: WidgetUtils.getPositioningParent(relativeToWidget);
 		ComplexPanel cp = WidgetUtils.complexChildOrSelf(positioningWidget);
 		rpp.setPositioningContainer(cp);
 		rpp.setPopupPositionAndShow(new PositionCallback() {

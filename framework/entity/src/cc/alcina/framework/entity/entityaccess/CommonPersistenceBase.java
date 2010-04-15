@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.entity.PersistentSingleton;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -606,6 +607,9 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			if (ignoreId != null) {
 				eql += " AND id != " + ignoreId;
 			}
+			if (HasId.class.isAssignableFrom(clazz)){
+				eql+=" order by id asc";
+			}
 			Query q = getEntityManager().createQuery(eql);
 			if (value != null) {
 				q.setParameter(1, caseInsensitive ? value.toString()
@@ -674,7 +678,12 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-
+	public <T extends HasId> T ensurePersistent(T obj){
+		if (getEntityManager().contains(obj)){
+			return obj;
+		}
+		return (T) getEntityManager().find(obj.getClass(), obj.getId());
+	}
 	protected <T> T findImplInstance(Class<? extends T> clazz, long id) {
 		Class<?> implClazz = getImplementation(clazz);
 		return (T) getEntityManager().find(implClazz, id);

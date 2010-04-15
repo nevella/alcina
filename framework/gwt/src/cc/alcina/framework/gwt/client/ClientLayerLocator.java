@@ -17,7 +17,6 @@ package cc.alcina.framework.gwt.client;
 import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.ProvidesCommonRemoteService;
-import cc.alcina.framework.gwt.gears.client.TransformPersistence;
 
 /**
  *
@@ -69,14 +68,5 @@ import cc.alcina.framework.gwt.gears.client.TransformPersistence;
 
 	public ClientBase clientBase() {
 		return clientBase;
-	}
-	private TransformPersistence transformPersistence;
-
-	public void registerTransformPersistence(TransformPersistence transformPersistence) {
-		this.transformPersistence = transformPersistence;
-	}
-
-	public TransformPersistence transformPersistence() {
-		return transformPersistence;
 	}
 }
