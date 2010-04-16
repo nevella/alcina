@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.beanutils.converters.StringConverter;
+
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -318,7 +320,7 @@ public class GwittirBridge implements PropertyAccessor {
 				}
 				return new Field(pr.getPropertyName(), TextProvider.get()
 						.getLabelText(c, pr), bwp, validator, vf,
-						getDefaultConverter(p.getType()));
+						getDefaultConverter(bwp,p.getType()));
 			}
 		} else if (beanInfo.allPropertiesVisualisable()
 				&& PermissionsManager.get().checkEffectivePropertyPermission(
@@ -330,15 +332,18 @@ public class GwittirBridge implements PropertyAccessor {
 			vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
 			return new Field(pr.getPropertyName(), TextProvider.get()
 					.getLabelText(c, pr), bwp, getValidator(p.getType(), obj,
-					pr.getPropertyName(), vf), vf, getDefaultConverter(p
+					pr.getPropertyName(), vf), vf, getDefaultConverter(bwp,p
 					.getType()));
 		}
 		return null;
 	}
 
-	public static Converter getDefaultConverter(Class propertyType) {
+	public static Converter getDefaultConverter(BoundWidgetProvider bwp, Class propertyType) {
 		if (propertyType == Date.class || propertyType == Timestamp.class) {
 			return DateToLongStringConverter.INSTANCE;
+		}
+		if (bwp==BoundWidgetTypeFactory.TEXTBOX_PROVIDER){
+			return Converter.TO_STRING_CONVERTER;//these seem to be being introspected as value-type object, not string
 		}
 		return null;
 	}

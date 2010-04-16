@@ -176,26 +176,26 @@ public class RelativePopupPositioning {
 
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis) {
-		return showPopup(relativeToWidget, widgetToShow, boundingWidget,
-				new RelativePopupAxis[] { axis }, null, null,true);
+		return showPopup(relativeToWidget, widgetToShow, boundingWidget, axis,
+				null);
 	}
 
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis,
 			String panelStyleName) {
+		RelativePopupPanel rpp = new RelativePopupPanel(true);
+		rpp.setAnimationEnabled(true);
+		if (panelStyleName != null) {
+			rpp.addStyleName(panelStyleName);
+		}
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget,
-				new RelativePopupAxis[] { axis }, panelStyleName, null,true);
+				new RelativePopupAxis[] { axis }, null, rpp,0,0);
 	}
 
 	public static RelativePopupPanel showPopup(final Widget relativeToWidget,
 			final Widget widgetToShow, final Widget boundingWidget,
-			final RelativePopupAxis[] axes, String panelStyleName,
-			Widget relativeContainer, boolean animationEnabled) {
-		final RelativePopupPanel rpp = new RelativePopupPanel(true);
-		if (panelStyleName != null) {
-			rpp.addStyleName(panelStyleName);
-		}
-		rpp.setAnimationEnabled(animationEnabled);
+			final RelativePopupAxis[] axes, Widget relativeContainer,
+			final RelativePopupPanel rpp, final int shiftX, final int shiftY) {
 		rpp.setWidget(widgetToShow);
 		final Widget positioningWidget = relativeContainer != null ? relativeContainer
 				: WidgetUtils.getPositioningParent(relativeToWidget);
@@ -205,6 +205,8 @@ public class RelativePopupPositioning {
 			public void setPosition(int offsetWidth, int offsetHeight) {
 				int x = relativeToWidget.getAbsoluteLeft();
 				int y = relativeToWidget.getAbsoluteTop();
+				x+=shiftX;
+				y+=shiftY;
 				// work in coordinate space of bounding widget
 				x -= boundingWidget.getAbsoluteLeft();
 				y -= boundingWidget.getAbsoluteTop();
