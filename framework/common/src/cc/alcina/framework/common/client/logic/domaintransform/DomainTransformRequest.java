@@ -15,13 +15,14 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
-import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 @MappedSuperclass
 /**
@@ -34,6 +35,8 @@ public class DomainTransformRequest implements Serializable {
 	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
 
 	private int requestId;
+
+	private Set<Long> eventIdsToIgnore = new HashSet<Long>();
 
 	private ClientInstance clientInstance;
 
@@ -53,6 +56,11 @@ public class DomainTransformRequest implements Serializable {
 
 	public DomainTransformRequestType getDomainTransformRequestType() {
 		return domainTransformRequestType;
+	}
+
+	@Transient
+	public Set<Long> getEventIdsToIgnore() {
+		return eventIdsToIgnore;
 	}
 
 	@Transient
@@ -84,6 +92,10 @@ public class DomainTransformRequest implements Serializable {
 	public void setDomainTransformRequestType(
 			DomainTransformRequestType domainTransformRequestType) {
 		this.domainTransformRequestType = domainTransformRequestType;
+	}
+
+	public void setEventIdsToIgnore(Set<Long> eventIdsToIgnore) {
+		this.eventIdsToIgnore = eventIdsToIgnore;
 	}
 
 	public void setItems(List<DomainTransformEvent> items) {
@@ -123,5 +135,22 @@ public class DomainTransformRequest implements Serializable {
 	public enum DomainTransformRequestType {
 		TO_REMOTE, CLIENT_OBJECT_LOAD, CLIENT_SYNC, TO_REMOTE_COMPLETED,
 		CLIENT_STARTUP_FROM_OFFLINE
+	}
+
+	public List<DomainTransformEvent> allTransforms() {
+		List<DomainTransformEvent> all = new ArrayList<DomainTransformEvent>();
+		List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
+		dtrs.addAll(getPriorRequestsWithoutResponse());
+		dtrs.add(this);
+		for (DomainTransformRequest dtr : dtrs) {
+			all.addAll(dtr.getItems());
+		}
+		return all;
+	}
+
+	public void updateTransformCommitType(CommitType commitType, boolean deep) {
+		for (DomainTransformEvent dte : deep?allTransforms():getItems()) {
+			dte.setCommitType(commitType);
+		}
 	}
 }

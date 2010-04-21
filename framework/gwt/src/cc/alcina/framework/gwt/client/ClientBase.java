@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent.Permissi
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponseBean;
 import cc.alcina.framework.common.client.csobjects.WebException;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.logic.StandardAsyncCallback;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
@@ -90,8 +91,6 @@ public abstract class ClientBase implements EntryPoint,
 
 	private static final String CSS_TEXT_PROPERTY = "cssText";
 
-	public abstract ClientInstance getClientInstance();
-
 	/**
 	 * This is the entry point method.
 	 */
@@ -107,43 +106,8 @@ public abstract class ClientBase implements EntryPoint,
 
 	private String logString = "";
 
-	public String getLogString() {
-		return this.logString;
-	}
-
-	public abstract CommonRemoteServiceAsync getCommonRemoteService();
-
-	public abstract void handleLoggedIn(LoginResponseBean lrb);
-
-	public void persist(GwtPersistableObject gpo) {
-		persist(gpo, new StandardAsyncCallback());
-	}
-
-	@SuppressWarnings("unchecked")
-	public void persist(GwtPersistableObject gpo, AsyncCallback callback) {
-		getCommonRemoteService().persist(gpo, callback);
-	}
-
-	protected void addCssListeners(GeneralProperties props) {
-		props.addPropertyChangeListener(
-				GeneralProperties.PROPERTY_PERSISTENT_CSS, cssPropertyListener);
-		props.addPropertyChangeListener(
-				GeneralProperties.PROPERTY_TRANSIENT_CSS, cssPropertyListener);
-	}
-
-	private void addHidden(Panel p, String key, String value) {
-		p.add(new Hidden(key, value));
-	}
-
-	public native void invokeJsDebugger() /*-{
-		debugger;
-	}-*/;
-
-	public void log(String s) {
-		logString += CommonUtils.formatDate(new Date(),
-				DateStyle.AU_DATE_TIME_MS)
-				+ ": " + s + "\n";
-	}
+	protected static final StandardDataImages images = GWT
+			.create(StandardDataImages.class);
 
 	public static boolean maybeOffline(Throwable t) {
 		if (t instanceof WrappedRuntimeException) {
@@ -165,6 +129,104 @@ public abstract class ClientBase implements EntryPoint,
 		return false;
 	}
 
+	private boolean dialogAnimationEnabled = true;
+
+	private Element styleElement;
+
+	private Map<String, Long> metricStartTimes = new HashMap<String, Long>();
+
+	private CommitToStorageTransformListener commitToStorageTransformListener;
+
+	public void confirm(String msg, final OkCallback callback) {
+		new OkCancelDialogBox("Confirmation", new Label(msg),
+				new PermissibleActionEvent.PermissibleActionListener() {
+					public void vetoableAction(PermissibleActionEvent evt) {
+						if (evt.getAction().getActionName().equals(
+								OkCancelDialogBox.OK_ACTION)) {
+							callback.ok();
+						}
+					}
+				}).show();
+	}
+
+	public String extraInfoForExceptionText() {
+		return "\n\nUser agent: " + BrowserMod.getUserAgent()
+				+ "\n\nHistory token: " + History.getToken();
+	}
+
+	public ClientInstance getClientInstance() {
+		return getCommitToStorageTransformListener().getClientInstance();
+	}
+
+	public CommitToStorageTransformListener getCommitToStorageTransformListener() {
+		return this.commitToStorageTransformListener;
+	}
+
+	public abstract CommonRemoteServiceAsync getCommonRemoteService();
+
+	public <T extends HasIdAndLocalId> void getItemById(String className,
+			Long id, AsyncCallback<T> callback) {
+		getCommonRemoteService().getItemById(className, id, callback);
+	}
+
+	public void getLogsForAction(RemoteAction action, int count,
+			AsyncCallback<List<ActionLogItem>> callback) {
+		getCommonRemoteService().getLogsForAction(action,
+				Integer.valueOf(count), callback);
+	}
+
+	public String getLogString() {
+		return this.logString;
+	}
+
+	public abstract void handleLoggedIn(LoginResponseBean lrb);
+
+	public void hello(AsyncCallback callback) {
+		getCommonRemoteService().hello(callback);
+	}
+
+	public void hideDialog() {
+		if (dialogBox != null) {
+			dialogBox.hide();
+		}
+	}
+
+	public native void invokeJsDebugger() /*-{
+		debugger;
+	}-*/;
+
+	public boolean isDialogAnimationEnabled() {
+		return dialogAnimationEnabled;
+	}
+
+	public void log(String s) {
+		logString += CommonUtils.formatDate(new Date(),
+				DateStyle.AU_DATE_TIME_MS)
+				+ ": " + s + "\n";
+	}
+
+	public void login(LoginBean loginBean, AsyncCallback callback) {
+		getCommonRemoteService().login(loginBean, callback);
+	}
+
+	public void logout(AsyncCallback callback) {
+		getCommonRemoteService().logout(callback);
+	}
+
+	public void metricLogEnd(String key) {
+		log(CommonUtils.format("Metric: %1 - %2 ms", key, System
+				.currentTimeMillis()
+				- metricStartTimes.get(key)));
+	}
+
+	public void metricLogStart(String key) {
+		metricStartTimes.put(key, System.currentTimeMillis());
+	}
+
+	public void notImplemented() {
+		this.showWarning("Not yet implemented");
+	}
+
 	public void onUncaughtException(Throwable e) {
 		// TODO - 3.02
 		GWT.log("Uncaught exception escaped", e);
@@ -173,23 +235,28 @@ public abstract class ClientBase implements EntryPoint,
 		}
 	}
 
-	protected void removeCssListeners(GeneralProperties props) {
-		props.removePropertyChangeListener(
-				GeneralProperties.PROPERTY_PERSISTENT_CSS, cssPropertyListener);
-		props.removePropertyChangeListener(
-				GeneralProperties.PROPERTY_TRANSIENT_CSS, cssPropertyListener);
+	public void performAction(RemoteAction action, AsyncCallback<Long> callback) {
+		getCommonRemoteService().performAction(action, callback);
 	}
 
-	protected static final StandardDataImages images = GWT
-			.create(StandardDataImages.class);
+	public void persist(WrapperPersistable gpo) {
+		persist(gpo, new StandardAsyncCallback());
+	}
+
+	@SuppressWarnings("unchecked")
+	public void persist(WrapperPersistable gpo, AsyncCallback callback) {
+		getCommonRemoteService().persist(gpo, callback);
+	}
+
+	public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
+		this.dialogAnimationEnabled = dialogAnimationEnabled;
+	}
 
 	public void showDialog(String captionHTML, Widget captionWidget,
 			String msg, MessageType messageType, List<Button> extraButtons) {
 		showDialog(captionHTML, captionWidget, msg, messageType, extraButtons,
 				null);
 	}
-
-	private boolean dialogAnimationEnabled = true;
 
 	public void showDialog(String captionHTML, Widget captionWidget,
 			String msg, MessageType messageType, List<Button> extraButtons,
@@ -277,16 +344,6 @@ public abstract class ClientBase implements EntryPoint,
 		closeButton.setFocus(true);
 	}
 
-	public void showError(Throwable caught) {
-		this.showError("", caught);
-	}
-
-	public void hideDialog() {
-		if (dialogBox != null) {
-			dialogBox.hide();
-		}
-	}
-
 	public void showError(String msg, Throwable throwable) {
 		msg += CommonUtils.isNullOrEmpty(msg) ? "" : "<br><br>";
 		msg += getStandardErrorText();
@@ -296,10 +353,8 @@ public abstract class ClientBase implements EntryPoint,
 				new ArrayList<Button>());
 	}
 
-	protected String getStandardErrorText() {
-		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
-				+ ""
-				+ " If the problem recurs, please try refreshing your browser";
+	public void showError(Throwable caught) {
+		this.showError("", caught);
 	}
 
 	public void showLog() {
@@ -320,6 +375,15 @@ public abstract class ClientBase implements EntryPoint,
 				MessageType.INFO, Arrays.asList(new Button[] { b, c }), "wide");
 	}
 
+	public void showMessage(String msg) {
+		showDialog("<div class='info'>" + msg + "</div>", null, null,
+				MessageType.INFO, null);
+	}
+
+	public void showMessage(Widget msg) {
+		showDialog(null, msg, null, MessageType.INFO, null);
+	}
+
 	public void showWarning(String msg) {
 		showDialog("<div class='warning'>" + msg + "</div>", null, null,
 				MessageType.WARN, null);
@@ -328,15 +392,6 @@ public abstract class ClientBase implements EntryPoint,
 	public void showWarning(String msg, String detail) {
 		showDialog("<div class='warning'>" + msg + "</div>", null, detail,
 				MessageType.WARN, null);
-	}
-
-	public void showMessage(String msg) {
-		showDialog("<div class='info'>" + msg + "</div>", null, null,
-				MessageType.INFO, null);
-	}
-
-	public void showMessage(Widget msg) {
-		showDialog(null, msg, null, MessageType.INFO, null);
 	}
 
 	public void submitForm(Map<String, String> params, String url) {
@@ -353,7 +408,9 @@ public abstract class ClientBase implements EntryPoint,
 		p.removeFromParent();
 	}
 
-	private Element styleElement;
+	public void transform(DomainTransformRequest request, AsyncCallback callback) {
+		getCommonRemoteService().transform(request, callback);
+	}
 
 	public Element updateCss(Element styleElement, String css) {
 		if (styleElement == null) {
@@ -386,80 +443,21 @@ public abstract class ClientBase implements EntryPoint,
 		this.styleElement = updateCss(styleElement, css);
 	}
 
-	public void hello(AsyncCallback callback) {
-		getCommonRemoteService().hello(callback);
+	private void addHidden(Panel p, String key, String value) {
+		p.add(new Hidden(key, value));
 	}
 
-	public void login(LoginBean loginBean, AsyncCallback callback) {
-		getCommonRemoteService().login(loginBean, callback);
+	protected void addCssListeners(GeneralProperties props) {
+		props.addPropertyChangeListener(
+				GeneralProperties.PROPERTY_PERSISTENT_CSS, cssPropertyListener);
+		props.addPropertyChangeListener(
+				GeneralProperties.PROPERTY_TRANSIENT_CSS, cssPropertyListener);
 	}
 
-	public void logout(AsyncCallback callback) {
-		getCommonRemoteService().logout(callback);
-	}
-
-	public void transform(DomainTransformRequest request, AsyncCallback callback) {
-		getCommonRemoteService().transform(request, callback);
-	}
-
-	public void getLogsForAction(RemoteAction action, int count,
-			AsyncCallback<List<ActionLogItem>> callback) {
-		getCommonRemoteService().getLogsForAction(action,
-				Integer.valueOf(count), callback);
-	}
-
-	public void performAction(RemoteAction action, AsyncCallback<Long> callback) {
-		getCommonRemoteService().performAction(action, callback);
-	}
-
-	public <T extends HasIdAndLocalId> void getItemById(String className,
-			Long id, AsyncCallback<T> callback) {
-		getCommonRemoteService().getItemById(className, id, callback);
-	}
-
-	public void confirm(String msg, final OkCallback callback) {
-		new OkCancelDialogBox("Confirmation", new Label(msg),
-				new PermissibleActionEvent.PermissibleActionListener() {
-					public void vetoableAction(PermissibleActionEvent evt) {
-						if (evt.getAction().getActionName().equals(
-								OkCancelDialogBox.OK_ACTION)) {
-							callback.ok();
-						}
-					}
-				}).show();
-	}
-
-	public void notImplemented() {
-		this.showWarning("Not yet implemented");
-	}
-
-	public enum MessageType {
-		INFO, WARN, ERROR
-	}
-
-	private Map<String, Long> metricStartTimes = new HashMap<String, Long>();
-
-	public void metricLogStart(String key) {
-		metricStartTimes.put(key, System.currentTimeMillis());
-	}
-
-	public void metricLogEnd(String key) {
-		log(CommonUtils.format("Metric: %1 - %2 ms", key, System
-				.currentTimeMillis()
-				- metricStartTimes.get(key)));
-	}
-
-	public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
-		this.dialogAnimationEnabled = dialogAnimationEnabled;
-	}
-
-	public boolean isDialogAnimationEnabled() {
-		return dialogAnimationEnabled;
-	}
-
-	public String extraInfoForExceptionText() {
-		return "\n\nUser agent: " + BrowserMod.getUserAgent()
-				+ "\n\nHistory token: " + History.getToken();
+	protected String getStandardErrorText() {
+		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
+				+ ""
+				+ " If the problem recurs, please try refreshing your browser";
 	}
 
 	protected Throwable possiblyWrapJavascriptException(Throwable e) {
@@ -475,4 +473,20 @@ public abstract class ClientBase implements EntryPoint,
 			}
 			return e;
 		}
+
+	protected void removeCssListeners(GeneralProperties props) {
+		props.removePropertyChangeListener(
+				GeneralProperties.PROPERTY_PERSISTENT_CSS, cssPropertyListener);
+		props.removePropertyChangeListener(
+				GeneralProperties.PROPERTY_TRANSIENT_CSS, cssPropertyListener);
+	}
+
+	protected void setCommitToStorageTransformListener(
+			CommitToStorageTransformListener commitToStorageTransformListener) {
+		this.commitToStorageTransformListener = commitToStorageTransformListener;
+	}
+
+	public enum MessageType {
+		INFO, WARN, ERROR
+	}
 }

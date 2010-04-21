@@ -21,11 +21,11 @@ import java.util.Map;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.ClientWorker;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.OldPlaintextProtocolHandler;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -39,7 +39,7 @@ import com.google.gwt.gears.client.database.ResultSet;
  *
  * @author Nick Reddel
  */
-public class GearsTransformPersistence extends TransformPersistence {
+public class GearsTransformPersistence extends LocalTransformPersistence {
 	private Factory factory;
 
 	private Database db;
@@ -114,7 +114,7 @@ public class GearsTransformPersistence extends TransformPersistence {
 						commitToServerTransformListener);
 				getCommitToStorageTransformListener().addStateChangeListener(
 						this);
-				TransformManager.get().setPersistableTransformListener(this);
+				ClientTransformManager.cast().setPersistableTransformListener(this);
 			} catch (Exception e) {
 				setLocalStorageInstalled(false);
 				// squelch - no gears
@@ -201,7 +201,7 @@ public class GearsTransformPersistence extends TransformPersistence {
 		return result;
 	}
 
-	protected void clearPersisted() {
+	protected void clearAllPersisted() {
 		try {
 			db.execute("DELETE from TransformRequests");
 		} catch (Exception e) {

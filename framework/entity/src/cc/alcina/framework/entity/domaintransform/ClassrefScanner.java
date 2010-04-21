@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.registry.CachingScanner;
 
 @SuppressWarnings("unchecked")

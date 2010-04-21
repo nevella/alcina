@@ -17,7 +17,7 @@ package cc.alcina.framework.common.client.csobjects;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 
@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
  * @author Nick Reddel
  */
 
- public abstract class UserIdContentDefinition extends GwtPersistableObject implements
+ public abstract class UserIdContentDefinition extends WrapperPersistable implements
 		ContentDefinition, GwtMultiplePersistable {
 	private long userId;
 

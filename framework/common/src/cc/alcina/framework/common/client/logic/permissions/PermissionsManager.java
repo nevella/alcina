@@ -63,9 +63,9 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 
 	private long userId;
 
-	public static String administratorGroupName;
+	private static String administratorGroupName="Administrators";
 
-	public static String developerGroupName;
+	private static String developerGroupName="Developers";
 
 	private PropertyChangeListener userListener;
 
@@ -291,18 +291,18 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	}
 
 	public boolean isAdmin() {
-		if (administratorGroupName == null || !isLoggedIn()) {
+		if (getAdministratorGroupName() == null || !isLoggedIn()) {
 			return false;
 		} else {
-			return isMemberOfGroup(administratorGroupName);
+			return isMemberOfGroup(getAdministratorGroupName());
 		}
 	}
 
 	public boolean isDeveloper() {
-		if (administratorGroupName == null || !isLoggedIn()) {
+		if (getAdministratorGroupName() == null || !isLoggedIn()) {
 			return false;
 		} else {
-			return isMemberOfGroup(developerGroupName);
+			return isMemberOfGroup(getDeveloperGroupName());
 		}
 	}
 
@@ -503,6 +503,22 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 
 	public boolean isAllPermissible() {
 		return allPermissible;
+	}
+
+	public static void setAdministratorGroupName(String administratorGroupName) {
+		PermissionsManager.administratorGroupName = administratorGroupName;
+	}
+
+	public static String getAdministratorGroupName() {
+		return administratorGroupName;
+	}
+
+	public static void setDeveloperGroupName(String developerGroupName) {
+		PermissionsManager.developerGroupName = developerGroupName;
+	}
+
+	public static String getDeveloperGroupName() {
+		return developerGroupName;
 	}
 
 	@ClientInstantiable

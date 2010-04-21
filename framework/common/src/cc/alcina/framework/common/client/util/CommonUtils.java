@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -47,6 +48,32 @@ public class CommonUtils {
 	public static final String[] DAY_NAMES = { "Sunday", "Monday", "Tuesday",
 			"Wednesday", "Thursday", "Friday", "Saturday" };
 
+	private static final Map<String, Class> stdClassMap = new HashMap<String, Class>();
+	static  {
+		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
+				Byte.class, Integer.class, Boolean.class, Character.class,
+				Date.class, String.class };
+		for (Class std : stds) {
+			stdClassMap.put(std.getName(), std);
+		}
+	}
+
+	private static final  Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
+	static {
+		Class[] prims = { long.class, int.class, short.class, char.class,
+				byte.class, boolean.class, double.class, float.class };
+		for (Class prim : prims) {
+			primitiveClassMap.put(prim.getName(), prim);
+		}
+	}
+
+	public static final  Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
+	static  {
+		stdAndPrimitivesMap.putAll(stdClassMap);
+		stdAndPrimitivesMap.putAll(primitiveClassMap);
+	}
+	public static final Set<Class> stdAndPrimitives = new HashSet<Class>(
+			stdAndPrimitivesMap.values());
 	public static boolean bv(Boolean b) {
 		return b == null || b == false ? false : true;
 	}
@@ -525,6 +552,10 @@ public class CommonUtils {
 			arr.add(o);
 			return arr;
 		}
+	}
+
+	public static boolean isStandardJavaClass(Class clazz) {
+		return stdAndPrimitivesMap.containsValue(clazz);
 	}
 
 	public enum DateStyle {

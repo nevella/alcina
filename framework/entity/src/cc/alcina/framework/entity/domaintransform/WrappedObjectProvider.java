@@ -18,7 +18,7 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 
 
@@ -29,13 +29,13 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 
  public interface WrappedObjectProvider {
 
-	public <T extends GwtPersistableObject> T getWrappedObjectForUser(Class<T> c, EntityManager em)
+	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<T> c, EntityManager em)
 			throws Exception;
 
-	public <T extends GwtPersistableObject> T getWrappedObjectForUser(Class<T> c, long id, EntityManager em)
+	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<T> c, long id, EntityManager em)
 			throws Exception;
 
-	public <T extends GwtPersistableObject> WrappedObject<T> getObjectWrapperForUser(Class<T> c, long id, EntityManager em)
+	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(Class<T> c, long id, EntityManager em)
 			throws Exception;
 	public List<Class> getJaxbSubclasses();
 }

@@ -23,11 +23,12 @@ import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -66,12 +67,12 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 	public void search(SearchDefinition def, int pageNumber,
 			AsyncCallback<SearchResultsBase> callback);
 
-	public void transform(DomainTransformRequest request, AsyncCallback callback);
+	public void transform(DomainTransformRequest request, AsyncCallback<DomainTransformResponse> callback);
 
 	public void validateOnServer(List<ServerValidator> validators,
 			AsyncCallback<List<ServerValidator>> callback);
 
-	<G extends GwtPersistableObject> void persist(G gwpo,
+	<G extends WrapperPersistable> void persist(G gwpo,
 			AsyncCallback<Long> callback);
 
 	void persistOfflineTransforms(List<DTRSimpleSerialWrapper> uncommitted,

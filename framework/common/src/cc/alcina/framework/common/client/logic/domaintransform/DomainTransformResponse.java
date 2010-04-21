@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
@@ -19,11 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class DomainTransformResponse implements Serializable {
+public class DomainTransformResponse implements Serializable {
 	private long requestId;
 
 	public enum DomainTransformResponseResult {
@@ -33,6 +31,23 @@ import java.util.List;
 	private DomainTransformResponseResult result = DomainTransformResponseResult.OK;
 
 	private List<DomainTransformEvent> eventsToUseForClientUpdate = new ArrayList<DomainTransformEvent>();
+
+	private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
+
+	public List<DomainTransformException> getTransformExceptions() {
+		return this.transformExceptions;
+	}
+
+	// only when error
+	private DomainTransformRequest request;
+
+	public DomainTransformRequest getRequest() {
+		return this.request;
+	}
+
+	public void setRequest(DomainTransformRequest request) {
+		this.request = request;
+	}
 
 	public DomainTransformResponseResult getResult() {
 		return this.result;
@@ -52,5 +67,14 @@ import java.util.List;
 
 	public long getRequestId() {
 		return requestId;
+	}
+
+	public String toExceptionString() {
+		StringBuffer sb = new StringBuffer();
+		for (DomainTransformException ex : getTransformExceptions()) {
+			sb.append(ex);
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 }

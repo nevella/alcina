@@ -25,11 +25,12 @@ import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -75,7 +76,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 			throws WebException;
 
 	@AuthenticationRequired
-	public <G extends GwtPersistableObject> Long persist(G gwpo)
+	public <G extends WrapperPersistable> Long persist(G gwpo)
 			throws WebException;
 
 	@AuthenticationRequired()
@@ -85,7 +86,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 
 	@AuthenticationRequired
 	public DomainTransformResponse transform(DomainTransformRequest request)
-			throws DomainTransformException;
+			throws DomainTransformException, DomainTransformRequestException;
 
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException;

@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
@@ -255,7 +256,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 						});
 				return;
 			} else if (evt.getAction().getClass() == CloneAction.class) {
-				HasIdAndLocalId newObj = TransformManager.get().clone(
+				HasIdAndLocalId newObj = ClientTransformManager.cast().clone(
 						(HasIdAndLocalId) singleObj);
 				handleParentLinks(obj, newObj);
 				TextProvider.get().setDecorated(true);

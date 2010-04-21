@@ -27,10 +27,10 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.entity.domaintransform.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
 
@@ -39,7 +39,7 @@ import cc.alcina.framework.entity.util.JaxbUtils;
  * @author Nick Reddel
  */
 
- public interface WrappedObject<T extends GwtPersistableObject> extends HasId {
+ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 	@Transient
 	public  T getObject();
 	@Transient

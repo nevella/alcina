@@ -11,51 +11,54 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.logic;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.StateListenable;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
+import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
 
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class CommitToStorageTransformListener extends StateListenable implements
+public class CommitToStorageTransformListener extends StateListenable implements
 		DomainTransformListener {
 	public static final int DELAY_MS = 100;
+
+	private ClientTransformExceptionResolver transformExceptionResolver = new ClientTransformExceptionResolutionSkipAndReload();
 
 	private List<DomainTransformEvent> transformQueue;
 
 	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
-
-	public List<DomainTransformRequest> getPriorRequestsWithoutResponse() {
-		return this.priorRequestsWithoutResponse;
-	}
 
 	private Timer queueingFinishedTimer;
 
@@ -63,24 +66,30 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 	private boolean suppressErrors = false;
 
+	private boolean paused;
+
 	private int localRequestId = 1;
-
-	public int getLocalRequestId() {
-		return this.localRequestId;
-	}
-
-	public void setLocalRequestId(int localRequestId) {
-		this.localRequestId = localRequestId;
-	}
 
 	private ClientInstance clientInstance;
 
+	private Map<Long, Long> localToServerIds = new HashMap<Long, Long>();
+
+	ArrayList<DomainTransformEvent> synthesisedEvents;
+
+	private boolean reloadRequired = false;
+
+	private Set<Long> eventIdsToIgnore = new HashSet<Long>();
+
+	public static final String COMMITTING = "COMMITTING";
+
+	public static final String COMMITTED = "COMMITTED";
+
+	public static final String ERROR = "ERROR";
+
+	public static final String RELOAD = "RELOAD";
+
 	public CommitToStorageTransformListener() {
 		resetQueue();
-	}
-
-	private void resetQueue() {
-		transformQueue = new ArrayList<DomainTransformEvent>();
 	}
 
 	public void domainTransform(DomainTransformEvent evt) {
@@ -120,28 +129,67 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 		priorRequestsWithoutResponse.clear();
 	}
 
-	/*
-	 * Unimplemented for the moment. This may or may not be necessary to
-	 * accelerate change conflict checking
-	 */
-	void updateTransformQueueVersions() {
+	public ClientInstance getClientInstance() {
+		return clientInstance;
 	}
 
-	private Map<Long, Long> localToServerIds = new HashMap<Long, Long>();
+	public int getLocalRequestId() {
+		return this.localRequestId;
+	}
 
-	 ArrayList<DomainTransformEvent> synthesisedEvents;
+	public List<DomainTransformRequest> getPriorRequestsWithoutResponse() {
+		return this.priorRequestsWithoutResponse;
+	}
 
 	public ArrayList<DomainTransformEvent> getSynthesisedEvents() {
 		return this.synthesisedEvents;
+	}
+
+	public ClientTransformExceptionResolver getTransformExceptionResolver() {
+		return transformExceptionResolver;
+	}
+
+	public boolean isPaused() {
+		return paused;
+	}
+
+	public boolean isSuppressErrors() {
+		return suppressErrors;
 	}
 
 	public Long localToServerId(Long localId) {
 		return localToServerIds.get(localId);
 	}
 
+	public void setClientInstance(ClientInstance clientInstance) {
+		this.clientInstance = clientInstance;
+	}
+
+	public void setLocalRequestId(int localRequestId) {
+		this.localRequestId = localRequestId;
+	}
+
+	public void setPaused(boolean paused) {
+		this.paused = paused;
+	}
+
+	public void setSuppressErrors(boolean suppressErrors) {
+		this.suppressErrors = suppressErrors;
+	}
+
+	public void setTransformExceptionResolver(
+			ClientTransformExceptionResolver transformExceptionResolver) {
+		this.transformExceptionResolver = transformExceptionResolver;
+	}
+
+	private void resetQueue() {
+		transformQueue = new ArrayList<DomainTransformEvent>();
+		//eventIdsToIgnore  = new HashSet<Long>();
+	}
+
 	void commit() {
 		if (priorRequestsWithoutResponse.size() == 0
-				&& transformQueue.size() == 0) {
+				&& transformQueue.size() == 0 || isPaused()) {
 			return;
 		}
 		if (queueingFinishedTimer != null) {
@@ -152,15 +200,39 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 		dtr.getPriorRequestsWithoutResponse().addAll(
 				priorRequestsWithoutResponse);
 		dtr.setRequestId(localRequestId++);
-		
 		dtr.setClientInstance(clientInstance);
 		dtr.getItems().addAll(transformQueue);
+		dtr.getEventIdsToIgnore().addAll(eventIdsToIgnore);
 		dtr.setDomainTransformRequestType(DomainTransformRequestType.TO_REMOTE);
 		updateTransformQueueVersions();
 		resetQueue();
 		AsyncCallback<DomainTransformResponse> callback = new AsyncCallback<DomainTransformResponse>() {
 			public void onFailure(Throwable caught) {
+				// resolve here
 				if (!suppressErrors) {
+					if (caught instanceof DomainTransformRequestException) {
+						final DomainTransformRequestException dtre = (DomainTransformRequestException) caught;
+						Callback<ClientTransformExceptionResolutionToken> callback = new Callback<ClientTransformExceptionResolutionToken>() {
+							public void callback(
+									ClientTransformExceptionResolutionToken resolutionToken) {
+								if (resolutionToken.getResolverAction() == ClientTransformExceptionResolverAction.RESUBMIT) {
+									eventIdsToIgnore = resolutionToken
+											.getEventIdsToIgnore();
+									reloadRequired = resolutionToken
+											.isReloadRequired();
+									setPaused(false);
+									commit();
+									return;
+								} else {
+									throw new WrappedRuntimeException(dtre,
+											SuggestedAction.RELOAD);
+								}
+							}
+						};
+						setPaused(true);
+						getTransformExceptionResolver().resolve(dtre, callback);
+						return;
+					}
 					throw new WrappedRuntimeException(caught);
 				}
 				fireStateChanged(ERROR);
@@ -171,7 +243,15 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 				TransformManager tm = TransformManager.get();
 				tm.setReplayingRemoteEvent(true);
 				try {
-					 synthesisedEvents = new ArrayList<DomainTransformEvent>();
+					synthesisedEvents = new ArrayList<DomainTransformEvent>();
+					/*
+					 * either way we do this (server or client), it's going to
+					 * seem a bit hacky but...a client's interpretation of what
+					 * is the canonical event (e.g. createObject on the server)
+					 * is more its business than the TLTM's
+					 * 
+					 * so...leave here. for now
+					 */
 					for (DomainTransformEvent dte : response
 							.getEventsToUseForClientUpdate()) {
 						long id = dte.getGeneratedServerId() != 0 ? dte
@@ -238,17 +318,22 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 					}
 				} finally {
 					tm.setReplayingRemoteEvent(false);
-					fireStateChanged(COMMITTED);
+					if (reloadRequired) {
+						fireStateChanged(RELOAD);
+					} else {
+						fireStateChanged(COMMITTED);
+					}
 				}
 			}
 		};
-		if (clientInstance==null){
-			int j=3;
+		if (clientInstance == null) {
+			int j = 3;
 		}
 		IUser user = clientInstance.getUser();
-		//not needed, and heavyweight
+		// not needed, and heavyweight
 		clientInstance.setUser(null);
-		ClientLayerLocator.get().commonRemoteServiceAsync().transform(dtr, callback);
+		ClientLayerLocator.get().commonRemoteServiceAsync().transform(dtr,
+				callback);
 		clientInstance.setUser(user);
 		clientInstance.setUser(null);
 		dtr.getPriorRequestsWithoutResponse().clear();
@@ -256,25 +341,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 		fireStateChanged(COMMITTING);
 	}
 
-	public void setClientInstance(ClientInstance clientInstance) {
-		this.clientInstance = clientInstance;
+	/*
+	 * Unimplemented for the moment. This may or may not be necessary to
+	 * accelerate change conflict checking
+	 */
+	void updateTransformQueueVersions() {
 	}
-
-	public ClientInstance getClientInstance() {
-		return clientInstance;
-	}
-
-	public void setSuppressErrors(boolean suppressErrors) {
-		this.suppressErrors = suppressErrors;
-	}
-
-	public boolean isSuppressErrors() {
-		return suppressErrors;
-	}
-
-	public static final String COMMITTING = "COMMITTING";
-
-	public static final String COMMITTED = "COMMITTED";
-
-	public static final String ERROR = "ERROR";
 }

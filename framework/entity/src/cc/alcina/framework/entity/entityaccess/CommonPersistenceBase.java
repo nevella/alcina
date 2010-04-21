@@ -24,32 +24,27 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.Map.Entry;
 
-import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
 import cc.alcina.framework.common.client.entity.PersistentSingleton;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
@@ -60,19 +55,15 @@ import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
-import cc.alcina.framework.entity.domaintransform.EntityLayerLocator;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocatorMap;
+import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.GraphCloner;
-import cc.alcina.framework.entity.util.Multiset;
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 
 @SuppressWarnings("unchecked")
@@ -81,17 +72,6 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
  * @author Nick Reddel
  */
 public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
-	private static final String PRECACHE_ENTITIES = "precache entities";
-
-	private static final String FLUSH_TRANSFORMS = "flush transforms";
-
-	private static final String PERSIST_TRANSFORMS = "persist transforms";
-
-	private static final String TRANSFORM_FIRE = "transform - fire";
-
-	// note - this'll be the stack depth of the eql ast processor
-	private static final int PRECACHE_RQ_SIZE = 250;
-
 	private static Map<Long, Integer> clientInstanceAuthMap = new HashMap<Long, Integer>();
 
 	public ClientInstance createClientInstance() {
@@ -110,6 +90,29 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			return instance;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper) {
+		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
+		tm.resetTltm(wrapper.locatorMap);
+		tm.setEntityManager(getEntityManager());
+		for (DomainTransformException ex : wrapper.response
+				.getTransformExceptions()) {
+			tryAddSourceObjectName(ex);
+		}
+	}
+
+	private void tryAddSourceObjectName(
+			DomainTransformException transformException) {
+		try {
+			HasIdAndLocalId object = TransformManager.get().getObject(
+					transformException.getEvent());
+			transformException.setSourceObjectName(CommonLocator.get()
+					.classLookup().displayNameForObject(object));
+		} catch (Exception e) {
+			// we tried
+			e.printStackTrace();
 		}
 	}
 
@@ -178,7 +181,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		return (T) ((l.size() == 0) ? null : l.get(0));
 	}
 
-	public <T extends GwtPersistableObject> WrappedObject<T> getObjectWrapperForUser(
+	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
 			Class<T> c, long id) throws Exception {
 		fixPermissionsManager();
 		WrappedObject<T> wrapper = EntityLayerLocator.get()
@@ -254,8 +257,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		return merge;
 	}
 
-	public <G extends GwtPersistableObject> Long persist(G gwpo)
-			throws Exception {
+	public <G extends WrapperPersistable> Long persist(G gwpo) throws Exception {
 		fixPermissionsManager();
 		WrappedObject<G> wrapper = (WrappedObject<G>) getObjectWrapperForUser(
 				gwpo.getClass(), gwpo.getId());
@@ -287,140 +289,10 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		getEntityManager().merge(inst);
 	}
 
-	public DomainTransformLayerWrapper transform(
-			DomainTransformRequest request, HiliLocatorMap locatorMap,
-			boolean persistTransforms, boolean possiblyReconstitueLocalIdMap)
-			throws DomainTransformException {
-		try {
-			fixPermissionsManager(true);
-			ObjectPersistenceHelper.get();
-			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
-			// We know this is thread-local, so we can clear the tm transforms
-			tm.resetTltm(locatorMap);
-			tm.setEntityManager(getEntityManager());
-			ClientInstance persistentClientInstance = findImplInstance(
-					ClientInstance.class, request.getClientInstance().getId());
-			if (persistentClientInstance.getAuth() != null
-					&& !(persistentClientInstance.getAuth().equals(request
-							.getClientInstance().getAuth()))) {
-				throw new DomainTransformException(
-						"Invalid client instance auth");
-			}
-			tm.setClientInstance(persistentClientInstance);
-			if (locatorMap != null && possiblyReconstitueLocalIdMap
-					&& locatorMap.isEmpty()) {
-				tm.reconstituteHiliMap();
-			}
-			Integer lastTransformId = getLastTransformId(request
-					.getClientInstance().getId(), request.getRequestId());
-			List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
-			dtrs.addAll(request.getPriorRequestsWithoutResponse());
-			dtrs.add(request);
-			for (int i = dtrs.size() - 1; i >= 0; i--) {
-				DomainTransformRequest dtr = dtrs.get(i);
-				if (lastTransformId != null
-						&& dtr.getRequestId() <= lastTransformId) {
-					dtrs.remove(i);
-				}
-			}
-			EntityLayerLocator.get().getMetricLogger().info(
-					String.format("data transform - %s - clid:"
-							+ "%s - rqid:%s - lasttransid:%s",
-							persistentClientInstance.getUser().getUserName(),
-							request.getClientInstance().getId(), request
-									.getRequestId(), lastTransformId));
-			for (DomainTransformRequest dtr : dtrs) {
-				List<DomainTransformEvent> items = dtr.getItems();
-				MetricLogging.get().lowPriorityStart(PRECACHE_ENTITIES);
-				preCacheEntities(items);
-				MetricLogging.get().lowPriorityEnd(PRECACHE_ENTITIES);
-				MetricLogging.get().lowPriorityStart(TRANSFORM_FIRE);
-				for (DomainTransformEvent dte : items) {
-					tm.fireDomainTransform(dte);
-				}
-				MetricLogging.get().lowPriorityEnd(TRANSFORM_FIRE);
-				MetricLogging.get().lowPriorityStart(PERSIST_TRANSFORMS);
-				if (persistTransforms) {
-					Class<? extends DomainTransformRequestPersistent> dtrqImpl = getImplementation(DomainTransformRequestPersistent.class);
-					Class<? extends DomainTransformEventPersistent> dtrEvtImpl = getImplementation(DomainTransformEventPersistent.class);
-					DomainTransformRequestPersistent dtrp = dtrqImpl
-							.newInstance();
-					getEntityManager().persist(dtrp);
-					dtrp.wrap(dtr);
-					dtrp.setClientInstance(persistentClientInstance);
-					for (DomainTransformEvent evt : dtr.getItems()) {
-						DomainTransformEventPersistent dtep = dtrEvtImpl
-								.newInstance();
-						getEntityManager().persist(dtep);
-						dtep.wrap(evt);
-						if (dtep.getObjectId() == 0
-								&& dtep.getTransformType() != TransformType.DELETE_OBJECT) {
-							dtep.setObjectId(tm.getObject(
-									dtep.getObjectClass(), 0,
-									dtep.getObjectLocalId()).getId());
-						}
-						dtep.setServerCommitDate(new Date());
-						dtep.setDomainTransformRequestPersistent(dtrp);
-						dtrp.getItems().add(dtep);
-					}
-				}
-				MetricLogging.get().lowPriorityEnd(PERSIST_TRANSFORMS);
-			}
-			MetricLogging.get().lowPriorityStart(FLUSH_TRANSFORMS);
-			getEntityManager().flush();
-			MetricLogging.get().lowPriorityEnd(FLUSH_TRANSFORMS);
-			DomainTransformResponse dtr = new DomainTransformResponse();
-			dtr.getEventsToUseForClientUpdate().addAll(
-					tm.getModificationEvents());
-			dtr.setRequestId(request.getRequestId());
-			DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
-			wrapper.locatorMap = locatorMap;
-			wrapper.response = dtr;
-			return wrapper;
-		} catch (Exception e) {
-			e.printStackTrace();
-			if (e instanceof DomainTransformException) {
-				throw (DomainTransformException) e;
-			}
-			throw new DomainTransformException(e);
-		}
-	}
-
-	private void preCacheEntities(List<DomainTransformEvent> items) {
-		Multiset<Class, Set<Long>> lkp = new Multiset<Class, Set<Long>>();
-		for (DomainTransformEvent dte : items) {
-			if (dte.getObjectId() != 0) {
-				lkp.add(dte.getObjectClass(), dte.getObjectId());
-			}
-			if (dte.getValueId() != 0) {
-				lkp.add(dte.getValueClass(), dte.getValueId());
-			}
-		}
-		for (Entry<Class, Set<Long>> entry : lkp.entrySet()) {
-			Class storageClass = null;
-			Class clazz = entry.getKey();
-			if (clazz.getAnnotation(Entity.class) != null) {
-				storageClass = clazz;
-			}
-			if (GwtPersistableObject.class.isAssignableFrom(clazz)) {
-				storageClass = getImplementation(WrappedObject.class);
-			}
-			if (storageClass != null) {
-				List<Long> ids = new ArrayList<Long>(entry.getValue());
-				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
-					List<Long> idsSlice = new ArrayList<Long>();
-					int sliceEnd = Math.min(ids.size() - i, PRECACHE_RQ_SIZE);
-					for (int j = 0; j < sliceEnd; j++) {
-						idsSlice.add(ids.get(i + j));
-					}
-					getEntityManager().createQuery(
-							String.format("from %s where id in %s",
-									storageClass.getSimpleName(), EntityUtils
-											.longListToIdClause(idsSlice)))
-							.getResultList();
-				}
-			}
-		}
+	public DomainTransformLayerWrapper transformInPersistenceContext(
+			TransformPersister persister, TransformPersistenceToken token) {
+		return persister.transformInPersistenceContext(token, this,
+				getEntityManager());
 	}
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
@@ -481,7 +353,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 						Long wrapperId = (Long) idpd.getReadMethod().invoke(
 								wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (wrapperId != null) {
-							Class<? extends GwtPersistableObject> pType = (Class<? extends GwtPersistableObject>) pd
+							Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
 									.getPropertyType();
 							WrappedObject wrappedObject = EntityLayerLocator
 									.get().wrappedObjectProvider()
@@ -519,7 +391,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 						Long wrapperId = (Long) idpd.getReadMethod().invoke(
 								wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (wrapperId != null) {
-							Class<? extends GwtPersistableObject> pType = (Class<? extends GwtPersistableObject>) pd
+							Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
 									.getPropertyType();
 							WrappedObject wrappedObject = (WrappedObject) getObjectWrapperForUser(
 									pType, wrapperId);
@@ -607,8 +479,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			if (ignoreId != null) {
 				eql += " AND id != " + ignoreId;
 			}
-			if (HasId.class.isAssignableFrom(clazz)){
-				eql+=" order by id asc";
+			if (HasId.class.isAssignableFrom(clazz)) {
+				eql += " order by id asc";
 			}
 			Query q = getEntityManager().createQuery(eql);
 			if (value != null) {
@@ -630,16 +502,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		}
 	}
 
-	private Integer getLastTransformId(long clientInstanceId, int firstRequestId) {
-		String eql = String.format("select max(dtrq.requestId) as maxId "
-				+ "from %s dtrq where dtrq.clientInstance.id=%s ",
-				getImplementation(DomainTransformRequestPersistent.class)
-						.getSimpleName(), clientInstanceId, firstRequestId);
-		Integer result = (Integer) getEntityManager().createQuery(eql)
-				.getSingleResult();
-		return result;
-	}
-
 	private void persistWrappables(HasId hi) {
 		try {
 			PropertyDescriptor[] pds = Introspector.getBeanInfo(hi.getClass())
@@ -651,13 +513,13 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 					if (info != null) {
 						Object obj = pd.getReadMethod().invoke(hi,
 								CommonUtils.EMPTY_OBJECT_ARRAY);
-						if (obj instanceof GwtPersistableObject) {
+						if (obj instanceof WrapperPersistable) {
 							if (!(GwtMultiplePersistable.class
 									.isAssignableFrom(obj.getClass()))) {
 								throw new Exception(
 										"Trying to persist a per-user object via wrapping");
 							}
-							GwtPersistableObject gwpo = (GwtPersistableObject) obj;
+							WrapperPersistable gwpo = (WrapperPersistable) obj;
 							if (info.toStringPropertyName().length() != 0) {
 								PropertyDescriptor tspd = SEUtilities
 										.descriptorByName(hi.getClass(), info
@@ -678,12 +540,14 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-	public <T extends HasId> T ensurePersistent(T obj){
-		if (getEntityManager().contains(obj)){
+
+	public <T extends HasId> T ensurePersistent(T obj) {
+		if (getEntityManager().contains(obj)) {
 			return obj;
 		}
 		return (T) getEntityManager().find(obj.getClass(), obj.getId());
 	}
+
 	protected <T> T findImplInstance(Class<? extends T> clazz, long id) {
 		Class<?> implClazz = getImplementation(clazz);
 		return (T) getEntityManager().find(implClazz, id);
@@ -691,7 +555,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	public abstract void fixPermissionsManager();
 
-	protected abstract void fixPermissionsManager(boolean forWriting);
+	public abstract void fixPermissionsManager(boolean forWriting);
 
 	protected abstract EntityManager getEntityManager();
 }

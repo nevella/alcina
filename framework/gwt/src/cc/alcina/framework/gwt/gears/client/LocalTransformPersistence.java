@@ -10,12 +10,13 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientUIThreadWorker;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.PersistableTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.ClientWorker;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.PersistableTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
@@ -28,9 +29,24 @@ import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import com.google.gwt.gears.client.GearsException;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-
-public abstract class TransformPersistence implements
-		StateChangeListener, PersistableTransformListener {
+/**
+ * <p><b>Ordering of client transforms</b></p>
+ * <blockquote><p>Save:</p>
+ * <ol><li>Inital object chunk: async</li>
+ * <li>Other (sync from remote, local transforms) - written synchronously</li>
+ * </ol>
+ * </blockquote>
+ * <blockquote><p>Load (offline):</p>
+ * <ol><li>Initial object chunk (which may be out of order wrt db id)</li>
+ * <li>Other (sync from remote, local transforms) - ordered by id</li>
+ * </ol>
+ * </blockquote>
+ * <p>This ensures that offline load is in the correct order
+ * @author nick@alcina.cc
+ *
+ */
+public abstract class LocalTransformPersistence implements
+		StateChangeListener, ClientTransformManager.PersistableTransformListener {
 	
 	private DTESerializationPolicy serializationPolicy;
 
@@ -44,7 +60,7 @@ public abstract class TransformPersistence implements
 
 	private Long clientInstanceIdForGet = null;
 
-	private static TransformPersistence transformPersistence;
+	private static LocalTransformPersistence localTransformPersistence;
 
 	public void setSerializationPolicy(
 			DTESerializationPolicy serializationPolicy) {
@@ -105,10 +121,13 @@ public abstract class TransformPersistence implements
 			rq.setProtocolVersion(getSerializationPolicy().getTransformPersistenceProtocol());
 			DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(rq);
 			persist(wrapper);
+		} else if (newState == CommitToStorageTransformListener.RELOAD) {
+			clearAllPersisted();
 		}
+			
 	}
 
-	protected abstract void clearPersisted();
+	protected abstract void clearAllPersisted();
 
 	protected abstract void transformPersisted(DTRSimpleSerialWrapper wrapper);
 
@@ -155,13 +174,13 @@ public abstract class TransformPersistence implements
 				AsyncCallback<Void> callback = new AsyncCallback<Void>() {
 					public void onFailure(Throwable caught) {
 						hideDialog();
-						new SimpleConflictResolver().resolve(uncommitted,
-								caught, TransformPersistence.this, cb);
+						new FromOfflineConflictResolver().resolve(uncommitted,
+								caught, LocalTransformPersistence.this, cb);
 					}
 
 					public void onSuccess(Void result) {
 						hideDialog();
-						clearPersisted();
+						clearAllPersisted();
 						Window
 								.alert("Save work from previous session to server completed");
 						cb.callback(null);
@@ -183,7 +202,7 @@ public abstract class TransformPersistence implements
 		}
 	}
 
-	protected class DTRAsyncSerializer extends ClientWorker {
+	protected class DTRAsyncSerializer extends ClientUIThreadWorker {
 		DTRSimpleSerialWrapper wrapper;
 
 		StringBuffer sb = new StringBuffer();
@@ -308,11 +327,11 @@ setCommitToStorageTransformListener(commitToServerTransformListener);
 		return clientInstanceIdForGet;
 	}
 
-	public static void registerTransformPersistence(TransformPersistence transformPersistence) {
-		TransformPersistence.transformPersistence = transformPersistence;
+	public static void registerLocalTransformPersistence(LocalTransformPersistence localTransformPersistence) {
+		LocalTransformPersistence.localTransformPersistence = localTransformPersistence;
 	}
 
-	public static TransformPersistence get() {
-		return transformPersistence;
+	public static LocalTransformPersistence get() {
+		return localTransformPersistence;
 	}
 }

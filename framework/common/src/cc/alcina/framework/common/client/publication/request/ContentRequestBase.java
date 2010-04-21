@@ -20,7 +20,7 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
@@ -48,7 +48,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 
  public abstract class ContentRequestBase<CD extends ContentDefinition> extends
-		GwtPersistableObject implements GwtMultiplePersistable, DeliveryModel {
+		WrapperPersistable implements GwtMultiplePersistable, DeliveryModel {
 	static final long serialVersionUID = -1L;
 	private PublicationOutputFormat outputFormat = PublicationOutputFormat.HTML;
 	private PublicationDeliveryMode deliveryMode = PublicationDeliveryMode.DOWNLOAD;

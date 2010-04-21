@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocatorMap;
+import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 
@@ -71,7 +71,7 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 
 	public long getNextPublicationIdForUser(IUser user);
 
-	public <T extends GwtPersistableObject> WrappedObject<T> getObjectWrapperForUser(
+	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
 			Class<T> c, long id) throws Exception;
 
 	public abstract IUser getSystemUser();
@@ -92,7 +92,7 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 
 	public abstract IUser mergeUser(IUser user);
 
-	public <G extends GwtPersistableObject> Long persist(G gwpo)
+	public <G extends WrapperPersistable> Long persist(G gwpo)
 			throws Exception;
 
 	public void remove(Object o);
@@ -102,10 +102,6 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 	public void setField(Class clazz, Long id, String key, Object value)
 			throws Exception;
 
-	public DomainTransformLayerWrapper transform(DomainTransformRequest request,
-			HiliLocatorMap locatorMap, boolean persistTransforms,
-			boolean possiblyReconstitueLocalIdMap)
-			throws DomainTransformException;
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers);
 
@@ -124,4 +120,10 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 	public void bulkDelete(Class clazz, Collection<Long> ids);
 
 	public <T extends HasId> T ensurePersistent(T obj);
+
+	public DomainTransformLayerWrapper transformInPersistenceContext(TransformPersister persister,
+			TransformPersistenceToken persistenceToken);
+
+	public void expandExceptionInfo(
+			DomainTransformLayerWrapper wrapper);
 }

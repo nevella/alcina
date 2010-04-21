@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.entity.SEUtilities;
 
@@ -32,11 +32,11 @@ import cc.alcina.framework.entity.SEUtilities;
  public class UnwrapInfoItem {
 	private String propertyName;
 
-	private WrappedObject<GwtPersistableObject> wrappedObject;
+	private WrappedObject<WrapperPersistable> wrappedObject;
 
 	public UnwrapInfoItem() {
 	}
-	public UnwrapInfoItem(String propertyName, WrappedObject<GwtPersistableObject> wrappedObject) {
+	public UnwrapInfoItem(String propertyName, WrappedObject<WrapperPersistable> wrappedObject) {
 		this.propertyName = propertyName;
 		this.wrappedObject = wrappedObject;
 	}
@@ -45,7 +45,7 @@ import cc.alcina.framework.entity.SEUtilities;
 		return this.propertyName;
 	}
 
-	public WrappedObject<GwtPersistableObject> getWrappedObject() {
+	public WrappedObject<WrapperPersistable> getWrappedObject() {
 		return this.wrappedObject;
 	}
 

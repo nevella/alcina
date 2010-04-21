@@ -26,20 +26,19 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
  */
 
  public class ServerTransformListener implements DomainTransformListener {
-	public void domainTransform(DomainTransformEvent evt)
+	public void domainTransform(DomainTransformEvent event)
 			throws DomainTransformException {
-		if (evt.getCommitType() == CommitType.TO_STORAGE) {
+		if (event.getCommitType() == CommitType.TO_STORAGE) {
 			TransformManager tm = TransformManager.get();
 			try {
-				tm.consume(evt);
+				tm.consume(event);
 			} catch (Exception e) {
-				 DomainTransformException dte = new DomainTransformException(e);
-				 dte.setEvent(evt);
+				 
 				 System.out.println("Direct cause:");
-				 System.out.println(evt);
-				 throw dte;
+				 System.out.println(event);
+				 throw DomainTransformException.wrap(e, event);
 			}
-			tm.setTransformCommitType(evt, CommitType.ALL_COMMITTED);
+			tm.setTransformCommitType(event, CommitType.ALL_COMMITTED);
 		}
 	}
 }

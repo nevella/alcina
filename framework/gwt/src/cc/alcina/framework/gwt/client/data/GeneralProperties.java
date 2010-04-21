@@ -17,7 +17,7 @@ package cc.alcina.framework.gwt.client.data;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -41,7 +41,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
  * @author Nick Reddel
  */
 
- public class GeneralProperties extends GwtPersistableObject  {
+ public class GeneralProperties extends WrapperPersistable  {
 	public static final transient String PROPERTY_TRANSIENT_CSS = "transientCss";
 
 	public static final transient String PROPERTY_PERSISTENT_CSS = "persistentCss";

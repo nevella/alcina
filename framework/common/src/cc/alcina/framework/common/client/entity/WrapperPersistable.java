@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.logic.permissions.Permissible;
  * 
  * @author Nick Reddel
  */
-public class GwtPersistableObject extends BaseBindable implements
+public class WrapperPersistable extends BaseBindable implements
 		HasIdAndLocalId, Permissible, HasOwner {
 	private long id;
 

@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -55,6 +55,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -150,9 +151,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	/**
-	 * TODO - ignore collection mods to collection properties with the @OneToMany annotation
+	 * TODO - ignore collection mods to collection properties with 
+	 * the @OneToMany annotation (inefficient and unnecessary)
 	 */
-	public void consume(DomainTransformEvent evt) {
+	public void consume(DomainTransformEvent evt) throws DomainTransformException{
 		super.consume(evt);
 	}
 
@@ -275,7 +277,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			}
 		}
 		if (id != 0) {
-			if (GwtPersistableObject.class.isAssignableFrom(c)) {
+			if (WrapperPersistable.class.isAssignableFrom(c)) {
 				try {
 					Class okClass = c;
 					T wofu = (T) EntityLayerLocator.get()
@@ -571,7 +573,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			}
 			EntityLayerLocator.get().log(LogMessageType.TRANSFORM_EXCEPTION,
 					"Data transform permissions exception", e);
-			throw new RuntimeException(e);
+			throw new WrappedRuntimeException(e);
 		}
 		return true;
 	}
@@ -582,8 +584,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	protected void objectModified(HasIdAndLocalId hili, DomainTransformEvent evt,
-			boolean targetObject) {
+	protected void objectModified(HasIdAndLocalId hili,
+			DomainTransformEvent evt, boolean targetObject) {
 		boolean addToResults = false;
 		if (evt.getTransformType() == TransformType.CREATE_OBJECT) {
 			addToResults = true;
@@ -627,9 +629,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			this.clazz = clazz;
 			this.id = id;
 		}
-	}
-
-	public static class HiliLocatorMap extends HashMap<Long, HiliLocator> {
 	}
 
 	public static ThreadlocalTransformManager cast() {

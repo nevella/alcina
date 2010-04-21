@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
@@ -21,17 +20,18 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
-
+import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 @MappedSuperclass
 /**
  *
  * @author Nick Reddel
  */
-
- public class DomainTransformEvent implements Serializable {
-	
+public class DomainTransformEvent implements Serializable {
 	private String propertyName;
 
 	private transient Object newValue;
@@ -295,5 +295,22 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 		return new DTRProtocolSerializer().serialize(this);
 	}
 
-	
+	public boolean related(DomainTransformEvent itrEvent) {
+		if (transformType == TransformType.DELETE_OBJECT) {
+			if (itrEvent.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION
+					&& itrEvent.getValueClass() == getObjectClass()
+					&& itrEvent.getValueId() == getObjectId()
+					&& itrEvent.getValueLocalId() == getObjectLocalId()) {
+				return true;
+			}
+			if (itrEvent.getTransformType() == TransformType.NULL_PROPERTY_REF
+					&& itrEvent.getObjectClass() == getObjectClass()
+					&& itrEvent.getObjectId() == getObjectId()
+					&& itrEvent.getObjectLocalId() == getObjectLocalId()) {
+				Class type=CommonLocator.get().propertyAccessor().getPropertyType(getObjectClass(),getPropertyName());
+				return !CommonUtils.isStandardJavaClass(type);
+			}
+		}
+		return false;
+	}
 }

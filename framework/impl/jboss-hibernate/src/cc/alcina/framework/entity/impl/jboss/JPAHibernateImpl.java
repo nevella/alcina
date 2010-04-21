@@ -13,14 +13,21 @@
  */
 package cc.alcina.framework.entity.impl.jboss;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.reflect.Method;
 import java.util.Collection;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 import org.hibernate.LazyInitializationException;
 import org.hibernate.proxy.HibernateProxy;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.util.EntityUtils;
@@ -78,4 +85,21 @@ public class JPAHibernateImpl implements JPAImplementation {
 		query.setHint("org.hibernate.cacheable", true);
 		
 	}
+
+	public void interpretException(DomainTransformException ex) {
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		ex.printStackTrace(pw);
+		String st = sw.toString();
+		if (st.contains("OptimisticLockException")){
+			ex.setType(DomainTransformExceptionType.OPTIMISTIC_LOCK_EXCEPTION);
+		}
+		if (st.contains("org.hibernate.exception.ConstraintViolationException")){
+			ex.setType(DomainTransformExceptionType.FK_CONSTRAINT_EXCEPTION);
+		}
+		// TODO Auto-generated method stub
+		
+	}
+
+	
 }

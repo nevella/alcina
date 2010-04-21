@@ -31,6 +31,6 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 
 	@Override
 	public String rule() {
-		return PermissionsManager.administratorGroupName;
+		return PermissionsManager.getAdministratorGroupName();
 	}
 }

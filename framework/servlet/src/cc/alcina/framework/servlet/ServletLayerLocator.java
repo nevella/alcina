@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet;
 
 import java.io.File;
@@ -19,14 +18,14 @@ import java.io.File;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-
+import cc.alcina.framework.servlet.servlet.NaiveTransformPersistenceQueue;
+import cc.alcina.framework.servlet.servlet.TransformPersistenceQueue;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ServletLayerLocator {
+public class ServletLayerLocator {
 	private ServletLayerLocator() {
 		super();
 	}
@@ -38,6 +37,17 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 			theInstance = new ServletLayerLocator();
 		}
 		return theInstance;
+	}
+
+	private TransformPersistenceQueue transformPersistenceQueue = new NaiveTransformPersistenceQueue();
+
+	public void registerTransformPersistenceQueue(
+			TransformPersistenceQueue transformPersistenceQueue) {
+		this.transformPersistenceQueue = transformPersistenceQueue;
+	}
+
+	public TransformPersistenceQueue transformPersistenceQueue() {
+		return transformPersistenceQueue;
 	}
 
 	private File dataFolder;
@@ -85,6 +95,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 	public CommonPersistenceProvider commonPersistenceProvider() {
 		return commonPersistenceProvider;
 	}
+
 	private Logger metricLogger;
 
 	public void registerMetricLogger(Logger metricLogger) {
@@ -94,10 +105,11 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 	public Logger metricLogger() {
 		return metricLogger;
 	}
-	
+
 	private CommonRemoteServletProvider commonRemoteServletProvider;
 
-	public void registerCommonRemoteServletProvider(CommonRemoteServletProvider commonRemoteServletProvider) {
+	public void registerCommonRemoteServletProvider(
+			CommonRemoteServletProvider commonRemoteServletProvider) {
 		this.commonRemoteServletProvider = commonRemoteServletProvider;
 	}
 

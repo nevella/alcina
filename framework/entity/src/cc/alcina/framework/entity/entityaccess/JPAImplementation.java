@@ -18,6 +18,7 @@ import java.util.Collection;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 
@@ -44,4 +45,7 @@ public interface JPAImplementation {
 	public void setCacheDisabled(boolean cacheDisabled);
 
 	public void cache(Query query);
+
+	public void interpretException(DomainTransformException exception);
+
 }

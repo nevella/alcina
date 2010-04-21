@@ -320,7 +320,7 @@ public class GwittirBridge implements PropertyAccessor {
 				}
 				return new Field(pr.getPropertyName(), TextProvider.get()
 						.getLabelText(c, pr), bwp, validator, vf,
-						getDefaultConverter(bwp,p.getType()));
+						getDefaultConverter(bwp, p.getType()));
 			}
 		} else if (beanInfo.allPropertiesVisualisable()
 				&& PermissionsManager.get().checkEffectivePropertyPermission(
@@ -332,18 +332,25 @@ public class GwittirBridge implements PropertyAccessor {
 			vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
 			return new Field(pr.getPropertyName(), TextProvider.get()
 					.getLabelText(c, pr), bwp, getValidator(p.getType(), obj,
-					pr.getPropertyName(), vf), vf, getDefaultConverter(bwp,p
+					pr.getPropertyName(), vf), vf, getDefaultConverter(bwp, p
 					.getType()));
 		}
 		return null;
 	}
 
-	public static Converter getDefaultConverter(BoundWidgetProvider bwp, Class propertyType) {
+	public static Converter getDefaultConverter(BoundWidgetProvider bwp,
+			Class propertyType) {
 		if (propertyType == Date.class || propertyType == Timestamp.class) {
-			return DateToLongStringConverter.INSTANCE;
+			if (bwp == DateBox.PROVIDER) {
+				return DateToLongStringConverter.INSTANCE;
+			}
 		}
-		if (bwp==BoundWidgetTypeFactory.TEXTBOX_PROVIDER){
-			return Converter.TO_STRING_CONVERTER;//these seem to be being introspected as value-type object, not string
+		if (bwp == BoundWidgetTypeFactory.TEXTBOX_PROVIDER) {
+			return Converter.TO_STRING_CONVERTER;
+			/*
+			 * these seem to be being introspected as value-type object, not
+			 * string - at least w JVMIntrospector
+			 */
 		}
 		return null;
 	}
@@ -543,5 +550,9 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public List<String> getIgnoreProperties() {
 		return ignoreProperties;
+	}
+
+	public Class getPropertyType(Class objectClass, String propertyName) {
+		return ClientReflector.get().getPropertyType(objectClass, propertyName);
 	}
 }

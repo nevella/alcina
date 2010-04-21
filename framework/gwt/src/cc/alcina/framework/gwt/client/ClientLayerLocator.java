@@ -24,10 +24,6 @@ import cc.alcina.framework.common.client.remote.ProvidesCommonRemoteService;
  */
 
  public class ClientLayerLocator {
-	private ClientLayerLocator() {
-		super();
-	}
-
 	private static ClientLayerLocator theInstance;
 
 	public static ClientLayerLocator get() {
@@ -37,36 +33,40 @@ import cc.alcina.framework.common.client.remote.ProvidesCommonRemoteService;
 		return theInstance;
 	}
 
-	public void appShutdown() {
-		theInstance = null;
-	}
-
 	private ProvidesCommonRemoteService pcrs;
 
-	public void registerCommonRemoteServiceProvider(
-			ProvidesCommonRemoteService pcrs) {
-		this.pcrs = pcrs;
-	}
-
-	public CommonRemoteServiceAsync commonRemoteServiceAsync() {
-		return pcrs.getCommonRemoteService();
-	}
 	private ActionLogProvider actionLogProvider;
 
-	public void registerActionLogProvider(ActionLogProvider provider) {
-		this.actionLogProvider = provider;
+	private ClientBase clientBase;
+
+	private ClientLayerLocator() {
+		super();
 	}
 
 	public ActionLogProvider actionLogProvider() {
 		return actionLogProvider;
 	}
-	private ClientBase clientBase;
+	public void appShutdown() {
+		theInstance = null;
+	}
+
+	public ClientBase clientBase() {
+		return clientBase;
+	}
+
+	public CommonRemoteServiceAsync commonRemoteServiceAsync() {
+		return pcrs.getCommonRemoteService();
+	}
+	public void registerActionLogProvider(ActionLogProvider provider) {
+		this.actionLogProvider = provider;
+	}
 
 	public void registerClientBase(ClientBase base) {
 		this.clientBase = base;
 	}
 
-	public ClientBase clientBase() {
-		return clientBase;
+	public void registerCommonRemoteServiceProvider(
+			ProvidesCommonRemoteService pcrs) {
+		this.pcrs = pcrs;
 	}
 }

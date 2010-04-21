@@ -25,6 +25,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 import com.google.gwt.core.client.GWT;
@@ -123,7 +124,7 @@ public class ClientReflector implements ClassLookup {
 
 	public boolean isInstantiableClass(Class clazz) {
 		try {
-			if (stdAndPrimitives.contains(clazz)) {
+			if (CommonUtils.stdAndPrimitives.contains(clazz)) {
 				return false;
 			}
 			getClassForName(clazz.getName());
@@ -131,10 +132,6 @@ public class ClientReflector implements ClassLookup {
 			return false;
 		}
 		return true;
-	}
-
-	public boolean isStandardJavaClass(Class clazz) {
-		return stdAndPrimitivesMap.containsValue(clazz);
 	}
 
 	public <T> T newInstance(Class<T> clazz) {
@@ -152,37 +149,13 @@ public class ClientReflector implements ClassLookup {
 		}
 	}
 
-	protected Map<String, Class> stdClassMap = new HashMap<String, Class>();
-	{
-		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
-				Byte.class, Integer.class, Boolean.class, Character.class,
-				Date.class, String.class };
-		for (Class std : stds) {
-			stdClassMap.put(std.getName(), std);
-		}
-	}
+	
 
-	protected Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
-	{
-		Class[] prims = { long.class, int.class, short.class, char.class,
-				byte.class, boolean.class, double.class, float.class };
-		for (Class prim : prims) {
-			primitiveClassMap.put(prim.getName(), prim);
-		}
-	}
-
-	protected Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
-	{
-		stdAndPrimitivesMap.putAll(stdClassMap);
-		stdAndPrimitivesMap.putAll(primitiveClassMap);
-	}
-
-	protected Set<Class> stdAndPrimitives = new HashSet<Class>(
-			stdAndPrimitivesMap.values());
+	
 
 	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
 	{
-		forNameMap.putAll(stdAndPrimitivesMap);
+		forNameMap.putAll(CommonUtils.stdAndPrimitivesMap);
 	}
 
 	public List<PropertyInfoLite> getWritableProperties(Class clazz) {

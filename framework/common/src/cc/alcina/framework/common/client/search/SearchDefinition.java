@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.entity.GwtPersistableObject;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
  *
  * @author Nick Reddel
  */
-public abstract class SearchDefinition extends GwtPersistableObject implements
+public abstract class SearchDefinition extends WrapperPersistable implements
 		Serializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation {
 	transient final String orderJoin = ", ";

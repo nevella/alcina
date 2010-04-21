@@ -28,4 +28,6 @@ import java.lang.annotation.Annotation;
 
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName);
+
+	public Class getPropertyType(Class objectClass, String propertyName);
 }

@@ -38,28 +38,29 @@ import com.google.gwt.user.client.ui.Widget;
 
 @SuppressWarnings("unchecked")
 /**
- *
+ * TODO - integrate with main conflict resolution framework
+ * 
  * @author Nick Reddel
  */
 
- public class SimpleConflictResolver {
+ public class FromOfflineConflictResolver {
 	private Throwable caught;
 
 	private GlassDialogBox dialog;
 
 	private List<DTRSimpleSerialWrapper> uncommitted;
 
-	private TransformPersistence abstractTransformPersistence;
+	private LocalTransformPersistence localTransformPersistence;
 
 	private Callback completionCallback;
 
 	public void resolve(List<DTRSimpleSerialWrapper> uncommitted,
 			Throwable caught,
-			TransformPersistence abstractTransformPersistence,
+			LocalTransformPersistence localTransformPersistence,
 			Callback cb) {
 		this.uncommitted = uncommitted;
 		this.caught = caught;
-		this.abstractTransformPersistence = abstractTransformPersistence;
+		this.localTransformPersistence = localTransformPersistence;
 		this.completionCallback = cb;
 		dialog = new GlassDialogBox();
 		dialog.setText("Conflicts saving offline work");
@@ -87,14 +88,14 @@ import com.google.gwt.user.client.ui.Widget;
 		public ResolutionOptions() {
 			this.fp = new FlowPanel();
 			displayLink = new BlockLink(TextProvider.get().getUiObjectText(
-					SimpleConflictResolver.class, "display-changes-link",
+					FromOfflineConflictResolver.class, "display-changes-link",
 					"Display changes"), this);
 			displayLink.removeStyleName("gwt-Hyperlink");
 			discardLink = new BlockLink(TextProvider.get().getUiObjectText(
-					SimpleConflictResolver.class, "discard-changes-link",
+					FromOfflineConflictResolver.class, "discard-changes-link",
 					"Discard changes"), this);
 			exitLink = new BlockLink(TextProvider.get().getUiObjectText(
-					SimpleConflictResolver.class, "exit-link", "Exit"), this);
+					FromOfflineConflictResolver.class, "exit-link", "Exit"), this);
 			displayLink.removeStyleName("gwt-Hyperlink");
 			discardLink.removeStyleName("gwt-Hyperlink");
 			exitLink.removeStyleName("gwt-Hyperlink");
@@ -102,7 +103,7 @@ import com.google.gwt.user.client.ui.Widget;
 					TextProvider
 							.get()
 							.getUiObjectText(
-									SimpleConflictResolver.class,
+									FromOfflineConflictResolver.class,
 									"resolution-procedure-text-1",
 									"<p>Some conflicts or other problems "
 											+ "with saving your changes need resolution</p>"
@@ -158,11 +159,11 @@ import com.google.gwt.user.client.ui.Widget;
 			}
 			if (sender == discardLink) {
 				if (Window.confirm(TextProvider.get().getUiObjectText(
-						SimpleConflictResolver.class, "discard-confirmation",
+						FromOfflineConflictResolver.class, "discard-confirmation",
 						"Are you sure you want to discard your changes?"))) {
-					abstractTransformPersistence.clearPersisted();
+					localTransformPersistence.clearAllPersisted();
 					Window.alert(TextProvider.get().getUiObjectText(
-							SimpleConflictResolver.class, "discard-complete",
+							FromOfflineConflictResolver.class, "discard-complete",
 							"Changes discarded"));
 					dialog.hide();
 					completionCallback.callback(null);

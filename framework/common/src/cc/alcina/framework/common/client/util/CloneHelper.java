@@ -59,7 +59,7 @@ public class CloneHelper {
 	private Object deepObjectClone(Object o) throws Exception {
 		if (o instanceof Date) {
 			return ((Date) o).clone();
-		} else if (ClientReflector.get().isStandardJavaClass(o.getClass())
+		} else if (CommonUtils.isStandardJavaClass(o.getClass())
 				|| o.getClass().isEnum()) {
 			return o;
 		} else if (o instanceof Collection) {

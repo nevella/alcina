@@ -18,8 +18,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.entity.domaintransform.EntityLayerLocator;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.GraphCloner;
 import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 

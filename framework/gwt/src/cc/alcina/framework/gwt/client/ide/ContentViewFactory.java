@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.actions.instances.NonstandardObjectActi
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
@@ -147,7 +148,7 @@ import com.totsp.gwittir.client.validator.Validator;
 				TransformManager.get().registerProvisionalObject(list);
 			}
 			if (bean instanceof HasIdAndLocalId) {
-				supportingObjects = TransformManager.get().prepareForEditing(
+				supportingObjects = ClientTransformManager.cast().prepareForEditing(
 						(HasIdAndLocalId) bean, autoSave);
 			}
 			supportingObjects.addAll(list);
@@ -553,7 +554,7 @@ import com.totsp.gwittir.client.validator.Validator;
 						}
 					}
 					if (PermissionsManager.get().isMemberOfGroup(
-							PermissionsManager.administratorGroupName)) {
+							PermissionsManager.getAdministratorGroupName())) {
 						if (PropertiesProvider.getGeneralProperties()
 								.isAllowAdminInvalidObjectWrite()
 								&& !alwaysDisallowOkIfInvalid) {

@@ -11,15 +11,16 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
-package cc.alcina.framework.entity.domaintransform;
+package cc.alcina.framework.entity.logic;
 
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
+import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
+import cc.alcina.framework.entity.domaintransform.policy.BasicPersistenceLayerTransformExceptionPolicyFactory;
+import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-
 
 /**
  * Also available to the server layer - although some methods should not be
@@ -55,6 +56,17 @@ public class EntityLayerLocator {
 
 	public WrappedObjectProvider wrappedObjectProvider() {
 		return wrappedObjectProvider;
+	}
+
+	private PersistenceLayerTransformExceptionPolicyFactory persistenceLayerTransformExceptionPolicyFactory = new BasicPersistenceLayerTransformExceptionPolicyFactory();
+
+	public void registerPersistenceLayerTransformExceptionPolicyFactory(
+			PersistenceLayerTransformExceptionPolicyFactory persistenceLayerTransformExceptionPolicyFactory) {
+		this.persistenceLayerTransformExceptionPolicyFactory = persistenceLayerTransformExceptionPolicyFactory;
+	}
+
+	public PersistenceLayerTransformExceptionPolicyFactory persistenceLayerTransformExceptionPolicyFactory() {
+		return persistenceLayerTransformExceptionPolicyFactory;
 	}
 
 	private Logger metricLogger;
@@ -103,6 +115,7 @@ public class EntityLayerLocator {
 	public Logger getPersistentLogger() {
 		return persistentLogger;
 	}
+
 	private JPAImplementation jpaImplementation;
 
 	public void registerJPAImplementation(JPAImplementation jpaImplementation) {

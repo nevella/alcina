@@ -11,17 +11,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.domaintransform;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import java.util.HashMap;
 
-/**
- *
- * @author Nick Reddel
- */
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
 
- public class DomainTransformLayerWrapper {
-	public DomainTransformResponse response;
-	public HiliLocatorMap locatorMap;
+public class HiliLocatorMap extends HashMap<Long, HiliLocator> {
 }
