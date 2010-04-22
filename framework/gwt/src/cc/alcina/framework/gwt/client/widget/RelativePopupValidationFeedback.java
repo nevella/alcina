@@ -69,8 +69,10 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 			super.onDetach();
 		}
 	}
-
 	@SuppressWarnings("unchecked")
+	protected Widget renderExceptionWidget(ValidationException exception){
+		return new Label(this.getMessage(exception));
+	}
 	public void handleException(Object source, ValidationException exception) {
 		final Widget w = (Widget) source;
 		resolve(source);
@@ -90,7 +92,7 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 			psve.setSourceWidget(source);
 			psve.setFeedback(this);
 		} else {
-			p.add(new Label(this.getMessage(exception)));
+			p.add(renderExceptionWidget(exception));
 		}
 		int x = w.getAbsoluteLeft();
 		int y = w.getAbsoluteTop();

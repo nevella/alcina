@@ -39,7 +39,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 	private transient boolean validated;
 
-	private transient Object lastValidated = null;
+	protected transient Object lastValidated = null;
 
 	private transient Object validateAfterServerReturns = null;
 

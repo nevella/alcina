@@ -41,6 +41,8 @@ import com.google.gwt.user.client.ui.Tree.Resources;
 	ImageResource minimise();
 
 	ImageResource error();
+	
+	ImageResource errorSmall();
 
 	ImageResource warning();
 

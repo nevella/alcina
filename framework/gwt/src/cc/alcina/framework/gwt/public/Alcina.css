@@ -269,7 +269,7 @@ div.alcina-BreadcrumbBar p.breadcrumb-next {
 }
 /** footer **/
 div.alcina-Footer {
-	background: #104860 url(_pix/footer-logo.gif) right center no-repeat;
+	background: #104860  right center no-repeat;
 	padding: 10px;
 	color: #6b93a3;
 	margin-top: 10px;
@@ -835,7 +835,7 @@ table.results-table {
 */
 .gwittir-ValidationPopup {
 	font-size: 0.9em;
-	color: #ff7777;
+	color: #F33;
 }
 
 .gwittir-ValidationPopup.dateChooser, .gwittir-ValidationPopup.withBkg {
@@ -964,7 +964,7 @@ div.alcina-Status {
 	font-weight: bold;
 	padding: 2px 5px 2px 5px;
 	position: absolute;
-	z-order: 1;
+	z-index: 1;
 	border-width: 2px;
 	background-color: #FFFF99;
 	border-color: #FFFF99;

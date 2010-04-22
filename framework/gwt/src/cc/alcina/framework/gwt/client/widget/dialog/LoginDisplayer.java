@@ -184,7 +184,7 @@ import com.google.gwt.user.client.ui.Widget;
 		dialogBox.hide();
 	}
 
-	public void addProblemHandlerWidget(Widget onProblemWidget) {
+	public void setProblemHandlerWidget(Widget onProblemWidget) {
 		this.onProblemWidget = onProblemWidget;
 		grr.resize(6, 2);
 		grr.setWidget(5, 1, onProblemWidget);

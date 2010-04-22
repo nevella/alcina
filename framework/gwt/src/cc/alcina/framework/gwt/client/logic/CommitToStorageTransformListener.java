@@ -184,7 +184,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	private void resetQueue() {
 		transformQueue = new ArrayList<DomainTransformEvent>();
-		//eventIdsToIgnore  = new HashSet<Long>();
+		// eventIdsToIgnore = new HashSet<Long>();
 	}
 
 	void commit() {
@@ -279,7 +279,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							synthesisedEvents.add(idEvt);
 							localToServerIds.put(dte.getObjectLocalId(), id);
 						}
-						if (dte.getObjectVersionNumber() != 0) {
+						if (dte.getObjectVersionNumber() != 0 && id != 0) {
 							DomainTransformEvent idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectId(id);

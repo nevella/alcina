@@ -144,9 +144,15 @@ import com.totsp.gwittir.client.validator.ValidationException;
 	public void setValueTemplate(String valueTemplate) {
 		this.valueTemplate = valueTemplate;
 	}
-
+	protected boolean nullAlwaysValid(){
+		return true;
+	}
 	@Override
 	public Object validate(Object value) throws ValidationException {
+		if (value==null&&nullAlwaysValid()){
+			lastValidated=value;
+			return value;
+		}
 		setValue(value == null ? null : value.toString());
 		return super.validate(value);
 	}

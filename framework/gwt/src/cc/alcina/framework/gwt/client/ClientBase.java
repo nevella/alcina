@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client;
 
 import java.beans.PropertyChangeEvent;
@@ -203,7 +202,16 @@ public abstract class ClientBase implements EntryPoint,
 		logString += CommonUtils.formatDate(new Date(),
 				DateStyle.AU_DATE_TIME_MS)
 				+ ": " + s + "\n";
+		consoleLog(s);
 	}
+
+	private native void consoleLog(String s) /*-{
+		try{
+			$wnd.console.log(s);
+		}catch(e){
+
+		}
+	}-*/;
 
 	public void login(LoginBean loginBean, AsyncCallback callback) {
 		getCommonRemoteService().login(loginBean, callback);
@@ -461,18 +469,18 @@ public abstract class ClientBase implements EntryPoint,
 	}
 
 	protected Throwable possiblyWrapJavascriptException(Throwable e) {
-			if (e instanceof JavaScriptException) {
-				JavaScriptException je = (JavaScriptException) e;
-				String errorText = je.getMessage();
-	//			if (BrowserMod.isChrome()){
-	//				errorText+="\n\nStacktrace: "+je.get
-	//			}
-				errorText += extraInfoForExceptionText();
-				e = new WebException("(Wrapped javascript exception) : "
-						+ errorText);
-			}
-			return e;
+		if (e instanceof JavaScriptException) {
+			JavaScriptException je = (JavaScriptException) e;
+			String errorText = je.getMessage();
+			// if (BrowserMod.isChrome()){
+			// errorText+="\n\nStacktrace: "+je.get
+			// }
+			errorText += extraInfoForExceptionText();
+			e = new WebException("(Wrapped javascript exception) : "
+					+ errorText);
 		}
+		return e;
+	}
 
 	protected void removeCssListeners(GeneralProperties props) {
 		props.removePropertyChangeListener(
