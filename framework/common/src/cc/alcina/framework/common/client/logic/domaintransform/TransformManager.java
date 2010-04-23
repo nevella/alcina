@@ -888,8 +888,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * listeners...
 	 */
 	public void setupClientListeners() {
-		addDomainTransformListener(new EditCommitTransformHandler());
-		addDomainTransformListener(new ContainerUpdateTransformHandler());
+		addDomainTransformListener(new RecordTransformListener());
+		addDomainTransformListener(new CommitToLocalDomainTransformListener());
 	}
 
 	private DomainTransformEvent createTransformFromPropertyChange(
@@ -1150,7 +1150,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		ADD, REMOVE
 	}
 
-	static class ContainerUpdateTransformHandler implements
+	static class CommitToLocalDomainTransformListener implements
 			DomainTransformListener {
 		public void domainTransform(DomainTransformEvent evt) {
 			if (evt.getCommitType() == CommitType.TO_LOCAL_GRAPH) {
@@ -1172,7 +1172,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	static class EditCommitTransformHandler implements DomainTransformListener {
+	static class RecordTransformListener implements DomainTransformListener {
 		public void domainTransform(DomainTransformEvent evt) {
 			if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
 				TransformManager tm = TransformManager.get();

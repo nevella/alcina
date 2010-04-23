@@ -162,7 +162,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 * TODO - this should probably be integrated more with {transform} - why is
 	 * the server layer so special? just another client
 	 */
-	public DomainTransformResponse transformFromServerLayer(
+	public DomainTransformResponse transformFromServletLayer(
 			boolean persistTransforms) throws DomainTransformException {
 		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
