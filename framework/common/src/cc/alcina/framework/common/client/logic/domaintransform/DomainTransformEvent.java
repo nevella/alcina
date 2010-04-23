@@ -60,7 +60,7 @@ public class DomainTransformEvent implements Serializable {
 
 	private long objectVersionNumber;
 
-	private long targetVersionNumber;
+	private long valueVersionNumber;
 
 	private transient Class valueClass;
 
@@ -154,9 +154,9 @@ public class DomainTransformEvent implements Serializable {
 	public Object getSource() {
 		return this.source;
 	}
-
-	public long getTargetVersionNumber() {
-		return targetVersionNumber;
+	@Transient
+	public long getValueVersionNumber() {
+		return valueVersionNumber;
 	}
 
 	public TransformType getTransformType() {
@@ -255,9 +255,9 @@ public class DomainTransformEvent implements Serializable {
 	public void setSource(Object source) {
 		this.source = source;
 	}
-
-	public void setTargetVersionNumber(long targetVersionNumber) {
-		this.targetVersionNumber = targetVersionNumber;
+	@Transient
+	public void setValueVersionNumber(long valueVersionNumber) {
+		this.valueVersionNumber = valueVersionNumber;
 	}
 
 	public void setTransformType(TransformType transformType) {

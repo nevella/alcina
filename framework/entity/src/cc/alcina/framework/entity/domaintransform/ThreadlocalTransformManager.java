@@ -154,7 +154,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	 * TODO - ignore collection mods to collection properties with 
 	 * the @OneToMany annotation (inefficient and unnecessary)
 	 */
-	public void consume(DomainTransformEvent evt) throws DomainTransformException{
+	public void consume(DomainTransformEvent evt)
+			throws DomainTransformException {
 		super.consume(evt);
 	}
 
@@ -596,9 +597,15 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			modifiedObjects.add(hili);
 			HasVersionNumber hv = (HasVersionNumber) hili;
 			if (targetObject) {
-				evt.setTargetVersionNumber(hv.getVersionNumber() + 1);
+				evt.setValueVersionNumber(hv.getVersionNumber() + 1);
+				if (evt.getValueId()==0){
+					evt.setValueId(hili.getId());
+				}
 			} else {
 				evt.setObjectVersionNumber(hv.getVersionNumber() + 1);
+				if (evt.getObjectId()==0){
+					evt.setObjectId(hili.getId());
+				}
 			}
 		}
 		if (addToResults) {

@@ -103,10 +103,16 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 				adapters.add(view);
 			}
 			reloadRequired |= view.reloadRequired;
-			
 			if (view.recommendedAction == RecommendedAction.SKIP) {
 				token.getEventIdsToIgnore().add(dte.getEvent().getEventId());
 			}
+		}
+		if (adapters.isEmpty() && irresolvable == null) {
+			// unknown exception - throw
+			token
+					.setResolverAction(ClientTransformExceptionResolverAction.THROW);
+			callback.callback(token);
+			return;
 		}
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		Field[] fields = GwittirBridge.get()
@@ -319,13 +325,13 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 
 		public void irresolvable(DomainTransformException dte) {
 			blurb.setVisible(false);
-			String text="<p>A problem has occurred which requires this page to be reloaded.</p>";
-			if (dte.getType()==DomainTransformExceptionType.INVALID_AUTHENTICATION){
-			text+="<p>The page's authentication is invalid. You may have logged in or out in another tab to this one.</p>";
-			}else{
-				text+="<p>Too many problems occurred to be resolved automatically.</p>";
+			String text = "<p>A problem has occurred which requires this page to be reloaded.</p>";
+			if (dte.getType() == DomainTransformExceptionType.INVALID_AUTHENTICATION) {
+				text += "<p>The page's authentication is invalid. You may have logged in or out in another tab to this one.</p>";
+			} else {
+				text += "<p>Too many problems occurred to be resolved automatically.</p>";
 			}
-			text+="<p><b>Detail: </b>"+dte.getMessage()+"</p>";
+			text += "<p><b>Detail: </b>" + dte.getMessage() + "</p>";
 			html.setHTML(text);
 			irresolvable = true;
 		}

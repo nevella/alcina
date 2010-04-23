@@ -372,9 +372,10 @@ public class ClientTransformManager extends TransformManager {
 	 * Useful series of actions when persisting a HasIdAndLocalId with
 	 * references to a WrappedObject
 	 * 
+	 * @see TransformManager#promoteToDomainObject(Object) wrt what to do with promoted objects
 	 * @param referrer
 	 */
-	public void persistWrappedObjectReferrer(final HasIdAndLocalId referrer,
+	public <T extends HasIdAndLocalId> T persistWrappedObjectReferrer(final T referrer,
 			boolean onlyLocalGraph) {
 		final ClientBeanReflector beanReflector = ClientReflector.get()
 				.beanInfoForClass(referrer.getClass());
@@ -390,11 +391,11 @@ public class ClientTransformManager extends TransformManager {
 										obj.toString());
 					}
 				});
-		HasIdAndLocalId target = referrer;
+		T target = referrer;
 		if (getProvisionalObjects().contains(referrer)) {
 			try {
 				CollectionModificationSupport.queue(true);
-				final HasIdAndLocalId promoted = promoteToDomainObject(referrer);
+				final T promoted = promoteToDomainObject(referrer);
 				target = promoted;
 				// copy, because at the moment wrapped refs don't get handled by
 				// the TM
@@ -436,5 +437,6 @@ public class ClientTransformManager extends TransformManager {
 			beanReflector.iterateForPropertyWithAnnotation(WrapperInfo.class,
 					callback);
 		}
+		return target;
 	}
 }

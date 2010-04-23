@@ -279,7 +279,11 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							synthesisedEvents.add(idEvt);
 							localToServerIds.put(dte.getObjectLocalId(), id);
 						}
-						if (dte.getObjectVersionNumber() != 0 && id != 0) {
+						// if (dte.getObjectVersionNumber() != 0 && id != 0) {
+						// if we have zero id at this stage, we're probably in a race condition
+						// with some other persistence mech
+						// and it definitely _does_ need to be sorted
+						if (dte.getObjectVersionNumber() != 0) {
 							DomainTransformEvent idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectId(id);
@@ -301,7 +305,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							// well, definitely notifies clients who need to
 							// know chanages were committed
 						} catch (DomainTransformException e) {
-							// shouldn't happen
+							// shouldn't happen, if the server code's ok 
 							throw new WrappedRuntimeException(e);
 						}
 					}
