@@ -473,6 +473,9 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 					.get(0);
 			Object curr = (this.selected.size() == 0) ? null : this.selected
 					.get(0);
+			if (prev==null&&curr==null){
+				return;//pcs is not MutablePropertyChangeLister
+			}
 			changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
 		}
 		fireChangeListeners();
