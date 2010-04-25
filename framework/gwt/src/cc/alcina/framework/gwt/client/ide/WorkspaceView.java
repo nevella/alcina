@@ -49,6 +49,7 @@ import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListener;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.widget.FilterWidget;
+import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
 import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
@@ -62,6 +63,7 @@ import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.HasName;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.ScrollPanel;
@@ -97,7 +99,8 @@ public class WorkspaceView extends Composite implements HasName,
 		initWidget(widget);
 	}
 
-	public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+	public void addVetoableActionListener(
+			PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
@@ -117,7 +120,8 @@ public class WorkspaceView extends Composite implements HasName,
 		return this.widget;
 	}
 
-	public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+	public void removeVetoableActionListener(
+			PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
@@ -130,8 +134,9 @@ public class WorkspaceView extends Composite implements HasName,
 	}
 
 	public static abstract class DataTreeView extends WorkspaceView implements
-			ExtraTreeEventListener, PermissibleActionEvent.PermissibleActionListener, HasLayoutInfo,
-			SelectionHandler<TreeItem> {
+			ExtraTreeEventListener,
+			PermissibleActionEvent.PermissibleActionListener, HasLayoutInfo,
+			SelectionHandler<TreeItem>, HasFirstFocusable {
 		private boolean showCollapseButton;
 
 		private DataTree dataTree;
@@ -150,6 +155,10 @@ public class WorkspaceView extends Composite implements HasName,
 
 		public DataTreeView(String name) {
 			this(name, null);
+		}
+
+		public Focusable firstFocusable() {
+			return filter.getTextBox();
 		}
 
 		public DataTreeView(String name, String debugId) {
@@ -181,9 +190,11 @@ public class WorkspaceView extends Composite implements HasName,
 			resetTree();
 			initWidget(fp);
 		}
-		protected DataTree createTree(){
+
+		protected DataTree createTree() {
 			return new DataTree();
 		}
+
 		public DataTree getDataTree() {
 			return this.dataTree;
 		}

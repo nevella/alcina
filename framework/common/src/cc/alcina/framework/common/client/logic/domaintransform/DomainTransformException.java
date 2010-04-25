@@ -47,7 +47,7 @@ public class DomainTransformException extends Exception implements Serializable 
 
 	public DomainTransformException(DomainTransformEvent event,
 			DomainTransformExceptionType type) {
-		super(type.toString());
+		super(type.toString()+"\n"+event.toString());
 		this.event = event;
 		this.type = type;
 	}

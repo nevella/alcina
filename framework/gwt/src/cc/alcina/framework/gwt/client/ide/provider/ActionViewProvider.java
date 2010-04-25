@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.beans.PropertyChangeEvent;
@@ -20,14 +19,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import cc.alcina.framework.common.client.actions.ActionLogItem;
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.SynchronousAction;
-import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -54,16 +50,18 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.InlineHTML;
+import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ActionViewProvider implements ViewProvider, PermissibleActionEvent.PermissibleActionListener {
+public class ActionViewProvider implements ViewProvider,
+		PermissibleActionEvent.PermissibleActionListener {
 	private PaneWrapper wrapper;
 
 	public Widget getViewForObject(Object obj) {
@@ -155,6 +153,21 @@ import com.google.gwt.user.client.ui.Widget;
 					for (ActionLogItem actionLogItem : result) {
 						fp.add(new ActionLogItemVisualiser(actionLogItem));
 					}
+					HorizontalPanel more = new HorizontalPanel();
+					more.setSpacing(2);
+					more.add(new InlineLabel("Show more - "));
+					int[] counts = { 20, 40, 60 };
+					for (int c : counts) {
+						final int fc = c;
+						more.add(new Link(String.valueOf(c),
+								new ClickHandler() {
+									public void onClick(ClickEvent event) {
+										logItemCount = fc;
+										redraw();
+									}
+								}));
+						more.add(new InlineHTML("&nbsp;"));
+					}
 				}
 			};
 			if (beanView != null) {
@@ -164,9 +177,11 @@ import com.google.gwt.user.client.ui.Widget;
 			button.setEnabled(true);
 			if (handler == null) {
 				ClientLayerLocator.get().actionLogProvider().getLogsForAction(
-						action, 5, outerCallback, true);
+						action, logItemCount, outerCallback, true);
 			}
 		}
+
+		int logItemCount = 5;
 
 		public ActionLogPanel(RemoteAction action) {
 			this.action = action;
@@ -187,8 +202,8 @@ import com.google.gwt.user.client.ui.Widget;
 			}
 			this.button = new Button("Run now");
 			button.ensureDebugId(AlcinaDebugIds.ACTION_VIEW_RUN);
-			//dill, not redrawn
-			//hasChildHandlersSupport.addHandler(button.addClickHandler(this));
+			// dill, not redrawn
+			// hasChildHandlersSupport.addHandler(button.addClickHandler(this));
 			button.addClickHandler(this);
 			HorizontalPanel hp = new HorizontalPanel();
 			hp.add(button);
@@ -302,7 +317,8 @@ import com.google.gwt.user.client.ui.Widget;
 
 		PermissibleActionEvent.PermissibleActionSupport support = new PermissibleActionEvent.PermissibleActionSupport();
 
-		public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+		public void addVetoableActionListener(
+				PermissibleActionEvent.PermissibleActionListener listener) {
 			this.support.addVetoableActionListener(listener);
 		}
 
@@ -310,7 +326,8 @@ import com.google.gwt.user.client.ui.Widget;
 			this.support.fireVetoableActionEvent(event);
 		}
 
-		public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+		public void removeVetoableActionListener(
+				PermissibleActionEvent.PermissibleActionListener listener) {
 			this.support.removeVetoableActionListener(listener);
 		}
 
@@ -330,8 +347,9 @@ import com.google.gwt.user.client.ui.Widget;
 		}
 
 		public void onClick(ClickEvent event) {
-			PermissibleActionEvent action = new PermissibleActionEvent(this.action,
-					ClientReflector.get().newInstance(ViewAction.class));
+			PermissibleActionEvent action = new PermissibleActionEvent(
+					this.action, ClientReflector.get().newInstance(
+							ViewAction.class));
 			fireVetoableActionEvent(action);
 		}
 	}

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide;
 
 import java.util.ArrayList;
@@ -65,7 +64,9 @@ import com.google.gwt.user.client.ui.Widget;
  * @author nick@alcina.cc
  * 
  */
-public class Workspace implements HasLayoutInfo, PermissibleActionEvent.PermissibleActionListener,PermissibleActionEvent.PermissibleActionSource {
+public class Workspace implements HasLayoutInfo,
+		PermissibleActionEvent.PermissibleActionListener,
+		PermissibleActionEvent.PermissibleActionSource {
 	private WSVisualModel visualModel;
 
 	protected SimpleWorkspaceVisualiser visualiser;
@@ -73,8 +74,11 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 	public SimpleWorkspaceVisualiser getVisualiser() {
 		return this.visualiser;
 	}
+
 	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
-	public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+
+	public void addVetoableActionListener(
+			PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
@@ -86,9 +90,11 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 		this.vetoableActionSupport.removeAllListeners();
 	}
 
-	public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+	public void removeVetoableActionListener(
+			PermissibleActionEvent.PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
+
 	private ContentViewFactory viewFactory;
 
 	private Map<Class<? extends PermissibleAction>, ViewProvider> viewProviderMap = new HashMap<Class<? extends PermissibleAction>, ViewProvider>();
@@ -109,7 +115,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 			@Override
 			public Iterator<Widget> getLayoutWidgets() {
 				if (visualiser != null) {
-				return visualiser.getLayoutInfo().getLayoutWidgets();
+					return visualiser.getLayoutInfo().getLayoutWidgets();
 				}
 				return new ArrayList<Widget>().iterator();
 			}
@@ -125,6 +131,10 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 		};
 	}
 
+	public void focusVisibleView() {
+		visualiser.focusVisibleView();
+	}
+
 	public ContentViewFactory getViewFactory() {
 		return this.viewFactory;
 	}
@@ -138,8 +148,8 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 			return;
 		}
 		visualiser.resetHsbPos();
-//		visualiser.getViewHolder().showStack(
-//				visualiser.getViewHolder().getSelectedIndex(), true);
+		// visualiser.getViewHolder().showStack(
+		// visualiser.getViewHolder().getSelectedIndex(), true);
 	}
 
 	public void registerViewProvider(ViewProvider v,
@@ -159,6 +169,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 		int widgetIndex = visualiser.getViewHolder().getWidgetIndex(view);
 		visualiser.getViewHolder().showStack(widgetIndex);
 	}
+
 	@SuppressWarnings("unchecked")
 	public void vetoableAction(final PermissibleActionEvent evt) {
 		if (evt.getAction().getClass() == CancelAction.class) {
@@ -208,8 +219,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 		}
 		if (singleObj instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) singleObj;
-			singleObj=TransformManager.get().getObject(hili);
-			
+			singleObj = TransformManager.get().getObject(hili);
 		}
 		if (singleObj != null) {
 			if (evt.getAction().getClass() == ViewAction.class) {
@@ -237,8 +247,9 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 				fireVetoableActionEvent(evt);
 				return;
 			} else if (evt.getAction().getClass() == DeleteAction.class) {
-				if (WorkspaceDeletionChecker.enabled){
-					if (!getDeletionChecker().checkPropertyRefs((HasIdAndLocalId) singleObj)){
+				if (WorkspaceDeletionChecker.enabled) {
+					if (!getDeletionChecker().checkPropertyRefs(
+							(HasIdAndLocalId) singleObj)) {
 						return;
 					}
 				}
@@ -251,7 +262,8 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 										(HasIdAndLocalId) objCopy);
 								visualiser
 										.setContentWidget(new HorizontalPanel());
-								fireVetoableActionEvent(new PermissibleActionEvent(objCopy, evt.getAction()));
+								fireVetoableActionEvent(new PermissibleActionEvent(
+										objCopy, evt.getAction()));
 							}
 						});
 				return;
@@ -267,7 +279,8 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 				Widget view = viewFactory.createBeanView(newObj, true, this,
 						autoSave, false);
 				visualiser.setContentWidget(view);
-				fireVetoableActionEvent(new PermissibleActionEvent(newObj, evt.getAction()));
+				fireVetoableActionEvent(new PermissibleActionEvent(newObj, evt
+						.getAction()));
 				return;
 			}
 		}
@@ -299,10 +312,11 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 			TextProvider.get().setDecorated(true);
 			TextProvider.get().setObjectName(newObj, "New " + tdn);
 			visualiser.setContentWidget(view);
-			fireVetoableActionEvent(new PermissibleActionEvent(newObj, evt.getAction()));
+			fireVetoableActionEvent(new PermissibleActionEvent(newObj, evt
+					.getAction()));
 		}
 	}
-	
+
 	private WorkspaceDeletionChecker deletionChecker = new WorkspaceDeletionChecker();
 
 	protected SimpleWorkspaceVisualiser createVisualiser() {
@@ -330,8 +344,8 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 						.getPropertyReflector();
 				String propertyName = propertyReflector.getAnnotation(
 						Association.class).propertyName();
-				CommonLocator.get().propertyAccessor().setPropertyValue(
-						newObj, propertyName, pcp.getDomainObject());
+				CommonLocator.get().propertyAccessor().setPropertyValue(newObj,
+						propertyName, pcp.getDomainObject());
 			}
 		}
 	}
@@ -399,6 +413,4 @@ public class Workspace implements HasLayoutInfo, PermissibleActionEvent.Permissi
 			this.views = views;
 		}
 	}
-
-	
 }

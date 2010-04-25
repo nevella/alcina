@@ -25,11 +25,14 @@ import cc.alcina.framework.gwt.client.ide.Workspace.WSVisualModel;
 import cc.alcina.framework.gwt.client.ide.WorkspaceView.DataTreeView;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.widget.DivStackPanel;
+import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
 
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HorizontalSplitPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -224,5 +227,20 @@ import com.google.gwt.user.client.ui.Widget;
 			}
 		}
 		return null;
+	}
+
+	public void focusVisibleView() {
+		DeferredCommand.addCommand(new Command() {
+			public void execute() {
+				int selectedIndex = viewHolder.getSelectedIndex();
+				if (selectedIndex!=-1){
+					Widget w = viewHolder.getWidget(selectedIndex);
+					if (w instanceof HasFirstFocusable) {
+						HasFirstFocusable hff = (HasFirstFocusable) w;
+						hff.firstFocusable().setFocus(true);
+					}
+				}
+			}
+		});
 	}
 }
