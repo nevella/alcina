@@ -13,13 +13,13 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class MaskedColour extends Composite {
 	public MaskedColour(String cssColorOrRule, Image maskImage,
-			OuterPixels padding, int colorPixelWidth) {
+			OuterPixels margin, int colorPixelWidth) {
 		FlowPanel holder = new FlowPanel();
 		Style holderStyle = holder.getElement().getStyle();
-		padding.pad(holder);
+		margin.marginalise(holder);
 		holderStyle.setDisplay(Display.BLOCK);
 		holderStyle.setProperty("lineHeight", maskImage.getHeight()
-				+ padding.top + padding.bottom, Unit.PX);
+				+ margin.top + margin.bottom, Unit.PX);
 		if (colorPixelWidth != 0) {
 			holder.add(maskImage);
 			FlowPanel cp = new FlowPanel();
@@ -71,6 +71,15 @@ public class MaskedColour extends Composite {
 			this.right = right;
 			this.bottom = bottom;
 			this.left = left;
+		}
+
+		public void marginalise(Widget widget) {
+			Style style = widget.getElement().getStyle();
+			style.setMarginTop(top, Unit.PX);
+			style.setMarginRight(right, Unit.PX);
+			style.setMarginBottom(bottom, Unit.PX);
+			style.setMarginLeft(left, Unit.PX);
+			
 		}
 
 		public void pad(Widget widget) {

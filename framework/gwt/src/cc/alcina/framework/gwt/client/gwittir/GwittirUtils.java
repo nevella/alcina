@@ -177,7 +177,7 @@ public class GwittirUtils {
 	 * Note: no support for (deprecated) Instantiable and Bindable interfaces if on server
 	 */
 	public static boolean isIntrospectable(Class clazz) {
-		if (GWT.isScript()) {
+		if (GWT.isClient()) {
 			return ClientReflector.get().beanInfoForClass(clazz) != null;
 		}
 		ClassLookup cl = CommonLocator.get().classLookup();

@@ -151,6 +151,14 @@ public class WorkspaceView extends Composite implements HasName,
 
 		private FilterWidget filter;
 
+		public FilterWidget getFilter() {
+			return this.filter;
+		}
+
+		public void setFilter(FilterWidget filter) {
+			this.filter = filter;
+		}
+
 		private Image collapse;
 
 		public DataTreeView(String name) {

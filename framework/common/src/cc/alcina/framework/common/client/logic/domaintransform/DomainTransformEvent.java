@@ -137,6 +137,7 @@ public class DomainTransformEvent implements Serializable {
 	 * 
 	 * @return
 	 */
+	@Transient
 	public long getObjectVersionNumber() {
 		return objectVersionNumber;
 	}
