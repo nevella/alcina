@@ -163,14 +163,24 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = newInstance(objectClass, localId);
+		//logic should probably be made clearer here - if id==0, we're not in an
+		// entitymanager context
+		//so we want to record creates
+		if (newInstance.getId() == 0) {
+			fireCreateObjectEvent(newInstance.getClass(), newInstance
+					.getLocalId());
+		}
 		registerDomainObject(newInstance);
 		return newInstance;
 	}
 
 	@Override
+	// for the moment, just ignore double deletes.
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
 		DomainTransformEvent event = super.deleteObject(hili);
-		addTransform(event);
+		if (event != null) {
+			addTransform(event);
+		}
 		return event;
 	}
 
@@ -373,8 +383,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	@Override
 	// NOTE - doesn't register children (unlike client)
 	public void registerDomainObject(HasIdAndLocalId hili) {
-		synthesiseCreateObjectEvent(hili.getClass(), hili.getId(), hili
-				.getLocalId());
 		if (hili instanceof SourcesPropertyChangeEvents) {
 			listenTo((SourcesPropertyChangeEvents) hili);
 		}
@@ -598,12 +606,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			HasVersionNumber hv = (HasVersionNumber) hili;
 			if (targetObject) {
 				evt.setValueVersionNumber(hv.getVersionNumber() + 1);
-				if (evt.getValueId()==0){
+				if (evt.getValueId() == 0) {
 					evt.setValueId(hili.getId());
 				}
 			} else {
 				evt.setObjectVersionNumber(hv.getVersionNumber() + 1);
-				if (evt.getObjectId()==0){
+				if (evt.getObjectId() == 0) {
 					evt.setObjectId(hili.getId());
 				}
 			}

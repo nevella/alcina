@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -280,7 +281,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							localToServerIds.put(dte.getObjectLocalId(), id);
 						}
 						// if (dte.getObjectVersionNumber() != 0 && id != 0) {
-						// if we have zero id at this stage, we're probably in a race condition
+						// if we have zero id at this stage, we're probably in a
+						// race condition
 						// with some other persistence mech
 						// and it definitely _does_ need to be sorted
 						if (dte.getObjectVersionNumber() != 0) {
@@ -305,8 +307,16 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							// well, definitely notifies clients who need to
 							// know chanages were committed
 						} catch (DomainTransformException e) {
-							// shouldn't happen, if the server code's ok 
-							throw new WrappedRuntimeException(e);
+							// shouldn't happen, if the server code's ok
+							// note - squelching (for the moment)
+							// sourceentitynotfound -
+							// assume object was either deregistered or deleted
+							// before these transforms
+							// made it back from the server
+							if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND) {
+							} else {
+								throw new WrappedRuntimeException(e);
+							}
 						}
 					}
 					List<DomainTransformEvent> items = dtr.getItems();

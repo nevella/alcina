@@ -308,6 +308,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		T newInstance = CommonLocator.get().classLookup().newInstance(
 				objectClass, localId);
 		newInstance.setLocalId(localId);
+		// a bit roundabout, but to ensure compatibility with the event system
+		// essentially registers a synthesised object, then replaces it in the
+		// mapping with the real one
+		fireCreateObjectEvent(objectClass, localId);
 		registerDomainObject(newInstance);
 		return newInstance;
 	}
@@ -327,6 +331,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
+		if (getObject(hili) == null) {
+			return null;
+		}
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setObjectId(hili.getId());
 		dte.setObjectLocalId(hili.getLocalId());
@@ -798,12 +805,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	// a bit roundabout, but to ensure compatibility with the event system
-	// essentially registers a synthesised object, then replaces it in the
-	// mapping with the real one
 	public void registerDomainObject(HasIdAndLocalId hili) {
-		synthesiseCreateObjectEvent(hili.getClass(), hili.getId(), hili
-				.getLocalId());
 		if (getDomainObjects() != null) {
 			if (hili.getId() == 0) {
 				HasIdAndLocalId createdObject = getDomainObjects().getObject(
@@ -1012,8 +1014,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					// doesn't generate a "create" event...no, in fact current
 					// way
 					// is better. so ignore all this. it works, it's fine
-					synthesiseCreateObjectEvent(hili.getClass(), hili.getId(),
-							hili.getLocalId());
+					fireCreateObjectEvent(hili.getClass(), hili.getLocalId());
 				}
 			}
 			Collection<DomainTransformEvent> trs = TransformManager.get()
@@ -1070,14 +1071,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		this.domainObjects = domainObjects;
 	}
 
-	protected void synthesiseCreateObjectEvent(Class clazz, long id,
-			long localId) {
-		if (id != 0) {
-			return;
-		}
+	protected void fireCreateObjectEvent(Class clazz, long localId) {
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setSource(null);
-		dte.setObjectId(id);
+		dte.setObjectId(0);
 		dte.setObjectLocalId(localId);
 		dte.setObjectClass(clazz);
 		dte.setTransformType(TransformType.CREATE_OBJECT);
