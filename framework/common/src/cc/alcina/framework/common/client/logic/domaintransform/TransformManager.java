@@ -250,6 +250,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 			deregisterObject((HasIdAndLocalId) obj);
 			break;
 		case CREATE_OBJECT:
+			if (event.getObjectId() != 0) {
+				// two possibilities: replaying a server create,
+				// or recording an in-entity-manager create
+				// if the latter, break at this point
+				if (getObject(event) != null) {
+					break;
+				}
+			}
 			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator.get()
 					.classLookup().newInstance(event.getObjectClass(),
 							event.getObjectLocalId());
@@ -311,7 +319,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// a bit roundabout, but to ensure compatibility with the event system
 		// essentially registers a synthesised object, then replaces it in the
 		// mapping with the real one
-		fireCreateObjectEvent(objectClass, localId);
+		fireCreateObjectEvent(objectClass, 0, localId);
 		registerDomainObject(newInstance);
 		return newInstance;
 	}
@@ -1014,7 +1022,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					// doesn't generate a "create" event...no, in fact current
 					// way
 					// is better. so ignore all this. it works, it's fine
-					fireCreateObjectEvent(hili.getClass(), hili.getLocalId());
+					fireCreateObjectEvent(hili.getClass(), 0, hili.getLocalId());
 				}
 			}
 			Collection<DomainTransformEvent> trs = TransformManager.get()
@@ -1071,10 +1079,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		this.domainObjects = domainObjects;
 	}
 
-	protected void fireCreateObjectEvent(Class clazz, long localId) {
+	protected void fireCreateObjectEvent(Class clazz, long id, long localId) {
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setSource(null);
-		dte.setObjectId(0);
+		dte.setObjectId(id);
 		dte.setObjectLocalId(localId);
 		dte.setObjectClass(clazz);
 		dte.setTransformType(TransformType.CREATE_OBJECT);

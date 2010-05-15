@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 
+import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -40,7 +41,7 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup> ext
 		};
 
 
-	private FlowPanel fp;
+	protected ComplexPanel container;
 
 
 	public CriteriaGroupSelectorCustomiserWrapper() {
@@ -55,10 +56,15 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup> ext
 				"FilterCombinator_" + groupName, Arrays
 						.asList(FilterCombinator.values()), fcRend);
 		filterRbl.setColumnCount(2);
-		this.fp = new FlowPanel();
-		fp.add(customiser);
-		fp.add(filterRbl);
-		initWidget(fp);
+		createContainer();
+		container.add(customiser);
+		container.add(filterRbl);
+		initWidget(container);
+	}
+
+
+	protected void createContainer() {
+		this.container = new FlowPanel();
 	}
 	public CriteriaGroup getValue() {
 		// noop

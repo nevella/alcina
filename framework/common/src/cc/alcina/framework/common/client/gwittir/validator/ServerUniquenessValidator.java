@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
-
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -26,8 +24,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
  *
  * @author Nick Reddel
  */
-
- public class ServerUniquenessValidator extends ServerValidator {
+public class ServerUniquenessValidator extends ServerValidator {
 	public static final transient String OBJECT_CLASS = "objectClass";
 
 	public static final transient String PROPERTY_NAME = "propertyName";
@@ -53,6 +50,15 @@ import com.totsp.gwittir.client.validator.ValidationException;
 	public transient String originalValue;
 
 	private Long okId;
+
+	@Override
+	protected void handleServerValidationException(ServerValidator sv) {
+		super.handleServerValidationException(sv);
+		if (sv instanceof ServerUniquenessValidator) {
+			ServerUniquenessValidator suv = (ServerUniquenessValidator) sv;
+			setSuggestedValue(suv.getSuggestedValue());
+		}
+	}
 
 	public ServerUniquenessValidator() {
 		initProperties();
@@ -144,13 +150,15 @@ import com.totsp.gwittir.client.validator.ValidationException;
 	public void setValueTemplate(String valueTemplate) {
 		this.valueTemplate = valueTemplate;
 	}
-	protected boolean nullAlwaysValid(){
+
+	protected boolean nullAlwaysValid() {
 		return true;
 	}
+
 	@Override
 	public Object validate(Object value) throws ValidationException {
-		if (value==null&&nullAlwaysValid()){
-			lastValidated=value;
+		if (value == null && nullAlwaysValid()) {
+			lastValidated = value;
 			return value;
 		}
 		setValue(value == null ? null : value.toString());

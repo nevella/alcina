@@ -97,7 +97,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 					setMessage(null);
 					for (ServerValidator sv : result) {
 						if (sv.getMessage() != null) {
-							setMessage(sv.getMessage());
+							handleServerValidationException(sv);
 						}
 					}
 					resolveFeedback();
@@ -143,7 +143,9 @@ import com.totsp.gwittir.client.validator.ValidationException;
 		}
 		return value;
 	}
-
+	protected void handleServerValidationException(ServerValidator sv){
+		setMessage(sv.getMessage());
+	}
 	public String getValidatingMessage() {
 		return " validating";
 	}

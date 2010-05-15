@@ -39,8 +39,9 @@ public class ShortDateValidator implements Validator {
 
 	@SuppressWarnings("deprecation")
 	public Object validate(Object value) throws ValidationException {
-		if (value == null) {
-			throw new ValidationException(ERR_FMT);
+		if (value==null||value.toString().length()==0) {
+			return null;
+//			throw new ValidationException(ERR_FMT);
 		}
 		String sValue = value.toString();
 		String[] splits = sValue.split("/");

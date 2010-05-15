@@ -23,6 +23,13 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 
 	private PropertyChangeListener pcl = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
+			SC templateCriterion = newCriterion(null);
+			Set saved = new HashSet();
+			for (Object sc : criteriaGroup.getCriteria()) {
+				if (sc.getClass()!=templateCriterion.getClass()){
+					saved.add(sc);
+				}
+			}
 			criteriaGroup.getCriteria().clear();
 			Set newValue = (Set) evt.getNewValue();
 			if (newValue == null) {
@@ -32,9 +39,12 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 				SC tc = newCriterion((O) obj);
 				criteriaGroup.getCriteria().add(tc);
 			}
+			criteriaGroup.getCriteria().addAll(saved);
 		}
 	};
-
+/**
+ * note must allow obj==null
+ */
 	protected abstract SC newCriterion(O obj);
 
 	public CriteriaGroupSelectorCustomiser(Class selectionObjectClass,
@@ -68,8 +78,12 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 		this.criteriaGroup = (C) model;
 		addPropertyChangeListener("value", pcl);
 		Set values = new HashSet();
+		SC templateCriterion = newCriterion(null);
 		for (Object sc : criteriaGroup.getCriteria()) {
-			values.add(getSearchCriterionDisplayObject((SC) sc));
+			//allows for potentially multiple criteria types in the cg
+			if (sc.getClass() == templateCriterion.getClass()) {
+				values.add(getSearchCriterionDisplayObject((SC) sc));
+			}
 		}
 		renderContents();
 		setValue(values);

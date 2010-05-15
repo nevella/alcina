@@ -53,6 +53,10 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 	public CriteriaGroup() {
 	}
 
+	public boolean provideIsEmpty() {
+		return getCriteria().isEmpty();
+	}
+
 	public CollectionFilter getFilter() {
 		return null;
 	}
@@ -69,6 +73,14 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		}
 		addCriterion((SC) criterion);
 		return criterion;
+	}
+	public <S extends SearchCriterion> S findCriterion(Class<S> clazz) {
+		for (SC sc : getCriteria()) {
+			if (sc.getClass() == clazz) {
+				return (S) sc;
+			}
+		}
+		return null;
 	}
 
 	/*
@@ -153,7 +165,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 	}
 
 	public String asString(boolean withGroupName, boolean asHtml) {
-		if (criteria.size() == 0) {
+		if (provideIsEmpty()) {
 			return "";
 		}
 		String displayName = CommonUtils.isNullOrEmpty(getDisplayName())

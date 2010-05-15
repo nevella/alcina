@@ -40,7 +40,7 @@ public abstract class AbstractRenderer<T extends TreeRenderable> implements
 	}
 
 	public String emptyChildText() {
-		return "(not set)";
+		return "(Not set)";
 	}
 
 	public RenderContext getContext() {

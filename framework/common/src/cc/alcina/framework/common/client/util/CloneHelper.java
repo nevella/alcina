@@ -88,7 +88,7 @@ public class CloneHelper {
 			if (val != null) {
 				if (pr.getMutatorMethod() != null
 						&& !ignore(o.getClass(), pr.getName(), o)) {
-					args[0] = deepProperty(o.getClass(), pr.getName()) ? deepObjectClone(val)
+					args[0] = deepProperty(o, pr.getName()) ? deepObjectClone(val)
 							: shallowishObjectClone(val);
 					pr.getMutatorMethod().invoke(ret, args);
 				}
@@ -105,7 +105,7 @@ public class CloneHelper {
 		return (T) ClientReflector.get().newInstance(o.getClass(), 0);
 	}
 
-	protected boolean deepProperty(Class c, String propertyName) {
+	protected boolean deepProperty(Object o, String propertyName) {
 		return true;
 	}
 

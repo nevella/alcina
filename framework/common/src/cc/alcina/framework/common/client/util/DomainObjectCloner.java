@@ -39,7 +39,8 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
  public class DomainObjectCloner extends CloneHelper {
 	
 	@Override
-	protected boolean deepProperty(Class c, String propertyName) {
+	protected boolean deepProperty(Object o, String propertyName) {
+		Class c = o.getClass();
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
 		if (bi == null) {
 			return false;

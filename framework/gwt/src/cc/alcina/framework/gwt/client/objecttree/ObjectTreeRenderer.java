@@ -47,7 +47,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  * @author Nick Reddel
  */
 public class ObjectTreeRenderer {
-	private OnetimeBoundWidget op;
+	private FlowPanelWithBinding op;
 
 	protected BoundWidgetTypeFactory factory = new BoundWidgetTypeFactorySimpleGenerator();
 
@@ -60,7 +60,7 @@ public class ObjectTreeRenderer {
 	}
 
 	public ComplexPanel render(TreeRenderable root, RenderContext renderContext) {
-		this.op = new OnetimeBoundWidget();
+		this.op = new FlowPanelWithBinding();
 		renderContext.setRootRenderable(root);
 		renderToPanel(root, op, 0, true, renderContext);
 		op.getBinding().bind();
@@ -74,7 +74,7 @@ public class ObjectTreeRenderer {
 			int depth, boolean soleChild, RenderContext renderContext) {
 		if (renderable instanceof Permissible) {
 			Permissible permissible = (Permissible) renderable;
-			if (!PermissionsManager.get().isPermissible(permissible)){
+			if (!PermissionsManager.get().isPermissible(permissible)) {
 				return;
 			}
 		}
@@ -132,7 +132,8 @@ public class ObjectTreeRenderer {
 			if (node.renderCss() != null) {
 				customiserWidget.addStyleName(node.renderCss());
 			}
-			String customiserStyleName = node.isSingleLineCustomiser()?"single-line-customiser":"customiser";
+			String customiserStyleName = node.isSingleLineCustomiser() ? "single-line-customiser"
+					: "customiser";
 			if (node.hint() != null) {
 				FlowPanel fp2 = new FlowPanel();
 				Label label = new Label(node.hint());
@@ -149,6 +150,41 @@ public class ObjectTreeRenderer {
 		}
 		if (node.renderInstruction() == RenderInstruction.AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD
 				|| node.renderInstruction() == RenderInstruction.AS_WIDGET) {
+			AbstractBoundWidget bw = new ObjectTreeBoundWidgetCreator()
+					.createBoundWidget(renderable, depth, soleChild, node, op
+							.getBinding());
+			cp.add(bw);
+			widgetsAdded = true;
+		}
+		if (children != null && children.size() != 0) {
+			ComplexPanel childPanel = cp;
+			if (depth != 0) {
+				if (node.renderChildrenHorizontally()) {
+					HorizontalPanel hp = new HorizontalPanel();
+					hp.setVerticalAlignment(HasVerticalAlignment.ALIGN_BOTTOM);
+					childPanel = hp;
+				} else {
+					childPanel = new FlowPanel();
+				}
+			}
+			if (childPanel != cp) {
+				level1ContentRendererMap.put(childPanel, node);
+				cp.add(childPanel);
+			}
+			Collection<? extends TreeRenderable> childRenderables = node
+					.renderableChildren();
+			for (TreeRenderable child : childRenderables) {
+				renderToPanel(child, childPanel, depth + 1, node
+						.renderableChildren().size() == 1, renderContext);
+			}
+		}
+		return;
+	}
+
+	public static class ObjectTreeBoundWidgetCreator {
+		public AbstractBoundWidget createBoundWidget(TreeRenderable renderable,
+				int depth, boolean soleChild, TreeRenderer node,
+				Binding parentBinding) {
 			String propertyName = node.renderablePropertyName();
 			Class type = GwittirBridge.get().getProperty(renderable,
 					propertyName).getType();
@@ -180,42 +216,37 @@ public class ObjectTreeRenderer {
 							f.getFeedback() != null ? vf : null).toRight(
 							renderable).onRightProperty(propertyName)
 					.convertRightWith(f.getConverter()).toBinding();
-			op.getBinding().getChildren().add(binding);
+			if (parentBinding != null) {
+				parentBinding.getChildren().add(binding);
+			}
 			if (node.renderCss() != null) {
 				bw.setStyleName(node.renderCss());
 			}
 			bw.addStyleName("level-"
 					+ ((soleChild) ? Math.max(1, depth - 1) : depth)
 					+ "-widget");
-			cp.add(bw);
-			widgetsAdded = true;
+			return bw;
 		}
-		if (children != null && children.size() != 0) {
-			ComplexPanel childPanel = cp;
-			if (depth != 0) {
-				if (node.renderChildrenHorizontally()) {
-					HorizontalPanel hp = new HorizontalPanel();
-					hp.setVerticalAlignment(HasVerticalAlignment.ALIGN_BOTTOM);
-					childPanel = hp;
-				} else {
-					childPanel = new FlowPanel();
-				}
-			}
-			if (childPanel != cp) {
-				level1ContentRendererMap.put(childPanel, node);
-				cp.add(childPanel);
-			}
-			Collection<? extends TreeRenderable> childRenderables = node
-					.renderableChildren();
-			for (TreeRenderable child : childRenderables) {
-				renderToPanel(child, childPanel, depth + 1, node
-						.renderableChildren().size() == 1, renderContext);
-			}
-		}
-		return;
 	}
 
-	public static class OnetimeBoundWidget extends FlowPanel {
+	public static class FlowPanelWithBinding extends FlowPanel {
+		@Override
+		protected void onDetach() {
+			super.onDetach();
+			binding.unbind();
+		}
+
+		private Binding binding = new Binding();
+
+		public void setBinding(Binding binding) {
+			this.binding = binding;
+		}
+
+		public Binding getBinding() {
+			return binding;
+		}
+	}
+	public static class HorizontalPanelWithBinding extends HorizontalPanel {
 		@Override
 		protected void onDetach() {
 			super.onDetach();
