@@ -194,9 +194,9 @@ public class ObjectTreeRenderer {
 					RelativePopupValidationFeedback.BOTTOM);
 			vf.addCssBackground();
 			if (f.getCellProvider() instanceof ListBoxEnumProvider
-					&& node instanceof HasWithNull) {
+					&& renderable instanceof HasWithNull) {
 				((ListBoxEnumProvider) f.getCellProvider())
-						.setWithNull(((HasWithNull) node).isWithNull());
+						.setWithNull(((HasWithNull) renderable).isWithNull());
 			}
 			if (f.getCellProvider() instanceof ListBoxCollectionProvider
 					&& node.collectionFilter() != null) {

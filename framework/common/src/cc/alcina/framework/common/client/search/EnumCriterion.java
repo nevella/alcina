@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull {
-	private boolean withNull;
+	private boolean withNull=true;
 
 	public EnumCriterion() {
 	}
