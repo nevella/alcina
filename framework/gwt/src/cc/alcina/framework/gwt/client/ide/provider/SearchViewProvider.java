@@ -59,6 +59,12 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 	private List<String> ignoreProperties;
 
+	private SearchPanel searchPanel;
+
+	public SearchPanel getSearchPanel() {
+		return this.searchPanel;
+	}
+
 	public List<String> getIgnoreProperties() {
 		return ignoreProperties;
 	}
@@ -74,10 +80,10 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 		if (!isWithoutCaption()) {
 			vp.add(createCaption(action));
 		}
-		vp.add(new SearchPanel(action, searchButtonTitle));
+		searchPanel = new SearchPanel(action, searchButtonTitle);
+		vp.add(searchPanel);
 		return vp;
 	}
-
 	public boolean isWithoutCaption() {
 		return withoutCaption;
 	}
@@ -156,7 +162,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 			search();
 		}
 
-		protected void search() {
+		public void search() {
 			resultsHolder.clear();
 			AsyncCallback completionCallback = new AsyncCallback() {
 				public void onFailure(Throwable caught) {

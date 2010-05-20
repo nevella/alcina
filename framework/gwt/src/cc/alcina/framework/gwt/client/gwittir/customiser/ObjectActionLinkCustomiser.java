@@ -65,7 +65,7 @@ public class ObjectActionLinkCustomiser implements Customiser {
 		}
 
 		public void setValue(Object value) {
-			return;
+			setVisible(value!=null);
 		}
 
 		public Object getValue() {

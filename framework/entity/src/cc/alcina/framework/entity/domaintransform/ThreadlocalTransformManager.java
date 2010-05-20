@@ -303,6 +303,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				}
 			}
 			T t = getEntityManager().find(c, id);
+			//this may be a performance hit - but worth it - otherwise all sorts of potential problems
+			//basically, transform events should (must) always have refs to "real" objects, not wrappers
+			t = EntityLayerLocator.get().jpaImplementation().getInstantiatedObject(t);
 			if (listenToFoundObjects
 					&& t instanceof SourcesPropertyChangeEvents) {
 				((SourcesPropertyChangeEvents) t)

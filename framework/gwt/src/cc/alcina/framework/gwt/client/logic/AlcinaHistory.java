@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -266,7 +267,7 @@ import com.google.gwt.http.client.URL;
 		protected Map<String, Object> params;
 
 		public String getToken() {
-			params = new HashMap<String, Object>();
+			params = new TreeMap<String, Object>();
 			params.put(TAB_KEY, tabName);
 			params.put(TAB_SUB_KEY, subTabName);
 			params.put(ACTION_KEY, actionName);
