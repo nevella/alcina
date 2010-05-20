@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.SelectorProvider;
-import cc.alcina.framework.gwt.client.gwittir.renderer.CollectionDisplayNameRenderer;
+import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter.ModelAssistedCollectionFilter;
 import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
@@ -94,15 +94,15 @@ public class SelectorCustomiser implements Customiser {
 				return new ExpandableDomainNodeCollectionLabelProvider(
 						maxLength, forceColumnWidth);
 			} else {
-				return COLL_DN_LABEL_PROVIDER;
+				return DN_LABEL_PROVIDER;
 			}
 		}
 	}
 
-	static final BoundWidgetProvider COLL_DN_LABEL_PROVIDER = new BoundWidgetProvider() {
+	static final BoundWidgetProvider DN_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
-			label.setRenderer(CollectionDisplayNameRenderer.INSTANCE);
+			label.setRenderer(DisplayNameRenderer.INSTANCE);
 			return label;
 		}
 	};
