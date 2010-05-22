@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity;
 
 import java.io.ByteArrayInputStream;
@@ -58,13 +57,11 @@ import org.xml.sax.SAXParseException;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class XmlUtilities {
+public class XmlUtilities {
 	public static final String A_EMPTY = "A-EMPTY";
 
 	private static boolean useJAXP;
@@ -103,11 +100,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		}
 		return db.newDocument();
 	}
-	public static int getDepth(Node n){
-		int depth=0;
-		while (n.getParentNode()!=null){
+
+	public static int getDepth(Node n) {
+		int depth = 0;
+		while (n.getParentNode() != null) {
 			depth++;
-			n=n.getParentNode();
+			n = n.getParentNode();
 		}
 		return depth;
 	}
@@ -179,29 +177,50 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public static Range getRangeSurroundedByBlocks(Node node) {
+		return getSurroundingBlockTuple(node).range;
+	}
+
+	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node) {
 		Element element = getParentElementWithTagName(node, "*", true);
-		Element prev = element;
-		Element next = element;
+		Node prev = element;
+		Node next = element;
+		SurroundingBlockTuple tuple = new SurroundingBlockTuple();
 		while (true) {
-			Element sib = previousSibOrParentSib(prev);
-			if (isBlockHTMLElementSimplistic(sib)) {
+			Node sib = previousSibOrParentSibNode(prev);
+			if (sib != null && sib.getNodeType() == Node.ELEMENT_NODE
+					&& isBlockHTMLElementSimplistic((Element) sib)) {
+				tuple.prevBlock = (Element) sib;
 				break;
 			} else {
 				prev = sib;
 			}
 		}
 		while (true) {
-			Element sib = nextSibOrParentSib(next);
-			if (isBlockHTMLElementSimplistic(sib)) {
+			Node sib = nextSibOrParentSibNode(next);
+			if (sib == null || sib.getNodeType() == Node.ELEMENT_NODE
+					&& isBlockHTMLElementSimplistic((Element) sib)) {
+				tuple.nextBlock = (Element) sib;
 				break;
 			} else {
 				next = sib;
 			}
 		}
 		Range r = ((DocumentRange) element.getOwnerDocument()).createRange();
-		r.setStart(prev, 0);
+		r.setStartBefore(prev);
 		r.setEndAfter(next);
-		return r;
+		tuple.firstNode = prev;
+		tuple.range = r;
+		return tuple;
+	}
+
+	public static class SurroundingBlockTuple {
+		public Range range;
+
+		public Node firstNode;
+
+		public Element prevBlock;
+
+		public Element nextBlock;
 	}
 
 	public static Element getParentElementWithTagName(Node n, String tagName) {
@@ -482,6 +501,18 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		return null;
 	}
 
+	public static Node nextSibOrParentSibNode(Node fromNode) {
+		Node nextSibling = fromNode.getNextSibling();
+		if (nextSibling != null) {
+			return nextSibling;
+		}
+		Node parentNode = fromNode.getParentNode();
+		if (parentNode != null) {
+			return nextSibOrParentSibNode(parentNode);
+		}
+		return null;
+	}
+
 	public static Node nextSibOrParentSibWithText(Node fromNode) {
 		Node nextSibling = fromNode.getNextSibling();
 		if (nextSibling != null) {
@@ -555,6 +586,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 				return (Element) previousSibling;
 			}
 			return previousSibOrParentSib(previousSibling);
+		}
+		return (Element) fromNode.getParentNode();
+	}
+
+	public static Node previousSibOrParentSibNode(Node fromNode) {
+		Node previousSibling = fromNode.getPreviousSibling();
+		if (previousSibling != null) {
+			return previousSibling;
 		}
 		return (Element) fromNode.getParentNode();
 	}
@@ -874,7 +913,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public static Range nodeToRange(Node container) {
-		Range r = ((DocumentRange)container.getOwnerDocument()).createRange();
+		Range r = ((DocumentRange) container.getOwnerDocument()).createRange();
 		r.setStart(container, 0);
 		r.setEndAfter(container);
 		return r;
