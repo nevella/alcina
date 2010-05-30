@@ -86,7 +86,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 					getValidatingMessage(), null);
 			AsyncCallback<List<ServerValidator>> callback = new AsyncCallback<List<ServerValidator>>() {
 				public void onFailure(Throwable caught) {
-					ClientLayerLocator.get().clientBase().showError(
+					ClientLayerLocator.get().notifications().showError(
 							"Validator error", caught);
 					setMessage("Validator error");
 					resolveFeedback();

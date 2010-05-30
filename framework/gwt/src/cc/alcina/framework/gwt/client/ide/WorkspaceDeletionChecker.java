@@ -93,7 +93,7 @@ import com.totsp.gwittir.client.beans.Property;
 			TextProvider.get().setTrimmed(false);
 		}
 		if (message.length() > 0) {
-			ClientLayerLocator.get().clientBase().showWarning(msgtitle,
+			ClientLayerLocator.get().notifications().showWarning(msgtitle,
 					message.replace("\n", "<br>\n"));
 		}
 		return message.length() == 0;

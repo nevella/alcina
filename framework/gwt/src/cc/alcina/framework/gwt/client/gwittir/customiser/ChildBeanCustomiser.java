@@ -19,10 +19,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
-import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.Link;
 
@@ -93,7 +93,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 			h.addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent event) {
 					Class clazz = ChildBeanWidget.this.objectClass;
-					boolean autoSave = PropertiesProvider
+					boolean autoSave = ClientLayerLocator.get()
 							.getGeneralProperties().isAutoSave();
 					Object obj = autoSave ? TransformManager.get()
 							.createDomainObject(clazz) : TransformManager.get()

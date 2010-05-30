@@ -24,9 +24,9 @@ import org.hibernate.proxy.LazyInitializer;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
-import cc.alcina.framework.entity.util.GraphCloner;
-import cc.alcina.framework.entity.util.GraphCloner.ClassFieldPair;
-import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
+import cc.alcina.framework.entity.util.GraphProjection;
+import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
+import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 
 @SuppressWarnings("unchecked")
 /**
@@ -60,7 +60,7 @@ import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 
 	@Override
 	public <T> T filterData(T value, T cloned,
-			ClassFieldPair context, GraphCloner graphCloner)
+			ClassFieldPair context, GraphProjection graphCloner)
 			throws Exception {
 		if (value instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;
@@ -76,7 +76,7 @@ import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 						impl = ((HibernateProxy) value)
 								.getHibernateLazyInitializer()
 								.getImplementation();
-						impl = graphCloner.clone(impl, value, context);
+						impl = graphCloner.project(impl, value, context);
 						cache.put((HasIdAndLocalId) impl);
 					}
 				}
@@ -108,7 +108,7 @@ import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 
 	@Override
 	protected Object clonePersistentSet(PersistentSet ps,
-			ClassFieldPair context, GraphCloner graphCloner)
+			ClassFieldPair context, GraphProjection graphCloner)
 			throws Exception {
 		HashSet hs = new HashSet();
 		graphCloner.getReached().put(ps, hs);
@@ -123,10 +123,10 @@ import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
 					Object impl = ((HibernateProxy) value)
 							.getHibernateLazyInitializer()
 							.getImplementation();
-					value = graphCloner.clone(impl, value, context);
+					value = graphCloner.project(impl, value, context);
 					cache.put((HasIdAndLocalId) value);
 				} else {
-					value = graphCloner.clone(value, context);
+					value = graphCloner.project(value, context);
 				}
 				hs.add(value);
 			}

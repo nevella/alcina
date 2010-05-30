@@ -21,9 +21,9 @@ import java.util.Set;
 import org.hibernate.collection.PersistentSet;
 import org.hibernate.proxy.HibernateProxy;
 
-import cc.alcina.framework.entity.util.GraphCloner;
-import cc.alcina.framework.entity.util.GraphCloner.ClassFieldPair;
-import cc.alcina.framework.entity.util.GraphCloner.CollectionCloneFilter;
+import cc.alcina.framework.entity.util.GraphProjection;
+import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
+import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
 
 
 /**
@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.util.GraphCloner.CollectionCloneFilter;
  * @author Nick Reddel
  */
 
- public class HibernateCloneFilter extends CollectionCloneFilter {
+ public class HibernateCloneFilter extends CollectionProjectionFilter {
 	private Set<ClassFieldPair> instantiateProps = new HashSet<ClassFieldPair>();
 
 	public HibernateCloneFilter() {
@@ -44,12 +44,12 @@ import cc.alcina.framework.entity.util.GraphCloner.CollectionCloneFilter;
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T filterData(T value, T cloned, ClassFieldPair context,
-			GraphCloner graphCloner) throws Exception {
+			GraphProjection graphCloner) throws Exception {
 		if (value instanceof HibernateProxy) {
 			if (instantiateProps.contains(context)) {
 				Object impl = ((HibernateProxy) value)
 						.getHibernateLazyInitializer().getImplementation();
-				value = (T) graphCloner.clone(impl, value, context);
+				value = (T) graphCloner.project(impl, value, context);
 				return value;
 			} else {
 				return null;
@@ -64,14 +64,14 @@ import cc.alcina.framework.entity.util.GraphCloner.CollectionCloneFilter;
 
 	@SuppressWarnings("unchecked")
 	protected Object clonePersistentSet(PersistentSet ps,
-			ClassFieldPair context, GraphCloner graphCloner) throws Exception {
+			ClassFieldPair context, GraphProjection graphCloner) throws Exception {
 		HashSet hs = new HashSet();
 		if (ps.wasInitialized()) {
 			Iterator itr = ps.iterator();
 			Object value;
 			for (; itr.hasNext();) {
 				value = itr.next();
-				value = graphCloner.clone(value, context);
+				value = graphCloner.project(value, context);
 				hs.add(value);
 			}
 		}

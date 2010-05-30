@@ -16,11 +16,11 @@ package cc.alcina.framework.gwt.client.ide.widget;
 
 
 import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ETEType;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListener;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventSource;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventSupport;
+import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventType;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
 
@@ -79,16 +79,16 @@ import com.google.gwt.user.client.ui.TreeItem;
 				if (getSelectedItem() != null) {
 					event.preventDefault();
 					fireActionsAvailbleChange(new ExtraTreeEventEvent(
-							getSelectedItem(), ETEType.DBL_CLICK));
+							getSelectedItem(), ExtraTreeEventType.DBL_CLICK));
 				}
 			case Event.ONCONTEXTMENU:
 				event.preventDefault();
 				fireActionsAvailbleChange(new ExtraTreeEventEvent(
-						getSelectedItem(), ETEType.RIGHT_CLICK));
+						getSelectedItem(), ExtraTreeEventType.RIGHT_CLICK));
 			case Event.ONKEYUP:
 				if (event.getKeyCode() == KeyCodes.KEY_ENTER) {
 					fireActionsAvailbleChange(new ExtraTreeEventEvent(
-							getSelectedItem(), ETEType.DBL_CLICK));
+							getSelectedItem(), ExtraTreeEventType.DBL_CLICK));
 				}
 			}
 		}

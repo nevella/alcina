@@ -29,6 +29,8 @@ import java.util.Set;
 	public Set<? extends IGroup> getMemberOfGroups();
 
 	public Set<? extends IUser> getMemberUsers();
+	
+	public void setMemberUsers(Set<? extends IUser> memberUsers);
 
 	public String getName();
 

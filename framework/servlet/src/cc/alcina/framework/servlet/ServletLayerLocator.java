@@ -60,15 +60,7 @@ public class ServletLayerLocator {
 		return dataFolder;
 	}
 
-	private Logger serverLogger;
-
-	public void registerLogger(Logger serverLogger) {
-		this.serverLogger = serverLogger;
-	}
-
-	public Logger serverLogger() {
-		return serverLogger;
-	}
+	
 
 	public void appShutdown() {
 		theInstance = null;

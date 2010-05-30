@@ -593,7 +593,7 @@ public class WidgetUtils {
 			if (e.getMessage().contains("NS_ERROR_XPC_NOT_ENOUGH_ARGS")) {
 				ClientLayerLocator
 						.get()
-						.clientBase()
+						.notifications()
 						.showMessage(
 								new HTML(
 										"<div class='info'>Sorry, clipboard operations"
@@ -601,7 +601,7 @@ public class WidgetUtils {
 												+ " security settings. <br><br> Please see "
 												+ "<a href='http://www.mozilla.org/editor/midasdemo/securityprefs.html'>"
 												+ "http://www.mozilla.org/editor/midasdemo/securityprefs.html</a></div> "));
-			}else{
+			} else {
 				throw e;
 			}
 		}

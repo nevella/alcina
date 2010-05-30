@@ -15,13 +15,12 @@
 package cc.alcina.framework.entity.logic.permissions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.GraphCloner;
-import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
+import cc.alcina.framework.entity.util.GraphProjection;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 
 /**
  *
@@ -29,7 +28,7 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
  */
 
  public class ThreadedPermissionsManager extends PermissionsManager {
-	public static CloneFilter INSTANTIATE_IMPL_FILTER;
+	public static GraphProjectionFilter INSTANTIATE_IMPL_FILTER;
 
 	@Override
 	public PermissionsManager getT() {
@@ -71,8 +70,8 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 		super.setUser(user);
 		if (INSTANTIATE_IMPL_FILTER != null) {
 			try {
-				setInstantiatedUser(new GraphCloner(null,
-						INSTANTIATE_IMPL_FILTER).clone(user, null));
+				setInstantiatedUser(new GraphProjection(null,
+						INSTANTIATE_IMPL_FILTER).project(user, null));
 			} catch (Exception e) {
 				if (EntityLayerLocator.get().jpaImplementation()
 						.isLazyInitialisationException(e)) {

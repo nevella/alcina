@@ -167,7 +167,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 			AsyncCallback completionCallback = new AsyncCallback() {
 				public void onFailure(Throwable caught) {
 					cleanup();
-					ClientLayerLocator.get().clientBase().showError(caught);
+					ClientLayerLocator.get().notifications().showError(caught);
 				}
 
 				public void onSuccess(Object result) {

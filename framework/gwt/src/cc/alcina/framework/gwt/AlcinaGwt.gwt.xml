@@ -1,6 +1,8 @@
 <module>
 	<inherits name='cc.alcina.framework.common.AlcinaCommon' />
-	<inherits name='cc.alcina.framework.common.AlcinaCommon' />
+	<inherits name="cc.alcina.framework.gwt.gears.DTGears" />
+	<inherits name='com.google.gwt.gears.Offline' />
+	<!-- DTGears will be compiled out for  non-local-persistence clients -->
 	<stylesheet src='Alcina.css' />
 	<!--  gwt2.03 bug see http://dev.vaadin.com/changeset/11707 -->
 	<!-- Safari needs a different implementation due to GWT bug. See #4279 (vaadin trac) -->

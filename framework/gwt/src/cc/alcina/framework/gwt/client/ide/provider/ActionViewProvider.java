@@ -146,7 +146,7 @@ public class ActionViewProvider implements ViewProvider,
 			hasChildHandlersSupport.detachHandlers();
 			AsyncCallback<List<ActionLogItem>> outerCallback = new AsyncCallback<List<ActionLogItem>>() {
 				public void onFailure(Throwable caught) {
-					ClientLayerLocator.get().clientBase().showError(caught);
+					ClientLayerLocator.get().notifications().showError(caught);
 				}
 
 				public void onSuccess(List<ActionLogItem> result) {
@@ -228,7 +228,7 @@ public class ActionViewProvider implements ViewProvider,
 			runningLabel.setText(RUNNING);
 			AsyncCallback<Long> asyncCallback = new AsyncCallback<Long>() {
 				public void onFailure(Throwable caught) {
-					ClientLayerLocator.get().clientBase().showError(caught);
+					ClientLayerLocator.get().notifications().showError(caught);
 					redraw();
 				}
 
@@ -254,7 +254,7 @@ public class ActionViewProvider implements ViewProvider,
 			};
 			AsyncCallback<ActionLogItem> syncCallback = new AsyncCallback<ActionLogItem>() {
 				public void onFailure(Throwable caught) {
-					ClientLayerLocator.get().clientBase().showError(caught);
+					ClientLayerLocator.get().notifications().showError(caught);
 					redraw();
 				}
 
@@ -269,7 +269,7 @@ public class ActionViewProvider implements ViewProvider,
 			GwittirUtils.refreshEmptyTextBoxes(beanView.getBoundWidget()
 					.getBinding());
 			if (!beanView.getBoundWidget().getBinding().validate()) {
-				ClientLayerLocator.get().clientBase().showWarning(
+				ClientLayerLocator.get().notifications().showWarning(
 						"Please correct the problems in the form");
 				return;
 			}

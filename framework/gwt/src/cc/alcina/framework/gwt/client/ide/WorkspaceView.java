@@ -22,9 +22,6 @@ import java.util.List;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
@@ -44,9 +41,9 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.SimpleCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.widget.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
-import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ETEType;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListener;
+import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventType;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.widget.FilterWidget;
 import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
@@ -248,7 +245,7 @@ public class WorkspaceView extends Composite implements HasName,
 					.getSource());
 			boolean canEdit = actions.contains(EditAction.class);
 			if (actions.contains(ViewAction.class)
-					&& evt.getType() == ETEType.DBL_CLICK) {
+					&& evt.getType() == ExtraTreeEventType.DBL_CLICK) {
 				Class<? extends PermissibleAction> actionClass = canEdit
 						&& (allowEditCollections || evt.getSource()
 								.getUserObject() instanceof HasIdAndLocalId) ? EditAction.class

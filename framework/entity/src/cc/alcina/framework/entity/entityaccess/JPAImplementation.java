@@ -13,14 +13,15 @@
  */
 package cc.alcina.framework.entity.entityaccess;
 
+import java.io.File;
 import java.util.Collection;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
-import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
-import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
+import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 
 /**
  * 
@@ -31,7 +32,7 @@ public interface JPAImplementation {
 
 	public <T> T getInstantiatedObject(T object);
 
-	public CloneFilter getResolvingFilter(InstantiateImplCallback callback,
+	public GraphProjectionFilter getResolvingFilter(InstantiateImplCallback callback,
 			DetachedEntityCache cache);
 
 	/**
@@ -48,4 +49,5 @@ public interface JPAImplementation {
 
 	public void interpretException(DomainTransformException exception);
 
+	public File getConfigDirectory();
 }

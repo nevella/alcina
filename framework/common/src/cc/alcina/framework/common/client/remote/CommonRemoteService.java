@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
-import cc.alcina.framework.common.client.csobjects.LoginResponseBean;
+import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
@@ -57,11 +57,11 @@ import com.google.gwt.user.client.rpc.RemoteService;
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count);
 
-	public LoginResponseBean hello();
+	public LoginResponse hello();
 
 	public Long logClientError(String exceptionToString);
 
-	public LoginResponseBean login(LoginBean loginBean);
+	public LoginResponse login(LoginBean loginBean);
 
 	public void logout();
 

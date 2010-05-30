@@ -20,8 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  *
  * @author Nick Reddel
  */
-public class EnumCriteriaGroup<E extends Enum> extends
-		CriteriaGroup<EnumCriterion<E>> {
+public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 	public EnumCriteriaGroup() {
 		super();
 		setDisplayName("");
@@ -34,6 +33,7 @@ public class EnumCriteriaGroup<E extends Enum> extends
 		}
 		return getCriteria().iterator().next().getDisplayName();
 	}
+
 	@Override
 	public String validatePermissions() {
 		try {
@@ -43,6 +43,6 @@ public class EnumCriteriaGroup<E extends Enum> extends
 		} catch (Exception e) {
 			return "Access not permitted: (not enum criterion)";
 		}
-		return null;//either subclass, or rely on property mappings
+		return null;// either subclass, or rely on property mappings
 	}
 }

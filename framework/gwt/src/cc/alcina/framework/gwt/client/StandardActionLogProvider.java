@@ -40,7 +40,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 		if (logs.get(action.getClass()) == null || refresh) {
 			AsyncCallback<List<ActionLogItem>> callback = new AsyncCallback<List<ActionLogItem>>() {
 				public void onFailure(Throwable caught) {
-					ClientLayerLocator.get().clientBase().showError(caught);
+					ClientLayerLocator.get().notifications().showError(caught);
 				}
 
 				public void onSuccess(List<ActionLogItem> result) {

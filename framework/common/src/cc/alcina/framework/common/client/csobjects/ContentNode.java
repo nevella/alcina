@@ -28,34 +28,34 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
  * @author Nick Reddel
  */
 
- public class DocumentationNode implements Serializable {
+ public class ContentNode implements Serializable {
 	private String title;
 
 	private String content;
 
 	private String url;
 
-	private List<DocumentationNode> children = new ArrayList<DocumentationNode>();
+	private List<ContentNode> children = new ArrayList<ContentNode>();
 	
 	private List<String> labels = new ArrayList<String>();
 
-	public DocumentationNode() {
+	public ContentNode() {
 	}
-	public Map<String,DocumentationNode> createTitleMap(){
-		Map<String,DocumentationNode> result = new HashMap<String, DocumentationNode>();
-		List<DocumentationNode> kids = getAllChildren(null);
-		for (DocumentationNode dn : kids) {
+	public Map<String,ContentNode> createTitleMap(){
+		Map<String,ContentNode> result = new HashMap<String, ContentNode>();
+		List<ContentNode> kids = getAllChildren(null);
+		for (ContentNode dn : kids) {
 			result.put(dn.getTitle().toLowerCase(), dn);
 		}
 		return result;
 	}
-	public List<DocumentationNode> getAllChildren(
-			List<DocumentationNode> currentList) {
+	public List<ContentNode> getAllChildren(
+			List<ContentNode> currentList) {
 		if (currentList == null) {
-			currentList = new ArrayList<DocumentationNode>();
+			currentList = new ArrayList<ContentNode>();
 		}
 		currentList.add(this);
-		for (DocumentationNode n : getChildren()) {
+		for (ContentNode n : getChildren()) {
 			n.getAllChildren(currentList);
 		}
 		return currentList;
@@ -105,25 +105,25 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 		this.lastModified = lastModified;
 	}
 
-	public void setChildren(List<DocumentationNode> children) {
+	public void setChildren(List<ContentNode> children) {
 		this.children = children;
 	}
 
-	public List<DocumentationNode> getChildren() {
+	public List<ContentNode> getChildren() {
 		return children;
 	}
-	public DocumentationNode cloneWithFilter(CollectionFilter<DocumentationNode> filter){
+	public ContentNode cloneWithFilter(CollectionFilter<ContentNode> filter){
 		if (!filter.allow(this)){
 			return null;
 		}
-		DocumentationNode copy = new DocumentationNode();
+		ContentNode copy = new ContentNode();
 		copy.setContent(getContent());
 		copy.setId(getId());
 		copy.setLastModified(getLastModified());
 		copy.setTitle(getTitle());
 		copy.setUrl(getUrl());
-		for(DocumentationNode child:getChildren()){
-			DocumentationNode childCopy = child.cloneWithFilter(filter);
+		for(ContentNode child:getChildren()){
+			ContentNode childCopy = child.cloneWithFilter(filter);
 			if (childCopy!=null){
 				copy.getChildren().add(childCopy);
 			}

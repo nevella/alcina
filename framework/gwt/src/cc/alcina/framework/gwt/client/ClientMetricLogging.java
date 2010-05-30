@@ -68,7 +68,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		String message = CommonUtils.format("[Metric] %1 - %2 ms%3", key,
 				elapsed, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
 						+ extraInfo);
-		ClientLayerLocator.get().clientBase().log(message);
+		ClientLayerLocator.get().notifications().log(message);
 		if (!averageCount.containsKey(key)) {
 			averageCount.put(key, 0L);
 			sum.put(key, 0L);

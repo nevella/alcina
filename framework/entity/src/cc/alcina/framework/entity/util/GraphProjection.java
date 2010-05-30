@@ -11,9 +11,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.util;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -40,27 +40,27 @@ import cc.alcina.framework.entity.SEUtilities;
  *
  * @author Nick Reddel
  */
+public class GraphProjection {
+	private GraphProjectionFilter dataFilter;
 
- public class GraphCloner {
-	private CloneFilter dataFilter;
+	private GraphProjectionFilter fieldFilter;
 
-	private CloneFilter fieldFilter;
-
-	public GraphCloner() {
+	public GraphProjection() {
 	}
 
-	public GraphCloner(CloneFilter fieldFilter, CloneFilter dataFilter) {
+	public GraphProjection(GraphProjectionFilter fieldFilter,
+			GraphProjectionFilter dataFilter) {
 		this.fieldFilter = fieldFilter;
 		this.dataFilter = dataFilter;
 	}
 
 	private IdentityHashMap reached = new IdentityHashMap();
 
-	public <T> T clone(T source, ClassFieldPair context) throws Exception {
-		return clone(source, null, context);
+	public <T> T project(T source, ClassFieldPair context) throws Exception {
+		return project(source, null, context);
 	}
 
-	public <T> T clone(T source, Object alsoMapTo, ClassFieldPair context)
+	public <T> T project(T source, Object alsoMapTo, ClassFieldPair context)
 			throws Exception {
 		if (source == null) {
 			return null;
@@ -87,53 +87,50 @@ import cc.alcina.framework.entity.SEUtilities;
 		// dbg += "-id:" + ((HasIdAndLocalId) source).getId();
 		// }
 		// System.out.println(dbg);
-		T cloned = (T) source.getClass().newInstance();
-		reached.put(source, cloned);
+		Class<? extends Object> sourceClass = source.getClass();
+		T projected = sourceClass.isArray() ? (T) Array.newInstance(sourceClass.getComponentType(),
+				Array.getLength(source)) : (T) sourceClass.newInstance();
+		reached.put(source, projected);
 		if (alsoMapTo != null) {
-			reached.put(alsoMapTo, cloned);
+			reached.put(alsoMapTo, projected);
 		}
 		if (dataFilter != null) {
 			if (context == null) {
 				context = new ClassFieldPair(c, "");
 			}
-			T replaceClone = dataFilter.filterData(source, cloned, context,
+			T replaceProjected = dataFilter.filterData(source, projected, context,
 					this);
-			if (replaceClone != cloned) {
-				reached.put(source, replaceClone);
+			if (replaceProjected != projected) {
+				reached.put(source, replaceProjected);
 				if (alsoMapTo != null) {
-					reached.put(alsoMapTo, replaceClone);
+					reached.put(alsoMapTo, replaceProjected);
 				}
 				// System.out.println(context + ":"
 				// + source.getClass().getSimpleName() + ":"
 				// + System.identityHashCode(source) + ">>"
-				// + System.identityHashCode(replaceClone));
-				return replaceClone;
+				// + System.identityHashCode(replaceProjected));
+				return replaceProjected;
 			}
 		}
-		if (cloned == null) {
-			return cloned;
+		if (projected == null) {
+			return projected;
 		}
-		Field[] fields = getFieldsForClass(cloned);
-		Set<Field> checkFields = perObjectPermissionFields.get(cloned
+		Field[] fields = getFieldsForClass(projected);
+		Set<Field> checkFields = perObjectPermissionFields.get(projected
 				.getClass());
 		for (Field field : fields) {
 			Object value = field.get(source);
 			if (checkFields.contains(field) && !permitField(field, source)) {
 				continue;
 			}
-			if (c.getSimpleName().equals("JadeGroup")
-					&& "Developers".equals(source.toString())
-					&& field.getName().equals("memberOfGroups")) {
-				int k = 3;
-			}
-			Object cv = clone(value, new ClassFieldPair(c, field.getName()));
-			field.set(cloned, cv);
+			Object cv = project(value, new ClassFieldPair(c, field.getName()));
+			field.set(projected, cv);
 		}
-		return cloned;
+		return projected;
 	}
 
 	// TODO - shouldn't this be package-private?
-	public Collection cloneCollection(Collection coll, ClassFieldPair context)
+	public Collection projectCollection(Collection coll, ClassFieldPair context)
 			throws Exception {
 		Collection c = null;
 		if (coll instanceof ArrayList) {
@@ -148,11 +145,8 @@ import cc.alcina.framework.entity.SEUtilities;
 		Object value;
 		for (; itr.hasNext();) {
 			value = itr.next();
-			Object clone = clone(value, context);
-			if (clone == null) {
-				int z = 3;
-			}
-			c.add(clone);
+			Object projected = project(value, context);
+			c.add(projected);
 		}
 		return c;
 	}
@@ -168,13 +162,13 @@ import cc.alcina.framework.entity.SEUtilities;
 		return false;
 	}
 
-	Map<Class, Field[]> cloneableFields = new HashMap<Class, Field[]>();
+	Map<Class, Field[]> projectableFields = new HashMap<Class, Field[]>();
 
 	Map<Class, Set<Field>> perObjectPermissionFields = new HashMap<Class, Set<Field>>();
 
-	private Field[] getFieldsForClass(Object cloned) {
-		Class<? extends Object> clazz = cloned.getClass();
-		if (!cloneableFields.containsKey(clazz)) {
+	private Field[] getFieldsForClass(Object projected) {
+		Class<? extends Object> clazz = projected.getClass();
+		if (!projectableFields.containsKey(clazz)) {
 			List<Field> allFields = new ArrayList<Field>();
 			Set<Field> dynamicPermissionFields = new HashSet<Field>();
 			Class c = clazz;
@@ -196,11 +190,11 @@ import cc.alcina.framework.entity.SEUtilities;
 				}
 				c = c.getSuperclass();
 			}
-			cloneableFields.put(clazz, (Field[]) allFields
+			projectableFields.put(clazz, (Field[]) allFields
 					.toArray(new Field[allFields.size()]));
 			perObjectPermissionFields.put(clazz, dynamicPermissionFields);
 		}
-		return cloneableFields.get(clazz);
+		return projectableFields.get(clazz);
 	}
 
 	public void setReached(IdentityHashMap reached) {
@@ -218,22 +212,21 @@ import cc.alcina.framework.entity.SEUtilities;
 		return reached;
 	}
 
-	public static interface CloneFilter {
+	public static interface GraphProjectionFilter {
 		/*
 		 * IMPORTANT - if filterdata changes the return value (i.e. doesn't
 		 * return value) it must immediately (on instantiation) register the new
-		 * value in graphCloner.reached
+		 * value in graphProjection.reached
 		 */
-		<T> T filterData(T value, T cloned, ClassFieldPair context,
-				GraphCloner graphCloner) throws Exception;
+		<T> T filterData(T original, T projected, ClassFieldPair context,
+				GraphProjection graphProjection) throws Exception;
 
 		boolean permitField(Field field, Set<Field> perObjectPermissionFields);
 	}
 
-	public static class PermissibleFieldFilter implements CloneFilter {
-		public <T> T filterData(T value, T cloned,
-				ClassFieldPair context, GraphCloner graphCloner)
-				throws Exception {
+	public static class PermissibleFieldFilter implements GraphProjectionFilter {
+		public <T> T filterData(T original, T projected, ClassFieldPair context,
+				GraphProjection graphProjection) throws Exception {
 			return null;
 		}
 
@@ -263,22 +256,29 @@ import cc.alcina.framework.entity.SEUtilities;
 		}
 	}
 
-	public static class CollectionCloneFilter implements CloneFilter {
+	public static class CollectionProjectionFilter implements GraphProjectionFilter {
 		@SuppressWarnings("unchecked")
-		public <T> T filterData(T value, T cloned,
-			ClassFieldPair context, GraphCloner graphCloner)
-			throws Exception {
-			if (value instanceof Collection) {
-				return (T) graphCloner.cloneCollection((Collection) value, context);
+		public <T> T filterData(T original, T projected, ClassFieldPair context,
+				GraphProjection graphProjection) throws Exception {
+			if (original.getClass().isArray()){
+				int n = Array.getLength(original);
+				for (int i=0;i<n;i++){
+					Array.set(projected, i, graphProjection.project(Array.get(original, i),
+							context));
+				}
 			}
-			if (value instanceof Map) {
-				return (T) cloneMap((Map) value, context, graphCloner);
+			if (original instanceof Collection) {
+				return (T) graphProjection.projectCollection((Collection) original,
+						context);
 			}
-			return cloned;
+			if (original instanceof Map) {
+				return (T) projectMap((Map) original, context, graphProjection);
+			}
+			return projected;
 		}
 
-		private Object cloneMap(Map map, ClassFieldPair context,
-				GraphCloner graphCloner) throws Exception {
+		private Object projectMap(Map map, ClassFieldPair context,
+				GraphProjection graphProjection) throws Exception {
 			Map m = null;
 			if (map instanceof LinkedHashMap) {
 				m = new LinkedHashMap();
@@ -290,7 +290,7 @@ import cc.alcina.framework.entity.SEUtilities;
 			for (; itr.hasNext();) {
 				key = itr.next();
 				value = map.get(key);
-				m.put(graphCloner.clone(key, context), graphCloner.clone(value,
+				m.put(graphProjection.project(key, context), graphProjection.project(value,
 						context));
 			}
 			return m;

@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNofications;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
@@ -138,10 +139,10 @@ import com.google.gwt.user.client.ui.Widget;
 					uncommitted.toString());
 			ta.setText(text);
 			fp.add(ta);
-			ClientBase clientBase = ClientLayerLocator.get().clientBase();
-			clientBase.setDialogAnimationEnabled(false);
-			clientBase.showMessage(fp);
-			clientBase.setDialogAnimationEnabled(true);
+			ClientNofications cn = ClientLayerLocator.get().notifications();
+			cn.setDialogAnimationEnabled(false);
+			cn.showMessage(fp);
+			cn.setDialogAnimationEnabled(true);
 			ta.setSelectionRange(0, text.length());
 			copy();
 		}

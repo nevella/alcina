@@ -30,9 +30,9 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
-import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
-import cc.alcina.framework.entity.util.GraphCloner.PermissibleFieldFilter;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
+import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.util.GraphProjection.PermissibleFieldFilter;
 
 /**
  * 
@@ -126,10 +126,10 @@ public class EntityUtils {
 	public <T> T detachedClone(T source, boolean useCache,
 			InstantiateImplCallback callback) {
 		DetachedEntityCache cache = useCache ? null : new DetachedEntityCache();
-		CloneFilter filter = EntityLayerLocator.get().jpaImplementation()
+		GraphProjectionFilter filter = EntityLayerLocator.get().jpaImplementation()
 				.getResolvingFilter(callback, cache);
 		try {
-			return new GraphCloner(new PermissibleFieldFilter(), filter).clone(
+			return new GraphProjection(new PermissibleFieldFilter(), filter).project(
 					source, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

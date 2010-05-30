@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
  * @author Nick Reddel
  */
 
- public class LogMuter {
+ public class JbossLogMuter {
 	private String[] info = {
 			"org.jboss.seam",
 			"org.codehaus.xfire",

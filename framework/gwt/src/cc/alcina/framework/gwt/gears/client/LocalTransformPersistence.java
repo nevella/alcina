@@ -26,28 +26,42 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
+import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.gears.client.GearsException;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.Window.ClosingEvent;
+import com.google.gwt.user.client.Window.ClosingHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+
 /**
- * <p><b>Ordering of client transforms</b></p>
- * <blockquote><p>Save:</p>
- * <ol><li>Inital object chunk: async</li>
+ * <p>
+ * <b>Ordering of client transforms</b>
+ * </p>
+ * <blockquote>
+ * <p>
+ * Save:
+ * </p>
+ * <ol>
+ * <li>Inital object chunk: async</li>
  * <li>Other (sync from remote, local transforms) - written synchronously</li>
  * </ol>
- * </blockquote>
- * <blockquote><p>Load (offline):</p>
- * <ol><li>Initial object chunk (which may be out of order wrt db id)</li>
+ * </blockquote> <blockquote>
+ * <p>
+ * Load (offline):
+ * </p>
+ * <ol>
+ * <li>Initial object chunk (which may be out of order wrt db id)</li>
  * <li>Other (sync from remote, local transforms) - ordered by id</li>
  * </ol>
  * </blockquote>
- * <p>This ensures that offline load is in the correct order
+ * <p>
+ * This ensures that offline load is in the correct order
+ * 
  * @author nick@alcina.cc
- *
+ * 
  */
-public abstract class LocalTransformPersistence implements
-		StateChangeListener, ClientTransformManager.PersistableTransformListener {
-	
+public abstract class LocalTransformPersistence implements StateChangeListener,
+		ClientTransformManager.PersistableTransformListener,  ClosingHandler {
 	private DTESerializationPolicy serializationPolicy;
 
 	private boolean localStorageInstalled = false;
@@ -88,7 +102,8 @@ public abstract class LocalTransformPersistence implements
 				int requestId = rq.getRequestId();
 				if (!getPersistedTransforms().containsKey(requestId)
 						&& !rq.getItems().isEmpty()) {
-					rq.setProtocolVersion(getSerializationPolicy().getTransformPersistenceProtocol());
+					rq.setProtocolVersion(getSerializationPolicy()
+							.getTransformPersistenceProtocol());
 					DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(
 							rq);
 					persist(wrapper);
@@ -118,13 +133,13 @@ public abstract class LocalTransformPersistence implements
 			rq.setItems(new ArrayList<DomainTransformEvent>(
 					getCommitToStorageTransformListener()
 							.getSynthesisedEvents()));
-			rq.setProtocolVersion(getSerializationPolicy().getTransformPersistenceProtocol());
+			rq.setProtocolVersion(getSerializationPolicy()
+					.getTransformPersistenceProtocol());
 			DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(rq);
 			persist(wrapper);
 		} else if (newState == CommitToStorageTransformListener.RELOAD) {
 			clearAllPersisted();
 		}
-			
 	}
 
 	protected abstract void clearAllPersisted();
@@ -142,10 +157,10 @@ public abstract class LocalTransformPersistence implements
 	}
 
 	public void persistableTransform(DomainTransformRequest dtr) {
-		if (dtr.getDomainTransformRequestType()==DomainTransformRequestType.CLIENT_OBJECT_LOAD){
+		if (dtr.getDomainTransformRequestType() == DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
 			dtr.setProtocolVersion(getSerializationPolicy()
 					.getInitialObjectPersistenceProtocol());
-		}else{
+		} else {
 			dtr.setProtocolVersion(getSerializationPolicy()
 					.getTransformPersistenceProtocol());
 		}
@@ -221,10 +236,10 @@ public abstract class LocalTransformPersistence implements
 		}
 
 		protected void onComplete() {
-			ClientLayerLocator.get().clientBase().metricLogStart("persist");
+			ClientLayerLocator.get().notifications().metricLogStart("persist");
 			wrapper.setText(sb.toString());
 			persist(wrapper);
-			ClientLayerLocator.get().clientBase().metricLogEnd("persist");
+			ClientLayerLocator.get().notifications().metricLogEnd("persist");
 		}
 
 		@Override
@@ -232,9 +247,10 @@ public abstract class LocalTransformPersistence implements
 			int max = Math.min(index + iterationCount, items.size());
 			StringBuffer sb2 = new StringBuffer();
 			lastPassIterationsPerformed = max - index;
-			DTRProtocolHandler handler = new DTRProtocolSerializer().getHandler(PlaintextProtocolHandler.VERSION);
+			DTRProtocolHandler handler = new DTRProtocolSerializer()
+					.getHandler(PlaintextProtocolHandler.VERSION);
 			for (; index < max; index++) {
-				handler.appendTo(items.get(index),sb2);
+				handler.appendTo(items.get(index), sb2);
 			}
 			sb.append(sb2.toString());
 		}
@@ -253,13 +269,15 @@ public abstract class LocalTransformPersistence implements
 
 	public void init(DTESerializationPolicy dteSerializationPolicy,
 			CommitToStorageTransformListener commitToServerTransformListener) {
-setSerializationPolicy(dteSerializationPolicy);
-setCommitToStorageTransformListener(commitToServerTransformListener);
+		setSerializationPolicy(dteSerializationPolicy);
+		setCommitToStorageTransformListener(commitToServerTransformListener);
 	}
 
-	protected List<DTRSimpleSerialWrapper> getTransforms(DomainTransformRequestType type) throws Exception {
+	protected List<DTRSimpleSerialWrapper> getTransforms(
+			DomainTransformRequestType type) throws Exception {
 		return getTransforms(new DomainTransformRequestType[] { type });
 	}
+
 	protected void setLocalStorageInstalled(boolean localStorageInstalled) {
 		this.localStorageInstalled = localStorageInstalled;
 	}
@@ -270,14 +288,14 @@ setCommitToStorageTransformListener(commitToServerTransformListener);
 	}
 
 	protected void showOfflineLimitMessage() {
-		ClientLayerLocator.get().clientBase().showError(
+		ClientLayerLocator.get().notifications().showError(
 				"Unable to open offline session",
 				new Exception("Only one tab may be open "
 						+ "for this application when opening offline. "));
 	}
 
 	protected void showUnableToLoadOfflineMessage() {
-		ClientLayerLocator.get().clientBase().showMessage(
+		ClientLayerLocator.get().notifications().showMessage(
 				"<b>Unable to open offline session</b><br><br>"
 						+ "No data saved");
 	}
@@ -286,17 +304,22 @@ setCommitToStorageTransformListener(commitToServerTransformListener);
 		return !ClientSession.get().isInitialObjectsPersisted();
 	}
 
-	public List<DTRSimpleSerialWrapper> openAvailableSessionTransformsForOfflineLoad() {
+	public List<DTRSimpleSerialWrapper> openAvailableSessionTransformsForOfflineLoad(
+			boolean finalPass) {
 		try {
 			List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
 			if (!ClientSession.get().isSoleOpenTab()) {
-				showOfflineLimitMessage();
+				if (finalPass) {
+					showOfflineLimitMessage();
+				}
 				return transforms;
 			}
 			List<DTRSimpleSerialWrapper> loads = getTransforms(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
 			if (loads.size() == 0) {
 				// should never happen (or very rarely)
-				showUnableToLoadOfflineMessage();
+				if (finalPass) {
+					showUnableToLoadOfflineMessage();
+				}
 				return transforms;
 			}
 			if (loads.size() != 1) {
@@ -327,11 +350,18 @@ setCommitToStorageTransformListener(commitToServerTransformListener);
 		return clientInstanceIdForGet;
 	}
 
-	public static void registerLocalTransformPersistence(LocalTransformPersistence localTransformPersistence) {
+	public static void registerLocalTransformPersistence(
+			LocalTransformPersistence localTransformPersistence) {
 		LocalTransformPersistence.localTransformPersistence = localTransformPersistence;
 	}
 
 	public static LocalTransformPersistence get() {
 		return localTransformPersistence;
+	}
+	public LocalTransformPersistence() {
+		Window.addWindowClosingHandler(this);
+	}
+	public void onWindowClosing(ClosingEvent event) {
+		setClosing(true);		
 	}
 }

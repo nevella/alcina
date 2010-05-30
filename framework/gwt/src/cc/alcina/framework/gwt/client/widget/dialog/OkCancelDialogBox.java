@@ -172,7 +172,7 @@ import com.totsp.gwittir.client.beans.Binding;
 				return true;
 			}
 			GwittirUtils.refreshEmptyTextBoxes(binding);
-			ClientLayerLocator.get().clientBase().showWarning(
+			ClientLayerLocator.get().notifications().showWarning(
 					"Please correct the problems in the form");
 			return false;
 		}

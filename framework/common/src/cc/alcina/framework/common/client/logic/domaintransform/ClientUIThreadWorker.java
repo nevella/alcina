@@ -46,7 +46,7 @@ public abstract class ClientUIThreadWorker {
 
 	protected void iterate() {
 		if (isComplete()) {
-			ClientLayerLocator.get().clientBase().log(
+			ClientLayerLocator.get().notifications().log(
 					CommonUtils.format("Itr [%1] [Complete] - %2 ms",
 							CommonUtils.simpleClassName(getClass()), System
 									.currentTimeMillis()
@@ -69,7 +69,7 @@ public abstract class ClientUIThreadWorker {
 			}
 			iterationCount = Math.max(iterationCount, 10);
 		}
-		ClientLayerLocator.get().clientBase().log(
+		ClientLayerLocator.get().notifications().log(
 				CommonUtils.format("Itr [%1] [x%3] - %2 ms", CommonUtils
 						.simpleClassName(getClass()), timeTaken,
 						lastPassIterationsPerformed));

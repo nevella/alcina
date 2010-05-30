@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import java.util.List;
@@ -25,23 +24,31 @@ import cc.alcina.framework.common.client.search.EqlWithParameters;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 
-
 @RegistryLocation(registryPoint = Searcher.class, targetClass = SearchDefinition.class)
 /**
  *
  * @author Nick Reddel
  */
-
- public class BasicSearcher implements Searcher {
+public class BasicSearcher implements Searcher {
 	private EntityManager entityManager;
 
 	public EntityManager getEntityManager() {
 		return this.entityManager;
 	}
+
 	@SuppressWarnings("unchecked")
-	
 	public SearchResultsBase search(SearchDefinition def, int pageNumber,
 			EntityManager entityManager) {
+		return searchWithTemp(def, pageNumber, entityManager, null);
+	}
+
+	/*
+	 * Like this because of...gwt serialization. See SearchResultsBase usage of
+	 * searchresult (which the db type may not implement - only required the
+	 * result does)
+	 */
+	protected SearchResultsBase searchWithTemp(SearchDefinition def,
+			int pageNumber, EntityManager entityManager, List tempObjects) {
 		this.entityManager = entityManager;
 		SearchResultsBase result = new SearchResultsBase();
 		SingleTableSearchDefinition sdef = (SingleTableSearchDefinition) def;
@@ -57,10 +64,14 @@ import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 		}
 		result.setTotalResultCount(resultCount == null ? 0 : resultCount
 				.intValue());
-		result.setResults(resultList);
 		result.setPageNumber(pageNumber);
 		result.setPageResultCount(resultList.size());
 		result.setSearchDefinition(def);
+		if (tempObjects != null) {
+			tempObjects.addAll(resultList);
+		} else {
+			result.setResults(resultList);
+		}
 		return result;
 	}
 

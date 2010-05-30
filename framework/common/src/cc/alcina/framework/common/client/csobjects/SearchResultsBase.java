@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -34,7 +35,9 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 
 	SearchDefinition searchDefinition;
 
-	private List<B> results;
+	// done this way (not as a list) to avoid unneccesary serializable
+	// collections - e.g. ChangeListenerCollection etc etc
+	private SearchResult[] results;
 
 	public SearchResultsBase() {
 		super();
@@ -106,10 +109,10 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 	}
 
 	public void setResults(List<B> results) {
-		this.results = results;
+		this.results = (SearchResult[]) results.toArray(new SearchResult[results.size()]);
 	}
 
 	public List<B> getResults() {
-		return results;
+		return (List<B>) Arrays.asList(results);
 	}
 }

@@ -28,18 +28,18 @@ import com.google.gwt.user.client.ui.TreeItem;
 	public interface ExtraTreeEventListener {
 		public void onExtraTreeEvent(ExtraTreeEventEvent evt);
 	}
-	public enum ETEType{
+	public enum ExtraTreeEventType{
 		DBL_CLICK, RIGHT_CLICK
 	}
 	public static class ExtraTreeEventEvent {
 		private TreeItem source;
-		private final ETEType type;
+		private final ExtraTreeEventType type;
 
-		public ETEType getType() {
+		public ExtraTreeEventType getType() {
 			return this.type;
 		}
 
-		public ExtraTreeEventEvent(TreeItem source, ETEType type) {
+		public ExtraTreeEventEvent(TreeItem source, ExtraTreeEventType type) {
 			this.source = source;
 			this.type = type;
 		}

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.domaintransform;
 
 import java.util.Date;
@@ -19,19 +18,18 @@ import java.util.Date;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-
 
 @MappedSuperclass
 /**
  *
  * @author Nick Reddel
  */
-
- public abstract class DomainTransformEventPersistent extends DomainTransformEvent
-		implements HasId {
+public abstract class DomainTransformEventPersistent extends
+		DomainTransformEvent implements HasId {
 	private long id;
 
 	private DomainTransformRequestPersistent domainTransformRequestPersistent;

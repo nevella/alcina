@@ -178,6 +178,8 @@ public class CollectionRenderingSupport implements
 			Collections.sort(currentOrderedObjects);
 			if (!currentOrderedObjects.equals(existingOrderedObjects)) {
 				existingObjects.clear();
+				existingList.clear();
+				this.item.removeItems();
 			}
 		}
 		int i1 = 0, i2 = 0;

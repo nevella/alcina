@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
  * @author Nick Reddel
  */
 
- public class LoginResponseBean implements Serializable{
+ public class LoginResponse implements Serializable{
 	private String friendlyName;
 	private boolean ok;
 	private String errorMsg;

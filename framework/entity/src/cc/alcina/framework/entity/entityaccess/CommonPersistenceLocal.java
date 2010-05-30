@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
@@ -34,7 +35,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
-import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 
 
 /**
@@ -69,8 +70,7 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
 			Object value1, String key2, Object value2);
 
-	public long getNextPublicationIdForUser(IUser user);
-
+	
 	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
 			Class<T> c, long id) throws Exception;
 
@@ -112,10 +112,10 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 
 	public <T extends ServerValidator> List<T> validate(List<T> validators);
 
-	public abstract void fixPermissionsManager();
+	public abstract void connectPermissionsManagerToLiveObjects();
 
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id,CloneFilter fieldFilter, CloneFilter dataFilter);
+			Long id,GraphProjectionFilter fieldFilter, GraphProjectionFilter dataFilter);
 
 	public void bulkDelete(Class clazz, Collection<Long> ids);
 
@@ -126,4 +126,8 @@ import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
 
 	public void expandExceptionInfo(
 			DomainTransformLayerWrapper wrapper);
+
+	public String getImplementationSimpleClassName(Class<?> clazz);
+
+	public <A> A getNewImplementationInstance(Class<A> clazz);
 }

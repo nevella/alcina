@@ -201,7 +201,7 @@ public class TransformPersister {
 			EntityManager entityManager) {
 		this.entityManager = entityManager;
 		this.commonPersistenceBase = commonPersistenceBase;
-		commonPersistenceBase.fixPermissionsManager(true);
+		commonPersistenceBase.connectPermissionsManagerToLiveObjects(true);
 		HiliLocatorMap locatorMap = token.getLocatorMap();
 		HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.clone();
 		DomainTransformRequest request = token.getRequest();
@@ -211,7 +211,7 @@ public class TransformPersister {
 			// We know this is thread-local, so we can clear the tm transforms
 			tm.resetTltm(locatorMap);
 			tm.setEntityManager(getEntityManager());
-			ClientInstance persistentClientInstance = commonPersistenceBase
+			ClientInstance persistentClientInstance = (ClientInstance) commonPersistenceBase
 					.findImplInstance(ClientInstance.class, request
 							.getClientInstance().getId());
 			if (persistentClientInstance.getAuth() != null

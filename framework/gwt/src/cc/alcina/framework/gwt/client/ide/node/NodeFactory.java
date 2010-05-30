@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.node;
 
 import java.util.ArrayList;
@@ -25,12 +24,15 @@ import java.util.Set;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
@@ -40,11 +42,10 @@ import com.google.gwt.user.client.ui.TreeItem;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class NodeFactory {
+public class NodeFactory {
 	protected static final StandardDataImages images = GWT
 			.create(StandardDataImages.class);
 
@@ -70,12 +71,35 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 	}
 
 	private Set<SourcesPropertyChangeEvents> childlessBindables = new HashSet<SourcesPropertyChangeEvents>();
+
+	private Class lastDomainObjectClass;
+	private NodeCreator nodeCreator;
 	@SuppressWarnings("unchecked")
-	protected DomainNode createDomainNode(SourcesPropertyChangeEvents domainObject) {
-		return new DomainNode(domainObject);
+	protected DomainNode createDomainNode(
+			SourcesPropertyChangeEvents domainObject) {
+		Class clazz=domainObject.getClass();
+		if (lastDomainObjectClass!=clazz){
+			nodeCreator = (NodeCreator) Registry.get().instantiateSingle(NodeCreator.class, clazz);
+		}
+		return nodeCreator.createDomainNode(domainObject);
 	}
 
-	public DomainNode getNodeForDomainObject(SourcesPropertyChangeEvents domainObject) {
+	public static interface NodeCreator{
+		public DomainNode createDomainNode(
+				SourcesPropertyChangeEvents domainObject) ;
+	}
+	@RegistryLocation(j2seOnly=false,registryPoint=NodeCreator.class)
+	@ClientInstantiable
+	public static class DefaultNodeCreator implements NodeCreator{
+		@SuppressWarnings("unchecked")
+		public DomainNode createDomainNode(
+				SourcesPropertyChangeEvents domainObject) {
+			return new DomainNode(domainObject);
+		}
+	}
+	
+	public DomainNode getNodeForDomainObject(
+			SourcesPropertyChangeEvents domainObject) {
 		DomainNode dn = createDomainNode(domainObject);
 		if (childlessBindables.contains(domainObject.getClass())) {
 			return dn;
@@ -109,7 +133,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 			PropertyCollectionProvider provider = new PropertyCollectionProvider(
 					domainObject, pr);
 			if (withoutContainer) {
-				//note - should only happen for one property
+				// note - should only happen for one property
 				((DomainCollectionProviderNode) dn)
 						.setCollectionProvider(provider);
 			} else {

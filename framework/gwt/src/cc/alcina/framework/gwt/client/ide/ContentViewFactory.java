@@ -24,9 +24,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
@@ -49,7 +46,6 @@ import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
-import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
@@ -511,7 +507,7 @@ import com.totsp.gwittir.client.validator.Validator;
 				beanValidator.validate(bean);
 				return true;
 			} catch (ValidationException e) {
-				ClientLayerLocator.get().clientBase().showWarning(
+				ClientLayerLocator.get().notifications().showWarning(
 						e.getMessage());
 				return false;
 			}
@@ -555,12 +551,12 @@ import com.totsp.gwittir.client.validator.Validator;
 					}
 					if (PermissionsManager.get().isMemberOfGroup(
 							PermissionsManager.getAdministratorGroupName())) {
-						if (PropertiesProvider.getGeneralProperties()
+						if (ClientLayerLocator.get().getGeneralProperties()
 								.isAllowAdminInvalidObjectWrite()
 								&& !alwaysDisallowOkIfInvalid) {
 							ClientLayerLocator
 									.get()
-									.clientBase()
+									.notifications()
 									.confirm(
 											"Administrative option: save the changed items "
 													+ "on this form (even though some are invalid)?",
@@ -572,7 +568,7 @@ import com.totsp.gwittir.client.validator.Validator;
 							return;
 						}
 					}
-					ClientLayerLocator.get().clientBase().showWarning(
+					ClientLayerLocator.get().notifications().showWarning(
 							"Please correct the problems in the form");
 					return;
 				}

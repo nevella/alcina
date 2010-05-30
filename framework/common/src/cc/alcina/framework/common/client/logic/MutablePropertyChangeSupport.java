@@ -17,6 +17,8 @@ package cc.alcina.framework.common.client.logic;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
+import com.google.gwt.core.client.GWT;
+
 /**
  * @author nick@alcina.cc
  * 
@@ -61,7 +63,8 @@ public class MutablePropertyChangeSupport extends PropertyChangeSupport {
 	}
 
 	/**
-	 * Hack - note that the old/newvalues of the propertychangeevent should
+	 * Sort of a hack - taking advantage of propertychangesupport null!=null
+	 *  - note that the old/newvalues of the propertychangeevent should
 	 * !not! be read. For listeners on collection properties
 	 */
 	public void fireNullPropertyChange(String name) {
@@ -72,6 +75,9 @@ public class MutablePropertyChangeSupport extends PropertyChangeSupport {
 	}
 
 	public static void setMuteAll(boolean muteAll) {
+		if (!GWT.isClient()){
+			throw new RuntimeException("Mute all should only be set on a single-threaded VM");
+		}
 		MutablePropertyChangeSupport.muteAll = muteAll;
 	}
 

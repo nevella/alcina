@@ -42,6 +42,8 @@ import com.google.gwt.user.client.Timer;
  * 
  */
 public class ClientSession {
+	public static final int KEEP_ALIVE_TIMER = 2000;
+
 	private static final String STORAGE_SESSION_COOKIE_NAME = ClientSession.class
 			.getName()
 			+ ".storage-session";
@@ -61,7 +63,7 @@ public class ClientSession {
 			public void run() {
 				updateCookie();
 			}
-		}.scheduleRepeating(2000);
+		}.scheduleRepeating(KEEP_ALIVE_TIMER);
 	}
 	private static ClientSession theInstance;
 

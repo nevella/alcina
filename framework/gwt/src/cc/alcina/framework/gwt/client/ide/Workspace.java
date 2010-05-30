@@ -23,9 +23,6 @@ import java.util.Map;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.CloneAction;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
@@ -33,27 +30,25 @@ import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
+import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
+import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
+import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHandler;
+import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandler;
+import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
 import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;
-import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.ViewProvider;
-import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 import com.google.gwt.user.client.ui.ComplexPanel;
-import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
@@ -95,14 +90,10 @@ public class Workspace implements HasLayoutInfo,
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
-	private ContentViewFactory viewFactory;
-
 	private Map<Class<? extends PermissibleAction>, ViewProvider> viewProviderMap = new HashMap<Class<? extends PermissibleAction>, ViewProvider>();
 
 	public Workspace() {
 		this.visualModel = new WSVisualModel();
-		this.viewFactory = new ContentViewFactory();
-		viewFactory.setCancelButton(true);
 	}
 
 	public LayoutInfo getLayoutInfo() {
@@ -135,10 +126,6 @@ public class Workspace implements HasLayoutInfo,
 		visualiser.focusVisibleView();
 	}
 
-	public ContentViewFactory getViewFactory() {
-		return this.viewFactory;
-	}
-
 	public WSVisualModel getVisualModel() {
 		return this.visualModel;
 	}
@@ -155,10 +142,6 @@ public class Workspace implements HasLayoutInfo,
 	public void registerViewProvider(ViewProvider v,
 			Class<? extends PermissibleAction> actionClass) {
 		viewProviderMap.put(actionClass, v);
-	}
-
-	public void setViewFactory(ContentViewFactory viewFactory) {
-		this.viewFactory = viewFactory;
 	}
 
 	public void setVisualModel(WSVisualModel visualModel) {
@@ -209,7 +192,7 @@ public class Workspace implements HasLayoutInfo,
 		if (colln != null && colln.size() == 1) {
 			singleObj = colln.iterator().next();
 		}
-		boolean autoSave = PropertiesProvider.getGeneralProperties()
+		boolean autoSave = ClientLayerLocator.get().getGeneralProperties()
 				.isAutoSave();
 		if (singleObj instanceof PermissibleAction) {
 			Widget view = getViewForAction((PermissibleAction) singleObj);
@@ -221,104 +204,55 @@ public class Workspace implements HasLayoutInfo,
 			HasIdAndLocalId hili = (HasIdAndLocalId) singleObj;
 			singleObj = TransformManager.get().getObject(hili);
 		}
+		Class<? extends WorkspaceActionHandler> handlerClass = null;
 		if (singleObj != null) {
 			if (evt.getAction().getClass() == ViewAction.class) {
-				ViewActionHandler vah = (ViewActionHandler) Registry.get()
-						.instantiateSingleOrNull(ViewActionHandler.class,
-								singleObj.getClass());
-				if (vah != null) {
-					visualiser.setContentWidget(vah.createWidget(singleObj));
-				} else {
-					PaneWrapperWithObjects view = viewFactory.createBeanView(
-							singleObj, false, this, autoSave, false);
-					visualiser.setContentWidget(view);
-					Widget widge = viewFactory
-							.createExtraActionsWidget(singleObj);
-					if (widge != null) {
-						view.add(widge);
-					}
-				}
-				fireVetoableActionEvent(evt);
-				return;
+				handlerClass = ViewActionHandler.class;
 			} else if (evt.getAction().getClass() == EditAction.class) {
-				Widget view = viewFactory.createBeanView(singleObj, true, this,
-						autoSave, false);
-				visualiser.setContentWidget(view);
-				fireVetoableActionEvent(evt);
-				return;
+				handlerClass = EditActionHandler.class;
 			} else if (evt.getAction().getClass() == DeleteAction.class) {
-				if (WorkspaceDeletionChecker.enabled) {
-					if (!getDeletionChecker().checkPropertyRefs(
-							(HasIdAndLocalId) singleObj)) {
-						return;
-					}
-				}
-				final Object objCopy = singleObj;
-				ClientLayerLocator.get().clientBase().confirm(
-						"Are you sure you want to delete the selected object",
-						new OkCallback() {
-							public void ok() {
-								TransformManager.get().deleteObject(
-										(HasIdAndLocalId) objCopy);
-								visualiser
-										.setContentWidget(new HorizontalPanel());
-								fireVetoableActionEvent(new PermissibleActionEvent(
-										objCopy, evt.getAction()));
-							}
-						});
-				return;
+				handlerClass = DeleteActionHandler.class;
 			} else if (evt.getAction().getClass() == CloneAction.class) {
-				HasIdAndLocalId newObj = ClientTransformManager.cast().clone(
-						(HasIdAndLocalId) singleObj);
-				handleParentLinks(obj, newObj);
-				TextProvider.get().setDecorated(true);
-				String newName = TextProvider.get().getObjectName(newObj)
-						+ " (copy)";
-				TextProvider.get().setDecorated(false);
-				TextProvider.get().setObjectName(newObj, newName);
-				Widget view = viewFactory.createBeanView(newObj, true, this,
-						autoSave, false);
-				visualiser.setContentWidget(view);
-				fireVetoableActionEvent(new PermissibleActionEvent(newObj, evt
-						.getAction()));
-				return;
+				handlerClass = CloneActionHandler.class;
+			} else if (evt.getAction().getClass() == CreateAction.class) {
+				handlerClass = CreateActionHandler.class;
 			}
-		}
-		if (colln != null) {
+		} else if (colln != null) {
 			if (evt.getAction().getClass() == ViewAction.class) {
-				Widget view = viewFactory.createMultipleBeanView(colln, clazz,
-						false, this, autoSave, false);
-				visualiser.setContentWidget(view);
-				fireVetoableActionEvent(evt);
-				return;
+				handlerClass = ViewActionHandler.class;
 			} else if (evt.getAction().getClass() == EditAction.class) {
-				Widget view = viewFactory.createMultipleBeanView(colln, clazz,
-						true, this, autoSave, false);
-				visualiser.setContentWidget(view);
-				fireVetoableActionEvent(evt);
-				return;
+				handlerClass = EditActionHandler.class;
+			} else if (evt.getAction().getClass() == CreateAction.class) {
+				handlerClass = CreateActionHandler.class;
 			}
 		}
-		if (evt.getAction().getClass() == CreateAction.class) {
-			HasIdAndLocalId newObj = autoSave ? TransformManager.get()
-					.createDomainObject(clazz) : TransformManager.get()
-					.createProvisionalObject(clazz);
-			handleParentLinks(obj, newObj);
-			PaneWrapperWithObjects view = viewFactory.createBeanView(newObj,
-					true, this, autoSave, false);
-			TextProvider.get().setDecorated(false);
-			String tdn = ClientReflector.get().beanInfoForClass(clazz)
-					.getTypeDisplayName();
-			TextProvider.get().setDecorated(true);
-			TextProvider.get().setObjectName(newObj, "New " + tdn);
-			visualiser.setContentWidget(view);
-			fireVetoableActionEvent(new PermissibleActionEvent(newObj, evt
-					.getAction()));
+		WorkspaceActionHandler handler = (WorkspaceActionHandler) Registry
+				.get().instantiateSingleOrNull(
+						handlerClass,
+						singleObj == null ? clazz == null ? Object.class
+								: clazz : singleObj.getClass());
+		handler.performAction(evt, obj,singleObj != null ? singleObj : colln, this,
+				clazz);
+	}
+	public void handleParentLinks(Object node, HasIdAndLocalId newObj) {
+		if (node instanceof DomainNode
+				&& !(node instanceof ProvidesParenting)) {
+			DomainNode dn = (DomainNode) node;
+			node = dn.getParentItem();
+		}
+		if (node instanceof ProvidesParenting) {
+			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
+					.getPropertyCollectionProvider();
+			if (pcp != null) {
+				ClientPropertyReflector propertyReflector = pcp
+						.getPropertyReflector();
+				String propertyName = propertyReflector.getAnnotation(
+						Association.class).propertyName();
+				CommonLocator.get().propertyAccessor().setPropertyValue(
+						newObj, propertyName, pcp.getDomainObject());
+			}
 		}
 	}
-
-	private WorkspaceDeletionChecker deletionChecker = new WorkspaceDeletionChecker();
-
 	protected SimpleWorkspaceVisualiser createVisualiser() {
 		return new SimpleWorkspaceVisualiser(visualModel, this);
 	}
@@ -331,35 +265,8 @@ public class Workspace implements HasLayoutInfo,
 		container.add(visualiser);
 	}
 
-	protected void handleParentLinks(Object node, HasIdAndLocalId newObj) {
-		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
-			DomainNode dn = (DomainNode) node;
-			node = dn.getParentItem();
-		}
-		if (node instanceof ProvidesParenting) {
-			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
-					.getPropertyCollectionProvider();
-			if (pcp != null) {
-				ClientPropertyReflector propertyReflector = pcp
-						.getPropertyReflector();
-				String propertyName = propertyReflector.getAnnotation(
-						Association.class).propertyName();
-				CommonLocator.get().propertyAccessor().setPropertyValue(newObj,
-						propertyName, pcp.getDomainObject());
-			}
-		}
-	}
-
 	protected Widget getViewForAction(PermissibleAction action) {
 		return viewProviderMap.get(action.getClass()).getViewForObject(action);
-	}
-
-	public void setDeletionChecker(WorkspaceDeletionChecker deletionChecker) {
-		this.deletionChecker = deletionChecker;
-	}
-
-	public WorkspaceDeletionChecker getDeletionChecker() {
-		return deletionChecker;
 	}
 
 	public static class WSVisualModel {

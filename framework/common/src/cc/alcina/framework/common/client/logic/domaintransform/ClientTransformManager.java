@@ -92,7 +92,6 @@ public class ClientTransformManager extends TransformManager {
 		ClientDteWorker(Map<Class, List> objCopy, ClientInstance clientInstance) {
 			this.objCopy = objCopy;
 			this.clientInstance = clientInstance;
-			ClientBase clientBase = ClientLayerLocator.get().clientBase();
 		}
 
 		protected void onComplete() {
@@ -101,7 +100,6 @@ public class ClientTransformManager extends TransformManager {
 			dtr.setClientInstance(clientInstance);
 			dtr
 					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
-			ClientBase clientBase = ClientLayerLocator.get().clientBase();
 			getPersistableTransformListener().persistableTransform(dtr);
 		}
 
@@ -178,7 +176,7 @@ public class ClientTransformManager extends TransformManager {
 			AsyncCallback<List<ObjectCacheItemResult>> innerCallback = new AsyncCallback<List<ObjectCacheItemResult>>() {
 				public void onSuccess(List<ObjectCacheItemResult> result) {
 					long t2 = System.currentTimeMillis();
-					ClientLayerLocator.get().clientBase().log(
+					ClientLayerLocator.get().notifications().log(
 							"Cache load/deser.: " + (t2 - t1));
 					cleanup();
 					MutablePropertyChangeSupport.setMuteAll(true);
@@ -198,7 +196,7 @@ public class ClientTransformManager extends TransformManager {
 							DomainTransformRequest dtr = new DomainTransformRequest();
 							dtr.setItems(item.getTransforms());
 							dtr.setClientInstance(ClientLayerLocator.get()
-									.clientBase().getClientInstance());
+									.getClientInstance());
 							dtr
 									.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 							pl.persistableTransform(dtr);
@@ -209,7 +207,7 @@ public class ClientTransformManager extends TransformManager {
 					System.arraycopy(spec, 0, spec2, 0, 3);
 					spec2[3] = true;
 					lkp.put(spec2);
-					ClientLayerLocator.get().clientBase().log(
+					ClientLayerLocator.get().notifications().log(
 							"Cache dte replay: "
 									+ (System.currentTimeMillis() - t2));
 					callback.onSuccess(result);
@@ -217,7 +215,7 @@ public class ClientTransformManager extends TransformManager {
 
 				public void onFailure(Throwable caught) {
 					cleanup();
-					ClientLayerLocator.get().clientBase().onUncaughtException(
+					ClientLayerLocator.get().exceptionHandler().onUncaughtException(
 							caught);
 				}
 

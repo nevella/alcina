@@ -70,7 +70,7 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		this.setComparator(SimpleComparator.INSTANCE);
 		this.base.addBlurHandler(new BlurHandler() {
 			public void onBlur(BlurEvent event) {
-				ClientLayerLocator.get().clientBase().log("lostfocus");
+				ClientLayerLocator.get().notifications().log("lostfocus");
 				EventTarget eventTarget = event.getNativeEvent()
 						.getEventTarget();
 				Element elt = Element.as(eventTarget);

@@ -176,6 +176,25 @@ public class XmlUtilities {
 		return null;
 	}
 
+	public static Text getFirstNonWhitespaceTextChild(Node node) {
+		NodeList nl = node.getChildNodes();
+		for (int i = 0; i < nl.getLength(); i++) {
+			node = nl.item(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				Text t = getFirstNonWhitespaceTextChild(node);
+				if (t != null) {
+					return t;
+				}
+			}
+			if (node.getNodeType() == Node.TEXT_NODE) {
+				if (!SEUtilities.isWhitespace(node.getTextContent())) {
+					return (Text) node;
+				}
+			}
+		}
+		return null;
+	}
+
 	public static Range getRangeSurroundedByBlocks(Node node) {
 		return getSurroundingBlockTuple(node).range;
 	}

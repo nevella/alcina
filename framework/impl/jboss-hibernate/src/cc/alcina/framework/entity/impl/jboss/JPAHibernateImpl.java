@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.impl.jboss;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -31,8 +32,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.util.EntityUtils;
-import cc.alcina.framework.entity.util.GraphCloner.CloneFilter;
-import cc.alcina.framework.entity.util.GraphCloner.InstantiateImplCallback;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
+import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 
 /**
  * 
@@ -62,7 +63,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return object;
 	}
 
-	public CloneFilter getResolvingFilter(InstantiateImplCallback callback,
+	public GraphProjectionFilter getResolvingFilter(InstantiateImplCallback callback,
 			DetachedEntityCache cache) {
 		EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(
 				callback);
@@ -83,7 +84,6 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 	public void cache(Query query) {
 		query.setHint("org.hibernate.cacheable", true);
-		
 	}
 
 	public void interpretException(DomainTransformException ex) {
@@ -91,15 +91,17 @@ public class JPAHibernateImpl implements JPAImplementation {
 		PrintWriter pw = new PrintWriter(sw);
 		ex.printStackTrace(pw);
 		String st = sw.toString();
-		if (st.contains("OptimisticLockException")){
+		if (st.contains("OptimisticLockException")) {
 			ex.setType(DomainTransformExceptionType.OPTIMISTIC_LOCK_EXCEPTION);
 		}
-		if (st.contains("org.hibernate.exception.ConstraintViolationException")){
+		if (st.contains("org.hibernate.exception.ConstraintViolationException")) {
 			ex.setType(DomainTransformExceptionType.FK_CONSTRAINT_EXCEPTION);
 		}
 		// TODO Auto-generated method stub
-		
 	}
 
-	
+	public File getConfigDirectory() {
+		return new File(System.getProperty("jboss.server.home.dir")
+				+ File.separator + "conf" + File.separator);
+	}
 }

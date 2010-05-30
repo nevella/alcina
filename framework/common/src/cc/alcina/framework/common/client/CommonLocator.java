@@ -85,16 +85,7 @@ import cc.alcina.framework.common.client.util.URLComponentEncoder;
 		return classLookup;
 	}
 
-	private LogWriter logWriter;
-
-	public void registerLogWriter(LogWriter logWriter) {
-		this.logWriter = logWriter;
-	}
-
-	public LogWriter logWriter() {
-		return logWriter;
-	}
-
+	
 	private ImplementationLookup implementationLookup;
 
 	public void registerImplementationLookup(

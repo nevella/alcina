@@ -17,12 +17,18 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.gwt.client.data.GeneralProperties;
+
 /**
  *
  * @author Nick Reddel
  */
 
- public interface DomainObjectHolder {
+ public interface DomainModelHolder {
 	public List registerableDomainObjects();
 	public Set<ClassRef> getClassRefs();
+	public IUser getCurrentUser();
+	public GeneralProperties getGeneralProperties();
+	public void registerSelfAsProvider();
 }

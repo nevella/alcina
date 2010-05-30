@@ -30,6 +30,8 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
  * 
  */
 public class EntityLayerLocator {
+	
+
 	private EntityLayerLocator() {
 		super();
 	}
@@ -125,4 +127,6 @@ public class EntityLayerLocator {
 	public JPAImplementation jpaImplementation() {
 		return jpaImplementation;
 	}
+
+	
 }

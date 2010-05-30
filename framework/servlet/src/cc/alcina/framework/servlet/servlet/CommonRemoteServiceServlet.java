@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.csobjects.LoginResponseBean;
+import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
@@ -103,7 +103,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	private static int transformRequestCounter = 1;
 
-	protected abstract void processValidLogin(LoginResponseBean lrb,
+	protected abstract void processValidLogin(LoginResponse lrb,
 			String userName) throws AuthenticationException;
 
 	public List<ServerValidator> validateOnServer(
@@ -276,7 +276,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					getThreadLocalRequest(), getThreadLocalResponse());
 			if (userName != null && !PermissionsManager.get().isLoggedIn()) {
 				try {
-					LoginResponseBean lrb = new LoginResponseBean();
+					LoginResponse lrb = new LoginResponse();
 					lrb.setOk(true);
 					processValidLogin(lrb, userName);
 				} catch (AuthenticationException e) {

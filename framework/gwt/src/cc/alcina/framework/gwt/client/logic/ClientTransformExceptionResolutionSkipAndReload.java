@@ -65,7 +65,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 	public void resolve(DomainTransformRequestException dtre,
 			Callback<ClientTransformExceptionResolutionToken> callback) {
 		final CommitToStorageTransformListener storage = ClientLayerLocator
-				.get().clientBase().getCommitToStorageTransformListener();
+				.get().getCommitToStorageTransformListener();
 		if (dialog != null) {
 			dialog.hide();
 		}

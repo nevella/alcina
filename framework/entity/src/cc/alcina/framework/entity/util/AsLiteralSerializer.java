@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.util.GraphCloner.ClassFieldPair;
+import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
 
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;

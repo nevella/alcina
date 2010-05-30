@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Layout;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
 import org.apache.log4j.PatternLayout;
@@ -37,7 +38,7 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 
  public class MetricLogging {
 	public static Logger metricLogger = Logger.getLogger(MetricLogging.class);
-
+	public static final String METRIC_MARKER = "jpmtx1:";
 	private Logger perThreadLogger;
 
 	private Map<String, Long> metricStartTimes;
@@ -69,6 +70,9 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 	public static boolean useLog4j = true;
 
 	private boolean muted = false;
+
+	public static final Layout METRIC_LAYOUT = new PatternLayout("[%d] ["
+	+ METRIC_MARKER + "%c{1}:%X{threadId}] %m%n");
 
 	private static ThreadLocal TL = new ThreadLocal() {
 		protected synchronized Object initialValue() {
@@ -128,7 +132,7 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 		String message = CommonUtils.format("Metric: %1 - %2 ms%3", key,
 				elapsed, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
 						+ extraInfo);
-		if (useLog4j) {
+		if (useLog4j&&metricLogger!=null) {
 			if (!muted) {
 				metricLogger.debug(message);
 				perThreadLogger.info(message);

@@ -15,7 +15,7 @@
 package cc.alcina.framework.gwt.client.widget;
 
 
-import cc.alcina.framework.gwt.client.ide.provider.PropertiesProvider;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -164,7 +164,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 					timerKeyMillis = lastKeyMillis;
 				}
 			};
-			queueingFinishedTimer.schedule(PropertiesProvider
+			queueingFinishedTimer.schedule(ClientLayerLocator.get()
 					.getGeneralProperties().getFilterDelayMs());
 		}
 		if (isArrowDown((int) keyCode) && vf != null

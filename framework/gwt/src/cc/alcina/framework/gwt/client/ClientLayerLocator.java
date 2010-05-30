@@ -11,19 +11,23 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client;
 
 import cc.alcina.framework.common.client.actions.ActionLogProvider;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.ProvidesCommonRemoteService;
+import cc.alcina.framework.gwt.client.data.GeneralProperties;
+import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ClientLayerLocator {
+public class ClientLayerLocator {
 	private static ClientLayerLocator theInstance;
 
 	public static ClientLayerLocator get() {
@@ -33,11 +37,19 @@ import cc.alcina.framework.common.client.remote.ProvidesCommonRemoteService;
 		return theInstance;
 	}
 
-	private ProvidesCommonRemoteService pcrs;
+	private CommonRemoteServiceAsync commonRemoteServiceAsync;
 
 	private ActionLogProvider actionLogProvider;
 
+	private CommitToStorageTransformListener commitToStorageTransformListener;
+
 	private ClientBase clientBase;
+
+	private GeneralProperties generalProperties;
+	
+	private DomainModelHolder domainModelHolder;
+	
+	private ClientHandshakeHelper clientHandshakeHelper;
 
 	private ClientLayerLocator() {
 		super();
@@ -46,6 +58,7 @@ import cc.alcina.framework.common.client.remote.ProvidesCommonRemoteService;
 	public ActionLogProvider actionLogProvider() {
 		return actionLogProvider;
 	}
+
 	public void appShutdown() {
 		theInstance = null;
 	}
@@ -55,8 +68,9 @@ import cc.alcina.framework.common.client.remote.ProvidesCommonRemoteService;
 	}
 
 	public CommonRemoteServiceAsync commonRemoteServiceAsync() {
-		return pcrs.getCommonRemoteService();
+		return commonRemoteServiceAsync;
 	}
+
 	public void registerActionLogProvider(ActionLogProvider provider) {
 		this.actionLogProvider = provider;
 	}
@@ -65,8 +79,65 @@ import cc.alcina.framework.common.client.remote.ProvidesCommonRemoteService;
 		this.clientBase = base;
 	}
 
-	public void registerCommonRemoteServiceProvider(
-			ProvidesCommonRemoteService pcrs) {
-		this.pcrs = pcrs;
+	public void registerCommonRemoteServiceAsync(
+			CommonRemoteServiceAsync commonRemoteServiceAsync) {
+		this.commonRemoteServiceAsync = commonRemoteServiceAsync;
+	}
+
+	private ClientNofications clientNotifications;
+
+	public void registerNotifications(ClientNofications clientNotifications) {
+		this.clientNotifications = clientNotifications;
+	}
+
+	public ClientNofications notifications() {
+		return clientNotifications;
+	}
+
+	public ClientInstance getClientInstance() {
+		return getCommitToStorageTransformListener().getClientInstance();
+	}
+
+	public void setCommitToStorageTransformListener(
+			CommitToStorageTransformListener commitToStorageTransformListener) {
+		this.commitToStorageTransformListener = commitToStorageTransformListener;
+	}
+
+	public CommitToStorageTransformListener getCommitToStorageTransformListener() {
+		return commitToStorageTransformListener;
+	}
+
+	private ClientExceptionHandler exceptionHandler;
+
+	public void registerExceptionHandler(ClientExceptionHandler exceptionHandler) {
+		this.exceptionHandler = exceptionHandler;
+	}
+
+	public ClientExceptionHandler exceptionHandler() {
+		return exceptionHandler;
+	}
+
+	public void setGeneralProperties(GeneralProperties generalProperties) {
+		this.generalProperties = generalProperties;
+	}
+
+	public GeneralProperties getGeneralProperties() {
+		return generalProperties;
+	}
+
+	public void setDomainModelHolder(DomainModelHolder domainModelHolder) {
+		this.domainModelHolder = domainModelHolder;
+	}
+
+	public DomainModelHolder getDomainModelHolder() {
+		return domainModelHolder;
+	}
+
+	public void setClientHandshakeHelper(ClientHandshakeHelper clientHandshakeHelper) {
+		this.clientHandshakeHelper = clientHandshakeHelper;
+	}
+
+	public ClientHandshakeHelper getClientHandshakeHelper() {
+		return clientHandshakeHelper;
 	}
 }

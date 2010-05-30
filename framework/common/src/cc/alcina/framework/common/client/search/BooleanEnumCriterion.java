@@ -1,18 +1,16 @@
 package cc.alcina.framework.common.client.search;
 
-
-public abstract class BooleanEnumCriterion extends
-		EnumCriterion<BooleanEnum> {
+public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 	public static final transient String RENDERABLE_PROPERTY_NAME = "booleanEnum";
+
 	private BooleanEnum booleanEnum;
 
 	public BooleanEnumCriterion() {
 		super();
 	}
 
-	public BooleanEnumCriterion(
-			String criteriaDisplayName, boolean withNull) {
-		super( criteriaDisplayName, withNull);
+	public BooleanEnumCriterion(String criteriaDisplayName, boolean withNull) {
+		super(criteriaDisplayName, withNull);
 	}
 
 	@Override

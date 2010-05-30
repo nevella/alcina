@@ -67,9 +67,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 		return this.support.getPropertyCollectionProvider();
 	}
 
-	// public Object getUserObject() {
-	// return this.support.getUserObject();
-	// }
 	public Collection getVisibleItemObjects() {
 		return this.support.getVisibleItemObjects();
 	}

@@ -69,10 +69,10 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		this.timestamp = new Date().getTime();
 		this.userId = PermissionsManager.get().getUserId();
 		if (!async) {
-			ClientLayerLocator.get().clientBase().metricLogStart(
+			ClientLayerLocator.get().notifications().metricLogStart(
 					"DTRSimpleSerialWrapper-tostr");
 			this.text = request.toString();
-			ClientLayerLocator.get().clientBase().metricLogEnd(
+			ClientLayerLocator.get().notifications().metricLogEnd(
 					"DTRSimpleSerialWrapper-tostr");
 		} else {
 			//text set async

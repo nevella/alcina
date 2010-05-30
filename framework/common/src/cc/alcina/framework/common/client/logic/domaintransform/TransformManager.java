@@ -827,7 +827,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	/**
 	 * Useful for unit tests, hence here rather than clientTM
 	 */
-	public void registerDomainObjectsInHolder(DomainObjectHolder h) {
+	public void registerDomainObjectsInHolder(DomainModelHolder h) {
 		if (this.getDomainObjects() != null) {
 			getDomainObjects().removeListeners();
 		}

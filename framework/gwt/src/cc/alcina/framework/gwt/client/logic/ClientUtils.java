@@ -11,40 +11,116 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.logic;
 
 import java.util.Date;
+import java.util.Map;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.user.client.rpc.StatusCodeException;
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.FormPanel;
+import com.google.gwt.user.client.ui.Hidden;
+import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.RootPanel;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
-
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 /**
- *
+ * 
+ * <OL>
+ * <LI>UTC date</LI>
+ * <LI>CSS utils</LI>
+ * 
+ * </ol>
+ * 
  * @author Nick Reddel
+ * 
  */
+public class ClientUtils {
+	private static final String HEAD = "head";
 
- public class ClientUtils implements CurrentUtcDateProvider {
-	private ClientUtils() {
-		super();
-	}
+	private static final String CSS_TEXT_PROPERTY = "cssText";
 
-	private static ClientUtils theInstance;
-
-	public static ClientUtils get() {
-		if (theInstance == null) {
-			theInstance = new ClientUtils();
+	public static boolean maybeOffline(Throwable t) {
+		if (t instanceof WrappedRuntimeException) {
+			t = t.getCause();
 		}
-		return theInstance;
+		if (t instanceof StatusCodeException) {
+			StatusCodeException sce = (StatusCodeException) t;
+			ClientLayerLocator.get().notifications().log(
+					"** Status code exception: " + sce.getStatusCode());
+			if ((!GWT.isScript() && sce.getStatusCode() == 500)
+					|| sce.getStatusCode() == 0) {
+				return true;
+			}
+			// DNS error in Africa
+			if (t.toString().contains("was not able to resolve the hostname")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	public void appShutdown() {
-		theInstance = null;
+	public static Element updateCss(Element styleElement, String css) {
+		if (styleElement == null) {
+			styleElement = Document.get().createStyleElement();
+			NodeList<Element> headList = Document.get().getElementsByTagName(
+					HEAD);
+			headList.getItem(0).appendChild(styleElement);
+		}
+		if (css.length() != 0) {
+			try {
+				styleElement.setInnerText(css);
+			} catch (Exception e) {
+				// fall through to IE
+				try {
+					styleElement.setPropertyString(CSS_TEXT_PROPERTY, css);
+				} catch (Exception e1) {
+					if (BrowserMod.isInternetExplorer()) {
+						ClientLayerLocator
+								.get()
+								.notifications()
+								.showMessage(
+										"Sorry, this action is not supported "
+												+ "on some versions of Internet Explorer");
+					}
+				}
+			}
+		}
+		return styleElement;
 	}
 
-	@SuppressWarnings("deprecation")
-	public Date currentUtcDate() {
-		Date d = new Date();
-		return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
+	private static void addHidden(Panel p, String key, String value) {
+		p.add(new Hidden(key, value));
 	}
+
+	public static void submitForm(Map<String, String> params, String url) {
+		FormPanel p = new FormPanel((String) null);
+		p.setAction(url);
+		p.setMethod(FormPanel.METHOD_POST);
+		FlowPanel fp = new FlowPanel();
+		p.add(fp);
+		for (String key : params.keySet()) {
+			addHidden(fp, key, params.get(key));
+		}
+		RootPanel.get().add(p);
+		p.submit();
+		p.removeFromParent();
+	}
+
+	public static void notImplemented() {
+		ClientLayerLocator.get().notifications().showWarning(
+				"Not yet implemented");
+	}
+
+	public static native void invokeJsDebugger() /*-{
+		debugger;
+	}-*/;
 }

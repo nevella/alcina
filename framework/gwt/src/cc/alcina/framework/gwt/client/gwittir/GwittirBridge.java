@@ -31,6 +31,7 @@ import org.apache.commons.beanutils.converters.StringConverter;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.gwittir.validator.BooleanEnsureNonNullCoverter;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.gwittir.validator.DateToLongStringConverter;
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
@@ -344,6 +345,9 @@ public class GwittirBridge implements PropertyAccessor {
 			if (bwp == DateBox.PROVIDER) {
 				return DateToLongStringConverter.INSTANCE;
 			}
+		}
+		if (propertyType == Boolean.class) {
+			return BooleanEnsureNonNullCoverter.INSTANCE;
 		}
 		if (bwp == BoundWidgetTypeFactory.TEXTBOX_PROVIDER) {
 			return Converter.TO_STRING_CONVERTER;
