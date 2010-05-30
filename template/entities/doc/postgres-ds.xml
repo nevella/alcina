@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ===================================================================== -->
+<!--                                                                       -->
+<!--  JBoss Server Configuration                                           -->
+<!--                                                                       -->
+<!-- ===================================================================== -->
+
+<!-- $Id: postgres-ds.xml,v 1.2 2008/09/27 16:08:17 nreddel Exp $ -->
+<!-- ==================================================================== -->
+<!--  Datasource config for Postgres                                      -->
+<!-- ==================================================================== -->
+
+
+<datasources>
+ 
+<local-tx-datasource>
+    <jndi-name>AlcinaTemplatePostgresDS</jndi-name>
+    <connection-url>jdbc:postgresql://localhost:5432/alcinaTemplate</connection-url>
+    <driver-class>org.postgresql.Driver</driver-class>
+    <user-name>alcinaTemplate</user-name>
+    <password>alcinaTemplate</password>
+      </local-tx-datasource>
+
+</datasources>

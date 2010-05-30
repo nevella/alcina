@@ -1,0 +1,4 @@
+#Tue Oct 10 20:47:18 CEST 2006
+eclipse.preferences.version=1
+xfire.services.location=meta-inf/Web Services/services.xml
+xfire.servlet.name=XFireServlet

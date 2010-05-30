@@ -1,0 +1,16 @@
+
+JAXB2
+=====
+jaxb-api-2.0.jar
+jaxb-xjc-2.0.1.jar
+jsr173_api.jar
+Axis
+====
+axis.jar
+axis-ant.jar
+commons-discovery-0.4.jar (non-standard, but lets you redeploy)
+jaxrpc.jar
+saaj.jar
+JDBC
+====
+postgresql-8.1-407.jdbc3.jar

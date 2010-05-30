@@ -1,0 +1,15 @@
+<module>
+	<inherits name='com.google.gwt.user.theme.standard.Standard' />
+	<inherits name='cc.alcina.template.AlcinaTemplateEntities' />
+	<inherits name="com.google.gwt.user.Debug"/>
+
+	<entry-point class='cc.alcina.template.client.AlcinaTemplateClient' />
+    
+	<stylesheet src='Alcina.css' />
+	<stylesheet src='AlcinaTemplateClient.css' />
+	<source path="client" />
+	<public path="public" />
+	<super-source path="jre" />
+	<public path="client/widgets/res" />
+	<set-property name="user.agent" value="safari" />
+</module>

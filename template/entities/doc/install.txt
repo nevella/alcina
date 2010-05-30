@@ -1,0 +1,36 @@
+SERVER INSTALLATION
+===================
+1. Setup an instance of JBoss4.2.3.GA. Download ant and add the executable (ant) to /bin or whereever
+2. Configure the datasources
+Modify <jboss>/server/default/deploy/postgres-ds.xml
+Sample in this folder
+3. Configure the server
+Copy bnc-authentication-url.properties, barnet.p12, server.keystore, alcinaTemplate-server.properties to <jboss>/server/default/conf
+Modify <jboss>/server/default/conf/bnc-authentication-url.properties 
+and <jboss>/server/default/conf/alcinaTemplate-server.properties 
+Samples/Files in this folder
+
+Replace the http connector elt of <jboss>/server/default/deploy/jboss-web.deployer/server.xml with
+  <Connector port="80" address="0.0.0.0"    
+         maxThreads="250" maxHttpHeaderSize="8192"
+         emptySessionPath="true" protocol="HTTP/1.1"
+         enableLookups="false" redirectPort="8443" acceptCount="100"
+         connectionTimeout="20000" disableUploadTimeout="true" 
+         compression="on"
+			compressionMinSize="2048"
+			noCompressionUserAgents="gozilla, traviata"
+			compressableMimeType="text/html,text/xml"/>
+
+4. CVS (preferably into /var/local/cvs)
+Checkout /projects/communicator
+Checkout /projects/alcinaTemplate3
+4.1 Copy <alcinaTemplate3 cvs>/entities/local.properties.template to <alcinaTemplate3 cvs>/entities/local.properties
+and <alcinaTemplate3 cvs>/entities/doc/ev.local.sh.template to <alcinaTemplate3 cvs>/entities/doc/ev.local.sh
+ 
+5. run install.sh in this folder
+6. AlcinaTemplate EARs
+Copy all <alcinaTemplate3 cvs>/server/dist/*.ear files to <jboss>/server/default/deploy
+7. DB Migration
+Note, you need encoding SQL_ASCII - i.e. 
+create database alcinaTemplate owner alcinaTemplate with encoding 'SQL_ASCII';
+8. Start JBoss
