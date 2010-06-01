@@ -106,7 +106,7 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 	}
 
 	protected void initialiseContentArea(WSVisualModel visualModel) {
-		visualModel.setContentWidget(new DocsIntro());
+		visualModel.setContentWidget(new BookmarksHome());
 	}
 
 	protected void initialiseViews(WSVisualModel visualModel) {
@@ -119,8 +119,8 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 		visualModel.getViews().add(dt);
 	}
 
-	public class DocsIntro extends Composite {
-		public DocsIntro() {
+	public class BookmarksHome extends Composite {
+		public BookmarksHome() {
 			HorizontalPanel panel = new HorizontalPanel();
 			FlowPanel p2 = new FlowPanel();
 			p2.getElement().getStyle().setMarginLeft(100, Unit.PX);

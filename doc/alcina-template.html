@@ -12,23 +12,32 @@ The Alcina template is a 3-project combo:
 <ul>
 	<li>entities: ejb3 module containing
 	<ul>
-		<li>persistable entities (start set: user, group, iid, 
-		wrapped object, datatransform persistence,
-		(*) publication</li>
+		<li>persistable entities (start set: user, group, iid, wrapped
+		object, datatransform persistence, (*) publication</li>
 		<li>client-server model objects, actions</li>
 		<li>persistence access code</li>
 		<li>handles the following spis: (fill-in, template ann)</li>
 	</ul>
+	</li>
 	<li>server: war module containing
 	<ul>
 		<li>remote call handler, servlet initialisation and central point</li>
 		<li>server action handlers</li>
 	</ul>
+	</li>
 	<li>client: gwt client module containing
 	<ul>
 		<li>app module (either inherits clientbase or not)</li>
 		<li>widget image providers</li>
 		<li>(todo: abstract layoutmanager,maincmp, maintabpanel)</li>
 	</ul>
+	</li>
+</ul>
+<h2>Manual building</h2>
+<ul><li>Obtain the jars </li>
+<li>Copy the template <tt>local.ant.properties.template</tt> files to (non-svn) local.ant.properties and edit - locations are:
+<br />&lt;project-root&gt;/local.ant.properties.template<br />
+&lt;project-root&gt;/template/entities/local.ant.properties.template<br /></li>
+<li><tt>&lt;project-root&gt;/template/server&gt;ant hot-deploy-and-gwt-and-restart</tt></li></ul>
 </body>
 </html>
