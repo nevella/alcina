@@ -280,9 +280,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public U getSystemUser(boolean clean) {
-		U user = getSystemUser();
-		PermissionsManager.get().getUserGroups(user);
-		return new EntityUtils().detachedClone(user);
+		return (U) getUserByName(getSystemUserName(), clean);
 	}
 
 	public abstract String getSystemUserName();
@@ -306,8 +304,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				clean ? createUserAndGroupInstantiator() : null);
 		return cleaned;
 	}
-	protected abstract InstantiateImplCallback createUserAndGroupInstantiator() ; 
-	
+
+	protected abstract InstantiateImplCallback createUserAndGroupInstantiator();
 
 	public List<ActionLogItem> listLogItemsForClass(String className, int count) {
 		List list = getEntityManager().createQuery(
@@ -352,7 +350,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id, GraphProjectionFilter fieldFilter, GraphProjectionFilter dataFilter) {
+			Long id, GraphProjectionFilter fieldFilter,
+			GraphProjectionFilter dataFilter) {
 		HasId wrapper = getItemById(clazz, id);
 		UnwrapInfoContainer result = new UnwrapInfoContainer();
 		result.setHasId(wrapper);
@@ -380,7 +379,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					}
 				}
 			}
-			return new GraphProjection(fieldFilter, dataFilter).project(result, null);
+			return new GraphProjection(fieldFilter, dataFilter).project(result,
+					null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
