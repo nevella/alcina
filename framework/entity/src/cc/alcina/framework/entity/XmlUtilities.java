@@ -481,27 +481,27 @@ public class XmlUtilities {
 		Map<Node, Integer> indiciesInContainers = new HashMap<Node, Integer>();
 		while ((t = (Text) walker.nextNode()) != null) {
 			String s = t.getTextContent();
+			Node parentNode = t.getParentNode();
+			if (!indiciesInContainers.containsKey(parentNode)) {
+				indiciesInContainers.put(parentNode, 0);
+			}
+			result.node = t;
+			result.nodeIndex = indiciesInContainers.get(parentNode);
 			if (s.length() >= index) {
 				result.characterOffset = index;
-				result.node = t;
 			}
 			if (s.length() > index) {
 				return result;
 			}
 			index -= s.length();
-			Node parentNode = t.getParentNode();
-			if (!indiciesInContainers.containsKey(parentNode)) {
-				indiciesInContainers.put(parentNode, 0);
-			}
+			
 			indiciesInContainers.put(parentNode, indiciesInContainers
 					.get(parentNode) + 1);
-			result.nodeIndex = indiciesInContainers.get(result.node
-					.getParentNode());
 		}
-		if (result.node != null && index == 0 && t == null) {
-			// edge case
-			result.nodeIndex--;
-		}
+//		if (result.node != null && index == 0 && t == null) {
+//			// edge case
+//			result.nodeIndex--;
+//		}
 		return result.node == null ? null : result;
 	}
 
