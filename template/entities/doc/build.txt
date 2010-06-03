@@ -1,2 +1,0 @@
-copy env.local.sh.template to env.local.sh, adjust vars if necessary
-run rebuild.sh
