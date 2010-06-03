@@ -853,6 +853,11 @@ public class XmlUtilities {
 								result.append(tabMarker);
 							}
 							Integer listIndex = listIndicies.get(listElt);
+							try{
+								listIndex=Integer.parseInt(elt.getAttribute("value"));
+							}catch(Exception e){
+								
+							}
 							result.append((listElt.getTagName()
 									.equalsIgnoreCase("UL") ? "*" : listIndex
 									+ ".")
