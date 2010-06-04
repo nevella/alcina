@@ -6,7 +6,7 @@ import java.util.Collection;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
@@ -26,7 +26,7 @@ import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class OptionsHandler implements LoginStateVisibleWithWidget,
-		ClickHandler, PermissibleActionEvent.PermissibleActionListener {
+		ClickHandler, PermissibleActionListener {
 	private Link hyperlink;
 
 	private Collection beans;

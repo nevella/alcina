@@ -3,6 +3,7 @@ package cc.alcina.template.client.widgets;
 import java.util.Arrays;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
 import cc.alcina.framework.common.client.logic.template.AlcinaTemplateType;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -184,7 +185,7 @@ public class LayoutManager {
 	public void preview(final String result) {
 		Label label = new Label(
 				"Your document preview is prepared. Please press OK to view");
-		PermissibleActionEvent.PermissibleActionListener l = new PermissibleActionEvent.PermissibleActionListener() {
+		PermissibleActionListener l = new PermissibleActionListener() {
 			public void vetoableAction(PermissibleActionEvent evt) {
 				previewBox.hide();
 				if (evt.getAction().getActionName() == OkCancelDialogBox.OK_ACTION) {
@@ -204,7 +205,7 @@ public class LayoutManager {
 		Widget widget = new ScrollPanel(ContentProvider.getWidget(contentKey));
 		widget.setSize("500px", "400px");
 		String title = provider.getNode(contentKey).getTitle();
-		PermissibleActionEvent.PermissibleActionListener listener = new PermissibleActionEvent.PermissibleActionListener() {
+		PermissibleActionListener listener = new PermissibleActionListener() {
 			public void vetoableAction(PermissibleActionEvent evt) {
 			}
 		};

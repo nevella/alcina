@@ -391,15 +391,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
+		
+		connectPermissionsManagerToLiveObjects();
 		String message = def.validatePermissions();
 		if (message != null) {
 			throw new WrappedRuntimeException(new PermissionsException(message));
 		}
 		Searcher searcher = (Searcher) Registry.get().instantiateSingle(
 				Searcher.class, def.getClass());
-		if (!(searcher instanceof HandlesPermissionsManager)) {
-			connectPermissionsManagerToLiveObjects();
-		}
 		SearchResultsBase result = searcher.search(def, pageNumber,
 				getEntityManager());
 		return new EntityUtils().detachedClone(result);

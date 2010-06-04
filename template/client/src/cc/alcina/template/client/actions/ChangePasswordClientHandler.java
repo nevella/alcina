@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.ChangePasswordClientAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
@@ -64,7 +65,7 @@ public class ChangePasswordClientHandler implements PermissibleActionHandler {
 		changePasswordHolder.add(new Label("Please enter the new password"));
 		ContentViewFactory cvf = new ContentViewFactory();
 		pcm = new ChangePasswordModel();
-		PermissibleActionEvent.PermissibleActionListener vl = new PermissibleActionEvent.PermissibleActionListener() {
+		PermissibleActionListener vl = new PermissibleActionListener() {
 			public void vetoableAction(PermissibleActionEvent evt) {
 				if (evt.getAction() instanceof ViewAction) {
 					ChangePasswordServerAction cp = new ChangePasswordServerAction();

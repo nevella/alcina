@@ -48,33 +48,29 @@ import java.util.List;
 		return parameters;
 	}
 
-	public interface PermissibleActionListener {
-		public void vetoableAction(PermissibleActionEvent evt);
-	}
-
 	public interface PermissibleActionSource {
-		public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener);
+		public void addVetoableActionListener(PermissibleActionListener listener);
 	
-		public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener);
+		public void removeVetoableActionListener(PermissibleActionListener listener);
 	}
 
 	public static class PermissibleActionSupport implements PermissibleActionEvent.PermissibleActionSource {
-		private List<PermissibleActionEvent.PermissibleActionListener> listenerList  =new ArrayList<PermissibleActionEvent.PermissibleActionListener>();
+		private List<PermissibleActionListener> listenerList  =new ArrayList<PermissibleActionListener>();
 	
 		
-		public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+		public void addVetoableActionListener(PermissibleActionListener listener) {
 			listenerList.add(listener);
 		}
 	
-		public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+		public void removeVetoableActionListener(PermissibleActionListener listener) {
 			listenerList.remove(listener);
 		}
 		public void removeAllListeners() {
 			listenerList.clear();
 		}
 		public void fireVetoableActionEvent(PermissibleActionEvent event) {
-			List<PermissibleActionEvent.PermissibleActionListener> copy = new ArrayList<PermissibleActionEvent.PermissibleActionListener>(listenerList);
-			for (PermissibleActionEvent.PermissibleActionListener listener : copy) {
+			List<PermissibleActionListener> copy = new ArrayList<PermissibleActionListener>(listenerList);
+			for (PermissibleActionListener listener : copy) {
 				listener.vetoableAction(event);
 			}
 		}

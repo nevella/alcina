@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.spi.LogWriter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -65,7 +66,7 @@ public class ClientNotificationsImpl implements ClientNofications {
 
 	public void confirm(String msg, final OkCallback callback) {
 		new OkCancelDialogBox("Confirmation", new Label(msg),
-				new PermissibleActionEvent.PermissibleActionListener() {
+				new PermissibleActionListener() {
 					public void vetoableAction(PermissibleActionEvent evt) {
 						if (evt.getAction().getActionName().equals(
 								OkCancelDialogBox.OK_ACTION)) {

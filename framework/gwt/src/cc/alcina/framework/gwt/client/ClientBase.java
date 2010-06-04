@@ -37,6 +37,7 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 	private boolean displayInitialised = false;
 
 	public void onWindowClosing(ClosingEvent event) {
+		ClientLayerLocator.get().getCommitToStorageTransformListener().setPaused(false);
 		ClientLayerLocator.get().getCommitToStorageTransformListener().flush();
 	}
 

@@ -23,7 +23,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.actions.ActionGroup;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSource;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionSupport;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
@@ -101,7 +101,7 @@ import com.google.gwt.user.client.ui.Widget;
 		redraw();
 	}
 
-	public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+	public void addVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
@@ -219,7 +219,7 @@ import com.google.gwt.user.client.ui.Widget;
 		}
 	}
 
-	public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+	public void removeVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 

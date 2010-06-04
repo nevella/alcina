@@ -21,6 +21,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.SynchronousAction;
@@ -61,7 +62,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 public class ActionViewProvider implements ViewProvider,
-		PermissibleActionEvent.PermissibleActionListener {
+		PermissibleActionListener {
 	private PaneWrapper wrapper;
 
 	public Widget getViewForObject(Object obj) {
@@ -318,7 +319,7 @@ public class ActionViewProvider implements ViewProvider,
 		PermissibleActionEvent.PermissibleActionSupport support = new PermissibleActionEvent.PermissibleActionSupport();
 
 		public void addVetoableActionListener(
-				PermissibleActionEvent.PermissibleActionListener listener) {
+				PermissibleActionListener listener) {
 			this.support.addVetoableActionListener(listener);
 		}
 
@@ -327,7 +328,7 @@ public class ActionViewProvider implements ViewProvider,
 		}
 
 		public void removeVetoableActionListener(
-				PermissibleActionEvent.PermissibleActionListener listener) {
+				PermissibleActionListener listener) {
 			this.support.removeVetoableActionListener(listener);
 		}
 

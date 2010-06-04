@@ -19,7 +19,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -32,7 +32,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 
- public abstract class Wizard<M> implements PermissibleActionEvent.PermissibleActionListener {
+ public abstract class Wizard<M> implements PermissibleActionListener {
 	private static final String NEXT = "next";
 
 	private static final String PREVIOUS = "previous";

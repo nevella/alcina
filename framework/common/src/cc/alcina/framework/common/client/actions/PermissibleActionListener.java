@@ -11,13 +11,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+package cc.alcina.framework.common.client.actions;
 
-package cc.alcina.framework.entity.entityaccess;
-/**
- * Marker to stop precipitate fixing of permissions manager (with associated unwanted java_assist domain objects
- * Hopefully we'll get rid of this "fix" soon
- * @author nick@alcina.cc
- *
- */
-public interface HandlesPermissionsManager {
+public interface PermissibleActionListener {
+	public void vetoableAction(PermissibleActionEvent evt);
 }

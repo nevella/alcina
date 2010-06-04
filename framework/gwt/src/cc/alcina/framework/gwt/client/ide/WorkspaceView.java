@@ -22,6 +22,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
@@ -97,7 +98,7 @@ public class WorkspaceView extends Composite implements HasName,
 	}
 
 	public void addVetoableActionListener(
-			PermissibleActionEvent.PermissibleActionListener listener) {
+			PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
@@ -118,7 +119,7 @@ public class WorkspaceView extends Composite implements HasName,
 	}
 
 	public void removeVetoableActionListener(
-			PermissibleActionEvent.PermissibleActionListener listener) {
+			PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
@@ -132,7 +133,7 @@ public class WorkspaceView extends Composite implements HasName,
 
 	public static abstract class DataTreeView extends WorkspaceView implements
 			ExtraTreeEventListener,
-			PermissibleActionEvent.PermissibleActionListener, HasLayoutInfo,
+			PermissibleActionListener, HasLayoutInfo,
 			SelectionHandler<TreeItem>, HasFirstFocusable {
 		private boolean showCollapseButton;
 

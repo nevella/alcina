@@ -23,6 +23,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.CloneAction;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
@@ -60,7 +61,7 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  */
 public class Workspace implements HasLayoutInfo,
-		PermissibleActionEvent.PermissibleActionListener,
+		PermissibleActionListener,
 		PermissibleActionEvent.PermissibleActionSource {
 	private WSVisualModel visualModel;
 
@@ -73,7 +74,7 @@ public class Workspace implements HasLayoutInfo,
 	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
 
 	public void addVetoableActionListener(
-			PermissibleActionEvent.PermissibleActionListener listener) {
+			PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
@@ -86,7 +87,7 @@ public class Workspace implements HasLayoutInfo,
 	}
 
 	public void removeVetoableActionListener(
-			PermissibleActionEvent.PermissibleActionListener listener) {
+			PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 

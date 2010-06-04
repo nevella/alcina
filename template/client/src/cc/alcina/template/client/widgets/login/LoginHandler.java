@@ -1,7 +1,7 @@
 package cc.alcina.template.client.widgets.login;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
@@ -23,7 +23,7 @@ import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class LoginHandler implements LoginStateVisibleWithWidget, ClickHandler,
-		PermissibleActionEvent.PermissibleActionListener {
+		PermissibleActionListener {
 	private Link hyperlink;
 
 	private LoginDisplayer ld;

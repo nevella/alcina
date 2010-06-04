@@ -17,7 +17,7 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -41,15 +41,15 @@ import com.google.gwt.user.client.ui.Label;
 
 	private Button retryButton;
 
-	public CancellableRemoteDialog(String msg, PermissibleActionEvent.PermissibleActionListener l) {
+	public CancellableRemoteDialog(String msg, PermissibleActionListener l) {
 		if (l == null) {
-			l = new PermissibleActionEvent.PermissibleActionListener() {
+			l = new PermissibleActionListener() {
 				public void vetoableAction(PermissibleActionEvent evt) {
 					CancellableRemoteDialog.this.hide();
 				}
 			};
 		}
-		final PermissibleActionEvent.PermissibleActionListener lCopy = l;
+		final PermissibleActionListener lCopy = l;
 		setText("Please wait...");
 		setAnimationEnabled(true);
 		Grid grr = new Grid(2, 1);

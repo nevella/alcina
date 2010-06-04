@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
@@ -92,7 +93,7 @@ import com.totsp.gwittir.client.validator.Validator;
 	private boolean noCaption;
 
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
-			PermissibleActionEvent.PermissibleActionListener actionListener, boolean autoSave,
+			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				bean.getClass());
@@ -216,7 +217,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 	public PaneWrapperWithObjects createMultipleBeanView(Collection beans,
 			Class beanClass, boolean editable,
-			PermissibleActionEvent.PermissibleActionListener actionListener, boolean autoSave,
+			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
 		return createMultipleBeanView(beans, beanClass, editable,
 				actionListener, autoSave, doNotClone, 0);
@@ -224,7 +225,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
 	public PaneWrapperWithObjects createMultipleBeanView(Collection beans,
 			Class beanClass, boolean editable,
-			PermissibleActionEvent.PermissibleActionListener actionListener, boolean autoSave,
+			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone, int tableMask) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				beanClass);
@@ -290,7 +291,7 @@ import com.totsp.gwittir.client.validator.Validator;
 	public ActionTableHolder createActionTable(Collection beans,
 			Class beanClass, Converter converter,
 			Collection<PermissibleAction> actions,
-			PermissibleActionEvent.PermissibleActionListener listener, boolean withObjectActions,
+			PermissibleActionListener listener, boolean withObjectActions,
 			boolean multiple) {
 		ActionTableHolder holder = new ActionTableHolder();
 		FlowPanel fp = holder.fp;
@@ -326,7 +327,7 @@ import com.totsp.gwittir.client.validator.Validator;
 	}
 
 	private PaneWrapperWithObjects createPaneWrapper(
-			PermissibleActionEvent.PermissibleActionListener actionListener) {
+			PermissibleActionListener actionListener) {
 		PaneWrapperWithObjects vp = new PaneWrapperWithObjects();
 		vp.setStyleName("alcina-BeanPanel");
 		if (actionListener != null) {
@@ -487,7 +488,7 @@ import com.totsp.gwittir.client.validator.Validator;
 			return this.saveButton;
 		}
 
-		public void addVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+		public void addVetoableActionListener(PermissibleActionListener listener) {
 			this.support.addVetoableActionListener(listener);
 		}
 
@@ -611,7 +612,7 @@ import com.totsp.gwittir.client.validator.Validator;
 			}
 		}
 
-		public void removeVetoableActionListener(PermissibleActionEvent.PermissibleActionListener listener) {
+		public void removeVetoableActionListener(PermissibleActionListener listener) {
 			this.support.removeVetoableActionListener(listener);
 		}
 
@@ -690,7 +691,7 @@ import com.totsp.gwittir.client.validator.Validator;
 	}
 
 	public void popupEdit(Object bean, String title,
-			final PermissibleActionEvent.PermissibleActionListener okListener) {
+			final PermissibleActionListener okListener) {
 		FlowPanel fp = new FlowPanel();
 		final DialogBox dialog = new GlassDialogBox();
 		dialog.setText(title);
@@ -698,7 +699,7 @@ import com.totsp.gwittir.client.validator.Validator;
 		setNoCaption(true);
 		setCancelButton(true);
 		PaneWrapperWithObjects view = createBeanView(bean, true,
-				new PermissibleActionEvent.PermissibleActionListener() {
+				new PermissibleActionListener() {
 					public void vetoableAction(PermissibleActionEvent evt) {
 						dialog.hide();
 						if (evt.getAction().getClass() == ViewAction.class) {

@@ -17,7 +17,7 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.widget.EnterAsClickKeyboardListener;
@@ -140,7 +140,7 @@ import com.google.gwt.user.client.ui.Widget;
 		dialogBox.setWidget(fp);
 	}
 
-	public void showLoginDialog(final PermissibleActionEvent.PermissibleActionListener listener) {
+	public void showLoginDialog(final PermissibleActionListener listener) {
 		okButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				statusLabel.setVisible(true);

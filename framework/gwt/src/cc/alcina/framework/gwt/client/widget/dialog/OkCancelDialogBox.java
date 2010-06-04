@@ -17,7 +17,7 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionEvent.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
@@ -48,10 +48,10 @@ import com.totsp.gwittir.client.beans.Binding;
 
 	protected final Widget widget;
 
-	protected  PermissibleActionEvent.PermissibleActionListener vetoableActionListener;
+	protected  PermissibleActionListener vetoableActionListener;
 
 	public OkCancelDialogBox(String title, Widget widget,
-			final PermissibleActionEvent.PermissibleActionListener l) {
+			final PermissibleActionListener l) {
 		this(title, widget, l, HasHorizontalAlignment.ALIGN_CENTER);
 	}
 
@@ -67,7 +67,7 @@ import com.totsp.gwittir.client.beans.Binding;
 		okButton.setFocus(true);
 	}
 	public OkCancelDialogBox(String title, Widget widget,
-			 PermissibleActionEvent.PermissibleActionListener listener,
+			 PermissibleActionListener listener,
 			HorizontalAlignmentConstant widgetAlign) {
 		this.widget = widget;
 		this.vetoableActionListener = listener;
@@ -151,7 +151,7 @@ import com.totsp.gwittir.client.beans.Binding;
 		protected final Binding binding;
 
 		public SaveWithValidatorDialogBox(String title, Widget widget,
-				PermissibleActionEvent.PermissibleActionListener l,
+				PermissibleActionListener l,
 				HorizontalAlignmentConstant widgetAlign, Binding binding) {
 			super(title, widget, l, widgetAlign);
 			this.binding = binding;
