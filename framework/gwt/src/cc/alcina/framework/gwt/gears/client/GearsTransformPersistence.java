@@ -67,6 +67,7 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 				"clientInstance_id", Long.class, "request_id", Integer.class,
 				"clientInstance_auth", Integer.class, "transform_request_type",
 				DomainTransformRequestType.class, "transform_event_protocol",
+				String.class ,"tag",
 				String.class };
 		List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
 		String sql = "select * from TransformRequests ";
@@ -91,7 +92,8 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 							.get("clientInstance_auth"),
 					(DomainTransformRequestType) map
 							.get("transform_request_type"), (String) map
-							.get("transform_event_protocol"));
+							.get("transform_event_protocol"), (String) map
+							.get("tag"));
 			transforms.add(wr);
 		}
 		rs.close();
@@ -114,7 +116,8 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 						commitToServerTransformListener);
 				getCommitToStorageTransformListener().addStateChangeListener(
 						this);
-				ClientTransformManager.cast().setPersistableTransformListener(this);
+				ClientTransformManager.cast().setPersistableTransformListener(
+						this);
 			} catch (Exception e) {
 				setLocalStorageInstalled(false);
 				// squelch - no gears
@@ -154,12 +157,11 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 		try {
 			db
 					.execute("ALTER TABLE TransformRequests add column transform_event_protocol nvarchar(255)");
-			// TODO - remove june 2010
+		} catch (Exception e) {
+		}
+		try {
 			db
-					.execute(CommonUtils
-							.formatJ(
-									"update TransformRequests set transform_event_protocol='%s'",
-									OldPlaintextProtocolHandler.VERSION));
+					.execute("ALTER TABLE TransformRequests add column tag nvarchar(255)");
 		} catch (Exception e) {
 		}
 	}
@@ -211,7 +213,7 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 
 	protected void persist(DTRSimpleSerialWrapper wrapper) {
 		try {
-			if (wrapper.getProtocolVersion()==null){
+			if (wrapper.getProtocolVersion() == null) {
 				throw new Exception("wrapper must have protocol version");
 			}
 			db
@@ -220,7 +222,7 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 									+ "(transform, timestamp,"
 									+ "user_id,clientInstance_id"
 									+ ",request_id,clientInstance_auth,"
-									+ "transform_request_type,transform_event_protocol) VALUES (?, ?,?,?,?,?,?,?)",
+									+ "transform_request_type,transform_event_protocol,tag) VALUES (?, ?,?,?,?,?,?,?,?)",
 							new String[] {
 									wrapper.getText(),
 									Long.toString(wrapper.getTimestamp()),
@@ -232,7 +234,9 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 									Long.toString(wrapper
 											.getClientInstanceAuth()),
 									wrapper.getDomainTransformRequestType()
-											.toString(),wrapper.getProtocolVersion() });
+											.toString(),
+									wrapper.getProtocolVersion(),
+									wrapper.getTag() });
 			if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
 				clearPersistedClient(getCommitToStorageTransformListener()
 						.getClientInstance());

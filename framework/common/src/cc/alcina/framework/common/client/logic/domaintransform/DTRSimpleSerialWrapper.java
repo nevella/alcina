@@ -58,6 +58,8 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 
 	private DomainTransformRequestType domainTransformRequestType;
 
+	private String tag;
+
 	public DTRSimpleSerialWrapper() {
 	}
 
@@ -75,7 +77,7 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 			ClientLayerLocator.get().notifications().metricLogEnd(
 					"DTRSimpleSerialWrapper-tostr");
 		} else {
-			//text set async
+			// text set async
 		}
 		this.clientInstanceId = request.getClientInstance().getId();
 		this.requestId = request.getRequestId();
@@ -83,23 +85,15 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		this.clientInstanceAuth = auth == null ? 0 : auth;
 		this.domainTransformRequestType = request
 				.getDomainTransformRequestType();
-		this.protocolVersion=request.getProtocolVersion();
-	}
-
-	@Override
-	public String toString() {
-		return CommonUtils.format(" clientInstanceAuth: %1\n"
-				+ "clientInstanceId: %2\n" + "id: %3\n" + "requestId: %4\n"
-				+ "timestamp: %5\n" + "userId: %6\n"
-				+ "DomainTransformRequestType: %7\n" + "text:\n%8\n",
-				clientInstanceAuth, clientInstanceId, id, requestId, timestamp,
-				userId, domainTransformRequestType, text);
+		this.protocolVersion = request.getProtocolVersion();
+		this.setTag(request.getTag());
 	}
 
 	public DTRSimpleSerialWrapper(int id, String text, long timestamp,
 			long userId, long clientInstanceId, int requestId,
 			int clientInstanceAuth,
-			DomainTransformRequestType domainTransformRequestType, String protocolVersion) {
+			DomainTransformRequestType domainTransformRequestType,
+			String protocolVersion, String tag) {
 		this.text = text;
 		this.timestamp = timestamp;
 		this.userId = userId;
@@ -109,6 +103,7 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		this.clientInstanceAuth = clientInstanceAuth;
 		this.domainTransformRequestType = domainTransformRequestType;
 		this.protocolVersion = protocolVersion;
+		this.setTag(tag);
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance auth", orderingHint = 30))
@@ -129,9 +124,17 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		return this.id;
 	}
 
+	public String getProtocolVersion() {
+		return protocolVersion;
+	}
+
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Request id", orderingHint = 10))
 	public int getRequestId() {
 		return this.requestId;
+	}
+	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Tag", orderingHint = 35))
+	public String getTag() {
+		return tag;
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Transforms", orderingHint = 40))
@@ -176,11 +179,24 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		this.id = id;
 	}
 
+	public void setProtocolVersion(String protocolVersion) {
+		String old_protocolVersion = this.protocolVersion;
+		this.protocolVersion = protocolVersion;
+		propertyChangeSupport.firePropertyChange("protocolVersion",
+				old_protocolVersion, protocolVersion);
+	}
+
 	public void setRequestId(int requestId) {
 		int old_requestId = this.requestId;
 		this.requestId = requestId;
 		propertyChangeSupport.firePropertyChange("requestId", old_requestId,
 				requestId);
+	}
+
+	public void setTag(String tag) {
+		String old_tag = this.tag;
+		this.tag = tag;
+		propertyChangeSupport.firePropertyChange("tag", old_tag, tag);
 	}
 
 	public void setText(String text) {
@@ -202,14 +218,14 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		propertyChangeSupport.firePropertyChange("userId", old_userId, userId);
 	}
 
-	public void setProtocolVersion(String protocolVersion) {
-		String old_protocolVersion = this.protocolVersion;
-		this.protocolVersion = protocolVersion;
-		propertyChangeSupport.firePropertyChange("protocolVersion",
-				old_protocolVersion, protocolVersion);
-	}
-
-	public String getProtocolVersion() {
-		return protocolVersion;
+	@Override
+	public String toString() {
+		return CommonUtils.format(" clientInstanceAuth: %1\n"
+				+ "clientInstanceId: %2\n" + "id: %3\n" + "requestId: %4\n"
+				+ "timestamp: %5\n" + "userId: %6\n"
+				+ "DomainTransformRequestType: %7\n" + "tag:\n%8\n"
+				+ "text:\n%9\n", clientInstanceAuth, clientInstanceId, id,
+				requestId, timestamp, userId, domainTransformRequestType,
+				getTag(), text);
 	}
 }

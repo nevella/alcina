@@ -119,6 +119,7 @@ public abstract class OfflineDomainLoader {
 						persist.setClientInstance(null);
 						persist
 								.setDomainTransformRequestType(DomainTransformRequestType.TO_REMOTE);
+						persist.setTag(wr.getTag());
 						LocalTransformPersistence.get()
 								.getPersistedTransforms().put(requestId, wr);
 						tl.getPriorRequestsWithoutResponse().add(persist);

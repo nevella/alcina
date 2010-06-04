@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestTagProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -205,6 +206,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		dtr.getItems().addAll(transformQueue);
 		dtr.getEventIdsToIgnore().addAll(eventIdsToIgnore);
 		dtr.setDomainTransformRequestType(DomainTransformRequestType.TO_REMOTE);
+		dtr.setTag(DomainTransformRequestTagProvider.get().getTag());
 		updateTransformQueueVersions();
 		resetQueue();
 		AsyncCallback<DomainTransformResponse> callback = new AsyncCallback<DomainTransformResponse>() {

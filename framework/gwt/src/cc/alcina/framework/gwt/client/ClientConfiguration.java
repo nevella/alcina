@@ -66,16 +66,21 @@ public class ClientConfiguration {
 				PermissionsManager.get());
 		ClientLayerLocator.get().setCommitToStorageTransformListener(
 				createStorageTransformListener());
+		registerExtraTransformListenersPreStorage();
 		TransformManager.get().addDomainTransformListener(
 				ClientLayerLocator.get().getCommitToStorageTransformListener());
-		registerExtraTransformListeners();
+		registerExtraTransformListenersPostStorage();
 		CommonLocator.get().registerClassLookup(ClientReflector.get());
 		CommonLocator.get().registerObjectLookup(TransformManager.get());
 		CommonLocator.get().registerURLComponentEncoder(
 				new ClientURLComponentEncoder());
 	}
 
-	protected void registerExtraTransformListeners() {
+	protected void registerExtraTransformListenersPreStorage() {
+		
+	}
+
+	protected void registerExtraTransformListenersPostStorage() {
 		
 	}
 
