@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity;
 
 import java.awt.Component;
@@ -55,7 +54,6 @@ import javax.swing.tree.TreePath;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 /**
  * @author nick@alcina.cc
  * 
@@ -64,6 +62,7 @@ public class SEUtilities {
 	public static final Locale EN_AU = new Locale("en", "AU", "");
 
 	public static int idCounter = 1;
+
 	@SuppressWarnings("unchecked")
 	public static <C> C collectionItemOfClass(Collection coll, Class<C> clazz) {
 		for (Object object : coll) {
@@ -88,6 +87,7 @@ public class SEUtilities {
 	public static String constantToDashedLc(Object constant) {
 		return constant.toString().replace('_', '-').toLowerCase();
 	}
+
 	@SuppressWarnings("unchecked")
 	public static <T> T getOrCreate(Collection<T> existing,
 			String propertyName, String propertyValue, Class itemClass)
@@ -119,7 +119,9 @@ public class SEUtilities {
 	private static Pattern yearRangePattern = Pattern
 			.compile("(\\d{4})(-(\\d{4}))?");
 
-	public static final Pattern WS_PATTERN = Pattern.compile("(\\s|\\u00A0)+");
+	public static final String WS_PATTERN_STR = "(?:\\s|\\u00A0)+";
+
+	public static final Pattern WS_PATTERN = Pattern.compile(WS_PATTERN_STR);
 
 	public static String normalizeWhitespace(String input) {
 		return WS_PATTERN.matcher(input).replaceAll(" ");
@@ -524,6 +526,7 @@ public class SEUtilities {
 		}
 		return b.toString();
 	}
+
 	@SuppressWarnings("unchecked")
 	public static Map listToMap(List l, Method m) throws Exception {
 		Map map = new HashMap<Object, Object>();
@@ -709,7 +712,7 @@ public class SEUtilities {
 	public static int getLeadingWsCount(String input) {
 		Matcher m = WS_PATTERN.matcher(input);
 		if (m.find()) {
-			return m.start()==0?m.end():0;
+			return m.start() == 0 ? m.end() : 0;
 		}
 		return 0;
 	}

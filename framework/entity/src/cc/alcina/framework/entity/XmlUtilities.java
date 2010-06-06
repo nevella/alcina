@@ -476,12 +476,14 @@ public class XmlUtilities {
 		DOMLocation result = new DOMLocation();
 		TreeWalker walker = ((DocumentTraversal) container.getOwnerDocument())
 				.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, true);
-		Text t = null;
+		Text t = (Text) (container.getNodeType() == Node.TEXT_NODE ? container
+				: null);
 		Text save = null;
 		Map<Node, Integer> indiciesInContainers = new HashMap<Node, Integer>();
-		while ((t = (Text) walker.nextNode()) != null) {
-			String s = t.getTextContent();
+		while (t == container || (t = (Text) walker.nextNode()) != null) {
+			Node n2 = t;
 			Node parentNode = t.getParentNode();
+			String s = t.getTextContent();
 			if (!indiciesInContainers.containsKey(parentNode)) {
 				indiciesInContainers.put(parentNode, 0);
 			}
@@ -494,14 +496,19 @@ public class XmlUtilities {
 				return result;
 			}
 			index -= s.length();
-			
 			indiciesInContainers.put(parentNode, indiciesInContainers
 					.get(parentNode) + 1);
+			if (t == container) {
+				t = null;
+			}
 		}
-//		if (result.node != null && index == 0 && t == null) {
-//			// edge case
-//			result.nodeIndex--;
-//		}
+		if (index > 0) {
+			return locationOfTextIndex(nextSibOrParentSibNode(container), index);
+		}
+		// if (result.node != null && index == 0 && t == null) {
+		// // edge case
+		// result.nodeIndex--;
+		// }
 		return result.node == null ? null : result;
 	}
 
@@ -691,6 +698,7 @@ public class XmlUtilities {
 		while (n != null) {
 			switch (n.getNodeType()) {
 			case Node.DOCUMENT_NODE:
+			case Node.DOCUMENT_FRAGMENT_NODE:
 				parts.add("");
 				break;
 			default:
@@ -804,6 +812,8 @@ public class XmlUtilities {
 
 		public static final int SHOW_NEWLINES = 2;
 
+		public static final int PRESERVE_WHITESPACE = 4;
+
 		private static final String nlMarker = new String(new char[] { 9000,
 				9001, 9009, 10455, 39876 });
 
@@ -853,10 +863,10 @@ public class XmlUtilities {
 								result.append(tabMarker);
 							}
 							Integer listIndex = listIndicies.get(listElt);
-							try{
-								listIndex=Integer.parseInt(elt.getAttribute("value"));
-							}catch(Exception e){
-								
+							try {
+								listIndex = Integer.parseInt(elt
+										.getAttribute("value"));
+							} catch (Exception e) {
 							}
 							result.append((listElt.getTagName()
 									.equalsIgnoreCase("UL") ? "*" : listIndex
@@ -869,7 +879,11 @@ public class XmlUtilities {
 					result.append(n2.getNodeValue());
 				}
 			}
-			String s = result.toString().replaceAll("\\s+", " ");
+			String s = result.toString();
+			if (flags == 4) {
+				return s;
+			}
+			s = s.replaceAll("\\s+", " ");
 			if (flags == 0) {
 				return s;
 			}
