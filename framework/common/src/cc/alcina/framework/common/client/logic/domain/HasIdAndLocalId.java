@@ -14,7 +14,6 @@
 package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 

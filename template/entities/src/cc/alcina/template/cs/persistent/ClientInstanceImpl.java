@@ -18,7 +18,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
-import cc.alcina.framework.entity.entityaccess.WrappedObject;
 
 
 @Table(name = "client_instance")

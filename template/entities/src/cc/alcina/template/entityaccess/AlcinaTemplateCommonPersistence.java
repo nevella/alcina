@@ -4,40 +4,26 @@
 package cc.alcina.template.entityaccess;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 
 import org.hibernate.proxy.LazyInitializer;
 
-import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
-import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.entityaccess.WrappedObject;
-import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 import cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants;
 import cc.alcina.template.cs.persistent.AlcinaTemplateGroup;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
-import cc.alcina.template.cs.persistent.ClassRefImpl;
 import cc.alcina.template.cs.persistent.ClientInstanceImpl;
 import cc.alcina.template.cs.persistent.IidImpl;
 import cc.alcina.template.cs.persistent.LogRecord;
-import cc.alcina.template.j2seentities.DomainTransformEventPersistentImpl;
-import cc.alcina.template.j2seentities.DomainTransformRequestPersistentImpl;
 
 @AlcinaTemplate
 @Stateless

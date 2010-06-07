@@ -5,7 +5,6 @@ import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.search.AbstractUserCriterion;
 import cc.alcina.framework.common.client.search.EqlWithParameters;
-import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 public class UserCriterion extends AbstractUserCriterion {

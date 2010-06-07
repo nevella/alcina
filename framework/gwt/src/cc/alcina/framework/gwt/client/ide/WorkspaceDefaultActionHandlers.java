@@ -2,14 +2,11 @@ package cc.alcina.framework.gwt.client.ide;
 
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.provider.TextProvider;
@@ -20,9 +17,6 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHan
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
-import cc.alcina.framework.gwt.client.ide.node.DomainNode;
-import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;
-import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 
 import com.google.gwt.user.client.ui.HorizontalPanel;

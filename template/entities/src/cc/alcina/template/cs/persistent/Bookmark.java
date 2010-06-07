@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
-import cc.alcina.framework.common.client.logic.domain.HasOrderValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.Association;

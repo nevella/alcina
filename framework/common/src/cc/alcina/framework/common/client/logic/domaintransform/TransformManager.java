@@ -50,15 +50,11 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector.HasAnnotationCallback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.DefaultCollectionFilter;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**

@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.entity.gwtsynth;
 
-import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Locale;

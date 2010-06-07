@@ -16,9 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.provider;
 import java.util.Comparator;
 
 import cc.alcina.framework.gwt.client.gwittir.Comparators;
-import cc.alcina.framework.gwt.client.gwittir.Comparators.EqualsComparator;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
-import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox.DomainListBox;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 

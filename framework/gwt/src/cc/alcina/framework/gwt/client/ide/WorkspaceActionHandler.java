@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.ide;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 public interface WorkspaceActionHandler {
 	void performAction(PermissibleActionEvent event, Object node, Object object,

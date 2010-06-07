@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.objecttree.basic;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 

@@ -14,7 +14,6 @@
 package cc.alcina.framework.common.client.search;
 
 import java.util.Date;
-import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;

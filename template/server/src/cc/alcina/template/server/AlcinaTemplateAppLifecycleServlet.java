@@ -10,7 +10,6 @@ import cc.alcina.framework.entity.impl.jboss.JBossSupport;
 import cc.alcina.framework.entity.impl.jboss.JPAHibernateImpl;
 import cc.alcina.framework.entity.impl.jboss.JbossLogMuter;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;

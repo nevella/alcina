@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers
 import java.util.List;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;

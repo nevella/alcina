@@ -20,7 +20,6 @@ import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
-import cc.alcina.template.client.AlcinaTemplateClient;
 import cc.alcina.template.client.widgets.login.LoginHandler;
 import cc.alcina.template.client.widgets.login.LoginStatus;
 import cc.alcina.template.client.widgets.login.LogoutHandler;

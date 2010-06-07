@@ -17,11 +17,10 @@ import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
-import cc.alcina.framework.common.client.remote.ProvidesCommonRemoteService;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
-import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 /**
  * 

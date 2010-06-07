@@ -7,8 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
@@ -32,11 +30,11 @@ import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ClientTransformManager extends TransformManager {
 	protected ClientDomainSync cache;

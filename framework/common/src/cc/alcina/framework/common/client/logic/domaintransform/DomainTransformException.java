@@ -14,8 +14,6 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DomainTransformException extends Exception implements Serializable {
 	private DomainTransformEvent event;

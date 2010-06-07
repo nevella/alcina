@@ -27,7 +27,7 @@ import org.w3c.dom.Text;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.XmlUtilities;
+import cc.alcina.framework.entity.XmlUtils;
 
 
 /**
@@ -109,7 +109,7 @@ import cc.alcina.framework.entity.XmlUtilities;
 	public Document getTemplate() throws Exception {
 		InputStream stream = this.getClass().getResourceAsStream(
 				DOC_TEMPLATE_XML);
-		Document document = XmlUtilities.loadDocument(stream);
+		Document document = XmlUtils.loadDocument(stream);
 		sheetTemplate = (Element) document.getDocumentElement()
 				.getElementsByTagName("Worksheet").item(0);
 		sheetTemplate.getParentNode().removeChild(sheetTemplate);

@@ -5,7 +5,6 @@ import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
 
 import com.google.gwt.user.client.ui.ComplexPanel;
-import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class RelativePopupPositioning {

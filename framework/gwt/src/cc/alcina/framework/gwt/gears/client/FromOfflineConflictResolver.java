@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWr
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNofications;
 import cc.alcina.framework.gwt.client.widget.BlockLink;

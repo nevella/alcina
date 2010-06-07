@@ -5,7 +5,6 @@ import com.google.gwt.gears.client.Factory;
 import com.google.gwt.gears.client.localserver.LocalServer;
 import com.google.gwt.gears.client.localserver.ResourceStore;
 import com.google.gwt.gears.client.localserver.ResourceStoreUrlCaptureHandler;
-import com.google.gwt.gears.client.localserver.ResourceStoreUrlCaptureHandler.ResourceStoreUrlCaptureEvent;
 import com.google.gwt.user.client.Window;
 
 public class LocalServerUtils {

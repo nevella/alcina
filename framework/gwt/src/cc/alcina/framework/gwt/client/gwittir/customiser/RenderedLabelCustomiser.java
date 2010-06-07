@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 

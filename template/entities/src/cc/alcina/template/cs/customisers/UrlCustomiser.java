@@ -3,13 +3,10 @@ package cc.alcina.template.cs.customisers;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundLink;
-import cc.alcina.template.cs.persistent.Bookmark;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @ClientInstantiable

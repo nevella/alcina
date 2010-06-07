@@ -1,17 +1,11 @@
 package cc.alcina.template.client;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.gwt.client.ClientBaseWithLayout;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
 import cc.alcina.template.client.widgets.LayoutManager;
-import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
 import cc.alcina.template.cs.remote.AlcinaTemplateRemoteService;
 import cc.alcina.template.cs.remote.AlcinaTemplateRemoteServiceAsync;
 
@@ -19,7 +13,6 @@ import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 

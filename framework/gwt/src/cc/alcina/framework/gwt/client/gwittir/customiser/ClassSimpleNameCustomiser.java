@@ -17,7 +17,6 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ClassSimpleNameRenderer;
 import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 

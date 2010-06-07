@@ -16,8 +16,6 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.gwt.user.client.ui.Widget;
-
 /**
  * 
  * @author Nick Reddel

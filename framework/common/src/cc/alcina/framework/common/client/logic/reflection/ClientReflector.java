@@ -16,12 +16,9 @@ package cc.alcina.framework.common.client.logic.reflection;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
@@ -30,8 +27,6 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
-import com.totsp.gwittir.client.beans.Introspector;
-import com.totsp.gwittir.client.beans.IntrospectorFactory;
 import com.totsp.gwittir.client.beans.Property;
 
 /**

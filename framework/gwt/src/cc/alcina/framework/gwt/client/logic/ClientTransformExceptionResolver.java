@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;

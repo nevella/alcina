@@ -1,9 +1,5 @@
 package cc.alcina.framework.common.client.csobjects;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
@@ -20,9 +16,6 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
-
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @MappedSuperclass
 public abstract class AbstractDomainBase extends BaseBindable implements

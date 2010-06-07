@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import cc.alcina.framework.gwt.client.gwittir.Comparators;
-import cc.alcina.framework.gwt.client.gwittir.Comparators.EqualsComparator;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 

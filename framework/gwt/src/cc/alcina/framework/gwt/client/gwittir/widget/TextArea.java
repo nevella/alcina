@@ -33,9 +33,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.HasEnabled;
-import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.SimpleComparator;
-import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 @SuppressWarnings("deprecation")
 /**

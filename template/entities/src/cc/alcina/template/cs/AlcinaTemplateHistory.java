@@ -1,8 +1,5 @@
 package cc.alcina.template.cs;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 
