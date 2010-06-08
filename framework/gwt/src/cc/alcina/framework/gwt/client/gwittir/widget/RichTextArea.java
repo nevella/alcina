@@ -19,6 +19,7 @@ import cc.alcina.framework.gwt.client.widget.richtext.RichTextToolbar;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -73,8 +74,7 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 				ClientLayerLocator.get().notifications().log("lostfocus");
 				EventTarget eventTarget = event.getNativeEvent()
 						.getEventTarget();
-				Element elt = Element.as(eventTarget);
-				String str = elt.getString();
+				Node elt = Node.as(eventTarget);
 				if (WidgetUtils.isAncestorOf(toolbar.getElement(), elt)) {
 					return;
 				}
