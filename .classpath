@@ -6,12 +6,11 @@
 	<classpathentry kind="src" path="framework/gwt/src"/>
 	<classpathentry kind="src" path="framework/servlet/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/framework/common/ejb3-persistence.jar"/>
+	<classpathentry kind="lib" path="lib/framework/common/persistence-api-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jsr173_api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/log4j-1.2.6.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-all.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-gears-noredist.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-servlet.jar"/>
@@ -19,5 +18,8 @@
 	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwittir-trunk.jar"/>
+	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-annotations.jar"/>
+	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-javaee.jar"/>
+	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
