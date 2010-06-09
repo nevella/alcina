@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<project name="download-framework-libs" basedir=".">
+	<target name="check-config">
+		<!--overriden in main script-->
+	</target>
+	<target name="download-framework-libs" depends="">
+		<mkdir dir="${framework.download.dir}" />
+		<mkdir dir="${container.download.dir}" />
+		<mkdir dir="${tmp.dir}" />
+		<download-libs targetDirectory="${framework.download.dir}" containerDirectory="${container.download.dir}">
+			<downloadable-file-list>
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/jaxb-api.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/xml/bind/jaxb-api/2.1/jaxb-api-2.1.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/persistence-api-1.0.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/persistence/persistence-api/1.0/persistence-api-1.0.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/jsr173_api.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/xml/bind/jsr173_api/1.0/jsr173_api-1.0.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/log4j-1.2.6.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/log4j/log4j/1.2.6/log4j-1.2.6.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/xercesImpl_2.9.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/xerces/xercesImpl/2.9.1/xercesImpl-2.9.1.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-gears-noredist.jar" tocUrl="" url="http://gwt-google-apis.googlecode.com/files/gwt-gears-1.3.0.zip" extractFileName="gwt-gears-noredist.jar" containerPath="gwt-gears-1.3.0.zip" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwittir-trunk.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwittir-trunk.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-server.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.0.3.zip" extractFileName="gwt-servlet.jar" containerPath="gwt-2.0.3.zip" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-user.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.0.3.zip" extractFileName="gwt-user.jar" containerPath="gwt-2.0.3.zip" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-dev.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.0.3.zip" extractFileName="gwt-dev.jar" containerPath="gwt-2.0.3.zip" />
+			</downloadable-file-list>
+		</download-libs>
+	</target>
+	<target name="download-impl-jboss-libs" depends="">
+		<mkdir dir="${framework.download.dir}" />
+		<mkdir dir="${container.download.dir}" />
+		<download-libs targetDirectory="${framework.download.dir}" containerDirectory="${container.download.dir}">
+			<downloadable-file-list>
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-annotations.jar" tocUrl="" url="http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-5.1.0.GA/jboss-5.1.0.GA.zip?use_mirror=cdnetworks-us-1" extractFileName="hibernate-annotations.jar" containerPath="jboss-5.1.0.GA.zip" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-core.jar" tocUrl="" url="http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-5.1.0.GA/jboss-5.1.0.GA.zip?use_mirror=cdnetworks-us-1" extractFileName="hibernate-core.jar" containerPath="jboss-5.1.0.GA.zip" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-ejb3x.jar" tocUrl="" url="http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-5.1.0.GA/jboss-5.1.0.GA.zip?use_mirror=cdnetworks-us-1" extractFileName="jboss-javaee.jar" containerPath="jboss-5.1.0.GA.zip" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-vfs.jar" tocUrl="" url="http://downloads.sourceforge.net/project/jboss/JBoss/JBoss-5.1.0.GA/jboss-5.1.0.GA.zip?use_mirror=cdnetworks-us-1" extractFileName="jboss-vfs.jar" containerPath="jboss-5.1.0.GA.zip" />
+			</downloadable-file-list>
+		</download-libs>
+	</target>
+
+</project>

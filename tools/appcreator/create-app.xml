@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<project name="create-app-call" basedir=".">
+	<property name="app.tmp.root" value="${tmp.dir}/${app.name.lc}" />
+	<target name="create-app-call">
+		<copy todir="${app.tmp.root}">
+			<fileset dir="${alcina.template.home.dir}" />
+		</copy>
+		<move file="${app.tmp.root}/client/src/${template.root.package.dir}" todir="${app.tmp.root}/client/src/${app.root.package.dir}" />
+		<move file="${app.tmp.root}/entity/src/${template.root.package.dir}" todir="${app.tmp.root}/entity/src/${app.root.package.dir}" />
+		<move file="${app.tmp.root}/servlet/src/${template.root.package.dir}" todir="${app.tmp.root}/servlet/src/${app.root.package.dir}" />
+	</target>
+</project>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="alcina-appcreator" basedir="." default="create-deploy-launch">
+	<copy overwrite="false" file="local.ant.properties.template" tofile="local.ant.properties" />
+	<property file="local.ant.properties" />
+	<property file="build.properties" />
+	<path id="project.classpath">
+		<fileset dir="${project.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${project.dist-lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<ant antfile="build-dist.xml" target="build">
+	</ant>
+	<typedef file="typedefs.properties" classpathref="project.classpath" loaderref="moi" />
+	<taskdef file="taskdefs.properties" classpathref="project.classpath" loaderref="moi" />
+	<target name="check-config">
+	</target>
+
+	<import file="download-libs.xml" />
+	<import file="create-app.xml" />
+	<target name="clean-tmp-dir">
+		<mkdir dir="${tmp.dir}">
+		</mkdir>
+		<delete includeemptydirs="true">
+			<fileset dir="${tmp.dir}" includes="**/*" />
+		</delete>
+	</target>
+	<target name="download-impl-libs" depends="download-impl-jboss-libs">
+	</target>
+	<target name="prepare" depends="check-config,download-framework-libs,download-impl-libs">
+	</target>
+	<target name="create-app" depends="prepare,clean-tmp-dir,create-app-call">
+	</target>
+	<target name="create-jboss-deployment" depends="prepare">
+	</target>
+	<target name="create-database" depends="prepare">
+	</target>
+	<target name="deploy-app" depends="prepare">
+	</target>
+	<target name="launch-jboss" depends="prepare">
+	</target>
+	<target name="create-deploy-launch" depends="create-app,create-jboss-deployment,deploy-app,create-database,launch-jboss">
+	</target>
+</project>
