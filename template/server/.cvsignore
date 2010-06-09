@@ -1,7 +1,0 @@
-dist
-build
-*.class
-WebRoot
-src-client
-test-src
-lib
