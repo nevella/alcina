@@ -1,5 +1,0 @@
-<module>
-	<!-- Inherit the core Web Toolkit stuff.                        -->
-	<inherits name='cc.alcina.framework.gwt.AlcinaGwt' />
-	<source path="cs" />
-</module>
