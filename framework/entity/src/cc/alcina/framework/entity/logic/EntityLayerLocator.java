@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.entity.logic;
 
+import java.io.File;
+
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
@@ -127,6 +129,14 @@ public class EntityLayerLocator {
 	public JPAImplementation jpaImplementation() {
 		return jpaImplementation;
 	}
+	private File dataFolder;
 
+	public void setDataFolder(File dataFolder) {
+		this.dataFolder = dataFolder;
+	}
+
+	public File getDataFolder() {
+		return dataFolder;
+	}
 	
 }

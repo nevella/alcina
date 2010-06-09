@@ -27,8 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Entity;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
 
 /**
@@ -62,9 +65,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		}
 	}
 
-	protected String getHomeDir() {
-		return (System.getenv("USERPROFILE") != null) ? System
-				.getenv("USERPROFILE") : System.getProperty("user.home");
+	protected File getHomeDir() {
+		return EntityLayerLocator.get().getDataFolder();
 	}
 
 	public void scan(Map<String, Date> classes, String cachePath) throws Exception {

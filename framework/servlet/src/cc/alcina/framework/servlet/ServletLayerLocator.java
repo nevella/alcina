@@ -52,11 +52,11 @@ public class ServletLayerLocator {
 
 	private File dataFolder;
 
-	public void registerDataFolder(File dataFolder) {
+	public void setDataFolder(File dataFolder) {
 		this.dataFolder = dataFolder;
 	}
 
-	public File dataFolder() {
+	public File getDataFolder() {
 		return dataFolder;
 	}
 

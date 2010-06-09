@@ -50,10 +50,8 @@ public class RegistryScanner extends CachingScanner {
 
 	public void scan(Map<String, Date> classes, Collection<String> ignore,
 			Registry toRegistry) throws Exception {
-		String homeDir = getHomeDir();
-		String cachePath = homeDir + File.separator + ".alcina"
-				+ File.separator + toRegistry.getClass().getSimpleName()
-				+ "-cache.ser";
+		String cachePath = getHomeDir().getPath() + File.separator
+				+ toRegistry.getClass().getSimpleName() + "-cache.ser";
 		this.toRegistry = toRegistry;
 		scan(classes, cachePath);
 	}

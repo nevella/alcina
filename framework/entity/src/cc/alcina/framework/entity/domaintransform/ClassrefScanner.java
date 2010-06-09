@@ -48,8 +48,7 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 	private LinkedHashSet<Class> persistableClasses;
 
 	public void scan(Map<String, Date> classes) throws Exception {
-		String homeDir = getHomeDir();
-		String cachePath = homeDir + File.separator + ".alcina"
+		String cachePath =getHomeDir().getPath()
 				+ File.separator + getClass().getSimpleName() + "-cache.ser";
 		persistableClasses = new LinkedHashSet<Class>();
 		persistableClasses.addAll(Arrays.asList(new Class[] { Long.class,
