@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/alcinaTemplate_entities"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/alcinaTemplate_entity"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/alcina"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="lib" path="/alcina/lib/framework/gwt/gwittir-trunk.jar"/>

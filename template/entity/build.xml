@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="alcinaTemplate_entity" basedir="." default="make-jars">
+	<property file="local.ant.properties" />
+	<property file="${alcina.home}/local.ant.properties" />
+	<property file="build.properties" />
+	<property file="${alcina.home}/build.properties" />
+	<fail unless="gwt.codestyle">
+		...
+		Please create a local.ant.properties file,
+		template is local.ant.properties.template in this directory</fail>
+	<import file="${alcina.home}/framework-paths.xml" />
+	<path id="project.classpath">
+		<fileset dir="${project.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+		<fileset dir="${framework.dist.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+		<path refid="framework.common.lib.path" />
+		<path refid="framework.impl.jboss-hibernate.lib.path" />
+	</path>
+	<patternset id="project.compile.filter.sources">
+		<include name="**/*.java" />
+	</patternset> 
+		<patternset id="project.jar.filter.exclude">
+		<exclude name="org/cosa/survey/cs/remote/*.*" />
+	</patternset>
+	
+	<import file="${alcina.home}/project-build.xml" />
+
+</project>

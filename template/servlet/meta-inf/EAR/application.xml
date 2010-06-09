@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.4" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/application_1_4.xsd">
+  <display-name>Alcina Template EAR</display-name>
+  <module id="alcinaTemplate_servlet.war">
+    <web>
+      <web-uri>alcinaTemplate_servlet.war</web-uri>
+      <context-root>/</context-root>
+    </web>
+  </module>
+  <module id="alcinaTemplate_entity">
+    <ejb>alcinaTemplate_entity.jar</ejb>
+  </module>
+  <module id="alcina-entity-alcinaTemplate">
+    <ejb>alcina-entity.jar</ejb>
+  </module>
+  <module id="alcina-entity-impl-alcinaTemplate">
+    <ejb>alcina-entity-impl.jar</ejb>
+  </module>
+  <module id="gwt_lib_alcinaTemplate">
+  	<java>gwt-user.jar</java>
+  </module>
+   <module id="gwittir_lib_alcinaTemplate">
+  	<java>gwittir-trunk.jar</java>
+  </module>
+  
+</application>
+
