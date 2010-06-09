@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <project name="create-app-call" basedir=".">
-	<property name="app.tmp.root" value="${tmp.dir}/${app.name.lc}" />
 	<target name="create-app-call">
+		<property name="app.tmp.root" value="${tmp.dir}/${app.name.lc}" />
 		<copy todir="${app.tmp.root}">
 			<fileset dir="${alcina.template.home.dir}" />
 		</copy>
-		<move file="${app.tmp.root}/client/src/${template.root.package.dir}" todir="${app.tmp.root}/client/src/${app.root.package.dir}" />
-		<move file="${app.tmp.root}/entity/src/${template.root.package.dir}" todir="${app.tmp.root}/entity/src/${app.root.package.dir}" />
-		<move file="${app.tmp.root}/servlet/src/${template.root.package.dir}" todir="${app.tmp.root}/servlet/src/${app.root.package.dir}" />
+		<echo message="${app.tmp.root}/client/src/${template.root.package.dir}" />
+		<move todir="${app.tmp.root}/client/src/${app.root.package.dir}">
+			<fileset dir="${app.tmp.root}/client/src/${template.root.package.dir}" />
+		</move>
+		<move todir="${app.tmp.root}/entity/src/${app.root.package.dir}">
+			<fileset dir="${app.tmp.root}/entity/src/${template.root.package.dir}" />
+		</move>
+		<move todir="${app.tmp.root}/servlet/src/${app.root.package.dir}">
+			<fileset dir="${app.tmp.root}/servlet/src/${template.root.package.dir}" />
+		</move>
+		<prune-empty dir="${app.tmp.root}/client/src/${template.root.package.dir}/../.." />
+		<prune-empty dir="${app.tmp.root}/entity/src/${template.root.package.dir}/../.." />
+		<prune-empty dir="${app.tmp.root}/servlet/src/${template.root.package.dir}/../.." />
+		<rename-starts-with dir="${app.tmp.root}" fromStartsWith="${template.name}" toStartsWith="${app.name}">
+		</rename-starts-with>
+		<replace dir="${app.tmp.root}" token="${template.package}" value="${app.package}" />
+		<replace dir="${app.tmp.root}" token="${template.name.cc}" value="${app.name.cc}" />
+		<replace dir="${app.tmp.root}" token="${template.name}" value="${app.name}" />
+		<replace dir="${app.tmp.root}" token="${template.human.name}" value="${app.human.name}" />
 	</target>
 </project>

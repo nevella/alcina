@@ -17,8 +17,9 @@
 	<typedef file="typedefs.properties" classpathref="project.classpath" loaderref="moi" />
 	<taskdef file="taskdefs.properties" classpathref="project.classpath" loaderref="moi" />
 	<target name="check-config">
+		<check-config />
 	</target>
-
+	
 	<import file="download-libs.xml" />
 	<import file="create-app.xml" />
 	<target name="clean-tmp-dir">

@@ -11,11 +11,11 @@ import java.io.StringWriter;
 import java.util.Stack;
 
 class PackageUtils {
-
 	public static String readFileToString(File f) throws IOException {
 		FileInputStream fis = new FileInputStream(f);
 		return readStreamToString(fis);
 	}
+
 	public static String readStreamToString(InputStream is) throws IOException {
 		return readStreamToString(is, null);
 	}
@@ -36,15 +36,18 @@ class PackageUtils {
 
 	public static String folderOf(String path) {
 		int x = path.lastIndexOf('/');
-		return x==-1?path:path.substring(0,x);
+		return x == -1 ? path : path.substring(0, x);
 	}
+
 	public static String fileOf(String path) {
 		int x = path.lastIndexOf('/');
-		return x==-1?path:path.substring(x+1);
+		return x == -1 ? path : path.substring(x + 1);
 	}
+
 	public static boolean isNullOrEmpty(String string) {
 		return string == null || string.length() == 0;
 	}
+
 	public static boolean clearFolder(File folder) {
 		Stack<File> pathStack = new Stack<File>();
 		Stack<File> dirStack = new Stack<File>();
@@ -74,19 +77,40 @@ class PackageUtils {
 		}
 		return true;
 	}
+
 	public static File findFile(File folder, final String fileName) {
 		File[] files = folder.listFiles(new FilenameFilter() {
 			public boolean accept(File dir, String name) {
-				return dir.isDirectory()||name.equals(fileName);
+				return dir.isDirectory() || name.equals(fileName);
 			}
 		});
 		for (File file : files) {
-			if (file.isDirectory()){
+			if (file.isDirectory()) {
 				return findFile(file, fileName);
-			}else{
+			} else {
 				return file;
 			}
 		}
 		return null;
+	}
+
+	public static boolean prune(File folder) {
+		File[] files = folder.listFiles();
+		boolean delete = true;
+		for (File file : files) {
+			if (file.isDirectory()) {
+				delete &= prune(file);
+			} else {
+				delete = false;
+			}
+		}
+		if (delete) {
+			folder.delete();
+		}
+		return delete;
+	}
+
+	public static String camelCase(String string) {
+		return string.substring(0, 1).toLowerCase() + string.substring(1);
 	}
 }

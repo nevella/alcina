@@ -8,6 +8,9 @@
 	<target name="clean" description="Delete all generated files">
 		<delete dir="${project.build.dir}" />
 		<delete dir="${project.dist.dir}" />
+		<delete dir="${project.web-inf.classes.dir}" quiet="true"/>
+		<delete dir="${project.gwt.build.dir}" quiet="true"/>
+		
 	</target>
 	<target name="build-dependencies" >
 		<!-- override in the top-level-project build script -->
