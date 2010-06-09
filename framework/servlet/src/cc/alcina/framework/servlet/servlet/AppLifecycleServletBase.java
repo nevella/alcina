@@ -109,11 +109,14 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		String key = "server layer init";
 		MetricLogging.get().start(key);
 		initCommonServices();
+		initDataFolder();
 		initServletLayerRegistry();
 		initCommonImplServices();
 		initCustomServices();
 		MetricLogging.get().end(key);
 	}
+
+	protected  abstract void initDataFolder();
 
 	public void init(ServletConfig servletConfig) throws ServletException {
 		try {

@@ -20,7 +20,7 @@
 		<include name="gwt-user.jar" />
 	</fileset>
 	<fileset dir="${alcina.home}/dist" id="alcina.war.exports">
-		<include name="alcina-server.jar" />
+		<include name="alcina-servlet.jar" />
 	</fileset>
 	<fileset dir="${alcina.home}/lib/framework/gwt" id="alcina.war.dependencies">
 		<exclude name="*.*" />

@@ -101,7 +101,7 @@
 				<exclude name="**/*.class" />
 			</fileset>
 		</copy>
-		<jar destfile="${framework.dist.dir}/${ant.project.name}-server.jar">
+		<jar destfile="${framework.dist.dir}/${ant.project.name}-servlet.jar">
 			<metainf dir="${framework.servlet.base.dir}/META-INF" />
 			<fileset dir="${framework.servlet.build.dir}">
 				<include name="**/*.*" />

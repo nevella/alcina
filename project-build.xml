@@ -4,7 +4,7 @@
 	<fail unless="gwt.codestyle">
 			...
 			Please create a local.ant.properties file,
-			template is local.ant.properties.template in appropriate (alcina or project/entities) directory</fail>
+			template is local.ant.properties.template in appropriate (alcina or project/entity) directory</fail>
 	<target name="clean" description="Delete all generated files">
 		<delete dir="${project.build.dir}" />
 		<delete dir="${project.dist.dir}" />
