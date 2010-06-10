@@ -4,13 +4,13 @@ import java.io.File;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolderProvider;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
 import cc.alcina.template.entityaccess.AlcinaTemplateBeanProvider;
 
-@AlcinaTemplate
+
 public class AlcinaTemplateServerManager implements
 		DomainModelHolderProvider<AlcinaTemplateObjects>,
 		CommonPersistenceProvider {

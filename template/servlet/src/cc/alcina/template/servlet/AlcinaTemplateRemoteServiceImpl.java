@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -30,7 +30,7 @@ import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 import cc.alcina.template.cs.remote.AlcinaTemplateRemoteService;
 import cc.alcina.template.entityaccess.AlcinaTemplateBeanProvider;
 
-@AlcinaTemplate
+
 public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		implements AlcinaTemplateRemoteService {
 	public AlcinaTemplateRemoteServiceImpl() {
