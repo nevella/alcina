@@ -9,7 +9,7 @@ import javax.naming.NamingException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 
@@ -18,7 +18,7 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
  * @author nreddel@barnet.com.au
  * 
  */
-@AlcinaTemplate
+
 public class AlcinaTemplateBeanProvider {
 
 	/**
@@ -37,7 +37,7 @@ public class AlcinaTemplateBeanProvider {
 
 	private Context context;
 
-	private static final String JNDIPrefix = "alcinaTemplate_server/";
+	private static final String JNDIPrefix = "alcinaTemplate/";
 
 	public void appShutdown() {
 		theInstance = null;

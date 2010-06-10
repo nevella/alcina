@@ -21,11 +21,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 import cc.alcina.template.cs.persistent.DomainBaseVersionable;
-@AlcinaTemplate
+
 @Entity
 @Table(name = "wrappedObject")
 @SequenceGenerator(name = "wrappedObject_sequence", sequenceName = "wrappedObject_id_seq")

@@ -15,11 +15,11 @@ import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 
 @Table(name="Iid")
 @Entity
-@AlcinaTemplate
+
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = Iid.class)
 public class IidImpl implements Serializable, Iid{
 	long id;

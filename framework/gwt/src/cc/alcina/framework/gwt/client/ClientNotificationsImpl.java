@@ -109,6 +109,7 @@ public class ClientNotificationsImpl implements ClientNofications {
 			log(CommonUtils.format("Metric: %1 - %2 ms", key, System
 					.currentTimeMillis()
 					- metricStartTimes.get(key)));
+			metricStartTimes.remove(key);
 		}
 	}
 

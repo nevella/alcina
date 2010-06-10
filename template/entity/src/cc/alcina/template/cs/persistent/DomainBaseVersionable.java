@@ -15,9 +15,9 @@ import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
 
-@AlcinaTemplate
+
+
 @MappedSuperclass
 public abstract class DomainBaseVersionable extends DomainBase implements IVersionable {
 	Date lastModificationDate;

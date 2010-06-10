@@ -10,11 +10,11 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
-@AlcinaTemplate
+
 @SuppressWarnings("unchecked")
 public class AlcinaTemplateWrappedObjectProvider implements WrappedObjectProvider {
 	public <T extends WrapperPersistable> WrappedObjectImpl<T> getObjectWrapperForUser(

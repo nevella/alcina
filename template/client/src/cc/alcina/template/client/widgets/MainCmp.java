@@ -4,8 +4,6 @@ import java.util.ArrayList;
 
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplateType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 import cc.alcina.framework.gwt.client.ide.provider.LooseActionRegistry;
@@ -35,7 +33,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.Widget;
 
-@AlcinaTemplate(AlcinaTemplateType.ALCINA_LAYOUT)
+
 public class MainCmp extends MainCmpBase {
 	private AdminTab adminTab;
 

@@ -16,13 +16,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.template.cs.persistent.AlcinaTemplateGroup;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 import cc.alcina.template.cs.persistent.Bookmark;
 
-@AlcinaTemplate
+
 public class AlcinaTemplateObjects implements Serializable, DomainModelHolder,
 		CollectionModificationListener,
 		DomainModelHolderProvider<AlcinaTemplateObjects> {

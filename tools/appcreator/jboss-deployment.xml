@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<project name="jboss-deployment" basedir=".">
+	<target name="unpack-jboss" unless="deploy.jboss.dir.exists">
+		<mkdir dir="${deploy.jboss.dir}/.." />
+		<unzip dest="${tmp.dir}" src="${container.download.dir}/jboss-5.1.0.GA.zip">
+		</unzip>
+		<move todir="${deploy.jboss.dir}/..">
+			<fileset dir="${tmp.dir}" />
+		</move>
+	</target>
+	<target name="create-jboss-deployment-call" depends="unpack-jboss">
+		<delete dir="${deploy.jboss.dir.server}/deploy/ROOT.war" />
+		<replaceregexp file="${deploy.jboss.dir.server}/deploy/jbossweb.sar/server.xml">
+			<regexp pattern="(Connector protocol=&lt;&quot;HTTP/1\.1&quot; port=&quot;8080&quot;.+)(/&gt;)" />
+			<substitution expression="\1 compression=&quot;on&quot; compressionMinSize=&quot;2048&quot; noCompressionUserAgents=&quot;gozilla, traviata&quot; compressableMimeType=&quot;text/html,text/xml&quot; \2" />
+		</replaceregexp>
+		<property name="app.ds.file" value="${deploy.jboss.dir.server}/deploy/${app.name}-ds.xml" />
+		<copy file="res/jboss/hypersonic/AlcinaTemplate-ds.xml" tofile="${app.ds.file}" />
+		<replace file="${app.ds.file}" token="${template.name}" value="${app.name}" />
+	</target>
+</project>

@@ -4,12 +4,12 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee   http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
 	<servlet>
 		<servlet-name>AlcinaTemplateGwtRpc</servlet-name>
-		<servlet-class>cc.alcina.template.server.AlcinaTemplateRemoteServiceImpl 
+		<servlet-class>cc.alcina.template.servlet.AlcinaTemplateRemoteServiceImpl 
 		</servlet-class>
 	</servlet>
 	<servlet>
 		<servlet-name>AlcinaTemplateAppStartupServlet</servlet-name>
-		<servlet-class>cc.alcina.template.server.AlcinaTemplateAppLifecycleServlet</servlet-class>
+		<servlet-class>cc.alcina.template.servlet.AlcinaTemplateAppLifecycleServlet</servlet-class>
 		<load-on-startup>1</load-on-startup>
 	</servlet>
 

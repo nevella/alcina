@@ -1,4 +1,4 @@
-package cc.alcina.template.server;
+package cc.alcina.template.servlet;
 
 import java.util.List;
 

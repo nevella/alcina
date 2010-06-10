@@ -52,7 +52,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.ValidatorInfo;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.gwt.client.gwittir.customiser.SelectorCustomiser;
 import cc.alcina.template.cs.constants.AlcinaTemplateSiteConstants;
 
@@ -68,7 +68,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 		@Action(actionClass = DeleteAction.class),
 		@Action(actionClass = ChangePasswordClientAction.class, permission = @Permission(access = AccessLevel.ADMIN_OR_OWNER)) }), displayNamePropertyName = "userName")
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ADMIN))
-@AlcinaTemplate
+
 @Introspectable
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = IUser.class)
 public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,

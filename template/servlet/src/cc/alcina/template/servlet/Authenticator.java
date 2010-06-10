@@ -1,4 +1,4 @@
-package cc.alcina.template.server;
+package cc.alcina.template.servlet;
 
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;

@@ -30,7 +30,7 @@
 		<include name="*.jar" />
 	</fileset>
 	<fileset id="project.war.dependencies" dir="${project.ear.lib.dir}">
-	<!-- deliberately empty, can be overriden -->
+		<!-- deliberately empty, can be overriden -->
 		<exclude name="**/*.*" />
 	</fileset>
 	<patternset id="project.jar.filter.exclude">
@@ -62,6 +62,7 @@
 	</target>
 	<target name="clean-gwt">
 		<delete dir="${project.gwt.build.dir}" />
+		<delete dir="${project.client.bin.dir}" quiet="true" />
 	</target>
 	<target name="build-dependencies">
 		<build-dependency home="${alcina.home}" />

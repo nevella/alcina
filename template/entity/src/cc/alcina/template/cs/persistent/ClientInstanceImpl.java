@@ -17,12 +17,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 
 
 @Table(name = "client_instance")
 @Entity
-@AlcinaTemplate
+
 @SequenceGenerator(name = "client_instance_id_seq", sequenceName = "client_instance_id_seq")
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ClientInstance.class)
 public class ClientInstanceImpl extends ClientInstance implements

@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.gwt.client.gwittir.customiser.SelectorCustomiser;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
@@ -53,7 +53,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 		@Action(actionClass = CreateAction.class),
 		@Action(actionClass = DeleteAction.class) }), displayNamePropertyName = "groupName")
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ADMIN))
-@AlcinaTemplate
+
 @Introspectable
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = IGroup.class)
 public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup,

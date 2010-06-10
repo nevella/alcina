@@ -1,12 +1,12 @@
 package cc.alcina.template.cs;
 
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 
-@AlcinaTemplate
+
 public class AlcinaTemplateHistory extends AlcinaHistory implements
 		ValueChangeHandler<String> {
 	public static final String BOOKMARKS_TAB = "bookmarks";

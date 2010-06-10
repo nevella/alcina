@@ -1,4 +1,4 @@
-package cc.alcina.template.server.actionhandlers;
+package cc.alcina.template.servlet.actionhandlers;
 
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;

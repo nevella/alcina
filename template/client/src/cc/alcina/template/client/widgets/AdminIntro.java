@@ -1,13 +1,12 @@
 package cc.alcina.template.client.widgets;
 
 
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplateType;
+
 
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
-@AlcinaTemplate(AlcinaTemplateType.ALCINA_LAYOUT)
+
 public class AdminIntro extends Composite {
 	public AdminIntro(){
 		HorizontalPanel panel = new HorizontalPanel();

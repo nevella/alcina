@@ -4,8 +4,6 @@ import java.util.Arrays;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplateType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
@@ -33,7 +31,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-@AlcinaTemplate(AlcinaTemplateType.ALCINA_LAYOUT)
+
 public class LayoutManager {
 	private LayoutManager() {
 		super();

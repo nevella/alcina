@@ -19,9 +19,10 @@
 	<target name="check-config">
 		<check-config />
 	</target>
-	
+
 	<import file="download-libs.xml" />
 	<import file="create-app.xml" />
+	<import file="jboss-deployment.xml" />
 	<target name="clean-tmp-dir">
 		<mkdir dir="${tmp.dir}">
 		</mkdir>
@@ -35,14 +36,27 @@
 	</target>
 	<target name="create-app" depends="prepare,clean-tmp-dir,create-app-call">
 	</target>
-	<target name="create-jboss-deployment" depends="prepare">
+	<target name="create-jboss-deployment" depends="prepare,clean-tmp-dir,create-jboss-deployment-call">
 	</target>
 	<target name="create-database" depends="prepare">
+		<echo message="create database - no-op - using jboss builtin hypersonicdb" />
+	</target>
+	<target name="clean-app" depends="prepare">
+		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="clean-all">
+		</ant>
+	</target>
+	<target name="build-app" depends="prepare">
+		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="clean-all">
+		</ant>
+		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="compile-gwt">
+		</ant>
 	</target>
 	<target name="deploy-app" depends="prepare">
+		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="hot-deploy">
+		</ant>
 	</target>
 	<target name="launch-jboss" depends="prepare">
 	</target>
-	<target name="create-deploy-launch" depends="create-app,create-jboss-deployment,deploy-app,create-database,launch-jboss">
+	<target name="create-deploy-launch" depends="create-app,create-jboss-deployment,build-app,deploy-app,create-database,launch-jboss">
 	</target>
 </project>

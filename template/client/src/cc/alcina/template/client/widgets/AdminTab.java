@@ -14,8 +14,6 @@ import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplateType;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.ide.Workspace;
 import cc.alcina.framework.gwt.client.ide.Workspace.WSVisualModel;
@@ -48,7 +46,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TreeItem;
 
-@AlcinaTemplate(AlcinaTemplateType.ALCINA_LAYOUT)
+
 public class AdminTab extends BaseTab implements HasLayoutInfo,
 		TabDisplaysAsFullHeight {
 	protected static final StandardDataImages images = GWT

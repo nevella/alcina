@@ -1,9 +1,9 @@
 package cc.alcina.template.entityaccess;
 
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
-@AlcinaTemplate
+
 public class AlcinaTemplateEjbLocator implements CommonPersistenceProvider {
 	private AlcinaTemplateEjbLocator() {
 		super();

@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
+
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
@@ -38,7 +38,7 @@ import cc.alcina.template.cs.persistent.Bookmark;
 import cc.alcina.template.cs.persistent.ClientInstanceImpl;
 import cc.alcina.template.cs.persistent.IidImpl;
 
-@AlcinaTemplate
+
 @Stateless
 public class AlcinaTemplatePersistence
 		extends

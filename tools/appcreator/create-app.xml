@@ -5,7 +5,7 @@
 		<copy todir="${app.tmp.root}">
 			<fileset dir="${alcina.template.home.dir}" />
 		</copy>
-		<echo message="${app.tmp.root}/client/src/${template.root.package.dir}" />
+		<replace file="${app.tmp.root}/client/src/cc/alcina/template/AlcinaTemplateClient.gwt.xml" token="safari" value="${build.gwt.client}" />
 		<move todir="${app.tmp.root}/client/src/${app.root.package.dir}">
 			<fileset dir="${app.tmp.root}/client/src/${template.root.package.dir}" />
 		</move>
@@ -18,11 +18,21 @@
 		<prune-empty dir="${app.tmp.root}/client/src/${template.root.package.dir}/../.." />
 		<prune-empty dir="${app.tmp.root}/entity/src/${template.root.package.dir}/../.." />
 		<prune-empty dir="${app.tmp.root}/servlet/src/${template.root.package.dir}/../.." />
+		<mkdir dir="${app.tmp.root}/client/lib" />
 		<rename-starts-with dir="${app.tmp.root}" fromStartsWith="${template.name}" toStartsWith="${app.name}">
 		</rename-starts-with>
 		<replace dir="${app.tmp.root}" token="${template.package}" value="${app.package}" />
 		<replace dir="${app.tmp.root}" token="${template.name.cc}" value="${app.name.cc}" />
 		<replace dir="${app.tmp.root}" token="${template.name}" value="${app.name}" />
 		<replace dir="${app.tmp.root}" token="${template.human.name}" value="${app.human.name}" />
+		<replace dir="${app.tmp.root}" token="${template.root.package.dir}" value="${app.root.package.dir}" />
+		<property name="app.tmp.local.properties" value="${app.tmp.root}/entity/local.ant.properties" />
+		<copy file="${app.tmp.root}/entity/local.ant.properties.template" tofile="${app.tmp.local.properties}" overwrite="true" />
+		<replace file="${app.tmp.local.properties}" token="ALCINA_HOME" value="${alcina.home.absolute}" />
+		<replace file="${app.tmp.local.properties}" token="GWT_SDK_DIR" value="${gwt.sdk.dir.absolute}" />
+		<replace file="${app.tmp.local.properties}" token="DEPLOY_JBOSS_DIR_ABS" value="${deploy.jboss.dir.absolute}" />
+		
+		
+		<move todir="${project.work.dir}" file="${app.tmp.root}"/>
 	</target>
 </project>

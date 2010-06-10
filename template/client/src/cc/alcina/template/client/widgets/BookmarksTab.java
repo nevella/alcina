@@ -42,6 +42,8 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -62,6 +64,8 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 	private HorizontalPanel panel;
 
 	public boolean initialisingTab;
+
+	private DTBookmarks dtBookmarks;
 
 	public BookmarksTab() {
 		minimumAccessLevel = AccessLevel.EVERYONE;
@@ -112,10 +116,10 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 		PermissibleAction[] acar = { new ViewAction(), new CreateAction(),
 				new EditAction(), new DeleteAction() };
 		List<PermissibleAction> treeActions = Arrays.asList(acar);
-		DataTreeView dt = new DTBookmarks();
-		dt.getScroller().setAlwaysShowScrollBars(true);
-		dt.getToolbar().setActions(treeActions);
-		visualModel.getViews().add(dt);
+		dtBookmarks = new DTBookmarks();
+		dtBookmarks.getScroller().setAlwaysShowScrollBars(true);
+		dtBookmarks.getToolbar().setActions(treeActions);
+		visualModel.getViews().add(dtBookmarks);
 	}
 
 	public class BookmarksHome extends Composite {
@@ -131,7 +135,8 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 					Bookmark folder = TransformManager.get()
 							.createDomainObject(Bookmark.class);
 					folder.setTitle("Worth a look");
-					AlcinaTemplateUser user = (AlcinaTemplateUser) PermissionsManager.get().getUser();
+					AlcinaTemplateUser user = (AlcinaTemplateUser) PermissionsManager
+							.get().getUser();
 					folder.setUser(user);
 					Bookmark bookmark = TransformManager.get()
 							.createDomainObject(Bookmark.class);
@@ -167,6 +172,11 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 					TransformManager.get().modifyCollectionProperty(folder,
 							"children", bookmark,
 							CollectionModificationType.ADD);
+					DeferredCommand.addCommand(new Command() {
+						public void execute() {
+							dtBookmarks.getDataTree().expandAll();
+						}
+					});
 				}
 			}));
 			panel.add(p2);

@@ -4,8 +4,6 @@ import static cc.alcina.template.client.logic.AlcinaTemplateContentProvider.HOME
 
 import java.util.Date;
 
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplate;
-import cc.alcina.framework.common.client.logic.template.AlcinaTemplateType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
@@ -18,7 +16,7 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
-@AlcinaTemplate(AlcinaTemplateType.ALCINA_LAYOUT)
+
 public class HomeTab extends BaseTab {
 	private FlowPanel fp;
 
