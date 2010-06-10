@@ -86,7 +86,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		sb.append("\n WHERE ");
 		int ct = 0;
 		for (CriteriaGroup cg : getCriteriaGroups()) {
-			if (!PermissionsManager.get().isPermissible(cg)){
+			if (!PermissionsManager.get().isPermissible(cg)) {
 				continue;
 			}
 			EqlWithParameters ewp2 = cg.eql();
@@ -148,6 +148,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	/**
 	 * Note - there's a slight risk of "injection" here...if truly concerned,
 	 * subclass validatePermissions()
+	 * 
 	 * @return the property name for "order by" in an eql query, if any
 	 */
 	public String getOrderName() {
@@ -194,11 +195,11 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	}
 
 	public void resetLookups() {
-		cgs.clear();
+		cgs = new HashMap<Class<? extends CriteriaGroup>, CriteriaGroup>();
+		ogs = new HashMap<Class<? extends OrderGroup>, OrderGroup>();
 		for (CriteriaGroup cg : criteriaGroups) {
 			cgs.put(cg.getClass(), cg);
 		}
-		ogs.clear();
 		for (OrderGroup og : orderGroups) {
 			ogs.put(og.getClass(), og);
 		}

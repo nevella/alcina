@@ -8,20 +8,21 @@
 	<target name="clean" description="Delete all generated files">
 		<delete dir="${project.build.dir}" />
 		<delete dir="${project.dist.dir}" />
-		<delete dir="${project.web-inf.classes.dir}" quiet="true"/>
-		<delete dir="${project.gwt.build.dir}" quiet="true"/>
-		
+		<delete dir="${project.web-inf.classes.dir}" quiet="true" />
+		<delete dir="${project.gwt.build.dir}" quiet="true" />
+
 	</target>
-	<target name="build-dependencies" >
+	<target name="build-dependencies">
 		<!-- override in the top-level-project build script -->
 	</target>
 	<target name="compile" description="Compiles the ${project.module.description} module" depends="build-dependencies">
 		<mkdir dir="${project.build.dir}" />
 		<javac debug="on" sourcepath="" destdir="${project.build.dir}">
+
+			<src path="${project.src.dirs}" />
 			<classpath>
 				<path refid="project.classpath" />
 			</classpath>
-			<src path="${project.src.dirs}" />
 			<patternset refid="project.compile.filter.sources" />
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
