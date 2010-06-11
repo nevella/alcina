@@ -28,11 +28,12 @@
 		<replace dir="${app.tmp.root}" token="${template.root.package.dir}" value="${app.root.package.dir}" />
 		<property name="app.tmp.local.properties" value="${app.tmp.root}/entity/local.ant.properties" />
 		<copy file="${app.tmp.root}/entity/local.ant.properties.template" tofile="${app.tmp.local.properties}" overwrite="true" />
-		<replace file="${app.tmp.local.properties}" token="ALCINA_HOME" value="${alcina.home.absolute}" />
-		<replace file="${app.tmp.local.properties}" token="GWT_SDK_DIR" value="${gwt.sdk.dir.absolute}" />
-		<replace file="${app.tmp.local.properties}" token="DEPLOY_JBOSS_DIR_ABS" value="${deploy.jboss.dir.absolute}" />
+		<replace file="${app.tmp.local.properties}" token="ALCINA_HOME" value="${alcina.home.absolute.fslash}" />
+		<replace file="${app.tmp.local.properties}" token="GWT_SDK_DIR" value="${gwt.sdk.dir.absolute.fslash}" />
+		<replace file="${app.tmp.local.properties}" token="DEPLOY_JBOSS_DIR_ABS" value="${deploy.jboss.dir.absolute.fslash}" />
 		
-		
+		<delete dir="${project.work.dir}/${app.name.lc}"/>
+		<mkdir dir="${project.work.dir}/${app.name.lc}"/>
 		<move todir="${project.work.dir}" file="${app.tmp.root}"/>
 	</target>
 </project>

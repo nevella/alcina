@@ -6,7 +6,7 @@ public class DownloadableFile {
 	private String url2;
 	private String tocUrl;
 	private String targetPath;
-	private LicenseType licenseType;
+	private String licenseType;
 	private String extractFileName;
 	private String containerPath;
 	public String getUrl() {
@@ -33,10 +33,10 @@ public class DownloadableFile {
 	public void setTargetPath(String targetPath) {
 		this.targetPath = targetPath;
 	}
-	public LicenseType getLicenseType() {
+	public String getLicenseType() {
 		return this.licenseType;
 	}
-	public void setLicenseType(LicenseType licenseType) {
+	public void setLicenseType(String licenseType) {
 		this.licenseType = licenseType;
 	}
 	public void setExtractFileName(String extractFileName) {

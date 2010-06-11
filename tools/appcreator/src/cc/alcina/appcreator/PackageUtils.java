@@ -10,6 +10,8 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.Stack;
 
+import org.apache.tools.ant.Project;
+
 class PackageUtils {
 	public static String readFileToString(File f) throws IOException {
 		FileInputStream fis = new FileInputStream(f);
@@ -112,5 +114,10 @@ class PackageUtils {
 
 	public static String camelCase(String string) {
 		return string.substring(0, 1).toLowerCase() + string.substring(1);
+	}
+
+	@SuppressWarnings("deprecation")
+	public static String translatePath( String path) {
+		return Project.translatePath(path);
 	}
 }

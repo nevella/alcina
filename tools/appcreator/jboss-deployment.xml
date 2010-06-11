@@ -8,7 +8,7 @@
 			<fileset dir="${tmp.dir}" />
 		</move>
 	</target>
-	<target name="create-jboss-deployment-call" depends="unpack-jboss">
+	<target name="create-jboss-deployment-call" depends="unpack-jboss" unless="deploy.jboss.dir.configured">
 		<delete dir="${deploy.jboss.dir.server}/deploy/ROOT.war" />
 		<replaceregexp file="${deploy.jboss.dir.server}/deploy/jbossweb.sar/server.xml">
 			<regexp pattern="(Connector protocol=&lt;&quot;HTTP/1\.1&quot; port=&quot;8080&quot;.+)(/&gt;)" />
@@ -17,5 +17,6 @@
 		<property name="app.ds.file" value="${deploy.jboss.dir.server}/deploy/${app.name}-ds.xml" />
 		<copy file="res/jboss/hypersonic/AlcinaTemplate-ds.xml" tofile="${app.ds.file}" />
 		<replace file="${app.ds.file}" token="${template.name}" value="${app.name}" />
+		<chmod perm="+x" file="${deploy.jboss.dir}/bin/run.sh"></chmod>
 	</target>
 </project>

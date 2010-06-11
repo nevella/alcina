@@ -11,7 +11,9 @@
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
-
+	<condition property="isWindows">
+		<os family="windows" />
+	</condition>
 	<ant antfile="build-dist.xml" target="build">
 	</ant>
 	<typedef file="typedefs.properties" classpathref="project.classpath" loaderref="moi" />
@@ -39,7 +41,7 @@
 	<target name="create-jboss-deployment" depends="prepare,clean-tmp-dir,create-jboss-deployment-call">
 	</target>
 	<target name="create-database" depends="prepare">
-		<echo message="create database - no-op - using jboss builtin hypersonicdb" />
+		<echo message="create database - no-op - using jboss builtin hypersonicdb. see readme.txt for configuring production rdbms" />
 	</target>
 	<target name="clean-app" depends="prepare">
 		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="clean-all">
@@ -57,7 +59,20 @@
 		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="hot-deploy">
 		</ant>
 	</target>
-	<target name="launch-jboss" depends="prepare">
+	<target name="launch-jboss" depends="prepare,launch-jboss-win,launch-jboss-unix">
+		<echo message="Once jboss has started up (1-2 mins), the app will be available at http://localhost:8080/{$app.name}Client.html" />
+	</target>
+	<target name="launch-jboss-win" if="isWindows">
+		<echo message='/c "${deploy.jboss.dir.absolute}\bin\run.bat" -c all -b 0.0.0.0'/>
+		<exec executable="cmd" vmlauncher="false">
+			<arg line='/c "${deploy.jboss.dir.absolute}\bin\run.bat" -c all -b 0.0.0.0' />
+		</exec>
+	</target>
+	<target name="launch-jboss-unix" unless="isWindows">
+		<exec dir="${deploy.jboss.dir}/bin" executable="/bin/sh" vmlauncher="false">
+			<arg value="-c" />
+			<arg value="${deploy.jboss.dir}/bin/run.sh -c all -b 0.0.0.0" />
+		</exec>
 	</target>
 	<target name="create-deploy-launch" depends="create-app,create-jboss-deployment,build-app,deploy-app,create-database,launch-jboss">
 	</target>

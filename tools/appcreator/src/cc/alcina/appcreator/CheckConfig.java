@@ -17,24 +17,32 @@ public class CheckConfig extends Task {
 		setProperty(Constants.APP_ROOT_PACKAGE_DIR, getProperty(
 				Constants.APP_PACKAGE).replace('.', '/'));
 		try {
-			setProperty(Constants.ALCINA_HOME_ABS, new File(FileUtils
-					.translatePath(getProperty(Constants.ALCINA_HOME)))
+			setProperty(Constants.ALCINA_HOME_ABS, new File(PackageUtils.translatePath(getProperty(Constants.ALCINA_HOME)))
 					.getCanonicalPath());
-			setProperty(Constants.DEPLOY_JBOSS_DIR_ABS, new File(FileUtils
-					.translatePath(getProperty(Constants.DEPLOY_JBOSS_DIR)))
+			setProperty(Constants.DEPLOY_JBOSS_DIR_ABS, new File(PackageUtils.translatePath(getProperty(Constants.DEPLOY_JBOSS_DIR)))
 					.getCanonicalPath());
-			setProperty(Constants.GWT_SDK_DIR_ABS, new File(FileUtils
-					.translatePath(getProperty(Constants.GWT_SDK_DIR)))
+			setProperty(Constants.GWT_SDK_DIR_ABS, new File(PackageUtils.translatePath(getProperty(Constants.GWT_SDK_DIR)))
 					.getCanonicalPath());
+			setProperty(Constants.ALCINA_HOME_ABS_FSLASH, new File(PackageUtils.translatePath(getProperty(Constants.ALCINA_HOME)))
+			.getCanonicalPath().replace('\\', '/'));
+	setProperty(Constants.DEPLOY_JBOSS_DIR_ABS_FSLASH, new File(PackageUtils.translatePath(getProperty(Constants.DEPLOY_JBOSS_DIR)))
+			.getCanonicalPath().replace('\\', '/'));
+	setProperty(Constants.GWT_SDK_DIR_ABS_FSLASH, new File(PackageUtils.translatePath(getProperty(Constants.GWT_SDK_DIR)))
+			.getCanonicalPath().replace('\\', '/'));
 		} catch (IOException e) {
 			throw new BuildException(e);
 		}
-		boolean exists = new File(FileUtils
-				.translatePath(getProperty(Constants.DEPLOY_JBOSS_DIR)))
+		boolean jbossExists = new File(PackageUtils.translatePath(getProperty(Constants.DEPLOY_JBOSS_DIR)))
 				.exists();
-		if (exists) {
+		if (jbossExists) {
 			setProperty(Constants.DEPLOY_JBOSS_DIR_EXISTS, Boolean
-					.toString(exists));
+					.toString(true));
+		}
+		boolean jbossRootAppExists = new File(PackageUtils.translatePath(getProperty(Constants.DEPLOY_JBOSS_DIR)
+						+ "/server/all/deploy/ROOT.war")).exists();
+		if (jbossExists&&!jbossRootAppExists) {
+			setProperty(Constants.DEPLOY_JBOSS_CONFIGURED, Boolean
+					.toString(true));
 		}
 	}
 

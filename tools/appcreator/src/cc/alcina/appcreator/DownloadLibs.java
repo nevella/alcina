@@ -31,7 +31,7 @@ public class DownloadLibs extends Task {
 		try {
 			String tmpDir = getProject().getProperty(
 					Constants.TMP_DOWNLOAD_DIR);
-			File tmpDirFile = new File(FileUtils.translatePath(tmpDir));
+			File tmpDirFile = new File(PackageUtils.translatePath(tmpDir));
 			Mkdir mkdir;
 			for (DownloadableFile downloadableFile : downloadableFileList
 					.getFiles()) {
@@ -39,24 +39,28 @@ public class DownloadLibs extends Task {
 				String targetPath = targetDirectory + "/"
 						+ downloadableFile.getTargetPath();
 				Get get = new Get();
-				File targetFile = new File(FileUtils.translatePath(targetPath));
+				get.setProject(getProject());
+				get.setTaskName("get");
+				File targetFile = new File(PackageUtils.translatePath(targetPath));
 				if (targetFile.exists()) {
 					continue;
 				}
 				File downloadFile = targetFile;
 				File dir = new File(PackageUtils.folderOf(targetPath));
 				mkdir = new Mkdir();
+				mkdir.setProject(getProject());
 				mkdir.setDir(dir);
+				mkdir.setTaskName("mkdir");
+				log(""+dir);
 				mkdir.execute();
 				if (downloadableFile.getContainerPath() != null) {
 					containerPath = containerDirectory + "/"
 							+ downloadableFile.getContainerPath();
-					downloadFile = new File(FileUtils
-							.translatePath(containerPath));
+					downloadFile = new File(PackageUtils.translatePath(containerPath));
 				}
 				if (!downloadFile.exists()) {
 					log("Downloading " + PackageUtils.fileOf(targetPath));
-					File tmpFile = new File(FileUtils.translatePath(tmpDir
+					File tmpFile = new File(PackageUtils.translatePath(tmpDir
 							+ "/" + downloadFile.getName()));
 					clearTmpDir();
 					get.setDest(tmpFile);
@@ -65,8 +69,10 @@ public class DownloadLibs extends Task {
 						get.setSrc(new URL(downloadableFile.getUrl()));
 						get.execute();
 						Move move = new Move();
+						move.setProject(getProject());
 						move.setFile(tmpFile);
 						move.setTofile(downloadFile);
+						move.setTaskName("move");
 						move.execute();
 						if (!PackageUtils.isNullOrEmpty(downloadableFile
 								.getTocUrl())) {
@@ -85,6 +91,8 @@ public class DownloadLibs extends Task {
 					Expand expand = new Expand();
 					expand.setSrc(downloadFile);
 					expand.setDest(tmpDirFile);
+					expand.setProject(getProject());
+					expand.setTaskName("expand");
 					PatternSet patternSet = new PatternSet();
 					NameEntry nameEntry = patternSet.createInclude();
 					nameEntry.setName("**/"
@@ -92,9 +100,11 @@ public class DownloadLibs extends Task {
 					expand.addPatternset(patternSet);
 					expand.execute();
 					Move move = new Move();
+					move.setProject(getProject());
 					move.setFile(PackageUtils.findFile(tmpDirFile,
 							downloadableFile.getExtractFileName()));
 					move.setTofile(targetFile);
+					move.setTaskName("move");
 					move.execute();
 					clearTmpDir();
 				}
@@ -111,7 +121,7 @@ public class DownloadLibs extends Task {
 
 	private void clearTmpDir() {
 		String tmpDir = getProject().getProperty(Constants.TMP_DOWNLOAD_DIR);
-		File tmpDirFile = new File(FileUtils.translatePath(tmpDir));
+		File tmpDirFile = new File(PackageUtils.translatePath(tmpDir));
 		PackageUtils.clearFolder(tmpDirFile);
 	}
 
