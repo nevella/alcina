@@ -35,6 +35,8 @@
 	</fileset>
 	<patternset id="project.jar.filter.exclude">
 	</patternset>
+	<patternset id="project.compile.client.filter.exclude">
+	</patternset>
 	<import file="${alcina.home}/framework-paths.xml" />
 	<path id="project.classpath">
 		<fileset dir="${project.lib.dir}">
