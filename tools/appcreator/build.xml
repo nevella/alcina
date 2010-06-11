@@ -48,6 +48,8 @@
 	<target name="build-app" depends="prepare">
 		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="clean-all">
 		</ant>
+		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="clean-gwt">
+		</ant>
 		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="compile-gwt">
 		</ant>
 	</target>
