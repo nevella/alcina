@@ -11,14 +11,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public enum TransformType {
-	CREATE_OBJECT,DELETE_OBJECT,ADD_REF_TO_COLLECTION,REMOVE_REF_FROM_COLLECTION,CHANGE_PROPERTY_REF,NULL_PROPERTY_REF,CHANGE_PROPERTY_SIMPLE_VALUE
+public enum TransformType {
+	CREATE_OBJECT, DELETE_OBJECT, ADD_REF_TO_COLLECTION,
+	REMOVE_REF_FROM_COLLECTION, CHANGE_PROPERTY_REF, NULL_PROPERTY_REF,
+	CHANGE_PROPERTY_SIMPLE_VALUE
 }
