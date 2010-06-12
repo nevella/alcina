@@ -10,23 +10,25 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
+
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-@Table(name="classref")
+@Table(name = "classref")
 @Entity
 @SequenceGenerator(name = "classref_id_seq", sequenceName = "classref_id_seq")
+@ClientInstantiable
+@Introspectable
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ClassRef.class)
 public class ClassRefImpl extends ClassRef implements Serializable {
 	long id;
 
-	
-
 	@Id
 	@Column(name = "id", unique = true, nullable = false)
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "classref_id_seq")
-	
 	public long getId() {
 		return this.id;
 	}
@@ -34,6 +36,4 @@ public class ClassRefImpl extends ClassRef implements Serializable {
 	public void setId(long id) {
 		this.id = id;
 	}
-
-	
 }

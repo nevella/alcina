@@ -8,7 +8,7 @@
 		<jta-data-source>java:/AlcinaTemplateDS</jta-data-source>
 		<properties>
 		  <property name="hibernate.dialect"
-value="org.hibernate.dialect.HSQLDialect"/>
+value="org.hibernate.dialect.PostgreSQLDialect"/>
 			<property name="hibernate.hbm2ddl.auto" value="update" />
 		</properties>
 	</persistence-unit>
