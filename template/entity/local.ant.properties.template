@@ -11,4 +11,4 @@ project.gwt.compile.flags=
 deploy.j2ee-server.deploy.dir=${deploy.j2ee-server.server}/deploy
 j2ee-server.unear.target=${deploy.j2ee-server.deploy.dir}/${deployment.ear.name}.ear
 j2ee-server.unwar.target=${deploy.j2ee-server.deploy.dir}/${deployment.ear.name}.ear/${deployment.war.name}.war
-developer=true
+#developer=true
