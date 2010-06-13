@@ -35,7 +35,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 		public void onFailure(Throwable caught) {
 			throw new WrappedRuntimeException(caught);
 		}
-
+		
 		public void onSuccess(T result) {
 		}
 		public void setCancelled(boolean cancelled) {
