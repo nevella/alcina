@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.gears.client;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.gears.client.Factory;
 import com.google.gwt.gears.client.localserver.LocalServer;
@@ -20,10 +22,14 @@ public class LocalServerUtils {
 		LocalServer server = Factory.getInstance().createLocalServer();
 		ResourceStore store = server.createStore(storeName);
 		String path = Window.Location.getPath();
+		path = path.substring(path.lastIndexOf("/") + 1);
 		store.capture(new ResourceStoreUrlCaptureHandler() {
 			public void onCapture(ResourceStoreUrlCaptureEvent event) {
 				// hopefully ok
 			}
-		}, path.substring(path.lastIndexOf("/") + 1));
+		}, path);
+		// note - we can't capture a gwt.codesvr string here - throw an error on
+		// remoteserviceimpl.hello()
+		// to simulate offline
 	}
 }

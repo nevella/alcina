@@ -54,8 +54,11 @@ public class ClientUtils {
 			StatusCodeException sce = (StatusCodeException) t;
 			ClientLayerLocator.get().notifications().log(
 					"** Status code exception: " + sce.getStatusCode());
+			boolean internetExplorerErrOffline = BrowserMod
+					.isInternetExplorer()
+					&& sce.getStatusCode() > 600;
 			if ((!GWT.isScript() && sce.getStatusCode() == 500)
-					|| sce.getStatusCode() == 0) {
+					|| sce.getStatusCode() == 0 || internetExplorerErrOffline) {
 				return true;
 			}
 			// DNS error in Africa
