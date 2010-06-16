@@ -1,2 +1,19 @@
-work.dir=${user.home}/.alcina/appcreator
-gwt.clien
+project.work.dir=${user.home}/.alcina/appcreator
+ant.build.javac.target=1.5
+
+app.name=MyApp
+app.package=com.moi.myapp
+app.human.name=My App
+
+# unused - for the moment
+#db.jdbc.driver.className=org.postgresql.Driver
+#db.name=myapp
+#db.username=myappuser
+#db.password=myapppassword
+#db.connection.url=jdbc:postgresql://localhost:5432
+
+jboss.hibernate.dialect=org.hibernate.dialect.HSQLDialect
+
+# emtpy string = all clients - otherwise sets the UA for the main gwt.xml module
+build.gwt.client=
+

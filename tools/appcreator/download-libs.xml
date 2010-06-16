@@ -16,9 +16,12 @@
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/xercesImpl_2.9.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/xerces/xercesImpl/2.9.1/xercesImpl-2.9.1.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-gears-noredist.jar" tocUrl="" url="http://gwt-google-apis.googlecode.com/files/gwt-gears-1.3.0.zip" extractFileName="gwt-gears-noredist.jar" containerPath="gwt-gears-1.3.0.zip" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwittir-trunk.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwittir-trunk.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="servlet/servlet-api-2.3.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/servlet/servlet-api/2.3/servlet-api-2.3.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwtx-1.5.2.jar" tocUrl="" url="http://gwtx.googlecode.com/files/gwtx-1.5.2.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-servlet.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.0.3.zip" extractFileName="gwt-servlet.jar" containerPath="gwt-2.0.3.zip" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-user.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.0.3.zip" extractFileName="gwt-user.jar" containerPath="gwt-2.0.3.zip" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-dev.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.0.3.zip" extractFileName="gwt-dev.jar" containerPath="gwt-2.0.3.zip" />
+				
 			</downloadable-file-list>
 		</download-libs>
 		<copy todir="${alcina.lib.framework.dir}">

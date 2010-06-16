@@ -28,3 +28,6 @@ table.home tbody td {
 table.home td.left {
 	width: 50%;
 }
+div.home-text{
+	font-size:1.1em;	
+}

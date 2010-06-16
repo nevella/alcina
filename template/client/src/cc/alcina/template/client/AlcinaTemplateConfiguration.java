@@ -73,10 +73,15 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 
 			public String getContent(String key) {
 				if ("blurb".equals(key)) {
-					return "Getting started: <ul><li>"
-							+ "Login as admin/admin</li><li>"
-							+ "create a few bookmarks</li><li>"
-							+ "and play with offline (if gears installed</li></ul>";
+					return "<div class='home-text'>"
+							+ "Getting started: <ul>"
+							+ "<li>Login as admin/admin</li>"
+							+ "<li>create a few bookmarks</li>"
+							+ "<li>and play with offline (if gears installed)"
+							+ "<br> - by shutting down the app server, reloading the page "
+							+ " <br> - everything should work except setting user passwords "
+							+ " - and searching the domain transform log</li>"
+							+ "</ul></div>";
 				}
 				return null;
 			}

@@ -3,6 +3,8 @@
 	<copy overwrite="false" file="local.ant.properties.template" tofile="local.ant.properties" />
 	<property file="local.ant.properties" />
 	<property file="build.properties" />
+	<copy overwrite="false" file="${alcina.home.dir}/local.ant.properties.template" tofile="${alcina.home.dir}}/local.ant.properties" />
+		
 	<path id="project.classpath">
 		<fileset dir="${project.lib.dir}">
 			<include name="**/*.jar" />
