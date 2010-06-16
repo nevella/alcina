@@ -5,7 +5,6 @@
 		<copy todir="${app.tmp.root}">
 			<fileset dir="${alcina.template.home.dir}" />
 		</copy>
-		<replace file="${app.tmp.root}/client/src/cc/alcina/template/AlcinaTemplateClient.gwt.xml" token="safari" value="${build.gwt.client}" />
 		<move todir="${app.tmp.root}/client/src/${app.root.package.dir}">
 			<fileset dir="${app.tmp.root}/client/src/${template.root.package.dir}" />
 		</move>
