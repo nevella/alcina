@@ -53,7 +53,11 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		return this.base;
 	}
 
-	private RichTextToolbar toolbar = new RichTextToolbar(base);
+	private RichTextToolbar toolbar = createToolbar();
+
+	protected RichTextToolbar createToolbar() {
+		return new RichTextToolbar(base);
+	}
 
 	public String getTitle() {
 		return this.base.getTitle();

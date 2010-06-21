@@ -547,6 +547,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 				options.add(0, null);
 			}
 			setOptions(options);
+			
 		}
 	}
 }

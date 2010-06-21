@@ -19,6 +19,8 @@ import java.util.Comparator;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ChangeListenerCollection;
 import com.google.gwt.user.client.ui.ClickListener;
@@ -45,6 +47,10 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 		HasFocus, HasEnabled, SourcesKeyboardEvents, SourcesClickEvents,
 		MultilineWidget ,Focusable{
 	private com.google.gwt.user.client.ui.TextArea base = new com.google.gwt.user.client.ui.TextArea();
+
+	public HandlerRegistration addKeyUpHandler(KeyUpHandler handler) {
+		return this.base.addKeyUpHandler(handler);
+	}
 
 	private ChangeListenerCollection changeListeners = new ChangeListenerCollection();
 
