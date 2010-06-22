@@ -59,8 +59,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  */
 public class SEUtilities {
-	public static final Locale EN_AU = new Locale("en", "AU", "");
-
+	
 	public static int idCounter = 1;
 
 	@SuppressWarnings("unchecked")

@@ -122,6 +122,15 @@ public class XmlUtils {
 		s = m.replaceAll("<$1$2></$1>");
 		return s;
 	}
+	public static Element getElementExt(Element root, String tagName, String attrName, String attrValue){
+		List<Element> elementList = nodeListToElementList(root.getElementsByTagName(tagName));
+		for (Element element : elementList) {
+			if (element.getAttribute(attrName).equals(attrValue)){
+				return element;
+			}
+		}
+		return null;
+	}
 
 	public static void insertAfter(Element el, Node newNode, Node insertAfter) {
 		NodeList nl = el.getChildNodes();
