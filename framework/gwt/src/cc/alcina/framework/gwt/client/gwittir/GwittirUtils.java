@@ -15,7 +15,11 @@ package cc.alcina.framework.gwt.client.gwittir;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
@@ -189,4 +193,27 @@ public class GwittirUtils {
 		}
 		return false;
 	}
+	public static ArrayList sortByStringValue(Collection c, Renderer renderer) {
+		Map<String, List> m = new HashMap<String, List>();
+		for (Object o : c) {
+			String key = o == null ? null : (String)renderer.render(o);
+			if (!m.containsKey(key)) {
+				m.put(key, new ArrayList());
+			}
+			m.get(key).add(o);
+		}
+		List nullValues = m.get(null);
+		m.remove(null);
+		ArrayList<String> keys = new ArrayList<String>(m.keySet());
+		Collections.sort(keys);
+		ArrayList result = new ArrayList();
+		if (nullValues != null) {
+			result.addAll(nullValues);
+		}
+		for (String key : keys) {
+			result.addAll(m.get(key));
+		}
+		return result;
+	}
+
 }

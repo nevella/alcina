@@ -27,6 +27,9 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.CommonUtils;
+
+import com.totsp.gwittir.client.ui.Renderer;
 
 
 @MappedSuperclass
@@ -119,6 +122,14 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 	public void setLocalId(long localId){
 		//noop. 
+	}
+	public static class ClassRefSimpleNameRenderer implements Renderer<ClassRef,String>{
+public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
+		public String render(ClassRef o) {
+			// TODO Auto-generated method stub
+			return o==null?"(undefined)":CommonUtils.simpleClassName(o.getRefClass());
+		}
+		
 	}
 
 }

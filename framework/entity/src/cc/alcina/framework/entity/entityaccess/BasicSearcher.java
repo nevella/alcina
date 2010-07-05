@@ -46,6 +46,9 @@ public class BasicSearcher implements Searcher {
 	 * Like this because of...gwt serialization. See SearchResultsBase usage of
 	 * searchresult (which the db type may not implement - only required the
 	 * result does)
+	 * 
+	 * hmmm...now got rid of searchresultsbase array (using garraylist instead)
+	 * - but leaving this code as is for now
 	 */
 	protected SearchResultsBase searchWithTemp(SearchDefinition def,
 			int pageNumber, EntityManager entityManager, List tempObjects) {

@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
-
 
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -32,10 +30,13 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.TextBox;
+
 /**
- * TODO - the "wrappedenterhandler" ClickHandler should be changed to SelectedValueHandler<String>
+ * TODO - the "wrappedenterhandler" ClickHandler should be changed to
+ * SelectedValueHandler<String>
+ * 
  * @author nick@alcina.cc
- *
+ * 
  */
 public class FilterWidget extends Composite implements KeyUpHandler,
 		KeyDownHandler {
@@ -107,7 +108,6 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		return this.enterHandler;
 	}
 
-
 	public FlowPanel getHolder() {
 		return this.holder;
 	}
@@ -144,6 +144,10 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		int keyCode = event.getNativeKeyCode();
 		if (keyCode == KeyCodes.KEY_ENTER || keyCode == KeyCodes.KEY_UP
 				|| keyCode == KeyCodes.KEY_DOWN) {
+			if (isArrowDown((int) keyCode) && vf != null
+					&& vf instanceof VisualFilterable.VisualFilterableWithFirst) {
+				((VisualFilterable.VisualFilterableWithFirst) vf).moveToFirst();
+			}
 			Event.getCurrentEvent().preventDefault();
 			return;
 		}
@@ -167,10 +171,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 			queueingFinishedTimer.schedule(ClientLayerLocator.get()
 					.getGeneralProperties().getFilterDelayMs());
 		}
-		if (isArrowDown((int) keyCode) && vf != null
-				&& vf instanceof VisualFilterable.VisualFilterableWithFirst) {
-			((VisualFilterable.VisualFilterableWithFirst) vf).moveToFirst();
-		}	}
+	}
 
 	public void registerFilterable(VisualFilterable vf) {
 		this.vf = vf;

@@ -35,9 +35,7 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 
 	SearchDefinition searchDefinition;
 
-	// done this way (not as a list) to avoid unneccesary serializable
-	// collections - e.g. ChangeListenerCollection etc etc
-	private SearchResult[] results;
+	private GArrayList<B> results;
 
 	public SearchResultsBase() {
 		super();
@@ -109,10 +107,10 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 	}
 
 	public void setResults(List<B> results) {
-		this.results = (SearchResult[]) results.toArray(new SearchResult[results.size()]);
+		this.results = new GArrayList<B>(results);
 	}
 
 	public List<B> getResults() {
-		return (List<B>) Arrays.asList(results);
+		return results;
 	}
 }

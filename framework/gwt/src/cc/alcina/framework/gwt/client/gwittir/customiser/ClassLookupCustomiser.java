@@ -56,7 +56,7 @@ public class ClassLookupCustomiser implements Customiser {
 		}
 
 		public BoundWidget get() {
-			ClassShortnameRenderer renderer = new ClassShortnameRenderer();
+			ClassShortnameRenderer renderer = ClassShortnameRenderer.INSTANCE;
 			if (!editable) {
 				RenderingLabel<Class> label = new RenderingLabel<Class>();
 				label.setRenderer(renderer);
@@ -75,6 +75,7 @@ public class ClassLookupCustomiser implements Customiser {
 
 	public static class ClassShortnameRenderer implements
 			Renderer<Class, String> {
+		public static final ClassShortnameRenderer INSTANCE = new ClassShortnameRenderer();
 		public String render(Class clazz) {
 			return clazz == null ? "----" : CommonUtils.simpleClassName(clazz);
 		}

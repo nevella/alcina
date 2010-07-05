@@ -134,7 +134,8 @@ public class GraphProjection {
 			throws Exception {
 		Collection c = null;
 		if (coll instanceof ArrayList) {
-			c = new ArrayList();
+			c = coll.getClass().newInstance();
+			//no "persistentLists", at least
 		} else if (coll instanceof LinkedHashSet) {
 			c = new LinkedHashSet();
 		} else if (coll instanceof Set) {

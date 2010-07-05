@@ -9,6 +9,8 @@ import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.search.DateGroup;
 import cc.alcina.framework.common.client.search.LongCriteriaGroup;
 import cc.alcina.framework.common.client.search.LongCriterion;
+import cc.alcina.framework.common.client.search.PersistentObjectCriteriaGroup;
+import cc.alcina.framework.common.client.search.PersistentObjectCriterion;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.search.TxtCriteriaGroup;
 import cc.alcina.framework.common.client.search.TxtCriterion;
@@ -21,10 +23,11 @@ import cc.alcina.framework.common.client.search.TxtCriterion.TxtCriterionType;
 		@CriterionPropertyNameMapping(criteriaGroupClass = UserCriteriaGroup.class, criterionClass = UserCriterion.class, propertyName = "t.user"),
 		@CriterionPropertyNameMapping(criteriaGroupClass = TxtCriteriaGroup.class, criterionClass = TxtCriterion.class, propertyName = "propertyName"),
 		@CriterionPropertyNameMapping(criteriaGroupClass = TxtCriteriaGroup2.class, criterionClass = TxtCriterion.class, propertyName = "newStringValue"),
-		@CriterionPropertyNameMapping(criteriaGroupClass = LongCriteriaGroup.class, criterionClass = LongCriterion.class, propertyName = "objectId") })
+		@CriterionPropertyNameMapping(criteriaGroupClass = LongCriteriaGroup.class, criterionClass = LongCriterion.class, propertyName = "objectId"),
+		@CriterionPropertyNameMapping(criteriaGroupClass = PersistentObjectCriteriaGroup.class, criterionClass = LongCriterion.class, propertyName = "objectClassRef") })
 @PermissibleChildClasses( { DateGroup.class, UserCriteriaGroup.class,
 		TxtCriteriaGroup.class, LongCriteriaGroup.class,
-		TxtCriteriaGroup2.class })
+		TxtCriteriaGroup2.class, PersistentObjectCriteriaGroup.class })
 public class DomainTransformSearchDefinition extends
 		SingleTableSearchDefinition<DomainTransformEventInfo> {
 	@Override
@@ -44,6 +47,9 @@ public class DomainTransformSearchDefinition extends
 		getCriteriaGroups().add(lcg);
 		tcg = new TxtCriteriaGroup2("New value");
 		getCriteriaGroups().add(tcg);
+		PersistentObjectCriteriaGroup pocg = new PersistentObjectCriteriaGroup();
+		pocg.addCriterion(new PersistentObjectCriterion("Object type"));
+		getCriteriaGroups().add(pocg);
 		setResultsPerPage(50);
 		setOrderPropertyName("id");
 		setOrderDirection(Direction.DESCENDING);
