@@ -144,6 +144,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		int keyCode = event.getNativeKeyCode();
 		if (keyCode == KeyCodes.KEY_ENTER || keyCode == KeyCodes.KEY_UP
 				|| keyCode == KeyCodes.KEY_DOWN) {
+			//this should probably be handled by having the vfwf add  a listener...but 
 			if (isArrowDown((int) keyCode) && vf != null
 					&& vf instanceof VisualFilterable.VisualFilterableWithFirst) {
 				((VisualFilterable.VisualFilterableWithFirst) vf).moveToFirst();

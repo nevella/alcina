@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.dialog;
-
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -27,6 +25,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -37,11 +36,10 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class LoginDisplayer {
+public class LoginDisplayer {
 	public static final String CANCEL_ACTION = "cancel";
 
 	public static final String LOGIN_ACTION = "ok";
@@ -62,7 +60,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 	private Button okButton;
 
-	private Grid grr;
+	private FlexTable grr;
 
 	private Widget onProblemWidget = new Label("blank");
 
@@ -102,7 +100,7 @@ import com.google.gwt.user.client.ui.Widget;
 		cancelButton = new Button("Cancel");
 		okButton = new Button("Login");
 		okButton.ensureDebugId(AlcinaDebugIds.LOGIN_SUBMIT);
-		grr = new Grid(5, 2);
+		grr = new FlexTable();
 		grr.setWidth("100%");
 		grr.setCellSpacing(2);
 		this.usernameLabel = new Label("Username: ");
@@ -152,7 +150,8 @@ import com.google.gwt.user.client.ui.Widget;
 				b.setRememberMe(rememberMeBox.getValue());
 				PermissibleAction action = new PermissibleAction();
 				action.setActionName(LOGIN_ACTION);
-				PermissibleActionEvent evt = new PermissibleActionEvent(this, action);
+				PermissibleActionEvent evt = new PermissibleActionEvent(this,
+						action);
 				evt.setParameters(b);
 				listener.vetoableAction(evt);
 			}
@@ -161,7 +160,8 @@ import com.google.gwt.user.client.ui.Widget;
 			public void onClick(ClickEvent event) {
 				PermissibleAction action = new PermissibleAction();
 				action.setActionName(CANCEL_ACTION);
-				listener.vetoableAction(new PermissibleActionEvent(this, action));
+				listener
+						.vetoableAction(new PermissibleActionEvent(this, action));
 			}
 		});
 		// Set the contents of the Widget
@@ -186,7 +186,9 @@ import com.google.gwt.user.client.ui.Widget;
 
 	public void setProblemHandlerWidget(Widget onProblemWidget) {
 		this.onProblemWidget = onProblemWidget;
-		grr.resize(6, 2);
-		grr.setWidget(5, 1, onProblemWidget);
+		grr.setWidget(5, 0, onProblemWidget);
+		grr.getFlexCellFormatter().setHorizontalAlignment(5, 0,
+				HasHorizontalAlignment.ALIGN_CENTER);
+		grr.getFlexCellFormatter().setColSpan(5, 0, 2);
 	}
 }
