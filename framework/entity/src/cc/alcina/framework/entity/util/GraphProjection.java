@@ -216,7 +216,7 @@ public class GraphProjection {
 	public static interface GraphProjectionFilter {
 		/*
 		 * IMPORTANT - if filterdata changes the return value (i.e. doesn't
-		 * return value) it must immediately (on instantiation) register the new
+		 * return a value === projected) it must immediately (on new object instantiation) register the new
 		 * value in graphProjection.reached
 		 */
 		<T> T filterData(T original, T projected, ClassFieldPair context,
