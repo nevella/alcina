@@ -134,9 +134,9 @@ public class CollectionDataProvider implements SortableDataProvider {
 
 	private Collection getChunk(int chunkNumber) {
 		ArrayList result = new ArrayList();
-		int maxSize = Math.min(pageSize, sort.size() - chunkNumber * pageSize);
+		int maxSize = Math.min(getPageSize(), sort.size() - chunkNumber * getPageSize());
 		for (int i = 0; i < maxSize; i++) {
-			result.add(sort.get(i + chunkNumber * pageSize));
+			result.add(sort.get(i + chunkNumber * getPageSize()));
 		}
 		return result;
 	}
@@ -151,7 +151,7 @@ public class CollectionDataProvider implements SortableDataProvider {
 	}
 
 	public void init(HasChunks table) {
-		table.init(getChunk(0), (sort.size() - 1) / pageSize + 1);
+		table.init(getChunk(0), (sort.size() - 1) / getPageSize() + 1);
 	}
 
 	public void setPageSize(int pageSize) {
