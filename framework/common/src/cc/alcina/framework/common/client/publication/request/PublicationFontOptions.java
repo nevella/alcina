@@ -20,5 +20,5 @@ package cc.alcina.framework.common.client.publication.request;
  */
 
  public enum PublicationFontOptions {
-	ARIAL,TIMES_NEW_ROMAN,COURIER
+	ARIAL,TIMES_NEW_ROMAN,COURIER,GEORGIA
 }

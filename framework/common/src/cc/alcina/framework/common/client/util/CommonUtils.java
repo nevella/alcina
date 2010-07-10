@@ -235,7 +235,18 @@ public class CommonUtils {
 		if (o == null) {
 			return "";
 		}
-		return capitaliseFirst(o.toString().toLowerCase().replace('_', ' '));
+		String s = capitaliseFirst(o.toString().toLowerCase());
+		int x=0,y=0;
+		while (true){
+			y=s.indexOf("__");
+			if (y!=-1){
+				s=s.substring(0,x)+((x==0)?"":" ")+s.substring(x,y).toUpperCase()+" "+s.substring(y+2);
+				x=y+2;
+			}else{
+				break;
+			}
+		}
+		return s.replace('_', ' ').trim();
 	}
 
 	public static <C extends HasId> C getObjectById(Collection<C> coll, long id) {
