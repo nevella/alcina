@@ -84,7 +84,14 @@ public class XmlUtils {
 			n.removeChild(nl.item(i));
 		}
 	}
-
+	public static String removeNamespaceInfo(String s) {
+		String regex = "<((?:/?)[a-zA-Z0-9]+):(.+?)>";
+		Pattern p = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL
+				| Pattern.CASE_INSENSITIVE);
+		Matcher m = p.matcher(s);
+		s = m.replaceAll("<$1EXTNSTAG>");
+		return s;
+	}
 	public static Document createDocument() throws Exception {
 		if (db == null) {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
