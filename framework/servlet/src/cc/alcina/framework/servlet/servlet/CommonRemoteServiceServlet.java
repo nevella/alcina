@@ -103,8 +103,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	private static int transformRequestCounter = 1;
 
-	protected abstract void processValidLogin(LoginResponse lrb,
-			String userName) throws AuthenticationException;
+	protected abstract void processValidLogin(LoginResponse lrb, String userName)
+			throws AuthenticationException;
 
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException {
@@ -188,7 +188,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
 				return wrapper.response;
 			} else {
-				logTransformException(wrapper.response,false);
+				logTransformException(wrapper.response, false);
 				throw wrapper.response.getTransformExceptions().get(0);
 			}
 		} finally {
@@ -207,10 +207,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	public DomainTransformResponse transform(DomainTransformRequest request)
+			throws DomainTransformRequestException {
+		return transform(request, false);
+	}
+
 	/**
 	 * synchronizing implies serialized transforms per clientInstance
 	 */
-	public DomainTransformResponse transform(DomainTransformRequest request)
+	DomainTransformResponse transform(DomainTransformRequest request,
+			boolean ignoreClientAuthMismatch)
 			throws DomainTransformRequestException {
 		Long clientInstanceId = request.getClientInstance().getId();
 		synchronized (clientInstanceLocatorMap) {
@@ -348,9 +354,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						xml = new String(os.toByteArray());
 						os.reset();
 					} catch (Exception e) {
-						xml = "Unable to write object - "+object.getClass().getName();
+						xml = "Unable to write object - "
+								+ object.getClass().getName();
 					}
-					
 				}
 				msg += CommonUtils.format("\t [%1] - %2\n\t   - %3\n", i++,
 						object, xml);
@@ -509,7 +515,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 							"Request [%1/%2] : %3 transforms written",
 							requestId, clientInstanceId, rq.getItems().size()));
 				}
-				transform(rq);
+				transform(rq, true);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

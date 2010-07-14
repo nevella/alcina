@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull {
-	private boolean withNull=true;
+	private boolean withNull = true;
 
 	public EnumCriterion() {
 	}
@@ -53,8 +53,19 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		return result;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof EnumCriterion) {
+			EnumCriterion ec = (EnumCriterion) obj;
+			return getClass() == ec.getClass() && ec.getValue() == getValue();
+		}
+		return super.equals(obj);
+	}
+
 	@XmlTransient
 	public abstract E getValue();
+	
+	
 
 	public abstract void setValue(E value);
 

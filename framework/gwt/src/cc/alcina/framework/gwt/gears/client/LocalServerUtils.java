@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.gears.client;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.gears.client.Factory;
@@ -23,6 +24,7 @@ public class LocalServerUtils {
 		ResourceStore store = server.createStore(storeName);
 		String path = Window.Location.getPath();
 		path = path.substring(path.lastIndexOf("/") + 1);
+		ClientLayerLocator.get().notifications().log("capturing host page:"+path);
 		store.capture(new ResourceStoreUrlCaptureHandler() {
 			public void onCapture(ResourceStoreUrlCaptureEvent event) {
 				// hopefully ok

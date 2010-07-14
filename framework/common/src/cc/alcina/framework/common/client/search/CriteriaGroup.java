@@ -52,6 +52,15 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 	public CriteriaGroup() {
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (obj != null && obj.getClass() == getClass()) {
+			CriteriaGroup cg = (CriteriaGroup) obj;
+			return criteria.equals(cg.criteria) && combinator == cg.combinator;
+		}
+		return super.equals(obj);
+	}
+
 	public boolean provideIsEmpty() {
 		return getCriteria().isEmpty();
 	}
@@ -73,6 +82,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		addCriterion((SC) criterion);
 		return criterion;
 	}
+
 	public <S extends SearchCriterion> S findCriterion(Class<S> clazz) {
 		for (SC sc : getCriteria()) {
 			if (sc.getClass() == clazz) {
