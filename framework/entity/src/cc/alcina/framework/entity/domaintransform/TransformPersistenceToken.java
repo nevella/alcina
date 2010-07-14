@@ -17,7 +17,7 @@ public class TransformPersistenceToken {
 
 	private final boolean persistTransforms;
 
-	private int dontFlushTilNthTransform=0;
+	private int dontFlushTilNthTransform = 0;
 
 	private final boolean possiblyReconstitueLocalIdMap;
 
@@ -28,10 +28,12 @@ public class TransformPersistenceToken {
 	private PersistenceLayerTransformExceptionPolicy transformExceptionPolicy;
 
 	private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
+
+	private final boolean ignoreClientAuthMismatch;
+
 	public List<DomainTransformException> getTransformExceptions() {
 		return this.transformExceptions;
 	}
-
 
 	public Set<DomainTransformEvent> getIgnoreInExceptionPass() {
 		return this.ignoreInExceptionPass;
@@ -39,11 +41,13 @@ public class TransformPersistenceToken {
 
 	public TransformPersistenceToken(DomainTransformRequest request,
 			HiliLocatorMap locatorMap, boolean persistTransforms,
-			boolean possiblyReconstitueLocalIdMap) {
+			boolean possiblyReconstitueLocalIdMap,
+			boolean ignoreClientAuthMismatch) {
 		this.request = request;
 		this.locatorMap = locatorMap;
 		this.persistTransforms = persistTransforms;
 		this.possiblyReconstitueLocalIdMap = possiblyReconstitueLocalIdMap;
+		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
 	}
 
 	public DomainTransformRequest getRequest() {
@@ -87,7 +91,11 @@ public class TransformPersistenceToken {
 		return dontFlushTilNthTransform;
 	}
 
+	public boolean isIgnoreClientAuthMismatch() {
+		return ignoreClientAuthMismatch;
+	}
+
 	public enum Pass {
-		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL,FAIL
+		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, FAIL
 	}
 }

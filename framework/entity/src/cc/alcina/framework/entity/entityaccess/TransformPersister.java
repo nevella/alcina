@@ -219,7 +219,7 @@ public class TransformPersister {
 				return wrapException(token, ex);
 			}
 			if (persistentClientInstance.getUser().getId() != PermissionsManager
-					.get().getUserId()) {
+					.get().getUserId() && !token.isIgnoreClientAuthMismatch()) {
 				DomainTransformException ex = new DomainTransformException(
 						"Browser login mismatch with transform request authentication");
 				ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);

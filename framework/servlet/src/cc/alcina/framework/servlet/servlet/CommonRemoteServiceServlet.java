@@ -184,7 +184,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 					.transformPersistenceQueue().submit(
 							new TransformPersistenceToken(request, map,
-									persistTransforms, false));
+									persistTransforms, false, false));
 			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
 				return wrapper.response;
 			} else {
@@ -231,7 +231,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 					.transformPersistenceQueue().submit(
 							new TransformPersistenceToken(request, locatorMap,
-									true, true));
+									true, true, ignoreClientAuthMismatch));
 			// not necessary if ejb layer is local
 			// clientInstanceLocatorMap.put(clientInstanceId,
 			// wrapper.locatorMap);
