@@ -44,6 +44,7 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 		}
 	};
 
+
 	protected Class selectionObjectClass;
 
 	protected CollectionFilter filter;
@@ -58,8 +59,8 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 		super();
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
+		setMultipleSelect(true);
 	}
-
 	protected abstract O getSearchCriterionDisplayObject(SC searchCriterion);
 
 	@SuppressWarnings("unchecked")

@@ -193,7 +193,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 			duplicateDisplayTextCriterionSet.add(scString);
 			if (scString != null && scString.length() > 0) {
 				if (ct++ != 0) {
-					result += " " + combinator.toString().toLowerCase() + " ";
+					result += " " + combinatorString() + " ";
 				}
 				result += scString;
 				if (searchCriterion instanceof SelfNamingCriterion) {
@@ -202,6 +202,10 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 			}
 		}
 		return result.length() == 0 ? result : displayName + result;
+	}
+
+	protected String combinatorString() {
+		return combinator.toString().toLowerCase();
 	}
 
 	public String toString() {
