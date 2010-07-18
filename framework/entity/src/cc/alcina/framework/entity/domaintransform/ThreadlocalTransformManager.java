@@ -153,6 +153,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	/**
 	 * TODO - ignore collection mods to collection properties with 
 	 * the @OneToMany annotation (inefficient and unnecessary)
+	 * ...hmmm...wait-a-sec - might be necessary for the level 2 cache
 	 */
 	public void consume(DomainTransformEvent evt)
 			throws DomainTransformException {
@@ -179,8 +180,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	// for the moment, just ignore double deletes.
-	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
-		DomainTransformEvent event = super.deleteObject(hili);
+	public DomainTransformEvent deleteObject(HasIdAndLocalId hili,
+			boolean generateEventIfObjectNotFound) {
+		DomainTransformEvent event = super.deleteObject(hili,
+				generateEventIfObjectNotFound);
 		if (event != null) {
 			addTransform(event);
 		}
@@ -303,9 +306,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				}
 			}
 			T t = getEntityManager().find(c, id);
-			//this may be a performance hit - but worth it - otherwise all sorts of potential problems
-			//basically, transform events should (must) always have refs to "real" objects, not wrappers
-			t = EntityLayerLocator.get().jpaImplementation().getInstantiatedObject(t);
+			// this may be a performance hit - but worth it - otherwise all
+			// sorts of potential problems
+			// basically, transform events should (must) always have refs to
+			// "real" objects, not wrappers
+			t = EntityLayerLocator.get().jpaImplementation()
+					.getInstantiatedObject(t);
 			if (listenToFoundObjects
 					&& t instanceof SourcesPropertyChangeEvents) {
 				((SourcesPropertyChangeEvents) t)

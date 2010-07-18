@@ -333,9 +333,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public boolean currentTransformIsDuringCreationRequest() {
 		return currentEvent.getObjectLocalId() != 0;
 	}
-
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
-		if (getObject(hili) == null) {
+		return deleteObject(hili,false);
+	}
+	public DomainTransformEvent deleteObject(HasIdAndLocalId hili, boolean generateEventIfObjectNotFound) {
+		if (!generateEventIfObjectNotFound&&getObject(hili) == null) {
 			return null;
 		}
 		DomainTransformEvent dte = new DomainTransformEvent();
