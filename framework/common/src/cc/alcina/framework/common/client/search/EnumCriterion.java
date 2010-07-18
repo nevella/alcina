@@ -62,10 +62,14 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		return super.equals(obj);
 	}
 
+	@Override
+	public int hashCode() {
+		E value = getValue();
+		return getClass().hashCode() ^ (value == null ? 0 : value.hashCode());
+	}
+
 	@XmlTransient
 	public abstract E getValue();
-	
-	
 
 	public abstract void setValue(E value);
 
