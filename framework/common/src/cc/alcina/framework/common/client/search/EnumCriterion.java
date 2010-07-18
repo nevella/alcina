@@ -53,20 +53,20 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		return result;
 	}
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof EnumCriterion) {
-			EnumCriterion ec = (EnumCriterion) obj;
-			return getClass() == ec.getClass() && ec.getValue() == getValue();
-		}
-		return super.equals(obj);
-	}
-
-	@Override
-	public int hashCode() {
-		E value = getValue();
-		return getClass().hashCode() ^ (value == null ? 0 : value.hashCode());
-	}
+//	@Override
+//	public boolean equals(Object obj) {
+//		if (obj instanceof EnumCriterion) {
+//			EnumCriterion ec = (EnumCriterion) obj;
+//			return getClass() == ec.getClass() && ec.getValue() == getValue();
+//		}
+//		return super.equals(obj);
+//	}
+//
+//	@Override
+//	public int hashCode() {
+//		E value = getValue();
+//		return getClass().hashCode() ^ (value == null ? 0 : value.hashCode());
+//	}
 
 	@XmlTransient
 	public abstract E getValue();

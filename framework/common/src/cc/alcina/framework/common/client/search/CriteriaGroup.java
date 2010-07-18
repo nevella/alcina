@@ -51,24 +51,25 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 
 	public CriteriaGroup() {
 	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (obj != null && obj.getClass() == getClass()) {
-			CriteriaGroup cg = (CriteriaGroup) obj;
-			return criteria.equals(cg.criteria) && combinator == cg.combinator;
-		}
-		return super.equals(obj);
-	}
-
-	@Override
-	public int hashCode() {
-		int h = getClass().hashCode() ^ combinator.hashCode();
-		for (SC c : criteria) {
-			h ^= c.hashCode();
-		}
-		return h;
-	}
+//
+//	@Override
+//	public boolean equals(Object obj) {
+//		if (obj != null && obj.getClass() == getClass()) {
+//			CriteriaGroup cg = (CriteriaGroup) obj;
+//			return criteria.equals(cg.criteria) && combinator == cg.combinator;
+//		}
+//		return super.equals(obj);
+//	}
+//
+	//Duh
+//	@Override
+//	public int hashCode() {
+//		int h = getClass().hashCode() ^ combinator.hashCode();
+//		for (SC c : criteria) {
+//			h ^= c.hashCode();
+//		}
+//		return h;
+//	}
 
 	public boolean provideIsEmpty() {
 		return getCriteria().isEmpty();
