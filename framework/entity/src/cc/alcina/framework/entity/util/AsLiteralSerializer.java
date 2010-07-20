@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.util;
 
 import java.beans.Introspector;
@@ -36,11 +35,10 @@ import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class AsLiteralSerializer {
+public class AsLiteralSerializer {
 	private ClassSourceFileComposerFactory composerFactory;
 
 	@SuppressWarnings("unused")
@@ -52,6 +50,12 @@ import com.google.gwt.user.rebind.SourceWriter;
 		this.className = className;
 		composerFactory = new ClassSourceFileComposerFactory(packageName,
 				className);
+	}
+
+	private boolean isEnumExt(Class c) {
+		return c.getSuperclass() == java.lang.Enum.class
+				|| (c.getSuperclass() != null && c.getSuperclass()
+						.getSuperclass() == java.lang.Enum.class);
 	}
 
 	public String generate(Object source) throws Exception {
@@ -68,8 +72,9 @@ import com.google.gwt.user.rebind.SourceWriter;
 				reached.values());
 		Collections.sort(insts);
 		for (OutputInstantiation inst : insts) {
-			String className = getClassName(inst.value.getClass());
-			if (inst.value instanceof Enum || inst.value instanceof Class) {
+			Class<? extends Object> valueClass = inst.value.getClass();
+			String className = getClassName(valueClass);
+			if (isEnumExt(valueClass) || inst.value instanceof Class) {
 				sw.println(String.format("%s %s= %s;", className,
 						getObjLitRef(inst), getLiteralValue(inst.value)));
 			} else {
@@ -93,9 +98,9 @@ import com.google.gwt.user.rebind.SourceWriter;
 			}
 		}
 		for (OutputAssignment assign : assignments) {
-			String assignLit = String.format("%s.%s(%s);", getObjLitRef(assign.src),
-					assign.pd.getWriteMethod().getName(),
-					getObjLitRef(assign.target));
+			String assignLit = String.format("%s.%s(%s);",
+					getObjLitRef(assign.src), assign.pd.getWriteMethod()
+							.getName(), getObjLitRef(assign.target));
 			sw.println(assignLit);
 			methodLengthCounter += assignLit.length() + 1;
 			if (methodLengthCounter > 20000) {
@@ -128,7 +133,7 @@ import com.google.gwt.user.rebind.SourceWriter;
 						++callCounter));
 		sw.indent();
 		mainCall.append(String.format("generate_%s();", callCounter));
-		methodLengthCounter=0;
+		methodLengthCounter = 0;
 	}
 
 	private String getObjLitRef(OutputInstantiation inst) {
@@ -157,7 +162,7 @@ import com.google.gwt.user.rebind.SourceWriter;
 		if (value instanceof Character) {
 			return "'" + value + "'";
 		}
-		if (value instanceof Class){
+		if (value instanceof Class) {
 			return ((Class) value).getSimpleName() + "." + "class";
 		}
 		if (value instanceof Long || value.getClass() == long.class) {
@@ -219,7 +224,7 @@ import com.google.gwt.user.rebind.SourceWriter;
 	private boolean isSimple(Object source) {
 		Class c = source.getClass();
 		return (c.isPrimitive() || c == String.class || c == Boolean.class
-				|| c == Character.class || c.isEnum() || c == Class.class
+				|| c == Character.class || isEnumExt(c) || c == Class.class
 				|| (source instanceof Number) || (source instanceof Date));
 	}
 
@@ -235,10 +240,9 @@ import com.google.gwt.user.rebind.SourceWriter;
 				source);
 		reached.put(source, instance);
 		Class c = source.getClass();
-		
 		reachedClasses.add(c);
-		if (source instanceof Class){
-			reachedClasses.add((Class) source);	
+		if (source instanceof Class) {
+			reachedClasses.add((Class) source);
 		}
 		if (isSimple(source)) {
 			return instance;

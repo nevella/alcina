@@ -53,7 +53,7 @@ public class EntityUtils {
 
 	public static List<Long> idClauseToLongArray(String str) {
 		ArrayList<Long> result = new ArrayList<Long>();
-		String[] strs = str.split(",\\s*");
+		String[] strs = str.replace("(","").replace(")","").split(",\\s*");
 		for (String s : strs) {
 			String t = s.trim();
 			if (t.length() > 0) {

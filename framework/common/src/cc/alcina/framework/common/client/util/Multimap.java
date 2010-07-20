@@ -11,28 +11,34 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
-
- public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
-	
+public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
+	public V allItems() {
+		List list = new ArrayList();
+		for (V v : values()) {
+			list.addAll(v);
+		}
+		return (V) list;
+	}
 
 	public void add(K key, Object item) {
 		if (!containsKey(key)) {
-			put(key,(V) new ArrayList());
+			put(key, (V) new ArrayList());
 		}
 		get(key).add(item);
 	}
-	public void remove(K key, Object item){
+
+	public void remove(K key, Object item) {
 		if (containsKey(key)) {
 			get(key).remove(item);
 		}

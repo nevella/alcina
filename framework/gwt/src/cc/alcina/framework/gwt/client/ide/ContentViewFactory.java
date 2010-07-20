@@ -145,8 +145,8 @@ import com.totsp.gwittir.client.validator.Validator;
 				TransformManager.get().registerProvisionalObject(list);
 			}
 			if (bean instanceof HasIdAndLocalId) {
-				supportingObjects = ClientTransformManager.cast().prepareForEditing(
-						(HasIdAndLocalId) bean, autoSave);
+				supportingObjects = ClientTransformManager.cast().prepareObject(
+						(HasIdAndLocalId) bean, autoSave,false,true);
 			}
 			supportingObjects.addAll(list);
 			cp.setObjects(supportingObjects);

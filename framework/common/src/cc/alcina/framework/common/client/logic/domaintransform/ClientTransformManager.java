@@ -213,8 +213,8 @@ public class ClientTransformManager extends TransformManager {
 
 				public void onFailure(Throwable caught) {
 					cleanup();
-					ClientLayerLocator.get().exceptionHandler().onUncaughtException(
-							caught);
+					ClientLayerLocator.get().exceptionHandler()
+							.onUncaughtException(caught);
 				}
 
 				private void cleanup() {
@@ -259,8 +259,8 @@ public class ClientTransformManager extends TransformManager {
 
 	private Map<Class, Boolean> requiresEditPrep = new HashMap<Class, Boolean>();
 
-	public Collection prepareForEditing(HasIdAndLocalId domainObject,
-			boolean autoSave) {
+	public Collection prepareObject(HasIdAndLocalId domainObject,
+			boolean autoSave, boolean afterCreation, boolean forEditing) {
 		List children = new ArrayList();
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				domainObject.getClass());
@@ -300,7 +300,7 @@ public class ClientTransformManager extends TransformManager {
 							.cloneForProvisionalEditing())) {
 				requiresEditPrep.put(c, true);
 			}
-			if (create) {
+			if (create && afterCreation) {
 				HasIdAndLocalId newObj = autoSave ? TransformManager.get()
 						.createDomainObject(pr.getPropertyType())
 						: TransformManager.get().createProvisionalObject(
@@ -308,11 +308,12 @@ public class ClientTransformManager extends TransformManager {
 				CommonLocator.get().propertyAccessor().setPropertyValue(
 						domainObject, propertyName, newObj);
 				children.add(newObj);
-				children.addAll(prepareForEditing(newObj, autoSave));
+				children.addAll(prepareObject(newObj, autoSave, afterCreation,
+						forEditing));
 			} else {
 				boolean cloneForEditing = instructions != null
 						&& instructions.cloneForProvisionalEditing()
-						&& !autoSave;
+						&& !autoSave && forEditing;
 				if (cloneForEditing && !autoSave && currentValue != null) {
 					if (currentValue instanceof Collection) {
 						Collection cl = (Collection) currentValue;
@@ -323,8 +324,8 @@ public class ClientTransformManager extends TransformManager {
 							HasIdAndLocalId clonedValue = (HasIdAndLocalId) new CloneHelper()
 									.shallowishBeanClone(hili);
 							children.add(clonedValue);
-							children.addAll(prepareForEditing(clonedValue,
-									autoSave));
+							children.addAll(prepareObject(clonedValue,
+									autoSave, afterCreation, forEditing));
 							cl.add(clonedValue);
 						}
 					} else {
@@ -334,12 +335,11 @@ public class ClientTransformManager extends TransformManager {
 								.setPropertyValue(domainObject, propertyName,
 										clonedValue);
 						children.add(clonedValue);
-						children
-								.addAll(prepareForEditing(clonedValue, autoSave));
+						children.addAll(prepareObject(clonedValue, autoSave,
+								afterCreation, forEditing));
 					}
 				}
 			}
-			// boolean cloneForEditing =
 		}
 		return children;
 	}
@@ -364,15 +364,17 @@ public class ClientTransformManager extends TransformManager {
 			ClientTransformManager.PersistableTransformListener persistableTransformListener) {
 		this.persistableTransformListener = persistableTransformListener;
 	}
+
 	/**
 	 * Useful series of actions when persisting a HasIdAndLocalId with
 	 * references to a WrappedObject
 	 * 
-	 * @see TransformManager#promoteToDomainObject(Object) wrt what to do with promoted objects
+	 * @see TransformManager#promoteToDomainObject(Object) wrt what to do with
+	 *      promoted objects
 	 * @param referrer
 	 */
-	public <T extends HasIdAndLocalId> T persistWrappedObjectReferrer(final T referrer,
-			boolean onlyLocalGraph) {
+	public <T extends HasIdAndLocalId> T persistWrappedObjectReferrer(
+			final T referrer, boolean onlyLocalGraph) {
 		final ClientBeanReflector beanReflector = ClientReflector.get()
 				.beanInfoForClass(referrer.getClass());
 		beanReflector.iterateForPropertyWithAnnotation(WrapperInfo.class,

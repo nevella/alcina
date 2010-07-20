@@ -25,7 +25,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	private static final String SRC = "src: ";
 
-	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\nDomainTransformEvent: ";
+	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\nDomainTransformEvent:";
 
 	private static Class classFromName(String className) {
 		if (className == null || className.equals("null")) {

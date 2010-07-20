@@ -79,7 +79,7 @@ public class WorkspaceDefaultActionHandlers {
 					nodeObjectClass) : TransformManager.get()
 					.createProvisionalObject(nodeObjectClass);
 			handleParentLinks(workspace, node, newObj);
-			ClientTransformManager.cast().prepareForEditing(newObj,isAutoSave());
+			ClientTransformManager.cast().prepareObject(newObj,isAutoSave(),true,false);
 			TextProvider.get().setDecorated(false);
 			String tdn = ClientReflector.get().beanInfoForClass(nodeObjectClass)
 					.getTypeDisplayName();
@@ -140,7 +140,7 @@ public class WorkspaceDefaultActionHandlers {
 			final HasIdAndLocalId hili = (HasIdAndLocalId) object;
 			HasIdAndLocalId newObj = ClientTransformManager.cast().clone(hili);
 			handleParentLinks(workspace, node, newObj);
-			ClientTransformManager.cast().prepareForEditing(newObj,isAutoSave());
+			ClientTransformManager.cast().prepareObject(newObj,isAutoSave(),true,false);
 			TextProvider.get().setDecorated(true);
 			String newName = TextProvider.get().getObjectName(newObj)
 					+ " (copy)";
