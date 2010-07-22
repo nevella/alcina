@@ -53,7 +53,7 @@ public class EntityUtils {
 
 	public static List<Long> idClauseToLongArray(String str) {
 		ArrayList<Long> result = new ArrayList<Long>();
-		String[] strs = str.replace("(","").replace(")","").split(",\\s*");
+		String[] strs = str.replace("(", "").replace(")", "").split(",\\s*");
 		for (String s : strs) {
 			String t = s.trim();
 			if (t.length() > 0) {
@@ -90,7 +90,7 @@ public class EntityUtils {
 		sb.append(" (");
 		for (String str : strs) {
 			sb.append(sb.length() == 2 ? "'" : ", '");
-			sb.append(str.replace("'"	, "''"));
+			sb.append(str.replace("'", "''"));
 			sb.append("'");
 		}
 		sb.append(") ");
@@ -103,8 +103,6 @@ public class EntityUtils {
 			throw new RuntimeException("Injection exception");
 		}
 	}
-
-	
 
 	public <T> T detachedClone(T source, InstantiateImplCallback callback) {
 		return detachedClone(source, false, callback);
@@ -121,11 +119,16 @@ public class EntityUtils {
 	public <T> T detachedClone(T source, boolean useCache,
 			InstantiateImplCallback callback) {
 		DetachedEntityCache cache = useCache ? null : new DetachedEntityCache();
-		GraphProjectionFilter filter = EntityLayerLocator.get().jpaImplementation()
-				.getResolvingFilter(callback, cache);
+		return detachedClone(source, callback, cache);
+	}
+
+	public <T> T detachedClone(T source, InstantiateImplCallback callback,
+			DetachedEntityCache cache) {
+		GraphProjectionFilter filter = EntityLayerLocator.get()
+				.jpaImplementation().getResolvingFilter(callback, cache);
 		try {
-			return new GraphProjection(new PermissibleFieldFilter(), filter).project(
-					source, null);
+			return new GraphProjection(new PermissibleFieldFilter(), filter)
+					.project(source, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
