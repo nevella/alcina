@@ -57,7 +57,10 @@ public class EntityUtils {
 		for (String s : strs) {
 			String t = s.trim();
 			if (t.length() > 0) {
-				result.add(Long.parseLong(t));
+				long value = Long.parseLong(t);
+				if (value > 0) {
+					result.add(value);
+				}
 			}
 		}
 		return result;
