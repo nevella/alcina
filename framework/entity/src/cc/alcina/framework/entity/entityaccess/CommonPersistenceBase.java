@@ -149,7 +149,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			getEntityManager().persist(impl);
 			impl.setHelloDate(new Date());
 			impl.setUser(PermissionsManager.get().getUser());
-			impl.setAuth(new Random().nextInt());
+			impl.setAuth(Math.abs(new Random().nextInt()));
 			getEntityManager().flush();
 			clientInstanceAuthMap.put(impl.getId(), impl.getAuth());
 			CI instance = new EntityUtils().detachedClone(impl, false);
@@ -391,7 +391,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
-		
 		connectPermissionsManagerToLiveObjects();
 		String message = def.validatePermissions();
 		if (message != null) {
@@ -644,6 +643,26 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
+	private static final Permissible ADMIN_PERMISSIBLE = new Permissible() {
+		public AccessLevel accessLevel() {
+			return AccessLevel.ADMIN;
+		}
+
+		public String rule() {
+			return null;
+		}
+	};
+
+	private static final Permissible ROOT_PERMISSIBLE = new Permissible() {
+		public AccessLevel accessLevel() {
+			return AccessLevel.ROOT;
+		}
+
+		public String rule() {
+			return null;
+		}
+	};
+
 	protected void checkWrappedObjectAccess(HasId wrapper,
 			WrappedObject wrapped, Class clazz) throws PermissionsException {
 		if (!PersistentSingleton.class.isAssignableFrom(clazz)
@@ -658,21 +677,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					}
 				}
 			}
-			if (PermissionsManager.get().isPermissible(new Permissible() {
-				public AccessLevel accessLevel() {
-					return AccessLevel.ADMIN;
+			if (PermissionsManager.get().isPermissible(ADMIN_PERMISSIBLE)) {
+				if (!PermissionsManager.get().isPermissible(ROOT_PERMISSIBLE)) {
+					System.err
+							.println(CommonUtils
+									.format(
+											"Warn - allowing access to %1 : %2 only via admin override",
+											HiliHelper.asDomainPoint(wrapper),
+											HiliHelper.asDomainPoint(wrapped)));
 				}
-
-				public String rule() {
-					return null;
-				}
-			})) {
-				System.err
-						.println(CommonUtils
-								.format(
-										"Warn - allowing access to %1 : %2 only via admin override",
-										HiliHelper.asDomainPoint(wrapper),
-										HiliHelper.asDomainPoint(wrapped)));
 				return;// permitted
 			}
 			throw new PermissionsException(CommonUtils.format(

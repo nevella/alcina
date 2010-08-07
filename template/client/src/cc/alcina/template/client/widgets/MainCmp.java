@@ -33,7 +33,6 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.Widget;
 
-
 public class MainCmp extends MainCmpBase {
 	private AdminTab adminTab;
 
@@ -60,8 +59,8 @@ public class MainCmp extends MainCmpBase {
 		int index = 0;
 		for (BaseTab tab : tabs) {
 			if (PermissionsManager.get().isPermissible(tab)) {
-				Hyperlink hl = new Hyperlink(tab.getDisplayName(), CommonUtils.format(
-						"%1=%2", AlcinaTemplateHistory.TAB_KEY, tab
+				Hyperlink hl = new Hyperlink(tab.getDisplayName(), CommonUtils
+						.format("%1=%2", AlcinaTemplateHistory.TAB_KEY, tab
 								.getHistoryToken()));
 				tabPanel.add(tab, hl);
 				if (tab.getClass() == currentTabClass) {
@@ -127,10 +126,6 @@ public class MainCmp extends MainCmpBase {
 			showContent(info.contentToken.replace("_", " "));
 			info.type = HistoryEventType.UNTABBED;
 		}
-		if (info.actionName != null) {
-			LooseActionRegistry.get().getHandler(info.actionName)
-					.performAction();
-		}
 		if (info.type == HistoryEventType.UNTABBED) {
 			showMinusOneTab();
 		}
@@ -146,6 +141,10 @@ public class MainCmp extends MainCmpBase {
 					tabPanel.selectTab(tabPanel.getWidgetIndex(tab));
 				}
 			}
+		}
+		if (info.actionName != null) {
+			LooseActionRegistry.get().getHandler(info.actionName)
+					.performAction();
 		}
 	}
 
