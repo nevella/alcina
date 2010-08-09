@@ -157,7 +157,7 @@ public class ActionViewProvider implements ViewProvider,
 					HorizontalPanel more = new HorizontalPanel();
 					more.setSpacing(2);
 					more.add(new InlineLabel("Show more - "));
-					int[] counts = { 20, 40, 60 };
+					int[] counts = { 10, 20, 40, 80, 160, 320 };
 					for (int c : counts) {
 						final int fc = c;
 						more.add(new Link(String.valueOf(c),
@@ -169,6 +169,7 @@ public class ActionViewProvider implements ViewProvider,
 								}));
 						more.add(new InlineHTML("&nbsp;"));
 					}
+					fp.add(more);
 				}
 			};
 			if (beanView != null) {
@@ -217,7 +218,10 @@ public class ActionViewProvider implements ViewProvider,
 			add(progressHolder);
 			if (handler == null) {
 				add(new HTML(
-						"<br /><hr /><div class='recent'>Last five action logs</div>"));
+						CommonUtils
+								.formatJ(
+										"<br /><hr /><div class='recent'>Last %s action logs</div><br />",
+										logItemCount)));
 			}
 			add(fp);
 			setWidth("80%");
@@ -318,8 +322,7 @@ public class ActionViewProvider implements ViewProvider,
 
 		PermissibleActionEvent.PermissibleActionSupport support = new PermissibleActionEvent.PermissibleActionSupport();
 
-		public void addVetoableActionListener(
-				PermissibleActionListener listener) {
+		public void addVetoableActionListener(PermissibleActionListener listener) {
 			this.support.addVetoableActionListener(listener);
 		}
 
