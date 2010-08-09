@@ -42,12 +42,13 @@ public class TransformPersistenceToken {
 	public TransformPersistenceToken(DomainTransformRequest request,
 			HiliLocatorMap locatorMap, boolean persistTransforms,
 			boolean possiblyReconstitueLocalIdMap,
-			boolean ignoreClientAuthMismatch) {
+			boolean ignoreClientAuthMismatch,PersistenceLayerTransformExceptionPolicy transformExceptionPolicy) {
 		this.request = request;
 		this.locatorMap = locatorMap;
 		this.persistTransforms = persistTransforms;
 		this.possiblyReconstitueLocalIdMap = possiblyReconstitueLocalIdMap;
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
+		this.transformExceptionPolicy = transformExceptionPolicy;
 	}
 
 	public DomainTransformRequest getRequest() {

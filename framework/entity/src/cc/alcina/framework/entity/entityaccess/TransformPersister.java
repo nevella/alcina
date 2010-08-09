@@ -55,9 +55,11 @@ public class TransformPersister {
 
 	public DomainTransformLayerWrapper transformExPersistenceContext(
 			TransformPersistenceToken token) {
-		token.setTransformExceptionPolicy(EntityLayerLocator.get()
-				.persistenceLayerTransformExceptionPolicyFactory().getPolicy(
-						token.getRequest()));
+		if (token.getTransformExceptionPolicy() == null) {
+			token.setTransformExceptionPolicy(EntityLayerLocator.get()
+					.persistenceLayerTransformExceptionPolicyFactory()
+					.getPolicy(token.getRequest()));
+		}
 		DomainTransformLayerWrapper wrapper = null;
 		while (wrapper == null
 				|| token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
@@ -219,7 +221,8 @@ public class TransformPersister {
 				return wrapException(token, ex);
 			}
 			if (persistentClientInstance.getUser().getId() != PermissionsManager
-					.get().getUserId() && !token.isIgnoreClientAuthMismatch()) {
+					.get().getUserId()
+					&& !token.isIgnoreClientAuthMismatch()) {
 				DomainTransformException ex = new DomainTransformException(
 						"Browser login mismatch with transform request authentication");
 				ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
@@ -294,19 +297,31 @@ public class TransformPersister {
 							token.getIgnoreInExceptionPass().add(event);
 							locatorMap.clear();
 							locatorMap.putAll(locatorMapClone);
+							boolean continuePass = false;
 							switch (token.getTransformExceptionPolicy()
 									.getActionForException(transformException,
 											token)) {
+							case IGNORE_AND_WARN:
+								System.out.println("Ignoring: ");
+								System.out.println(transformException);
+								continuePass = true;
+								break;
+							case IGNORE_SILENT:
+								continuePass = true;
+								break;
 							case RESOLVE:
 								break;
 							case THROW:
 								token.setPass(Pass.FAIL);
 								break;
 							}
-							MetricLogging.get().lowPriorityEnd(TRANSFORM_FIRE);
-							// ve must rollback
-							throw new DeliberatelyThrownWrapperException(
-									wrapException(token, transformException));
+							if (!continuePass) {
+								MetricLogging.get().lowPriorityEnd(
+										TRANSFORM_FIRE);
+								// ve must rollback
+								throw new DeliberatelyThrownWrapperException(
+										wrapException(token, transformException));
+							}
 						}
 					}// commit/determine exception
 				}// dtes

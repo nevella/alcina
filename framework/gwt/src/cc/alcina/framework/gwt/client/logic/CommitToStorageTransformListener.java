@@ -315,7 +315,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							// assume object was either deregistered or deleted
 							// before these transforms
 							// made it back from the server
-							if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND) {
+							if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND || e.getType() == DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND) {
 							} else {
 								throw new WrappedRuntimeException(e);
 							}

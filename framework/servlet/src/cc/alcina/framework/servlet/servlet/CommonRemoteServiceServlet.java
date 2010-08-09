@@ -63,6 +63,8 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
+import cc.alcina.framework.entity.domaintransform.policy.IgnoreMissingPersistenceLayerTransformExceptionPolicy;
+import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -158,12 +160,19 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return transformRequestCounter++;
 	}
 
+	public DomainTransformResponse transformFromServletLayer(
+			boolean persistTransforms) throws DomainTransformException {
+		return transformFromServletLayer(persistTransforms, null);
+	}
+
 	/*
 	 * TODO - this should probably be integrated more with {transform} - why is
 	 * the server layer so special? just another client
 	 */
 	public DomainTransformResponse transformFromServletLayer(
-			boolean persistTransforms) throws DomainTransformException {
+			boolean persistTransforms,
+			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
+			throws DomainTransformException {
 		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
 		request.setClientInstance(serverAsClientInstance);
@@ -184,7 +193,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 					.transformPersistenceQueue().submit(
 							new TransformPersistenceToken(request, map,
-									persistTransforms, false, false));
+									persistTransforms, false, false,
+									transformExceptionPolicy));
 			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
 				return wrapper.response;
 			} else {
@@ -209,14 +219,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
-		return transform(request, false);
+		return transform(request, false, null);
 	}
 
 	/**
 	 * synchronizing implies serialized transforms per clientInstance
 	 */
 	DomainTransformResponse transform(DomainTransformRequest request,
-			boolean ignoreClientAuthMismatch)
+			boolean ignoreClientAuthMismatch,
+			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
 			throws DomainTransformRequestException {
 		Long clientInstanceId = request.getClientInstance().getId();
 		synchronized (clientInstanceLocatorMap) {
@@ -231,7 +242,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 					.transformPersistenceQueue().submit(
 							new TransformPersistenceToken(request, locatorMap,
-									true, true, ignoreClientAuthMismatch));
+									true, true, ignoreClientAuthMismatch,
+									transformExceptionPolicy));
 			// not necessary if ejb layer is local
 			// clientInstanceLocatorMap.put(clientInstanceId,
 			// wrapper.locatorMap);
@@ -515,7 +527,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 							"Request [%1/%2] : %3 transforms written",
 							requestId, clientInstanceId, rq.getItems().size()));
 				}
-				transform(rq, true);
+				transform(
+						rq,
+						true,
+						new IgnoreMissingPersistenceLayerTransformExceptionPolicy());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

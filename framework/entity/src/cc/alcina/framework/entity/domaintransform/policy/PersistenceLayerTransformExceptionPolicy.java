@@ -10,6 +10,6 @@ public interface PersistenceLayerTransformExceptionPolicy {
 			TransformPersistenceToken persistenceToken);
 
 	public enum TransformExceptionAction {
-		THROW, RESOLVE
+		THROW, RESOLVE,IGNORE_AND_WARN,IGNORE_SILENT
 	}
 }
