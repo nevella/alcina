@@ -287,6 +287,7 @@ public class TransformPersister {
 							if (!actionForException.ignoreable()) {
 								throw e;
 							}else{
+								request.getEventIdsToIgnore().add(event.getEventId());
 								token.ignored++;
 							}
 						}
