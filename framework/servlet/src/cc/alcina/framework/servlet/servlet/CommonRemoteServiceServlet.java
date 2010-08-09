@@ -219,13 +219,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
-		return transform(request, false, null);
+		return transform(request, false, null).response;
 	}
 
 	/**
 	 * synchronizing implies serialized transforms per clientInstance
 	 */
-	DomainTransformResponse transform(DomainTransformRequest request,
+	DomainTransformLayerWrapper transform(DomainTransformRequest request,
 			boolean ignoreClientAuthMismatch,
 			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
 			throws DomainTransformRequestException {
@@ -239,16 +239,19 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		HiliLocatorMap locatorMap = clientInstanceLocatorMap
 				.get(clientInstanceId);
 		synchronized (locatorMap) {
+			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(request, locatorMap,
+					true, true, ignoreClientAuthMismatch,
+					transformExceptionPolicy);
 			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 					.transformPersistenceQueue().submit(
-							new TransformPersistenceToken(request, locatorMap,
-									true, true, ignoreClientAuthMismatch,
-									transformExceptionPolicy));
+							persistenceToken);
+			
+			wrapper.ignored=persistenceToken.ignored;
 			// not necessary if ejb layer is local
 			// clientInstanceLocatorMap.put(clientInstanceId,
 			// wrapper.locatorMap);
 			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
-				return wrapper.response;
+				return wrapper;
 			} else {
 				logTransformException(wrapper.response, true);
 				throw new DomainTransformRequestException(wrapper.response);
@@ -522,15 +525,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				// transforms. but...perhaps better not (keep as is)
 				rq.setRequestId(wr.getRequestId());
 				rq.fromString(wr.getText());
-				if (logger != null) {
-					logger.info(CommonUtils.format(
-							"Request [%1/%2] : %3 transforms written",
-							requestId, clientInstanceId, rq.getItems().size()));
-				}
-				transform(
+				
+				DomainTransformLayerWrapper transformLayerWrapper = transform(
 						rq,
 						true,
 						new IgnoreMissingPersistenceLayerTransformExceptionPolicy());
+				if (logger != null) {
+					logger.info(CommonUtils.format(
+							"Request [%1/%2] : %3 transforms written, %4 ignored",
+							requestId, clientInstanceId, rq.getItems().size(),transformLayerWrapper.ignored));
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -24,4 +24,5 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
  public class DomainTransformLayerWrapper {
 	public DomainTransformResponse response;
 	public HiliLocatorMap locatorMap;
+	public int ignored;
 }

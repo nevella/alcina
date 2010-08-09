@@ -29,6 +29,7 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
+import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.Multiset;
@@ -270,7 +271,25 @@ public class TransformPersister {
 						continue;
 					}
 					if (token.getPass() == Pass.TRY_COMMIT) {
-						tm.fireDomainTransform(event);
+						try {
+							tm.fireDomainTransform(event);
+						} catch (Exception e) {
+							DomainTransformException transformException = DomainTransformException
+									.wrap(e, event);
+							EntityLayerLocator.get().jpaImplementation()
+									.interpretException(transformException);
+							EntityLayerLocator.get().jpaImplementation()
+									.interpretException(transformException);
+							TransformExceptionAction actionForException = token
+									.getTransformExceptionPolicy()
+									.getActionForException(transformException,
+											token);
+							if (!actionForException.ignoreable()) {
+								throw e;
+							}else{
+								token.ignored++;
+							}
+						}
 					} else if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
 						try {
 							tm.fireDomainTransform(event);
@@ -290,24 +309,17 @@ public class TransformPersister {
 							token.getTransformExceptions().add(
 									transformException);
 							possiblyAddSilentSkips(token, transformException);
-							if (transformException.getType() == DomainTransformExceptionType.UNKNOWN) {
-								EntityLayerLocator.get().jpaImplementation()
-										.interpretException(transformException);
-							}
 							token.getIgnoreInExceptionPass().add(event);
 							locatorMap.clear();
 							locatorMap.putAll(locatorMapClone);
-							boolean continuePass = false;
-							switch (token.getTransformExceptionPolicy()
+							TransformExceptionAction actionForException = token
+									.getTransformExceptionPolicy()
 									.getActionForException(transformException,
-											token)) {
+											token);
+							switch (actionForException) {
 							case IGNORE_AND_WARN:
 								System.out.println("Ignoring: ");
 								System.out.println(transformException);
-								continuePass = true;
-								break;
-							case IGNORE_SILENT:
-								continuePass = true;
 								break;
 							case RESOLVE:
 								break;
@@ -315,7 +327,7 @@ public class TransformPersister {
 								token.setPass(Pass.FAIL);
 								break;
 							}
-							if (!continuePass) {
+							if (!actionForException.ignoreable()) {
 								MetricLogging.get().lowPriorityEnd(
 										TRANSFORM_FIRE);
 								// ve must rollback

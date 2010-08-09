@@ -18,6 +18,8 @@ public class TransformPersistenceToken {
 	private final boolean persistTransforms;
 
 	private int dontFlushTilNthTransform = 0;
+	
+	public int ignored=0;
 
 	private final boolean possiblyReconstitueLocalIdMap;
 
