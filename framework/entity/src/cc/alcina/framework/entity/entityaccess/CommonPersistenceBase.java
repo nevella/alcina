@@ -48,11 +48,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentE
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
-import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -643,26 +641,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	private static final Permissible ADMIN_PERMISSIBLE = new Permissible() {
-		public AccessLevel accessLevel() {
-			return AccessLevel.ADMIN;
-		}
-
-		public String rule() {
-			return null;
-		}
-	};
-
-	private static final Permissible ROOT_PERMISSIBLE = new Permissible() {
-		public AccessLevel accessLevel() {
-			return AccessLevel.ROOT;
-		}
-
-		public String rule() {
-			return null;
-		}
-	};
-
 	protected void checkWrappedObjectAccess(HasId wrapper,
 			WrappedObject wrapped, Class clazz) throws PermissionsException {
 		if (!PersistentSingleton.class.isAssignableFrom(clazz)
@@ -677,8 +655,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					}
 				}
 			}
-			if (PermissionsManager.get().isPermissible(ADMIN_PERMISSIBLE)) {
-				if (!PermissionsManager.get().isPermissible(ROOT_PERMISSIBLE)) {
+			if (PermissionsManager.get().isPermissible(PermissionsManager.ADMIN_PERMISSIBLE)) {
+				if (!PermissionsManager.get().isPermissible(PermissionsManager.ROOT_PERMISSIBLE)) {
 					System.err
 							.println(CommonUtils
 									.format(

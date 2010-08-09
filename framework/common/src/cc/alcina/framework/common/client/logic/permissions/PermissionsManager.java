@@ -316,6 +316,26 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 
 	private boolean allPermissible = false;
 
+	public static final Permissible ROOT_PERMISSIBLE = new Permissible() {
+		public AccessLevel accessLevel() {
+			return AccessLevel.ROOT;
+		}
+	
+		public String rule() {
+			return null;
+		}
+	};
+
+	public static final Permissible ADMIN_PERMISSIBLE = new Permissible() {
+		public AccessLevel accessLevel() {
+			return AccessLevel.ADMIN;
+		}
+	
+		public String rule() {
+			return null;
+		}
+	};
+
 	public boolean isPermissible(Object o, Permissible p) {
 		if (allPermissible) {
 			return true;
