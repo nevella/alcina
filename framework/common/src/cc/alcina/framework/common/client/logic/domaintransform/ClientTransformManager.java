@@ -213,8 +213,7 @@ public class ClientTransformManager extends TransformManager {
 
 				public void onFailure(Throwable caught) {
 					cleanup();
-					ClientLayerLocator.get().exceptionHandler()
-							.onUncaughtException(caught);
+					throw new WrappedRuntimeException(caught);
 				}
 
 				private void cleanup() {

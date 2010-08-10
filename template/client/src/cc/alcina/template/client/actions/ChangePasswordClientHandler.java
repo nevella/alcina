@@ -2,6 +2,7 @@ package cc.alcina.template.client.actions;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -72,8 +73,8 @@ public class ChangePasswordClientHandler implements PermissibleActionHandler {
 					cp.setParameters(pcm);
 					AsyncCallback<ActionLogItem> callback = new AsyncCallback<ActionLogItem>() {
 						public void onFailure(Throwable caught) {
-							ClientLayerLocator.get().notifications().showError(caught);
 							gdb.hide();
+							throw new WrappedRuntimeException(caught);
 						}
 
 						public void onSuccess(ActionLogItem item) {

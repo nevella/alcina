@@ -214,12 +214,11 @@ public class ActionProgress extends Composite implements
 						checking = false;
 						if (maxConnectionFailure-- <= 0) {
 							stopTimer();
-							ClientLayerLocator.get().notifications().showError(
-									caught);
 							if (ActionProgress.this.completionCallback != null) {
 								ActionProgress.this.completionCallback
 										.onFailure(caught);
 							}
+							throw new WrappedRuntimeException(caught);
 						}
 					}
 

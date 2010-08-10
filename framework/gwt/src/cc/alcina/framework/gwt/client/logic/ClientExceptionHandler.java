@@ -29,6 +29,13 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 		}
 		return e;
 	}
+	/*called at points in code where the exception's not actually uncaught,
+	 * but might as well give to centralised "arggh" handler
+	 */
+	
+	public void handleException(Throwable e){
+		onUncaughtException(e);
+	}
 	public void onUncaughtException(Throwable e) {
 		// TODO - 3.02
 		GWT.log("Uncaught exception escaped", e);

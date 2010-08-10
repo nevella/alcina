@@ -11,11 +11,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -49,8 +49,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  *
  * @author Nick Reddel
  */
-
- public class SearchViewProvider implements ViewProvider {
+public class SearchViewProvider implements ViewProvider {
 	private RemoteActionWithParameters<SingleTableSearchDefinition> action;
 
 	private boolean withoutCaption;
@@ -84,6 +83,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 		vp.add(searchPanel);
 		return vp;
 	}
+
 	public boolean isWithoutCaption() {
 		return withoutCaption;
 	}
@@ -167,7 +167,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 			AsyncCallback completionCallback = new AsyncCallback() {
 				public void onFailure(Throwable caught) {
 					cleanup();
-					ClientLayerLocator.get().notifications().showError(caught);
+					throw new WrappedRuntimeException(caught);
 				}
 
 				public void onSuccess(Object result) {

@@ -21,7 +21,8 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class AlcinaTemplateHandshakeHelper extends ClientHandshakeHelperWithLocalPersistence {
+public class AlcinaTemplateHandshakeHelper extends
+		ClientHandshakeHelperWithLocalPersistence {
 	@Override
 	protected void updateUIPreHello() {
 		Element statusVariable = Document.get().getElementById(
@@ -41,7 +42,7 @@ public class AlcinaTemplateHandshakeHelper extends ClientHandshakeHelperWithLoca
 		AsyncCallback<AlcinaTemplateObjects> callback = new AsyncCallback<AlcinaTemplateObjects>() {
 			public void onFailure(Throwable caught) {
 				cleanup();
-				ClientLayerLocator.get().notifications().showError(caught);
+				throw new WrappedRuntimeException(caught);
 			}
 
 			public void onSuccess(AlcinaTemplateObjects objects) {
@@ -65,9 +66,9 @@ public class AlcinaTemplateHandshakeHelper extends ClientHandshakeHelperWithLoca
 
 	@Override
 	protected void preSerialization(LoginState loginState) {
-		AlcinaTemplateObjectsSerializationHelper.preSerialization(ClientLayerLocator.get()
-				.getCommitToStorageTransformListener().getClientInstance(),
-				loginState);
+		AlcinaTemplateObjectsSerializationHelper.preSerialization(
+				ClientLayerLocator.get().getCommitToStorageTransformListener()
+						.getClientInstance(), loginState);
 	}
 
 	@Override
@@ -98,7 +99,7 @@ public class AlcinaTemplateHandshakeHelper extends ClientHandshakeHelperWithLoca
 		AsyncCallback<LoginResponse> callback = new AsyncCallback<LoginResponse>() {
 			public void onFailure(Throwable caught) {
 				if (!offlineDomainLoader.tryOffline(caught)) {
-					ClientLayerLocator.get().notifications().showError(caught);
+					throw new WrappedRuntimeException(caught);
 				}
 			}
 

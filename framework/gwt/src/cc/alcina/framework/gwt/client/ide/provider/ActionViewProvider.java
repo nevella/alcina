@@ -18,6 +18,7 @@ import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.List;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -147,7 +148,7 @@ public class ActionViewProvider implements ViewProvider,
 			hasChildHandlersSupport.detachHandlers();
 			AsyncCallback<List<ActionLogItem>> outerCallback = new AsyncCallback<List<ActionLogItem>>() {
 				public void onFailure(Throwable caught) {
-					ClientLayerLocator.get().notifications().showError(caught);
+					throw new WrappedRuntimeException(caught);
 				}
 
 				public void onSuccess(List<ActionLogItem> result) {
@@ -233,8 +234,8 @@ public class ActionViewProvider implements ViewProvider,
 			runningLabel.setText(RUNNING);
 			AsyncCallback<Long> asyncCallback = new AsyncCallback<Long>() {
 				public void onFailure(Throwable caught) {
-					ClientLayerLocator.get().notifications().showError(caught);
 					redraw();
+					throw new WrappedRuntimeException(caught);
 				}
 
 				public void onSuccess(Long id) {
@@ -259,8 +260,8 @@ public class ActionViewProvider implements ViewProvider,
 			};
 			AsyncCallback<ActionLogItem> syncCallback = new AsyncCallback<ActionLogItem>() {
 				public void onFailure(Throwable caught) {
-					ClientLayerLocator.get().notifications().showError(caught);
 					redraw();
+					throw new WrappedRuntimeException(caught);
 				}
 
 				public void onSuccess(ActionLogItem ali) {

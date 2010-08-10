@@ -14,6 +14,8 @@
 
 package cc.alcina.framework.gwt.client.widget.dialog;
 
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -25,6 +27,9 @@ import com.google.gwt.user.client.ui.Widget;
  public class OkDialogBox extends OkCancelDialogBox {
 	public OkDialogBox(String title, Widget widget) {
 		super(title, widget, null,HasHorizontalAlignment.ALIGN_LEFT);
+	}
+	public OkDialogBox(String title, Widget widget,final PermissibleActionListener l) {
+		super(title, widget, l,HasHorizontalAlignment.ALIGN_LEFT);
 	}
 
 	@Override

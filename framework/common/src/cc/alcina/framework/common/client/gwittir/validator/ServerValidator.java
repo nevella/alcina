@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
@@ -86,11 +87,11 @@ import com.totsp.gwittir.client.validator.ValidationException;
 					getValidatingMessage(), null);
 			AsyncCallback<List<ServerValidator>> callback = new AsyncCallback<List<ServerValidator>>() {
 				public void onFailure(Throwable caught) {
-					ClientLayerLocator.get().notifications().showError(
-							"Validator error", caught);
 					setMessage("Validator error");
 					resolveFeedback();
 					cleanUp();
+					throw new WrappedRuntimeException(
+							"Validator error", caught);
 				}
 
 				public void onSuccess(List<ServerValidator> result) {
