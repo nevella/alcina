@@ -74,7 +74,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 			Collection<Long> ids) {
 		em.createQuery(
 				String.format("delete %s where id in %s ", clazz
-						.getSimpleName(), EntityUtils.longListToIdClause(ids)))
+						.getSimpleName(), EntityUtils.longsToIdClause(ids)))
 				.executeUpdate();
 		return true;
 	}

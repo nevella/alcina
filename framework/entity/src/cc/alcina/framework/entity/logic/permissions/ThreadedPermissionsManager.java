@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.logic.permissions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -23,11 +22,10 @@ import cc.alcina.framework.entity.util.GraphProjection;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ThreadedPermissionsManager extends PermissionsManager {
+public class ThreadedPermissionsManager extends PermissionsManager {
 	public static GraphProjectionFilter INSTANTIATE_IMPL_FILTER;
 
 	@Override
@@ -55,8 +53,12 @@ import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 	}
 
 	public IUser popSystemUser() {
-		root = false;
-		return popUser();
+		IUser popUser = popUser();
+		CommonPersistenceLocal up = EntityLayerLocator.get()
+				.commonPersistenceProvider().getCommonPersistence();
+		IUser systemUser = up.getSystemUser(true);
+		root = systemUser.equals(popUser);
+		return popUser;
 	}
 
 	protected boolean isRoot() {
@@ -81,7 +83,8 @@ import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 			}
 		}
 	}
-	public static ThreadedPermissionsManager cast(){
+
+	public static ThreadedPermissionsManager cast() {
 		return (ThreadedPermissionsManager) PermissionsManager.get();
 	}
 }

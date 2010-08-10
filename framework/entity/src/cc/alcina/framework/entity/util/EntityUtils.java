@@ -34,15 +34,15 @@ import cc.alcina.framework.entity.util.GraphProjection.PermissibleFieldFilter;
  * @author Nick Reddel
  */
 public class EntityUtils {
-	public static String longListToIdClause(Long[] longs) {
-		return longListToIdClause(Arrays.asList(longs));
+	public static String longArrayToIdClause(Long[] longs) {
+		return longsToIdClause(Arrays.asList(longs));
 	}
 
-	public static String hasIdListToIdClause(Collection<? extends HasId> hasIds) {
-		return longListToIdClause(hasIdListToIdList(hasIds));
+	public static String hasIdsToIdClause(Collection<? extends HasId> hasIds) {
+		return longsToIdClause(hasIdsToIdList(hasIds));
 	}
 
-	public static List<Long> hasIdListToIdList(
+	public static List<Long> hasIdsToIdList(
 			Collection<? extends HasId> hasIds) {
 		List<Long> ids = new ArrayList<Long>();
 		for (HasId hasId : hasIds) {
@@ -66,7 +66,7 @@ public class EntityUtils {
 		return result;
 	}
 
-	public static String longListToIdClause(Collection<Long> longs) {
+	public static String longsToIdClause(Collection<Long> longs) {
 		StringBuffer sb = new StringBuffer();
 		sb.append(" (-1");
 		for (Long long1 : longs) {

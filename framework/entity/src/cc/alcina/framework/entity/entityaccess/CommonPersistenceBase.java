@@ -97,7 +97,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			List<Object> resultList = getEntityManager().createQuery(
 					String.format("from %s where id in %s ", clazz
 							.getSimpleName(), EntityUtils
-							.longListToIdClause(ids))).getResultList();
+							.longsToIdClause(ids))).getResultList();
 			for (Object object : resultList) {
 				getEntityManager().remove(object);
 			}
@@ -617,7 +617,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					"from "
 							+ getImplementation(WrappedObject.class)
 									.getSimpleName() + " where id in "
-							+ EntityUtils.longListToIdClause(wrapperIds));
+							+ EntityUtils.longsToIdClause(wrapperIds));
 			query.getResultList();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

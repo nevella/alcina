@@ -187,7 +187,7 @@ public class TransformPersister {
 					getEntityManager().createQuery(
 							String.format("from %s where id in %s",
 									storageClass.getSimpleName(), EntityUtils
-											.longListToIdClause(idsSlice)))
+											.longsToIdClause(idsSlice)))
 							.getResultList();
 				}
 			}
