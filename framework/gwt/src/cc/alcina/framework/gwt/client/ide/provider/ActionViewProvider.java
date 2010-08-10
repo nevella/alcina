@@ -156,6 +156,7 @@ public class ActionViewProvider implements ViewProvider,
 						fp.add(new ActionLogItemVisualiser(actionLogItem));
 					}
 					HorizontalPanel more = new HorizontalPanel();
+					more.setStyleName("pad-15");
 					more.setSpacing(2);
 					more.add(new InlineLabel("Show more - "));
 					int[] counts = { 10, 20, 40, 80, 160, 320 };
