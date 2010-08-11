@@ -59,7 +59,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  */
 public class SEUtilities {
-	
 	public static int idCounter = 1;
 
 	@SuppressWarnings("unchecked")
@@ -124,6 +123,10 @@ public class SEUtilities {
 
 	public static String normalizeWhitespace(String input) {
 		return WS_PATTERN.matcher(input).replaceAll(" ");
+	}
+
+	public static String stripWhitespace(String input) {
+		return WS_PATTERN.matcher(input).replaceAll("");
 	}
 
 	public static boolean isWhitespace(String input) {
