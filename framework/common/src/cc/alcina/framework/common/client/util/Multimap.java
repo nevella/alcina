@@ -23,6 +23,12 @@ import java.util.List;
  * @author Nick Reddel
  */
 public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
+	public Multimap(){
+		super();
+	}
+	public Multimap(int initialCapacity) {
+		super(initialCapacity);
+	}
 	public V allItems() {
 		List list = new ArrayList();
 		for (V v : values()) {
@@ -30,7 +36,12 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		return (V) list;
 	}
-
+	public V getAndEnsure(K key) {
+		if (!containsKey(key)) {
+			put(key, (V) new ArrayList());
+		}
+		return get(key);
+	}
 	public void add(K key, Object item) {
 		if (!containsKey(key)) {
 			put(key, (V) new ArrayList());

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.impl.jboss;
 
 import java.io.Serializable;
@@ -27,16 +26,17 @@ import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.util.GraphProjection;
 import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallbackWithShellObject;
 
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
-
- public class EntityCacheHibernateResolvingFilter extends
-		HibernateCloneFilter {
+public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 	private DetachedEntityCache cache;
+
+	private InstantiateImplCallbackWithShellObject shellInstantiator;
 
 	public DetachedEntityCache getCache() {
 		return this.cache;
@@ -56,28 +56,35 @@ import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 			InstantiateImplCallback instantiateImplCallback) {
 		this();
 		this.instantiateImplCallback = instantiateImplCallback;
+		if (instantiateImplCallback instanceof InstantiateImplCallbackWithShellObject) {
+			InstantiateImplCallbackWithShellObject shellInstantiator = (InstantiateImplCallbackWithShellObject) instantiateImplCallback;
+		}
 	}
 
 	@Override
-	public <T> T filterData(T value, T cloned,
-			ClassFieldPair context, GraphProjection graphCloner)
-			throws Exception {
+	public <T> T filterData(T value, T cloned, ClassFieldPair context,
+			GraphProjection graphCloner) throws Exception {
 		if (value instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;
 			if (value instanceof HibernateProxy) {
 				LazyInitializer lazy = ((HibernateProxy) value)
 						.getHibernateLazyInitializer();
 				Serializable id = lazy.getIdentifier();
-				Object impl = cache.get(lazy.getPersistentClass(),
-						(Long) id);
+				Object impl = cache.get(lazy.getPersistentClass(), (Long) id);
 				if (impl == null && instantiateImplCallback != null) {
-					if (instantiateImplCallback
-							.instantiateLazyInitializer(lazy,context)) {
+					if (instantiateImplCallback.instantiateLazyInitializer(
+							lazy, context)) {
 						impl = ((HibernateProxy) value)
 								.getHibernateLazyInitializer()
 								.getImplementation();
 						impl = graphCloner.project(impl, value, context);
 						cache.put((HasIdAndLocalId) impl);
+					} else if (shellInstantiator != null) {
+						impl = shellInstantiator.instantiateShellObject(lazy,
+								context);
+						if (impl != null) {
+							cache.put((HasIdAndLocalId) impl);
+						}
 					}
 				}
 				if (impl != null) {
@@ -121,8 +128,7 @@ import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 					LazyInitializer lazy = ((HibernateProxy) value)
 							.getHibernateLazyInitializer();
 					Object impl = ((HibernateProxy) value)
-							.getHibernateLazyInitializer()
-							.getImplementation();
+							.getHibernateLazyInitializer().getImplementation();
 					value = graphCloner.project(impl, value, context);
 					cache.put((HasIdAndLocalId) value);
 				} else {

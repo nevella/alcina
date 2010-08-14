@@ -63,6 +63,8 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
 import cc.alcina.framework.entity.domaintransform.policy.IgnoreMissingPersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -100,180 +102,47 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static Map<Long, HiliLocatorMap> clientInstanceLocatorMap = new HashMap<Long, HiliLocatorMap>();
 
+	private static DomainTransformRequestPersistenceSupport requestPersistenceSupport = new DomainTransformRequestPersistenceSupport();
+
+	public static DomainTransformRequestPersistenceSupport persistenceEvents() {
+		return requestPersistenceSupport;
+	}
+
 	/**
 	 * ibid
 	 */
 	private static int transformRequestCounter = 1;
 
-	protected abstract void processValidLogin(LoginResponse lrb, String userName)
-			throws AuthenticationException;
+	private Logger logger;
 
-	public List<ServerValidator> validateOnServer(
-			List<ServerValidator> validators) throws WebException {
-		return ServletLayerLocator.get().commonPersistenceProvider()
-				.getCommonPersistence().validate(validators);
-	}
+	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
 
-	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
-		return ServletLayerLocator.get().commonPersistenceProvider()
-				.getCommonPersistence().search(def, pageNumber);
-	}
+	private int actionCount = 0;
 
-	public <G extends WrapperPersistable> Long persist(G gwpo)
+	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws WebException {
 		try {
 			return ServletLayerLocator.get().commonPersistenceProvider()
-					.getCommonPersistence().persist(gwpo);
+					.getCommonPersistence().cache(specs);
 		} catch (Exception e) {
-			logger.warn(e);
+			e.printStackTrace();
+			throw new WebException(e);
+		}
+	}
+
+	public <T extends HasIdAndLocalId> T getItemById(String className, Long id)
+			throws WebException {
+		try {
+			Class<T> clazz = (Class<T>) Class.forName(className);
+			return ServletLayerLocator.get().commonPersistenceProvider()
+					.getCommonPersistence().getItemById(clazz, id, true, false);
+		} catch (Exception e) {
 			throw new WebException(e.getMessage());
 		}
 	}
 
-	@Override
-	protected void doUnexpectedFailure(Throwable e) {
-		if (e.getClass().getName().equals(
-				"org.apache.catalina.connector.ClientAbortException")) {
-			getLogger().debug("Client RPC call aborted by client");
-			return;
-		}
-		super.doUnexpectedFailure(e);
-	}
-
-	private Logger logger;
-
-	protected void setLogger(Logger logger) {
-		this.logger = logger;
-	}
-
 	public Logger getLogger() {
 		return logger;
-	}
-
-	public Long logClientError(String exceptionToString) {
-		return ServletLayerLocator.get().commonPersistenceProvider()
-				.getCommonPersistence().log(exceptionToString,
-						LogMessageType.CLIENT_EXCEPTION.toString());
-	}
-
-	protected int nextTransformRequestId() {
-		return transformRequestCounter++;
-	}
-
-	public DomainTransformResponse transformFromServletLayer(
-			boolean persistTransforms) throws DomainTransformException {
-		return transformFromServletLayer(persistTransforms, null);
-	}
-
-	/*
-	 * TODO - this should probably be integrated more with {transform} - why is
-	 * the server layer so special? just another client
-	 */
-	public DomainTransformResponse transformFromServletLayer(
-			boolean persistTransforms,
-			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
-			throws DomainTransformException {
-		DomainTransformRequest request = new DomainTransformRequest();
-		HiliLocatorMap map = new HiliLocatorMap();
-		request.setClientInstance(serverAsClientInstance);
-		request.setRequestId(nextTransformRequestId());
-		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
-				TransformManager.get().getTransformsByCommitType(
-						CommitType.TO_LOCAL_BEAN));
-		if (items.isEmpty()) {
-			return null;
-		}
-		for (DomainTransformEvent dte : items) {
-			dte.setCommitType(CommitType.TO_STORAGE);
-		}
-		request.setItems(items);
-		try {
-			((ThreadedPermissionsManager) PermissionsManager.get())
-					.pushSystemUser();
-			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
-					.transformPersistenceQueue().submit(
-							new TransformPersistenceToken(request, map,
-									persistTransforms, false, false,
-									transformExceptionPolicy));
-			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
-				return wrapper.response;
-			} else {
-				logTransformException(wrapper.response, false);
-				throw wrapper.response.getTransformExceptions().get(0);
-			}
-		} finally {
-			PermissionsManager.get().popUser();
-		}
-	}
-
-	private void logTransformException(DomainTransformResponse response,
-			boolean requestDetail) {
-		logger.info("data transform problem - user "
-				+ PermissionsManager.get().getUserName());
-		if (requestDetail) {
-			logger.info(response.getRequest().toStringForError());
-		} else {
-			logger.info(response.getRequest());
-		}
-	}
-
-	public DomainTransformResponse transform(DomainTransformRequest request)
-			throws DomainTransformRequestException {
-		return transform(request, false, null).response;
-	}
-
-	/**
-	 * synchronizing implies serialized transforms per clientInstance
-	 */
-	DomainTransformLayerWrapper transform(DomainTransformRequest request,
-			boolean ignoreClientAuthMismatch,
-			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
-			throws DomainTransformRequestException {
-		Long clientInstanceId = request.getClientInstance().getId();
-		synchronized (clientInstanceLocatorMap) {
-			if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
-				clientInstanceLocatorMap.put(clientInstanceId,
-						new HiliLocatorMap());
-			}
-		}
-		HiliLocatorMap locatorMap = clientInstanceLocatorMap
-				.get(clientInstanceId);
-		synchronized (locatorMap) {
-			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(request, locatorMap,
-					true, true, ignoreClientAuthMismatch,
-					transformExceptionPolicy);
-			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
-					.transformPersistenceQueue().submit(
-							persistenceToken);
-			
-			wrapper.ignored=persistenceToken.ignored;
-			// not necessary if ejb layer is local
-			// clientInstanceLocatorMap.put(clientInstanceId,
-			// wrapper.locatorMap);
-			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
-				return wrapper;
-			} else {
-				logTransformException(wrapper.response, true);
-				throw new DomainTransformRequestException(wrapper.response);
-			}
-		}
-	}
-
-	protected void checkAnnotatedPermissions(Object o) {
-		AuthenticationRequired ara = o.getClass().getAnnotation(
-				AuthenticationRequired.class);
-		if (ara != null) {
-			if (!PermissionsManager.get().isPermissible(
-					new AnnotatedPermissible(ara.permission()))) {
-				WrappedRuntimeException e = new WrappedRuntimeException(
-						"Permission denied for action " + o,
-						SuggestedAction.NOTIFY_WARNING);
-				EntityLayerLocator.get().log(
-						LogMessageType.TRANSFORM_EXCEPTION,
-						"Data transform permissions exception", e);
-				throw e;
-			}
-		}
 	}
 
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
@@ -284,65 +153,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						action.getClass().getName(), count);
 	}
 
-	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
+	public List<Long> listRunningJobs() {
+		return JobRegistry.get().getRunningJobs();
+	}
 
-	@Override
-	public String processCall(String payload) throws SerializationException {
-		RPCRequest rpcRequest = null;
-		try {
-			CookieHelper.get().getIid(getThreadLocalRequest(),
-					getThreadLocalResponse());
-			SessionHelper.initUserState(getThreadLocalRequest());
-			String userName = CookieHelper.get().getRememberedUserName(
-					getThreadLocalRequest(), getThreadLocalResponse());
-			if (userName != null && !PermissionsManager.get().isLoggedIn()) {
-				try {
-					LoginResponse lrb = new LoginResponse();
-					lrb.setOk(true);
-					processValidLogin(lrb, userName);
-				} catch (AuthenticationException e) {
-					// ignore
-				}
-			}
-			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
-			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
-			String name = rpcRequest.getMethod().getName();
-			Method method;
-			try {
-				method = this.getClass().getMethod(name,
-						rpcRequest.getMethod().getParameterTypes());
-				if (method.isAnnotationPresent(AuthenticationRequired.class)) {
-					AuthenticationRequired ar = method
-							.getAnnotation(AuthenticationRequired.class);
-					AnnotatedPermissible ap = new AnnotatedPermissible(ar
-							.permission());
-					if (!PermissionsManager.get().isPermissible(ap)) {
-						getServletContext().log(
-								"Action not permitted: " + name,
-								new Exception());
-						return RPC.encodeResponseForFailure(null,
-								new WebException("Action not permitted: "
-										+ name));
-					}
-				}
-			} catch (SecurityException ex) {
-				RPC.encodeResponseForFailure(null, ex);
-			} catch (NoSuchMethodException ex) {
-				RPC.encodeResponseForFailure(null, ex);
-			}
-			return RPC.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
-					rpcRequest.getParameters(), rpcRequest
-							.getSerializationPolicy());
-		} catch (IncompatibleRemoteServiceException ex) {
-			getServletContext()
-					.log(
-							"An IncompatibleRemoteServiceException was thrown while processing this call.",
-							ex);
-			return RPC.encodeResponseForFailure(null, ex);
-		} catch (UnexpectedException ex) {
-			logRpcException(ex);
-			throw ex;
-		}
+	public Long logClientError(String exceptionToString) {
+		return ServletLayerLocator.get().commonPersistenceProvider()
+				.getCommonPersistence().log(exceptionToString,
+						LogMessageType.CLIENT_EXCEPTION.toString());
 	}
 
 	public void logRpcException(Exception ex) {
@@ -382,19 +200,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.commonPersistenceProvider().getCommonPersistence();
 		cpl.log(msg, LogMessageType.RPC_EXCEPTION.toString());
 	}
-
-	public <T extends HasIdAndLocalId> T getItemById(String className, Long id)
-			throws WebException {
-		try {
-			Class<T> clazz = (Class<T>) Class.forName(className);
-			return ServletLayerLocator.get().commonPersistenceProvider()
-					.getCommonPersistence().getItemById(clazz, id, true, false);
-		} catch (Exception e) {
-			throw new WebException(e.getMessage());
-		}
-	}
-
-	private int actionCount = 0;
 
 	public Long performAction(final RemoteAction action) {
 		return performAction(action, true);
@@ -461,21 +266,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	public JobInfo pollJobStatus(Long id, boolean cancel) {
-		if (cancel) {
-			JobRegistry.get().cancel(id);
-		}
-		return JobRegistry.get().getInfo(id);
-	}
-
-	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
+	public <G extends WrapperPersistable> Long persist(G gwpo)
 			throws WebException {
 		try {
 			return ServletLayerLocator.get().commonPersistenceProvider()
-					.getCommonPersistence().cache(specs);
+					.getCommonPersistence().persist(gwpo);
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new WebException(e);
+			logger.warn(e);
+			throw new WebException(e.getMessage());
 		}
 	}
 
@@ -525,15 +323,18 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				// transforms. but...perhaps better not (keep as is)
 				rq.setRequestId(wr.getRequestId());
 				rq.fromString(wr.getText());
-				
 				DomainTransformLayerWrapper transformLayerWrapper = transform(
 						rq,
 						true,
 						new IgnoreMissingPersistenceLayerTransformExceptionPolicy());
 				if (logger != null) {
-					logger.info(CommonUtils.format(
-							"Request [%1/%2] : %3 transforms written, %4 ignored",
-							requestId, clientInstanceId, rq.getItems().size(),transformLayerWrapper.ignored));
+					logger
+							.info(CommonUtils
+									.format(
+											"Request [%1/%2] : %3 transforms written, %4 ignored",
+											requestId, clientInstanceId, rq
+													.getItems().size(),
+											transformLayerWrapper.ignored));
 				}
 			}
 		} catch (Exception e) {
@@ -542,7 +343,218 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	public List<Long> listRunningJobs() {
-		return JobRegistry.get().getRunningJobs();
+	public JobInfo pollJobStatus(Long id, boolean cancel) {
+		if (cancel) {
+			JobRegistry.get().cancel(id);
+		}
+		return JobRegistry.get().getInfo(id);
+	}
+
+	@Override
+	public String processCall(String payload) throws SerializationException {
+		RPCRequest rpcRequest = null;
+		try {
+			CookieHelper.get().getIid(getThreadLocalRequest(),
+					getThreadLocalResponse());
+			SessionHelper.initUserState(getThreadLocalRequest());
+			String userName = CookieHelper.get().getRememberedUserName(
+					getThreadLocalRequest(), getThreadLocalResponse());
+			if (userName != null && !PermissionsManager.get().isLoggedIn()) {
+				try {
+					LoginResponse lrb = new LoginResponse();
+					lrb.setOk(true);
+					processValidLogin(lrb, userName);
+				} catch (AuthenticationException e) {
+					// ignore
+				}
+			}
+			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
+			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
+			String name = rpcRequest.getMethod().getName();
+			Method method;
+			try {
+				method = this.getClass().getMethod(name,
+						rpcRequest.getMethod().getParameterTypes());
+				if (method.isAnnotationPresent(AuthenticationRequired.class)) {
+					AuthenticationRequired ar = method
+							.getAnnotation(AuthenticationRequired.class);
+					AnnotatedPermissible ap = new AnnotatedPermissible(ar
+							.permission());
+					if (!PermissionsManager.get().isPermissible(ap)) {
+						getServletContext().log(
+								"Action not permitted: " + name,
+								new Exception());
+						return RPC.encodeResponseForFailure(null,
+								new WebException("Action not permitted: "
+										+ name));
+					}
+				}
+			} catch (SecurityException ex) {
+				RPC.encodeResponseForFailure(null, ex);
+			} catch (NoSuchMethodException ex) {
+				RPC.encodeResponseForFailure(null, ex);
+			}
+			return RPC.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
+					rpcRequest.getParameters(), rpcRequest
+							.getSerializationPolicy());
+		} catch (IncompatibleRemoteServiceException ex) {
+			getServletContext()
+					.log(
+							"An IncompatibleRemoteServiceException was thrown while processing this call.",
+							ex);
+			return RPC.encodeResponseForFailure(null, ex);
+		} catch (UnexpectedException ex) {
+			logRpcException(ex);
+			throw ex;
+		}
+	}
+
+	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
+		return ServletLayerLocator.get().commonPersistenceProvider()
+				.getCommonPersistence().search(def, pageNumber);
+	}
+
+	public DomainTransformResponse transform(DomainTransformRequest request)
+			throws DomainTransformRequestException {
+		return transform(request, false, null).response;
+	}
+
+	public DomainTransformResponse transformFromServletLayer(
+			boolean persistTransforms) throws DomainTransformRequestException {
+		DomainTransformLayerWrapper wrapper = transformFromServletLayer(persistTransforms, null);
+		return wrapper==null?null:wrapper.response;
+	}
+
+	/*
+	 * TODO - this should probably be integrated more with {transform} - why is
+	 * the server layer so special? just another client
+	 */
+	public DomainTransformLayerWrapper transformFromServletLayer(
+			boolean persistTransforms,
+			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
+			throws DomainTransformRequestException {
+		DomainTransformRequest request = new DomainTransformRequest();
+		HiliLocatorMap map = new HiliLocatorMap();
+		request.setClientInstance(serverAsClientInstance);
+		request.setRequestId(nextTransformRequestId());
+		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
+				TransformManager.get().getTransformsByCommitType(
+						CommitType.TO_LOCAL_BEAN));
+		if (items.isEmpty()) {
+			return null;
+		}
+		for (DomainTransformEvent dte : items) {
+			dte.setCommitType(CommitType.TO_STORAGE);
+		}
+		request.setItems(items);
+		try {
+			((ThreadedPermissionsManager) PermissionsManager.get())
+					.pushSystemUser();
+			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
+					request, map, persistTransforms, false, false,
+					transformExceptionPolicy);
+			return submitAndHandleTransforms(persistenceToken);
+		} finally {
+			PermissionsManager.get().popUser();
+		}
+	}
+
+	public List<ServerValidator> validateOnServer(
+			List<ServerValidator> validators) throws WebException {
+		return ServletLayerLocator.get().commonPersistenceProvider()
+				.getCommonPersistence().validate(validators);
+	}
+
+	private void logTransformException(DomainTransformResponse response,
+			boolean requestDetail) {
+		logger.info("data transform problem - user "
+				+ PermissionsManager.get().getUserName());
+		if (requestDetail) {
+			logger.info(response.getRequest().toStringForError());
+		} else {
+			logger.info(response.getRequest());
+		}
+	}
+
+	protected void checkAnnotatedPermissions(Object o) {
+		AuthenticationRequired ara = o.getClass().getAnnotation(
+				AuthenticationRequired.class);
+		if (ara != null) {
+			if (!PermissionsManager.get().isPermissible(
+					new AnnotatedPermissible(ara.permission()))) {
+				WrappedRuntimeException e = new WrappedRuntimeException(
+						"Permission denied for action " + o,
+						SuggestedAction.NOTIFY_WARNING);
+				EntityLayerLocator.get().log(
+						LogMessageType.TRANSFORM_EXCEPTION,
+						"Data transform permissions exception", e);
+				throw e;
+			}
+		}
+	}
+
+	@Override
+	protected void doUnexpectedFailure(Throwable e) {
+		if (e.getClass().getName().equals(
+				"org.apache.catalina.connector.ClientAbortException")) {
+			getLogger().debug("Client RPC call aborted by client");
+			return;
+		}
+		super.doUnexpectedFailure(e);
+	}
+
+	protected int nextTransformRequestId() {
+		return transformRequestCounter++;
+	}
+
+	protected abstract void processValidLogin(LoginResponse lrb, String userName)
+			throws AuthenticationException;
+
+	protected void setLogger(Logger logger) {
+		this.logger = logger;
+	}
+
+	/**
+	 * synchronizing implies serialized transforms per clientInstance
+	 */
+	protected DomainTransformLayerWrapper transform(
+			DomainTransformRequest request, boolean ignoreClientAuthMismatch,
+			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
+			throws DomainTransformRequestException {
+		Long clientInstanceId = request.getClientInstance().getId();
+		synchronized (clientInstanceLocatorMap) {
+			if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
+				clientInstanceLocatorMap.put(clientInstanceId,
+						new HiliLocatorMap());
+			}
+		}
+		HiliLocatorMap locatorMap = clientInstanceLocatorMap
+				.get(clientInstanceId);
+		synchronized (locatorMap) {
+			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
+					request, locatorMap, true, true, ignoreClientAuthMismatch,
+					transformExceptionPolicy);
+			return submitAndHandleTransforms(persistenceToken);
+		}
+	}
+
+	protected DomainTransformLayerWrapper submitAndHandleTransforms(
+			TransformPersistenceToken persistenceToken)
+			throws DomainTransformRequestException {
+		persistenceEvents().fireDomainTransformRequestPersistenceEvent(
+				new DomainTransformRequestPersistenceEvent(persistenceToken,
+						null));
+		DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
+				.transformPersistenceQueue().submit(persistenceToken);
+		wrapper.ignored = persistenceToken.ignored;
+		persistenceEvents().fireDomainTransformRequestPersistenceEvent(
+				new DomainTransformRequestPersistenceEvent(persistenceToken,
+						wrapper));
+		if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
+			return wrapper;
+		} else {
+			logTransformException(wrapper.response, true);
+			throw new DomainTransformRequestException(wrapper.response);
+		}
 	}
 }

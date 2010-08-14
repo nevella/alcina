@@ -94,10 +94,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public void bulkDelete(Class clazz, Collection<Long> ids) {
 		if (!EntityLayerLocator.get().jpaImplementation().bulkDelete(
 				getEntityManager(), clazz, ids)) {
-			List<Object> resultList = getEntityManager().createQuery(
-					String.format("from %s where id in %s ", clazz
-							.getSimpleName(), EntityUtils
-							.longsToIdClause(ids))).getResultList();
+			List<Object> resultList = getEntityManager()
+					.createQuery(
+							String.format("from %s where id in %s ", clazz
+									.getSimpleName(), EntityUtils
+									.longsToIdClause(ids))).getResultList();
 			for (Object object : resultList) {
 				getEntityManager().remove(object);
 			}
@@ -636,8 +637,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			transformException.setSourceObjectName(CommonLocator.get()
 					.classLookup().displayNameForObject(object));
 		} catch (Exception e) {
+			System.out.println("Unable to add source object name - reason: "
+					+ e.getMessage());
 			// we tried
-			e.printStackTrace();
+			// e.printStackTrace();
 		}
 	}
 
@@ -655,8 +658,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					}
 				}
 			}
-			if (PermissionsManager.get().isPermissible(PermissionsManager.ADMIN_PERMISSIBLE)) {
-				if (!PermissionsManager.get().isPermissible(PermissionsManager.ROOT_PERMISSIBLE)) {
+			if (PermissionsManager.get().isPermissible(
+					PermissionsManager.ADMIN_PERMISSIBLE)) {
+				if (!PermissionsManager.get().isPermissible(
+						PermissionsManager.ROOT_PERMISSIBLE)) {
 					System.err
 							.println(CommonUtils
 									.format(

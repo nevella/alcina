@@ -336,4 +336,10 @@ public class GraphProjection {
 	public interface InstantiateImplCallback<T> {
 		boolean instantiateLazyInitializer(T initializer, ClassFieldPair context);
 	}
+
+	public interface InstantiateImplCallbackWithShellObject<T> extends
+			InstantiateImplCallback<T>{
+		boolean instantiateLazyInitializer(T initializer, ClassFieldPair context);
+		Object instantiateShellObject(T initializer, ClassFieldPair context);
+	}
 }
