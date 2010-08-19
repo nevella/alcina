@@ -20,7 +20,6 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,7 +44,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
@@ -95,24 +93,8 @@ import com.google.gwt.user.server.rpc.UnexpectedException;
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		implements CommonRemoteService {
 	/**
-	 * the instance used by the server layer when acting as a client to the ejb
-	 * layer. Note - this must be set on webapp startup
-	 */
-	public static ClientInstance serverAsClientInstance;
-
-	public static Map<Long, HiliLocatorMap> clientInstanceLocatorMap = new HashMap<Long, HiliLocatorMap>();
-
-	private static DomainTransformRequestPersistenceSupport requestPersistenceSupport = new DomainTransformRequestPersistenceSupport();
-
-	public static DomainTransformRequestPersistenceSupport persistenceEvents() {
-		return requestPersistenceSupport;
-	}
-
-	/**
 	 * ibid
 	 */
-	private static int transformRequestCounter = 1;
-
 	private Logger logger;
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
@@ -421,8 +403,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public DomainTransformResponse transformFromServletLayer(
 			boolean persistTransforms) throws DomainTransformRequestException {
-		DomainTransformLayerWrapper wrapper = transformFromServletLayer(persistTransforms, null);
-		return wrapper==null?null:wrapper.response;
+		DomainTransformLayerWrapper wrapper = transformFromServletLayer(
+				persistTransforms, null);
+		return wrapper == null ? null : wrapper.response;
 	}
 
 	/*
@@ -435,7 +418,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws DomainTransformRequestException {
 		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
-		request.setClientInstance(serverAsClientInstance);
+		request.setClientInstance(CommonRemoteServiceServletSupport.get()
+				.getServerAsClientInstance());
 		request.setRequestId(nextTransformRequestId());
 		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
 				TransformManager.get().getTransformsByCommitType(
@@ -504,7 +488,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected int nextTransformRequestId() {
-		return transformRequestCounter++;
+		return CommonRemoteServiceServletSupport.get().nextTransformRequestId();
 	}
 
 	protected abstract void processValidLogin(LoginResponse lrb, String userName)
@@ -522,6 +506,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
 			throws DomainTransformRequestException {
 		Long clientInstanceId = request.getClientInstance().getId();
+		Map<Long, HiliLocatorMap> clientInstanceLocatorMap = CommonRemoteServiceServletSupport
+				.get().getClientInstanceLocatorMap();
 		synchronized (clientInstanceLocatorMap) {
 			if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
 				clientInstanceLocatorMap.put(clientInstanceId,
@@ -541,15 +527,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	protected DomainTransformLayerWrapper submitAndHandleTransforms(
 			TransformPersistenceToken persistenceToken)
 			throws DomainTransformRequestException {
-		persistenceEvents().fireDomainTransformRequestPersistenceEvent(
-				new DomainTransformRequestPersistenceEvent(persistenceToken,
-						null));
+		DomainTransformRequestPersistenceSupport persistenceSupport = CommonRemoteServiceServletSupport
+				.get().getRequestPersistenceSupport();
+		persistenceSupport
+				.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
+						persistenceToken, null));
 		DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 				.transformPersistenceQueue().submit(persistenceToken);
 		wrapper.ignored = persistenceToken.ignored;
-		persistenceEvents().fireDomainTransformRequestPersistenceEvent(
-				new DomainTransformRequestPersistenceEvent(persistenceToken,
-						wrapper));
+		persistenceSupport
+				.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
+						persistenceToken, wrapper));
 		if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
 			return wrapper;
 		} else {

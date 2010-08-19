@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
@@ -22,15 +23,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
- * some sort of note to self TODO: 3.2 - use case, we've loaded single user
- * & recursive member groups, now we're merging all users/groups we
- * essentially want a recursive scan on all properties (ouch) of incoming
- * objects replacing incoming object refs with local refs if they exist it's
- * going to be linear...but it's going to be long...but it's gotta be done
- * remember, if yr about to replace, merge replacement first (cos replaced
- * will be gone might be a circular ref problem here...aha...something to
- * think on ...wait a sec...why not just clear all current info if humanly
- * possible?
+ * some sort of note to self TODO: 3.2 - use case, we've loaded single user &
+ * recursive member groups, now we're merging all users/groups we essentially
+ * want a recursive scan on all properties (ouch) of incoming objects replacing
+ * incoming object refs with local refs if they exist it's going to be
+ * linear...but it's going to be long...but it's gotta be done remember, if yr
+ * about to replace, merge replacement first (cos replaced will be gone might be
+ * a circular ref problem here...aha...something to think on ...wait a sec...why
+ * not just clear all current info if humanly possible?
  * 
  * @param hasIdAndLocalId
  * @param obj
@@ -50,8 +50,7 @@ public class MapObjectLookup implements ObjectLookup {
 
 	private Map<Class, Boolean> registerChildren = new HashMap<Class, Boolean>();
 
-	public MapObjectLookup(PropertyChangeListener listener,
-			List topLevelObjects) {
+	public MapObjectLookup(PropertyChangeListener listener, List topLevelObjects) {
 		this.listener = listener;
 		this.idMap = new HashMap<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>>();
 		this.localIdMap = new HashMap<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>>();
@@ -64,6 +63,12 @@ public class MapObjectLookup implements ObjectLookup {
 		ensureCollections(clazz);
 		idMap.get(clazz).remove(id);
 		localIdMap.get(clazz).remove(localId);
+		// see discussion in AbstractDomainBase - nuffink's perfect
+		// collnMap.get(clazz).remove(obj);
+		// if (obj instanceof AbstractDomainBase) {
+		// AbstractDomainBase adb = (AbstractDomainBase) obj;
+		// adb.clearHash();
+		// }
 		mapObject(obj);
 	}
 
@@ -113,8 +118,8 @@ public class MapObjectLookup implements ObjectLookup {
 	}
 
 	public HasIdAndLocalId getObject(HasIdAndLocalId bean) {
-		return (HasIdAndLocalId) getObject(bean.getClass(), bean.getId(),
-				bean.getLocalId());
+		return (HasIdAndLocalId) getObject(bean.getClass(), bean.getId(), bean
+				.getLocalId());
 	}
 
 	public void registerObjects(Collection objects) {
@@ -196,8 +201,8 @@ public class MapObjectLookup implements ObjectLookup {
 				&& (!registerChildren.containsKey(clazz) || registerChildren
 						.get(clazz))) {
 			boolean shouldMapChildren = lookupCreated;
-			ClientBeanReflector bi = ClientReflector.get()
-					.beanInfoForClass(clazz);
+			ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
+					clazz);
 			Collection<ClientPropertyReflector> prs = bi == null ? new ArrayList<ClientPropertyReflector>()
 					: bi.getPropertyReflectors().values();
 			for (ClientPropertyReflector pr : prs) {
@@ -207,8 +212,8 @@ public class MapObjectLookup implements ObjectLookup {
 					shouldMapChildren = true;
 					Collection<HasIdAndLocalId> colln = (Collection<HasIdAndLocalId>) CommonUtils
 							.wrapInCollection(CommonLocator.get()
-									.propertyAccessor().getPropertyValue(
-											obj, pr.getPropertyName()));
+									.propertyAccessor().getPropertyValue(obj,
+											pr.getPropertyName()));
 					if (colln != null) {
 						for (HasIdAndLocalId hili : colln) {
 							mapObject(hili);

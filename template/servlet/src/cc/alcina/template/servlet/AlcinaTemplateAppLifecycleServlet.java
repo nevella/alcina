@@ -18,6 +18,7 @@ import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.template.cs.constants.AlcinaTemplateImplLookup;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
 import cc.alcina.template.entityaccess.AlcinaTemplateBeanProvider;
+import cc.alcina.template.entityaccess.AlcinaTemplatePersistence;
 import cc.alcina.template.entityaccess.AlcinaTemplatePersistenceLocal;
 
 public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
@@ -29,10 +30,11 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 	 */
 	public void destroy() {
 		try {
+			super.destroy();
 			ResourceUtilities.singleton().appShutdown();
-			AlcinaTemplatePersistenceLocal jpb = AlcinaTemplateBeanProvider
-					.get().getAlcinaTemplatePersistenceBean();
-			jpb.destroy();
+			// we won't be able to access as an ejb bean at this stage - so destroy() must have no @em refs
+			AlcinaTemplatePersistenceLocal pb = new AlcinaTemplatePersistence();
+			pb.destroy();
 			ServletLayerRegistry.get().appShutdown();
 		} catch (Exception e) {
 			System.out.println(e);

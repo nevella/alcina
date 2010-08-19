@@ -45,7 +45,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		ClientInstance serverAsClientInstance = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence()
 				.createClientInstance();
-		CommonRemoteServiceServlet.serverAsClientInstance = serverAsClientInstance;
+		CommonRemoteServiceServletSupport.get().setServerAsClientInstance(
+				serverAsClientInstance);
 		PermissionsManager.get().popUser();
 	}
 
@@ -116,9 +117,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		MetricLogging.get().end(key);
 	}
 
-	protected  abstract void initDataFolder();
+	protected abstract void initDataFolder();
 
 	public void init(ServletConfig servletConfig) throws ServletException {
+		MetricLogging.get().start("Web app startup");
 		try {
 			initNames();
 			initLoggers();
@@ -131,6 +133,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		} catch (Exception e) {
 			throw new ServletException(e);
 		}
+		MetricLogging.get().end("Web app startup");
 	}
 
 	protected abstract void initCustom();
@@ -193,5 +196,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	public void service(ServletRequest arg0, ServletResponse arg1)
 			throws ServletException, IOException {
+	}
+
+	@Override
+	public void destroy() {
+		super.destroy();
+		CommonRemoteServiceServletSupport.get().appShutdown();
 	}
 }
