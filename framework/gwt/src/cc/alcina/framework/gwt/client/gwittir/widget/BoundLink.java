@@ -15,6 +15,8 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import cc.alcina.framework.gwt.client.widget.Link;
 
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -28,6 +30,10 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 	protected Link base;
 
 	private boolean asHtml;
+
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return this.base.addClickHandler(handler);
+	}
 
 	/** Creates a new instance of Label */
 	public BoundLink() {

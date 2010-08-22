@@ -20,6 +20,6 @@
 	<classpathentry kind="lib" path="lib/framework/gwt/gwittir-trunk.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-annotations.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-javaee.jar"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core.jar"/>
+	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core.jar" sourcepath="/jboss-hibernate-core/src/main/java"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

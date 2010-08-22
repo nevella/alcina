@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.objecttree.basic;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,27 +24,27 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 	private PropertyChangeListener pcl = new PropertyChangeListener() {
 		public void propertyChange(PropertyChangeEvent evt) {
 			SC templateCriterion = newCriterion(null);
-			Set saved = new HashSet();
+			Set toReplace = new LinkedHashSet();
 			for (Object sc : criteriaGroup.getCriteria()) {
-				if (sc.getClass()!=templateCriterion.getClass()){
-					saved.add(sc);
+				if (sc.getClass() != templateCriterion.getClass()) {
+					toReplace.add(sc);
 				}
 			}
-			criteriaGroup.getCriteria().clear();
 			Set newValue = (Set) evt.getNewValue();
 			if (newValue == null) {
 				return;
 			}
 			for (Object obj : newValue) {
 				SC tc = newCriterion((O) obj);
-				criteriaGroup.getCriteria().add(tc);
+				toReplace.add(tc);
 			}
-			criteriaGroup.getCriteria().addAll(saved);
+			criteriaGroup.setCriteria(toReplace);
 		}
 	};
-/**
- * note must allow obj==null
- */
+
+	/**
+	 * note must allow obj==null
+	 */
 	protected abstract SC newCriterion(O obj);
 
 	public CriteriaGroupSelectorCustomiser(Class selectionObjectClass,
@@ -79,7 +80,7 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 		Set values = new HashSet();
 		SC templateCriterion = newCriterion(null);
 		for (Object sc : criteriaGroup.getCriteria()) {
-			//allows for potentially multiple criteria types in the cg
+			// allows for potentially multiple criteria types in the cg
 			if (sc.getClass() == templateCriterion.getClass()) {
 				values.add(getSearchCriterionDisplayObject((SC) sc));
 			}

@@ -53,6 +53,8 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 @SuppressWarnings("unchecked")
 /**
@@ -645,7 +647,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			super(item.toString() + sep, asHTML);
 			this.item = item;
 			this.ownerLabel = ownerLabel;
-			String text = CommonUtils.singularOrPluralToString(item) + sep;
+			String text = (String) renderer.render(item)+ sep;
 			filterableText = text.toLowerCase();
 			// if (text.length() < charWidth) {
 			// this is just too hacky - use mouseover highlight to differentiate
@@ -671,6 +673,15 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			return item;
 		}
 	}
+	private Renderer renderer = ToStringRenderer.INSTANCE;
+
+	public Renderer getRenderer() {
+		return this.renderer;
+	}
+
+	public void setRenderer(Renderer renderer) {
+		this.renderer = renderer;
+	}
 
 	public class SelectWithSearchItemDiv extends BlockLink implements
 			VisualFilterable, HasItem<T> {
@@ -685,7 +696,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			super(item.toString(), asHTML);
 			this.item = item;
 			this.ownerLabel = ownerLabel;
-			String text = CommonUtils.singularOrPluralToString(item);
+			String text = (String) renderer.render(item);
 			filterableText = text.toLowerCase();
 			setHTML(text + sep);
 			setStyleName("chooser-item");

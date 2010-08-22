@@ -20,6 +20,19 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 /**
  * 
  * @author Nick Reddel
+ *         <p>
+ *         See JVM bugs, particularly
+ *         http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4477877
+ *         </p>
+ *         <p>
+ *         For JVMIntrospector (not compiled gwt) to work, make sure the
+ *         <b>getValue, setValue</b> overrides in children are the <i>first</i>
+ *         bean methods in source - i.e.<br>
+ *         getValue()<br>
+ *         setValue()<br>
+ *         getMyEnum()<br>
+ *         setMyEnum()<br>
+ *         </p>
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull {
@@ -53,24 +66,26 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		return result;
 	}
 
-//	@Override
-//	public boolean equals(Object obj) {
-//		if (obj instanceof EnumCriterion) {
-//			EnumCriterion ec = (EnumCriterion) obj;
-//			return getClass() == ec.getClass() && ec.getValue() == getValue();
-//		}
-//		return super.equals(obj);
-//	}
-//
-//	@Override
-//	public int hashCode() {
-//		E value = getValue();
-//		return getClass().hashCode() ^ (value == null ? 0 : value.hashCode());
-//	}
-
+	// @Override
+	// public boolean equals(Object obj) {
+	// if (obj instanceof EnumCriterion) {
+	// EnumCriterion ec = (EnumCriterion) obj;
+	// return getClass() == ec.getClass() && ec.getValue() == getValue();
+	// }
+	// return super.equals(obj);
+	// }
+	//
+	// @Override
+	// public int hashCode() {
+	// E value = getValue();
+	// return getClass().hashCode() ^ (value == null ? 0 : value.hashCode());
+	// }
 	@XmlTransient
 	public abstract E getValue();
 
+	/**
+	 * add property change firing to the subclass implementation, if you care
+	 */
 	public abstract void setValue(E value);
 
 	public void setWithNull(boolean withNull) {

@@ -13,6 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
@@ -20,6 +24,7 @@ import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
@@ -30,12 +35,44 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 public abstract class AbstractRenderer<T extends TreeRenderable> implements
 		TreeRenderer<T> {
 	private T renderable;
+
+	private AbstractBoundWidget boundWidget;
+
+	public AbstractBoundWidget getBoundWidget() {
+		return this.boundWidget;
+	}
+
+	public void setBoundWidget(AbstractBoundWidget boundWidget) {
+		this.boundWidget = boundWidget;
+	}
+
 	private RenderContext context;
+
+	private List<TreeRenderer> childRenderers = new ArrayList<TreeRenderer>();
 
 	public CollectionFilter collectionFilter() {
 		return null;
 	}
+
 	public CollectionProvider collectionProvider() {
+		return null;
+	}
+
+	public Collection<? extends TreeRenderer> childRenderers() {
+		return childRenderers;
+	}
+
+	public TreeRenderer childRendererForRenderableClass(
+			Class<? extends TreeRenderable> clazz) {
+		if (renderable.getClass() == clazz) {
+			return this;
+		}
+		for (TreeRenderer tr : childRenderers) {
+			TreeRenderer r = tr.childRendererForRenderableClass(clazz);
+			if (r != null) {
+				return r;
+			}
+		}
 		return null;
 	}
 

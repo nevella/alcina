@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
+import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.DOM;
@@ -1086,7 +1087,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.inChunk = false;
 		this.setValue(c);
 	}
-
+	private RenderContext renderContext=RenderContext.current();
 	private void init(int masksValue) {
 		// GWT.log( "Init "+ +masksValue + " :: "+((masksValue &
 		// BoundTable.MULTI_REQUIRES_SHIFT) > 0), null);
@@ -1355,6 +1356,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	private String noContentMessage = "No matching results found";
 
 	private void renderAll() {
+		RenderContext saved = RenderContext.current();
+		RenderContext.setCurrent(renderContext);
 		if (this.value == null || this.value.isEmpty()) {
 			this.clear();
 			Label l = new Label(
@@ -1418,6 +1421,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					HasHorizontalAlignment.ALIGN_CENTER);
 		}
 		setVisible(true);
+		RenderContext.setCurrent(saved);
 		// GWT.log(this.toString(), null);
 	}
 

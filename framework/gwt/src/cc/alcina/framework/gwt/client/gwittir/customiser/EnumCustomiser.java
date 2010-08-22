@@ -11,9 +11,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import java.util.ArrayList;
+import java.util.List;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -32,8 +33,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  *
  * @author Nick Reddel
  */
-
- public class EnumCustomiser implements Customiser {
+public class EnumCustomiser implements Customiser {
 	public static final String MULTIPLE = "multiple";
 
 	public static final String WITH_NULL = "with-null";
@@ -42,11 +42,13 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 	public static final String RENDERER_CLASS = "renderer-class";
 
+	public static final String HIDDEN_VALUES = "hidden-values";
+
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		NamedParameter parameter = NamedParameter.Support.getParameter(info
 				.parameters(), ENUM_CLASS);
-		Class clazz = parameter.classValue();
+		Class<? extends Enum> clazz = parameter.classValue();
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				MULTIPLE);
 		boolean multipleSelect = parameter != null && parameter.booleanValue();
@@ -58,10 +60,24 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				RENDERER_CLASS);
 		final Renderer renderer = parameter != null ? (Renderer) CommonLocator
-				.get().classLookup().newInstance(parameter.classValue())
-				: null;
+				.get().classLookup().newInstance(parameter.classValue()) : null;
 		if (renderer != null) {
 			provider.setRenderer(renderer);
+		}
+		String hiddenValuesStr = NamedParameter.Support.stringValue(info
+				.parameters(), HIDDEN_VALUES, null);
+		if (hiddenValuesStr != null) {
+			List<Enum> hiddenValues = new ArrayList<Enum>();
+			String[] enumStrs = hiddenValuesStr.split(",");
+			for (String enumStr : enumStrs) {
+				Enum[] enumConstants = clazz.getEnumConstants();
+				for (Enum en : enumConstants) {
+					if (en.toString().equals(enumStr)) {
+						hiddenValues.add(en);
+					}
+				}
+			}
+			provider.setHiddenValues(hiddenValues);
 		}
 		return editable ? provider : new BoundWidgetProvider() {
 			public BoundWidget get() {

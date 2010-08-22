@@ -122,7 +122,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 						false, true);
 		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK;
 		CollectionDataProvider cp = new CollectionDataProvider(adapters);
-		RenderContext.reset();
+		RenderContext.setCurrent(new RenderContext());
 		RelativePopupPositioning.setCurrentBoundingParent(RootPanel.get());
 		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, factory,
 				fields, cp);

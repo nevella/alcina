@@ -10,6 +10,9 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
@@ -22,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @SequenceGenerator(name = "classref_id_seq", sequenceName = "classref_id_seq")
 @ClientInstantiable
 @Introspectable
+@Cache(usage=CacheConcurrencyStrategy.TRANSACTIONAL)
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ClassRef.class)
 public class ClassRefImpl extends ClassRef implements Serializable {
 	long id;

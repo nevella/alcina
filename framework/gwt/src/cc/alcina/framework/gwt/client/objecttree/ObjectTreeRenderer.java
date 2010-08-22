@@ -61,8 +61,8 @@ public class ObjectTreeRenderer {
 
 	public ComplexPanel render(TreeRenderable root, RenderContext renderContext) {
 		this.op = new FlowPanelWithBinding();
-		renderContext.setRootRenderable(root);
-		renderToPanel(root, op, 0, true, renderContext);
+		op.setRenderContext(renderContext);
+		renderToPanel(root, op, 0, true, renderContext, null);
 		op.getBinding().bind();
 		op.getBinding().setLeft();
 		op.setStyleName("alcina-ObjectTree");
@@ -71,7 +71,8 @@ public class ObjectTreeRenderer {
 
 	@SuppressWarnings("unchecked")
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
-			int depth, boolean soleChild, RenderContext renderContext) {
+			int depth, boolean soleChild, RenderContext renderContext,
+			TreeRenderer parent) {
 		if (renderable instanceof Permissible) {
 			Permissible permissible = (Permissible) renderable;
 			if (!PermissionsManager.get().isPermissible(permissible)) {
@@ -80,6 +81,11 @@ public class ObjectTreeRenderer {
 		}
 		TreeRenderer node = TreeRenderingInfoProvider.get().getForRenderable(
 				renderable, renderContext);
+		if (parent != null) {
+			parent.childRenderers().add(node);
+		} else {
+			renderContext.setRootRenderer(node);
+		}
 		if (depth == 0 && node.renderCss() != null) {
 			cp.setStyleName(node.renderCss());
 		}
@@ -129,6 +135,7 @@ public class ObjectTreeRenderer {
 		if (customiserWidget != null) {
 			// note - must be responsible for own detach - cleanup
 			customiserWidget.setModel(renderable);
+			node.setBoundWidget(customiserWidget);
 			if (node.renderCss() != null) {
 				customiserWidget.addStyleName(node.renderCss());
 			}
@@ -153,6 +160,7 @@ public class ObjectTreeRenderer {
 			AbstractBoundWidget bw = new ObjectTreeBoundWidgetCreator()
 					.createBoundWidget(renderable, depth, soleChild, node, op
 							.getBinding());
+			node.setBoundWidget(bw);
 			cp.add(bw);
 			widgetsAdded = true;
 		}
@@ -175,7 +183,7 @@ public class ObjectTreeRenderer {
 					.renderableChildren();
 			for (TreeRenderable child : childRenderables) {
 				renderToPanel(child, childPanel, depth + 1, node
-						.renderableChildren().size() == 1, renderContext);
+						.renderableChildren().size() == 1, renderContext, node);
 			}
 		}
 		return;
@@ -229,14 +237,24 @@ public class ObjectTreeRenderer {
 		}
 	}
 
-	public static class FlowPanelWithBinding extends FlowPanel {
+	public interface SupportsAttachDetachCallbacks {
+		public void setRenderContext(RenderContext renderContext);
+	}
+
+	public static class FlowPanelWithBinding extends FlowPanel implements
+			SupportsAttachDetachCallbacks {
 		@Override
 		protected void onDetach() {
 			super.onDetach();
+			if (renderContext != null) {
+				renderContext.onDetach(this);
+			}
 			binding.unbind();
 		}
 
 		private Binding binding = new Binding();
+
+		private RenderContext renderContext;
 
 		public void setBinding(Binding binding) {
 			this.binding = binding;
@@ -245,7 +263,20 @@ public class ObjectTreeRenderer {
 		public Binding getBinding() {
 			return binding;
 		}
+
+		@Override
+		protected void onAttach() {
+			super.onAttach();
+			if (renderContext != null) {
+				renderContext.onAttach(this);
+			}
+		}
+
+		public void setRenderContext(RenderContext renderContext) {
+			this.renderContext = renderContext;
+		}
 	}
+
 	public static class HorizontalPanelWithBinding extends HorizontalPanel {
 		@Override
 		protected void onDetach() {

@@ -38,9 +38,10 @@ public class ObjectTreeGridRenderer extends ObjectTreeRenderer {
 	protected int colCountMax;
 
 	// a fair bit of hackery here - but, heck, it works
+	@Override
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
-			int depth, boolean soleChild, RenderContext renderContext) {
-		super.renderToPanel(renderable, cp, depth, soleChild, renderContext);
+			int depth, boolean soleChild, RenderContext renderContext, TreeRenderer parent) {
+		super.renderToPanel(renderable, cp, depth, soleChild, renderContext,parent);
 		if (depth == 0) {
 			cellFormatter = (FlexCellFormatter) ft.getCellFormatter();
 			int widgetCount = cp.getWidgetCount();

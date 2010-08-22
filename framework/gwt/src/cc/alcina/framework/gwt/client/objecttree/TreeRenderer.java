@@ -18,6 +18,7 @@ import java.util.Collection;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
@@ -48,6 +49,11 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public Collection<? extends TreeRenderable> renderableChildren();
 
+	public Collection<? extends TreeRenderer> childRenderers();
+
+	public TreeRenderer childRendererForRenderableClass(
+			Class<? extends TreeRenderable> clazz);
+
 	public String renderablePropertyName();
 
 	public boolean renderChildrenHorizontally();
@@ -57,6 +63,10 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	public String renderableText();
 
 	public BoundWidgetProvider renderCustomiser();
+	
+	public AbstractBoundWidget getBoundWidget();
+	
+	public void setBoundWidget(AbstractBoundWidget widget);
 
 	public RenderInstruction renderInstruction();
 

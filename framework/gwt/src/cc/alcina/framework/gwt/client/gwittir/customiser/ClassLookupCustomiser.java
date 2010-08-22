@@ -15,7 +15,6 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -78,19 +77,6 @@ public class ClassLookupCustomiser implements Customiser {
 		public static final ClassShortnameRenderer INSTANCE = new ClassShortnameRenderer();
 		public String render(Class clazz) {
 			return clazz == null ? "----" : CommonUtils.simpleClassName(clazz);
-		}
-	}
-
-	public static class RendererComparator implements Comparator {
-		private final Renderer renderer;
-
-		public RendererComparator(Renderer<?, ? extends Comparable> renderer) {
-			this.renderer = renderer;
-		}
-
-		public int compare(Object o1, Object o2) {
-			return CommonUtils.compareWithNullMinusOne((Comparable) renderer
-					.render(o1), (Comparable) renderer.render(o2));
 		}
 	}
 }

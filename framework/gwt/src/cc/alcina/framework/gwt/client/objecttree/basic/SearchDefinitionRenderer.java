@@ -28,17 +28,18 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
  *
  * @author Nick Reddel
  */
-
- public class SearchDefinitionRenderer extends AbstractRenderer<SearchDefinition> {
+public class SearchDefinitionRenderer<SD extends SearchDefinition> extends
+		AbstractRenderer<SD> {
 	public static final String RENDER_ORDER_GROUPS = "RENDER_ORDER_GROUPS";
+
 	public Collection<? extends TreeRenderable> renderableChildren() {
-		if (getContext().isBoolean(RENDER_ORDER_GROUPS)){
+		if (getContext().isBoolean(RENDER_ORDER_GROUPS)) {
 			List<CriteriaGroup> allCgs = new ArrayList<CriteriaGroup>();
 			allCgs.addAll(getRenderable().getCriteriaGroups());
 			allCgs.addAll(getRenderable().getOrderGroups());
 			return allCgs;
-		}else{
-		return getRenderable().getCriteriaGroups();
+		} else {
+			return getRenderable().getCriteriaGroups();
 		}
 	}
 

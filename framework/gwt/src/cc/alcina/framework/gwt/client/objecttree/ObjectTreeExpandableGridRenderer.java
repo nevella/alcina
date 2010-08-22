@@ -39,9 +39,12 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 
 	public static final String DEFAULT_SECTION_NAME = "DEFAULT_SECTION_NAME";
 
+	@Override
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
-			int depth, boolean soleChild, RenderContext renderContext) {
-		super.renderToPanel(renderable, cp, depth, soleChild, renderContext);
+			int depth, boolean soleChild, RenderContext renderContext,
+			TreeRenderer parent) {
+		super.renderToPanel(renderable, cp, depth, soleChild, renderContext,
+				parent);
 		if (depth == 0) {
 			cp.remove(ft);
 			for (Integer level1Row : level1Rows.keySet()) {

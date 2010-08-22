@@ -75,5 +75,12 @@ import cc.alcina.framework.common.client.CommonLocator;
 			}
 			return defaultValue;
 		}
+		public static Class classValue(NamedParameter[] parameters, String name, Class defaultValue) {
+			NamedParameter p = Support.getParameter(parameters, name);
+			if (p!=null && p.classValue()!=null){
+				return p.classValue();
+			}
+			return defaultValue;
+		}
 	}
 }

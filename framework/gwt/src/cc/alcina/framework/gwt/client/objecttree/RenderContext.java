@@ -16,59 +16,105 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.util.HashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.util.Callback;
+
+import com.google.gwt.user.client.ui.Widget;
+
 /**
  * 
  * @author Nick Reddel
  */
 public class RenderContext {
 	public Map<String, Object> properties = new HashMap<String, Object>();
+
 	private static RenderContext current;
-	public static RenderContext current(){
+
+	/**
+	 * this needs some work. "current" should only be available at time of
+	 * rendering - and null-ed thereafter components which may need it should
+	 * take a reference at render time
+	 */
+	public static RenderContext current() {
 		return current;
 	}
-	public static void reset(){
-		current = new RenderContext();
+
+	public static void setCurrent(RenderContext current) {
+		RenderContext.current = current;
 	}
-	private TreeRenderable rootRenderable = null;
+
+	private TreeRenderer rootRenderer;
 
 	private IsRenderableFilter renderableFilter = null;
 
-	public void setRootRenderable(TreeRenderable rootRenderable) {
-		this.rootRenderable = rootRenderable;
-	}
+	private Callback<Widget> onAttachCallback;
 
-	public TreeRenderable getRootRenderable() {
-		return rootRenderable;
-	}
+	private Callback<Widget> onDetachCallback;
 
-	public void setBoolean(String key) {
-		properties.put(key, Boolean.TRUE);
-	}
-
-	public boolean isBoolean(String key) {
-		return properties.get(key) == Boolean.TRUE;
-	}
-
-	public void set(String key, Object value) {
-		properties.put(key, value);
+	public <T> T get(String key) {
+		return (T) properties.get(key);
 	}
 
 	public Integer getInteger(String key) {
 		return (Integer) properties.get(key);
 	}
 
-	public void setRenderableFilter(IsRenderableFilter renderableFilter) {
-		this.renderableFilter = renderableFilter;
+	public Callback<Widget> getOnAttachCallback() {
+		return this.onAttachCallback;
+	}
+
+	public Callback<Widget> getOnDetachCallback() {
+		return this.onDetachCallback;
 	}
 
 	public IsRenderableFilter getRenderableFilter() {
 		return renderableFilter;
 	}
 
+	public TreeRenderer getRootRenderer() {
+		return this.rootRenderer;
+	}
+
 	public String getString(String key) {
 		return (String) properties.get(key);
 	}
-	public <T> T get(String key) {
-		return (T) properties.get(key);
+
+	public boolean isBoolean(String key) {
+		return properties.get(key) == Boolean.TRUE;
+	}
+
+	public void onAttach(Widget widget) {
+		if (onAttachCallback != null) {
+			onAttachCallback.callback(widget);
+		}
+	}
+
+	public void onDetach(Widget widget) {
+		if (onDetachCallback != null) {
+			onDetachCallback.callback(widget);
+		}
+	}
+
+	public void set(String key, Object value) {
+		properties.put(key, value);
+	}
+
+	public void setBoolean(String key) {
+		properties.put(key, Boolean.TRUE);
+	}
+
+	public void setOnAttachCallback(Callback<Widget> onAttachCallback) {
+		this.onAttachCallback = onAttachCallback;
+	}
+
+	public void setOnDetachCallback(Callback<Widget> onDetachCallback) {
+		this.onDetachCallback = onDetachCallback;
+	}
+
+	public void setRenderableFilter(IsRenderableFilter renderableFilter) {
+		this.renderableFilter = renderableFilter;
+	}
+
+	public void setRootRenderer(TreeRenderer rootRenderer) {
+		this.rootRenderer = rootRenderer;
 	}
 }

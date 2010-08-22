@@ -463,15 +463,7 @@ public class CommonUtils {
 		return s.substring(s.lastIndexOf('.') + 1);
 	}
 
-	public static String singularOrPluralToString(Object o) {
-		if (o == null) {
-			return null;
-		}
-		if (o instanceof HasPluralToString) {
-			return ((HasPluralToString) o).pluralToString();
-		}
-		return o.toString();
-	}
+	
 
 	// use when tostring is relatively expensive
 	public static ArrayList sortByStringValue(Collection c) {
