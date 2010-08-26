@@ -158,8 +158,10 @@ public class ResourceUtilities {
 			out.createNewFile();
 		}
 		FileInputStream ins = new FileInputStream(in);
-		writeStreamToStream(ins, new FileOutputStream(out));
+		FileOutputStream os = new FileOutputStream(out);
+		writeStreamToStream(ins, os);
 		ins.close();
+		os.close();
 	}
 
 	public static OutputStream scaleImage(InputStream in, int width,
