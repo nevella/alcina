@@ -196,6 +196,7 @@ public class ResourceUtilities {
 			throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		writeStreamToStream(is, baos);
+		is.close();
 		return baos.toByteArray();
 	}
 
@@ -331,6 +332,7 @@ public class ResourceUtilities {
 		while ((len = in.read(cb, 0, 4096)) != -1) {
 			sw.write(cb, 0, len);
 		}
+		is.close();
 		return sw.toString();
 	}
 
