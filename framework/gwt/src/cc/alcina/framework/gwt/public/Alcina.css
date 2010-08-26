@@ -619,7 +619,9 @@ div.pad-top-0{
 	margin-left: 45px;
 }
 
-
+.wrap {
+	white-space: normal;
+}
 .nowrap {
 	white-space: nowrap;
 }
