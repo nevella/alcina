@@ -161,7 +161,6 @@ public class ResourceUtilities {
 		FileOutputStream os = new FileOutputStream(out);
 		writeStreamToStream(ins, os);
 		ins.close();
-		os.close();
 	}
 
 	public static OutputStream scaleImage(InputStream in, int width,
