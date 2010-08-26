@@ -593,7 +593,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				evt.setPropertyName(propertyName);
 			}
 			EntityLayerLocator.get().log(LogMessageType.TRANSFORM_EXCEPTION,
-					"Data transform permissions exception", e);
+					"Domain transform permissions exception", e);
 			throw new WrappedRuntimeException(e);
 		}
 		return true;

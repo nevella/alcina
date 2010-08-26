@@ -451,7 +451,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private void logTransformException(DomainTransformResponse response,
 			boolean requestDetail) {
-		logger.info("data transform problem - user "
+		logger.info("domain transform problem - user "
 				+ PermissionsManager.get().getUserName());
 		if (requestDetail) {
 			logger.info(response.getRequest().toStringForError());
@@ -471,7 +471,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						SuggestedAction.NOTIFY_WARNING);
 				EntityLayerLocator.get().log(
 						LogMessageType.TRANSFORM_EXCEPTION,
-						"Data transform permissions exception", e);
+						"Domain transform permissions exception", e);
 				throw e;
 			}
 		}

@@ -248,7 +248,7 @@ public class TransformPersister {
 			}
 			if (token.getPass() == Pass.TRY_COMMIT) {
 				EntityLayerLocator.get().getMetricLogger().info(
-						String.format("data transform - %s - clid:"
+						String.format("domain transform - %s - clid:"
 								+ "%s - rqid:%s - lasttransid:%s",
 								persistentClientInstance.getUser()
 										.getUserName(), request
