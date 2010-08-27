@@ -115,7 +115,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	public boolean isCancelled() {
 		long id = Thread.currentThread().getId();
-		return CommonUtils.bv(cancelledMap.get(id));
+		return CommonUtils.bv(cancelledMap.get(id))||!infoMap.containsKey(id);
 	}
 
 	public void cancel(Long id) {

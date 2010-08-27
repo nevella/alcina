@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide;
 
 import java.util.ArrayList;
@@ -38,7 +37,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
@@ -84,8 +82,7 @@ import com.totsp.gwittir.client.validator.Validator;
  *
  * @author Nick Reddel
  */
-
- public class ContentViewFactory {
+public class ContentViewFactory {
 	private boolean noButtons;
 
 	private boolean cancelButton;
@@ -145,8 +142,9 @@ import com.totsp.gwittir.client.validator.Validator;
 				TransformManager.get().registerProvisionalObject(list);
 			}
 			if (bean instanceof HasIdAndLocalId) {
-				supportingObjects = ClientTransformManager.cast().prepareObject(
-						(HasIdAndLocalId) bean, autoSave,false,true);
+				supportingObjects = ClientTransformManager.cast()
+						.prepareObject((HasIdAndLocalId) bean, autoSave, false,
+								true);
 			}
 			supportingObjects.addAll(list);
 			cp.setObjects(supportingObjects);
@@ -264,12 +262,14 @@ import com.totsp.gwittir.client.validator.Validator;
 			int tableMask, Object templateBean) {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(templateBean, factory,
-						editable, true);
-		int mask = tableMask|BoundTableExt.HEADER_MASK | BoundTableExt.SORT_MASK;
+				.fieldsForReflectedObjectAndSetupWidgetFactory(templateBean,
+						factory, editable, true);
+		int mask = tableMask | BoundTableExt.HEADER_MASK
+				| BoundTableExt.SORT_MASK;
 		CollectionDataProvider cdp = new CollectionDataProvider(beans);
-		BoundTableExt table = editable ? new BoundTableExt(mask, factory, fields, cdp)
-				: new NiceWidthBoundTable(mask, factory, fields, cdp);
+		BoundTableExt table = editable ? new BoundTableExt(mask, factory,
+				fields, cdp) : new NiceWidthBoundTable(mask, factory, fields,
+				cdp);
 		return table;
 	}
 
@@ -296,7 +296,7 @@ import com.totsp.gwittir.client.validator.Validator;
 		ActionTableHolder holder = new ActionTableHolder();
 		FlowPanel fp = holder.fp;
 		if (converter != null) {
-			beans = CommonUtils.convertCollection(beans, converter);
+			beans = GwittirUtils.convertCollection(beans, converter);
 		}
 		Object bean = ClientReflector.get().getTemplateInstance(beanClass);
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
@@ -370,7 +370,10 @@ import com.totsp.gwittir.client.validator.Validator;
 
 		public NiceWidthBoundTable(int mask, BoundWidgetTypeFactory factory,
 				Field[] fields, DataProvider provider) {
-			super(mask|BoundTableExt.NO_SELECT_CELL_MASK|BoundTableExt.NO_SELECT_COL_MASK|BoundTableExt.NO_SELECT_ROW_MASK, factory, fields, provider);
+			super(mask | BoundTableExt.NO_SELECT_CELL_MASK
+					| BoundTableExt.NO_SELECT_COL_MASK
+					| BoundTableExt.NO_SELECT_ROW_MASK, factory, fields,
+					provider);
 		}
 
 		@Override
@@ -612,7 +615,8 @@ import com.totsp.gwittir.client.validator.Validator;
 			}
 		}
 
-		public void removeVetoableActionListener(PermissibleActionListener listener) {
+		public void removeVetoableActionListener(
+				PermissibleActionListener listener) {
 			this.support.removeVetoableActionListener(listener);
 		}
 

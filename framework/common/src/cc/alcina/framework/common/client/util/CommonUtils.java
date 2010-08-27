@@ -26,9 +26,6 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasId;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 @SuppressWarnings("unchecked")
 /**
@@ -136,14 +133,7 @@ public class CommonUtils {
 		return string != null && string.toLowerCase().contains(lcText);
 	}
 
-	public static Collection convertCollection(Collection source,
-			Converter converter) {
-		ArrayList result = new ArrayList();
-		for (Object object : source) {
-			result.add(converter.convert(object));
-		}
-		return result;
-	}
+	
 
 	public static boolean equalsWithNullEquality(Object o1, Object o2) {
 		if (o1 == null) {
@@ -261,14 +251,7 @@ public class CommonUtils {
 		return s.replace('_', ' ').trim();
 	}
 
-	public static <C extends HasId> C getObjectById(Collection<C> coll, long id) {
-		for (C c : coll) {
-			if (c.getId() == id) {
-				return c;
-			}
-		}
-		return null;
-	}
+	
 
 	public static String getSimpleTimeBefore(Date d) {
 		return getSimpleTimeBefore(d, new Date());

@@ -35,6 +35,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.HasEnabled;
@@ -64,7 +65,14 @@ public class GwittirUtils {
 		}
 		TransformManager.get().setIgnorePropertyChanges(false);
 	}
-
+	public static Collection convertCollection(Collection source,
+			Converter converter) {
+		ArrayList result = new ArrayList();
+		for (Object object : source) {
+			result.add(converter.convert(object));
+		}
+		return result;
+	}
 	public static void refreshTextBox(Binding binding, String propertyName) {
 		TransformManager.get().setIgnorePropertyChanges(true);
 		List<Binding> l = binding.getChildren();
