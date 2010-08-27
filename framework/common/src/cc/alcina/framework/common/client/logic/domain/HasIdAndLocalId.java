@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -38,9 +39,25 @@ public interface HasIdAndLocalId extends HasId {
 	public void setLocalId(long localId);
 
 	public static class HiliHelper {
+		public static int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+			int i = o1.getClass().getName().compareTo(o2.getClass().getName());
+			if (i != 0) {
+				return i;
+			}
+			i = CommonUtils.compareLongs(o1.getId(), o2.getId());
+			if (i != 0) {
+				return i;
+			}
+			i = CommonUtils.compareLongs(o1.getLocalId(), o2.getLocalId());
+			if (i != 0) {
+				return i;
+			}
+			return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
+		}
+
 		public static boolean equals(HasIdAndLocalId o1, Object o2) {
-			if (o1==null){
-				return o2==null;
+			if (o1 == null) {
+				return o2 == null;
 			}
 			if (o1.getId() == 0 && o1.getLocalId() == 0) {
 				return o1 == o2;

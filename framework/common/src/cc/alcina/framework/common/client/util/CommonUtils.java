@@ -49,7 +49,7 @@ public class CommonUtils {
 			"Wednesday", "Thursday", "Friday", "Saturday" };
 
 	private static final Map<String, Class> stdClassMap = new HashMap<String, Class>();
-	static  {
+	static {
 		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
 				Byte.class, Integer.class, Boolean.class, Character.class,
 				Date.class, String.class };
@@ -58,7 +58,7 @@ public class CommonUtils {
 		}
 	}
 
-	private static final  Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
+	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
 	static {
 		Class[] prims = { long.class, int.class, short.class, char.class,
 				byte.class, boolean.class, double.class, float.class };
@@ -67,13 +67,15 @@ public class CommonUtils {
 		}
 	}
 
-	public static final  Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
-	static  {
+	public static final Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
+	static {
 		stdAndPrimitivesMap.putAll(stdClassMap);
 		stdAndPrimitivesMap.putAll(primitiveClassMap);
 	}
+
 	public static final Set<Class> stdAndPrimitives = new HashSet<Class>(
 			stdAndPrimitivesMap.values());
+
 	public static boolean bv(Boolean b) {
 		return b == null || b == false ? false : true;
 	}
@@ -109,6 +111,14 @@ public class CommonUtils {
 			return o2 == null ? 0 : -1;
 		}
 		return o2 == null ? 1 : o1.compareToIgnoreCase(o2);
+	}
+
+	public static int compareInts(int i1, int i2) {
+		return (i1 < i2 ? -1 : (i1 == i2 ? 0 : 1));
+	}
+
+	public static int compareLongs(long l1, long l2) {
+		return (l1 < l2 ? -1 : (l1 == l2 ? 0 : 1));
 	}
 
 	public static int compareWithNullMinusOne(Comparable o1, Comparable o2) {
@@ -236,13 +246,15 @@ public class CommonUtils {
 			return "";
 		}
 		String s = capitaliseFirst(o.toString().toLowerCase());
-		int x=0,y=0;
-		while (true){
-			y=s.indexOf("__");
-			if (y!=-1){
-				s=s.substring(0,x)+((x==0)?"":" ")+s.substring(x,y).toUpperCase()+" "+s.substring(y+2);
-				x=y+2;
-			}else{
+		int x = 0, y = 0;
+		while (true) {
+			y = s.indexOf("__");
+			if (y != -1) {
+				s = s.substring(0, x) + ((x == 0) ? "" : " ")
+						+ s.substring(x, y).toUpperCase() + " "
+						+ s.substring(y + 2);
+				x = y + 2;
+			} else {
 				break;
 			}
 		}
@@ -421,7 +433,7 @@ public class CommonUtils {
 			// language...)
 			return s;
 		}
-		if (s.endsWith("s")){
+		if (s.endsWith("s")) {
 			return s;
 		}
 		if (s.endsWith("y")) {
@@ -438,10 +450,12 @@ public class CommonUtils {
 		d.setSeconds(up ? 59 : 0);
 		return d;
 	}
+
 	@SuppressWarnings("deprecation")
-	public static int getYear(Date d){
-		return d.getYear()+1900;
+	public static int getYear(Date d) {
+		return d.getYear() + 1900;
 	}
+
 	public static <T extends Collection> T shallowCollectionClone(T coll) {
 		try {
 			T c = null;
@@ -462,8 +476,6 @@ public class CommonUtils {
 		String s = c.getName();
 		return s.substring(s.lastIndexOf('.') + 1);
 	}
-
-	
 
 	// use when tostring is relatively expensive
 	public static ArrayList sortByStringValue(Collection c) {
@@ -612,11 +624,12 @@ public class CommonUtils {
 		}
 		return last;
 	}
+
 	public static <T> T get(Iterator<T> iterator, int index) {
 		T last = null;
 		while (iterator.hasNext()) {
 			last = iterator.next();
-			if (index--==0){
+			if (index-- == 0) {
 				return last;
 			}
 		}
