@@ -529,7 +529,8 @@ public class CommonUtils {
 		if (sub.indexOf(" ") > maxChars / 2) {
 			return sub;
 		}
-		return sub.substring(sub.indexOf(' '));
+		int firstSpace = sub.indexOf(' ');
+		return firstSpace==-1?"":sub.substring(firstSpace);
 	}
 
 	public static String upperCaseFirstLetterOnly(String s) {
