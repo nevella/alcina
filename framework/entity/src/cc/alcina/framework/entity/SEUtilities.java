@@ -117,7 +117,7 @@ public class SEUtilities {
 	private static Pattern yearRangePattern = Pattern
 			.compile("(\\d{4})(-(\\d{4}))?");
 
-	public static final String WS_PATTERN_STR = "(?:\\s|\\u00A0)+";
+	public static final String WS_PATTERN_STR = "(?:[\\u0009\\u000A\\u000B\\u000C\\u000D\\u0020\\\\u00A0])+";
 
 	public static final Pattern WS_PATTERN = Pattern.compile(WS_PATTERN_STR);
 
