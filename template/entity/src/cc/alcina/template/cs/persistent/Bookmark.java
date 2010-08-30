@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.template.cs.customisers.UrlCustomiser;
+import cc.alcina.framework.gwt.client.gwittir.customiser.UrlCustomiser;
 
 @Entity
 @Table(name = "bookmark", schema = "public")
