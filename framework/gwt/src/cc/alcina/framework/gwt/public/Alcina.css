@@ -466,7 +466,8 @@ div input.button-submit {
 .font-grey {
 	color: #717171;
 }
-
+/* don't think this is good - UA needs margin for wrapping in blockquotes etc */
+/*
 p {
 	margin: 0;
 	padding: 0 0 15px 0;
@@ -475,6 +476,7 @@ p {
 img {
 	border: 0;
 }
+*/
 
 /* Forms ######################################################### */
 form {
