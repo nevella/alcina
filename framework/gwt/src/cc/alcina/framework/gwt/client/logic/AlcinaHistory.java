@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.logic;
 
 import java.util.ArrayList;
@@ -30,11 +29,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import com.google.gwt.http.client.URL;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class AlcinaHistory {
+public class AlcinaHistory {
 	public static final String LOGIN_EVENT = "LOGIN_EVENT";
 
 	public static final String SEARCH = "SEARCH";
@@ -42,6 +40,12 @@ import com.google.gwt.http.client.URL;
 	public static final String TAB_KEY = "t";
 
 	public static final String CONTENT_KEY = "c";
+
+	public static final String P1_KEY = "p1";
+
+	public static final String P2_KEY = "p2";
+
+	public static final String P3_KEY = "p3";
 
 	public static final String TAB_SUB_KEY = "ts";
 
@@ -180,6 +184,15 @@ import com.google.gwt.http.client.URL;
 		if (params.containsKey(CLASS_NAME_KEY)) {
 			info.className = params.get(CLASS_NAME_KEY);
 		}
+		if (params.containsKey(P1_KEY)) {
+			info.p1 = params.get(P1_KEY);
+		}
+		if (params.containsKey(P2_KEY)) {
+			info.p2 = params.get(P2_KEY);
+		}
+		if (params.containsKey(P3_KEY)) {
+			info.p3 = params.get(P3_KEY);
+		}
 		if (params.containsKey(ID_KEY)) {
 			info.id = Long.parseLong(params.get(ID_KEY));
 		}
@@ -262,6 +275,12 @@ import com.google.gwt.http.client.URL;
 
 		public boolean noHistory = false;
 
+		public String p1 = null;
+
+		public String p2 = null;
+
+		public String p3 = null;
+
 		public HistoryEventType type = HistoryEventType.NO_TAB_SPEC;
 
 		protected Map<String, Object> params;
@@ -283,6 +302,9 @@ import com.google.gwt.http.client.URL;
 				params.put(NO_HISTORY_KEY, true);
 			}
 			params.put(CLASS_NAME_KEY, className);
+			params.put(P1_KEY, p1);
+			params.put(P2_KEY, p2);
+			params.put(P3_KEY, p3);
 			if (searchHistoryInfo != null) {
 				params.put(SEARCH_INDEX, searchHistoryInfo.defId);
 				params.put(SEARCH_PAGE, searchHistoryInfo.pageNumber);
@@ -296,6 +318,7 @@ import com.google.gwt.http.client.URL;
 			id = hili.getId();
 			localId = hili.getLocalId();
 		}
+
 		@SuppressWarnings("unchecked")
 		public Object getReferencedObjectOrClassName() {
 			if (className == null) {
@@ -305,8 +328,8 @@ import com.google.gwt.http.client.URL;
 				return className;
 			}
 			return TransformManager.get().getObject(
-					CommonLocator.get().classLookup().getClassForName(
-							className), id, localId);
+					CommonLocator.get().classLookup()
+							.getClassForName(className), id, localId);
 		}
 
 		public List<SimpleHistoryEventInfo> toSimpleEvents() {
