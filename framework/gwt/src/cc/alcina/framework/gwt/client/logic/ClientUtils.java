@@ -23,6 +23,8 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.http.client.UrlBuilder;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
@@ -120,7 +122,16 @@ public class ClientUtils {
 		ClientLayerLocator.get().notifications().showWarning(
 				"Not yet implemented");
 	}
-
+	public static UrlBuilder getBaseUrlBuilder(){
+		UrlBuilder builder =new UrlBuilder();
+		builder.setProtocol(Window.Location.getProtocol());
+		builder.setHost(Window.Location.getHostName());
+		String port = Window.Location.getPort();
+		if (port != null && port.length() > 0) {
+	        builder.setPort(Integer.parseInt(port));
+	      }
+		return builder;
+	}
 	public static native void invokeJsDebugger() /*-{
 		debugger;
 	}-*/;
