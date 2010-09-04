@@ -49,7 +49,7 @@ public class AlcinaTemplateBeanProvider {
 				"org.jnp.interfaces.NamingContextFactory");
 		properties.put("java.naming.factory.url.pkgs",
 				"=org.jboss.naming:org.jnp.interfaces");
-		properties.put("java.naming.provider.url", ResourceUtilities.get().getBundledString(AlcinaTemplateBeanProvider.class, "jndiUrl"));
+		properties.put("java.naming.provider.url", ResourceUtilities.getBundledString(AlcinaTemplateBeanProvider.class, "jndiUrl"));
 		try {
 			context = new InitialContext(properties);
 		} catch (NamingException e) {

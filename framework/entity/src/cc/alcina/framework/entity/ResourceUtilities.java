@@ -58,27 +58,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  */
 public class ResourceUtilities {
-	private ResourceUtilities() {
-		super();
-		customProperties = new ArrayList<Properties>();
+
+	public static void appShutdown() {
+		customProperties.clear();
 	}
 
-	private static ResourceUtilities theInstance;
+	private static List<Properties> customProperties= new ArrayList<Properties>();
 
-	public static ResourceUtilities get() {
-		if (theInstance == null) {
-			theInstance = new ResourceUtilities();
-		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
-	}
-
-	List<Properties> customProperties;
-
-	public void registerCustomProperties(InputStream ios) {
+	public static void registerCustomProperties(InputStream ios) {
 		try {
 			Properties p = new Properties();
 			if (ios != null) {
@@ -92,17 +79,17 @@ public class ResourceUtilities {
 		}
 	}
 
-	public void registerCustomProperties(String path) {
-		InputStream ios = this.getClass().getResourceAsStream(path);
-		this.registerCustomProperties(ios);
+	public static void registerCustomProperties(String path) {
+		InputStream ios = ResourceUtilities.class.getResourceAsStream(path);
+		registerCustomProperties(ios);
 	}
 
-	public boolean getBoolean(Class clazz, String propertyName) {
+	public static boolean getBoolean(Class clazz, String propertyName) {
 		String s = getBundledString(clazz, propertyName);
 		return Boolean.valueOf(s);
 	}
 
-	public int getInteger(Class clazz, String propertyName, int defaultValue) {
+	public static int getInteger(Class clazz, String propertyName, int defaultValue) {
 		try {
 			String s = getBundledString(clazz, propertyName);
 			return Integer.valueOf(s);
@@ -111,7 +98,7 @@ public class ResourceUtilities {
 		}
 	}
 
-	public String getBundledString(Class clazz, String propertyName) {
+	public static String getBundledString(Class clazz, String propertyName) {
 		for (Properties p : customProperties) {
 			String namespacedKey = (clazz == null) ? propertyName : clazz
 					.getSimpleName()
