@@ -65,7 +65,7 @@ public class ResourceUtilities {
 
 	private static ResourceUtilities theInstance;
 
-	public static ResourceUtilities singleton() {
+	public static ResourceUtilities get() {
 		if (theInstance == null) {
 			theInstance = new ResourceUtilities();
 		}

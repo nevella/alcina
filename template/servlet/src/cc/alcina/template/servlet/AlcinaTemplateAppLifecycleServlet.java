@@ -31,7 +31,7 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 	public void destroy() {
 		try {
 			super.destroy();
-			ResourceUtilities.singleton().appShutdown();
+			ResourceUtilities.get().appShutdown();
 			// we won't be able to access as an ejb bean at this stage - so destroy() must have no @em refs
 			AlcinaTemplatePersistenceLocal pb = new AlcinaTemplatePersistence();
 			pb.destroy();

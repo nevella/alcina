@@ -60,7 +60,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		try {
 			FileInputStream fis = new FileInputStream(AlcinaServerConfig.get()
 					.getCustomPropertiesFilePath());
-			ResourceUtilities.singleton().registerCustomProperties(fis);
+			ResourceUtilities.get().registerCustomProperties(fis);
 		} catch (FileNotFoundException fnfe) {
 			// no custom properties
 		}

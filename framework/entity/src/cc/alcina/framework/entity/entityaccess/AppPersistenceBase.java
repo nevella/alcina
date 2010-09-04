@@ -76,7 +76,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		try {
 			FileInputStream fis = new FileInputStream(AlcinaServerConfig.get()
 					.getCustomPropertiesFilePath());
-			ResourceUtilities.singleton().registerCustomProperties(fis);
+			ResourceUtilities.get().registerCustomProperties(fis);
 		} catch (FileNotFoundException fnfe) {
 			// no custom properties
 		}
