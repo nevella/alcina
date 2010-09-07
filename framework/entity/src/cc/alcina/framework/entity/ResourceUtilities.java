@@ -39,6 +39,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -88,7 +89,14 @@ public class ResourceUtilities {
 		String s = getBundledString(clazz, propertyName);
 		return Boolean.valueOf(s);
 	}
-
+	public static String getUrlAsString(String strUrl) throws Exception {
+		URL url = new URL(strUrl);
+		InputStream is=null;
+		is = url.openConnection().getInputStream();
+		String input = readStreamToString(is);
+		is.close();
+		return input;
+	}
 	public static int getInteger(Class clazz, String propertyName, int defaultValue) {
 		try {
 			String s = getBundledString(clazz, propertyName);

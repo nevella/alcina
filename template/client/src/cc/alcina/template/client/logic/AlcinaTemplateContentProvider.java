@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.csobjects.ContentNode;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider.ContentProviderSource;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.util.DomUtils;
 /**
  * Sample - unused - but see MainCmp.showContent
  *
@@ -39,7 +39,7 @@ public class AlcinaTemplateContentProvider implements ContentProviderSource {
 
 	public String getContent(String key) {
 		key = key.toLowerCase();
-		return contentMap.containsKey(key) ? WidgetUtils
+		return contentMap.containsKey(key) ? DomUtils
 				.stripStructuralTags(contentMap.get(key).getContent())
 				: "No content for key: " + key;
 	}

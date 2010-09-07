@@ -1,3 +1,4 @@
 <module>
 	<super-source path="jre" />
+	<super-source path="alcina" />
 </module>

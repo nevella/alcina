@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.util.DomUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.richtext.RichTextToolbar;
 
@@ -79,7 +80,7 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 				EventTarget eventTarget = event.getNativeEvent()
 						.getEventTarget();
 				Node elt = Node.as(eventTarget);
-				if (WidgetUtils.isAncestorOf(toolbar.getElement(), elt)) {
+				if (DomUtils.isAncestorOf(toolbar.getElement(), elt)) {
 					return;
 				}
 				changes.firePropertyChange("value", old, getValue());

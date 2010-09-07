@@ -299,38 +299,6 @@ public class WidgetUtils {
 				new Widget[] { w }).iterator(), 0, 0);
 	}
 
-	public static String stripStructuralTags(String html) {
-		Element elt = Document.get().createDivElement();
-		elt.setInnerHTML(html);
-		boolean loopOk = true;
-		while (loopOk) {
-			loopOk = false;
-			if (elt.getChildNodes().getLength() == 1) {
-				Node child = elt.getChildNodes().getItem(0);
-				if (child.getNodeType() == Node.ELEMENT_NODE) {
-					Element childElt = (Element) child;
-					String tag = childElt.getTagName().toLowerCase();
-					if (tag.equals("div") || tag.equals("p")) {
-						elt = childElt;
-						loopOk = true;
-					}
-				}
-			}
-		}
-		return elt.getInnerHTML();
-	}
-
-	public static boolean isAncestorOf(Element ancestor, Node possibleChild) {
-		Element stop = RootPanel.get().getElement();
-		while (possibleChild != null && possibleChild != stop) {
-			if (possibleChild == ancestor) {
-				return true;
-			}
-			possibleChild = possibleChild.getParentNode();
-		}
-		return false;
-	}
-
 	public static void replace(Widget current, Widget newWidget) {
 		ComplexPanel cp = (ComplexPanel) current.getParent();
 		int index = cp.getWidgetIndex(current);
@@ -522,34 +490,6 @@ public class WidgetUtils {
 				target.ensureDebugId(prefix);
 			}
 		});
-	}
-
-	public static Element getParentElement(Element elt, String tagName) {
-		while (elt != null) {
-			if (elt.getTagName().equalsIgnoreCase(tagName)) {
-				return elt;
-			}
-			elt = elt.getParentElement();
-		}
-		return null;
-	}
-
-	private static final String HTML_BLOCKS = ",ADDRESS,BLOCKQUOTE,DIV,DL,H1,H2,H3,H4,H5,"
-			+ "H6,IFRAME,ILAYER,LAYER,OL,TABLE,TR,UL,TD,P,HR,BR,LI,";
-
-	static boolean isBlockHTMLElementSimplistic(Element e) {
-		return HTML_BLOCKS.contains("," + e.getTagName() + ",");
-	}
-
-	public static Element getContainingBlock(Node n) {
-		while (n != null) {
-			if (n.getNodeType() == Node.ELEMENT_NODE
-					&& isBlockHTMLElementSimplistic((Element) n)) {
-				return (Element) n;
-			}
-			n = n.getParentNode();
-		}
-		return null;
 	}
 
 	public static void setCssVisibility(Widget widget, boolean visible) {

@@ -133,8 +133,6 @@ public class CommonUtils {
 		return string != null && string.toLowerCase().contains(lcText);
 	}
 
-	
-
 	public static boolean equalsWithNullEquality(Object o1, Object o2) {
 		if (o1 == null) {
 			return o2 == null;
@@ -250,8 +248,6 @@ public class CommonUtils {
 		}
 		return s.replace('_', ' ').trim();
 	}
-
-	
 
 	public static String getSimpleTimeBefore(Date d) {
 		return getSimpleTimeBefore(d, new Date());
@@ -530,7 +526,7 @@ public class CommonUtils {
 			return sub;
 		}
 		int firstSpace = sub.indexOf(' ');
-		return firstSpace==-1?"":sub.substring(firstSpace);
+		return firstSpace == -1 ? "" : sub.substring(firstSpace);
 	}
 
 	public static String upperCaseFirstLetterOnly(String s) {
@@ -630,5 +626,15 @@ public class CommonUtils {
 		if (k != null) {
 			m.put(k, v);
 		}
+	}
+
+	public static boolean containsAny(Collection container,
+			Collection containees) {
+		for (Iterator itr = containees.iterator(); itr.hasNext();) {
+			if (container.contains(itr.next())) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
