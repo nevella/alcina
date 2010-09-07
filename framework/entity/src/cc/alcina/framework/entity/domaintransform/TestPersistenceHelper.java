@@ -217,9 +217,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 							.implementationLookup().getImplementation(
 									propertyType);
 				}
-				if (propertyType==null){
-					int k=3;
-				}
 				infos.add(new PropertyInfoLite(propertyType, pd
 						.getName(),null,clazz));
 			}

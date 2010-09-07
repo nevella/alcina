@@ -560,9 +560,6 @@ public class CommonUtils {
 	}
 
 	public static String tabify(String value, int charsPerLine, int tabCount) {
-		if (value.contains("ITAL_WHO_VS_WHO, IGNORABLE, MN_REF")) {
-			int j = 3;
-		}
 		int fuzz = 15;
 		StringBuilder sb = new StringBuilder();
 		String ss = null;

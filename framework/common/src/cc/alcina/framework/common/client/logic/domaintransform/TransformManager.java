@@ -595,9 +595,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 		}
 		List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
-		if (CommonUtils.simpleClassName(clazz).contains("SerializationHelper")) {
-			int j = 2;
-		}
 		for (Object o : objects) {
 			Object[] arr = asObjectSpec ? (Object[]) o : null;
 			HasIdAndLocalId hili = asObjectSpec ? null : (HasIdAndLocalId) o;

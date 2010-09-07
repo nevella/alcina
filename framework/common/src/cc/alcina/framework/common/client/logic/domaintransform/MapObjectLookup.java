@@ -158,9 +158,6 @@ public class MapObjectLookup implements ObjectLookup {
 	}
 
 	protected void mapObject(HasIdAndLocalId obj) {
-		if (obj == null) {
-			int k = 3;
-		}
 		if (obj.getId() == 0 && obj.getLocalId() == 0) {
 			return;
 		}

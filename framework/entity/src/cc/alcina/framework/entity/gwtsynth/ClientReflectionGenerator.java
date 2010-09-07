@@ -398,9 +398,6 @@ public class ClientReflectionGenerator extends Generator {
 						|| pd.getName().equals("propertyChangeListeners")) {
 					continue;
 				}
-				// if (pd.getName().equals("startLocation")){
-				// int k=3;
-				// }
 				Method m = pd.getReadMethod();
 				Collection<Annotation> annotations = AnnotationUtils
 						.getSuperclassAnnotationsForMethod(m);

@@ -258,18 +258,14 @@ public class WidgetUtils {
 						}
 						if (availableHeight >= 0) {
 							widget.setHeight((availableHeight) + "px");
-						} else {
-							int j = 1;
-						}
+						} 
 					}
 					if (info.to100percentOfAvailableWidth()) {
 						availableWidth = availableWidth - usedWidth
 								- parentAdjustWidth - info.getAdjustWidth();
 						if (availableWidth >= 0) {
 							widget.setWidth((availableWidth) + "px");
-						} else {
-							int j = 1;
-						}
+						} 
 					}
 				}
 				Iterator<Widget> toResize = info.getWidgetsToResize();

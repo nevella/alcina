@@ -342,9 +342,6 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				}
 			}
 		};
-		if (clientInstance == null) {
-			int j = 3;
-		}
 		IUser user = clientInstance.getUser();
 		// not needed, and heavyweight
 		clientInstance.setUser(null);
