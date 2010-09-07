@@ -89,12 +89,14 @@ public class ResourceUtilities {
 		String s = getBundledString(clazz, propertyName);
 		return Boolean.valueOf(s);
 	}
-	public static String getUrlAsString(String strUrl) throws Exception {
+	public static String readUrlAsString(String strUrl) throws Exception {
+		return readUrlAsString(strUrl, null);
+	}
+	public static String readUrlAsString(String strUrl,String charset) throws Exception {
 		URL url = new URL(strUrl);
 		InputStream is=null;
 		is = url.openConnection().getInputStream();
-		String input = readStreamToString(is);
-		is.close();
+		String input = readStreamToString(is,charset);
 		return input;
 	}
 	public static int getInteger(Class clazz, String propertyName, int defaultValue) {
