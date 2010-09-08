@@ -1,13 +1,12 @@
 package cc.alcina.template.cs;
 
-
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 
-
-public class AlcinaTemplateHistory extends AlcinaHistory implements
+public class AlcinaTemplateHistory extends
+		AlcinaHistory<AlcinaTemplateHistoryItem> implements
 		ValueChangeHandler<String> {
 	public static final String BOOKMARKS_TAB = "bookmarks";
 
@@ -18,22 +17,13 @@ public class AlcinaTemplateHistory extends AlcinaHistory implements
 		}
 	}
 
-	public static class AlcinaTemplateHistoryEventInfo extends HistoryInfoBase {
-	}
-
 	public void onValueChange(ValueChangeEvent<String> event) {
 		onHistoryChanged(event.getValue());
 	}
 
-	public AlcinaTemplateHistoryEventInfo parseToken(String historyToken) {
-		AlcinaTemplateHistoryEventInfo info = (AlcinaTemplateHistoryEventInfo) super
-				.parseToken(historyToken);
-		return info;
-	}
-
 	@Override
-	public HistoryInfoBase createHistoryInfo() {
-		return new AlcinaTemplateHistoryEventInfo();
+	public AlcinaTemplateHistoryItem createHistoryInfo() {
+		return new AlcinaTemplateHistoryItem();
 	}
 
 	private AlcinaTemplateHistory() {

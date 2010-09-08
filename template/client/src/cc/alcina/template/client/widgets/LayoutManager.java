@@ -8,8 +8,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
+import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
-import cc.alcina.framework.gwt.client.logic.AlcinaHistory.HistoryInfoBase;
 import cc.alcina.framework.gwt.client.stdlayout.MainTabPanel;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
@@ -134,9 +134,9 @@ public class LayoutManager {
 					if (targetBeforeHash.equals(beforeHash)
 							|| targetBeforeHash.length() == 0) {
 						if (targetHash != null && targetHash.length() != 0) {
-							HistoryInfoBase token = AlcinaHistory.get()
+							AlcinaHistoryItem token = AlcinaHistory.get()
 									.parseToken(targetHash);
-							if (token.noHistory) {
+							if (token.isNoHistory()) {
 								layoutManager.getMainCmp().onHistoryChanged(
 										targetHash);
 							} else {

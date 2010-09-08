@@ -14,7 +14,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.LoginDisplayer;
 import cc.alcina.template.client.AlcinaTemplateClient;
 import cc.alcina.template.client.logic.AlcinaTemplateContentProvider;
 import cc.alcina.template.client.widgets.LayoutManager;
-import cc.alcina.template.cs.AlcinaTemplateHistory.AlcinaTemplateHistoryEventInfo;
+import cc.alcina.template.cs.AlcinaTemplateHistoryItem;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -42,13 +42,13 @@ public class LoginHandler implements LoginStateVisibleWithWidget, ClickHandler,
 		panel.add(new InlineLabel("Problems with login?"));
 		panel.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent clickEvent) {
-				AlcinaTemplateHistoryEventInfo info = new AlcinaTemplateHistoryEventInfo();
-				info.contentToken = AlcinaTemplateContentProvider.PROBLEMS_LOGGING_IN;
-				info.noHistory = true;
+				AlcinaTemplateHistoryItem info = new AlcinaTemplateHistoryItem();
+				info.setContentToken(AlcinaTemplateContentProvider.PROBLEMS_LOGGING_IN);
+				info.setNoHistory(true);
 				// ResetPasswordHandler.username = userName;
 				ld.hideLoginDialog();
 				LayoutManager.get().getMainCmp().onHistoryChanged(
-						info.getToken());
+						info.toTokenString());
 			}
 		});
 		return panel;

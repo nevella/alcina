@@ -16,13 +16,8 @@ package cc.alcina.framework.gwt.client.logic;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
-import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -32,7 +27,7 @@ import com.google.gwt.http.client.URL;
  * 
  * @author Nick Reddel
  */
-public class AlcinaHistory {
+public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public static final String LOGIN_EVENT = "LOGIN_EVENT";
 
 	public static final String SEARCH = "SEARCH";
@@ -40,12 +35,6 @@ public class AlcinaHistory {
 	public static final String TAB_KEY = "t";
 
 	public static final String CONTENT_KEY = "c";
-
-	public static final String P1_KEY = "p1";
-
-	public static final String P2_KEY = "p2";
-
-	public static final String P3_KEY = "p3";
 
 	public static final String TAB_SUB_KEY = "ts";
 
@@ -74,11 +63,15 @@ public class AlcinaHistory {
 		return theInstance;
 	}
 
+	public static void register(AlcinaHistory subclass) {
+		theInstance = subclass;
+	}
+
 	private boolean noHistoryDisabled = false;
 
-	protected HistoryInfoBase currentEvent;
+	protected I currentEvent;
 
-	protected HistoryInfoBase lastEvent;
+	protected I lastEvent;
 
 	protected String lastHistoryToken;
 
@@ -92,19 +85,21 @@ public class AlcinaHistory {
 		theInstance = null;
 	}
 
-	public HistoryInfoBase createHistoryInfo() {
-		return new HistoryInfoBase();
+	public I createHistoryInfo() {
+		return (I) new AlcinaHistoryItem();
 	}
 
-	public String getContentLink(String tabId) {
-		return CONTENT_KEY + "=" + tabId;
+	public String getContentLink(String contentKey) {
+		I hib = createHistoryInfo();
+		hib.setContentToken(contentKey);
+		return hib.toTokenString();
 	}
 
-	public HistoryInfoBase getCurrentEvent() {
+	public I getCurrentEvent() {
 		return this.currentEvent;
 	}
 
-	public HistoryInfoBase getLastEvent() {
+	public I getLastEvent() {
 		return this.lastEvent;
 	}
 
@@ -113,11 +108,16 @@ public class AlcinaHistory {
 	}
 
 	public String getTabLink(String tabId) {
-		return TAB_KEY + "=" + tabId;
+		AlcinaHistoryItem hib = createHistoryInfo();
+		hib.setTabName(tabId);
+		return hib.toTokenString();
 	}
 
 	public String getTabSubkeyLink(String tabId, String subkeyId) {
-		return TAB_KEY + "=" + tabId + "&" + TAB_SUB_KEY + "=" + subkeyId;
+		AlcinaHistoryItem hib = createHistoryInfo();
+		hib.setTabName(tabId);
+		hib.setSubTabName(subkeyId);
+		return hib.toTokenString();
 	}
 
 	public String getTokenDisplayName(String token) {
@@ -125,14 +125,14 @@ public class AlcinaHistory {
 		return tokenDisplayNames.get(token);
 	}
 
-	public boolean isCurrentTabAndSubtab(HistoryInfoBase info) {
+	public boolean isCurrentTabAndSubtab(AlcinaHistoryItem info) {
 		if (currentEvent == null) {
 			return info == null;
 		}
-		return CommonUtils.equalsWithNullEquality(currentEvent.tabName,
-				info.tabName)
-				&& CommonUtils.equalsWithNullEquality(currentEvent.subTabName,
-						info.subTabName);
+		return CommonUtils.equalsWithNullEquality(currentEvent.getTabName(),
+				info.getTabName())
+				&& CommonUtils.equalsWithNullEquality(currentEvent
+						.getSubTabName(), info.getSubTabName());
 	}
 
 	public boolean isNoHistoryDisabled() {
@@ -144,74 +144,16 @@ public class AlcinaHistory {
 		currentEvent = parseToken(historyToken);
 	}
 
-	public Map<String, String> parseParameters(String s) {
-		Map<String, String> params = new HashMap<String, String>();
-		String[] pairs = s.split("&");
-		for (String pair : pairs) {
-			String[] split = pair.split("=");
-			if (split.length == 2) {
-				params.put(split[0], URL.decodeComponent(split[1]));
-			}
-		}
-		return params;
-	}
-
-	public HistoryInfoBase parseToken(String historyToken) {
-		HistoryInfoBase info = createHistoryInfo();
-		Map<String, String> params = parseParameters(historyToken);
+	public I parseToken(String historyToken) {
+		I item = createHistoryInfo();
+		Map<String, String> params = item.parseParameters(historyToken);
 		if (params.size() == 0) {
-			info.notAHistoryToken = true;
-			return info;
+			item.notAHistoryToken = true;
+			return item;
 		} else {
 			lastHistoryToken = historyToken;
 		}
-		if (params.containsKey(TAB_KEY)) {
-			info.tabName = params.get(TAB_KEY);
-			info.type = HistoryEventType.TABBED;
-		}
-		if (params.containsKey(TAB_SUB_KEY)) {
-			info.subTabName = params.get(TAB_SUB_KEY);
-		}
-		if (params.containsKey(CONTENT_KEY)) {
-			info.contentToken = params.get(CONTENT_KEY);
-		}
-		if (params.containsKey(NO_HISTORY_KEY)) {
-			info.noHistory = true;
-		}
-		if (params.containsKey(ACTION_KEY)) {
-			info.actionName = params.get(ACTION_KEY);
-		}
-		if (params.containsKey(CLASS_NAME_KEY)) {
-			info.className = params.get(CLASS_NAME_KEY);
-		}
-		if (params.containsKey(P1_KEY)) {
-			info.p1 = params.get(P1_KEY);
-		}
-		if (params.containsKey(P2_KEY)) {
-			info.p2 = params.get(P2_KEY);
-		}
-		if (params.containsKey(P3_KEY)) {
-			info.p3 = params.get(P3_KEY);
-		}
-		if (params.containsKey(ID_KEY)) {
-			info.id = Long.parseLong(params.get(ID_KEY));
-		}
-		if (params.containsKey(LOCAL_ID_KEY)) {
-			info.localId = Long.parseLong(params.get(LOCAL_ID_KEY));
-		}
-		if (params.containsKey(Y_KEY)) {
-			info.y = Integer.parseInt(params.get(Y_KEY));
-		}
-		if (params.containsKey(SEARCH_INDEX) && params.containsKey(SEARCH_PAGE)) {
-			int defId = Integer.parseInt(params.get(SEARCH_INDEX));
-			int pageNumber = Integer.parseInt(params.get(SEARCH_PAGE));
-			info.searchHistoryInfo = new SearchHistoryInfo(defId, pageNumber);
-		}
-		return info;
-	}
-
-	public static void register(AlcinaHistory subclass) {
-		theInstance = subclass;
+		return item;
 	}
 
 	public void setLastHistoryToken(String lastHistoryToken) {
@@ -222,7 +164,7 @@ public class AlcinaHistory {
 		this.noHistoryDisabled = noHistoryDisabled;
 	}
 
-	public String toHash(Map<String, Object> params) {
+	public String toHash(Map<String, String> params) {
 		StringBuffer sb = new StringBuffer();
 		ArrayList<String> keys = new ArrayList<String>(params.keySet());
 		Collections.sort(keys);
@@ -241,8 +183,10 @@ public class AlcinaHistory {
 	}
 
 	public String tokenForSearch(SearchDefinition def, int pageNumber) {
-		return CommonUtils.format("%1=%2&%3=%4", SEARCH_INDEX, def
-				.getClientSearchIndex(), SEARCH_PAGE, pageNumber);
+		AlcinaHistoryItem hib = createHistoryInfo();
+		hib.setSearchHistoryInfo(new SearchHistoryInfo(def
+				.getClientSearchIndex(), pageNumber));
+		return hib.toTokenString();
 	}
 
 	protected void initTokenDisplayNames() {
@@ -250,116 +194,6 @@ public class AlcinaHistory {
 
 	public enum HistoryEventType {
 		NO_TAB_SPEC, UNTABBED, TABBED, SEARCH
-	}
-
-	public static class HistoryInfoBase {
-		public boolean notAHistoryToken = false;
-
-		public String contentToken = null;
-
-		public String tabName = null;
-
-		public String subTabName = null;
-
-		public SearchHistoryInfo searchHistoryInfo = null;
-
-		public String actionName = null;
-
-		public long localId;
-
-		public long id;
-
-		public int y;
-
-		public String className;
-
-		public boolean noHistory = false;
-
-		public String p1 = null;
-
-		public String p2 = null;
-
-		public String p3 = null;
-
-		public HistoryEventType type = HistoryEventType.NO_TAB_SPEC;
-
-		protected Map<String, Object> params;
-
-		public String getToken() {
-			params = new TreeMap<String, Object>();
-			params.put(TAB_KEY, tabName);
-			params.put(TAB_SUB_KEY, subTabName);
-			params.put(ACTION_KEY, actionName);
-			params.put(CONTENT_KEY, contentToken);
-			if (y != 0) {
-				params.put(Y_KEY, y);
-			}
-			if (localId != 0 || id != 0) {
-				params.put(LOCAL_ID_KEY, localId);
-				params.put(ID_KEY, id);
-			}
-			if (noHistory) {
-				params.put(NO_HISTORY_KEY, true);
-			}
-			params.put(CLASS_NAME_KEY, className);
-			params.put(P1_KEY, p1);
-			params.put(P2_KEY, p2);
-			params.put(P3_KEY, p3);
-			if (searchHistoryInfo != null) {
-				params.put(SEARCH_INDEX, searchHistoryInfo.defId);
-				params.put(SEARCH_PAGE, searchHistoryInfo.pageNumber);
-			}
-			addToToken(params);
-			return AlcinaHistory.get().toHash(params);
-		}
-
-		public void setReferencedObject(HasIdAndLocalId hili) {
-			className = hili.getClass().getName();
-			id = hili.getId();
-			localId = hili.getLocalId();
-		}
-
-		@SuppressWarnings("unchecked")
-		public Object getReferencedObjectOrClassName() {
-			if (className == null) {
-				return null;
-			}
-			if (id == 0 && localId == 0) {
-				return className;
-			}
-			return TransformManager.get().getObject(
-					CommonLocator.get().classLookup()
-							.getClassForName(className), id, localId);
-		}
-
-		public List<SimpleHistoryEventInfo> toSimpleEvents() {
-			List<SimpleHistoryEventInfo> result = new ArrayList<SimpleHistoryEventInfo>();
-			String s = subTabName;
-			subTabName = null;
-			{
-				SimpleHistoryEventInfo info = new SimpleHistoryEventInfo();
-				info.displayName = AlcinaHistory.get().getTokenDisplayName(
-						tabName);
-				info.displayName = info.displayName == null ? CommonUtils
-						.upperCaseFirstLetterOnly(tabName) : info.displayName;
-				info.historyToken = getToken();
-				result.add(info);
-			}
-			subTabName = s;
-			if (subTabName != null) {
-				SimpleHistoryEventInfo info = new SimpleHistoryEventInfo();
-				info.displayName = AlcinaHistory.get().getTokenDisplayName(
-						subTabName);
-				info.displayName = info.displayName == null ? subTabName
-						: info.displayName;
-				info.historyToken = getToken();
-				result.add(info);
-			}
-			return result;
-		}
-
-		protected void addToToken(Map<String, Object> params) {
-		}
 	}
 
 	public static class SearchHistoryInfo {

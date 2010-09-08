@@ -5,8 +5,8 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.On
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
-import cc.alcina.framework.gwt.client.logic.ClientUtils;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.gears.client.database.DatabaseException;

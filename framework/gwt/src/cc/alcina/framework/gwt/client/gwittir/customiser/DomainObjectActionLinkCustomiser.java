@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundHyperlink;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
-import cc.alcina.framework.gwt.client.logic.AlcinaHistory.HistoryInfoBase;
+import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -139,13 +139,13 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 			super.setModel(model);
 			if (model instanceof HasIdAndLocalId) {
 				HasIdAndLocalId hili = (HasIdAndLocalId) model;
-				HistoryInfoBase info = AlcinaHistory.get().createHistoryInfo();
-				info.actionName = actionName;
-				info.className = targetClass == null ? hili.getClass()
-						.getName() : targetClass.getName();
-				info.id = hili.getId();
-				info.localId = hili.getLocalId();
-				setTargetHistoryToken(info.getToken());
+				AlcinaHistoryItem info = AlcinaHistory.get().createHistoryInfo();
+				info.setActionName(actionName);
+				info.setClassName(targetClass == null ? hili.getClass()
+						.getName() : targetClass.getName());
+				info.setId(hili.getId());
+				info.setLocalId(hili.getLocalId());
+				setTargetHistoryToken(info.toTokenString());
 				String renderedString = this.getRenderer() != null ? (String) this
 						.getRenderer().render(model)
 						: model == null ? "" : model.toString();

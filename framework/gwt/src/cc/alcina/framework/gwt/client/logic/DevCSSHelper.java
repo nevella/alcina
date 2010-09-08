@@ -5,6 +5,7 @@ import java.beans.PropertyChangeListener;
 
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.dom.client.Element;
 

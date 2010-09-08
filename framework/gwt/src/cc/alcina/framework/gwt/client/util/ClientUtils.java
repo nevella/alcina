@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.gwt.client.logic;
+package cc.alcina.framework.gwt.client.util;
 
 import java.util.Map;
 
@@ -24,6 +24,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.http.client.UrlBuilder;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -135,4 +136,13 @@ public class ClientUtils {
 	public static native void invokeJsDebugger() /*-{
 		debugger;
 	}-*/;
+	public static void fireHistoryToken(String token){
+		if (token==null){
+			return;
+		}
+		if (token.equals(History.getToken())){
+			History.fireCurrentHistoryState();
+		}
+		History.newItem(token);
+	}
 }

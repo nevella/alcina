@@ -23,7 +23,7 @@ import cc.alcina.template.client.widgets.login.LoginStatus;
 import cc.alcina.template.client.widgets.login.LogoutHandler;
 import cc.alcina.template.client.widgets.login.OptionsHandler;
 import cc.alcina.template.cs.AlcinaTemplateHistory;
-import cc.alcina.template.cs.AlcinaTemplateHistory.AlcinaTemplateHistoryEventInfo;
+import cc.alcina.template.cs.AlcinaTemplateHistoryItem;
 
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -120,10 +120,10 @@ public class MainCmp extends MainCmpBase {
 	}
 
 	public void onHistoryChanged(String historyToken) {
-		AlcinaTemplateHistoryEventInfo info = AlcinaTemplateHistory.get()
+		AlcinaTemplateHistoryItem info = AlcinaTemplateHistory.get()
 				.parseToken(historyToken);
-		if (info.contentToken != null) {
-			showContent(info.contentToken.replace("_", " "));
+		if (info.getContentToken() != null) {
+			showContent(info.getContentToken().replace("_", " "));
 			info.type = HistoryEventType.UNTABBED;
 		}
 		if (info.type == HistoryEventType.UNTABBED) {
@@ -137,13 +137,13 @@ public class MainCmp extends MainCmpBase {
 			}
 			for (BaseTab tab : tabs) {
 				if (PermissionsManager.get().isPermissible(tab)
-						&& tab.getHistoryToken().equals(info.tabName)) {
+						&& tab.getHistoryToken().equals(info.getTabName())) {
 					tabPanel.selectTab(tabPanel.getWidgetIndex(tab));
 				}
 			}
 		}
-		if (info.actionName != null) {
-			LooseActionRegistry.get().getHandler(info.actionName)
+		if (info.getActionName() != null) {
+			LooseActionRegistry.get().getHandler(info.getActionName())
 					.performAction();
 		}
 	}
