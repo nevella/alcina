@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import java.util.Collection;
@@ -34,13 +33,11 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface CommonPersistenceLocal {
+public interface CommonPersistenceLocal {
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws Exception;
 
@@ -67,7 +64,6 @@ import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
 			Object value1, String key2, Object value2);
 
-	
 	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
 			Class<T> c, long id) throws Exception;
 
@@ -89,8 +85,7 @@ import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 
 	public abstract IUser mergeUser(IUser user);
 
-	public <G extends WrapperPersistable> Long persist(G gwpo)
-			throws Exception;
+	public <G extends WrapperPersistable> Long persist(G gwpo) throws Exception;
 
 	public void remove(Object o);
 
@@ -98,7 +93,6 @@ import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 
 	public void setField(Class clazz, Long id, String key, Object value)
 			throws Exception;
-
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers);
 
@@ -112,19 +106,22 @@ import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 	public abstract void connectPermissionsManagerToLiveObjects();
 
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id,GraphProjectionFilter fieldFilter, GraphProjectionFilter dataFilter);
+			Long id, GraphProjectionFilter fieldFilter,
+			GraphProjectionFilter dataFilter);
 
 	public void bulkDelete(Class clazz, Collection<Long> ids);
 
 	public <T extends HasId> T ensurePersistent(T obj);
 
-	public DomainTransformLayerWrapper transformInPersistenceContext(TransformPersister persister,
+	public DomainTransformLayerWrapper transformInPersistenceContext(
+			TransformPersister persister,
 			TransformPersistenceToken persistenceToken);
 
-	public void expandExceptionInfo(
-			DomainTransformLayerWrapper wrapper);
+	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
 
 	public String getImplementationSimpleClassName(Class<?> clazz);
 
 	public <A> A getNewImplementationInstance(Class<A> clazz);
+
+	public String validateClientInstance(long id, int auth);
 }

@@ -77,4 +77,5 @@ public class AlcinaTemplateCommonPersistence
 	public String getSystemUserName() {
 		return AlcinaTemplateAccessConstants.SYSTEM_USER;
 	}
+
 }

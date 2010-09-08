@@ -133,7 +133,7 @@ public class AlcinaTemplateHandshakeHelper extends
 				loadUserObjects("", null, LoginState.NOT_LOGGED_IN);
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsync().logout(callback);
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().logout(callback);
 		CallManager.get().register(callback, "Logging out");
 	}
 }

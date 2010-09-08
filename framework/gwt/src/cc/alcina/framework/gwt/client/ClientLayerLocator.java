@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
@@ -36,7 +37,7 @@ public class ClientLayerLocator {
 		return theInstance;
 	}
 
-	private CommonRemoteServiceAsync commonRemoteServiceAsync;
+	private CommonRemoteServiceAsyncProvider commonRemoteServiceAsyncProvider;
 
 	private ActionLogProvider actionLogProvider;
 
@@ -66,8 +67,8 @@ public class ClientLayerLocator {
 		return clientBase;
 	}
 
-	public CommonRemoteServiceAsync commonRemoteServiceAsync() {
-		return commonRemoteServiceAsync;
+	public CommonRemoteServiceAsync commonRemoteServiceAsyncInstance() {
+		return commonRemoteServiceAsyncProvider.getServiceInstance();
 	}
 
 	public void registerActionLogProvider(ActionLogProvider provider) {
@@ -78,9 +79,9 @@ public class ClientLayerLocator {
 		this.clientBase = base;
 	}
 
-	public void registerCommonRemoteServiceAsync(
-			CommonRemoteServiceAsync commonRemoteServiceAsync) {
-		this.commonRemoteServiceAsync = commonRemoteServiceAsync;
+	public void registerCommonRemoteServiceAsyncProvider(
+			CommonRemoteServiceAsyncProvider commonRemoteServiceAsyncProvider) {
+		this.commonRemoteServiceAsyncProvider = commonRemoteServiceAsyncProvider;
 	}
 
 	private ClientNofications clientNotifications;

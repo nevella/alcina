@@ -1,6 +1,8 @@
 package cc.alcina.template.client;
 
 import cc.alcina.framework.common.client.logic.StateChangeListener;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
 import cc.alcina.framework.gwt.client.ClientBaseWithLayout;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
@@ -16,14 +18,9 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
-/**
- * Entry point classes define <code>onModuleLoad()</code>.
- */
 public class AlcinaTemplateClient extends ClientBaseWithLayout implements
 		EntryPoint {
 	public static AlcinaTemplateClient theApp;
-
-	private AlcinaTemplateRemoteServiceAsync alcinaTemplateRemoteService;
 
 	private AlcinaTemplateConfiguration config = new AlcinaTemplateConfiguration();
 
@@ -44,12 +41,7 @@ public class AlcinaTemplateClient extends ClientBaseWithLayout implements
 	}
 
 	public AlcinaTemplateRemoteServiceAsync getAppRemoteService() {
-		return this.alcinaTemplateRemoteService;
-	}
-
-	private void setAlcinaTemplateRemoteService(
-			AlcinaTemplateRemoteServiceAsync alcinaTemplateRemoteService) {
-		this.alcinaTemplateRemoteService = alcinaTemplateRemoteService;
+		return remoteServiceAsyncProvider.getServiceInstance();
 	}
 
 	@Override
@@ -92,14 +84,21 @@ public class AlcinaTemplateClient extends ClientBaseWithLayout implements
 	}
 
 	void initServices() {
-		setAlcinaTemplateRemoteService((AlcinaTemplateRemoteServiceAsync) GWT
-				.create(AlcinaTemplateRemoteService.class));
-		((ServiceDefTarget) getAppRemoteService())
-				.setServiceEntryPoint("/alcinaTemplateService.do");
-		ClientLayerLocator.get().registerCommonRemoteServiceAsync(
-				getAppRemoteService());
+		ClientLayerLocator.get().registerCommonRemoteServiceAsyncProvider(
+				remoteServiceAsyncProvider);
 		config.initServices();
 		ClientLayerLocator.get().registerClientBase(this);
 		LayoutEvents.get().addLayoutEventListener(this);
 	}
+
+	private CommonRemoteServiceAsyncProvider<AlcinaTemplateRemoteServiceAsync> remoteServiceAsyncProvider = new CommonRemoteServiceAsyncProvider<AlcinaTemplateRemoteServiceAsync>() {
+		@Override
+		protected AlcinaTemplateRemoteServiceAsync createAndIntialiseEndpoint() {
+			AlcinaTemplateRemoteServiceAsync service = (AlcinaTemplateRemoteServiceAsync) GWT
+					.create(AlcinaTemplateRemoteService.class);
+			((ServiceDefTarget) service)
+					.setServiceEntryPoint("/alcinaTemplateService.do");
+			return service;
+		}
+	};
 }

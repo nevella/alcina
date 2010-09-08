@@ -204,7 +204,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 					}
 				};
 				crd.show();
-				ClientLayerLocator.get().commonRemoteServiceAsync()
+				ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 						.persistOfflineTransforms(uncommitted, callback);
 				return;
 			} else {

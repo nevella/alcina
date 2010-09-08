@@ -84,7 +84,7 @@ public class ChangePasswordClientHandler implements PermissibleActionHandler {
 						}
 					};
 					changePasswordView.setVisible(false);
-					ClientLayerLocator.get().commonRemoteServiceAsync()
+					ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 							.performActionAndWait(cp, callback);
 				}
 				if (evt.getAction() instanceof CancelAction) {

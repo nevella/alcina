@@ -223,7 +223,7 @@ public class ClientTransformManager extends TransformManager {
 			List<ObjectCacheItemSpec> specs = new ArrayList<ObjectCacheItemSpec>();
 			specs.add(new ObjectCacheItemSpec(hili, propertyName));
 			crd.show();
-			ClientLayerLocator.get().commonRemoteServiceAsync().cache(specs,
+			ClientLayerLocator.get().commonRemoteServiceAsyncInstance().cache(specs,
 					innerCallback);
 		}
 
@@ -426,7 +426,7 @@ public class ClientTransformManager extends TransformManager {
 										annotation.idPropertyName(), result);
 					}
 				};
-				ClientLayerLocator.get().commonRemoteServiceAsync().persist(
+				ClientLayerLocator.get().commonRemoteServiceAsyncInstance().persist(
 						persistableObject, savedCallback);
 			}
 		};

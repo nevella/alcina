@@ -153,6 +153,9 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 		} else {
 			lastHistoryToken = historyToken;
 		}
+		if (item.getTabName() != null) {
+			item.type = HistoryEventType.TABBED;
+		}
 		return item;
 	}
 
@@ -193,7 +196,7 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public enum HistoryEventType {
-		NO_TAB_SPEC, UNTABBED, TABBED, SEARCH
+		NO_TAB_SPEC, UNTABBED, TABBED
 	}
 
 	public static class SearchHistoryInfo {

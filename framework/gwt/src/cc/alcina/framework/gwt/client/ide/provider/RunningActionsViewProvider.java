@@ -94,7 +94,7 @@ import com.google.gwt.user.client.ui.Widget;
 				refreshTimer.schedule(10000);
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsync().listRunningJobs(callback);
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().listRunningJobs(callback);
 	}
 
 	private Widget createCaption() {

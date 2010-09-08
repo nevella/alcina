@@ -337,7 +337,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				}
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsync().transform(dtr,
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().transform(dtr,
 				callback);
 		dtr.getPriorRequestsWithoutResponse().clear();
 		priorRequestsWithoutResponse.add(dtr);

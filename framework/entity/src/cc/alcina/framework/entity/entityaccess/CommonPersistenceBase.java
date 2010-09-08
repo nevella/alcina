@@ -157,7 +157,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			throw new WrappedRuntimeException(e);
 		}
 	}
-
+	public String validateClientInstance(long id, int auth){
+		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
+		CI ci = getItemById(clientInstanceImpl, id);
+		return ci!=null&&ci.getAuth()==auth?ci.getUser().getUserName():null;
+		
+	}
 	public <T> T ensureObject(T t, String key, String value) throws Exception {
 		T newT = (T) getItemByKeyValue(t.getClass(), key, value, false);
 		if (newT != null) {

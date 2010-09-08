@@ -11,14 +11,23 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.remote;
 
+import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
+
+import com.google.gwt.user.client.rpc.ServiceDefTarget;
+
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public abstract class CommonRemoteServiceAsyncProvider<CRSA extends CommonRemoteServiceAsync> {
+	public CRSA getServiceInstance() {
+		CRSA service = createAndIntialiseEndpoint();
+		((ServiceDefTarget) service)
+				.setRpcRequestBuilder(new AlcinaRpcRequestBuilder());
+		return service;
+	}
 
- public interface ProvidesCommonRemoteService {
-	public CommonRemoteServiceAsync getCommonRemoteService() ;
+	protected abstract CRSA createAndIntialiseEndpoint();
 }

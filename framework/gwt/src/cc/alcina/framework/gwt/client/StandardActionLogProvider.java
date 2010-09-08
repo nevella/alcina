@@ -46,7 +46,7 @@ public class StandardActionLogProvider implements ActionLogProvider {
 					outerCallback.onSuccess(logs.get(action.getClass()));
 				}
 			};
-			ClientLayerLocator.get().commonRemoteServiceAsync()
+			ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 					.getLogsForAction(action, count, callback);
 		} else {
 			outerCallback.onSuccess(logs.get(action.getClass()));

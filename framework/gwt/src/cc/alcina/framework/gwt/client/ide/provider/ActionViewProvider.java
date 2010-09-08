@@ -282,10 +282,10 @@ public class ActionViewProvider implements ViewProvider,
 			}
 			running(true);
 			if (action instanceof SynchronousAction) {
-				ClientLayerLocator.get().commonRemoteServiceAsync()
+				ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 						.performActionAndWait(action, syncCallback);
 			} else {
-				ClientLayerLocator.get().commonRemoteServiceAsync()
+				ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 						.performAction(action, asyncCallback);
 			}
 		}

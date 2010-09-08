@@ -138,7 +138,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 					psve.setSourceWidget(null);
 				}
 			};
-			ClientLayerLocator.get().commonRemoteServiceAsync().validateOnServer(
+			ClientLayerLocator.get().commonRemoteServiceAsyncInstance().validateOnServer(
 					Arrays.asList(new ServerValidator[] { this }), callback);
 			throw psve;
 		}

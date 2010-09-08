@@ -114,7 +114,7 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 				runningCallback = null;
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsync().search(def, pageNumber,
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().search(def, pageNumber,
 				callback);
 	}
 
