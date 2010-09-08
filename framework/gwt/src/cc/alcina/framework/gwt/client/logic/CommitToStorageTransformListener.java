@@ -72,8 +72,6 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	private int localRequestId = 1;
 
-	private ClientInstance clientInstance;
-
 	private Map<Long, Long> localToServerIds = new HashMap<Long, Long>();
 
 	ArrayList<DomainTransformEvent> synthesisedEvents;
@@ -131,8 +129,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		priorRequestsWithoutResponse.clear();
 	}
 
-	public ClientInstance getClientInstance() {
-		return clientInstance;
+	private ClientInstance getClientInstance() {
+		return ClientLayerLocator.get().getClientInstance();
 	}
 
 	public int getLocalRequestId() {
@@ -161,10 +159,6 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	public Long localToServerId(Long localId) {
 		return localToServerIds.get(localId);
-	}
-
-	public void setClientInstance(ClientInstance clientInstance) {
-		this.clientInstance = clientInstance;
 	}
 
 	public void setLocalRequestId(int localRequestId) {
@@ -202,7 +196,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		dtr.getPriorRequestsWithoutResponse().addAll(
 				priorRequestsWithoutResponse);
 		dtr.setRequestId(localRequestId++);
-		dtr.setClientInstance(clientInstance);
+		dtr.setClientInstance(getClientInstance());
 		dtr.getItems().addAll(transformQueue);
 		dtr.getEventIdsToIgnore().addAll(eventIdsToIgnore);
 		dtr.setDomainTransformRequestType(DomainTransformRequestType.TO_REMOTE);
@@ -315,7 +309,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							// assume object was either deregistered or deleted
 							// before these transforms
 							// made it back from the server
-							if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND || e.getType() == DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND) {
+							if (e.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND
+									|| e.getType() == DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND) {
 							} else {
 								throw new WrappedRuntimeException(e);
 							}
@@ -342,13 +337,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				}
 			}
 		};
-		IUser user = clientInstance.getUser();
-		// not needed, and heavyweight
-		clientInstance.setUser(null);
 		ClientLayerLocator.get().commonRemoteServiceAsync().transform(dtr,
 				callback);
-		clientInstance.setUser(user);
-		clientInstance.setUser(null);
 		dtr.getPriorRequestsWithoutResponse().clear();
 		priorRequestsWithoutResponse.add(dtr);
 		fireStateChanged(COMMITTING);

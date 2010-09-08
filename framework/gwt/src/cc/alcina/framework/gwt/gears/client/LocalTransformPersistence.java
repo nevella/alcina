@@ -123,7 +123,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				getPersistedTransforms().remove(i);
 			}
 			DomainTransformRequest rq = new DomainTransformRequest();
-			rq.setClientInstance(getCommitToStorageTransformListener()
+			rq.setClientInstance(ClientLayerLocator.get()
 					.getClientInstance());
 			rq
 					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);

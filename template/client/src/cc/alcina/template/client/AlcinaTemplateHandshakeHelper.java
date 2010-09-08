@@ -67,13 +67,13 @@ public class AlcinaTemplateHandshakeHelper extends
 	@Override
 	protected void preSerialization(LoginState loginState) {
 		AlcinaTemplateObjectsSerializationHelper.preSerialization(
-				ClientLayerLocator.get().getCommitToStorageTransformListener()
+				ClientLayerLocator.get()
 						.getClientInstance(), loginState);
 	}
 
 	@Override
 	public void handleLoggedIn(LoginResponse loginResponse) {
-		ClientLayerLocator.get().getCommitToStorageTransformListener()
+		ClientLayerLocator.get()
 				.setClientInstance(loginResponse.getClientInstance());
 		LocalTransformPersistence.get().handleUncommittedTransformsOnLoad(
 				new Callback() {
@@ -104,7 +104,7 @@ public class AlcinaTemplateHandshakeHelper extends
 			}
 
 			public void onSuccess(LoginResponse loginResponse) {
-				ClientLayerLocator.get().getCommitToStorageTransformListener()
+				ClientLayerLocator.get()
 						.setClientInstance(loginResponse.getClientInstance());
 				if (loginResponse.isOk()) {
 					handleLoggedIn(loginResponse);

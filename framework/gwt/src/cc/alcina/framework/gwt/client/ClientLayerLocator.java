@@ -45,9 +45,9 @@ public class ClientLayerLocator {
 	private ClientBase clientBase;
 
 	private GeneralProperties generalProperties;
-	
+
 	private DomainModelHolder domainModelHolder;
-	
+
 	private ClientHandshakeHelper clientHandshakeHelper;
 
 	private ClientLayerLocator() {
@@ -85,6 +85,8 @@ public class ClientLayerLocator {
 
 	private ClientNofications clientNotifications;
 
+	private ClientInstance clientInstance;
+
 	public void registerNotifications(ClientNofications clientNotifications) {
 		this.clientNotifications = clientNotifications;
 	}
@@ -94,7 +96,13 @@ public class ClientLayerLocator {
 	}
 
 	public ClientInstance getClientInstance() {
-		return getCommitToStorageTransformListener().getClientInstance();
+		return clientInstance;
+	}
+
+	public void setClientInstance(ClientInstance clientInstance) {
+		// not needed, and heavyweight (for transforms, etc)
+		clientInstance.setUser(null);
+		this.clientInstance = clientInstance;
 	}
 
 	public void setCommitToStorageTransformListener(
@@ -132,7 +140,8 @@ public class ClientLayerLocator {
 		return domainModelHolder;
 	}
 
-	public void setClientHandshakeHelper(ClientHandshakeHelper clientHandshakeHelper) {
+	public void setClientHandshakeHelper(
+			ClientHandshakeHelper clientHandshakeHelper) {
 		this.clientHandshakeHelper = clientHandshakeHelper;
 	}
 

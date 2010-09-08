@@ -190,7 +190,7 @@ public abstract class OfflineDomainLoader {
 			ClientInstance clientInstance = beforeEventReplay();
 			CommitToStorageTransformListener tl = ClientLayerLocator.get()
 					.getCommitToStorageTransformListener();
-			tl.setClientInstance(clientInstance);
+			ClientLayerLocator.get().setClientInstance(clientInstance);
 			for (DomainTransformRequest rq : tl
 					.getPriorRequestsWithoutResponse()) {
 				rq.setClientInstance(clientInstance);

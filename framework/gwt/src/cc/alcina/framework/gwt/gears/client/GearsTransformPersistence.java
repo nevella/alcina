@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 import com.google.gwt.gears.client.Factory;
@@ -235,7 +236,7 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 									wrapper.getProtocolVersion(),
 									wrapper.getTag() });
 			if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
-				clearPersistedClient(getCommitToStorageTransformListener()
+				clearPersistedClient(ClientLayerLocator.get()
 						.getClientInstance());
 			}
 			wrapper.setId(db.getLastInsertRowId());
