@@ -6,11 +6,12 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.CallManager;
-import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelperWithLocalPersistence;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
+import cc.alcina.framework.gwt.gears.client.ClientHandshakeHelperWithLocalPersistence;
 import cc.alcina.framework.gwt.gears.client.LocalTransformPersistence;
 import cc.alcina.framework.gwt.gears.client.OfflineDomainLoader;
 import cc.alcina.template.client.logic.AlcinaTemplateOfflineDomainLoader;
@@ -20,9 +21,15 @@ import cc.alcina.template.cs.csobjects.AlcinaTemplateObjectsSerializationHelper;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.rpc.StatusCodeException;
 
 public class AlcinaTemplateHandshakeHelper extends
 		ClientHandshakeHelperWithLocalPersistence {
+	@Override
+	public boolean supportsRpcPersistence() {
+		return false;
+	}
+
 	@Override
 	protected void updateUIPreHello() {
 		Element statusVariable = Document.get().getElementById(
@@ -67,14 +74,13 @@ public class AlcinaTemplateHandshakeHelper extends
 	@Override
 	protected void preSerialization(LoginState loginState) {
 		AlcinaTemplateObjectsSerializationHelper.preSerialization(
-				ClientLayerLocator.get()
-						.getClientInstance(), loginState);
+				ClientLayerLocator.get().getClientInstance(), loginState);
 	}
 
 	@Override
 	public void handleLoggedIn(LoginResponse loginResponse) {
-		ClientLayerLocator.get()
-				.setClientInstance(loginResponse.getClientInstance());
+		ClientLayerLocator.get().setClientInstance(
+				loginResponse.getClientInstance());
 		LocalTransformPersistence.get().handleUncommittedTransformsOnLoad(
 				new Callback() {
 					public void callback(Object target) {
@@ -104,8 +110,8 @@ public class AlcinaTemplateHandshakeHelper extends
 			}
 
 			public void onSuccess(LoginResponse loginResponse) {
-				ClientLayerLocator.get()
-						.setClientInstance(loginResponse.getClientInstance());
+				ClientLayerLocator.get().setClientInstance(
+						loginResponse.getClientInstance());
 				if (loginResponse.isOk()) {
 					handleLoggedIn(loginResponse);
 				} else {
@@ -133,7 +139,8 @@ public class AlcinaTemplateHandshakeHelper extends
 				loadUserObjects("", null, LoginState.NOT_LOGGED_IN);
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().logout(callback);
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().logout(
+				callback);
 		CallManager.get().register(callback, "Logging out");
 	}
 }

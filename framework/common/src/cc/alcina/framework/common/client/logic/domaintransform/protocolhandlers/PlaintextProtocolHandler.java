@@ -145,7 +145,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		int i = 0;
 		for (DomainTransformEvent dte : events) {
 			if (++i % 200 == 0) {
-				appendTo(dte, sb1);
+				sb2.append(sb1.toString());
 				sb1 = new StringBuffer();
 			}
 			appendTo(dte, sb1);

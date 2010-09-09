@@ -18,6 +18,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -50,10 +51,14 @@ public class ClientUtils {
 	private static final String CSS_TEXT_PROPERTY = "cssText";
 
 	public static boolean maybeOffline(Throwable t) {
+		
 		if (t instanceof WrappedRuntimeException) {
 			t = t.getCause();
 		}
 		if (t instanceof StatusCodeException) {
+			if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)){
+				return true;
+			}
 			StatusCodeException sce = (StatusCodeException) t;
 			ClientLayerLocator.get().notifications().log(
 					"** Status code exception: " + sce.getStatusCode());

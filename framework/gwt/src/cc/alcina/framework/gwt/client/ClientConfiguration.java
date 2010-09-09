@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.ClientUTCDateProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -25,22 +26,23 @@ public class ClientConfiguration {
 		initImageProvider();
 		initHandshakeHelper();
 		extraConfiguration();
+		prepareDebugFromHistory();
 	}
-	
+
+	protected void prepareDebugFromHistory() {
+		AlcinaDebugIds.initialise();
+	}
+
 	protected void initAppCache() {
-		
 	}
 
 	protected void initHandshakeHelper() {
-		
 	}
 
 	protected void initLocalPersistence() {
-		
 	}
 
 	protected void extraConfiguration() {
-		
 	}
 
 	protected CommitToStorageTransformListener createStorageTransformListener() {
@@ -49,7 +51,6 @@ public class ClientConfiguration {
 
 	protected void initImageProvider() {
 	}
-
 
 	protected void initContentProvider() {
 	}
@@ -77,11 +78,9 @@ public class ClientConfiguration {
 	}
 
 	protected void registerExtraTransformListenersPreStorage() {
-		
 	}
 
 	protected void registerExtraTransformListenersPostStorage() {
-		
 	}
 
 	protected ClientTransformManager createTransformManager() {

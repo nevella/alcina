@@ -40,7 +40,9 @@ import com.google.gwt.user.client.ui.Label;
 	protected Button cancelButton;
 
 	private Button retryButton;
-
+	protected boolean initialAnimationEnabled(){
+		return true;
+	}
 	public CancellableRemoteDialog(String msg, PermissibleActionListener l) {
 		if (l == null) {
 			l = new PermissibleActionListener() {
@@ -51,7 +53,7 @@ import com.google.gwt.user.client.ui.Label;
 		}
 		final PermissibleActionListener lCopy = l;
 		setText("Please wait...");
-		setAnimationEnabled(true);
+		setAnimationEnabled(initialAnimationEnabled());
 		Grid grr = new Grid(2, 1);
 		statusLabel = new Label(msg);
 		grr.getCellFormatter().setHorizontalAlignment(0, 0,

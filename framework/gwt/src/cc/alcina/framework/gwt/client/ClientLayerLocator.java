@@ -39,6 +39,11 @@ public class ClientLayerLocator {
 
 	private CommonRemoteServiceAsyncProvider commonRemoteServiceAsyncProvider;
 
+	public CommonRemoteServiceAsyncProvider getCommonRemoteServiceAsyncProvider() {
+		return this.commonRemoteServiceAsyncProvider;
+	}
+
+
 	private ActionLogProvider actionLogProvider;
 
 	private CommitToStorageTransformListener commitToStorageTransformListener;

@@ -10,6 +10,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientUIThreadWorker;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
@@ -18,7 +19,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.GwtRpcProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -59,7 +62,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * 
  */
 public abstract class LocalTransformPersistence implements StateChangeListener,
-		ClientTransformManager.PersistableTransformListener,  ClosingHandler {
+		ClientTransformManager.PersistableTransformListener, ClosingHandler {
 	private DTESerializationPolicy serializationPolicy;
 
 	private boolean localStorageInstalled = false;
@@ -123,8 +126,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				getPersistedTransforms().remove(i);
 			}
 			DomainTransformRequest rq = new DomainTransformRequest();
-			rq.setClientInstance(ClientLayerLocator.get()
-					.getClientInstance());
+			rq.setClientInstance(ClientLayerLocator.get().getClientInstance());
 			rq
 					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 			rq.setRequestId(0);
@@ -138,6 +140,21 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		} else if (newState == CommitToStorageTransformListener.RELOAD) {
 			clearAllPersisted();
 		}
+	}
+
+	public void persistInitialRpcPayload(MixedGwtTransformHelper mixedHelper) {
+		//TODO - if transforms, delete all but first c_o_l (and reparent) - if not, delete all
+		
+		ClientInstance clientInstance = ClientLayerLocator.get()
+				.getClientInstance();
+		DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(0,
+				mixedHelper.getBuilder().getRpcResult(), System
+						.currentTimeMillis(), PermissionsManager.get()
+						.getUserId(), clientInstance.getId(), 0, clientInstance
+						.getAuth(),
+				DomainTransformRequestType.CLIENT_OBJECT_LOAD,
+				GwtRpcProtocolHandler.VERSION, "");
+		persist(wrapper);
 	}
 
 	protected abstract void clearAllPersisted();
@@ -298,8 +315,8 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 						+ "No data saved");
 	}
 
-	public boolean shouldPersistClient() throws GearsException {
-		return !ClientSession.get().isInitialObjectsPersisted();
+	public boolean shouldPersistClient(boolean clientSupportsRpcPersistence) throws GearsException {
+		return !ClientSession.get().isInitialObjectsPersisted()||clientSupportsRpcPersistence;
 	}
 
 	public List<DTRSimpleSerialWrapper> openAvailableSessionTransformsForOfflineLoad(
@@ -320,14 +337,16 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				}
 				return transforms;
 			}
-			if (loads.size() != 1) {
-				// an assert?
-				throw new WrappedRuntimeException(
-						"Multiple client object loads",
-						SuggestedAction.NOTIFY_WARNING);
-			}
 			DTRSimpleSerialWrapper loadWrapper = loads.iterator().next();
-			setClientInstanceIdForGet(loadWrapper.getClientInstanceId());
+			long clientInstanceId = loadWrapper.getClientInstanceId();
+			for (DTRSimpleSerialWrapper wrapper : loads) {
+				if (wrapper.getClientInstanceId() != clientInstanceId) {
+					throw new WrappedRuntimeException(
+							"Multiple client object loads",
+							SuggestedAction.NOTIFY_WARNING);
+				}
+			}
+			setClientInstanceIdForGet(clientInstanceId);
 			transforms.add(loadWrapper);
 			transforms.addAll(getTransforms(new DomainTransformRequestType[] {
 					DomainTransformRequestType.TO_REMOTE_COMPLETED,
@@ -356,10 +375,12 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	public static LocalTransformPersistence get() {
 		return localTransformPersistence;
 	}
+
 	public LocalTransformPersistence() {
 		Window.addWindowClosingHandler(this);
 	}
+
 	public void onWindowClosing(ClosingEvent event) {
-		setClosing(true);		
+		setClosing(true);
 	}
 }

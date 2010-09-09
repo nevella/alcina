@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.gears.client.OfflineDomainLoader;
 import cc.alcina.template.client.AlcinaTemplateClient;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
@@ -34,5 +35,6 @@ public class AlcinaTemplateOfflineDomainLoader extends OfflineDomainLoader {
 	public void afterEventReplay() {
 		PermissionsManager.get().setLoginState(LoginState.LOGGED_IN);
 		AlcinaTemplateClient.theApp.afterDomainModelRegistration();
+		ClientMetricLogging.get().end(OFFLINE_LOAD_METRIC_KEY);
 	}
 }

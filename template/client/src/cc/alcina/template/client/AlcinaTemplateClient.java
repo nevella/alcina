@@ -97,7 +97,7 @@ public class AlcinaTemplateClient extends ClientBaseWithLayout implements
 			AlcinaTemplateRemoteServiceAsync service = (AlcinaTemplateRemoteServiceAsync) GWT
 					.create(AlcinaTemplateRemoteService.class);
 			((ServiceDefTarget) service)
-					.setServiceEntryPoint("/alcinaTemplateService.do");
+					.setServiceEntryPoint(adjustEndpoint("/alcinaTemplateService.do"));
 			return service;
 		}
 	};

@@ -13,8 +13,10 @@
  */
 package cc.alcina.framework.common.client.remote;
 
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 
+import com.google.gwt.user.client.rpc.RpcRequestBuilder;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 /**
@@ -28,6 +30,21 @@ public abstract class CommonRemoteServiceAsyncProvider<CRSA extends CommonRemote
 				.setRpcRequestBuilder(new AlcinaRpcRequestBuilder());
 		return service;
 	}
+	public CRSA getServiceInstance(RpcRequestBuilder builder) {
+		CRSA service = createAndIntialiseEndpoint();
+		((ServiceDefTarget) service)
+				.setRpcRequestBuilder(builder);
+		return service;
+	}
 
 	protected abstract CRSA createAndIntialiseEndpoint();
+	
+	protected String adjustEndpoint(String endpoint){
+		if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)){
+			endpoint+="-not";
+		}
+		return endpoint;
+	}
+	
+	
 }

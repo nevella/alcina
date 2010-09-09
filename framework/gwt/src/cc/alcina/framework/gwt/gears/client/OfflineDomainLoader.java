@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientUIThreadWorker;
@@ -16,20 +17,27 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.GwtRpcProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
+import com.google.gwt.user.client.Command;
+import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Timer;
 
 public abstract class OfflineDomainLoader {
+	public static final String OFFLINE_LOAD_METRIC_KEY = "offline-load";
+
 	private List<DTRSimpleSerialWrapper> transforms;
 
 	public boolean tryOffline(final Throwable t) {
-		if (!tryOfflinePass(t,false)) {
+		if (!tryOfflinePass(t, false)) {
 			return false;
 		}
 		if (transforms.isEmpty() && !ClientSession.get().isSoleOpenTab()) {
@@ -38,7 +46,7 @@ public abstract class OfflineDomainLoader {
 			new Timer() {
 				@Override
 				public void run() {
-					tryOfflinePass(t,true);
+					tryOfflinePass(t, true);
 				}
 			}.schedule(ClientSession.KEEP_ALIVE_TIMER + 1000);
 		}
@@ -50,20 +58,86 @@ public abstract class OfflineDomainLoader {
 		if (!ClientUtils.maybeOffline(t) || !gears.isLocalStorageInstalled()) {
 			return false;
 		}
+		ClientMetricLogging.get().start(OFFLINE_LOAD_METRIC_KEY);
 		PermissionsManager.get().setOnlineState(OnlineState.OFFLINE);
-		// deser cosa objects
 		TransformManager tm = TransformManager.get();
 		tm.registerDomainObjectsInHolder(createDummyModel());
 		try {
-			transforms = gears.openAvailableSessionTransformsForOfflineLoad(notify);
+			transforms = gears
+					.openAvailableSessionTransformsForOfflineLoad(notify);
 			if (!transforms.isEmpty()) {
-				StringBuffer sb = new StringBuffer();
-				new DTEAsyncDeserializer(transforms).start();
+				if (hasGwtRpcTransforms()) {
+					displayReplayRpcNotification(false);
+				}
+				new Timer() {
+					@Override
+					public void run() {
+						List<DomainTransformEvent> initialEvents = handleGwtRpcTransforms();
+						if (loadObjectsHolder != null) {
+							registerRpcDomainModelHolder();
+						}
+						new DTEAsyncDeserializer(transforms, initialEvents)
+								.start();
+					}
+				}.schedule(500);
 			}
 		} catch (Exception e) {
+			ClientMetricLogging.get().end(OFFLINE_LOAD_METRIC_KEY);
 			throw new WrappedRuntimeException(e);
 		}
 		return true;
+	}
+
+	protected void registerRpcDomainModelHolder() {
+		throw new UnsupportedOperationException();
+	}
+
+	protected LoadObjectsHolder<DomainModelHolder> loadObjectsHolder;
+
+	private boolean hasGwtRpcTransforms() {
+		List<DomainTransformEvent> initialEvents = new ArrayList<DomainTransformEvent>();
+		for (Iterator<DTRSimpleSerialWrapper> iterator = transforms.iterator(); iterator
+				.hasNext();) {
+			DTRSimpleSerialWrapper wrapper = iterator.next();
+			DTRProtocolHandler handler = new DTRProtocolSerializer()
+					.getHandler(wrapper.getProtocolVersion());
+			if (handler instanceof GwtRpcProtocolHandler) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/*
+	 * at most two gwtrpc wrappers - at the top of the list
+	 */
+	private List<DomainTransformEvent> handleGwtRpcTransforms() {
+		List<DomainTransformEvent> initialEvents = new ArrayList<DomainTransformEvent>();
+		for (Iterator<DTRSimpleSerialWrapper> iterator = transforms.iterator(); iterator
+				.hasNext();) {
+			DTRSimpleSerialWrapper wrapper = iterator.next();
+			DTRProtocolHandler handler = new DTRProtocolSerializer()
+					.getHandler(wrapper.getProtocolVersion());
+			if (handler instanceof GwtRpcProtocolHandler) {
+				LoadObjectsHolder replayRpc = replayRpc(wrapper.getText());
+				iterator.remove();
+				if (replayRpc != null) {
+					if (replayRpc.getDomainObjects() != null) {
+						loadObjectsHolder = replayRpc;
+					}
+					initialEvents.addAll(replayRpc.getReplayEvents());
+				}
+			}
+		}
+		return initialEvents;
+	}
+
+	protected void displayReplayRpcNotification(boolean end) {
+	}
+
+	protected LoadObjectsHolder replayRpc(String text) {
+		return ((ClientHandshakeHelperWithLocalPersistence) ClientLayerLocator
+				.get().getClientHandshakeHelper()).replayRpc(text);
 	}
 
 	public abstract DomainModelHolder createDummyModel();
@@ -85,8 +159,10 @@ public abstract class OfflineDomainLoader {
 
 		private DTRSimpleSerialWrapper wr;
 
-		public DTEAsyncDeserializer(List<DTRSimpleSerialWrapper> transforms) {
+		public DTEAsyncDeserializer(List<DTRSimpleSerialWrapper> transforms,
+				List<DomainTransformEvent> initialItems) {
 			super(1000, 200);
+			items = initialItems;
 			this.transformIterator = transforms.iterator();
 			for (DTRSimpleSerialWrapper wr : transforms) {
 				totalStrlen += wr.getText().length();
@@ -96,7 +172,13 @@ public abstract class OfflineDomainLoader {
 
 		@Override
 		public void start() {
-			this.cd = new NonCancellableRemoteDialog("");
+			this.cd = new NonCancellableRemoteDialog("") {
+				@Override
+				protected boolean initialAnimationEnabled() {
+					return false;
+				}
+			};
+			cd.setAnimationEnabled(false);
 			cd.getGlass().setOpacity(0);
 			cd.show();
 			super.start();
@@ -169,7 +251,12 @@ public abstract class OfflineDomainLoader {
 
 		@Override
 		public void start() {
-			this.cd = new NonCancellableRemoteDialog("");
+			this.cd = new NonCancellableRemoteDialog("") {
+				@Override
+				protected boolean initialAnimationEnabled() {
+					return false;
+				}
+			};
 			cd.getGlass().setOpacity(0);
 			cd.show();
 			MutablePropertyChangeSupport.setMuteAll(true);

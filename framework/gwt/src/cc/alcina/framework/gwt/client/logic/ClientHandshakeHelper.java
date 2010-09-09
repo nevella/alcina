@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 
@@ -85,7 +86,9 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 		ClientLayerLocator.get().setDomainModelHolder(objects);
 		if (!TransformManager.get().isReplayingRemoteEvent()) {
 			TransformManager.get().registerDomainObjectsInHolder(objects);
-			locallyPersistDomainModel(loginState);
+			if (PermissionsManager.get().getOnlineState() != OnlineState.OFFLINE) {
+				locallyPersistDomainModelAndReplayPostLoadTransforms(loginState);
+			}
 		}
 		ContentProvider.refresh();
 		PermissionsManager.get().setLoginState(loginState);
@@ -93,8 +96,11 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 
 	/**
 	 * see <tt>ClientHandshakeHelperWithLocalPersistence</tt>
+	 * 
+	 * @param loadHelper
 	 */
-	protected void locallyPersistDomainModel(LoginState loginState) {
+	protected void locallyPersistDomainModelAndReplayPostLoadTransforms(
+			LoginState loginState) {
 	}
 
 	protected abstract void afterDomainModelRegistration();
