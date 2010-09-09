@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.rpc;
 
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 import com.google.gwt.http.client.Header;
@@ -118,7 +119,8 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	@Override
 	protected void doFinish(RequestBuilder rb) {
 		super.doFinish(rb);
-		if (ClientLayerLocator.get().getClientInstance() != null) {
+		if (ClientLayerLocator.get().getClientInstance() != null
+				&& PermissionsManager.get().isLoggedIn()) {
 			rb.setHeader(CLIENT_INSTANCE_ID_KEY, String
 					.valueOf(ClientLayerLocator.get().getClientInstance()
 							.getId()));
