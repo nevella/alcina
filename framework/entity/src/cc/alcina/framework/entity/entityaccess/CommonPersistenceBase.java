@@ -740,11 +740,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						EntityUtils.longsToIdClause(classRefIds));
 		Query query = getEntityManager().createQuery(eql).setParameter(1,
 				sinceId);
-		if (sinceId != 0) {
+		if (sinceId == 0) {
 			query.setMaxResults(maxTransforms);
 		}
-		List resultList = query.getResultList();
-		return new EntityUtils().detachedClone(resultList, false);
+		return query.getResultList();
 	}
 
 	/**
@@ -772,7 +771,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public long getLastTransformId() {
 		String eql = String
 				.format(
-						"select count(dtep.id) from %s dtep ",
+						"select max(dtep.id) from %s dtep ",
 						getImplementationSimpleClassName(DomainTransformEventPersistent.class));
 		Long l = (Long) getEntityManager().createQuery(eql).getSingleResult();
 		return CommonUtils.lv(l);
