@@ -89,7 +89,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	public DTESerializationPolicy getSerializationPolicy() {
 		return serializationPolicy;
 	}
-
+	protected abstract void clearPersistedClient(ClientInstance exceptFor) ;
 	public void setCommitToStorageTransformListener(
 			CommitToStorageTransformListener commitToStorageTransformListener) {
 		this.commitToStorageTransformListener = commitToStorageTransformListener;
@@ -143,8 +143,8 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	public void persistInitialRpcPayload(MixedGwtTransformHelper mixedHelper) {
-		//TODO - if transforms, delete all but first c_o_l (and reparent) - if not, delete all
-		
+		// TODO - if transforms, delete all but first c_o_l (and reparent) - if
+		// not, delete all
 		ClientInstance clientInstance = ClientLayerLocator.get()
 				.getClientInstance();
 		DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(0,
@@ -315,15 +315,50 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 						+ "No data saved");
 	}
 
-	public boolean shouldPersistClient(boolean clientSupportsRpcPersistence) throws GearsException {
-		return !ClientSession.get().isInitialObjectsPersisted()||clientSupportsRpcPersistence;
+	public boolean shouldPersistClient(boolean clientSupportsRpcPersistence)
+			throws GearsException {
+		return !ClientSession.get().isInitialObjectsPersisted()
+				|| clientSupportsRpcPersistence;
 	}
 
+	private ClientInstance domainObjectsPersistedBy;
+
+	ClientInstance getDomainObjectsPersistedBy() {
+		return this.domainObjectsPersistedBy;
+	}
+
+	protected void persistAndReparentClientLoadTransforms(
+			MixedGwtTransformHelper mixedHelper) throws MixedGwtLoadException {
+		try {
+			List<DTRSimpleSerialWrapper> loads = getTransforms(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
+			if (loads.size() == 0 ) {
+				throw new MixedGwtLoadException("Hmm...our load disappeared. Dang. ",false);
+			}
+			DTRSimpleSerialWrapper rpcWrapper = loads.get(0);
+			if (rpcWrapper.getUserId()!=PermissionsManager.get().getUserId()){
+				throw new MixedGwtLoadException("Hmm...our load was hijacked by another user. Dang. ",false);
+			}
+			reparentToClientInstance(rpcWrapper,ClientLayerLocator.get().getClientInstance());
+			persistInitialRpcPayload(mixedHelper);
+		} catch (Exception e) {
+			MixedGwtLoadException lex = null;
+			lex = (MixedGwtLoadException) ((e instanceof MixedGwtLoadException) ? e
+					: new MixedGwtLoadException(e));
+				throw lex; 
+		}
+	}
+
+	protected abstract void reparentToClientInstance(DTRSimpleSerialWrapper wrapper,
+			ClientInstance clientInstance) ;
 	public List<DTRSimpleSerialWrapper> openAvailableSessionTransformsForOfflineLoad(
 			boolean finalPass) {
+		return openAvailableSessionTransformsForOfflineLoad(finalPass, true);
+	}
+	public List<DTRSimpleSerialWrapper> openAvailableSessionTransformsForOfflineLoad(
+			boolean finalPass, boolean checkSoleOpenTab) {
 		try {
 			List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
-			if (!ClientSession.get().isSoleOpenTab()) {
+			if (checkSoleOpenTab&&!ClientSession.get().isSoleOpenTab()) {
 				if (finalPass) {
 					showOfflineLimitMessage();
 				}
@@ -339,6 +374,9 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			}
 			DTRSimpleSerialWrapper loadWrapper = loads.iterator().next();
 			long clientInstanceId = loadWrapper.getClientInstanceId();
+			domainObjectsPersistedBy = ((ClientHandshakeHelperWithLocalPersistence) ClientLayerLocator
+					.get().getClientHandshakeHelper()).createClientInstance(
+					clientInstanceId, loadWrapper.getClientInstanceAuth());
 			for (DTRSimpleSerialWrapper wrapper : loads) {
 				if (wrapper.getClientInstanceId() != clientInstanceId) {
 					throw new WrappedRuntimeException(

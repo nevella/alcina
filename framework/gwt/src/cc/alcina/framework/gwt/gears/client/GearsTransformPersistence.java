@@ -45,13 +45,14 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 	public GearsTransformPersistence() {
 	}
 
-	public void clearPersistedClient(ClientInstance exceptFor) {
+	protected void clearPersistedClient(ClientInstance exceptFor) {
 		try {
 			db.execute("DELETE from TransformRequests"
 					+ " where (transform_request_type='CLIENT_OBJECT_LOAD'"
 					+ " OR transform_request_type='CLIENT_SYNC'"
 					+ " OR transform_request_type='TO_REMOTE_COMPLETED')"
-					+ " and clientInstance_id != " + exceptFor.getId());
+					+ " and clientInstance_id != "
+					+ (exceptFor == null ? -1 : exceptFor.getId()));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -65,8 +66,7 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 				"clientInstance_id", Long.class, "request_id", Integer.class,
 				"clientInstance_auth", Integer.class, "transform_request_type",
 				DomainTransformRequestType.class, "transform_event_protocol",
-				String.class ,"tag",
-				String.class };
+				String.class, "tag", String.class };
 		List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
 		String sql = "select * from TransformRequests ";
 		for (int i = 0; i < types.length; i++) {
@@ -251,6 +251,21 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 					+ "transform_request_type='TO_REMOTE_COMPLETED'"
 					+ " where id = ?", new String[] { Integer.toString(wrapper
 					.getId()) });
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	@Override
+	protected void reparentToClientInstance(DTRSimpleSerialWrapper wrapper,
+			ClientInstance clientInstance) {
+		try {
+			db.execute("update  TransformRequests  set "
+					+ "clientInstance_id=?,clientInstance_auth=? "
+					+ " where id = ?", new String[] {
+					Long.toString(clientInstance.getId()),
+					Integer.toString(clientInstance.getAuth()),
+					Integer.toString(wrapper.getId()) });
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

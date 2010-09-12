@@ -27,18 +27,22 @@ import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.registry.RegistryScanner;
+import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
 public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid> {
@@ -71,6 +75,10 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		this();
 		em = entityManager;
 	}
+
+	
+
+	
 
 	protected void loadCustomProperties() {
 		try {

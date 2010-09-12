@@ -119,9 +119,12 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected abstract void initDataFolder();
 
+	protected ServletConfig initServletConfig;
+
 	public void init(ServletConfig servletConfig) throws ServletException {
 		MetricLogging.get().start("Web app startup");
 		try {
+			initServletConfig = servletConfig;
 			initNames();
 			initLoggers();
 			initJPA();
@@ -132,6 +135,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initCustom();
 		} catch (Exception e) {
 			throw new ServletException(e);
+		} finally {
+			initServletConfig = null;
 		}
 		MetricLogging.get().end("Web app startup");
 	}

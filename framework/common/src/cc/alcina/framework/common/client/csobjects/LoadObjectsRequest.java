@@ -16,11 +16,7 @@ public class LoadObjectsRequest implements Serializable {
 
 	private String typeSignature;
 	
-	private ClientInstance clientInstance;
-
-	public ClientInstance getClientInstance() {
-		return this.clientInstance;
-	}
+	
 
 	public Long getLastTransformId() {
 		return this.lastTransformId;
@@ -30,9 +26,7 @@ public class LoadObjectsRequest implements Serializable {
 		return this.typeSignature;
 	}
 
-	public void setClientInstance(ClientInstance clientInstance) {
-		this.clientInstance = clientInstance;
-	}
+	
 
 	public void setLastTransformId(Long lastTransformId) {
 		this.lastTransformId = lastTransformId;

@@ -28,6 +28,8 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
@@ -124,4 +126,12 @@ public interface CommonPersistenceLocal {
 	public <A> A getNewImplementationInstance(Class<A> clazz);
 
 	public String validateClientInstance(long id, int auth);
+
+	public long getLastTransformId();
+
+	/**
+	 * Used for supporting mixed rpc/transform domain loads
+	 * 
+	 */
+	public TransformCache warmupTransformCache();
 }

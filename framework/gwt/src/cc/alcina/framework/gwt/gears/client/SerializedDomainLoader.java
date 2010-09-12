@@ -23,16 +23,20 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.On
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientMetricLogging;
+import cc.alcina.framework.gwt.client.ClientNofications;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Timer;
 
-public abstract class OfflineDomainLoader {
+public abstract class SerializedDomainLoader {
 	public static final String OFFLINE_LOAD_METRIC_KEY = "offline-load";
+
+	private static final String ONLINE_INITIAL_DESER_METRIC_KEY = "online-initial-deser";
 
 	private List<DTRSimpleSerialWrapper> transforms;
 
@@ -53,9 +57,18 @@ public abstract class OfflineDomainLoader {
 		return true;
 	}
 
+	protected ClientInstance getDomainObjectsPersistedBy() {
+		LocalTransformPersistence localPersistence = LocalTransformPersistence
+				.get();
+		return localPersistence != null ? localPersistence
+				.getDomainObjectsPersistedBy() : null;
+	}
+
 	private boolean tryOfflinePass(Throwable t, boolean notify) {
-		LocalTransformPersistence gears = LocalTransformPersistence.get();
-		if (!ClientUtils.maybeOffline(t) || !gears.isLocalStorageInstalled()) {
+		LocalTransformPersistence localPersistence = LocalTransformPersistence
+				.get();
+		if (!ClientUtils.maybeOffline(t)
+				|| !localPersistence.isLocalStorageInstalled()) {
 			return false;
 		}
 		ClientMetricLogging.get().start(OFFLINE_LOAD_METRIC_KEY);
@@ -63,7 +76,7 @@ public abstract class OfflineDomainLoader {
 		TransformManager tm = TransformManager.get();
 		tm.registerDomainObjectsInHolder(createDummyModel());
 		try {
-			transforms = gears
+			transforms = localPersistence
 					.openAvailableSessionTransformsForOfflineLoad(notify);
 			if (!transforms.isEmpty()) {
 				if (hasGwtRpcTransforms()) {
@@ -73,13 +86,13 @@ public abstract class OfflineDomainLoader {
 					@Override
 					public void run() {
 						List<DomainTransformEvent> initialEvents = handleGwtRpcTransforms();
-						if (loadObjectsHolder != null) {
+						if (getLoadObjectsHolder() != null) {
 							registerRpcDomainModelHolder();
 						}
 						new DTEAsyncDeserializer(transforms, initialEvents)
 								.start();
 					}
-				}.schedule(500);
+				}.schedule(100);
 			}
 		} catch (Exception e) {
 			ClientMetricLogging.get().end(OFFLINE_LOAD_METRIC_KEY);
@@ -88,11 +101,52 @@ public abstract class OfflineDomainLoader {
 		return true;
 	}
 
+	public boolean loadSerializedTransformsForOnline() {
+		ClientMetricLogging.get().start(ONLINE_INITIAL_DESER_METRIC_KEY);
+		LocalTransformPersistence localPersistence = LocalTransformPersistence
+				.get();
+		if (!localPersistence.isLocalStorageInstalled()) {
+			return false;
+		}
+		try {
+			transforms = localPersistence
+					.openAvailableSessionTransformsForOfflineLoad(false,false);
+			if (!transforms.isEmpty()) {
+				DTRSimpleSerialWrapper wrapper = transforms.get(0);
+				DTRProtocolHandler handler = new DTRProtocolSerializer()
+						.getHandler(wrapper.getProtocolVersion());
+				if (handler instanceof GwtRpcProtocolHandler) {
+					LoadObjectsHolder replayRpc = replayRpc(wrapper.getText());
+					ClientNofications no = ClientLayerLocator.get().notifications();
+					no.log("replayRpc - exists - "+(replayRpc!=null));
+					no.log("replayRpc - domain objects exist - "+(replayRpc.getDomainObjects()!=null));
+					no.log("replayRpc permutation (ser) - "+(replayRpc.getRequest().getTypeSignature()));
+					no.log("replayRpc permutation(app) - "+GWT.getPermutationStrongName());
+					no.log("replayRpc userid (ser)- "+(wrapper.getUserId()));
+					no.log("replayRpc userid (app)- "+PermissionsManager.get()
+							.getUserId());
+					if (replayRpc != null
+							&& replayRpc.getDomainObjects() != null
+							&& GWT.getPermutationStrongName().equals(
+									replayRpc.getRequest().getTypeSignature())
+							&& wrapper.getUserId() == PermissionsManager.get()
+									.getUserId()) {
+						setLoadObjectsHolder(replayRpc);
+						return true;
+					}
+				}
+			}
+		} catch (Exception e) {
+		}
+		ClientMetricLogging.get().end(ONLINE_INITIAL_DESER_METRIC_KEY);
+		return false;
+	}
+
 	protected void registerRpcDomainModelHolder() {
 		throw new UnsupportedOperationException();
 	}
 
-	protected LoadObjectsHolder<DomainModelHolder> loadObjectsHolder;
+	private LoadObjectsHolder<DomainModelHolder> loadObjectsHolder;
 
 	private boolean hasGwtRpcTransforms() {
 		List<DomainTransformEvent> initialEvents = new ArrayList<DomainTransformEvent>();
@@ -123,7 +177,7 @@ public abstract class OfflineDomainLoader {
 				iterator.remove();
 				if (replayRpc != null) {
 					if (replayRpc.getDomainObjects() != null) {
-						loadObjectsHolder = replayRpc;
+						setLoadObjectsHolder(replayRpc);
 					}
 					initialEvents.addAll(replayRpc.getReplayEvents());
 				}
@@ -307,4 +361,13 @@ public abstract class OfflineDomainLoader {
 	public abstract ClientInstance beforeEventReplay();
 
 	public abstract void afterEventReplay();
+
+	protected void setLoadObjectsHolder(
+			LoadObjectsHolder<DomainModelHolder> loadObjectsHolder) {
+		this.loadObjectsHolder = loadObjectsHolder;
+	}
+
+	protected LoadObjectsHolder<DomainModelHolder> getLoadObjectsHolder() {
+		return loadObjectsHolder;
+	}
 }

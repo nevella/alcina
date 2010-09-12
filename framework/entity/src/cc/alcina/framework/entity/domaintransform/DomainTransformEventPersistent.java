@@ -21,6 +21,7 @@ import javax.persistence.Transient;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.entity.ResourceUtilities;
 
 @MappedSuperclass
 /**
@@ -69,4 +70,11 @@ public abstract class DomainTransformEventPersistent extends
 	public abstract void setUser(IUser user);
 
 	public abstract void wrap(DomainTransformEvent evt);
+
+	public DomainTransformEvent toSimpleEvent() {
+		DomainTransformEvent event = new DomainTransformEvent();
+		ResourceUtilities.copyBeanProperties(this, event, null, true);
+		event.setEventId(getId());
+		return event;
+	}
 }

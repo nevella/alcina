@@ -22,6 +22,7 @@ import java.io.Serializable;
  */
 
  public class WebException extends Exception implements Serializable {
+	public static final String THE_APPLICATION_IS_OUT_OF_DATE = "The application is out of date";
 	public WebException(){
 		
 	}

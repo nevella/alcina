@@ -204,6 +204,7 @@ public class TransformPersister {
 		HiliLocatorMap locatorMap = token.getLocatorMap();
 		HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.clone();
 		DomainTransformRequest request = token.getRequest();
+		DomainTransformRequestPersistent dtrp=null;
 		try {
 			ObjectPersistenceHelper.get();
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
@@ -347,12 +348,16 @@ public class TransformPersister {
 							.getImplementation(DomainTransformRequestPersistent.class);
 					Class<? extends DomainTransformEventPersistent> dtrEvtImpl = commonPersistenceBase
 							.getImplementation(DomainTransformEventPersistent.class);
-					DomainTransformRequestPersistent dtrp = dtrqImpl
+					 dtrp = dtrqImpl
 							.newInstance();
 					getEntityManager().persist(dtrp);
+					
+					dtr.setItems(null);
 					dtrp.wrap(dtr);
+					dtrp.setItems(new ArrayList<DomainTransformEvent>());
+					dtr.setItems(items);
 					dtrp.setClientInstance(persistentClientInstance);
-					for (DomainTransformEvent event : dtr.getItems()) {
+					for (DomainTransformEvent event : items) {
 						if (request.getEventIdsToIgnore().contains(
 								event.getEventId())) {
 							continue;
@@ -388,6 +393,7 @@ public class TransformPersister {
 				DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 				wrapper.locatorMap = locatorMap;
 				wrapper.response = dtr;
+				wrapper.persistentEvents=(List)dtrp.getItems();
 				return wrapper;
 			} else {
 				locatorMap.clear();

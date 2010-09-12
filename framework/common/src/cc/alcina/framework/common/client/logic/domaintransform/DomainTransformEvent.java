@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  * @author Nick Reddel
  */
-public class DomainTransformEvent implements Serializable {
+public class DomainTransformEvent implements Serializable, Comparable<DomainTransformEvent> {
 	private String propertyName;
 
 	private transient Object newValue;
@@ -40,9 +40,9 @@ public class DomainTransformEvent implements Serializable {
 
 	private transient Class objectClass;
 
-	private String objectClassName;
+	private transient String objectClassName;
 
-	private String valueClassName;
+	private transient String valueClassName;
 
 	private ClassRef objectClassRef;
 
@@ -311,5 +311,9 @@ public class DomainTransformEvent implements Serializable {
 			}
 		}
 		return false;
+	}
+
+	public int compareTo(DomainTransformEvent o) {
+		return CommonUtils.compareLongs(getEventId(), o.getEventId());
 	}
 }

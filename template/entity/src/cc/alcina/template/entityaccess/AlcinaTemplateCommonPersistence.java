@@ -78,4 +78,5 @@ public class AlcinaTemplateCommonPersistence
 		return AlcinaTemplateAccessConstants.SYSTEM_USER;
 	}
 
+
 }

@@ -16,9 +16,11 @@ package cc.alcina.framework.entity.entityaccess;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +47,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -58,7 +61,9 @@ import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
@@ -140,6 +145,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
+	/**
+	 * Note...we deliberately crop the client instance user - at the servlet
+	 * layer we (should) always want it lightweight
+	 */
 	public CI createClientInstance() {
 		connectPermissionsManagerToLiveObjects(true);
 		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
@@ -150,19 +159,29 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			impl.setUser(PermissionsManager.get().getUser());
 			impl.setAuth(Math.abs(new Random().nextInt()));
 			getEntityManager().flush();
+			IUser clonedUser = getNewImplementationInstance(IUser.class);
+			ResourceUtilities
+					.copyBeanProperties(PermissionsManager.get().getUser(),
+							clonedUser, null, false, Arrays
+									.asList(new String[] { "primaryGroup",
+											"secondaryGroups" }));
 			clientInstanceAuthMap.put(impl.getId(), impl.getAuth());
 			CI instance = new EntityUtils().detachedClone(impl, false);
+			instance
+					.setUser(new EntityUtils().detachedClone(clonedUser, false));
 			return instance;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-	public String validateClientInstance(long id, int auth){
+
+	public String validateClientInstance(long id, int auth) {
 		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
 		CI ci = getItemById(clientInstanceImpl, id);
-		return ci!=null&&ci.getAuth()==auth?ci.getUser().getUserName():null;
-		
+		return ci != null && ci.getAuth() == auth ? ci.getUser().getUserName()
+				: null;
 	}
+
 	public <T> T ensureObject(T t, String key, String value) throws Exception {
 		T newT = (T) getItemByKeyValue(t.getClass(), key, value, false);
 		if (newT != null) {
@@ -686,5 +705,76 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	protected <T> T findImplInstance(Class<? extends T> clazz, long id) {
 		Class<?> implClazz = getImplementation(clazz);
 		return (T) getEntityManager().find(implClazz, id);
+	}
+
+	protected Collection<Class> getSharedTransformClasses() {
+		return new ArrayList<Class>();
+	}
+
+	protected Collection<Class> getPerUserTransformClasses() {
+		return new ArrayList<Class>();
+	}
+
+	/**
+	 * This is deliberately low - for big initial objects size, 1000 is quite
+	 * reasonable (i.e. client load will be much faster)
+	 */
+	protected int getSharedTransformWarmupSize() {
+		return 100;
+	}
+
+	protected List<DomainTransformEventPersistent> getRecentTransforms(
+			Collection<Class> sourceObjectClasses, int maxTransforms,
+			long sinceId) {
+		Set<Long> classRefIds = new HashSet<Long>();
+		for (Class clazz : sourceObjectClasses) {
+			ClassRef classRef = ClassRef.forClass(clazz);
+			classRefIds.add(classRef.getId());
+		}
+		String eql = String
+				.format(
+						"select dtep from %s dtep "
+								+ "where  dtep.id>? and dtep.objectClassRef.id in %s "
+								+ "order by dtep.id desc",
+						getImplementationSimpleClassName(DomainTransformEventPersistent.class),
+						EntityUtils.longsToIdClause(classRefIds));
+		Query query = getEntityManager().createQuery(eql).setParameter(1,
+				sinceId);
+		if (sinceId != 0) {
+			query.setMaxResults(maxTransforms);
+		}
+		List resultList = query.getResultList();
+		return new EntityUtils().detachedClone(resultList, false);
+	}
+
+	/**
+	 * Used for supporting mixed rpc/transform domain loads
+	 * 
+	 * @param userId
+	 */
+	public TransformCache warmupTransformCache() {
+		TransformCache result = new TransformCache();
+		List<DomainTransformEventPersistent> recentTransforms = getRecentTransforms(
+				getSharedTransformClasses(), getSharedTransformWarmupSize(), 0L);
+		if (!recentTransforms.isEmpty()) {
+			result.sharedTransformClasses = getSharedTransformClasses();
+			result.perUserTransformClasses = getPerUserTransformClasses();
+			result.putSharedTransforms(recentTransforms);
+			recentTransforms = getRecentTransforms(
+					getPerUserTransformClasses(), 0, result.cacheValidFrom);
+			result.putPerUserTransforms(recentTransforms);
+		} else {
+			result.invalid = true;
+		}
+		return result;
+	}
+
+	public long getLastTransformId() {
+		String eql = String
+				.format(
+						"select count(dtep.id) from %s dtep ",
+						getImplementationSimpleClassName(DomainTransformEventPersistent.class));
+		Long l = (Long) getEntityManager().createQuery(eql).getSingleResult();
+		return CommonUtils.lv(l);
 	}
 }

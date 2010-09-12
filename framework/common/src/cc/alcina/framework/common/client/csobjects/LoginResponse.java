@@ -11,53 +11,59 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class LoginResponse implements Serializable{
+public class LoginResponse implements Serializable {
 	private String friendlyName;
+
 	private boolean ok;
+
 	private String errorMsg;
+
 	private ClientInstance clientInstance;
-	public String getFriendlyName() {
-		return this.friendlyName;
+
+	public LoginResponse() {
 	}
 
-	public void setFriendlyName(String friendlyName) {
-		this.friendlyName = friendlyName;
-	}
-
-	public boolean isOk() {
-		return this.ok;
-	}
-
-	public void setOk(boolean ok) {
-		this.ok = ok;
+	public ClientInstance getClientInstance() {
+		return clientInstance;
 	}
 
 	public String getErrorMsg() {
 		return this.errorMsg;
 	}
 
-	public void setErrorMsg(String errorMsg) {
-		this.errorMsg = errorMsg;
+	public String getFriendlyName() {
+		return this.friendlyName;
+	}
+
+	public boolean isOk() {
+		return this.ok;
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
 		this.clientInstance = clientInstance;
 	}
 
-	public ClientInstance getClientInstance() {
-		return clientInstance;
+	public void setErrorMsg(String errorMsg) {
+		this.errorMsg = errorMsg;
+	}
+
+	public void setFriendlyName(String friendlyName) {
+		this.friendlyName = friendlyName;
+	}
+
+	public void setOk(boolean ok) {
+		this.ok = ok;
 	}
 }

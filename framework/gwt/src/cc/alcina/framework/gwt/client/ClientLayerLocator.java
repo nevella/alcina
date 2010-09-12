@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client;
 import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
@@ -42,7 +43,6 @@ public class ClientLayerLocator {
 	public CommonRemoteServiceAsyncProvider getCommonRemoteServiceAsyncProvider() {
 		return this.commonRemoteServiceAsyncProvider;
 	}
-
 
 	private ActionLogProvider actionLogProvider;
 
@@ -106,6 +106,9 @@ public class ClientLayerLocator {
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
+		if (clientInstance.getUser() != null) {
+			PermissionsManager.get().setUser(clientInstance.getUser());
+		}
 		// not needed, and heavyweight (for transforms, etc)
 		clientInstance.setUser(null);
 		this.clientInstance = clientInstance;

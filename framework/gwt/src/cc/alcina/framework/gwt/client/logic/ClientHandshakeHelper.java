@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.logic;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.StateListenable;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -110,4 +111,6 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 	public abstract void handleLoggedIn(LoginResponse lrb);
 
 	public abstract void logout();
+
+	
 }

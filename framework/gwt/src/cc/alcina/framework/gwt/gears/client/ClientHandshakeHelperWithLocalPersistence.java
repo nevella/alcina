@@ -1,8 +1,13 @@
 package cc.alcina.framework.gwt.gears.client;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
+import cc.alcina.framework.common.client.csobjects.LoginResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -31,9 +36,22 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 				ClientSession.get().setInitialObjectsPersisted(true);
 				if (supportsRpcPersistence()) {
 					if (mixedHelper != null) {
-						ClientMetricLogging.get().start("persist-rpc");
-						mixedHelper.persistGwtObjectGraph();
-						ClientMetricLogging.get().end("persist-rpc");
+						if (mixedHelper.isUseMixedObjectLoadSequence()) {
+							ClientMetricLogging.get()
+									.start("replay-transforms");
+							TransformManager.get()
+									.setReplayingRemoteEvent(true);
+							TransformManager.get().replayRemoteEvents(
+									mixedHelper.getHolder().getReplayEvents(),
+									false);
+							TransformManager.get().setReplayingRemoteEvent(
+									false);
+							ClientMetricLogging.get().end("replay-transforms");
+						} else {
+							ClientMetricLogging.get().start("persist-rpc");
+							mixedHelper.persistGwtObjectGraph();
+							ClientMetricLogging.get().end("persist-rpc");
+						}
 						mixedHelper = null;
 					}
 				} else {
@@ -48,6 +66,11 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 		}
 	}
 
+	protected abstract ClientInstance createClientInstance(
+			long clientInstanceId, int clientInstanceAuth);
+
+	public abstract SerializedDomainLoader getSerializedDomainLoader();
+
 	protected abstract void preSerialization(LoginState loginState);
 
 	/**
@@ -57,4 +80,5 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 	public LoadObjectsHolder replayRpc(String text) {
 		throw new UnsupportedOperationException();
 	}
+
 }

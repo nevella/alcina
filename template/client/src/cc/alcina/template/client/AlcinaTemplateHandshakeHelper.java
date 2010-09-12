@@ -2,26 +2,26 @@ package cc.alcina.template.client;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.CallManager;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.gears.client.ClientHandshakeHelperWithLocalPersistence;
 import cc.alcina.framework.gwt.gears.client.LocalTransformPersistence;
-import cc.alcina.framework.gwt.gears.client.OfflineDomainLoader;
-import cc.alcina.template.client.logic.AlcinaTemplateOfflineDomainLoader;
+import cc.alcina.framework.gwt.gears.client.SerializedDomainLoader;
+import cc.alcina.template.client.logic.AlcinaTemplateSerializedDomainLoader;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjectsSerializationHelper;
+import cc.alcina.template.cs.persistent.ClientInstanceImpl;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.rpc.StatusCodeException;
 
 public class AlcinaTemplateHandshakeHelper extends
 		ClientHandshakeHelperWithLocalPersistence {
@@ -96,15 +96,24 @@ public class AlcinaTemplateHandshakeHelper extends
 	}
 
 	public AlcinaTemplateHandshakeHelper() {
-		this.offlineDomainLoader = new AlcinaTemplateOfflineDomainLoader();
+		this.serializedDomainLoader = new AlcinaTemplateSerializedDomainLoader();
 	}
 
-	private OfflineDomainLoader offlineDomainLoader;
+	private SerializedDomainLoader serializedDomainLoader;
+
+	public SerializedDomainLoader getSerializedDomainLoader() {
+		return this.serializedDomainLoader;
+	}
+
+	public void setSerializedDomainLoader(
+			SerializedDomainLoader serializedDomainLoader) {
+		this.serializedDomainLoader = serializedDomainLoader;
+	}
 
 	protected void hello() {
 		AsyncCallback<LoginResponse> callback = new AsyncCallback<LoginResponse>() {
 			public void onFailure(Throwable caught) {
-				if (!offlineDomainLoader.tryOffline(caught)) {
+				if (!serializedDomainLoader.tryOffline(caught)) {
 					throw new WrappedRuntimeException(caught);
 				}
 			}
@@ -142,5 +151,14 @@ public class AlcinaTemplateHandshakeHelper extends
 		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().logout(
 				callback);
 		CallManager.get().register(callback, "Logging out");
+	}
+
+	@Override
+	protected ClientInstance createClientInstance(long clientInstanceId,
+			int clientInstanceAuth) {
+		ClientInstanceImpl impl = new ClientInstanceImpl();
+		impl.setId(clientInstanceId);
+		impl.setAuth(clientInstanceAuth);
+		return impl;
 	}
 }

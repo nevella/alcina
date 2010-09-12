@@ -91,7 +91,7 @@ public class BrowserMod {
 
 	public static boolean isInternetExplorer() {
 		return getUserAgent().indexOf(Constants.INTERNET_EXPLORER_USER_AGENT) != -1
-				&& !isOpera();
+				&& !isOpera()&&!isSafari()&&!isChrome();
 	}
 
 	public static boolean isFireFox() {
@@ -113,7 +113,7 @@ public class BrowserMod {
 
 	public static boolean isSafari() {
 		return getUserAgent().indexOf(Constants.SAFARI_USER_AGENT) != -1
-				&& !isOpera();
+				&& !isOpera()&&!isChrome();
 	}
 	public static boolean isChrome() {
 		return getUserAgent().indexOf(Constants.CHROME_USER_AGENT) != -1

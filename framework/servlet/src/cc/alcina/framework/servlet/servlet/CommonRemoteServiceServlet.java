@@ -81,6 +81,7 @@ import com.google.gwt.user.server.rpc.RPC;
 import com.google.gwt.user.server.rpc.RPCRequest;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.user.server.rpc.UnexpectedException;
+import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 
 /**
  * Tests (todo) for transform persistence: invalid clientauth multiple
@@ -351,6 +352,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				}
 			}
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
+			if (rpcRequest.getSerializationPolicy() instanceof LegacySerializationPolicy) {
+				throw new IncompatibleRemoteServiceException();
+			}
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
 			String name = rpcRequest.getMethod().getName();
 			Method method;
