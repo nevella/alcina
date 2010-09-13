@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.search.TxtCriterion.TxtCriterionType;
 		@CriterionPropertyNameMapping(criteriaGroupClass = TxtCriteriaGroup.class, criterionClass = TxtCriterion.class, propertyName = "propertyName"),
 		@CriterionPropertyNameMapping(criteriaGroupClass = TxtCriteriaGroup2.class, criterionClass = TxtCriterion.class, propertyName = "newStringValue"),
 		@CriterionPropertyNameMapping(criteriaGroupClass = LongCriteriaGroup.class, criterionClass = LongCriterion.class, propertyName = "objectId"),
-		@CriterionPropertyNameMapping(criteriaGroupClass = PersistentObjectCriteriaGroup.class, criterionClass = LongCriterion.class, propertyName = "objectClassRef") })
+		@CriterionPropertyNameMapping(criteriaGroupClass = PersistentObjectCriteriaGroup.class, criterionClass = PersistentObjectCriterion.class, propertyName = "objectClassRef") })
 @PermissibleChildClasses( { DateGroup.class, UserCriteriaGroup.class,
 		TxtCriteriaGroup.class, LongCriteriaGroup.class,
 		TxtCriteriaGroup2.class, PersistentObjectCriteriaGroup.class })
