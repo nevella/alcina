@@ -204,7 +204,7 @@ public class TransformPersister {
 		HiliLocatorMap locatorMap = token.getLocatorMap();
 		HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.clone();
 		DomainTransformRequest request = token.getRequest();
-		DomainTransformRequestPersistent dtrp=null;
+		DomainTransformRequestPersistent dtrp = null;
 		try {
 			ObjectPersistenceHelper.get();
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
@@ -287,8 +287,9 @@ public class TransformPersister {
 											token);
 							if (!actionForException.ignoreable()) {
 								throw e;
-							}else{
-								request.getEventIdsToIgnore().add(event.getEventId());
+							} else {
+								request.getEventIdsToIgnore().add(
+										event.getEventId());
 								token.ignored++;
 							}
 						}
@@ -348,10 +349,8 @@ public class TransformPersister {
 							.getImplementation(DomainTransformRequestPersistent.class);
 					Class<? extends DomainTransformEventPersistent> dtrEvtImpl = commonPersistenceBase
 							.getImplementation(DomainTransformEventPersistent.class);
-					 dtrp = dtrqImpl
-							.newInstance();
+					dtrp = dtrqImpl.newInstance();
 					getEntityManager().persist(dtrp);
-					
 					dtr.setItems(null);
 					dtrp.wrap(dtr);
 					dtrp.setItems(new ArrayList<DomainTransformEvent>());
@@ -393,7 +392,8 @@ public class TransformPersister {
 				DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 				wrapper.locatorMap = locatorMap;
 				wrapper.response = dtr;
-				wrapper.persistentEvents=(List)dtrp.getItems();
+				wrapper.persistentEvents = dtrp == null ? new ArrayList<DomainTransformEventPersistent>()
+						: (List) dtrp.getItems();
 				return wrapper;
 			} else {
 				locatorMap.clear();
