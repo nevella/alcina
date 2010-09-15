@@ -84,6 +84,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		implements CommonPersistenceLocal {
 	private static Map<Long, Integer> clientInstanceAuthMap = new HashMap<Long, Integer>();
 
+	// note - this'll be the stack depth of the eql ast processor
+	private static final int PRECACHE_RQ_SIZE = 500;
+
 	@PersistenceContext
 	private EntityManager entityManager;
 
@@ -218,7 +221,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public IUser getAnonymousUser() {
-		return getUserByName(getAnonymousUserName(),true);
+		return getUserByName(getAnonymousUserName(), true);
 	}
 
 	public abstract String getAnonymousUserName();
@@ -319,10 +322,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.getResultList();
 		return (l.size() == 0) ? null : l.get(0);
 	}
-/**
- * Assume that this is always an in-system call (since we're after a specific user)
- * so _don't clean based on permissions_
- */
+
+	/**
+	 * Assume that this is always an in-system call (since we're after a
+	 * specific user) so _don't clean based on permissions_
+	 */
 	public IUser getUserByName(String userName, boolean clean) {
 		IUser user = getUserByName(userName);
 		PermissionsManager.get().getUserGroups(user);
@@ -641,12 +645,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					}
 				}
 			}
-			Query query = getEntityManager().createQuery(
-					"from "
-							+ getImplementation(WrappedObject.class)
-									.getSimpleName() + " where id in "
-							+ EntityUtils.longsToIdClause(wrapperIds));
-			query.getResultList();
+			for (int i = 0; i < wrapperIds.size(); i += PRECACHE_RQ_SIZE) {
+				List<Long> subList = wrapperIds.subList(i, Math.min(wrapperIds
+						.size(), i + PRECACHE_RQ_SIZE) - 1);
+				Query query = getEntityManager().createQuery(
+						"from "
+								+ getImplementation(WrappedObject.class)
+										.getSimpleName() + " where id in "
+								+ EntityUtils.longsToIdClause(subList));
+				query.getResultList();
+			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
