@@ -235,6 +235,8 @@ public class GraphProjection {
 			return null;
 		}
 
+		public static boolean disablePerObjectPermissions;
+
 		public boolean permitField(Field field,
 				Set<Field> perObjectPermissionFields) {
 			try {
@@ -245,7 +247,12 @@ public class GraphProjection {
 					AnnotatedPermissible ap = new AnnotatedPermissible(pp
 							.read());
 					if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
-						perObjectPermissionFields.add(field);
+						if (!PermissionsManager.get().isLoggedIn()){
+							return false;
+						}
+						if (!disablePerObjectPermissions) {
+							perObjectPermissionFields.add(field);
+						}
 						return true;
 					}
 					if (!PermissionsManager.get().isPermissible(ap)) {
