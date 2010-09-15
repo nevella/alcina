@@ -42,8 +42,7 @@ public class EntityUtils {
 		return longsToIdClause(hasIdsToIdList(hasIds));
 	}
 
-	public static List<Long> hasIdsToIdList(
-			Collection<? extends HasId> hasIds) {
+	public static List<Long> hasIdsToIdList(Collection<? extends HasId> hasIds) {
 		List<Long> ids = new ArrayList<Long>();
 		for (HasId hasId : hasIds) {
 			ids.add(hasId.getId());
@@ -132,6 +131,18 @@ public class EntityUtils {
 		try {
 			return new GraphProjection(new PermissibleFieldFilter(), filter)
 					.project(source, null);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public <T> T detachedCloneIgnorePermissions(T source,
+			InstantiateImplCallback callback) {
+		DetachedEntityCache cache = new DetachedEntityCache();
+		GraphProjectionFilter filter = EntityLayerLocator.get()
+				.jpaImplementation().getResolvingFilter(callback, cache);
+		try {
+			return new GraphProjection(null, filter).project(source, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

@@ -88,8 +88,9 @@ public class GraphProjection {
 		// }
 		// System.out.println(dbg);
 		Class<? extends Object> sourceClass = source.getClass();
-		T projected = sourceClass.isArray() ? (T) Array.newInstance(sourceClass.getComponentType(),
-				Array.getLength(source)) : (T) sourceClass.newInstance();
+		T projected = sourceClass.isArray() ? (T) Array.newInstance(sourceClass
+				.getComponentType(), Array.getLength(source)) : (T) sourceClass
+				.newInstance();
 		reached.put(source, projected);
 		if (alsoMapTo != null) {
 			reached.put(alsoMapTo, projected);
@@ -98,8 +99,8 @@ public class GraphProjection {
 			if (context == null) {
 				context = new ClassFieldPair(c, "");
 			}
-			T replaceProjected = dataFilter.filterData(source, projected, context,
-					this);
+			T replaceProjected = dataFilter.filterData(source, projected,
+					context, this);
 			if (replaceProjected != projected) {
 				reached.put(source, replaceProjected);
 				if (alsoMapTo != null) {
@@ -120,8 +121,10 @@ public class GraphProjection {
 				.getClass());
 		for (Field field : fields) {
 			Object value = field.get(source);
-			if (checkFields.contains(field) && !permitField(field, source)) {
-				continue;
+			if (checkFields.contains(field)) {
+				if (!permitField(field, source)) {
+					continue;
+				}
 			}
 			Object cv = project(value, new ClassFieldPair(c, field.getName()));
 			field.set(projected, cv);
@@ -135,7 +138,7 @@ public class GraphProjection {
 		Collection c = null;
 		if (coll instanceof ArrayList) {
 			c = coll.getClass().newInstance();
-			//no "persistentLists", at least
+			// no "persistentLists", at least
 		} else if (coll instanceof LinkedHashSet) {
 			c = new LinkedHashSet();
 		} else if (coll instanceof Set) {
@@ -216,8 +219,8 @@ public class GraphProjection {
 	public static interface GraphProjectionFilter {
 		/*
 		 * IMPORTANT - if filterdata changes the return value (i.e. doesn't
-		 * return a value === projected) it must immediately (on new object instantiation) register the new
-		 * value in graphProjection.reached
+		 * return a value === projected) it must immediately (on new object
+		 * instantiation) register the new value in graphProjection.reached
 		 */
 		<T> T filterData(T original, T projected, ClassFieldPair context,
 				GraphProjection graphProjection) throws Exception;
@@ -226,8 +229,9 @@ public class GraphProjection {
 	}
 
 	public static class PermissibleFieldFilter implements GraphProjectionFilter {
-		public <T> T filterData(T original, T projected, ClassFieldPair context,
-				GraphProjection graphProjection) throws Exception {
+		public <T> T filterData(T original, T projected,
+				ClassFieldPair context, GraphProjection graphProjection)
+				throws Exception {
 			return null;
 		}
 
@@ -241,6 +245,7 @@ public class GraphProjection {
 					AnnotatedPermissible ap = new AnnotatedPermissible(pp
 							.read());
 					if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
+						perObjectPermissionFields.add(field);
 						return true;
 					}
 					if (!PermissionsManager.get().isPermissible(ap)) {
@@ -257,20 +262,22 @@ public class GraphProjection {
 		}
 	}
 
-	public static class CollectionProjectionFilter implements GraphProjectionFilter {
+	public static class CollectionProjectionFilter implements
+			GraphProjectionFilter {
 		@SuppressWarnings("unchecked")
-		public <T> T filterData(T original, T projected, ClassFieldPair context,
-				GraphProjection graphProjection) throws Exception {
-			if (original.getClass().isArray()){
+		public <T> T filterData(T original, T projected,
+				ClassFieldPair context, GraphProjection graphProjection)
+				throws Exception {
+			if (original.getClass().isArray()) {
 				int n = Array.getLength(original);
-				for (int i=0;i<n;i++){
-					Array.set(projected, i, graphProjection.project(Array.get(original, i),
-							context));
+				for (int i = 0; i < n; i++) {
+					Array.set(projected, i, graphProjection.project(Array.get(
+							original, i), context));
 				}
 			}
 			if (original instanceof Collection) {
-				return (T) graphProjection.projectCollection((Collection) original,
-						context);
+				return (T) graphProjection.projectCollection(
+						(Collection) original, context);
 			}
 			if (original instanceof Map) {
 				return (T) projectMap((Map) original, context, graphProjection);
@@ -291,8 +298,8 @@ public class GraphProjection {
 			for (; itr.hasNext();) {
 				key = itr.next();
 				value = map.get(key);
-				m.put(graphProjection.project(key, context), graphProjection.project(value,
-						context));
+				m.put(graphProjection.project(key, context), graphProjection
+						.project(value, context));
 			}
 			return m;
 		}
@@ -338,8 +345,9 @@ public class GraphProjection {
 	}
 
 	public interface InstantiateImplCallbackWithShellObject<T> extends
-			InstantiateImplCallback<T>{
+			InstantiateImplCallback<T> {
 		boolean instantiateLazyInitializer(T initializer, ClassFieldPair context);
+
 		Object instantiateShellObject(T initializer, ClassFieldPair context);
 	}
 }

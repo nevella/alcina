@@ -87,7 +87,7 @@ public class SessionHelper {
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
 		CommonPersistenceLocal up = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
-		PermissionsManager.get().setUser(up.getSystemUser(true));
+		PermissionsManager.get().setUser(up.getAnonymousUser());
 	}
 
 	public static void reinitialiseUserState(HttpServletRequest request) {

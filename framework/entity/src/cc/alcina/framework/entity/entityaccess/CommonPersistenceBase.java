@@ -218,7 +218,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public IUser getAnonymousUser() {
-		return getUserByName(getAnonymousUserName());
+		return getUserByName(getAnonymousUserName(),true);
 	}
 
 	public abstract String getAnonymousUserName();
@@ -319,11 +319,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.getResultList();
 		return (l.size() == 0) ? null : l.get(0);
 	}
-
+/**
+ * Assume that this is always an in-system call (since we're after a specific user)
+ * so _don't clean based on permissions_
+ */
 	public IUser getUserByName(String userName, boolean clean) {
 		IUser user = getUserByName(userName);
 		PermissionsManager.get().getUserGroups(user);
-		IUser cleaned = new EntityUtils().detachedClone(user,
+		IUser cleaned = new EntityUtils().detachedCloneIgnorePermissions(user,
 				clean ? createUserAndGroupInstantiator() : null);
 		return cleaned;
 	}
