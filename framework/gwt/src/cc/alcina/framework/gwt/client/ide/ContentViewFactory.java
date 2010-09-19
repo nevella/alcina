@@ -170,11 +170,11 @@ public class ContentViewFactory {
 							.get().getUiObjectText(getClass(), "Extra actions",
 									"Extra actions")));
 				}
-				BlockLink<PermissibleAction> nhd = new BlockLink<PermissibleAction>();
+				final BlockLink<PermissibleAction> nhd = new BlockLink<PermissibleAction>();
 				nhd.setUserObject(v);
 				nhd.addClickHandler(new ClickHandler() {
 					public void onClick(ClickEvent event) {
-						DefaultPermissibleActionHandler.handleAction(v, bean);
+						DefaultPermissibleActionHandler.handleAction((Widget) nhd,v, bean);
 					}
 				});
 				nhd.setText(v.getDisplayName());

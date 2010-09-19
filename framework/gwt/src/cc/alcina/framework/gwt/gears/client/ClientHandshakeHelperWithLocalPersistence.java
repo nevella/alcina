@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.ClientNofications;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
 
 public abstract class ClientHandshakeHelperWithLocalPersistence extends
@@ -34,6 +35,7 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 					&& loginState == LoginState.LOGGED_IN) {
 				// set before
 				ClientSession.get().setInitialObjectsPersisted(true);
+				
 				if (supportsRpcPersistence()) {
 					if (mixedHelper != null) {
 						if (mixedHelper.isUseMixedObjectLoadSequence()) {

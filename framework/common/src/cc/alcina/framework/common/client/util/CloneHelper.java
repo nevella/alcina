@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
@@ -79,6 +78,9 @@ public class CloneHelper {
 		createdMap.put(o, ret);
 		Property[] prs = GwittirBridge.get().getDescriptor(ret).getProperties();
 		for (Property pr : prs) {
+			if (pr.getMutatorMethod() == null) {
+				continue;
+			}
 			Object[] args = new Object[1];
 			Object val = pr.getAccessorMethod().invoke(o,
 					CommonUtils.EMPTY_OBJECT_ARRAY);
@@ -86,8 +88,7 @@ public class CloneHelper {
 				val = createdMap.get(val);
 			}
 			if (val != null) {
-				if (pr.getMutatorMethod() != null
-						&& !ignore(o.getClass(), pr.getName(), o)) {
+				if (!ignore(o.getClass(), pr.getName(), o)) {
 					args[0] = deepProperty(o, pr.getName()) ? deepObjectClone(val)
 							: shallowishObjectClone(val);
 					pr.getMutatorMethod().invoke(ret, args);
@@ -124,9 +125,14 @@ public class CloneHelper {
 	 * so invoking the mutator won't cause args to be reused (i.e. this to be
 	 * called)
 	 */
-	public void copyBeanProperties(Object source, Object target) throws Exception {
-		Property[] prs = GwittirBridge.get().getDescriptor(target).getProperties();
+	public void copyBeanProperties(Object source, Object target)
+			throws Exception {
+		Property[] prs = GwittirBridge.get().getDescriptor(target)
+				.getProperties();
 		for (Property pr : prs) {
+			if (pr.getMutatorMethod() == null) {
+				continue;
+			}
 			Object val = pr.getAccessorMethod().invoke(source,
 					CommonUtils.EMPTY_OBJECT_ARRAY);
 			if (val != null) {
@@ -134,9 +140,7 @@ public class CloneHelper {
 					val = CommonUtils.shallowCollectionClone((Collection) val);
 				}
 				args[0] = val;
-				if (pr.getMutatorMethod() != null) {
-					pr.getMutatorMethod().invoke(target, args);
-				}
+				pr.getMutatorMethod().invoke(target, args);
 			}
 		}
 	}
@@ -147,9 +151,8 @@ public class CloneHelper {
 			copyBeanProperties(o, ret);
 			return ret;
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(
-					"Unable to clone: " + o.getClass(), e,
-					SuggestedAction.NOTIFY_WARNING);
+			throw new WrappedRuntimeException("Unable to clone: "
+					+ o.getClass(), e, SuggestedAction.NOTIFY_WARNING);
 		}
 	}
 }

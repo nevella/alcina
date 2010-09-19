@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client;
 
 import java.util.HashMap;
@@ -21,19 +20,27 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ClientMetricLogging {
+public class ClientMetricLogging {
 	private Map<String, Long> metricStartTimes;
 
 	private static ClientMetricLogging INSTANCE = new ClientMetricLogging();
 
 	public static ClientMetricLogging get() {
 		return INSTANCE;
+	}
+
+	private boolean muted;
+
+	public boolean isMuted() {
+		return this.muted;
+	}
+
+	public void setMuted(boolean muted) {
+		this.muted = muted;
 	}
 
 	private ClientMetricLogging() {
@@ -56,7 +63,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	public void end(String key, String extraInfo, boolean ignoreNotRunning) {
 		key = keyWithParents(key, true);
-		if (terminated.contains(key) && ignoreNotRunning ) {
+		if (terminated.contains(key) && ignoreNotRunning) {
 			return;
 		}
 		terminated.add(key);
@@ -68,7 +75,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		String message = CommonUtils.format("[Metric] %1 - %2 ms%3", key,
 				elapsed, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
 						+ extraInfo);
-		ClientLayerLocator.get().notifications().log(message);
+		if (!isMuted()) {
+			ClientLayerLocator.get().notifications().log(message);
+		}
 		if (!averageCount.containsKey(key)) {
 			averageCount.put(key, 0L);
 			sum.put(key, 0L);

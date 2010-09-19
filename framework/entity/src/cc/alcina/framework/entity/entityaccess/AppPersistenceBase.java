@@ -265,6 +265,16 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		List results = query.getResultList();
 		return new LinkedHashSet<A>(results);
 	}
+	@SuppressWarnings("unchecked")
+	public <A> Set<A> getAllForCreationUser(Class<A> clazz) {
+		Query query = em.createQuery(
+				String.format("from %s where creationUser=? ", clazz.getSimpleName()))
+				.setParameter(1, PermissionsManager.get().getUser());
+		// seems to be throwing transactional cache errors
+		// EntityLayerLocator.get().jpaImplementation().cache(query);
+		List results = query.getResultList();
+		return new LinkedHashSet<A>(results);
+	}
 
 	public List<Long> getAllIds(Class clazz) {
 		Query query = em.createQuery(String.format(

@@ -55,7 +55,7 @@ public class UniqueInCollectionValidator implements Validator {
 					}
 				}
 				throw new ValidationException(
-						"Item is does not have unique identifying property",
+						"Value must be unique",
 						UniqueInCollectionValidator.class);
 			}
 		}

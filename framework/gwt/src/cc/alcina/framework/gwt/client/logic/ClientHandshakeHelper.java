@@ -3,13 +3,13 @@ package cc.alcina.framework.gwt.client.logic;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.StateListenable;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 
 import com.google.gwt.user.client.Command;
@@ -47,6 +47,11 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 
 	public void stateChanged(Object source, String newState) {
 		if (newState.equals(STATE_PRE_HELLO)) {
+			boolean logLoadMetrics = AlcinaDebugIds
+					.hasFlag(AlcinaDebugIds.DEBUG_LOG_LOAD_METRICS);
+			if (!logLoadMetrics) {
+				ClientMetricLogging.get().setMuted(true);
+			}
 			updateUIPreHello();
 			DeferredCommand.addCommand(new Command() {
 				public void execute() {
@@ -55,6 +60,7 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 			});
 		}
 		if (newState.equals(STATE_DOMAIN_MODEL_REGISTERED)) {
+			ClientMetricLogging.get().setMuted(false);
 			afterDomainModelRegistration();
 			fireStateChanged(STATE_AFTER_DOMAIN_MODEL_REGISTERED);
 		}
@@ -86,7 +92,9 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 		PermissionsManager.get().setUser(objects.getCurrentUser());
 		ClientLayerLocator.get().setDomainModelHolder(objects);
 		if (!TransformManager.get().isReplayingRemoteEvent()) {
+			ClientMetricLogging.get().start("register-domain");
 			TransformManager.get().registerDomainObjectsInHolder(objects);
+			ClientMetricLogging.get().end("register-domain");
 			if (PermissionsManager.get().getOnlineState() != OnlineState.OFFLINE) {
 				locallyPersistDomainModelAndReplayPostLoadTransforms(loginState);
 			}
@@ -111,6 +119,4 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 	public abstract void handleLoggedIn(LoginResponse lrb);
 
 	public abstract void logout();
-
-	
 }

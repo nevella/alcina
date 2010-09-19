@@ -27,6 +27,7 @@ import cc.alcina.template.cs.csobjects.ChangePasswordModel;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.validator.Validator;
 
@@ -40,7 +41,9 @@ import com.totsp.gwittir.client.validator.Validator;
 public class ChangePasswordClientHandler implements PermissibleActionHandler {
 	private GlassDialogBox gdb;
 
-	public void handleAction(PermissibleAction action, Object target) {
+	public void handleAction(Widget sourceWidget, PermissibleAction action,
+			Object target) {
+
 		IUser user = (IUser) target;
 		if (user.getId() == 0) {
 			ClientLayerLocator.get().notifications().showWarning(

@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -39,8 +40,12 @@ public class MixedGwtTransformHelper {
 		this.holder = holder;
 		if (this.holder.getDomainObjects() == null) {
 			try {
+				ClientMetricLogging.get()
+				.start("persist-rpc-transforms");
 				LocalTransformPersistence.get()
 						.persistAndReparentClientLoadTransforms(this);
+				ClientMetricLogging.get()
+				.end("persist-rpc-transforms");
 				useMixedObjectLoadSequence = true;
 				return (T) getDomainLoader().getLoadObjectsHolder().getDomainObjects();
 			} catch (MixedGwtLoadException e) {

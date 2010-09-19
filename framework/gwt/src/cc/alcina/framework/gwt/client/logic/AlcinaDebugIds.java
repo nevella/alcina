@@ -48,10 +48,11 @@ public class AlcinaDebugIds {
 
 	public static final String GRID_FORM_FIELD_DEBUG_PREFIX = "GridForm-";
 
-	public static final String DEBUG_SIMULATE_OFFLINE = "debug-simulate-offline";
+	public static final String DEBUG_SIMULATE_OFFLINE = "d-simulate-offline";
+	public static final String DEBUG_LOG_LOAD_METRICS = "d-load-metrics";
 
 	public static final List<String> DEBUG_IDS = new ArrayList(Arrays
-			.asList(new String[] { DEBUG_SIMULATE_OFFLINE }));
+			.asList(new String[] { DEBUG_SIMULATE_OFFLINE ,DEBUG_LOG_LOAD_METRICS}));
 
 	private static List<String> debugIdsMatched = new ArrayList<String>();
 

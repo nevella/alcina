@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
@@ -163,7 +164,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			XMLEncoder enc = new XMLEncoder(os);
 			for (Object object : parameters) {
 				String xml = "";
-				if (object != null) {
+				if (object != null
+						&& CommonUtils.isStandardJavaClass(object.getClass())) {
 					try {
 						enc.writeObject(object);
 						enc.flush();
