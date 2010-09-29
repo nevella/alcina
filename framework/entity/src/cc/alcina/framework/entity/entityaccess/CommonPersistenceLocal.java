@@ -111,7 +111,7 @@ public interface CommonPersistenceLocal {
 			Long id, GraphProjectionFilter fieldFilter,
 			GraphProjectionFilter dataFilter);
 
-	public void bulkDelete(Class clazz, Collection<Long> ids);
+	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
 	public <T extends HasId> T ensurePersistent(T obj);
 

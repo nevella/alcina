@@ -149,17 +149,6 @@ public class ResourceUtilities {
 		return beanInfo;
 	}
 
-	public static void copyFile(File in, File out) throws IOException {
-		if (!out.exists()) {
-			out.getParentFile().mkdirs();
-			out.createNewFile();
-		}
-		FileInputStream ins = new FileInputStream(in);
-		FileOutputStream os = new FileOutputStream(out);
-		writeStreamToStream(ins, os);
-		ins.close();
-	}
-
 	public static OutputStream scaleImage(InputStream in, int width,
 			int height, OutputStream out) throws IOException {
 		byte[] b = readStreamToByteArray(in);

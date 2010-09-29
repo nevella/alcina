@@ -21,6 +21,8 @@ import java.beans.PropertyDescriptor;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
@@ -177,7 +179,10 @@ public class SEUtilities {
 		return absPath + relPath;
 	}
 
-	public static boolean deleteFolder(File folder) {
+	public static boolean deleteDirectory(File folder) {
+		if (!folder.exists()){
+			return false;
+		}
 		Stack<File> pathStack = new Stack<File>();
 		Stack<File> dirStack = new Stack<File>();
 		pathStack.push(folder);
@@ -609,6 +614,39 @@ public class SEUtilities {
 	public static String getAccessorName(Field field) {
 		return (field.getType() == boolean.class ? "is" : "get")
 				+ CommonUtils.capitaliseFirst(field.getName());
+	}
+
+	public static void copyFile(File in, File out) throws IOException {
+		if (in.isDirectory()){
+			copyDirectory(in,out);
+			return;
+		}
+		if (!out.exists()) {
+			out.getParentFile().mkdirs();
+			out.createNewFile();
+		}
+		FileInputStream ins = new FileInputStream(in);
+		FileOutputStream os = new FileOutputStream(out);
+		ResourceUtilities.writeStreamToStream(ins, os);
+		ins.close();
+	}
+
+	private static void copyDirectory(File in, File out) throws IOException {
+		if (out.exists()){
+			if (out.isDirectory()){
+				deleteDirectory(out);
+			}else{
+				out.delete();
+			}
+		}
+		out.mkdirs();
+		File[] files = in.listFiles();
+		for (File subIn : files) {
+			File subOut=new File(out.getPath()+File.separator+subIn.getName());
+			copyFile(subIn, subOut);
+		}
+		
+		
 	}
 
 	public static class Byte {

@@ -72,10 +72,15 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 	public boolean bulkDelete(EntityManager em, Class clazz,
 			Collection<Long> ids) {
-		em.createQuery(
-				String.format("delete %s where id in %s ", clazz
-						.getSimpleName(), EntityUtils.longsToIdClause(ids)))
-				.executeUpdate();
+		try {
+			em.createQuery(
+					String.format("delete %s where id in %s ", clazz
+							.getSimpleName(), EntityUtils.longsToIdClause(ids)))
+					.executeUpdate();
+		} catch (Exception e) {
+			//probably a reference error, try with parent delete/cascade
+			return false;
+		}
 		return true;
 	}
 

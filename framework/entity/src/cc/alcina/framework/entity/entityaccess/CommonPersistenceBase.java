@@ -99,9 +99,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		this.setEntityManager(em);
 	}
 
-	public void bulkDelete(Class clazz, Collection<Long> ids) {
-		if (!EntityLayerLocator.get().jpaImplementation().bulkDelete(
-				getEntityManager(), clazz, ids)) {
+	/**
+	 * An implementation can perform a (direct sql) accelerated delete - but you
+	 * may want to avoid this if the entities to delete require delete/cascade
+	 */
+	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl) {
+		if (!tryImpl
+				|| !EntityLayerLocator.get().jpaImplementation().bulkDelete(
+						getEntityManager(), clazz, ids)) {
 			List<Object> resultList = getEntityManager()
 					.createQuery(
 							String.format("from %s where id in %s ", clazz
