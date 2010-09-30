@@ -371,6 +371,11 @@ public class TransformPersister {
 									dtep.getObjectClass(), 0,
 									dtep.getObjectLocalId()).getId());
 						}
+						if (dtep.getValueId()==0 && dtep.getValueLocalId()!=0){
+							dtep.setValueId(tm.getObject(
+									dtep.getValueClass(), 0,
+									dtep.getValueLocalId()).getId());
+						}
 						dtep.setServerCommitDate(new Date());
 						dtep.setDomainTransformRequestPersistent(dtrp);
 						dtrp.getItems().add(dtep);
