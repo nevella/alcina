@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
@@ -41,7 +42,10 @@ public class TransformCache implements
 	}
 
 	private void putSharedEvent(DomainTransformEventPersistent event) {
-		sharedLookup.put(event.getId(), event.toSimpleEvent());
+		DomainTransformEvent nonPersistentEvent = event.toNonPersistentEvent();
+		nonPersistentEvent.setObjectLocalId(0);
+		nonPersistentEvent.setValueLocalId(0);
+		sharedLookup.put(event.getId(), nonPersistentEvent);
 	}
 
 	public void putPerUserTransforms(List<DomainTransformEventPersistent> events) {
@@ -55,7 +59,11 @@ public class TransformCache implements
 		if (!perUserLookup.containsKey(userId)) {
 			perUserLookup.put(userId, new TransformIdLookup());
 		}
-		perUserLookup.get(userId).put(event.getId(), event.toSimpleEvent());
+		DomainTransformEvent nonPersistentEvent = event.toNonPersistentEvent();
+		//very important - local ids MUST be 'pure' (per-client)
+		nonPersistentEvent.setObjectLocalId(0);
+		nonPersistentEvent.setValueLocalId(0);
+		perUserLookup.get(userId).put(event.getId(), nonPersistentEvent);
 	}
 
 	public void onDomainTransformRequestPersistence(

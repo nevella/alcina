@@ -71,7 +71,11 @@ public abstract class DomainTransformEventPersistent extends
 
 	public abstract void wrap(DomainTransformEvent evt);
 
-	public DomainTransformEvent toSimpleEvent() {
+	/**
+	 * Important: if the non-persistent event is to be used, make sure the
+	 * object/value localIds are set to 0 or else all hell may break loose
+	 */
+	public DomainTransformEvent toNonPersistentEvent() {
 		DomainTransformEvent event = new DomainTransformEvent();
 		ResourceUtilities.copyBeanProperties(this, event, null, true);
 		event.setEventId(getId());
