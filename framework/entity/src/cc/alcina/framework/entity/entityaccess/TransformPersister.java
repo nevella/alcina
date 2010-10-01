@@ -179,11 +179,8 @@ public class TransformPersister {
 			if (storageClass != null) {
 				List<Long> ids = new ArrayList<Long>(entry.getValue());
 				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
-					List<Long> idsSlice = new ArrayList<Long>();
-					int sliceEnd = Math.min(ids.size() - i, PRECACHE_RQ_SIZE);
-					for (int j = 0; j < sliceEnd; j++) {
-						idsSlice.add(ids.get(i + j));
-					}
+					List<Long> idsSlice = ids.subList(i, Math.min(ids.size(), i
+							+ PRECACHE_RQ_SIZE));
 					getEntityManager().createQuery(
 							String.format("from %s where id in %s",
 									storageClass.getSimpleName(), EntityUtils
@@ -371,10 +368,10 @@ public class TransformPersister {
 									dtep.getObjectClass(), 0,
 									dtep.getObjectLocalId()).getId());
 						}
-						if (dtep.getValueId()==0 && dtep.getValueLocalId()!=0){
-							dtep.setValueId(tm.getObject(
-									dtep.getValueClass(), 0,
-									dtep.getValueLocalId()).getId());
+						if (dtep.getValueId() == 0
+								&& dtep.getValueLocalId() != 0) {
+							dtep.setValueId(tm.getObject(dtep.getValueClass(),
+									0, dtep.getValueLocalId()).getId());
 						}
 						dtep.setServerCommitDate(new Date());
 						dtep.setDomainTransformRequestPersistent(dtrp);

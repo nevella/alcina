@@ -652,7 +652,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 			for (int i = 0; i < wrapperIds.size(); i += PRECACHE_RQ_SIZE) {
 				List<Long> subList = wrapperIds.subList(i, Math.min(wrapperIds
-						.size(), i + PRECACHE_RQ_SIZE) - 1);
+						.size(), i + PRECACHE_RQ_SIZE) );
 				Query query = getEntityManager().createQuery(
 						"from "
 								+ getImplementation(WrappedObject.class)
