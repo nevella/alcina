@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import java.util.Collection;
@@ -29,8 +28,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  *
  * @author Nick Reddel
  */
-
- public class DetachedEntityCache {
+public class DetachedEntityCache {
 	private Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>();
 
 	private Map<Class, Map<Long, HasIdAndLocalId>> entities = new HashMap<Class, Map<Long, HasIdAndLocalId>>();
@@ -68,6 +66,15 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 		} else {
 			return new LinkedHashSet<T>((Collection<? extends T>) detached.get(
 					clazz).values());
+		}
+	}
+
+	public Set<Long> keys(Class clazz) {
+		ensureMaps(clazz);
+		if (detached.get(clazz).isEmpty()) {
+			return entities.get(clazz).keySet();
+		} else {
+			return detached.get(clazz).keySet();
 		}
 	}
 
