@@ -652,7 +652,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 			for (int i = 0; i < wrapperIds.size(); i += PRECACHE_RQ_SIZE) {
 				List<Long> subList = wrapperIds.subList(i, Math.min(wrapperIds
-						.size(), i + PRECACHE_RQ_SIZE) );
+						.size(), i + PRECACHE_RQ_SIZE));
 				Query query = getEntityManager().createQuery(
 						"from "
 								+ getImplementation(WrappedObject.class)
@@ -696,6 +696,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					if (ivo.getOwner().getId() == wrapped.getUser().getId()) {
 						return;// permitted
 					}
+					if (ivo.getOwnerGroup() != null
+							&& PermissionsManager.get().isMemberOfGroup(
+									ivo.getOwnerGroup().getName())) {
+						return;// ditto
+					}
 				}
 			}
 			if (PermissionsManager.get().isPermissible(
@@ -706,7 +711,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 							.println(CommonUtils
 									.format(
 											"Warn - allowing access to %1 : %2 only via admin override",
-											HiliHelper.asDomainPoint(wrapper),
+											wrapper == null ? "(null wrapper)"
+													: HiliHelper
+															.asDomainPoint(wrapper),
 											HiliHelper.asDomainPoint(wrapped)));
 				}
 				return;// permitted

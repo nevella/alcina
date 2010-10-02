@@ -21,12 +21,12 @@ import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
+import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.InputButton;
 
@@ -135,8 +135,9 @@ public class SearchViewProvider implements ViewProvider {
 			HTML description = new HTML("<i>" + action.getDescription()
 					+ "</i><br />");
 			this.resultsHolder = new FlowPanel();
+			RenderContext renderContext= getRenderContext();
 			beanView = new ObjectTreeGridRenderer().render(action
-					.getParameters());
+					.getParameters(),renderContext);
 			beanView.addStyleName("no-bottom");
 			beanView.addStyleName(CommonUtils.simpleClassName(action
 					.getParameters().getClass()));
@@ -204,5 +205,9 @@ public class SearchViewProvider implements ViewProvider {
 			table.addStyleName("results-table");
 			resultsHolder.add(table);
 		}
+	}
+
+	protected RenderContext getRenderContext() {
+		return new RenderContext();
 	}
 }

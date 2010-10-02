@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity;
 
 import java.io.ByteArrayInputStream;
@@ -43,16 +42,14 @@ import javax.crypto.spec.DESedeKeySpec;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
-
 /*The "large" functions assume a byte structure of [first 128] public-key RSA encrypted 3DES key, byte 129 onwards 3dse encrypted data
  * 
  */
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class EncryptionUtils {
+public class EncryptionUtils {
 	private static EncryptionUtils theInstance;
 
 	public static void main(String[] args) {
@@ -366,12 +363,23 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 		}
 		return buf.toString();
 	}
+
 	public static String MD5(String text) throws NoSuchAlgorithmException,
 			UnsupportedEncodingException {
 		MessageDigest md;
 		md = MessageDigest.getInstance("MD5");
 		byte[] md5hash = new byte[32];
 		md.update(text.getBytes("iso-8859-1"), 0, text.length());
+		md5hash = md.digest();
+		return convertToHex(md5hash);
+	}
+
+	public static String MD5(byte[] bytes) throws NoSuchAlgorithmException,
+			UnsupportedEncodingException {
+		MessageDigest md;
+		md = MessageDigest.getInstance("MD5");
+		byte[] md5hash = new byte[32];
+		md.update(bytes, 0, bytes.length);
 		md5hash = md.digest();
 		return convertToHex(md5hash);
 	}
