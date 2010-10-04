@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
 
@@ -57,6 +58,20 @@ public class CommonRemoteServiceServletSupport {
 
 	Map<Long, HiliLocatorMap> getClientInstanceLocatorMap() {
 		return this.clientInstanceLocatorMap;
+	}
+
+	public HiliLocatorMap getLocatorMapForClient(DomainTransformRequest request) {
+		Long clientInstanceId = request.getClientInstance().getId();
+		Map<Long, HiliLocatorMap> clientInstanceLocatorMap = getClientInstanceLocatorMap();
+		synchronized (clientInstanceLocatorMap) {
+			if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
+				clientInstanceLocatorMap.put(clientInstanceId,
+						new HiliLocatorMap());
+			}
+		}
+		HiliLocatorMap locatorMap = clientInstanceLocatorMap
+				.get(clientInstanceId);
+		return locatorMap;
 	}
 
 	int getTransformRequestCounter() {

@@ -263,6 +263,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public <T> T getItemById(Class<T> clazz, Long id, boolean clean,
 			boolean unwrap) {
 		T t = getEntityManager().find(clazz, id);
+		if (t==null){
+			return t;
+		}
 		if (clean) {
 			t = new EntityUtils().detachedClone(t);
 		}

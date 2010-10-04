@@ -66,7 +66,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  */
 public class ThreadlocalTransformManager extends TransformManager implements
 		PropertyAccessor, ObjectLookup, ClassLookup {
-	private static ThreadLocal getTTL = new ThreadLocal() {
+	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
 		protected synchronized Object initialValue() {
 			ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
 			tm.resetTltm(null);
@@ -347,7 +347,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	public TransformManager getT() {
-		return (TransformManager) getTTL.get();
+		return (TransformManager) threadLocalTLTMInstance.get();
 	}
 
 	public <T> T getTemplateInstance(Class<T> clazz) {

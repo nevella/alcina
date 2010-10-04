@@ -511,17 +511,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			DomainTransformRequest request, boolean ignoreClientAuthMismatch,
 			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
 			throws DomainTransformRequestException {
-		Long clientInstanceId = request.getClientInstance().getId();
-		Map<Long, HiliLocatorMap> clientInstanceLocatorMap = CommonRemoteServiceServletSupport
-				.get().getClientInstanceLocatorMap();
-		synchronized (clientInstanceLocatorMap) {
-			if (!clientInstanceLocatorMap.containsKey(clientInstanceId)) {
-				clientInstanceLocatorMap.put(clientInstanceId,
-						new HiliLocatorMap());
-			}
-		}
-		HiliLocatorMap locatorMap = clientInstanceLocatorMap
-				.get(clientInstanceId);
+		HiliLocatorMap locatorMap = CommonRemoteServiceServletSupport.get()
+				.getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, locatorMap, true, true, ignoreClientAuthMismatch,

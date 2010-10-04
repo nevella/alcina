@@ -16,6 +16,10 @@ package cc.alcina.framework.entity.domaintransform;
 import java.util.HashMap;
 
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
-
+/**
+ * The key is the (client's) localid of the Hili
+ * @author nick@alcina.cc
+ *
+ */
 public class HiliLocatorMap extends HashMap<Long, HiliLocator> {
 }
