@@ -966,16 +966,16 @@ div.toolbar div.group.float-right {
 div.alcina-Status {
 	color: #338e5d;
 	font-weight: bold;
-	padding: 2px 5px 2px 5px;
-	position: absolute;
+	padding: 2px 15px 2px 15px;
+	position: fixed;
+	top:0px;
+	right:0px;
 	z-index: 1;
-	border-width: 2px;
+	border-width: 1px;
 	background-color: #FFFF99;
-	border-color: #FFFF99;
+	border-color: #DDDD77;
 	border-style: solid;
-	-moz-border-radius: 0.5em;
-  	border-radius: 0.5em;
-    -webkit-border-radius: 0.5em;
+	
 	
 }
 div.alcina-Status.icy{

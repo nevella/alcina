@@ -220,14 +220,7 @@ public class CommonUtils {
 		return date.toString();
 	}
 
-	public static String formatWithNullsBlank(String source, Object... args) {
-		for (int i = 0; i < args.length; i++) {
-			if (args[i] == null) {
-				args[i] = "";
-			}
-		}
-		return format(source, args);
-	}
+	
 
 	public static String friendlyConstant(Object o) {
 		if (o == null) {
