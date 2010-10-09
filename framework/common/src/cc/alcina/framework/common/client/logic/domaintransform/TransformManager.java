@@ -308,7 +308,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
-		long localId = TransformManager.get().nextLocalIdCounter();
+		long localId = nextLocalIdCounter();
 		T newInstance = CommonLocator.get().classLookup().newInstance(
 				objectClass, localId);
 		newInstance.setLocalId(localId);
@@ -322,7 +322,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public <T extends HasIdAndLocalId> T createProvisionalObject(
 			Class<T> objectClass) {
-		long localId = TransformManager.get().nextLocalIdCounter();
+		long localId = nextLocalIdCounter();
 		T newInstance = CommonLocator.get().classLookup().newInstance(
 				objectClass, localId);
 		newInstance.setLocalId(localId);
@@ -382,8 +382,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public boolean dirty(Collection provisionalObjects) {
-		Collection<DomainTransformEvent> trs = TransformManager.get()
-				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		Collection<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent dte : trs) {
 			if (provisionalObjects.contains(dte.getSource())) {
 				return true;
@@ -522,8 +521,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public boolean hasUnsavedChanges(Object object) {
 		Collection objects = CommonUtils.wrapInCollection(object);
-		Collection<DomainTransformEvent> trs = TransformManager.get()
-				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		Collection<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent dte : trs) {
 			if (objects.contains(dte.getSource())) {
 				return true;
@@ -1020,10 +1018,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 					fireCreateObjectEvent(hili.getClass(), 0, hili.getLocalId());
 				}
 			}
-			Collection<DomainTransformEvent> trs = TransformManager.get()
-					.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+			Collection<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 			trs = (Set) ((LinkedHashSet) trs).clone();
-			TransformManager.get().deregisterProvisionalObjects(objects);
+			deregisterProvisionalObjects(objects);
 			for (DomainTransformEvent dte : trs) {
 				if (objects.contains(dte.getSource())) {
 					if (dte.getTransformType() == TransformType.ADD_REF_TO_COLLECTION
@@ -1033,13 +1030,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 							// ways
 							// yet.
 							//
-							TransformManager.get().fireDomainTransform(dte);
+							fireDomainTransform(dte);
 						} catch (Exception e) {
 							throw new WrappedRuntimeException(e);
 						}
 					} else {
 						try {
-							TransformManager.get().consume(dte);
+							consume(dte);
 						} catch (Exception e) {
 							throw new WrappedRuntimeException(e);
 						}
@@ -1048,7 +1045,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 		} finally {
 			if (!deregister) {
-				TransformManager.get().registerProvisionalObject(objects);
+				registerProvisionalObject(objects);
 			}
 			CollectionModificationSupport.queue(false);
 		}
@@ -1060,8 +1057,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected void removeTransformsForObjects(Collection c) {
-		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) TransformManager
-				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
+		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
 				.clone();
 		for (DomainTransformEvent dte : trs) {
 			if (c.contains(dte.getSource())) {
