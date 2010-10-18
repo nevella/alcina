@@ -112,12 +112,11 @@ public class AlcinaHistoryItem {
 	}
 
 	public AlcinaHistory.SearchHistoryInfo getSearchHistoryInfo() {
-		int defId = getIntParameter(SEARCH_INDEX);
-		if (defId == 0) {
+		if (!hasParameter(SEARCH_INDEX)) {
 			return null;
 		}
 		int pageNumber = getIntParameter(SEARCH_PAGE);
-		return new SearchHistoryInfo(defId, pageNumber);
+		return new SearchHistoryInfo(getIntParameter(SEARCH_INDEX), pageNumber);
 	}
 
 	public String getStringParameter(String key) {
@@ -168,6 +167,9 @@ public class AlcinaHistoryItem {
 		setParameter(NO_HISTORY_KEY, noHistory);
 	}
 
+	public void setParameter(String key, Object value, boolean explicitBlanks) {
+		params.put(key, value == null ? null : value.toString());
+	}
 	public void setParameter(String key, Object value) {
 		if (value instanceof Number) {
 			if (((Number) value).longValue() == 0) {
@@ -191,7 +193,7 @@ public class AlcinaHistoryItem {
 	public void setSearchHistoryInfo(
 			AlcinaHistory.SearchHistoryInfo searchHistoryInfo) {
 		if (searchHistoryInfo != null) {
-			setParameter(SEARCH_INDEX, searchHistoryInfo.defId);
+			setParameter(SEARCH_INDEX, searchHistoryInfo.defId,true);
 			setParameter(SEARCH_PAGE, searchHistoryInfo.pageNumber);
 		}
 	}
