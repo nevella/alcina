@@ -781,9 +781,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		TransformCache result = new TransformCache();
 		List<DomainTransformEventPersistent> recentTransforms = getRecentTransforms(
 				getSharedTransformClasses(), getSharedTransformWarmupSize(), 0L);
+		result.sharedTransformClasses = getSharedTransformClasses();
+		result.perUserTransformClasses = getPerUserTransformClasses();
 		if (!recentTransforms.isEmpty()) {
-			result.sharedTransformClasses = getSharedTransformClasses();
-			result.perUserTransformClasses = getPerUserTransformClasses();
 			result.putSharedTransforms(recentTransforms);
 			recentTransforms = getRecentTransforms(
 					getPerUserTransformClasses(), 0, result.cacheValidFrom);

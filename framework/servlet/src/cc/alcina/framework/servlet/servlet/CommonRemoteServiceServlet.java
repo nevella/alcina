@@ -142,9 +142,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	public Long logClientError(String exceptionToString) {
+		return logClientError(exceptionToString, 	LogMessageType.CLIENT_EXCEPTION.toString());
+	}
+	public Long logClientError(String exceptionToString, String exceptionType) {
 		return ServletLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().log(exceptionToString,
-						LogMessageType.CLIENT_EXCEPTION.toString());
+						exceptionType);
 	}
 
 	public void logRpcException(Exception ex) {

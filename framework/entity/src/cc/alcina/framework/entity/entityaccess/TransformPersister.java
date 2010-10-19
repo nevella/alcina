@@ -362,8 +362,7 @@ public class TransformPersister {
 								.newInstance();
 						getEntityManager().persist(dtep);
 						dtep.wrap(event);
-						if (dtep.getObjectId() == 0
-								&& dtep.getTransformType() != TransformType.DELETE_OBJECT) {
+						if (dtep.getObjectId() == 0) {
 							dtep.setObjectId(tm.getObject(
 									dtep.getObjectClass(), 0,
 									dtep.getObjectLocalId()).getId());

@@ -79,4 +79,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 			AsyncCallback<Void> callback);
 
 	void pollJobStatus(Long id, boolean cancel, AsyncCallback<JobInfo> callback);
+
+	void logClientError(String exceptionToString, String exceptionType,
+			AsyncCallback<Long> callback);
 }

@@ -26,7 +26,9 @@ import com.google.gwt.user.client.ui.Frame;
 	public native Document getDocument()/*-{
 		return null;
 	}-*/;
-
+/**
+ * Should not include '<html>', '</html>' tags
+ */
 	public void setDocumentHtml(String html) {
 		this.html = html;
 		if (isAttached()) {

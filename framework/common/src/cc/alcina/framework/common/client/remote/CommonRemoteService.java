@@ -59,17 +59,19 @@ import com.google.gwt.user.client.rpc.RemoteService;
 
 	public LoginResponse hello();
 
+	@AuthenticationRequired()
+	public List<Long> listRunningJobs();
+
 	public Long logClientError(String exceptionToString);
 
-	public LoginResponse login(LoginBean loginBean);
+	public Long logClientError(String exceptionToString, String exceptionType);
 
+	public LoginResponse login(LoginBean loginBean);
+	
 	public void logout();
 
 	@AuthenticationRequired()
 	public Long performAction(RemoteAction action);
-	
-	@AuthenticationRequired()
-	public List<Long> listRunningJobs();
 
 	@AuthenticationRequired()
 	public ActionLogItem performActionAndWait(RemoteAction action)
@@ -79,16 +81,15 @@ import com.google.gwt.user.client.rpc.RemoteService;
 	public <G extends WrapperPersistable> Long persist(G gwpo)
 			throws WebException;
 
+	public void persistOfflineTransforms(List<DTRSimpleSerialWrapper> uncommitted) throws WebException;
+
 	@AuthenticationRequired()
 	public JobInfo pollJobStatus(Long id, boolean cancel);
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber);
-
 	@AuthenticationRequired
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformException, DomainTransformRequestException;
-
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException;
-	public void persistOfflineTransforms(List<DTRSimpleSerialWrapper> uncommitted) throws WebException;
 }
