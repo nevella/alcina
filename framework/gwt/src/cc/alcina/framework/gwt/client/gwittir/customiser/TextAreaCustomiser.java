@@ -62,7 +62,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		public BoundWidget get() {
 			TextArea area = new TextArea();
 			area.setVisibleLines(lines);
-			area.setEnabled(editable);
+			area.setReadOnly(!editable);
 			if (width != 0) {
 				area.setWidth(width + "px");
 			}

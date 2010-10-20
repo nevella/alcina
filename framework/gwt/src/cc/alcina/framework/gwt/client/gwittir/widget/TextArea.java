@@ -48,24 +48,12 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 		MultilineWidget ,Focusable{
 	private com.google.gwt.user.client.ui.TextArea base = new com.google.gwt.user.client.ui.TextArea();
 
-	public HandlerRegistration addKeyUpHandler(KeyUpHandler handler) {
-		return this.base.addKeyUpHandler(handler);
-	}
-
 	private ChangeListenerCollection changeListeners = new ChangeListenerCollection();
 
 	private String old;
 
 	public TextArea() {
 		this(false);
-	}
-
-	public int getCharacterWidth() {
-		return this.base.getCharacterWidth();
-	}
-
-	public void setCharacterWidth(int width) {
-		this.base.setCharacterWidth(width);
 	}
 
 	/** Creates a new instance of TextBox */
@@ -76,13 +64,13 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 		this.setComparator(SimpleComparator.INSTANCE);
 		if (updateOnKeypress) {
 			this.addKeyboardListener(new KeyboardListener() {
+				public void onKeyDown(Widget sender, char keyCode, int modifiers) {
+				}
+
 				public void onKeyPress(Widget sender, char keyCode,
 						int modifiers) {
 					changes.firePropertyChange("value", old, getValue());
 					old = (String) getValue();
-				}
-
-				public void onKeyDown(Widget sender, char keyCode, int modifiers) {
 				}
 
 				public void onKeyUp(Widget sender, char keyCode, int modifiers) {
@@ -116,13 +104,39 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 		this.base.addKeyboardListener(listener);
 	}
 
+	public HandlerRegistration addKeyUpHandler(KeyUpHandler handler) {
+		return this.base.addKeyUpHandler(handler);
+	}
+
 	public void cancelKey() {
 		this.base.cancelKey();
+	}
+
+	public Action getAction() {
+		Action retValue;
+		retValue = super.getAction();
+		return retValue;
+	}
+
+	public int getCharacterWidth() {
+		return this.base.getCharacterWidth();
+	}
+
+	public Comparator getComparator() {
+		Comparator retValue;
+		retValue = super.getComparator();
+		return retValue;
 	}
 
 	public int getCursorPos() {
 		int retValue;
 		retValue = this.base.getCursorPos();
+		return retValue;
+	}
+
+	public Object getModel() {
+		Object retValue;
+		retValue = super.getModel();
 		return retValue;
 	}
 
@@ -184,6 +198,22 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 		}
 	}
 
+	public int getVisibleLines() {
+		return this.base.getVisibleLines();
+	}
+
+	public boolean isEnabled() {
+		return this.base.isEnabled();
+	}
+
+	public boolean isMultiline() {
+		return true;
+	}
+
+	public boolean isReadOnly() {
+		return this.base.isReadOnly();
+	}
+
 	public void removeChangeListener(ChangeListener listener) {
 		this.changeListeners.add(listener);
 	}
@@ -212,6 +242,14 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 		this.base.setAccessKey(key);
 	}
 
+	public void setAction(Action action) {
+		super.setAction(action);
+	}
+
+	public void setCharacterWidth(int width) {
+		this.base.setCharacterWidth(width);
+	}
+
 	public void setCursorPos(int pos) {
 		this.base.setCursorPos(pos);
 	}
@@ -232,6 +270,10 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 		this.base.setKey(key);
 	}
 
+	public void setModel(Object model) {
+		super.setModel(model);
+	}
+
 	public void setName(String name) {
 		this.base.setName(name);
 	}
@@ -241,6 +283,7 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 	}
 
 	public void setReadOnly(boolean readOnly) {
+		this.base.setReadOnly(readOnly);
 	}
 
 	public void setSelectionRange(int pos, int length) {
@@ -254,6 +297,7 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 	public void setStyleName(String style) {
 		this.base.setStyleName(style);
 	}
+
 
 	public void setTabIndex(int index) {
 		this.base.setTabIndex(index);
@@ -281,6 +325,10 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 		}
 	}
 
+	public void setVisibleLines(int lines) {
+		this.base.setVisibleLines(lines);
+	}
+
 	public void setWidth(String width) {
 		this.base.setWidth(width);
 	}
@@ -291,48 +339,5 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	public void setModel(Object model) {
-		super.setModel(model);
-	}
-
-
-	public void setAction(Action action) {
-		super.setAction(action);
-	}
-
-	public Comparator getComparator() {
-		Comparator retValue;
-		retValue = super.getComparator();
-		return retValue;
-	}
-
-	public Object getModel() {
-		Object retValue;
-		retValue = super.getModel();
-		return retValue;
-	}
-
-	public Action getAction() {
-		Action retValue;
-		retValue = super.getAction();
-		return retValue;
-	}
-
-	public boolean isEnabled() {
-		return this.base.isEnabled();
-	}
-
-	public int getVisibleLines() {
-		return this.base.getVisibleLines();
-	}
-
-	public void setVisibleLines(int lines) {
-		this.base.setVisibleLines(lines);
-	}
-
-	public boolean isMultiline() {
-		return true;
 	}
 }
