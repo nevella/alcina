@@ -61,6 +61,7 @@ import cc.alcina.framework.entity.actions.RequiresHttpRequest;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
@@ -397,6 +398,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (UnexpectedException ex) {
 			logRpcException(ex);
 			throw ex;
+		}finally{
+			ThreadlocalTransformManager.cast().resetTltm(null);
 		}
 	}
 
