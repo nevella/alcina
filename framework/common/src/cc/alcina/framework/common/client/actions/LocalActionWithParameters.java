@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 /**
  *
  * @author Nick Reddel
+ * An action to be run on the client
  */
 
  public class LocalActionWithParameters<T> extends PermissibleAction {
