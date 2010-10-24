@@ -121,7 +121,7 @@ public class MainCmp extends MainCmpBase {
 
 	public void onHistoryChanged(String historyToken) {
 		AlcinaTemplateHistoryItem info = AlcinaTemplateHistory.get()
-				.parseToken(historyToken);
+				.getCurrentEvent();
 		if (info.getContentToken() != null) {
 			showContent(info.getContentToken().replace("_", " "));
 			info.type = HistoryEventType.UNTABBED;

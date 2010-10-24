@@ -85,8 +85,8 @@ public abstract class MainCmpBase extends Composite implements
 
 	@Override
 	protected void onAttach() {
-		super.onAttach();
 		this.historyHandlerRegistration = History.addValueChangeHandler(this);
+		super.onAttach();
 	}
 
 	@Override
