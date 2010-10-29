@@ -16,7 +16,8 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.gwt.client.gwittir.provider.DomainObjectIdRefProvider;
+import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser.RenderedLabelProvider;
+import cc.alcina.framework.gwt.client.gwittir.renderer.IdToStringRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.DomainObjectIdEditor.DomainObjectIdEditorProvider;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -26,14 +27,14 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  *
  * @author Nick Reddel
  */
-public class DomainObjectIdRefCustomiser implements Customiser {
+public class DomainObjectIdEditCustomiser implements Customiser {
 	public static final String TARGET_CLASS = "targetClass";
-
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
-		Class classValue = NamedParameter.Support
-						.getParameter(info.parameters(), TARGET_CLASS).classValue();
-		return new DomainObjectIdRefProvider(classValue);
+		Class classValue = NamedParameter.Support.getParameter(
+				info.parameters(), TARGET_CLASS).classValue();
+		return editable ? new DomainObjectIdEditorProvider(classValue)
+				: new RenderedLabelProvider(IdToStringRenderer.class, null);
 	}
 }

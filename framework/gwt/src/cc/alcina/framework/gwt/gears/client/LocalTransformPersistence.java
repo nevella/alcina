@@ -89,7 +89,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	public DTESerializationPolicy getSerializationPolicy() {
 		return serializationPolicy;
 	}
-	protected abstract void clearPersistedClient(ClientInstance exceptFor) ;
+	public abstract void clearPersistedClient(ClientInstance exceptFor) ;
 	public void setCommitToStorageTransformListener(
 			CommitToStorageTransformListener commitToStorageTransformListener) {
 		this.commitToStorageTransformListener = commitToStorageTransformListener;

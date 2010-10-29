@@ -494,11 +494,11 @@ public class CommonUtils {
 
 	public static String trimToWsChars(String s, int maxChars,
 			boolean withDotDot) {
-		if (s == null || s.length() <= maxChars) {
-			return s;
-		}
 		if (maxChars < 0) {
 			maxChars = 100;
+		}
+		if (s == null || s.length() <= maxChars) {
+			return s;
 		}
 		if (s.substring(maxChars / 2, maxChars).indexOf(" ") == -1) {
 			return s.substring(0, maxChars) + (withDotDot ? "..." : "");

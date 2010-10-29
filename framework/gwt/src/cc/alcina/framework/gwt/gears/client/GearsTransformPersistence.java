@@ -45,7 +45,7 @@ public class GearsTransformPersistence extends LocalTransformPersistence {
 	public GearsTransformPersistence() {
 	}
 
-	protected void clearPersistedClient(ClientInstance exceptFor) {
+	public void clearPersistedClient(ClientInstance exceptFor) {
 		try {
 			db.execute("DELETE from TransformRequests"
 					+ " where (transform_request_type='CLIENT_OBJECT_LOAD'"
