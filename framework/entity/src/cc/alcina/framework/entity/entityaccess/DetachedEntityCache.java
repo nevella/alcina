@@ -51,6 +51,9 @@ public class DetachedEntityCache {
 
 	public <T> T get(Class<T> clazz, Long id) {
 		ensureMaps(clazz);
+		if (id==null){
+			return null;
+		}
 		T t = (T) detached.get(clazz).get(id);
 		if (t == null) {
 			t = (T) entities.get(clazz).get(id);
