@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
@@ -143,12 +144,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	public Long logClientError(String exceptionToString) {
-		return logClientError(exceptionToString, 	LogMessageType.CLIENT_EXCEPTION.toString());
+		return logClientError(exceptionToString,
+				LogMessageType.CLIENT_EXCEPTION.toString());
 	}
+
 	public Long logClientError(String exceptionToString, String exceptionType) {
 		return ServletLayerLocator.get().commonPersistenceProvider()
-				.getCommonPersistence().log(exceptionToString,
-						exceptionType);
+				.getCommonPersistence().log(exceptionToString, exceptionType);
 	}
 
 	public void logRpcException(Exception ex) {
@@ -398,7 +400,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (UnexpectedException ex) {
 			logRpcException(ex);
 			throw ex;
-		}finally{
+		} finally {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 		}
 	}
@@ -461,14 +463,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.getCommonPersistence().validate(validators);
 	}
 
-	private void logTransformException(DomainTransformResponse response,
-			boolean requestDetail) {
-		logger.info("domain transform problem - user "
-				+ PermissionsManager.get().getUserName());
-		if (requestDetail) {
-			logger.info(response.getRequest().toStringForError());
-		} else {
-			logger.info(response.getRequest());
+	private void logTransformException(DomainTransformResponse response) {
+		logger.info(String.format("domain transform problem - clientInstance: %s - rqId: %s - user ",
+				response.getRequest().getClientInstance().getId(),response.getRequestId(), PermissionsManager.get().getUserName()));
+		List<DomainTransformException> transformExceptions = response
+				.getTransformExceptions();
+		for (DomainTransformException ex : transformExceptions) {
+			logger.info("Per-event error: " + ex.getMessage());
+			logger.info("Event: " + ex.getEvent());
 		}
 	}
 
@@ -544,7 +546,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
 			return wrapper;
 		} else {
-			logTransformException(wrapper.response, true);
+			logTransformException(wrapper.response);
 			throw new DomainTransformRequestException(wrapper.response);
 		}
 	}
