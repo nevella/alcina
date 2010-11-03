@@ -15,12 +15,10 @@
 package cc.alcina.framework.gwt.client;
 
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
@@ -55,8 +53,7 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 	}-*/;
 
 	public static void throwToHandler(String message) {
-		handler.onUncaughtException(new WrappedRuntimeException(message,
-				SuggestedAction.NOTIFY_WARNING));
+		handler.onUncaughtException(new JavaScriptException(message));
 	}
 
 	public void onWindowClosed() {

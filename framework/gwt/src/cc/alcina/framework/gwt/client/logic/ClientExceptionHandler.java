@@ -43,7 +43,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 			ClientLayerLocator.get().notifications().showError(e);
 		}
 	}
-	public String extraInfoForExceptionText() {
+	public  String extraInfoForExceptionText() {
 		return "\n\nUser agent: " + BrowserMod.getUserAgent()
 				+ "\n\nHistory token: " + History.getToken();
 	}
