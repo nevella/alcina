@@ -19,14 +19,25 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.FocusEvent;
+import com.google.gwt.event.dom.client.FocusHandler;
+import com.google.gwt.event.dom.client.HasAllFocusHandlers;
 import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.FocusListener;
+import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasFocus;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.action.BindingAction;
@@ -61,6 +72,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  *         </ul>
  * 
  */
+@SuppressWarnings("deprecation")
 public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		HasBinding {
 	private static final String STYLE_NAME = "gwittir-GridForm";
@@ -169,6 +181,52 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		this.binding.unbind();
 	}
 
+	private Focusable focusOnDetachIfEditorFocussed;
+
+	public Focusable getFocusOnDetachIfEditorFocussed() {
+		return this.focusOnDetachIfEditorFocussed;
+	}
+
+	public void setFocusOnDetachIfEditorFocussed(
+			Focusable focusOnDetachIfEditorFocussed) {
+		this.focusOnDetachIfEditorFocussed = focusOnDetachIfEditorFocussed;
+	}
+
+	private Object focussedWidget;
+
+	private FocusHandler focusHandler = new FocusHandler() {
+		public void onFocus(FocusEvent event) {
+			Object source = event.getSource();
+			focussedWidget = source;
+		}
+	};
+
+	private BlurHandler blurHandler = new BlurHandler() {
+		public void onBlur(BlurEvent event) {
+			if (focussedWidget == event.getSource()) {
+				focussedWidget = null;
+			}
+		}
+	};
+
+	private FocusListener focusListener = new FocusListener() {
+		public void onLostFocus(Widget sender) {
+			if (focussedWidget == sender) {
+				focussedWidget = null;
+			}
+		}
+
+		public void onFocus(Widget sender) {
+			focussedWidget = sender;
+		}
+	};
+
+	protected void onUnload() {
+		if (focussedWidget != null && focusOnDetachIfEditorFocussed != null) {
+			focusOnDetachIfEditorFocussed.setFocus(true);
+		}
+	}
+
 	private void render() {
 		if (this.binding.getChildren().size() > 0) {
 			this.binding.unbind();
@@ -184,6 +242,14 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 				}
 				Widget widget = (Widget) this.createWidget(this.binding, field,
 						(SourcesPropertyChangeEvents) this.getValue());
+				if (widget instanceof HasAllFocusHandlers) {
+					HasAllFocusHandlers haff = (HasAllFocusHandlers) widget;
+					haff.addBlurHandler(blurHandler);
+					haff.addFocusHandler(focusHandler);
+				} else if (widget instanceof HasFocus) {
+					HasFocus hf = (HasFocus) widget;
+					hf.addFocusListener(focusListener);
+				}
 				widget
 						.ensureDebugId(AlcinaDebugIds.GRID_FORM_FIELD_DEBUG_PREFIX
 								+ field.getPropertyName());

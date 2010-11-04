@@ -64,6 +64,7 @@ import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -88,6 +89,44 @@ public class ContentViewFactory {
 	private boolean cancelButton;
 
 	private boolean noCaption;
+
+	public ActionTableHolder createActionTable(Collection beans,
+			Class beanClass, Converter converter,
+			Collection<PermissibleAction> actions,
+			PermissibleActionListener listener, boolean withObjectActions,
+			boolean multiple) {
+		ActionTableHolder holder = new ActionTableHolder();
+		FlowPanel fp = holder.fp;
+		if (converter != null) {
+			beans = GwittirUtils.convertCollection(beans, converter);
+		}
+		Object bean = ClientReflector.get().getTemplateInstance(beanClass);
+		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
+		Field[] fields = GwittirBridge.get()
+				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
+						false, true);
+		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK
+				| BoundTableExt.NO_SELECT_ROW_MASK;
+		if (withObjectActions) {
+			mask |= BoundTableExt.ROW_HANDLE_MASK
+					| BoundTableExt.HANDLES_AS_CHECKBOXES;
+		}
+		if (multiple) {
+			mask |= BoundTableExt.MULTIROWSELECT_MASK;
+		}
+		CollectionDataProvider cp = new CollectionDataProvider(beans);
+		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, factory,
+				fields, cp);
+		table.addStyleName("results-table");
+		if (actions != null && !actions.isEmpty()) {
+			Toolbar tb = createToolbar(new ArrayList<PermissibleAction>(actions));
+			tb.addVetoableActionListener(listener);
+			fp.add(tb);
+		}
+		fp.add(table);
+		holder.table = table;
+		return holder;
+	}
 
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
@@ -125,6 +164,7 @@ public class ContentViewFactory {
 			SavePanel sp = new SavePanel(cp, isCancelButton());
 			cp.add(sp);
 			cp.setSaveButton(sp.saveButton);
+			f.setFocusOnDetachIfEditorFocussed(sp.saveButton);
 			Validator beanValidator = GwittirBridge.get().getValidator(
 					bean.getClass(), bean, null, null);
 			cp.setBeanValidator(beanValidator);
@@ -174,7 +214,8 @@ public class ContentViewFactory {
 				nhd.setUserObject(v);
 				nhd.addClickHandler(new ClickHandler() {
 					public void onClick(ClickEvent event) {
-						DefaultPermissibleActionHandler.handleAction((Widget) nhd,v, bean);
+						DefaultPermissibleActionHandler.handleAction(
+								(Widget) nhd, v, bean);
 					}
 				});
 				nhd.setText(v.getDisplayName());
@@ -183,34 +224,6 @@ public class ContentViewFactory {
 			}
 		}
 		return fp;
-	}
-
-	private Widget createCaption(Object bean, PaneWrapperWithObjects cp) {
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-				bean.getClass());
-		TextProvider.get().setTrimmed(true);
-		List<SimpleHistoryEventInfo> history = Arrays
-				.asList(new SimpleHistoryEventInfo[] {
-						new SimpleHistoryEventInfo(objName()),
-						new SimpleHistoryEventInfo(bi.getTypeDisplayName()),
-						new SimpleHistoryEventInfo(bi.getObjectName(bean)) });
-		TextProvider.get().setTrimmed(false);
-		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
-	}
-
-	private Widget createMultiCaption(Class beanClass, PaneWrapperWithObjects cp) {
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-				beanClass);
-		List<SimpleHistoryEventInfo> history = Arrays
-				.asList(new SimpleHistoryEventInfo[] {
-						new SimpleHistoryEventInfo(objName()),
-						new SimpleHistoryEventInfo(bi.getTypeDisplayName()) });
-		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
-	}
-
-	private String objName() {
-		return TextProvider.get().getUiObjectText(getClass(),
-				"caption-objects", "Objects");
 	}
 
 	public PaneWrapperWithObjects createMultipleBeanView(Collection beans,
@@ -273,67 +286,17 @@ public class ContentViewFactory {
 		return table;
 	}
 
-	public static class ActionTableHolder extends Composite {
-		private FlowPanel fp;
-
-		private NiceWidthBoundTable table;
-
-		public NiceWidthBoundTable getTable() {
-			return this.table;
-		}
-
-		public ActionTableHolder() {
-			this.fp = new FlowPanel();
-			initWidget(fp);
-		}
+	public Toolbar createToolbar(List<PermissibleAction> actions) {
+		Toolbar tb = new Toolbar();
+		tb.setAsButton(true);
+		tb.setActions(actions);
+		tb.setStyleName("table-toolbar alcina-ToolbarSmall clearfix");
+		tb.enableAll(true);
+		return tb;
 	}
 
-	public ActionTableHolder createActionTable(Collection beans,
-			Class beanClass, Converter converter,
-			Collection<PermissibleAction> actions,
-			PermissibleActionListener listener, boolean withObjectActions,
-			boolean multiple) {
-		ActionTableHolder holder = new ActionTableHolder();
-		FlowPanel fp = holder.fp;
-		if (converter != null) {
-			beans = GwittirUtils.convertCollection(beans, converter);
-		}
-		Object bean = ClientReflector.get().getTemplateInstance(beanClass);
-		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
-						false, true);
-		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK
-				| BoundTableExt.NO_SELECT_ROW_MASK;
-		if (withObjectActions) {
-			mask |= BoundTableExt.ROW_HANDLE_MASK
-					| BoundTableExt.HANDLES_AS_CHECKBOXES;
-		}
-		if (multiple) {
-			mask |= BoundTableExt.MULTIROWSELECT_MASK;
-		}
-		CollectionDataProvider cp = new CollectionDataProvider(beans);
-		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, factory,
-				fields, cp);
-		table.addStyleName("results-table");
-		if (actions != null && !actions.isEmpty()) {
-			Toolbar tb = createToolbar(new ArrayList<PermissibleAction>(actions));
-			tb.addVetoableActionListener(listener);
-			fp.add(tb);
-		}
-		fp.add(table);
-		holder.table = table;
-		return holder;
-	}
-
-	private PaneWrapperWithObjects createPaneWrapper(
-			PermissibleActionListener actionListener) {
-		PaneWrapperWithObjects vp = new PaneWrapperWithObjects();
-		vp.setStyleName("alcina-BeanPanel");
-		if (actionListener != null) {
-			vp.addVetoableActionListener(actionListener);
-		}
-		return vp;
+	public boolean isCancelButton() {
+		return cancelButton;
 	}
 
 	public boolean isNoButtons() {
@@ -342,6 +305,32 @@ public class ContentViewFactory {
 
 	public boolean isNoCaption() {
 		return noCaption;
+	}
+
+	public void popupEdit(Object bean, String title,
+			final PermissibleActionListener okListener) {
+		FlowPanel fp = new FlowPanel();
+		final DialogBox dialog = new GlassDialogBox();
+		dialog.setText(title);
+		dialog.add(fp);
+		setNoCaption(true);
+		setCancelButton(true);
+		PaneWrapperWithObjects view = createBeanView(bean, true,
+				new PermissibleActionListener() {
+					public void vetoableAction(PermissibleActionEvent evt) {
+						dialog.hide();
+						if (evt.getAction().getClass() == ViewAction.class) {
+							okListener.vetoableAction(evt);
+						}
+					}
+				}, false, true);
+		fp.add(view);
+		dialog.center();
+		dialog.show();
+	}
+
+	public void setCancelButton(boolean cancelButton) {
+		this.cancelButton = cancelButton;
 	}
 
 	public void setNoButtons(boolean noButtons) {
@@ -357,12 +346,57 @@ public class ContentViewFactory {
 		this.noButtons = noCaptionsOrButtons;
 	}
 
-	public void setCancelButton(boolean cancelButton) {
-		this.cancelButton = cancelButton;
+	private Widget createCaption(Object bean, PaneWrapperWithObjects cp) {
+		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
+				bean.getClass());
+		TextProvider.get().setTrimmed(true);
+		List<SimpleHistoryEventInfo> history = Arrays
+				.asList(new SimpleHistoryEventInfo[] {
+						new SimpleHistoryEventInfo(objName()),
+						new SimpleHistoryEventInfo(bi.getTypeDisplayName()),
+						new SimpleHistoryEventInfo(bi.getObjectName(bean)) });
+		TextProvider.get().setTrimmed(false);
+		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
 	}
 
-	public boolean isCancelButton() {
-		return cancelButton;
+	private Widget createMultiCaption(Class beanClass, PaneWrapperWithObjects cp) {
+		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
+				beanClass);
+		List<SimpleHistoryEventInfo> history = Arrays
+				.asList(new SimpleHistoryEventInfo[] {
+						new SimpleHistoryEventInfo(objName()),
+						new SimpleHistoryEventInfo(bi.getTypeDisplayName()) });
+		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
+	}
+
+	private PaneWrapperWithObjects createPaneWrapper(
+			PermissibleActionListener actionListener) {
+		PaneWrapperWithObjects vp = new PaneWrapperWithObjects();
+		vp.setStyleName("alcina-BeanPanel");
+		if (actionListener != null) {
+			vp.addVetoableActionListener(actionListener);
+		}
+		return vp;
+	}
+
+	private String objName() {
+		return TextProvider.get().getUiObjectText(getClass(),
+				"caption-objects", "Objects");
+	}
+
+	public static class ActionTableHolder extends Composite {
+		private FlowPanel fp;
+
+		private NiceWidthBoundTable table;
+
+		public ActionTableHolder() {
+			this.fp = new FlowPanel();
+			initWidget(fp);
+		}
+
+		public NiceWidthBoundTable getTable() {
+			return this.table;
+		}
 	}
 
 	public static class NiceWidthBoundTable extends FastROBoundTable {
@@ -374,6 +408,23 @@ public class ContentViewFactory {
 					| BoundTableExt.NO_SELECT_COL_MASK
 					| BoundTableExt.NO_SELECT_ROW_MASK, factory, fields,
 					provider);
+		}
+
+		@Override
+		public void init(Collection c, int numberOfChunks) {
+			super.init(c, numberOfChunks);
+			beautify();
+		}
+
+		@Override
+		public void setValue(Object value) {
+			super.setValue(value);
+		}
+
+		@Override
+		public void sortColumn(int index) {
+			super.sortColumn(index);
+			beautify();
 		}
 
 		@Override
@@ -411,25 +462,8 @@ public class ContentViewFactory {
 		}
 
 		@Override
-		public void init(Collection c, int numberOfChunks) {
-			super.init(c, numberOfChunks);
-			beautify();
-		}
-
-		@Override
 		protected void onAttach() {
 			super.onAttach();
-			beautify();
-		}
-
-		@Override
-		public void setValue(Object value) {
-			super.setValue(value);
-		}
-
-		@Override
-		public void sortColumn(int index) {
-			super.sortColumn(index);
 			beautify();
 		}
 	}
@@ -440,46 +474,13 @@ public class ContentViewFactory {
 
 		private boolean alwaysDisallowOkIfInvalid;
 
-		public boolean isAlwaysDisallowOkIfInvalid() {
-			return this.alwaysDisallowOkIfInvalid;
-		}
-
-		public void setAlwaysDisallowOkIfInvalid(
-				boolean alwaysDisallowOkIfInvalid) {
-			this.alwaysDisallowOkIfInvalid = alwaysDisallowOkIfInvalid;
-		}
-
 		private Object bean;
-
-		public PaneWrapperWithObjects() {
-			getElement().getStyle().setProperty("position", "relative");
-		}
-
-		public void setBean(Object bean) {
-			this.bean = bean;
-		}
-
-		public void setBeanValidator(Validator beanValidator) {
-			this.beanValidator = beanValidator;
-		}
 
 		private HasBinding boundWidget;
 
 		Collection objects;
 
-		public void addExtraActions(Widget w) {
-			add(w);
-		}
-
 		Collection initialObjects;
-
-		public Collection getInitialObjects() {
-			return this.initialObjects;
-		}
-
-		public void setInitialObjects(Collection initialObjects) {
-			this.initialObjects = initialObjects;
-		}
 
 		private boolean provisionalObjects;
 
@@ -487,8 +488,12 @@ public class ContentViewFactory {
 
 		private Button saveButton;
 
-		public Button getSaveButton() {
-			return this.saveButton;
+		public PaneWrapperWithObjects() {
+			getElement().getStyle().setProperty("position", "relative");
+		}
+
+		public void addExtraActions(Widget w) {
+			add(w);
 		}
 
 		public void addVetoableActionListener(PermissibleActionListener listener) {
@@ -499,84 +504,35 @@ public class ContentViewFactory {
 			this.support.fireVetoableActionEvent(event);
 		}
 
+		public HasBinding getBoundWidget() {
+			return boundWidget;
+		}
+
+		public Collection getInitialObjects() {
+			return this.initialObjects;
+		}
+
 		public Collection getObjects() {
 			return this.objects;
 		}
 
-		public boolean validateBean() {
-			if (beanValidator == null) {
-				return true;
-			}
-			try {
-				beanValidator.validate(bean);
-				return true;
-			} catch (ValidationException e) {
-				ClientLayerLocator.get().notifications().showWarning(
-						e.getMessage());
-				return false;
-			}
+		public Button getSaveButton() {
+			return this.saveButton;
+		}
+
+		public boolean isAlwaysDisallowOkIfInvalid() {
+			return this.alwaysDisallowOkIfInvalid;
+		}
+
+		public boolean isProvisionalObjects() {
+			return provisionalObjects;
 		}
 
 		public void onClick(ClickEvent clickEvent) {
 			final Widget sender = (Widget) clickEvent.getSource();
 			if (sender == saveButton) {
-				// makes sure richtextareas get a focuslost()
-				saveButton.setFocus(true);
-				if (!validateBean()) {
-					return;
-				}
-				ServerValidator.performingBeanValidation = true;
-				boolean bindingValid = false;
-				try {
-					bindingValid = getBoundWidget().getBinding().validate();
-				} finally {
-					ServerValidator.performingBeanValidation = false;
-				}
-				if (!bindingValid) {
-					List<Validator> validators = GwittirUtils.getAllValidators(
-							getBoundWidget().getBinding(), null);
-					for (Validator v : validators) {
-						if (v instanceof ServerValidator) {
-							ServerValidator sv = (ServerValidator) v;
-							if (sv.isValidating()) {
-								final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
-										"Checking values", null);
-								new Timer() {
-									@Override
-									public void run() {
-										crd.hide();
-										DomEvent.fireNativeEvent(WidgetUtils
-												.createZeroClick(), sender);
-									}
-								}.schedule(500);
-								return;
-							}
-						}
-					}
-					if (PermissionsManager.get().isMemberOfGroup(
-							PermissionsManager.getAdministratorGroupName())) {
-						if (ClientLayerLocator.get().getGeneralProperties()
-								.isAllowAdminInvalidObjectWrite()
-								&& !alwaysDisallowOkIfInvalid) {
-							ClientLayerLocator
-									.get()
-									.notifications()
-									.confirm(
-											"Administrative option: save the changed items "
-													+ "on this form (even though some are invalid)?",
-											new OkCallback() {
-												public void ok() {
-													commitChanges();
-												}
-											});
-							return;
-						}
-					}
-					ClientLayerLocator.get().notifications().showWarning(
-							"Please correct the problems in the form");
-					return;
-				}
-				commitChanges();
+				validateAndCommit(sender);
+				return;
 			} else {
 				if (isProvisionalObjects()) {
 					TransformManager.get()
@@ -593,31 +549,30 @@ public class ContentViewFactory {
 			}
 		}
 
-		private void commitChanges() {
-			if (isProvisionalObjects()) {
-				TransformManager.get().promoteToDomainObject(objects);
-			}
-			final PermissibleActionEvent action = new PermissibleActionEvent(
-					initialObjects, ClientReflector.get().newInstance(
-							ViewAction.class));
-			DeferredCommand.addCommand(new Command() {
-				public void execute() {
-					fireVetoableActionEvent(action);
-				}
-			});
-		}
-
-		@Override
-		protected void onDetach() {
-			super.onDetach();
-			if (objects != null) {
-				TransformManager.get().deregisterProvisionalObjects(objects);
-			}
-		}
-
 		public void removeVetoableActionListener(
 				PermissibleActionListener listener) {
 			this.support.removeVetoableActionListener(listener);
+		}
+
+		public void setAlwaysDisallowOkIfInvalid(
+				boolean alwaysDisallowOkIfInvalid) {
+			this.alwaysDisallowOkIfInvalid = alwaysDisallowOkIfInvalid;
+		}
+
+		public void setBean(Object bean) {
+			this.bean = bean;
+		}
+
+		public void setBeanValidator(Validator beanValidator) {
+			this.beanValidator = beanValidator;
+		}
+
+		public void setBoundWidget(HasBinding boundWidget) {
+			this.boundWidget = boundWidget;
+		}
+
+		public void setInitialObjects(Collection initialObjects) {
+			this.initialObjects = initialObjects;
 		}
 
 		public void setObjects(Collection objects) {
@@ -636,37 +591,137 @@ public class ContentViewFactory {
 			}
 		}
 
-		public void setSaveButton(Button saveButton) {
-			this.saveButton = saveButton;
-		}
-
-		public void setBoundWidget(HasBinding boundWidget) {
-			this.boundWidget = boundWidget;
-		}
-
-		public HasBinding getBoundWidget() {
-			return boundWidget;
-		}
-
 		public void setProvisionalObjects(boolean promote) {
 			this.provisionalObjects = promote;
 		}
 
-		public boolean isProvisionalObjects() {
-			return provisionalObjects;
+		public void setSaveButton(Button saveButton) {
+			this.saveButton = saveButton;
+		}
+
+		public boolean validateBean() {
+			if (beanValidator == null) {
+				return true;
+			}
+			try {
+				beanValidator.validate(bean);
+				return true;
+			} catch (ValidationException e) {
+				ClientLayerLocator.get().notifications().showWarning(
+						e.getMessage());
+				return false;
+			}
+		}
+
+		private void commitChanges(boolean fireViewEvent) {
+			if (isProvisionalObjects()) {
+				TransformManager.get().promoteToDomainObject(objects);
+				objects.clear();
+			}
+			if (!fireViewEvent){
+				return;
+			}
+			final PermissibleActionEvent action = new PermissibleActionEvent(
+					initialObjects, ClientReflector.get().newInstance(
+							ViewAction.class));
+			DeferredCommand.addCommand(new Command() {
+				public void execute() {
+					fireVetoableActionEvent(action);
+				}
+			});
+		}
+
+		private boolean validateAndCommit(final Widget sender) {
+			// makes sure richtextareas get a focuslost()
+			saveButton.setFocus(true);
+			if (!validateBean()) {
+				return false;
+			}
+			ServerValidator.performingBeanValidation = true;
+			boolean bindingValid = false;
+			try {
+				bindingValid = getBoundWidget().getBinding().validate();
+			} finally {
+				ServerValidator.performingBeanValidation = false;
+			}
+			if (!bindingValid) {
+				List<Validator> validators = GwittirUtils.getAllValidators(
+						getBoundWidget().getBinding(), null);
+				for (Validator v : validators) {
+					if (v instanceof ServerValidator) {
+						ServerValidator sv = (ServerValidator) v;
+						if (sv.isValidating()) {
+							final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
+									"Checking values", null);
+							new Timer() {
+								@Override
+								public void run() {
+									crd.hide();
+									DomEvent.fireNativeEvent(WidgetUtils
+											.createZeroClick(), sender);
+								}
+							}.schedule(500);
+							return false;
+						}
+					}
+				}
+				if (PermissionsManager.get().isMemberOfGroup(
+						PermissionsManager.getAdministratorGroupName())
+						&& sender != null) {
+					if (ClientLayerLocator.get().getGeneralProperties()
+							.isAllowAdminInvalidObjectWrite()
+							&& !alwaysDisallowOkIfInvalid) {
+						ClientLayerLocator
+								.get()
+								.notifications()
+								.confirm(
+										"Administrative option: save the changed items "
+												+ "on this form (even though some are invalid)?",
+										new OkCallback() {
+											public void ok() {
+												commitChanges(true);
+											}
+										});
+						return false;
+					}
+				}
+				if (sender != null) {
+					ClientLayerLocator.get().notifications().showWarning(
+							"Please correct the problems in the form");
+				} else {
+				}
+				return false;
+			}
+			commitChanges(sender!=null);
+			return true;
+		}
+
+		@Override
+		protected void onDetach() {
+			super.onDetach();
+			if (objects != null && TransformManager.get().dirty(objects)) {
+				boolean save = Window
+						.confirm("You are closing a form that"
+								+ " has unsaved changes. Please press 'OK' to save the changes"
+								+ ", or 'Cancel' to ignore them.");
+				if (save) {
+					boolean result = validateAndCommit(null);
+					if (!result) {
+						Window
+								.alert("Unable to save changes due to form validation error.");
+						TransformManager.get().deregisterProvisionalObjects(
+								objects);
+					}
+				} else {
+					TransformManager.get()
+							.deregisterProvisionalObjects(objects);
+				}
+			}
 		}
 	}
 
 	public static class SavePanel extends FlowPanel {
 		private Button saveButton;
-
-		public Button getSaveButton() {
-			return this.saveButton;
-		}
-
-		public Button getCancelButton() {
-			return this.cancelButton;
-		}
 
 		private Button cancelButton;
 
@@ -683,36 +738,13 @@ public class ContentViewFactory {
 				fp.add(cancelButton);
 			}
 		}
-	}
 
-	public Toolbar createToolbar(List<PermissibleAction> actions) {
-		Toolbar tb = new Toolbar();
-		tb.setAsButton(true);
-		tb.setActions(actions);
-		tb.setStyleName("table-toolbar alcina-ToolbarSmall clearfix");
-		tb.enableAll(true);
-		return tb;
-	}
+		public Button getCancelButton() {
+			return this.cancelButton;
+		}
 
-	public void popupEdit(Object bean, String title,
-			final PermissibleActionListener okListener) {
-		FlowPanel fp = new FlowPanel();
-		final DialogBox dialog = new GlassDialogBox();
-		dialog.setText(title);
-		dialog.add(fp);
-		setNoCaption(true);
-		setCancelButton(true);
-		PaneWrapperWithObjects view = createBeanView(bean, true,
-				new PermissibleActionListener() {
-					public void vetoableAction(PermissibleActionEvent evt) {
-						dialog.hide();
-						if (evt.getAction().getClass() == ViewAction.class) {
-							okListener.vetoableAction(evt);
-						}
-					}
-				}, false, true);
-		fp.add(view);
-		dialog.center();
-		dialog.show();
+		public Button getSaveButton() {
+			return this.saveButton;
+		}
 	}
 }
