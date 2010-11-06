@@ -91,7 +91,17 @@ public class BrowserMod {
 
 	public static boolean isInternetExplorer() {
 		return getUserAgent().indexOf(Constants.INTERNET_EXPLORER_USER_AGENT) != -1
-				&& !isOpera()&&!isSafari()&&!isChrome();
+				&& !isOpera() && !isSafari() && !isChrome();
+	}
+
+	public static boolean isIE8() {
+		return isInternetExplorer()
+				&& getUserAgent().indexOf(
+						Constants.INTERNET_EXPLORER_8_USER_AGENT) != -1;
+	}
+	public static boolean isIEpre8() {
+		return isInternetExplorer()
+				&& !isIE8();
 	}
 
 	public static boolean isFireFox() {
@@ -113,8 +123,9 @@ public class BrowserMod {
 
 	public static boolean isSafari() {
 		return getUserAgent().indexOf(Constants.SAFARI_USER_AGENT) != -1
-				&& !isOpera()&&!isChrome();
+				&& !isOpera() && !isChrome();
 	}
+
 	public static boolean isChrome() {
 		return getUserAgent().indexOf(Constants.CHROME_USER_AGENT) != -1
 				&& !isOpera();

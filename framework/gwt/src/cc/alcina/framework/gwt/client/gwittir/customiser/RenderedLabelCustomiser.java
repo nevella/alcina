@@ -34,12 +34,10 @@ public class RenderedLabelCustomiser implements Customiser {
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
-		NamedParameter p = NamedParameter.Support.getParameter(info
-				.parameters(), RENDERER_CLASS);
-		Class rendererClass= p.classValue();
-		p = NamedParameter.Support.getParameter(info.parameters(),
-				WIDGET_CSS_CLASS);
-		String widgetCssClass = p == null ? null : p.stringValue();
+		Class rendererClass= NamedParameter.Support.classValue(info
+				.parameters(), RENDERER_CLASS,null);
+		String widgetCssClass = NamedParameter.Support.stringValue(info
+				.parameters(), WIDGET_CSS_CLASS,null);
 		return new RenderedLabelProvider(rendererClass,widgetCssClass);
 	}
 

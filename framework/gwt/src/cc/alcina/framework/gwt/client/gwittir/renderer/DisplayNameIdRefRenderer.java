@@ -18,12 +18,12 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
+	private  Class targetClass;
 
- public class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
-	private final Class targetClass;
 
 	public DisplayNameIdRefRenderer(Class targetClass) {
 		this.targetClass = targetClass;
@@ -34,8 +34,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 			return "0";
 		}
 		Long id = (Long) o;
-		HasIdAndLocalId object = CommonLocator.get().objectLookup()
-				.getObject(targetClass, id, 0);
+		HasIdAndLocalId object = CommonLocator.get().objectLookup().getObject(
+				targetClass, id, 0);
 		String dn = null;
 		if (object != null) {
 			return ClientReflector.get().displayNameForObject(object);

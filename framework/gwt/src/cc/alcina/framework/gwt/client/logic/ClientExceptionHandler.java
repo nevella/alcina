@@ -16,26 +16,20 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 				+ " If the problem recurs, please try refreshing your browser";
 	}
 
-	protected Throwable possiblyWrapJavascriptException(Throwable e) {
-		if (e instanceof JavaScriptException) {
-			JavaScriptException je = (JavaScriptException) e;
-			String errorText = je.getMessage();
-			// if (BrowserMod.isChrome()){
-			// errorText+="\n\nStacktrace: "+je.get
-			// }
-			errorText += extraInfoForExceptionText();
-			e = new WebException("(Wrapped javascript exception) : "
-					+ errorText);
-		}
-		return e;
+	protected Throwable wrapException(Throwable e) {
+		String errorText = e.toString();
+		errorText += extraInfoForExceptionText();
+		return new WebException("(Wrapped GWT exception) : " + errorText);
 	}
-	/*called at points in code where the exception's not actually uncaught,
-	 * but might as well give to centralised "arggh" handler
+
+	/*
+	 * called at points in code where the exception's not actually uncaught, but
+	 * might as well give to centralised "arggh" handler
 	 */
-	
-	public void handleException(Throwable e){
+	public void handleException(Throwable e) {
 		onUncaughtException(e);
 	}
+
 	public void onUncaughtException(Throwable e) {
 		// TODO - 3.02
 		GWT.log("Uncaught exception escaped", e);
@@ -43,9 +37,9 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 			ClientLayerLocator.get().notifications().showError(e);
 		}
 	}
-	public  String extraInfoForExceptionText() {
+
+	public String extraInfoForExceptionText() {
 		return "\n\nUser agent: " + BrowserMod.getUserAgent()
 				+ "\n\nHistory token: " + History.getToken();
 	}
-
 }

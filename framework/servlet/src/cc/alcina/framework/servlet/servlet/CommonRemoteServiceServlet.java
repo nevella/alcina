@@ -20,6 +20,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -435,9 +436,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		request.setClientInstance(CommonRemoteServiceServletSupport.get()
 				.getServerAsClientInstance());
 		request.setRequestId(nextTransformRequestId());
+		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager.get().getTransformsByCommitType(
+				CommitType.TO_LOCAL_BEAN);
 		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
-				TransformManager.get().getTransformsByCommitType(
-						CommitType.TO_LOCAL_BEAN));
+				pendingTransforms);
+		pendingTransforms.clear();
 		if (items.isEmpty()) {
 			return null;
 		}

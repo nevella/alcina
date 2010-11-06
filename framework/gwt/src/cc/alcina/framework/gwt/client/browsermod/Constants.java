@@ -24,6 +24,8 @@ package cc.alcina.framework.gwt.client.browsermod;
 	final static String IMAGES = "/images";
 
 	final static String INTERNET_EXPLORER_USER_AGENT = "MSIE";
+	
+	final static String INTERNET_EXPLORER_8_USER_AGENT = "MSIE8";
 
 	final static String FIREFOX_USER_AGENT = "Firefox";
 

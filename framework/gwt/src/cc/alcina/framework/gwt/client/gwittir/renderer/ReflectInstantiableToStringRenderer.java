@@ -24,9 +24,10 @@ import com.totsp.gwittir.client.ui.Renderer;
  *
  * @param <T>
  */
-public class FlexibleToStringRenderer<T> implements Renderer<T,String> {
+@ClientInstantiable
+public class ReflectInstantiableToStringRenderer<T> implements Renderer<T,String> {
 
-    public static final FlexibleToStringRenderer<Object> INSTANCE = new FlexibleToStringRenderer<Object>();
+    public static final ReflectInstantiableToStringRenderer<Object> INSTANCE = new ReflectInstantiableToStringRenderer<Object>();
 
     public String render(T o) {
         return (o == null) ? "" : o.toString();
