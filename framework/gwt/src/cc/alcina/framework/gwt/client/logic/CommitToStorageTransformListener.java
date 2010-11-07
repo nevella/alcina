@@ -37,7 +37,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.util.Callback;
@@ -327,6 +326,10 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							priorRequestsWithoutResponse.remove(i);
 						}
 					}
+					if (response.getMessage() != null) {
+						ClientLayerLocator.get().notifications().showMessage(
+								response.getMessage());
+					}
 				} finally {
 					tm.setReplayingRemoteEvent(false);
 					if (reloadRequired) {
@@ -337,8 +340,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				}
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().transform(dtr,
-				callback);
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().transform(
+				dtr, callback);
 		dtr.getPriorRequestsWithoutResponse().clear();
 		priorRequestsWithoutResponse.add(dtr);
 		fireStateChanged(COMMITTING);

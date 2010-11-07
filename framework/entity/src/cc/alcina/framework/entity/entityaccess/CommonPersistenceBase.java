@@ -260,10 +260,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return getItemById(clazz, id, false, false);
 	}
 
+	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
+			Collection<Long> ids,InstantiateImplCallback instantiateImplCallback) {
+		String eql = String.format("from %s where  id in %s order by id", clazz
+				.getSimpleName(), EntityUtils.longsToIdClause(ids));
+		List results = getEntityManager().createQuery(eql).getResultList();
+		return new EntityUtils().detachedClone(results,instantiateImplCallback);
+	}
+
 	public <T> T getItemById(Class<T> clazz, Long id, boolean clean,
 			boolean unwrap) {
 		T t = getEntityManager().find(clazz, id);
-		if (t==null){
+		if (t == null) {
 			return t;
 		}
 		if (clean) {

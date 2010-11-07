@@ -33,7 +33,9 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
+import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
+import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 
 /**
  * 
@@ -134,4 +136,8 @@ public interface CommonPersistenceLocal {
 	 * 
 	 */
 	public TransformCache warmupTransformCache();
+
+
+	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz, Collection<Long> ids,
+			InstantiateImplCallback instantiateImplCallback);
 }

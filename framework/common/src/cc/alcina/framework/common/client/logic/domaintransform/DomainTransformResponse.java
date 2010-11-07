@@ -24,6 +24,15 @@ import java.util.List;
 public class DomainTransformResponse implements Serializable {
 	private long requestId;
 
+	private String message;
+	public String getMessage() {
+		return this.message;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
 	public enum DomainTransformResponseResult {
 		OK, FAILURE
 	}

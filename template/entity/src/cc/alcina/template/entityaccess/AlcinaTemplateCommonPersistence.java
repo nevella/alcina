@@ -25,7 +25,6 @@ import cc.alcina.template.cs.persistent.ClientInstanceImpl;
 import cc.alcina.template.cs.persistent.IidImpl;
 import cc.alcina.template.cs.persistent.LogRecord;
 
-
 @Stateless
 public class AlcinaTemplateCommonPersistence
 		extends
@@ -77,6 +76,4 @@ public class AlcinaTemplateCommonPersistence
 	public String getSystemUserName() {
 		return AlcinaTemplateAccessConstants.SYSTEM_USER;
 	}
-
-
 }
