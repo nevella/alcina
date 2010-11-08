@@ -52,7 +52,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			x = idx + 2;
 		}
 		sb.append(s.substring(x));
-		return s.toString();
+		return sb.toString();
 	}
 
 	public void appendTo(DomainTransformEvent domainTransformEvent,
