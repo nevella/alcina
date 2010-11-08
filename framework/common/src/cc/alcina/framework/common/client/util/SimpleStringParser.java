@@ -123,11 +123,14 @@ public class SimpleStringParser {
 	}-*/;
 
 	public static long toLong(String str) {
-		int idx = str.indexOf("::");
+		int idx = str.indexOf("/");
 		if (idx == -1) {
 			return Long.parseLong(str);
 		} else {
-			return longFromBase64(str.substring(idx + 2));
+			if(str.substring(0,idx).contains(".")){
+				return SimpleStringParser20.toLong(str);
+			}
+			return longFromBase64(str.substring(idx + 1));
 		}
 	}
 
