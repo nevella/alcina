@@ -296,10 +296,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			evt.setNewStringValue(value.toString());
 		} else if (value.getClass() == Long.class) {
 			evt.setNewStringValue(SimpleStringParser
-					.longToGwtDoublesToString((Long) value));
+					.toString((Long) value));
 		} else if (value.getClass() == Date.class) {
 			evt.setNewStringValue(SimpleStringParser
-					.longToGwtDoublesToString((((Date) value).getTime())));
+					.toString((((Date) value).getTime())));
 		} else if (value instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;
 			evt.setValueId(hili.getId());
@@ -333,11 +333,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public boolean currentTransformIsDuringCreationRequest() {
 		return currentEvent.getObjectLocalId() != 0;
 	}
+
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
-		return deleteObject(hili,false);
+		return deleteObject(hili, false);
 	}
-	public DomainTransformEvent deleteObject(HasIdAndLocalId hili, boolean generateEventIfObjectNotFound) {
-		if (!generateEventIfObjectNotFound&&getObject(hili) == null) {
+
+	public DomainTransformEvent deleteObject(HasIdAndLocalId hili,
+			boolean generateEventIfObjectNotFound) {
+		if (!generateEventIfObjectNotFound && getObject(hili) == null) {
 			return null;
 		}
 		DomainTransformEvent dte = new DomainTransformEvent();
@@ -1057,8 +1060,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected void removeTransformsForObjects(Collection c) {
-		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
-				.clone();
+		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) getTransformsByCommitType(
+				CommitType.TO_LOCAL_BEAN).clone();
 		for (DomainTransformEvent dte : trs) {
 			if (c.contains(dte.getSource())) {
 				removeTransform(dte);

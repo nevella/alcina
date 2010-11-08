@@ -6,10 +6,12 @@
 	<stylesheet src='Alcina.css?r222' />
 	<!--  gwt2.03 bug see http://dev.vaadin.com/changeset/11707 -->
 	<!-- Safari needs a different implementation due to GWT bug. See #4279 (vaadin trac) -->
+	<!-- 
 	<replace-with class="cc.alcina.framework.gwt.client.widget.CustomWebkitRichTextArea">
 		<when-type-is class="com.google.gwt.user.client.ui.impl.RichTextAreaImpl" />
 		<when-property-is name="user.agent" value="safari" />
 	</replace-with>
+	 -->
 	<public path="public" />
 	<source path="client" />
 </module>

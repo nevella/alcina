@@ -10,13 +10,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.util.SimpleStringParser;
-import cc.alcina.framework.common.client.util.SimpleStringParser;
+import cc.alcina.framework.common.client.util.SimpleStringParser20;
 
 @RegistryLocation(registryPoint = DTRProtocolHandler.class, j2seOnly = false)
 @ClientInstantiable
-public class PlaintextProtocolHandler implements DTRProtocolHandler {
-	public static final String VERSION = "1.1 - plain text, GWT2.1";
+public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
+	public static final String VERSION = "1.0 - plain text";
 
 	private static final String TGT = "tgt: ";
 
@@ -69,11 +68,11 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		sb.append(SRC);
 		sb.append(domainTransformEvent.getObjectClass().getName());
 		sb.append(",");
-		sb.append(SimpleStringParser
-				.toString(domainTransformEvent.getObjectId()));
+		sb.append(SimpleStringParser20
+				.longToGwtDoublesToString(domainTransformEvent.getObjectId()));
 		sb.append(",");
-		sb.append(SimpleStringParser
-				.toString(domainTransformEvent
+		sb.append(SimpleStringParser20
+				.longToGwtDoublesToString(domainTransformEvent
 						.getObjectLocalId()));
 		sb.append(newlineTab);
 		sb.append(PARAMS);
@@ -94,18 +93,18 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		sb.append(domainTransformEvent.getValueClass() == null ? null
 				: domainTransformEvent.getValueClass().getName());
 		sb.append(",");
-		sb.append(SimpleStringParser
-				.toString(domainTransformEvent.getValueId()));
+		sb.append(SimpleStringParser20
+				.longToGwtDoublesToString(domainTransformEvent.getValueId()));
 		sb.append(",");
-		sb.append(SimpleStringParser
-				.toString(domainTransformEvent
+		sb.append(SimpleStringParser20
+				.longToGwtDoublesToString(domainTransformEvent
 						.getValueLocalId()));
 		sb.append("\n");
 	}
 
 	public List<DomainTransformEvent> deserialize(String serializedEvents) {
 		List<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>();
-		SimpleStringParser p = new SimpleStringParser(serializedEvents);
+		SimpleStringParser20 p = new SimpleStringParser20(serializedEvents);
 		String s;
 		while ((s = p.read(getDomainTransformEventMarker(),
 				getDomainTransformEventMarker(), true, false)) != null) {
@@ -114,11 +113,11 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		return items;
 	}
 
-	private SimpleStringParser asyncParser = null;
+	private SimpleStringParser20 asyncParser = null;
 	public String deserialize(String serializedEvents,
 			List<DomainTransformEvent> events, int maxCount) {
 		if (asyncParser==null){
-			asyncParser=new SimpleStringParser(serializedEvents);
+			asyncParser=new SimpleStringParser20(serializedEvents);
 		}
 		int i = 0;
 		String s;
@@ -157,7 +156,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	private DomainTransformEvent fromString(String s) {
 		DomainTransformEvent dte = new DomainTransformEvent();
-		SimpleStringParser p = new SimpleStringParser(s);
+		SimpleStringParser20 p = new SimpleStringParser20(s);
 		String i = p.read(SRC, ",");
 		dte.setObjectClass(classFromName(i));
 		dte.setObjectId(p.readLong("", ","));

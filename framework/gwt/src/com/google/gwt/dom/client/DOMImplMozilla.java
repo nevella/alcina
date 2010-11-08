@@ -18,10 +18,6 @@ package com.google.gwt.dom.client;
 /**
  * Mozilla implementation of StandardBrowser.
  */
-/**
- * patched by Nick - see http://code.google.com/p/google-web-toolkit/issues/detail?id=1909 - 
- * still getting errors (regression)?
- */
 class DOMImplMozilla extends DOMImplStandard {
 
   @Override
@@ -36,6 +32,30 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
+  public NativeEvent createKeyCodeEvent(Document doc, String type,
+      boolean ctrlKey, boolean altKey, boolean shiftKey, boolean metaKey,
+      int keyCode) {
+    return createKeyEventImpl(doc, type, true, true, ctrlKey, altKey, shiftKey,
+        metaKey, keyCode, 0);
+  }
+
+  @Override
+  @Deprecated
+  public NativeEvent createKeyEvent(Document doc, String type,
+      boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
+      boolean shiftKey, boolean metaKey, int keyCode, int charCode) {
+    return createKeyEventImpl(doc, type, canBubble, cancelable, ctrlKey,
+        altKey, shiftKey, metaKey, keyCode, charCode);
+  }
+
+  @Override
+  public NativeEvent createKeyPressEvent(Document doc, boolean ctrlKey,
+      boolean altKey, boolean shiftKey, boolean metaKey, int charCode) {
+    return createKeyEventImpl(doc, "keypress", true, true, ctrlKey, altKey,
+        shiftKey, metaKey, 0, charCode);
+  }
+
+  @Override
   public native int eventGetMouseWheelVelocityY(NativeEvent evt) /*-{
     return evt.detail || 0;
   }-*/;
@@ -46,6 +66,9 @@ class DOMImplMozilla extends DOMImplStandard {
     // elements). Trying to access relatedTarget.nodeName will throw an
     // exception if it's a XUL element.
     var relatedTarget = evt.relatedTarget;
+    if (!relatedTarget) {
+      return null;
+    }
     try {
       var nodeName = relatedTarget.nodeName;
       return relatedTarget;
@@ -79,11 +102,6 @@ class DOMImplMozilla extends DOMImplStandard {
   }-*/;
 
   @Override
-  public native String getInnerText(Element elem) /*-{
-    return elem.textContent;
-  }-*/;
-
-  @Override
   public native int getNodeType(Node node) /*-{
     try {
       return node.nodeType;
@@ -111,16 +129,11 @@ class DOMImplMozilla extends DOMImplStandard {
   public native boolean isOrHasChild(Node parent, Node child) /*-{
     // For more information about compareDocumentPosition, see:
     // http://www.quirksmode.org/blog/archives/2006/01/contains_for_mo.html
-    try{
+      try{
     	return (parent === child) || !!(parent.compareDocumentPosition(child) & 16);
     }catch(ex){
     	return false;
     }
-  }-*/;
-
-  @Override
-  public native void setInnerText(Element elem, String text) /*-{
-    elem.textContent = text || '';
   }-*/;
 
   @Override
@@ -142,6 +155,15 @@ class DOMImplMozilla extends DOMImplStandard {
     outer = tempDiv.innerHTML;
     temp.innerHTML = "";
     return outer;
+  }-*/;
+
+  private native NativeEvent createKeyEventImpl(Document doc, String type,
+      boolean canBubble, boolean cancelable, boolean ctrlKey, boolean altKey,
+      boolean shiftKey, boolean metaKey, int keyCode, int charCode) /*-{
+    var evt = doc.createEvent('KeyEvents');
+    evt.initKeyEvent(type, canBubble, cancelable, null, ctrlKey, altKey,
+      shiftKey, metaKey, keyCode, charCode);
+    return evt;
   }-*/;
 
   private native int getAbsoluteLeftImpl(Element viewport, Element elem) /*-{
@@ -202,3 +224,4 @@ class DOMImplMozilla extends DOMImplStandard {
     return style.direction == 'rtl';
   }-*/;
 }
+
