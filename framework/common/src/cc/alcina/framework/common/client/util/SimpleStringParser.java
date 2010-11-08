@@ -81,7 +81,7 @@ public class SimpleStringParser {
 	public static String toString(long value) {
 		String serLong = GWT.isScript() ? fastMinSerialisedLong(value) : String
 				.valueOf(value);
-		return serLong + "::" + toBase64(value);
+		return serLong + "/" + toBase64(value);
 	}
 
 	private static boolean base64Append(StringBuilder sb, int digit,
