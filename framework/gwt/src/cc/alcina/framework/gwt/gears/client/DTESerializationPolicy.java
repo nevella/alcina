@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.gears.client;
 
-import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler0pt1;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 
 public class DTESerializationPolicy {
-	private String initialObjectPersistenceProtocol = PlaintextProtocolHandler0pt1.VERSION;
+	private String initialObjectPersistenceProtocol = PlaintextProtocolHandler.VERSION;
 
-	private String transformPersistenceProtocol = PlaintextProtocolHandler0pt1.VERSION;
+	private String transformPersistenceProtocol = PlaintextProtocolHandler.VERSION;
 
 	public String getInitialObjectPersistenceProtocol() {
 		return this.initialObjectPersistenceProtocol;

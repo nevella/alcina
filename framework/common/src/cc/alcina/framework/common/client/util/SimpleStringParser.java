@@ -118,7 +118,7 @@ public class SimpleStringParser {
 		if (!value.m&&!value.h){
 			return value.l.toString();
 		}else{
-			return value.l.toString+"(lsbits)";
+			return value.l.toString()+"(lsbits)";
 		}
 	}-*/;
 
