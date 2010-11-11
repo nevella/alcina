@@ -3,8 +3,8 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
-import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.DeferredCommand;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.impl.RichTextAreaImplSafari;
 
@@ -14,7 +14,7 @@ import com.google.gwt.user.client.ui.impl.RichTextAreaImplSafari;
  */
 class CustomWebkitRichTextArea extends RichTextAreaImplSafari {
 	public CustomWebkitRichTextArea() {
-		DeferredCommand.addCommand(new Command() {
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			public void execute() {
 				hookBlur(getElement());
 			}

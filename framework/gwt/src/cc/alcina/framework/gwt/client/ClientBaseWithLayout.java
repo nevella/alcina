@@ -9,10 +9,10 @@ import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventListener;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
-import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Window;
 
@@ -58,7 +58,7 @@ public abstract class ClientBaseWithLayout extends ClientBase implements
 		ClientLayerLocator.get().notifications().metricLogEnd("moduleLoad");
 		LayoutEvents.get().fireLayoutEvent(
 				new LayoutEvent(LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
-		DeferredCommand.addCommand(new Command() {
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			public void execute() {
 				LayoutEvents.get().fireLayoutEvent(
 						new LayoutEvent(

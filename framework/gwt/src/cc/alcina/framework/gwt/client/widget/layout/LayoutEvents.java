@@ -16,8 +16,8 @@ package cc.alcina.framework.gwt.client.widget.layout;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.DeferredCommand;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 /**
  * 
@@ -97,7 +97,7 @@ public class LayoutEvents {
 	}
 
 	public void deferRequiresGlobalRelayout() {
-		DeferredCommand.addCommand(new Command() {
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			public void execute() {
 				fireRequiresGlobalRelayout();
 			}

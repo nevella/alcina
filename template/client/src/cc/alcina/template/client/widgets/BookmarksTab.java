@@ -38,12 +38,12 @@ import cc.alcina.template.cs.AlcinaTemplateHistory;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 import cc.alcina.template.cs.persistent.Bookmark;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.resources.client.ImageResource;
-import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.DeferredCommand;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -172,7 +172,7 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 					TransformManager.get().modifyCollectionProperty(folder,
 							"children", bookmark,
 							CollectionModificationType.ADD);
-					DeferredCommand.addCommand(new Command() {
+					Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 						public void execute() {
 							dtBookmarks.getDataTree().expandAll();
 						}

@@ -12,8 +12,8 @@ import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 
-import com.google.gwt.user.client.Command;
-import com.google.gwt.user.client.DeferredCommand;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 public abstract class ClientHandshakeHelper extends StateListenable implements
 		StateChangeListener {
@@ -53,7 +53,7 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 				ClientMetricLogging.get().setMuted(true);
 			}
 			updateUIPreHello();
-			DeferredCommand.addCommand(new Command() {
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				public void execute() {
 					hello();
 				}
