@@ -11,15 +11,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public enum LogMessageType {
-	INVALID_AUTHENTICATION, TRANSFORM_EXCEPTION, PUBLICATION_EXCEPTION, INFO, CLIENT_EXCEPTION,RPC_EXCEPTION
+public enum LogMessageType {
+	INVALID_AUTHENTICATION, TRANSFORM_EXCEPTION, PUBLICATION_EXCEPTION, INFO,
+	CLIENT_EXCEPTION, RPC_EXCEPTION
 }
