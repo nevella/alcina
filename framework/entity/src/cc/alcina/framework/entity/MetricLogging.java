@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity;
 
 import java.io.StringWriter;
@@ -35,15 +34,16 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
  *
  * @author Nick Reddel
  */
-
- public class MetricLogging {
+public class MetricLogging {
 	public static Logger metricLogger = Logger.getLogger(MetricLogging.class);
+
 	public static final String METRIC_MARKER = "jpmtx1:";
+
 	private Logger perThreadLogger;
 
-	private Map<String, Long> metricStartTimes;
+	private Map<String, Long> metricStart;
 
-	private Map<String, Long> metricStartTimesThreadIds;
+	private Map<String, Long> metricStartThreadIds;
 
 	private Map<String, Long> ticksSum;
 
@@ -72,7 +72,7 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 	private boolean muted = false;
 
 	public static final Layout METRIC_LAYOUT = new PatternLayout("[%d] ["
-	+ METRIC_MARKER + "%c{1}:%X{threadId}] %m%n");
+			+ METRIC_MARKER + "%c{1}:%X{threadId}] %m%n");
 
 	private static ThreadLocal TL = new ThreadLocal() {
 		protected synchronized Object initialValue() {
@@ -120,19 +120,29 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 		end(key, "");
 	}
 
+	public void endMem(String key) {
+		System.gc();
+		end(key, "", false);
+	}
+
 	public void end(String key, String extraInfo) {
+		end(key, extraInfo, true);
+	}
+
+	private void end(String key, String extraInfo, boolean time) {
 		key = keyWithParents(key, true);
-		if (!metricStartTimes.containsKey(key) && !ticksSum.containsKey(key)) {
+		if (!metricStart.containsKey(key) && !ticksSum.containsKey(key)) {
 			System.out.println("Warning - metric end without start - " + key);
 			return;
 		}
-		long elapsed = ticksSum.containsKey(key) ? ticksSum.get(key) / 1000000
-				: System.currentTimeMillis() - metricStartTimes.get(key);
+		long delta = time ? ticksSum.containsKey(key) ? ticksSum.get(key) / 1000000
+				: System.currentTimeMillis() - metricStart.get(key)
+				: Runtime.getRuntime().freeMemory() - metricStart.get(key);
 		ticksSum.remove(key);
-		String message = CommonUtils.format("Metric: %1 - %2 ms%3", key,
-				elapsed, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
-						+ extraInfo);
-		if (useLog4j&&metricLogger!=null) {
+		String units=time?"ms":"bytes";
+		String message = CommonUtils.formatJ("Metric: %s - %s %s%s", key, delta,units,
+				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
+		if (useLog4j && metricLogger != null) {
 			if (!muted) {
 				metricLogger.debug(message);
 				perThreadLogger.info(message);
@@ -145,7 +155,7 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 			sum.put(key, 0L);
 		}
 		averageCount.put(key, averageCount.get(key) + 1);
-		sum.put(key, sum.get(key) + elapsed);
+		sum.put(key, sum.get(key) + delta);
 		terminated.add(key);
 	}
 
@@ -194,8 +204,8 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 			parentThreadId = null;
 			thisLoggerThreadId = getCurrentThreadId();
 		}
-		metricStartTimes = new LinkedHashMap<String, Long>();
-		metricStartTimesThreadIds = new LinkedHashMap<String, Long>();
+		metricStart = new LinkedHashMap<String, Long>();
+		metricStartThreadIds = new LinkedHashMap<String, Long>();
 		sum = new HashMap<String, Long>();
 		averageCount = new HashMap<String, Long>();
 		keyToKeyWithParents = new HashMap<String, String>();
@@ -206,8 +216,14 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 
 	public void start(String key) {
 		key = keyWithParents(key, false);
-		metricStartTimes.put(key, System.currentTimeMillis());
-		metricStartTimesThreadIds.put(key, getCurrentThreadId());
+		metricStart.put(key, System.currentTimeMillis());
+		metricStartThreadIds.put(key, getCurrentThreadId());
+	}
+
+	public void startMem(String key) {
+		key = keyWithParents(key, false);
+		metricStart.put(key, Runtime.getRuntime().freeMemory());
+		metricStartThreadIds.put(key, getCurrentThreadId());
 	}
 
 	public void startTicks(String key) {
@@ -224,8 +240,8 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 			return keyToKeyWithParents.get(key);
 		}
 		String withParents = "";
-		for (String parentKey : metricStartTimes.keySet()) {
-			Long tid = metricStartTimesThreadIds.get(parentKey);
+		for (String parentKey : metricStart.keySet()) {
+			Long tid = metricStartThreadIds.get(parentKey);
 			if (!terminated.contains(parentKey)
 					&& (tid.equals(thisLoggerThreadId) || tid
 							.equals(getCurrentThreadId()))) {

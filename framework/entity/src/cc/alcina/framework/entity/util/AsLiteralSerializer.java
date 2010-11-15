@@ -58,10 +58,27 @@ public class AsLiteralSerializer {
 						.getSuperclass() == java.lang.Enum.class);
 	}
 
+	private boolean isEnumSubClass(Class c) {
+		return (c.getSuperclass() != null && !c.isEnum() && c.getSuperclass()
+				.getSuperclass() == java.lang.Enum.class);
+	}
+
+	private Class getEnumExt(Class c) {
+		if (c.getSuperclass() != null
+				&& c.getSuperclass().getSuperclass() == java.lang.Enum.class) {
+			return c.getSuperclass();
+		}
+		return null;
+	}
+
 	public String generate(Object source) throws Exception {
 		// traverse
 		traverse(source, null);
+		reachedClasses.remove(null);
 		for (Class c : reachedClasses) {
+			if (isEnumSubClass(c)) {
+				continue;
+			}
 			composerFactory.addImport(c.getName().replace("$", "."));
 		}
 		StringWriter stringWriter = new StringWriter();
@@ -75,16 +92,33 @@ public class AsLiteralSerializer {
 			Class<? extends Object> valueClass = inst.value.getClass();
 			String className = getClassName(valueClass);
 			if (isEnumExt(valueClass) || inst.value instanceof Class) {
-				sw.println(String.format("%s %s= %s;", className,
+				sw.println(String.format("%s %s;", className,
 						getObjLitRef(inst), getLiteralValue(inst.value)));
 			} else {
-				sw.println(String.format("%s %s= new %s (%s);", className,
+				sw.println(String.format("%s %s;", className,
 						getObjLitRef(inst), className,
 						getLiteralValue(inst.value)));
 			}
 		}
 		StringBuffer mainCall = new StringBuffer();
 		newCall(mainCall, sw, false);
+		for (OutputInstantiation inst : insts) {
+			Class<? extends Object> valueClass = inst.value.getClass();
+			String className = getClassName(valueClass);
+			String add = null;
+			if (isEnumExt(valueClass) || inst.value instanceof Class) {
+				add = (String.format(" %s= %s;", getObjLitRef(inst),
+						getLiteralValue(inst.value)));
+			} else {
+				add = (String.format(" %s= new %s (%s);", getObjLitRef(inst),
+						className, getLiteralValue(inst.value)));
+			}
+			sw.println(add);
+			methodLengthCounter += add.length() + 1;
+			if (methodLengthCounter > 20000) {
+				newCall(mainCall, sw, true);
+			}
+		}
 		for (OutputInstantiation inst : addToCollnMap.keySet()) {
 			List<OutputInstantiation> elts = addToCollnMap.get(inst);
 			for (OutputInstantiation elt : elts) {
@@ -175,6 +209,9 @@ public class AsLiteralSerializer {
 	}
 
 	private String getClassName(Class<? extends Object> clazz) {
+		if (isEnumSubClass(clazz)) {
+			clazz = clazz.getSuperclass();
+		}
 		return clazz.getSimpleName();
 	}
 
@@ -241,8 +278,10 @@ public class AsLiteralSerializer {
 		reached.put(source, instance);
 		Class c = source.getClass();
 		reachedClasses.add(c);
+		reachedClasses.add(getEnumExt(c));
 		if (source instanceof Class) {
 			reachedClasses.add((Class) source);
+			reachedClasses.add(getEnumExt((Class) source));
 		}
 		if (isSimple(source)) {
 			return instance;
