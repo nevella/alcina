@@ -23,7 +23,7 @@ import java.util.Comparator;
  */
 
  public class CollectionSizeComparator implements Comparator<Collection>{
-	
+	public static final CollectionSizeComparator INSTANCE = new CollectionSizeComparator();
 	public int compare(Collection o1, Collection o2) {
 		if (o1 == null) {
 			return o2 == null ? 0 : -1;
