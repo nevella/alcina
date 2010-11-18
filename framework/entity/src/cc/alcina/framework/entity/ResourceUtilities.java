@@ -42,10 +42,14 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.Map.Entry;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
@@ -59,12 +63,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  */
 public class ResourceUtilities {
-
 	public static void appShutdown() {
 		customProperties.clear();
 	}
 
-	private static List<Properties> customProperties= new ArrayList<Properties>();
+	private static Map<String, String> customProperties = Collections
+			.synchronizedMap(new LinkedHashMap<String, String>());
 
 	public static void registerCustomProperties(InputStream ios) {
 		try {
@@ -72,11 +76,21 @@ public class ResourceUtilities {
 			if (ios != null) {
 				p.load(ios);
 				ios.close();
-				customProperties.add(p);
+				registerCustomProperties(p);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+
+	public static void registerCustomProperties(Properties p) {
+		for (Entry<Object, Object> entry : p.entrySet()) {
+			Object key = entry.getKey();
+			Object value = entry.getValue();
+			if (!(key instanceof String) || !(value instanceof String)) {
+				continue;
+			}
+			customProperties.put((String) key, (String) value);
 		}
 	}
 
@@ -89,17 +103,22 @@ public class ResourceUtilities {
 		String s = getBundledString(clazz, propertyName);
 		return Boolean.valueOf(s);
 	}
+
 	public static String readUrlAsString(String strUrl) throws Exception {
 		return readUrlAsString(strUrl, null);
 	}
-	public static String readUrlAsString(String strUrl,String charset) throws Exception {
+
+	public static String readUrlAsString(String strUrl, String charset)
+			throws Exception {
 		URL url = new URL(strUrl);
-		InputStream is=null;
+		InputStream is = null;
 		is = url.openConnection().getInputStream();
-		String input = readStreamToString(is,charset);
+		String input = readStreamToString(is, charset);
 		return input;
 	}
-	public static int getInteger(Class clazz, String propertyName, int defaultValue) {
+
+	public static int getInteger(Class clazz, String propertyName,
+			int defaultValue) {
 		try {
 			String s = getBundledString(clazz, propertyName);
 			return Integer.valueOf(s);
@@ -109,13 +128,11 @@ public class ResourceUtilities {
 	}
 
 	public static String getBundledString(Class clazz, String propertyName) {
-		for (Properties p : customProperties) {
-			String namespacedKey = (clazz == null) ? propertyName : clazz
-					.getSimpleName()
-					+ "." + propertyName;
-			if (p.containsKey(namespacedKey)) {
-				return p.getProperty(namespacedKey);
-			}
+		String namespacedKey = (clazz == null) ? propertyName : clazz
+				.getSimpleName()
+				+ "." + propertyName;
+		if (customProperties.containsKey(namespacedKey)) {
+			return customProperties.get(namespacedKey);
 		}
 		ResourceBundle b = ResourceBundle.getBundle(clazz.getPackage()
 				.getName()
