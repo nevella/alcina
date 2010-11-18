@@ -39,7 +39,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
  */
 public abstract class SearchDefinition extends WrapperPersistable implements
 		Serializable, TreeRenderable, ContentDefinition,
-		HasPermissionsValidation {
+		HasPermissionsValidation, HasEquivalence<SearchDefinition> {
 	transient final String orderJoin = ", ";
 
 	private int resultsPerPage;
@@ -104,6 +104,28 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 		ewp.eql = sb.toString();
 		return ewp;
+	}
+
+	public boolean equivalentTo(SearchDefinition other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		List<CriteriaGroup> otherCriteriaGroups = new ArrayList<CriteriaGroup>(
+				other.getCriteriaGroups());
+		for (CriteriaGroup cg : getCriteriaGroups()) {
+			boolean foundEquiv = false;
+			for (CriteriaGroup otherCg : otherCriteriaGroups) {
+				if (cg.equivalentTo(otherCg)) {
+					otherCriteriaGroups.remove(otherCg);
+					foundEquiv = true;
+					break;
+				}
+			}
+			if (!foundEquiv) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public String filterDescription(boolean html) {

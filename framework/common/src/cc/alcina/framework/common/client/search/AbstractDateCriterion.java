@@ -15,6 +15,8 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Date;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 /**
  * 
  * @author Nick Reddel
@@ -37,6 +39,16 @@ public class AbstractDateCriterion extends SearchCriterion {
 
 	public AbstractDateCriterion(String displayName) {
 		super(displayName);
+	}
+
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		AbstractDateCriterion otherImpl = (AbstractDateCriterion) other;
+		return otherImpl.getDirection() == getDirection()
+				&& CommonUtils.equalsWithNullEquality(getDate(), otherImpl
+						.getDate());
 	}
 
 	public void setDate(Date date) {

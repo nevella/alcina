@@ -28,6 +28,15 @@ public class PersistentObjectCriterion extends SearchCriterion {
 		result.parameters.add(classRef.getId());
 		return result;
 	}
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		PersistentObjectCriterion otherImpl = (PersistentObjectCriterion) other;
+		return otherImpl.getDirection() == getDirection()
+				&& CommonUtils.equalsWithNullEquality(getClassRef(), otherImpl
+						.getClassRef());
+	}
 
 	@Override
 	public String toString() {

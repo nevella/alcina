@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
@@ -31,14 +30,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.totsp.gwittir.client.ui.Renderer;
 
-
 @MappedSuperclass
 /**
  *
  * @author Nick Reddel
  */
-
- public abstract class ClassRef implements Serializable,HasIdAndLocalId {
+public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 	private static Map<String, ClassRef> refMap = new HashMap<String, ClassRef>();
 
 	public static ClassRef forClass(Class clazz) {
@@ -66,20 +63,25 @@ import com.totsp.gwittir.client.ui.Renderer;
 		}
 		return null;
 	}
-	public static void remove(ClassRef ref){
+
+	public static void remove(ClassRef ref) {
 		refMap.remove(ref.getRefClassName());
 	}
+
 	public static void add(Collection<? extends ClassRef> refs) {
 		for (ClassRef classRef : refs) {
 			refMap.put(classRef.getRefClassName(), classRef);
 		}
 	}
-	public static Set<ClassRef> all(){
+
+	public static Set<ClassRef> all() {
 		return new LinkedHashSet<ClassRef>(refMap.values());
 	}
+
 	private String refClassName;
 
 	private transient Class refClass;
+
 	@Transient
 	public abstract long getId();
 
@@ -106,30 +108,34 @@ import com.totsp.gwittir.client.ui.Renderer;
 
 	public void setRefClass(Class refClass) {
 		this.refClass = refClass;
-		this.refClassName = (refClass == null) ? null : this.refClass.getName();//.replace('$', '.');
+		this.refClassName = (refClass == null) ? null : this.refClass.getName();// .replace('$',
+																				// '.');
 	}
 
 	public void setRefClassName(String refClassName) {
 		this.refClassName = refClassName;
 	}
+
 	@Transient
 	/**
 	 * Here for HasIdAndLocalId compatibility, but always 0 since always server-generated
 	 */
-	public long getLocalId(){
+	public long getLocalId() {
 		return 0;
 	}
 
-	public void setLocalId(long localId){
-		//noop. 
-	}
-	public static class ClassRefSimpleNameRenderer implements Renderer<ClassRef,String>{
-public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
-		public String render(ClassRef o) {
-			// TODO Auto-generated method stub
-			return o==null?"(undefined)":CommonUtils.simpleClassName(o.getRefClass());
-		}
-		
+	public void setLocalId(long localId) {
+		// noop.
 	}
 
+	public static class ClassRefSimpleNameRenderer implements
+			Renderer<ClassRef, String> {
+		public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
+
+		public String render(ClassRef o) {
+			// TODO Auto-generated method stub
+			return o == null ? "(undefined)" : CommonUtils.simpleClassName(o
+					.getRefClass());
+		}
+	}
 }

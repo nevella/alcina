@@ -4,10 +4,10 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		SearchCriterion implements HasId {
-
 	private long id;
 
 	private String displayText;
@@ -28,6 +28,15 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		return value;
 	}
 
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		TruncatedObjectCriterion otherImpl = (TruncatedObjectCriterion) other;
+		return otherImpl.getDirection() == getDirection()
+				&& getId() == otherImpl.getId();
+	}
+
 	public void setDisplayText(String displayText) {
 		this.displayText = displayText;
 	}
@@ -41,12 +50,12 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		if (value != null) {
 			setId(value.getId());
 			setDisplayText(getDisplayTextFor(value));
-		}else{
+		} else {
 			setId(0);
 		}
 	}
 
-	protected  String getDisplayTextFor(E value) {
-		return value==null?null:value.toString();
+	protected String getDisplayTextFor(E value) {
+		return value == null ? null : value.toString();
 	}
 }

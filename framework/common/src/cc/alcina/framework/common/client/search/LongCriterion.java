@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 
 /**
  * 
@@ -35,6 +37,15 @@ public class LongCriterion extends SearchCriterion {
 
 	public void setValue(Long value) {
 		this.value = value;
+	}
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		LongCriterion otherImpl = (LongCriterion) other;
+		return otherImpl.getDirection() == getDirection()
+				&& CommonUtils.equalsWithNullEquality(getValue(), otherImpl
+						.getValue());
 	}
 
 	public Long getValue() {

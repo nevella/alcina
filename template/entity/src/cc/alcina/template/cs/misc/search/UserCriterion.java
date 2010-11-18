@@ -3,8 +3,11 @@ package cc.alcina.template.cs.misc.search;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.search.AbstractDateCriterion;
 import cc.alcina.framework.common.client.search.AbstractUserCriterion;
 import cc.alcina.framework.common.client.search.EqlWithParameters;
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 public class UserCriterion extends AbstractUserCriterion {
@@ -37,6 +40,16 @@ public class UserCriterion extends AbstractUserCriterion {
 		result.eql = getTargetPropertyName() + ".id = ? ";
 		result.parameters.add(getUserId());
 		return result;
+	}
+
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		UserCriterion otherImpl = (UserCriterion) other;
+		return otherImpl.getDirection() == getDirection()
+				&& CommonUtils.equalsWithNullEquality(getUserId(), otherImpl
+						.getUserId());
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "AlcinaTemplate user", orderingHint = 10))

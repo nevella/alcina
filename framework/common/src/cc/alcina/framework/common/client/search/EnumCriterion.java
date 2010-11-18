@@ -41,6 +41,16 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	public EnumCriterion() {
 	}
 
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		EnumCriterion otherImpl = (EnumCriterion) other;
+		return otherImpl.getDirection() == getDirection()
+				&& otherImpl.isWithNull() == isWithNull()
+				&& otherImpl.getValue() == getValue();
+	}
+
 	/**
 	 * If the enum is serialised in the db as a string, set to true
 	 */

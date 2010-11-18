@@ -26,7 +26,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 @BeanInfo(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-public abstract class SearchCriterion extends BaseBindable implements TreeRenderable {
+public abstract class SearchCriterion extends BaseBindable implements TreeRenderable, HasEquivalence<SearchCriterion> {
 	// TODO: great big injection hole here - should be checked server-side
 	//FIXED: - transient, and set in the server validation phase
 	private transient String targetPropertyName;

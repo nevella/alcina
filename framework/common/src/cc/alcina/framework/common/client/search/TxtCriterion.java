@@ -11,18 +11,16 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class TxtCriterion extends SearchCriterion {
+public class TxtCriterion extends SearchCriterion {
 	@ClientInstantiable
 	public static enum TxtCriterionType {
 		CONTAINS, EQUALS, EQUALS_OR_LIKE
@@ -38,6 +36,17 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	public String getText() {
 		return text;
+	}
+
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other instanceof TxtCriterion) {
+			TxtCriterion otherT = (TxtCriterion) other;
+			return otherT.getDirection() == getDirection()
+					&& otherT.getTxtCriterionType() == getTxtCriterionType()
+					&& CommonUtils.equalsWithNullEquality(getText(), otherT
+							.getText());
+		}
+		return false;
 	}
 
 	@Override
@@ -65,7 +74,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		return result;
 	}
 
-	
 	public void setTxtCriterionType(TxtCriterionType txtCriterionType) {
 		this.txtCriterionType = txtCriterionType;
 	}

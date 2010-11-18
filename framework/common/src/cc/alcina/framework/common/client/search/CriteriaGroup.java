@@ -13,8 +13,10 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlTransient;
@@ -29,7 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 @BeanInfo(displayNamePropertyName = "displayName")
@@ -40,7 +41,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
  */
 public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		BaseBindable implements TreeRenderable, Permissible,
-		HasPermissionsValidation {
+		HasPermissionsValidation, HasEquivalence<CriteriaGroup> {
 	private transient String displayName;
 
 	private FilterCombinator combinator = FilterCombinator.AND;
@@ -51,32 +52,52 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 
 	public CriteriaGroup() {
 	}
-//
-//	@Override
-//	public boolean equals(Object obj) {
-//		if (obj != null && obj.getClass() == getClass()) {
-//			CriteriaGroup cg = (CriteriaGroup) obj;
-//			return criteria.equals(cg.criteria) && combinator == cg.combinator;
-//		}
-//		return super.equals(obj);
-//	}
-//
-	//Duh
-//	@Override
-//	public int hashCode() {
-//		int h = getClass().hashCode() ^ combinator.hashCode();
-//		for (SC c : criteria) {
-//			h ^= c.hashCode();
-//		}
-//		return h;
-//	}
+
+	//
+	// @Override
+	// public boolean equals(Object obj) {
+	// if (obj != null && obj.getClass() == getClass()) {
+	// CriteriaGroup cg = (CriteriaGroup) obj;
+	// return criteria.equals(cg.criteria) && combinator == cg.combinator;
+	// }
+	// return super.equals(obj);
+	// }
+	//
+	// Duh
+	// @Override
+	// public int hashCode() {
+	// int h = getClass().hashCode() ^ combinator.hashCode();
+	// for (SC c : criteria) {
+	// h ^= c.hashCode();
+	// }
+	// return h;
+	// }
+	public boolean equivalentTo(CriteriaGroup other) {
+		if (other == null || other.getClass() != getClass()
+				|| other.getEntityClass() != getEntityClass()
+				|| other.getCombinator() != getCombinator()
+				|| other.getCriteria().size() != getCriteria().size()) {
+			return false;
+		}
+		List<SC> otherCriteria = new ArrayList<SC>(other.getCriteria());
+		for (SC sc : getCriteria()) {
+			boolean foundEquiv=false;
+			for(SC otherCriterion:otherCriteria){
+				if (sc.equivalentTo(otherCriterion)){
+					otherCriteria.remove(otherCriterion);
+					foundEquiv=true;
+					break;
+				}
+			}
+			if (!foundEquiv){
+				return false;
+			}
+		}
+		return true;
+	}
 
 	public boolean provideIsEmpty() {
 		return getCriteria().isEmpty();
-	}
-
-	public CollectionFilter getFilter() {
-		return null;
 	}
 
 	public void addCriterion(SC criterion) {

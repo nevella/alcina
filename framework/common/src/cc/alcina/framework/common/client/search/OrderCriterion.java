@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 /**
  * 
  * @author Nick Reddel
@@ -21,5 +23,12 @@ public class OrderCriterion extends SearchCriterion {
 	public String addDirection(String criterionName) {
 		return criterionName == null || getDirection() == Direction.ASCENDING ? criterionName
 				: criterionName + " (reverse)";
+	}
+
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		return other.getDirection() == getDirection();
 	}
 }
