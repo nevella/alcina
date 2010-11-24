@@ -28,23 +28,23 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestTagProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
 
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
@@ -61,7 +61,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
 
-	private Timer queueingFinishedTimer;
+	private TimerWrapper queueingFinishedTimer;
 
 	private long lastQueueAddMillis;
 
@@ -106,20 +106,24 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			transformQueue.add(evt);
 			lastQueueAddMillis = new Date().getTime();
 			if (queueingFinishedTimer == null) {
-				queueingFinishedTimer = new Timer() {
-					long timerAddedMillis = lastQueueAddMillis;
-
-					@Override
-					public void run() {
-						if (lastQueueAddMillis - timerAddedMillis == 0) {
-							commit();
-						}
-						timerAddedMillis = lastQueueAddMillis;
-					}
-				};
+				queueingFinishedTimer = ClientLayerLocator.get()
+						.timerWrapperProvider()
+						.getTimer(new CommitLoopRunnable());
 				queueingFinishedTimer.scheduleRepeating(DELAY_MS);
 			}
 			return;
+		}
+	}
+
+	class CommitLoopRunnable implements Runnable {
+		long timerAddedMillis = lastQueueAddMillis;
+
+		@Override
+		public void run() {
+			if (lastQueueAddMillis - timerAddedMillis == 0) {
+				commit();
+			}
+			timerAddedMillis = lastQueueAddMillis;
 		}
 	}
 
@@ -256,22 +260,18 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							DomainTransformEvent idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectLocalId(dte.getObjectLocalId());
-							idEvt
-									.setPropertyName(TransformManager.ID_FIELD_NAME);
+							idEvt.setPropertyName(TransformManager.ID_FIELD_NAME);
 							idEvt.setValueClass(Long.class);
-							idEvt
-									.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+							idEvt.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 							idEvt.setNewStringValue(String.valueOf(id));
 							synthesisedEvents.add(idEvt);
 							idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectId(id);
-							idEvt
-									.setPropertyName(TransformManager.LOCAL_ID_FIELD_NAME);
+							idEvt.setPropertyName(TransformManager.LOCAL_ID_FIELD_NAME);
 							idEvt.setNewStringValue("0");
 							idEvt.setValueClass(Long.class);
-							idEvt
-									.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+							idEvt.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 							synthesisedEvents.add(idEvt);
 							localToServerIds.put(dte.getObjectLocalId(), id);
 						}
@@ -284,13 +284,11 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							DomainTransformEvent idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectId(id);
-							idEvt
-									.setPropertyName(TransformManager.VERSION_FIELD_NAME);
+							idEvt.setPropertyName(TransformManager.VERSION_FIELD_NAME);
 							idEvt.setNewStringValue(String.valueOf(dte
 									.getObjectVersionNumber()));
 							idEvt.setValueClass(Integer.class);
-							idEvt
-									.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+							idEvt.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 							synthesisedEvents.add(idEvt);
 						}
 					}
@@ -327,8 +325,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 						}
 					}
 					if (response.getMessage() != null) {
-						ClientLayerLocator.get().notifications().showMessage(
-								response.getMessage());
+						ClientLayerLocator.get().notifications()
+								.showMessage(response.getMessage());
 					}
 				} finally {
 					tm.setReplayingRemoteEvent(false);
@@ -340,8 +338,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				}
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().transform(
-				dtr, callback);
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+				.transform(dtr, callback);
 		dtr.getPriorRequestsWithoutResponse().clear();
 		priorRequestsWithoutResponse.add(dtr);
 		fireStateChanged(COMMITTING);

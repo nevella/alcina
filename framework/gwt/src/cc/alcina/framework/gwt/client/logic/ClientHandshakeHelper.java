@@ -44,7 +44,9 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 	public void setLoginResponse(LoginResponse loginResponse) {
 		this.loginResponse = loginResponse;
 	}
-
+	public boolean permitsOfflineWithEmptyTransforms(){
+		return false;
+	}
 	public void stateChanged(Object source, String newState) {
 		if (newState.equals(STATE_PRE_HELLO)) {
 			boolean logLoadMetrics = AlcinaDebugIds
@@ -53,17 +55,21 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 				ClientMetricLogging.get().setMuted(true);
 			}
 			updateUIPreHello();
-			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-				public void execute() {
-					hello();
-				}
-			});
+			doHello();
 		}
 		if (newState.equals(STATE_DOMAIN_MODEL_REGISTERED)) {
 			ClientMetricLogging.get().setMuted(false);
 			afterDomainModelRegistration();
 			fireStateChanged(STATE_AFTER_DOMAIN_MODEL_REGISTERED);
 		}
+	}
+
+	protected void doHello() {
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+			public void execute() {
+				hello();
+			}
+		});
 	}
 
 	protected void updateUIPreHello() {
@@ -87,8 +93,7 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 		registerClientObjectListeners(true);
 		ClientLayerLocator.get().setGeneralProperties(
 				objects.getGeneralProperties());
-		DevCSSHelper.get().addCssListeners(
-				ClientLayerLocator.get().getGeneralProperties());
+		
 		PermissionsManager.get().setUser(objects.getCurrentUser());
 		ClientLayerLocator.get().setDomainModelHolder(objects);
 		if (!TransformManager.get().isReplayingRemoteEvent()) {
@@ -99,9 +104,16 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 				locallyPersistDomainModelAndReplayPostLoadTransforms(loginState);
 			}
 		}
-		ContentProvider.refresh();
+		registerObjectsPostDomainLoad();
 		PermissionsManager.get().setLoginState(loginState);
 	}
+
+	protected void registerObjectsPostDomainLoad() {
+		DevCSSHelper.get().addCssListeners(
+				ClientLayerLocator.get().getGeneralProperties());
+		ContentProvider.refresh();
+	}
+
 
 	/**
 	 * see <tt>ClientHandshakeHelperWithLocalPersistence</tt>

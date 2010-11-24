@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.impl.jboss;
 
 import java.net.URL;
@@ -25,13 +24,11 @@ import org.jboss.virtual.VirtualFileFilter;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class JBossSupport {
+public class JBossSupport {
 	public static void install() {
 		ClasspathScanner.installVisitor(VFSClasspathVisitor.class);
 	}
@@ -58,7 +55,8 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
 						}
 					});
 			for (VirtualFile file : children) {
-				String pathName = file.getPathName().substring(root.getPathName().length()+1);
+				String pathName = file.getPathName().substring(
+						root.getPathName().length() + 1);
 				if (pathName.endsWith(".class")) {
 					String cName = pathName.substring(0, pathName.length() - 6)
 							.replace('/', '.');

@@ -37,7 +37,7 @@ import com.google.gwt.gears.client.database.ResultSet;
  *
  * @author Nick Reddel
  */
-public class GearsTransformPersistence extends LocalTransformPersistence {
+public class GearsTransformPersistence extends LocalTransformPersistenceGwt {
 	private Factory factory;
 
 	private Database db;

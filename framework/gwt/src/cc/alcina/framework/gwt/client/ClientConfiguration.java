@@ -13,6 +13,7 @@ import cc.alcina.framework.gwt.client.logic.ClientUTCDateProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.provider.ClientURLComponentEncoder;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
+import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderGwt;
 
 public class ClientConfiguration {
 	public void initServices() {
@@ -60,6 +61,7 @@ public class ClientConfiguration {
 		CommonLocator.get().registerPropertyAccessor(GwittirBridge.get());
 		CommonLocator.get().registerCurrentUtcDateProvider(
 				new ClientUTCDateProvider());
+		
 		DataImageProvider.register(StandardDataImageProvider
 				.standardDipInstance());
 		TransformManager.get().setupClientListeners();
@@ -67,6 +69,7 @@ public class ClientConfiguration {
 				PermissionsManager.get());
 		ClientLayerLocator.get().setCommitToStorageTransformListener(
 				createStorageTransformListener());
+		ClientLayerLocator.get().registerTimerWrapperProvider(new TimerWrapperProviderGwt());
 		registerExtraTransformListenersPreStorage();
 		TransformManager.get().addDomainTransformListener(
 				ClientLayerLocator.get().getCommitToStorageTransformListener());

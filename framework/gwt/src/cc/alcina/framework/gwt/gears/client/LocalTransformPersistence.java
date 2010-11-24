@@ -62,7 +62,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * 
  */
 public abstract class LocalTransformPersistence implements StateChangeListener,
-		ClientTransformManager.PersistableTransformListener, ClosingHandler {
+		ClientTransformManager.PersistableTransformListener {
 	private DTESerializationPolicy serializationPolicy;
 
 	private boolean localStorageInstalled = false;
@@ -89,7 +89,9 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	public DTESerializationPolicy getSerializationPolicy() {
 		return serializationPolicy;
 	}
-	public abstract void clearPersistedClient(ClientInstance exceptFor) ;
+
+	public abstract void clearPersistedClient(ClientInstance exceptFor);
+
 	public void setCommitToStorageTransformListener(
 			CommitToStorageTransformListener commitToStorageTransformListener) {
 		this.commitToStorageTransformListener = commitToStorageTransformListener;
@@ -127,8 +129,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			}
 			DomainTransformRequest rq = new DomainTransformRequest();
 			rq.setClientInstance(ClientLayerLocator.get().getClientInstance());
-			rq
-					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
+			rq.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 			rq.setRequestId(0);
 			rq.setItems(new ArrayList<DomainTransformEvent>(
 					getCommitToStorageTransformListener()
@@ -148,10 +149,10 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		ClientInstance clientInstance = ClientLayerLocator.get()
 				.getClientInstance();
 		DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(0,
-				mixedHelper.getBuilder().getRpcResult(), System
-						.currentTimeMillis(), PermissionsManager.get()
-						.getUserId(), clientInstance.getId(), 0, clientInstance
-						.getAuth(),
+				mixedHelper.getBuilder().getRpcResult(),
+				System.currentTimeMillis(), PermissionsManager.get()
+						.getUserId(), clientInstance.getId(), 0,
+				clientInstance.getAuth(),
 				DomainTransformRequestType.CLIENT_OBJECT_LOAD,
 				GwtRpcProtocolHandler.VERSION, "");
 		persist(wrapper);
@@ -211,8 +212,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 					public void onSuccess(Void result) {
 						hideDialog();
 						clearAllPersisted();
-						Window
-								.alert("Save work from previous session to server completed");
+						Window.alert("Save work from previous session to server completed");
 						cb.callback(null);
 					}
 
@@ -303,16 +303,22 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	protected void showOfflineLimitMessage() {
-		ClientLayerLocator.get().notifications().showError(
-				"Unable to open offline session",
-				new Exception("Only one tab may be open "
-						+ "for this application when opening offline. "));
+		ClientLayerLocator
+				.get()
+				.notifications()
+				.showError(
+						"Unable to open offline session",
+						new Exception("Only one tab may be open "
+								+ "for this application when opening offline. "));
 	}
 
 	protected void showUnableToLoadOfflineMessage() {
-		ClientLayerLocator.get().notifications().showMessage(
-				"<b>Unable to open offline session</b><br><br>"
-						+ "No data saved");
+		ClientLayerLocator
+				.get()
+				.notifications()
+				.showMessage(
+						"<b>Unable to open offline session</b><br><br>"
+								+ "No data saved");
 	}
 
 	public boolean shouldPersistClient(boolean clientSupportsRpcPersistence)
@@ -331,34 +337,53 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			MixedGwtTransformHelper mixedHelper) throws MixedGwtLoadException {
 		try {
 			List<DTRSimpleSerialWrapper> loads = getTransforms(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
-			if (loads.size() == 0 ) {
-				throw new MixedGwtLoadException("Hmm...our load disappeared. Dang. ",false);
+			if (loads.size() == 0) {
+				throw new MixedGwtLoadException(
+						"Hmm...our load disappeared. Dang. ", false);
 			}
 			DTRSimpleSerialWrapper rpcWrapper = loads.get(0);
-			if (rpcWrapper.getUserId()!=PermissionsManager.get().getUserId()){
-				throw new MixedGwtLoadException("Hmm...our load was hijacked by another user. Dang. ",false);
+			if (rpcWrapper.getUserId() != PermissionsManager.get().getUserId()) {
+				throw new MixedGwtLoadException(
+						"Hmm...our load was hijacked by another user. Dang. ",
+						false);
 			}
-			reparentToClientInstance(rpcWrapper,ClientLayerLocator.get().getClientInstance());
+			reparentToClientInstance(rpcWrapper, ClientLayerLocator.get()
+					.getClientInstance());
 			persistInitialRpcPayload(mixedHelper);
 		} catch (Exception e) {
 			MixedGwtLoadException lex = null;
 			lex = (MixedGwtLoadException) ((e instanceof MixedGwtLoadException) ? e
 					: new MixedGwtLoadException(e));
-				throw lex; 
+			throw lex;
 		}
 	}
 
-	protected abstract void reparentToClientInstance(DTRSimpleSerialWrapper wrapper,
-			ClientInstance clientInstance) ;
+	protected abstract void reparentToClientInstance(
+			DTRSimpleSerialWrapper wrapper, ClientInstance clientInstance);
+
 	public List<DTRSimpleSerialWrapper> openAvailableSessionTransformsForOfflineLoad(
 			boolean finalPass) {
 		return openAvailableSessionTransformsForOfflineLoad(finalPass, true);
 	}
+
+	public List<DTRSimpleSerialWrapper> openAvailableSessionTransformsForOfflineLoadNeverOnline() {
+		try {
+			List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
+			transforms.addAll(getTransforms(new DomainTransformRequestType[] {
+					DomainTransformRequestType.TO_REMOTE_COMPLETED,
+					DomainTransformRequestType.TO_REMOTE,
+					DomainTransformRequestType.CLIENT_SYNC }));
+			return transforms;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public List<DTRSimpleSerialWrapper> openAvailableSessionTransformsForOfflineLoad(
 			boolean finalPass, boolean checkSoleOpenTab) {
 		try {
 			List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
-			if (checkSoleOpenTab&&!ClientSession.get().isSoleOpenTab()) {
+			if (checkSoleOpenTab && !ClientSession.get().isSoleOpenTab()) {
 				if (finalPass) {
 					showOfflineLimitMessage();
 				}
@@ -415,10 +440,5 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	public LocalTransformPersistence() {
-		Window.addWindowClosingHandler(this);
-	}
-
-	public void onWindowClosing(ClosingEvent event) {
-		setClosing(true);
 	}
 }

@@ -8,12 +8,12 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientMetricLogging;
-import cc.alcina.framework.gwt.gears.client.SerializedDomainLoader;
+import cc.alcina.framework.gwt.gears.client.GwtSerializedDomainLoader;
 import cc.alcina.template.client.AlcinaTemplateClient;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjectsSerializationHelper;
 
-public class AlcinaTemplateSerializedDomainLoader extends SerializedDomainLoader {
+public class AlcinaTemplateSerializedDomainLoader extends GwtSerializedDomainLoader {
 	@Override
 	public DomainModelHolder createDummyModel() {
 		return new AlcinaTemplateObjects();

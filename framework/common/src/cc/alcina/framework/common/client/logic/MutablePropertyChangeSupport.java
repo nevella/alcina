@@ -73,9 +73,11 @@ public class MutablePropertyChangeSupport extends PropertyChangeSupport {
 		}
 		super.firePropertyChange(name, null, null);
 	}
-
 	public static void setMuteAll(boolean muteAll) {
-		if (!GWT.isClient()){
+		setMuteAll(muteAll, false);
+	}
+	public static void setMuteAll(boolean muteAll, boolean initLifecycleThread) {
+		if (!GWT.isClient()&&!initLifecycleThread){
 			throw new RuntimeException("Mute all should only be set on a single-threaded VM");
 		}
 		MutablePropertyChangeSupport.muteAll = muteAll;

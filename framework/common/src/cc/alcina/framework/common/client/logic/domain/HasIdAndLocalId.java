@@ -38,6 +38,15 @@ public interface HasIdAndLocalId extends HasId {
 
 	public void setLocalId(long localId);
 
+	public static class HiliComparator implements Comparator<HasIdAndLocalId> {
+		public static final HiliComparator INSTANCE = new HiliComparator();
+
+		@Override
+		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+			return HiliHelper.compare(o1, o2);
+		}
+	}
+
 	public static class HiliHelper {
 		public static int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			int i = o1.getClass().getName().compareTo(o2.getClass().getName());

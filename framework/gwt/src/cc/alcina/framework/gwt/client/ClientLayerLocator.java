@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
@@ -40,10 +41,6 @@ public class ClientLayerLocator {
 
 	private CommonRemoteServiceAsyncProvider commonRemoteServiceAsyncProvider;
 
-	public CommonRemoteServiceAsyncProvider getCommonRemoteServiceAsyncProvider() {
-		return this.commonRemoteServiceAsyncProvider;
-	}
-
 	private ActionLogProvider actionLogProvider;
 
 	private CommitToStorageTransformListener commitToStorageTransformListener;
@@ -55,6 +52,14 @@ public class ClientLayerLocator {
 	private DomainModelHolder domainModelHolder;
 
 	private ClientHandshakeHelper clientHandshakeHelper;
+
+	private TimerWrapperProvider timerWrapperProvider;
+	
+	private ClientNofications clientNotifications;
+
+	private ClientInstance clientInstance;
+
+	private ClientExceptionHandler exceptionHandler;
 
 	private ClientLayerLocator() {
 		super();
@@ -76,6 +81,38 @@ public class ClientLayerLocator {
 		return commonRemoteServiceAsyncProvider.getServiceInstance();
 	}
 
+	public ClientExceptionHandler exceptionHandler() {
+		return exceptionHandler;
+	}
+
+	public ClientHandshakeHelper getClientHandshakeHelper() {
+		return clientHandshakeHelper;
+	}
+
+	public ClientInstance getClientInstance() {
+		return clientInstance;
+	}
+
+	public CommitToStorageTransformListener getCommitToStorageTransformListener() {
+		return commitToStorageTransformListener;
+	}
+
+	public CommonRemoteServiceAsyncProvider getCommonRemoteServiceAsyncProvider() {
+		return this.commonRemoteServiceAsyncProvider;
+	}
+
+	public DomainModelHolder getDomainModelHolder() {
+		return domainModelHolder;
+	}
+
+	public GeneralProperties getGeneralProperties() {
+		return generalProperties;
+	}
+
+	public ClientNofications notifications() {
+		return clientNotifications;
+	}
+
 	public void registerActionLogProvider(ActionLogProvider provider) {
 		this.actionLogProvider = provider;
 	}
@@ -89,20 +126,21 @@ public class ClientLayerLocator {
 		this.commonRemoteServiceAsyncProvider = commonRemoteServiceAsyncProvider;
 	}
 
-	private ClientNofications clientNotifications;
-
-	private ClientInstance clientInstance;
+	public void registerExceptionHandler(ClientExceptionHandler exceptionHandler) {
+		this.exceptionHandler = exceptionHandler;
+	}
 
 	public void registerNotifications(ClientNofications clientNotifications) {
 		this.clientNotifications = clientNotifications;
 	}
 
-	public ClientNofications notifications() {
-		return clientNotifications;
+	public void registerTimerWrapperProvider(TimerWrapperProvider timerWrapperProvider) {
+		this.timerWrapperProvider = timerWrapperProvider;
 	}
 
-	public ClientInstance getClientInstance() {
-		return clientInstance;
+	public void setClientHandshakeHelper(
+			ClientHandshakeHelper clientHandshakeHelper) {
+		this.clientHandshakeHelper = clientHandshakeHelper;
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
@@ -119,42 +157,15 @@ public class ClientLayerLocator {
 		this.commitToStorageTransformListener = commitToStorageTransformListener;
 	}
 
-	public CommitToStorageTransformListener getCommitToStorageTransformListener() {
-		return commitToStorageTransformListener;
-	}
-
-	private ClientExceptionHandler exceptionHandler;
-
-	public void registerExceptionHandler(ClientExceptionHandler exceptionHandler) {
-		this.exceptionHandler = exceptionHandler;
-	}
-
-	public ClientExceptionHandler exceptionHandler() {
-		return exceptionHandler;
+	public void setDomainModelHolder(DomainModelHolder domainModelHolder) {
+		this.domainModelHolder = domainModelHolder;
 	}
 
 	public void setGeneralProperties(GeneralProperties generalProperties) {
 		this.generalProperties = generalProperties;
 	}
 
-	public GeneralProperties getGeneralProperties() {
-		return generalProperties;
-	}
-
-	public void setDomainModelHolder(DomainModelHolder domainModelHolder) {
-		this.domainModelHolder = domainModelHolder;
-	}
-
-	public DomainModelHolder getDomainModelHolder() {
-		return domainModelHolder;
-	}
-
-	public void setClientHandshakeHelper(
-			ClientHandshakeHelper clientHandshakeHelper) {
-		this.clientHandshakeHelper = clientHandshakeHelper;
-	}
-
-	public ClientHandshakeHelper getClientHandshakeHelper() {
-		return clientHandshakeHelper;
+	public TimerWrapperProvider timerWrapperProvider() {
+		return timerWrapperProvider;
 	}
 }

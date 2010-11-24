@@ -45,18 +45,21 @@ public class ClientSession {
 	public static final int KEEP_ALIVE_TIMER = 2000;
 
 	private static final String STORAGE_SESSION_COOKIE_NAME = ClientSession.class
-			.getName()
-			+ ".storage-session";
+			.getName() + ".storage-session";
 
 	private static final String HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME = ClientSession.class
-			.getName()
-			+ ".initial-objects-persisted";
+			.getName() + ".initial-objects-persisted";
 
 	private ClientSession() {
 		super();
+		init();
+	}
+
+	protected void init() {
 		Map<Long, Long> m = parseCookie();
-		Long maxTabId=m.isEmpty()?0:CommonUtils.last(m.keySet().iterator());
-		tabId=maxTabId+1;
+		Long maxTabId = m.isEmpty() ? 0 : CommonUtils.last(m.keySet()
+				.iterator());
+		tabId = maxTabId + 1;
 		updateCookie();
 		new Timer() {
 			@Override
@@ -65,6 +68,7 @@ public class ClientSession {
 			}
 		}.scheduleRepeating(KEEP_ALIVE_TIMER);
 	}
+
 	private static ClientSession theInstance;
 
 	private long tabId;
@@ -79,7 +83,6 @@ public class ClientSession {
 	public void appShutdown() {
 		theInstance = null;
 	}
-
 
 	protected void updateCookie() {
 		Map<Long, Long> m = parseCookie();
@@ -100,8 +103,8 @@ public class ClientSession {
 		if (s != null) {
 			String[] split = s.split(",");
 			for (int i = 0; i < split.length; i += 2) {
-				result.put(Long.parseLong(split[i]), Long
-						.parseLong(split[i + 1]));
+				result.put(Long.parseLong(split[i]),
+						Long.parseLong(split[i + 1]));
 			}
 		}
 		return result;
@@ -118,13 +121,38 @@ public class ClientSession {
 		return true;
 	}
 
+	public static void registerImplementation(ClientSession impl) {
+		theInstance = impl;
+	}
+
 	public void setInitialObjectsPersisted(boolean initialObjectsPersisted) {
-		Cookies.setCookie(HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME,String.valueOf(initialObjectsPersisted));
+		Cookies.setCookie(HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME,
+				String.valueOf(initialObjectsPersisted));
 	}
 
 	public boolean isInitialObjectsPersisted() {
-		String s=Cookies.getCookie(HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME);
-		return s!=null && Boolean.valueOf(s);
+		String s = Cookies.getCookie(HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME);
+		return s != null && Boolean.valueOf(s);
 	}
-	
+
+	public static class ClientSessionSingleAccess extends ClientSession {
+		private boolean initialObjectsPersisted;
+
+		public boolean isInitialObjectsPersisted() {
+			return this.initialObjectsPersisted;
+		}
+
+		public void setInitialObjectsPersisted(boolean initialObjectsPersisted) {
+			this.initialObjectsPersisted = initialObjectsPersisted;
+		}
+
+		@Override
+		protected void init() {
+		}
+
+		@Override
+		public boolean isSoleOpenTab() {
+			return true;
+		}
+	}
 }
