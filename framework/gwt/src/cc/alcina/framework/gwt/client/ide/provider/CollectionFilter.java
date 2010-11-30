@@ -11,20 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface CollectionFilter<T> {
+public interface CollectionFilter<T> {
 	public boolean allow(T o);
-
-	public interface ModelAssistedCollectionFilter<T> extends
-			CollectionFilter<T> {
-		public void setModel(Object model);
-	}
 }

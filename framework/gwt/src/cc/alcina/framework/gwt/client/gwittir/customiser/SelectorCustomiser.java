@@ -31,11 +31,11 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.SelectorProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter.ModelAssistedCollectionFilter;
 import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
@@ -45,8 +45,11 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.ToStringRenderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
@@ -65,27 +68,32 @@ public class SelectorCustomiser implements Customiser {
 
 	public static final String MAX_SELECTED_ITEMS = "maxSelectedItems";
 
+	public static final String RENDERER_CLASS = "rendererClass";
+
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, CustomiserInfo info) {
 		if (editable) {
 			CollectionFilter filter = null;
 			int maxSelectedItems = 0;
-			NamedParameter parameter = NamedParameter.Support.getParameter(info
-					.parameters(), FILTER_CLASS);
+			NamedParameter parameter = NamedParameter.Support.getParameter(
+					info.parameters(), FILTER_CLASS);
 			if (parameter != null) {
 				filter = (CollectionFilter) CommonLocator.get().classLookup()
 						.newInstance(parameter.classValue(), 0);
 			}
+			Renderer renderer = NamedParameter.Support.instantiateClass(
+					info.parameters(), RENDERER_CLASS);
 			parameter = NamedParameter.Support.getParameter(info.parameters(),
 					MAX_SELECTED_ITEMS);
 			if (parameter != null) {
 				maxSelectedItems = parameter.intValue();
 			}
-			return new SelectorProvider(clazz, filter, maxSelectedItems);
+			return new SelectorProvider(clazz, filter, maxSelectedItems,
+					renderer);
 		} else {
 			if (multiple) {
-				NamedParameter p = NamedParameter.Support.getParameter(info
-						.parameters(), MAX_WIDTH);
+				NamedParameter p = NamedParameter.Support.getParameter(
+						info.parameters(), MAX_WIDTH);
 				int maxLength = p == null ? GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH
 						: p.intValue();
 				p = NamedParameter.Support.getParameter(info.parameters(),
@@ -125,6 +133,8 @@ public class SelectorCustomiser implements Customiser {
 
 		private int maxSelectedItems;
 
+		private Renderer renderer = ToStringRenderer.INSTANCE;
+
 		protected boolean isMultipleSelect() {
 			return maxSelectedItems != 1;
 		}
@@ -159,9 +169,15 @@ public class SelectorCustomiser implements Customiser {
 
 		public BoundSelector(Class selectionObjectClass,
 				CollectionFilter filter, int maxSelectedItems) {
+			this(selectionObjectClass, filter, maxSelectedItems, null);
+		}
+
+		public BoundSelector(Class selectionObjectClass,
+				CollectionFilter filter, int maxSelectedItems, Renderer renderer) {
 			this.selectionObjectClass = selectionObjectClass;
 			this.filter = filter;
 			this.maxSelectedItems = maxSelectedItems;
+			this.renderer = renderer;
 			renderGrid();
 			renderContents();
 		}
@@ -175,14 +191,17 @@ public class SelectorCustomiser implements Customiser {
 			grid.setCellPadding(0);
 			grid.setCellSpacing(0);
 			grid.setWidget(0, 0, createHeader("Available items", "available"));
-			grid.setWidget(0, 1, createHeader(
-					isMultipleSelect() ? "Selected items" : "Selected item",
-					"selected"));
+			grid.setWidget(
+					0,
+					1,
+					createHeader(isMultipleSelect() ? "Selected items"
+							: "Selected item", "selected"));
 			this.search = new SelectWithSearch();
 			search.setItemsHaveLinefeeds(true);
 			search.setSortGroups(true);
 			search.setPopdown(false);
 			search.setHolderHeight("");
+			search.setRenderer(renderer);
 			customiseLeftWidget();
 			Map<String, List> tmpSearchMap = new HashMap<String, List>();
 			tmpSearchMap.put("", new ArrayList());
@@ -196,6 +215,7 @@ public class SelectorCustomiser implements Customiser {
 			results.setSortGroups(true);
 			results.setPopdown(false);
 			results.setHolderHeight("");
+			results.setRenderer(renderer);
 			Map<String, List> resultMap = new HashMap<String, List>();
 			resultMap.put("", new ArrayList());
 			Widget resultsWidget = results.createWidget(resultMap,
@@ -210,6 +230,15 @@ public class SelectorCustomiser implements Customiser {
 			grid.setStyleName("alcina-SelectorFrame");
 			searchWidget.setStyleName("alcina-Selector available");
 			resultsWidget.setStyleName("alcina-Selector selected");
+		}
+
+		@Override
+		public void setModel(Object model) {
+			super.setModel(model);
+			if (filter instanceof RequiresContextBindable) {
+				RequiresContextBindable rcb = (RequiresContextBindable) filter;
+				rcb.setBindable((SourcesPropertyChangeEvents) model);
+			}
 		}
 
 		private ClickHandler resultsClickListener = new ClickHandler() {
@@ -231,9 +260,6 @@ public class SelectorCustomiser implements Customiser {
 				return l;
 			}
 			Iterator<HasId> itr = collection.iterator();
-			if (filter instanceof ModelAssistedCollectionFilter) {
-				((ModelAssistedCollectionFilter) filter).setModel(getModel());
-			}
 			while (itr.hasNext()) {
 				HasId obj = itr.next();
 				if (!filter.allow(obj)) {

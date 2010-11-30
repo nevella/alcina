@@ -215,7 +215,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 								assocSet.remove(hili);
 							}
 							// direct references (parent/one-one) are not
-							// removed, throw a dependency exception instead
+							// removed, throw a referential integrity exception instead
 						}
 					}
 				}

@@ -18,6 +18,7 @@ package cc.alcina.framework.gwt.client.gwittir.provider;
 import cc.alcina.framework.gwt.client.gwittir.customiser.SelectorCustomiser.BoundSelector;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 
+import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
@@ -29,14 +30,17 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	private final Class selectionObjectClass;
 	private final CollectionFilter filter;
 	private final int maxSelectedItems;
+	private final Renderer renderer;
 
-	public SelectorProvider(Class selectionObjectClass, CollectionFilter filter, int maxSelectedItems) {
+	public SelectorProvider(Class selectionObjectClass,
+			CollectionFilter filter, int maxSelectedItems, Renderer renderer) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
+		this.renderer = renderer;
 	}
 
 	public BoundSelector get() {
-		return new BoundSelector(selectionObjectClass, filter,maxSelectedItems);
+		return new BoundSelector(selectionObjectClass, filter,maxSelectedItems,renderer);
 	}
 }
