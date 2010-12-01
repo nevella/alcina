@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.logic;
 
+import java.util.Set;
+
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
@@ -7,6 +9,7 @@ import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
+import com.google.gwt.event.shared.UmbrellaException;
 import com.google.gwt.user.client.History;
 
 public class ClientExceptionHandler implements UncaughtExceptionHandler {
@@ -18,6 +21,13 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 
 	protected Throwable wrapException(Throwable e) {
 		String errorText = e.toString();
+		if (e instanceof UmbrellaException) {
+			UmbrellaException umbrella = (UmbrellaException) e;
+			Set<Throwable> causes = umbrella.getCauses();
+			for (Throwable cause : causes) {
+				errorText+="\n"+cause.toString();
+			}
+		}
 		errorText += extraInfoForExceptionText();
 		return new WebException("(Wrapped GWT exception) : " + errorText);
 	}
