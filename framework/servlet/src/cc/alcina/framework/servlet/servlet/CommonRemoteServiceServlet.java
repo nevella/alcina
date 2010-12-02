@@ -419,7 +419,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public DomainTransformResponse transformFromServletLayer(
 			boolean persistTransforms) throws DomainTransformRequestException {
 		DomainTransformLayerWrapper wrapper = transformFromServletLayer(
-				persistTransforms, null);
+				persistTransforms, null,null);
 		return wrapper == null ? null : wrapper.response;
 	}
 
@@ -429,12 +429,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	public DomainTransformLayerWrapper transformFromServletLayer(
 			boolean persistTransforms,
-			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
+			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy, String tag)
 			throws DomainTransformRequestException {
 		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
 		request.setClientInstance(CommonRemoteServiceServletSupport.get()
 				.getServerAsClientInstance());
+		request.setTag(tag);
 		request.setRequestId(nextTransformRequestId());
 		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager.get().getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN);
