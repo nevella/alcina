@@ -199,7 +199,7 @@ public class ContentViewFactory {
 			return null;
 		}
 		FlowPanel fp = null;
-		for (Class<? extends PermissibleAction> c : bi.getActions()) {
+		for (Class<? extends PermissibleAction> c : bi.getActions(bean)) {
 			final PermissibleAction v = CommonLocator.get().classLookup()
 					.getTemplateInstance(c);
 			if (v instanceof NonstandardObjectAction) {

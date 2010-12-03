@@ -39,8 +39,10 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 			registerIEWindowErrorListener();
 			Window.addCloseHandler(this);
 		} else {
-			GWT.setUncaughtExceptionHandler(handler);
 		}
+		//this will catch Throwable exceptions (not uncaught js exceptions)
+		// in both cases
+		GWT.setUncaughtExceptionHandler(handler);
 	}
 
 	private native void registerIEWindowErrorListener() /*-{

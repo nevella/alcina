@@ -6,6 +6,8 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -85,6 +87,9 @@ public class WorkspaceDefaultActionHandlers {
 					.getTypeDisplayName();
 			TextProvider.get().setDecorated(true);
 			TextProvider.get().setObjectName(newObj, "New " + tdn);
+			if (newObj instanceof IVersionableOwnable){
+				((IVersionableOwnable) newObj).setOwner(PermissionsManager.get().getUser());
+			}
 			PaneWrapperWithObjects view = getContentViewFactory()
 					.createBeanView(newObj, true, workspace, isAutoSave(),
 							false);

@@ -19,6 +19,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -44,7 +46,7 @@ public class ClientBeanReflector {
 		return this.beanClass;
 	}
 
-	public List<Class<? extends PermissibleAction>> getActions() {
+	public List<Class<? extends PermissibleAction>> getActions(Object userObject) {
 		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
 		ObjectActions actions = getGwBeanInfo().actions();
 		if (actions != null) {
@@ -56,7 +58,7 @@ public class ClientBeanReflector {
 						|| actionClass == ViewAction.class
 						|| actionClass == DeleteAction.class;
 				if (noPermissionsCheck
-						|| PermissionsManager.get().isPermissible(
+						|| PermissionsManager.get().isPermissible(userObject,
 								new AnnotatedPermissible(action.permission()))) {
 					result.add(actionClass);
 				}

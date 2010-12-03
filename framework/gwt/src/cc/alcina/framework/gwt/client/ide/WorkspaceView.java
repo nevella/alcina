@@ -331,7 +331,7 @@ public class WorkspaceView extends Composite implements HasName,
 				domainClass = userObject.getClass();
 				ClientBeanReflector info = ClientReflector.get()
 						.beanInfoForClass(domainClass);
-				actions.addAll(info.getActions());
+				actions.addAll(info.getActions(userObject));
 			}
 			if (item instanceof CollectionProviderNode) {
 				CollectionProviderNode cpn = (CollectionProviderNode) item;
@@ -340,7 +340,7 @@ public class WorkspaceView extends Composite implements HasName,
 				ClientBeanReflector info = ClientReflector.get()
 						.beanInfoForClass(domainClass);
 				List<Class<? extends PermissibleAction>> availableActions = info
-						.getActions();
+						.getActions(null);
 				if (availableActions.contains(CreateAction.class)) {
 					actions.add(CreateAction.class);
 				}

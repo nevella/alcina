@@ -16,6 +16,20 @@ package cc.alcina.framework.common.client.logic.permissions;
 /**
  * 
  * @author Nick Reddel
+ *         <p>
+ *         Note - Alcina doesn't currently support interfaces for transform
+ *         persistence - so use a pattern like:
+ *         </p>
+ * 
+ *         <pre>
+ * class MyUser implements IUser
+ * class MyObj implements IVersionableOwnable {
+ * 	private MyUser user;//property
+ * 	public IUser getOwner(){return getUser()};
+ * 	public void setOwner(IUser owner){setUser((MyUser)owner);}
+ * 	....
+ * }
+ * </pre>
  */
 public interface IVersionableOwnable extends IVersionable, HasOwner {
 	public IGroup getOwnerGroup();
