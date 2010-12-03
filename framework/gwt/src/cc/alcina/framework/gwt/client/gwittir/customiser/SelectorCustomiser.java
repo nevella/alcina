@@ -133,7 +133,7 @@ public class SelectorCustomiser implements Customiser {
 
 		private int maxSelectedItems;
 
-		private Renderer renderer = ToStringRenderer.INSTANCE;
+		private Renderer renderer = null;
 
 		protected boolean isMultipleSelect() {
 			return maxSelectedItems != 1;
@@ -177,7 +177,8 @@ public class SelectorCustomiser implements Customiser {
 			this.selectionObjectClass = selectionObjectClass;
 			this.filter = filter;
 			this.maxSelectedItems = maxSelectedItems;
-			this.renderer = renderer;
+			this.renderer = renderer == null ? ToStringRenderer.INSTANCE
+					: renderer;
 			renderGrid();
 			renderContents();
 		}
