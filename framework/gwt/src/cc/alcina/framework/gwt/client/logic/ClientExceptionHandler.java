@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.logic;
 
 import java.util.Set;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
@@ -20,16 +21,26 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	}
 
 	protected Throwable wrapException(Throwable e) {
-		String errorText = e.toString();
+		StringBuffer errorBuffer = new StringBuffer();
+		unrollUmbrella(e, errorBuffer);
+		errorBuffer.append(extraInfoForExceptionText());
+		return new WebException("(Wrapped GWT exception) : "
+				+ errorBuffer.toString());
+	}
+
+	private void unrollUmbrella(Throwable e, StringBuffer errorBuffer) {
 		if (e instanceof UmbrellaException) {
+			errorBuffer.append("\nUmbrellaException");
 			UmbrellaException umbrella = (UmbrellaException) e;
 			Set<Throwable> causes = umbrella.getCauses();
 			for (Throwable cause : causes) {
-				errorText+="\n"+cause.toString();
+				unrollUmbrella(cause, errorBuffer);
 			}
+		} else {
+			errorBuffer.append("\n" + e.toString());
+			errorBuffer.append("\n\t-----\n");
+			errorBuffer.append(e.getStackTrace());
 		}
-		errorText += extraInfoForExceptionText();
-		return new WebException("(Wrapped GWT exception) : " + errorText);
 	}
 
 	/*
@@ -49,7 +60,8 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	}
 
 	public String extraInfoForExceptionText() {
-		return "\n\nUser agent: " + BrowserMod.getUserAgent()
+		String extraInfo = "\n\nUser agent: " + BrowserMod.getUserAgent()
 				+ "\n\nHistory token: " + History.getToken();
+		return extraInfo;
 	}
 }
