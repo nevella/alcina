@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir;
 
 import java.util.ArrayList;
@@ -22,7 +21,7 @@ import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.logic.StandardAsyncCallback.CancellableAsyncCallback;
+import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -31,11 +30,10 @@ import com.totsp.gwittir.client.ui.table.HasChunks;
 import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class SearchDataProvider implements SortableDataProvider {
+public class SearchDataProvider implements SortableDataProvider {
 	private SingleTableSearchDefinition def;
 
 	private final AsyncCallback completionCallback;
@@ -59,17 +57,16 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 				def.getResultClass());
 		List<String> pNames = new ArrayList<String>();
 		for (Property p : descriptor.getProperties()) {
-			if (p.getType().isPrimitive()
-					|| p.getType().isEnum()
-					|| CommonUtils
-							.isStandardJavaClass(p.getType())) {
+			if (p.getType().isPrimitive() || p.getType().isEnum()
+					|| CommonUtils.isStandardJavaClass(p.getType())) {
 				pNames.add(p.getName());
 			}
 		}
 		return (String[]) pNames.toArray(new String[pNames.size()]);
 	}
 
-	class SearchCallback extends CancellableAsyncCallback<SearchResultsBase> {
+	abstract class SearchCallback extends
+			CancellableAsyncCallback<SearchResultsBase> {
 		private final boolean callBackInit;
 
 		public SearchCallback(boolean callBackInit) {
@@ -82,6 +79,7 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 	}
 
 	private SearchCallback runningCallback;
+
 	@SuppressWarnings("unchecked")
 	protected void runSort(final boolean callBackInit, int pageNumber,
 			final HasChunks table) {
@@ -114,8 +112,8 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 				runningCallback = null;
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().search(def, pageNumber,
-				callback);
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+				.search(def, pageNumber, callback);
 	}
 
 	public void sortOnProperty(HasChunks table, String propertyName,

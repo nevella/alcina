@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Comparator;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 import com.google.gwt.event.dom.client.ChangeEvent;

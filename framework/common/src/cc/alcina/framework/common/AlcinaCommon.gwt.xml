@@ -6,5 +6,13 @@
 	<inherits name='com.totsp.gwittir.LoggingWarn' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
 	<inherits name='cc.alcina.framework.common.ClientReflector' />
+	<replace-with class="cc.alcina.framework.common.client.util.StackFrameHelperIE">
+		<when-type-is class="cc.alcina.framework.common.client.util.StackFrameHelper" />
+		<when-property-is name="user.agent" value="ie6" />
+	</replace-with>
+	<replace-with class="cc.alcina.framework.common.client.util.StackFrameHelperIE">
+		<when-type-is class="cc.alcina.framework.common.client.util.StackFrameHelper" />
+		<when-property-is name="user.agent" value="ie8" />
+	</replace-with>
 	<source path="client" />
 </module>

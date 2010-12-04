@@ -203,8 +203,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				// note, should never occur TODO: notify server
 				return;
 			}
-			CommonLocator.get().propertyAccessor().setPropertyValue(obj,
-					event.getPropertyName(), tgt);
+			CommonLocator.get().propertyAccessor()
+					.setPropertyValue(obj, event.getPropertyName(), tgt);
 			String pn = event.getPropertyName();
 			if (pn.equals(TransformManager.ID_FIELD_NAME)
 					|| pn.equals(TransformManager.LOCAL_ID_FIELD_NAME)) {
@@ -220,8 +220,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			case CHANGE_PROPERTY_REF:
 				if (event.getOldValue() != null
 						&& event.getOldValue() instanceof HasIdAndLocalId) {
-					updateAssociation(event, obj, (HasIdAndLocalId) event
-							.getOldValue(), true, true);
+					updateAssociation(event, obj,
+							(HasIdAndLocalId) event.getOldValue(), true, true);
 				}
 				updateAssociation(event, obj, tgt, false, true);
 				break;
@@ -230,15 +230,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// add and removeref will not cause a property change, so no transform
 		// removal
 		case ADD_REF_TO_COLLECTION:
-			((Set) CommonLocator.get().propertyAccessor().getPropertyValue(obj,
-					event.getPropertyName())).add(tgt);
+			((Set) CommonLocator.get().propertyAccessor()
+					.getPropertyValue(obj, event.getPropertyName())).add(tgt);
 			objectModified(obj, event, false);
 			updateAssociation(event, obj, tgt, false, false);
 			collectionChanged(obj, tgt);
 			break;
 		case REMOVE_REF_FROM_COLLECTION:
-			((Set) CommonLocator.get().propertyAccessor().getPropertyValue(obj,
-					event.getPropertyName())).remove(tgt);
+			((Set) CommonLocator.get().propertyAccessor()
+					.getPropertyValue(obj, event.getPropertyName()))
+					.remove(tgt);
 			updateAssociation(event, obj, tgt, true, false);
 			collectionChanged(obj, tgt);
 			break;
@@ -254,8 +255,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 					break;
 				}
 			}
-			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator.get()
-					.classLookup().newInstance(event.getObjectClass(),
+			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator
+					.get()
+					.classLookup()
+					.newInstance(event.getObjectClass(),
 							event.getObjectLocalId());
 			hili.setLocalId(event.getObjectLocalId());
 			if (hili.getId() == 0) {// replay from server
@@ -273,10 +276,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 			break;
 		default:
-			throw new WrappedRuntimeException(
-					"Transform type not implemented: "
-							+ event.getTransformType(),
-					SuggestedAction.NOTIFY_WARNING);
+			assert false : "Transform type not implemented: "
+					+ event.getTransformType();
 		}
 		currentEvent = null;
 	}
@@ -308,8 +309,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
-		T newInstance = CommonLocator.get().classLookup().newInstance(
-				objectClass, localId);
+		T newInstance = CommonLocator.get().classLookup()
+				.newInstance(objectClass, localId);
 		newInstance.setLocalId(localId);
 		// a bit roundabout, but to ensure compatibility with the event system
 		// essentially registers a synthesised object, then replaces it in the
@@ -322,8 +323,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public <T extends HasIdAndLocalId> T createProvisionalObject(
 			Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
-		T newInstance = CommonLocator.get().classLookup().newInstance(
-				objectClass, localId);
+		T newInstance = CommonLocator.get().classLookup()
+				.newInstance(objectClass, localId);
 		newInstance.setLocalId(localId);
 		registerProvisionalObject(newInstance);
 		return newInstance;
@@ -434,7 +435,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public HasIdAndLocalId getObject(DomainTransformEvent dte) {
-		HasIdAndLocalId obj = CommonLocator.get().objectLookup()
+		HasIdAndLocalId obj = CommonLocator
+				.get()
+				.objectLookup()
 				.getObject(dte.getObjectClass(), dte.getObjectId(),
 						dte.getObjectLocalId());
 		dte.setSource(obj);
@@ -442,8 +445,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public <T extends HasIdAndLocalId> T getObject(T hili) {
-		return (T) CommonLocator.get().objectLookup().getObject(
-				hili.getClass(), hili.getId(), hili.getLocalId());
+		return (T) CommonLocator.get().objectLookup()
+				.getObject(hili.getClass(), hili.getId(), hili.getLocalId());
 	}
 
 	public Collection getProvisionalObjects() {
@@ -494,7 +497,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return e;
 		}
 		if (evt.getValueId() != 0 || evt.getValueLocalId() != 0) {
-			HasIdAndLocalId object = CommonLocator.get().objectLookup()
+			HasIdAndLocalId object = CommonLocator
+					.get()
+					.objectLookup()
 					.getObject(evt.getValueClass(), evt.getValueId(),
 							evt.getValueLocalId());
 			if (object != null) {
@@ -545,16 +550,21 @@ public abstract class TransformManager implements PropertyChangeListener,
 			CollectionModificationType modificationType) {
 		Collection deltaC = CommonUtils.wrapInCollection(delta);
 		Collection c = CommonUtils
-				.shallowCollectionClone((Collection) CommonLocator.get()
-						.propertyAccessor().getPropertyValue(
-								objectWithCollection, collectionPropertyName));
+				.shallowCollectionClone((Collection) CommonLocator
+						.get()
+						.propertyAccessor()
+						.getPropertyValue(objectWithCollection,
+								collectionPropertyName));
 		if (modificationType == CollectionModificationType.ADD) {
 			c.addAll(deltaC);
 		} else {
 			c.removeAll(deltaC);
 		}
-		CommonLocator.get().propertyAccessor().setPropertyValue(
-				objectWithCollection, collectionPropertyName, c);
+		CommonLocator
+				.get()
+				.propertyAccessor()
+				.setPropertyValue(objectWithCollection, collectionPropertyName,
+						c);
 	}
 
 	public synchronized long nextEventIdCounter() {
@@ -629,8 +639,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 							dte.setObjectId(id);
 							dte.setObjectClass(clazz);
 							dte.setPropertyName(propertyName);
-							dte
-									.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
+							dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
 							if (o2 instanceof HasIdAndLocalId) {
 								HasIdAndLocalId h2 = (HasIdAndLocalId) o2;
 								dte.setNewValue(null);
@@ -657,8 +666,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					dte.setPropertyName(propertyName);
 					if (!implementsHili.contains(propertyType)) {
 						convertToTargetObject(dte);
-						dte
-								.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+						dte.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 					} else {
 						dte.setValueClass(propertyType);
 						dte.setValueId(asObjectSpec ? (Long) value
@@ -741,8 +749,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						dte.setValueId(hili.getId());
 						dte.setValueLocalId(hili.getLocalId());
 						dte.setValueClass(hili.getClass());
-						dte
-								.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
+						dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
 						transforms.add(dte);
 					}
 				}
@@ -753,8 +760,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						dte.setValueId(hili.getId());
 						dte.setValueLocalId(hili.getLocalId());
 						dte.setValueClass(hili.getClass());
-						dte
-								.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
+						dte.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
 						transforms.add(dte);
 					}
 				}
@@ -767,8 +773,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						dte.setNewValue(null);
 						dte.setNewStringValue(e.name());
 						dte.setValueClass(e.getClass());
-						dte
-								.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
+						dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
 						transforms.add(dte);
 					}
 				}
@@ -778,8 +783,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						dte.setNewValue(null);
 						dte.setNewStringValue(e.name());
 						dte.setValueClass(e.getClass());
-						dte
-								.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
+						dte.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
 						transforms.add(dte);
 					}
 				}
@@ -966,8 +970,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		if (evt.getValueClass().isEnum()) {
 			try {
-				return Enum.valueOf(evt.getValueClass(), evt
-						.getNewStringValue());
+				return Enum.valueOf(evt.getValueClass(),
+						evt.getNewStringValue());
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -999,8 +1003,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			CollectionModificationSupport.queue(true);
 			for (Object o : objects) {
 				if (o instanceof HasIdAndLocalId
-						&& CommonLocator.get().objectLookup().getObject(
-								(HasIdAndLocalId) o) == null) {
+						&& CommonLocator.get().objectLookup()
+								.getObject((HasIdAndLocalId) o) == null) {
 					HasIdAndLocalId hili = (HasIdAndLocalId) o;
 					// if this is a new object, we want to register a blank
 					// object,
@@ -1098,9 +1102,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void updateAssociation(DomainTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt, boolean remove,
 			boolean collectionPropertyChange) {
-		Association assoc = obj == null ? null : CommonLocator.get()
-				.propertyAccessor().getAnnotationForProperty(obj.getClass(),
-						Association.class, evt.getPropertyName());
+		Association assoc = obj == null ? null : CommonLocator
+				.get()
+				.propertyAccessor()
+				.getAnnotationForProperty(obj.getClass(), Association.class,
+						evt.getPropertyName());
 		if (tgt == null || assoc == null || assoc.propertyName().length() == 0) {
 			return;
 		}
@@ -1131,12 +1137,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 				c.add(obj);
 			}
 			if (collectionPropertyChange && !assoc.silentUpdates()) {
-				CommonLocator.get().propertyAccessor().setPropertyValue(tgt,
-						assoc.propertyName(), c);
+				CommonLocator.get().propertyAccessor()
+						.setPropertyValue(tgt, assoc.propertyName(), c);
 			}
 		} else {
-			CommonLocator.get().propertyAccessor().setPropertyValue(tgt,
-					assoc.propertyName(), remove ? null : obj);
+			CommonLocator
+					.get()
+					.propertyAccessor()
+					.setPropertyValue(tgt, assoc.propertyName(),
+							remove ? null : obj);
 		}
 		objectModified(hTgt, evt, true);
 	}
@@ -1159,8 +1168,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		 * Until 23/11/2010, case NULL_PROPERTY_REF: case CHANGE_PROPERTY_REF:
 		 * were not in the case
 		 * 
-		 * I think that's in error - but checking. Basically, the transforms will be ignored
-		 * if they're a double-dip (the property won't change)
+		 * I think that's in error - but checking. Basically, the transforms
+		 * will be ignored if they're a double-dip (the property won't change)
 		 */
 		public void domainTransform(DomainTransformEvent evt) {
 			if (evt.getCommitType() == CommitType.TO_LOCAL_GRAPH) {

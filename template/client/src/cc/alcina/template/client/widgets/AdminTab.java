@@ -6,13 +6,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.ide.Workspace;
@@ -22,7 +23,6 @@ import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
 import cc.alcina.framework.gwt.client.ide.provider.ActionViewProvider;
 import cc.alcina.framework.gwt.client.ide.provider.SearchViewProvider;
-import cc.alcina.framework.gwt.client.logic.StandardAsyncCallback;
 import cc.alcina.framework.gwt.client.stdlayout.TabDisplaysAsFullHeight;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
@@ -45,7 +45,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TreeItem;
-
 
 public class AdminTab extends BaseTab implements HasLayoutInfo,
 		TabDisplaysAsFullHeight {
@@ -147,20 +146,20 @@ public class AdminTab extends BaseTab implements HasLayoutInfo,
 		loadingUserInfo = true;
 		final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
 				"Loading all users and groups...", null);
-		AsyncCallback<List<AlcinaTemplateGroup>> callback = new StandardAsyncCallback<List<AlcinaTemplateGroup>>() {
+		AsyncCallback<List<AlcinaTemplateGroup>> callback = new AsyncCallback<List<AlcinaTemplateGroup>>() {
 			@Override
 			public void onFailure(Throwable caught) {
 				crd.hide();
 				loadingUserInfo = false;
-				super.onFailure(caught);
+				throw new WrappedRuntimeException(caught);
 			}
 
 			public void onSuccess(List<AlcinaTemplateGroup> result) {
-				TransformManager.get().getDomainObjects().registerObjects(
-						result);
+				TransformManager.get().getDomainObjects()
+						.registerObjects(result);
 				for (AlcinaTemplateGroup jg : result) {
-					TransformManager.get().getDomainObjects().registerObjects(
-							jg.getMemberUsers());
+					TransformManager.get().getDomainObjects()
+							.registerObjects(jg.getMemberUsers());
 				}
 				Collection<AlcinaTemplateUser> c = TransformManager.get()
 						.getCollection(AlcinaTemplateUser.class);
@@ -240,8 +239,8 @@ public class AdminTab extends BaseTab implements HasLayoutInfo,
 
 		protected TreeItem getTopLevelItems() {
 			ContainerNode root = new ContainerNode("All", images.folder());
-			ContainerNode actions = new ContainerNode("Actions", images
-					.folder());
+			ContainerNode actions = new ContainerNode("Actions",
+					images.folder());
 			root.addItem(actions);
 			ContainerNode search = new ContainerNode(TextProvider.get()
 					.getUiObjectText(AdminTab.class, "actionsSectionSearch",
@@ -251,6 +250,7 @@ public class AdminTab extends BaseTab implements HasLayoutInfo,
 					new DomainTransformRecordSearchAction(), images.file()));
 			return root;
 		}
+
 		@Override
 		public void resetTree() {
 			super.resetTree();

@@ -43,7 +43,6 @@ import cc.alcina.framework.common.client.util.URLComponentEncoder;
 	public void appShutdown() {
 		theInstance = null;
 	}
-
 	private PropertyAccessor propertyAccessor;
 
 	public void registerPropertyAccessor(PropertyAccessor accessor) {

@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.gears.client;
 
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;

@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
