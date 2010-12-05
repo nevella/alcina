@@ -74,29 +74,42 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		this(null);
 	}
 
-	public FilterWidget(final String hint) {
+	public FilterWidget(String hint) {
 		this.holder = new FlowPanel();
 		this.textBox = new TextBox();
 		textBox.setStyleName("alcina-Filter");
 		textBox.addKeyUpHandler(this);
 		textBox.addKeyDownHandler(this);
-		if (hint != null) {
-			textBox.addStyleName("alcina-FilterHint");
-			textBox.setText(hint);
-			textBox.addFocusHandler(new FocusHandler() {
-				public void onFocus(FocusEvent event) {
-					if (!hintWasCleared && textBox.getText().equals(hint)) {
-						hintWasCleared = true;
-						textBox.setText("");
-						textBox.removeStyleName("alcina-FilterHint");
-						filter();
-					}
-				}
-			});
-		}
 		holder.setStyleName("alcina-FilterHolder");
 		holder.add(textBox);
 		initWidget(holder);
+		setHint(hint);
+	}
+
+	private String hint;
+
+	public String getHint() {
+		return this.hint;
+	}
+
+	public void setHint(String _hint) {
+		if (_hint != null) {
+			textBox.addStyleName("alcina-FilterHint");
+			textBox.setText(_hint);
+			if (hint == null) {
+				textBox.addFocusHandler(new FocusHandler() {
+					public void onFocus(FocusEvent event) {
+						if (!hintWasCleared && textBox.getText().equals(hint)) {
+							hintWasCleared = true;
+							textBox.setText("");
+							textBox.removeStyleName("alcina-FilterHint");
+							filter();
+						}
+					}
+				});
+			}
+		}
+		this.hint = _hint;
 	}
 
 	public void filter() {
@@ -133,8 +146,8 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		if (keyCode == KeyCodes.KEY_ENTER) {
 			Event.getCurrentEvent().preventDefault();
 			if (enterHandler != null) {
-				WidgetUtils.fireClickOnHandler((HasClickHandlers) event
-						.getSource(), enterHandler);
+				WidgetUtils.fireClickOnHandler(
+						(HasClickHandlers) event.getSource(), enterHandler);
 			}
 			return;
 		}
@@ -144,7 +157,8 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		int keyCode = event.getNativeKeyCode();
 		if (keyCode == KeyCodes.KEY_ENTER || keyCode == KeyCodes.KEY_UP
 				|| keyCode == KeyCodes.KEY_DOWN) {
-			//this should probably be handled by having the vfwf add  a listener...but 
+			// this should probably be handled by having the vfwf add a
+			// listener...but
 			if (isArrowDown((int) keyCode) && vf != null
 					&& vf instanceof VisualFilterable.VisualFilterableWithFirst) {
 				((VisualFilterable.VisualFilterableWithFirst) vf).moveToFirst();

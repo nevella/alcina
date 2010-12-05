@@ -164,8 +164,9 @@ public class WidgetUtils {
 		if (e.getFirstChildElement() == null && !parentPass) {
 			return getBestOffsetHeight(e, true);
 		}
-		return getBestOffsetHeight(parentPass ? e.getParentElement() : e
-				.getFirstChildElement(), parentPass);
+		return getBestOffsetHeight(
+				parentPass ? e.getParentElement() : e.getFirstChildElement(),
+				parentPass);
 	}
 
 	private static int getBestOffsetWidth(Element e) {
@@ -180,8 +181,9 @@ public class WidgetUtils {
 		if (e.getFirstChildElement() == null && !parentPass) {
 			return getBestOffsetWidth(e, true);
 		}
-		return getBestOffsetWidth(parentPass ? e.getParentElement() : e
-				.getFirstChildElement(), parentPass);
+		return getBestOffsetWidth(
+				parentPass ? e.getParentElement() : e.getFirstChildElement(),
+				parentPass);
 	}
 
 	private static boolean debug = false;
@@ -198,8 +200,9 @@ public class WidgetUtils {
 			int availableWidth = containerWidth;
 			if (widget instanceof HasLayoutInfo) {
 				if (debug) {
-					GWT.log(CommonUtils.format("%1: ", CommonUtils
-							.simpleClassName(widget.getClass())), null);
+					GWT.log(CommonUtils.format("%1: ",
+							CommonUtils.simpleClassName(widget.getClass())),
+							null);
 				}
 				LayoutInfo info = ((HasLayoutInfo) widget).getLayoutInfo();
 				info.beforeLayout();
@@ -210,13 +213,11 @@ public class WidgetUtils {
 					Widget parent = widget.getParent();
 					Iterator<Widget> childIterator = null;
 					availableHeight = info.useBestOffsetForParentHeight() ? getBestOffsetHeight(
-							parent.getElement(), true)
-							: containerHeight;
+							parent.getElement(), true) : containerHeight;
 					availableHeight = Math
 							.min(availableHeight, containerHeight);
 					availableWidth = info.useBestOffsetForParentWidth() ? getBestOffsetWidth(
-							parent.getElement(), true)
-							: containerWidth;
+							parent.getElement(), true) : containerWidth;
 					availableWidth = Math.min(availableWidth, containerWidth);
 					if (parent instanceof HasLayoutInfo) {
 						childIterator = ((HasLayoutInfo) parent)
@@ -258,23 +259,23 @@ public class WidgetUtils {
 						}
 						if (availableHeight >= 0) {
 							widget.setHeight((availableHeight) + "px");
-						} 
+						}
 					}
 					if (info.to100percentOfAvailableWidth()) {
 						availableWidth = availableWidth - usedWidth
 								- parentAdjustWidth - info.getAdjustWidth();
 						if (availableWidth >= 0) {
 							widget.setWidth((availableWidth) + "px");
-						} 
+						}
 					}
 				}
 				Iterator<Widget> toResize = info.getWidgetsToResize();
 				while (toResize.hasNext()) {
 					toResize.next().setHeight(containerHeight + "px");
 				}
-				resizeUsingInfo(availableHeight, availableWidth, info
-						.getLayoutWidgets(), info.getClientAdjustHeight(), info
-						.getClientAdjustWidth());
+				resizeUsingInfo(availableHeight, availableWidth,
+						info.getLayoutWidgets(), info.getClientAdjustHeight(),
+						info.getClientAdjustWidth());
 				info.afterLayout();
 			}// haslayoutinfo
 			else if (widget instanceof HasWidgets) {
@@ -291,8 +292,8 @@ public class WidgetUtils {
 
 	public static void resizeUsingInfo(int availableHeight, int availableWidth,
 			Widget w) {
-		resizeUsingInfo(availableHeight, availableWidth, Arrays.asList(
-				new Widget[] { w }).iterator(), 0, 0);
+		resizeUsingInfo(availableHeight, availableWidth,
+				Arrays.asList(new Widget[] { w }).iterator(), 0, 0);
 	}
 
 	public static void replace(Widget current, Widget newWidget) {
@@ -316,14 +317,7 @@ public class WidgetUtils {
 	}
 
 	public static void scrollIntoView(Element e) {
-		DOM.scrollIntoView((com.google.gwt.user.client.Element) e);
-		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
-		int y2 = y1 + Window.getClientHeight();
-		int absoluteTop = e.getAbsoluteTop();
-		if (absoluteTop < y1 || absoluteTop > y2) {
-			BodyElement body = Document.get().getBody();
-			body.setPropertyInt("scrollTop", (Math.max(0, absoluteTop - 10)));
-		}
+		scrollIntoView(e, 0);
 	}
 
 	public static void scrollBodyTo(int y) {
@@ -489,8 +483,8 @@ public class WidgetUtils {
 	}
 
 	public static void setCssVisibility(Widget widget, boolean visible) {
-		widget.getElement().getStyle().setProperty("visibility",
-				visible ? "visible" : "hidden");
+		widget.getElement().getStyle()
+				.setProperty("visibility", visible ? "visible" : "hidden");
 	}
 
 	public static void squelchCurrentEvent() {
@@ -566,5 +560,23 @@ public class WidgetUtils {
 				handlerRegistration.removeHandler();
 			}
 		});
+	}
+
+	public static void scrollIntoView(Element e, int fromTop) {
+		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
+		int y2 = y1 + Window.getClientHeight();
+		int absoluteTop = e.getAbsoluteTop();
+		if (absoluteTop >= y1 && absoluteTop < y2) {
+			return;
+		}
+		DOM.scrollIntoView((com.google.gwt.user.client.Element) e);
+		y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
+		y2 = y1 + Window.getClientHeight();
+		absoluteTop = e.getAbsoluteTop();
+		if (absoluteTop < y1 || absoluteTop > y2 || fromTop != 0) {
+			BodyElement body = Document.get().getBody();
+			body.setPropertyInt("scrollTop",
+					(Math.max(0, absoluteTop - fromTop)));
+		}
 	}
 }
