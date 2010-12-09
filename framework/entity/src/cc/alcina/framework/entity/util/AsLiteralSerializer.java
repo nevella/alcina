@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -119,6 +120,17 @@ public class AsLiteralSerializer {
 				newCall(mainCall, sw, true);
 			}
 		}
+		
+		for (OutputAssignment assign : assignments) {
+			String assignLit = String.format("%s.%s(%s);",
+					getObjLitRef(assign.src), assign.pd.getWriteMethod()
+							.getName(), getObjLitRef(assign.target));
+			sw.println(assignLit);
+			methodLengthCounter += assignLit.length() + 1;
+			if (methodLengthCounter > 20000) {
+				newCall(mainCall, sw, true);
+			}
+		}
 		for (OutputInstantiation inst : addToCollnMap.keySet()) {
 			List<OutputInstantiation> elts = addToCollnMap.get(inst);
 			for (OutputInstantiation elt : elts) {
@@ -131,14 +143,20 @@ public class AsLiteralSerializer {
 				}
 			}
 		}
-		for (OutputAssignment assign : assignments) {
-			String assignLit = String.format("%s.%s(%s);",
-					getObjLitRef(assign.src), assign.pd.getWriteMethod()
-							.getName(), getObjLitRef(assign.target));
-			sw.println(assignLit);
-			methodLengthCounter += assignLit.length() + 1;
-			if (methodLengthCounter > 20000) {
-				newCall(mainCall, sw, true);
+		for (OutputInstantiation inst : addToMapMap.keySet()) {
+			List<OutputInstantiation> elts = addToMapMap.get(inst);
+			Iterator<OutputInstantiation> itr = elts.iterator();
+			for(;itr.hasNext();){
+				OutputInstantiation key=itr.next();
+				OutputInstantiation value=itr.next();
+				
+				String add = String.format("%s.put(%s,%s);", getObjLitRef(inst),
+						getObjLitRef(key),getObjLitRef(value));
+				sw.println(add);
+				methodLengthCounter += add.length() + 1;
+				if (methodLengthCounter > 20000) {
+					newCall(mainCall, sw, true);
+				}
 			}
 		}
 		sw.outdent();
@@ -220,6 +238,7 @@ public class AsLiteralSerializer {
 	private List<OutputAssignment> assignments = new ArrayList<OutputAssignment>();
 
 	private Map<OutputInstantiation, List<OutputInstantiation>> addToCollnMap = new HashMap<OutputInstantiation, List<OutputInstantiation>>();
+	private Map<OutputInstantiation, List<OutputInstantiation>> addToMapMap = new HashMap<OutputInstantiation, List<OutputInstantiation>>();
 
 	private Set<Class> reachedClasses = new LinkedHashSet<Class>();
 
@@ -305,6 +324,16 @@ public class AsLiteralSerializer {
 			for (Object object : colln) {
 				elts.add(traverse(object, null));
 			}
+		}
+		if(source instanceof Map){
+			Map map=(Map) source;
+			ArrayList<OutputInstantiation> elts = new ArrayList<OutputInstantiation>();
+			addToMapMap.put(instance, elts);
+			for (Object object : map.keySet()) {
+				elts.add(traverse(object, null));
+				elts.add(traverse(map.get(object), null));
+			}
+
 		}
 		return instance;
 	}

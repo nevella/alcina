@@ -164,7 +164,7 @@ import com.google.gwt.user.client.ui.Widget;
 			}
 		}
 	}
-
+	
 	protected void redraw() {
 		WidgetUtils.clearChildren(panel);
 		hasChildHandlersSupport.detachHandlers();
