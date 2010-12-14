@@ -36,6 +36,14 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 	private String regex;
 
+	public String getRegex() {
+		return this.regex;
+	}
+
+	public void setRegex(String regex) {
+		this.regex = regex;
+	}
+
 	private static final String REGEX_REPLACE = "234IBBDA";
 
 	public Object validate(Object value) throws ValidationException {

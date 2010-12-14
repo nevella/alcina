@@ -106,6 +106,9 @@ import com.totsp.gwittir.client.validator.ValidationException;
 				}
 				@SuppressWarnings("unchecked")
 				void resolveFeedback() {
+					if(psve.feedback==null){
+						return;
+					}
 					psve.feedback.resolve(psve.sourceWidget);
 					if (getMessage() != null) {
 						psve.feedback.handleException(psve.getSourceWidget(),
