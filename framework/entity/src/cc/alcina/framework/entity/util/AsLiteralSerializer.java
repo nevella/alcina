@@ -208,8 +208,10 @@ public class AsLiteralSerializer {
 		}
 		if (value instanceof String) {
 			return "\""
-					+ ((String) value).replace("\"", "\\\"").replace("\n",
-							"\\n") + "\"";
+					+ ((String) value).replace("\\", "\\\\").replace("\"", "\\\"").replace("\n",
+							"\\n").replace("\r",
+							"\\r").replace("\t",
+							"\\t") + "\"";
 		}
 		if (value instanceof Character) {
 			return "'" + value + "'";

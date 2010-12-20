@@ -103,7 +103,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 							hintWasCleared = true;
 							textBox.setText("");
 							textBox.removeStyleName("alcina-FilterHint");
-							filter();
+							lastFilteredText = textBox.getText();
 						}
 					}
 				});
