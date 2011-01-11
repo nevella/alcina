@@ -120,7 +120,6 @@ public class AsLiteralSerializer {
 				newCall(mainCall, sw, true);
 			}
 		}
-		
 		for (OutputAssignment assign : assignments) {
 			String assignLit = String.format("%s.%s(%s);",
 					getObjLitRef(assign.src), assign.pd.getWriteMethod()
@@ -146,12 +145,12 @@ public class AsLiteralSerializer {
 		for (OutputInstantiation inst : addToMapMap.keySet()) {
 			List<OutputInstantiation> elts = addToMapMap.get(inst);
 			Iterator<OutputInstantiation> itr = elts.iterator();
-			for(;itr.hasNext();){
-				OutputInstantiation key=itr.next();
-				OutputInstantiation value=itr.next();
-				
-				String add = String.format("%s.put(%s,%s);", getObjLitRef(inst),
-						getObjLitRef(key),getObjLitRef(value));
+			for (; itr.hasNext();) {
+				OutputInstantiation key = itr.next();
+				OutputInstantiation value = itr.next();
+				String add = String.format("%s.put(%s,%s);",
+						getObjLitRef(inst), getObjLitRef(key),
+						getObjLitRef(value));
 				sw.println(add);
 				methodLengthCounter += add.length() + 1;
 				if (methodLengthCounter > 20000) {
@@ -159,6 +158,8 @@ public class AsLiteralSerializer {
 				}
 			}
 		}
+		sw.outdent();
+		sw.println("}");
 		sw.outdent();
 		sw.println("}");
 		sw.println(String.format("public %s generate() {", source.getClass()
@@ -179,12 +180,14 @@ public class AsLiteralSerializer {
 		if (close) {
 			sw.outdent();
 			sw.println("}");
+			sw.outdent();
+			sw.println("}");
 		}
-		sw
-				.println(String.format("private void generate_%s() {",
-						++callCounter));
+		sw.println(String.format("private class Generate_%s {", ++callCounter));
 		sw.indent();
-		mainCall.append(String.format("generate_%s();", callCounter));
+		sw.println("private void run() {");
+		sw.indent();
+		mainCall.append(String.format("new Generate_%s().run();", callCounter));
 		methodLengthCounter = 0;
 	}
 
@@ -208,10 +211,9 @@ public class AsLiteralSerializer {
 		}
 		if (value instanceof String) {
 			return "\""
-					+ ((String) value).replace("\\", "\\\\").replace("\"", "\\\"").replace("\n",
-							"\\n").replace("\r",
-							"\\r").replace("\t",
-							"\\t") + "\"";
+					+ ((String) value).replace("\\", "\\\\")
+							.replace("\"", "\\\"").replace("\n", "\\n")
+							.replace("\r", "\\r").replace("\t", "\\t") + "\"";
 		}
 		if (value instanceof Character) {
 			return "'" + value + "'";
@@ -240,6 +242,7 @@ public class AsLiteralSerializer {
 	private List<OutputAssignment> assignments = new ArrayList<OutputAssignment>();
 
 	private Map<OutputInstantiation, List<OutputInstantiation>> addToCollnMap = new HashMap<OutputInstantiation, List<OutputInstantiation>>();
+
 	private Map<OutputInstantiation, List<OutputInstantiation>> addToMapMap = new HashMap<OutputInstantiation, List<OutputInstantiation>>();
 
 	private Set<Class> reachedClasses = new LinkedHashSet<Class>();
@@ -327,15 +330,14 @@ public class AsLiteralSerializer {
 				elts.add(traverse(object, null));
 			}
 		}
-		if(source instanceof Map){
-			Map map=(Map) source;
+		if (source instanceof Map) {
+			Map map = (Map) source;
 			ArrayList<OutputInstantiation> elts = new ArrayList<OutputInstantiation>();
 			addToMapMap.put(instance, elts);
 			for (Object object : map.keySet()) {
 				elts.add(traverse(object, null));
 				elts.add(traverse(map.get(object), null));
 			}
-
 		}
 		return instance;
 	}
@@ -355,8 +357,7 @@ public class AsLiteralSerializer {
 				}
 			}
 			propertyDescriptorsPerClass
-					.put(
-							clazz,
+					.put(clazz,
 							(PropertyDescriptor[]) allPropertyDescriptors
 									.toArray(new PropertyDescriptor[allPropertyDescriptors
 											.size()]));
