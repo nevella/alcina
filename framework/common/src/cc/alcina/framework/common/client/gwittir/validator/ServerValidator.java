@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.io.Serializable;
@@ -29,11 +28,10 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.ValidationException;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ServerValidator implements ParameterisedValidator, Serializable {
+public class ServerValidator implements ParameterisedValidator, Serializable {
 	private String message;
 
 	private transient boolean validating;
@@ -45,7 +43,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 	private transient Object validateAfterServerReturns = null;
 
 	private transient boolean ignoreValidation = false;
-	
+
 	public static boolean performingBeanValidation = false;
 
 	public boolean isValidating() {
@@ -78,7 +76,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 				return value;
 			}
 		}
-		if (GWT.isClient() && !validating&&!performingBeanValidation) {
+		if (GWT.isClient() && !validating && !performingBeanValidation) {
 			validateAfterServerReturns = null;
 			validating = true;
 			validated = false;
@@ -90,8 +88,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 					setMessage("Validator error");
 					resolveFeedback();
 					cleanUp();
-					throw new WrappedRuntimeException(
-							"Validator error", caught);
+					throw new WrappedRuntimeException("Validator error", caught);
 				}
 
 				public void onSuccess(List<ServerValidator> result) {
@@ -104,9 +101,10 @@ import com.totsp.gwittir.client.validator.ValidationException;
 					resolveFeedback();
 					cleanUp();
 				}
+
 				@SuppressWarnings("unchecked")
 				void resolveFeedback() {
-					if(psve.feedback==null){
+					if (psve.feedback == null) {
 						return;
 					}
 					psve.feedback.resolve(psve.sourceWidget);
@@ -128,6 +126,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 						}
 					}
 				}
+
 				@SuppressWarnings("unchecked")
 				void cleanUp() {
 					validating = false;
@@ -136,20 +135,28 @@ import com.totsp.gwittir.client.validator.ValidationException;
 					psve.setFeedback(null);
 					if (validateAfterServerReturns != null) {
 						AbstractBoundWidget bw = (AbstractBoundWidget) psve.sourceWidget;
-						bw.setValue(validateAfterServerReturns);
+						if (bw != null) {
+							bw.setValue(validateAfterServerReturns);
+						}
 					}
 					psve.setSourceWidget(null);
 				}
 			};
-			ClientLayerLocator.get().commonRemoteServiceAsyncInstance().validateOnServer(
-					Arrays.asList(new ServerValidator[] { this }), callback);
+			ClientLayerLocator
+					.get()
+					.commonRemoteServiceAsyncInstance()
+					.validateOnServer(
+							Arrays.asList(new ServerValidator[] { this }),
+							callback);
 			throw psve;
 		}
 		return value;
 	}
-	protected void handleServerValidationException(ServerValidator sv){
+
+	protected void handleServerValidationException(ServerValidator sv) {
 		setMessage(sv.getMessage());
 	}
+
 	public String getValidatingMessage() {
 		return " validating";
 	}
