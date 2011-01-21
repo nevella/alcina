@@ -66,8 +66,8 @@ public class TransformPersister {
 				|| token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
 			try {
 				wrapper = EntityLayerLocator.get().commonPersistenceProvider()
-						.getCommonPersistence().transformInPersistenceContext(
-								this, token);
+						.getCommonPersistence()
+						.transformInPersistenceContext(this, token);
 			} catch (RuntimeException ex) {
 				DeliberatelyThrownWrapperException dtwe = null;
 				if (ex instanceof DeliberatelyThrownWrapperException) {
@@ -179,12 +179,12 @@ public class TransformPersister {
 			if (storageClass != null) {
 				List<Long> ids = new ArrayList<Long>(entry.getValue());
 				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
-					List<Long> idsSlice = ids.subList(i, Math.min(ids.size(), i
-							+ PRECACHE_RQ_SIZE));
+					List<Long> idsSlice = ids.subList(i,
+							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));
 					getEntityManager().createQuery(
 							String.format("from %s where id in %s",
-									storageClass.getSimpleName(), EntityUtils
-											.longsToIdClause(idsSlice)))
+									storageClass.getSimpleName(),
+									EntityUtils.longsToIdClause(idsSlice)))
 							.getResultList();
 				}
 			}
@@ -220,8 +220,7 @@ public class TransformPersister {
 				return wrapException(token, ex);
 			}
 			if (persistentClientInstance.getUser().getId() != PermissionsManager
-					.get().getUserId()
-					&& !token.isIgnoreClientAuthMismatch()) {
+					.get().getUserId() && !token.isIgnoreClientAuthMismatch()) {
 				DomainTransformException ex = new DomainTransformException(
 						"Browser login mismatch with transform request authentication");
 				ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
@@ -245,8 +244,10 @@ public class TransformPersister {
 				}
 			}
 			if (token.getPass() == Pass.TRY_COMMIT) {
-				EntityLayerLocator.get().getMetricLogger().info(
-						String.format("domain transform - %s - clid:"
+				EntityLayerLocator
+						.get()
+						.getMetricLogger()
+						.info(String.format("domain transform - %s - clid:"
 								+ "%s - rqid:%s - lasttransid:%s",
 								persistentClientInstance.getUser()
 										.getUserName(), request
@@ -285,6 +286,12 @@ public class TransformPersister {
 							if (!actionForException.ignoreable()) {
 								throw e;
 							} else {
+								EntityLayerLocator
+										.get()
+										.getMetricLogger()
+										.info(String.format(
+												">>>Event ignored :%s\n",
+												e.getMessage()));
 								request.getEventIdsToIgnore().add(
 										event.getEventId());
 								token.ignored++;
@@ -297,8 +304,7 @@ public class TransformPersister {
 									.getDontFlushTilNthTransform();
 							if (transformCount >= dontFlushTilNthTransform) {
 								getEntityManager().flush();
-								token
-										.setDontFlushTilNthTransform(dontFlushTilNthTransform + 1);
+								token.setDontFlushTilNthTransform(dontFlushTilNthTransform + 1);
 							}
 							transformCount++;
 						} catch (Exception e) {
