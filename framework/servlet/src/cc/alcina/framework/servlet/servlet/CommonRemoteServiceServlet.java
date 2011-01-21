@@ -315,6 +315,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				// transforms. but...perhaps better not (keep as is)
 				rq.setRequestId(wr.getRequestId());
 				rq.fromString(wr.getText());
+				//necessary because event id is used by transformpersister for pass control etc
+				long idCounter=1;
+				for (DomainTransformEvent event : rq.getItems()) {
+					event.setEventId(idCounter++);
+				}
 				DomainTransformLayerWrapper transformLayerWrapper = transform(
 						rq,
 						true,
