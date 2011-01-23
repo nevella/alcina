@@ -58,9 +58,9 @@ public class SearchViewProvider implements ViewProvider {
 	private boolean withoutParameters;
 
 	private List<String> ignoreProperties;
-
+	
 	private SearchPanel searchPanel;
-
+	private boolean initialSearch=true;
 	public SearchPanel getSearchPanel() {
 		return this.searchPanel;
 	}
@@ -157,7 +157,9 @@ public class SearchViewProvider implements ViewProvider {
 				beanView.setVisible(false);
 			}
 			add(resultsHolder);
+			if(isInitialSearch()){
 			search();
+			}
 		}
 
 		public void onClick(ClickEvent event) {
@@ -210,5 +212,13 @@ public class SearchViewProvider implements ViewProvider {
 
 	protected RenderContext getRenderContext() {
 		return new RenderContext();
+	}
+
+	public void setInitialSearch(boolean initialSearch) {
+		this.initialSearch = initialSearch;
+	}
+
+	public boolean isInitialSearch() {
+		return initialSearch;
 	}
 }

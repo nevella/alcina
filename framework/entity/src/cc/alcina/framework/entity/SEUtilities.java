@@ -25,6 +25,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -180,7 +182,7 @@ public class SEUtilities {
 	}
 
 	public static boolean deleteDirectory(File folder) {
-		if (!folder.exists()){
+		if (!folder.exists()) {
 			return false;
 		}
 		Stack<File> pathStack = new Stack<File>();
@@ -414,8 +416,8 @@ public class SEUtilities {
 		case Unix:
 			File file = new File(System.getProperty("user.home")
 					+ File.separator + "Desktop");
-			return (file.exists()) ? file : new File(System
-					.getProperty("user.home"));
+			return (file.exists()) ? file : new File(
+					System.getProperty("user.home"));
 		default:
 			return null;
 		}
@@ -457,8 +459,8 @@ public class SEUtilities {
 
 	public static int getUniqueInt(List<Integer> ints) {
 		while (true) {
-			int i = (int) Math.max(Math
-					.round(Math.random() * Integer.MAX_VALUE) - 1, 0);
+			int i = (int) Math.max(
+					Math.round(Math.random() * Integer.MAX_VALUE) - 1, 0);
 			if (!ints.contains(i)) {
 				return i;
 			}
@@ -617,8 +619,8 @@ public class SEUtilities {
 	}
 
 	public static void copyFile(File in, File out) throws IOException {
-		if (in.isDirectory()){
-			copyDirectory(in,out);
+		if (in.isDirectory()) {
+			copyDirectory(in, out);
 			return;
 		}
 		if (!out.exists()) {
@@ -632,21 +634,20 @@ public class SEUtilities {
 	}
 
 	private static void copyDirectory(File in, File out) throws IOException {
-		if (out.exists()){
-			if (out.isDirectory()){
+		if (out.exists()) {
+			if (out.isDirectory()) {
 				deleteDirectory(out);
-			}else{
+			} else {
 				out.delete();
 			}
 		}
 		out.mkdirs();
 		File[] files = in.listFiles();
 		for (File subIn : files) {
-			File subOut=new File(out.getPath()+File.separator+subIn.getName());
+			File subOut = new File(out.getPath() + File.separator
+					+ subIn.getName());
 			copyFile(subIn, subOut);
 		}
-		
-		
 	}
 
 	public static class Byte {
@@ -755,5 +756,12 @@ public class SEUtilities {
 			return m.start() == 0 ? m.end() : 0;
 		}
 		return 0;
+	}
+
+	public static String getFullExceptionMessage(Throwable t) {
+		StringWriter sw = new StringWriter();
+		sw.write(t.getMessage()+"\n");
+		t.printStackTrace(new PrintWriter(sw));
+		return sw.toString();
 	}
 }
