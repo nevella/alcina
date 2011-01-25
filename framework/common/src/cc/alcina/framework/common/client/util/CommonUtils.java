@@ -364,7 +364,7 @@ public class CommonUtils {
 		return s == null ? "" : s;
 	}
 
-	public static String padString(String input, int length, char padChar) {
+	public static String padStringLeft(String input, int length, char padChar) {
 		input = input == null ? "(null)" : input;
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < length - input.length(); i++) {
@@ -374,7 +374,7 @@ public class CommonUtils {
 		return sb.toString();
 	}
 
-	public static String padStringLeft(String input, int length, char padChar) {
+	public static String padStringRight(String input, int length, char padChar) {
 		input = input == null ? "(null)" : input;
 		StringBuffer sb = new StringBuffer();
 		sb.append(input);
