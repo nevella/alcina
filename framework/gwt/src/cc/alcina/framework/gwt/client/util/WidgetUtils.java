@@ -561,7 +561,14 @@ public class WidgetUtils {
 			}
 		});
 	}
-
+	public native static int getRelativeTopTo(Element elem,Element end) /*-{
+    var top = 0;
+    while (elem!=end) {
+      top += elem.offsetTop;
+      elem = elem.offsetParent;
+    }
+    return top;
+  }-*/;
 	public static void scrollIntoView(Element e, int fromTop) {
 		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
 		int y2 = y1 + Window.getClientHeight();
