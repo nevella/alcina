@@ -128,6 +128,9 @@ public class SEUtilities {
 	public static String normalizeWhitespace(String input) {
 		return WS_PATTERN.matcher(input).replaceAll(" ");
 	}
+	public static String normalizeWhitespaceAndTrim(String input) {
+		return WS_PATTERN.matcher(input).replaceAll(" ").trim();
+	}
 
 	public static String stripWhitespace(String input) {
 		return WS_PATTERN.matcher(input).replaceAll("");
