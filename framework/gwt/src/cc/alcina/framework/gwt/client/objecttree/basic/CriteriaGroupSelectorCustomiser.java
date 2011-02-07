@@ -9,7 +9,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
-import cc.alcina.framework.gwt.client.gwittir.customiser.SelectorCustomiser.BoundSelector;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelector;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 
 /**
