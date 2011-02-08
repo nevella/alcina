@@ -68,7 +68,7 @@ public class BoundSelector extends AbstractBoundWidget implements
 	 * Allows for subclasses which need a model before rendering
 	 */
 	public BoundSelector() {
-		initContainer();
+		renderContainer();
 	}
 
 	public BoundSelector(Class selectionObjectClass) {
@@ -98,11 +98,11 @@ public class BoundSelector extends AbstractBoundWidget implements
 		if(renderer!=null){
 			this.renderer=renderer;
 		}
-		initContainer();
-		renderContents();
+		renderSelects();
+		renderContainer();
 	}
 
-	public void initContainer() {
+	public void renderContainer() {
 		this.grid = new Grid(2, 2);
 		initWidget(grid);
 		grid.setCellPadding(0);
@@ -118,9 +118,9 @@ public class BoundSelector extends AbstractBoundWidget implements
 		grid.setStyleName("alcina-SelectorFrame");
 	}
 
-	public void renderContents() {
+	public void renderSelects() {
 		
-		this.search = new SelectWithSearch();
+		createSearch();
 		search.setItemsHaveLinefeeds(true);
 		search.setSortGroups(true);
 		search.setPopdown(false);
@@ -133,7 +133,7 @@ public class BoundSelector extends AbstractBoundWidget implements
 				MAX_SINGLE_LINE_CHARS);
 		search.getScroller().setHeight("");
 		search.getScroller().setStyleName("scroller");
-		this.results = new SelectWithSearch();
+		createResults();
 		results.setItemsHaveLinefeeds(true);
 		results.setSortGroups(true);
 		results.setPopdown(false);
@@ -152,6 +152,14 @@ public class BoundSelector extends AbstractBoundWidget implements
 		searchWidget.setStyleName("alcina-Selector available");
 		resultsWidget.setStyleName("alcina-Selector selected");
 		
+	}
+
+	protected void createResults() {
+		this.results = new SelectWithSearch();
+	}
+
+	protected void createSearch() {
+		this.search = new SelectWithSearch();
 	}
 
 	@Override

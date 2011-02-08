@@ -85,7 +85,7 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 				values.add(getSearchCriterionDisplayObject((SC) sc));
 			}
 		}
-		renderContents();
+		renderSelects();
 		setValue(values);
 	}
 }

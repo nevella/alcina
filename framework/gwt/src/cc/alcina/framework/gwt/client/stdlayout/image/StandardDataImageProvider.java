@@ -41,7 +41,7 @@ import com.google.gwt.user.client.ui.AbstractImagePrototype;
 		return dataImages;
 	}
 
-	public static StandardDataImageProvider standardDipInstance() {
+	public static StandardDataImageProvider get() {
 		StandardDataImageProvider dip = new StandardDataImageProvider();
 		dip.dataImages = GWT.create(StandardDataImages.class);
 		return dip;

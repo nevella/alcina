@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
@@ -43,12 +43,15 @@ import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
+import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
@@ -131,6 +134,8 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	private String separatorText = " ";
 
 	private ShowHintStrategy showHintStrategy;
+
+	private String popupPanelCssClassName = "noBorder";
 
 	// additional problem with ff
 	public SelectWithSearch() {
@@ -313,8 +318,9 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 					selectedIndex = -1;
 				} else {
 					if (wrappedEnterListener != null) {
-						WidgetUtils.fireClickOnHandler((HasClickHandlers) event
-								.getSource(), wrappedEnterListener);
+						WidgetUtils.fireClickOnHandler(
+								(HasClickHandlers) event.getSource(),
+								wrappedEnterListener);
 						hidePopdown = true;
 					}
 				}
@@ -448,9 +454,9 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	public void onFocus(FocusEvent event) {
 		Widget sender = (Widget) event.getSource();
 		int i = 0;
-//		log("gained focus, flowPanelForFocusPanel vis:"
-//				+ panelForPopup.isVisible() + "-widget:"
-//				+ sender.getClass().getName(), null);
+		// log("gained focus, flowPanelForFocusPanel vis:"
+		// + panelForPopup.isVisible() + "-widget:"
+		// + sender.getClass().getName(), null);
 		checkShowPopup();
 		waitingToFocus = true;
 		new Timer() {
@@ -464,17 +470,17 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	}
 
 	public void onBlur(BlurEvent event) {
-//		log("lost focus, fp vis:" + panelForPopup.isVisible() + "-widget:"
-//				+ event.getSource().getClass().getName(), null);
+		// log("lost focus, fp vis:" + panelForPopup.isVisible() + "-widget:"
+		// + event.getSource().getClass().getName(), null);
 		if (!waitingToFocus) {
 			new Timer() {
 				@Override
 				public void run() {
-//					log("lost focus timer", null);
+					// log("lost focus timer", null);
 					if (!waitingToFocus) {
-//						log("not waiting - lost focus-butc", null);
+						// log("not waiting - lost focus-butc", null);
 						if ((relativePopupPanel == null || relativePopupPanel
-								.getParent() == null)){
+								.getParent() == null)) {
 							relativePopupPanel.hide();
 						}
 					}
@@ -566,10 +572,8 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			for (T item : itemMap.get(c)) {
 				String sep = (--ctr != 0 && separatorText.length() != 1) ? separatorText
 						: "";
-				HasClickHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
-						item, false, charWidth, itemsHaveLinefeeds, l, sep)
-						: new SelectWithSearchItem(item, false, charWidth,
-								itemsHaveLinefeeds, l, sep);
+				HasClickHandlers hch = createItem(item, false, charWidth,
+						itemsHaveLinefeeds, l, sep);
 				hch.addClickHandler(clickHandler);
 				if (popdown) {
 					hch.addClickHandler(popdownHider);
@@ -580,6 +584,15 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 				}
 			}
 		}
+	}
+
+	public HasClickHandlers createItem(T item, boolean asHTML, int charWidth,
+			boolean itemsHaveLinefeeds, Label ownerLabel, String sep) {
+		HasClickHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
+				item, false, charWidth, itemsHaveLinefeeds, ownerLabel, sep)
+				: new SelectWithSearchItem(item, false, charWidth,
+						itemsHaveLinefeeds, ownerLabel, sep);
+		return hch;
 	}
 
 	// TODO:hcdim
@@ -602,8 +615,10 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			filter(filter.getTextBox().getText());
 			this.relativePopupPanel = RelativePopupPositioning.showPopup(
 					filter, panelForPopup, RootPanel.get(),
-					RelativePopupPositioning.BOTTOM_LTR, "noBorder");
-			this.relativePopupPanel.setWidth(this.relativePopupPanel.getOffsetWidth()+"px");
+					RelativePopupPositioning.BOTTOM_LTR,
+					getPopupPanelCssClassName());
+//			this.relativePopupPanel.setWidth(this.relativePopupPanel
+//					.getOffsetWidth() + "px");
 		}
 	}
 
@@ -634,8 +649,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 		LazyData dataRequired();
 	}
 
-	public class SelectWithSearchItem extends Link implements VisualFilterable,
-			HasItem<T> {
+	public class SelectWithSearchItem extends Link implements VisualFilterable {
 		private String filterableText;
 
 		private final T item;
@@ -647,7 +661,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			super(item.toString() + sep, asHTML);
 			this.item = item;
 			this.ownerLabel = ownerLabel;
-			String text = (String) renderer.render(item)+ sep;
+			String text = (String) renderer.render(item) + sep;
 			filterableText = text.toLowerCase();
 			// if (text.length() < charWidth) {
 			// this is just too hacky - use mouseover highlight to differentiate
@@ -673,6 +687,57 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			return item;
 		}
 	}
+
+	public class SelectWithSearchItemX extends SpanPanel implements
+			VisualFilterable, HasItem<T>, HasClickHandlers {
+		private String filterableText;
+
+		private final T item;
+
+		private final Label ownerLabel;
+
+		private Link hl;
+
+		public SelectWithSearchItemX(T item, boolean asHTML, int charWidth,
+				boolean withLfs, Label ownerLabel, String sep) {
+			Label label = asHTML ? new InlineHTML(item.toString())
+					: new InlineLabel(item.toString());
+			add(label);
+			label.setStyleName("text");
+			this.item = item;
+			this.ownerLabel = ownerLabel;
+			String text = (String) renderer.render(item);
+			filterableText = text.toLowerCase();
+			AbstractImagePrototype aip = AbstractImagePrototype
+					.create(StandardDataImageProvider.get().getDataImages()
+							.deleteItem());
+			hl = new Link(aip.getHTML(), true);
+			hl.setUserObject(item);
+			add(label);
+			add(hl);
+			setStyleName("selectx");
+		}
+
+		public boolean filter(String filterText) {
+			boolean b = filterableText.contains(filterText)
+					&& !selectedItems.contains(item);
+			setVisible(b);
+			if (b && !ownerLabel.isVisible()) {
+				ownerLabel.setVisible(true);
+			}
+			return b;
+		}
+
+		public T getItem() {
+			return item;
+		}
+
+		@Override
+		public HandlerRegistration addClickHandler(ClickHandler handler) {
+			return hl.addClickHandler(handler);
+		}
+	}
+
 	private Renderer renderer = ToStringRenderer.INSTANCE;
 
 	public Renderer getRenderer() {
@@ -684,7 +749,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	}
 
 	public class SelectWithSearchItemDiv extends BlockLink implements
-			VisualFilterable, HasItem<T> {
+			VisualFilterable {
 		private String filterableText;
 
 		private final T item;
@@ -743,5 +808,19 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 
 	public String getPopdownStyleName() {
 		return popdownStyleName;
+	}
+
+	public void removeScroller() {
+		Widget child = scroller.getWidget();
+		holder.remove(scroller);
+		holder.add(child);
+	}
+
+	public void setPopupPanelCssClassName(String popupPanelCssClassName) {
+		this.popupPanelCssClassName = popupPanelCssClassName;
+	}
+
+	public String getPopupPanelCssClassName() {
+		return popupPanelCssClassName;
 	}
 }

@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.widget;
 
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -32,7 +33,7 @@ import com.totsp.gwittir.client.ui.HasEnabled;
  * @author Nick Reddel
  */
 public class Link<T> extends Widget implements HasHTML, HasEnabled,
-		HasClickHandlers {
+		HasClickHandlers,HasItem<T> {
 	protected Element anchorElem;
 
 	private T userObject;
@@ -177,5 +178,10 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 
 	public void setTarget(String target) {
 		DOM.setElementProperty(anchorElem, "target", target);
+	}
+
+	@Override
+	public T getItem() {
+		return userObject;
 	}
 }

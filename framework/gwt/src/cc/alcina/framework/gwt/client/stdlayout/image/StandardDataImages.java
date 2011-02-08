@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.stdlayout.image;
 
 import com.google.gwt.resources.client.ClientBundle;
@@ -19,11 +18,10 @@ import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.Tree.Resources;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface StandardDataImages extends ClientBundle, Resources {
+public interface StandardDataImages extends ClientBundle, Resources {
 	ImageResource backupRoot();
 
 	ImageResource folder();
@@ -41,10 +39,12 @@ import com.google.gwt.user.client.ui.Tree.Resources;
 	ImageResource minimise();
 
 	ImageResource error();
-	
+
 	ImageResource errorSmall();
 
 	ImageResource warning();
 
 	ImageResource info();
+
+	ImageResource deleteItem();
 }

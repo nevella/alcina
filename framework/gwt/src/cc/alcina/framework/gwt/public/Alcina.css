@@ -709,6 +709,9 @@ table.alcina-SelectorFrame {
 table.gwittir-GridForm table.alcina-SelectorFrame td {
 	padding: 0px;
 }
+div.alcina-Selector .chooser-item.selected,div.select-item-container .chooser-item.selected{
+	background-color:#A8D3E6;
+}
 
 div.alcina-Selector {
 	width: 250px;
@@ -766,7 +769,44 @@ div.alcina-BeanPanel div.alcina-BreadcrumbBar.font-grey {
 	color: #505050;
 	font-weight: bold
 }
+/* Minimal selector */
+table.alcina-SelectorFrame.minimal .invisible{
+	display:none;
+}
+table.alcina-SelectorFrame.minimal div.alcina-Selector.selected{
+	margin: 3px 2px 3px 2px;
+}
+table.alcina-SelectorFrame.minimal div.alcina-FilterHolder{
+	border: none;
+}
+table.alcina-SelectorFrame.minimal div.alcina-Selector.available{
+	border-right:none;
+}
+table.alcina-SelectorFrame.minimal input.alcina-Filter{
+	border: none;
+}
+table.alcina-SelectorFrame.minimal input.alcina-Filter:focus{
+	outline-width:0;
+}
+.minimal-popDown{
+	min-width: 250px;
+}
 
+table.alcina-SelectorFrame.minimal div.alcina-Selector{
+	height:inherit;
+}
+.selectx .text{
+	padding-right:6px;
+}
+.selectx{
+	padding: 1px 2px;
+	background: #D0DFEE;
+	border: 1px solid #7077EE;
+	-moz-border-radius: 0.3em;
+	border-radius: 0.3em;
+	-webkit-border-radius: 0.3em;
+	 
+}
 /*Object tree rendering */
 div.alcina-ObjectTree .customiser {
 	margin-bottom: 15px;

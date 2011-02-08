@@ -63,7 +63,7 @@ public class ClientConfiguration {
 				new ClientUTCDateProvider());
 		
 		DataImageProvider.register(StandardDataImageProvider
-				.standardDipInstance());
+				.get());
 		TransformManager.get().setupClientListeners();
 		TransformManager.get().addDomainTransformListener(
 				PermissionsManager.get());
