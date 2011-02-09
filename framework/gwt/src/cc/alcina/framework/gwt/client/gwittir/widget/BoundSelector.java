@@ -21,6 +21,7 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
@@ -53,6 +54,8 @@ public class BoundSelector extends AbstractBoundWidget implements
 
 	protected Widget searchWidget;
 
+	private FlowPanel container;
+
 	protected boolean isMultipleSelect() {
 		return maxSelectedItems != 1;
 	}
@@ -68,7 +71,7 @@ public class BoundSelector extends AbstractBoundWidget implements
 	 * Allows for subclasses which need a model before rendering
 	 */
 	public BoundSelector() {
-		renderContainer();
+		redrawContainer();
 	}
 
 	public BoundSelector(Class selectionObjectClass) {
@@ -98,13 +101,15 @@ public class BoundSelector extends AbstractBoundWidget implements
 		if(renderer!=null){
 			this.renderer=renderer;
 		}
+		container = new FlowPanel();
+		initWidget(container);
 		renderSelects();
-		renderContainer();
+		redrawContainer();
 	}
 
-	public void renderContainer() {
+	public void redrawContainer() {
+		container.clear();
 		this.grid = new Grid(2, 2);
-		initWidget(grid);
 		grid.setCellPadding(0);
 		grid.setCellSpacing(0);
 		grid.setWidget(0, 0, createHeader("Available items", "available"));
@@ -116,6 +121,7 @@ public class BoundSelector extends AbstractBoundWidget implements
 		grid.setWidget(1, 0, searchWidget);
 		grid.setWidget(1, 1, resultsWidget);
 		grid.setStyleName("alcina-SelectorFrame");
+		container.add(grid);
 	}
 
 	public void renderSelects() {

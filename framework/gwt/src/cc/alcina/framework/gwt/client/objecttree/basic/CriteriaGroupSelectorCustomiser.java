@@ -87,5 +87,6 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 		}
 		renderSelects();
 		setValue(values);
+		redrawContainer();
 	}
 }
