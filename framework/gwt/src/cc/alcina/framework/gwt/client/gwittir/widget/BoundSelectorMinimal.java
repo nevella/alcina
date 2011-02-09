@@ -42,6 +42,14 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	@Override
+	protected void addItem(Object item) {
+		super.addItem(item);
+		if (search.getFilter().isHintWasCleared()) {
+			search.getFilter().getTextBox().setText("");
+		}
+	}
+
+	@Override
 	protected void customiseLeftWidget() {
 		search.setPopdown(true);
 		search.setHint("Add new tags");

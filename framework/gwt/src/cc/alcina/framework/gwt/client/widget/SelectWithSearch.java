@@ -136,6 +136,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	private ShowHintStrategy showHintStrategy;
 
 	private String popupPanelCssClassName = "noBorder";
+	
 
 	// additional problem with ff
 	public SelectWithSearch() {

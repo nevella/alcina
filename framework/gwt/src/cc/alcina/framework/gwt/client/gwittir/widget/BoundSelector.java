@@ -275,7 +275,7 @@ public class BoundSelector extends AbstractBoundWidget implements
 		search.filter(null);
 	}
 
-	private void addItem(Object item) {
+	protected void addItem(Object item) {
 		if (search.getSelectedItems().add(item)) {
 			((List) results.getItemMap().get("")).add(item);
 			results.setItemMap(results.getItemMap());
