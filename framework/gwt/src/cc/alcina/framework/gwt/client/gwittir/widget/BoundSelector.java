@@ -54,7 +54,7 @@ public class BoundSelector extends AbstractBoundWidget implements
 
 	protected Widget searchWidget;
 
-	private FlowPanel container;
+	protected FlowPanel container;
 
 	protected boolean isMultipleSelect() {
 		return maxSelectedItems != 1;
@@ -71,7 +71,7 @@ public class BoundSelector extends AbstractBoundWidget implements
 	 * Allows for subclasses which need a model before rendering
 	 */
 	public BoundSelector() {
-		redrawContainer();
+		initContainer();
 	}
 
 	public BoundSelector(Class selectionObjectClass) {
@@ -101,13 +101,17 @@ public class BoundSelector extends AbstractBoundWidget implements
 		if(renderer!=null){
 			this.renderer=renderer;
 		}
-		container = new FlowPanel();
-		initWidget(container);
+		initContainer();
 		renderSelects();
-		redrawContainer();
+		redrawGrid();
 	}
 
-	public void redrawContainer() {
+	private void initContainer() {
+		container = new FlowPanel();
+		initWidget(container);
+	}
+
+	public void redrawGrid() {
 		container.clear();
 		this.grid = new Grid(2, 2);
 		grid.setCellPadding(0);

@@ -31,7 +31,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	@Override
-	public void redrawContainer() {
+	public void redrawGrid() {
 		this.grid = new Grid(2, 1);
 		initWidget(grid);
 		grid.setCellPadding(0);

@@ -7,6 +7,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.gwt.user.client.ui.FlowPanel;
+
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelector;
@@ -87,6 +89,6 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 		}
 		renderSelects();
 		setValue(values);
-		redrawContainer();
+		redrawGrid();
 	}
 }
