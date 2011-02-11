@@ -7,11 +7,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.gwt.user.client.ui.FlowPanel;
-
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
-import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelector;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 
 /**
@@ -20,7 +18,7 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
  * 
  */
 public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, SC extends SearchCriterion, O>
-		extends BoundSelector {
+		extends BoundSelectorMinimal {
 	protected C criteriaGroup;
 
 	private PropertyChangeListener pcl = new PropertyChangeListener() {
@@ -58,16 +56,17 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 
 	@Override
 	protected void customiseLeftWidget() {
-		search.setItemsHaveLinefeeds(false);
-		search.setSeparatorText(" - ");
+		super.customiseLeftWidget();
 		search.setSortGroups(true);
 		search.setSortGroupContents(true);
 	}
 
 	protected void customiseRightWidget() {
+		super.customiseRightWidget();
 		results.setItemsHaveLinefeeds(true);
 		results.setSortGroups(true);
 		results.setSortGroupContents(true);
+		
 	}
 
 	@Override

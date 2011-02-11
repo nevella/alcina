@@ -195,7 +195,9 @@ public class RelativePopupPositioning {
 			final Widget widgetToShow, final Widget boundingWidget,
 			final RelativePopupAxis[] axes, Widget relativeContainer,
 			final RelativePopupPanel rpp, final int shiftX, final int shiftY) {
-		rpp.setWidget(widgetToShow);
+		if(widgetToShow!=null){
+			rpp.setWidget(widgetToShow);
+		}
 		final Widget positioningWidget = relativeContainer != null ? relativeContainer
 				: WidgetUtils.getPositioningParent(relativeToWidget);
 		ComplexPanel cp = WidgetUtils.complexChildOrSelf(positioningWidget);

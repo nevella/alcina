@@ -25,6 +25,8 @@ import java.util.Set;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
+import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
@@ -48,6 +50,7 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
+import com.google.gwt.user.client.ui.DecoratedPopupPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
@@ -100,7 +103,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 
 	boolean waitingToFocus = false;
 
-	private FlowPanel panelForPopup;
+	private DecoratedRelativePopupPanel panelForPopup;
 
 	private boolean closingOnClick = false;
 
@@ -136,7 +139,6 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	private ShowHintStrategy showHintStrategy;
 
 	private String popupPanelCssClassName = "noBorder";
-	
 
 	// additional problem with ff
 	public SelectWithSearch() {
@@ -208,9 +210,11 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 		holder.setStyleName("alcina-Chooser");
 		holder.add(filter);
 		if (popdown) {
-			panelForPopup = new FlowPanel();
-			panelForPopup.addStyleName("pop-down");
-			panelForPopup.setHeight(holderHeight);
+			panelForPopup = new DecoratedRelativePopupPanel(true);
+			panelForPopup.setStyleName("dropdown-popup");
+			panelForPopup.addStyleName("alcina-Selector");
+			panelForPopup.getElement().getStyle()
+					.setProperty("maxHeight", holderHeight);
 			panelForPopup.add(scroller);
 			filter.getTextBox().addFocusHandler(this);
 			filter.getTextBox().addBlurHandler(this);
@@ -614,12 +618,23 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 				panelForPopup.addStyleName(popdownStyleName);
 			}
 			filter(filter.getTextBox().getText());
-			this.relativePopupPanel = RelativePopupPositioning.showPopup(
-					filter, panelForPopup, RootPanel.get(),
-					RelativePopupPositioning.BOTTOM_LTR,
-					getPopupPanelCssClassName());
-//			this.relativePopupPanel.setWidth(this.relativePopupPanel
-//					.getOffsetWidth() + "px");
+			this.relativePopupPanel = RelativePopupPositioning
+					.showPopup(
+							filter,
+							null,
+							RootPanel.get(),
+							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
+							RootPanel.get(), panelForPopup, -2, 0);
+			int border = 2;
+			if (fp.getOffsetHeight() + border > panelForPopup.getOffsetHeight()) {
+				scroller.setHeight((panelForPopup.getOffsetHeight() - border)
+						+ "px");
+			}
+			int minWidth = getFilter().getOffsetWidth() ;
+			if (minWidth > 20) {
+				scroller.getElement().getStyle()
+						.setProperty("minWidth", minWidth + "px");
+			}
 		}
 	}
 

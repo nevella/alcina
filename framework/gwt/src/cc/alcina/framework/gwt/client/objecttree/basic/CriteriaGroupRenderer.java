@@ -41,6 +41,7 @@ public class CriteriaGroupRenderer<T extends CriteriaGroup> extends
 		return "sub-head";
 	}
 
+
 	public RenderInstruction renderInstruction() {
 		return RenderInstruction.AS_TITLE;
 	}

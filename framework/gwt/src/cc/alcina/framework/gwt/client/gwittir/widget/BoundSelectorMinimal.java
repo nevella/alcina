@@ -32,13 +32,14 @@ public class BoundSelectorMinimal extends BoundSelector {
 
 	@Override
 	public void redrawGrid() {
+		container.clear();
 		this.grid = new Grid(2, 1);
-		initWidget(grid);
 		grid.setCellPadding(0);
 		grid.setCellSpacing(0);
 		grid.setWidget(0, 0, resultsWidget);
 		grid.setWidget(1, 0, searchWidget);
 		grid.setStyleName("alcina-SelectorFrame minimal");
+		container.add(grid);
 	}
 
 	@Override
@@ -52,7 +53,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	protected void customiseLeftWidget() {
 		search.setPopdown(true);
-		search.setHint("Add new tags");
+		search.setHint("Type to select");
 		search.setItemsHaveLinefeeds(true);
 		search.setHolderHeight("200px");
 		search.setPopupPanelCssClassName("minimal-popDown");

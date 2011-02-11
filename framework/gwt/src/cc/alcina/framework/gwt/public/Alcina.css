@@ -704,6 +704,7 @@ div.alcina-Chooser input.chooser-text {
 table.alcina-SelectorFrame {
 	border: 1px solid #cdcdcd;
 	background-color: white;
+	margin-bottom:3px;
 }
 
 table.gwittir-GridForm table.alcina-SelectorFrame td {
@@ -720,8 +721,8 @@ div.alcina-Selector {
 div.alcina-Selector .scroller{
 	height: 115px;	
 }
-div.alcina-Selector input.alcina-Filter {
-	width: 200px;
+div.alcina-Selector input.alcina-Filter[type="text"]{
+	width: 300px;
 }
 
 div.alcina-Selector div.alcina-FilterHolder {
@@ -773,8 +774,12 @@ div.alcina-BeanPanel div.alcina-BreadcrumbBar.font-grey {
 table.alcina-SelectorFrame.minimal .invisible{
 	display:none;
 }
+table.alcina-SelectorFrame.minimal .select-item-container{
+	padding: 1px 2px 1px 2px;
+	line-height: 20px;
+}
 table.alcina-SelectorFrame.minimal div.alcina-Selector.selected{
-	margin: 3px 2px 3px 2px;
+	margin: 0px 2px 0px 2px;
 }
 table.alcina-SelectorFrame.minimal div.alcina-FilterHolder{
 	border: none;
@@ -794,6 +799,7 @@ table.alcina-SelectorFrame.minimal input.alcina-Filter:focus{
 
 table.alcina-SelectorFrame.minimal div.alcina-Selector{
 	height:inherit;
+	width: inherit;
 }
 .selectx .text{
 	padding-right:6px;
@@ -862,7 +868,7 @@ div.alcina-ObjectTree input[type="text"] {
 div.alcina-ObjectTree .results-table {
 	width: 100%;
 }
-div.alcina-ObjectTree .alcina-Selector .group-heading{
+div.alcina-ObjectTree .alcina-Selector .group-heading,.alcina-Selector .popupContent .group-heading{
 	color: #717171;
 	background-color:#f4f4f4;
 }
@@ -1272,4 +1278,47 @@ table.gwittir-BoundTable td.editableOver{
 div.max .gwt-RichTextArea{
 	height: 440px;	
 }
- 
+ /* dropdown */
+.dropdown-popup .popupContent{
+	background-color:#fff;
+	border: 1px solid #bbb;
+	
+}
+.dropdown-popup .popupTopLeft{
+	
+}
+.dropdown-popup .popupTopRight{
+		
+}
+
+.dropdown-popup .popupMiddleLeft{
+	background: url(_pix/dropdown-shadow/l.png);
+	background-repeat:repeat-y;
+	width:8px;	
+}
+.dropdown-popup .popupMiddleRight{
+	background: url(_pix/dropdown-shadow/r.png);
+	background-repeat:repeat-y;
+	width:8px;	
+}
+.dropdown-popup .popupBottomLeft{
+	background: url(_pix/dropdown-shadow/lb.png);
+	width:8px;	
+	height:14px;
+}
+.dropdown-popup .popupBottomRight{
+	background: url(_pix/dropdown-shadow/rb.png);
+	width:8px;
+	height:14px;	
+}
+.dropdown-popup .popupBottomCenter{
+	background: url(_pix/dropdown-shadow/b.png);
+	background-repeat:repeat-x;
+	height:14px;
+}
+.alcina-Selector .popupContent{
+	padding: 2px 0px;
+}
+.alcina-Selector .popupContent .chooser-item{
+	padding:0px 3px;
+} 
