@@ -728,7 +728,6 @@ div.alcina-Selector input.alcina-Filter[type="text"]{
 div.alcina-Selector div.alcina-FilterHolder {
 	background-color: transparent;
 }
-
 div.alcina-Selector.available {
 	border-right: 1px solid #cdcdcd;
 }
@@ -783,6 +782,8 @@ table.alcina-SelectorFrame.minimal div.alcina-Selector.selected{
 }
 table.alcina-SelectorFrame.minimal div.alcina-FilterHolder{
 	border: none;
+	padding-top:0px;
+	padding-bottom:0px;
 }
 table.alcina-SelectorFrame.minimal div.alcina-Selector.available{
 	border-right:none;
@@ -800,17 +801,19 @@ table.alcina-SelectorFrame.minimal input.alcina-Filter:focus{
 table.alcina-SelectorFrame.minimal div.alcina-Selector{
 	height:inherit;
 	width: inherit;
+	max-width: 300px;
 }
 .selectx .text{
 	padding-right:6px;
 }
 .selectx{
 	padding: 1px 2px;
-	background: #D0DFEE;
-	border: 1px solid #7077EE;
+	background: #DEE6EE;
+	border: 1px solid #7DB0E4;
 	-moz-border-radius: 0.3em;
 	border-radius: 0.3em;
 	-webkit-border-radius: 0.3em;
+	white-space:nowrap;
 	 
 }
 /*Object tree rendering */
@@ -823,6 +826,10 @@ div.alcina-ObjectTree .gwt-TextBox.customiser {
 div.alcina-ObjectTree td.td0{
 	padding-right:15px;
 }
+div.alcina-ObjectTree td.td0.multiline-caption{
+	padding-top:7px;
+}
+
 div.alcina-ObjectTree .hint{
 	color:#717171;
 	font-style: italic;
@@ -871,8 +878,12 @@ div.alcina-ObjectTree .results-table {
 div.alcina-ObjectTree .alcina-Selector .group-heading,.alcina-Selector .popupContent .group-heading{
 	color: #717171;
 	background-color:#f4f4f4;
+	
 }
-
+.alcina-Selector .popupContent .group-heading{
+	font-weight:bold;
+	padding-left:5px;
+}
 /**SEARCH-RESULTS TABLES*/
 table.results-table {
 	width: 100%;
@@ -1317,7 +1328,7 @@ div.max .gwt-RichTextArea{
 	height:14px;
 }
 .alcina-Selector .popupContent{
-	padding: 2px 0px;
+	padding: 0;
 }
 .alcina-Selector .popupContent .chooser-item{
 	padding:0px 3px;

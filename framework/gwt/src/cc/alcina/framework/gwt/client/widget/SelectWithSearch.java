@@ -508,6 +508,9 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 
 	public void setHint(String hint) {
 		this.hint = hint;
+		if(filter!=null){
+			filter.setHint(hint);
+		}
 	}
 
 	public void setHolderHeight(String holderHeight) {
@@ -630,7 +633,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 				scroller.setHeight((panelForPopup.getOffsetHeight() - border)
 						+ "px");
 			}
-			int minWidth = getFilter().getOffsetWidth() ;
+			int minWidth = holder.getOffsetWidth();
 			if (minWidth > 20) {
 				scroller.getElement().getStyle()
 						.setProperty("minWidth", minWidth + "px");

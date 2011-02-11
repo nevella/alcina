@@ -73,6 +73,7 @@ public class ObjectTreeGridRenderer extends ObjectTreeRenderer {
 									.isSingleLineCustomiser()) {
 						cellFormatter.setVerticalAlignment(row, 0,
 								HasVerticalAlignment.ALIGN_TOP);
+						cellFormatter.addStyleName(row, 0, "multiline-caption");
 					}
 					level1Rows.put(row, w);
 				}

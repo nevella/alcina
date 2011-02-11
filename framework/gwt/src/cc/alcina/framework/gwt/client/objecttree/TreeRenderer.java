@@ -35,6 +35,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  * @author Nick Reddel
  */
 public interface TreeRenderer<T extends TreeRenderable> {
+	public static final String TOOLTIP_HINT="(Tooltip)";
 	public CollectionProvider collectionProvider();
 
 	public String emptyChildText();
@@ -42,7 +43,7 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	public T getRenderable();
 
 	public String hint();
-
+	
 	public boolean isAlwaysExpanded();
 
 	public boolean isSingleLineCustomiser();

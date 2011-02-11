@@ -141,9 +141,15 @@ public class ObjectTreeRenderer {
 			}
 			String customiserStyleName = node.isSingleLineCustomiser() ? "single-line-customiser"
 					: "customiser";
-			if (node.hint() != null) {
+			String hint = node.hint();
+			if(hint!=null&&hint.startsWith(TreeRenderer.TOOLTIP_HINT)){
+				hint=hint.substring(TreeRenderer.TOOLTIP_HINT.length());
+				customiserWidget.setTitle(hint);
+				hint=null;
+			}
+			if (hint != null) {
 				FlowPanel fp2 = new FlowPanel();
-				Label label = new Label(node.hint());
+				Label label = new Label(hint);
 				label.setStyleName("hint");
 				fp2.add(customiserWidget);
 				fp2.add(label);
@@ -158,8 +164,8 @@ public class ObjectTreeRenderer {
 		if (node.renderInstruction() == RenderInstruction.AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD
 				|| node.renderInstruction() == RenderInstruction.AS_WIDGET) {
 			AbstractBoundWidget bw = new ObjectTreeBoundWidgetCreator()
-					.createBoundWidget(renderable, depth, soleChild, node, op
-							.getBinding());
+					.createBoundWidget(renderable, depth, soleChild, node,
+							op.getBinding());
 			node.setBoundWidget(bw);
 			cp.add(bw);
 			widgetsAdded = true;
@@ -194,8 +200,8 @@ public class ObjectTreeRenderer {
 				int depth, boolean soleChild, TreeRenderer node,
 				Binding parentBinding) {
 			String propertyName = node.renderablePropertyName();
-			Class type = GwittirBridge.get().getProperty(renderable,
-					propertyName).getType();
+			Class type = GwittirBridge.get()
+					.getProperty(renderable, propertyName).getType();
 			Field f = GwittirBridge.get().getField(renderable.getClass(),
 					propertyName, true, false);
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
@@ -220,9 +226,9 @@ public class ObjectTreeRenderer {
 						"Exception rendering object tree", e);
 			}
 			Binding binding = BindingBuilder.bind(bw).onLeftProperty("value")
-					.validateLeftWith(f.getValidator()).notifiedWithLeft(
-							f.getFeedback() != null ? vf : null).toRight(
-							renderable).onRightProperty(propertyName)
+					.validateLeftWith(f.getValidator())
+					.notifiedWithLeft(f.getFeedback() != null ? vf : null)
+					.toRight(renderable).onRightProperty(propertyName)
 					.convertRightWith(f.getConverter()).toBinding();
 			if (parentBinding != null) {
 				parentBinding.getChildren().add(binding);

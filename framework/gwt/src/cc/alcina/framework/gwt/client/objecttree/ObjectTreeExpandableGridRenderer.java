@@ -39,6 +39,8 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 
 	public static final String DEFAULT_SECTION_NAME = "DEFAULT_SECTION_NAME";
 
+	private boolean useExpandableWidgets = true;
+
 	@Override
 	protected void renderToPanel(TreeRenderable renderable, ComplexPanel cp,
 			int depth, boolean soleChild, RenderContext renderContext,
@@ -47,29 +49,31 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 				parent);
 		if (depth == 0) {
 			cp.remove(ft);
-			for (Integer level1Row : level1Rows.keySet()) {
-				Widget level1ContentWidget = level1Rows.get(level1Row);
-				TreeRenderer renderer = ObjectTreeExpandableGridRenderer.this.level1ContentRendererMap
-						.get(level1ContentWidget);
-				if (renderer.isAlwaysExpanded()) {
-					continue;
+			if (useExpandableWidgets) {
+				for (Integer level1Row : level1Rows.keySet()) {
+					Widget level1ContentWidget = level1Rows.get(level1Row);
+					TreeRenderer renderer = ObjectTreeExpandableGridRenderer.this.level1ContentRendererMap
+							.get(level1ContentWidget);
+					if (renderer.isAlwaysExpanded()) {
+						continue;
+					}
+					final ExpandableWidgetWithRendererWrapper expandableWidgetWrapper = new ExpandableWidgetWithRendererWrapper(
+							level1ContentWidget, renderer, renderContext);
+					ft.setWidget(level1Row, 1, expandableWidgetWrapper);
+					ft.setWidget(level1Row, colCountMax + 1, new ToggleLink(
+							"[Change]", "[Finished]",
+							new SelectionHandler<Integer>() {
+								public void onSelection(
+										SelectionEvent<Integer> event) {
+									expandableWidgetWrapper.showExpanded(event
+											.getSelectedItem() == 0);
+									LayoutEvents.get()
+											.deferRequiresGlobalRelayout();
+								}
+							}));
+					cellFormatter.setVerticalAlignment(level1Row,
+							colCountMax + 1, HasVerticalAlignment.ALIGN_TOP);
 				}
-				final ExpandableWidgetWithRendererWrapper expandableWidgetWrapper = new ExpandableWidgetWithRendererWrapper(
-						level1ContentWidget, renderer, renderContext);
-				ft.setWidget(level1Row, 1, expandableWidgetWrapper);
-				ft.setWidget(level1Row, colCountMax + 1, new ToggleLink(
-						"[Change]", "[Finished]",
-						new SelectionHandler<Integer>() {
-							public void onSelection(
-									SelectionEvent<Integer> event) {
-								expandableWidgetWrapper.showExpanded(event
-										.getSelectedItem() == 0);
-								LayoutEvents.get()
-										.deferRequiresGlobalRelayout();
-							}
-						}));
-				cellFormatter.setVerticalAlignment(level1Row, colCountMax + 1,
-						HasVerticalAlignment.ALIGN_TOP);
 			}
 			colCountMax += level1Rows.isEmpty() ? 0 : 1;
 			// sort later
@@ -85,14 +89,22 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 					section = rs;
 					int rowInsert = i + (rowShift++);
 					ft.insertRow(rowInsert);
-					ft.setWidget(rowInsert, 0, UsefulWidgetFactory
-							.mediumTitleWidget(section));
+					ft.setWidget(rowInsert, 0,
+							UsefulWidgetFactory.mediumTitleWidget(section));
 					cellFormatter.setColSpan(rowInsert, 0, colCountMax);
 				}
 			}
 			cp.add(ft);
 		}
 		return;
+	}
+
+	public void setUseExpandableWidgets(boolean useExpandableWidgets) {
+		this.useExpandableWidgets = useExpandableWidgets;
+	}
+
+	public boolean isUseExpandableWidgets() {
+		return useExpandableWidgets;
 	}
 
 	class ExpandableWidgetWithRendererWrapper extends Composite {

@@ -30,8 +30,8 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
-public class BoundSelector extends AbstractBoundWidget implements
-		ClickHandler, MultilineWidget {
+public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
+		MultilineWidget {
 	private static final int MAX_SINGLE_LINE_CHARS = 42;
 
 	public static final String VALUE_PROPERTY_NAME = "value";
@@ -88,23 +88,29 @@ public class BoundSelector extends AbstractBoundWidget implements
 		this(selectionObjectClass, filter, 0);
 	}
 
-	public BoundSelector(Class selectionObjectClass,
-			CollectionFilter filter, int maxSelectedItems) {
+	public BoundSelector(Class selectionObjectClass, CollectionFilter filter,
+			int maxSelectedItems) {
 		this(selectionObjectClass, filter, maxSelectedItems, null);
 	}
 
-	public BoundSelector(Class selectionObjectClass,
-			CollectionFilter filter, int maxSelectedItems, Renderer renderer) {
+	public BoundSelector(Class selectionObjectClass, CollectionFilter filter,
+			int maxSelectedItems, Renderer renderer) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
-		if(renderer!=null){
-			this.renderer=renderer;
+		if (renderer != null) {
+			this.renderer = renderer;
 		}
 		initContainer();
 		renderSelects();
 		redrawGrid();
 	}
+
+	public String getHint() {
+		return null;
+	}
+
+	
 
 	private void initContainer() {
 		container = new FlowPanel();
@@ -129,13 +135,13 @@ public class BoundSelector extends AbstractBoundWidget implements
 	}
 
 	public void renderSelects() {
-		
 		createSearch();
 		search.setItemsHaveLinefeeds(true);
 		search.setSortGroups(true);
 		search.setPopdown(false);
 		search.setHolderHeight("");
 		search.setRenderer(renderer);
+		search.setHint(getHint());
 		customiseLeftWidget();
 		Map<String, List> tmpSearchMap = new HashMap<String, List>();
 		tmpSearchMap.put("", new ArrayList());
@@ -151,8 +157,8 @@ public class BoundSelector extends AbstractBoundWidget implements
 		results.setRenderer(renderer);
 		Map<String, List> resultMap = new HashMap<String, List>();
 		resultMap.put("", new ArrayList());
-		 resultsWidget = results.createWidget(resultMap,
-				resultsClickListener, MAX_SINGLE_LINE_CHARS);
+		resultsWidget = results.createWidget(resultMap, resultsClickListener,
+				MAX_SINGLE_LINE_CHARS);
 		if (isMultipleSelect()) {
 			results.getFilter().addStyleName("invisible");
 		}
@@ -161,7 +167,6 @@ public class BoundSelector extends AbstractBoundWidget implements
 		customiseRightWidget();
 		searchWidget.setStyleName("alcina-Selector available");
 		resultsWidget.setStyleName("alcina-Selector selected");
-		
 	}
 
 	protected void createResults() {
@@ -192,8 +197,7 @@ public class BoundSelector extends AbstractBoundWidget implements
 		}
 	};
 
-	protected List<HasId> filterAvailableObjects(
-			Collection<HasId> collection) {
+	protected List<HasId> filterAvailableObjects(Collection<HasId> collection) {
 		ArrayList<HasId> l = new ArrayList();
 		if (filter == null) {
 			l.addAll(collection);
@@ -212,8 +216,8 @@ public class BoundSelector extends AbstractBoundWidget implements
 
 	protected Map createObjectMap() {
 		Map result = new HashMap();
-		Collection<HasId> collection = TransformManager.get()
-				.getCollection(selectionObjectClass);
+		Collection<HasId> collection = TransformManager.get().getCollection(
+				selectionObjectClass);
 		result.put("", filterAvailableObjects(collection));
 		return result;
 	}
@@ -263,8 +267,7 @@ public class BoundSelector extends AbstractBoundWidget implements
 				addItem(value);
 			}
 		}
-		if (((List) search.getItemMap().values().iterator().next())
-				.isEmpty()) {
+		if (((List) search.getItemMap().values().iterator().next()).isEmpty()) {
 			// first time, init (now we have the model)
 			search.setItemMap(createObjectMap());
 		}
@@ -273,8 +276,8 @@ public class BoundSelector extends AbstractBoundWidget implements
 
 	private void update(Set old) {
 		if (this.isMultipleSelect()) {
-			changes.firePropertyChange(VALUE_PROPERTY_NAME, old,
-					new HashSet(new HashSet(search.getSelectedItems())));
+			changes.firePropertyChange(VALUE_PROPERTY_NAME, old, new HashSet(
+					new HashSet(search.getSelectedItems())));
 		} else {
 			Object prev = ((old == null) || (old.size() == 0)) ? null : old
 					.iterator().next();
