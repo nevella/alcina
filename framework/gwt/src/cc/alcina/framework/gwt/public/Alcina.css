@@ -721,9 +721,7 @@ div.alcina-Selector {
 div.alcina-Selector .scroller{
 	height: 115px;	
 }
-div.alcina-Selector input.alcina-Filter[type="text"]{
-	width: 300px;
-}
+
 
 div.alcina-Selector div.alcina-FilterHolder {
 	background-color: transparent;
@@ -793,6 +791,11 @@ table.alcina-SelectorFrame.minimal div.alcina-Selector.available{
 }
 table.alcina-SelectorFrame.minimal input.alcina-Filter{
 	border: none;
+}
+table.alcina-SelectorFrame.minimal div.alcina-Selector input.alcina-Filter[type="text"]{
+	width: 300px;
+	background: none;
+	padding: 2px;
 }
 table.alcina-SelectorFrame.minimal input.alcina-Filter:focus{
 	outline-width:0;
