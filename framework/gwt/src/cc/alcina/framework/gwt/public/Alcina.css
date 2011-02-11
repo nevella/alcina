@@ -784,6 +784,9 @@ table.alcina-SelectorFrame.minimal div.alcina-FilterHolder{
 	border: none;
 	padding-top:0px;
 	padding-bottom:0px;
+	background-image:url('_pix/arrow-selector-down.gif');
+	background-repeat:no-repeat;
+	background-position:right center; 
 }
 table.alcina-SelectorFrame.minimal div.alcina-Selector.available{
 	border-right:none;

@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
 import com.totsp.gwittir.client.ui.Renderer;
 
@@ -53,9 +54,8 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	protected void customiseLeftWidget() {
 		search.setPopdown(true);
-		search.setHint("Type to select");
 		search.setItemsHaveLinefeeds(true);
-		search.setHolderHeight("200px");
+		search.setHolderHeight(Window.getClientHeight()/2+"px");
 		search.setPopupPanelCssClassName("minimal-popDown");
 	}
 
