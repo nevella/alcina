@@ -20,6 +20,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.domain.HasId;
+
 /**
  *
  * @author Nick Reddel
@@ -31,6 +33,16 @@ import java.util.Set;
 		ArrayList<V> result = new ArrayList<V>();
 		for (V v : collection) {
 			if (filter.allow(v)) {
+				result.add(v);
+			}
+		}
+		return result;
+	}
+	public static <V extends HasId> List<V> filterByIds(Collection<? extends V> collection,
+			Collection<Long> ids) {
+		ArrayList<V> result = new ArrayList<V>();
+		for (V v : collection) {
+			if (ids.contains(v.getId())) {
 				result.add(v);
 			}
 		}

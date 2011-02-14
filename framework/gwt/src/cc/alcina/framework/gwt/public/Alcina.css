@@ -319,6 +319,9 @@ a:hover {
 	color: #104860;
 	cursor: pointer;
 }
+div.gwt-TabBarItem input:focus,div.gwt-TabBarItem input{
+	outline-width: 0;
+}
 
 .alcina-Footer a:link,.alcina-Footer a:visited,.alcina-Footer a:active {
 	color: #c7d7dd;
@@ -888,7 +891,8 @@ div.alcina-ObjectTree .alcina-Selector .group-heading,.alcina-Selector .popupCon
 }
 .alcina-Selector .popupContent .group-heading{
 	font-weight:bold;
-	padding-left:5px;
+	padding:2px 0 2px 5px;
+	margin:2px 0;
 }
 /**SEARCH-RESULTS TABLES*/
 table.results-table {
@@ -1337,5 +1341,11 @@ div.max .gwt-RichTextArea{
 	padding: 0;
 }
 .alcina-Selector .popupContent .chooser-item{
-	padding:0px 3px;
+	padding:2px 3px;
 } 
+.alcina-Selector .popupContent a:hover{
+	background-color:transparent;
+}
+.alcina-Selector .popupContent div.chooser-item:hover{
+	background-color:#A8D3E6;
+}

@@ -292,6 +292,7 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		if (search.getSelectedItems().add(item)) {
 			((List) results.getItemMap().get("")).add(item);
 			results.setItemMap(results.getItemMap());
+			search.getFilter().clear();
 		}
 	}
 

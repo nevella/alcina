@@ -97,7 +97,7 @@ public class ObjectTreeRenderer {
 		IsRenderableFilter renderableFilter = renderContext
 				.getRenderableFilter();
 		if (renderableFilter != null
-				&& !renderableFilter.isRenderable(renderable)) {
+				&& !renderableFilter.isRenderable(renderable,node)) {
 			renderInstruction = RenderInstruction.NO_RENDER;
 		}
 		if (renderInstruction != RenderInstruction.NO_RENDER) {

@@ -11,14 +11,36 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.objecttree;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public interface IsRenderableFilter {
+	public boolean isRenderable(TreeRenderable renderable, TreeRenderer renderer);
 
- public interface IsRenderableFilter {
-	public boolean isRenderable(TreeRenderable renderable);
+	public static class CompositeIsRenderableFilter implements
+			IsRenderableFilter {
+		private List<IsRenderableFilter> filters = new ArrayList<IsRenderableFilter>();
+
+		public CompositeIsRenderableFilter add(IsRenderableFilter filter) {
+			filters.add(filter);
+			return this;
+		}
+
+		@Override
+		public boolean isRenderable(TreeRenderable renderable,
+				TreeRenderer renderer) {
+			for (IsRenderableFilter filter : filters) {
+				if (!filter.isRenderable(renderable, renderer)) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
 }

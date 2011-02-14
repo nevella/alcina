@@ -19,4 +19,11 @@ package cc.alcina.framework.gwt.client.ide.provider;
  */
 public interface CollectionFilter<T> {
 	public boolean allow(T o);
+
+	public static final CollectionFilter PASSTHROUGH_FILTER = new CollectionFilter() {
+		@Override
+		public boolean allow(Object o) {
+			return true;
+		}
+	};
 }

@@ -32,6 +32,7 @@ import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
 
+import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -508,7 +509,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 
 	public void setHint(String hint) {
 		this.hint = hint;
-		if(filter!=null){
+		if (filter != null) {
 			filter.setHint(hint);
 		}
 	}
@@ -572,10 +573,14 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			if (!itemMap.containsKey(c)) {
 				continue;
 			}
+			
 			Label l = new Label(c.toString().toUpperCase());
 			l.setStyleName("group-heading");
 			groupCaptions.add(l);
 			fp.add(l);
+			if(c.toString().trim().isEmpty()){
+				l.getElement().getStyle().setVisibility(Visibility.HIDDEN);
+			}
 			int ctr = itemMap.get(c).size();
 			for (T item : itemMap.get(c)) {
 				String sep = (--ctr != 0 && separatorText.length() != 1) ? separatorText
@@ -630,7 +635,10 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 							RootPanel.get(), panelForPopup, -2, 0);
 			int border = 2;
 			if (fp.getOffsetHeight() + border > panelForPopup.getOffsetHeight()) {
-				scroller.setHeight((panelForPopup.getOffsetHeight() - border)
+				int hhInt = holderHeight != null && holderHeight.endsWith("px") ? Integer
+						.parseInt(holderHeight.replace("px", "")) : 0;
+				scroller.setHeight(Math.max(hhInt,
+						panelForPopup.getOffsetHeight() - border)
 						+ "px");
 			}
 			int minWidth = holder.getOffsetWidth();

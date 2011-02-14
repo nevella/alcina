@@ -15,6 +15,9 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -51,12 +54,16 @@ import com.google.gwt.user.client.ui.Widget;
 @SuppressWarnings("deprecation")
 public class FlowTabBar extends Composite implements
 		HasBeforeSelectionHandlers<Integer>, HasSelectionHandlers<Integer>,
-		ClickHandler,KeyDownHandler {
+		ClickHandler, KeyDownHandler {
 	private static final String STYLENAME_DEFAULT = "gwt-TabBarItem";
 
 	private FlowPanel panel2 = new FlowPanel();
 
 	private Widget selectedTab;
+
+	private List<Widget> captions = new ArrayList<Widget>();
+
+	private List<ClickDelegatePanel> tabs = new ArrayList<ClickDelegatePanel>();
 
 	/**
 	 * Creates an empty tab bar.
@@ -116,8 +123,8 @@ public class FlowTabBar extends Composite implements
 
 	public void allTabsAdded() {
 		if (getTabCount() != 0) {
-			panel2.getWidget(1).addStyleName("TabBarFirst");
-			panel2.getWidget(getTabCount()).addStyleName("TabBarLast");
+			tabs.get(0).addStyleName("TabBarFirst");
+			tabs.get(getTabCount() - 1).addStyleName("TabBarLast");
 		}
 	}
 
@@ -163,7 +170,7 @@ public class FlowTabBar extends Composite implements
 		if (selectedTab == null) {
 			return -1;
 		}
-		return panel2.getWidgetIndex(selectedTab) - 1;
+		return tabs.indexOf(selectedTab);
 	}
 
 	/**
@@ -172,7 +179,7 @@ public class FlowTabBar extends Composite implements
 	 * @return the tab count
 	 */
 	public int getTabCount() {
-		return panel2.getWidgetCount() - 2;
+		return tabs.size();
 	}
 
 	/**
@@ -186,8 +193,7 @@ public class FlowTabBar extends Composite implements
 		if (index >= getTabCount()) {
 			return null;
 		}
-		ClickDelegatePanel delPanel = (ClickDelegatePanel) panel2
-				.getWidget(index + 1);
+		ClickDelegatePanel delPanel = tabs.get(index);
 		SimplePanel focusablePanel = delPanel.getFocusablePanel();
 		Widget widget = focusablePanel.getWidget();
 		if (widget instanceof HTML) {
@@ -265,11 +271,24 @@ public class FlowTabBar extends Composite implements
 		SimplePanel focusablePanel = delWidget.getFocusablePanel();
 		Accessibility.setRole(focusablePanel.getElement(),
 				Accessibility.ROLE_TAB);
-		panel2.insert(delWidget, beforeIndex + 1);
+		if (beforeIndex == tabs.size()) {
+			panel2.add(delWidget);
+		} else {
+			panel2.insert(delWidget,
+					panel2.getWidgetIndex(tabs.get(beforeIndex)));
+		}
+		tabs.add(delWidget);
 		setStyleName(DOM.getParent(delWidget.getElement()), STYLENAME_DEFAULT
 				+ "-wrapper", true);
 	}
 
+	public void insertCaption(String text, String className) {
+		Label label = new Label(text);
+		if (className != null) {
+			label.addStyleName(className);
+		}
+		panel2.add(label);
+	}
 
 	/**
 	 * <b>Affected Elements:</b>
@@ -285,8 +304,7 @@ public class FlowTabBar extends Composite implements
 		super.onEnsureDebugId(baseID);
 		int numTabs = getTabCount();
 		for (int i = 0; i < numTabs; i++) {
-			ClickDelegatePanel delPanel = (ClickDelegatePanel) panel2
-					.getWidget(i + 1);
+			ClickDelegatePanel delPanel = tabs.get(i);
 			SimplePanel focusablePanel = delPanel.getFocusablePanel();
 			// ensureDebugId(focusablePanel.getContainerElement(), baseID, "tab"
 			// + i);
@@ -294,8 +312,6 @@ public class FlowTabBar extends Composite implements
 					"tab-wrapper" + i);
 		}
 	}
-
-	
 
 	/**
 	 * Removes the tab at the specified index.
@@ -305,15 +321,13 @@ public class FlowTabBar extends Composite implements
 	 */
 	public void removeTab(int index) {
 		checkTabIndex(index);
-		// (index + 1) to account for 'first' placeholder widget.
-		Widget toRemove = panel2.getWidget(index + 1);
+		ClickDelegatePanel toRemove = tabs.get(index);
 		if (toRemove == selectedTab) {
 			selectedTab = null;
 		}
 		panel2.remove(toRemove);
+		tabs.remove(toRemove);
 	}
-
-	
 
 	/**
 	 * Programmatically selects the specified tab. Use index -1 to specify that
@@ -325,23 +339,20 @@ public class FlowTabBar extends Composite implements
 	 *         is denied by the {@link TabListener}.
 	 */
 	public boolean selectTab(int index) {
-		 BeforeSelectionEvent<?> event = BeforeSelectionEvent.fire(this, index);
-
-		    if (event != null && event.isCanceled()) {
-		      return false;
-		    }
-
-		    // Check for -1.
-		    setSelectionStyle(selectedTab, false);
-		    if (index == -1) {
-		      selectedTab = null;
-		      return true;
-		    }
-
-		    selectedTab = panel2.getWidget(index + 1);
-		    setSelectionStyle(selectedTab, true);
-		    SelectionEvent.fire(this, index);
-		    return true;
+		BeforeSelectionEvent<?> event = BeforeSelectionEvent.fire(this, index);
+		if (event != null && event.isCanceled()) {
+			return false;
+		}
+		// Check for -1.
+		setSelectionStyle(selectedTab, false);
+		if (index == -1) {
+			selectedTab = null;
+			return true;
+		}
+		selectedTab = tabs.get(index);
+		setSelectionStyle(selectedTab, true);
+		SelectionEvent.fire(this, index);
+		return true;
 	}
 
 	/**
@@ -355,11 +366,9 @@ public class FlowTabBar extends Composite implements
 	 *         located and selected, false otherwise
 	 */
 	private boolean selectTabByTabWidget(Widget tabWidget) {
-		int numTabs = panel2.getWidgetCount() - 1;
-		for (int i = 1; i < numTabs; ++i) {
-			if (panel2.getWidget(i) == tabWidget) {
-				return selectTab(i - 1);
-			}
+		int index = tabs.indexOf(tabWidget);
+		if(index>=0){
+			return selectTab(index);
 		}
 		return false;
 	}
@@ -392,8 +401,7 @@ public class FlowTabBar extends Composite implements
 	 */
 	public void setTabHTML(int index, String html) {
 		assert (index >= 0) && (index < getTabCount()) : "Tab index out of bounds";
-		ClickDelegatePanel delPanel = (ClickDelegatePanel) panel2
-				.getWidget(index + 1);
+		ClickDelegatePanel delPanel = tabs.get(index);
 		SimplePanel focusablePanel = delPanel.getFocusablePanel();
 		focusablePanel.setWidget(new HTML(html));
 	}
@@ -408,8 +416,7 @@ public class FlowTabBar extends Composite implements
 	 */
 	public void setTabText(int index, String text) {
 		assert (index >= 0) && (index < getTabCount()) : "Tab index out of bounds";
-		ClickDelegatePanel delPanel = (ClickDelegatePanel) panel2
-				.getWidget(index + 1);
+		ClickDelegatePanel delPanel = tabs.get(index);
 		SimplePanel focusablePanel = delPanel.getFocusablePanel();
 		// It is not safe to check if the current widget is an instanceof Label
 		// and
@@ -428,7 +435,6 @@ public class FlowTabBar extends Composite implements
 	private class ClickDelegatePanel extends Composite implements
 			HasClickHandlers, HasKeyDownHandlers {
 		private SimplePanel focusablePanel;
-
 
 		ClickDelegatePanel(Widget child) {
 			focusablePanel = new FocusPanel();
@@ -464,8 +470,6 @@ public class FlowTabBar extends Composite implements
 			return focusablePanel;
 		}
 
-		
-
 		public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
 			return addDomHandler(handler, KeyDownEvent.getType());
 		}
@@ -477,12 +481,11 @@ public class FlowTabBar extends Composite implements
 
 	public void onClick(ClickEvent event) {
 		selectTabByTabWidget((Widget) event.getSource());
-		
 	}
 
 	public void onKeyDown(KeyDownEvent event) {
 		if (event.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
 			selectTabByTabWidget((Widget) event.getSource());
-		}		
+		}
 	}
 }

@@ -55,6 +55,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	protected void customiseLeftWidget() {
 		search.setPopdown(true);
 		search.setItemsHaveLinefeeds(true);
+		search.setFlowLayout(true);
 		search.setHolderHeight(Window.getClientHeight()/2+"px");
 		search.setPopupPanelCssClassName("minimal-popDown");
 	}

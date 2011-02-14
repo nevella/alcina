@@ -207,4 +207,8 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 			textBox.setFocus(true);
 		}
 	}
+
+	public void clear() {
+		getTextBox().setText("");
+	}
 }
