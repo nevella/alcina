@@ -35,6 +35,7 @@ public class AlcinaTemplateExceptionHandler extends ClientExceptionHandler {
 			}
 		}
 		if (GWT.isScript()) {
+			e = wrapException(e);
 			ClientLayerLocator.get().notifications().showError(e);
 		}
 	}

@@ -39,7 +39,11 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 		} else {
 			errorBuffer.append("\n" + e.toString());
 			errorBuffer.append("\n\t-----\n");
-			errorBuffer.append(e.getStackTrace());
+			StackTraceElement[] stackTrace = e.getStackTrace();
+			for (StackTraceElement stackTraceElement : stackTrace) {
+				errorBuffer.append(stackTraceElement);
+				errorBuffer.append("\n");
+			}
 		}
 	}
 

@@ -369,6 +369,9 @@ public class ResourceUtilities {
 		FileInputStream fis = new FileInputStream(f);
 		return readStreamToString(fis);
 	}
+	public static String readFileToString(String fileName) throws IOException {
+		return readFileToString(new File(fileName));
+	}
 
 	public static String readFileToString(File f, String charsetName)
 			throws IOException {

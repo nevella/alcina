@@ -34,6 +34,11 @@ public class LongCriterion extends SearchCriterion {
 		result.parameters.add(value);
 		return result;
 	}
+	@Override
+	public String toString() {
+		return value == null ? "":
+				value.toString();
+	}
 
 	public void setValue(Long value) {
 		this.value = value;
