@@ -338,6 +338,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return deleteObject(hili, false);
 	}
 
+	/**
+	 * If calling from the servlet layer, the object will normally not be
+	 * 'found' - so this function variant should be called, with the second
+	 * parameter equal to true
+	 */
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili,
 			boolean generateEventIfObjectNotFound) {
 		if (!generateEventIfObjectNotFound && getObject(hili) == null) {
