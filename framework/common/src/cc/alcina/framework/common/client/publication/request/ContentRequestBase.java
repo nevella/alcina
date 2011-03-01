@@ -54,7 +54,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	private PublicationDeliveryMode deliveryMode = PublicationDeliveryMode.DOWNLOAD;
 	private PublicationRange publicationRange = PublicationRange.ALL;
 	private PublicationFontOptions fontOptions = PublicationFontOptions.ARIAL;
-	private boolean coverPage = true;
+	private boolean coverPage = false;
 	private String suggestedFileName = "";
 	private String emailSubject = "";
 	private String emailSubjectForRequestor = null;
@@ -72,7 +72,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	private String note;
 	private boolean noPersistence = false;
 	protected CD contentDefinition;
-	private boolean footer = true;
+	private boolean footer = false;
 	private transient boolean test;
 
 	public Class<? extends ContentDeliveryType> deliveryMode() {

@@ -26,9 +26,12 @@
 	<fileset id="project.ear.libs.1" dir="${project.entity.dist.dir}">
 		<include name="*.jar" />
 	</fileset>
-	<fileset id="project.ear.libs.2" dir="${project.ear.lib.dir}">
-		<include name="*.jar" />
-	</fileset>
+	<files id="project.ear.libs.2" >
+		<include name="${project.ear.lib.dir}/*.jar" />
+	</files>
+	<fileset id="project.ear.libs.3" dir="${alcina.home}/dist">
+			<include name="none" />
+		</fileset>
 	<fileset id="project.war.dependencies" dir="${project.ear.lib.dir}">
 		<!-- deliberately empty, can be overriden -->
 		<exclude name="**/*.*" />

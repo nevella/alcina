@@ -46,6 +46,7 @@
 			</metainf>
 			<fileset refid="project.ear.libs.1" />
 			<fileset refid="project.ear.libs.2" />
+			<fileset refid="project.ear.libs.3" />
 			<fileset refid="alcina.ear.exports" />
 			<fileset refid="alcina.ear.dependencies" />
 		</ear>
@@ -84,6 +85,7 @@
 		<copy todir="${j2ee-server.unear.target}" preservelastmodified="true">
 			<fileset refid="project.ear.libs.1" />
 			<fileset refid="project.ear.libs.2" />
+			<fileset refid="project.ear.libs.3" />
 			<fileset refid="alcina.ear.exports" />
 			<fileset refid="alcina.ear.dependencies" />
 		</copy>

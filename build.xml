@@ -13,6 +13,7 @@
 		<delete dir="${framework.servlet.build.dir}" />
 		<delete dir="${framework.impl.jboss-hibernate.build.dir}" />
 		<delete dir="${framework.dist.dir}" />
+		<delete dir="${extras.collections.build.dir}" />
 	</target>
 	<target name="compile" description="Compiles all J2SE modules">
 		<mkdir dir="${framework.entity.build.dir}" />
@@ -40,10 +41,17 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
-
+		<mkdir dir="${extras.collections.build.dir}" />
+		<javac debug="on" srcdir="${extras.collections.src.dir}" destdir="${extras.collections.build.dir}">
+			<classpath>
+				<path refid="framework.common.lib.path" />
+				<pathelement path="${framework.entity.build.dir}" />
+			</classpath>
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
 	</target>
 
-	<target name="make-jars" description="Make entity, entity-impl and servlet jars " depends="compile">
+	<target name="make-jars" description="Make entity, entity-impl, servlet and extras jars " depends="compile">
 		<mkdir dir="${framework.dist.dir}" />
 		<delete file="${framework.dist.dir}/${ant.project.name}-entity.jar" />
 		<copy todir="${framework.entity.build.dir}">
@@ -61,12 +69,17 @@
 				<exclude name="${framework.remote.interface.class}" />
 				<exclude name="${framework.remote.asyncinterface.class}" />
 			</fileset>
+
 			<!-- give the server handy access to stylesheets for print, static serving etc -->
 			<fileset dir="${framework.gwt.src.dir}">
 				<include name="**/*.css" />
 			</fileset>
 		</jar>
-
+		<jar destfile="${framework.dist.dir}/${ant.project.name}-extras-collections.jar">
+			<fileset dir="${extras.collections.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+		</jar>
 
 		<condition property="framework.impl.base.dir" value="${framework.impl.jboss-hibernate.base.dir}">
 			<equals arg1="${framework.jpa.impl}" arg2="jboss-hibernate" />
@@ -114,7 +127,7 @@
 
 
 	</target>
-	
+
 	<target name="javadoc" description="Make framework javadoc">
 		<delete dir="${framework.javadoc.outputpath}">
 		</delete>
