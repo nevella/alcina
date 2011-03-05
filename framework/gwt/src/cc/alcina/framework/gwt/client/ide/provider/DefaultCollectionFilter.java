@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.util.ArrayList;
@@ -23,11 +22,10 @@ import java.util.Set;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class DefaultCollectionFilter {
+public class DefaultCollectionFilter {
 	public static <V> List<V> filter(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
 		ArrayList<V> result = new ArrayList<V>();
@@ -38,12 +36,24 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 		}
 		return result;
 	}
-	public static <V extends HasId> List<V> filterByIds(Collection<? extends V> collection,
-			Collection<Long> ids) {
+
+	public static <V extends HasId> List<V> filterByIds(
+			Collection<? extends V> collection, Collection<Long> ids) {
 		ArrayList<V> result = new ArrayList<V>();
 		for (V v : collection) {
 			if (ids.contains(v.getId())) {
 				result.add(v);
+			}
+		}
+		return result;
+	}
+
+	public static <I, O> List<O> filterByClass(
+			Collection<? extends I> collection, Class<? extends O> filterClass) {
+		ArrayList<O> result = new ArrayList<O>();
+		for (I i : collection) {
+			if (i.getClass() == filterClass) {
+				result.add((O) i);
 			}
 		}
 		return result;

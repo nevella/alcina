@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.objecttree.basic;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -17,6 +18,7 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
  * @author nreddel@barnet.com.au
  * 
  */
+@SuppressWarnings("unchecked")
 public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGroup, SC extends SearchCriterion, O>
 		extends SetBasedListBox {
 	protected C criteriaGroup;
@@ -31,18 +33,23 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 				}
 			}
 			criteriaGroup.getCriteria().clear();
-			Set newValue = (Set) evt.getNewValue();
+			criteriaGroup.getCriteria().addAll(saved);
+			Object obj = evt.getNewValue();
+			Set newValue = null;
+			if (!(obj == null || obj instanceof Set)) {
+				newValue = Collections.singleton(evt.getNewValue());
+			} else {
+				newValue = (Set) evt.getNewValue();
+			}
 			if (newValue == null) {
 				return;
 			}
-			for (Object obj : newValue) {
-				SC tc = newCriterion((O) obj);
+			for (Object member : newValue) {
+				SC tc = newCriterion((O) member);
 				criteriaGroup.getCriteria().add(tc);
 			}
-			criteriaGroup.getCriteria().addAll(saved);
 		}
 	};
-
 
 	protected Class selectionObjectClass;
 
@@ -60,9 +67,9 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 		this.filter = filter;
 		setMultipleSelect(true);
 	}
+
 	protected abstract O getSearchCriterionDisplayObject(SC searchCriterion);
 
-	@SuppressWarnings("unchecked")
 	public void setModel(Object model) {
 		this.criteriaGroup = (C) model;
 		addPropertyChangeListener("value", pcl);

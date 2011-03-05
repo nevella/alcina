@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 
@@ -20,7 +21,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  * @author Nick Reddel
  */
-public class LongCriterion extends SearchCriterion {
+public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 	private Long value;
 
 	@Override

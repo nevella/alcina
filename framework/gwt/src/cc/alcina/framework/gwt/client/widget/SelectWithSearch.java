@@ -573,12 +573,11 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 			if (!itemMap.containsKey(c)) {
 				continue;
 			}
-			
 			Label l = new Label(c.toString().toUpperCase());
 			l.setStyleName("group-heading");
 			groupCaptions.add(l);
 			fp.add(l);
-			if(c.toString().trim().isEmpty()){
+			if (c.toString().trim().isEmpty()) {
 				l.getElement().getStyle().setVisibility(Visibility.HIDDEN);
 			}
 			int ctr = itemMap.get(c).size();
@@ -642,6 +641,9 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 						+ "px");
 			}
 			int minWidth = holder.getOffsetWidth();
+			if (minWidth == 0) {//probably inline
+				minWidth=filter.getOffsetWidth();
+			}
 			if (minWidth > 20) {
 				scroller.getElement().getStyle()
 						.setProperty("minWidth", minWidth + "px");

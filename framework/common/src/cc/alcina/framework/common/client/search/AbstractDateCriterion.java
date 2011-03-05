@@ -15,13 +15,17 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Date;
 
+import javax.xml.bind.annotation.XmlTransient;
+
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 
  * @author Nick Reddel
  */
-public class AbstractDateCriterion extends SearchCriterion {
+public class AbstractDateCriterion extends SearchCriterion implements
+		HasValue<Date> {
 	private Date date;
 
 	public AbstractDateCriterion() {
@@ -47,8 +51,8 @@ public class AbstractDateCriterion extends SearchCriterion {
 		}
 		AbstractDateCriterion otherImpl = (AbstractDateCriterion) other;
 		return otherImpl.getDirection() == getDirection()
-				&& CommonUtils.equalsWithNullEquality(getDate(), otherImpl
-						.getDate());
+				&& CommonUtils.equalsWithNullEquality(getDate(),
+						otherImpl.getDate());
 	}
 
 	public void setDate(Date date) {
@@ -59,5 +63,17 @@ public class AbstractDateCriterion extends SearchCriterion {
 
 	public Date getDate() {
 		return date;
+	}
+
+	@XmlTransient
+	public Date getValue() {
+		return getDate();
+	}
+
+	/**
+	 * add property change firing to the subclass implementation, if you care
+	 */
+	public void setValue(Date value) {
+		setDate(value);
 	}
 }

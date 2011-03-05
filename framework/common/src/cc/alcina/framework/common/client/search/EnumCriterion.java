@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -35,7 +36,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *         </p>
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
-		implements HasWithNull {
+		implements HasWithNull, HasValue<E> {
 	private boolean withNull = true;
 
 	public EnumCriterion() {

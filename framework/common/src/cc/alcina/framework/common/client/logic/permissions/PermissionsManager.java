@@ -63,9 +63,9 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 
 	private long userId;
 
-	private static String administratorGroupName="Administrators";
+	private static String administratorGroupName = "Administrators";
 
-	private static String developerGroupName="Developers";
+	private static String developerGroupName = "Developers";
 
 	private PropertyChangeListener userListener;
 
@@ -160,7 +160,9 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		Class<? extends Object> clazz = bean.getClass();
 		ObjectPermissions op = CommonLocator.get().classLookup()
 				.getAnnotationForClass(clazz, ObjectPermissions.class);
-		PropertyPermissions pp = CommonLocator.get().propertyAccessor()
+		PropertyPermissions pp = CommonLocator
+				.get()
+				.propertyAccessor()
 				.getAnnotationForProperty(clazz, PropertyPermissions.class,
 						propertyName);
 		return checkEffectivePropertyPermission(op, pp, bean, read);
@@ -262,6 +264,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public Map<String, ? extends IGroup> getUserGroups() {
 		return getUserGroups(user);
 	}
+
 	public Map<String, ? extends IGroup> getUserGroups(IUser user) {
 		if (groupMap != null) {
 			return groupMap;
@@ -320,7 +323,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		public AccessLevel accessLevel() {
 			return AccessLevel.ROOT;
 		}
-	
+
 		public String rule() {
 			return null;
 		}
@@ -330,7 +333,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		public AccessLevel accessLevel() {
 			return AccessLevel.ADMIN;
 		}
-	
+
 		public String rule() {
 			return null;
 		}
@@ -365,11 +368,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 			}
 			if (isLoggedIn()) {
 				if (o instanceof HasOwner) {
-					HasOwner hasOwner = (HasOwner) o;
-					if (hasOwner.getOwner() == null
-							|| hasOwner.getOwner().equals(instantiatedUser)) {
-						permitted = true;
-					}
+					permitted |= isOwnerOf((HasOwner) o);
 				}
 			}
 		}
@@ -382,6 +381,11 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 			}
 		}
 		return permitted;
+	}
+
+	public boolean isOwnerOf(HasOwner hasOwner) {
+		return (hasOwner.getOwner() == null || hasOwner.getOwner().equals(
+				instantiatedUser));
 	}
 
 	public boolean isPermissible(Object o, Permission p) {
@@ -570,8 +574,8 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 
 	/**
 	 * <p>
-	 * Note - make sure the environment is ready before
-	 * instantiating i.e. servlet layer:
+	 * Note - make sure the environment is ready before instantiating i.e.
+	 * servlet layer:
 	 * </p>
 	 * <code>
 	 * ObjectPersistenceHelper.get();

@@ -117,8 +117,7 @@ public abstract class HibernateEJBSearcherBase {
 						: Restrictions.conjunction();
 				for (SearchCriterion sc : (Set<SearchCriterion>) cg
 						.getCriteria()) {
-					SearchCriterionHandler handler = handlerMap.get(sc
-							.getClass());
+					SearchCriterionHandler handler = getCriterionHandler(sc);
 					if (handler == null) {
 						System.err.println("No handler for class "
 								+ sc.getClass());
@@ -139,6 +138,10 @@ public abstract class HibernateEJBSearcherBase {
 				}
 			}
 		}
+	}
+	protected SearchCriterionHandler getCriterionHandler(SearchCriterion sc) {
+		return handlerMap.get(sc
+				.getClass());
 	}
 
 	protected void register(Class<? extends SearchCriterion> clazz,
