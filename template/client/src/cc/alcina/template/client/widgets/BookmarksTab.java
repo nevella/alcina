@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHan
 import cc.alcina.framework.gwt.client.ide.WorkspaceDefaultActionHandlers.DefaultCreateActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceView.DataTreeView;
 import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
+import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainCollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
 import cc.alcina.framework.gwt.client.ide.node.NodeFactory.NodeCreator;
@@ -203,7 +204,7 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 					return o.getParent() == null;
 				}
 			};
-			CollectionProviderNode cpn = getFilteredCollectionNode(TextProvider
+			ContainerNode cpn = getFilteredCollectionNode(TextProvider
 					.get().getUiObjectText(BookmarksTab.class,
 							"bookmarksTreeRootNode", "Bookmarks"),
 					Bookmark.class, getImages().folder(), cf);

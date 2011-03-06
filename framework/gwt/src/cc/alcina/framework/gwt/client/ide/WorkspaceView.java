@@ -37,9 +37,14 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
+import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
+import cc.alcina.framework.gwt.client.ide.node.HasVisibleCollection;
+import cc.alcina.framework.gwt.client.ide.node.UmbrellaProviderNode;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.SimpleCollectionProvider;
+import cc.alcina.framework.gwt.client.ide.provider.UmbrellaCollectionProviderMultiplexer;
+import cc.alcina.framework.gwt.client.ide.provider.UmbrellaProvider;
 import cc.alcina.framework.gwt.client.ide.widget.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
@@ -97,8 +102,7 @@ public class WorkspaceView extends Composite implements HasName,
 		initWidget(widget);
 	}
 
-	public void addVetoableActionListener(
-			PermissibleActionListener listener) {
+	public void addVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
@@ -118,8 +122,7 @@ public class WorkspaceView extends Composite implements HasName,
 		return this.widget;
 	}
 
-	public void removeVetoableActionListener(
-			PermissibleActionListener listener) {
+	public void removeVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
@@ -132,8 +135,7 @@ public class WorkspaceView extends Composite implements HasName,
 	}
 
 	public static abstract class DataTreeView extends WorkspaceView implements
-			ExtraTreeEventListener,
-			PermissibleActionListener, HasLayoutInfo,
+			ExtraTreeEventListener, PermissibleActionListener, HasLayoutInfo,
 			SelectionHandler<TreeItem>, HasFirstFocusable {
 		private boolean showCollapseButton;
 
@@ -312,8 +314,8 @@ public class WorkspaceView extends Composite implements HasName,
 
 		public void vetoableAction(PermissibleActionEvent evt) {
 			TreeItem item = dataTree.getSelectedItem();
-			fireVetoableActionEvent(new PermissibleActionEvent(item, evt
-					.getAction()));
+			fireVetoableActionEvent(new PermissibleActionEvent(item,
+					evt.getAction()));
 			if (evt.getAction().getClass() == DeleteAction.class) {
 				onTreeItemSelected(item);
 			}
@@ -333,10 +335,10 @@ public class WorkspaceView extends Composite implements HasName,
 						.beanInfoForClass(domainClass);
 				actions.addAll(info.getActions(userObject));
 			}
-			if (item instanceof CollectionProviderNode) {
-				CollectionProviderNode cpn = (CollectionProviderNode) item;
-				domainClass = cpn.getCollectionProvider().getCollectionClass();
-				int size = cpn.getCollectionProvider().getCollection().size();
+			if (item instanceof HasVisibleCollection) {
+				HasVisibleCollection hvc = (HasVisibleCollection) item;
+				domainClass = hvc.getCollectionMemberClass();
+				int size = hvc.getVisibleCollection().size();
 				ClientBeanReflector info = ClientReflector.get()
 						.beanInfoForClass(domainClass);
 				List<Class<? extends PermissibleAction>> availableActions = info
@@ -359,7 +361,9 @@ public class WorkspaceView extends Composite implements HasName,
 				}
 			}
 			if (domainClass != null) {
-				ObjectPermissions op = CommonLocator.get().classLookup()
+				ObjectPermissions op = CommonLocator
+						.get()
+						.classLookup()
 						.getAnnotationForClass(domainClass,
 								ObjectPermissions.class);
 				op = op == null ? PermissionsManager.get()
@@ -392,7 +396,7 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		@SuppressWarnings("unchecked")
-		protected <C> CollectionProviderNode getBasicCollectionNode(
+		protected <C> ContainerNode getBasicCollectionNode(
 				String name, Class<C> clazz, ImageResource imageResource) {
 			Collection domainCollection = TransformManager.get().getCollection(
 					clazz);
@@ -406,7 +410,7 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		@SuppressWarnings("unchecked")
-		protected <C> CollectionProviderNode getFilteredCollectionNode(
+		protected <C> ContainerNode getFilteredCollectionNode(
 				String name, Class<C> clazz, ImageResource imageResource,
 				CollectionFilter cf) {
 			Collection domainCollection = TransformManager.get().getCollection(
@@ -418,6 +422,22 @@ public class WorkspaceView extends Composite implements HasName,
 					name, imageResource);
 			TransformManager.get().addCollectionModificationListener(provider,
 					clazz, true);
+			return node;
+		}
+
+		@SuppressWarnings("unchecked")
+		protected <C> ContainerNode getUmbrellaProviderNode(String name,
+				Class<C> clazz, ImageResource imageResource,
+				UmbrellaProvider umbrellaProvider,CollectionFilter collectionFilter) {
+			Collection domainCollection = TransformManager.get().getCollection(
+					clazz);
+			UmbrellaCollectionProviderMultiplexer<C> collectionProvider = new UmbrellaCollectionProviderMultiplexer<C>(
+					domainCollection, clazz, umbrellaProvider, collectionFilter,3);
+			UmbrellaProviderNode node = new UmbrellaProviderNode(
+					collectionProvider.getRootSubprovider(), name,
+					imageResource);
+			TransformManager.get().addCollectionModificationListener(
+					collectionProvider, clazz, true);
 			return node;
 		}
 

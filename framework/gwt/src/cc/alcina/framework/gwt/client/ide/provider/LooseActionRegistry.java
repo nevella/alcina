@@ -68,7 +68,7 @@ import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler.LooseTarge
 	@SuppressWarnings("unchecked")
 	void loadFromRegistry() {
 		List<Class> handlers = Registry.get().lookup(false,
-				LooseActionHandler.class, void.class, true);
+				LooseActionHandler.class, void.class, false);
 		for (Class c : handlers) {
 			LooseActionHandler handler = (LooseActionHandler) CommonLocator
 					.get().classLookup().newInstance(c);

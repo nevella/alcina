@@ -31,7 +31,7 @@ import com.google.gwt.user.client.ui.TreeItem;
  */
 
  public class CollectionProviderNode extends ContainerNode implements
-		CollectionModificationListener, ProvidesParenting {
+		CollectionModificationListener, ProvidesParenting,HasVisibleCollection {
 	private CollectionRenderingSupport support = null;
 
 	public CollectionProviderNode(CollectionProvider collectionProvider,
@@ -78,12 +78,9 @@ import com.google.gwt.user.client.ui.TreeItem;
 		return this.support.getUserObject();
 	}
 
-	public Collection getVisibleItemObjects() {
-		return this.support.getVisibleItemObjects();
-	}
 
 	public void refreshChildren() {
-		this.support.refreshChildren();
+		this.support.refreshChildren(false);
 	}
 
 	public void setCollectionProvider(CollectionProvider collectionProvider) {
@@ -94,5 +91,13 @@ import com.google.gwt.user.client.ui.TreeItem;
 	protected String imageItemHTML(AbstractImagePrototype imageProto,
 			String title) {
 		return imageProto.getHTML() + " " + title;
+	}
+	@Override
+	public Collection getVisibleCollection() {
+		return this.support.getVisibleItemObjects();
+	}
+	@Override
+	public Class getCollectionMemberClass() {
+		return getCollectionProvider().getCollectionMemberClass();
 	}
 }

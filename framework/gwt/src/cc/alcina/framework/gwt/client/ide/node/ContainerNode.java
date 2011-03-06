@@ -11,30 +11,31 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.node;
 
-
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.TreeItem;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public class ContainerNode extends FilterableTreeItem implements DetachListener {
+	private String title;
 
- public class ContainerNode extends FilterableTreeItem implements DetachListener {
-	private final String title;
+	private AbstractImagePrototype imagePrototype;
 
-	private final AbstractImagePrototype imagePrototype;
 
 	public ContainerNode(String title, ImageResource imageResource) {
 		super();
 		this.title = title;
-		this.imagePrototype = AbstractImagePrototype.create(imageResource);
+		this.imagePrototype = AbstractImagePrototype
+				.create(imageResource == null ? StandardDataImageProvider.get()
+						.getDataImages().folder() : imageResource);
 		setHTML(imageItemHTML(imagePrototype, title));
 	}
 

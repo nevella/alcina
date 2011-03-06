@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
+import cc.alcina.framework.gwt.client.ide.provider.UmbrellaCollectionProviderMultiplexer.UmbrellaCollectionProvider;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 
 import com.google.gwt.core.client.GWT;
@@ -73,31 +74,49 @@ public class NodeFactory {
 	private Set<SourcesPropertyChangeEvents> childlessBindables = new HashSet<SourcesPropertyChangeEvents>();
 
 	private Class lastDomainObjectClass;
+
 	private NodeCreator nodeCreator;
+
 	@SuppressWarnings("unchecked")
 	protected DomainNode createDomainNode(
 			SourcesPropertyChangeEvents domainObject) {
-		Class clazz=domainObject.getClass();
-		if (lastDomainObjectClass!=clazz){
-			nodeCreator = (NodeCreator) Registry.get().instantiateSingle(NodeCreator.class, clazz);
+		Class clazz = domainObject.getClass();
+		if (lastDomainObjectClass != clazz) {
+			nodeCreator = (NodeCreator) Registry.get().instantiateSingle(
+					NodeCreator.class, clazz);
 		}
 		return nodeCreator.createDomainNode(domainObject);
 	}
 
-	public static interface NodeCreator{
+	public static interface NodeCreator {
 		public DomainNode createDomainNode(
-				SourcesPropertyChangeEvents domainObject) ;
+				SourcesPropertyChangeEvents domainObject);
 	}
-	@RegistryLocation(j2seOnly=false,registryPoint=NodeCreator.class)
+
+	@RegistryLocation(j2seOnly = false, registryPoint = NodeCreator.class)
 	@ClientInstantiable
-	public static class DefaultNodeCreator implements NodeCreator{
+	public static class DefaultNodeCreator implements NodeCreator {
 		@SuppressWarnings("unchecked")
 		public DomainNode createDomainNode(
 				SourcesPropertyChangeEvents domainObject) {
 			return new DomainNode(domainObject);
 		}
 	}
-	
+
+	public TreeItem getNodeForObject(Object object) {
+		if (object instanceof SourcesPropertyChangeEvents) {
+			return getNodeForDomainObject((SourcesPropertyChangeEvents) object);
+		}
+		if (object instanceof UmbrellaCollectionProvider) {
+			return getNodeForUmbrella((UmbrellaCollectionProvider) object);
+		}
+		return null;
+	}
+
+	private UmbrellaProviderNode getNodeForUmbrella(UmbrellaCollectionProvider providerChild) {
+		return new UmbrellaProviderNode(providerChild,null,null);
+	}
+
 	public DomainNode getNodeForDomainObject(
 			SourcesPropertyChangeEvents domainObject) {
 		DomainNode dn = createDomainNode(domainObject);

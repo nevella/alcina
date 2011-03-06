@@ -28,4 +28,8 @@ package cc.alcina.framework.gwt.client.widget;
 	public interface VisualFilterableWithParentEnforcesChildVisibility extends VisualFilterable {
 		public boolean filter(String filterText, boolean enforceVisible);
 	}
+	//this is at a per-node, rather than tree level
+	public interface HasSatisfiesFilter<T>{
+		 boolean satisfiesFilter(T t,String filterText);
+	}
 }

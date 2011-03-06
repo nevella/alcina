@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.util.Collection;
@@ -20,20 +19,18 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface CollectionProvider<E> extends CollectionModificationSource,
+public interface CollectionProvider<T> extends CollectionModificationSource,
 		DetachListener {
-	public Collection<E> getCollection();
+	public Collection<T> getCollection();
 
-	public Class<? extends E> getCollectionClass();
+	public Class<? extends T> getCollectionMemberClass();
 
-	public abstract static class BaseCollectionProvider<E> implements
-			CollectionProvider<E> {
+	public abstract static class SilentCollectionProvider<T> implements
+			CollectionProvider<T> {
 		public void addCollectionModificationListener(
 				CollectionModificationListener listener) {
 		}
@@ -44,5 +41,12 @@ import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 
 		public void onDetach() {
 		}
+
+		@Override
+		public int getCollectionSize() {
+			return 0;
+		}
 	}
+
+	public int getCollectionSize();
 }

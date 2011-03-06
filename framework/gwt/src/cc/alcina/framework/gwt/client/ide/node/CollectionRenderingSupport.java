@@ -55,10 +55,21 @@ public class CollectionRenderingSupport implements
 		this.item = new TreeOrItemTree(tree);
 	}
 
+	private boolean dirty = true;
+
+	public boolean isDirty() {
+		return this.dirty;
+	}
+
+	public void setDirty(boolean dirty) {
+		this.dirty = dirty;
+	}
+
 	public void setCollectionProvider(CollectionProvider collectionProvider) {
 		this.collectionProvider = collectionProvider;
+		dirty = true;
 		if (collectionProvider != null) {
-			refreshChildren();
+			refreshChildren(true);
 			collectionProvider.addCollectionModificationListener(this);
 		}
 	}
@@ -68,7 +79,8 @@ public class CollectionRenderingSupport implements
 	}
 
 	public void collectionModification(CollectionModificationEvent evt) {
-		refreshChildren();
+		dirty = true;
+		refreshChildren(true);
 	}
 
 	public CollectionProvider getCollectionProvider() {
@@ -76,7 +88,7 @@ public class CollectionRenderingSupport implements
 	}
 
 	public Class getListenedClass() {
-		return getCollectionProvider().getCollectionClass();
+		return getCollectionProvider().getCollectionMemberClass();
 	}
 
 	public PropertyCollectionProvider getPropertyCollectionProvider() {
@@ -146,23 +158,39 @@ public class CollectionRenderingSupport implements
 		return res;
 	}
 
-	public void refreshChildren() {
-		Collection objects = collectionProvider.getCollection();
+	private boolean lazyRefresh = false;
+
+	public void refreshChildrenIfDirty() {
+		if (dirty) {
+			dirty = false;
+			refreshChildren(false);
+		}
+	}
+
+	public void refreshChildren(boolean lazy) {
+		if (lazy && lazyRefresh && !item.getState()) {
+			return;
+		}
+		Map<Object, TreeItem> existingObjects = new LinkedHashMap<Object, TreeItem>();
+		for (int i = 0; i < item.getChildCount(); i++) {
+			TreeItem child = item.getChild(i);
+			if (child != null) {
+				existingObjects.put(child.getUserObject(), child);
+			}
+		}
+		Collection objects = getCollection();
 		if (objects == null || objects.isEmpty()) {
-			item.removeItems();
+			if (!existingObjects.isEmpty()) {
+				item.removeItems();
+			}
 			return;
 		}
 		if (volatileOrder) {
-			item.removeItems();
+			if (!existingObjects.isEmpty()) {
+				item.removeItems();
+			}
 		}
-		Map<Object, TreeItem> existingObjects = new LinkedHashMap<Object, TreeItem>();
-		List existingList = new ArrayList();
 		List currentObjects = new ArrayList(objects);
-		for (int i = 0; i < item.getChildCount(); i++) {
-			TreeItem child = item.getChild(i);
-			existingObjects.put(child.getUserObject(), child);
-			existingList.add(child.getUserObject());
-		}
 		Object o = currentObjects.get(0);
 		if (comparator != null) {
 			Collections.sort(currentObjects, comparator);
@@ -171,21 +199,21 @@ public class CollectionRenderingSupport implements
 		}
 		if (CollectionRenderingSupport.REDRAW_CHILDREN_ON_ORDER_CHANGE
 				&& existingObjects.size() == currentObjects.size()) {
-			List existingOrderedObjects = new ArrayList(existingObjects
-					.keySet());
+			List existingOrderedObjects = new ArrayList(
+					existingObjects.keySet());
 			List currentOrderedObjects = new ArrayList(currentObjects);
 			Collections.sort(existingOrderedObjects);
 			Collections.sort(currentOrderedObjects);
 			if (!currentOrderedObjects.equals(existingOrderedObjects)) {
 				existingObjects.clear();
-				existingList.clear();
 				this.item.removeItems();
 			}
 		}
 		int i1 = 0, i2 = 0;
 		// find next common object, run the indexes up to it. if -1, run indexes
 		// to end
-		while (i1 < existingList.size() || i2 < currentObjects.size()) {
+		List existingList = new ArrayList(existingObjects.keySet());
+		while (i1 < existingObjects.size() || i2 < currentObjects.size()) {
 			int[] nextCommon = nextCommonObject(existingList, currentObjects,
 					i1, i2);
 			for (; i1 < nextCommon[0]; i1++) {
@@ -194,12 +222,19 @@ public class CollectionRenderingSupport implements
 			for (; i2 < nextCommon[1]; i2++) {
 				// if there were an "insertItem" on the tree API, this'd be
 				// where we'd use it...
-				item.addItem(getNodeFactory().getNodeForDomainObject(
-						(SourcesPropertyChangeEvents) currentObjects.get(i2)));
+				// well..there is...but anyway (did someone slip that in?) -
+				// anyway, adding at end is sometimes
+				// nicer UI-wise
+				item.addItem(getNodeFactory().getNodeForObject(
+						currentObjects.get(i2)));
 			}
 			i1++;
 			i2++;
 		}
+	}
+
+	protected Collection getCollection() {
+		return collectionProvider.getCollection();
 	}
 
 	protected NodeFactory getNodeFactory() {
@@ -211,7 +246,9 @@ public class CollectionRenderingSupport implements
 	}
 
 	public void removeItem(TreeItem item) {
-		((DomainNode) item).removeListeners();
+		if (item instanceof DomainNode) {
+			((DomainNode) item).removeListeners();
+		}
 	}
 
 	public void setComparator(Comparator comparator) {
@@ -234,6 +271,14 @@ public class CollectionRenderingSupport implements
 		return volatileOrder;
 	}
 
+	public void setLazyRefresh(boolean lazyRefresh) {
+		this.lazyRefresh = lazyRefresh;
+	}
+
+	public boolean isLazyRefresh() {
+		return lazyRefresh;
+	}
+
 	public interface TreeOrItem {
 		public void addItem(TreeItem item);
 
@@ -246,6 +291,8 @@ public class CollectionRenderingSupport implements
 		public int getChildCount();
 
 		public Tree getTree();
+
+		public boolean getState();
 	}
 
 	public static class TreeOrItemTreeItem implements TreeOrItem {
@@ -278,6 +325,11 @@ public class CollectionRenderingSupport implements
 		public Tree getTree() {
 			return item.getTree();
 		}
+
+		@Override
+		public boolean getState() {
+			return item.getState();
+		}
 	}
 
 	public static class TreeOrItemTree implements TreeOrItem {
@@ -309,6 +361,11 @@ public class CollectionRenderingSupport implements
 
 		public Tree getTree() {
 			return tree;
+		}
+
+		@Override
+		public boolean getState() {
+			return true;
 		}
 	}
 }

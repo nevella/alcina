@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.beans.PropertyChangeEvent;
@@ -29,11 +28,10 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class PropertyCollectionProvider<E> implements CollectionProvider<E>,
+public class PropertyCollectionProvider<E> implements CollectionProvider<E>,
 		PropertyChangeListener {
 	private CollectionFilter<E> filter;
 
@@ -45,17 +43,23 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 		this.filter = filter;
 	}
 
+	@Override
+	public int getCollectionSize() {
+		return getCollection().size();
+	}
+
 	public PropertyCollectionProvider(SourcesPropertyChangeEvents domainObject,
 			ClientPropertyReflector propertyReflector) {
 		this.domainObject = domainObject;
 		this.propertyReflector = propertyReflector;
-		domainObject.addPropertyChangeListener(propertyReflector
-				.getPropertyName(), this);
+		domainObject.addPropertyChangeListener(
+				propertyReflector.getPropertyName(), this);
 	}
 
 	public CollectionFilter<E> getFilter() {
 		return this.filter;
 	}
+
 	@SuppressWarnings("unchecked")
 	public Collection<E> getCollection() {
 		Collection<E> colln = (Collection) GwittirBridge.get()
@@ -74,8 +78,9 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 	}
 
 	private CollectionModificationSupport collectionModificationSupport = new CollectionModificationSupport();
+
 	@SuppressWarnings("unchecked")
-	public Class<? extends E> getCollectionClass() {
+	public Class<? extends E> getCollectionMemberClass() {
 		return getPropertyReflector().getAnnotation(Association.class)
 				.implementationClass();
 	}

@@ -44,6 +44,7 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandl
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
+import cc.alcina.framework.gwt.client.ide.node.HasVisibleCollection;
 import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.ViewProvider;
@@ -60,8 +61,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author nick@alcina.cc
  * 
  */
-public class Workspace implements HasLayoutInfo,
-		PermissibleActionListener,
+public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		PermissibleActionEvent.PermissibleActionSource {
 	private WSVisualModel visualModel;
 
@@ -73,8 +73,7 @@ public class Workspace implements HasLayoutInfo,
 
 	private PermissibleActionEvent.PermissibleActionSupport vetoableActionSupport = new PermissibleActionEvent.PermissibleActionSupport();
 
-	public void addVetoableActionListener(
-			PermissibleActionListener listener) {
+	public void addVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.addVetoableActionListener(listener);
 	}
 
@@ -86,8 +85,7 @@ public class Workspace implements HasLayoutInfo,
 		this.vetoableActionSupport.removeAllListeners();
 	}
 
-	public void removeVetoableActionListener(
-			PermissibleActionListener listener) {
+	public void removeVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
 	}
 
@@ -165,10 +163,9 @@ public class Workspace implements HasLayoutInfo,
 		Collection colln = null;
 		Object singleObj = null;
 		Class clazz = null;
-		if (obj instanceof CollectionProviderNode) {
-			colln = ((CollectionProviderNode) obj).getVisibleItemObjects();
-			clazz = ((CollectionProviderNode) obj).getCollectionProvider()
-					.getCollectionClass();
+		if (obj instanceof HasVisibleCollection) {
+			colln = ((HasVisibleCollection) obj).getVisibleCollection();
+			clazz = ((HasVisibleCollection) obj).getCollectionMemberClass();
 		} else if (obj instanceof DomainNode) {
 			singleObj = ((DomainNode) obj).getUserObject();
 			clazz = singleObj.getClass();
@@ -232,12 +229,12 @@ public class Workspace implements HasLayoutInfo,
 						handlerClass,
 						singleObj == null ? clazz == null ? Object.class
 								: clazz : singleObj.getClass());
-		handler.performAction(evt, obj,singleObj != null ? singleObj : colln, this,
-				clazz);
+		handler.performAction(evt, obj, singleObj != null ? singleObj : colln,
+				this, clazz);
 	}
+
 	public void handleParentLinks(Object node, HasIdAndLocalId newObj) {
-		if (node instanceof DomainNode
-				&& !(node instanceof ProvidesParenting)) {
+		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
 			DomainNode dn = (DomainNode) node;
 			node = dn.getParentItem();
 		}
@@ -249,11 +246,15 @@ public class Workspace implements HasLayoutInfo,
 						.getPropertyReflector();
 				String propertyName = propertyReflector.getAnnotation(
 						Association.class).propertyName();
-				CommonLocator.get().propertyAccessor().setPropertyValue(
-						newObj, propertyName, pcp.getDomainObject());
+				CommonLocator
+						.get()
+						.propertyAccessor()
+						.setPropertyValue(newObj, propertyName,
+								pcp.getDomainObject());
 			}
 		}
 	}
+
 	protected SimpleWorkspaceVisualiser createVisualiser() {
 		return new SimpleWorkspaceVisualiser(visualModel, this);
 	}

@@ -72,7 +72,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 	}
 
 	public void refreshChildren() {
-		this.support.refreshChildren();
+		this.support.refreshChildren(false);
 	}
 
 	public void setCollectionProvider(CollectionProvider collectionProvider) {

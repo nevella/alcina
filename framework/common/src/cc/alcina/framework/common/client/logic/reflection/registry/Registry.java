@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LookupMapToMap;
 
 /**
  * 
@@ -34,10 +35,16 @@ public class Registry {
 
 	protected HashMap<Class, Map<Class, Integer>> targetPriority;
 
+	protected LookupMapToMap<Class> exactMap;
+
+	protected HashMap<Class, Object> singletons;
+
 	protected Registry() {
 		super();
 		registry = new HashMap<Class, Map<Class, List<Class>>>();
 		targetPriority = new HashMap<Class, Map<Class, Integer>>();
+		singletons = new HashMap<Class, Object>();
+		exactMap = new LookupMapToMap<Class>(2);
 	}
 
 	private static Registry theInstance = new Registry();
@@ -71,7 +78,7 @@ public class Registry {
 			int infoPriority = info.priority();
 			if (currentPriority > infoPriority) {
 				registered.clear();
-			}else{
+			} else {
 				return;
 			}
 		}
@@ -83,47 +90,54 @@ public class Registry {
 		return lookupSingle(registryPoint, targetObject, false);
 	}
 
+	public Object lookupSingleton(Class registryPoint, Class targetObject) {
+		Class markerClass = lookupSingle(registryPoint, targetObject, false);
+		Object singleton = singletons.get(markerClass);
+		if (singleton == null) {
+			singleton = CommonLocator.get().classLookup()
+					.newInstance(markerClass);
+			singletons.put(markerClass, singleton);
+		}
+		return singleton;
+	}
+
 	public Class lookupSingle(Class registryPoint, Class targetObject,
 			boolean errorOnNull) {
-		List<Class> lookup = lookup(true, registryPoint, targetObject);
-		Class result = lookup.size() > 0 ? lookup.get(0) : null;
-		if (result == null && errorOnNull) {
-			throw new RuntimeException(CommonUtils.format(
-					"Could not find lookup - %1:%2", CommonUtils
-							.classSimpleName(registryPoint), CommonUtils
-							.classSimpleName(targetObject)));
+		Class cached = exactMap.get(registryPoint, targetObject);
+		if (cached == null) {
+			List<Class> lookup = lookup(true, registryPoint, targetObject,false);
+			cached = lookup.size() > 0 ? lookup.get(0) : Void.class;
+			exactMap.put(registryPoint, targetObject, cached);
 		}
-		return result;
+		if (cached == Void.class && errorOnNull) {
+			throw new RuntimeException(CommonUtils.format(
+					"Could not find lookup - %1:%2",
+					CommonUtils.classSimpleName(registryPoint),
+					CommonUtils.classSimpleName(targetObject)));
+		}
+		return cached;
 	}
 
 	public Object instantiateSingleOrNull(Class registryPoint,
 			Class targetObject) {
-		List<Class> lookup = lookup(true, registryPoint, targetObject, true);
-		return lookup.size() > 0 ? instantiateSingle(registryPoint,
+		Class lookupSingle = lookupSingle(registryPoint, targetObject,false);
+		return lookupSingle!=null ? instantiateSingle(registryPoint,
 				targetObject) : null;
 	}
 
 	@SuppressWarnings("unchecked")
 	public Object instantiateSingle(Class registryPoint, Class targetObject) {
-		Class lookupSingle = lookupSingle(registryPoint, targetObject);
-		try {
-			return CommonLocator.get().classLookup().newInstance(lookupSingle);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		Class lookupSingle = lookupSingle(registryPoint, targetObject,true);
+		return CommonLocator.get().classLookup().newInstance(lookupSingle);
 	}
 
 	public List<Class> lookup(Class registryPoint) {
-		return lookup(false, registryPoint, void.class);
+		return lookup(false, registryPoint, void.class, true);
 	}
 
-	public List<Class> lookup(boolean mostSpecificTarget, Class registryPoint,
-			Class targetObject) {
-		return lookup(mostSpecificTarget, registryPoint, targetObject, false);
-	}
 
 	public List<Class> lookup(boolean mostSpecificTarget, Class registryPoint,
-			Class targetObject, boolean notRequired) {
+			Class targetObject, boolean required) {
 		// superclasschain
 		List<Class> scChain = new ArrayList<Class>();
 		Class c = targetObject;
@@ -137,7 +151,7 @@ public class Registry {
 		List<Class> result = new ArrayList<Class>();
 		Map<Class, List<Class>> map = registry.get(registryPoint);
 		if (map == null) {
-			if (notRequired) {
+			if (!required) {
 				return new ArrayList<Class>(0);
 			}
 			throw new RuntimeException(CommonUtils.format(

@@ -594,14 +594,14 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		public RegistryPermissionsExtension(Registry registry) {
 			try {
 				List<Class> lookup = registry.lookup(false,
-						PermissionsExtensionForClass.class, void.class, true);
+						PermissionsExtensionForClass.class, void.class, false);
 				for (Class clazz : lookup) {
 					PermissionsExtensionForClass ext = (PermissionsExtensionForClass) CommonLocator
 							.get().classLookup().newInstance(clazz);
 					extensionMapForClass.put(ext.getGenericClass(), ext);
 				}
 				lookup = registry.lookup(false,
-						PermissionsExtensionForRule.class, void.class, true);
+						PermissionsExtensionForRule.class, void.class, false);
 				for (Class clazz : lookup) {
 					PermissionsExtensionForRule ext = (PermissionsExtensionForRule) CommonLocator
 							.get().classLookup().newInstance(clazz);

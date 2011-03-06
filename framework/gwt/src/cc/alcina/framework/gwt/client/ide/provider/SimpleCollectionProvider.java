@@ -38,11 +38,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 
 	private CollectionFilter<E> filter;
 
-	public void setFilter(CollectionFilter<E> filter) {
-		this.filter = filter;
-		collectionModification(new CollectionModificationEvent(this));
-	}
-
 	public SimpleCollectionProvider(Collection<E> colln,
 			Class<? extends E> baseClass) {
 		this(colln, baseClass, null);
@@ -55,8 +50,17 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 		this.filter = filter;
 	}
 
-	public CollectionFilter<E> getFilter() {
-		return this.filter;
+	public void addCollectionModificationListener(
+			CollectionModificationListener listener) {
+		this.collectionModificationSupport
+				.addCollectionModificationListener(listener);
+	}
+	// chained through to the node
+	public void collectionModification(CollectionModificationEvent evt) {
+		CollectionModificationEvent simpleEvent = new CollectionModificationEvent(
+				evt.getSource());
+		this.collectionModificationSupport
+				.fireCollectionModificationEvent(simpleEvent);
 	}
 
 	public Collection<E> getCollection() {
@@ -72,14 +76,21 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 		return l;
 	}
 
-	public Class<? extends E> getCollectionClass() {
+	public Class<? extends E> getCollectionMemberClass() {
 		return this.baseClass;
 	}
 
-	public void addCollectionModificationListener(
-			CollectionModificationListener listener) {
-		this.collectionModificationSupport
-				.addCollectionModificationListener(listener);
+	@Override
+	public int getCollectionSize() {
+		return getCollection().size();
+	}
+
+	public CollectionFilter<E> getFilter() {
+		return this.filter;
+	}
+
+	public void onDetach() {
+		TransformManager.get().removeCollectionModificationListener(this);
 	}
 
 	public void removeCollectionModificationListener(
@@ -88,15 +99,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 				.removeCollectionModificationListener(listener);
 	}
 
-	public void onDetach() {
-		TransformManager.get().removeCollectionModificationListener(this);
-	}
-
-	// chained through to the node
-	public void collectionModification(CollectionModificationEvent evt) {
-		CollectionModificationEvent simpleEvent = new CollectionModificationEvent(
-				evt.getSource());
-		this.collectionModificationSupport
-				.fireCollectionModificationEvent(simpleEvent);
+	public void setFilter(CollectionFilter<E> filter) {
+		this.filter = filter;
+		collectionModification(new CollectionModificationEvent(this));
 	}
 }

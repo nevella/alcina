@@ -18,7 +18,11 @@ import java.beans.PropertyChangeListener;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
@@ -72,14 +76,28 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 
 	@Override
 	protected boolean satisfiesFilter(String filterText) {
-		if (super.satisfiesFilter(filterText)) {
-			return true;
+		T userObject = getUserObject();
+		return ((HasSatisfiesFilter) Registry.get().lookupSingleton(
+				HasSatisfiesFilter.class, userObject.getClass()))
+				.satisfiesFilter(userObject, filterText);
+	}
+
+	@RegistryLocation(registryPoint = HasSatisfiesFilter.class)
+	@ClientInstantiable
+	public static class DefaultHasSatisfiesFilter<T> implements HasSatisfiesFilter<T> {
+
+		@Override
+		public boolean satisfiesFilter(T t, String filterText) {
+			if (TextProvider.get().getObjectName(t).toLowerCase()
+					.contains(filterText)) {
+				return true;
+			}
+			if (t instanceof HasId) {
+				return String.valueOf(((HasId) t).getId()).equals(
+						filterText);
+			}
+			return false;
 		}
-		if (getUserObject() instanceof HasId) {
-			return String.valueOf(((HasId) getUserObject()).getId()).equals(
-					filterText);
-		}
-		return false;
 	}
 
 	public void removeListeners() {

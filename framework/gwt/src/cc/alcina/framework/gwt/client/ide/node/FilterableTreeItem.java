@@ -11,47 +11,54 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.node;
 
-
+import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.gwt.client.widget.VisualFilterable.HasSatisfiesFilter;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithParentEnforcesChildVisibility;
 
 import com.google.gwt.user.client.ui.TreeItem;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class FilterableTreeItem extends TreeItem implements VisualFilterableWithParentEnforcesChildVisibility {
+public class FilterableTreeItem extends TreeItem implements
+		VisualFilterableWithParentEnforcesChildVisibility {
 	public boolean filter(String filterText) {
-		return filter(filterText,false);
+		return filter(filterText, false);
 	}
-	protected boolean satisfiesFilter(String filterText){
+
+	protected boolean satisfiesFilter(String filterText) {
 		return getText().toLowerCase().contains(filterText);
 	}
+
+	
+
 	public boolean filter(String filterText, boolean enforceVisible) {
-		boolean satisfiesFilter= satisfiesFilter(filterText);
+		boolean satisfiesFilter = satisfiesFilter(filterText);
 		boolean satisfiesFilterThisNode = satisfiesFilter;
 		for (int i = 0; i < getChildCount(); i++) {
 			TreeItem child = getChild(i);
 			if (child instanceof VisualFilterableWithParentEnforcesChildVisibility) {
-				
 				VisualFilterableWithParentEnforcesChildVisibility vf = (VisualFilterableWithParentEnforcesChildVisibility) child;
-				satisfiesFilterThisNode |= vf.filter(filterText,satisfiesFilter|enforceVisible);
+				satisfiesFilterThisNode |= vf.filter(filterText,
+						satisfiesFilter | enforceVisible);
 			}
 		}
 		satisfiesFilterThisNode |= getText().toLowerCase().contains(filterText);
-		setVisible(satisfiesFilterThisNode||enforceVisible);
-		if (satisfiesFilterThisNode && filterText!=""){
-			setState(true,false);
+		setVisible(satisfiesFilterThisNode || enforceVisible);
+		if (satisfiesFilterThisNode && filterText != "") {
+			setState(true, false);
 		}
 		return satisfiesFilterThisNode;
 	}
+
 	@Override
 	public String getText() {
 		String text = super.getText();
-		return text==null?"":text;
+		return text == null ? "" : text;
 	}
 }
