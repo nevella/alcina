@@ -33,6 +33,7 @@ import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TreeItem;
@@ -108,11 +109,10 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	protected void createContentContainer(SplitLayoutPanel hsp) {
-		this.contentContainer = new SimplePanel();
+		this.contentContainer = new ScrollPanel();
 		contentContainer.setStyleName("alcina-WorkspaceContent");
 		setContentWidget(model.getContentWidget());
 		contentContainer.setHeight("100%");
-		contentContainer.setWidth("95%");
 		hsp.add(contentContainer);
 	}
 
