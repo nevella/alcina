@@ -35,8 +35,7 @@ import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
-import com.google.gwt.dom.client.Node;
-import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -45,20 +44,21 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.DockLayoutPanel;
+import com.google.gwt.user.client.ui.DockLayoutPanel.Direction;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLTable;
 import com.google.gwt.user.client.ui.HasWidgets;
-import com.google.gwt.user.client.ui.HorizontalSplitPanel;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.UIObject;
-import com.google.gwt.user.client.ui.VerticalSplitPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -121,13 +121,13 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element elt,
 			String attributeName)/*-{
-		if (elt.currentStyle){
-		return elt.currentStyle[attributeName];
-		}
-		if ($wnd.getComputedStyle){
-		return $wnd.getComputedStyle(elt,null)[attributeName];
-		}
-	}-*/;
+									if (elt.currentStyle) {
+									return elt.currentStyle[attributeName];
+									}
+									if ($wnd.getComputedStyle) {
+									return $wnd.getComputedStyle(elt, null)[attributeName];
+									}
+									}-*/;
 
 	public static void clearChildren(TabPanel tp) {
 		for (int i = tp.getWidgetCount() - 1; i >= 0; i--) {
@@ -227,11 +227,11 @@ public class WidgetUtils {
 					}
 					boolean ignoreChildrenForHeight = info
 							.to100percentOfAvailableHeight()
-							&& (parent instanceof HorizontalSplitPanel || info
+							&& (isDirectionalLayoutPanel(parent, true) || info
 									.ignoreSiblingsForHeight());
 					boolean ignoreChildrenForWidth = info
 							.to100percentOfAvailableWidth()
-							&& (parent instanceof VerticalSplitPanel || info
+							&& (isDirectionalLayoutPanel(parent, false) || info
 									.ignoreSiblingsForWidth());
 					if (childIterator != null) {
 						while (childIterator.hasNext()) {
@@ -285,6 +285,27 @@ public class WidgetUtils {
 		}// while
 	}
 
+	private static boolean isDirectionalLayoutPanel(Widget panel,
+			boolean horizontal) {
+		if (panel instanceof DockLayoutPanel) {
+			DockLayoutPanel dlp = (DockLayoutPanel) panel;
+			Iterator<Widget> itr = dlp.iterator();
+			for (Widget widget : dlp) {
+				Direction dir = dlp.getWidgetDirection(widget);
+				if (horizontal
+						&& (dir == Direction.NORTH || dir == Direction.SOUTH)) {
+					return false;
+				}
+				if (!horizontal
+						&& (dir == Direction.WEST || dir == Direction.EAST)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
 	public static void resizeUsingInfo(Widget w) {
 		resizeUsingInfo(getBestOffsetHeight(w.getElement()),
 				getBestOffsetWidth(w.getElement()), w);
@@ -327,23 +348,22 @@ public class WidgetUtils {
 
 	private static List<Widget> hiddenWidgets;
 
-	private static List<Widget> morphedWidgets;// hsps and vsps
+	private static List<SplitLayoutPanel> morphedWidgets;
 
 	private static List<ElementLayout> elementLayouts;
 
 	public static void maximiseWidget(Widget widget) {
 		restoreFromMaximise();
 		hiddenWidgets = new ArrayList<Widget>();
-		morphedWidgets = new ArrayList<Widget>();
+		morphedWidgets = new ArrayList<SplitLayoutPanel>();
 		elementLayouts = new ArrayList<ElementLayout>();
 		Element e = widget.getElement();
 		while (widget.getParent() != null) {
 			Widget parent = widget.getParent();
-			if (parent instanceof HorizontalSplitPanel
-					|| parent instanceof VerticalSplitPanel) {
-				morphSplitPanel(parent, widget, false);
-			}
-			if (parent instanceof HasWidgets && !(parent instanceof TabPanel)) {
+			if (parent instanceof SplitLayoutPanel) {
+				morphSplitPanel((SplitLayoutPanel) parent, widget, false);
+			} else if (parent instanceof HasWidgets
+					&& !(parent instanceof TabPanel)) {
 				HasWidgets hw = (HasWidgets) parent;
 				for (Iterator<Widget> itr = hw.iterator(); itr.hasNext();) {
 					Widget w = itr.next();
@@ -362,7 +382,8 @@ public class WidgetUtils {
 			e = e.getParentElement();
 		}
 	}
-
+	//those values might be needed for non-webkit
+	@SuppressWarnings("unused")
 	private static class ElementLayout {
 		private String position;
 
@@ -381,64 +402,77 @@ public class WidgetUtils {
 
 		void maximise() {
 			position = element.getStyle().getProperty("position");
-			width = element.getStyle().getProperty("width");
-			height = element.getStyle().getProperty("height");
+			// width = element.getStyle().getProperty("width");
+			// height = element.getStyle().getProperty("height");
 			overflow = element.getStyle().getProperty("overflow");
 			element.getStyle().setProperty("position", "");
-			element.getStyle().setProperty("width", "");
-			element.getStyle().setProperty("height", "");
+			// element.getStyle().setProperty("width", "");
+			// element.getStyle().setProperty("height", "");
 			element.getStyle().setProperty("overflow", "");
 		}
 
 		void restore() {
 			element.getStyle().setProperty("position", position);
-			element.getStyle().setProperty("width", width);
-			element.getStyle().setProperty("height", height);
+			// element.getStyle().setProperty("width", width);
+			// element.getStyle().setProperty("height", height);
 			element.getStyle().setProperty("overflow", overflow);
 		}
 	}
 
-	private static void morphSplitPanel(Widget splitPanel, Widget keepChild,
-			boolean restore) {
+	private static void morphSplitPanel(SplitLayoutPanel splitPanel,
+			Widget keepChild, boolean restore) {
 		final String zeroSize = "0px";
-		boolean hsp = (splitPanel instanceof HorizontalSplitPanel);
-		com.google.gwt.user.client.Element root, splitter, container0, container1, contained0, contained1, keepDisplaying;
-		root = (com.google.gwt.user.client.Element) splitPanel.getElement()
-				.getChildNodes().getItem(0);
-		String str = root.getString();
-		NodeList<Node> childNodes = root.getChildNodes();
-		container0 = (com.google.gwt.user.client.Element) childNodes.getItem(0);
-		splitter = (com.google.gwt.user.client.Element) childNodes.getItem(1);
-		container1 = (com.google.gwt.user.client.Element) childNodes.getItem(2);
-		contained0 = (com.google.gwt.user.client.Element) container0
-				.getChildNodes().getItem(0);
-		contained1 = (com.google.gwt.user.client.Element) container1
-				.getChildNodes().getItem(0);
-		int splitPos = hsp ? container0.getOffsetWidth() : container0
-				.getOffsetHeight();
-		String display = restore ? "" : "none";
-		String position = restore ? "absolute" : "";
-		splitter.getStyle().setProperty("display", display);
-		container0.getStyle().setProperty("display", display);
-		container1.getStyle().setProperty("display", display);
-		container0.getStyle().setProperty("position", position);
-		container1.getStyle().setProperty("position", position);
-		if (!restore) {
-			keepDisplaying = contained0 == keepChild.getElement() ? container0
-					: container1;
-			keepDisplaying.getStyle().setProperty("display", "");
-			morphedWidgets.add(splitPanel);
-			root.setPropertyInt(SPLIT_PANEL_RESTORE_PROP, splitPos);
-		} else {
-			splitPos = root.getPropertyInt(SPLIT_PANEL_RESTORE_PROP);
-			if (hsp) {
-				((HorizontalSplitPanel) splitPanel).setSplitPosition(splitPos
-						+ "px");
+		boolean hsp = isDirectionalLayoutPanel(splitPanel, true);
+		for (int index = 0; index < splitPanel.getWidgetCount(); index++) {
+			Widget w = splitPanel.getWidget(index);
+			if (CommonUtils.simpleClassName(w.getClass()).contains("Splitter")) {
+				w.setVisible(restore);
 			} else {
-				((VerticalSplitPanel) splitPanel).setSplitPosition(splitPos
-						+ "px");
+				Element container = splitPanel.getWidgetContainerElement(w);
+				container.getStyle().setDisplay(
+						restore || keepChild == w ? Display.BLOCK
+								: Display.NONE);
 			}
 		}
+		if (!restore) {
+			morphedWidgets.add(splitPanel);
+		}
+		// splitPanel.getWidgetCount()
+		// com.google.gwt.user.client.Element root, splitter, container0,
+		// container1, contained0, contained1, keepDisplaying;
+		// root = (com.google.gwt.user.client.Element) splitPanel.getElement()
+		// ;
+		// String str = root.getString();
+		// NodeList<Node> childNodes = root.getChildNodes();
+		// container0 = (com.google.gwt.user.client.Element)
+		// childNodes.getItem(0);
+		// splitter = (com.google.gwt.user.client.Element)
+		// childNodes.getItem(1);
+		// container1 = (com.google.gwt.user.client.Element)
+		// childNodes.getItem(2);
+		// contained0 = (com.google.gwt.user.client.Element) container0
+		// .getChildNodes().getItem(0);
+		// contained1 = (com.google.gwt.user.client.Element) container1
+		// .getChildNodes().getItem(0);
+		// int splitPos = hsp ? container0.getOffsetWidth() : container0
+		// .getOffsetHeight();
+		// String display = restore ? "" : "none";
+		// String position = restore ? "absolute" : "";
+		// splitter.getStyle().setProperty("display", display);
+		// container0.getStyle().setProperty("display", display);
+		// container1.getStyle().setProperty("display", display);
+		// container0.getStyle().setProperty("position", position);
+		// container1.getStyle().setProperty("position", position);
+		// if (!restore) {
+		// keepDisplaying = contained0 == keepChild.getElement() ? container0
+		// : container1;
+		// keepDisplaying.getStyle().setProperty("display", "");
+		// morphedWidgets.add(splitPanel);
+		// root.setPropertyInt(SPLIT_PANEL_RESTORE_PROP, splitPos);
+		// } else {
+		// splitPos = root.getPropertyInt(SPLIT_PANEL_RESTORE_PROP);
+		// splitPanel.setWidgetSize(splitPanel.getWidget(0), splitPos);
+		// }
 	}
 
 	private static final String SPLIT_PANEL_RESTORE_PROP = "_split_panel_restore";
@@ -452,7 +486,7 @@ public class WidgetUtils {
 			ElementLayout layout = elementLayouts.get(i);
 			layout.restore();
 		}
-		for (Widget w : morphedWidgets) {
+		for (SplitLayoutPanel w : morphedWidgets) {
 			morphSplitPanel(w, null, true);
 		}
 		for (Widget w : hiddenWidgets) {
@@ -539,8 +573,8 @@ public class WidgetUtils {
 	}
 
 	private static native void copy() /*-{
-		$doc.execCommand("Copy");
-	}-*/;
+										$doc.execCommand("Copy");
+										}-*/;
 
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
@@ -561,14 +595,16 @@ public class WidgetUtils {
 			}
 		});
 	}
-	public native static int getRelativeTopTo(Element elem,Element end) /*-{
-    var top = 0;
-    while (elem!=end) {
-      top += elem.offsetTop;
-      elem = elem.offsetParent;
-    }
-    return top;
-  }-*/;
+
+	public native static int getRelativeTopTo(Element elem, Element end) /*-{
+																			var top = 0;
+																			while (elem != end) {
+																			top += elem.offsetTop;
+																			elem = elem.offsetParent;
+																			}
+																			return top;
+																			}-*/;
+
 	public static void scrollIntoView(Element e, int fromTop) {
 		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
 		int y2 = y1 + Window.getClientHeight();

@@ -33,8 +33,8 @@ import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.HorizontalSplitPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -48,7 +48,7 @@ import com.google.gwt.user.client.ui.Widget;
 		HasLayoutInfo {
 	private final WSVisualModel model;
 
-	protected HorizontalSplitPanel hsp;
+	protected SplitLayoutPanel hsp;
 
 	private StackPanel100pcHeight viewHolder;
 
@@ -62,7 +62,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 	private Toolbar toolbar;
 
-	public static String defaultSplitterPosition = "280px";
+	public static double defaultSplitterPosition = 280;
 
 	/**
 	 * Uses horizontal panels because they're tables - i.e. 100% height works
@@ -74,7 +74,7 @@ import com.google.gwt.user.client.ui.Widget;
 			PermissibleActionListener actionListener) {
 		this.model = model;
 		this.verticalPanel = new Resize100Vp();
-		this.hsp = new HorizontalSplitPanel();
+		this.hsp = new SplitLayoutPanel();
 		this.viewHolder = new StackPanel100pcHeight();
 		// viewHolder.setHeight("100%");
 		viewHolder.setWidth("100%");
@@ -88,7 +88,7 @@ import com.google.gwt.user.client.ui.Widget;
 			view.ensureDebugId("");
 			view.addVetoableActionListener(actionListener);
 		}
-		hsp.add(viewHolder);
+		hsp.addWest(viewHolder,defaultSplitterPosition);
 		createContentContainer(hsp);
 		hsp.setHeight("100%");
 		// verticalPanel.setHeight("100%");
@@ -107,7 +107,7 @@ import com.google.gwt.user.client.ui.Widget;
 		super.onDetach();
 	}
 
-	protected void createContentContainer(HorizontalSplitPanel hsp) {
+	protected void createContentContainer(SplitLayoutPanel hsp) {
 		this.contentContainer = new SimplePanel();
 		contentContainer.setStyleName("alcina-WorkspaceContent");
 		setContentWidget(model.getContentWidget());
@@ -125,7 +125,7 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	void resetHsbPos() {
-		hsp.setSplitPosition(defaultSplitterPosition);
+		hsp.setWidgetSize(viewHolder, defaultSplitterPosition);
 	}
 
 	public void setContentWidget(Widget w) {

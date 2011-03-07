@@ -15,7 +15,6 @@
 	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-gears-noredist.jar"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/gwt-servlet.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar"/>

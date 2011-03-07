@@ -62,7 +62,7 @@ public class AlcinaHistoryItem {
 		for (String pair : pairs) {
 			String[] split = pair.split("=");
 			if (split.length == 2) {
-				params.put(split[0], URL.decodeComponent(split[1]));
+				params.put(split[0], URL.decodeQueryString(split[1]));
 			}
 		}
 		return params;

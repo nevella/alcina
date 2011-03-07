@@ -26,7 +26,7 @@ import com.google.gwt.http.client.URL;
 
  public class ClientURLComponentEncoder implements URLComponentEncoder {
 	public String decode(String componentText) {
-		return URL.decodeComponent(componentText);
+		return URL.decodeQueryString(componentText);
 	}
 
 	public String encode(String text) {

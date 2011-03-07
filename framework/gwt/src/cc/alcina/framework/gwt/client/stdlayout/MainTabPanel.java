@@ -41,7 +41,11 @@ import com.google.gwt.user.client.ui.Widget;
 /**
  * 
  * @author Nick Reddel
+ * Note - this class is closely coupled to DockPanel - so ignoring deprecation warnings.
+ * 
+ * It works...and a rewrite would be painful (and probably require a complete reimplementation)
  */
+@SuppressWarnings("deprecation")
 public class MainTabPanel extends TabPanel {
 	private HorizontalPanel bp;
 

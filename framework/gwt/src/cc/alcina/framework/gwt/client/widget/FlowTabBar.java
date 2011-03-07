@@ -61,8 +61,6 @@ public class FlowTabBar extends Composite implements
 
 	private Widget selectedTab;
 
-	private List<Widget> captions = new ArrayList<Widget>();
-
 	private List<ClickDelegatePanel> tabs = new ArrayList<ClickDelegatePanel>();
 
 	/**
@@ -367,7 +365,7 @@ public class FlowTabBar extends Composite implements
 	 */
 	private boolean selectTabByTabWidget(Widget tabWidget) {
 		int index = tabs.indexOf(tabWidget);
-		if(index>=0){
+		if (index >= 0) {
 			return selectTab(index);
 		}
 		return false;
