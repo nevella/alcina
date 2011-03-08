@@ -34,11 +34,15 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *         getMyEnum()<br>
  *         setMyEnum()<br>
  *         </p>
+ *         <p>Also - there seems to be something dodgy wrt HasValue<E> in serialization -
+ *         best to have an explicit serialverisionUID</p>
+ *         
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull, HasValue<E> {
 	private boolean withNull = true;
-
+	
+	static final transient long serialVersionUID = -1L;
 	public EnumCriterion() {
 	}
 

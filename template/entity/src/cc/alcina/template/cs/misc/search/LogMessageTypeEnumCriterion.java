@@ -3,6 +3,7 @@ package cc.alcina.template.cs.misc.search;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.search.EnumCriterion;
 public class LogMessageTypeEnumCriterion extends EnumCriterion<LogMessageType> {
+	static final transient long serialVersionUID = -1L;
 	private LogMessageType logMessageType;
 
 	public LogMessageTypeEnumCriterion() {

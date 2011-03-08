@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
  * @author Nick Reddel
  */
 public class DateCriterion extends AbstractDateCriterion {
+	static final transient long serialVersionUID = -1L;
 	public DateCriterion() {
 	}
 

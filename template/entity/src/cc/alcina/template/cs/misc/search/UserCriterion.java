@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 public class UserCriterion extends AbstractUserCriterion {
+	static final transient long serialVersionUID = -1L;
 	public UserCriterion() {
 	}
 

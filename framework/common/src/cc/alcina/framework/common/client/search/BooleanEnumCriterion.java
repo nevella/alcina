@@ -1,8 +1,7 @@
 package cc.alcina.framework.common.client.search;
 
 public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
-	public static final transient String RENDERABLE_PROPERTY_NAME = "booleanEnum";
-
+	static final transient long serialVersionUID = -1L;
 	private BooleanEnum booleanEnum;
 
 	public BooleanEnumCriterion() {

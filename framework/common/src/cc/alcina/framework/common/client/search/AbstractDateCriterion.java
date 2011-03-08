@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public class AbstractDateCriterion extends SearchCriterion implements
 		HasValue<Date> {
+	static final transient long serialVersionUID = -1L;
 	private Date date;
 
 	public AbstractDateCriterion() {
