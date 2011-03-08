@@ -50,6 +50,7 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.Map.Entry;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
@@ -129,14 +130,13 @@ public class ResourceUtilities {
 
 	public static String getBundledString(Class clazz, String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName : clazz
-				.getSimpleName()
-				+ "." + propertyName;
+				.getSimpleName() + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {
 			return customProperties.get(namespacedKey);
 		}
 		ResourceBundle b = ResourceBundle.getBundle(clazz.getPackage()
-				.getName()
-				+ ".Bundle", Locale.getDefault(), clazz.getClassLoader());
+				.getName() + ".Bundle", Locale.getDefault(),
+				clazz.getClassLoader());
 		return b.getString(propertyName);
 	}
 
@@ -365,10 +365,19 @@ public class ResourceUtilities {
 		return new ByteArrayInputStream(baos.toByteArray());
 	}
 
-	public static String readFileToString(File f) throws IOException {
-		FileInputStream fis = new FileInputStream(f);
+	public static String readFileToStringGz(File f) throws IOException {
+		InputStream fis = new FileInputStream(f);
+		if (f.getName().endsWith(".gz")) {
+			fis = new GZIPInputStream(new BufferedInputStream(fis));
+		}
 		return readStreamToString(fis);
 	}
+
+	public static String readFileToString(File f) throws IOException {
+		InputStream fis = new FileInputStream(f);
+		return readStreamToString(fis);
+	}
+
 	public static String readFileToString(String fileName) throws IOException {
 		return readFileToString(new File(fileName));
 	}

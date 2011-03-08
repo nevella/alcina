@@ -74,8 +74,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	};
 
-	public static TransformManager ttmInstance() {
-		return new ThreadlocalTransformManager();
+	public static ThreadlocalTransformManager cast() {
+		return (ThreadlocalTransformManager) TransformManager.get();
 	}
 
 	/**
@@ -84,6 +84,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public static ThreadlocalTransformManager get() {
 		return ThreadlocalTransformManager.cast();
 	}
+
+	public static TransformManager ttmInstance() {
+		return new ThreadlocalTransformManager();
+	}
+
+	private boolean useObjectCreationId;
 
 	Set<HasIdAndLocalId> modifiedObjects = new HashSet<HasIdAndLocalId>();
 
@@ -112,7 +118,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		for (ObjectCacheItemSpec itemSpec : specs) {
 			ObjectRef ref = itemSpec.getObjectRef();
 			String propertyName = itemSpec.getPropertyName();
-			Association assoc = CommonLocator.get().propertyAccessor()
+			Association assoc = CommonLocator
+					.get()
+					.propertyAccessor()
 					.getAnnotationForProperty(ref.getClassRef().getRefClass(),
 							Association.class, propertyName);
 			ObjectCacheItemResult itemResult = new ObjectCacheItemResult();
@@ -120,12 +128,14 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			String eql = buildEqlForSpec(itemSpec, assoc.implementationClass());
 			long t1 = System.currentTimeMillis();
 			List results = getEntityManager().createQuery(eql).getResultList();
-			EntityLayerLocator.get().getMetricLogger().debug(
-					"cache eql - total (ms):"
+			EntityLayerLocator
+					.get()
+					.getMetricLogger()
+					.debug("cache eql - total (ms):"
 							+ (System.currentTimeMillis() - t1));
 			try {
-				itemResult.setTransforms(objectsToDtes(results, assoc
-						.implementationClass(), true));
+				itemResult.setTransforms(objectsToDtes(results,
+						assoc.implementationClass(), true));
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -138,9 +148,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public boolean checkPropertyAccess(HasIdAndLocalId hili,
 			String propertyName, boolean read) throws IntrospectionException {
 		if (hili.getId() != 0) {
-			PropertyPermissions pp = SEUtilities.descriptorByName(
-					hili.getClass(), propertyName).getReadMethod()
-					.getAnnotation(PropertyPermissions.class);
+			PropertyPermissions pp = SEUtilities
+					.descriptorByName(hili.getClass(), propertyName)
+					.getReadMethod().getAnnotation(PropertyPermissions.class);
 			ObjectPermissions op = hili.getClass().getAnnotation(
 					ObjectPermissions.class);
 			return PermissionsManager.get().checkEffectivePropertyPermission(
@@ -163,7 +173,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	@Override
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
-		T newInstance = newInstance(objectClass, localId);
+		T newInstance = newInstance(objectClass, 0, localId);
 		// logic should probably be made clearer here - if id==0, we're not in
 		// an
 		// entitymanager context
@@ -207,15 +217,16 @@ public class ThreadlocalTransformManager extends TransformManager implements
 							String accessorName = "get"
 									+ CommonUtils.capitaliseFirst(info
 											.propertyName());
-							Object o3 = o2.getClass().getMethod(accessorName,
-									new Class[0]).invoke(o2,
-									CommonUtils.EMPTY_OBJECT_ARRAY);
+							Object o3 = o2.getClass()
+									.getMethod(accessorName, new Class[0])
+									.invoke(o2, CommonUtils.EMPTY_OBJECT_ARRAY);
 							if (o3 instanceof Set) {
 								Set assocSet = (Set) o3;
 								assocSet.remove(hili);
 							}
 							// direct references (parent/one-one) are not
-							// removed, throw a referential integrity exception instead
+							// removed, throw a referential integrity exception
+							// instead
 						}
 					}
 				}
@@ -289,17 +300,18 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			}
 			if (userSessionHiliMap != null && localId != 0) {
 				id = userSessionHiliMap.containsKey(localId) ? userSessionHiliMap
-						.get(localId).id
-						: 0;
+						.get(localId).id : 0;
 			}
 		}
 		if (id != 0 && getEntityManager() != null) {
 			if (WrapperPersistable.class.isAssignableFrom(c)) {
 				try {
 					Class okClass = c;
-					T wofu = (T) EntityLayerLocator.get()
-							.wrappedObjectProvider().getWrappedObjectForUser(
-									okClass, id, getEntityManager());
+					T wofu = (T) EntityLayerLocator
+							.get()
+							.wrappedObjectProvider()
+							.getWrappedObjectForUser(okClass, id,
+									getEntityManager());
 					return (T) wofu;
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
@@ -362,6 +374,13 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return listenToFoundObjects;
 	}
 
+	/**
+	 * for complete database replay
+	 */
+	public boolean isUseObjectCreationId() {
+		return useObjectCreationId;
+	}
+
 	public <T> T newInstance(Class<T> clazz) {
 		return ObjectPersistenceHelper.get().newInstance(clazz);
 	}
@@ -369,7 +388,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	/**
 	 * Can be called from the server layer(entityManager==null)
 	 */
-	public <T> T newInstance(Class<T> clazz, long localId) {
+	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		try {
 			if (HasIdAndLocalId.class.isAssignableFrom(clazz)) {
 				HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz
@@ -377,7 +396,18 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				newInstance.setLocalId(localId);
 				localIdToEntityMap.put(localId, newInstance);
 				if (entityManager != null) {
-					entityManager.persist(newInstance);
+					if (isUseObjectCreationId() && objectId != 0) {
+						newInstance.setId(objectId);
+						Object fromBefore = EntityLayerLocator
+								.get()
+								.jpaImplementation()
+								.beforeSpecificSetId(entityManager, newInstance);
+						entityManager.persist(newInstance);
+						EntityLayerLocator.get().jpaImplementation()
+								.afterSpecificSetId(fromBefore);
+					} else {
+						entityManager.persist(newInstance);
+					}
 				}
 				if (userSessionHiliMap != null) {
 					userSessionHiliMap.put(localId, new HiliLocator(
@@ -389,6 +419,37 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			throw new Exception("only construct hilis here");
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void reconstituteHiliMap() {
+		if (clientInstance != null) {
+			CommonPersistenceLocal cp = EntityLayerLocator.get()
+					.commonPersistenceProvider().getCommonPersistence();
+			String message = "Reconstitute hili map - clientInstance: "
+					+ clientInstance.getId();
+			// System.out.println(message);
+			// cp.log(message, LogMessageType.INFO.toString());
+			String dteName = cp.getImplementation(
+					DomainTransformEventPersistent.class).getSimpleName();
+			MetricLogging.get().start(message);
+			List<? extends DomainTransformEvent> dtes = getEntityManager()
+					.createQuery(
+							"from "
+									+ dteName
+									+ " dte "
+									+ " where dte.domainTransformRequestPersistent.clientInstance.id = ?"
+									+ " and dte.objectLocalId!=0 and dte.transformType = ?")
+					.setParameter(1, clientInstance.getId())
+					.setParameter(2, TransformType.CREATE_OBJECT)
+					.getResultList();
+			// force non-empty
+			userSessionHiliMap.put((long) -1, null);
+			for (DomainTransformEvent dte : dtes) {
+				userSessionHiliMap.put(dte.getObjectLocalId(), new HiliLocator(
+						null, dte.getObjectId()));
+			}
+			MetricLogging.get().end(message);
 		}
 	}
 
@@ -453,6 +514,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				SuggestedAction.NOTIFY_WARNING);
 	}
 
+	public void setUseObjectCreationId(boolean useObjectCreationId) {
+		this.useObjectCreationId = useObjectCreationId;
+	}
+
 	private String buildEqlForSpec(ObjectCacheItemSpec itemSpec,
 			Class assocClass) throws Exception {
 		ObjectRef ref = itemSpec.getObjectRef();
@@ -511,36 +576,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	private void listenTo(SourcesPropertyChangeEvents spce) {
 		spce.addPropertyChangeListener(this);
-	}
-
-	public void reconstituteHiliMap() {
-		if (clientInstance != null) {
-			CommonPersistenceLocal cp = EntityLayerLocator.get()
-					.commonPersistenceProvider().getCommonPersistence();
-			String message = "Reconstitute hili map - clientInstance: "
-					+ clientInstance.getId();
-			// System.out.println(message);
-			// cp.log(message, LogMessageType.INFO.toString());
-			String dteName = cp.getImplementation(
-					DomainTransformEventPersistent.class).getSimpleName();
-			MetricLogging.get().start(message);
-			List<? extends DomainTransformEvent> dtes = getEntityManager()
-					.createQuery(
-							"from "
-									+ dteName
-									+ " dte "
-									+ " where dte.domainTransformRequestPersistent.clientInstance.id = ?"
-									+ " and dte.objectLocalId!=0 and dte.transformType = ?")
-					.setParameter(1, clientInstance.getId()).setParameter(2,
-							TransformType.CREATE_OBJECT).getResultList();
-			// force non-empty
-			userSessionHiliMap.put((long) -1, null);
-			for (DomainTransformEvent dte : dtes) {
-				userSessionHiliMap.put(dte.getObjectLocalId(), new HiliLocator(
-						null, dte.getObjectId()));
-			}
-			MetricLogging.get().end(message);
-		}
 	}
 
 	@Override
@@ -639,7 +674,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	protected void updateAssociation(DomainTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt, boolean remove,
 			boolean collectionPropertyChange) {
-		ManyToMany manyToMany = CommonLocator.get().propertyAccessor()
+		ManyToMany manyToMany = CommonLocator
+				.get()
+				.propertyAccessor()
 				.getAnnotationForProperty(evt.getObjectClass(),
 						ManyToMany.class, evt.getPropertyName());
 		if (manyToMany != null && manyToMany.mappedBy().length() != 0) {
@@ -656,9 +693,5 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			this.clazz = clazz;
 			this.id = id;
 		}
-	}
-
-	public static ThreadlocalTransformManager cast() {
-		return (ThreadlocalTransformManager) TransformManager.get();
 	}
 }

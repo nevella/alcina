@@ -64,7 +64,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 			NamedParameter p = Support.getParameter(parameters, name);
 			if (p!=null && p.classValue()!=null){
 				return (T) CommonLocator.get().classLookup()
-				.newInstance(p.classValue(), 0);
+				.newInstance(p.classValue(), 0,0);
 			}
 			return null;
 		}

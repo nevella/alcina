@@ -50,4 +50,8 @@ public interface JPAImplementation {
 	public void interpretException(DomainTransformException exception);
 
 	public File getConfigDirectory();
+	
+	public void afterSpecificSetId(Object fromBefore) throws Exception;
+
+	Object beforeSpecificSetId(EntityManager entityManager, Object toPersist) throws Exception;
 }

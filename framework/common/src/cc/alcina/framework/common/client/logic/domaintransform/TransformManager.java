@@ -248,9 +248,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 			break;
 		case CREATE_OBJECT:
 			if (event.getObjectId() != 0) {
-				// two possibilities: replaying a server create,
-				// or recording an in-entity-manager create
-				// if the latter, break at this point
+				// three possibilities:
+				// 1. replaying a server create,(on the client)
+				// 2. recording an in-entity-manager create
+				// 3. doing a database-regeneration 
+				// if (2), break at this point
 				if (getObject(event) != null) {
 					break;
 				}
@@ -258,10 +260,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator
 					.get()
 					.classLookup()
-					.newInstance(event.getObjectClass(),
+					.newInstance(event.getObjectClass(),event.getObjectId(),
 							event.getObjectLocalId());
 			hili.setLocalId(event.getObjectLocalId());
-			if (hili.getId() == 0) {// replay from server
+			if (hili.getId() == 0) {// replay from server - 
 				hili.setId(event.getObjectId());
 			}
 			event.setObjectId(hili.getId());
@@ -310,7 +312,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = CommonLocator.get().classLookup()
-				.newInstance(objectClass, localId);
+				.newInstance(objectClass, 0,localId);
 		newInstance.setLocalId(localId);
 		// a bit roundabout, but to ensure compatibility with the event system
 		// essentially registers a synthesised object, then replaces it in the
@@ -324,7 +326,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = CommonLocator.get().classLookup()
-				.newInstance(objectClass, localId);
+				.newInstance(objectClass, 0,localId);
 		newInstance.setLocalId(localId);
 		registerProvisionalObject(newInstance);
 		return newInstance;

@@ -559,4 +559,5 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw new DomainTransformRequestException(wrapper.response);
 		}
 	}
+
 }

@@ -16,13 +16,18 @@ package cc.alcina.framework.entity.impl.jboss;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.Collection;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.hibernate.LazyInitializationException;
+import org.hibernate.engine.IdentifierValue;
+import org.hibernate.engine.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.tuple.IdentifierProperty;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
@@ -60,8 +65,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return object;
 	}
 
-	public GraphProjectionFilter getResolvingFilter(InstantiateImplCallback callback,
-			DetachedEntityCache cache) {
+	public GraphProjectionFilter getResolvingFilter(
+			InstantiateImplCallback callback, DetachedEntityCache cache) {
 		EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(
 				callback);
 		if (cache != null) {
@@ -74,11 +79,11 @@ public class JPAHibernateImpl implements JPAImplementation {
 			Collection<Long> ids) {
 		try {
 			em.createQuery(
-					String.format("delete %s where id in %s ", clazz
-							.getSimpleName(), EntityUtils.longsToIdClause(ids)))
-					.executeUpdate();
+					String.format("delete %s where id in %s ",
+							clazz.getSimpleName(),
+							EntityUtils.longsToIdClause(ids))).executeUpdate();
 		} catch (Exception e) {
-			//probably a reference error, try with parent delete/cascade
+			// probably a reference error, try with parent delete/cascade
 			return false;
 		}
 		return true;
@@ -105,5 +110,46 @@ public class JPAHibernateImpl implements JPAImplementation {
 	public File getConfigDirectory() {
 		return new File(System.getProperty("jboss.server.home.dir")
 				+ File.separator + "conf" + File.separator);
+	}
+
+	public IdentifierValue setUnsavedValue(IdentifierProperty ip,
+			IdentifierValue newUnsavedValue) throws Exception {
+		IdentifierValue backup = ip.getUnsavedValue();
+		Field f = ip.getClass().getDeclaredField("unsavedValue");
+		f.setAccessible(true);
+		f.set(ip, newUnsavedValue);
+		return backup;
+	}
+
+	@Override
+	public Object beforeSpecificSetId(EntityManager entityManager,
+			Object toPersist) throws Exception {
+		SessionImplementor session = (SessionImplementor) entityManager
+				.getDelegate();
+		EntityPersister persister = session.getEntityPersister(toPersist
+				.getClass().getName(), toPersist);
+		IdentifierProperty ip = persister.getEntityMetamodel()
+				.getIdentifierProperty();
+		IdentifierValue backupUnsavedValue = setUnsavedValue(ip,
+				IdentifierValue.ANY);
+		return new SavedId(ip, backupUnsavedValue);
+	}
+
+	private static class SavedId {
+		private final IdentifierProperty ip;
+
+		private final IdentifierValue backupUnsavedValue;
+
+		public SavedId(IdentifierProperty ip, IdentifierValue backupUnsavedValue) {
+			this.ip = ip;
+			this.backupUnsavedValue = backupUnsavedValue;
+		}
+	}
+
+	@Override
+	public void afterSpecificSetId(Object fromBefore) throws Exception {
+		// restore the backuped unsavedValue
+		SavedId savedId = (SavedId) fromBefore;
+		setUnsavedValue(savedId.ip, savedId.backupUnsavedValue);
 	}
 }

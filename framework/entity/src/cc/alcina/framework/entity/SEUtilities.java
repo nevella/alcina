@@ -653,6 +653,11 @@ public class SEUtilities {
 		}
 	}
 
+	public static String getHomeDir() {
+		return (System.getenv("USERPROFILE") != null) ? System
+				.getenv("USERPROFILE") : System.getProperty("user.home");
+	}
+
 	public static class Byte {
 		public static int indexOf(byte[] src, byte[] toFind) {
 			return indexOf(src, toFind, 0);

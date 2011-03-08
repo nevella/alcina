@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
+import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.util.EntityUtils;
@@ -140,4 +141,7 @@ public interface CommonPersistenceLocal {
 
 	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz, Collection<Long> ids,
 			InstantiateImplCallback instantiateImplCallback);
+
+	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
+			long fromId, long toId);
 }

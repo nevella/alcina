@@ -2,9 +2,10 @@ package cc.alcina.framework.entity.entityaccess;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
@@ -14,10 +15,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.entity.MetricLogging;
@@ -257,6 +257,7 @@ public class TransformPersister {
 			int transformCount = 0;
 			for (DomainTransformRequest dtr : dtrs) {
 				List<DomainTransformEvent> items = dtr.getItems();
+				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
 				if (token.getPass() == Pass.TRY_COMMIT) {
 					MetricLogging.get().lowPriorityStart(PRECACHE_ENTITIES);
 					preCacheEntities(items);
@@ -271,7 +272,10 @@ public class TransformPersister {
 					}
 					if (token.getPass() == Pass.TRY_COMMIT) {
 						try {
-							tm.fireDomainTransform(event);
+							if (event.getCommitType() == CommitType.TO_STORAGE) {
+								tm.fireDomainTransform(event);
+								eventsPersisted.add(event);
+							}
 						} catch (Exception e) {
 							DomainTransformException transformException = DomainTransformException
 									.wrap(e, event);
@@ -360,7 +364,7 @@ public class TransformPersister {
 					dtrp.setItems(new ArrayList<DomainTransformEvent>());
 					dtr.setItems(items);
 					dtrp.setClientInstance(persistentClientInstance);
-					for (DomainTransformEvent event : items) {
+					for (DomainTransformEvent event : eventsPersisted) {
 						if (request.getEventIdsToIgnore().contains(
 								event.getEventId())) {
 							continue;

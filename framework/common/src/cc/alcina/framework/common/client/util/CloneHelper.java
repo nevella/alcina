@@ -103,7 +103,7 @@ public class CloneHelper {
 	}
 
 	protected <T> T newInstance(T o) {
-		return (T) ClientReflector.get().newInstance(o.getClass(), 0);
+		return (T) ClientReflector.get().newInstance(o.getClass(),0, 0);
 	}
 
 	protected boolean deepProperty(Object o, String propertyName) {

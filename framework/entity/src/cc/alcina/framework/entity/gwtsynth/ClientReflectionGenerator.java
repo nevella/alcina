@@ -114,8 +114,8 @@ public class ClientReflectionGenerator extends Generator {
 			List<JAnnotationType> jAnns = this.getClientVisibleAnnotations(
 					logger, context.getTypeOracle());
 			writeAnnotations(logger, context, jAnns, crf);
-			List<JType> beanInfoTypes = this.getBeanInfoTypes(logger, context
-					.getTypeOracle(), crf);
+			List<JType> beanInfoTypes = this.getBeanInfoTypes(logger,
+					context.getTypeOracle(), crf);
 			List<JType> instantiableTypes = this.getInstantiableTypes(logger,
 					context.getTypeOracle(), crf);
 			Map<Class, Set<RegistryLocation>> gwtRegisteringClasses = getRegistryAnnotations(context
@@ -128,9 +128,8 @@ public class ClientReflectionGenerator extends Generator {
 			System.out.println(String.format("Client reflection generation - "
 					+ "%s annotations, %s beans, "
 					+ "%s instantiable types - %s ms", jAnns.size(),
-					beanInfoTypes.size(), instantiableTypes.size(), System
-							.currentTimeMillis()
-							- start));
+					beanInfoTypes.size(), instantiableTypes.size(),
+					System.currentTimeMillis() - start));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -240,8 +239,8 @@ public class ClientReflectionGenerator extends Generator {
 			annf.addImport(Annotation.class.getCanonicalName());
 			annf.addImport(type.getQualifiedSourceName());
 			annf.addImplementedInterface(type.getName());
-			List<Method> declaredMethods = new ArrayList<Method>(Arrays
-					.asList(annClass.getDeclaredMethods()));
+			List<Method> declaredMethods = new ArrayList<Method>(
+					Arrays.asList(annClass.getDeclaredMethods()));
 			Collections.sort(declaredMethods, ToStringComparator.INSTANCE);
 			StringBuffer constrParams = new StringBuffer();
 			List<String> constrLines = new ArrayList<String>();
@@ -273,8 +272,8 @@ public class ClientReflectionGenerator extends Generator {
 			}
 			sw.println();
 			sw.println("public Class<? extends Annotation> annotationType() {");
-			sw.indentln(String.format("return %s.class;", annClass
-					.getSimpleName()));
+			sw.indentln(String.format("return %s.class;",
+					annClass.getSimpleName()));
 			sw.println("}");
 			sw.println();
 			sw.println(String.format("public %s (%s){", implementationName,
@@ -337,8 +336,7 @@ public class ClientReflectionGenerator extends Generator {
 			Map<Class, Set<RegistryLocation>> gwtRegisteringClasses,
 			String implName) throws Exception {
 		sw.indent();
-		sw
-				.println("Map<Class, ClientBeanReflector> gwbiMap = new HashMap<Class, ClientBeanReflector>();");
+		sw.println("Map<Class, ClientBeanReflector> gwbiMap = new HashMap<Class, ClientBeanReflector>();");
 		sw.println(String.format("public %s() {", implName));
 		sw.indent();
 		sw.println("super();");
@@ -346,8 +344,7 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("ClientReflector.register(this);");
 		sw.outdent();
 		sw.println("}");
-		sw
-				.println("public ClientBeanReflector beanInfoForClass(Class clazz) {");
+		sw.println("public ClientBeanReflector beanInfoForClass(Class clazz) {");
 		sw.indent();
 		sw.println("return gwbiMap.get(clazz);");
 		sw.outdent();
@@ -355,29 +352,23 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println();
 		sw.println();
 		sw.println("@Override");
-		sw.println("public <T> T newInstance(Class<T> clazz, long localId) {");
+		sw.println("public <T> T newInstance(Class<T> clazz, long objectId, long localId) {");
 		sw.indent();
 		for (Class c : beanInfoClasses) {
-			sw
-					.println(String
-							.format(
-									"if (clazz.equals(%s.class)){return (T)GWT.create(%s.class);} ",
-									c.getSimpleName(), c.getSimpleName()));
+			sw.println(String
+					.format("if (clazz.equals(%s.class)){return (T)GWT.create(%s.class);} ",
+							c.getSimpleName(), c.getSimpleName()));
 		}
 		for (Class c : instantiableClasses) {
 			if (c.isEnum()) {
 				continue;
 			}
-			sw
-					.println(String
-							.format(
-									"if (clazz.equals(%s.class)){return (T)GWT.create(%s.class);} ",
-									c.getSimpleName(), c.getSimpleName()));
+			sw.println(String
+					.format("if (clazz.equals(%s.class)){return (T)GWT.create(%s.class);} ",
+							c.getSimpleName(), c.getSimpleName()));
 		}
-		sw
-				.println("if (child!=null){return child.newInstance(clazz,localId);}");
-		sw
-				.println("throw new RuntimeException(\"Class \"+clazz+\" not reflect-instantiable\");");
+		sw.println("if (child!=null){return child.newInstance(clazz,objectId,localId);}");
+		sw.println("throw new RuntimeException(\"Class \"+clazz+\" not reflect-instantiable\");");
 		sw.outdent();
 		sw.println("}");
 		sw.println();
@@ -389,8 +380,7 @@ public class ClientReflectionGenerator extends Generator {
 			methodNames.add(methodName);
 			sw.println(String.format("private void %s(){", methodName));
 			sw.indent();
-			sw
-					.println("Map<String,ClientPropertyReflector> propertyReflectors = new HashMap<String,ClientPropertyReflector>();");
+			sw.println("Map<String,ClientPropertyReflector> propertyReflectors = new HashMap<String,ClientPropertyReflector>();");
 			BeanInfo beanInfo = Introspector.getBeanInfo(c);
 			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
@@ -435,8 +425,7 @@ public class ClientReflectionGenerator extends Generator {
 						+ " new Annotation[]{%s}) ;", pd.getName(), pd
 						.getPropertyType().getName().replace("$", "."),
 						annArray));
-				sw
-						.println("propertyReflectors.put(reflector.getPropertyName(), reflector);");
+				sw.println("propertyReflectors.put(reflector.getPropertyName(), reflector);");
 				sw.outdent();
 				sw.println("}");
 			}
@@ -454,14 +443,11 @@ public class ClientReflectionGenerator extends Generator {
 				annArray += "a" + aCount;
 				sw.println(annImpl);
 			}
-			sw
-					.println(String
-							.format(
-									"ClientBeanReflector beanReflector = new ClientBeanReflector("
-											+ "%s.class,new Annotation[]{%s},propertyReflectors);",
-									c.getCanonicalName(), annArray));
-			sw
-					.println("gwbiMap.put(beanReflector.getBeanClass(),beanReflector );");
+			sw.println(String
+					.format("ClientBeanReflector beanReflector = new ClientBeanReflector("
+							+ "%s.class,new Annotation[]{%s},propertyReflectors);",
+							c.getCanonicalName(), annArray));
+			sw.println("gwbiMap.put(beanReflector.getBeanClass(),beanReflector );");
 			sw.outdent();
 			sw.println("}");
 			sw.println("");
@@ -471,13 +457,13 @@ public class ClientReflectionGenerator extends Generator {
 		Set<Class> qt = new HashSet<Class>();
 		qt.addAll(instantiableClasses);
 		for (Class c : instantiableClasses) {
-			sw.println(String.format("forNameMap.put(\"%s\",%s.class);", c
-					.getName(), c.getName().replace("$", ".")));
+			sw.println(String.format("forNameMap.put(\"%s\",%s.class);",
+					c.getName(), c.getName().replace("$", ".")));
 		}
 		for (Class c : beanInfoClasses) {
 			if (!qt.contains(c)) {
-				sw.println(String.format("forNameMap.put(\"%s\",%s.class);", c
-						.getName(), c.getName().replace("$", ".")));
+				sw.println(String.format("forNameMap.put(\"%s\",%s.class);",
+						c.getName(), c.getName().replace("$", ".")));
 			}
 		}
 		for (String methodName : methodNames) {
@@ -491,8 +477,8 @@ public class ClientReflectionGenerator extends Generator {
 				StringBuffer sb = new StringBuffer();
 				writeAnnImpl(l, ann2impl, 0, false, sb);
 				sw.println(String.format(
-						"Registry.get().register(%s.class,%s);", clazz
-								.getCanonicalName(), sb));
+						"Registry.get().register(%s.class,%s);",
+						clazz.getCanonicalName(), sb));
 			}
 		}
 		sw.outdent();
@@ -528,8 +514,8 @@ public class ClientReflectionGenerator extends Generator {
 			if (pc++ != 0) {
 				sb.append(", ");
 			}
-			writeLiteral(m.invoke(a, CommonUtils.EMPTY_OBJECT_ARRAY), m
-					.getReturnType(), sb);
+			writeLiteral(m.invoke(a, CommonUtils.EMPTY_OBJECT_ARRAY),
+					m.getReturnType(), sb);
 		}
 		sb.append(")");
 		if (assignment) {
@@ -543,8 +529,7 @@ public class ClientReflectionGenerator extends Generator {
 		if (c.isArray()) {
 			String implClassName = ann2impl.containsKey(declaredType
 					.getComponentType()) ? ann2impl.get(declaredType
-					.getComponentType())
-					+ "[]" : c.getSimpleName();
+					.getComponentType()) + "[]" : c.getSimpleName();
 			sb.append(String.format("new %s{", implClassName));
 			int length = Array.getLength(object);
 			for (int i = 0; i < length; i++) {
@@ -559,8 +544,8 @@ public class ClientReflectionGenerator extends Generator {
 		} else if (c.equals(Class.class)) {
 			sb.append(((Class) object).getCanonicalName() + ".class");
 		} else if (c.equals(String.class)) {
-			sb.append(String.format("\"%s\"", object.toString().replace("\\",
-					"\\\\")));
+			sb.append(String.format("\"%s\"",
+					object.toString().replace("\\", "\\\\")));
 		} else if (Enum.class.isAssignableFrom(c)) {
 			sb.append(c.getSimpleName() + "." + object.toString());
 		} else {

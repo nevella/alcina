@@ -166,7 +166,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
-	public <T> T newInstance(Class<T> clazz, long localId) {
+	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		try {
 			HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz.newInstance();
 			newInstance.setLocalId(localId);

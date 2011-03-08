@@ -17,6 +17,8 @@ import java.util.Date;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
@@ -69,11 +71,15 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		this.timestamp = new Date().getTime();
 		this.userId = PermissionsManager.get().getUserId();
 		if (!async) {
-			ClientLayerLocator.get().notifications().metricLogStart(
-					"DTRSimpleSerialWrapper-tostr");
-			this.text = request.toString();
-			ClientLayerLocator.get().notifications().metricLogEnd(
-					"DTRSimpleSerialWrapper-tostr");
+			if (GWT.isClient()) {
+				ClientLayerLocator.get().notifications()
+						.metricLogStart("DTRSimpleSerialWrapper-tostr");
+				this.text = request.toString();
+				ClientLayerLocator.get().notifications()
+						.metricLogEnd("DTRSimpleSerialWrapper-tostr");
+			} else {
+				this.text = request.toString();
+			}
 		} else {
 			// text set async
 		}
@@ -92,11 +98,11 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 			int clientInstanceAuth,
 			DomainTransformRequestType domainTransformRequestType,
 			String protocolVersion, String tag) {
+		this.id = id;
 		this.text = text;
 		this.timestamp = timestamp;
 		this.userId = userId;
 		this.clientInstanceId = clientInstanceId;
-		this.id = id;
 		this.requestId = requestId;
 		this.clientInstanceAuth = clientInstanceAuth;
 		this.domainTransformRequestType = domainTransformRequestType;
@@ -130,6 +136,7 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 	public int getRequestId() {
 		return this.requestId;
 	}
+
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Tag", orderingHint = 35))
 	public String getTag() {
 		return tag;

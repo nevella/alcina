@@ -56,7 +56,7 @@ public class SelectorCustomiser implements Customiser {
 					info.parameters(), FILTER_CLASS);
 			if (parameter != null) {
 				filter = (CollectionFilter) CommonLocator.get().classLookup()
-						.newInstance(parameter.classValue(), 0);
+						.newInstance(parameter.classValue(),0, 0);
 			}
 			Renderer renderer = NamedParameter.Support.instantiateClass(
 					info.parameters(), RENDERER_CLASS);

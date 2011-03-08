@@ -173,6 +173,10 @@ public class SimpleStringParser {
 		String str = read(start, end);
 		return toLong(str);
 	}
+	public long readLongString(String start, String end) {
+		String str = read(start, end);
+		return Long.parseLong(str);
+	}
 
 	public int indexOf(String of) {
 		return s.indexOf(of, offset);

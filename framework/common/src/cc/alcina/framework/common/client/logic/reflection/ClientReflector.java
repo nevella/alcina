@@ -112,7 +112,7 @@ public class ClientReflector implements ClassLookup {
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		if (!templateInstances.containsKey(clazz)) {
 			templateInstances.put(clazz, CommonLocator.get().classLookup()
-					.newInstance(clazz, 0));
+					.newInstance(clazz, 0, 0));
 		}
 		return (T) templateInstances.get(clazz);
 	}
@@ -130,10 +130,11 @@ public class ClientReflector implements ClassLookup {
 	}
 
 	public <T> T newInstance(Class<T> clazz) {
-		return newInstance(clazz, 0);
+		return newInstance(clazz, 0, 0);
 	}
 
-	public <T> T newInstance(Class<T> clazz, long localId) {
+	@Override
+	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		throw new RuntimeException("Operation not implemented");
 	}
 
@@ -143,10 +144,6 @@ public class ClientReflector implements ClassLookup {
 			parent.gwbiMap.put(c, gwbiMap.get(c));
 		}
 	}
-
-	
-
-	
 
 	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
 	{

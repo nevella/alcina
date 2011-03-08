@@ -133,8 +133,8 @@ public class GwittirBridge implements PropertyAccessor {
 	public Object getPropertyValue(Object o, String propertyName) {
 		try {
 			BeanDescriptor bd = getDescriptor(o);
-			return bd.getProperty(propertyName).getAccessorMethod().invoke(o,
-					null);
+			return bd.getProperty(propertyName).getAccessorMethod()
+					.invoke(o, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(CommonUtils.format(
 					"Unable to get property %1 for object %2", propertyName, o
@@ -300,8 +300,9 @@ public class GwittirBridge implements PropertyAccessor {
 				if (customiserInfo == null) {
 					customiser = ((HasCustomiser) obj).customiser();
 				} else {
-					customiser = (Customiser) ClientReflector.get()
-							.newInstance(customiserInfo.customiserClass(), 0);
+					customiser = (Customiser) ClientReflector
+							.get()
+							.newInstance(customiserInfo.customiserClass(), 0, 0);
 				}
 				bwp = customiser.getProvider(fieldEditable, domainType,
 						multiple, customiserInfo);
@@ -313,11 +314,9 @@ public class GwittirBridge implements PropertyAccessor {
 					vf = new RelativePopupValidationFeedback(
 							multiple ? RelativePopupValidationFeedback.BOTTOM
 									: RelativePopupValidationFeedback.RIGHT);
-					vf
-							.setCss(multiple ? null
-									: "gwittir-ValidationPopup-right");
-					validator = getValidator(domainType, obj, pr
-							.getPropertyName(), vf);
+					vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
+					validator = getValidator(domainType, obj,
+							pr.getPropertyName(), vf);
 				}
 				return new Field(pr.getPropertyName(), TextProvider.get()
 						.getLabelText(c, pr), bwp, validator, vf,
@@ -333,8 +332,8 @@ public class GwittirBridge implements PropertyAccessor {
 			vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
 			return new Field(pr.getPropertyName(), TextProvider.get()
 					.getLabelText(c, pr), bwp, getValidator(p.getType(), obj,
-					pr.getPropertyName(), vf), vf, getDefaultConverter(bwp, p
-					.getType()));
+					pr.getPropertyName(), vf), vf, getDefaultConverter(bwp,
+					p.getType()));
 		}
 		return null;
 	}
@@ -413,8 +412,8 @@ public class GwittirBridge implements PropertyAccessor {
 		if (!validators.isEmpty()) {
 			CompositeValidator cv = new CompositeValidator();
 			for (ValidatorInfo vi : validators) {
-				Validator v = CommonLocator.get().classLookup().newInstance(
-						vi.validator());
+				Validator v = CommonLocator.get().classLookup()
+						.newInstance(vi.validator());
 				if (v instanceof ParameterisedValidator) {
 					ParameterisedValidator pv = (ParameterisedValidator) v;
 					pv.setParameters(vi.parameters());
@@ -429,8 +428,8 @@ public class GwittirBridge implements PropertyAccessor {
 					RequiresSourceValidator rsv = (RequiresSourceValidator) v;
 					rsv.setSourceObject((HasIdAndLocalId) obj);
 				}
-				NamedParameter msg = NamedParameter.Support.getParameter(vi
-						.parameters(), ValidatorInfo.FEEDBACK_MESSAGE);
+				NamedParameter msg = NamedParameter.Support.getParameter(
+						vi.parameters(), ValidatorInfo.FEEDBACK_MESSAGE);
 				if (msg != null) {
 					vf.addMessage(vi.validator(), msg.stringValue());
 				}
@@ -511,7 +510,9 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 
 		public int compare(Field o1, Field o2) {
-			return bi.getPropertyReflectors().get(o1.getPropertyName())
+			return bi
+					.getPropertyReflectors()
+					.get(o1.getPropertyName())
 					.compareTo(
 							bi.getPropertyReflectors()
 									.get(o2.getPropertyName()));

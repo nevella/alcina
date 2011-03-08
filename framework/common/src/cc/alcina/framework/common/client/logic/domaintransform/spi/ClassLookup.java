@@ -32,7 +32,7 @@ import com.totsp.gwittir.client.beans.Method;
  public interface ClassLookup {
 	public Class getClassForName(String fqn);
 	public <T> T newInstance(Class<T> clazz);
-	public <T> T newInstance(Class<T> clazz, long localId) ;
+	public <T> T newInstance(Class<T> clazz, long objectId,long localId) ;
 	public String displayNameForObject(Object o);
 	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
 			Class<A> annotationClass);
