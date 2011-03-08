@@ -25,4 +25,6 @@ public interface PersistenceLayerTransformExceptionPolicy {
 			return false;
 		}
 	}
+
+	public boolean precreateMissingEntities();
 }

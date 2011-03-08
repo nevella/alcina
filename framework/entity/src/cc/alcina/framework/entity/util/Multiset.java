@@ -14,6 +14,7 @@
 
 package cc.alcina.framework.entity.util;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -39,5 +40,11 @@ public class Multiset<K, V extends Set> extends LinkedHashMap<K, V> {
 		if (containsKey(key)) {
 			get(key).remove(item);
 		}
+	}
+	public V getAndEnsure(K key) {
+		if (!containsKey(key)) {
+			put(key, (V) new LinkedHashSet());
+		}
+		return get(key);
 	}
 }

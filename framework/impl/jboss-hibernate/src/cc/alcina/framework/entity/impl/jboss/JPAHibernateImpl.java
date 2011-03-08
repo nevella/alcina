@@ -104,7 +104,9 @@ public class JPAHibernateImpl implements JPAImplementation {
 		if (st.contains("org.hibernate.exception.ConstraintViolationException")) {
 			ex.setType(DomainTransformExceptionType.FK_CONSTRAINT_EXCEPTION);
 		}
-		// TODO Auto-generated method stub
+		if (st.contains("java.beans.IntrospectionException")) {
+			ex.setType(DomainTransformExceptionType.INTROSPECTION_EXCEPTION);
+		}
 	}
 
 	public File getConfigDirectory() {

@@ -136,8 +136,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Integer count) {
 		checkAnnotatedPermissions(action);
 		return ServletLayerLocator.get().commonPersistenceProvider()
-				.getCommonPersistence().listLogItemsForClass(
-						action.getClass().getName(), count);
+				.getCommonPersistence()
+				.listLogItemsForClass(action.getClass().getName(), count);
 	}
 
 	public List<Long> listRunningJobs() {
@@ -302,8 +302,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					continue;
 				}
 				DomainTransformRequest rq = new DomainTransformRequest();
-				rq
-						.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_STARTUP_FROM_OFFLINE);
+				rq.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_STARTUP_FROM_OFFLINE);
 				ClientInstance clientInstance = clientInstanceClass
 						.newInstance();
 				clientInstance.setAuth(wr.getClientInstanceAuth());
@@ -315,29 +314,36 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				// transforms. but...perhaps better not (keep as is)
 				rq.setRequestId(wr.getRequestId());
 				rq.fromString(wr.getText());
-				//necessary because event id is used by transformpersister for pass control etc
-				long idCounter=1;
+				// necessary because event id is used by transformpersister for
+				// pass control etc
+				long idCounter = 1;
 				for (DomainTransformEvent event : rq.getItems()) {
 					event.setEventId(idCounter++);
 				}
 				DomainTransformLayerWrapper transformLayerWrapper = transform(
-						rq,
-						true,
-						new IgnoreMissingPersistenceLayerTransformExceptionPolicy());
+						rq, true, isPersistOfflineTransforms(),
+						getOfflineTransformExceptionPolicy());
 				if (logger != null) {
-					logger
-							.info(CommonUtils
-									.format(
-											"Request [%1/%2] : %3 transforms written, %4 ignored",
-											requestId, clientInstanceId, rq
-													.getItems().size(),
-											transformLayerWrapper.ignored));
+					logger.info(CommonUtils
+							.format("Request [%1/%2] : %3 transforms written, %4 ignored",
+									requestId, clientInstanceId, rq.getItems()
+											.size(),
+									transformLayerWrapper.ignored));
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WebException(e);
 		}
+	}
+
+	protected boolean isPersistOfflineTransforms() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public IgnoreMissingPersistenceLayerTransformExceptionPolicy getOfflineTransformExceptionPolicy() {
+		return new IgnoreMissingPersistenceLayerTransformExceptionPolicy();
 	}
 
 	public JobInfo pollJobStatus(Long id, boolean cancel) {
@@ -378,8 +384,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				if (method.isAnnotationPresent(AuthenticationRequired.class)) {
 					AuthenticationRequired ar = method
 							.getAnnotation(AuthenticationRequired.class);
-					AnnotatedPermissible ap = new AnnotatedPermissible(ar
-							.permission());
+					AnnotatedPermissible ap = new AnnotatedPermissible(
+							ar.permission());
 					if (!PermissionsManager.get().isPermissible(ap)) {
 						getServletContext().log(
 								"Action not permitted: " + name,
@@ -395,12 +401,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				RPC.encodeResponseForFailure(null, ex);
 			}
 			return RPC.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
-					rpcRequest.getParameters(), rpcRequest
-							.getSerializationPolicy());
+					rpcRequest.getParameters(),
+					rpcRequest.getSerializationPolicy());
 		} catch (IncompatibleRemoteServiceException ex) {
 			getServletContext()
-					.log(
-							"An IncompatibleRemoteServiceException was thrown while processing this call.",
+					.log("An IncompatibleRemoteServiceException was thrown while processing this call.",
 							ex);
 			return RPC.encodeResponseForFailure(null, ex);
 		} catch (UnexpectedException ex) {
@@ -418,13 +423,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
-		return transform(request, false, null).response;
+		return transform(request, false, true, null).response;
 	}
 
 	public DomainTransformResponse transformFromServletLayer(
 			boolean persistTransforms) throws DomainTransformRequestException {
 		DomainTransformLayerWrapper wrapper = transformFromServletLayer(
-				persistTransforms, null,null);
+				persistTransforms, null, null);
 		return wrapper == null ? null : wrapper.response;
 	}
 
@@ -434,16 +439,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	public DomainTransformLayerWrapper transformFromServletLayer(
 			boolean persistTransforms,
-			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy, String tag)
-			throws DomainTransformRequestException {
+			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy,
+			String tag) throws DomainTransformRequestException {
 		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
 		request.setClientInstance(CommonRemoteServiceServletSupport.get()
 				.getServerAsClientInstance());
 		request.setTag(tag);
 		request.setRequestId(nextTransformRequestId());
-		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager.get().getTransformsByCommitType(
-				CommitType.TO_LOCAL_BEAN);
+		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
+				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
 				pendingTransforms);
 		pendingTransforms.clear();
@@ -473,8 +478,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	private void logTransformException(DomainTransformResponse response) {
-		logger.info(String.format("domain transform problem - clientInstance: %s - rqId: %s - user ",
-				response.getRequest().getClientInstance().getId(),response.getRequestId(), PermissionsManager.get().getUserName()));
+		logger.info(String
+				.format("domain transform problem - clientInstance: %s - rqId: %s - user ",
+						response.getRequest().getClientInstance().getId(),
+						response.getRequestId(), PermissionsManager.get()
+								.getUserName()));
 		List<DomainTransformException> transformExceptions = response
 				.getTransformExceptions();
 		for (DomainTransformException ex : transformExceptions) {
@@ -502,8 +510,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	protected void doUnexpectedFailure(Throwable e) {
-		if (e.getClass().getName().equals(
-				"org.apache.catalina.connector.ClientAbortException")) {
+		if (e.getClass().getName()
+				.equals("org.apache.catalina.connector.ClientAbortException")) {
 			getLogger().debug("Client RPC call aborted by client");
 			return;
 		}
@@ -526,6 +534,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	protected DomainTransformLayerWrapper transform(
 			DomainTransformRequest request, boolean ignoreClientAuthMismatch,
+			boolean persistTransforms,
 			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
 			throws DomainTransformRequestException {
 		HiliLocatorMap locatorMap = CommonRemoteServiceServletSupport.get()
@@ -559,5 +568,4 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw new DomainTransformRequestException(wrapper.response);
 		}
 	}
-
 }

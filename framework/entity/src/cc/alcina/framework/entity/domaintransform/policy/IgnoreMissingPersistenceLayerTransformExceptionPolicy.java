@@ -14,12 +14,22 @@ public class IgnoreMissingPersistenceLayerTransformExceptionPolicy implements
 		switch (exception.getType()) {
 		case SOURCE_ENTITY_NOT_FOUND:
 		case TARGET_ENTITY_NOT_FOUND:
+		case INTROSPECTION_EXCEPTION:
 			return TransformExceptionAction.IGNORE_AND_WARN;
 		}
-		if (persistenceToken.getTransformExceptions().size() < TOO_MANY_EXCEPTIONS) {
+		if (persistenceToken.getTransformExceptions().size() < tooManyExceptions()) {
 			return TransformExceptionAction.RESOLVE;
 		}
 		exception.setType(DomainTransformExceptionType.TOO_MANY_EXCEPTIONS);
 		return TransformExceptionAction.THROW;
+	}
+
+	public int tooManyExceptions() {
+		return TOO_MANY_EXCEPTIONS;
+	}
+
+	@Override
+	public boolean precreateMissingEntities() {
+		return false;
 	}
 }

@@ -18,4 +18,9 @@ public class BasicPersistenceLayerTransformExceptionPolicy implements
 				DomainTransformExceptionType.TOO_MANY_EXCEPTIONS);
 		return TransformExceptionAction.THROW;
 	}
+
+	@Override
+	public boolean precreateMissingEntities() {
+		return false;
+	}
 }

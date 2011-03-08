@@ -148,6 +148,13 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public boolean checkPropertyAccess(HasIdAndLocalId hili,
 			String propertyName, boolean read) throws IntrospectionException {
 		if (hili.getId() != 0) {
+			PropertyDescriptor descriptor = SEUtilities.descriptorByName(
+					hili.getClass(), propertyName);
+			if (descriptor == null) {
+				throw new IntrospectionException(String.format(
+						"Property not found - %s::%s", hili.getClass()
+								.getName(), propertyName));
+			}
 			PropertyPermissions pp = SEUtilities
 					.descriptorByName(hili.getClass(), propertyName)
 					.getReadMethod().getAnnotation(PropertyPermissions.class);
