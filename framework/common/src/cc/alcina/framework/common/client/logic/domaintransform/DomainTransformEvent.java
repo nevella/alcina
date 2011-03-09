@@ -29,7 +29,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  * @author Nick Reddel
  */
-public class DomainTransformEvent implements Serializable, Comparable<DomainTransformEvent> {
+public class DomainTransformEvent implements Serializable,
+		Comparable<DomainTransformEvent> {
 	private String propertyName;
 
 	private transient Object newValue;
@@ -153,6 +154,7 @@ public class DomainTransformEvent implements Serializable, Comparable<DomainTran
 	public Object getSource() {
 		return this.source;
 	}
+
 	@Transient
 	public long getValueVersionNumber() {
 		return valueVersionNumber;
@@ -168,8 +170,13 @@ public class DomainTransformEvent implements Serializable, Comparable<DomainTran
 
 	@Transient
 	public Class getValueClass() {
-		if (this.valueClass == null && this.valueClassRef != null) {
-			this.valueClass = this.valueClassRef.getRefClass();
+		if (this.valueClass == null) {
+			if (this.valueClassName != null && this.valueClassRef == null) {
+				valueClassRef = ClassRef.forName(valueClassName);
+			}
+			if (this.valueClassRef != null) {
+				this.valueClass = this.valueClassRef.getRefClass();
+			}
 		}
 		return this.valueClass;
 	}
@@ -254,6 +261,7 @@ public class DomainTransformEvent implements Serializable, Comparable<DomainTran
 	public void setSource(Object source) {
 		this.source = source;
 	}
+
 	@Transient
 	public void setValueVersionNumber(long valueVersionNumber) {
 		this.valueVersionNumber = valueVersionNumber;
@@ -306,7 +314,8 @@ public class DomainTransformEvent implements Serializable, Comparable<DomainTran
 					&& itrEvent.getObjectClass() == getObjectClass()
 					&& itrEvent.getObjectId() == getObjectId()
 					&& itrEvent.getObjectLocalId() == getObjectLocalId()) {
-				Class type=CommonLocator.get().propertyAccessor().getPropertyType(getObjectClass(),getPropertyName());
+				Class type = CommonLocator.get().propertyAccessor()
+						.getPropertyType(getObjectClass(), getPropertyName());
 				return !CommonUtils.isStandardJavaClass(type);
 			}
 		}

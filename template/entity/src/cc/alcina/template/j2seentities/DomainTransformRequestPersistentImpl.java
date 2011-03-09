@@ -48,12 +48,12 @@ public class DomainTransformRequestPersistentImpl extends
 	@Override
 	@OneToMany(cascade = { CascadeType.MERGE, CascadeType.REMOVE,
 			CascadeType.REFRESH }, fetch = FetchType.LAZY, mappedBy = "domainTransformRequestPersistent",targetEntity=DomainTransformEventPersistentImpl.class)
-	public List<DomainTransformEvent> getItems() {
-		return super.getItems();
+	public List<DomainTransformEvent> getEvents() {
+		return super.getEvents();
 	}
 	@Override
-	public void setItems(List<DomainTransformEvent> items) {
-		super.setItems(items);
+	public void setEvents(List<DomainTransformEvent> events) {
+		super.setEvents(events);
 	}
 	@Override
 	@Id

@@ -104,7 +104,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			for (DomainTransformRequest rq : rqs) {
 				int requestId = rq.getRequestId();
 				if (!getPersistedTransforms().containsKey(requestId)
-						&& !rq.getItems().isEmpty()) {
+						&& !rq.getEvents().isEmpty()) {
 					rq.setProtocolVersion(getSerializationPolicy()
 							.getTransformPersistenceProtocol());
 					DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(
@@ -131,7 +131,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			rq.setClientInstance(ClientLayerLocator.get().getClientInstance());
 			rq.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 			rq.setRequestId(0);
-			rq.setItems(new ArrayList<DomainTransformEvent>(
+			rq.setEvents(new ArrayList<DomainTransformEvent>(
 					getCommitToStorageTransformListener()
 							.getSynthesisedEvents()));
 			rq.setProtocolVersion(getSerializationPolicy()
@@ -180,7 +180,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			dtr.setProtocolVersion(getSerializationPolicy()
 					.getTransformPersistenceProtocol());
 		}
-		if (!dtr.getItems().isEmpty()) {
+		if (!dtr.getEvents().isEmpty()) {
 			if (!closing) {
 				new DTRAsyncSerializer(dtr).start();
 			} else {
@@ -242,7 +242,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		public DTRAsyncSerializer(DomainTransformRequest dtr) {
 			super(1000, 200);
 			wrapper = new DTRSimpleSerialWrapper(dtr, true);
-			items = dtr.getItems();
+			items = dtr.getEvents();
 		}
 
 		@Override

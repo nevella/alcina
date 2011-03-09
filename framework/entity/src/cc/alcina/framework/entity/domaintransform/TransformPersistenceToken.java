@@ -99,6 +99,6 @@ public class TransformPersistenceToken {
 	}
 
 	public enum Pass {
-		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, FAIL
+		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
 	}
 }

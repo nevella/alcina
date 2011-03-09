@@ -90,6 +90,9 @@ public class TransformPersister {
 				if (firstException.irresolvable()) {
 					break;
 				}
+			} else if (token.getPass() == Pass.RETRY_WITH_IGNORES) {
+				token.setPass(Pass.TRY_COMMIT);
+				wrapper = null;
 			}
 		}
 		if (wrapper.response.getResult() == DomainTransformResponseResult.FAILURE) {
@@ -299,7 +302,7 @@ public class TransformPersister {
 			}
 			int transformCount = 0;
 			for (DomainTransformRequest dtr : dtrs) {
-				List<DomainTransformEvent> items = dtr.getItems();
+				List<DomainTransformEvent> items = dtr.getEvents();
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
 				if (token.getPass() == Pass.TRY_COMMIT) {
 					MetricLogging.get().lowPriorityStart(PRECACHE_ENTITIES);
@@ -317,20 +320,12 @@ public class TransformPersister {
 					if (token.getPass() == Pass.TRY_COMMIT) {
 						try {
 							if (event.getCommitType() == CommitType.TO_STORAGE) {
-								if ((event.getValueId() != 0 || event
-										.getValueLocalId() != 0)
-										&& event.getValueClass() == null) {
-									continue;// replaying, where the classref
-												// was refactored away
-								}
 								tm.fireDomainTransform(event);
 								eventsPersisted.add(event);
 							}
 						} catch (Exception e) {
 							DomainTransformException transformException = DomainTransformException
 									.wrap(e, event);
-							EntityLayerLocator.get().jpaImplementation()
-									.interpretException(transformException);
 							EntityLayerLocator.get().jpaImplementation()
 									.interpretException(transformException);
 							TransformExceptionAction actionForException = token
@@ -380,6 +375,13 @@ public class TransformPersister {
 							case IGNORE_AND_WARN:
 								System.out.println("Ignoring: ");
 								System.out.println(transformException);
+								if (transformException.getType()
+										.isOnlyDiscoverableStepping()) {
+									request.getEventIdsToIgnore().add(
+											event.getEventId());
+									token.ignored++;
+									token.setPass(Pass.RETRY_WITH_IGNORES);
+								}
 								break;
 							case RESOLVE:
 								break;
@@ -409,10 +411,10 @@ public class TransformPersister {
 					DomainTransformRequestPersistent dtrp = dtrqImpl
 							.newInstance();
 					getEntityManager().persist(dtrp);
-					dtr.setItems(null);
+					dtr.setEvents(null);
 					dtrp.wrap(dtr);
-					dtrp.setItems(new ArrayList<DomainTransformEvent>());
-					dtr.setItems(items);
+					dtrp.setEvents(new ArrayList<DomainTransformEvent>());
+					dtr.setEvents(items);
 					dtrp.setClientInstance(persistentClientInstance);
 					for (DomainTransformEvent event : eventsPersisted) {
 						if (request.getEventIdsToIgnore().contains(
@@ -435,13 +437,14 @@ public class TransformPersister {
 						}
 						dtep.setServerCommitDate(new Date());
 						dtep.setDomainTransformRequestPersistent(dtrp);
-						dtrp.getItems().add(dtep);
+						dtrp.getEvents().add(dtep);
 						dtreps.add(dtep);
 					}
-				}
+				}// dtes
 				MetricLogging.get().lowPriorityEnd(PERSIST_TRANSFORMS);
 			}// dtrs
-			if (token.getPass() == Pass.TRY_COMMIT) {
+			switch (token.getPass()) {
+			case TRY_COMMIT:
 				MetricLogging.get().lowPriorityStart(FLUSH_TRANSFORMS);
 				try {
 					getEntityManager().flush();
@@ -457,7 +460,9 @@ public class TransformPersister {
 				wrapper.response = dtr;
 				wrapper.persistentEvents = dtreps;
 				return wrapper;
-			} else {
+			case RETRY_WITH_IGNORES:
+				return null;
+			default:
 				locatorMap.clear();
 				locatorMap.putAll(locatorMapClone);
 				token.setPass(Pass.FAIL);

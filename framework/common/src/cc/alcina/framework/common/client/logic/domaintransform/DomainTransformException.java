@@ -45,7 +45,7 @@ public class DomainTransformException extends Exception implements Serializable 
 
 	public DomainTransformException(DomainTransformEvent event,
 			DomainTransformExceptionType type) {
-		super(type.toString()+"\n"+event.toString());
+		super(type.toString() + "\n" + event.toString());
 		this.event = event;
 		this.type = type;
 	}
@@ -110,11 +110,21 @@ public class DomainTransformException extends Exception implements Serializable 
 
 	public enum DomainTransformExceptionType {
 		OPTIMISTIC_LOCK_EXCEPTION, SOURCE_ENTITY_NOT_FOUND,
-		TARGET_ENTITY_NOT_FOUND, FK_CONSTRAINT_EXCEPTION, VALIDATION_EXCEPTION,
-		PERMISSIONS_EXCEPTION, UNKNOWN, TOO_MANY_EXCEPTIONS,
-		INVALID_AUTHENTICATION, INTROSPECTION_EXCEPTION
+		TARGET_ENTITY_NOT_FOUND, FK_CONSTRAINT_EXCEPTION {
+			@Override
+			public boolean isOnlyDiscoverableStepping() {
+				return true;
+			}
+		},
+		VALIDATION_EXCEPTION, PERMISSIONS_EXCEPTION, UNKNOWN,
+		TOO_MANY_EXCEPTIONS, INVALID_AUTHENTICATION, INTROSPECTION_EXCEPTION;
+		public boolean isOnlyDiscoverableStepping() {
+			return false;
+		}
 	}
-	public boolean irresolvable(){
-		return type==DomainTransformExceptionType.INVALID_AUTHENTICATION||type==DomainTransformExceptionType.TOO_MANY_EXCEPTIONS;
+
+	public boolean irresolvable() {
+		return type == DomainTransformExceptionType.INVALID_AUTHENTICATION
+				|| type == DomainTransformExceptionType.TOO_MANY_EXCEPTIONS;
 	}
 }

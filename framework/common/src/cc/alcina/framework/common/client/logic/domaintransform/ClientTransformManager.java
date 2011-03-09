@@ -93,8 +93,8 @@ public class ClientTransformManager extends TransformManager {
 		}
 
 		protected void onComplete() {
-			dtr.getItems().addAll(creates);
-			dtr.getItems().addAll(mods);
+			dtr.getEvents().addAll(creates);
+			dtr.getEvents().addAll(mods);
 			dtr.setClientInstance(clientInstance);
 			dtr
 					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
@@ -192,7 +192,7 @@ public class ClientTransformManager extends TransformManager {
 						ClientTransformManager.PersistableTransformListener pl = getPersistableTransformListener();
 						if (pl != null) {
 							DomainTransformRequest dtr = new DomainTransformRequest();
-							dtr.setItems(item.getTransforms());
+							dtr.setEvents(item.getTransforms());
 							dtr.setClientInstance(ClientLayerLocator.get()
 									.getClientInstance());
 							dtr

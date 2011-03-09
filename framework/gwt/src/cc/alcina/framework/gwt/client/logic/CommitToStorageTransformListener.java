@@ -201,7 +201,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				priorRequestsWithoutResponse);
 		dtr.setRequestId(localRequestId++);
 		dtr.setClientInstance(getClientInstance());
-		dtr.getItems().addAll(transformQueue);
+		dtr.getEvents().addAll(transformQueue);
 		dtr.getEventIdsToIgnore().addAll(eventIdsToIgnore);
 		dtr.setDomainTransformRequestType(DomainTransformRequestType.TO_REMOTE);
 		dtr.setTag(DomainTransformRequestTagProvider.get().getTag());
@@ -314,7 +314,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							}
 						}
 					}
-					List<DomainTransformEvent> items = dtr.getItems();
+					List<DomainTransformEvent> items = dtr.getEvents();
 					for (DomainTransformEvent evt : items) {
 						TransformManager.get().setTransformCommitType(evt,
 								CommitType.ALL_COMMITTED);

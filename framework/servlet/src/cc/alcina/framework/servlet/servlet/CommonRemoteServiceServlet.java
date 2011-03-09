@@ -275,7 +275,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		persistOfflineTransforms(uncommitted, null);
 	}
 
-	public void persistOfflineTransforms(
+	public int persistOfflineTransforms(
 			List<DTRSimpleSerialWrapper> uncommitted, Logger logger)
 			throws WebException {
 		CommonPersistenceLocal cp = ServletLayerLocator.get()
@@ -286,6 +286,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Class<? extends DomainTransformRequestPersistent> dtrClass = cp
 					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
+			int committed=0;
 			for (DTRSimpleSerialWrapper wr : uncommitted) {
 				long clientInstanceId = wr.getClientInstanceId();
 				int requestId = (int) wr.getRequestId();
@@ -317,7 +318,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				// necessary because event id is used by transformpersister for
 				// pass control etc
 				long idCounter = 1;
-				for (DomainTransformEvent event : rq.getItems()) {
+				for (DomainTransformEvent event : rq.getEvents()) {
 					event.setEventId(idCounter++);
 				}
 				DomainTransformLayerWrapper transformLayerWrapper = transform(
@@ -326,11 +327,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				if (logger != null) {
 					logger.info(CommonUtils
 							.format("Request [%1/%2] : %3 transforms written, %4 ignored",
-									requestId, clientInstanceId, rq.getItems()
+									requestId, clientInstanceId, rq.getEvents()
 											.size(),
 									transformLayerWrapper.ignored));
 				}
+				committed++;
 			}
+			return committed;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WebException(e);
@@ -458,7 +461,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		for (DomainTransformEvent dte : items) {
 			dte.setCommitType(CommitType.TO_STORAGE);
 		}
-		request.setItems(items);
+		request.setEvents(items);
 		try {
 			((ThreadedPermissionsManager) PermissionsManager.get())
 					.pushSystemUser();
@@ -541,7 +544,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, locatorMap, true, true, ignoreClientAuthMismatch,
+					request, locatorMap, persistTransforms, true, ignoreClientAuthMismatch,
 					transformExceptionPolicy);
 			return submitAndHandleTransforms(persistenceToken);
 		}

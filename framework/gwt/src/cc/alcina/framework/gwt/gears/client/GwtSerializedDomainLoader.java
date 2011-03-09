@@ -153,7 +153,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 					iterationCount);
 			items.addAll(events);
 			if (persist != null) {
-				persist.getItems().addAll(events);
+				persist.getEvents().addAll(events);
 			}
 			lastPassIterationsPerformed = iterationCount;
 			if (s == null) {
@@ -206,7 +206,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 			for (DomainTransformRequest rq : tl
 					.getPriorRequestsWithoutResponse()) {
 				rq.setClientInstance(clientInstance);
-				for (DomainTransformEvent dte : rq.getItems()) {
+				for (DomainTransformEvent dte : rq.getEvents()) {
 					dte.getObjectClassRef();
 				}
 			}

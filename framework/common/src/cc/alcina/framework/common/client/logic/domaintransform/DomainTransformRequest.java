@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
  * @author Nick Reddel
  */
 public class DomainTransformRequest implements Serializable {
-	private List<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>();
+	private List<DomainTransformEvent> events = new ArrayList<DomainTransformEvent>();
 
 	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
 
@@ -52,7 +52,7 @@ public class DomainTransformRequest implements Serializable {
 		dtrs.addAll(getPriorRequestsWithoutResponse());
 		dtrs.add(this);
 		for (DomainTransformRequest dtr : dtrs) {
-			all.addAll(dtr.getItems());
+			all.addAll(dtr.getEvents());
 		}
 		return all;
 	}
@@ -77,8 +77,8 @@ public class DomainTransformRequest implements Serializable {
 	}
 
 	@Transient
-	public List<DomainTransformEvent> getItems() {
-		return items;
+	public List<DomainTransformEvent> getEvents() {
+		return events;
 	}
 
 	/**
@@ -115,8 +115,8 @@ public class DomainTransformRequest implements Serializable {
 		this.eventIdsToIgnore = eventIdsToIgnore;
 	}
 
-	public void setItems(List<DomainTransformEvent> items) {
-		this.items = items;
+	public void setEvents(List<DomainTransformEvent> items) {
+		this.events = items;
 	}
 
 	public void setProtocolVersion(String protocolVersion) {
@@ -144,7 +144,7 @@ public class DomainTransformRequest implements Serializable {
 		for (DomainTransformRequest dtr : dtrs) {
 			sb.append("----");
 			sb.append(dtr.getRequestId());
-			List<DomainTransformEvent> items = dtr.getItems();
+			List<DomainTransformEvent> items = dtr.getEvents();
 			for (DomainTransformEvent dte : items) {
 				String s2 = "\t" + dte.toString().replace("\n", "\n\t") + "\n";
 				sb.append(s2);
@@ -154,7 +154,7 @@ public class DomainTransformRequest implements Serializable {
 	}
 
 	public void updateTransformCommitType(CommitType commitType, boolean deep) {
-		for (DomainTransformEvent dte : deep ? allTransforms() : getItems()) {
+		for (DomainTransformEvent dte : deep ? allTransforms() : getEvents()) {
 			dte.setCommitType(commitType);
 		}
 	}

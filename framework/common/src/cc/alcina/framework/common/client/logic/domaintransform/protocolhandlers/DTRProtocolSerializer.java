@@ -22,12 +22,12 @@ public class DTRProtocolSerializer {
 
 	public String serialize(DomainTransformRequest request,
 			String protocolVersion) {
-		return getHandler(protocolVersion).serialize(request.getItems());
+		return getHandler(protocolVersion).serialize(request.getEvents());
 	}
 
 	public void deserialize(DomainTransformRequest request,
 			String protocolVersion, String serializedEvents) {
-		request.setItems(getHandler(protocolVersion).deserialize(
+		request.setEvents(getHandler(protocolVersion).deserialize(
 				serializedEvents));
 	}
 	public String serialize(DomainTransformEvent domainTransformEvent) {
