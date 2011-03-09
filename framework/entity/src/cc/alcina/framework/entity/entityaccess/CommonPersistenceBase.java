@@ -830,7 +830,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						String.format(
 								"select distinct dtrp " +
 								"from %s dtrp "
-										+ "inner join fetch dtrp.items "
+										+ "inner join fetch dtrp.events "
 										+ "inner join fetch dtrp.clientInstance "
 										+ " where dtrp.id>=%s and dtrp.id<=%s " +
 												"order by dtrp.id",
