@@ -47,7 +47,7 @@ import org.apache.commons.collections.map.LRUMap;
 		return caches.get(mapName).isEmpty();
 		
 	}
-	private static void checkMap(String mapName){
+	private static synchronized void checkMap(String mapName){
 		if (!caches.containsKey(mapName)) {
 			caches.put(mapName, new LRUMap(cacheSize));
 		}
