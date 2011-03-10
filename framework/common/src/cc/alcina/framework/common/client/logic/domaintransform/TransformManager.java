@@ -233,14 +233,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 			((Set) CommonLocator.get().propertyAccessor()
 					.getPropertyValue(obj, event.getPropertyName())).add(tgt);
 			objectModified(obj, event, false);
-			updateAssociation(event, obj, tgt, false, false);
+			updateAssociation(event, obj, tgt, false, true);
 			collectionChanged(obj, tgt);
 			break;
 		case REMOVE_REF_FROM_COLLECTION:
 			((Set) CommonLocator.get().propertyAccessor()
 					.getPropertyValue(obj, event.getPropertyName()))
 					.remove(tgt);
-			updateAssociation(event, obj, tgt, true, false);
+			updateAssociation(event, obj, tgt, true, true);
 			collectionChanged(obj, tgt);
 			break;
 		case DELETE_OBJECT:
