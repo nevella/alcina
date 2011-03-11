@@ -79,4 +79,11 @@ public class DefaultCollectionFilter {
 		}
 		return null;
 	}
+
+	public static final CollectionFilter PASSTHROUGH_FILTER = new CollectionFilter() {
+		@Override
+		public boolean allow(Object o) {
+			return true;
+		}
+	};
 }

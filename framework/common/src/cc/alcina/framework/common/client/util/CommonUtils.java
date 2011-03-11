@@ -55,7 +55,7 @@ public class CommonUtils {
 			stdClassMap.put(std.getName(), std);
 		}
 	}
-
+	
 	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
 	static {
 		Class[] prims = { long.class, int.class, short.class, char.class,
@@ -627,5 +627,8 @@ public class CommonUtils {
 			}
 		}
 		return false;
+	}
+	public static String nullToEmpty(String s){
+		return s==null?"":s;
 	}
 }

@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.search;
 
 public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 	static final transient long serialVersionUID = -1L;
+
 	private BooleanEnum booleanEnum;
 
 	public BooleanEnumCriterion() {
@@ -18,17 +19,6 @@ public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 				: (booleanEnum == BooleanEnum.TRUE) ? "yes" : "no";
 	}
 
-	public void setBooleanEnum(BooleanEnum booleanEnum) {
-		BooleanEnum old_booleanEnum = this.booleanEnum;
-		this.booleanEnum = booleanEnum;
-		propertyChangeSupport.firePropertyChange("booleanEnum",
-				old_booleanEnum, booleanEnum);
-	}
-
-	public BooleanEnum getBooleanEnum() {
-		return booleanEnum;
-	}
-
 	@Override
 	public BooleanEnum getValue() {
 		return getBooleanEnum();
@@ -37,5 +27,16 @@ public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 	@Override
 	public void setValue(BooleanEnum value) {
 		setBooleanEnum(value);
+	}
+
+	public BooleanEnum getBooleanEnum() {
+		return booleanEnum;
+	}
+
+	public void setBooleanEnum(BooleanEnum booleanEnum) {
+		BooleanEnum old_booleanEnum = this.booleanEnum;
+		this.booleanEnum = booleanEnum;
+		propertyChangeSupport.firePropertyChange("booleanEnum",
+				old_booleanEnum, booleanEnum);
 	}
 }
