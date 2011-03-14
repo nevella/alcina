@@ -125,6 +125,10 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	// for non-filtered items
 	private LazyDataProvider<G, T> lazyProvider;
 
+	public void setLazyProvider(LazyDataProvider<G, T> lazyProvider) {
+		this.lazyProvider = lazyProvider;
+	}
+
 	private int topAdjust = 0;
 
 	private String inPanelHint = null;

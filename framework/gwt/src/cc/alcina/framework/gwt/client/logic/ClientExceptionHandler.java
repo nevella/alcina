@@ -12,6 +12,7 @@ import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.event.shared.UmbrellaException;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.rpc.StatusCodeException;
 
 public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	protected String getStandardErrorText() {

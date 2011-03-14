@@ -772,4 +772,21 @@ public class SEUtilities {
 		t.printStackTrace(new PrintWriter(sw));
 		return sw.toString();
 	}
+
+	public static List<File> listFilesRecursive(String initialPath) {
+		Stack<File> folders = new Stack<File>();
+		List<File> results=new ArrayList<File>();
+		folders.add(new File(initialPath));
+		while(!folders.isEmpty()){
+			File folder = folders.pop();
+			File[] files = folder.listFiles();
+			for (File file : files) {
+				if(file.isDirectory()){
+					folders.push(file);
+				}
+				results.add(file);
+			}
+		}
+		return results;
+	}
 }

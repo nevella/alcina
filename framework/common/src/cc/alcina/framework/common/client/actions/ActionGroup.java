@@ -31,6 +31,10 @@ import java.util.List;
 	public ActionGroup(PermissibleAction[] actions) {
 		this(actions, false);
 	}
+	public ActionGroup(List<PermissibleAction> actions) {
+		this.actions=actions;
+		this.rightAligned=false;
+	}
 
 	public ActionGroup(PermissibleAction[] actions, boolean rightAligned) {
 		this.rightAligned = rightAligned;

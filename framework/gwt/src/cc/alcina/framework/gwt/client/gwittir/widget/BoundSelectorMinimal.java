@@ -1,7 +1,12 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import java.util.Arrays;
+import java.util.Map;
+
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
 
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
@@ -44,6 +49,22 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	@Override
+	protected void initValues() {
+		search.setLazyProvider(new LazyDataMinimal());
+	}
+
+	private class LazyDataMinimal implements LazyDataProvider {
+		@Override
+		public LazyData dataRequired() {
+			LazyData lazyData = new LazyData();
+			Map map = createObjectMap();
+			lazyData.keys = Arrays.asList(map.keySet());
+			lazyData.data = map;
+			return lazyData;
+		}
+	}
+
+	@Override
 	protected void addItem(Object item) {
 		super.addItem(item);
 		if (search.getFilter().isHintWasCleared()) {
@@ -56,7 +77,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 		search.setPopdown(true);
 		search.setItemsHaveLinefeeds(true);
 		search.setFlowLayout(true);
-		search.setHolderHeight(Window.getClientHeight()/2+"px");
+		search.setHolderHeight(Window.getClientHeight() / 2 + "px");
 		search.setPopupPanelCssClassName("minimal-popDown");
 	}
 

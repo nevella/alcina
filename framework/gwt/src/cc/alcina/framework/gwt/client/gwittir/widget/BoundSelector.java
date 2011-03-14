@@ -269,9 +269,14 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		}
 		if (((List) search.getItemMap().values().iterator().next()).isEmpty()) {
 			// first time, init (now we have the model)
-			search.setItemMap(createObjectMap());
+			initValues();
+			
 		}
 		update(old);
+	}
+
+	protected void initValues() {
+		search.setItemMap(createObjectMap());		
 	}
 
 	private void update(Set old) {

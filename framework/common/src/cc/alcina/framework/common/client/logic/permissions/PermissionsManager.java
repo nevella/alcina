@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.logic.permissions;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,9 +40,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -315,6 +316,14 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 
 	public boolean isMemberOfGroup(String groupName) {
 		return getUserGroups().containsKey(groupName);
+	}
+	public boolean isMemberOfGroups(Collection<String> groupNames) {
+		for (String groupName : groupNames) {
+			if(isMemberOfGroup(groupName)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean allPermissible = false;
