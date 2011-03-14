@@ -3,25 +3,25 @@ package java.io;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class ObjectInputStream 
-    extends InputStream 
+public class ObjectOutputStream 
+    extends OutputStream 
 { 
-	public ObjectInputStream(InputStream in)  {
+	public ObjectOutputStream(OutputStream in)  {
 		throw new UnsupportedOperationException();
 	}
-	public final Object readObject(){
+	public final void writeObject(Object o){
 		throw new UnsupportedOperationException();
 	}
-	public int read(){
+	public void write(int i){
 		throw new UnsupportedOperationException();
 	}
-	public boolean readBoolean(){
+	public void writeBoolean(boolean b){
 		throw new UnsupportedOperationException();
 	}
-	public long readLong(){
+	public void writeLong(long l){
 		throw new UnsupportedOperationException();
 	}
-	public String readUTF(){
+	public void writeUTF(String s){
 		throw new UnsupportedOperationException();
 	}
 }
