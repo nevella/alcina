@@ -280,9 +280,6 @@ div.gwt-Hyperlink {
 	display: inline;
 }
 
-.gwt-PushButton {
-	display: inline;
-}
 
 .gwt-TabPanelBottom {
 	padding: 0px;
@@ -393,22 +390,22 @@ a.b-viewing-options span {
 }
 
 a.b-options-small span {
-	background: url(_pix/icon-options-small.gif) 1px 2px no-repeat;
+	background: url(_pix/icon-options-small.gif) 1px 1px no-repeat;
 	padding-left: 15px;
 }
 
 a.b-delete-small span {
-	background: url(_pix/icon-delete-small.gif) 1px 2px no-repeat;
+	background: url(_pix/icon-delete-small.gif) 1px 1px no-repeat;
 	padding-left: 15px;
 }
 
 a.b-color-small span {
-	background: url(_pix/icon-color-small.gif) 1px 2px no-repeat;
+	background: url(_pix/icon-color-small.gif) 1px 1px no-repeat;
 	padding-left: 15px;
 }
 
 a.b-share-small span {
-	background: url(_pix/icon-share-small.gif) 1px 2px no-repeat;
+	background: url(_pix/icon-share-small.gif) 1px 1px no-repeat;
 	padding-left: 15px;
 }
 

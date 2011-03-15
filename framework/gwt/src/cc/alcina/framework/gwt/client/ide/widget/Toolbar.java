@@ -55,17 +55,6 @@ import com.google.gwt.user.client.ui.Widget;
 		this.hasChildHandlersSupport.detachHandlers();
 	}
 
-	public boolean equals(Object obj) {
-		return this.hasChildHandlersSupport.equals(obj);
-	}
-
-	public int hashCode() {
-		return this.hasChildHandlersSupport.hashCode();
-	}
-
-	public String toString() {
-		return this.hasChildHandlersSupport.toString();
-	}
 
 	private List<PermissibleAction> actions;
 
@@ -201,8 +190,9 @@ import com.google.gwt.user.client.ui.Widget;
 		} else {
 			for (PermissibleAction action : actions) {
 				ToolbarButton button = new ToolbarButton(action, asButton);
+				HandlerRegistration registration = button.addClickHandler(this);
 				hasChildHandlersSupport
-						.addHandler(button.addClickHandler(this));
+						.addHandler(registration);
 				button.setEnabled(false);
 				panel.add(button);
 				actionButtons.put(action.getClass(), button);

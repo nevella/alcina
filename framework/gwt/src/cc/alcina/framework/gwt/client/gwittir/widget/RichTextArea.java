@@ -39,7 +39,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.SimpleComparator;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
 public class RichTextArea extends AbstractBoundWidget<String> implements
@@ -79,9 +79,11 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 				ClientLayerLocator.get().notifications().log("lostfocus");
 				EventTarget eventTarget = event.getNativeEvent()
 						.getEventTarget();
-				Node elt = Node.as(eventTarget);
-				if (DomUtils.isAncestorOf(toolbar.getElement(), elt)) {
-					return;
+				if (Node.is(eventTarget)) {
+					Node elt = Node.as(eventTarget);
+					if (DomUtils.isAncestorOf(toolbar.getElement(), elt)) {
+						return;
+					}
 				}
 				changes.firePropertyChange("value", old, getValue());
 			}
@@ -129,11 +131,9 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		super.onDetach();
 	}
 
-
 	public int getTabIndex() {
 		return this.base.getTabIndex();
 	}
-
 
 	public void setAccessKey(char key) {
 		this.base.setAccessKey(key);
