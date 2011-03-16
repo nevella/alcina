@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
@@ -74,6 +75,15 @@ public class WidgetUtils {
 		}
 	}
 
+	public static void toggleStyleName(Widget w, String styleName) {
+		String current = w.getStyleName();
+		if (current.contains(styleName)) {
+			w.removeStyleName(styleName);
+		} else {
+			w.addStyleName(styleName);
+		}
+	}
+
 	// TODO - check all calls here either the cp implements haschildhandlers, or
 	// explain why t'hell not...(doesn't add handlers to the child widgets would
 	// be a good reason)
@@ -121,13 +131,13 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element elt,
 			String attributeName)/*-{
-									if (elt.currentStyle) {
-									return elt.currentStyle[attributeName];
-									}
-									if ($wnd.getComputedStyle) {
-									return $wnd.getComputedStyle(elt, null)[attributeName];
-									}
-									}-*/;
+		if (elt.currentStyle) {
+			return elt.currentStyle[attributeName];
+		}
+		if ($wnd.getComputedStyle) {
+			return $wnd.getComputedStyle(elt, null)[attributeName];
+		}
+	}-*/;
 
 	public static void clearChildren(TabPanel tp) {
 		for (int i = tp.getWidgetCount() - 1; i >= 0; i--) {
@@ -382,7 +392,8 @@ public class WidgetUtils {
 			e = e.getParentElement();
 		}
 	}
-	//those values might be needed for non-webkit
+
+	// those values might be needed for non-webkit
 	@SuppressWarnings("unused")
 	private static class ElementLayout {
 		private String position;
@@ -573,8 +584,8 @@ public class WidgetUtils {
 	}
 
 	private static native void copy() /*-{
-										$doc.execCommand("Copy");
-										}-*/;
+		$doc.execCommand("Copy");
+	}-*/;
 
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
@@ -597,13 +608,13 @@ public class WidgetUtils {
 	}
 
 	public native static int getRelativeTopTo(Element elem, Element end) /*-{
-																			var top = 0;
-																			while (elem != end) {
-																			top += elem.offsetTop;
-																			elem = elem.offsetParent;
-																			}
-																			return top;
-																			}-*/;
+		var top = 0;
+		while (elem != end) {
+			top += elem.offsetTop;
+			elem = elem.offsetParent;
+		}
+		return top;
+	}-*/;
 
 	public static void scrollIntoView(Element e, int fromTop) {
 		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
@@ -620,6 +631,15 @@ public class WidgetUtils {
 			BodyElement body = Document.get().getBody();
 			body.setPropertyInt("scrollTop",
 					(Math.max(0, absoluteTop - fromTop)));
+		}
+	}
+
+	public static void setOrRemoveStyleName(Widget widget, String styleName,
+			boolean set) {
+		if(set){
+			widget.addStyleName(styleName);
+		}else{
+			widget.removeStyleName(styleName);
 		}
 	}
 }

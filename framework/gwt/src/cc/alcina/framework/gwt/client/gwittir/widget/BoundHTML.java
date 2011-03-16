@@ -26,7 +26,6 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 /**
  *
- * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet" Cooper</a>
  */
 public class BoundHTML extends AbstractBoundWidget<String> {
     private com.google.gwt.user.client.ui.HTML base;
@@ -38,7 +37,6 @@ public class BoundHTML extends AbstractBoundWidget<String> {
     public BoundHTML(String text){
         this.init( text );
     }
-    
     @Override
     public void addStyleName(String style) {
         this.base.addStyleName(style);
@@ -172,7 +170,7 @@ public class BoundHTML extends AbstractBoundWidget<String> {
         //("Setting value "+ value, null );
         Object old = this.getValue();
         this.setHTML( value );
-        if( this.getValue() != old && this.getValue() != null && this.getValue().equals( old ) ){
+        if( this.getValue() != old && this.getValue() != null && !this.getValue().equals( old ) ){
             this.changes.firePropertyChange("value", old, this.getValue());
         }
         
