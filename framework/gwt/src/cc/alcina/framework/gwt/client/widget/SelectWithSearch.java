@@ -610,7 +610,6 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 						itemsHaveLinefeeds, ownerLabel, sep);
 		return hch;
 	}
-
 	// TODO:hcdim
 	void checkShowPopup() {
 		if ((this.relativePopupPanel == null || this.relativePopupPanel
@@ -624,6 +623,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 					setKeys(lazyData.keys);
 					setItemMap(lazyData.data);
 				}
+				lazyProvider=null;
 			}
 			if (popdownStyleName != null) {
 				panelForPopup.addStyleName(popdownStyleName);

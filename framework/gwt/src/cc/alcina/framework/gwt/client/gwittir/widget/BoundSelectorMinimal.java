@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Map;
 
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
@@ -58,7 +58,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 		public LazyData dataRequired() {
 			LazyData lazyData = new LazyData();
 			Map map = createObjectMap();
-			lazyData.keys = Arrays.asList(map.keySet());
+			lazyData.keys = new ArrayList(map.keySet());
 			lazyData.data = map;
 			return lazyData;
 		}
