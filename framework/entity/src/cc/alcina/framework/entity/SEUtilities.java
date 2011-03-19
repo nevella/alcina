@@ -21,11 +21,11 @@ import java.beans.PropertyDescriptor;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
@@ -40,7 +40,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
@@ -773,13 +772,13 @@ public class SEUtilities {
 		return sw.toString();
 	}
 
-	public static List<File> listFilesRecursive(String initialPath) {
+	public static List<File> listFilesRecursive(String initialPath,FileFilter filter) {
 		Stack<File> folders = new Stack<File>();
 		List<File> results=new ArrayList<File>();
 		folders.add(new File(initialPath));
 		while(!folders.isEmpty()){
 			File folder = folders.pop();
-			File[] files = folder.listFiles();
+			File[] files = filter==null?folder.listFiles():folder.listFiles(filter);
 			for (File file : files) {
 				if(file.isDirectory()){
 					folders.push(file);
