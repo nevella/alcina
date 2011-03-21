@@ -188,6 +188,7 @@ public class CollectionRenderingSupport implements
 		if (volatileOrder) {
 			if (!existingObjects.isEmpty()) {
 				item.removeItems();
+				existingObjects.clear();
 			}
 		}
 		List currentObjects = new ArrayList(objects);
