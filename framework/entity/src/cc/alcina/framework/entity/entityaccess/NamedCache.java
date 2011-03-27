@@ -17,7 +17,7 @@ package cc.alcina.framework.entity.entityaccess;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections.map.LRUMap2;
 @SuppressWarnings("unchecked")
 /**
  *
@@ -36,7 +36,15 @@ import org.apache.commons.collections.map.LRUMap;
 
 	public static void put(String mapName, Object key, Object value) {
 		checkMap(mapName);
-		caches.get(mapName).put(key, value);
+		try {
+			caches.get(mapName).put(key, value);
+		} catch (Exception e) {
+			//weird stuff with LRUMap 
+			e.printStackTrace();
+			caches.remove(mapName);
+			checkMap(mapName);
+			caches.get(mapName).put(key, value);
+		}
 	}
 
 	public static boolean containsKey(String mapName, Object key) {
@@ -49,7 +57,7 @@ import org.apache.commons.collections.map.LRUMap;
 	}
 	private static synchronized void checkMap(String mapName){
 		if (!caches.containsKey(mapName)) {
-			caches.put(mapName, new LRUMap(cacheSize));
+			caches.put(mapName, new LRUMap2(cacheSize));
 		}
 	}
 

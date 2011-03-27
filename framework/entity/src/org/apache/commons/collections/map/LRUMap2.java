@@ -54,8 +54,11 @@ import org.apache.commons.collections.BoundedMap;
  * @author Stephen Colebourne
  * @author Mike Pettypiece
  * @author Mario Ivankovits
+ * 
+ * Nick - renamed to LRUMap2 because of nullpointer exceptions from older versions of LRUMap, 
+ * reuseMapping - see various web threads
  */
-public class LRUMap
+public class LRUMap2
         extends AbstractLinkedMap implements BoundedMap, Serializable, Cloneable {
     
     /** Serialisation version */
@@ -71,7 +74,7 @@ public class LRUMap
     /**
      * Constructs a new empty map with a maximum size of 100.
      */
-    public LRUMap() {
+    public LRUMap2() {
         this(DEFAULT_MAX_SIZE, DEFAULT_LOAD_FACTOR, false);
     }
 
@@ -81,7 +84,7 @@ public class LRUMap
      * @param maxSize  the maximum size of the map
      * @throws IllegalArgumentException if the maximum size is less than one
      */
-    public LRUMap(int maxSize) {
+    public LRUMap2(int maxSize) {
         this(maxSize, DEFAULT_LOAD_FACTOR);
     }
 
@@ -93,7 +96,7 @@ public class LRUMap
      * @throws IllegalArgumentException if the maximum size is less than one
      * @since Commons Collections 3.1
      */
-    public LRUMap(int maxSize, boolean scanUntilRemovable) {
+    public LRUMap2(int maxSize, boolean scanUntilRemovable) {
         this(maxSize, DEFAULT_LOAD_FACTOR, scanUntilRemovable);
     }
 
@@ -106,7 +109,7 @@ public class LRUMap
      * @throws IllegalArgumentException if the maximum size is less than one
      * @throws IllegalArgumentException if the load factor is less than zero
      */
-    public LRUMap(int maxSize, float loadFactor) {
+    public LRUMap2(int maxSize, float loadFactor) {
         this(maxSize, loadFactor, false);
     }
 
@@ -121,7 +124,7 @@ public class LRUMap
      * @throws IllegalArgumentException if the load factor is less than zero
      * @since Commons Collections 3.1
      */
-    public LRUMap(int maxSize, float loadFactor, boolean scanUntilRemovable) {
+    public LRUMap2(int maxSize, float loadFactor, boolean scanUntilRemovable) {
         super((maxSize < 1 ? DEFAULT_CAPACITY : maxSize), loadFactor);
         if (maxSize < 1) {
             throw new IllegalArgumentException("LRUMap max size must be greater than 0");
@@ -139,7 +142,7 @@ public class LRUMap
      * @throws NullPointerException if the map is null
      * @throws IllegalArgumentException if the map is empty
      */
-    public LRUMap(Map map) {
+    public LRUMap2(Map map) {
         this(map, false);
     }
 
@@ -154,7 +157,7 @@ public class LRUMap
      * @throws IllegalArgumentException if the map is empty
      * @since Commons Collections 3.1
      */
-    public LRUMap(Map map, boolean scanUntilRemovable) {
+    public LRUMap2(Map map, boolean scanUntilRemovable) {
         this(map.size(), DEFAULT_LOAD_FACTOR, scanUntilRemovable);
         putAll(map);
     }
