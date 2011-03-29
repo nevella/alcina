@@ -13,32 +13,19 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.ACTION_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.CLASS_NAME_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.CONTENT_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.ID_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.LOCAL_ID_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.NO_HISTORY_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.SEARCH_INDEX;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.SEARCH_PAGE;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.TAB_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.TAB_SUB_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.Y_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gwt.http.client.URL;
-
-import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.HistoryEventType;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SearchHistoryInfo;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
+
+import com.google.gwt.http.client.URL;
 
 public class AlcinaHistoryItem {
 	public boolean notAHistoryToken;
@@ -96,19 +83,6 @@ public class AlcinaHistoryItem {
 	public long getLongParameter(String key) {
 		String value = params.get(key);
 		return value == null ? 0 : Long.parseLong(value);
-	}
-
-	@SuppressWarnings("unchecked")
-	public Object getReferencedObjectOrClassName() {
-		if (getClassName() == null) {
-			return null;
-		}
-		if (getId() == 0 && getLocalId() == 0) {
-			return getClassName();
-		}
-		return TransformManager.get().getObject(
-				CommonLocator.get().classLookup().getClassForName(
-						getClassName()), getId(), getLocalId());
 	}
 
 	public AlcinaHistory.SearchHistoryInfo getSearchHistoryInfo() {
@@ -182,12 +156,6 @@ public class AlcinaHistoryItem {
 			}
 		}
 		params.put(key, value == null ? null : value.toString());
-	}
-
-	public void setReferencedObject(HasIdAndLocalId hili) {
-		setParameter(CLASS_NAME_KEY, hili.getClass().getName());
-		setParameter(ID_KEY, hili.getId());
-		setParameter(LOCAL_ID_KEY, hili.getLocalId());
 	}
 
 	public void setSearchHistoryInfo(

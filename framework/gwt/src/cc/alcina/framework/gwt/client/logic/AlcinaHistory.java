@@ -21,8 +21,6 @@ import java.util.Map;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-import com.google.gwt.http.client.URL;
-
 /**
  * 
  * @author Nick Reddel
