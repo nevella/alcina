@@ -280,7 +280,12 @@ public class FlowTabBar extends Composite implements
 				+ "-wrapper", true);
 	}
 
-	public void insertCaption(String text, String className) {
+	public void insertCaption(String text, String className, boolean separator) {
+		if(separator){
+			Label label = new Label("\u00A0");
+			label.setStyleName("flowTabBar-separator");
+			panel2.add(label);
+		}
 		Label label = new Label(text);
 		if (className != null) {
 			label.addStyleName(className);
