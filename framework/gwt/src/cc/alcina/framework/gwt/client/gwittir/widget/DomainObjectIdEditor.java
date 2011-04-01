@@ -16,10 +16,9 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameIdRefRenderer;
 import cc.alcina.framework.gwt.client.gwittir.renderer.IdToStringRenderer;
 
 import com.google.gwt.core.client.GWT;
@@ -86,6 +85,10 @@ public class DomainObjectIdEditor extends AbstractBoundWidget implements
 					HasIdAndLocalId hili = CommonLocator.get().classLookup()
 							.newInstance(domainObjectClass);
 					hili.setId(id);
+					if (hili != null && !hili.equals(currentValue)
+							&& TransformManager.get().getObject(hili) == null) {
+						TransformManager.get().registerDomainObject(hili);
+					}
 					currentValue = hili;
 				} catch (Exception e) {
 				}
@@ -98,28 +101,13 @@ public class DomainObjectIdEditor extends AbstractBoundWidget implements
 		Object old = getValue();
 		currentValue = value;
 		if (CommonUtils.isNullOrEmpty(tb.getText())) {
-			tb
-					.setText(IdToStringRenderer.INSTANCE
-							.render((HasId) currentValue));
+			tb.setText(IdToStringRenderer.INSTANCE
+					.render((HasIdAndLocalId) currentValue));
 		}
-		changes.firePropertyChange("value", old, this.getValue());
+		changes.firePropertyChange("value", old, getValue());
 	}
 
 	public void onValueChange(ValueChangeEvent event) {
 		changes.firePropertyChange("value", currentValue, getValue());
-	}
-
-	/**
-	 * Should always be setting a stringified long
-	 */
-	public void setValue(String value) {
-		if (value != null) {
-			try {
-				long l = Long.parseLong(value);
-				setValue(new Date(l));
-			} catch (Exception e) {
-				GWT.log("Setting illegal datebox string value - " + value);
-			}
-		}
 	}
 }
