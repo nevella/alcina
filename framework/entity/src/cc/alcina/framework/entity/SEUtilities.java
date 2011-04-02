@@ -632,6 +632,7 @@ public class SEUtilities {
 		FileInputStream ins = new FileInputStream(in);
 		FileOutputStream os = new FileOutputStream(out);
 		ResourceUtilities.writeStreamToStream(ins, os);
+		out.setLastModified(in.lastModified());
 		ins.close();
 	}
 

@@ -54,7 +54,7 @@ public class CommonUtils {
 			stdClassMap.put(std.getName(), std);
 		}
 	}
-	
+
 	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
 	static {
 		Class[] prims = { long.class, int.class, short.class, char.class,
@@ -172,14 +172,14 @@ public class CommonUtils {
 		}
 		switch (style) {
 		case AU_DATE_SLASH:
-			return format("%1/%2/%3", padTwo(date.getDate()), padTwo(date
-					.getMonth() + 1), padTwo(date.getYear() + 1900));
+			return format("%1/%2/%3", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
 		case AU_DATE_SLASH_MONTH:
-			return format("%1/%2", padTwo(date.getMonth() + 1), padTwo(date
-					.getYear() + 1900));
+			return format("%1/%2", padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900));
 		case AU_DATE_DOT:
-			return format("%1.%2.%3", padTwo(date.getDate()), padTwo(date
-					.getMonth() + 1), padTwo(date.getYear() + 1900));
+			return format("%1.%2.%3", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
 		case AU_DATE_TIME:
 			return format("%1/%2/%3 - %4:%5:%6", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
@@ -188,28 +188,29 @@ public class CommonUtils {
 		case AU_DATE_TIME_HUMAN:
 			return formatDate(date, DateStyle.AU_LONG_DAY)
 					+ format(" at %1:%2 %3",
-							padTwo((date.getHours() - 1) % 12 + 1), padTwo(date
-									.getMinutes()), date.getHours() < 12 ? "AM"
-									: "PM");
+							padTwo((date.getHours() - 1) % 12 + 1),
+							padTwo(date.getMinutes()),
+							date.getHours() < 12 ? "AM" : "PM");
 		case AU_DATE_TIME_MS:
 			return format("%1/%2/%3 - %4:%5:%6:%7", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
 					padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()), date.getTime() % 1000);
 		case AU_DATE_MONTH:
-			return format("%1 %2 %3", padTwo(date.getDate()), MONTH_NAMES[date
-					.getMonth() + 1], padTwo(date.getYear() + 1900));
+			return format("%1 %2 %3", padTwo(date.getDate()),
+					MONTH_NAMES[date.getMonth() + 1],
+					padTwo(date.getYear() + 1900));
 		case AU_SHORT_MONTH:
-			return format("%1 %2 %3", padTwo(date.getDate()), MONTH_NAMES[date
-					.getMonth() + 1].substring(0, 3),
+			return format("%1 %2 %3", padTwo(date.getDate()),
+					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
 					padTwo(date.getYear() + 1900));
 		case AU_SHORT_DAY:
-			return format("%4 - %1.%2.%3", padTwo(date.getDate()), padTwo(date
-					.getMonth() + 1), padTwo(date.getYear() + 1900),
+			return format("%4 - %1.%2.%3", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
 					DAY_NAMES[date.getDay()].substring(0, 3));
 		case AU_LONG_DAY:
-			return format("%4, %1.%2.%3", padTwo(date.getDate()), padTwo(date
-					.getMonth() + 1), padTwo(date.getYear() + 1900),
+			return format("%4, %1.%2.%3", padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
 					DAY_NAMES[date.getDay()]);
 		case TIMESTAMP:
 			return format("%3%2%1_%4%5%6_%7", padTwo(date.getDate()),
@@ -219,8 +220,6 @@ public class CommonUtils {
 		}
 		return date.toString();
 	}
-
-	
 
 	public static String friendlyConstant(Object o) {
 		if (o == null) {
@@ -248,8 +247,7 @@ public class CommonUtils {
 
 	public static String getSimpleTimeBefore(Date d, Date currentDate) {
 		long timeDiff = (long) Math.ceil((double) (currentDate.getTime() - d
-				.getTime())
-				/ (60 * 1000));
+				.getTime()) / (60 * 1000));
 		if (timeDiff < 60) {
 			return timeDiff + " minutes ago";
 		}
@@ -357,10 +355,6 @@ public class CommonUtils {
 			source = source.replace("%" + s + "%", args.get(s).toString());
 		}
 		return source;
-	}
-
-	public static String nullAsBlank(String s) {
-		return s == null ? "" : s;
 	}
 
 	public static String padStringLeft(String input, int length, char padChar) {
@@ -627,7 +621,8 @@ public class CommonUtils {
 		}
 		return false;
 	}
-	public static String nullToEmpty(String s){
-		return s==null?"":s;
+
+	public static String nullToEmpty(String s) {
+		return s == null ? "" : s;
 	}
 }
