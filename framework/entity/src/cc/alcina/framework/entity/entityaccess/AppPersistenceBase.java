@@ -195,13 +195,14 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 				(Collection<? extends G>) PermissionsManager.get()
 						.getUserGroups().values());
 		String filterEql = createGroupFilter(true, FilterCombinator.OR);
+		filterEql=filterEql.isEmpty()?"":" OR "+filterEql;
 		// get metas
 		List<G> visgrps = em.createQuery(
 				"select distinct g from "
 						+ getCommonPersistence()
 								.getImplementationSimpleClassName(IGroup.class)
 						+ " g left join fetch g.memberUsers "
-						+ "where g.id = -1  OR " + filterEql).getResultList();
+						+ "where g.id = -1  " + filterEql).getResultList();
 		// hydrate children, just in case - no formalised
 		for (G group : visgrps) {
 			grps.add(group);
