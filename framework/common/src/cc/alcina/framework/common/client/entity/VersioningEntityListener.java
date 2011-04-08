@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.entity;
 
 import javax.persistence.PrePersist;
@@ -20,21 +19,23 @@ import javax.persistence.PreUpdate;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 
-
-
 /**
- *
+ * Only used in entity-layer code
  * @author Nick Reddel
  */
+public class VersioningEntityListener {
+	public static ThreadLocal<Boolean> disabled = new ThreadLocal() {
+		protected synchronized Boolean initialValue() {
+			return false;
+		}
+	};
 
- public class VersioningEntityListener {
 	@PrePersist
 	@PreUpdate
 	public void setVersioningInfo(Object obj) {
-		if (obj instanceof IVersionable) {
+		if (obj instanceof IVersionable &&!disabled.get()) {
 			IVersionable iv = (IVersionable) obj;
 			PermissionsManager.get().prepareVersionable(iv);
 		}
 	}
-	
 }

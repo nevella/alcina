@@ -127,6 +127,7 @@ public class SEUtilities {
 	public static String normalizeWhitespace(String input) {
 		return WS_PATTERN.matcher(input).replaceAll(" ");
 	}
+
 	public static String normalizeWhitespaceAndTrim(String input) {
 		return WS_PATTERN.matcher(input).replaceAll(" ").trim();
 	}
@@ -186,6 +187,9 @@ public class SEUtilities {
 	public static boolean deleteDirectory(File folder) {
 		if (!folder.exists()) {
 			return false;
+		}
+		if (!folder.isDirectory()) {
+			return folder.delete();
 		}
 		Stack<File> pathStack = new Stack<File>();
 		Stack<File> dirStack = new Stack<File>();
@@ -768,20 +772,22 @@ public class SEUtilities {
 
 	public static String getFullExceptionMessage(Throwable t) {
 		StringWriter sw = new StringWriter();
-		sw.write(t.getMessage()+"\n");
+		sw.write(t.getMessage() + "\n");
 		t.printStackTrace(new PrintWriter(sw));
 		return sw.toString();
 	}
 
-	public static List<File> listFilesRecursive(String initialPath,FileFilter filter) {
+	public static List<File> listFilesRecursive(String initialPath,
+			FileFilter filter) {
 		Stack<File> folders = new Stack<File>();
-		List<File> results=new ArrayList<File>();
+		List<File> results = new ArrayList<File>();
 		folders.add(new File(initialPath));
-		while(!folders.isEmpty()){
+		while (!folders.isEmpty()) {
 			File folder = folders.pop();
-			File[] files = filter==null?folder.listFiles():folder.listFiles(filter);
+			File[] files = filter == null ? folder.listFiles() : folder
+					.listFiles(filter);
 			for (File file : files) {
-				if(file.isDirectory()){
+				if (file.isDirectory()) {
 					folders.push(file);
 				}
 				results.add(file);

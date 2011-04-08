@@ -14,6 +14,13 @@ public class CountingMap<K> extends HashMap<K, Integer> {
 		}
 	}
 
+	public int size(K key) {
+		if (!containsKey(key)) {
+			return 0;
+		}
+		return get(key);
+	}
+
 	public K max() {
 		K max = null;
 		Integer maxCount = 0;

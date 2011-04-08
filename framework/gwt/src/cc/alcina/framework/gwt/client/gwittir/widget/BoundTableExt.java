@@ -30,12 +30,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
@@ -111,7 +113,7 @@ import com.totsp.gwittir.client.util.ListSorter;
  *         </ul>
  *         </ul>
  */
-@SuppressWarnings( { "unchecked", "deprecation" })
+@SuppressWarnings({ "unchecked", "deprecation" })
 public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		HasBinding {
 	private static BoundTableExt activeTable = null;
@@ -832,9 +834,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			this.bindingCache.put(target, bindings);
 		}
 		if (bindings[colIndex] == null) {
-			bindings[colIndex] = new Binding(widget, "value", col
-					.getValidator(), col.getFeedback(), target, col
-					.getPropertyName(), null, null);
+			bindings[colIndex] = new Binding(widget, "value",
+					col.getValidator(), col.getFeedback(), target,
+					col.getPropertyName(), null, null);
 			// BoundTable.LOG.log(Level.SPAM,
 			// "Created binding " + bindings[colIndex], null);
 		}
@@ -1087,7 +1089,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.inChunk = false;
 		this.setValue(c);
 	}
-	private RenderContext renderContext=RenderContext.current();
+
+	private RenderContext renderContext = RenderContext.current();
+
 	private void init(int masksValue) {
 		// GWT.log( "Init "+ +masksValue + " :: "+((masksValue &
 		// BoundTable.MULTI_REQUIRES_SHIFT) > 0), null);
@@ -1320,6 +1324,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 	}
 
+	private RepeatingSequentialCommand incrementalRenderContainer;
+
 	@Override
 	protected void onAttach() {
 		super.onAttach();
@@ -1356,7 +1362,61 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	private String noContentMessage = "No matching results found";
 
 	private void renderAll() {
+		if (getIncrementalRenderContainer() == null) {
+			renderNonIncremental();
+		} else {
+			renderIncremental();
+		}
+	}
+
+	private void renderIncremental() {
+		getIncrementalRenderContainer().add(new RepeatingCommand() {
+			int state = 0;
+
+			private RenderContext saved;
+
+			@Override
+			public boolean execute() {
+				if (state == 0) {
+					saved = RenderContext.current();
+					if (!renderCheck()) {
+						return false;
+					}
+					renderTop();
+					state = 1;
+				}
+				if (state == 1) {
+					renderRows(20);
+					if (!rowIterator.hasNext()) {
+						state = 2;
+					}
+				}
+				if (state == 2) {
+					renderBottom(saved);
+				}
+				return state != 2;
+			}
+		});
+	}
+
+	private void renderRows(int numberOfRows) {
+		for (; rowIterator != null && rowIterator.hasNext()
+				&& --numberOfRows != 0;) {
+			this.addRow((SourcesPropertyChangeEvents) rowIterator.next());
+		}
+	}
+
+	private void renderNonIncremental() {
 		RenderContext saved = RenderContext.current();
+		if (!renderCheck()) {
+			return;
+		}
+		renderTop();
+		renderRows(Integer.MAX_VALUE);
+		renderBottom(saved);
+	}
+
+	public boolean renderCheck() {
 		RenderContext.setCurrent(renderContext);
 		if (this.value == null || this.value.isEmpty()) {
 			this.clear();
@@ -1366,8 +1426,30 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 							: noContentMessage);
 			l.setStyleName("no-content");
 			this.table.setWidget(0, 0, l);
-			return;
+			return false;
 		}
+		return true;
+	}
+
+	private Iterator rowIterator = null;
+
+	public void renderBottom(RenderContext saved) {
+		if ((this.provider != null)
+				&& ((this.masks & BoundTableExt.SCROLL_MASK) == 0)
+				&& ((this.masks & BoundTableExt.NO_NAV_ROW_MASK) == 0)
+				&& numberOfChunks > 1) {
+			int row = this.table.getRowCount();
+			this.table.setWidget(row, 0, this.createNavWidget());
+			this.table.getFlexCellFormatter().setColSpan(row, 0,
+					this.columns.length);
+			table.getCellFormatter().setHorizontalAlignment(row, 0,
+					HasHorizontalAlignment.ALIGN_CENTER);
+		}
+		setVisible(true);
+		RenderContext.setCurrent(saved);
+	}
+
+	public void renderTop() {
 		setVisible(false);
 		this.clear();
 		int startColumn = 0;
@@ -1405,24 +1487,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 								: "descending");
 			}
 		}
-		for (Iterator it = (this.value == null) ? null : this.value.iterator(); (it != null)
-				&& it.hasNext();) {
-			this.addRow((SourcesPropertyChangeEvents) it.next());
-		}
-		if ((this.provider != null)
-				&& ((this.masks & BoundTableExt.SCROLL_MASK) == 0)
-				&& ((this.masks & BoundTableExt.NO_NAV_ROW_MASK) == 0)
-				&& numberOfChunks > 1) {
-			int row = this.table.getRowCount();
-			this.table.setWidget(row, 0, this.createNavWidget());
-			this.table.getFlexCellFormatter().setColSpan(row, 0,
-					this.columns.length);
-			table.getCellFormatter().setHorizontalAlignment(row, 0,
-					HasHorizontalAlignment.ALIGN_CENTER);
-		}
-		setVisible(true);
-		RenderContext.setCurrent(saved);
-		// GWT.log(this.toString(), null);
+		rowIterator = this.value == null ? null : this.value.iterator();
 	}
 
 	private int selectedRowsBeforeRow(int row) {
@@ -1723,8 +1788,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			ArrayList sort = new ArrayList();
 			sort.addAll(value);
 			try {
-				ListSorter.sortOnProperty(sort, columns[index]
-						.getPropertyName(), ascending[index]);
+				ListSorter.sortOnProperty(sort,
+						columns[index].getPropertyName(), ascending[index]);
 			} catch (Exception e) {
 				LOG.log(Level.INFO, "Exception during sort", e);
 			}
@@ -1765,6 +1830,15 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	public String getNoContentMessage() {
 		return noContentMessage;
+	}
+
+	public void setIncrementalRenderContainer(
+			RepeatingSequentialCommand incrementalRenderContainer) {
+		this.incrementalRenderContainer = incrementalRenderContainer;
+	}
+
+	public RepeatingSequentialCommand getIncrementalRenderContainer() {
+		return incrementalRenderContainer;
 	}
 
 	private int sortedColumn = -1;

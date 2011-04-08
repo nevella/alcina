@@ -17,7 +17,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 import com.google.gwt.user.client.Timer;
-
+/**
+ * Scheduler.scheduleIncremental much better idea...although this did work fine
+ * @author nick@alcina.cc
+ *
+ */
 public abstract class ClientUIThreadWorker {
 	protected int iterationCount = 200;
 
