@@ -12,6 +12,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -21,6 +22,8 @@ import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.permissions.HasOwner;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
@@ -45,7 +48,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.UrlCustomiser;
 @ObjectPermissions(create = @Permission(access = AccessLevel.LOGGED_IN), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 @Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 public class Bookmark extends DomainBaseVersionable implements
-		Comparable<Bookmark> {
+		Comparable<Bookmark> ,HasOwner{
 	private long id;
 
 	private String title;
@@ -141,5 +144,11 @@ public class Bookmark extends DomainBaseVersionable implements
 		AlcinaTemplateUser old_user = this.user;
 		this.user = user;
 		propertyChangeSupport.firePropertyChange("user", old_user, user);
+	}
+
+	@Override
+	@Transient
+	public IUser getOwner() {
+		return getUser();
 	}
 }
