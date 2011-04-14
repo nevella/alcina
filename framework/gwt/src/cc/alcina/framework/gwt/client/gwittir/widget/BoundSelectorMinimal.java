@@ -54,13 +54,19 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	private class LazyDataMinimal implements LazyDataProvider {
+		private boolean called = false;
+
 		@Override
 		public LazyData dataRequired() {
-			LazyData lazyData = new LazyData();
-			Map map = createObjectMap();
-			lazyData.keys = new ArrayList(map.keySet());
-			lazyData.data = map;
-			return lazyData;
+			if (!called) {
+				LazyData lazyData = new LazyData();
+				Map map = createObjectMap();
+				lazyData.keys = new ArrayList(map.keySet());
+				lazyData.data = map;
+				called = true;
+				return lazyData;
+			}
+			return null;
 		}
 	}
 

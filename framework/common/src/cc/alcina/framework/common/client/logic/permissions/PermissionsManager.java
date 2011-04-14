@@ -49,7 +49,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 @SuppressWarnings("unchecked")
 /**
- *
+ *<h2>Notes</h2>
+ *<p>Permissions type ADMIN_OR_OWNER pretty much mandates that the object implement HasOwner</p>
  * @author Nick Reddel
  */
 public class PermissionsManager extends BaseBindable implements Vetoer,

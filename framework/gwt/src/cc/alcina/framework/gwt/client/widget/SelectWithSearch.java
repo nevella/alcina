@@ -623,7 +623,6 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 					setKeys(lazyData.keys);
 					setItemMap(lazyData.data);
 				}
-				lazyProvider=null;
 			}
 			if (popdownStyleName != null) {
 				panelForPopup.addStyleName(popdownStyleName);
