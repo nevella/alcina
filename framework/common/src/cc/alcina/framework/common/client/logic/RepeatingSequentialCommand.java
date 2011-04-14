@@ -21,6 +21,14 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 		}
 		tasks.add(task);
 	}
+	public void flushSynchronous(){
+		while(!tasks.isEmpty()){
+			boolean result = tasks.get(0).execute();
+			if (!result) {
+				tasks.remove(0);
+			}
+		}
+	}
 
 	@Override
 	public boolean execute() {
