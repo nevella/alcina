@@ -20,18 +20,37 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 			Scheduler.get().scheduleIncremental(this);
 		}
 		tasks.add(task);
-	}
-	public void flushSynchronous(){
-		while(!tasks.isEmpty()){
-			boolean result = tasks.get(0).execute();
-			if (!result) {
-				tasks.remove(0);
-			}
+		if (isSynchronous()) {
+			flushSynchronous();
 		}
 	}
 
+	public void flushSynchronous() {
+		if (flushing) {
+			return;
+		}
+		try {
+			flushing = true;
+			while (!tasks.isEmpty()) {
+				boolean result = tasks.get(0).execute();
+				if (!result) {
+					tasks.remove(0);
+				}
+			}
+		} finally {
+			flushing = false;
+		}
+	}
+
+	private boolean flushing = false;
+
+	private boolean synchronous = false;
+
 	@Override
 	public boolean execute() {
+		if (isSynchronous()) {
+			flushSynchronous();
+		}
 		if (tasks.isEmpty()) {
 			return false;
 		}
@@ -45,5 +64,16 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 			throw new WrappedRuntimeException(e);
 		}
 		return !tasks.isEmpty();
+	}
+
+	public void setSynchronous(boolean synchronous) {
+		this.synchronous = synchronous;
+		if (synchronous) {
+			flushSynchronous();
+		}
+	}
+
+	public boolean isSynchronous() {
+		return synchronous;
 	}
 }
