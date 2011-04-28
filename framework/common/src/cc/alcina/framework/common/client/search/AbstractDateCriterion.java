@@ -59,7 +59,7 @@ public class AbstractDateCriterion extends SearchCriterion implements
 	public void setDate(Date date) {
 		Date old_date = this.date;
 		this.date = date;
-		propertyChangeSupport.firePropertyChange("date", old_date, date);
+		propertyChangeSupport().firePropertyChange("date", old_date, date);
 	}
 
 	public Date getDate() {

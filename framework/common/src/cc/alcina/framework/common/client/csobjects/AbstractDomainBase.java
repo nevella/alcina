@@ -37,7 +37,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	 * Useful for collection listeners - a "check the kids" thing
 	 */
 	public void fireNullPropertyChange(String name) {
-		((MutablePropertyChangeSupport) this.propertyChangeSupport)
+		((MutablePropertyChangeSupport) this.propertyChangeSupport())
 				.fireNullPropertyChange(name);
 	}
 

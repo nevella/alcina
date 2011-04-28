@@ -52,14 +52,14 @@ public class ChangePasswordModel extends BaseBindable implements RemoteParameter
 	public void setNewPassword(String newPassword) {
 		String old_newPassword = this.newPassword;
 		this.newPassword = newPassword;
-		propertyChangeSupport.firePropertyChange("newPassword",
+		propertyChangeSupport().firePropertyChange("newPassword",
 				old_newPassword, newPassword);
 	}
 
 	public void setNewPassword2(String newPassword2) {
 		String old_newPassword2 = this.newPassword2;
 		this.newPassword2 = newPassword2;
-		propertyChangeSupport.firePropertyChange("newPassword2",
+		propertyChangeSupport().firePropertyChange("newPassword2",
 				old_newPassword2, newPassword2);
 	}
 

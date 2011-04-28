@@ -161,14 +161,14 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 	public void setClientInstanceAuth(int clientInstanceAuth) {
 		int old_clientInstanceAuth = this.clientInstanceAuth;
 		this.clientInstanceAuth = clientInstanceAuth;
-		propertyChangeSupport.firePropertyChange("clientInstanceAuth",
+		propertyChangeSupport().firePropertyChange("clientInstanceAuth",
 				old_clientInstanceAuth, clientInstanceAuth);
 	}
 
 	public void setClientInstanceId(long clientInstanceId) {
 		long old_clientInstanceId = this.clientInstanceId;
 		this.clientInstanceId = clientInstanceId;
-		propertyChangeSupport.firePropertyChange("clientInstanceId",
+		propertyChangeSupport().firePropertyChange("clientInstanceId",
 				old_clientInstanceId, clientInstanceId);
 	}
 
@@ -176,7 +176,7 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 			DomainTransformRequestType domainTransformRequestType) {
 		DomainTransformRequestType old_domainTransformRequestType = this.domainTransformRequestType;
 		this.domainTransformRequestType = domainTransformRequestType;
-		propertyChangeSupport.firePropertyChange("domainTransformRequestType",
+		propertyChangeSupport().firePropertyChange("domainTransformRequestType",
 				old_domainTransformRequestType, domainTransformRequestType);
 	}
 
@@ -187,40 +187,40 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 	public void setProtocolVersion(String protocolVersion) {
 		String old_protocolVersion = this.protocolVersion;
 		this.protocolVersion = protocolVersion;
-		propertyChangeSupport.firePropertyChange("protocolVersion",
+		propertyChangeSupport().firePropertyChange("protocolVersion",
 				old_protocolVersion, protocolVersion);
 	}
 
 	public void setRequestId(int requestId) {
 		int old_requestId = this.requestId;
 		this.requestId = requestId;
-		propertyChangeSupport.firePropertyChange("requestId", old_requestId,
+		propertyChangeSupport().firePropertyChange("requestId", old_requestId,
 				requestId);
 	}
 
 	public void setTag(String tag) {
 		String old_tag = this.tag;
 		this.tag = tag;
-		propertyChangeSupport.firePropertyChange("tag", old_tag, tag);
+		propertyChangeSupport().firePropertyChange("tag", old_tag, tag);
 	}
 
 	public void setText(String text) {
 		String old_text = this.text;
 		this.text = text;
-		propertyChangeSupport.firePropertyChange("text", old_text, text);
+		propertyChangeSupport().firePropertyChange("text", old_text, text);
 	}
 
 	public void setTimestamp(long timestamp) {
 		long old_timestamp = this.timestamp;
 		this.timestamp = timestamp;
-		propertyChangeSupport.firePropertyChange("timestamp", old_timestamp,
+		propertyChangeSupport().firePropertyChange("timestamp", old_timestamp,
 				timestamp);
 	}
 
 	public void setUserId(long userId) {
 		long old_userId = this.userId;
 		this.userId = userId;
-		propertyChangeSupport.firePropertyChange("userId", old_userId, userId);
+		propertyChangeSupport().firePropertyChange("userId", old_userId, userId);
 	}
 
 	@Override

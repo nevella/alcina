@@ -178,7 +178,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 	public void setCriteria(Set<SC> criteria) {
 		Set<SC> old_criteria = this.criteria;
 		this.criteria = criteria;
-		propertyChangeSupport.firePropertyChange("criteria", old_criteria,
+		propertyChangeSupport().firePropertyChange("criteria", old_criteria,
 				criteria);
 	}
 

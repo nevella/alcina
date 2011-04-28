@@ -145,7 +145,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	@Transient
 	public PropertyChangeListener[] getPropertyChangeListeners() {
-		return this.propertyChangeSupport.getPropertyChangeListeners();
+		return this.propertyChangeSupport().getPropertyChangeListeners();
 	}
 
 	public PublicationRange getPublicationRange() {
@@ -210,21 +210,21 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	public void setContentPageRange(String contentPageRange) {
 		String old_contentPageRange = this.contentPageRange;
 		this.contentPageRange = contentPageRange;
-		propertyChangeSupport.firePropertyChange("contentPageRange",
+		propertyChangeSupport().firePropertyChange("contentPageRange",
 				old_contentPageRange, contentPageRange);
 	}
 
 	public void setCoverPage(boolean coverPage) {
 		boolean old_coverPage = this.coverPage;
 		this.coverPage = coverPage;
-		propertyChangeSupport.firePropertyChange("coverPage", old_coverPage,
+		propertyChangeSupport().firePropertyChange("coverPage", old_coverPage,
 				coverPage);
 	}
 
 	public void setDeliveryMode(PublicationDeliveryMode deliveryMode) {
 		PublicationDeliveryMode old_deliveryMode = this.deliveryMode;
 		this.deliveryMode = deliveryMode;
-		propertyChangeSupport.firePropertyChange("deliveryMode",
+		propertyChangeSupport().firePropertyChange("deliveryMode",
 				old_deliveryMode, deliveryMode);
 	}
 
@@ -235,7 +235,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	public void setEmailInline(boolean emailInline) {
 		boolean old_emailInline = this.emailInline;
 		this.emailInline = emailInline;
-		propertyChangeSupport.firePropertyChange("emailInline",
+		propertyChangeSupport().firePropertyChange("emailInline",
 				old_emailInline, emailInline);
 	}
 
@@ -254,7 +254,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	public void setFooter(boolean footer) {
 		boolean old_footer = this.footer;
 		this.footer = footer;
-		propertyChangeSupport.firePropertyChange("footer", old_footer, footer);
+		propertyChangeSupport().firePropertyChange("footer", old_footer, footer);
 	}
 
 	public void setNoPersistence(boolean noPersistence) {
@@ -268,14 +268,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	public void setOutputFormat(PublicationOutputFormat outputFormat) {
 		PublicationOutputFormat old_outputFormat = this.outputFormat;
 		this.outputFormat = outputFormat;
-		propertyChangeSupport.firePropertyChange("outputFormat",
+		propertyChangeSupport().firePropertyChange("outputFormat",
 				old_outputFormat, outputFormat);
 	}
 
 	public void setPageBreakAfterEachDocument(boolean pageBreakAfterEachDocument) {
 		boolean old_pageBreakAfterEachDocument = this.pageBreakAfterEachDocument;
 		this.pageBreakAfterEachDocument = pageBreakAfterEachDocument;
-		propertyChangeSupport.firePropertyChange("pageBreakAfterEachDocument",
+		propertyChangeSupport().firePropertyChange("pageBreakAfterEachDocument",
 				old_pageBreakAfterEachDocument, pageBreakAfterEachDocument);
 	}
 
@@ -290,7 +290,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	public void setSingleContentObjectId(Long singleContentObjectId) {
 		Long old_singleContentObjectId = this.singleContentObjectId;
 		this.singleContentObjectId = singleContentObjectId;
-		propertyChangeSupport.firePropertyChange("singleContentObjectId",
+		propertyChangeSupport().firePropertyChange("singleContentObjectId",
 				old_singleContentObjectId, singleContentObjectId);
 	}
 

@@ -59,9 +59,10 @@ public class MainCmp extends MainCmpBase {
 		int index = 0;
 		for (BaseTab tab : tabs) {
 			if (PermissionsManager.get().isPermissible(tab)) {
-				Hyperlink hl = new Hyperlink(tab.getDisplayName(), CommonUtils
-						.format("%1=%2", AlcinaTemplateHistory.TAB_KEY, tab
-								.getHistoryToken()));
+				Hyperlink hl = new Hyperlink(tab.getDisplayName(),
+						CommonUtils.format("%1=%2",
+								AlcinaTemplateHistory.TAB_KEY,
+								tab.getHistoryToken()));
 				tabPanel.add(tab, hl);
 				if (tab.getClass() == currentTabClass) {
 					tabPanel.selectTab(index);
@@ -107,7 +108,8 @@ public class MainCmp extends MainCmpBase {
 
 	protected void afterTabSelect(int tabIndex) {
 		refreshToolbar();
-		boolean showingFullHeight = (tabPanel.getWidget(tabIndex) instanceof TabDisplaysAsFullHeight);
+		boolean showingFullHeight = tabIndex >= 0
+				&& (tabPanel.getWidget(tabIndex) instanceof TabDisplaysAsFullHeight);
 		tabPanel.getDeckPanel().setStyleName(
 				showingFullHeight ? "alcina-MainContent content-100pc-lhs"
 						: "alcina-MainContent");

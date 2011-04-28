@@ -263,14 +263,14 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	public void setDeleted(Boolean deleted) {
 		Boolean old_deleted = this.deleted;
 		this.deleted = deleted;
-		propertyChangeSupport.firePropertyChange("deleted", old_deleted,
+		propertyChangeSupport().firePropertyChange("deleted", old_deleted,
 				deleted);
 	}
 
 	public void setFirstName(String firstName) {
 		String old_firstName = this.firstName;
 		this.firstName = firstName;
-		propertyChangeSupport.firePropertyChange("firstName", old_firstName,
+		propertyChangeSupport().firePropertyChange("firstName", old_firstName,
 				firstName);
 	}
 
@@ -289,7 +289,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	public void setLastName(String lastName) {
 		String old_lastName = this.lastName;
 		this.lastName = lastName;
-		propertyChangeSupport.firePropertyChange("lastName", old_lastName,
+		propertyChangeSupport().firePropertyChange("lastName", old_lastName,
 				lastName);
 	}
 
@@ -312,7 +312,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	public void setPrimaryGroup(IGroup primaryGroup) {
 		IGroup old_primaryGroup = this.primaryGroup;
 		this.primaryGroup = (AlcinaTemplateGroup) primaryGroup;
-		propertyChangeSupport.firePropertyChange("primaryGroup",
+		propertyChangeSupport().firePropertyChange("primaryGroup",
 				old_primaryGroup, primaryGroup);
 	}
 
@@ -328,14 +328,14 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	public void setSecondaryGroups(Set<? extends IGroup> secondaryGroups) {
 		Set<? extends IGroup> old_secondaryGroups = this.secondaryGroups;
 		this.secondaryGroups = (Set<AlcinaTemplateGroup>) secondaryGroups;
-		propertyChangeSupport.firePropertyChange("secondaryGroups",
+		propertyChangeSupport().firePropertyChange("secondaryGroups",
 				old_secondaryGroups, secondaryGroups);
 	}
 
 	public void setUserName(String userName) {
 		String old_userName = this.userName;
 		this.userName = userName;
-		propertyChangeSupport.firePropertyChange("userName", old_userName,
+		propertyChangeSupport().firePropertyChange("userName", old_userName,
 				userName);
 		comparisonString = userName == null ? null : userName.toLowerCase();
 	}
@@ -343,7 +343,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	public void setSystem(Boolean system) {
 		Boolean old_system = this.system;
 		this.system = system;
-		propertyChangeSupport.firePropertyChange("system", old_system, system);
+		propertyChangeSupport().firePropertyChange("system", old_system, system);
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "System", orderingHint = 1010))

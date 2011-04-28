@@ -36,7 +36,7 @@ public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 	public void setBooleanEnum(BooleanEnum booleanEnum) {
 		BooleanEnum old_booleanEnum = this.booleanEnum;
 		this.booleanEnum = booleanEnum;
-		propertyChangeSupport.firePropertyChange("booleanEnum",
+		propertyChangeSupport().firePropertyChange("booleanEnum",
 				old_booleanEnum, booleanEnum);
 	}
 }

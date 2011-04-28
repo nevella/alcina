@@ -63,6 +63,6 @@ public class UserCriterion extends AbstractUserCriterion {
 		AlcinaTemplateUser old_user = this.user;
 		this.user = user;
 		this.userId = user == null ? 0 : user.getId();
-		propertyChangeSupport.firePropertyChange("user", old_user, user);
+		propertyChangeSupport().firePropertyChange("user", old_user, user);
 	}
 }

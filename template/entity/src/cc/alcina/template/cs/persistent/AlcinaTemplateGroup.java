@@ -162,7 +162,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	public void setGroupName(String groupName) {
 		String old_groupName = this.groupName;
 		this.groupName = groupName;
-		propertyChangeSupport.firePropertyChange("groupName", old_groupName,
+		propertyChangeSupport().firePropertyChange("groupName", old_groupName,
 				groupName);
 		this.groupName = groupName;
 		comparisonString = groupName == null ? null : groupName.toLowerCase();
@@ -175,7 +175,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	public void setMemberGroups(Set<? extends IGroup> memberGroups) {
 		Set<? extends IGroup> old_memberGroups = this.memberGroups;
 		this.memberGroups = (Set<AlcinaTemplateGroup>) memberGroups;
-		propertyChangeSupport.firePropertyChange("memberGroups",
+		propertyChangeSupport().firePropertyChange("memberGroups",
 				old_memberGroups, memberGroups);
 	}
 
@@ -184,14 +184,14 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	public void setMemberOfGroups(Set<AlcinaTemplateGroup> memberOfGroups) {
 		Set<AlcinaTemplateGroup> old_memberOfGroups = this.memberOfGroups;
 		this.memberOfGroups = memberOfGroups;
-		propertyChangeSupport.firePropertyChange("memberOfGroups",
+		propertyChangeSupport().firePropertyChange("memberOfGroups",
 				old_memberOfGroups, memberOfGroups);
 	}
 	@SuppressWarnings("unchecked")
 	public void setMemberUsers(Set<? extends IUser> memberUsers) {
 		Set<AlcinaTemplateUser> old_memberUsers = this.memberUsers;
 		this.memberUsers = (Set<AlcinaTemplateUser>) memberUsers;
-		propertyChangeSupport.firePropertyChange("memberUsers",
+		propertyChangeSupport().firePropertyChange("memberUsers",
 				old_memberUsers, memberUsers);
 	}
 }

@@ -17,7 +17,7 @@ public class LogMessageTypeEnumCriterion extends EnumCriterion<LogMessageType> {
 	public void setLogMessageType(LogMessageType logMessageType) {
 		LogMessageType old_logMessageType = this.logMessageType;
 		this.logMessageType = logMessageType;
-		propertyChangeSupport.firePropertyChange("logMessageType",
+		propertyChangeSupport().firePropertyChange("logMessageType",
 				old_logMessageType, logMessageType);
 	}
 

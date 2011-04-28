@@ -67,7 +67,7 @@ public abstract class SearchCriterion extends BaseBindable implements TreeRender
 	public void setDirection(Direction direction) {
 		Direction old_direction = this.direction;
 		this.direction = direction;
-		propertyChangeSupport.firePropertyChange("direction", old_direction,
+		propertyChangeSupport().firePropertyChange("direction", old_direction,
 				direction);
 	}
 

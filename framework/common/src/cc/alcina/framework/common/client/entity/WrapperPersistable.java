@@ -56,7 +56,7 @@ public class WrapperPersistable extends BaseBindable implements
 	 * !not! be read. For listeners on collection properties
 	 */
 	public void fireNullPropertyChange(String name) {
-		((MutablePropertyChangeSupport)this.propertyChangeSupport).fireNullPropertyChange(name);
+		((MutablePropertyChangeSupport)this.propertyChangeSupport()).fireNullPropertyChange(name);
 	}
 
 	public AccessLevel accessLevel() {

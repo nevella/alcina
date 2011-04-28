@@ -97,9 +97,6 @@ import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 @SuppressWarnings("unchecked")
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		implements CommonRemoteService {
-	/**
-	 * ibid
-	 */
 	private Logger logger;
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
@@ -286,7 +283,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Class<? extends DomainTransformRequestPersistent> dtrClass = cp
 					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
-			int committed=0;
+			int committed = 0;
 			for (DTRSimpleSerialWrapper wr : uncommitted) {
 				long clientInstanceId = wr.getClientInstanceId();
 				int requestId = (int) wr.getRequestId();
@@ -544,8 +541,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, locatorMap, persistTransforms, true, ignoreClientAuthMismatch,
-					transformExceptionPolicy);
+					request, locatorMap, persistTransforms, true,
+					ignoreClientAuthMismatch, transformExceptionPolicy);
 			return submitAndHandleTransforms(persistenceToken);
 		}
 	}

@@ -114,7 +114,7 @@ public class Bookmark extends DomainBaseVersionable implements
 	public void setChildren(Set<Bookmark> children) {
 		Set<Bookmark> old_children = this.children;
 		this.children = children;
-		propertyChangeSupport.firePropertyChange("children", old_children,
+		propertyChangeSupport().firePropertyChange("children", old_children,
 				children);
 	}
 
@@ -125,25 +125,25 @@ public class Bookmark extends DomainBaseVersionable implements
 	public void setParent(Bookmark parent) {
 		Bookmark old_parent = this.parent;
 		this.parent = parent;
-		propertyChangeSupport.firePropertyChange("parent", old_parent, parent);
+		propertyChangeSupport().firePropertyChange("parent", old_parent, parent);
 	}
 
 	public void setTitle(String title) {
 		String old_title = this.title;
 		this.title = title;
-		propertyChangeSupport.firePropertyChange("title", old_title, title);
+		propertyChangeSupport().firePropertyChange("title", old_title, title);
 	}
 
 	public void setUrl(String url) {
 		String old_url = this.url;
 		this.url = url;
-		propertyChangeSupport.firePropertyChange("url", old_url, url);
+		propertyChangeSupport().firePropertyChange("url", old_url, url);
 	}
 
 	public void setUser(AlcinaTemplateUser user) {
 		AlcinaTemplateUser old_user = this.user;
 		this.user = user;
-		propertyChangeSupport.firePropertyChange("user", old_user, user);
+		propertyChangeSupport().firePropertyChange("user", old_user, user);
 	}
 
 	@Override

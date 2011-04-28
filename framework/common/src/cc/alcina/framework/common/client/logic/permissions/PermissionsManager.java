@@ -450,14 +450,14 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public void setLoginState(LoginState loginState) {
 		LoginState old_loginState = this.loginState;
 		this.loginState = loginState;
-		propertyChangeSupport.firePropertyChange("loginState", old_loginState,
+		propertyChangeSupport().firePropertyChange("loginState", old_loginState,
 				loginState);
 	}
 
 	public void setOnlineState(OnlineState onlineState) {
 		OnlineState old_onlineState = this.onlineState;
 		this.onlineState = onlineState;
-		propertyChangeSupport.firePropertyChange("onlineState",
+		propertyChangeSupport().firePropertyChange("onlineState",
 				old_onlineState, onlineState);
 	}
 

@@ -96,7 +96,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 			boolean allowAdminInvalidObjectWrite) {
 		boolean old_allowAdminInvalidObjectWrite = this.allowAdminInvalidObjectWrite;
 		this.allowAdminInvalidObjectWrite = allowAdminInvalidObjectWrite;
-		propertyChangeSupport.firePropertyChange(
+		propertyChangeSupport().firePropertyChange(
 				"allowAdminInvalidObjectWrite",
 				old_allowAdminInvalidObjectWrite, allowAdminInvalidObjectWrite);
 	}
@@ -104,28 +104,28 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 	public void setAutoSave(boolean autoSave) {
 		boolean old_autoSave = this.autoSave;
 		this.autoSave = autoSave;
-		propertyChangeSupport.firePropertyChange("autoSave", old_autoSave,
+		propertyChangeSupport().firePropertyChange("autoSave", old_autoSave,
 				autoSave);
 	}
 
 	public void setFilterDelayMs(int filterDelayMs) {
 		int old_filterDelayMs = this.filterDelayMs;
 		this.filterDelayMs = filterDelayMs;
-		propertyChangeSupport.firePropertyChange("filterDelayMs",
+		propertyChangeSupport().firePropertyChange("filterDelayMs",
 				old_filterDelayMs, filterDelayMs);
 	}
 
 	public void setPersistentCss(String persistentCss) {
 		String old_persistentCss = this.persistentCss;
 		this.persistentCss = persistentCss;
-		propertyChangeSupport.firePropertyChange("persistentCss",
+		propertyChangeSupport().firePropertyChange("persistentCss",
 				old_persistentCss, persistentCss);
 	}
 
 	public void setTransientCss(String transientCss) {
 		String old_transientCss = this.transientCss;
 		this.transientCss = transientCss;
-		propertyChangeSupport.firePropertyChange("transientCss",
+		propertyChangeSupport().firePropertyChange("transientCss",
 				old_transientCss, transientCss);
 	}
 }

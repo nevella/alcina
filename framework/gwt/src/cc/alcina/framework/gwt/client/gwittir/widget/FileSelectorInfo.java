@@ -16,7 +16,7 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents implements
 	public void setFileName(String fileName) {
 		String old_fileName = this.fileName;
 		this.fileName = fileName;
-		propertyChangeSupport.firePropertyChange("fileName", old_fileName,
+		propertyChangeSupport().firePropertyChange("fileName", old_fileName,
 				fileName);
 	}
 
@@ -27,6 +27,6 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents implements
 	public void setBytes(byte[] bytes) {
 		byte[] old_bytes = this.bytes;
 		this.bytes = bytes;
-		propertyChangeSupport.firePropertyChange("bytes", old_bytes, bytes);
+		propertyChangeSupport().firePropertyChange("bytes", old_bytes, bytes);
 	}
 }

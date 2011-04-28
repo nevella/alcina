@@ -34,7 +34,7 @@ public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
 		if (soleCriterion != null) {
 			getCriteria().add(soleCriterion);
 		}
-		propertyChangeSupport.firePropertyChange("soleCriterion",
+		propertyChangeSupport().firePropertyChange("soleCriterion",
 				old_soleCriterion, soleCriterion);
 	}
 	@Override
