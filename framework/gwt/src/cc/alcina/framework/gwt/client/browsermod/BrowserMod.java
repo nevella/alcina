@@ -48,7 +48,7 @@ public class BrowserMod {
 	 *            The vertical offset in pixels
 	 */
 	public static native void scrollTo(final int x, final int y)/*-{
-		$wnd.scroll( x, y );
+		$wnd.scroll(x, y);
 	}-*/;
 
 	/**
@@ -99,9 +99,9 @@ public class BrowserMod {
 				&& getUserAgent().indexOf(
 						Constants.INTERNET_EXPLORER_8_USER_AGENT) != -1;
 	}
+
 	public static boolean isIEpre8() {
-		return isInternetExplorer()
-				&& !isIE8();
+		return isInternetExplorer() && !isIE8();
 	}
 
 	public static boolean isFireFox() {
@@ -148,8 +148,12 @@ public class BrowserMod {
 	public static String getOperatingSystem() {
 		final String userAgent = BrowserMod.getUserAgent();
 		final int leftParenthesis = userAgent.indexOf('(');
-		final int semiColon = userAgent.indexOf(';', leftParenthesis);
-		return userAgent.substring(leftParenthesis + 1, semiColon);
+		int semiColonOrRightParen = userAgent.indexOf(';', leftParenthesis);
+		int rightParenthesis = userAgent.indexOf(')', leftParenthesis);
+		if (semiColonOrRightParen == -1) {
+			semiColonOrRightParen = rightParenthesis;
+		}
+		return userAgent.substring(leftParenthesis + 1, semiColonOrRightParen);
 	}
 
 	/**
