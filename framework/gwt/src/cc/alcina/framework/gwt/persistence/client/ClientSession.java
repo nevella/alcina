@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.gwt.gears.client;
+package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

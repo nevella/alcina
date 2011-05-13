@@ -11,9 +11,11 @@ import cc.alcina.framework.gwt.client.logic.CallManager;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
-import cc.alcina.framework.gwt.gears.client.ClientHandshakeHelperWithLocalPersistence;
-import cc.alcina.framework.gwt.gears.client.LocalTransformPersistence;
-import cc.alcina.framework.gwt.gears.client.SerializedDomainLoader;
+import cc.alcina.framework.gwt.persistence.client.ClientHandshakeHelperWithLocalPersistence;
+import cc.alcina.framework.gwt.persistence.client.OfflineUtils;
+import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
+import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
+import cc.alcina.framework.gwt.persistence.client.SerializedDomainLoader;
 import cc.alcina.template.client.logic.AlcinaTemplateSerializedDomainLoader;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjectsSerializationHelper;
@@ -112,10 +114,25 @@ public class AlcinaTemplateHandshakeHelper extends
 
 	protected void hello() {
 		AsyncCallback<LoginResponse> callback = new AsyncCallback<LoginResponse>() {
-			public void onFailure(Throwable caught) {
-				if (!serializedDomainLoader.tryOffline(caught)) {
-					throw new WrappedRuntimeException(caught);
-				}
+			public void onFailure(final Throwable caught) {
+				PersistenceCallback<Boolean> tryOfflineHandler = new PersistenceCallback<Boolean>() {
+					@Override
+					public void onFailure(Throwable caught) {
+						throw new WrappedRuntimeException(caught);
+					}
+
+					@Override
+					public void onSuccess(Boolean result) {
+						if (!result) {
+							if (OfflineUtils.isInvalidModule(caught)) {
+								OfflineUtils.waitAndReload();
+							} else {
+								throw new WrappedRuntimeException(caught);
+							}
+						}
+					}
+				};
+				serializedDomainLoader.tryOffline(caught, tryOfflineHandler);
 			}
 
 			public void onSuccess(LoginResponse loginResponse) {
@@ -148,8 +165,8 @@ public class AlcinaTemplateHandshakeHelper extends
 				loadUserObjects("", null, LoginState.NOT_LOGGED_IN);
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().logout(
-				callback);
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+				.logout(callback);
 		CallManager.get().register(callback, "Logging out");
 	}
 

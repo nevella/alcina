@@ -1,5 +1,6 @@
 package cc.alcina.template.client;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.RegistryPermissionsExtension;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -12,15 +13,13 @@ import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider.ContentProviderSource;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
-import cc.alcina.framework.gwt.gears.client.DTESerializationPolicy;
-import cc.alcina.framework.gwt.gears.client.GearsTransformPersistence;
-import cc.alcina.framework.gwt.gears.client.LocalServerUtils;
-import cc.alcina.framework.gwt.gears.client.LocalTransformPersistence;
+import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
+import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
+import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
+import cc.alcina.framework.gwt.persistence.client.WebDatabaseTransformPersistence;
 import cc.alcina.template.client.logic.AlcinaTemplateContentProvider;
 import cc.alcina.template.cs.AlcinaTemplateHistory;
 
-import com.google.gwt.gears.client.localserver.ManagedResourceStore;
-import com.google.gwt.gears.offline.client.Offline;
 import com.google.gwt.user.client.History;
 
 public class AlcinaTemplateConfiguration extends ClientConfiguration {
@@ -32,13 +31,7 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 
 	@Override
 	protected void initAppCache() {
-		try {
-			final ManagedResourceStore managedResourceStore = Offline
-					.getManagedResourceStore();
-			LocalServerUtils.cacheHostPage();
-		} catch (Exception e) {
-			//
-		}
+		//html5 appcache doesn't require client init
 	}
 
 	@Override
@@ -49,9 +42,21 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 	@Override
 	protected void initLocalPersistence() {
 		LocalTransformPersistence
-				.registerLocalTransformPersistence(new GearsTransformPersistence());
+				.registerLocalTransformPersistence(new WebDatabaseTransformPersistence());
+		PersistenceCallback<Void> callback = new PersistenceCallback<Void>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				throw new WrappedRuntimeException(caught);
+			}
+
+			@Override
+			public void onSuccess(Void result) {
+				initServicesPostLocalPersistence();
+			}
+		};
 		LocalTransformPersistence.get().init(new DTESerializationPolicy(),
-				ClientLayerLocator.get().getCommitToStorageTransformListener());
+				ClientLayerLocator.get().getCommitToStorageTransformListener(),
+				callback);
 	}
 
 	@Override
@@ -77,7 +82,7 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 							+ "Getting started: <ul>"
 							+ "<li>Login as admin/admin</li>"
 							+ "<li>create a few bookmarks</li>"
-							+ "<li>and play with offline (if gears installed)"
+							+ "<li>and play with offline (if your browser supports html5 appcache and webdb)"
 							+ "<br> - by shutting down the app server, reloading the page "
 							+ " <br> - everything should work except setting user passwords "
 							+ " - and searching the domain transform log</li>"

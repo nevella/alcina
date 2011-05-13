@@ -26,7 +26,14 @@
 			<param-value>max-age=86400</param-value>
 		</init-param>
 	</filter>
-	
+	<servlet>
+		<servlet-name>AppCacheManifest</servlet-name>
+		<servlet-class>cc.alcina.framework.servlet.servlet.ApplicationCacheManifestServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>AppCacheManifest</servlet-name>
+		<url-pattern>*.manifest</url-pattern>
+	</servlet-mapping>
 	<filter-mapping>
 		<filter-name>ResponseHeaderFilter</filter-name>
 		<url-pattern>*.png</url-pattern>
@@ -58,14 +65,14 @@
 			<param-name>expires</param-name>
 			<param-value>0</param-value>
 		</init-param>
+		<init-param>
+			<param-name>Url-Regex</param-name>
+			<param-value>.+\.nocache\..+</param-value>
+		</init-param>
 	</filter>
 	<filter-mapping>
 		<filter-name>NoCacheResponseHeaderFilter</filter-name>
-		<url-pattern>*.nocache.js</url-pattern>
-	</filter-mapping>
-	<filter-mapping>
-		<filter-name>NoCacheResponseHeaderFilter</filter-name>
-		<url-pattern>*.nocache.manifest</url-pattern>
+		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 	<filter>
 		<filter-name>EternalCacheResponseHeaderFilter</filter-name>
@@ -74,13 +81,13 @@
 			<param-name>Cache-Control</param-name>
 			<param-value>max-age=8640000</param-value>
 		</init-param>
+		<init-param>
+			<param-name>Url-Regex</param-name>
+			<param-value>.+\.cache\..+</param-value>
+		</init-param>
 	</filter>
 	<filter-mapping>
 		<filter-name>EternalCacheResponseHeaderFilter</filter-name>
-		<url-pattern>*.cache.html</url-pattern>
-	</filter-mapping>
-	<filter-mapping>
-		<filter-name>EternalCacheResponseHeaderFilter</filter-name>
-		<url-pattern>*.cache.png</url-pattern>
+		<url-pattern>/*</url-pattern>
 	</filter-mapping>
 </web-app>

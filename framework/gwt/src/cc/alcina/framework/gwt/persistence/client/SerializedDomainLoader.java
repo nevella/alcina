@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.gears.client;
+package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,51 +36,67 @@ public abstract class SerializedDomainLoader {
 
 	public abstract DomainModelHolder createDummyModel();
 
-	public boolean loadSerializedTransformsForOnline() {
-		ClientMetricLogging.get().start(ONLINE_INITIAL_DESER_METRIC_KEY);
+	public void loadSerializedTransformsForOnline(
+			final PersistenceCallback<Boolean> persistenceCallback) {
 		LocalTransformPersistence localPersistence = LocalTransformPersistence
 				.get();
 		if (!localPersistence.isLocalStorageInstalled()) {
-			return false;
+			persistenceCallback.onSuccess(false);
 		}
-		try {
-			transforms = localPersistence
-					.openAvailableSessionTransformsForOfflineLoad(false, false);
-			if (!transforms.isEmpty()) {
-				DTRSimpleSerialWrapper wrapper = transforms.get(0);
-				DTRProtocolHandler handler = new DTRProtocolSerializer()
-						.getHandler(wrapper.getProtocolVersion());
-				if (handler instanceof GwtRpcProtocolHandler) {
-					LoadObjectsHolder loadObjectsHolder = replayRpc(wrapper
-							.getText());
-					ClientNofications no = ClientLayerLocator.get()
-							.notifications();
-					no.log("replayRpc - exists - "
-							+ (loadObjectsHolder != null));
-					no.log("replayRpc - domain objects exist - "
-							+ (loadObjectsHolder.getDomainObjects() != null));
-					no.log("replayRpc permutation (ser) - "
-							+ (loadObjectsHolder.getRequest()
-									.getTypeSignature()));
-					no.log("replayRpc permutation(app) - "
-							+ getTransformSignature());
-					no.log("replayRpc userid (ser)- " + (wrapper.getUserId()));
-					no.log("replayRpc userid (app)- "
-							+ PermissionsManager.get().getUserId());
-					if (loadObjectsHolder != null
-							&& loadObjectsHolder.getDomainObjects() != null
-							&& checkTransformSignature(loadObjectsHolder)
-							&& wrapper.getUserId() == PermissionsManager.get()
-									.getUserId()) {
-						setLoadObjectsHolder(loadObjectsHolder);
-						return true;
-					}
-				}
+		ClientMetricLogging.get().start(ONLINE_INITIAL_DESER_METRIC_KEY);
+		PersistenceCallback<List<DTRSimpleSerialWrapper>> afterOpenTransforms = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				persistenceCallback.onSuccess(false);
 			}
-		} catch (Exception e) {
-		}
-		ClientMetricLogging.get().end(ONLINE_INITIAL_DESER_METRIC_KEY);
-		return false;
+
+			@Override
+			public void onSuccess(List<DTRSimpleSerialWrapper> result) {
+				transforms = result;
+				try {
+					if (!transforms.isEmpty()) {
+						DTRSimpleSerialWrapper wrapper = transforms.get(0);
+						DTRProtocolHandler handler = new DTRProtocolSerializer()
+								.getHandler(wrapper.getProtocolVersion());
+						if (handler instanceof GwtRpcProtocolHandler) {
+							LoadObjectsHolder loadObjectsHolder = replayRpc(wrapper
+									.getText());
+							ClientNofications no = ClientLayerLocator.get()
+									.notifications();
+							no.log("replayRpc - exists - "
+									+ (loadObjectsHolder != null));
+							no.log("replayRpc - domain objects exist - "
+									+ (loadObjectsHolder.getDomainObjects() != null));
+							no.log("replayRpc permutation (ser) - "
+									+ (loadObjectsHolder.getRequest()
+											.getTypeSignature()));
+							no.log("replayRpc permutation(app) - "
+									+ getTransformSignature());
+							no.log("replayRpc userid (ser)- "
+									+ (wrapper.getUserId()));
+							no.log("replayRpc userid (app)- "
+									+ PermissionsManager.get().getUserId());
+							if (loadObjectsHolder != null
+									&& loadObjectsHolder.getDomainObjects() != null
+									&& checkTransformSignature(loadObjectsHolder)
+									&& wrapper.getUserId() == PermissionsManager
+											.get().getUserId()) {
+								setLoadObjectsHolder(loadObjectsHolder);
+								persistenceCallback.onSuccess(true);
+								return;
+							}
+						}
+					}
+				} catch (Exception e) {
+				} finally {
+					ClientMetricLogging.get().end(
+							ONLINE_INITIAL_DESER_METRIC_KEY);
+				}
+				persistenceCallback.onSuccess(false);
+			}
+		};
+		localPersistence.openAvailableSessionTransformsForOfflineLoad(false,
+				false, afterOpenTransforms);
 	}
 
 	protected abstract String getTransformSignature();
@@ -88,7 +104,8 @@ public abstract class SerializedDomainLoader {
 	protected abstract boolean checkTransformSignature(
 			LoadObjectsHolder loadObjectsHolder);
 
-	public abstract boolean tryOffline(final Throwable t);
+	public abstract void tryOffline(final Throwable t,
+			PersistenceCallback<Boolean> persistenceCallback);
 
 	/*
 	 * at most two gwtrpc wrappers - at the top of the list
@@ -162,39 +179,61 @@ public abstract class SerializedDomainLoader {
 				&& localPersistence.isLocalStorageInstalled();
 	}
 
-	protected boolean tryOfflinePass(Throwable t, boolean notify) {
-		LocalTransformPersistence localPersistence = LocalTransformPersistence
+	protected void tryOfflinePass(Throwable t, boolean notify,
+			final PersistenceCallback<Boolean> persistenceCallback) {
+		final LocalTransformPersistence localPersistence = LocalTransformPersistence
 				.get();
 		if (!shouldTryOffline(t, localPersistence)) {
-			return false;
+			persistenceCallback.onSuccess(false);
 		}
 		ClientMetricLogging.get().start(OFFLINE_LOAD_METRIC_KEY);
 		PermissionsManager.get().setOnlineState(OnlineState.OFFLINE);
 		TransformManager tm = TransformManager.get();
 		tm.registerDomainObjectsInHolder(createDummyModel());
-		try {
-			transforms = localPersistence
-					.openAvailableSessionTransformsForOfflineLoad(notify);
-			if (transforms.isEmpty()) {
-				if (ClientLayerLocator.get().getClientHandshakeHelper()
-						.permitsOfflineWithEmptyTransforms()) {
-					transforms = localPersistence
-							.openAvailableSessionTransformsForOfflineLoadNeverOnline();
-				}
+		final PersistenceCallback<List<DTRSimpleSerialWrapper>> replayTransformsCallback = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				ClientMetricLogging.get().end(OFFLINE_LOAD_METRIC_KEY);
+				persistenceCallback.onFailure(caught);
 			}
-			if (!transforms.isEmpty()
-					|| ClientLayerLocator.get().getClientHandshakeHelper()
+
+			@Override
+			public void onSuccess(List<DTRSimpleSerialWrapper> result) {
+				if (!transforms.isEmpty()
+						|| ClientLayerLocator.get().getClientHandshakeHelper()
+								.permitsOfflineWithEmptyTransforms()) {
+					if (hasGwtRpcTransforms()) {
+						displayReplayRpcNotification(false);
+					}
+					replayAfterPossibleDelay();
+				}
+				persistenceCallback.onSuccess(true);
+			}
+		};
+		PersistenceCallback<List<DTRSimpleSerialWrapper>> afterOpenForOffline = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				ClientMetricLogging.get().end(OFFLINE_LOAD_METRIC_KEY);
+				persistenceCallback.onFailure(caught);
+			}
+
+			@Override
+			public void onSuccess(List<DTRSimpleSerialWrapper> result) {
+				transforms = result;
+				if (transforms.isEmpty()) {
+					if (ClientLayerLocator.get().getClientHandshakeHelper()
 							.permitsOfflineWithEmptyTransforms()) {
-				if (hasGwtRpcTransforms()) {
-					displayReplayRpcNotification(false);
+						localPersistence
+								.openAvailableSessionTransformsForOfflineLoadNeverOnline(replayTransformsCallback);
+					}
+				} else {
+					replayTransformsCallback.onSuccess(result);
 				}
-				replayAfterPossibleDelay();
+				persistenceCallback.onSuccess(true);
 			}
-		} catch (Exception e) {
-			ClientMetricLogging.get().end(OFFLINE_LOAD_METRIC_KEY);
-			throw new WrappedRuntimeException(e);
-		}
-		return true;
+		};
+		localPersistence.openAvailableSessionTransformsForOfflineLoad(notify,
+				afterOpenForOffline);
 	}
 
 	protected void replaySequence() {

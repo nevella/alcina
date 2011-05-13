@@ -9,8 +9,6 @@ import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.gears.client.database.DatabaseException;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 
 public class AlcinaTemplateExceptionHandler extends ClientExceptionHandler {
@@ -21,9 +19,6 @@ public class AlcinaTemplateExceptionHandler extends ClientExceptionHandler {
 					"error-message-offline",
 					"Unable to perform action - offline");
 			MessageManager.get().icyMessage(message);
-			return;
-		}
-		if (checkUnexplainedGearsException(e)) {
 			return;
 		}
 		GWT.log("Uncaught exception escaped", e);
@@ -40,25 +35,5 @@ public class AlcinaTemplateExceptionHandler extends ClientExceptionHandler {
 		}
 	}
 
-	private boolean checkUnexplainedGearsException(Throwable e) {
-		if (e instanceof DatabaseException) {
-			databaseExceptionMaxCount--;
-		}
-		if (databaseExceptionMaxCount <= 0) {
-			if (databaseExceptionMaxCount == 0) {
-				String message = TextProvider.get().getUiObjectText(
-						getClass(),
-						"error-message-too-many-gears-errors",
-						"Too many unexpected Google Gears"
-								+ " errors - disabling offline support"
-								+ " for this session");
-				Window.alert(message);
-			}
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	private int databaseExceptionMaxCount = 2;
+	
 }

@@ -19,13 +19,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector.HasAnnotationCallback;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
+import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -96,8 +97,7 @@ public class ClientTransformManager extends TransformManager {
 			dtr.getEvents().addAll(creates);
 			dtr.getEvents().addAll(mods);
 			dtr.setClientInstance(clientInstance);
-			dtr
-					.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
+			dtr.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
 			getPersistableTransformListener().persistableTransform(dtr);
 		}
 
@@ -174,39 +174,38 @@ public class ClientTransformManager extends TransformManager {
 			AsyncCallback<List<ObjectCacheItemResult>> innerCallback = new AsyncCallback<List<ObjectCacheItemResult>>() {
 				public void onSuccess(List<ObjectCacheItemResult> result) {
 					long t2 = System.currentTimeMillis();
-					ClientLayerLocator.get().notifications().log(
-							"Cache load/deser.: " + (t2 - t1));
-					cleanup();
+					ClientLayerLocator.get().notifications()
+							.log("Cache load/deser.: " + (t2 - t1));
+					crd.hide();
 					MutablePropertyChangeSupport.setMuteAll(true);
+					ClientTransformManager.PersistableTransformListener pl = getPersistableTransformListener();
+					DomainTransformRequest dtr = null;
+					if (pl != null) {
+						dtr = new DomainTransformRequest();
+						dtr.setClientInstance(ClientLayerLocator.get()
+								.getClientInstance());
+						dtr.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
+					}
 					for (ObjectCacheItemResult item : result) {
-						// ObjectRef ref = item.getItemSpec().getObjectRef();
-						// HasIdAndLocalId hili = getObject(ref.getClassRef()
-						// .getRefClass(), ref.getId(), ref.getLocalId());
-						// PlatformLocator.get().propertyAccessor()
-						// .setPropertyValue(hili,
-						// item.getItemSpec().getPropertyName(),
-						// item.getResult());
-						// TransformManager.this.getDomainObjects()
-						// .registerObjects(item.getResult());
 						replayRemoteEvents(item.getTransforms(), fireTransforms);
-						ClientTransformManager.PersistableTransformListener pl = getPersistableTransformListener();
 						if (pl != null) {
-							DomainTransformRequest dtr = new DomainTransformRequest();
-							dtr.setEvents(item.getTransforms());
-							dtr.setClientInstance(ClientLayerLocator.get()
-									.getClientInstance());
-							dtr
-									.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
-							pl.persistableTransform(dtr);
+							dtr.getEvents().addAll(item.getTransforms());
 						}
+					}
+					if (pl != null) {
+						// ignore failure, since we at least have a (currently)
+						// functioning client, even if persistence is mczapped
+						pl.persistableTransform(dtr);
 					}
 					MutablePropertyChangeSupport.setMuteAll(false);
 					Object[] spec2 = new Object[4];
 					System.arraycopy(spec, 0, spec2, 0, 3);
 					spec2[3] = true;
 					lkp.put(spec2);
-					ClientLayerLocator.get().notifications().log(
-							"Cache dte replay: "
+					ClientLayerLocator
+							.get()
+							.notifications()
+							.log("Cache dte replay: "
 									+ (System.currentTimeMillis() - t2));
 					callback.onSuccess(result);
 				}
@@ -223,8 +222,8 @@ public class ClientTransformManager extends TransformManager {
 			List<ObjectCacheItemSpec> specs = new ArrayList<ObjectCacheItemSpec>();
 			specs.add(new ObjectCacheItemSpec(hili, propertyName));
 			crd.show();
-			ClientLayerLocator.get().commonRemoteServiceAsyncInstance().cache(specs,
-					innerCallback);
+			ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+					.cache(specs, innerCallback);
 		}
 
 		public void clearUserObjects() {
@@ -241,8 +240,8 @@ public class ClientTransformManager extends TransformManager {
 				if (dte.getTransformType() == TransformType.CREATE_OBJECT
 						&& dte.getObjectId() == 0
 						&& dte.getObjectLocalId() != 0) {
-					localIdCounter = Math.max(localIdCounter, dte
-							.getObjectLocalId());
+					localIdCounter = Math.max(localIdCounter,
+							dte.getObjectLocalId());
 				}
 				if (fireTransforms) {
 					fireDomainTransform(dte);
@@ -304,8 +303,8 @@ public class ClientTransformManager extends TransformManager {
 						.createDomainObject(pr.getPropertyType())
 						: TransformManager.get().createProvisionalObject(
 								pr.getPropertyType());
-				CommonLocator.get().propertyAccessor().setPropertyValue(
-						domainObject, propertyName, newObj);
+				CommonLocator.get().propertyAccessor()
+						.setPropertyValue(domainObject, propertyName, newObj);
 				children.add(newObj);
 				children.addAll(prepareObject(newObj, autoSave, afterCreation,
 						forEditing));
@@ -330,7 +329,9 @@ public class ClientTransformManager extends TransformManager {
 					} else {
 						HasIdAndLocalId clonedValue = (HasIdAndLocalId) new CloneHelper()
 								.shallowishBeanClone(currentValue);
-						CommonLocator.get().propertyAccessor()
+						CommonLocator
+								.get()
+								.propertyAccessor()
 								.setPropertyValue(domainObject, propertyName,
 										clonedValue);
 						children.add(clonedValue);
@@ -382,7 +383,9 @@ public class ClientTransformManager extends TransformManager {
 							ClientPropertyReflector propertyReflector) {
 						WrapperPersistable obj = (WrapperPersistable) propertyReflector
 								.getPropertyValue(referrer);
-						CommonLocator.get().propertyAccessor()
+						CommonLocator
+								.get()
+								.propertyAccessor()
 								.setPropertyValue(referrer,
 										annotation.toStringPropertyName(),
 										obj.toString());
@@ -421,13 +424,15 @@ public class ClientTransformManager extends TransformManager {
 					}
 
 					public void onSuccess(Long result) {
-						CommonLocator.get().propertyAccessor()
+						CommonLocator
+								.get()
+								.propertyAccessor()
 								.setPropertyValue(finalTarget,
 										annotation.idPropertyName(), result);
 					}
 				};
-				ClientLayerLocator.get().commonRemoteServiceAsyncInstance().persist(
-						persistableObject, savedCallback);
+				ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+						.persist(persistableObject, savedCallback);
 			}
 		};
 		if (!onlyLocalGraph) {

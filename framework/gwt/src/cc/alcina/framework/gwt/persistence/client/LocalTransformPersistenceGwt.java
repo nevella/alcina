@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.gears.client;
+package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.List;
 

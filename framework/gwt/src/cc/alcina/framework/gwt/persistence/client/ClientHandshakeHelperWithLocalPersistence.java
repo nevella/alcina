@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.gears.client;
+package cc.alcina.framework.gwt.persistence.client;
 
 import com.google.gwt.core.client.GWT;
 
@@ -25,7 +25,7 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 
 	@Override
 	protected void locallyPersistDomainModelAndReplayPostLoadTransforms(
-			LoginState loginState) {
+			final LoginState loginState) {
 		LocalTransformPersistence localPersistence = LocalTransformPersistence
 				.get();
 		try {
@@ -36,10 +36,10 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 					&& loginState == LoginState.LOGGED_IN) {
 				// set before
 				ClientSession.get().setInitialObjectsPersisted(true);
-				
 				if (supportsRpcPersistence()) {
 					if (mixedHelper != null) {
 						if (mixedHelper.isUseMixedObjectLoadSequence()) {
+							// synchronous
 							ClientMetricLogging.get()
 									.start("replay-transforms");
 							TransformManager.get()
@@ -52,8 +52,29 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 							ClientMetricLogging.get().end("replay-transforms");
 						} else {
 							ClientMetricLogging.get().start("persist-rpc");
-							mixedHelper.persistGwtObjectGraph();
-							ClientMetricLogging.get().end("persist-rpc");
+							PersistenceCallback<Void> callback=new PersistenceCallback<Void>(){
+
+								@Override
+								public void onFailure(Throwable caught) {
+									cleanup();
+									ClientSession.get().setInitialObjectsPersisted(false);
+									throw new WrappedRuntimeException(caught);
+								}
+
+								@Override
+								public void onSuccess(Void result) {
+									cleanup();
+									afterLocalPersistenceAndReplay(loginState);
+									
+								}
+								void cleanup(){
+									ClientMetricLogging.get().end("persist-rpc");
+								}
+								
+							};
+							mixedHelper.persistGwtObjectGraph(callback);
+							return;
+							
 						}
 						mixedHelper = null;
 					}
@@ -67,6 +88,7 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 			ClientSession.get().setInitialObjectsPersisted(false);
 			throw new WrappedRuntimeException(e);
 		}
+		afterLocalPersistenceAndReplay(loginState);
 	}
 
 	protected abstract ClientInstance createClientInstance(
@@ -83,5 +105,4 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 	public LoadObjectsHolder replayRpc(String text) {
 		throw new UnsupportedOperationException();
 	}
-
 }

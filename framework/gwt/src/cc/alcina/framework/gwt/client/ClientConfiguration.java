@@ -23,6 +23,9 @@ public class ClientConfiguration {
 		initAppCache();
 		initCommonClient();
 		initLocalPersistence();
+		
+	}
+	protected void initServicesPostLocalPersistence() {
 		initContentProvider();
 		initImageProvider();
 		initHandshakeHelper();
@@ -41,6 +44,7 @@ public class ClientConfiguration {
 	}
 
 	protected void initLocalPersistence() {
+		initServicesPostLocalPersistence();
 	}
 
 	protected void extraConfiguration() {

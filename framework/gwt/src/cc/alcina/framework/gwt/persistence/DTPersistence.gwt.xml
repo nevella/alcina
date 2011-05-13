@@ -1,5 +1,5 @@
 <module>
-	<inherits name='com.google.gwt.gears.Gears' />
+	<inherits name="com.google.code.gwt.database.Html5Database" />
 	<public path="public" />
 	<source path="client" />
 </module>

@@ -22,5 +22,6 @@
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-annotations.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-javaee.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core.jar" sourcepath="/jboss-hibernate-core/src/main/java"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwt-html5-database.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

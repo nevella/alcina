@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.gears.client;
+package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -41,21 +41,45 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 		}.schedule(100);
 	}
 
-	public boolean tryOffline(final Throwable t) {
-		if (!tryOfflinePass(t, false)) {
-			return false;
-		}
-		if (transforms.isEmpty() && !ClientSession.get().isSoleOpenTab()) {
-			// double-check - easier at this level than with a stack of
-			// callbacks - well...maybe. easier for me anyway.
-			new Timer() {
-				@Override
-				public void run() {
-					tryOfflinePass(t, true);
+	@Override
+	public void tryOffline(final Throwable t,
+			final PersistenceCallback<Boolean> persistenceCallback) {
+		final PersistenceCallback<Boolean> secondPassCallback = new PersistenceCallback<Boolean>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				persistenceCallback.onFailure(caught);
+			}
+
+			@Override
+			public void onSuccess(Boolean result) {
+				// TODO Auto-generated method stub
+			}
+		};
+		PersistenceCallback<Boolean> firstPassCallback = new PersistenceCallback<Boolean>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				persistenceCallback.onFailure(caught);
+			}
+
+			@Override
+			public void onSuccess(Boolean result) {
+				if (!result) {
+					persistenceCallback.onSuccess(false);
 				}
-			}.schedule(ClientSession.KEEP_ALIVE_TIMER + 1000);
-		}
-		return true;
+				if (transforms.isEmpty()
+						&& !ClientSession.get().isSoleOpenTab()) {
+					// double-check - easier at this level than with a stack of
+					// callbacks - well...maybe. easier for me anyway.
+					new Timer() {
+						@Override
+						public void run() {
+							tryOfflinePass(t, true, secondPassCallback);
+						}
+					}.schedule(ClientSession.KEEP_ALIVE_TIMER + 1000);
+				}
+			}
+		};
+		tryOfflinePass(t, false, firstPassCallback);
 	}
 
 	protected boolean checkTransformSignature(

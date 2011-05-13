@@ -11,8 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
-package cc.alcina.framework.gwt.gears.client;
+package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.List;
 
@@ -42,8 +41,7 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author Nick Reddel
  */
-
- public class FromOfflineConflictResolver {
+public class FromOfflineConflictResolver {
 	private Throwable caught;
 
 	private GlassDialogBox dialog;
@@ -56,8 +54,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 	public void resolve(List<DTRSimpleSerialWrapper> uncommitted,
 			Throwable caught,
-			LocalTransformPersistence localTransformPersistence,
-			Callback cb) {
+			LocalTransformPersistence localTransformPersistence, Callback cb) {
 		this.uncommitted = uncommitted;
 		this.caught = caught;
 		this.localTransformPersistence = localTransformPersistence;
@@ -95,7 +92,8 @@ import com.google.gwt.user.client.ui.Widget;
 					FromOfflineConflictResolver.class, "discard-changes-link",
 					"Discard changes"), this);
 			exitLink = new BlockLink(TextProvider.get().getUiObjectText(
-					FromOfflineConflictResolver.class, "exit-link", "Exit"), this);
+					FromOfflineConflictResolver.class, "exit-link", "Exit"),
+					this);
 			displayLink.removeStyleName("gwt-Hyperlink");
 			discardLink.removeStyleName("gwt-Hyperlink");
 			exitLink.removeStyleName("gwt-Hyperlink");
@@ -146,7 +144,6 @@ import com.google.gwt.user.client.ui.Widget;
 			copy();
 		}
 
-
 		protected native void copy() /*-{
 			$doc.execCommand("Copy");
 		}-*/;
@@ -159,12 +156,14 @@ import com.google.gwt.user.client.ui.Widget;
 			}
 			if (sender == discardLink) {
 				if (Window.confirm(TextProvider.get().getUiObjectText(
-						FromOfflineConflictResolver.class, "discard-confirmation",
+						FromOfflineConflictResolver.class,
+						"discard-confirmation",
 						"Are you sure you want to discard your changes?"))) {
-					localTransformPersistence.clearAllPersisted();
+					localTransformPersistence
+							.clearAllPersisted(PersistenceCallback.VOID_CALLBACK);
 					Window.alert(TextProvider.get().getUiObjectText(
-							FromOfflineConflictResolver.class, "discard-complete",
-							"Changes discarded"));
+							FromOfflineConflictResolver.class,
+							"discard-complete", "Changes discarded"));
 					dialog.hide();
 					completionCallback.callback(null);
 				}

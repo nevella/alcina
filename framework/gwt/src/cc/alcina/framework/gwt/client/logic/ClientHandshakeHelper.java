@@ -96,14 +96,20 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 		
 		PermissionsManager.get().setUser(objects.getCurrentUser());
 		ClientLayerLocator.get().setDomainModelHolder(objects);
+		
 		if (!TransformManager.get().isReplayingRemoteEvent()) {
 			ClientMetricLogging.get().start("register-domain");
 			TransformManager.get().registerDomainObjectsInHolder(objects);
 			ClientMetricLogging.get().end("register-domain");
 			if (PermissionsManager.get().getOnlineState() != OnlineState.OFFLINE) {
 				locallyPersistDomainModelAndReplayPostLoadTransforms(loginState);
+				return;
 			}
 		}
+		afterLocalPersistenceAndReplay(loginState);
+	}
+
+	public void afterLocalPersistenceAndReplay(LoginState loginState) {
 		registerObjectsPostDomainLoad();
 		PermissionsManager.get().setLoginState(loginState);
 	}
@@ -122,6 +128,7 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 	 */
 	protected void locallyPersistDomainModelAndReplayPostLoadTransforms(
 			LoginState loginState) {
+		afterLocalPersistenceAndReplay(loginState);
 	}
 
 	protected abstract void afterDomainModelRegistration();
