@@ -5,7 +5,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/alcina"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="lib" path="/alcina/lib/framework/gwt/gwittir-trunk.jar"/>
-	<classpathentry kind="lib" path="/alcina/lib/framework/gwt/gwt-gears-noredist.jar"/>
 	<classpathentry kind="lib" path="/alcina/lib/framework/gwt/gwt-user.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>

@@ -14,7 +14,7 @@
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/jsr173_api.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/xml/bind/jsr173_api/1.0/jsr173_api-1.0.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/log4j-1.2.6.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/log4j/log4j/1.2.6/log4j-1.2.6.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/xercesImpl_2.9.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/xerces/xercesImpl/2.9.1/xercesImpl-2.9.1.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-gears-noredist.jar" tocUrl="" url="http://gwt-google-apis.googlecode.com/files/gwt-gears-1.3.0.zip" extractFileName="gwt-gears-noredist.jar" containerPath="gwt-gears-1.3.0.zip" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-html5-database.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwt-html5-database.jar"/>
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwittir-trunk.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwittir-trunk.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="servlet/servlet-api-2.3.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/servlet/servlet-api/2.3/servlet-api-2.3.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwtx-1.5.2.jar" tocUrl="" url="http://gwtx.googlecode.com/files/gwtx-1.5.2.jar" />
