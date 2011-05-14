@@ -150,7 +150,7 @@ public class WebDatabaseTransformPersistence extends
 		final LocalTransformPersistence listener = this;
 		try {
 			db = Database.openDatabase("alcina-transform-persistence", "1.0",
-					"Alcina Transforms", 20000000);
+					"Alcina Transforms", 5000000);
 		} catch (Exception e) {
 			// squelch - no gears
 		}
