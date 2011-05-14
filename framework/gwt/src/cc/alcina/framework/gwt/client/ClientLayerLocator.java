@@ -60,6 +60,7 @@ public class ClientLayerLocator {
 	private ClientInstance clientInstance;
 
 	private ClientExceptionHandler exceptionHandler;
+	
 
 	private ClientLayerLocator() {
 		super();

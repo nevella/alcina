@@ -45,12 +45,18 @@ public class MixedGwtTransformHelper {
 					cleanup();
 					ClientLayerLocator.get().notifications()
 							.log(e.getMessage());
+					if(PersistenceExceptionInterceptor.get()
+							.checkTerminateAfterPossiblePersistenceException(e)){
+						return;
+					}
 					e.printStackTrace();
 					if (e instanceof MixedGwtLoadException
 							&& ((MixedGwtLoadException) e).isWipeOffline()) {
 						LocalTransformPersistence.get().clearPersistedClient(
 								null, PersistenceCallback.VOID_CALLBACK);
 					}
+					onLoadCallback.onSuccess((T) getDomainLoader()
+							.getLoadObjectsHolder().getDomainObjects());
 				}
 
 				@Override
