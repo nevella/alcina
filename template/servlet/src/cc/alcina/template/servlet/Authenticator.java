@@ -13,9 +13,8 @@ import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 class Authenticator {
-	protected AlcinaTemplateUser processAuthenticatedLogin(
-			LoginResponse lrb, String userName)
-			throws AuthenticationException {
+	protected AlcinaTemplateUser processAuthenticatedLogin(LoginResponse lrb,
+			String userName) throws AuthenticationException {
 		CommonPersistenceLocal up = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
 		AlcinaTemplateUser user = (AlcinaTemplateUser) up
@@ -31,15 +30,19 @@ class Authenticator {
 	public IUser createUser(String userName, String password) {
 		CommonPersistenceLocal up = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
-		((ThreadedPermissionsManager) PermissionsManager.get())
-				.pushSystemUser();
-		AlcinaTemplateUser user = new AlcinaTemplateUser();
-		user.setUserName(userName);
-		user.setSalt(userName);
-		user.setPassword(UnixCrypt.crypt(user.getSalt(), password));
-		user = (AlcinaTemplateUser) up.mergeUser(user);
-		((ThreadedPermissionsManager) PermissionsManager.get()).popSystemUser();
-		return user;
+		try {
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			AlcinaTemplateUser user = new AlcinaTemplateUser();
+			user.setUserName(userName);
+			user.setSalt(userName);
+			user.setPassword(UnixCrypt.crypt(user.getSalt(), password));
+			user = (AlcinaTemplateUser) up.mergeUser(user);
+			((ThreadedPermissionsManager) PermissionsManager.get())
+					.popSystemUser();
+			return user;
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+		}
 	}
 
 	public LoginResponse authenticate(LoginBean loginBean)

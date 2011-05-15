@@ -57,7 +57,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		CommonPersistenceLocal up = EntityLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
 		IUser systemUser = up.getSystemUser(true);
-		root = systemUser.equals(popUser);
+		root = systemUser.equals(popUser)&&!userStack.isEmpty();
 		return popUser;
 	}
 

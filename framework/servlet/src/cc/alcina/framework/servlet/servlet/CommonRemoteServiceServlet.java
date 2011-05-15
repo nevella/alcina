@@ -460,14 +460,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 		request.setEvents(items);
 		try {
-			((ThreadedPermissionsManager) PermissionsManager.get())
-					.pushSystemUser();
+			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, map, persistTransforms, false, false,
 					transformExceptionPolicy);
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
-			PermissionsManager.get().popUser();
+			ThreadedPermissionsManager.cast().popSystemUser();
 		}
 	}
 

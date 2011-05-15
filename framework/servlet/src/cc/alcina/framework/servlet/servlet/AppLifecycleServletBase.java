@@ -41,13 +41,16 @@ import cc.alcina.framework.servlet.ServletLayerRegistry;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void createServletTransformClientInstance() {
-		ThreadedPermissionsManager.cast().pushSystemUser();
-		ClientInstance serverAsClientInstance = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence()
-				.createClientInstance();
-		CommonRemoteServiceServletSupport.get().setServerAsClientInstance(
-				serverAsClientInstance);
-		PermissionsManager.get().popUser();
+		try {
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			ClientInstance serverAsClientInstance = ServletLayerLocator.get()
+					.commonPersistenceProvider().getCommonPersistence()
+					.createClientInstance();
+			CommonRemoteServiceServletSupport.get().setServerAsClientInstance(
+					serverAsClientInstance);
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+		}
 	}
 
 	protected abstract void initNames();
@@ -190,8 +193,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				.getMainLoggerName());
 		try {
 			Map<String, Date> classes = new ServletClasspathScanner("*", true,
-					false, logger, Registry.MARKER_RESOURCE, Arrays
-							.asList(new String[] {})).getClasses();
+					false, logger, Registry.MARKER_RESOURCE,
+					Arrays.asList(new String[] {})).getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					ServletLayerRegistry.get());
 		} catch (Exception e) {
