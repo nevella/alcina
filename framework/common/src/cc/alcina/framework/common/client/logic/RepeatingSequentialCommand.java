@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -46,6 +48,8 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 
 	private boolean synchronous = false;
 
+	public static boolean DEBUG = false;
+
 	@Override
 	public boolean execute() {
 		if (isSynchronous()) {
@@ -55,7 +59,18 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 			return false;
 		}
 		try {
+			long t1 = System.currentTimeMillis();
 			boolean result = tasks.get(0).execute();
+			if (DEBUG) {
+				long t2 = System.currentTimeMillis();
+				if (t2 - t1 > 100) {
+					ClientLayerLocator
+							.get()
+							.notifications()
+							.log(CommonUtils.formatJ("Long task: %s - %sms",
+									tasks.get(0).getClass().getName(), t2 - t1));
+				}
+			}
 			if (!result) {
 				tasks.remove(0);
 			}

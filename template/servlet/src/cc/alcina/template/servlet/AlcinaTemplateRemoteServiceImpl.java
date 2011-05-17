@@ -84,8 +84,8 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		if (!lrb.isOk()) {
 			EntityLayerLocator.get().log(
 					LogMessageType.INVALID_AUTHENTICATION,
-					String.format("Invalid login: %s %s", loginBean
-							.getUserName(), loginBean.getPassword()));
+					String.format("Invalid login: %s (password obscured)",
+							loginBean.getUserName()));
 		} else {
 		}
 		return lrb;

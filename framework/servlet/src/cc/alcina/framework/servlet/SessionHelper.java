@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 
 /**
@@ -84,6 +85,7 @@ public class SessionHelper {
 	}
 
 	private static void resetPermissions() {
+		ThreadedPermissionsManager.cast().reset();
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
 		CommonPersistenceLocal up = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();

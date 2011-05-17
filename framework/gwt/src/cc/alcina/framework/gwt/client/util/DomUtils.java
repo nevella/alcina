@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -19,6 +20,8 @@ import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.ui.RootPanel;
 
 public class DomUtils {
+	private static final String DOM_XPATH_MAP = "dom-xpath-map";
+
 	private static final String TEXT_MARKER = "TEXT()";
 
 	private boolean useXpathMap = true;
@@ -94,11 +97,11 @@ public class DomUtils {
 				ClientNofications notifications = ClientLayerLocator.get()
 						.notifications();
 				if (notifications != null) {
-					notifications.metricLogStart("dom-xpath-map");
+					notifications.metricLogStart(DOM_XPATH_MAP);
 				}
 				generateMap((Element) container, "", xpathMap);
 				if (notifications != null) {
-					notifications.metricLogEnd("dom-xpath-map");
+					notifications.metricLogEnd(DOM_XPATH_MAP);
 				}
 			}
 			Node node = xpathMap.get(ucXpath);
@@ -241,6 +244,7 @@ public class DomUtils {
 			}
 		}
 	}
+
 	public static String toSimpleXPointer(Node n) {
 		List<String> parts = new ArrayList<String>();
 		while (n != null) {
@@ -282,6 +286,7 @@ public class DomUtils {
 		Collections.reverse(parts);
 		return CommonUtils.join(parts, "/");
 	}
+
 	public void dumpMap() {
 		xpathMap = new LinkedHashMap<String, Node>();
 		generateMap((Element) lastContainer, "", xpathMap);
@@ -376,6 +381,102 @@ public class DomUtils {
 			this.cssClassName = cssClassName;
 			this.styleProperties = styleProperties;
 			this.properties = properties;
+		}
+	}
+
+	public void resetCache(Node container) {
+		if (useXpathMap) {
+			if (lastContainer != container) {
+				lastContainer = container;
+				xpathMap = new HashMap<String, Node>();
+				ClientNofications notifications = ClientLayerLocator.get()
+						.notifications();
+				if (notifications != null) {
+					notifications.metricLogStart(DOM_XPATH_MAP);
+				}
+				itrStack = new Stack<DomUtils.XpathMapPoint>();
+				itrStack.add(new XpathMapPoint((Element) container, ""));
+			}
+		}
+	}
+
+	Stack<XpathMapPoint> itrStack = null;
+
+	class XpathMapPoint {
+		Element elt;
+
+		public XpathMapPoint(Element elt, String prefix) {
+			this.elt = elt;
+			this.prefix = prefix;
+		}
+
+		String prefix;
+	}
+
+	public boolean iterateCache(int numberIterations) {
+		for (int i = 0; i < numberIterations && !itrStack.isEmpty(); i++) {
+			generateMapItr(itrStack.pop());
+		}
+		if (itrStack.isEmpty()) {
+			ClientNofications notifications = ClientLayerLocator.get()
+					.notifications();
+			if (notifications != null) {
+				notifications.metricLogEnd(DOM_XPATH_MAP);
+			}
+		}
+		return !itrStack.isEmpty();
+	}
+
+	public void generateMapItr(XpathMapPoint point) {
+		Map<String, Integer> total = new HashMap<String, Integer>();
+		Map<String, Integer> current = new HashMap<String, Integer>();
+		Element elt = point.elt;
+		String prefix = point.prefix;
+		NodeList<Node> nodes = elt.getChildNodes();
+		if (prefix.length() <= 1) {
+			xpathMap.put(prefix, elt);
+		}
+		int length = nodes.getLength();
+		for (int i = 0; i < length; i++) {
+			Node node = nodes.getItem(i);
+			short nodeType = node.getNodeType();
+			if (nodeType == Node.TEXT_NODE || nodeType == Node.ELEMENT_NODE) {
+				String marker = nodeType == Node.TEXT_NODE ? DomUtils.TEXT_MARKER
+						: node.getNodeName().toUpperCase();
+				int c = total.containsKey(marker) ? total.get(marker) : 0;
+				total.put(marker, c + 1);
+			}
+		}
+		for (int i = 0; i < length; i++) {
+			Node node = nodes.getItem(i);
+			short nodeType = node.getNodeType();
+			if (nodeType == Node.TEXT_NODE || nodeType == Node.ELEMENT_NODE) {
+				String marker = nodeType == Node.TEXT_NODE ? DomUtils.TEXT_MARKER
+						: node.getNodeName().toUpperCase();
+				String post = marker;
+				if (total.get(marker) != 1) {
+					int c = current.containsKey(marker) ? current.get(marker)
+							: 0;
+					current.put(marker, ++c);
+					post += "[" + c + "]";
+				}
+				String xp = prefix + post;
+				if (debug && !xp.contains("TBODY")) {
+					System.out.println(xp);
+				}
+				xpathMap.put(xp, node);
+				if (nodeType == Node.ELEMENT_NODE) {
+					itrStack.push(new XpathMapPoint((Element) node, xp + "/"));
+					// this won't cause ambiguity
+					if (post.equals("TBODY")) {
+						itrStack.push(new XpathMapPoint((Element) node, prefix));
+					}
+				} else {
+					if (debug && !xp.contains("TBODY")) {
+						System.out.println("\t\t" + node.getNodeValue());
+					}
+				}
+			}
 		}
 	}
 }
