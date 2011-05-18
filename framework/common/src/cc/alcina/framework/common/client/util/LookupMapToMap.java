@@ -100,13 +100,14 @@ public class LookupMapToMap<V> extends LinkedHashMap {
 		}
 		return null;
 	}
+
 	public V remove(Object... objects) {
 		Map m = this;
 		int mapDepth = depth;
 		for (int i = 0; i < objects.length; i++) {
 			Object k = objects[i];
 			if (--mapDepth == 0) {
-				 m.remove(k);
+				return (V) m.remove(k);
 			}
 			if (!m.containsKey(k)) {
 				m.put(k, new LookupMapToMap(depth - 1));
