@@ -52,7 +52,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 
 			@Override
 			public void onSuccess(Boolean result) {
-				// TODO Auto-generated method stub
+				persistenceCallback.onSuccess(result);
 			}
 		};
 		PersistenceCallback<Boolean> firstPassCallback = new PersistenceCallback<Boolean>() {

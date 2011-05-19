@@ -1,0 +1,46 @@
+package cc.alcina.framework.jvmclient.rcp;
+
+import java.lang.reflect.Method;
+import java.net.URL;
+
+import cc.alcina.framework.entity.util.ClasspathScanner;
+import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
+/**
+ * Has an eclipse dependency - but we use reflection to avoid adding for just one method
+ * @author nick@alcina.cc
+ *
+ */
+public class RcpClasspathVisitor extends ClasspathVisitor {
+	public RcpClasspathVisitor(ClasspathScanner scanner) {
+		super(scanner);
+	}
+
+	protected static final Object PROTOCOL_BUNDLE_RESOURCE = "bundleresource";
+
+	protected static final Object PROTOCOL_VFSZIP = "vfszip";
+
+	protected static final Object PROTOCOL_VFSFILE = "vfsfile";
+
+	@Override
+	public void enumerateClasses(URL url) throws Exception {
+		assert false;
+	}
+
+	@Override
+	public URL resolve(URL url) throws Exception {
+		if (url.getProtocol().equals(PROTOCOL_BUNDLE_RESOURCE)) {
+			Class fileLocatorClass=Class.forName("org.eclipse.core.runtime.FileLocator");
+			Method resolveMethod = fileLocatorClass.getMethod("resolve", URL.class);
+			return (URL) resolveMethod.invoke(null, url);
+		}
+		return super.resolve(url);
+	}
+
+	@Override
+	public boolean handles(URL url) {
+		if (url.getProtocol().equals(PROTOCOL_BUNDLE_RESOURCE)) {
+			assert false;
+		}
+		return false;
+	}
+}

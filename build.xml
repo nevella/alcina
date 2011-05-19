@@ -14,6 +14,7 @@
 		<delete dir="${framework.impl.jboss-hibernate.build.dir}" />
 		<delete dir="${framework.dist.dir}" />
 		<delete dir="${extras.collections.build.dir}" />
+		<delete dir="${framework.jvmclient.build.dir}" />
 	</target>
 	<target name="compile" description="Compiles all J2SE modules">
 		<mkdir dir="${framework.entity.build.dir}" />
@@ -77,6 +78,11 @@
 		</jar>
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-extras-collections.jar">
 			<fileset dir="${extras.collections.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+		</jar>
+		<jar destfile="${framework.dist.dir}/${ant.project.name}-jvmclient.jar">
+			<fileset dir="${framework.jvmclient.build.dir}">
 				<include name="**/*.*" />
 			</fileset>
 		</jar>
