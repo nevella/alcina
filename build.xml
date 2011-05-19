@@ -50,6 +50,14 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
+		<mkdir dir="${framework.jvmclient.build.dir}" />
+		<javac debug="on" srcdir="${framework.jvmclient.src.dir}" destdir="${framework.jvmclient.build.dir}">
+			<classpath>
+				<path refid="framework.common.lib.path" />
+				<pathelement path="${framework.entity.build.dir}" />
+			</classpath>
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
 	</target>
 
 	<target name="make-jars" description="Make entity, entity-impl, servlet and extras jars " depends="compile">
