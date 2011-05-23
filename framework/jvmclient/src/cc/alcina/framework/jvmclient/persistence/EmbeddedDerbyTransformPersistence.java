@@ -11,13 +11,19 @@ import cc.alcina.framework.entity.ResourceUtilities;
 
 public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence {
 	public EmbeddedDerbyTransformPersistence(String derbyHomePath) {
+		this(derbyHomePath, null, "org.apache.derby.jdbc.EmbeddedDriver");
+	}
+
+	public EmbeddedDerbyTransformPersistence(String derbyHomePath,
+			Class driverClass, String driverClassName) {
 		super();
 		System.setProperty("derby.system.home", derbyHomePath);
-		String driver = "org.apache.derby.jdbc.EmbeddedDriver";
-		try {
-			Class.forName(driver);
-		} catch (ClassNotFoundException e) {
-			throw new WrappedRuntimeException(e);
+		if (driverClass == null) {
+			try {
+				Class.forName(driverClassName);
+			} catch (ClassNotFoundException e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 		String dbName = "persistedtransforms";
 		String connectionUrl = "jdbc:derby:" + dbName + ";create=true";
