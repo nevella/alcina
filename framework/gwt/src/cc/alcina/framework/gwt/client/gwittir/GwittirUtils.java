@@ -65,6 +65,7 @@ public class GwittirUtils {
 		}
 		TransformManager.get().setIgnorePropertyChanges(false);
 	}
+
 	public static Collection convertCollection(Collection source,
 			Converter converter) {
 		ArrayList result = new ArrayList();
@@ -73,6 +74,7 @@ public class GwittirUtils {
 		}
 		return result;
 	}
+
 	public static void refreshTextBox(Binding binding, String propertyName) {
 		TransformManager.get().setIgnorePropertyChanges(true);
 		List<Binding> l = binding.getChildren();
@@ -94,6 +96,24 @@ public class GwittirUtils {
 			}
 		}
 		TransformManager.get().setIgnorePropertyChanges(false);
+	}
+
+	public static void refreshAllTextBoxesNoTransformManager(Binding binding) {
+		List<Binding> l = binding.getChildren();
+		for (Binding b : l) {
+			if (b.getLeft().object instanceof TextBox
+					|| b.getLeft().object instanceof PasswordTextBox) {
+				AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
+				if (tb.getValue() == null) {
+					tb.setValue(" ");
+					tb.setValue("");
+				} else {
+					String s = tb.getValue().toString();
+					tb.setValue(" ");
+					tb.setValue(s);
+				}
+			}
+		}
 	}
 
 	public static void refreshAllTextBoxes(Binding binding) {
@@ -186,25 +206,27 @@ public class GwittirUtils {
 	}
 
 	/**
-	 * Note: no support for (deprecated) Instantiable and Bindable interfaces if on server
+	 * Note: no support for (deprecated) Instantiable and Bindable interfaces if
+	 * on server
 	 */
 	public static boolean isIntrospectable(Class clazz) {
 		if (GWT.isClient()) {
 			return ClientReflector.get().beanInfoForClass(clazz) != null;
 		}
 		ClassLookup cl = CommonLocator.get().classLookup();
-		while (clazz!=null && clazz != Object.class) {
+		while (clazz != null && clazz != Object.class) {
 			if (cl.getAnnotationForClass(clazz, Introspectable.class) != null) {
 				return true;
 			}
-			clazz=clazz.getSuperclass();
+			clazz = clazz.getSuperclass();
 		}
 		return false;
 	}
+
 	public static ArrayList sortByStringValue(Collection c, Renderer renderer) {
 		Map<String, List> m = new HashMap<String, List>();
 		for (Object o : c) {
-			String key = o == null ? null : (String)renderer.render(o);
+			String key = o == null ? null : (String) renderer.render(o);
 			if (!m.containsKey(key)) {
 				m.put(key, new ArrayList());
 			}
@@ -223,5 +245,4 @@ public class GwittirUtils {
 		}
 		return result;
 	}
-
 }

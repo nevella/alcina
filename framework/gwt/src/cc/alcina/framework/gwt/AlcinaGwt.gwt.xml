@@ -1,5 +1,6 @@
 <module>
 	<inherits name='cc.alcina.framework.common.AlcinaCommon' />
+	<inherits name='cc.alcina.framework.common.ClientReflector' />
 	<inherits name="cc.alcina.framework.gwt.persistence.DTPersistence" />
 
 	<inherits name='cc.alcina.framework.gwt.appcache.AppCache' />

@@ -11,13 +11,14 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -26,13 +27,13 @@ import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
+
 @SuppressWarnings("deprecation")
 /**
  *
  * @author Nick Reddel
  */
-
- public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
+public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		ClickListener {
 	Map<String, T> labelMap = new HashMap<String, T>();
 
@@ -42,25 +43,25 @@ import com.totsp.gwittir.client.ui.Renderer;
 
 	private final Collection<T> values;
 
-	private final Renderer<T,String> renderer;
+	private final Renderer<T, String> renderer;
 
 	private final String groupName;
 
 	private int columnCount = 1;
-	
+
 	private void render() {
 		fp.clear();
 		Grid grid = new Grid((int) Math.ceil((double) values.size()
 				/ (double) getColumnCount()), getColumnCount());
-		int x=0, y=0;
+		int x = 0, y = 0;
 		for (T o : values) {
 			String displayText = renderer.render(o);
 			labelMap.put(displayText, o);
 			RadioButton rb = new RadioButton(groupName, displayText);
 			radioMap.put(o, rb);
 			grid.setWidget(y, x++, rb);
-			if (x==getColumnCount()){
-				x=0;
+			if (x == getColumnCount()) {
+				x = 0;
 				y++;
 			}
 			rb.addClickListener(this);
@@ -69,7 +70,13 @@ import com.totsp.gwittir.client.ui.Renderer;
 	}
 
 	public RadioButtonList(String groupName, Collection<T> values,
-			Renderer<T,String> renderer) {
+			Renderer<T, String> renderer, int columnCount) {
+		this(groupName, values, renderer);
+		setColumnCount(columnCount);
+	}
+
+	public RadioButtonList(String groupName, Collection<T> values,
+			Renderer<T, String> renderer) {
 		this.groupName = groupName;
 		this.values = values;
 		this.renderer = renderer;
@@ -85,22 +92,38 @@ import com.totsp.gwittir.client.ui.Renderer;
 				return object;
 			}
 		}
-		return null;
+		return nonMatchedValue;
+	}
+	public boolean hasSelectedButton(){
+		Set<T> keySet = radioMap.keySet();
+		for (T object : keySet) {
+			if (radioMap.get(object).isChecked()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private T lastValue;
 
+	private T nonMatchedValue;
+
 	public void setValue(T value) {
 		Set<T> keySet = radioMap.keySet();
+		boolean matched = false;
 		for (T object : keySet) {
-			radioMap.get(object).setChecked(object.equals(value));
+			boolean cMatched = object.equals(value);
+			radioMap.get(object).setChecked(cMatched);
+			matched |= cMatched;
 		}
-		if ( value != lastValue) {
+		nonMatchedValue = matched ? null : value;
+		if (!CommonUtils.equalsWithNullEquality(value, lastValue)) {
 			this.changes
 					.firePropertyChange("value", lastValue, this.getValue());
 		}
 		lastValue = value;
 	}
+
 	@SuppressWarnings("unchecked")
 	public void onClick(Widget sender) {
 		Set<T> keySet = radioMap.keySet();
@@ -119,6 +142,4 @@ import com.totsp.gwittir.client.ui.Renderer;
 	public int getColumnCount() {
 		return columnCount;
 	}
-
-	
 }
