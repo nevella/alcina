@@ -306,7 +306,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		} else {
 			for (Iterator it = this.options.iterator(); it.hasNext(); i++) {
 				Object item = it.next();
-				if (this.getComparator().compare(value, item) == 0) {
+				if (safeCompare(value, item) == 0) {
 					base.setItemSelected(i, true);
 				} else {
 					base.setItemSelected(i, false);
@@ -324,6 +324,22 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
 		}
 		fireChangeListeners();
+	}
+	public Object provideOtherValue(){
+		Iterator itr = getOptions().iterator();
+		Object value = getValue();
+		Object other=null;
+		while(other==value&&itr.hasNext()){
+			other=itr.next();
+		}
+		return other;
+	}
+	public int safeCompare(Object value, Object item) {
+		try {
+			return this.getComparator().compare(value, item);
+		} catch (ClassCastException e) {
+			return value.getClass().getName().compareTo(item.getClass().getName());
+		}
 	}
 
 	public Object getValue() {
@@ -414,7 +430,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		int i = 0;
 		for (Iterator it = this.options.iterator(); it.hasNext(); i++) {
 			Object option = it.next();
-			if (this.getComparator().compare(option, o) == 0) {
+			if (safeCompare(option, o) == 0) {
 				this.options.remove(option);
 				this.base.removeItem(i);
 				this.update();
@@ -437,7 +453,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 	protected boolean contains(final Collection c, final Object o) {
 		for (Iterator it = c.iterator(); it.hasNext();) {
 			Object next = it.next();
-			if (this.getComparator().compare(o, next) == 0) {
+			if (safeCompare(o, next) == 0) {
 				return true;
 			}
 		}

@@ -57,13 +57,13 @@ import com.google.gwt.user.client.ui.Widget;
 
 	private Toolbar toolbar;
 
-	private PermissibleAction nextPage = new PermissibleAction("Next >", NEXT);
+	protected PermissibleAction nextPage = new PermissibleAction("Next >", NEXT);
 
-	private PermissibleAction previousPage = new PermissibleAction("< Back", PREVIOUS);
+	protected PermissibleAction previousPage = new PermissibleAction("< Back", PREVIOUS);
 
-	private PermissibleAction finished = new PermissibleAction("Finish", FINISH);
+	protected PermissibleAction finished = new PermissibleAction("Finish", FINISH);
 
-	private PermissibleAction cancel = new PermissibleAction("Cancel", CANCEL);
+	protected PermissibleAction cancel = new PermissibleAction("Cancel", CANCEL);
 
 	protected ArrayList<PermissibleAction> actions;
 
@@ -75,7 +75,6 @@ import com.google.gwt.user.client.ui.Widget;
 	protected void getExtraActions() {
 	}
 
-	protected abstract boolean canFinish();
 
 	protected abstract boolean canFinishOnThisPage();
 

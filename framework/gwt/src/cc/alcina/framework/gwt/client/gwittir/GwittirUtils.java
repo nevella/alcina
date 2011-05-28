@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
@@ -37,11 +38,11 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
+import com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.ListBox;
 import com.totsp.gwittir.client.ui.Renderer;
-import com.totsp.gwittir.client.ui.TextBox;
 import com.totsp.gwittir.client.validator.Validator;
 
 @SuppressWarnings("unchecked")
@@ -51,19 +52,7 @@ import com.totsp.gwittir.client.validator.Validator;
  */
 public class GwittirUtils {
 	public static void refreshEmptyTextBoxes(Binding binding) {
-		TransformManager.get().setIgnorePropertyChanges(true);
-		List<Binding> l = binding.getChildren();
-		for (Binding b : l) {
-			if (b.getLeft().object instanceof TextBox
-					|| b.getLeft().object instanceof PasswordTextBox) {
-				AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
-				if (tb.getValue() == null) {
-					tb.setValue(" ");
-					tb.setValue("");
-				}
-			}
-		}
-		TransformManager.get().setIgnorePropertyChanges(false);
+		refreshTextBoxes(binding, null, true, true);
 	}
 
 	public static Collection convertCollection(Collection source,
@@ -76,64 +65,84 @@ public class GwittirUtils {
 	}
 
 	public static void refreshTextBox(Binding binding, String propertyName) {
-		TransformManager.get().setIgnorePropertyChanges(true);
-		List<Binding> l = binding.getChildren();
-		for (Binding b : l) {
-			if (b.getLeft().object instanceof TextBox
-					|| b.getLeft().object instanceof PasswordTextBox) {
-				if (!propertyName.equals(b.getRight().property.getName())) {
-					continue;
-				}
-				AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
-				if (tb.getValue() == null) {
-					tb.setValue(" ");
-					tb.setValue("");
-				} else {
-					String s = tb.getValue().toString();
-					tb.setValue(" ");
-					tb.setValue(s);
-				}
-			}
-		}
-		TransformManager.get().setIgnorePropertyChanges(false);
+		refreshTextBoxes(binding, propertyName, true, false);
 	}
 
-	public static void refreshAllTextBoxesNoTransformManager(Binding binding) {
+	public static void refreshTextBoxes(Binding binding,
+			String onlyPropertyName, boolean muteTransformManager,
+			boolean onlyEmpties) {
+		refreshFields(binding, onlyPropertyName, muteTransformManager,
+				onlyEmpties,
+				new FormFieldTypeForRefresh[] { FormFieldTypeForRefresh.TEXT });
+	}
+
+	public static void refreshTextBoxesAndSelects(Binding binding,
+			String onlyPropertyName, boolean muteTransformManager,
+			boolean onlyEmpties) {
+		refreshFields(binding, onlyPropertyName, muteTransformManager,
+				onlyEmpties, new FormFieldTypeForRefresh[] {
+						FormFieldTypeForRefresh.TEXT,
+						FormFieldTypeForRefresh.SELECT });
+	}
+
+	public enum FormFieldTypeForRefresh {
+		TEXT, RADIO, CHECK, SELECT
+	}
+
+	public static void refreshFields(Binding binding, String onlyPropertyName,
+			boolean muteTransformManager, boolean onlyEmpties,
+			FormFieldTypeForRefresh[] types) {
 		List<Binding> l = binding.getChildren();
-		for (Binding b : l) {
-			if (b.getLeft().object instanceof TextBox
-					|| b.getLeft().object instanceof PasswordTextBox) {
-				AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
-				if (tb.getValue() == null) {
-					tb.setValue(" ");
-					tb.setValue("");
-				} else {
-					String s = tb.getValue().toString();
-					tb.setValue(" ");
-					tb.setValue(s);
+		List<FormFieldTypeForRefresh> lTypes = Arrays.asList(types);
+		try {
+			if (muteTransformManager) {
+				TransformManager.get().setIgnorePropertyChanges(true);
+			}
+			for (Binding b : l) {
+				if (onlyPropertyName != null
+						&& !onlyPropertyName.equals(b.getRight().property
+								.getName())) {
+					continue;
 				}
+				boolean satisfiesType = false;
+				boolean isText = CommonUtils.simpleClassName(
+						b.getLeft().object.getClass()).equals("TextBox")
+						|| b.getLeft().object instanceof PasswordTextBox;
+				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.TEXT)
+						&& isText;
+				boolean isSetBasedListBox = (b.getLeft().object instanceof SetBasedListBox);
+				satisfiesType |= lTypes
+						.contains(FormFieldTypeForRefresh.SELECT)
+						&& isSetBasedListBox;
+				if (satisfiesType) {
+					AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
+					Object value = b.getRight().property.getAccessorMethod()
+							.invoke(b.getRight().object,
+									CommonUtils.EMPTY_OBJECT_ARRAY);
+					Object tbValue = tb.getValue();
+					if (onlyEmpties && tbValue != null) {
+						continue;
+					}
+					Object other = isSetBasedListBox ? ((SetBasedListBox) tb)
+							.provideOtherValue() : " ".equals(tbValue) ? ""
+							: " ";
+					tb.setValue(other);
+					b.getRight().property.getMutatorMethod().invoke(
+							b.getRight().object, new Object[] { value });
+					tb.setValue(tbValue);
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		} finally {
+			if (muteTransformManager) {
+				TransformManager.get().setIgnorePropertyChanges(false);
 			}
 		}
 	}
 
 	public static void refreshAllTextBoxes(Binding binding) {
-		TransformManager.get().setIgnorePropertyChanges(true);
-		List<Binding> l = binding.getChildren();
-		for (Binding b : l) {
-			if (b.getLeft().object instanceof TextBox
-					|| b.getLeft().object instanceof PasswordTextBox) {
-				AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
-				if (tb.getValue() == null) {
-					tb.setValue(" ");
-					tb.setValue("");
-				} else {
-					String s = tb.getValue().toString();
-					tb.setValue(" ");
-					tb.setValue(s);
-				}
-			}
-		}
-		TransformManager.get().setIgnorePropertyChanges(false);
+		refreshTextBoxes(binding, null, true, false);
 	}
 
 	public static List<Validator> getAllValidators(Binding b,
