@@ -306,6 +306,9 @@ public class CommonUtils {
 	public static boolean isNullOrEmpty(String string) {
 		return string == null || string.length() == 0;
 	}
+	public static boolean isNotNullOrEmpty(String string) {
+		return string != null && string.length() != 0;
+	}
 
 	public static int iv(Integer i) {
 		return i == null ? 0 : i;

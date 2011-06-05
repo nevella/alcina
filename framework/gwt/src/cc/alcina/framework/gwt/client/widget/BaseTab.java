@@ -70,7 +70,7 @@ import com.google.gwt.user.client.ui.Widget;
 		return null;
 	}
 
-	public Widget getWidget() {
+	public Widget getPageWidget() {
 		return super.getWidget();
 	}
 

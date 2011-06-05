@@ -118,7 +118,7 @@ public class WorkspaceView extends Composite implements HasName,
 		return this.name;
 	}
 
-	public Widget getWidget() {
+	public Widget getPageWidget() {
 		return this.widget;
 	}
 

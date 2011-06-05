@@ -55,7 +55,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 	private M model;
 
-	private Toolbar toolbar;
+	protected Toolbar toolbar;
 
 	protected PermissibleAction nextPage = new PermissibleAction("Next >", NEXT);
 
@@ -112,7 +112,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 	private boolean allButtonsEnabled = false;
 
-	private void refreshButtonActivation() {
+	protected void refreshButtonActivation() {
 		toolbar.enableAll(true);
 		if (allButtonsEnabled) {
 			return;
@@ -171,7 +171,7 @@ import com.google.gwt.user.client.ui.Widget;
 		if (usePageTabs) {
 			renderTabPane(fp);
 		} else {
-			Widget w = pages.get(pageIndex).getWidget();
+			Widget w = pages.get(pageIndex).getPageWidget();
 			w.addStyleName("wizard-form");
 			fp.add(w);
 			renderButtonsPane(fp);
@@ -202,24 +202,32 @@ import com.google.gwt.user.client.ui.Widget;
 
 	public void vetoableAction(PermissibleActionEvent evt) {
 		if (evt.getAction() == nextPage) {
-			if (beforeMoveToPage(pageIndex + 1)) {
-				pageIndex++;
-				WidgetUtils.replace(currentWidget, renderPage());
-				refreshButtonActivation();
-			}
+			moveNext();
 		}
 		if (evt.getAction() == previousPage) {
-			if (beforeMoveToPage(pageIndex - 1)) {
-				pageIndex--;
-				WidgetUtils.replace(currentWidget, renderPage());
-				refreshButtonActivation();
-			}
+			movePrevious();
 		}
 		if (evt.getAction() == cancel) {
 			onCancel();
 		}
 		if (evt.getAction() == finished) {
 			onFinished();
+		}
+	}
+
+	protected void movePrevious() {
+		if (beforeMoveToPage(pageIndex - 1)) {
+			pageIndex--;
+			WidgetUtils.replace(currentWidget, renderPage());
+			refreshButtonActivation();
+		}
+	}
+
+	protected void moveNext() {
+		if (beforeMoveToPage(pageIndex + 1)) {
+			pageIndex++;
+			WidgetUtils.replace(currentWidget, renderPage());
+			refreshButtonActivation();
 		}
 	}
 
@@ -240,6 +248,6 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	public static interface WizardPage {
-		public Widget getWidget();
+		public Widget getPageWidget();
 	}
 }

@@ -194,7 +194,7 @@ public class MainTabPanel extends TabPanel {
 		// }
 		Panel w2 = selectedTab == -1 ? noTabContentHolder
 				: (Panel) ((BaseTab) getDeckPanel().getWidget(selectedTab))
-						.getWidget();
+						.getPageWidget();
 		int scrollWidth = availableWidth - 1;
 		if (scrollWidth < 1) {
 			scrollWidth = 1;

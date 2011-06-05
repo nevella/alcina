@@ -59,9 +59,9 @@ import com.totsp.gwittir.client.validator.ValidationException;
 			strings = new String[] { sz };
 		}
 		for (String s : strings) {
-			if (!s.replaceAll(regex, REGEX_REPLACE).equals(REGEX_REPLACE)) {
+			if (!s.replaceAll(getRegex(), REGEX_REPLACE).equals(REGEX_REPLACE)) {
 				throw new ValidationException(CommonUtils.format(
-						"Does not match regex ('%1', '%2')", regex,
+						"Does not match regex ('%1', '%2')", getRegex(),
 						multipleSeparator), RegexValidator.class);
 			}
 		}
