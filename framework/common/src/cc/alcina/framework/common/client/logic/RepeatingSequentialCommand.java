@@ -11,7 +11,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 
 public class RepeatingSequentialCommand implements RepeatingCommand {
-	private List<RepeatingCommand> tasks = new ArrayList<RepeatingCommand>();
+	protected List<RepeatingCommand> tasks = new ArrayList<RepeatingCommand>();
 
 	public void cancel() {
 		tasks.clear();
