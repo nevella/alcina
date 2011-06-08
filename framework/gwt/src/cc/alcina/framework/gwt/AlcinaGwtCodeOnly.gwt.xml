@@ -1,5 +1,6 @@
 <module>
 	<inherits name='cc.alcina.framework.common.AlcinaCommon' />
+	<inherits name='com.google.gwt.json.JSON'/>
 	<stylesheet src='Alcina.css?r304' />
 
 	<public path="public" />

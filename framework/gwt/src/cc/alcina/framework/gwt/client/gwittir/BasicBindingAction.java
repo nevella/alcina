@@ -40,6 +40,5 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 
 	public void unbind(T widget) {
 		binding.unbind();
-		binding.getChildren().clear();
 	}
 }

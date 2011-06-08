@@ -2,7 +2,7 @@
 	<inherits name='cc.alcina.framework.common.AlcinaCommon' />
 	<inherits name='cc.alcina.framework.common.ClientReflector' />
 	<inherits name="cc.alcina.framework.gwt.persistence.DTPersistence" />
-
+	<inherits name='com.google.gwt.json.JSON'/>
 	<inherits name='cc.alcina.framework.gwt.appcache.AppCache' />
 	<stylesheet src='Alcina.css?r304' />
 

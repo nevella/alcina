@@ -14,18 +14,22 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 
 @SuppressWarnings("deprecation")
@@ -34,14 +38,14 @@ import com.totsp.gwittir.client.ui.Renderer;
  * @author Nick Reddel
  */
 public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
-		ClickListener {
+		 ClickHandler {
 	Map<String, T> labelMap = new HashMap<String, T>();
 
 	Map<T, RadioButton> radioMap = new HashMap<T, RadioButton>();
 
 	private FlowPanel fp;
 
-	private final Collection<T> values;
+	private  Collection<T> values;
 
 	private final Renderer<T, String> renderer;
 
@@ -49,24 +53,17 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 
 	private int columnCount = 1;
 
-	private void render() {
-		fp.clear();
-		Grid grid = new Grid((int) Math.ceil((double) values.size()
-				/ (double) getColumnCount()), getColumnCount());
-		int x = 0, y = 0;
-		for (T o : values) {
-			String displayText = renderer.render(o);
-			labelMap.put(displayText, o);
-			RadioButton rb = new RadioButton(groupName, displayText);
-			radioMap.put(o, rb);
-			grid.setWidget(y, x++, rb);
-			if (x == getColumnCount()) {
-				x = 0;
-				y++;
-			}
-			rb.addClickListener(this);
-		}
-		fp.add(grid);
+	private T lastValue;
+
+	private T nonMatchedValue;
+
+	public RadioButtonList(String groupName, Collection<T> values,
+			Renderer<T, String> renderer) {
+		this.groupName = groupName;
+		this.renderer = renderer;
+		this.fp = new FlowPanel();
+		this.setValues(values);
+		initWidget(fp);
 	}
 
 	public RadioButtonList(String groupName, Collection<T> values,
@@ -74,17 +71,9 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		this(groupName, values, renderer);
 		setColumnCount(columnCount);
 	}
-
-	public RadioButtonList(String groupName, Collection<T> values,
-			Renderer<T, String> renderer) {
-		this.groupName = groupName;
-		this.values = values;
-		this.renderer = renderer;
-		this.fp = new FlowPanel();
-		render();
-		initWidget(fp);
+	public int getColumnCount() {
+		return columnCount;
 	}
-
 	public T getValue() {
 		Set<T> keySet = radioMap.keySet();
 		for (T object : keySet) {
@@ -94,6 +83,11 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		}
 		return nonMatchedValue;
 	}
+
+	public Collection<T> getValues() {
+		return values;
+	}
+
 	public boolean hasSelectedButton(){
 		Set<T> keySet = radioMap.keySet();
 		for (T object : keySet) {
@@ -104,9 +98,12 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		return false;
 	}
 
-	private T lastValue;
+	
 
-	private T nonMatchedValue;
+	public void setColumnCount(int width) {
+		this.columnCount = width;
+		render();
+	}
 
 	public void setValue(T value) {
 		Set<T> keySet = radioMap.keySet();
@@ -124,22 +121,41 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		lastValue = value;
 	}
 
-	@SuppressWarnings("unchecked")
-	public void onClick(Widget sender) {
-		Set<T> keySet = radioMap.keySet();
-		for (T object : keySet) {
-			if (radioMap.get(object).equals(sender)) {
-				setValue((T) object);
-			}
-		}
-	}
-
-	public void setColumnCount(int width) {
-		this.columnCount = width;
+	public void setValues(Collection<T> values) {
+		this.values = values;
 		render();
 	}
 
-	public int getColumnCount() {
-		return columnCount;
+	private void render() {
+		fp.clear();
+		radioMap.clear();
+		Grid grid = new Grid((int) Math.ceil((double) getValues().size()
+				/ (double) getColumnCount()), getColumnCount());
+		int x = 0, y = 0;
+		for (T o : getValues()) {
+			String displayText = renderer.render(o);
+			labelMap.put(displayText, o);
+			RadioButton rb = new RadioButton(groupName, displayText);
+			radioMap.put(o, rb);
+			grid.setWidget(y, x++, rb);
+			if (x == getColumnCount()) {
+				x = 0;
+				y++;
+			}
+			rb.addClickHandler(this);
+		}
+		fp.add(grid);
+	}
+
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void onClick(ClickEvent event) {
+		Set<T> keySet = radioMap.keySet();
+		for (T object : keySet) {
+			if (radioMap.get(object).equals(event.getSource())) {
+				setValue((T) object);
+			}
+		}		
 	}
 }
