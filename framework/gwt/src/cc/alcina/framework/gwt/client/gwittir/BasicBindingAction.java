@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir;
 
 import com.totsp.gwittir.client.action.BindingAction;
@@ -19,16 +18,17 @@ import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.BoundWidget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public abstract class BasicBindingAction<T extends BoundWidget<?>> implements BindingAction<T>{
+public abstract class BasicBindingAction<T extends BoundWidget<?>> implements
+		BindingAction<T> {
 	protected Binding binding = new Binding();
 
 	public Binding getBinding() {
 		return this.binding;
 	}
+
 	public void bind(T widget) {
 		binding.bind();
 	}
@@ -36,7 +36,14 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 	public void execute(T model) {
 	}
 
-	
+	public void set(BoundWidget widget) {
+		if (!binding.getChildren().isEmpty()) {
+			return;
+		}
+		set0(widget);
+	}
+
+	protected abstract void set0(BoundWidget widget);
 
 	public void unbind(T widget) {
 		binding.unbind();

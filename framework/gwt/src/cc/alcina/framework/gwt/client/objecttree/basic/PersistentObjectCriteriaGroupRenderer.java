@@ -102,7 +102,8 @@ public class PersistentObjectCriteriaGroupRenderer extends
 
 	private static class HiliSelectBoxBindingAction extends
 			BasicBindingAction<BoundWidget<PersistentObjectCriteriaGroup>> {
-		public void set(BoundWidget<PersistentObjectCriteriaGroup> widget) {
+		@Override
+		protected void set0(BoundWidget widget)  {
 			HiliSelectBox hsb = (HiliSelectBox) widget;
 			binding.getChildren().add(
 					new Binding(hsb.box, "value",

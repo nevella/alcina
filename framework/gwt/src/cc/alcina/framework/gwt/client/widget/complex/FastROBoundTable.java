@@ -156,8 +156,8 @@ public class FastROBoundTable extends BoundTableExt {
 		if (!wpMap.containsKey(col.getPropertyName())) {
 			Property p = GwittirBridge.get().getProperty(target,
 					col.getPropertyName());
-			BoundWidgetProvider wp = this.factory.getWidgetProvider(col
-					.getPropertyName(), p.getType());
+			BoundWidgetProvider wp = this.factory.getWidgetProvider(
+					col.getPropertyName(), p.getType());
 			pMap.put(col.getPropertyName(), p);
 			wpMap.put(col.getPropertyName(), wp);
 		}
@@ -183,7 +183,8 @@ public class FastROBoundTable extends BoundTableExt {
 		ROFlexTable table = new ROFlexTable();
 		return table;
 	}
-//this actually duplicates a lot of stuff in HTMLTable - 
+
+	// this actually duplicates a lot of stuff in HTMLTable -
 	private class EditOverlayHandler implements ClickHandler, MouseOutHandler,
 			MouseOverHandler, MouseMoveHandler {
 		Map<Integer, Boolean> editableColumns = new HashMap<Integer, Boolean>();
@@ -193,14 +194,16 @@ public class FastROBoundTable extends BoundTableExt {
 		RowCol lastRowCol;
 
 		public EditOverlayHandler(Class tableObjectClass) {
-			editableColumns.put(-1,false);
+			editableColumns.put(-1, false);
 			int i = 0;
 			if ((masks & BoundTableExt.ROW_HANDLE_MASK) > 0) {
-				editableColumns.put(i++,false);
+				editableColumns.put(i++, false);
 			}
 			for (Field f : columns) {
-				editableColumns.put(i++, GwittirBridge.get().isFieldEditable(
-						tableObjectClass, f.getPropertyName()));
+				editableColumns.put(
+						i++,
+						GwittirBridge.get().isFieldEditable(tableObjectClass,
+								f.getPropertyName()));
 			}
 		}
 
@@ -229,7 +232,8 @@ public class FastROBoundTable extends BoundTableExt {
 			try {
 				editableWidget.setModel(target);
 				action = new BasicBindingAction() {
-					public void set(BoundWidget widget) {
+					@Override
+					protected void set0(BoundWidget widget) {
 						binding.getChildren().add(
 								new Binding(widget, "value", editableField
 										.getValidator(), editableField
@@ -261,7 +265,7 @@ public class FastROBoundTable extends BoundTableExt {
 			RowCol rowCol = getRowCol(event);
 			if (lastRowCol != null && !lastRowCol.equals(rowCol)) {
 				styleDelta(lastRowCol, null, "editableOver");
-				lastRowCol=null;
+				lastRowCol = null;
 			}
 			if (editableColumns.get(rowCol.col)) {
 				lastRowCol = rowCol;
@@ -271,7 +275,7 @@ public class FastROBoundTable extends BoundTableExt {
 
 		public void onMouseOut(MouseOutEvent event) {
 			styleDelta(lastRowCol, null, "editableOver");
-			lastRowCol=null;
+			lastRowCol = null;
 		}
 
 		public void onMouseOver(MouseOverEvent event) {
@@ -284,7 +288,7 @@ public class FastROBoundTable extends BoundTableExt {
 				Element tableElt = table.getElement();
 				com.google.gwt.dom.client.Element tr = null;
 				com.google.gwt.dom.client.Element td = null;
-				while (elt!=null && elt != tableElt) {
+				while (elt != null && elt != tableElt) {
 					if (elt.getTagName().equalsIgnoreCase("td")) {
 						td = elt;
 					}
@@ -351,6 +355,7 @@ public class FastROBoundTable extends BoundTableExt {
 		protected boolean internalClearCell(Element td, boolean clearInnerHTML) {
 			return false;
 		}
+
 		@Override
 		public Element getEventTargetCell(Event event) {
 			return super.getEventTargetCell(event);
