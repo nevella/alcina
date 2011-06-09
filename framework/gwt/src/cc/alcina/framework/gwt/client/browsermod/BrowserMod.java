@@ -99,9 +99,14 @@ public class BrowserMod {
 				&& getUserAgent().indexOf(
 						Constants.INTERNET_EXPLORER_8_USER_AGENT) != -1;
 	}
+	public static boolean isIE9() {
+		return isInternetExplorer()
+				&& getUserAgent().indexOf(
+						Constants.INTERNET_EXPLORER_9_USER_AGENT) != -1;
+	}
 
-	public static boolean isIEpre8() {
-		return isInternetExplorer() && !isIE8();
+	public static boolean isIEpre9() {
+		return isInternetExplorer() && !isIE9();
 	}
 
 	public static boolean isFireFox() {
