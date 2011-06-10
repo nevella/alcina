@@ -173,6 +173,11 @@ public class RelativePopupPositioning {
 					AxisCoordinate.H_CENTER, AxisCoordinate.H_RIGHT },
 			AxisCoordinate.V_BOTTOM);
 
+	public static final RelativePopupAxis LEFT_TTB = new RelativePopupAxis(
+			new AxisCoordinate[] { AxisCoordinate.V_TOP,
+					AxisCoordinate.V_CENTER, AxisCoordinate.V_BOTTOM },
+			AxisCoordinate.H_LEFT);
+
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis) {
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget, axis,
@@ -188,14 +193,14 @@ public class RelativePopupPositioning {
 			rpp.addStyleName(panelStyleName);
 		}
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget,
-				new RelativePopupAxis[] { axis }, null, rpp,0,0);
+				new RelativePopupAxis[] { axis }, null, rpp, 0, 0);
 	}
 
 	public static RelativePopupPanel showPopup(final Widget relativeToWidget,
 			final Widget widgetToShow, final Widget boundingWidget,
 			final RelativePopupAxis[] axes, Widget relativeContainer,
 			final RelativePopupPanel rpp, final int shiftX, final int shiftY) {
-		if(widgetToShow!=null){
+		if (widgetToShow != null) {
 			rpp.setWidget(widgetToShow);
 		}
 		final Widget positioningWidget = relativeContainer != null ? relativeContainer
@@ -206,8 +211,8 @@ public class RelativePopupPositioning {
 			public void setPosition(int offsetWidth, int offsetHeight) {
 				int x = relativeToWidget.getAbsoluteLeft();
 				int y = relativeToWidget.getAbsoluteTop();
-				x+=shiftX;
-				y+=shiftY;
+				x += shiftX;
+				y += shiftY;
 				// work in coordinate space of bounding widget
 				x -= boundingWidget.getAbsoluteLeft();
 				y -= boundingWidget.getAbsoluteTop();
