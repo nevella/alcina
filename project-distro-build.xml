@@ -196,7 +196,7 @@
 		</java>
 	</target>
 	<target name="deployAndGwt" description="JARs the Task" depends="compile,compile-gwt,make-ear">
-		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${dist.dir}/${ant.project.name}.ear">
+		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
 		</copy>
 	</target>
 	<target name="hot-deploy-and-gwt-and-restart" description="WARs the Task" depends="compile-gwt,hot-deploy-restart">

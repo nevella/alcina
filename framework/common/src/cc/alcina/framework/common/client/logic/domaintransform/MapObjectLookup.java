@@ -213,7 +213,9 @@ public class MapObjectLookup implements ObjectLookup {
 											pr.getPropertyName()));
 					if (colln != null) {
 						for (HasIdAndLocalId hili : colln) {
-							mapObject(hili);
+							if(getObject(hili)==null){
+								mapObject(hili);
+							}
 						}
 					}
 				}

@@ -199,6 +199,7 @@ public abstract class SerializedDomainLoader {
 
 			@Override
 			public void onSuccess(List<DTRSimpleSerialWrapper> result) {
+				transforms = result;
 				if (!transforms.isEmpty()
 						|| ClientLayerLocator.get().getClientHandshakeHelper()
 								.permitsOfflineWithEmptyTransforms()) {
@@ -225,11 +226,13 @@ public abstract class SerializedDomainLoader {
 							.permitsOfflineWithEmptyTransforms()) {
 						localPersistence
 								.openAvailableSessionTransformsForOfflineLoadNeverOnline(replayTransformsCallback);
+					}else{
+						persistenceCallback.onSuccess(true);
 					}
 				} else {
 					replayTransformsCallback.onSuccess(result);
 				}
-				persistenceCallback.onSuccess(true);
+				
 			}
 		};
 		localPersistence.openAvailableSessionTransformsForOfflineLoad(notify,
