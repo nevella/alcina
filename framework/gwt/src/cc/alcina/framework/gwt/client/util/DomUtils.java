@@ -19,7 +19,7 @@ import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.ui.RootPanel;
 
-public class DomUtils {
+public class DomUtils implements NodeFromXpathProvider {
 	private static final String DOM_XPATH_MAP = "dom-xpath-map";
 
 	private static final String TEXT_MARKER = "TEXT()";
@@ -40,6 +40,8 @@ public class DomUtils {
 	public static boolean isBlockHTMLElement(Element e) {
 		return HTML_BLOCKS.contains("," + e.getTagName().toUpperCase() + ",");
 	}
+
+	private NodeFromXpathProvider nodeProvider = null;
 
 	private static void addVisibleTextNodes(Element element, List<Text> texts) {
 		NodeList<Node> nl = element.getChildNodes();
@@ -86,6 +88,9 @@ public class DomUtils {
 	}
 
 	public Node findXpathWithIndexedText(String xpathStr, Node container) {
+		if (nodeProvider != null) {
+			return nodeProvider.findXpathWithIndexedText(xpathStr, container);
+		}
 		if (xpathStr.length() == 0) {
 			return container;
 		}
@@ -478,5 +483,13 @@ public class DomUtils {
 				}
 			}
 		}
+	}
+
+	public void setNodeProvider(NodeFromXpathProvider nodeProvider) {
+		this.nodeProvider = nodeProvider;
+	}
+
+	public NodeFromXpathProvider getNodeProvider() {
+		return nodeProvider;
 	}
 }
