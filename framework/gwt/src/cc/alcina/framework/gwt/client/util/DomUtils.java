@@ -262,7 +262,7 @@ public class DomUtils implements NodeFromXpathProvider {
 				String part = n.getNodeName();
 				switch (nodeType) {
 				case Node.TEXT_NODE:
-					part = "text()";
+					part = "TEXT()";
 				}
 				NodeList childNodes = n.getParentNode().getChildNodes();
 				int pos = -1;

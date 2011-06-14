@@ -48,6 +48,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
+import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
@@ -439,11 +440,12 @@ public class ContentViewFactory {
 				if (i == 0) {
 					getCellFormatter().addStyleName(0, 0, "first");
 				}
-				BoundWidgetProvider provider = factory.getWidgetProvider(field
-						.getPropertyName(), null);
+				BoundWidgetProvider provider = field.getCellProvider() != null ? field
+						.getCellProvider() : factory.getWidgetProvider(
+						field.getPropertyName(), null);
 				if (provider instanceof HasMaxWidth) {
 					HasMaxWidth hmw = (HasMaxWidth) provider;
-					if (hmw.isForceColumnWidth()) {
+					if (hmw.isForceColumnWidth() && hmw.getMaxWidth() != 0) {
 						Element element = (Element) getCellFormatter()
 								.getElement(0, i).getFirstChildElement();
 						int widthEm = hmw.getMaxWidth() + 8;
@@ -453,12 +455,27 @@ public class ContentViewFactory {
 						element.getStyle().setProperty("width",
 								Math.round(widthEm * EM_WIDTH) + "em");
 					}
+					int pct = hmw.getMinPercentOfTable();
+					if (pct != 0) {
+						int offsetWidth = table.getOffsetWidth();
+						getCellFormatter().setWidth(0, i,
+								(pct * offsetWidth/100) + "px");
+					}
 				}
 				i++;
 				if (i >= table.getCellCount(0)) {
 					break;
 				}
 			}
+		}
+
+		@Override
+		/**
+		 * handles beautification of incrementally rendered tables
+		 */
+		public void renderBottom(RenderContext saved) {
+			super.renderBottom(saved);
+			beautify();
 		}
 
 		@Override
@@ -607,8 +624,8 @@ public class ContentViewFactory {
 				beanValidator.validate(bean);
 				return true;
 			} catch (ValidationException e) {
-				ClientLayerLocator.get().notifications().showWarning(
-						e.getMessage());
+				ClientLayerLocator.get().notifications()
+						.showWarning(e.getMessage());
 				return false;
 			}
 		}
@@ -618,7 +635,7 @@ public class ContentViewFactory {
 				TransformManager.get().promoteToDomainObject(objects);
 				objects.clear();
 			}
-			if (!fireViewEvent){
+			if (!fireViewEvent) {
 				return;
 			}
 			final PermissibleActionEvent action = new PermissibleActionEvent(
@@ -657,8 +674,9 @@ public class ContentViewFactory {
 								@Override
 								public void run() {
 									crd.hide();
-									DomEvent.fireNativeEvent(WidgetUtils
-											.createZeroClick(), sender);
+									DomEvent.fireNativeEvent(
+											WidgetUtils.createZeroClick(),
+											sender);
 								}
 							}.schedule(500);
 							return false;
@@ -686,13 +704,16 @@ public class ContentViewFactory {
 					}
 				}
 				if (sender != null) {
-					ClientLayerLocator.get().notifications().showWarning(
-							"Please correct the problems in the form");
+					ClientLayerLocator
+							.get()
+							.notifications()
+							.showWarning(
+									"Please correct the problems in the form");
 				} else {
 				}
 				return false;
 			}
-			commitChanges(sender!=null);
+			commitChanges(sender != null);
 			return true;
 		}
 
@@ -707,8 +728,7 @@ public class ContentViewFactory {
 				if (save) {
 					boolean result = validateAndCommit(null);
 					if (!result) {
-						Window
-								.alert("Unable to save changes due to form validation error.");
+						Window.alert("Unable to save changes due to form validation error.");
 						TransformManager.get().deregisterProvisionalObjects(
 								objects);
 					}

@@ -47,4 +47,9 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	public boolean isForceColumnWidth() {
 		return forceColumnWidth;
 	}
+
+	@Override
+	public int getMinPercentOfTable() {
+		return 0;
+	}
 }

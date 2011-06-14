@@ -119,6 +119,10 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	@Override
 	protected void doFinish(RequestBuilder rb) {
 		super.doFinish(rb);
+		addAlcinaHeaders(rb);
+	}
+
+	public static void addAlcinaHeaders(RequestBuilder rb) {
 		if (ClientLayerLocator.get().getClientInstance() != null
 				&& PermissionsManager.get().isLoggedIn()) {
 			rb.setHeader(CLIENT_INSTANCE_ID_KEY, String

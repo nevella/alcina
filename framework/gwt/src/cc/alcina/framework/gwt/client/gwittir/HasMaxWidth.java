@@ -19,7 +19,14 @@ package cc.alcina.framework.gwt.client.gwittir;
  */
 
  public interface HasMaxWidth {
+	 /**
+	  * in <b>em</b>
+	  */
 	public int getMaxWidth();
 
 	public boolean isForceColumnWidth();
+	/**
+	 * 0 implies ignore
+	 */
+	public int getMinPercentOfTable();
 }
