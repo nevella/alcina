@@ -84,14 +84,35 @@ public class XmlUtils {
 			n.removeChild(nl.item(i));
 		}
 	}
+
 	public static String removeNamespaceInfo(String s) {
-		String regex = "<((?:/?)[a-zA-Z0-9]+):(.+?)>";
-		Pattern p = Pattern.compile(regex, Pattern.MULTILINE | Pattern.DOTALL
-				| Pattern.CASE_INSENSITIVE);
-		Matcher m = p.matcher(s);
-		s = m.replaceAll("<$1EXTNSTAG>");
-		return s;
+		StringBuffer sb = new StringBuffer();
+		boolean inTag = false;
+		boolean inAttr = false;
+		int length = s.length();
+		for (int i = 0; i < length; i++) {
+			char c = s.charAt(i);
+			if (c == '<' && i < length) {
+				char next = s.charAt(i + 1);
+				if (next == '/' || ('A' <= next && 'Z' >= next)
+						|| ('a' <= next && 'z' >= next)) {
+					inTag = true;
+				}
+			}
+			if (c == '>') {
+				inTag = false;
+			}
+			if (inTag && (c == '\'' || c == '"')) {
+				inAttr = !inAttr;
+			}
+			if (inTag && !inAttr && c == ':') {
+				c = '-';
+			}
+			sb.append(c);
+		}
+		return sb.toString();
 	}
+
 	public static Document createDocument() throws Exception {
 		if (db == null) {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -129,10 +150,13 @@ public class XmlUtils {
 		s = m.replaceAll("<$1$2></$1>");
 		return s;
 	}
-	public static Element getElementExt(Element root, String tagName, String attrName, String attrValue){
-		List<Element> elementList = nodeListToElementList(root.getElementsByTagName(tagName));
+
+	public static Element getElementExt(Element root, String tagName,
+			String attrName, String attrValue) {
+		List<Element> elementList = nodeListToElementList(root
+				.getElementsByTagName(tagName));
 		for (Element element : elementList) {
-			if (element.getAttribute(attrName).equals(attrValue)){
+			if (element.getAttribute(attrName).equals(attrValue)) {
 				return element;
 			}
 		}
@@ -194,14 +218,12 @@ public class XmlUtils {
 		}
 		DOMParser parser = new DOMParser();
 		parser.setErrorHandler(new XmlErrHandler());
-		parser
-				.setFeature(
-						"http://apache.org/xml/features/nonvalidating/load-dtd-grammar",
-						false);
-		parser
-				.setFeature(
-						"http://apache.org/xml/features/nonvalidating/load-external-dtd",
-						false);
+		parser.setFeature(
+				"http://apache.org/xml/features/nonvalidating/load-dtd-grammar",
+				false);
+		parser.setFeature(
+				"http://apache.org/xml/features/nonvalidating/load-external-dtd",
+				false);
 		parser.parse(new InputSource(stream));
 		return parser.getDocument();
 	}
@@ -363,5 +385,42 @@ public class XmlUtils {
 		}
 	}
 
-	
+	public static void stripFixedWidthInfo(Document doc, int maxWidth) {
+		String[] tags = { "IMG", "img" };
+		for (String tag : tags) {
+			NodeList imgs = doc.getElementsByTagName(tag);
+			int length = imgs.getLength();
+			for (int i = 0; i < length; i++) {
+				Element img = (Element) imgs.item(i);
+				try {
+					int width = Integer.parseInt(img.getAttribute("width"));
+					int height = Integer.parseInt(img.getAttribute("height"));
+					if (width > maxWidth) {
+						height = height * maxWidth / width;
+						width = maxWidth;
+						img.setAttribute("height", String.valueOf(height));
+						img.setAttribute("width", String.valueOf(width));
+					}
+				} catch (NumberFormatException nfe) {
+				}
+			}
+		}
+	}
+	public static void rebaseImages(Document doc, String baseHref) {
+		if(baseHref.endsWith("/")){
+			baseHref=baseHref.substring(0,baseHref.length()-1);
+		}
+		String[] tags = { "IMG", "img" };
+		for (String tag : tags) {
+			NodeList imgs = doc.getElementsByTagName(tag);
+			int length = imgs.getLength();
+			for (int i = 0; i < length; i++) {
+				Element img = (Element) imgs.item(i);
+				String src = img.getAttribute("src");
+				if(src.startsWith("/")){
+					img.setAttribute("src", baseHref+src);
+				}
+			}
+		}
+	}
 }
