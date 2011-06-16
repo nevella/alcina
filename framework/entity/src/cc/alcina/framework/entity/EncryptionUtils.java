@@ -31,6 +31,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -141,8 +142,8 @@ public class EncryptionUtils {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			KeyGenerator keygen = KeyGenerator.getInstance("DESede");
 			SecretKey desKey = keygen.generateKey();
-			byte[] publicEncryptedSymKey = asymmetricEncrypt(desKey
-					.getEncoded(), this.publicKey);
+			byte[] publicEncryptedSymKey = asymmetricEncrypt(
+					desKey.getEncoded(), this.publicKey);
 			baos.write(publicEncryptedSymKey);
 			byte[] gzs = gzipBytes(source);
 			baos.write(symmetricEncrypt(gzs, desKey));
@@ -383,4 +384,34 @@ public class EncryptionUtils {
 		md5hash = md.digest();
 		return convertToHex(md5hash);
 	}
+
+	public static String MD5(List<byte[]> byties)
+			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+		MessageDigest md;
+		md = MessageDigest.getInstance("MD5");
+		for (byte[] bytes : byties) {
+			md.update(bytes, 0, bytes.length);
+		}
+		byte[] md5hash = new byte[32];
+		md5hash = md.digest();
+		return convertToHex(md5hash);
+	}
+	public static final byte[] intToByteArray(int value) {
+        return new byte[] {
+                (byte)(value >>> 24),
+                (byte)(value >>> 16),
+                (byte)(value >>> 8),
+                (byte)value};
+}
+	public static final byte[] longToByteArray(long value) {
+        return new byte[] {
+                (byte)(value >>> 56),
+                (byte)(value >>> 48),
+                (byte)(value >>> 40),
+                (byte)(value >>> 32),
+                (byte)(value >>> 24),
+                (byte)(value >>> 16),
+                (byte)(value >>> 8),
+                (byte)value};
+}
 }
