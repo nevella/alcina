@@ -235,7 +235,7 @@ public class MetricLogging {
 		return Thread.currentThread().getId();
 	}
 
-	private String keyWithParents(String key, boolean end) {
+	private synchronized String keyWithParents(String key, boolean end) {
 		if (end) {
 			return keyToKeyWithParents.get(key);
 		}
