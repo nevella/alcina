@@ -31,11 +31,9 @@ public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence 
 		if (!checkDbVersionOK()) {
 			String createSmt = null;
 			try {
-				InputStream is = this.getClass().getResourceAsStream(
-						"derby-create.sql");
 				Connection conn = DriverManager
 						.getConnection(getConnectionUrl());
-				String createStmt = ResourceUtilities.readStreamToString(is);
+				String createStmt = getCreateStatement();
 				Statement s = conn.createStatement();
 				s.execute(createStmt);
 				s.close();
@@ -44,6 +42,23 @@ public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence 
 				throw new WrappedRuntimeException(e);
 			}
 		}
+	}
+
+	private String getCreateStatement() {
+		return "CREATE TABLE TransformRequests (\n"+
+		"id INT NOT NULL GENERATED ALWAYS AS IDENTITY (START WITH 1,\n"+
+		" INCREMENT BY 1) ,\n"+
+		" transform CLOB,\n"+
+		" timestamp BIGINT,\n"+
+		" user_id BIGINT,\n"+
+		" clientInstance_id BIGINT,\n"+
+		" request_id BIGINT,\n"+
+		" clientInstance_auth INTEGER,\n"+
+		"   transform_request_type varchar(50),\n"+
+		"  transform_event_protocol varchar(50),\n"+
+		"  tag varchar(50) ,\n"+
+		"  PRIMARY KEY (id)\n"+
+		") \n";
 	}
 
 	private boolean checkDbVersionOK() {
