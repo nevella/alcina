@@ -129,7 +129,7 @@ public class MetricLogging {
 		end(key, extraInfo, true);
 	}
 
-	private void end(String key, String extraInfo, boolean time) {
+	private synchronized void end(String key, String extraInfo, boolean time) {
 		key = keyWithParents(key, true);
 		if (!metricStart.containsKey(key) && !ticksSum.containsKey(key)) {
 			System.out.println("Warning - metric end without start - " + key);
@@ -188,7 +188,7 @@ public class MetricLogging {
 		muted = true;
 	}
 
-	public void reset() {
+	public synchronized void reset() {
 		muted = false;
 		if (useLog4j) {
 			MDC.put(LOG_CONTEXT_THREAD_ID, getCurrentThreadId());
@@ -214,13 +214,13 @@ public class MetricLogging {
 		terminated = new HashSet<String>();
 	}
 
-	public void start(String key) {
+	public synchronized void start(String key) {
 		key = keyWithParents(key, false);
 		metricStart.put(key, System.currentTimeMillis());
 		metricStartThreadIds.put(key, getCurrentThreadId());
 	}
 
-	public void startMem(String key) {
+	public synchronized void startMem(String key) {
 		key = keyWithParents(key, false);
 		metricStart.put(key, Runtime.getRuntime().freeMemory());
 		metricStartThreadIds.put(key, getCurrentThreadId());
