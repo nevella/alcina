@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -22,15 +21,36 @@ import java.lang.annotation.RetentionPolicy;
 @Documented
 @ClientVisible
 /**
- *
+ * Provides information about both ends of an association
  * @author Nick Reddel
  */
-
- public @interface Association {
+public @interface Association {
+	/**
+	 * The property name of the <i>other end</i> of this association - e.g. for:<br>
+	 * <blockquote> <code>Bookstore Book.getBookstore() and<br>
+	 * Set&lt;Book&gt; Bookstore.getBooks()
+	 * </code> </blockquote> the getBookstore method would have association with
+	 * propertyName "books"
+	 */
 	String propertyName() default "";
 
+	/**
+	 * The type name of the implementation class (component type for a
+	 * collection, implementation type for an interface) of <i>this end</i> of
+	 * this association - e.g. for:<br>
+	 * <blockquote> <code>Bookstore Book.getBookstore() and<br>
+	 * Set&lt;Book&gt; Bookstore.getBooks()
+	 * </code> </blockquote> the <code>getBookstore()</code> method would have
+	 * association with implementationClass "Bookstore" and the
+	 * <code>getBookss()</code> method would have association with
+	 * implementationClass "Book"
+	 */
 	Class implementationClass() default void.class;
 
+	/**
+	 * Do not update the other end of this association when consuming a
+	 * DomainTransformEvent - this is useful for performance reasons
+	 * (parent-child associations with 1000s of kids spring to mind)
+	 */
 	boolean silentUpdates() default false;
-	boolean deletionAllowed() default false;
 }

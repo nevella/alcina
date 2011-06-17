@@ -146,7 +146,7 @@
 		<delete dir="${framework.javadoc.outputpath}">
 		</delete>
 		<mkdir dir="${framework.javadoc.outputpath}" />
-		<javadoc source="1.5" destdir="${framework.javadoc.outputpath}" classpathref="framework.gwt.classpath" sourcepathref="framework.javadoc.sourcepath" defaultexcludes="yes" packagenames="cc.*">
+		<javadoc source="1.5" destdir="${framework.javadoc.outputpath}" classpathref="framework.javadoc.classpath" sourcepathref="framework.javadoc.sourcepath" defaultexcludes="yes" packagenames="cc.*">
 
 		</javadoc>
 	</target>
