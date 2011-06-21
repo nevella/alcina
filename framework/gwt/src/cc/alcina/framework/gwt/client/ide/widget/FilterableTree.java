@@ -11,15 +11,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.widget;
 
+import java.util.Stack;
 
+import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
@@ -102,6 +105,63 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 	public void expandAll(int depth) {
 		for (int i = 0; i < getItemCount(); i++) {
 			expandAll(getItem(i), depth - 1);
+		}
+	}
+
+	public void expandAllAsync(Callback<Void> callback, int depth) {
+		Scheduler.get().scheduleIncremental(new ExpandCommand(callback, depth));
+	}
+
+	class ExpandCommand implements RepeatingCommand {
+		private final Callback<Void> callback;
+
+		private final int depth;
+
+		Stack<TreeItem> items = new Stack<TreeItem>();
+
+		int counter = 0;
+
+		public ExpandCommand(Callback<Void> callback, int depth) {
+			this.callback = callback;
+			this.depth = depth;
+			for (int i = 0; i < getItemCount(); i++) {
+				items.push(getItem(i));
+			}
+		}
+
+		public void walk() {
+			while (!items.isEmpty()) {
+				TreeItem pop = items.pop();
+				pop.setState(true);
+				int pDepth = getDepth(pop);
+				if (pDepth <= depth) {
+					for (int i = 0; i < pop.getChildCount(); i++) {
+						items.push(pop.getChild(i));
+					}
+				}
+				if (counter-- < 0) {
+					break;
+				}
+			}
+		}
+
+		private int getDepth(TreeItem item) {
+			int pDepth = 1;
+			while (((item = item.getParentItem())) != null) {
+				pDepth++;
+			}
+			return pDepth;
+		}
+
+		@Override
+		public boolean execute() {
+			counter = 200;
+			walk();
+			if (counter > 0) {
+				callback.callback(null);
+				return false;
+			}
+			return true;
 		}
 	}
 

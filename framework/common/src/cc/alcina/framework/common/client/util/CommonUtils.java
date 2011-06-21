@@ -333,14 +333,13 @@ public class CommonUtils {
 
 	public static String joinAsEnglishList(List<String> phrases,
 			String phraseTemplate) {
-		phraseTemplate = (phraseTemplate == null) ? "" : phraseTemplate;
 		StringBuffer result = new StringBuffer();
 		for (int i = 0; i < phrases.size(); i++) {
 			String phrase = phrases.get(i);
 			if (i > 0) {
 				result.append((i == phrases.size() - 1) ? " and " : ", ");
 			}
-			result.append(CommonUtils.format(phraseTemplate, phrase));
+			result.append(phraseTemplate==null?phrase:CommonUtils.formatJ(phraseTemplate, phrase));
 		}
 		return result.toString();
 	}
