@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import org.apache.log4j.AppenderSkeleton;
@@ -20,13 +19,11 @@ import org.apache.log4j.spi.LoggingEvent;
 
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class DbAppender extends AppenderSkeleton {
+public class DbAppender extends AppenderSkeleton {
 	public DbAppender(Layout l) {
 		setLayout(l);
 	}
@@ -35,7 +32,12 @@ import cc.alcina.framework.entity.logic.EntityLayerLocator;
 	protected void append(LoggingEvent event) {
 		String renderedMessage = event.getRenderedMessage();
 		String[] split = renderedMessage.split(" - ", 2);
-		EntityLayerLocator.get().persistentLog(split[1], split[0]);
+		if (split.length == 2) {
+			EntityLayerLocator.get().persistentLog(split[1], split[0]);
+		} else {
+			EntityLayerLocator.get().persistentLog("Unknown exception type",
+					renderedMessage);
+		}
 	}
 
 	public void close() {
