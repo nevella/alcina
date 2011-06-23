@@ -928,6 +928,7 @@ table.results-table {
 }
 .combined-validation-feedback {
 	min-width:300px;
+	width:300px;
 }
 .combined-validation-feedback .caption{
 	font-weight:bold;
