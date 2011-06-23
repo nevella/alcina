@@ -926,6 +926,17 @@ table.results-table {
 .login-error, .error {
 	color: #ff3333;
 }
+.combined-validation-feedback {
+	min-width:300px;
+}
+.combined-validation-feedback .caption{
+	font-weight:bold;
+	color: #444;
+	border-bottom: 1px solid #4040A0;
+	margin-left:1em;
+	margin-top:0.8em;
+	
+}
 
 
 /** Filter widget **/

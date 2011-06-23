@@ -65,8 +65,8 @@ public class ClientNotificationsImpl implements ClientNofications {
 		new OkCancelDialogBox("Confirmation", new Label(msg),
 				new PermissibleActionListener() {
 					public void vetoableAction(PermissibleActionEvent evt) {
-						if (evt.getAction().getActionName().equals(
-								OkCancelDialogBox.OK_ACTION)) {
+						if (evt.getAction().getActionName()
+								.equals(OkCancelDialogBox.OK_ACTION)) {
 							callback.ok();
 						}
 					}
@@ -89,15 +89,14 @@ public class ClientNotificationsImpl implements ClientNofications {
 
 	public void log(String s) {
 		logString += CommonUtils.formatDate(new Date(),
-				DateStyle.AU_DATE_TIME_MS)
-				+ ": " + s + "\n";
+				DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
 		consoleLog(s);
 	}
 
 	private native void consoleLog(String s) /*-{
-		try{
+		try {
 			$wnd.console.log(s);
-		}catch(e){
+		} catch (e) {
 
 		}
 	}-*/;
@@ -106,9 +105,8 @@ public class ClientNotificationsImpl implements ClientNofications {
 
 	public void metricLogEnd(String key) {
 		if (metricStartTimes.containsKey(key)) {
-			log(CommonUtils.format("Metric: %1 - %2 ms", key, System
-					.currentTimeMillis()
-					- metricStartTimes.get(key)));
+			log(CommonUtils.format("Metric: %1 - %2 ms", key,
+					System.currentTimeMillis() - metricStartTimes.get(key)));
 			metricStartTimes.remove(key);
 		}
 	}
@@ -170,7 +168,9 @@ public class ClientNotificationsImpl implements ClientNofications {
 		fp.setStyleName("text");
 		Widget capWidget = captionHTML != null ? new HTML(captionHTML)
 				: captionWidget;
-		capWidget.setStyleName("caption");
+		if (captionHTML != null) {
+			capWidget.setStyleName("caption");
+		}
 		fp.add(capWidget);
 		if (!CommonUtils.isNullOrEmpty(msg)) {
 			Link nh = new Link("View detail");

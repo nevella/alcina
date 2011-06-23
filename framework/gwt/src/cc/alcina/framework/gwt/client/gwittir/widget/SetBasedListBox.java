@@ -398,9 +398,10 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 	}
 
 	public boolean equals(final Object obj) {
-		if (obj == null) {
+		if (obj == null||!(obj instanceof SetBasedListBox)) {
 			return false;
 		}
+		
 		final SetBasedListBox other = (SetBasedListBox) obj;
 		if ((this.options != other.options)
 				&& ((this.options == null) || !this.options
