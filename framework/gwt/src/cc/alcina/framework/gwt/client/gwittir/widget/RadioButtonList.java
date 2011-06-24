@@ -38,14 +38,14 @@ import com.totsp.gwittir.client.ui.Renderer;
  * @author Nick Reddel
  */
 public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
-		 ClickHandler {
+		ClickHandler {
 	Map<String, T> labelMap = new HashMap<String, T>();
 
 	Map<T, RadioButton> radioMap = new HashMap<T, RadioButton>();
 
 	private FlowPanel fp;
 
-	private  Collection<T> values;
+	private Collection<T> values;
 
 	private final Renderer<T, String> renderer;
 
@@ -71,9 +71,11 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		this(groupName, values, renderer);
 		setColumnCount(columnCount);
 	}
+
 	public int getColumnCount() {
 		return columnCount;
 	}
+
 	public T getValue() {
 		Set<T> keySet = radioMap.keySet();
 		for (T object : keySet) {
@@ -88,7 +90,7 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		return values;
 	}
 
-	public boolean hasSelectedButton(){
+	public boolean hasSelectedButton() {
 		Set<T> keySet = radioMap.keySet();
 		for (T object : keySet) {
 			if (radioMap.get(object).isChecked()) {
@@ -97,8 +99,6 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		}
 		return false;
 	}
-
-	
 
 	public void setColumnCount(int width) {
 		this.columnCount = width;
@@ -124,6 +124,9 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 	public void setValues(Collection<T> values) {
 		this.values = values;
 		render();
+		if (lastValue != null) {
+			setValue(lastValue);
+		}
 	}
 
 	private void render() {
@@ -147,7 +150,6 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		fp.add(grid);
 	}
 
-
 	@Override
 	@SuppressWarnings("unchecked")
 	public void onClick(ClickEvent event) {
@@ -156,6 +158,6 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 			if (radioMap.get(object).equals(event.getSource())) {
 				setValue((T) object);
 			}
-		}		
+		}
 	}
 }
