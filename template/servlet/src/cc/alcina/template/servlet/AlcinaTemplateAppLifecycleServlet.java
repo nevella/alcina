@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.RegistryPermissionsExtension;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.impl.jboss.JBossSupport;
 import cc.alcina.framework.entity.impl.jboss.JPAHibernateImpl;
 import cc.alcina.framework.entity.impl.jboss.JbossLogMuter;
@@ -32,6 +33,7 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 		try {
 			super.destroy();
 			ResourceUtilities.appShutdown();
+			DetachedEntityCache.get().appShutdown();
 			// we won't be able to access as an ejb bean at this stage - so destroy() must have no @em refs
 			AlcinaTemplatePersistenceLocal pb = new AlcinaTemplatePersistence();
 			pb.destroy();
