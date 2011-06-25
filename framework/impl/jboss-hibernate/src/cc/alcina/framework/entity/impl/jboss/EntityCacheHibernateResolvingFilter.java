@@ -39,7 +39,7 @@ public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 	private InstantiateImplCallbackWithShellObject shellInstantiator;
 
 	public DetachedEntityCache getCache() {
-		return this.cache;
+		return this.cache == null ? DetachedEntityCache.get() : this.cache;
 	}
 
 	public void setCache(DetachedEntityCache cache) {
@@ -49,7 +49,6 @@ public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 	private InstantiateImplCallback instantiateImplCallback;
 
 	public EntityCacheHibernateResolvingFilter() {
-		cache = DetachedEntityCache.get();
 	}
 
 	public EntityCacheHibernateResolvingFilter(
@@ -70,7 +69,8 @@ public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 				LazyInitializer lazy = ((HibernateProxy) value)
 						.getHibernateLazyInitializer();
 				Serializable id = lazy.getIdentifier();
-				Object impl = cache.get(lazy.getPersistentClass(), (Long) id);
+				Object impl = getCache().get(lazy.getPersistentClass(),
+						(Long) id);
 				if (impl == null && instantiateImplCallback != null) {
 					if (instantiateImplCallback.instantiateLazyInitializer(
 							lazy, context)) {
@@ -78,12 +78,12 @@ public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 								.getHibernateLazyInitializer()
 								.getImplementation();
 						impl = graphCloner.project(impl, value, context);
-						cache.put((HasIdAndLocalId) impl);
+						getCache().put((HasIdAndLocalId) impl);
 					} else if (shellInstantiator != null) {
 						impl = shellInstantiator.instantiateShellObject(lazy,
 								context);
 						if (impl != null) {
-							cache.put((HasIdAndLocalId) impl);
+							getCache().put((HasIdAndLocalId) impl);
 						}
 					}
 				}
@@ -99,13 +99,13 @@ public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 					return null;
 				}
 			} else {
-				Object cached = cache.get(value.getClass(), hili.getId());
+				Object cached = getCache().get(value.getClass(), hili.getId());
 				if (cached != null) {
 					return (T) cached;
 				} else {
 					HasIdAndLocalId clonedHili = (HasIdAndLocalId) cloned;
 					clonedHili.setId(hili.getId());
-					cache.put(clonedHili);
+					getCache().put(clonedHili);
 					return (T) clonedHili;
 				}
 			}
@@ -130,7 +130,7 @@ public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 					Object impl = ((HibernateProxy) value)
 							.getHibernateLazyInitializer().getImplementation();
 					value = graphCloner.project(impl, value, context);
-					cache.put((HasIdAndLocalId) value);
+					getCache().put((HasIdAndLocalId) value);
 				} else {
 					value = graphCloner.project(value, context);
 				}

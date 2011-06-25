@@ -71,4 +71,7 @@ import com.google.gwt.user.client.ui.Widget;
 			super.insert(w, beforeIndex);
 		}
 	}
+	public void setContentHeight(String height){
+		ensureWidget().setHeight(height);
+	}
 }
