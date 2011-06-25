@@ -205,15 +205,19 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				+ (++actionCount)) {
 			@Override
 			public void run() {
-				// different thread-local
-				pm.copyTo(PermissionsManager.get());
-				ActionLogItem result = null;
-				result = performer.performAction(action);
-				result.setActionClass(action.getClass());
-				result.setActionDate(new Date());
-				if (persistentLog) {
-					ServletLayerLocator.get().commonPersistenceProvider()
-							.getCommonPersistence().logActionItem(result);
+				try {
+					// different thread-local
+					pm.copyTo(PermissionsManager.get());
+					ActionLogItem result = null;
+					result = performer.performAction(action);
+					result.setActionClass(action.getClass());
+					result.setActionDate(new Date());
+					if (persistentLog) {
+						ServletLayerLocator.get().commonPersistenceProvider()
+								.getCommonPersistence().logActionItem(result);
+					}
+				} finally {
+					JobRegistry.get().jobErrorInThread();
 				}
 			}
 		};
@@ -243,6 +247,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 			return result;
 		} catch (Exception e) {
+			JobRegistry.get().jobErrorInThread();
 			boolean log = true;
 			if (e instanceof WrappedRuntimeException) {
 				WrappedRuntimeException ire = (WrappedRuntimeException) e;

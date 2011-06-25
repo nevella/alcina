@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet.job;
 
 import java.util.ArrayList;
@@ -24,34 +23,24 @@ import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
+import cc.alcina.framework.common.client.util.Multimap;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class JobRegistry {
+public class JobRegistry {
 	private Map<Long, JobInfo> infoMap;
+
+	private Multimap<Long, List<JobInfo>> infoChildMap;
 
 	private Map<Long, Boolean> cancelledMap;
 
 	private JobRegistry() {
 		super();
 		infoMap = new HashMap<Long, JobInfo>();
+		infoChildMap = new Multimap<Long, List<JobInfo>>();
 		cancelledMap = new HashMap<Long, Boolean>();
-	}
-
-	Thread getThread(long id) {
-		int count = Thread.currentThread().getThreadGroup().activeCount();
-		Thread[] threads = new Thread[count * 2];
-		count = Thread.currentThread().getThreadGroup().enumerate(threads);
-		for (int i = 0; i < count; i++) {
-			if (threads[i].getId() == id) {
-				return threads[i];
-			}
-		}
-		return null;
 	}
 
 	private static JobRegistry theInstance;
@@ -66,11 +55,21 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	public void updateInfo(JobInfo info) {
 		long id = Thread.currentThread().getId();
 		info.setThreadId(id);
-		infoMap.put(info.getThreadId(), info);
+		if (info.isComplete()) {
+			infoChildMap.getAndEnsure(id).remove(info);// if it's a child - keep
+														// if top level
+		}
 	}
 
 	public JobInfo getInfo(long id) {
-		return infoMap.get(id);
+		JobInfo jobInfo = infoMap.get(id);
+		if (jobInfo != null) {
+			JobInfo kid = CommonUtils.last(infoChildMap.getAndEnsure(id));
+			if (kid != null) {
+				return jobInfo.combineWithChild(kid);
+			}
+		}
+		return jobInfo;
 	}
 
 	public void appShutdown() {
@@ -85,13 +84,20 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		info.setProgressMessage(message != null ? message : "Starting job...");
 		updateInfo(info);
 		info.setStartTime(new Date());
-		cancelledMap.remove(info.getThreadId());
+		JobInfo tlInfo = getTopLevelInfoForThread();
+		if (tlInfo == null || tlInfo.isComplete()) {
+			cancelledMap.remove(info.getThreadId());
+			infoMap.put(info.getThreadId(), info);
+			infoChildMap.clear();
+		} else {
+			infoChildMap.add(info.getThreadId(), info);
+		}
 		return info;
 	}
 
 	public void jobProgress(JobInfo info, String progressMessage,
 			double percentComplete) {
-		if (info==null){
+		if (info == null) {
 			return;
 		}
 		info.setComplete(false);
@@ -101,11 +107,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public void jobComplete(JobInfo info) {
-		jobComplete(info,"Job complete");
+		jobComplete(info, "Job complete");
 	}
 
 	public void jobError(JobInfo info, String errorMessage) {
-		if (info==null){
+		if (info == null) {
 			return;
 		}
 		jobComplete(info);
@@ -115,17 +121,22 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	public boolean isCancelled() {
 		long id = Thread.currentThread().getId();
-		return CommonUtils.bv(cancelledMap.get(id))||!infoMap.containsKey(id);
+		return CommonUtils.bv(cancelledMap.get(id)) || !infoMap.containsKey(id);
 	}
 
 	public void cancel(Long id) {
 		cancelledMap.put(id, true);
+		JobInfo info = getTopLevelInfoForThread();
+		if (info != null && !info.isComplete()) {
+			jobError(info, "Job cancelled");
+		}
 	}
-	public List<Long> getRunningJobs(){
+
+	public List<Long> getRunningJobs() {
 		Set<Entry<Long, JobInfo>> entries = infoMap.entrySet();
 		List<Long> runningJobids = new ArrayList<Long>();
 		for (Entry<Long, JobInfo> entry : entries) {
-			if (!entry.getValue().isComplete()){
+			if (!entry.getValue().isComplete()) {
 				runningJobids.add(entry.getKey());
 			}
 		}
@@ -133,13 +144,24 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public void jobComplete(JobInfo info, String message) {
-		if (info==null){
+		if (info == null) {
 			return;
 		}
 		info.setComplete(true);
 		info.setPercentComplete(1);
 		info.setProgressMessage(message);
 		info.setEndTime(new Date());
-		updateInfo(info);		
+		updateInfo(info);
+	}
+
+	public void jobErrorInThread() {
+		JobInfo info = getTopLevelInfoForThread();
+		if (info != null && !info.isComplete()) {
+			jobError(info, "Unknown error");
+		}
+	}
+
+	private JobInfo getTopLevelInfoForThread() {
+		return infoMap.get(Thread.currentThread().getId());
 	}
 }

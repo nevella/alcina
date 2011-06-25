@@ -11,18 +11,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 import java.util.Date;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class JobInfo implements Serializable{
+public class JobInfo implements Serializable, Cloneable {
 	private long threadId;
 
 	private Date startTime;
@@ -101,5 +101,26 @@ import java.util.Date;
 
 	public void setThreadId(long threadId) {
 		this.threadId = threadId;
+	}
+
+	// literal for gwt
+	protected JobInfo gClone() {
+		JobInfo clone = new JobInfo();
+		clone.complete = complete;
+		clone.endTime = endTime;
+		clone.errorMessage = errorMessage;
+		clone.jobName = jobName;
+		clone.percentComplete = percentComplete;
+		clone.progressMessage = progressMessage;
+		clone.startTime = startTime;
+		clone.threadId = threadId;
+		return clone;
+	}
+
+	public JobInfo combineWithChild(JobInfo kid) {
+		JobInfo combo = gClone();
+		combo.setProgressMessage(CommonUtils.formatJ("%s >> %s: %s",
+				progressMessage, kid.getJobName(), kid.progressMessage));
+		return combo;
 	}
 }

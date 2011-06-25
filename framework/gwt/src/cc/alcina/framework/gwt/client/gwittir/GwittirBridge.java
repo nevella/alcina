@@ -565,4 +565,14 @@ public class GwittirBridge implements PropertyAccessor {
 	public Class getPropertyType(Class objectClass, String propertyName) {
 		return ClientReflector.get().getPropertyType(objectClass, propertyName);
 	}
+
+	public static void renameField(Field[] fields, String propertyName,
+			String label) {
+		for(Field f:fields){
+			if(f.getPropertyName().equals(propertyName)){
+				f.setLabel(label);
+			}
+		}
+		
+	}
 }
