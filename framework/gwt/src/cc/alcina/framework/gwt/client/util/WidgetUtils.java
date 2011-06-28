@@ -39,6 +39,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.dom.client.Style.VerticalAlign;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -648,7 +649,7 @@ public class WidgetUtils {
 	/**
 	 * Assumes a fully expanded tree
 	 */
-	public static void wrap(Element root) {
+	public static void wrapAndVtop(Element root) {
 		Stack<Element> stack = new Stack<Element>();
 		stack.push(root);
 		while (!stack.isEmpty()) {
@@ -656,6 +657,9 @@ public class WidgetUtils {
 			String wsProp = curr.getStyle().getProperty("whiteSpace");
 			if (wsProp.equals("nowrap")) {
 				curr.getStyle().setProperty("whiteSpace", "");
+			}
+			if(curr.getStyle().getVerticalAlign().equals("middle")){
+				curr.getStyle().setVerticalAlign(VerticalAlign.TOP);
 			}
 			int cc = curr.getChildCount();
 			for (int i = 0; i < cc; i++) {
