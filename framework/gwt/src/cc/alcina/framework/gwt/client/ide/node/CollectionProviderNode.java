@@ -36,13 +36,13 @@ import com.google.gwt.user.client.ui.TreeItem;
 
 	public CollectionProviderNode(CollectionProvider collectionProvider,
 			String title, ImageResource imageResource) {
-		super(title, imageResource);
-		setCollectionProvider(collectionProvider);
-		setHTML(imageItemHTML(getImagePrototype(), title));
+		this(collectionProvider, title, imageResource, false,null);
 	}
 	public CollectionProviderNode(CollectionProvider collectionProvider,
-			String title, ImageResource imageResource, boolean volatileOrder) {
-		this(collectionProvider, title, imageResource);
+			String title, ImageResource imageResource, boolean volatileOrder,NodeFactory nodeFactory) {
+		super(title, imageResource,nodeFactory);
+		setCollectionProvider(collectionProvider);
+		setHTML(imageItemHTML(getImagePrototype(), title));
 		this.support.setVolatileOrder(volatileOrder);
 	}
 	public void removeItem(TreeItem item) {

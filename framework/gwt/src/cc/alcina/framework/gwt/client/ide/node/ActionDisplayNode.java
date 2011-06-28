@@ -29,6 +29,12 @@ import com.google.gwt.resources.client.ImageResource;
 	public ActionDisplayNode(String title, ImageResource imageResource) {
 		super(title, imageResource);
 	}
+	
+	public ActionDisplayNode(String title, ImageResource imageResource,
+			NodeFactory nodeFactory) {
+		super(title, imageResource, nodeFactory);
+	}
+
 	@Override
 	protected void onEnsureDebugId(String baseID) {
 		ensureDebugId(getElement(),CommonUtils.simpleClassName(getAction().getClass()));

@@ -31,7 +31,12 @@ public class ContainerNode extends FilterableTreeItem implements DetachListener 
 
 
 	public ContainerNode(String title, ImageResource imageResource) {
-		super();
+		this(title, imageResource, null);
+	}
+
+	public ContainerNode(String title, ImageResource imageResource,
+			NodeFactory nodeFactory) {
+		super(nodeFactory);
 		this.title = title;
 		this.imagePrototype = AbstractImagePrototype
 				.create(imageResource == null ? StandardDataImageProvider.get()

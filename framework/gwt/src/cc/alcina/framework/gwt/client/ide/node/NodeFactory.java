@@ -85,21 +85,21 @@ public class NodeFactory {
 			nodeCreator = (NodeCreator) Registry.get().instantiateSingle(
 					NodeCreator.class, clazz);
 		}
-		return nodeCreator.createDomainNode(domainObject);
+		return nodeCreator.createDomainNode(domainObject, this);
 	}
 
 	public static interface NodeCreator {
 		public DomainNode createDomainNode(
-				SourcesPropertyChangeEvents domainObject);
+				SourcesPropertyChangeEvents domainObject, NodeFactory factory);
 	}
 
 	@RegistryLocation(j2seOnly = false, registryPoint = NodeCreator.class)
 	@ClientInstantiable
 	public static class DefaultNodeCreator implements NodeCreator {
-		@SuppressWarnings("unchecked")
+		@Override
 		public DomainNode createDomainNode(
-				SourcesPropertyChangeEvents domainObject) {
-			return new DomainNode(domainObject);
+				SourcesPropertyChangeEvents domainObject, NodeFactory factory) {
+			return new DomainNode(domainObject, factory);
 		}
 	}
 
@@ -113,8 +113,9 @@ public class NodeFactory {
 		return null;
 	}
 
-	private UmbrellaProviderNode getNodeForUmbrella(UmbrellaCollectionProvider providerChild) {
-		return new UmbrellaProviderNode(providerChild,null,null);
+	private UmbrellaProviderNode getNodeForUmbrella(
+			UmbrellaCollectionProvider providerChild) {
+		return new UmbrellaProviderNode(providerChild, null, null, this);
 	}
 
 	public DomainNode getNodeForDomainObject(
@@ -158,7 +159,7 @@ public class NodeFactory {
 			} else {
 				CollectionProviderNode node = new CollectionProviderNode(
 						provider, TextProvider.get().getLabelText(c, pr),
-						images.folder());
+						images.folder(),false,this);
 				createdNodes.put(visualiserInfo.displayInfo().orderingHint(),
 						node);
 			}

@@ -42,8 +42,8 @@ public class UmbrellaProviderNode extends ContainerNode implements
 	private final UmbrellaCollectionProvider provider;
 
 	public UmbrellaProviderNode(UmbrellaCollectionProvider provider,
-			String title, ImageResource imageResource) {
-		super(title, imageResource);
+			String title, ImageResource imageResource,NodeFactory nodeFactory) {
+		super(title, imageResource,nodeFactory);
 		this.provider = provider;
 		setCollectionProvider(provider);
 		title = title == null ? provider.getTitle() : title;

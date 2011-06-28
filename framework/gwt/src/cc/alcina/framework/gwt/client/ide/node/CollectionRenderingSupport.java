@@ -239,11 +239,8 @@ public class CollectionRenderingSupport implements
 	}
 
 	protected NodeFactory getNodeFactory() {
-		if (item.getTree() instanceof NodeFactoryProvider) {
-			NodeFactoryProvider nfp = (NodeFactoryProvider) item.getTree();
-			return nfp.getNodeFactory();
-		}
-		return NodeFactory.get();
+		NodeFactory nodeFactory = item.getNodeFactory();
+		return nodeFactory != null ? nodeFactory : NodeFactory.get();
 	}
 
 	public void removeItem(TreeItem item) {
@@ -294,6 +291,8 @@ public class CollectionRenderingSupport implements
 		public Tree getTree();
 
 		public boolean getState();
+
+		public NodeFactory getNodeFactory();
 	}
 
 	public static class TreeOrItemTreeItem implements TreeOrItem {
@@ -331,6 +330,14 @@ public class CollectionRenderingSupport implements
 		public boolean getState() {
 			return item.getState();
 		}
+
+		@Override
+		public NodeFactory getNodeFactory() {
+			if (item instanceof NodeFactoryProvider) {
+				return ((NodeFactoryProvider) item).getNodeFactory();
+			}
+			return null;
+		}
 	}
 
 	public static class TreeOrItemTree implements TreeOrItem {
@@ -367,6 +374,14 @@ public class CollectionRenderingSupport implements
 		@Override
 		public boolean getState() {
 			return true;
+		}
+
+		@Override
+		public NodeFactory getNodeFactory() {
+			if (tree instanceof NodeFactoryProvider) {
+				return ((NodeFactoryProvider) tree).getNodeFactory();
+			}
+			return null;
 		}
 	}
 }

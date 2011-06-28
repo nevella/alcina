@@ -4,7 +4,7 @@
 	<inherits name="cc.alcina.framework.gwt.persistence.DTPersistence" />
 	<inherits name='com.google.gwt.json.JSON'/>
 	<inherits name='cc.alcina.framework.gwt.appcache.AppCache' />
-	<stylesheet src='Alcina.css?r304' />
+	<stylesheet src='Alcina.css?r422' />
 
 	<public path="public" />
 	<source path="client" />

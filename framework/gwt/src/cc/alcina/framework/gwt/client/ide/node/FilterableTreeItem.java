@@ -26,7 +26,9 @@ import com.google.gwt.user.client.ui.TreeItem;
  * @author Nick Reddel
  */
 public class FilterableTreeItem extends TreeItem implements
-		VisualFilterableWithParentEnforcesChildVisibility {
+		VisualFilterableWithParentEnforcesChildVisibility, NodeFactoryProvider {
+	private NodeFactory nodeFactory;
+
 	public boolean filter(String filterText) {
 		return filter(filterText, false);
 	}
@@ -34,8 +36,6 @@ public class FilterableTreeItem extends TreeItem implements
 	protected boolean satisfiesFilter(String filterText) {
 		return getText().toLowerCase().contains(filterText);
 	}
-
-	
 
 	public boolean filter(String filterText, boolean enforceVisible) {
 		boolean satisfiesFilter = satisfiesFilter(filterText);
@@ -56,9 +56,20 @@ public class FilterableTreeItem extends TreeItem implements
 		return satisfiesFilterThisNode;
 	}
 
+	public FilterableTreeItem() {
+	}
+
+	public FilterableTreeItem(NodeFactory nodeFactory) {
+		this.nodeFactory = nodeFactory;
+	}
+
 	@Override
 	public String getText() {
 		String text = super.getText();
 		return text == null ? "" : text;
+	}
+
+	public NodeFactory getNodeFactory() {
+		return this.nodeFactory;
 	}
 }

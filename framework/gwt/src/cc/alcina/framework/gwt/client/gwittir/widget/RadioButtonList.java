@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.ClickListener;
+import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.RadioButton;
@@ -56,6 +57,8 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 	private T lastValue;
 
 	private T nonMatchedValue;
+
+	private FlexTable table;
 
 	public RadioButtonList(String groupName, Collection<T> values,
 			Renderer<T, String> renderer) {
@@ -132,22 +135,21 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 	private void render() {
 		fp.clear();
 		radioMap.clear();
-		Grid grid = new Grid((int) Math.ceil((double) getValues().size()
-				/ (double) getColumnCount()), getColumnCount());
+		table=new FlexTable();
 		int x = 0, y = 0;
 		for (T o : getValues()) {
 			String displayText = renderer.render(o);
 			labelMap.put(displayText, o);
 			RadioButton rb = new RadioButton(groupName, displayText);
 			radioMap.put(o, rb);
-			grid.setWidget(y, x++, rb);
+			table.setWidget(y, x++, rb);
 			if (x == getColumnCount()) {
 				x = 0;
 				y++;
 			}
 			rb.addClickHandler(this);
 		}
-		fp.add(grid);
+		fp.add(table);
 	}
 
 	@Override
@@ -159,5 +161,9 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 				setValue((T) object);
 			}
 		}
+	}
+
+	public FlexTable getTable() {
+		return this.table;
 	}
 }

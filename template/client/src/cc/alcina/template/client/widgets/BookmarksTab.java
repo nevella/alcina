@@ -25,6 +25,7 @@ import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainCollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
+import cc.alcina.framework.gwt.client.ide.node.NodeFactory;
 import cc.alcina.framework.gwt.client.ide.node.NodeFactory.NodeCreator;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
@@ -143,13 +144,11 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 							.createDomainObject(Bookmark.class);
 					bookmark.setUser(user);
 					bookmark.setUrl("http://en.wikipedia.org/wiki/Alcina");
-					bookmark
-							.setTitle("Alcina - Wikipedia, the free encyclopedia");
+					bookmark.setTitle("Alcina - Wikipedia, the free encyclopedia");
 					bookmark = TransformManager.get().createDomainObject(
 							Bookmark.class);
 					bookmark.setUser(user);
-					bookmark
-							.setUrl("http://video.google.com/videoplay?docid=-4779697496133297566#");
+					bookmark.setUrl("http://video.google.com/videoplay?docid=-4779697496133297566#");
 					bookmark.setTitle("History of oil");
 					TransformManager.get().modifyCollectionProperty(folder,
 							"children", bookmark,
@@ -157,18 +156,15 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 					bookmark = TransformManager.get().createDomainObject(
 							Bookmark.class);
 					bookmark.setUser(user);
-					bookmark
-							.setUrl("http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html");
-					bookmark
-							.setTitle("The 'Double-Checked Locking is Broken' Declaration");
+					bookmark.setUrl("http://www.cs.umd.edu/~pugh/java/memoryModel/DoubleCheckedLocking.html");
+					bookmark.setTitle("The 'Double-Checked Locking is Broken' Declaration");
 					TransformManager.get().modifyCollectionProperty(folder,
 							"children", bookmark,
 							CollectionModificationType.ADD);
 					bookmark = TransformManager.get().createDomainObject(
 							Bookmark.class);
 					bookmark.setUser(user);
-					bookmark
-							.setUrl("http://docs.jboss.org/ejb3/docs/tutorial/1.0.7/html/Caching_EJB3_Entities.html");
+					bookmark.setUrl("http://docs.jboss.org/ejb3/docs/tutorial/1.0.7/html/Caching_EJB3_Entities.html");
 					bookmark.setTitle("Caching EJB3 Entities");
 					TransformManager.get().modifyCollectionProperty(folder,
 							"children", bookmark,
@@ -204,8 +200,8 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 					return o.getParent() == null;
 				}
 			};
-			ContainerNode cpn = getFilteredCollectionNode(TextProvider
-					.get().getUiObjectText(BookmarksTab.class,
+			ContainerNode cpn = getFilteredCollectionNode(
+					TextProvider.get().getUiObjectText(BookmarksTab.class,
 							"bookmarksTreeRootNode", "Bookmarks"),
 					Bookmark.class, getImages().folder(), cf);
 			return cpn;
@@ -226,25 +222,24 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 	@RegistryLocation(j2seOnly = false, registryPoint = NodeCreator.class, targetClass = Bookmark.class)
 	@ClientInstantiable
 	public static class BookmarkNodeCreator implements NodeCreator {
-		@SuppressWarnings("unchecked")
+		@Override
 		public DomainNode createDomainNode(
-				SourcesPropertyChangeEvents domainObject) {
-			return new BookmarkNode((Bookmark) domainObject);
+				SourcesPropertyChangeEvents domainObject, NodeFactory factory) {
+			return new BookmarkNode((Bookmark) domainObject, factory);
 		}
 	}
 
 	public static class BookmarkNode extends
 			DomainCollectionProviderNode<Bookmark> {
-		public BookmarkNode(Bookmark object) {
-			super(object);
+		public BookmarkNode(Bookmark object,NodeFactory factory) {
+			super(object,factory);
 		}
 
 		@Override
 		protected String imageItemHTML(AbstractImagePrototype imageProto,
 				String title) {
 			ImageResource res = !getUserObject().getChildren().isEmpty() ? getImages()
-					.folder()
-					: getImages().file();
+					.folder() : getImages().file();
 			return super.imageItemHTML(AbstractImagePrototype.create(res),
 					title);
 		}

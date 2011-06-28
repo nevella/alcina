@@ -35,7 +35,10 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 	protected CollectionRenderingSupport support = null;
 
 	public DomainCollectionProviderNode(T object) {
-		super(object);
+		this(object,null);
+	}
+	public DomainCollectionProviderNode(T object,NodeFactory factory) {
+		super(object,factory);
 	}
 
 	public void removeItem(TreeItem item) {

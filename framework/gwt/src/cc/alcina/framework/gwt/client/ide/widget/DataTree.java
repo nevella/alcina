@@ -11,9 +11,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.widget;
 
+import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
@@ -24,17 +24,18 @@ import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventType;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
 
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.TreeItem;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class DataTree extends FilterableTree implements ExtraTreeEventSource,
+public class DataTree extends FilterableTree implements ExtraTreeEventSource,
 		VisualFilterableWithFirst {
 	public static final String DEBUG_ID = "DataTree";
 
@@ -103,8 +104,8 @@ import com.google.gwt.user.client.ui.TreeItem;
 			public void callback(TreeItem target) {
 				Object userObject = target.getUserObject();
 				if (userObject != null) {
-					if ((classNameTest && userObject.getClass()
-							.getName().equals(obj))
+					if ((classNameTest && userObject.getClass().getName()
+							.equals(obj))
 							|| obj.equals(userObject)) {
 						result = target;
 					}
@@ -119,4 +120,5 @@ import com.google.gwt.user.client.ui.TreeItem;
 		}
 		return result;
 	}
+
 }

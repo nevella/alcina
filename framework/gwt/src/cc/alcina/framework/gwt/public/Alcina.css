@@ -1358,3 +1358,6 @@ div.max .gwt-RichTextArea{
 .alcina-Selector .popupContent div.chooser-item:hover{
 	background-color:#A8D3E6;
 }
+.gwt-Tree.wrapped-tree .gwt-TreeItem{
+	white-space: normal;
+}

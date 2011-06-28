@@ -51,8 +51,10 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 	public T getUserObject() {
 		return (T) super.getUserObject();
 	}
-
 	public DomainNode(T object) {
+		this(object,null);
+	}
+	public DomainNode(T object,NodeFactory nodeFactory) {
 		super();
 		setUserObject(object);
 		ClientBeanReflector info = ClientReflector.get().beanInfoForClass(

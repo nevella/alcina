@@ -40,6 +40,7 @@ import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
 import cc.alcina.framework.gwt.client.ide.node.HasVisibleCollection;
+import cc.alcina.framework.gwt.client.ide.node.NodeFactory;
 import cc.alcina.framework.gwt.client.ide.node.UmbrellaProviderNode;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.SimpleCollectionProvider;
@@ -394,32 +395,41 @@ public class WorkspaceView extends Composite implements HasName,
 			}
 			return actions;
 		}
-
 		@SuppressWarnings("unchecked")
 		protected <C> ContainerNode getBasicCollectionNode(
 				String name, Class<C> clazz, ImageResource imageResource) {
+			return getBasicCollectionNode(name, clazz, imageResource, null);
+		}
+		@SuppressWarnings("unchecked")
+		protected <C> ContainerNode getBasicCollectionNode(
+				String name, Class<C> clazz, ImageResource imageResource,NodeFactory nodeFactory) {
 			Collection domainCollection = TransformManager.get().getCollection(
 					clazz);
 			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
 					domainCollection, clazz);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
-					name, imageResource);
+					name, imageResource,false,nodeFactory);
 			TransformManager.get().addCollectionModificationListener(provider,
 					clazz);
 			return node;
 		}
-
 		@SuppressWarnings("unchecked")
 		protected <C> ContainerNode getFilteredCollectionNode(
 				String name, Class<C> clazz, ImageResource imageResource,
 				CollectionFilter cf) {
+			return getFilteredCollectionNode(name, clazz, imageResource, cf, null);
+		}
+		@SuppressWarnings("unchecked")
+		protected <C> ContainerNode getFilteredCollectionNode(
+				String name, Class<C> clazz, ImageResource imageResource,
+				CollectionFilter cf,NodeFactory nodeFactory) {
 			Collection domainCollection = TransformManager.get().getCollection(
 					clazz);
 			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
 					domainCollection, clazz);
 			provider.setFilter(cf);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
-					name, imageResource);
+					name, imageResource,false,nodeFactory);
 			TransformManager.get().addCollectionModificationListener(provider,
 					clazz, true);
 			return node;
@@ -428,14 +438,14 @@ public class WorkspaceView extends Composite implements HasName,
 		@SuppressWarnings("unchecked")
 		protected <C> ContainerNode getUmbrellaProviderNode(String name,
 				Class<C> clazz, ImageResource imageResource,
-				UmbrellaProvider umbrellaProvider,CollectionFilter collectionFilter) {
+				UmbrellaProvider umbrellaProvider,CollectionFilter collectionFilter,NodeFactory nodeFactory) {
 			Collection domainCollection = TransformManager.get().getCollection(
 					clazz);
 			UmbrellaCollectionProviderMultiplexer<C> collectionProvider = new UmbrellaCollectionProviderMultiplexer<C>(
 					domainCollection, clazz, umbrellaProvider, collectionFilter,3);
 			UmbrellaProviderNode node = new UmbrellaProviderNode(
 					collectionProvider.getRootSubprovider(), name,
-					imageResource);
+					imageResource,nodeFactory);
 			TransformManager.get().addCollectionModificationListener(
 					collectionProvider, clazz, true);
 			return node;

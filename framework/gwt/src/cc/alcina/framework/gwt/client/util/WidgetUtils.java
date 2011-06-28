@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -36,6 +37,7 @@ import com.google.gwt.dom.client.BodyElement;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -640,6 +642,28 @@ public class WidgetUtils {
 			widget.addStyleName(styleName);
 		}else{
 			widget.removeStyleName(styleName);
+		}
+	}
+
+	/**
+	 * Assumes a fully expanded tree
+	 */
+	public static void wrap(Element root) {
+		Stack<Element> stack = new Stack<Element>();
+		stack.push(root);
+		while (!stack.isEmpty()) {
+			Element curr = stack.pop();
+			String wsProp = curr.getStyle().getProperty("whiteSpace");
+			if (wsProp.equals("nowrap")) {
+				curr.getStyle().setProperty("whiteSpace", "");
+			}
+			int cc = curr.getChildCount();
+			for (int i = 0; i < cc; i++) {
+				Node child = curr.getChild(i);
+				if (child.getNodeType() == Node.ELEMENT_NODE) {
+					stack.push((Element) child);
+				}
+			}
 		}
 	}
 }
