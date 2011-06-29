@@ -164,4 +164,9 @@ public class JobRegistry {
 	private JobInfo getTopLevelInfoForThread() {
 		return infoMap.get(Thread.currentThread().getId());
 	}
+
+	public boolean isTopLevel(JobInfo jobInfo) {
+		long id = Thread.currentThread().getId();
+		return jobInfo == infoMap.get(id);
+	}
 }

@@ -16,7 +16,7 @@ public abstract class BaseRemoteActionPerformer {
 	}
 
 	protected JobInfo jobInfo;
-	protected long itemCount;
+	private long itemCount;
 	public long getItemCount() {
 		return this.itemCount;
 	}
@@ -26,7 +26,8 @@ public abstract class BaseRemoteActionPerformer {
 
 	protected long itemsCompleted;
 	public void updateJob(String message) {
-		updateJob(message,1);
+		
+		updateJob(message,JobRegistry.get().isTopLevel(jobInfo)?1:0);
 	}
 	public void updateJob(String message, int completedDelta) {
 		itemsCompleted+=completedDelta;

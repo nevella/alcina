@@ -229,7 +229,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public void setEmailAddress(String emailAddress) {
+		String old_emailAddress = this.emailAddress;
 		this.emailAddress = emailAddress;
+		propertyChangeSupport().firePropertyChange("emailAddress",
+				old_emailAddress, emailAddress);
 	}
 
 	public void setEmailInline(boolean emailInline) {
@@ -248,7 +251,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public void setFontOptions(PublicationFontOptions fontOptions) {
+		PublicationFontOptions old_fontOptions = this.fontOptions;
 		this.fontOptions = fontOptions;
+		propertyChangeSupport().firePropertyChange("fontOptions",
+				old_fontOptions, fontOptions);
 	}
 
 	public void setFooter(boolean footer) {
@@ -262,7 +268,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public void setNote(String note) {
+		String old_note = this.note;
 		this.note = note;
+		propertyChangeSupport().firePropertyChange("note", old_note, note);
 	}
 
 	public void setOutputFormat(PublicationOutputFormat outputFormat) {
@@ -280,7 +288,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	public void setPublicationRange(PublicationRange publicationRange) {
+		PublicationRange old_publicationRange = this.publicationRange;
 		this.publicationRange = publicationRange;
+		propertyChangeSupport().firePropertyChange("publicationRange",
+				old_publicationRange, publicationRange);
 	}
 
 	public void setResultCount(int resultCount) {
