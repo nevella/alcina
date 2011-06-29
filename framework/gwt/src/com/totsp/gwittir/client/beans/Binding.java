@@ -290,6 +290,9 @@ public class Binding {
      * Establishes a two-way binding between the objects.
      */
     public void bind() {
+    	if(this.bound){
+    		return;
+    	}
         if ((left != null) && (right != null)) {
             left.object.addPropertyChangeListener(left.property.getName(), left.listener);
 
@@ -365,6 +368,9 @@ public class Binding {
      * Breaks the two way binding and removes all listeners.
      */
     public void unbind() {
+    	if(!this.bound){
+    		return;
+    	}
         if ((left != null) && (right != null)) {
             left.object.removePropertyChangeListener(left.property.getName(), left.listener);
             if(left.feedback != null){
@@ -779,4 +785,8 @@ public class Binding {
             }
         }
     }
+
+	public boolean isBound() {
+		return bound;
+	}
 }
