@@ -39,6 +39,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.Style.VerticalAlign;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -639,9 +640,9 @@ public class WidgetUtils {
 
 	public static void setOrRemoveStyleName(Widget widget, String styleName,
 			boolean set) {
-		if(set){
+		if (set) {
 			widget.addStyleName(styleName);
-		}else{
+		} else {
 			widget.removeStyleName(styleName);
 		}
 	}
@@ -658,8 +659,13 @@ public class WidgetUtils {
 			if (wsProp.equals("nowrap")) {
 				curr.getStyle().setProperty("whiteSpace", "");
 			}
-			if(curr.getStyle().getVerticalAlign().equals("middle")){
+			if (curr.getStyle().getVerticalAlign().equals("middle")) {
 				curr.getStyle().setVerticalAlign(VerticalAlign.TOP);
+			}
+			if (curr.getTagName().equalsIgnoreCase("IMG")
+					&& curr.getParentElement() != null
+					&& curr.getParentElement().getTagName().equals("TD")) {
+				curr.getParentElement().getStyle().setWidth(16, Unit.PX);
 			}
 			int cc = curr.getChildCount();
 			for (int i = 0; i < cc; i++) {
