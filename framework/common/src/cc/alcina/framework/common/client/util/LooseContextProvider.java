@@ -1,0 +1,43 @@
+package cc.alcina.framework.common.client.util;
+
+/**
+ * Beginnings of a general approach to decoupling hints - let's see if it works
+ * 
+ * @author nick@alcina.cc
+ * 
+ */
+public abstract class LooseContextProvider {
+	private static LooseContextProvider theInstance;
+
+	public static LooseContextProvider get() {
+		if (theInstance == null) {
+			// well, throw an exception.
+		}
+		LooseContextProvider tm = theInstance.getT();
+		if (tm != null) {
+			return tm;
+		}
+		return theInstance;
+	}
+
+	public static void register(LooseContextProvider tm) {
+		theInstance = tm;
+	}
+
+	private LooseContext context;
+
+	public static LooseContext getContext() {
+		return get().getContext0();
+	}
+
+	private LooseContext getContext0() {
+		if (context == null) {
+			context = new LooseContext();
+		}
+		return context;
+	}
+
+	public LooseContextProvider getT() {
+		return null;
+	}
+}

@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
@@ -35,6 +36,7 @@ import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.ServerURLComponentEncoder;
+import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
@@ -186,6 +188,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				new RemoteActionLoggerProvider());
 		ObjectPersistenceHelper.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
+		LooseContextProvider.register(ThreadlocalLooseContextProvider.ttmInstance());
 	}
 
 	protected void initServletLayerRegistry() {

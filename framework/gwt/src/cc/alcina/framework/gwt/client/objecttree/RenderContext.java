@@ -13,10 +13,9 @@
  */
 package cc.alcina.framework.gwt.client.objecttree;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 import com.google.gwt.user.client.ui.Widget;
 
@@ -24,9 +23,7 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author Nick Reddel
  */
-public class RenderContext {
-	public Map<String, Object> properties = new HashMap<String, Object>();
-
+public class RenderContext extends LooseContext {
 	private static RenderContext current;
 
 	/**
@@ -50,14 +47,6 @@ public class RenderContext {
 
 	private Callback<Widget> onDetachCallback;
 
-	public <T> T get(String key) {
-		return (T) properties.get(key);
-	}
-
-	public Integer getInteger(String key) {
-		return (Integer) properties.get(key);
-	}
-
 	public Callback<Widget> getOnAttachCallback() {
 		return this.onAttachCallback;
 	}
@@ -74,14 +63,6 @@ public class RenderContext {
 		return this.rootRenderer;
 	}
 
-	public String getString(String key) {
-		return (String) properties.get(key);
-	}
-
-	public boolean isBoolean(String key) {
-		return properties.get(key) == Boolean.TRUE;
-	}
-
 	public void onAttach(Widget widget) {
 		if (onAttachCallback != null) {
 			onAttachCallback.callback(widget);
@@ -92,14 +73,6 @@ public class RenderContext {
 		if (onDetachCallback != null) {
 			onDetachCallback.callback(widget);
 		}
-	}
-
-	public void set(String key, Object value) {
-		properties.put(key, value);
-	}
-
-	public void setBoolean(String key) {
-		properties.put(key, Boolean.TRUE);
 	}
 
 	public void setOnAttachCallback(Callback<Widget> onAttachCallback) {
