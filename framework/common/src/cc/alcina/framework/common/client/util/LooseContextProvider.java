@@ -37,7 +37,11 @@ public abstract class LooseContextProvider {
 		return context;
 	}
 
-	public LooseContextProvider getT() {
-		return null;
+	public abstract LooseContextProvider getT();
+	public static class ClientLooseContextProvider extends LooseContextProvider{
+		@Override
+		public LooseContextProvider getT() {
+			return this;
+		}
 	}
 }

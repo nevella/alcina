@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 //
@@ -40,6 +41,8 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 public abstract class SearchDefinition extends WrapperPersistable implements
 		Serializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation, HasEquivalence<SearchDefinition> {
+	static final transient long serialVersionUID = -1L;
+	
 	transient final String orderJoin = ", ";
 
 	private int resultsPerPage;
@@ -67,6 +70,9 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	protected transient Map<String, String> propertyColumnAliases = new HashMap<String, String>();
 
 	public static final transient int LARGE_SEARCH = 0xFF0000;
+
+	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
+			.getName() + ":" + "current-search-definition";
 
 	@SuppressWarnings("unchecked")
 	public <C extends CriteriaGroup> C criteriaGroup(Class<C> clazz) {
@@ -130,14 +136,22 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	public String filterDescription(boolean html) {
 		StringBuffer result = new StringBuffer();
-		for (CriteriaGroup criteriaGroup : criteriaGroups) {
-			String s = html ? criteriaGroup.toHtml() : criteriaGroup.toString();
-			if (!CommonUtils.isNullOrEmpty(s)) {
-				if (result.length() != 0) {
-					result.append("; ");
+		try {
+			LooseContextProvider.getContext().set(
+					CONTEXT_CURRENT_SEARCH_DEFINITION, this);
+			for (CriteriaGroup criteriaGroup : criteriaGroups) {
+				String s = html ? criteriaGroup.toHtml() : criteriaGroup
+						.toString();
+				if (!CommonUtils.isNullOrEmpty(s)) {
+					if (result.length() != 0) {
+						result.append("; ");
+					}
+					result.append(s);
 				}
-				result.append(s);
 			}
+		} finally {
+			LooseContextProvider.getContext().remove(
+					CONTEXT_CURRENT_SEARCH_DEFINITION);
 		}
 		return (result.length() == 0) ? defaultFilterDescription : result
 				.toString();
@@ -187,6 +201,20 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	public String idEqlPrefix() {
 		return null;
+	}
+
+	public void mapCriteriaToPropertyNames() {
+		CriterionPropertyNameMappings crMappings = CommonLocator
+				.get()
+				.classLookup()
+				.getAnnotationForClass(getClass(),
+						CriterionPropertyNameMappings.class);
+		if (crMappings != null) {
+			for (CriterionPropertyNameMapping mapping : crMappings.value()) {
+				criteriaGroup(mapping.criteriaGroupClass()).map(
+						mapping.criterionClass(), mapping.propertyName());
+			}
+		}
 	}
 
 	public String orderDescription(boolean html) {
@@ -276,6 +304,15 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 				orderDescription(false));
 	}
 
+	public String validatePermissions() {
+		resetLookups();
+		mapCriteriaToPropertyNames();
+		List<CriteriaGroup> children = new ArrayList<CriteriaGroup>();
+		children.addAll(getCriteriaGroups());
+		children.addAll(getOrderGroups());
+		return DefaultValidation.validatePermissions(this, children);
+	}
+
 	protected String orderEql() {
 		return "";
 	}
@@ -288,26 +325,5 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	protected void putOrderGroup(OrderGroup og) {
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
-	}
-
-	public String validatePermissions() {
-		resetLookups();
-		mapCriteriaToPropertyNames();
-		List<CriteriaGroup> children = new ArrayList<CriteriaGroup>();
-		children.addAll(getCriteriaGroups());
-		children.addAll(getOrderGroups());
-		return DefaultValidation.validatePermissions(this, children);
-	}
-
-	public void mapCriteriaToPropertyNames() {
-		CriterionPropertyNameMappings crMappings = CommonLocator.get()
-				.classLookup().getAnnotationForClass(getClass(),
-						CriterionPropertyNameMappings.class);
-		if (crMappings != null) {
-			for (CriterionPropertyNameMapping mapping : crMappings.value()) {
-				criteriaGroup(mapping.criteriaGroupClass()).map(
-						mapping.criterionClass(), mapping.propertyName());
-			}
-		}
 	}
 }

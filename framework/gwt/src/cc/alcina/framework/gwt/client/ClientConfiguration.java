@@ -5,6 +5,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContextProvider.ClientLooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
@@ -23,8 +25,8 @@ public class ClientConfiguration {
 		initAppCache();
 		initCommonClient();
 		initLocalPersistence();
-		
 	}
+
 	protected void initServicesPostLocalPersistence() {
 		initContentProvider();
 		initImageProvider();
@@ -62,18 +64,18 @@ public class ClientConfiguration {
 
 	protected void initCommonClient() {
 		TransformManager.register(createTransformManager());
+		LooseContextProvider.register(new ClientLooseContextProvider());
 		CommonLocator.get().registerPropertyAccessor(GwittirBridge.get());
 		CommonLocator.get().registerCurrentUtcDateProvider(
 				new ClientUTCDateProvider());
-		
-		DataImageProvider.register(StandardDataImageProvider
-				.get());
+		DataImageProvider.register(StandardDataImageProvider.get());
 		TransformManager.get().setupClientListeners();
 		TransformManager.get().addDomainTransformListener(
 				PermissionsManager.get());
 		ClientLayerLocator.get().setCommitToStorageTransformListener(
 				createStorageTransformListener());
-		ClientLayerLocator.get().registerTimerWrapperProvider(new TimerWrapperProviderGwt());
+		ClientLayerLocator.get().registerTimerWrapperProvider(
+				new TimerWrapperProviderGwt());
 		registerExtraTransformListenersPreStorage();
 		TransformManager.get().addDomainTransformListener(
 				ClientLayerLocator.get().getCommitToStorageTransformListener());
