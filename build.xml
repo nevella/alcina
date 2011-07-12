@@ -84,9 +84,13 @@
 				<include name="**/*.css" />
 			</fileset>
 		</jar>
+
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-extras-collections.jar">
 			<fileset dir="${extras.collections.build.dir}">
 				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${extras.collections.src.dir}">
+				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-jvmclient.jar">
