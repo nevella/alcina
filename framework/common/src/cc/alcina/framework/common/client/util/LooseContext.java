@@ -19,6 +19,9 @@ public class LooseContext {
 	public Integer getInteger(String key) {
 		return (Integer) properties.get(key);
 	}
+	public Float getFloat(String key) {
+		return (Float) properties.get(key);
+	}
 
 	public String getString(String key) {
 		return (String) properties.get(key);

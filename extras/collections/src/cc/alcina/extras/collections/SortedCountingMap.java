@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
-public class CountingMap<K> extends HashMap<K, Integer> {
+public class SortedCountingMap<K> extends TreeMap<K, Integer> {
 	public void add(K key) {
 		if (!containsKey(key)) {
 			put(key, 1);

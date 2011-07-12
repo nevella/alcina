@@ -1,11 +1,13 @@
 package cc.alcina.extras.collections;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 @SuppressWarnings("unchecked")
 public class FuzzyCache<I, O> {
@@ -15,6 +17,8 @@ public class FuzzyCache<I, O> {
 
 	private final ResultConvertor<I, O> converter;
 
+	private List<FloatPairWithWeight> sortedRanges;
+
 	public FuzzyCache(SortedMap<Float, I> map, Float fuzz,
 			ResultConvertor<I, O> converter) {
 		this.map = map;
@@ -22,7 +26,7 @@ public class FuzzyCache<I, O> {
 		this.converter = converter;
 	}
 
-	interface ResultConvertor<I, O> {
+	public interface ResultConvertor<I, O> {
 		O convert(SortedMap<Float, I> map);
 	}
 
@@ -70,7 +74,16 @@ public class FuzzyCache<I, O> {
 		SortedMap<Float, I> subMap = map.subMap(around - fuzz, around + fuzz);
 		return converter.convert(subMap);
 	}
-
+	public static Float weightedMean(SortedMap<Float, List> map){
+		float total=0;
+		float count=0;
+		for(Float key:map.keySet()){
+			List list = map.get(key);
+			count+=list.size();
+			total+=key*list.size();
+		}
+		return total/count;
+	}
 	public static Integer countNear(SortedMap<Float, Integer> map,
 			float around, float fuzz) {
 		SortedMap<Float, Integer> subMap = map.subMap(around - fuzz, around
@@ -80,5 +93,81 @@ public class FuzzyCache<I, O> {
 			result += v;
 		}
 		return result;
+	}
+
+	public int indexInRanges(float f) {
+		int index = 0;
+		for (FloatPairWithWeight fp : sortedRanges) {
+			if (fp.range.contains(f)) {
+				break;
+			}
+			index++;
+		}
+		return index;
+	}
+
+	public static class FloatPairWithWeight implements
+			Comparable<FloatPairWithWeight> {
+		public FloatPairWithWeight(int count, FloatPair range) {
+			this.count = count;
+			this.range = range;
+		}
+
+		public int count;
+		
+		public FloatPair range;
+
+		@Override
+		public int compareTo(FloatPairWithWeight o) {
+			return -CommonUtils.compareInts(count, o.count);
+		}
+	}
+
+	public void sortRanges(int steps) {
+		sortedRanges = new ArrayList<FuzzyCache.FloatPairWithWeight>();
+		if (map.size() <= 1) {
+			return;
+		}
+		float last = map.lastKey();
+		float step = (last - map.firstKey()) / steps;
+		float firstMatched = Float.MIN_VALUE;
+		float lastMatched = Float.MIN_VALUE;
+		int total = 0;
+		for (float f = map.firstKey(); f <= last; f += step) {
+			SortedMap<Float, I> subMap = map.subMap(f, f + step);
+			int count = 0;
+			for (I v : subMap.values()) {
+				if (v instanceof Integer) {
+					count += (Integer) v;
+				} else if (v instanceof Collection){
+					count+=((Collection)v).size();
+				}else{
+					count++;
+				}
+			}
+			if (count != 0) {
+				if (firstMatched == Float.MIN_VALUE) {
+					firstMatched = f;
+				}
+				lastMatched = f;
+				total += count;
+			}
+			if (firstMatched != Float.MIN_VALUE
+					&& (count == 0 || f + step > last)) {
+				FloatPair pair = new FloatPair(firstMatched, lastMatched
+						+ (count == 0 ? 0 : step));
+				sortedRanges.add(new FloatPairWithWeight(total, pair));
+			}
+			if (count == 0) {
+				firstMatched = Float.MIN_VALUE;
+				lastMatched = Float.MIN_VALUE;
+				total = 0;
+			}
+		}
+		Collections.sort(sortedRanges);
+	}
+
+	public List<FloatPairWithWeight> getSortedRanges() {
+		return this.sortedRanges;
 	}
 }
