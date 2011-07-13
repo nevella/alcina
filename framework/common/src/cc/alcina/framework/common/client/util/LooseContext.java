@@ -2,9 +2,12 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 public class LooseContext {
 	public Map<String, Object> properties = new HashMap<String, Object>();
+	
+	private Stack<Map<String, Object>> stack=new Stack<Map<String,Object>>();
 
 	public LooseContext() {
 		super();
@@ -42,5 +45,12 @@ public class LooseContext {
 	public void remove(String key) {
 		properties.remove(key);
 		
+	}
+	public void push(){
+		stack.push(properties);
+		properties=new HashMap<String, Object>(properties);
+	}
+	public void pop(){
+		properties=stack.pop();
 	}
 }
