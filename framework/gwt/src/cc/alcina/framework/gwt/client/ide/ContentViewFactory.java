@@ -254,7 +254,7 @@ public class ContentViewFactory {
 			throw new WrappedRuntimeException("Unviewable bean type: "
 					+ beanClass, SuggestedAction.NOTIFY_WARNING);
 		}
-		Object bean = beans.iterator().next();
+		Object bean = beans.iterator().hasNext()?beans.iterator().next():CommonLocator.get().classLookup().getTemplateInstance(beanClass);
 		PaneWrapperWithObjects cp = createPaneWrapper(actionListener);
 		if (!noCaption) {
 			cp.add(createMultiCaption(beanClass, cp));

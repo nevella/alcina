@@ -18,6 +18,9 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+
 /**
  * Signals to listeners (collection nodes) that they should recalc their
  * collections
@@ -100,6 +103,8 @@ public class CollectionModification {
 
 		private List<Tuple> classListenerList = new ArrayList<Tuple>();
 
+		private boolean firing = false;
+
 		private static List<SupportEvent> queuedEvents = null;
 
 		private static int queueDepth = 0;
@@ -131,24 +136,44 @@ public class CollectionModification {
 		}
 
 		public void addCollectionModificationListener(
-				CollectionModificationListener listener, Class listenedClass,
-				boolean filteringListener) {
-			Tuple tuple = new Tuple();
-			tuple.listenedClass = listenedClass;
-			tuple.listener = listener;
-			tuple.filteringListener = filteringListener;
-			classListenerList.add(tuple);
+				final CollectionModificationListener listener,
+				final Class listenedClass, final boolean filteringListener) {
+			ScheduledCommand cmd = new ScheduledCommand() {
+				@Override
+				public void execute() {
+					Tuple tuple = new Tuple();
+					tuple.listenedClass = listenedClass;
+					tuple.listener = listener;
+					tuple.filteringListener = filteringListener;
+					classListenerList.add(tuple);
+				}
+			};
+			if (firing) {
+				Scheduler.get().scheduleDeferred(cmd);
+			} else {
+				cmd.execute();
+			}
 		}
 
 		public void removeCollectionModificationListener(
-				CollectionModificationListener listener) {
-			listenerList.remove(listener);
-			Iterator<Tuple> itr = classListenerList.iterator();
-			while (itr.hasNext()) {
-				Tuple t = itr.next();
-				if (t.listener == listener) {
-					itr.remove();
+				final CollectionModificationListener listener) {
+			ScheduledCommand cmd = new ScheduledCommand() {
+				@Override
+				public void execute() {
+					listenerList.remove(listener);
+					Iterator<Tuple> itr = classListenerList.iterator();
+					while (itr.hasNext()) {
+						Tuple t = itr.next();
+						if (t.listener == listener) {
+							itr.remove();
+						}
+					}
 				}
+			};
+			if (firing) {
+				Scheduler.get().scheduleDeferred(cmd);
+			} else {
+				cmd.execute();
 			}
 		}
 
@@ -161,17 +186,22 @@ public class CollectionModification {
 				queuedEvents.add(new SupportEvent(event, this));
 				return;
 			}
-			if (!event.isFromPropertyChange()) {
-				for (CollectionModificationListener listener : listenerList) {
-					listener.collectionModification(event);
+			try {
+				firing = true;
+				if (!event.isFromPropertyChange()) {
+					for (CollectionModificationListener listener : listenerList) {
+						listener.collectionModification(event);
+					}
 				}
-			}
-			for (Tuple t : classListenerList) {
-				if ((event.getCollectionClass() == Object.class || t.listenedClass == event
-						.getCollectionClass())
-						&& (!event.isFromPropertyChange() || t.filteringListener)) {
-					t.listener.collectionModification(event);
+				for (Tuple t : classListenerList) {
+					if ((event.getCollectionClass() == Object.class || t.listenedClass == event
+							.getCollectionClass())
+							&& (!event.isFromPropertyChange() || t.filteringListener)) {
+						t.listener.collectionModification(event);
+					}
 				}
+			} finally {
+				firing = false;
 			}
 		}
 
