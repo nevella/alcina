@@ -7,21 +7,21 @@ package cc.alcina.framework.common.client.util;
  * 
  */
 public abstract class LooseContextProvider {
-	private static LooseContextProvider theInstance;
+	private static LooseContextProvider factoryInstance;
 
 	public static LooseContextProvider get() {
-		if (theInstance == null) {
-			// well, throw an exception.
+		if (factoryInstance == null) {
+			factoryInstance=new ClientLooseContextProvider();
 		}
-		LooseContextProvider tm = theInstance.getT();
+		LooseContextProvider tm = factoryInstance.getT();
 		if (tm != null) {
 			return tm;
 		}
-		return theInstance;
+		return factoryInstance;
 	}
 
 	public static void register(LooseContextProvider tm) {
-		theInstance = tm;
+		factoryInstance = tm;
 	}
 
 	private LooseContext context;
