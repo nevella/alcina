@@ -17,7 +17,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Locale;
 
-class BiWriter extends PrintWriter {
+public class BiWriter extends PrintWriter {
 	private StringWriter stringWriter;
 
 	private PrintWriter printWriter2;
@@ -194,13 +194,7 @@ class BiWriter extends PrintWriter {
 		this.printWriter.println(x);
 	}
 
-	public void setPrintWriter(PrintWriter printWriter) {
-		this.printWriter = printWriter;
-	}
 
-	public void setStringWriter(StringWriter stringWriter) {
-		this.stringWriter = stringWriter;
-	}
 
 	
 
@@ -227,5 +221,9 @@ class BiWriter extends PrintWriter {
 	public void write(String s, int off, int len) {
 		this.printWriter2.write(s, off, len);
 		this.printWriter.write(s, off, len);
+	}
+
+	public void setPrintWriter2(PrintWriter printWriter2) {
+		this.printWriter2 = printWriter2;
 	}
 }

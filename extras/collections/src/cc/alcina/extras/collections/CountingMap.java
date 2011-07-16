@@ -43,7 +43,13 @@ public class CountingMap<K> extends HashMap<K, Integer> {
 		}
 		return max;
 	}
-
+	public int sum(){
+		int result=0;
+		for(Integer v:values()){
+			result+=v;
+		}
+		return result;
+	}
 	public SortedMultimap<Integer, List<K>> reverseMap(boolean descending) {
 		SortedMultimap<Integer, List<K>> result = descending ? new SortedMultimap<Integer, List<K>>(
 				Collections.reverseOrder())
