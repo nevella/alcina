@@ -306,6 +306,7 @@ public class CommonUtils {
 	public static boolean isNullOrEmpty(String string) {
 		return string == null || string.length() == 0;
 	}
+
 	public static boolean isNotNullOrEmpty(String string) {
 		return string != null && string.length() != 0;
 	}
@@ -339,7 +340,8 @@ public class CommonUtils {
 			if (i > 0) {
 				result.append((i == phrases.size() - 1) ? " and " : ", ");
 			}
-			result.append(phraseTemplate==null?phrase:CommonUtils.formatJ(phraseTemplate, phrase));
+			result.append(phraseTemplate == null ? phrase : CommonUtils
+					.formatJ(phraseTemplate, phrase));
 		}
 		return result.toString();
 	}
@@ -626,5 +628,24 @@ public class CommonUtils {
 
 	public static String nullToEmpty(String s) {
 		return s == null ? "" : s;
+	}
+
+	public static String hangingIndent(String text, boolean noTabsFirstLine,
+			int tabs) {
+		StringBuilder result = new StringBuilder();
+		String[] lines = text.split("\n");
+		for (int i = 0; i < lines.length; i++) {
+			if (noTabsFirstLine && i == 0) {
+			} else {
+				for (int j = 0; j < tabs; j++) {
+					result.append("\t");
+				}
+			}
+			result.append(lines[i]);
+			if (i < lines.length - 1) {
+				result.append("\n");
+			}
+		}
+		return result.toString();
 	}
 }

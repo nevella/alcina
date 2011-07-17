@@ -33,7 +33,7 @@ public class SearchDefinitionRenderer<SD extends SearchDefinition> extends
 	public static final String RENDER_ORDER_GROUPS = "RENDER_ORDER_GROUPS";
 
 	public Collection<? extends TreeRenderable> renderableChildren() {
-		if (getContext().isBoolean(RENDER_ORDER_GROUPS)) {
+		if (getContext().getBoolean(RENDER_ORDER_GROUPS)) {
 			List<CriteriaGroup> allCgs = new ArrayList<CriteriaGroup>();
 			allCgs.addAll(getRenderable().getCriteriaGroups());
 			allCgs.addAll(getRenderable().getOrderGroups());

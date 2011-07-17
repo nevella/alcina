@@ -47,7 +47,7 @@ public class LooseContext {
 		return (String) properties.get(key);
 	}
 
-	public boolean isBoolean(String key) {
+	public boolean getBoolean(String key) {
 		return properties.get(key) == Boolean.TRUE;
 	}
 
