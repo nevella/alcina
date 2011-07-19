@@ -24,4 +24,8 @@ package cc.alcina.framework.servlet.authentication;
 	public AuthenticationException(Exception e) {
 		super(e);
 	}
+
+	public AuthenticationException(String message) {
+		super(message);
+	}
 }
