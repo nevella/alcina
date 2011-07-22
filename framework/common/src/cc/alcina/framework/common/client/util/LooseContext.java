@@ -52,9 +52,10 @@ public class LooseContext {
 	}
 
 	public void pop() {
+		TopicPublisher publisher = ensureTopicPublisher();
 		for (TopicListener listener : addedListeners.keySet()) {
 			for (String key : addedListeners.get(listener)) {
-				removeTopicListener(key, listener);
+				publisher.removeListener(key, listener);
 			}
 		}
 		properties = stack.pop();
