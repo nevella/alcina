@@ -38,8 +38,19 @@ public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 
 	private InstantiateImplCallbackWithShellObject shellInstantiator;
 
+	// non thread-safe - but can be very useful where there are large graphs and
+	// you're doing a big read
+	public static boolean USE_SINGLETON_CACHE = false;
+
 	public DetachedEntityCache getCache() {
-		return this.cache == null ? DetachedEntityCache.get() : this.cache;
+		if (this.cache == null) {
+			if (USE_SINGLETON_CACHE) {
+				this.cache = DetachedEntityCache.get();
+			} else {
+				this.cache = new DetachedEntityCache();
+			}
+		}
+		return this.cache;
 	}
 
 	public void setCache(DetachedEntityCache cache) {
@@ -58,6 +69,12 @@ public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 		if (instantiateImplCallback instanceof InstantiateImplCallbackWithShellObject) {
 			InstantiateImplCallbackWithShellObject shellInstantiator = (InstantiateImplCallbackWithShellObject) instantiateImplCallback;
 		}
+	}
+
+	public EntityCacheHibernateResolvingFilter(
+			InstantiateImplCallback instantiateImplCallback, boolean blankCache) {
+		this(instantiateImplCallback);
+		setCache(new DetachedEntityCache());
 	}
 
 	@Override
