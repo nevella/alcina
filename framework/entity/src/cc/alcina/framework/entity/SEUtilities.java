@@ -41,8 +41,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutionException;
@@ -794,5 +796,17 @@ public class SEUtilities {
 			}
 		}
 		return results;
+	}
+
+	public static void threadDump() {
+		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
+				.getAllStackTraces().entrySet();
+		for (Entry<Thread, StackTraceElement[]> entry : allStackTraces) {
+			System.out.println(entry.getKey());
+			StackTraceElement[] value = entry.getValue();
+			for (StackTraceElement stackTraceElement : value) {
+				System.out.println("\t" + stackTraceElement);
+			}
+		}
 	}
 }

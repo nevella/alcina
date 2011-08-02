@@ -59,6 +59,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.actions.RequiresHttpRequest;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
@@ -102,6 +103,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
 
 	private int actionCount = 0;
+
+	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws WebException {
@@ -216,6 +219,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						ServletLayerLocator.get().commonPersistenceProvider()
 								.getCommonPersistence().logActionItem(result);
 					}
+				} catch (OutOfMemoryError e) {
+					handleOom(e);
+					throw e;
 				} finally {
 					JobRegistry.get().jobErrorInThread();
 				}
@@ -224,6 +230,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		thread.setPriority(Thread.MIN_PRIORITY);
 		thread.start();
 		return thread.getId();
+	}
+
+	protected void handleOom(OutOfMemoryError e) {
+		if (DUMP_STACK_TRACE_ON_OOM) {
+			e.printStackTrace();
+			SEUtilities.threadDump();
+		}
 	}
 
 	public ActionLogItem performActionAndWait(final RemoteAction action)
@@ -416,6 +429,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (UnexpectedException ex) {
 			logRpcException(ex);
 			throw ex;
+		} catch (OutOfMemoryError e) {
+			handleOom(e);
+			throw e;
 		} finally {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 		}
