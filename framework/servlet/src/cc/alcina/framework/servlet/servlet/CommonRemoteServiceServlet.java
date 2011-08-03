@@ -220,7 +220,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								.getCommonPersistence().logActionItem(result);
 					}
 				} catch (OutOfMemoryError e) {
-					handleOom(e);
+					handleOom("",e);
 					throw e;
 				} finally {
 					JobRegistry.get().jobErrorInThread();
@@ -232,8 +232,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return thread.getId();
 	}
 
-	protected void handleOom(OutOfMemoryError e) {
+	protected void handleOom(String payload, OutOfMemoryError e) {
 		if (DUMP_STACK_TRACE_ON_OOM) {
+			System.out.println("Payload:");
+			System.out.println(payload);
 			e.printStackTrace();
 			SEUtilities.threadDump();
 		}
@@ -430,7 +432,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logRpcException(ex);
 			throw ex;
 		} catch (OutOfMemoryError e) {
-			handleOom(e);
+			handleOom(payload,e);
 			throw e;
 		} finally {
 			ThreadlocalTransformManager.cast().resetTltm(null);
