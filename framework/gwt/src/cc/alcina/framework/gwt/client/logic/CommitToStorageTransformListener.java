@@ -60,7 +60,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	private List<DomainTransformEvent> transformQueue;
 
-	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
+	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>() ;
 
 	private TimerWrapper queueingFinishedTimer;
 
@@ -197,8 +197,6 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		}
 		queueingFinishedTimer = null;
 		final DomainTransformRequest dtr = new DomainTransformRequest();
-		dtr.getPriorRequestsWithoutResponse().addAll(
-				priorRequestsWithoutResponse);
 		dtr.setRequestId(localRequestId++);
 		dtr.setClientInstance(getClientInstance());
 		dtr.getEvents().addAll(transformQueue);
@@ -339,11 +337,20 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				}
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-				.transform(dtr, callback);
-		dtr.getPriorRequestsWithoutResponse().clear();
+		// the ordering here is tricky
+		// 'committing' says 'we have a flat list of rqs without response (incl
+		// current)
+		// wheras the transform rpc call requires rq (current) with prior rqs as a listfield
+		// given listener callbacks can be multi-threaded (jvm version),
+		// use the following ordering - note we use a new list in
+		// dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseCopy)
+		List<DomainTransformRequest> priorRequestsWithoutResponseCopy = new ArrayList<DomainTransformRequest>(
+				priorRequestsWithoutResponse);
 		priorRequestsWithoutResponse.add(dtr);
 		fireStateChanged(COMMITTING);
+		dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseCopy);
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+				.transform(dtr, callback);
 	}
 
 	/*

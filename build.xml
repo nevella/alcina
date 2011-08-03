@@ -63,13 +63,6 @@
 	<target name="make-jars" description="Make entity, entity-impl, servlet and extras jars " depends="compile">
 		<mkdir dir="${framework.dist.dir}" />
 		<delete file="${framework.dist.dir}/${ant.project.name}-entity.jar" />
-		<copy todir="${framework.entity.build.dir}">
-			<fileset dir="${framework.entity.base.dir}/src">
-				<include name="au/**/*.*" />
-				<exclude name="**/*.java" />
-				<exclude name="**/*.class" />
-			</fileset>
-		</copy>
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-entity.jar">
 			<metainf dir="${framework.entity.base.dir}/META-INF" />
 			<fileset dir="${framework.entity.build.dir}">
@@ -77,6 +70,16 @@
 				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
 				<exclude name="${framework.remote.interface.class}" />
 				<exclude name="${framework.remote.asyncinterface.class}" />
+			</fileset>
+
+			<fileset dir="${framework.dir}/common/src">
+				<include name="**/*.java" />
+			</fileset>
+			<fileset dir="${framework.dir}/gwt/src">
+				<include name="**/*.java" />
+			</fileset>
+			<fileset dir="${framework.entity.base.dir}/src">
+				<include name="**/*.java" />
 			</fileset>
 
 			<!-- give the server handy access to stylesheets for print, static serving etc -->
@@ -90,12 +93,17 @@
 				<include name="**/*.*" />
 			</fileset>
 			<fileset dir="${extras.collections.src.dir}">
+				<include name="**/*.*" />
 				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-jvmclient.jar">
 			<fileset dir="${framework.jvmclient.build.dir}">
 				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${framework.jvmclient.src.dir}">
+				<include name="**/*.*" />
+				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
 
@@ -109,33 +117,31 @@
 		</fail>
 
 		<delete file="${framework.dist.dir}/${ant.project.name}-entity-impl.jar" />
-		<copy todir="${framework.impl.base.dir}/build">
-			<fileset dir="${framework.impl.base.dir}/src">
-				<include name="au/**/*.*" />
-				<exclude name="**/*.java" />
-				<exclude name="**/*.class" />
-			</fileset>
-		</copy>
+
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-entity-impl.jar">
 			<metainf dir="${framework.impl.base.dir}/META-INF" />
 			<fileset dir="${framework.impl.base.dir}/build">
 				<include name="**/*.*" />
 			</fileset>
+			<fileset dir="${framework.impl.base.dir}/src">
+				<include name="cc/*.*" />
+				<include name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
 		</jar>
 
 		<delete file="${framework.dist.dir}/${ant.project.name}-servlet.jar" />
-		<copy todir="${framework.servlet.build.dir}">
-			<fileset dir="${framework.servlet.base.dir}/src">
-				<include name="cc/**/*.*" />
 
-				<exclude name="**/*.java" />
-				<exclude name="**/*.class" />
-			</fileset>
-		</copy>
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-servlet.jar">
 			<metainf dir="${framework.servlet.base.dir}/META-INF" />
 			<fileset dir="${framework.servlet.build.dir}">
 				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${framework.servlet.base.dir}/src">
+				<include name="cc/**/*.*" />
+
+				<include name="**/*.java" />
+				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${framework.entity.build.dir}">
 				<include name="${framework.remote.interface.class}" />

@@ -304,8 +304,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		this.serializationPolicy = serializationPolicy;
 	}
 
-	public boolean shouldPersistClient(boolean clientSupportsRpcPersistence)
-			 {
+	public boolean shouldPersistClient(boolean clientSupportsRpcPersistence) {
 		return !ClientSession.get().isInitialObjectsPersisted()
 				|| clientSupportsRpcPersistence;
 	}
@@ -398,54 +397,54 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	protected void persistAndReparentClientLoadTransforms(
 			final MixedGwtTransformHelper mixedHelper,
 			final PersistenceCallback<Void> persistenceCallback) {
-			final PersistenceCallback afterReparentTransforms = new PersistenceCallback<Void>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					MixedGwtLoadException lex = null;
-					lex = (MixedGwtLoadException) ((caught instanceof MixedGwtLoadException) ? caught
-							: new MixedGwtLoadException(caught));
-					persistenceCallback.onFailure(caught);
-				}
+		final PersistenceCallback afterReparentTransforms = new PersistenceCallback<Void>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				MixedGwtLoadException lex = null;
+				lex = (MixedGwtLoadException) ((caught instanceof MixedGwtLoadException) ? caught
+						: new MixedGwtLoadException(caught));
+				persistenceCallback.onFailure(caught);
+			}
 
-				@Override
-				public void onSuccess(Void result) {
-					persistInitialRpcPayload(mixedHelper, persistenceCallback);
-				}
-			};
-			PersistenceCallback afterGetTransforms = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					MixedGwtLoadException lex = null;
-					lex = (MixedGwtLoadException) ((caught instanceof MixedGwtLoadException) ? caught
-							: new MixedGwtLoadException(caught));
-					persistenceCallback.onFailure(caught);
-				}
+			@Override
+			public void onSuccess(Void result) {
+				persistInitialRpcPayload(mixedHelper, persistenceCallback);
+			}
+		};
+		PersistenceCallback afterGetTransforms = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				MixedGwtLoadException lex = null;
+				lex = (MixedGwtLoadException) ((caught instanceof MixedGwtLoadException) ? caught
+						: new MixedGwtLoadException(caught));
+				persistenceCallback.onFailure(caught);
+			}
 
-				@Override
-				public void onSuccess(List<DTRSimpleSerialWrapper> loads) {
-					DTRSimpleSerialWrapper rpcWrapper;
-					try {
-						if (loads.size() == 0) {
-							throw new MixedGwtLoadException(
-									"Hmm...our load disappeared. Dang. ", false);
-						}
-						rpcWrapper = loads.get(0);
-						if (rpcWrapper.getUserId() != PermissionsManager.get()
-								.getUserId()) {
-							throw new MixedGwtLoadException(
-									"Hmm...our load was hijacked by another user. Dang. ",
-									false);
-						}
-					} catch (MixedGwtLoadException e) {
-						onFailure(e);
-						return;
+			@Override
+			public void onSuccess(List<DTRSimpleSerialWrapper> loads) {
+				DTRSimpleSerialWrapper rpcWrapper;
+				try {
+					if (loads.size() == 0) {
+						throw new MixedGwtLoadException(
+								"Hmm...our load disappeared. Dang. ", false);
 					}
-					reparentToClientInstance(rpcWrapper, ClientLayerLocator
-							.get().getClientInstance(), afterReparentTransforms);
+					rpcWrapper = loads.get(0);
+					if (rpcWrapper.getUserId() != PermissionsManager.get()
+							.getUserId()) {
+						throw new MixedGwtLoadException(
+								"Hmm...our load was hijacked by another user. Dang. ",
+								false);
+					}
+				} catch (MixedGwtLoadException e) {
+					onFailure(e);
+					return;
 				}
-			};
-			getTransforms(DomainTransformRequestType.CLIENT_OBJECT_LOAD,
-					afterGetTransforms);
+				reparentToClientInstance(rpcWrapper, ClientLayerLocator.get()
+						.getClientInstance(), afterReparentTransforms);
+			}
+		};
+		getTransforms(DomainTransformRequestType.CLIENT_OBJECT_LOAD,
+				afterGetTransforms);
 	}
 
 	protected abstract void reparentToClientInstance(

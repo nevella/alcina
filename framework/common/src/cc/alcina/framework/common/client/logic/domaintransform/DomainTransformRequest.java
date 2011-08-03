@@ -89,6 +89,11 @@ public class DomainTransformRequest implements Serializable {
 		return this.priorRequestsWithoutResponse;
 	}
 
+	public void setPriorRequestsWithoutResponse(
+			List<DomainTransformRequest> priorRequestsWithoutResponse) {
+		this.priorRequestsWithoutResponse = priorRequestsWithoutResponse;
+	}
+
 	@Transient
 	public String getProtocolVersion() {
 		return protocolVersion;

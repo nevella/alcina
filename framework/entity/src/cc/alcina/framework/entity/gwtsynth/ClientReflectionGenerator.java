@@ -381,6 +381,7 @@ public class ClientReflectionGenerator extends Generator {
 			sw.println(String.format("private void %s(){", methodName));
 			sw.indent();
 			sw.println("Map<String,ClientPropertyReflector> propertyReflectors = new HashMap<String,ClientPropertyReflector>();");
+			
 			BeanInfo beanInfo = Introspector.getBeanInfo(c);
 			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
@@ -391,6 +392,7 @@ public class ClientReflectionGenerator extends Generator {
 				Method m = pd.getReadMethod();
 				Collection<Annotation> annotations = AnnotationUtils
 						.getSuperclassAnnotationsForMethod(m);
+				
 				int aCount = 0;
 				String annArray = "";
 				boolean ignore = false;
