@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.extras.collections;
+package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
 import java.util.Comparator;

@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
+import cc.alcina.framework.common.client.util.SortedMultimap;
+
 public class SortedCountingMap<K> extends TreeMap<K, Integer> {
 	public void add(K key) {
 		if (!containsKey(key)) {
