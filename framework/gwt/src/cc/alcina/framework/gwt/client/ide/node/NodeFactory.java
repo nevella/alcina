@@ -18,9 +18,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
+import cc.alcina.extras.collections.SortedMultimap;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
@@ -132,7 +133,7 @@ public class NodeFactory {
 		Class<? extends Object> c = domainObject.getClass();
 		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
 		BeanInfo beanInfo = bi.getAnnotation(BeanInfo.class);
-		Map<Integer, TreeItem> createdNodes = new HashMap<Integer, TreeItem>();
+		SortedMultimap<Integer, List<TreeItem>> createdNodes = new SortedMultimap<Integer, List<TreeItem>>();
 		for (ClientPropertyReflector pr : prs) {
 			PropertyPermissions pp = pr
 					.getAnnotation(PropertyPermissions.class);
@@ -159,15 +160,13 @@ public class NodeFactory {
 			} else {
 				CollectionProviderNode node = new CollectionProviderNode(
 						provider, TextProvider.get().getLabelText(c, pr),
-						images.folder(),false,this);
-				createdNodes.put(visualiserInfo.displayInfo().orderingHint(),
+						images.folder(), false, this);
+				createdNodes.add(visualiserInfo.displayInfo().orderingHint(),
 						node);
 			}
 		}
-		ArrayList<Integer> l = new ArrayList<Integer>(createdNodes.keySet());
-		Collections.sort(l);
-		for (Integer integer : l) {
-			dn.addItem(createdNodes.get(integer));
+		for (TreeItem item : createdNodes.allItems()) {
+			dn.addItem(item);
 		}
 		if (isChildlessPoorThing && dn.getChildCount() == 0) {
 			childlessBindables.add(domainObject);
