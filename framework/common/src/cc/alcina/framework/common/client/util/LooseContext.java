@@ -105,4 +105,21 @@ public class LooseContext {
 		ensureTopicPublisher().publish(key, message);
 		
 	}
+
+	public void addProperties(String contextProperties) {
+		if(CommonUtils.isNullOrEmpty(contextProperties)){
+			return;
+		}
+		for(String kv:contextProperties.split("\n")){
+			String[] split = kv.split("=", 2);
+			if(split.length==2){
+				if(split[1].equals("true")){
+					setBoolean(split[0]);
+				}else{
+					set(split[0], split[1]);
+				}
+			}
+		}
+		
+	}
 }
