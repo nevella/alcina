@@ -19,12 +19,12 @@
  */
 package com.totsp.gwittir.client.ui.table;
 
+import java.util.Comparator;
+
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 import com.totsp.gwittir.client.validator.Validator;
-
-import java.util.Comparator;
 
 
 /**

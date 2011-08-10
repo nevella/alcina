@@ -23,6 +23,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -38,7 +39,13 @@ import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
+import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.ClickListener;
@@ -47,6 +54,7 @@ import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLTable;
+import com.google.gwt.user.client.ui.HTMLTable.Cell;
 import com.google.gwt.user.client.ui.HasFocus;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.ScrollListener;
@@ -147,7 +155,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	/**
 	 * Turns off row selection and styling.
 	 */
-	public static final int NO_SELECT_ROW_MASK = 8;
+	public static final int SELECT_ROW_MASK = 8;
 
 	/**
 	 * Turns off selected column stying.
@@ -783,14 +791,13 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					.hasNext();) {
 				Entry entry = (Entry) it.next();
 				int row = ((Integer) entry.getKey()).intValue();
-				this.table.getRowFormatter().setStyleName(row,
-						(String) entry.getValue());
+				this.table.getRowFormatter().removeStyleName(row, "selected");
 			}
 			this.selectedRowStyles.clear();
-		} else if ((this.masks & BoundTableExt.NO_SELECT_ROW_MASK) == 0) {
+		} else if ((this.masks & BoundTableExt.SELECT_ROW_MASK) != 0) {
 			if (this.selectedRowLastIndex != -1) {
-				this.getRowFormatter().setStyleName(this.selectedRowLastIndex,
-						this.selectedRowLastStyle);
+				this.table.getRowFormatter().removeStyleName(
+						this.selectedRowLastIndex, "selected");
 				this.selectedRowLastStyle = BoundTableExt.DEFAULT_STYLE;
 			}
 		}
@@ -1012,11 +1019,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					this.selectedRowLastIndex)));
 		}
 		int i = 0;
-		for (Iterator it = this.topBinding.getChildren().iterator(); it
-				.hasNext(); i++) {
+		for (Iterator it = this.value.iterator(); it.hasNext(); i++) {
 			if (realIndexes.contains(new Integer(i))) {
-				selected.add(((Binding) ((Binding) it.next()).getChildren()
-						.get(0)).getRight().object);
+				selected.add(it.next());
 			} else {
 				it.next();
 			}
@@ -1092,6 +1097,16 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private RenderContext renderContext = RenderContext.current();
 
+	private ClickHandler rowSelectHandler = new ClickHandler() {
+		@Override
+		public void onClick(ClickEvent event) {
+			Object o = getObjectForEvent(event);
+			setSelected(Collections.singletonList(o));
+		}
+	};
+
+	private EventingSimplePanel esp;
+
 	private void init(int masksValue) {
 		// GWT.log( "Init "+ +masksValue + " :: "+((masksValue &
 		// BoundTable.MULTI_REQUIRES_SHIFT) > 0), null);
@@ -1129,9 +1144,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			this.rowHandles = new ArrayList();
 		}
 		this.table = createTableImpl();
+		this.table.addClickHandler(rowSelectHandler);
 		this.table.setCellPadding(0);
 		this.table.setCellSpacing(0);
-		EventingSimplePanel esp = new EventingSimplePanel();
+		esp = new EventingSimplePanel();
 		esp.setWidget(table);
 		if ((masks & BoundTableExt.SCROLL_MASK) > 0) {
 			this.scroll = new ScrollPanel();
@@ -1244,6 +1260,33 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			}
 		});
 	}
+
+	public void handleKeyupEvent(KeyUpEvent event) {
+		int delta = 0;
+		if (event.getNativeKeyCode() == KeyCodes.KEY_UP) {
+			delta = -1;
+		}
+		if (event.getNativeKeyCode() == KeyCodes.KEY_DOWN) {
+			delta = 1;
+		}
+		if (delta != 0) {
+			boolean hasHeader = (masks & BoundTableExt.HEADER_MASK) > 0;
+			int row = selectedRowLastIndex + delta;
+			if (row == -2) {
+				row = -1;
+			}
+			row = row % value.size();
+			setSelectedRow(row);
+			int row2 = Math.min(value.size() - 1, row + 4);
+			final Element row3 = getRow(table.getElement(), row2);
+			event.stopPropagation();
+			event.preventDefault();
+		}
+	}
+
+	protected native Element getRow(Element elem, int row)/*-{
+		return elem.rows[row];
+	}-*/;
 
 	private void insertNestedWidget(int row) {
 		// GWT.log( "Inserting nested for row "+row, null);
@@ -1656,12 +1699,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			return row;
 		}
 		List old = this.getSelected();
-		// GWT.log( "Selected row:"+row, null);
-		// GWT.log( "Needs Shift:" + ((this.masks &
-		// BoundTable.MULTI_REQUIRES_SHIFT) > 0), null);
-		// GWT.log( "Has Shift:" + shiftDown, null );
-		// GWT.log(( "Shift OK: "+((masks & BoundTable.MULTI_REQUIRES_SHIFT) > 0
-		// == shiftDown ) ) , null );
 		if ((this.masks & BoundTableExt.MULTIROWSELECT_MASK) > 0) {
 			if ((((masks & BoundTableExt.MULTI_REQUIRES_SHIFT) > 0) == shiftDown)) {
 				// TOGGLE ROW.
@@ -1680,7 +1717,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					lastStyle = ((lastStyle == null) || (lastStyle.length() == 0)) ? BoundTableExt.DEFAULT_STYLE
 							: lastStyle;
 					this.selectedRowStyles.put(new Integer(row), lastStyle);
-					this.getRowFormatter().setStyleName(row, "selected");
+					this.getRowFormatter().addStyleName(row, "selected");
 					if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
 						this.insertNestedWidget(row);
 					}
@@ -1697,8 +1734,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					}
 					GWT.log("Clearing " + i, null);
 					// Handle Widget remove on Multirow
-					this.getRowFormatter().setStyleName(i,
-							this.selectedRowStyles.remove(i));
+					this.getRowFormatter().removeStyleName(i, "selected");
 					if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
 						this.removeNestedWidget(row);
 					}
@@ -1709,35 +1745,37 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					lastStyle = ((lastStyle == null) || (lastStyle.length() == 0)) ? BoundTableExt.DEFAULT_STYLE
 							: lastStyle;
 					this.selectedRowStyles.put(row, lastStyle);
-					this.getRowFormatter().setStyleName(row, "selected");
+					this.getRowFormatter().addStyleName(row, "selected");
 					if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
 						this.insertNestedWidget(row);
 					}
 				}
 			}
-		} else { // if ((this.masks & BoundTable.NO_SELECT_ROW_MASK) == 0) {
-			// if (this.selectedRowLastIndex != -1) {
-			// this.getRowFormatter().setStyleName(this.selectedRowLastIndex,
-			// this.selectedRowLastStyle);
-			// if ((this.masks & BoundTable.INSERT_WIDGET_MASK) > 0) {
-			// this.removeNestedWidget(this.selectedRowLastIndex);
-			// if (this.selectedRowLastIndex < row) {
-			// row--;
-			// }
-			// }
-			// }
-			// String currentStyle = table.getRowFormatter().getStyleName(row);
-			// if ((currentStyle == null) || !currentStyle.equals("selected")) {
-			// this.selectedRowLastStyle = currentStyle;
-			// }
-			// if ((this.selectedRowLastStyle == null)
-			// || (this.selectedRowLastStyle.length() == 0)) {
-			// this.selectedRowLastStyle = BoundTable.DEFAULT_STYLE;
-			// }
-			// table.getRowFormatter().setStyleName(row, "selected");
-			// if ((this.masks & BoundTable.INSERT_WIDGET_MASK) > 0) {
-			// this.insertNestedWidget(row);
-			// }
+		} else {
+			if ((this.masks & BoundTableExt.SELECT_ROW_MASK) != 0) {
+				if (this.selectedRowLastIndex != -1) {
+					this.getRowFormatter().removeStyleName(
+							this.selectedRowLastIndex, "selected");
+					if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
+						this.removeNestedWidget(this.selectedRowLastIndex);
+						if (this.selectedRowLastIndex < row) {
+							row--;
+						}
+					}
+				}
+				String currentStyle = table.getRowFormatter().getStyleName(row);
+				if ((currentStyle == null) || !currentStyle.equals("selected")) {
+					this.selectedRowLastStyle = currentStyle;
+				}
+				if ((this.selectedRowLastStyle == null)
+						|| (this.selectedRowLastStyle.length() == 0)) {
+					this.selectedRowLastStyle = BoundTableExt.DEFAULT_STYLE;
+				}
+				table.getRowFormatter().addStyleName(row, "selected");
+				if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
+					this.insertNestedWidget(row);
+				}
+			}
 		}
 		this.selectedRowLastIndex = (this.selectedRowLastIndex == row) ? (-1)
 				: row;
@@ -1848,6 +1886,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			super();
 			sinkEvents(Event.MOUSEEVENTS);
 			sinkEvents(Event.FOCUSEVENTS);
+			sinkEvents(Event.KEYEVENTS);
 		}
 
 		@Override
@@ -1860,4 +1899,26 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			super.onBrowserEvent(evt);
 		}
 	}
+
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return this.table.addClickHandler(handler);
+	}
+
+	public Object getObjectForEvent(ClickEvent event) {
+		Cell cell = table.getCellForEvent(event);
+		if (cell != null) {
+			Iterator itr = value.iterator();
+			for (int i = 1; i < cell.getRowIndex() && itr.hasNext(); i++) {
+				itr.next();
+			}
+			return itr.hasNext() ? itr.next() : null;
+		}
+		return null;
+	}
+
+	public int getSelectedRowIndex() {
+		return this.selectedRowLastIndex;
+	}
+
+	
 }

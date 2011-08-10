@@ -15,20 +15,21 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.xml.bind.JAXBException;
 
+import org.hibernate.annotations.Type;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 import cc.alcina.template.cs.persistent.DomainBaseVersionable;
 
 @Entity
 @Table(name = "wrappedObject")
-@SequenceGenerator(name = "wrappedObject_sequence", sequenceName = "wrappedObject_id_seq")
+@SequenceGenerator(allocationSize=1,name = "wrappedObject_sequence", sequenceName = "wrappedObject_id_seq")
 @SuppressWarnings("unchecked")
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = WrappedObject.class)
 public class WrappedObjectImpl<T extends WrapperPersistable> extends
@@ -117,6 +118,7 @@ public class WrappedObjectImpl<T extends WrapperPersistable> extends
 	 * @return Returns the serializedXml.
 	 */
 	@Lob
+	@Type(type="org.hibernate.type.StringClobType")
 	public String getSerializedXml() {
 		return serializedXml;
 	}

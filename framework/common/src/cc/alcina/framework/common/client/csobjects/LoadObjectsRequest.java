@@ -2,8 +2,6 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-
 /**
  * For very large object loads (to Africa), localdb-serializing on the client
  * and running transforms may be very nice

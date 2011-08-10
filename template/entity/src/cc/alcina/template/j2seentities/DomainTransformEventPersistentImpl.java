@@ -7,9 +7,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Transient;
+
+import org.hibernate.annotations.Type;
 
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
@@ -28,7 +32,7 @@ import cc.alcina.template.cs.persistent.ClassRefImpl;
 
 @Entity
 @Table(name = "domain_transform_event")
-@SequenceGenerator(name = "domain_transform_event_id_seq", sequenceName = "domain_transform_event_id_seq")
+@SequenceGenerator(allocationSize=1,name = "domain_transform_event_id_seq", sequenceName = "domain_transform_event_id_seq")
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = DomainTransformEventPersistent.class)
 public class DomainTransformEventPersistentImpl extends
 		DomainTransformEventPersistent {
@@ -65,7 +69,11 @@ public class DomainTransformEventPersistentImpl extends
 	public ClassRef getValueClassRef() {
 		return super.getValueClassRef();
 	}
-
+	@Lob
+	@Type(type="org.hibernate.type.StringClobType")
+	public String getNewStringValue() {
+		return super.getNewStringValue();
+	}
 	@Override
 	public void setDomainTransformRequestPersistent(
 			DomainTransformRequestPersistent DomainTransformRequestPersistent) {

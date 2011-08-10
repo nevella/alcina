@@ -1,20 +1,13 @@
 package cc.alcina.framework.gwt.persistence.client;
 
-import com.google.gwt.core.client.GWT;
-
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
-import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientMetricLogging;
-import cc.alcina.framework.gwt.client.ClientNofications;
-import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
 
 public abstract class ClientHandshakeHelperWithLocalPersistence extends

@@ -13,8 +13,10 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -99,6 +101,22 @@ public class LookupMapToMap<V> extends LinkedHashMap {
 			m = (Map) m.get(k);
 		}
 		return null;
+	}
+
+	public List<V> allValues() {
+		ArrayList<V> all = new ArrayList<V>();
+		addValues(all);
+		return all;
+	}
+
+	private void addValues(List<V> values) {
+		if (depth == 1) {
+			values.addAll(values());
+		} else {
+			for (Object k : keySet()) {
+				((LookupMapToMap<V>) get(k)).addValues(values);
+			}
+		}
 	}
 
 	public V remove(Object... objects) {

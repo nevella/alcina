@@ -1,13 +1,11 @@
 package cc.alcina.framework.jvmclient.persistence;
 
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.entity.ResourceUtilities;
 
 public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence {
 	public EmbeddedDerbyTransformPersistence(String derbyHomePath) {

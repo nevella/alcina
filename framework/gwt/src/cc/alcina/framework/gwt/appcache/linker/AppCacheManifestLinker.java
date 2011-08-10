@@ -15,17 +15,6 @@
  */
 package cc.alcina.framework.gwt.appcache.linker;
 
-import com.google.gwt.core.ext.LinkerContext;
-import com.google.gwt.core.ext.TreeLogger;
-import com.google.gwt.core.ext.UnableToCompleteException;
-import com.google.gwt.core.ext.linker.AbstractLinker;
-import com.google.gwt.core.ext.linker.ArtifactSet;
-import com.google.gwt.core.ext.linker.EmittedArtifact;
-import com.google.gwt.core.ext.linker.LinkerOrder;
-import com.google.gwt.core.ext.linker.EmittedArtifact.Visibility;
-import com.google.gwt.core.ext.linker.LinkerOrder.Order;
-import com.google.gwt.dev.util.Util;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,6 +27,17 @@ import java.util.SortedSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import com.google.gwt.core.ext.LinkerContext;
+import com.google.gwt.core.ext.TreeLogger;
+import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.linker.AbstractLinker;
+import com.google.gwt.core.ext.linker.ArtifactSet;
+import com.google.gwt.core.ext.linker.EmittedArtifact;
+import com.google.gwt.core.ext.linker.EmittedArtifact.Visibility;
+import com.google.gwt.core.ext.linker.LinkerOrder;
+import com.google.gwt.core.ext.linker.LinkerOrder.Order;
+import com.google.gwt.dev.util.Util;
 
 /**
  * Generates an appcache manifest file for use with the AppCache client class.

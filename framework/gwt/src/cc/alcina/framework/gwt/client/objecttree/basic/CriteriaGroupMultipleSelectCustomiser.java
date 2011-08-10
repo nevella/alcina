@@ -5,7 +5,6 @@ import java.beans.PropertyChangeListener;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.search.CriteriaGroup;

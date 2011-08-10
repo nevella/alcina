@@ -15,7 +15,6 @@ package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.util.Stack;
 
-import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;

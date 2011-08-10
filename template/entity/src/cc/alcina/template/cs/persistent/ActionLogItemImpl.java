@@ -12,6 +12,7 @@ import javax.persistence.Transient;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Type;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
@@ -24,7 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @Entity
 @Table(name = "actionlog", schema = "public")
-@SequenceGenerator(name = "actionlog_sequence", sequenceName = "actionlog_id_seq")
+@SequenceGenerator(allocationSize=1,name = "actionlog_sequence", sequenceName = "actionlog_id_seq")
 @Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 @BeanInfo(displayNamePropertyName = "id")
 
@@ -68,6 +69,7 @@ public class ActionLogItemImpl extends DomainBaseVersionable implements ActionLo
 		this.actionDate = actionDate;
 	}
 	@Lob
+	@Type(type="org.hibernate.type.StringClobType")
 	public String getActionLog() {
 		return this.actionLog;
 	}

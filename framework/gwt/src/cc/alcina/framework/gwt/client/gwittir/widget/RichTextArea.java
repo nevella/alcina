@@ -33,6 +33,7 @@ import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Focusable;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
@@ -70,8 +71,16 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 
 	private String old;
 
+	private final String defaultFontSize;
+
 	@SuppressWarnings("unchecked")
 	public RichTextArea() {
+		this(true, "12px");
+	}
+
+	@SuppressWarnings("unchecked")
+	public RichTextArea(boolean withToolbar, String defaultFontSize) {
+		this.defaultFontSize = defaultFontSize;
 		old = base.getHTML();
 		this.setComparator(SimpleComparator.INSTANCE);
 		this.base.addBlurHandler(new BlurHandler() {
@@ -104,10 +113,12 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 			}
 		});
 		FlowPanel fp = new FlowPanel();
-		FlowPanel tbHolder = new FlowPanel();
-		tbHolder.setStyleName("alcina-richTextToolbarBkg");
-		tbHolder.add(toolbar);
-		fp.add(tbHolder);
+		if (withToolbar) {
+			FlowPanel tbHolder = new FlowPanel();
+			tbHolder.setStyleName("alcina-richTextToolbarBkg");
+			tbHolder.add(toolbar);
+			fp.add(tbHolder);
+		}
 		fp.add(base);
 		super.initWidget(fp);
 	}
@@ -127,9 +138,20 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 	}
 
 	@Override
-	protected void onDetach() {
-		super.onDetach();
+	protected void onLoad() {
+		new Timer() {
+			@Override
+			public void run() {
+				styleBody(base.getElement(), defaultFontSize);
+			}
+		}.schedule(200);
+		super.onLoad();
 	}
+
+	protected native void styleBody(Element elem, String defaultFontSize) /*-{
+		elem.contentWindow.document.body.setAttribute("style",
+				"font-family: Arial; margin: 2px;font-size:" + defaultFontSize);
+	}-*/;
 
 	public int getTabIndex() {
 		return this.base.getTabIndex();

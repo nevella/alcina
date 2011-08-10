@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @Table(name = "classref")
 @Entity
-@SequenceGenerator(name = "classref_id_seq", sequenceName = "classref_id_seq")
+@SequenceGenerator(allocationSize=1,name = "classref_id_seq", sequenceName = "classref_id_seq")
 @ClientInstantiable
 @Introspectable
 @Cache(usage=CacheConcurrencyStrategy.TRANSACTIONAL)

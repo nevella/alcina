@@ -2,9 +2,7 @@ package cc.alcina.framework.entity.domaintransform.policy;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
 
 public class ReconstituteDbTransformExceptionPolicy extends
 		IgnoreMissingPersistenceLayerTransformExceptionPolicy {

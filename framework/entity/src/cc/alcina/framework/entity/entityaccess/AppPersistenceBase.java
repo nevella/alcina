@@ -14,8 +14,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceUnit;
 import javax.persistence.Query;
 
 import org.apache.log4j.Appender;
@@ -27,28 +25,23 @@ import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
-import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
-import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.registry.RegistryScanner;
-import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
 public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid> {
 	public static final String PERSISTENCE_TEST = AppPersistenceBase.class
-			.getName()
-			+ ".PERSISTENCE_TEST";
+			.getName() + ".PERSISTENCE_TEST";
 
 	public static boolean isTest() {
 		return Boolean.getBoolean(PERSISTENCE_TEST);
@@ -58,27 +51,12 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		System.setProperty(PERSISTENCE_TEST, String.valueOf(true));
 	}
 
-	@PersistenceContext
-	protected EntityManager em;
-
-	@PersistenceUnit
-	protected EntityManagerFactory factory;
-
 	protected CommonPersistenceLocal commonPersistence;
 
 	protected abstract CommonPersistenceLocal getCommonPersistence();
 
-	public AppPersistenceBase() {
+	protected AppPersistenceBase() {
 	}
-
-	public AppPersistenceBase(EntityManager entityManager) {
-		this();
-		em = entityManager;
-	}
-
-	
-
-	
 
 	protected void loadCustomProperties() {
 		try {
@@ -109,9 +87,9 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 				.getMainLoggerName());
 		try {
 			Map<String, Date> classes = new ServletClasspathScanner("*", true,
-					false, mainLogger, Registry.MARKER_RESOURCE, Arrays
-							.asList(new String[] { "WEB-INF/classes",
-									"WEB-INF/lib" })).getClasses();
+					false, mainLogger, Registry.MARKER_RESOURCE,
+					Arrays.asList(new String[] { "WEB-INF/classes",
+							"WEB-INF/lib" })).getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					Registry.get());
 			new ClassrefScanner().scan(classes);
@@ -195,9 +173,9 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 				(Collection<? extends G>) PermissionsManager.get()
 						.getUserGroups().values());
 		String filterEql = createGroupFilter(true, FilterCombinator.OR);
-		filterEql=filterEql.isEmpty()?"":" OR "+filterEql;
+		filterEql = filterEql.isEmpty() ? "" : " OR " + filterEql;
 		// get metas
-		List<G> visgrps = em.createQuery(
+		List<G> visgrps = getEntityManager().createQuery(
 				"select distinct g from "
 						+ getCommonPersistence()
 								.getImplementationSimpleClassName(IGroup.class)
@@ -215,7 +193,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	@SuppressWarnings("unchecked")
 	protected List<G> getAllGroupEntities() {
-		List<G> resultList = new ArrayList(em.createQuery(
+		List<G> resultList = new ArrayList(getEntityManager().createQuery(
 				"select distinct g from "
 						+ getCommonPersistence()
 								.getImplementationSimpleClassName(IGroup.class)
@@ -228,7 +206,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		for (G jg : resultList) {
 			usersInGroups.addAll((Collection<? extends U>) jg.getMemberUsers());
 		}
-		List<U> users = em.createQuery(
+		List<U> users = getEntityManager().createQuery(
 				"from "
 						+ getCommonPersistence()
 								.getImplementationSimpleClassName(IUser.class))
@@ -249,8 +227,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	@SuppressWarnings("unchecked")
 	public <A> Set<A> getAll(Class<A> clazz) {
-		Query query = em.createQuery(String.format("from %s ", clazz
-				.getSimpleName()));
+		Query query = getEntityManager().createQuery(
+				String.format("from %s ", clazz.getSimpleName()));
 		EntityLayerLocator.get().jpaImplementation().cache(query);
 		List results = query.getResultList();
 		return new LinkedHashSet<A>(results);
@@ -258,7 +236,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	@SuppressWarnings("unchecked")
 	public <A> Set<A> getAllForUser(Class<A> clazz) {
-		Query query = em.createQuery(
+		Query query = getEntityManager().createQuery(
 				String.format("from %s where user=? ", clazz.getSimpleName()))
 				.setParameter(1, PermissionsManager.get().getUser());
 		// seems to be throwing transactional cache errors
@@ -266,11 +244,13 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		List results = query.getResultList();
 		return new LinkedHashSet<A>(results);
 	}
+
 	@SuppressWarnings("unchecked")
 	public <A> Set<A> getAllForCreationUser(Class<A> clazz) {
-		Query query = em.createQuery(
-				String.format("from %s where creationUser=? ", clazz.getSimpleName()))
-				.setParameter(1, PermissionsManager.get().getUser());
+		Query query = getEntityManager().createQuery(
+				String.format("from %s where creationUser=? ",
+						clazz.getSimpleName())).setParameter(1,
+				PermissionsManager.get().getUser());
 		// seems to be throwing transactional cache errors
 		// EntityLayerLocator.get().jpaImplementation().cache(query);
 		List results = query.getResultList();
@@ -278,8 +258,9 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	}
 
 	public List<Long> getAllIds(Class clazz) {
-		Query query = em.createQuery(String.format(
-				"select id from %s order by id", clazz.getSimpleName()));
+		Query query = getEntityManager().createQuery(
+				String.format("select id from %s order by id",
+						clazz.getSimpleName()));
 		EntityLayerLocator.get().jpaImplementation().cache(query);
 		return query.getResultList();
 	}
@@ -297,4 +278,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		sb.append(string);
 		sb.append(" ");
 	}
+
+	protected abstract EntityManager getEntityManager();
+
+	protected abstract EntityManagerFactory getEntityManagerFactory();
 }

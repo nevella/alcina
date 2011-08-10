@@ -1,15 +1,16 @@
 package cc.alcina.template.entityaccess;
 
-import static cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants.ANONYMOUS_GROUP;
-import static cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants.ANONYMOUS_USER;
-import static cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants.SYSTEM_GROUP;
-import static cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants.SYSTEM_USER;
+import static cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants.*;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.ejb.Stateless;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceUnit;
 
 import org.hibernate.proxy.LazyInitializer;
 
@@ -17,7 +18,6 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
@@ -25,10 +25,10 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.impl.jboss.JPAHibernateImpl;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.EntityUtils;
-import cc.alcina.framework.entity.util.JaxbUtils;
-import cc.alcina.framework.entity.util.UnixCrypt;
 import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.util.JaxbUtils;
+import cc.alcina.framework.entity.util.UnixCrypt;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
@@ -50,7 +50,7 @@ public class AlcinaTemplatePersistence
 
 	public static final String LocalJNDIName = AlcinaTemplatePersistence.class
 			.getSimpleName()
-			+ "/local";
+			;
 
 	public AlcinaTemplateObjects loadInitial(boolean internal) throws Exception {
 		getCommonPersistence().connectPermissionsManagerToLiveObjects();
@@ -73,6 +73,22 @@ public class AlcinaTemplatePersistence
 		return new EntityUtils().detachedClone(initialObjects);
 	}
 
+	@PersistenceContext
+	protected EntityManager em;
+
+	@PersistenceUnit
+	protected EntityManagerFactory factory;
+
+	public AlcinaTemplatePersistence(EntityManager entityManager) {
+		super();
+		if (entityManager != null) {
+			em = entityManager;
+		}
+	}
+
+	public AlcinaTemplatePersistence() {
+		this(null);
+	}
 	@Override
 	public List<AlcinaTemplateGroup> getVisibleGroups() {
 		return new ArrayList<AlcinaTemplateGroup>(super.getVisibleGroups());
@@ -168,5 +184,14 @@ public class AlcinaTemplatePersistence
 				new JPAHibernateImpl());
 		CommonLocator.get().registerCurrentUtcDateProvider(
 				ObjectPersistenceHelper.get());
+	}
+	@Override
+	protected EntityManager getEntityManager() {
+		return em;
+	}
+
+	@Override
+	protected EntityManagerFactory getEntityManagerFactory() {
+		return factory;
 	}
 }

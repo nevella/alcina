@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @Table(name = "client_instance")
 @Entity
 
-@SequenceGenerator(name = "client_instance_id_seq", sequenceName = "client_instance_id_seq")
+@SequenceGenerator(allocationSize=1,name = "client_instance_id_seq", sequenceName = "client_instance_id_seq")
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ClientInstance.class)
 public class ClientInstanceImpl extends ClientInstance implements
 		Serializable {

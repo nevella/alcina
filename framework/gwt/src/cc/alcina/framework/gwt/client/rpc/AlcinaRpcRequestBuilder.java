@@ -9,9 +9,7 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
-import com.google.gwt.http.client.RequestBuilder.Method;
 import com.google.gwt.user.client.rpc.RpcRequestBuilder;
-import com.google.gwt.user.client.rpc.impl.RequestCallbackAdapter;
 
 public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	public static final String CLIENT_INSTANCE_ID_KEY = "X-ALCINA-CLIENT-INSTANCE-ID";

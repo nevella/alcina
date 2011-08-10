@@ -14,9 +14,9 @@
 
 package cc.alcina.framework.common.client.actions;
 
-import com.google.gwt.user.client.ui.Widget;
-
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+
+import com.google.gwt.user.client.ui.Widget;
 
 
 /**

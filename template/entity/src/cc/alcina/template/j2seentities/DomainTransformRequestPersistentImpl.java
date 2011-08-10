@@ -27,7 +27,7 @@ import cc.alcina.template.cs.persistent.ClientInstanceImpl;
 
 @Entity
 @Table(name = "domain_transform_request")
-@SequenceGenerator(name = "domain_transform_request_id_seq", sequenceName = "domain_transform_request_id_seq")
+@SequenceGenerator(allocationSize=1,name = "domain_transform_request_id_seq", sequenceName = "domain_transform_request_id_seq")
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = DomainTransformRequestPersistent.class)
 public class DomainTransformRequestPersistentImpl extends
 		DomainTransformRequestPersistent {

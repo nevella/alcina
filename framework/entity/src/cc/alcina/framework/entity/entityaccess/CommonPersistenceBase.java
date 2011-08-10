@@ -28,7 +28,6 @@ import java.util.Random;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.CommonLocator;
@@ -49,10 +48,8 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
@@ -89,9 +86,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	// note - this'll be the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
-
-	@PersistenceContext
-	private EntityManager entityManager;
 
 	public CommonPersistenceBase() {
 		ObjectPersistenceHelper.get();
@@ -171,7 +165,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			impl.setHelloDate(new Date());
 			impl.setUser(PermissionsManager.get().getUser());
 			impl.setAuth(Math.abs(new Random().nextInt()));
-			getEntityManager().flush();
+			getEntityManager().flush();	
 			IUser clonedUser = getNewImplementationInstance(IUser.class);
 			ResourceUtilities
 					.copyBeanProperties(
@@ -188,13 +182,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	public String validateClientInstance(long id, int auth) {
-		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
-		CI ci = getItemById(clientInstanceImpl, id);
-		return ci != null && ci.getAuth() == auth ? ci.getUser().getUserName()
-				: null;
 	}
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception {
@@ -238,9 +225,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public abstract String getAnonymousUserName();
 
-	public EntityManager getEntityManager() {
-		return entityManager;
-	}
+	public abstract EntityManager getEntityManager();
+
+	public abstract void setEntityManager(EntityManager entityManager);
 
 	public IID getIidByKey(String iid) {
 		List<IID> l = getEntityManager()
@@ -265,16 +252,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public <T> T getItemById(Class<T> clazz, Long id) {
 		return getItemById(clazz, id, false, false);
-	}
-
-	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
-			Collection<Long> ids,
-			InstantiateImplCallback instantiateImplCallback) {
-		String eql = String.format("from %s where  id in %s order by id",
-				clazz.getSimpleName(), EntityUtils.longsToIdClause(ids));
-		List results = getEntityManager().createQuery(eql).getResultList();
-		return new EntityUtils()
-				.detachedClone(results, instantiateImplCallback);
 	}
 
 	public <T> T getItemById(Class<T> clazz, Long id, boolean clean,
@@ -308,6 +285,24 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return (T) ((l.size() == 0) ? null : l.get(0));
 	}
 
+	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
+			Collection<Long> ids,
+			InstantiateImplCallback instantiateImplCallback) {
+		String eql = String.format("from %s where  id in %s order by id",
+				clazz.getSimpleName(), EntityUtils.longsToIdClause(ids));
+		List results = getEntityManager().createQuery(eql).getResultList();
+		return new EntityUtils()
+				.detachedClone(results, instantiateImplCallback);
+	}
+
+	public long getLastTransformId() {
+		String eql = String
+				.format("select max(dtep.id) from %s dtep ",
+						getImplementationSimpleClassName(DomainTransformEventPersistent.class));
+		Long l = (Long) getEntityManager().createQuery(eql).getSingleResult();
+		return CommonUtils.lv(l);
+	}
+
 	public <A> A getNewImplementationInstance(Class<A> clazz) {
 		try {
 			return getImplementation(clazz).newInstance();
@@ -324,6 +319,25 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.getObjectWrapperForUser(c, id, getEntityManager());
 		checkWrappedObjectAccess(null, wrapper, c);
 		return wrapper;
+	}
+
+	@Override
+	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
+			long fromId, long toId) {
+		List<DomainTransformRequestPersistent> dtes = getEntityManager()
+				.createQuery(
+						String.format(
+								"select distinct dtrp "
+										+ "from %s dtrp "
+										+ "inner join fetch dtrp.events "
+										+ "inner join fetch dtrp.clientInstance "
+										+ " where dtrp.id>=%s and dtrp.id<=%s "
+										+ "order by dtrp.id",
+								getImplementation(
+										DomainTransformRequestPersistent.class)
+										.getSimpleName(), fromId, toId))
+				.getResultList();
+		return dtes;
 	}
 
 	public U getSystemUser() {
@@ -360,8 +374,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				clean ? createUserAndGroupInstantiator() : null);
 		return cleaned;
 	}
-
-	protected abstract InstantiateImplCallback createUserAndGroupInstantiator();
 
 	public List<ActionLogItem> listLogItemsForClass(String className, int count) {
 		List list = getEntityManager()
@@ -577,6 +589,35 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return result;
 	}
 
+	public String validateClientInstance(long id, int auth) {
+		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
+		CI ci = getItemById(clientInstanceImpl, id);
+		return ci != null && ci.getAuth() == auth ? ci.getUser().getUserName()
+				: null;
+	}
+
+	/**
+	 * Used for supporting mixed rpc/transform domain loads
+	 * 
+	 * @param userId
+	 */
+	public TransformCache warmupTransformCache() {
+		TransformCache result = new TransformCache();
+		List<DomainTransformEventPersistent> recentTransforms = getRecentTransforms(
+				getSharedTransformClasses(), getSharedTransformWarmupSize(), 0L);
+		result.sharedTransformClasses = getSharedTransformClasses();
+		result.perUserTransformClasses = getPerUserTransformClasses();
+		if (!recentTransforms.isEmpty()) {
+			result.putSharedTransforms(recentTransforms);
+			recentTransforms = getRecentTransforms(
+					getPerUserTransformClasses(), 0, result.cacheValidFrom);
+			result.putPerUserTransforms(recentTransforms);
+		} else {
+			result.invalid = true;
+		}
+		return result;
+	}
+
 	private <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
 			boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive) {
 		try {
@@ -690,10 +731,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	private void setEntityManager(EntityManager em) {
-		entityManager = em;
-	}
-
 	private void tryAddSourceObjectName(
 			DomainTransformException transformException) {
 		try {
@@ -749,25 +786,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
+	protected abstract InstantiateImplCallback createUserAndGroupInstantiator();
+
 	protected <T> T findImplInstance(Class<? extends T> clazz, long id) {
 		Class<?> implClazz = getImplementation(clazz);
 		return (T) getEntityManager().find(implClazz, id);
 	}
 
-	protected Collection<Class> getSharedTransformClasses() {
-		return new ArrayList<Class>();
-	}
-
 	protected Collection<Class> getPerUserTransformClasses() {
 		return new ArrayList<Class>();
-	}
-
-	/**
-	 * This is deliberately low - for big initial objects size, 1000 is quite
-	 * reasonable (i.e. client load will be much faster)
-	 */
-	protected int getSharedTransformWarmupSize() {
-		return 100;
 	}
 
 	protected List<DomainTransformEventPersistent> getRecentTransforms(
@@ -792,52 +819,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return query.getResultList();
 	}
 
+	protected Collection<Class> getSharedTransformClasses() {
+		return new ArrayList<Class>();
+	}
+
 	/**
-	 * Used for supporting mixed rpc/transform domain loads
-	 * 
-	 * @param userId
+	 * This is deliberately low - for big initial objects size, 1000 is quite
+	 * reasonable (i.e. client load will be much faster)
 	 */
-	public TransformCache warmupTransformCache() {
-		TransformCache result = new TransformCache();
-		List<DomainTransformEventPersistent> recentTransforms = getRecentTransforms(
-				getSharedTransformClasses(), getSharedTransformWarmupSize(), 0L);
-		result.sharedTransformClasses = getSharedTransformClasses();
-		result.perUserTransformClasses = getPerUserTransformClasses();
-		if (!recentTransforms.isEmpty()) {
-			result.putSharedTransforms(recentTransforms);
-			recentTransforms = getRecentTransforms(
-					getPerUserTransformClasses(), 0, result.cacheValidFrom);
-			result.putPerUserTransforms(recentTransforms);
-		} else {
-			result.invalid = true;
-		}
-		return result;
-	}
-
-	public long getLastTransformId() {
-		String eql = String
-				.format("select max(dtep.id) from %s dtep ",
-						getImplementationSimpleClassName(DomainTransformEventPersistent.class));
-		Long l = (Long) getEntityManager().createQuery(eql).getSingleResult();
-		return CommonUtils.lv(l);
-	}
-
-	@Override
-	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId) {
-		List<DomainTransformRequestPersistent> dtes = getEntityManager()
-				.createQuery(
-						String.format(
-								"select distinct dtrp " +
-								"from %s dtrp "
-										+ "inner join fetch dtrp.events "
-										+ "inner join fetch dtrp.clientInstance "
-										+ " where dtrp.id>=%s and dtrp.id<=%s " +
-												"order by dtrp.id",
-								getImplementation(
-										DomainTransformRequestPersistent.class)
-										.getSimpleName(), fromId, toId))
-				.getResultList();
-		return dtes;
+	protected int getSharedTransformWarmupSize() {
+		return 100;
 	}
 }

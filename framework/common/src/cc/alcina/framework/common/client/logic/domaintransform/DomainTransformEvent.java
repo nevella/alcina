@@ -94,6 +94,7 @@ public class DomainTransformEvent implements Serializable,
 	}
 
 	@Lob
+	@Transient
 	public String getNewStringValue() {
 		return this.newStringValue;
 	}

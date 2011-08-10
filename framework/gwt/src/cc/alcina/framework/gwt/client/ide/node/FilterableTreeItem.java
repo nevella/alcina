@@ -13,10 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.ide.node;
 
-import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.provider.TextProvider;
-import cc.alcina.framework.gwt.client.widget.VisualFilterable.HasSatisfiesFilter;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithParentEnforcesChildVisibility;
 
 import com.google.gwt.user.client.ui.TreeItem;

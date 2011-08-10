@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.common.client.search;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 

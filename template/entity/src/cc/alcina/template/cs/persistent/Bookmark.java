@@ -44,7 +44,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.UrlCustomiser;
 		@Action(actionClass = EditAction.class),
 		@Action(actionClass = CreateAction.class),
 		@Action(actionClass = DeleteAction.class) }))
-@SequenceGenerator(name = "bookmark_id_seq", sequenceName = "bookmark_id_seq")
+@SequenceGenerator(allocationSize=1,name = "bookmark_id_seq", sequenceName = "bookmark_id_seq")
 @ObjectPermissions(create = @Permission(access = AccessLevel.LOGGED_IN), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 @Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 public class Bookmark extends DomainBaseVersionable implements

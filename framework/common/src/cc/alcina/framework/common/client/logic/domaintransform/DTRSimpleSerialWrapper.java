@@ -17,8 +17,6 @@ import java.util.Date;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
@@ -31,6 +29,8 @@ import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
+
+import com.google.gwt.core.client.GWT;
 
 @BeanInfo(displayNamePropertyName = "id")
 @XmlRootElement

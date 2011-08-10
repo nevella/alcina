@@ -33,7 +33,6 @@ import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
-import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 

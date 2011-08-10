@@ -13,9 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.ide.node;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;

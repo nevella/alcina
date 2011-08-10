@@ -13,9 +13,6 @@
  */
 package cc.alcina.framework.entity.gwtsynth;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -42,16 +39,18 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
-import cc.alcina.framework.entity.util.AnnotationUtils;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
+import com.google.gwt.core.ext.typeinfo.HasAnnotations;
 import com.google.gwt.core.ext.typeinfo.JAnnotationType;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
@@ -80,13 +79,15 @@ public class ClientReflectionGenerator extends Generator {
 
 	private Map<Class, String> ann2impl = new HashMap<Class, String>();
 
+	private ArrayList<Class<? extends Annotation>> visibleAnnotationClasses;
+
 	public SourceWriter getSw() {
 		return this.sw;
 	}
 
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
-		// System.out.println("ClientReflector generation...");
+//		System.out.println("ClientReflector generation...");
 		PrintWriter printWriter = context.tryCreate(logger, packageName,
 				implementationName);
 		if (printWriter == null) {
@@ -109,21 +110,29 @@ public class ClientReflectionGenerator extends Generator {
 		crf.addImport(ClientPropertyReflector.class.getName());
 		crf.addImport(ClientReflector.class.getName());
 		crf.addImport(RegistryLocation.class.getName());
+		ctLookup.clear();
 		// scan for reflectable annotations etc
 		try {
+			visibleAnnotationClasses = new ArrayList<Class<? extends Annotation>>();
 			List<JAnnotationType> jAnns = this.getClientVisibleAnnotations(
 					logger, context.getTypeOracle());
+			for (JAnnotationType jAnnotationType : jAnns) {
+				visibleAnnotationClasses
+						.add((Class<? extends Annotation>) Class
+								.forName(jAnnotationType
+										.getQualifiedBinaryName()));
+			}
 			writeAnnotations(logger, context, jAnns, crf);
-			List<JType> beanInfoTypes = this.getBeanInfoTypes(logger,
+			List<JClassType> beanInfoTypes = this.getBeanInfoTypes(logger,
 					context.getTypeOracle(), crf);
-			List<JType> instantiableTypes = this.getInstantiableTypes(logger,
-					context.getTypeOracle(), crf);
-			Map<Class, Set<RegistryLocation>> gwtRegisteringClasses = getRegistryAnnotations(context
+			List<JClassType> instantiableTypes = this.getInstantiableTypes(
+					logger, context.getTypeOracle(), crf);
+			Map<JClassType, Set<RegistryLocation>> gwtRegisteringClasses = getRegistryAnnotations(context
 					.getTypeOracle());
 			SourceWriter srcW = createWriter(crf, printWriter);
-			procDomain(toJavaClasses(beanInfoTypes),
-					toJavaClasses(instantiableTypes), srcW,
+			procDomain(beanInfoTypes, instantiableTypes, srcW,
 					gwtRegisteringClasses, implementationName);
+//			srcW.println("bruce");
 			commit(context, logger, printWriter);
 			System.out.println(String.format("Client reflection generation - "
 					+ "%s annotations, %s beans, "
@@ -131,10 +140,13 @@ public class ClientReflectionGenerator extends Generator {
 					beanInfoTypes.size(), instantiableTypes.size(),
 					System.currentTimeMillis() - start));
 		} catch (Exception e) {
+			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
 		return packageName + "." + implementationName;
 	}
+
+	Map<Class, JClassType> ctLookup = new HashMap<Class, JClassType>();
 
 	/**
 	 * Since overridden parent annotations are potentially useful, we don't use
@@ -142,38 +154,36 @@ public class ClientReflectionGenerator extends Generator {
 	 * 
 	 * @throws ClassNotFoundException
 	 */
-	private Map<Class, Set<RegistryLocation>> getRegistryAnnotations(
+	private Map<JClassType, Set<RegistryLocation>> getRegistryAnnotations(
 			TypeOracle typeOracle) throws ClassNotFoundException {
-		HashMap<Class, Set<RegistryLocation>> results = new HashMap<Class, Set<RegistryLocation>>();
+		HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
 		JClassType[] types = typeOracle.getTypes();
-		for (JClassType jClassType : types) {
-			if (ignore(jClassType)) {
+		for (JClassType jct : types) {
+			if (ignore(jct)) {
 				continue;
 			}
-			if ((jClassType.isAnnotationPresent(RegistryLocation.class) || jClassType
+			if ((jct.isAnnotationPresent(RegistryLocation.class) || jct
 					.isAnnotationPresent(RegistryLocations.class))
-					&& !jClassType.isAbstract()) {
-				Class c = forName(jClassType);
-				Set<Annotation> sca = AnnotationUtils
-						.getSuperclassAnnotations(c);
-				Set<RegistryLocation> rls = AnnotationUtils.filterAnnotations(
-						sca, RegistryLocation.class);
-				Set<RegistryLocations> rlsSet = AnnotationUtils
-						.filterAnnotations(sca, RegistryLocations.class);
+					&& !jct.isAbstract()) {
+				Set<RegistryLocation> rls = getClassAnnotations(jct,
+						RegistryLocation.class);
+				Set<RegistryLocations> rlsSet = getClassAnnotations(jct,
+						RegistryLocations.class);
 				for (RegistryLocations rlcs : rlsSet) {
 					for (RegistryLocation rl : rlcs.value()) {
 						rls.add(rl);
 					}
 				}
-				for (RegistryLocation rl : rls) {
-					if (!results.containsKey(c)) {
-						results.put(c, new LinkedHashSet<RegistryLocation>());
-					}
-					results.get(c).add(rl);
-				}
+				results.put(jct, new LinkedHashSet<RegistryLocation>(rls));
 			}
 		}
 		return results;
+	}
+
+	private <T> Set<T> getClassAnnotations(JClassType jct,
+			Class<T> annotationType) {
+		return (Set) getClassAnnotations(jct,
+				(List) Collections.singletonList(annotationType));
 	}
 
 	private boolean ignore(JClassType jClassType) {
@@ -181,18 +191,9 @@ public class ClientReflectionGenerator extends Generator {
 				|| !jClassType.isPublic();
 	}
 
-	private List<Class> toJavaClasses(List<JType> instantiableTypes)
-			throws Exception {
-		List<Class> results = new ArrayList<Class>();
-		for (JType jType : instantiableTypes) {
-			results.add(forName(jType));
-		}
-		return results;
-	}
-
-	private List<JType> getInstantiableTypes(TreeLogger logger,
+	private List<JClassType> getInstantiableTypes(TreeLogger logger,
 			TypeOracle typeOracle, ClassSourceFileComposerFactory crf) {
-		List<JType> results = new ArrayList<JType>();
+		List<JClassType> results = new ArrayList<JClassType>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jClassType : types) {
 			if (jClassType.isAnnotationPresent(ClientInstantiable.class)
@@ -204,9 +205,9 @@ public class ClientReflectionGenerator extends Generator {
 		return results;
 	}
 
-	private List<JType> getBeanInfoTypes(TreeLogger logger,
+	private List<JClassType> getBeanInfoTypes(TreeLogger logger,
 			TypeOracle typeOracle, ClassSourceFileComposerFactory crf) {
-		List<JType> results = new ArrayList<JType>();
+		List<JClassType> results = new ArrayList<JClassType>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jClassType : types) {
 			if (jClassType
@@ -331,9 +332,9 @@ public class ClientReflectionGenerator extends Generator {
 		return results;
 	}
 
-	public void procDomain(List<Class> beanInfoClasses,
-			List<Class> instantiableClasses, SourceWriter sw,
-			Map<Class, Set<RegistryLocation>> gwtRegisteringClasses,
+	public void procDomain(List<JClassType> beanInfoTypes,
+			List<JClassType> instantiableTypes, SourceWriter sw,
+			Map<JClassType, Set<RegistryLocation>> gwtRegisteringClasses,
 			String implName) throws Exception {
 		sw.indent();
 		sw.println("Map<Class, ClientBeanReflector> gwbiMap = new HashMap<Class, ClientBeanReflector>();");
@@ -354,18 +355,18 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("@Override");
 		sw.println("public <T> T newInstance(Class<T> clazz, long objectId, long localId) {");
 		sw.indent();
-		for (Class c : beanInfoClasses) {
+		for (JClassType c : beanInfoTypes) {
 			sw.println(String
 					.format("if (clazz.equals(%s.class)){return (T)GWT.create(%s.class);} ",
-							c.getSimpleName(), c.getSimpleName()));
+							c.getSimpleSourceName(), c.getSimpleSourceName()));
 		}
-		for (Class c : instantiableClasses) {
-			if (c.isEnum()) {
+		for (JClassType c : instantiableTypes) {
+			if (c.isEnum() != null) {
 				continue;
 			}
 			sw.println(String
 					.format("if (clazz.equals(%s.class)){return (T)GWT.create(%s.class);} ",
-							c.getSimpleName(), c.getSimpleName()));
+							c.getSimpleSourceName(), c.getSimpleSourceName()));
 		}
 		sw.println("if (child!=null){return child.newInstance(clazz,objectId,localId);}");
 		sw.println("throw new RuntimeException(\"Class \"+clazz+\" not reflect-instantiable\");");
@@ -375,24 +376,20 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println();
 		List<String> methodNames = new ArrayList<String>();
 		int methodCount = 0;
-		for (Class c : beanInfoClasses) {
+		for (JClassType jct : beanInfoTypes) {
 			String methodName = "initClass" + (methodCount++);
 			methodNames.add(methodName);
 			sw.println(String.format("private void %s(){", methodName));
 			sw.indent();
 			sw.println("Map<String,ClientPropertyReflector> propertyReflectors = new HashMap<String,ClientPropertyReflector>();");
-			
-			BeanInfo beanInfo = Introspector.getBeanInfo(c);
-			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals("class")
-						|| pd.getName().equals("propertyChangeListeners")) {
+			for (JMethod method : getPropertyGetters(jct)) {
+				String propertyName = getPropertyNameForReadMethod(method);
+				if (propertyName.equals("class")
+						|| propertyName
+								.equals("propertyChangeListeners")) {
 					continue;
 				}
-				Method m = pd.getReadMethod();
-				Collection<Annotation> annotations = AnnotationUtils
-						.getSuperclassAnnotationsForMethod(m);
-				
+				Collection<Annotation> annotations = getSuperclassAnnotationsForMethod(method);
 				int aCount = 0;
 				String annArray = "";
 				boolean ignore = false;
@@ -424,20 +421,16 @@ public class ClientReflectionGenerator extends Generator {
 				}
 				sw.println(String.format("ClientPropertyReflector reflector = "
 						+ "new ClientPropertyReflector(\"%s\",%s.class,"
-						+ " new Annotation[]{%s}) ;", pd.getName(), pd
-						.getPropertyType().getName().replace("$", "."),
-						annArray));
+						+ " new Annotation[]{%s}) ;", propertyName, method
+						.getReturnType().getQualifiedSourceName(), annArray));
 				sw.println("propertyReflectors.put(reflector.getPropertyName(), reflector);");
 				sw.outdent();
 				sw.println("}");
 			}
 			int aCount = 0;
 			String annArray = "";
-			for (Annotation a : c.getAnnotations()) {
-				if (!a.annotationType()
-						.isAnnotationPresent(ClientVisible.class)) {
-					continue;
-				}
+			for (Annotation a : getClassAnnotations(jct,
+					visibleAnnotationClasses)) {
 				if (aCount++ != 0) {
 					annArray += ", ";
 				}
@@ -448,7 +441,7 @@ public class ClientReflectionGenerator extends Generator {
 			sw.println(String
 					.format("ClientBeanReflector beanReflector = new ClientBeanReflector("
 							+ "%s.class,new Annotation[]{%s},propertyReflectors);",
-							c.getCanonicalName(), annArray));
+							jct.getQualifiedSourceName(), annArray));
 			sw.println("gwbiMap.put(beanReflector.getBeanClass(),beanReflector );");
 			sw.outdent();
 			sw.println("}");
@@ -456,17 +449,12 @@ public class ClientReflectionGenerator extends Generator {
 		}
 		sw.println("private void init() {");
 		sw.indent();
-		Set<Class> qt = new HashSet<Class>();
-		qt.addAll(instantiableClasses);
-		for (Class c : instantiableClasses) {
+		Set<JClassType> qt = new HashSet<JClassType>();
+		qt.addAll(instantiableTypes);
+		qt.addAll(beanInfoTypes);
+		for (JClassType t : qt) {
 			sw.println(String.format("forNameMap.put(\"%s\",%s.class);",
-					c.getName(), c.getName().replace("$", ".")));
-		}
-		for (Class c : beanInfoClasses) {
-			if (!qt.contains(c)) {
-				sw.println(String.format("forNameMap.put(\"%s\",%s.class);",
-						c.getName(), c.getName().replace("$", ".")));
-			}
+					t.getQualifiedBinaryName(), t.getQualifiedSourceName()));
 		}
 		for (String methodName : methodNames) {
 			sw.println(String.format("%s();", methodName));
@@ -474,19 +462,41 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("");
 		sw.println("//init registry");
 		sw.println("");
-		for (Class clazz : gwtRegisteringClasses.keySet()) {
+		for (JClassType clazz : gwtRegisteringClasses.keySet()) {
 			for (RegistryLocation l : gwtRegisteringClasses.get(clazz)) {
 				StringBuffer sb = new StringBuffer();
 				writeAnnImpl(l, ann2impl, 0, false, sb);
 				sw.println(String.format(
 						"Registry.get().register(%s.class,%s);",
-						clazz.getCanonicalName(), sb));
+						clazz.getQualifiedSourceName(), sb));
 			}
 		}
 		sw.outdent();
 		sw.println("}");
 		sw.outdent();
 		sw.println("}");
+	}
+
+	private String getPropertyNameForReadMethod(JMethod method) {
+		String name = method.getName();
+		int offset = name.startsWith("is") ? 2 : 3;
+		return name.substring(offset, offset + 1).toLowerCase()
+				+ name.substring(offset + 1);
+	}
+
+	private List<JMethod> getPropertyGetters(JClassType jct) {
+		ArrayList<JMethod> methods = new ArrayList<JMethod>();
+		JMethod[] jms = jct.getInheritableMethods();
+		for (JMethod jm : jms) {
+			String name = jm.getName();
+			if ((name.startsWith("get") && name.length() > 3)
+					|| (name.startsWith("is") && name.length() > 2)) {
+				if (jm.getParameters().length == 0) {
+					methods.add(jm);
+				}
+			}
+		}
+		return methods;
 	}
 
 	private String getAnnImpl(Annotation a, Map<Class, String> ann2impl,
@@ -568,5 +578,70 @@ public class ClientReflectionGenerator extends Generator {
 			return pbm.get(c.getName());
 		}
 		return c;
+	}
+
+	private HashMap<JMethod, Set<Annotation>> superMethodAnnotationMap = new HashMap<JMethod, Set<Annotation>>();
+
+	public Set<Annotation> getSuperclassAnnotationsForMethod(JMethod m) {
+		if (superMethodAnnotationMap.containsKey(m)) {
+			return superMethodAnnotationMap.get(m);
+		}
+		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
+		JClassType c = m.getEnclosingType();
+		Set<? extends JClassType> flattenedSupertypeHierarchy = c
+				.getFlattenedSupertypeHierarchy();
+		for (JClassType jct : flattenedSupertypeHierarchy) {
+			try {
+				JMethod m2 = jct.getMethod(m.getName(), m.getParameterTypes());
+				for (Annotation a : getVisibleAnnotations(m2,
+						visibleAnnotationClasses)) {
+					if (!uniqueMap.containsKey(a.annotationType())) {
+						uniqueMap.put(a.annotationType(), a);
+					}
+				}
+			} catch (Exception e) {
+			}
+		}
+		HashSet values = new HashSet(uniqueMap.values());
+		superMethodAnnotationMap.put(m, values);
+		return values;
+	}
+
+	private List<Annotation> getVisibleAnnotations(HasAnnotations ha,
+			List<Class<? extends Annotation>> annotationClasses) {
+		List<Annotation> result = new ArrayList<Annotation>();
+		for (Class<? extends Annotation> a : annotationClasses) {
+			if (ha.isAnnotationPresent(a)) {
+				result.add(ha.getAnnotation(a));
+			}
+		}
+		return result;
+	}
+
+	private LookupMapToMap<Set<Annotation>> superAnnotationMap = new LookupMapToMap<Set<Annotation>>(
+			2);
+
+	public Set<Annotation> getClassAnnotations(JClassType clazz,
+			List<Class<? extends Annotation>> annotationClasses) {
+		if (superAnnotationMap.containsKey(clazz, annotationClasses)) {
+			return superAnnotationMap.get(clazz, annotationClasses);
+		}
+		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
+		Set<? extends JClassType> flattenedSupertypeHierarchy = clazz
+				.getFlattenedSupertypeHierarchy();
+		for (JClassType jct : flattenedSupertypeHierarchy) {
+			try {
+				for (Annotation a : getVisibleAnnotations(jct,
+						annotationClasses)) {
+					if (!uniqueMap.containsKey(a.annotationType())) {
+						uniqueMap.put(a.annotationType(), a);
+					}
+				}
+			} catch (Exception e) {
+			}
+		}
+		HashSet values = new HashSet(uniqueMap.values());
+		superAnnotationMap.put(clazz, annotationClasses, values);
+		return values;
 	}
 }

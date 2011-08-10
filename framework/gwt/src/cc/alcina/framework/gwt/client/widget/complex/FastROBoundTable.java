@@ -72,6 +72,8 @@ public class FastROBoundTable extends BoundTableExt {
 
 	private List selectedObjects = new ArrayList();
 
+	public boolean reallyClear;
+
 	public FastROBoundTable(int mask, BoundWidgetTypeFactory factory,
 			Field[] fields, DataProvider provider) {
 		super(mask, factory, fields, provider);
@@ -96,7 +98,28 @@ public class FastROBoundTable extends BoundTableExt {
 	public void setSelectedObjects(List selectedObjects) {
 		this.selectedObjects = selectedObjects;
 	}
-
+	public void redrawRowForObject(Object o) {
+		List list = (List)getValue();
+		Iterator itr = list.iterator();
+		int i = 0;
+		int startColumn = (this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0 ? 1
+				: 0;
+		for (; itr.hasNext(); i++) {
+			if (itr.next() == o) {
+				break;
+			}
+		}
+		if(i==list.size()){
+			return;
+		}
+		int row = calculateObjectToRowOffset(i);
+		reallyClear=true;
+		for (int col = 0; col < this.columns.length; col++) {
+			Widget widget = (Widget) createCellWidget(col, (SourcesPropertyChangeEvents) o);
+			table.setWidget(row, col + startColumn, widget);
+		}
+		reallyClear=false;
+	}
 	@Override
 	protected void addRow(final SourcesPropertyChangeEvents o) {
 		int row = table.getRowCount();
@@ -338,7 +361,7 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 	}
 
-	private static class ROFlexTable extends FlexTable implements
+	private  class ROFlexTable extends FlexTable implements
 			HasMouseOverHandlers, HasMouseOutHandlers, HasMouseMoveHandlers {
 		public HandlerRegistration addMouseMoveHandler(MouseMoveHandler handler) {
 			return addDomHandler(handler, MouseMoveEvent.getType());
@@ -353,7 +376,11 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 
 		protected boolean internalClearCell(Element td, boolean clearInnerHTML) {
+			if(!reallyClear){
 			return false;
+			}else{
+				return super.internalClearCell(td, clearInnerHTML);
+			}
 		}
 
 		@Override

@@ -6,7 +6,6 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 
 public class LoadObjectsHolder<DO extends DomainModelHolder> implements
 		Serializable {

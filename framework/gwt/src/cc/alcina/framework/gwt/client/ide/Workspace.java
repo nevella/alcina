@@ -42,7 +42,6 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHan
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
-import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
 import cc.alcina.framework.gwt.client.ide.node.HasVisibleCollection;
 import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;

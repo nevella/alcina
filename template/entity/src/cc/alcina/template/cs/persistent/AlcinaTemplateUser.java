@@ -60,7 +60,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @Entity
 @Table(name = "users", schema = "public")
-@SequenceGenerator(name = "users_id_seq", sequenceName = "users_id_seq")
+@SequenceGenerator(allocationSize=1,name = "users_id_seq", sequenceName = "users_id_seq")
 @BeanInfo(actions = @ObjectActions( {
 		@Action(actionClass = ViewAction.class),
 		@Action(actionClass = EditAction.class),

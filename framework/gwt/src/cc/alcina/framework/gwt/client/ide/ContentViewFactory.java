@@ -23,8 +23,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
-import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
@@ -46,8 +46,8 @@ import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
-import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
+import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
@@ -107,7 +107,7 @@ public class ContentViewFactory {
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
 						false, true);
 		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK
-				| BoundTableExt.NO_SELECT_ROW_MASK;
+				;
 		if (withObjectActions) {
 			mask |= BoundTableExt.ROW_HANDLE_MASK
 					| BoundTableExt.HANDLES_AS_CHECKBOXES;
@@ -273,7 +273,6 @@ public class ContentViewFactory {
 		}
 		return cp;
 	}
-
 	public BoundTableExt createTable(Collection beans, boolean editable,
 			int tableMask, Object templateBean) {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
@@ -283,6 +282,9 @@ public class ContentViewFactory {
 		int mask = tableMask | BoundTableExt.HEADER_MASK
 				| BoundTableExt.SORT_MASK;
 		CollectionDataProvider cdp = new CollectionDataProvider(beans);
+		if((mask&BoundTableExt.NO_NAV_ROW_MASK)!=0){
+			cdp.setPageSize(beans.size());
+		}
 		BoundTableExt table = editable ? new BoundTableExt(mask, factory,
 				fields, cdp) : new NiceWidthBoundTable(mask, factory, fields,
 				cdp);
@@ -409,9 +411,11 @@ public class ContentViewFactory {
 				Field[] fields, DataProvider provider) {
 			super(mask | BoundTableExt.NO_SELECT_CELL_MASK
 					| BoundTableExt.NO_SELECT_COL_MASK
-					| BoundTableExt.NO_SELECT_ROW_MASK, factory, fields,
+					, factory, fields,
 					provider);
 		}
+
+		
 
 		@Override
 		public void init(Collection c, int numberOfChunks) {

@@ -20,11 +20,12 @@
 
 package com.totsp.gwittir.client.validator;
 
+import java.util.HashMap;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.UIObject;
 import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.log.Logger;
-import java.util.HashMap;
 
 /**
  *

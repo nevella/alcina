@@ -43,6 +43,7 @@ import com.google.gwt.user.client.ui.HTML;
 	public static HTML getWidget(String key) {
 		return getWidget(key, null);
 	}
+	
 
 	public static HTML getWidget(String key, String styleClassName) {
 		if (provider != null) {

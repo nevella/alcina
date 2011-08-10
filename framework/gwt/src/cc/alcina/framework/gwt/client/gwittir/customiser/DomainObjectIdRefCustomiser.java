@@ -17,7 +17,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.provider.DomainObjectIdRefProvider;
-import cc.alcina.framework.gwt.client.gwittir.widget.DomainObjectIdEditor.DomainObjectIdEditorProvider;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 

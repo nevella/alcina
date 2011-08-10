@@ -14,7 +14,6 @@
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 
 import cc.alcina.framework.common.client.search.SearchDefinition;

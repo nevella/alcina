@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.gwt.user.client.Timer;
-
 import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -18,7 +16,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.persistence.client.ClientSession;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
 import cc.alcina.framework.gwt.persistence.client.SerializedDomainLoader;

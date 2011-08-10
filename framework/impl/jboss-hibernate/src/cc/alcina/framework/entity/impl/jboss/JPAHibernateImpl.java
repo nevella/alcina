@@ -110,8 +110,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 	}
 
 	public File getConfigDirectory() {
-		return new File(System.getProperty("jboss.server.home.dir")
-				+ File.separator + "conf" + File.separator);
+		return new File(System.getProperty("jboss.server.base.dir")
+				+ File.separator + "configuration" + File.separator);
 	}
 
 	public IdentifierValue setUnsavedValue(IdentifierProperty ip,

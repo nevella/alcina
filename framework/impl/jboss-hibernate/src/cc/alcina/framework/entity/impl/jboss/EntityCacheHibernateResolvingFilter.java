@@ -16,8 +16,8 @@ package cc.alcina.framework.entity.impl.jboss;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
-import org.hibernate.collection.PersistentSet;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
@@ -33,7 +33,7 @@ import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallbackWi
  *
  * @author Nick Reddel
  */
-public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
+public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	private DetachedEntityCache cache;
 
 	private InstantiateImplCallbackWithShellObject shellInstantiator;
@@ -131,12 +131,12 @@ public class EntityCacheHibernateResolvingFilter extends HibernateCloneFilter {
 	}
 
 	@Override
-	protected Object clonePersistentSet(PersistentSet ps,
+	protected Object clonePersistentSet(Set ps,
 			ClassFieldPair context, GraphProjection graphCloner)
 			throws Exception {
 		HashSet hs = new HashSet();
 		graphCloner.getReached().put(ps, hs);
-		if (ps.wasInitialized()) {
+		if (getWasInitialized(ps)) {
 			Iterator itr = ps.iterator();
 			Object value;
 			for (; itr.hasNext();) {

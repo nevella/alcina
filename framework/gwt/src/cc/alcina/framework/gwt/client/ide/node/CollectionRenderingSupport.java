@@ -28,7 +28,6 @@ import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
-import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 @SuppressWarnings("unchecked")
 /**

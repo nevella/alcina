@@ -7,6 +7,7 @@ import java.util.Date;
 
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.hibernate.proxy.LazyInitializer;
 
@@ -31,12 +32,13 @@ public class AlcinaTemplateCommonPersistence
 		CommonPersistenceBase<ClientInstanceImpl, AlcinaTemplateUser, AlcinaTemplateGroup, IidImpl>
 		implements CommonPersistenceLocal {
 	public static final String RemoteJNDIName = AlcinaTemplateCommonPersistence.class
-			.getSimpleName()
-			+ "/remote";
+			.getSimpleName() + "/remote";
 
 	public static final String LocalJNDIName = AlcinaTemplateCommonPersistence.class
-			.getSimpleName()
-			+ "/local";
+			.getSimpleName();
+
+	@PersistenceContext
+	private EntityManager entityManager;
 
 	public AlcinaTemplateCommonPersistence() {
 		super();
@@ -46,15 +48,18 @@ public class AlcinaTemplateCommonPersistence
 		super(em);
 	}
 
-	protected InstantiateImplCallback createUserAndGroupInstantiator() {
-		return new InstantiateImplCallback<LazyInitializer>() {
-			public boolean instantiateLazyInitializer(
-					LazyInitializer initializer, ClassFieldPair context) {
-				Class persistentClass = initializer.getPersistentClass();
-				return IUser.class.isAssignableFrom(persistentClass)
-						|| IGroup.class.isAssignableFrom(persistentClass);
-			}
-		};
+	@Override
+	public String getAnonymousUserName() {
+		return AlcinaTemplateAccessConstants.ANONYMOUS_USER;
+	}
+
+	public EntityManager getEntityManager() {
+		return this.entityManager;
+	}
+
+	@Override
+	public String getSystemUserName() {
+		return AlcinaTemplateAccessConstants.SYSTEM_USER;
 	}
 
 	public long log(String message, String componentKey) {
@@ -67,13 +72,18 @@ public class AlcinaTemplateCommonPersistence
 		return l.getId();
 	}
 
-	@Override
-	public String getAnonymousUserName() {
-		return AlcinaTemplateAccessConstants.ANONYMOUS_USER;
+	public void setEntityManager(EntityManager entityManager) {
+		this.entityManager = entityManager;
 	}
 
-	@Override
-	public String getSystemUserName() {
-		return AlcinaTemplateAccessConstants.SYSTEM_USER;
+	protected InstantiateImplCallback createUserAndGroupInstantiator() {
+		return new InstantiateImplCallback<LazyInitializer>() {
+			public boolean instantiateLazyInitializer(
+					LazyInitializer initializer, ClassFieldPair context) {
+				Class persistentClass = initializer.getPersistentClass();
+				return IUser.class.isAssignableFrom(persistentClass)
+						|| IGroup.class.isAssignableFrom(persistentClass);
+			}
+		};
 	}
 }

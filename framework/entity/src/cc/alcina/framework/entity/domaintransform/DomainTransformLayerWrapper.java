@@ -16,7 +16,6 @@ package cc.alcina.framework.entity.domaintransform;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 
 /**

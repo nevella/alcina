@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
-import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 @RegistryLocation(registryPoint = DTRProtocolHandler.class, j2seOnly = false)
 @ClientInstantiable

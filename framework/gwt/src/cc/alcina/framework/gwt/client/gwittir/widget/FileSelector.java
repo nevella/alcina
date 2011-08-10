@@ -13,9 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import java.util.Comparator;
-
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -23,7 +20,6 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.BoundWidget;
 
 /**
  * A very, very, very simple, rapid implementation. Very.

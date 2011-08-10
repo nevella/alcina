@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.csobjects.AbstractDomainBase;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;

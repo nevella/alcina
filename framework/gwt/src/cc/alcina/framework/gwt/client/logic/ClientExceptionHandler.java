@@ -2,17 +2,14 @@ package cc.alcina.framework.gwt.client.logic;
 
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
 import com.google.gwt.event.shared.UmbrellaException;
 import com.google.gwt.user.client.History;
-import com.google.gwt.user.client.rpc.StatusCodeException;
 
 public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	protected String getStandardErrorText() {

@@ -12,6 +12,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.Type;
+
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
@@ -21,7 +23,6 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
-
 import cc.alcina.framework.gwt.client.gwittir.customiser.DomainObjectIdRefCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ExpandableLabelCustomiser;
 
@@ -34,7 +35,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 @Entity
 @Table(name = "logging", schema = "public")
 @BeanInfo(displayNamePropertyName = "createdOn")
-@SequenceGenerator(name = "logging_id_seq", sequenceName = "logging_id_seq")
+@SequenceGenerator(allocationSize=1,name = "logging_id_seq", sequenceName = "logging_id_seq")
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Introspectable
 public class LogRecord extends DomainBase implements SearchResult {
@@ -90,6 +91,7 @@ public class LogRecord extends DomainBase implements SearchResult {
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Text"))
 	@CustomiserInfo(customiserClass = ExpandableLabelCustomiser.class)
 	@Lob
+	@Type(type="org.hibernate.type.StringClobType")
 	public String getText() {
 		return this.text;
 	}

@@ -7,12 +7,13 @@
 		<delete file="${project.dist.dir}/${ant.project.name}.war" />
 		<antcall target="prepare-war">
 		</antcall>
-		<war destfile="${project.dist.dir}/${ant.project.name}.war" webxml="${project.web-inf.dir}/web.xml">
+		<war destfile="${project.dist.dir}/${ant.project.name}.war" manifest="${project.web-inf.dir}/MANIFEST.MF" webxml="${project.web-inf.dir}/web.xml">
 			<!--<fileset dir="${project.web-inf.dir}">
 				<exclude name="WEB-INF/web.xml" />
 			</fileset>-->
 			<!-- dump this too-->
 			<!--to change in a sec-->
+			
 			<zipfileset dir="${project.gwt.build.dir}" prefix="">
 				<include name="**/*" />
 			</zipfileset>
@@ -42,13 +43,14 @@
 			<fileset dir="dist">
 				<include name="**/*.war" />
 			</fileset>
+			<fileset refid="project.ear.entity-lib" />
 			<metainf dir="${project.ear-inf.dir}/META-INF">
 			</metainf>
-			<fileset refid="project.ear.libs.1" />
-			<fileset refid="project.ear.libs.2" />
-			<fileset refid="project.ear.libs.3" />
-			<fileset refid="alcina.ear.exports" />
-			<fileset refid="alcina.ear.dependencies" />
+			<zipfileset prefix="${j2ee-lib.dir}" refid="project.ear.libs.1" />
+			<zipfileset prefix="${j2ee-lib.dir}" refid="project.ear.libs.2" />
+			<zipfileset prefix="${j2ee-lib.dir}" refid="project.ear.libs.3" />
+			<zipfileset prefix="${j2ee-lib.dir}" refid="alcina.ear.exports" />
+			<zipfileset prefix="${j2ee-lib.dir}" refid="alcina.ear.dependencies" />
 		</ear>
 	</target>
 	<target name="deploy" description="Deploy the ear to the j2ee server" depends="make-ear">
@@ -82,12 +84,17 @@
 	<target name="hot-deploy" description="WARs the Task" depends="build-dependencies,compile">
 		<!--the ear-->
 		<mkdir dir="${j2ee-server.unear.target}" />
-		<copy todir="${j2ee-server.unear.target}" preservelastmodified="true">
+		<mkdir dir="${j2ee-server.unear.target}${j2ee-lib.dir}" />
+		<copy todir="${j2ee-server.unear.target}${j2ee-lib.dir}" preservelastmodified="true">
 			<fileset refid="project.ear.libs.1" />
 			<fileset refid="project.ear.libs.2" />
 			<fileset refid="project.ear.libs.3" />
 			<fileset refid="alcina.ear.exports" />
 			<fileset refid="alcina.ear.dependencies" />
+		</copy>
+		<copy todir="${j2ee-server.unear.target}" preservelastmodified="true">
+			<fileset refid="project.ear.entity-lib" />
+			
 		</copy>
 		<copy todir="${j2ee-server.unear.target}/META-INF" preservelastmodified="true">
 			<fileset dir="${project.ear-inf.dir}/META-INF">
@@ -128,10 +135,14 @@
 		<copy file="${project.web-inf.dir}/web.xml" todir="${j2ee-server.unwar.target}/WEB-INF" preservelastmodified="true">
 
 		</copy>
+		<copy file="${project.web-inf.dir}/MANIFEST.MF" todir="${j2ee-server.unwar.target}/META-INF" preservelastmodified="true">
+
+		</copy>
 	</target>
 
 	<target name="hot-deploy-restart" description="xx" depends="hot-deploy">
 		<touch file="${j2ee-server.unear.target}/META-INF/application.xml" />
+		<touch file="${j2ee-server.unear.target}/../${j2ee-server.unear.name}.dodeploy" />
 	</target>
 	<target name="patch-module" unless="isdev">
 		<copy file="${project.gwt.module.file}" tofile="${project.gwt.module.file}.copy" />

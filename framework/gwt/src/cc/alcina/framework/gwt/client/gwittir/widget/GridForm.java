@@ -19,9 +19,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;

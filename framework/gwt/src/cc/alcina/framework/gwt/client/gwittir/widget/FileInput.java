@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.InputElement;
