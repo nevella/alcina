@@ -129,7 +129,7 @@ public class FuzzyCache<I, O> {
 			return;
 		}
 		float last = map.lastKey();
-		float step = (last - map.firstKey()) / steps;
+		float step = Math.max((last - map.firstKey()) / steps,(float)0.0001);
 		float firstMatched = Float.MIN_VALUE;
 		float lastMatched = Float.MIN_VALUE;
 		int total = 0;
