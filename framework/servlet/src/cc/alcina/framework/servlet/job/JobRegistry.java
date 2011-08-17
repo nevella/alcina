@@ -73,6 +73,9 @@ public class JobRegistry {
 	}
 
 	public void appShutdown() {
+		infoMap.clear();
+		cancelledMap.clear();
+		infoChildMap.clear();
 		theInstance = null;
 	}
 

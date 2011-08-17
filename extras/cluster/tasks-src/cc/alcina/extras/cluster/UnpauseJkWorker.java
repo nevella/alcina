@@ -1,6 +1,7 @@
 package cc.alcina.extras.cluster;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,10 +17,30 @@ public class UnpauseJkWorker extends Task {
 	private String jkStatusUrl;
 
 	private String balancedWorkerName;
+	
+	private int timeout=30;
+	
+	private String redeployedMarkerFile;
 
 	@Override
 	public void execute() throws BuildException {
-		String url = String.format("%s?cmd=update&from=list&w=%s&sw=%s&vwa=1",
+		File marker = new File(redeployedMarkerFile);
+		if(marker.exists()){
+			marker.delete();
+		}
+		log(redeployedMarkerFile);
+		while (!marker.exists()&&timeout-->0){
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+			}
+			log("..."+timeout);
+		}
+		unpause();
+	}
+
+	protected void unpause() {
+		String url = String.format("%s?cmd=update&from=list&w=%s&sw=%s&vwa=0",
 				getJkStatusUrl(), getBalancedWorkerName(), getWorkerName());
 		try {
 			log("reading "+url);
@@ -74,5 +95,21 @@ public class UnpauseJkWorker extends Task {
 
 	public String getBalancedWorkerName() {
 		return balancedWorkerName;
+	}
+
+	public int getTimeout() {
+		return this.timeout;
+	}
+
+	public void setTimeout(int timeout) {
+		this.timeout = timeout;
+	}
+
+	public String getRedeployedMarkerFile() {
+		return this.redeployedMarkerFile;
+	}
+
+	public void setRedeployedMarkerFile(String redeployedMarkerFile) {
+		this.redeployedMarkerFile = redeployedMarkerFile;
 	}
 }
