@@ -22,7 +22,6 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.impl.jboss.JPAHibernateImpl;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
@@ -180,8 +179,6 @@ public class AlcinaTemplatePersistence
 				new AlcinaTemplateWrappedObjectProvider());
 		EntityLayerLocator.get().registerCommonPersistenceProvider(
 				AlcinaTemplateEjbLocator.get());
-		EntityLayerLocator.get().registerJPAImplementation(
-				new JPAHibernateImpl());
 		CommonLocator.get().registerCurrentUtcDateProvider(
 				ObjectPersistenceHelper.get());
 	}
@@ -194,4 +191,5 @@ public class AlcinaTemplatePersistence
 	protected EntityManagerFactory getEntityManagerFactory() {
 		return factory;
 	}
+
 }

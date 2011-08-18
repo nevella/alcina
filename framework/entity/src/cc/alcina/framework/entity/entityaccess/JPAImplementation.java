@@ -54,4 +54,6 @@ public interface JPAImplementation {
 	public void afterSpecificSetId(Object fromBefore) throws Exception;
 
 	Object beforeSpecificSetId(EntityManager entityManager, Object toPersist) throws Exception;
+
+	void muteClassloaderLogging(boolean mute);
 }

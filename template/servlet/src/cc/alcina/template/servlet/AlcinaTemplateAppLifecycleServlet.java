@@ -94,9 +94,12 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 	@Override
 	protected void initJPA() {
 		JBossSupport.install();
+		EntityLayerLocator.get().registerJPAImplementation(
+				new JPAHibernateImpl());
 	}
 
 	@Override
 	protected void initCustomServices() {
 	}
+	
 }

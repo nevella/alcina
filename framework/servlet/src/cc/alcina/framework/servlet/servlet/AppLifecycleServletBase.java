@@ -194,7 +194,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void initServletLayerRegistry() {
 		Logger logger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
+		
 		try {
+			EntityLayerLocator.get().jpaImplementation().muteClassloaderLogging(true);
 			Map<String, Date> classes = new ServletClasspathScanner("*", true,
 					false, logger, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
@@ -202,6 +204,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					ServletLayerRegistry.get());
 		} catch (Exception e) {
 			logger.warn("", e);
+		}finally{
+			EntityLayerLocator.get().jpaImplementation().muteClassloaderLogging(false);
 		}
 	}
 

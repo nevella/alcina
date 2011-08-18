@@ -67,7 +67,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			// no custom properties
 		}
 	}
-
+	
 	public void init() throws Exception {
 		loadCustomProperties();
 		initLoggers();
@@ -86,6 +86,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		Logger mainLogger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
+			EntityLayerLocator.get().jpaImplementation().muteClassloaderLogging(true);
 			Map<String, Date> classes = new ServletClasspathScanner("*", true,
 					false, mainLogger, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] { "WEB-INF/classes",
@@ -95,21 +96,14 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			new ClassrefScanner().scan(classes);
 		} catch (Exception e) {
 			mainLogger.warn("", e);
+		}finally{
+			EntityLayerLocator.get().jpaImplementation().muteClassloaderLogging(false);
 		}
 	}
 
 	protected abstract void initServiceImpl();
 
-	// EntityLayerLocator.get().registerWrappedObjectProvider(
-	// new AlcinaTemplateWrappedObjectProvider());
-	// EntityLayerLocator.get().registerCommonPersistenceProvider(
-	// AlcinaTemplateEjbLocator.get());
-	// EntityLayerLocator.get().registerCommonPersistenceProvider(
-	// JadeEjbLocator.get());
-	// EntityLayerLocator.get().registerJPAImplementation(
-	// new JPAHibernateImpl());
-	// CommonLocator.get().registerCurrentUtcDateProvider(
-	// ObjectPersistenceHelper.get());
+	
 	protected void createSystemGroupsAndUsers() {
 		// normally, override
 	}

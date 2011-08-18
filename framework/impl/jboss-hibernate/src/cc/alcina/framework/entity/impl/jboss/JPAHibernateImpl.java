@@ -22,6 +22,8 @@ import java.util.Collection;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.IdentifierValue;
 import org.hibernate.engine.SessionImplementor;
@@ -43,6 +45,8 @@ import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
  */
 public class JPAHibernateImpl implements JPAImplementation {
 	private boolean cacheDisabled;
+
+	private java.util.logging.Level level;
 
 	public boolean isCacheDisabled() {
 		return this.cacheDisabled;
@@ -153,5 +157,16 @@ public class JPAHibernateImpl implements JPAImplementation {
 		// restore the backuped unsavedValue
 		SavedId savedId = (SavedId) fromBefore;
 		setUnsavedValue(savedId.ip, savedId.backupUnsavedValue);
+	}
+
+	@Override
+	public void muteClassloaderLogging(boolean mute) {
+		java.util.logging.Logger logger = java.util.logging.Logger.getLogger("org.jboss.modules");
+		if (mute) {
+			level = logger.getLevel();
+			logger.setLevel(java.util.logging.Level.SEVERE);
+		} else {
+			logger.setLevel(level);
+		}
 	}
 }

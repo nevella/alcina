@@ -321,13 +321,18 @@ public class CommonUtils {
 	}
 
 	public static String join(Object[] objects, String separator) {
+		return join(objects, separator, false);
+	}
+
+	public static String join(Object[] objects, String separator,
+			boolean ignoreEmpties) {
 		StringBuilder sb = new StringBuilder();
-		int count = 0;
 		for (Object obj : objects) {
-			if (count++ != 0) {
+			String app = obj == null ? "null" : obj.toString();
+			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)) {
 				sb.append(separator);
 			}
-			sb.append(obj);
+			sb.append(app);
 		}
 		return sb.toString();
 	}

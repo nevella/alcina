@@ -67,7 +67,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 		this();
 		this.instantiateImplCallback = instantiateImplCallback;
 		if (instantiateImplCallback instanceof InstantiateImplCallbackWithShellObject) {
-			InstantiateImplCallbackWithShellObject shellInstantiator = (InstantiateImplCallbackWithShellObject) instantiateImplCallback;
+			shellInstantiator = (InstantiateImplCallbackWithShellObject) instantiateImplCallback;
 		}
 	}
 
@@ -131,9 +131,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	}
 
 	@Override
-	protected Object clonePersistentSet(Set ps,
-			ClassFieldPair context, GraphProjection graphCloner)
-			throws Exception {
+	protected Object clonePersistentSet(Set ps, ClassFieldPair context,
+			GraphProjection graphCloner) throws Exception {
 		HashSet hs = new HashSet();
 		graphCloner.getReached().put(ps, hs);
 		if (getWasInitialized(ps)) {
