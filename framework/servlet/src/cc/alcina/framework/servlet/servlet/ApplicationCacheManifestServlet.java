@@ -37,7 +37,6 @@ import javax.servlet.http.HttpServletResponse;
 public class ApplicationCacheManifestServlet extends HttpServlet {
 	private static final long serialVersionUID = 6970120146736639472L;
 
-
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
@@ -47,6 +46,11 @@ public class ApplicationCacheManifestServlet extends HttpServlet {
 		out.flush();
 		resp.flushBuffer();
 		log("Hitting a cache manifest: " + req.getRequestURI());
+	}
+
+	@Override
+	public void log(String msg) {
+		// super.log(msg);
 	}
 
 	private String getCacheManifest(HttpServletRequest req)

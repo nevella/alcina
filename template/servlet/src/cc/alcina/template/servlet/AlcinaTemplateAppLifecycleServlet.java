@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.RegistryPermissionsExtension;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
-import cc.alcina.framework.entity.impl.jboss.JBossSupport;
+import cc.alcina.framework.entity.impl.jboss.JBoss7Support;
 import cc.alcina.framework.entity.impl.jboss.JPAHibernateImpl;
 import cc.alcina.framework.entity.impl.jboss.JbossLogMuter;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
@@ -93,7 +93,7 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 
 	@Override
 	protected void initJPA() {
-		JBossSupport.install();
+		JBoss7Support.install();
 		EntityLayerLocator.get().registerJPAImplementation(
 				new JPAHibernateImpl());
 	}
