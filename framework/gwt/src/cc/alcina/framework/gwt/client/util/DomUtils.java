@@ -240,10 +240,12 @@ public class DomUtils implements NodeFromXpathProvider {
 			matched += section;
 			Node match = findXpathWithIndexedText(matched, container);
 			if (match == null) {
+				System.out.println("Prefix matched:"+matched+"\n----------\n");
 				Map<String, Node> xpathMap = new HashMap<String, Node>();
 				debug = true;
 				generateMap((Element) lastMatched, "", xpathMap);
 				debug = false;
+				return;
 			} else {
 				lastMatched = match;
 			}
