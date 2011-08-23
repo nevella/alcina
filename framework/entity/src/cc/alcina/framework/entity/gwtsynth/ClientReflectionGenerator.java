@@ -122,6 +122,7 @@ public class ClientReflectionGenerator extends Generator {
 								.forName(jAnnotationType
 										.getQualifiedBinaryName()));
 			}
+			visibleAnnotationClasses.add(Omit.class);
 			writeAnnotations(logger, context, jAnns, crf);
 			List<JClassType> beanInfoTypes = this.getBeanInfoTypes(logger,
 					context.getTypeOracle(), crf);
@@ -404,9 +405,7 @@ public class ClientReflectionGenerator extends Generator {
 				sw.println("{");
 				sw.indent();
 				for (Annotation a : annotations) {
-					if (a.annotationType() == Omit.class) {
-						ignore = true;
-					}
+					
 					if (!a.annotationType().isAnnotationPresent(
 							ClientVisible.class)
 							|| a.annotationType() == RegistryLocation.class) {
