@@ -16,8 +16,10 @@ package cc.alcina.framework.servlet;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Layout;
@@ -36,25 +38,25 @@ public class RemoteActionLoggerProvider {
 	class ClassAndThreadToken {
 		private final Class clazz;
 
-		private Thread thread;
+		private long threadId;
 
 		public ClassAndThreadToken(Class clazz) {
 			this.clazz = clazz;
-			this.thread = Thread.currentThread();
+			this.threadId = Thread.currentThread().getId();
 		}
 
 		@Override
 		public boolean equals(Object obj) {
 			if (obj instanceof ClassAndThreadToken) {
 				ClassAndThreadToken token = (ClassAndThreadToken) obj;
-				return token.thread.equals(thread) && token.clazz == clazz;
+				return token.threadId == threadId && token.clazz == clazz;
 			}
 			return super.equals(obj);
 		}
 
 		@Override
 		public int hashCode() {
-			return thread.hashCode() ^ clazz.hashCode();
+			return Long.valueOf(threadId).hashCode() ^ clazz.hashCode();
 		}
 	}
 
@@ -62,21 +64,42 @@ public class RemoteActionLoggerProvider {
 
 	Map<ClassAndThreadToken, Logger> runningLoggers = new HashMap<ClassAndThreadToken, Logger>();
 
-	Map<Class, List<Logger>> finishedLoggers = new HashMap<Class, List<Logger>>();
+	Map<ClassAndThreadToken, Logger> finishedLoggers = new HashMap<ClassAndThreadToken, Logger>();
 
 	public Logger getLogger(Class clazz) {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
+		if (finishedLoggers.containsKey(token)) {
+			Logger logger = finishedLoggers.get(token);
+			resetAppenders(logger);
+			finishedLoggers.remove(token);
+		}
 		if (runningLoggers.containsKey(token)) {
 			return runningLoggers.get(token);
-		}
-		if (finishedLoggers.containsKey(clazz)
-				&& finishedLoggers.get(clazz).size() > 0) {
-			Logger logger = finishedLoggers.get(clazz).remove(0);
-			resetAppenders(logger);
 		}
 		Logger l = makeNewLoggerInstance(clazz.getName() + "-" + logCounter++);
 		runningLoggers.put(token, l);
 		return l;
+	}
+
+	public void clearAllThreadLoggers() {
+		long id = Thread.currentThread().getId();
+		Iterator<Entry<ClassAndThreadToken, Logger>> itr = runningLoggers
+				.entrySet().iterator();
+		for (; itr.hasNext();) {
+			Entry<ClassAndThreadToken, Logger> entry = itr.next();
+			if (entry.getKey().threadId == id) {
+				resetAppenders(entry.getValue());
+				itr.remove();
+			}
+		}
+		itr = finishedLoggers.entrySet().iterator();
+		for (; itr.hasNext();) {
+			Entry<ClassAndThreadToken, Logger> entry = itr.next();
+			if (entry.getKey().threadId == id) {
+				resetAppenders(entry.getValue());
+				itr.remove();
+			}
+		}
 	}
 
 	public static void resetAppenders(Logger logger) {
@@ -107,10 +130,7 @@ public class RemoteActionLoggerProvider {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
 		if (runningLoggers.containsKey(token)) {
 			Logger logger = runningLoggers.remove(token);
-			if (!finishedLoggers.containsKey(clazz)) {
-				finishedLoggers.put(clazz, new ArrayList<Logger>());
-			}
-			finishedLoggers.get(clazz).add(logger);
+			finishedLoggers.put(token, logger);
 			StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
 					.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
 					.getWriterAccess();

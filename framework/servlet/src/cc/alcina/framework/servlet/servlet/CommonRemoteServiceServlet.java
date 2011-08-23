@@ -217,11 +217,19 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						ServletLayerLocator.get().commonPersistenceProvider()
 								.getCommonPersistence().logActionItem(result);
 					}
+				} catch (Exception e) {
+					JobRegistry.get().jobErrorInThread();
+					if (e instanceof RuntimeException) {
+						throw ((RuntimeException) e);
+					}
+					throw new RuntimeException(e);
 				} catch (OutOfMemoryError e) {
-					handleOom("",e);
+					handleOom("", e);
+					JobRegistry.get().jobErrorInThread();
 					throw e;
 				} finally {
-					JobRegistry.get().jobErrorInThread();
+					ServletLayerLocator.get().remoteActionLoggerProvider()
+							.clearAllThreadLoggers();
 				}
 			}
 		};
@@ -270,6 +278,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				logRpcException(e);
 			}
 			throw new WebException(e);
+		} finally {
+			ServletLayerLocator.get().remoteActionLoggerProvider()
+					.clearAllThreadLoggers();
 		}
 	}
 
@@ -430,7 +441,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logRpcException(ex);
 			throw ex;
 		} catch (OutOfMemoryError e) {
-			handleOom(payload,e);
+			handleOom(payload, e);
 			throw e;
 		} finally {
 			ThreadlocalTransformManager.cast().resetTltm(null);
@@ -587,5 +598,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logTransformException(wrapper.response);
 			throw new DomainTransformRequestException(wrapper.response);
 		}
+	}
+
+	@Override
+	protected void onAfterResponseSerialized(String serializedResponse) {
+		ServletLayerLocator.get().remoteActionLoggerProvider()
+				.clearAllThreadLoggers();
+		super.onAfterResponseSerialized(serializedResponse);
 	}
 }
