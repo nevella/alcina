@@ -71,7 +71,7 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 			ClassFieldPair context, GraphProjection graphCloner)
 			throws Exception {
 		HashSet hs = new HashSet();
-		if (getWasInitialized(ps)) {
+		if (shouldClone(ps)) {
 			Iterator itr = ps.iterator();
 			Object value;
 			for (; itr.hasNext();) {
@@ -81,6 +81,10 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 			}
 		}
 		return hs;
+	}
+
+	protected boolean shouldClone(Set ps) throws Exception {
+		return getWasInitialized(ps);
 	}
 
 	protected boolean getWasInitialized(Set ps) throws  Exception{

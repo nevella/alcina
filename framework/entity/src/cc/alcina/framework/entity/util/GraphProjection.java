@@ -81,12 +81,6 @@ public class GraphProjection {
 		if (reached.containsKey(source)) {
 			return (T) reached.get(source);
 		}
-		// String dbg = context + ":" + source.getClass().getSimpleName() + ":"
-		// + System.identityHashCode(source);
-		// if (source instanceof HasIdAndLocalId) {
-		// dbg += "-id:" + ((HasIdAndLocalId) source).getId();
-		// }
-		// System.out.println(dbg);
 		Class<? extends Object> sourceClass = source.getClass();
 		T projected = sourceClass.isArray() ? (T) Array.newInstance(sourceClass
 				.getComponentType(), Array.getLength(source)) : (T) sourceClass
@@ -106,10 +100,6 @@ public class GraphProjection {
 				if (alsoMapTo != null) {
 					reached.put(alsoMapTo, replaceProjected);
 				}
-				// System.out.println(context + ":"
-				// + source.getClass().getSimpleName() + ":"
-				// + System.identityHashCode(source) + ">>"
-				// + System.identityHashCode(replaceProjected));
 				return replaceProjected;
 			}
 		}
