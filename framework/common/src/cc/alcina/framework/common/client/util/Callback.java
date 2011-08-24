@@ -19,6 +19,6 @@ package cc.alcina.framework.common.client.util;
  * @author Nick Reddel
  */
 
- public interface Callback<T> {
-	public void callback(T target);
+ public interface Callback<V> {
+	public void callback(V value);
 }

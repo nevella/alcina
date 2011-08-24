@@ -140,6 +140,6 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	}
 
 	public String getRpcResult() {
-		return response.getText();
+		return response==null?null:response.getText();
 	}
 }

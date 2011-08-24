@@ -193,7 +193,7 @@ public class MapObjectLookup implements ObjectLookup {
 			// }
 		}
 		boolean lookupCreated = registerChildren.containsKey(clazz);
-		if (ClientReflector.isDefined()
+		if (ClientReflector.get().isDefined()
 				&& (!registerChildren.containsKey(clazz) || registerChildren
 						.get(clazz))) {
 			boolean shouldMapChildren = lookupCreated;

@@ -26,10 +26,10 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
  *
  */
 public class ClientReflectorJvm extends ClientReflector {
+	Map<Class, ClientBeanReflector> reflectors = new HashMap<Class, ClientBeanReflector>();
+
 	public ClientReflectorJvm() {
 	}
-
-	Map<Class, ClientBeanReflector> reflectors = new HashMap<Class, ClientBeanReflector>();
 
 	public ClientBeanReflector beanInfoForClass(Class clazz) {
 		if (!reflectors.containsKey(clazz)) {
@@ -90,6 +90,11 @@ public class ClientReflectorJvm extends ClientReflector {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public boolean isDefined() {
+		return true;
 	}
 
 	@Override

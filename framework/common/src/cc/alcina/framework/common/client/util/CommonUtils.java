@@ -191,6 +191,16 @@ public class CommonUtils {
 							padTwo((date.getHours() - 1) % 12 + 1),
 							padTwo(date.getMinutes()),
 							date.getHours() < 12 ? "AM" : "PM");
+		case NAMED_MONTH_DATE_TIME_HUMAN:
+			return formatDate(date, DateStyle.NAMED_MONTH_DAY)
+					+ format(" at %1:%2 %3",
+							padTwo((date.getHours() - 1) % 12 + 1),
+							padTwo(date.getMinutes()),
+							date.getHours() < 12 ? "AM" : "PM");
+		case NAMED_MONTH_DAY:
+			return formatJ("%s, %s %s %s", DAY_NAMES[date.getDay()],
+					MONTH_NAMES[date.getMonth() + 1], padTwo(date.getDate()),
+					padTwo(date.getYear() + 1900));
 		case AU_DATE_TIME_MS:
 			return format("%1/%2/%3 - %4:%5:%6:%7", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
@@ -552,7 +562,8 @@ public class CommonUtils {
 	public enum DateStyle {
 		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_TIME, AU_DATE_TIME_HUMAN,
 		AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT, AU_LONG_DAY,
-		AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP
+		AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
+		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY
 	}
 
 	public static String tabify(String value, int charsPerLine, int tabCount) {

@@ -280,8 +280,13 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		// not, delete all
 		ClientInstance clientInstance = ClientLayerLocator.get()
 				.getClientInstance();
+		String rpcResult = mixedHelper.getBuilder().getRpcResult();
+		if(rpcResult==null){
+			persistenceCallback.onSuccess(null);
+			return;
+		}
 		DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(0,
-				mixedHelper.getBuilder().getRpcResult(),
+				rpcResult,
 				System.currentTimeMillis(), PermissionsManager.get()
 						.getUserId(), clientInstance.getId(), 0,
 				clientInstance.getAuth(),

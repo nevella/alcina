@@ -1361,3 +1361,29 @@ div.max .gwt-RichTextArea{
 .gwt-Tree.wrapped-tree .gwt-TreeItem{
 	white-space: normal;
 }
+/** more misc - added 2011.08.24 **/
+ a.link-no-underline:link,a.link-no-underline:visited,a.link-no-underline:active,a.link-no-underline
+	{
+	text-decoration: none;
+}
+
+a.link-no-underline:hover {
+	text-decoration: underline;
+}
+div.popdown-select {
+	padding: 8px;
+	border: 1px solid #e0e0e0;
+	background-color: white;
+}
+
+
+div.popdown-select a,div.popdown-select a:link {
+	color: #555;
+	font-size: 0.9em;
+	white-space: nowrap;
+	text-decoration:none;
+}
+
+div.popdown-select a:hover {
+	text-decoration: underline;
+}

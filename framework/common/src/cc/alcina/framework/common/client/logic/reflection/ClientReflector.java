@@ -36,7 +36,7 @@ import com.totsp.gwittir.client.beans.Property;
 public class ClientReflector implements ClassLookup {
 	private static ClientReflector domainReflector;
 
-	public static boolean isDefined() {
+	public  boolean isDefined() {
 		return GWT.isClient();
 	}
 

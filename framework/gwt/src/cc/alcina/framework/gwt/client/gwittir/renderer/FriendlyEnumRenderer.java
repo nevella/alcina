@@ -13,13 +13,14 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  *
  * @author Nick Reddel
  */
-
+@ClientInstantiable
  public class FriendlyEnumRenderer extends FlexibleToStringRenderer {
 	public static final FriendlyEnumRenderer INSTANCE = new FriendlyEnumRenderer();
 
