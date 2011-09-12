@@ -64,6 +64,7 @@
 		<antcall target="clean">
 		</antcall>
 		<delete dir="${project.client.bin.dir}" />
+		<delete dir="${project.base.dir}/gwt-unitCache" />
 	</target>
 	<target name="clean-gwt">
 		<delete dir="${project.gwt.build.dir}" />

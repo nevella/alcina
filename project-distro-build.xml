@@ -175,6 +175,11 @@
 			<istrue value="${developer}" />
 		</condition>
 		<antcall target="patch-module" />
+		<echo message="${project.gwt.classpath.src}"/>
+		<echo message="${project.gwt.classpath.bin}"/>
+		<echo message="${project.gwt.classpath.lib}"/>
+		<echo message="${framework.gwt.classpath.src}"/>
+		<echo message="${framework.gwt.classpath.lib}"/>
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
