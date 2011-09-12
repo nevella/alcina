@@ -20,13 +20,14 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
-import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.safehtml.client.HasSafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 
 /**
- * Custom Button is a base button class with built in support for a set number
+ * CustomButton is a base button class with built in support for a set number
  * of button faces.
  * 
  * Each face has its own style modifier. For example, the state for down and
@@ -118,7 +119,7 @@ import com.google.gwt.user.client.Event;
  * 
  * Each face element can take an optional <code>image</code> attribute
  * and an html body. For example:<pre>
- * &lt;ui:image field='downButton'/> &lt;!-- define an {@link ImageResource} -->
+ * &lt;ui:image field='downButton'/> &lt;!-- define an {@link com.google.gwt.resources.client.ImageResource ImageResource} -->
  *
  * &lt;g:PushButton ui:field='pushButton' enabled='true'>
  *   &lt;g:upFace>
@@ -138,7 +139,7 @@ public abstract class CustomButton extends ButtonBase {
    * Represents a button's face. Each face is associated with its own style
    * modifier and, optionally, its own contents html, text, or image.
    */
-  public abstract class Face implements HasHTML {
+  public abstract class Face implements HasHTML, HasSafeHtml {
     private static final String STYLENAME_HTML_FACE = "html-face";
     private final Face delegateTo;
     private Element face;
@@ -175,9 +176,18 @@ public abstract class CustomButton extends ButtonBase {
 
     /**
      * Set the face's contents as html.
-     * 
+     *
      * @param html html to set as face's contents html
-     * 
+     */
+    public void setHTML(SafeHtml html) {
+      setHTML(html.asString());
+    }
+
+    /**
+     * Set the face's contents as html.
+     *
+     * @param html html to set as face's contents html
+     *
      */
     public void setHTML(String html) {
       face = DOM.createDiv();
@@ -198,7 +208,7 @@ public abstract class CustomButton extends ButtonBase {
 
     /**
      * Sets the face's contents as text.
-     * 
+     *
      * @param text text to set as face's contents
      */
     public final void setText(String text) {
@@ -747,9 +757,14 @@ public abstract class CustomButton extends ButtonBase {
     }
   }
 
+  @Override
+  public void setHTML(SafeHtml html) {
+    setHTML(html.asString());
+  }
+
   /**
    * Sets the current face's html.
-   * 
+   *
    * @param html html to set
    */
   @Override
@@ -861,7 +876,7 @@ public abstract class CustomButton extends ButtonBase {
     }
   }
 
-  void fireClickListeners( Event nativeEvent) {
+  void fireClickListeners(@SuppressWarnings("unused") Event nativeEvent) {
     // TODO(ecc) Once event triggering is committed, should fire a native click event instead.
     fireEvent(new ClickEvent() {
     });

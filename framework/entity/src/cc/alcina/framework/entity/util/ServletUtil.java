@@ -17,6 +17,8 @@ package cc.alcina.framework.entity.util;
 import java.io.IOException;
 import java.io.Writer;
 
+import javax.servlet.http.HttpServletResponse;
+
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 
@@ -26,8 +28,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 
  public class ServletUtil {
-	public static void writeClientSideRedirect(String targetUrl, Writer writer) throws IOException {
-		writer.write(CommonUtils.format(
+	public static void writeClientSideRedirect(String targetUrl, HttpServletResponse resp) throws IOException {
+		resp.setContentType("text/html");
+		resp.getWriter().write(CommonUtils.format(
 				"<html><head>  <meta http-equiv=\"Refresh\" "
 						+ "content=\"0; URL=%1\"></head></html>", targetUrl));
 	}

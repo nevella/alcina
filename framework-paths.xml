@@ -18,6 +18,7 @@
 	<fileset dir="${alcina.home}/lib/framework/gwt" id="alcina.ear.dependencies">
 		<include name="gwittir-trunk.jar" />
 		<include name="gwt-user.jar" />
+		<include name="validation-api-1.0.0.GA.jar" />
 	</fileset>
 	<fileset dir="${alcina.home}/dist" id="alcina.war.exports">
 		<include name="alcina-servlet.jar" />
