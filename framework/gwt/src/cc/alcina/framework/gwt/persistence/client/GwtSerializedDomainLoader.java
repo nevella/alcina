@@ -226,7 +226,9 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 			ClientInstance clientInstance = beforeEventReplay();
 			CommitToStorageTransformListener tl = ClientLayerLocator.get()
 					.getCommitToStorageTransformListener();
-			ClientLayerLocator.get().setClientInstance(clientInstance);
+			if (clientInstance != null) {
+				ClientLayerLocator.get().setClientInstance(clientInstance);
+			}
 			for (DomainTransformRequest rq : tl
 					.getPriorRequestsWithoutResponse()) {
 				rq.setClientInstance(clientInstance);
