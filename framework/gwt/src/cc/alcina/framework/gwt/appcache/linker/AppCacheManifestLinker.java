@@ -137,6 +137,7 @@ public  class AppCacheManifestLinker extends AbstractLinker {
     for (String pattern : BUILTIN_FILTERS) {
       filters.add(Pattern.compile(pattern));
     }
+    filters.add(Pattern.compile(".*?(^|/)\\.[^/]+"));//ignore .-prefixed files (e.g. .cvsignore)
 
     // Generate the manifest entries
     String entries = generateEntries(logger, context, filters, artifacts);
