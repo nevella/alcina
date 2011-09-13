@@ -191,13 +191,28 @@ public class WorkspaceView extends Composite implements HasName,
 			filter.registerFilterable(dataTree);
 			this.fp = new FlowPanel100pcHeight();
 			fp.add(toolbar);
+			Widget w=getPreFilterWidget();
+			if(w!=null){
+				fp.add(w);
+			}
 			fp.add(filter);
+			 w=getPostFilterWidget();
+			if(w!=null){
+				fp.add(w);
+			}
 			this.scroller = new ScrollPanel100pcHeight(dataTree);
 			fp.add(scroller);
 			fp.setWidth("100%");
 			dataTree.addSelectionHandler(this);
 			resetTree();
 			initWidget(fp);
+		}
+
+		protected Widget getPreFilterWidget() {
+			return null;
+		}
+		protected Widget getPostFilterWidget() {
+			return null;
 		}
 
 		protected DataTree createTree() {

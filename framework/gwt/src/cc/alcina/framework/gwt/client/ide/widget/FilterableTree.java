@@ -16,6 +16,8 @@ package cc.alcina.framework.gwt.client.ide.widget;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
+import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
@@ -89,6 +91,10 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 		new TreeNodeWalker().walk(this, new Callback<TreeItem>() {
 			public void callback(TreeItem target) {
 				boolean open = target.getParentItem() == null;
+				if (shouldExpandCallback != null
+						&& !shouldExpandCallback.allow(target)) {
+					open=false;
+				}
 				target.setState(open);
 			}
 		});
@@ -101,6 +107,8 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 	public void expandAll() {
 		expandAll(99);
 	}
+
+	private CollectionFilter shouldExpandCallback;
 
 	public void expandAll(int depth) {
 		for (int i = 0; i < getItemCount(); i++) {
@@ -183,9 +191,9 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 		if (filterText.length() == 0) {
 			collapseToFirstLevel();
 		}
-		if(getParent() instanceof ScrollPanel){
-			((ScrollPanel)getParent()).scrollToTop();
-			((ScrollPanel)getParent()).scrollToLeft();
+		if (getParent() instanceof ScrollPanel) {
+			((ScrollPanel) getParent()).scrollToTop();
+			((ScrollPanel) getParent()).scrollToLeft();
 		}
 		return b;
 	}
@@ -261,6 +269,9 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 	}
 
 	private void expandAll(TreeItem ti, int depth) {
+		if (shouldExpandCallback != null && !shouldExpandCallback.allow(ti)) {
+			return;
+		}
 		ti.setState(true);
 		if (depth > 0) {
 			for (int i = 0; i < ti.getChildCount(); i++) {
@@ -352,5 +363,13 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 		setSelectedItem(item);
 		setFocus(true);
 		return true;
+	}
+
+	public CollectionFilter getShouldExpandCallback() {
+		return this.shouldExpandCallback;
+	}
+
+	public void setShouldExpandCallback(CollectionFilter shouldExpandCallback) {
+		this.shouldExpandCallback = shouldExpandCallback;
 	}
 }

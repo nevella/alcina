@@ -240,7 +240,8 @@ public class DomUtils implements NodeFromXpathProvider {
 			matched += section;
 			Node match = findXpathWithIndexedText(matched, container);
 			if (match == null) {
-				System.out.println("Prefix matched:"+matched+"\n----------\n");
+				System.out.println("Prefix matched:" + matched
+						+ "\n----------\n");
 				Map<String, Node> xpathMap = new HashMap<String, Node>();
 				debug = true;
 				generateMap((Element) lastMatched, "", xpathMap);
@@ -373,6 +374,27 @@ public class DomUtils implements NodeFromXpathProvider {
 			n = n.getParentNode();
 		}
 		return null;
+	}
+
+	public static Element getNeighbouringBlock(Node n, int dir) {
+		Element block = getContainingBlock(n);
+		if (block == null) {
+			return null;
+		}
+		ClientNodeIterator itr = new ClientNodeIterator(block,
+				ClientNodeIterator.SHOW_ELEMENT);
+		while (true) {
+			Element e = (Element) (dir == 1 ? itr.nextNode() : itr
+					.previousNode());
+			if (e == null) {
+				return null;
+			}
+			Element cb = getContainingBlock(e);
+			if (cb != block && !isAncestorOf(block, cb)
+					&& !isAncestorOf(cb, block)) {
+				return cb;
+			}
+		}
 	}
 
 	public static class HighlightInfo {
