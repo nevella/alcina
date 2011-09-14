@@ -53,4 +53,5 @@ public @interface Association {
 	 * (parent-child associations with 1000s of kids spring to mind)
 	 */
 	boolean silentUpdates() default false;
+	
 }

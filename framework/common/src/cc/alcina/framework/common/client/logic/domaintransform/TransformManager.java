@@ -46,10 +46,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoManager;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
@@ -251,7 +253,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				// three possibilities:
 				// 1. replaying a server create,(on the client)
 				// 2. recording an in-entity-manager create
-				// 3. doing a database-regeneration 
+				// 3. doing a database-regeneration
 				// if (2), break at this point
 				if (getObject(event) != null) {
 					break;
@@ -260,10 +262,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator
 					.get()
 					.classLookup()
-					.newInstance(event.getObjectClass(),event.getObjectId(),
+					.newInstance(event.getObjectClass(), event.getObjectId(),
 							event.getObjectLocalId());
 			hili.setLocalId(event.getObjectLocalId());
-			if (hili.getId() == 0) {// replay from server - 
+			if (hili.getId() == 0) {// replay from server -
 				hili.setId(event.getObjectId());
 			}
 			event.setObjectId(hili.getId());
@@ -312,7 +314,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = CommonLocator.get().classLookup()
-				.newInstance(objectClass, 0,localId);
+				.newInstance(objectClass, 0, localId);
 		newInstance.setLocalId(localId);
 		// a bit roundabout, but to ensure compatibility with the event system
 		// essentially registers a synthesised object, then replaces it in the
@@ -326,7 +328,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = CommonLocator.get().classLookup()
-				.newInstance(objectClass, 0,localId);
+				.newInstance(objectClass, 0, localId);
 		newInstance.setLocalId(localId);
 		registerProvisionalObject(newInstance);
 		return newInstance;
@@ -929,6 +931,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		for (ClientPropertyReflector pr : prs) {
+			if (bi.getAnnotation(SyntheticGetter.class) != null) {
+				continue;
+			}
 			DomainTransformEvent dte = new DomainTransformEvent();
 			dte.setPropertyName(pr.getPropertyName());
 			if (!CommonUtils.isStandardJavaClass(pr.getPropertyType())) {

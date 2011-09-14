@@ -208,7 +208,6 @@ public class GwittirBridge implements PropertyAccessor {
 			PropertyPermissions pp = pr
 					.getAnnotation(PropertyPermissions.class);
 			VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
-			Association association = pr.getAnnotation(Association.class);
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
 					&& visualiserInfo != null
