@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="alcinaTemplate_servlet" basedir="." default="compile">
+<project name="alcinaTemplate_server" basedir="." default="compile">
 	<property file="../entity/local.ant.properties" />
 	<property file="build.properties" />
 
@@ -23,7 +23,10 @@
 	<patternset id="project.war.libs">
 		<include name="**/*.jar" />
 	</patternset>
-	<fileset id="project.ear.libs.1" dir="${project.entity.dist.dir}">
+	<fileset id="project.ear.entity-lib" dir="${project.entity.dist.dir}">
+		<include name="*.jar" />
+	</fileset>
+	<fileset id="project.ear.libs.1" dir="${project.ear.lib.dir}">
 		<include name="*.jar" />
 	</fileset>
 	<fileset id="project.ear.libs.2" dir="${project.ear.lib.dir}">

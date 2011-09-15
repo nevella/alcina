@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Class-Path: 
+Dependencies: org.jboss.vfs export, org.hibernate export, org.apache.xerces export, org.apache.xalan export, javax.wsdl4j.api export, com.sun.image export 
