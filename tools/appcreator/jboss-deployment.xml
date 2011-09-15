@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <project name="jboss-deployment" basedir=".">
+	<property file="jboss.config.properties" />
 	<target name="unpack-jboss" unless="deploy.jboss.dir.exists">
 		<mkdir dir="${deploy.jboss.dir}/.." />
-		<unzip dest="${tmp.dir}" src="${container.download.dir}/jboss-5.1.0.GA.zip">
+		<unzip dest="${tmp.dir}" src="${container.download.dir}/jboss-as-7.0.0.Final.zip">
 		</unzip>
 		<move todir="${deploy.jboss.dir}/..">
 			<fileset dir="${tmp.dir}" />
 		</move>
 	</target>
 	<target name="create-jboss-deployment-call" depends="unpack-jboss" unless="deploy.jboss.dir.configured">
-		<delete dir="${deploy.jboss.dir.server}/deploy/ROOT.war" />
-		<replaceregexp file="${deploy.jboss.dir.server}/deploy/jbossweb.sar/server.xml">
-			<regexp pattern="(Connector protocol=&lt;&quot;HTTP/1\.1&quot; port=&quot;8080&quot;.+)(/&gt;)" />
-			<substitution expression="\1 compression=&quot;on&quot; compressionMinSize=&quot;2048&quot; noCompressionUserAgents=&quot;gozilla, traviata&quot; compressableMimeType=&quot;text/html,text/xml&quot; \2" />
+		<property name="jboss.config.1" value="${deploy.jboss.dir}/bin/standalone.conf" />
+		<property name="jboss.config.2" value="${deploy.jboss.dir}/standalone/configuration/standalone-preview.xml" />
+
+		<replaceregexp file="${jboss.config.1}">
+			<regexp pattern="${cr.1.1.f}" />
+			<substitution expression="${cr.1.1.t}" />
 		</replaceregexp>
-		<property name="app.ds.file" value="${deploy.jboss.dir.server}/deploy/${app.name}-ds.xml" />
-		<copy file="res/jboss/hypersonic/AlcinaTemplate-ds.xml" tofile="${app.ds.file}" />
-		<replace file="${app.ds.file}" token="${template.name}" value="${app.name}" />
-		<chmod perm="+x" file="${deploy.jboss.dir}/bin/run.sh"></chmod>
+		
+		<replace file="${jboss.config.2}" token="${cr.2.1.f}" value="${cr.2.1.t}" />
+		<replace file="${jboss.config.2}" token="${cr.2.2.f}" value="${cr.2.2.t}" />
+		<replace file="${jboss.config.2}" token="${cr.2.3.f}" value="${cr.2.3.t}" />
+		<replace file="${jboss.config.2}" token="${template.name}" value="${app.name}" />
+		<chmod perm="+x" file="${deploy.jboss.dir}/bin/standalone.sh">
+		</chmod>
 	</target>
 </project>

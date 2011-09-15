@@ -8,7 +8,6 @@ alcina.compiler.args=-Xlint:unchecked
 #-nowarn
 project.gwt.compile.flags=
 #-draftCompile
-deploy.j2ee-server.deploy.dir=${deploy.j2ee-server.server}/deploy
 j2ee-server.unear.target=${deploy.j2ee-server.deploy.dir}/${deployment.ear.name}
 j2ee-server.unwar.target=${deploy.j2ee-server.deploy.dir}/${deployment.ear.name}/${deployment.war.name}
 #developer=true
