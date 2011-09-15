@@ -1,14 +1,17 @@
 alcina.home=ALCINA_HOME
 gwt.sdk.dir=GWT_SDK_DIR
-deploy.j2ee-server.server=DEPLOY_JBOSS_DIR_ABS/server/all
-deployment.ear.name=alcinaTemplate
-deployment.war.name=alcinaTemplate_servlet
+deploy.j2ee-server.deploy.dir=DEPLOY_JBOSS_DIR_ABS/standalone/deployments
+deployment.ear.name=alcinaTemplate_server.ear
+deployment.war.name=alcinaTemplate_server.war
 
 alcina.compiler.args=-Xlint:unchecked
 #-nowarn
 project.gwt.compile.flags=
 #-draftCompile
 deploy.j2ee-server.deploy.dir=${deploy.j2ee-server.server}/deploy
-j2ee-server.unear.target=${deploy.j2ee-server.deploy.dir}/${deployment.ear.name}.ear
-j2ee-server.unwar.target=${deploy.j2ee-server.deploy.dir}/${deployment.ear.name}.ear/${deployment.war.name}.war
+j2ee-server.unear.target=${deploy.j2ee-server.deploy.dir}/${deployment.ear.name}
+j2ee-server.unwar.target=${deploy.j2ee-server.deploy.dir}/${deployment.ear.name}/${deployment.war.name}
 #developer=true
+
+j2ee-server.unear.name=${deployment.ear.name}
+j2ee-lib.dir=/lib

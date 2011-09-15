@@ -37,7 +37,7 @@ public class AlcinaTemplateBeanProvider {
 
 	private Context context;
 
-	private static final String JNDIPrefix = "alcinaTemplate/";
+	private static final String JNDIPrefix = "java:global/alcinaTemplate_server/alcinaTemplate_entity/";
 
 	public void appShutdown() {
 		theInstance = null;
@@ -46,9 +46,9 @@ public class AlcinaTemplateBeanProvider {
 	private AlcinaTemplateBeanProvider() {
 		Properties properties = new Properties();
 		properties.put("java.naming.factory.initial",
-				"org.jnp.interfaces.NamingContextFactory");
-		properties.put("java.naming.factory.url.pkgs",
-				"=org.jboss.naming:org.jnp.interfaces");
+		"org.jboss.as.naming.InitialContextFactory");
+properties.put("java.naming.factory.url.pkgs",
+		"=org.jboss.naming:org.jnp.interfaces");
 		properties.put("java.naming.provider.url", ResourceUtilities.getBundledString(AlcinaTemplateBeanProvider.class, "jndiUrl"));
 		try {
 			context = new InitialContext(properties);

@@ -117,7 +117,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	@Association(implementationClass = AlcinaTemplateGroup.class, propertyName="memberOfGroups")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
 	@CustomiserInfo(customiserClass = SelectorCustomiser.class )
-	public Set<? extends IGroup> getMemberGroups() {
+	public Set<AlcinaTemplateGroup> getMemberGroups() {
 		return this.memberGroups;
 	}
 
@@ -137,7 +137,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 @Association(implementationClass=AlcinaTemplateUser.class,propertyName="secondaryGroups")
 	@CustomiserInfo(customiserClass = SelectorCustomiser.class)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
-	public Set<? extends IUser> getMemberUsers() {
+	public Set<AlcinaTemplateUser> getMemberUsers() {
 		return this.memberUsers;
 	}
 

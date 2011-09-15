@@ -12,6 +12,6 @@
 	<super-source path="jre" />
 	<public path="client/widgets/res" />
 	<!-- 
-	<set-property name="user.agent" value="safari" />
+	
 	 -->
 </module>

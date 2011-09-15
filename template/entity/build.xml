@@ -23,7 +23,7 @@
 		<include name="**/*.java" />
 	</patternset> 
 		<patternset id="project.jar.filter.exclude">
-		<exclude name="org/cosa/survey/cs/remote/*.*" />
+		<exclude name="cc/alcina/template/cs/remote/**" />
 	</patternset>
 	
 	<import file="${alcina.home}/project-build.xml" />

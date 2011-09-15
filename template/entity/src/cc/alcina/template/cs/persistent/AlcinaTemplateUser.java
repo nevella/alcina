@@ -243,7 +243,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	@CustomiserInfo(customiserClass = SelectorCustomiser.class)
 	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 	@XmlTransient
-	public Set<? extends IGroup> getSecondaryGroups() {
+	public Set<AlcinaTemplateGroup> getSecondaryGroups() {
 		return (Set<AlcinaTemplateGroup>) this.secondaryGroups;
 	}
 
