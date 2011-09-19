@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNofications;
@@ -32,13 +33,10 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	private boolean debug = false;
 
-	private static final String HTML_BLOCKS = ",ADDRESS,BLOCKQUOTE,DIV,DL,H1,H2,H3,H4,H5,"
-			+ "H6,IFRAME,ILAYER,LAYER,OL,TABLE,TR,UL,TD,P,HR,BR,LI,";
-
 	private static final String HTML_INVISIBLE_CONTENT_ELEMENTS = ",STYLE,TEXTAREA,SCRIPT,INPUT,SELECT,";
 
 	public static boolean isBlockHTMLElement(Element e) {
-		return HTML_BLOCKS.contains("," + e.getTagName().toUpperCase() + ",");
+		return CommonConstants.HTML_BLOCKS.contains("," + e.getTagName().toUpperCase() + ",");
 	}
 
 	private NodeFromXpathProvider nodeProvider = null;
