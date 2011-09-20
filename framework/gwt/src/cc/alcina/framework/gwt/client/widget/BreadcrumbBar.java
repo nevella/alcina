@@ -171,6 +171,7 @@ import com.google.gwt.user.client.ui.Widget;
 	public static class BreadcrumbBarButton extends Composite implements
 			HasClickHandlers {
 		protected APanel panel;
+		private  boolean asHtml;
 
 		public BreadcrumbBarButton() {
 			this.panel = new APanel();
@@ -183,9 +184,14 @@ import com.google.gwt.user.client.ui.Widget;
 			setText(text);
 		}
 
+		public BreadcrumbBarButton(String text, boolean asHtml) {
+			this();
+			this.asHtml = asHtml;
+			setText(text);
+		}
 		public void setText(String text) {
 			panel.clear();
-			panel.add(BreadcrumbBar.asHTML ? new InlineHTML(text)
+			panel.add(BreadcrumbBar.asHTML ||this.asHtml? new InlineHTML(text)
 					: new InlineLabel(text));
 		}
 
@@ -202,6 +208,11 @@ import com.google.gwt.user.client.ui.Widget;
 		public BreadcrumbBarDropdown(String text) {
 			this();
 			setText(text);
+		}
+
+		public BreadcrumbBarDropdown(String text, boolean asHtml) {
+			super(text, asHtml);
+			this.panel.setStyleName("dropdown");
 		}
 	}
 }
