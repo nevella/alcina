@@ -208,10 +208,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		if (provideIsEmpty()) {
 			return "";
 		}
-		String displayName = CommonUtils.isNullOrEmpty(getDisplayName())
-				|| !withGroupName ? "" : CommonUtils.pluralise(CommonUtils
-				.capitaliseFirst(getDisplayName()), criteria)
-				+ ": ";
+		String displayName = provideDisplayNamePrefix(withGroupName);
 		String result = "";
 		int ct = 0;
 		Set<String> duplicateDisplayTextCriterionSet = new HashSet<String>();
@@ -233,6 +230,13 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 			}
 		}
 		return result.length() == 0 ? result : displayName + result;
+	}
+
+	protected String provideDisplayNamePrefix(boolean withGroupName) {
+		return CommonUtils.isNullOrEmpty(getDisplayName())
+				|| !withGroupName ? "" : CommonUtils.pluralise(CommonUtils
+				.capitaliseFirst(getDisplayName()), criteria)
+				+ ": ";
 	}
 
 	protected String combinatorString() {

@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
+import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
 
@@ -67,7 +68,10 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	public Link(String text) {
 		this(text, false);
 	}
-
+	public Link(String text,AlcinaHistoryItem historyItem) {
+		this(text, false);
+		setHref("#"+historyItem.toTokenString());
+	}
 	public Link(String text, boolean asHTML) {
 		this();
 		if (asHTML) {

@@ -16,14 +16,21 @@ package cc.alcina.framework.common.client.search;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 /**
  * 
  * @author Nick Reddel
  */
 public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 	static final transient long serialVersionUID = -1L;
+
 	private Long value;
+
+	public LongCriterion() {
+	}
+
+	public LongCriterion(Long value) {
+		setValue(value);
+	}
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -36,23 +43,24 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 		result.parameters.add(value);
 		return result;
 	}
+
 	@Override
 	public String toString() {
-		return value == null ? "":
-				value.toString();
+		return value == null ? "" : value.toString();
 	}
 
 	public void setValue(Long value) {
 		this.value = value;
 	}
+
 	public boolean equivalentTo(SearchCriterion other) {
 		if (other == null || other.getClass() != getClass()) {
 			return false;
 		}
 		LongCriterion otherImpl = (LongCriterion) other;
 		return otherImpl.getDirection() == getDirection()
-				&& CommonUtils.equalsWithNullEquality(getValue(), otherImpl
-						.getValue());
+				&& CommonUtils.equalsWithNullEquality(getValue(),
+						otherImpl.getValue());
 	}
 
 	public Long getValue() {

@@ -45,7 +45,6 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * It works...and a rewrite would be painful (and probably require a complete reimplementation)
  */
-@SuppressWarnings("deprecation")
 public class MainTabPanel extends TabPanel {
 	private HorizontalPanel bp;
 

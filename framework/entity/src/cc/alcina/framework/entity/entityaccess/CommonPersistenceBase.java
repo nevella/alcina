@@ -441,6 +441,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						if (wrapperId != null) {
 							Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
 									.getPropertyType();
+							if(info.defaultImplementationType()!=Void.class){
+								pType=info.defaultImplementationType();
+							}
 							WrappedObject wrappedObject = (WrappedObject) getObjectWrapperForUser(
 									pType, wrapperId);
 							result.getItems().add(
@@ -514,6 +517,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						if (wrapperId != null) {
 							Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
 									.getPropertyType();
+							if(info.defaultImplementationType()!=Void.class){
+								pType=info.defaultImplementationType();
+							}
 							WrappedObject wrappedObject = EntityLayerLocator
 									.get()
 									.wrappedObjectProvider()

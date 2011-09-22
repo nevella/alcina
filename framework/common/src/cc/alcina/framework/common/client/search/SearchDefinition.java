@@ -326,4 +326,10 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
 	}
+	/**
+	 * For more complex search definitions, override this
+	 */
+	public Object provideResultsType(){
+		return null;
+	}
 }

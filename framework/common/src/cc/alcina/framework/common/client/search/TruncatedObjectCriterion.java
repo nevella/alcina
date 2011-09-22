@@ -57,4 +57,8 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 	protected String getDisplayTextFor(E value) {
 		return value == null ? null : value.toString();
 	}
+	@Override
+	public String toString() {
+		return getDisplayText();
+	}
 }

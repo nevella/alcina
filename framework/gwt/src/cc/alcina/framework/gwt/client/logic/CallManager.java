@@ -56,7 +56,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 	public boolean isCancelled(AsyncCallback ac) {
 		boolean yep = cancelled.contains(ac);
-		remove(ac);
+		
 		return yep;
 	}
 

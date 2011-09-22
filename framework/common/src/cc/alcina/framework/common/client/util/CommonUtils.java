@@ -664,4 +664,12 @@ public class CommonUtils {
 		}
 		return result.toString();
 	}
+	public static boolean isOneOf(Class clazz,Class[] possibleClasses){
+		for (Class c : possibleClasses) {
+			if(clazz==c){
+				return true;
+			}
+		}
+		return false;
+	}
 }

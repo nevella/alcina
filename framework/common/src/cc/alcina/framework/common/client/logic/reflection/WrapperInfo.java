@@ -37,4 +37,5 @@ import java.lang.annotation.Target;
 	 String toStringPropertyName() default "";
 	 //TODO - currently not implemented. Question is: should it be?
 	 boolean cascadeDelete() default true;
+	 Class defaultImplementationType() default Void.class;
 }

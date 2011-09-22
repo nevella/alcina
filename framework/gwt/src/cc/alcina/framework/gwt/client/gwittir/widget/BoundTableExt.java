@@ -1596,8 +1596,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			this.setValue(c);
 		}
 		if (((masks & BoundTableExt.SCROLL_MASK) > 0)
-				&& (this.scroll.getScrollPosition() >= this.lastScrollPosition)) {
-			this.scroll.setScrollPosition(this.lastScrollPosition);
+				&& (this.scroll.getVerticalScrollPosition() >= this.lastScrollPosition)) {
+			this.scroll.setVerticalScrollPosition(this.lastScrollPosition);
 		}
 		this.inChunk = false;
 	}
