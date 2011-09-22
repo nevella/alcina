@@ -283,7 +283,7 @@ public class ContentViewFactory {
 				| BoundTableExt.SORT_MASK;
 		CollectionDataProvider cdp = new CollectionDataProvider(beans);
 		if((mask&BoundTableExt.NO_NAV_ROW_MASK)!=0){
-			cdp.setPageSize(beans.size());
+			cdp.showAllObjectsInCollection();
 		}
 		BoundTableExt table = editable ? new BoundTableExt(mask, factory,
 				fields, cdp) : new NiceWidthBoundTable(mask, factory, fields,
