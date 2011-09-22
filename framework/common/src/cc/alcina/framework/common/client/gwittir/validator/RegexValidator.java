@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
-
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -26,13 +24,8 @@ import com.totsp.gwittir.client.validator.ValidationException;
  *
  * @author Nick Reddel
  */
-
- public class RegexValidator implements ParameterisedValidator {
+public class RegexValidator implements ParameterisedValidator {
 	public static final String PARAM_REGEX = "regex";
-
-	public static final String MULTIPLE_SEPARATOR = "multipleSeparator";
-
-	private String multipleSeparator = null;
 
 	private String regex;
 
@@ -52,18 +45,10 @@ import com.totsp.gwittir.client.validator.ValidationException;
 		}
 		value = value.toString().trim();
 		String sz = value.toString();
-		String[] strings = null;
-		if (!CommonUtils.isNullOrEmpty(multipleSeparator)) {
-			strings = sz.split(multipleSeparator);
-		} else {
-			strings = new String[] { sz };
-		}
-		for (String s : strings) {
-			if (!s.replaceAll(getRegex(), REGEX_REPLACE).equals(REGEX_REPLACE)) {
-				throw new ValidationException(CommonUtils.format(
-						"Does not match regex ('%1', '%2')", getRegex(),
-						multipleSeparator), RegexValidator.class);
-			}
+		if (!sz.replaceAll(getRegex(), REGEX_REPLACE).equals(REGEX_REPLACE)) {
+			throw new ValidationException(CommonUtils.format(
+					"Does not match regex ('%1')", getRegex()),
+					RegexValidator.class);
 		}
 		return value;
 	}
@@ -72,7 +57,5 @@ import com.totsp.gwittir.client.validator.ValidationException;
 		NamedParameter p = NamedParameter.Support.getParameter(params,
 				PARAM_REGEX);
 		regex = p.stringValue();
-		p = NamedParameter.Support.getParameter(params, MULTIPLE_SEPARATOR);
-		multipleSeparator = p == null ? null : p.stringValue();
 	}
 }
