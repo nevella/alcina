@@ -66,7 +66,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 				if (!result) {
 					persistenceCallback.onSuccess(false);
 				}
-				if (transforms.isEmpty()
+				if (transforms!=null&&transforms.isEmpty()
 						&& !ClientSession.get().isSoleOpenTab()) {
 					// double-check - easier at this level than with a stack of
 					// callbacks - well...maybe. easier for me anyway.
