@@ -679,4 +679,14 @@ public class WidgetUtils {
 	public static boolean isZeroOffsetDims(Element e) {
 		return e.getOffsetHeight()==0&&e.getOffsetWidth()==0;
 	}
+	public static boolean isVisibleAncestorChain(Widget w){
+		while(w!=null){
+			if(!w.isVisible()){
+				return false;
+			}
+			w=w.getParent();
+		}
+		return true;
+		
+	}
 }
