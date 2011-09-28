@@ -32,6 +32,8 @@ import java.util.Set;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
@@ -54,8 +56,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
-import cc.alcina.framework.gwt.client.ide.provider.DefaultCollectionFilter;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 

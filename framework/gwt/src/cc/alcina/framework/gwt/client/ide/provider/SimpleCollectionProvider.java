@@ -17,6 +17,7 @@ package cc.alcina.framework.gwt.client.ide.provider;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;

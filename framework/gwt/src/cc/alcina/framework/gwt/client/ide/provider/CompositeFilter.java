@@ -17,6 +17,8 @@ package cc.alcina.framework.gwt.client.ide.provider;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+
 /**
  *
  * @author Nick Reddel

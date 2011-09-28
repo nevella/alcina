@@ -15,7 +15,7 @@ package cc.alcina.framework.gwt.client.objecttree;
 
 import java.util.Collection;
 
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;

@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef.ClassRefSimpleNameRenderer;
@@ -26,8 +28,6 @@ import cc.alcina.framework.common.client.search.PersistentObjectCriteriaGroup;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
-import cc.alcina.framework.gwt.client.ide.provider.DefaultCollectionFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 import com.google.gwt.user.client.ui.FlowPanel;

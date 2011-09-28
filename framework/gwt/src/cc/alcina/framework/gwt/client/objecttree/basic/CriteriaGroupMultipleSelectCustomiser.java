@@ -7,10 +7,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 
 /**
  * 

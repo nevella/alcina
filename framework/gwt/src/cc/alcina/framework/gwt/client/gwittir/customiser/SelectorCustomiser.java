@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -22,7 +23,6 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.SelectorProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;

@@ -15,8 +15,8 @@
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelector;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;

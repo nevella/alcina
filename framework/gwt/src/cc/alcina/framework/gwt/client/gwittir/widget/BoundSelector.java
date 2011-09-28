@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
 

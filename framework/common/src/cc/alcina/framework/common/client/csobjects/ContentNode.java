@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
@@ -21,14 +20,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ContentNode implements Serializable {
+public class ContentNode implements Serializable {
 	private String title;
 
 	private String content;
@@ -36,21 +34,22 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 	private String url;
 
 	private List<ContentNode> children = new ArrayList<ContentNode>();
-	
+
 	private List<String> labels = new ArrayList<String>();
 
 	public ContentNode() {
 	}
-	public Map<String,ContentNode> createTitleMap(){
-		Map<String,ContentNode> result = new HashMap<String, ContentNode>();
+
+	public Map<String, ContentNode> createTitleMap() {
+		Map<String, ContentNode> result = new HashMap<String, ContentNode>();
 		List<ContentNode> kids = getAllChildren(null);
 		for (ContentNode dn : kids) {
 			result.put(dn.getTitle().toLowerCase(), dn);
 		}
 		return result;
 	}
-	public List<ContentNode> getAllChildren(
-			List<ContentNode> currentList) {
+
+	public List<ContentNode> getAllChildren(List<ContentNode> currentList) {
 		if (currentList == null) {
 			currentList = new ArrayList<ContentNode>();
 		}
@@ -112,8 +111,9 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 	public List<ContentNode> getChildren() {
 		return children;
 	}
-	public ContentNode cloneWithFilter(CollectionFilter<ContentNode> filter){
-		if (!filter.allow(this)){
+
+	public ContentNode cloneWithFilter(CollectionFilter<ContentNode> filter) {
+		if (!filter.allow(this)) {
 			return null;
 		}
 		ContentNode copy = new ContentNode();
@@ -122,17 +122,19 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionFilter;
 		copy.setLastModified(getLastModified());
 		copy.setTitle(getTitle());
 		copy.setUrl(getUrl());
-		for(ContentNode child:getChildren()){
+		for (ContentNode child : getChildren()) {
 			ContentNode childCopy = child.cloneWithFilter(filter);
-			if (childCopy!=null){
+			if (childCopy != null) {
 				copy.getChildren().add(childCopy);
 			}
 		}
 		return copy;
 	}
+
 	public void setLabels(List<String> labels) {
 		this.labels = labels;
 	}
+
 	public List<String> getLabels() {
 		return labels;
 	}
