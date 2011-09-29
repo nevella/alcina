@@ -29,6 +29,7 @@ import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
 
 /**
  *
@@ -53,6 +54,8 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 	private Link hideLink;
 
 	private boolean hiding;
+	
+	private Renderer renderer;
 
 	private final int maxLength;
 
@@ -108,7 +111,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 				fp.add(label);
 			}
 		} else {
-			String s = o.toString();
+			String s = renderer==null?o.toString():renderer.render(o).toString();
 			if (isShowNewlinesAsBreaks()) {
 				s = s.replace("\n", "<br>\n");
 			}
@@ -179,4 +182,12 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 			dots.setVisible(hiding);
 		}
 	};
+
+	public Renderer getRenderer() {
+		return this.renderer;
+	}
+
+	public void setRenderer(Renderer renderer) {
+		this.renderer = renderer;
+	}
 }
