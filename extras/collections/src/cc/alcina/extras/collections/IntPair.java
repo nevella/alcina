@@ -73,4 +73,8 @@ public class IntPair implements Comparable<IntPair> {
 		IntPair result=new IntPair(Math.max(i1,other.i1),Math.min(i2,other.i2));
 		return result.i1<=result.i2?result:null;
 	}
+
+	public boolean contains(IntPair other) {
+		return other==null?false:other.equals(intersection(other));
+	}
 }

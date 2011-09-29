@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Comparator;
@@ -42,15 +41,16 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
  *
  * @author Nick Reddel
  */
-
- public class TextArea<B> extends AbstractBoundWidget< String> implements
+public class TextArea<B> extends AbstractBoundWidget<String> implements
 		HasFocus, HasEnabled, SourcesKeyboardEvents, SourcesClickEvents,
-		MultilineWidget ,Focusable{
+		MultilineWidget, Focusable {
 	private com.google.gwt.user.client.ui.TextArea base = new com.google.gwt.user.client.ui.TextArea();
 
 	private ChangeListenerCollection changeListeners = new ChangeListenerCollection();
 
 	private String old;
+
+	private boolean ensureAllLinesVisible;
 
 	public TextArea() {
 		this(false);
@@ -298,7 +298,6 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 		this.base.setStyleName(style);
 	}
 
-
 	public void setTabIndex(int index) {
 		this.base.setTabIndex(index);
 	}
@@ -318,6 +317,10 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 	public void setValue(String value) {
 		String old = this.getValue();
 		this.setText(value);
+		if (ensureAllLinesVisible) {
+			base.setVisibleLines((getValue().length()*10/9)
+					/ base.getCharacterWidth() + 1);
+		}
 		if (this.getValue() != old
 				&& (this.getValue() == null || (this.getValue() != null && !this
 						.getValue().equals(old)))) {
@@ -339,5 +342,13 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
+	}
+
+	public boolean isEnsureAllLinesVisible() {
+		return this.ensureAllLinesVisible;
+	}
+
+	public void setEnsureAllLinesVisible(boolean ensureAllLinesVisible) {
+		this.ensureAllLinesVisible = ensureAllLinesVisible;
 	}
 }
