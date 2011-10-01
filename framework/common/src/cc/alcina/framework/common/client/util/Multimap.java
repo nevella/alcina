@@ -48,6 +48,15 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		get(key).add(item);
 	}
+	public void addIfNotContained(K key, Object item) {
+		if (!containsKey(key)) {
+			put(key, (V) new ArrayList());
+		}
+		V v = get(key);
+		if(!v.contains(item)){
+			v.add(item);
+		}
+	}
 
 	public void remove(K key, Object item) {
 		if (containsKey(key)) {
