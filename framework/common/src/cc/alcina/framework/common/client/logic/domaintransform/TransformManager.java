@@ -1079,7 +1079,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		getTransformsByCommitType(evt.getCommitType()).remove(evt);
 	}
 
-	protected void removeTransformsForObjects(Collection c) {
+	public void removeTransformsForObjects(Collection c) {
 		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN).clone();
 		for (DomainTransformEvent dte : trs) {
