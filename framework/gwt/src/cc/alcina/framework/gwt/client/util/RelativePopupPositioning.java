@@ -4,6 +4,7 @@ import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
 
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -211,6 +212,13 @@ public class RelativePopupPositioning {
 			public void setPosition(int offsetWidth, int offsetHeight) {
 				int x = relativeToWidget.getAbsoluteLeft();
 				int y = relativeToWidget.getAbsoluteTop();
+				int relW = relativeToWidget.getOffsetWidth();
+				int relH = relativeToWidget.getOffsetHeight();
+				if(relH==0){
+					Element parentElement = relativeToWidget.getElement().getParentElement();
+					relH=parentElement.getOffsetHeight();
+					y=parentElement.getAbsoluteTop();
+				}
 				x += shiftX;
 				y += shiftY;
 				// work in coordinate space of bounding widget
@@ -222,8 +230,7 @@ public class RelativePopupPositioning {
 				AxisCoordinate freeAxis = null;
 				int bw = boundingWidget.getOffsetWidth();
 				int bh = boundingWidget.getOffsetHeight();
-				int relW = relativeToWidget.getOffsetWidth();
-				int relH = relativeToWidget.getOffsetHeight();
+				
 				int axisIndex = 0;
 				for (RelativePopupAxis axis : axes) {
 					fixedAxis = axis.fixedAxis;

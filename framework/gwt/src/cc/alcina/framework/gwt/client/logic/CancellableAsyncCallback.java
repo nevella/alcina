@@ -10,6 +10,5 @@ public abstract class CancellableAsyncCallback<T> implements AsyncCallback<T> {
 	public boolean isCancelled() {
 		return cancelled;
 	}
-
 	private boolean cancelled;
 }

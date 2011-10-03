@@ -8,8 +8,10 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
 
+import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
 
 public class BoundSelectorMinimal extends BoundSelector {
@@ -90,10 +92,10 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	protected void createResults() {
 		results = new SelectWithSearch() {
-			public com.google.gwt.event.dom.client.HasClickHandlers createItem(
-					Comparable item, boolean asHTML, int charWidth,
+			public HasClickHandlers createItem(
+					Object item, boolean asHTML, int charWidth,
 					boolean itemsHaveLinefeeds,
-					com.google.gwt.user.client.ui.Label ownerLabel, String sep) {
+					Label ownerLabel, String sep) {
 				return new SelectWithSearchItemX(item, asHTML, charWidth,
 						itemsHaveLinefeeds, ownerLabel, sep);
 			};

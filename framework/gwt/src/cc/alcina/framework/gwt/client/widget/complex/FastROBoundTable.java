@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
@@ -89,6 +90,7 @@ public class FastROBoundTable extends BoundTableExt {
 		t.addMouseOutHandler(handler);
 		t.addMouseMoveHandler(handler);
 		t.addMouseOverHandler(handler);
+		table.addStyleName("editable");
 	}
 
 	public List getSelectedObjects() {

@@ -16,6 +16,8 @@ package cc.alcina.framework.gwt.client.widget;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
@@ -87,6 +89,8 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	}
 
 	private String hint;
+
+	private int filterDelayMs;
 
 	public String getHint() {
 		return this.hint;
@@ -183,8 +187,9 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 					timerKeyMillis = lastKeyMillis;
 				}
 			};
-			queueingFinishedTimer.schedule(ClientLayerLocator.get()
-					.getGeneralProperties().getFilterDelayMs());
+			filterDelayMs = ClientLayerLocator.get().getGeneralProperties()
+					.getFilterDelayMs();
+			queueingFinishedTimer.schedule(filterDelayMs);
 		}
 	}
 
@@ -204,11 +209,25 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	protected void onAttach() {
 		super.onAttach();
 		if (isFocusOnAttach()) {
-			textBox.setFocus(true);
+			//just in case this widget is inside a popup panel e.g. 
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					textBox.setFocus(true);
+				}
+			});
 		}
 	}
 
 	public void clear() {
 		getTextBox().setText("");
+	}
+
+	public int getFilterDelayMs() {
+		return this.filterDelayMs;
+	}
+
+	public void setFilterDelayMs(int filterDelayMs) {
+		this.filterDelayMs = filterDelayMs;
 	}
 }

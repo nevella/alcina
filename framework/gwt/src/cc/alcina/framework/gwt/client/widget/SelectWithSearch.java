@@ -53,6 +53,7 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
@@ -67,8 +68,8 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
  *
  * @author Nick Reddel
  */
-public class SelectWithSearch<G extends Comparable, T extends Comparable>
-		implements VisualFilterable, FocusHandler, HasLayoutInfo, BlurHandler {
+public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
+		HasLayoutInfo, BlurHandler {
 	private static final int DELAY_TO_CHECK_FOR_CLOSING = 400;
 
 	private FlowPanel holder;
@@ -144,6 +145,8 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 
 	private String popupPanelCssClassName = "noBorder";
 
+	private boolean autoselectFirst = false;
+
 	// additional problem with ff
 	public SelectWithSearch() {
 	}
@@ -182,7 +185,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 		fp = new FlowPanel();
 		fp.setStyleName("select-item-container");
 		if (inPanelHint != null) {
-			hintLabel = new Label(inPanelHint);
+			hintLabel = new HTML(inPanelHint);
 			hintLabel.setStyleName("hint");
 			if (showHintStrategy != null) {
 				showHintStrategy.registerHintWidget(hintLabel);
@@ -526,17 +529,22 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 	}
 
 	public void setItemMap(Map<G, List<T>> itemMap) {
+		selectableNavigation.clear();
 		this.itemMap = itemMap;
 		if (isSortGroupContents()) {
 			for (List<T> ttl : itemMap.values()) {
-				Collections.sort(ttl);
+				Collections.sort((List) ttl);
 			}
 		}
 		if (isSortGroups()) {
 			keys = new ArrayList<G>(itemMap.keySet());
-			Collections.sort(keys);
+			Collections.sort((List) keys);
 		}
 		updateItems();
+		if (isAutoselectFirst()) {
+			selectableNavigation.selectedIndex = 0;
+			selectableNavigation.updateSelection();
+		}
 	}
 
 	public void setItemsHaveLinefeeds(boolean itemsHaveLinefeeds) {
@@ -567,7 +575,7 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 		this.topAdjust = topAdjust;
 	}
 
-	private void updateItems() {
+	protected void updateItems() {
 		fp.clear();
 		if (hintLabel != null) {
 			fp.add(hintLabel);
@@ -601,14 +609,16 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 		}
 	}
 
-	public HasClickHandlers createItem(T item, boolean asHTML, int charWidth,
-			boolean itemsHaveLinefeeds, Label ownerLabel, String sep) {
+	protected HasClickHandlers createItem(T item, boolean asHTML,
+			int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
+			String sep) {
 		HasClickHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
 				item, false, charWidth, itemsHaveLinefeeds, ownerLabel, sep)
 				: new SelectWithSearchItem(item, false, charWidth,
 						itemsHaveLinefeeds, ownerLabel, sep);
 		return hch;
 	}
+
 	// TODO:hcdim
 	void checkShowPopup() {
 		if ((this.relativePopupPanel == null || this.relativePopupPanel
@@ -643,8 +653,8 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 						+ "px");
 			}
 			int minWidth = holder.getOffsetWidth();
-			if (minWidth == 0) {//probably inline
-				minWidth=filter.getOffsetWidth();
+			if (minWidth == 0) {// probably inline
+				minWidth = filter.getOffsetWidth();
 			}
 			if (minWidth > 20) {
 				scroller.getElement().getStyle()
@@ -827,6 +837,30 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 		}
 	}
 
+	public static class HideOnKeypressHintStrategy extends ShowHintStrategy implements
+			KeyDownHandler {
+		private  boolean hintShown = false;
+	
+		@Override
+		public void registerFilter(FilterWidget filter) {
+			super.registerFilter(filter);
+			filter.getTextBox().addKeyDownHandler(this);
+		}
+	
+		@Override
+		public void registerHintWidget(Widget hintWidget) {
+			super.registerHintWidget(hintWidget);
+			if (hintShown) {
+				hintWidget.setVisible(false);
+			}
+		}
+	
+		public void onKeyDown(KeyDownEvent event) {
+			hintShown = true;
+			hintWidget.setVisible(false);
+		}
+	}
+
 	public void clearFilterText() {
 		getFilter().getTextBox().setText("");
 		selectableNavigation.clear();
@@ -853,5 +887,13 @@ public class SelectWithSearch<G extends Comparable, T extends Comparable>
 
 	public String getPopupPanelCssClassName() {
 		return popupPanelCssClassName;
+	}
+
+	public void setAutoselectFirst(boolean autoselectFirst) {
+		this.autoselectFirst = autoselectFirst;
+	}
+
+	public boolean isAutoselectFirst() {
+		return autoselectFirst;
 	}
 }

@@ -110,8 +110,6 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		return null;
 	}
 
-	
-
 	private void initContainer() {
 		container = new FlowPanel();
 		initWidget(container);
@@ -267,19 +265,20 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 				addItem(value);
 			}
 		}
-		if (((List) search.getItemMap().values().iterator().next()).isEmpty()) {
+		if (!((Collection) search.getItemMap().values()).isEmpty()
+				&& ((List) search.getItemMap().values().iterator().next())
+						.isEmpty()) {
 			// first time, init (now we have the model)
 			initValues();
-			
 		}
 		update(old);
 	}
 
 	protected void initValues() {
-		search.setItemMap(createObjectMap());		
+		search.setItemMap(createObjectMap());
 	}
 
-	private void update(Set old) {
+	protected void update(Set old) {
 		if (this.isMultipleSelect()) {
 			changes.firePropertyChange(VALUE_PROPERTY_NAME, old, new HashSet(
 					new HashSet(search.getSelectedItems())));

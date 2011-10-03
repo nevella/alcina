@@ -822,6 +822,9 @@ table.alcina-SelectorFrame.minimal div.alcina-Selector{
 	white-space:nowrap;
 	 
 }
+table.alcina-SelectorFrame.minimal .caption-hint{
+	font-style:italic;
+}
 /*Object tree rendering */
 div.alcina-ObjectTree .customiser {
 	margin-bottom: 15px;
@@ -1194,11 +1197,17 @@ table.gwittir-BoundTable tr.header {
 	color: red;
 }
 /** editable overlay **/
-table.gwittir-BoundTable td.editableOver{
+table.gwittir-BoundTable.editable tr.even td.editableOver,table.gwittir-BoundTable.editable tr.odd td.editableOver{
 	background-color: #F4F4F4;
 	cursor: pointer;
 	border: 1px solid #A0A0D0;
-	padding: 1px 11px 1px 1px;
+	
+}
+table.gwittir-BoundTable.editable tr.even td{
+	border: 1px solid white;
+}
+table.gwittir-BoundTable.editable tr.odd td{
+	border: 1px solid  #F0F0FE;
 }
 /** logging, notification **/
 .logbox {
