@@ -104,7 +104,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				return;
 			}
 			transformQueue.add(evt);
-			lastQueueAddMillis = new Date().getTime();
+			lastQueueAddMillis = System.currentTimeMillis();
 			if (queueingFinishedTimer == null) {
 				queueingFinishedTimer = ClientLayerLocator.get()
 						.timerWrapperProvider()

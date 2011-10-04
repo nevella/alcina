@@ -37,6 +37,13 @@ public class RegexValidator implements ParameterisedValidator {
 		this.regex = regex;
 	}
 
+	public RegexValidator() {
+	}
+
+	public RegexValidator(String regex) {
+		this.regex = regex;
+	}
+
 	private static final String REGEX_REPLACE = "234IBBDA";
 
 	public Object validate(Object value) throws ValidationException {

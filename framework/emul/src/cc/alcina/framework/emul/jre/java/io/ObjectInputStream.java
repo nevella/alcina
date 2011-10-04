@@ -24,4 +24,7 @@ public class ObjectInputStream
 	public String readUTF(){
 		throw new UnsupportedOperationException();
 	}
+	public int readInt()   {
+		throw new UnsupportedOperationException();
+	    }
 }

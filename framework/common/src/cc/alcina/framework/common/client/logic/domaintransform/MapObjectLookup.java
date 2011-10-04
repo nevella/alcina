@@ -72,6 +72,9 @@ public class MapObjectLookup implements ObjectLookup {
 	}
 
 	public void deregisterObject(HasIdAndLocalId hili) {
+		if (hili == null) {
+			return;
+		}
 		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
 		ensureCollections(clazz);
 		idMap.get(clazz).remove(hili.getId());
@@ -88,9 +91,6 @@ public class MapObjectLookup implements ObjectLookup {
 			return;
 		}
 		for (HasIdAndLocalId hili : objects) {
-			if (hili == null) {
-				continue;
-			}
 			deregisterObject(hili);
 		}
 	}
@@ -117,8 +117,8 @@ public class MapObjectLookup implements ObjectLookup {
 	}
 
 	public HasIdAndLocalId getObject(HasIdAndLocalId bean) {
-		return (HasIdAndLocalId) getObject(bean.getClass(), bean.getId(), bean
-				.getLocalId());
+		return (HasIdAndLocalId) getObject(bean.getClass(), bean.getId(),
+				bean.getLocalId());
 	}
 
 	public void registerObjects(Collection objects) {
@@ -207,12 +207,13 @@ public class MapObjectLookup implements ObjectLookup {
 				if (dpi != null && dpi.registerChildren()) {
 					shouldMapChildren = true;
 					Collection<HasIdAndLocalId> colln = (Collection<HasIdAndLocalId>) CommonUtils
-							.wrapInCollection(CommonLocator.get()
-									.propertyAccessor().getPropertyValue(obj,
-											pr.getPropertyName()));
+							.wrapInCollection(CommonLocator
+									.get()
+									.propertyAccessor()
+									.getPropertyValue(obj, pr.getPropertyName()));
 					if (colln != null) {
 						for (HasIdAndLocalId hili : colln) {
-							if(getObject(hili)==null){
+							if (getObject(hili) == null) {
 								mapObject(hili);
 							}
 						}

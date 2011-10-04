@@ -53,13 +53,13 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 		return dpi == null ? false : dpi.cloneForDuplication();
 	}
 
-	private Set<String> ignorePns = new HashSet<String>(Arrays
+	public static  final Set<String> IGNORE_FOR_DOMAIN_OBJECT_CLONING = new HashSet<String>(Arrays
 			.asList(new String[] { "id", "localId", "lastModificationDate",
 					"lastModificationUser", "creationDate", "creationUser",
 					"versionNumber" }));
 
 	protected boolean ignore(Class clazz, String propertyName, Object obj) {
-		if(ignorePns.contains(propertyName)){
+		if(IGNORE_FOR_DOMAIN_OBJECT_CLONING.contains(propertyName)){
 			return true;
 		}
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(clazz);

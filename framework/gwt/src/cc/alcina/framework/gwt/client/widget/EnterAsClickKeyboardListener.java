@@ -45,7 +45,7 @@ import com.google.gwt.user.client.ui.TextBoxBase;
 	public void onKeyPress(KeyPressEvent event) {
 		char charCode = event.getCharCode();
 		int keyCode = event.getNativeEvent().getKeyCode();
-		if ((charCode == KeyCodes.KEY_ENTER||keyCode==KeyCodes.KEY_ENTER) && tb.getText().length() != 0) {
+		if ((charCode == KeyCodes.KEY_ENTER||keyCode==KeyCodes.KEY_ENTER) && checkCanClick()) {
 			if (button != null) {
 				button.click();
 			}
@@ -53,5 +53,9 @@ import com.google.gwt.user.client.ui.TextBoxBase;
 				inputButton.click();
 			}
 		}
+	}
+
+	protected boolean checkCanClick() {
+		return tb.getText().length() != 0;
 	}
 }

@@ -14,14 +14,16 @@
 package cc.alcina.framework.gwt.client.widget.complex;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
@@ -75,6 +77,10 @@ public class FastROBoundTable extends BoundTableExt {
 
 	public boolean reallyClear;
 
+	public CollectionFilter<CheckEditableTuple> checkEditableFilter;
+
+	private EditOverlayHandler editOverlayHandler;
+
 	public FastROBoundTable(int mask, BoundWidgetTypeFactory factory,
 			Field[] fields, DataProvider provider) {
 		super(mask, factory, fields, provider);
@@ -85,12 +91,30 @@ public class FastROBoundTable extends BoundTableExt {
 	 */
 	public void editOverlay(Class tableObjectClass) {
 		ROFlexTable t = (ROFlexTable) table;
-		EditOverlayHandler handler = new EditOverlayHandler(tableObjectClass);
-		t.addClickHandler(handler);
-		t.addMouseOutHandler(handler);
-		t.addMouseMoveHandler(handler);
-		t.addMouseOverHandler(handler);
+		 editOverlayHandler = new EditOverlayHandler(tableObjectClass);
+		t.addClickHandler(editOverlayHandler);
+		t.addMouseOutHandler(editOverlayHandler);
+		t.addMouseMoveHandler(editOverlayHandler);
+		t.addMouseOverHandler(editOverlayHandler);
 		table.addStyleName("editable");
+	}
+
+	public void edit(Object target, final String fieldName) {
+		int row = CommonUtils.indexOf(((Collection)getValue()).iterator(), target);
+		if(row==-1){
+			return;
+		}
+		row += ((this.masks & BoundTableExt.HEADER_MASK) > 0) ? 1 : 0;
+		int col = DefaultCollectionFilter.indexOf(Arrays.asList(columns
+				), new CollectionFilter<Field>() {
+
+					@Override
+					public boolean allow(Field field) {
+						return field.getPropertyName().equals(fieldName);
+					}
+		});
+		col += ((this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0) ? 1 : 0;
+		editOverlayHandler.edit(new RowCol(row, col));
 	}
 
 	public List getSelectedObjects() {
@@ -100,8 +124,9 @@ public class FastROBoundTable extends BoundTableExt {
 	public void setSelectedObjects(List selectedObjects) {
 		this.selectedObjects = selectedObjects;
 	}
+
 	public void redrawRowForObject(Object o) {
-		List list = (List)getValue();
+		List list = (List) getValue();
 		Iterator itr = list.iterator();
 		int i = 0;
 		int startColumn = (this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0 ? 1
@@ -111,17 +136,19 @@ public class FastROBoundTable extends BoundTableExt {
 				break;
 			}
 		}
-		if(i==list.size()){
+		if (i == list.size()) {
 			return;
 		}
 		int row = calculateObjectToRowOffset(i);
-		reallyClear=true;
+		reallyClear = true;
 		for (int col = 0; col < this.columns.length; col++) {
-			Widget widget = (Widget) createCellWidget(col, (SourcesPropertyChangeEvents) o);
+			Widget widget = (Widget) createCellWidget(col,
+					(SourcesPropertyChangeEvents) o);
 			table.setWidget(row, col + startColumn, widget);
 		}
-		reallyClear=false;
+		reallyClear = false;
 	}
+
 	@Override
 	protected void addRow(final SourcesPropertyChangeEvents o) {
 		int row = table.getRowCount();
@@ -234,9 +261,14 @@ public class FastROBoundTable extends BoundTableExt {
 
 		public void onClick(ClickEvent event) {
 			RowCol rowCol = getRowCol(event);
+			edit(rowCol);
+		}
+
+		protected void edit(RowCol rowCol) {
 			if (rowCol.row == 0 || !editableColumns.get(rowCol.col)) {
 				return;
 			}
+			showEditable(rowCol);
 			Iterator itr = ((Collection) getValue()).iterator();
 			final SourcesPropertyChangeEvents target = (SourcesPropertyChangeEvents) CommonUtils
 					.get(itr, rowCol.row - 1);
@@ -245,25 +277,28 @@ public class FastROBoundTable extends BoundTableExt {
 				startColumn++;
 			}
 			Field col = columns[rowCol.col - startColumn];
-			final Field editableField = GwittirBridge.get().getField(
-					target.getClass(), col.getPropertyName(), true, false);
-			BoundWidgetProvider wp = editableField.getCellProvider();
+			final Field field = GwittirBridge.get().getField(target.getClass(),
+					col.getPropertyName(), true, false);
+			if (!checkEditable(target, field)) {
+				return;
+			}
+			BoundWidgetProvider wp = field.getCellProvider();
 			if (wp instanceof RequiresContextBindable) {
 				((RequiresContextBindable) wp).setBindable(target);
 			}
 			final BoundWidget editableWidget = wp.get();
 			Property p = GwittirBridge.get().getProperty(target,
-					col.getPropertyName());
+					field.getPropertyName());
 			try {
 				editableWidget.setModel(target);
 				action = new BasicBindingAction() {
 					@Override
 					protected void set0(BoundWidget widget) {
 						binding.getChildren().add(
-								new Binding(widget, "value", editableField
-										.getValidator(), editableField
-										.getFeedback(), target, editableField
-										.getPropertyName(), null, null));
+								new Binding(widget, "value", field
+										.getValidator(), field.getFeedback(),
+										target, field.getPropertyName(), null,
+										null));
 						binding.setLeft();
 					}
 				};
@@ -285,22 +320,28 @@ public class FastROBoundTable extends BoundTableExt {
 				GWT.log("Exception creating cell widget", e);
 			}
 		}
-
 		public void onMouseMove(MouseMoveEvent event) {
+			
 			RowCol rowCol = getRowCol(event);
 			if (lastRowCol != null && !lastRowCol.equals(rowCol)) {
-				styleDelta(lastRowCol, null, "editableOver");
-				lastRowCol = null;
+				showEditable(null);
 			}
 			if (editableColumns.get(rowCol.col)) {
-				lastRowCol = rowCol;
-				styleDelta(lastRowCol, "editableOver", null);
+				showEditable(rowCol);
 			}
 		}
 
-		public void onMouseOut(MouseOutEvent event) {
+		protected void showEditable(RowCol rowCol) {
 			styleDelta(lastRowCol, null, "editableOver");
 			lastRowCol = null;
+			if (rowCol != null) {
+				lastRowCol = rowCol;
+				styleDelta(lastRowCol, "editableOver", null);
+			} 
+		}
+
+		public void onMouseOut(MouseOutEvent event) {
+			showEditable(null);
 		}
 
 		public void onMouseOver(MouseOverEvent event) {
@@ -363,7 +404,7 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 	}
 
-	private  class ROFlexTable extends FlexTable implements
+	private class ROFlexTable extends FlexTable implements
 			HasMouseOverHandlers, HasMouseOutHandlers, HasMouseMoveHandlers {
 		public HandlerRegistration addMouseMoveHandler(MouseMoveHandler handler) {
 			return addDomHandler(handler, MouseMoveEvent.getType());
@@ -378,9 +419,9 @@ public class FastROBoundTable extends BoundTableExt {
 		}
 
 		protected boolean internalClearCell(Element td, boolean clearInnerHTML) {
-			if(!reallyClear){
-			return false;
-			}else{
+			if (!reallyClear) {
+				return false;
+			} else {
 				return super.internalClearCell(td, clearInnerHTML);
 			}
 		}
@@ -410,5 +451,33 @@ public class FastROBoundTable extends BoundTableExt {
 			}
 			return false;
 		}
+	}
+
+	public boolean checkEditable(SourcesPropertyChangeEvents target,
+			Field editableField) {
+		return checkEditableFilter == null
+				|| checkEditableFilter.allow(new CheckEditableTuple(target,
+						editableField));
+	}
+
+	public static class CheckEditableTuple {
+		public SourcesPropertyChangeEvents target;
+
+		public Field field;
+
+		public CheckEditableTuple(SourcesPropertyChangeEvents target,
+				Field editableField) {
+			this.target = target;
+			this.field = editableField;
+		}
+	}
+
+	public CollectionFilter<CheckEditableTuple> getCheckEditableFilter() {
+		return this.checkEditableFilter;
+	}
+
+	public void setCheckEditableFilter(
+			CollectionFilter<CheckEditableTuple> checkEditableFilter) {
+		this.checkEditableFilter = checkEditableFilter;
 	}
 }

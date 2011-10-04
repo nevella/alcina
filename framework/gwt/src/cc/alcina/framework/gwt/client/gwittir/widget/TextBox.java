@@ -24,6 +24,7 @@ import java.util.Comparator;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ChangeListenerCollection;
 import com.google.gwt.user.client.ui.ClickListener;
@@ -99,7 +100,7 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 
 				public void onKeyPress(Widget sender, char keyCode,
 						int modifiers) {
-					if (keyCode == KeyboardListener.KEY_ENTER) {
+					if (keyCode == KeyCodes.KEY_ENTER) {
 						setFocus(false);
 						setFocus(true);
 					}

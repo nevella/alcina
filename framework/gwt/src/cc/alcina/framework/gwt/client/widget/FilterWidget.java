@@ -56,8 +56,6 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 
 	private static final int OTHER_KEY_DOWN = 63233;
 
-	private long lastKeyMillis;
-
 	private Timer queueingFinishedTimer;
 
 	private VisualFilterable vf;
@@ -86,6 +84,8 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		holder.add(textBox);
 		initWidget(holder);
 		setHint(hint);
+		filterDelayMs = ClientLayerLocator.get().getGeneralProperties()
+				.getFilterDelayMs();
 	}
 
 	private String hint;
@@ -170,27 +170,33 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 			Event.getCurrentEvent().preventDefault();
 			return;
 		}
-		if (lastKeyMillis == 0) {
-			lastKeyMillis = System.currentTimeMillis();
-		}
+		lastQueueAddMillis = System.currentTimeMillis();
 		if (queueingFinishedTimer == null) {
 			queueingFinishedTimer = new Timer() {
-				long timerKeyMillis = lastKeyMillis;
+				long timerAddedMillis = lastQueueAddMillis;
 
 				@Override
 				public void run() {
-					if (timerKeyMillis == lastKeyMillis) {
-						filter();
-						this.cancel();
-						queueingFinishedTimer = null;
+					if (lastQueueAddMillis - timerAddedMillis == 0) {
+						commit();
 					}
-					timerKeyMillis = lastKeyMillis;
+					timerAddedMillis = lastQueueAddMillis;
 				}
 			};
-			filterDelayMs = ClientLayerLocator.get().getGeneralProperties()
-					.getFilterDelayMs();
-			queueingFinishedTimer.schedule(filterDelayMs);
+			queueingFinishedTimer.scheduleRepeating(filterDelayMs);
 		}
+	}
+
+	private long lastQueueAddMillis;
+	public boolean isQueueing(){
+		return queueingFinishedTimer!=null;
+	}
+	private void commit() {
+		if (queueingFinishedTimer != null) {
+			queueingFinishedTimer.cancel();
+		}
+		queueingFinishedTimer = null;
+		filter();
 	}
 
 	public void registerFilterable(VisualFilterable vf) {
@@ -209,7 +215,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	protected void onAttach() {
 		super.onAttach();
 		if (isFocusOnAttach()) {
-			//just in case this widget is inside a popup panel e.g. 
+			// just in case this widget is inside a popup panel e.g.
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				@Override
 				public void execute() {

@@ -69,7 +69,17 @@ public class DefaultCollectionFilter {
 		}
 		return result;
 	}
-
+	public static <V> int indexOf(Collection<? extends V> collection,
+			CollectionFilter<V> filter) {
+		int i=0;
+		for (V v : collection) {
+			if (filter.allow(v)) {
+				return i;
+			}
+			i++;
+		}
+		return -1;
+	}
 	public static <V> V singleNodeFilter(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
 		for (V v : collection) {

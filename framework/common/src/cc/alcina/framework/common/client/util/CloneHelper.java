@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -103,7 +104,7 @@ public class CloneHelper {
 	}
 
 	protected <T> T newInstance(T o) {
-		return (T) ClientReflector.get().newInstance(o.getClass(),0, 0);
+		return (T) ClientReflector.get().newInstance(o.getClass(), 0, 0);
 	}
 
 	protected boolean deepProperty(Object o, String propertyName) {
@@ -125,8 +126,8 @@ public class CloneHelper {
 	 * so invoking the mutator won't cause args to be reused (i.e. this to be
 	 * called)
 	 */
-	public void copyBeanProperties(Object source, Object target)
-			throws Exception {
+	public void copyBeanProperties(Object source, Object target,
+			Set<String> excludeProperties) throws Exception {
 		Property[] prs = GwittirBridge.get().getDescriptor(target)
 				.getProperties();
 		for (Property pr : prs) {
@@ -136,6 +137,10 @@ public class CloneHelper {
 			Object val = pr.getAccessorMethod().invoke(source,
 					CommonUtils.EMPTY_OBJECT_ARRAY);
 			if (val != null) {
+				if (excludeProperties != null
+						&& excludeProperties.contains(pr.getName())) {
+					continue;
+				}
 				if (val instanceof Collection) {
 					val = CommonUtils.shallowCollectionClone((Collection) val);
 				}
@@ -148,7 +153,7 @@ public class CloneHelper {
 	public <T> T shallowishBeanClone(T o) {
 		try {
 			T ret = newInstance(o);
-			copyBeanProperties(o, ret);
+			copyBeanProperties(o, ret, null);
 			return ret;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException("Unable to clone: "

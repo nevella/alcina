@@ -619,6 +619,16 @@ public class CommonUtils {
 		}
 		return null;
 	}
+	public static int indexOf(Iterator iterator, Object obj) {
+		int i=0;
+		while (iterator.hasNext()) {
+			if(obj==iterator.next()){
+				return i;
+			}
+			i++;
+		}
+		return -1;
+	}
 
 	public static void addIfNotNull(List l, Object o) {
 		if (o != null) {

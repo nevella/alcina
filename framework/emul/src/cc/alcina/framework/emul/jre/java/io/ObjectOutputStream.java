@@ -24,4 +24,7 @@ public class ObjectOutputStream
 	public void writeUTF(String s){
 		throw new UnsupportedOperationException();
 	}
+	public void writeInt(int i){
+		throw new UnsupportedOperationException();
+	}
 }

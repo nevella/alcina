@@ -32,7 +32,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		MultilineWidget {
-	private static final int MAX_SINGLE_LINE_CHARS = 42;
+	public static final int MAX_SINGLE_LINE_CHARS = 42;
 
 	public static final String VALUE_PROPERTY_NAME = "value";
 
@@ -141,9 +141,8 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		search.setRenderer(renderer);
 		search.setHint(getHint());
 		customiseLeftWidget();
-		Map<String, List> tmpSearchMap = new HashMap<String, List>();
-		tmpSearchMap.put("", new ArrayList());
-		searchWidget = search.createWidget(tmpSearchMap, this,
+		
+		searchWidget = search.createWidget(SelectWithSearch.emptyItems(), this,
 				MAX_SINGLE_LINE_CHARS);
 		search.getScroller().setHeight("");
 		search.getScroller().setStyleName("scroller");
@@ -153,9 +152,7 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		results.setPopdown(false);
 		results.setHolderHeight("");
 		results.setRenderer(renderer);
-		Map<String, List> resultMap = new HashMap<String, List>();
-		resultMap.put("", new ArrayList());
-		resultsWidget = results.createWidget(resultMap, resultsClickListener,
+		resultsWidget = results.createWidget(SelectWithSearch.emptyItems(), resultsClickListener,
 				MAX_SINGLE_LINE_CHARS);
 		if (isMultipleSelect()) {
 			results.getFilter().addStyleName("invisible");

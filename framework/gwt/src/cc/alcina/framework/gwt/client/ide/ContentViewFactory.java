@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client.ide;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import cc.alcina.framework.common.client.CommonLocator;
@@ -489,6 +490,9 @@ public class ContentViewFactory {
 			super.onAttach();
 			beautify();
 		}
+
+
+
 	}
 
 	public static class PaneWrapperWithObjects extends FlowPanel implements

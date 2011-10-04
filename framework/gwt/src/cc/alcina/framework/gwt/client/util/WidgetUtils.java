@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.widget.HasComplexPanel;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
@@ -125,6 +126,9 @@ public class WidgetUtils {
 	public static ComplexPanel complexChildOrSelf(Widget w) {
 		if (w instanceof ComplexPanel) {
 			return (ComplexPanel) w;
+		}
+		if (w instanceof HasComplexPanel) {
+			return ((HasComplexPanel) w).getComplexPanel();
 		}
 		if (w instanceof SimplePanel) {
 			return complexChildOrSelf(((SimplePanel) w).getWidget());
