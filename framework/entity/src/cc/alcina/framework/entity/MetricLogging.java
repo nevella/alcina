@@ -165,6 +165,9 @@ public class MetricLogging {
 		if (!ticksSum.containsKey(key)) {
 			ticksSum.put(key, 0L);
 		}
+		if(!ticks.containsKey(key)){
+			ticks.put(key, cn);
+		}
 		ticksSum.put(key, ticksSum.get(key) + (cn - ticks.get(key)));
 	}
 
