@@ -18,6 +18,10 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
@@ -41,7 +45,7 @@ import com.google.gwt.user.client.ui.TextBox;
  * 
  */
 public class FilterWidget extends Composite implements KeyUpHandler,
-		KeyDownHandler {
+		KeyDownHandler, FocusHandler, BlurHandler {
 	private static boolean isArrowDown(int code) {
 		switch (code) {
 		case OTHER_KEY_DOWN:
@@ -70,6 +74,8 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 
 	private String lastFilteredText = "";
 
+	private String lastQueuedText = "";
+
 	public FilterWidget() {
 		this(null);
 	}
@@ -80,6 +86,8 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		textBox.setStyleName("alcina-Filter");
 		textBox.addKeyUpHandler(this);
 		textBox.addKeyDownHandler(this);
+		textBox.addFocusHandler(this);
+		textBox.addBlurHandler(this);
 		holder.setStyleName("alcina-FilterHolder");
 		holder.add(textBox);
 		initWidget(holder);
@@ -170,7 +178,12 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 			Event.getCurrentEvent().preventDefault();
 			return;
 		}
+		queueCommit();
+	}
+
+	protected void queueCommit() {
 		lastQueueAddMillis = System.currentTimeMillis();
+		lastQueuedText = getTextBox().getText();
 		if (queueingFinishedTimer == null) {
 			queueingFinishedTimer = new Timer() {
 				long timerAddedMillis = lastQueueAddMillis;
@@ -188,9 +201,11 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	}
 
 	private long lastQueueAddMillis;
-	public boolean isQueueing(){
-		return queueingFinishedTimer!=null;
+
+	public boolean isQueueing() {
+		return queueingFinishedTimer != null;
 	}
+
 	private void commit() {
 		if (queueingFinishedTimer != null) {
 			queueingFinishedTimer.cancel();
@@ -225,6 +240,15 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		}
 	}
 
+	@Override
+	protected void onDetach() {
+		if (queueingFinishedTimer != null) {
+			queueingFinishedTimer.cancel();
+		}
+		changeListenerTimer.cancel();
+		super.onDetach();
+	}
+
 	public void clear() {
 		getTextBox().setText("");
 	}
@@ -235,5 +259,24 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 
 	public void setFilterDelayMs(int filterDelayMs) {
 		this.filterDelayMs = filterDelayMs;
+	}
+
+	private Timer changeListenerTimer = new Timer() {
+		@Override
+		public void run() {
+			if (!getTextBox().getText().equals(lastQueuedText)) {
+				queueCommit();
+			}
+		}
+	};
+
+	@Override
+	public void onFocus(FocusEvent event) {
+		changeListenerTimer.scheduleRepeating(100);
+	}
+
+	@Override
+	public void onBlur(BlurEvent event) {
+		changeListenerTimer.cancel();
 	}
 }

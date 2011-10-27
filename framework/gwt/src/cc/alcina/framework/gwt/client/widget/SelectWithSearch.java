@@ -655,7 +655,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	// TODO:hcdim
-	void checkShowPopup() {
+	protected void checkShowPopup() {
 		if ((this.relativePopupPanel == null || this.relativePopupPanel
 				.getParent() == null)
 				&& !closingOnClick
