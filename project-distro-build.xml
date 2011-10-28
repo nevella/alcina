@@ -57,6 +57,10 @@
 		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
 		</copy>
 	</target>
+	<target name="deploy-only" description="Deploy the ear to the j2ee server" depends="make-ear">
+		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
+		</copy>
+	</target>
 	<target name="undeploy" description="Undeploy ear from server">
 		<delete file="${deploy.j2ee-server.deploy.dir}/${ant.project.name}.ear" />
 		<delete dir="${deploy.j2ee-server.deploy.dir}/${ant.project.name}.ear" />
