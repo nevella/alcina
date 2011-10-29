@@ -21,7 +21,7 @@ public class CountingMap<K> extends HashMap<K, Integer> {
 			put(key, get(key) + i);
 		}
 	}
-	public int size(K key) {
+	public int countFor(K key) {
 		if (!containsKey(key)) {
 			return 0;
 		}
