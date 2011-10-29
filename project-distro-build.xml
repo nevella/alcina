@@ -57,7 +57,7 @@
 		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
 		</copy>
 	</target>
-	<target name="deploy-only" description="Deploy the ear to the j2ee server" depends="make-ear">
+	<target name="deploy-only" description="Deploy the ear to the j2ee server">
 		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
 		</copy>
 	</target>
