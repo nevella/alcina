@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
@@ -217,5 +218,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	public void destroy() {
 		super.destroy();
 		CommonRemoteServiceServletSupport.get().appShutdown();
+		GlobalTopicPublisher.get().appShutdown();
 	}
 }

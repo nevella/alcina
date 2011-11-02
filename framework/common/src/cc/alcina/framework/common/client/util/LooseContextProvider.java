@@ -25,7 +25,6 @@ public abstract class LooseContextProvider {
 	}
 
 	private LooseContext context;
-
 	public static LooseContext getContext() {
 		return get().getContext0();
 	}

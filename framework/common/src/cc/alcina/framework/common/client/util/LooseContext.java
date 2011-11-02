@@ -55,7 +55,7 @@ public class LooseContext {
 		TopicPublisher publisher = ensureTopicPublisher();
 		for (TopicListener listener : addedListeners.keySet()) {
 			for (String key : addedListeners.get(listener)) {
-				publisher.removeListener(key, listener);
+				publisher.removeTopicListener(key, listener);
 			}
 		}
 		properties = stack.pop();
@@ -83,14 +83,14 @@ public class LooseContext {
 
 	public void removeTopicListener(String key, TopicListener listener) {
 		TopicPublisher publisher = ensureTopicPublisher();
-		publisher.removeListener(key, listener);
+		publisher.removeTopicListener(key, listener);
 		addedListeners.remove(listener, key);
 	}
 
 	public void addTopicListener(String key, TopicListener listener) {
 		addedListeners.add(listener, key);
 		TopicPublisher publisher = ensureTopicPublisher();
-		publisher.addListener(key, listener);
+		publisher.addTopicListener(key, listener);
 	}
 
 	private TopicPublisher ensureTopicPublisher() {
@@ -102,7 +102,7 @@ public class LooseContext {
 
 	public void publishTopic(String key,
 			Object message) {
-		ensureTopicPublisher().publish(key, message);
+		ensureTopicPublisher().publishTopic(key, message);
 		
 	}
 

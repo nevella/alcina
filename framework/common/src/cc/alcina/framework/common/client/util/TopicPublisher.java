@@ -11,18 +11,18 @@ public class TopicPublisher {
 	private MutablePropertyChangeSupport support = new MutablePropertyChangeSupport(
 			this);
 
-	public void publish(String key, Object message) {
+	public void publishTopic(String key, Object message) {
 		support.firePropertyChange(key, null, message);
 	}
 
 	private Map<TopicListener, TopicListenerAdapter> lookup = new HashMap<TopicPublisher.TopicListener, TopicPublisher.TopicListenerAdapter>();
 
-	public void addListener(String key,TopicListener listener) {
+	public void addTopicListener(String key,TopicListener listener) {
 		TopicListenerAdapter adapter = new TopicListenerAdapter(listener);
 		support.addPropertyChangeListener(key,adapter);
 		lookup.put(listener,adapter);
 	}
-	public void removeListener(String key,TopicListener listener) {
+	public void removeTopicListener(String key,TopicListener listener) {
 		TopicListenerAdapter adapter = lookup.get(listener);
 		support.removePropertyChangeListener(key,adapter);
 	}
@@ -50,7 +50,23 @@ public class TopicPublisher {
 			listener.topicPublished(evt.getPropertyName(), evt.getNewValue());
 		}
 	}
-
+	public static class GlobalTopicPublisher extends TopicPublisher{
+		private GlobalTopicPublisher() {
+			super();
+		}
+		
+		private static GlobalTopicPublisher theInstance;
+		
+		public static GlobalTopicPublisher get() {
+			if (theInstance == null) {
+				theInstance = new GlobalTopicPublisher();
+			}
+			return theInstance;
+		}
+		public void appShutdown(){
+			theInstance = null;
+		}
+	}
 	public interface TopicListener<T> {
 		void topicPublished(String key, T message);
 	}
