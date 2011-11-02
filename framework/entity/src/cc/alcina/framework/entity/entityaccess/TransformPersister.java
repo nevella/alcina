@@ -236,6 +236,14 @@ public class TransformPersister {
 		}
 	}
 
+	long determineExceptionDetailPassStartTime = 0;
+
+	private int determinedExceptionCount;
+
+	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS = 20 * 1000;
+
+	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS = 40 * 1000;
+
 	public DomainTransformLayerWrapper transformInPersistenceContext(
 			TransformPersistenceToken token,
 			CommonPersistenceBase commonPersistenceBase,
@@ -300,7 +308,7 @@ public class TransformPersister {
 										.getRequestId(), lastTransformId));
 			}
 			int transformCount = 0;
-			for (DomainTransformRequest dtr : dtrs) {
+			loop_dtrs: for (DomainTransformRequest dtr : dtrs) {
 				List<DomainTransformEvent> items = dtr.getEvents();
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
 				if (token.getPass() == Pass.TRY_COMMIT) {
@@ -347,6 +355,11 @@ public class TransformPersister {
 						}
 					} else if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
 						try {
+							if (System.currentTimeMillis()
+									- determineExceptionDetailPassStartTime > (determinedExceptionCount == 0 ? MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS
+									: MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS)) {
+								break loop_dtrs;
+							}
 							tm.fireDomainTransform(event);
 							int dontFlushTilNthTransform = token
 									.getDontFlushTilNthTransform();
@@ -356,6 +369,7 @@ public class TransformPersister {
 							}
 							transformCount++;
 						} catch (Exception e) {
+							determinedExceptionCount++;
 							DomainTransformException transformException = DomainTransformException
 									.wrap(e, event);
 							EntityLayerLocator.get().jpaImplementation()
@@ -478,6 +492,12 @@ public class TransformPersister {
 			locatorMap.putAll(locatorMapClone);
 			if (token.getPass() == Pass.TRY_COMMIT) {
 				token.setPass(Pass.DETERMINE_EXCEPTION_DETAIL);
+				determineExceptionDetailPassStartTime = System
+						.currentTimeMillis();
+				EntityLayerLocator
+						.get()
+						.getMetricLogger()
+						.warn("TransformPersister: determining exception detail");
 			} else {
 				token.setPass(Pass.FAIL);
 			}
