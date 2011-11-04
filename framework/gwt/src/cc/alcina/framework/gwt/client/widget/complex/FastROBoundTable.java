@@ -91,7 +91,7 @@ public class FastROBoundTable extends BoundTableExt {
 	 */
 	public void editOverlay(Class tableObjectClass) {
 		ROFlexTable t = (ROFlexTable) table;
-		 editOverlayHandler = new EditOverlayHandler(tableObjectClass);
+		editOverlayHandler = new EditOverlayHandler(tableObjectClass);
 		t.addClickHandler(editOverlayHandler);
 		t.addMouseOutHandler(editOverlayHandler);
 		t.addMouseMoveHandler(editOverlayHandler);
@@ -100,19 +100,19 @@ public class FastROBoundTable extends BoundTableExt {
 	}
 
 	public void edit(Object target, final String fieldName) {
-		int row = CommonUtils.indexOf(((Collection)getValue()).iterator(), target);
-		if(row==-1){
+		int row = CommonUtils.indexOf(((Collection) getValue()).iterator(),
+				target);
+		if (row == -1) {
 			return;
 		}
 		row += ((this.masks & BoundTableExt.HEADER_MASK) > 0) ? 1 : 0;
-		int col = DefaultCollectionFilter.indexOf(Arrays.asList(columns
-				), new CollectionFilter<Field>() {
-
+		int col = DefaultCollectionFilter.indexOf(Arrays.asList(columns),
+				new CollectionFilter<Field>() {
 					@Override
 					public boolean allow(Field field) {
 						return field.getPropertyName().equals(fieldName);
 					}
-		});
+				});
 		col += ((this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0) ? 1 : 0;
 		editOverlayHandler.edit(new RowCol(row, col));
 	}
@@ -147,6 +147,26 @@ public class FastROBoundTable extends BoundTableExt {
 			table.setWidget(row, col + startColumn, widget);
 		}
 		reallyClear = false;
+	}
+
+	public void removeRow(Object o) {
+		List list = (List) getValue();
+		Iterator itr = list.iterator();
+		int i = 0;
+		int startColumn = (this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0 ? 1
+				: 0;
+		for (; itr.hasNext(); i++) {
+			if (itr.next() == o) {
+				break;
+			}
+		}
+		if (i == list.size()) {
+			return;
+		}
+		int row = calculateObjectToRowOffset(i);
+		table.removeRow(i + ((this.masks & BoundTableExt.HEADER_MASK) > 0 ? 1
+				: 0));
+		((Collection) getValue()).remove(o);
 	}
 
 	@Override
@@ -320,8 +340,8 @@ public class FastROBoundTable extends BoundTableExt {
 				GWT.log("Exception creating cell widget", e);
 			}
 		}
+
 		public void onMouseMove(MouseMoveEvent event) {
-			
 			RowCol rowCol = getRowCol(event);
 			if (lastRowCol != null && !lastRowCol.equals(rowCol)) {
 				showEditable(null);
@@ -337,7 +357,7 @@ public class FastROBoundTable extends BoundTableExt {
 			if (rowCol != null) {
 				lastRowCol = rowCol;
 				styleDelta(lastRowCol, "editableOver", null);
-			} 
+			}
 		}
 
 		public void onMouseOut(MouseOutEvent event) {

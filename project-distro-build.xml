@@ -8,12 +8,10 @@
 		<antcall target="prepare-war">
 		</antcall>
 		<war destfile="${project.dist.dir}/${ant.project.name}.war" manifest="${project.web-inf.dir}/MANIFEST.MF" webxml="${project.web-inf.dir}/web.xml">
-			<!--<fileset dir="${project.web-inf.dir}">
-				<exclude name="WEB-INF/web.xml" />
-			</fileset>-->
-			<!-- dump this too-->
-			<!--to change in a sec-->
-			
+			<!--<fileset dir="${project.web-inf.dir}"> <exclude name="WEB-INF/web.xml" /> </fileset> -->
+			<!-- dump this too -->
+			<!--to change in a sec -->
+
 			<zipfileset dir="${project.gwt.build.dir}" prefix="">
 				<include name="**/*" />
 			</zipfileset>
@@ -86,7 +84,7 @@
 		</copy>
 	</target>
 	<target name="hot-deploy" description="WARs the Task" depends="build-dependencies,compile">
-		<!--the ear-->
+		<!--the ear -->
 		<mkdir dir="${j2ee-server.unear.target}" />
 		<mkdir dir="${j2ee-server.unear.target}${j2ee-lib.dir}" />
 		<copy todir="${j2ee-server.unear.target}${j2ee-lib.dir}" preservelastmodified="true">
@@ -98,7 +96,7 @@
 		</copy>
 		<copy todir="${j2ee-server.unear.target}" preservelastmodified="true">
 			<fileset refid="project.ear.entity-lib" />
-			
+
 		</copy>
 		<copy todir="${j2ee-server.unear.target}/META-INF" preservelastmodified="true">
 			<fileset dir="${project.ear-inf.dir}/META-INF">
@@ -106,11 +104,11 @@
 			<fileset file="${project.ear-inf.dir}/application.xml">
 			</fileset>
 		</copy>
-		<!--prepare gwt/www-->
+		<!--prepare gwt/www -->
 		<antcall target="prepare-war">
 		</antcall>
 
-		<!--the war-->
+		<!--the war -->
 		<mkdir dir="${j2ee-server.unwar.target}" />
 		<copy todir="${j2ee-server.unwar.target}" preservelastmodified="true">
 			<fileset dir="${project.gwt.build.dir}">
@@ -143,7 +141,14 @@
 
 		</copy>
 	</target>
-
+	<target name="hot-deploy-static" description="deploy static client files" depends="prepare-war">
+		<mkdir dir="${j2ee-server.unwar.target}" />
+		<copy todir="${j2ee-server.unwar.target}" preservelastmodified="true">
+			<fileset dir="${project.gwt.build.dir}">
+				<include name="**/*" />
+			</fileset>
+		</copy>
+	</target>
 	<target name="hot-deploy-restart" description="xx" depends="hot-deploy">
 		<touch file="${j2ee-server.unear.target}/META-INF/application.xml" />
 		<touch file="${j2ee-server.unear.target}/../${j2ee-server.unear.name}.dodeploy" />
@@ -159,14 +164,14 @@
 		<copy file="${project.gwt.module.file}.copy" tofile="${project.gwt.module.file}" />
 		<delete file="${project.gwt.module.file}.copy" />
 	</target>
-	<!-- needed so gwt can see the compiled annotations, if any, from client source-->
+	<!-- needed so gwt can see the compiled annotations, if any, from client source -->
 	<target name="compile-client" depends="compile">
 		<mkdir dir="${project.client.bin.dir}" />
 		<javac debug="on" srcdir="${project.client.src.dir}" destdir="${project.client.bin.dir}">
 			<classpath>
 				<path refid="project.classpath" />
 
-				<!-- because of being fancy with entity layer remote interfaces, make sure we can see 'em-->
+				<!-- because of being fancy with entity layer remote interfaces, make sure we can see 'em -->
 				<pathelement path="${project.build.dir}" />
 				<fileset dir="${project.client.lib.dir}">
 					<include name="*.jar" />
@@ -206,7 +211,7 @@
 			<jvmarg value="-Xmx600M" />
 			<arg value="-startupUrl" />
 			<arg value="${project.gwt.dev.startup.url}" />
-			<!--<arg line="-logLevel SPAM" />-->
+			<!--<arg line="-logLevel SPAM" /> -->
 			<arg value="${project.gwt.module.name}" />
 		</java>
 	</target>
