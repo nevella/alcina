@@ -39,7 +39,7 @@
 				<exclude name="**/*.class" />
 			</fileset>
 		</copy>
-		<jar destfile="${project.dist.dir}/${ant.project.name}.jar">
+		<jar destfile="${project.dist.dir}/${ant.project.name}.jar" manifest="${project.meta-inf.dir}/MANIFEST.MF">
 			<metainf dir="${project.meta-inf.dir}" />
 			<fileset dir="${project.build.dir}">
 				<include name="**/*.*" />

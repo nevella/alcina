@@ -65,6 +65,9 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 			hash = Long.valueOf(getId()).hashCode()
 					^ Long.valueOf(getLocalId()).hashCode()
 					^ getClass().getName().hashCode();
+			if(hash==0){
+				hash=-1;
+			}
 		}
 		return hash;
 	}
