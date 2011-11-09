@@ -112,6 +112,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	private boolean listenToFoundObjects;
 
+	private Set<SourcesPropertyChangeEvents> listeningTo=new HashSet<SourcesPropertyChangeEvents>();
+
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws Exception {
 		List<ObjectCacheItemResult> result = new ArrayList<ObjectCacheItemResult>();
@@ -475,6 +477,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		modifiedObjects = new HashSet<HasIdAndLocalId>();
 		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
+		for(SourcesPropertyChangeEvents spce:listeningTo){
+			spce.removePropertyChangeListener(this);
+		}
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
 		for (DomainTransformListener listener : threadLocalListeners) {
@@ -582,6 +587,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	private void listenTo(SourcesPropertyChangeEvents spce) {
+		listeningTo.add(spce);
 		spce.addPropertyChangeListener(this);
 	}
 

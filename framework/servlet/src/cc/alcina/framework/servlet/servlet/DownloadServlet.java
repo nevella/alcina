@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet.servlet;
 
 import java.io.BufferedInputStream;
@@ -30,13 +29,11 @@ import javax.servlet.http.HttpServletResponse;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class DownloadServlet extends HttpServlet {
+public class DownloadServlet extends HttpServlet {
 	private static Map<String, DownloadItem> items = new HashMap<String, DownloadItem>();
 
 	public static String add(DownloadItem item) {
@@ -44,13 +41,15 @@ import cc.alcina.framework.entity.SEUtilities;
 		items.put(id, item);
 		return id;
 	}
-	public File getFile(String id){
-		 DownloadItem item = items.get(id);
-		 if (item!=null){
-			 return new File(item.tmpFileName);
-		 }
-		 return null;
+
+	public File getFile(String id) {
+		DownloadItem item = items.get(id);
+		if (item != null) {
+			return new File(item.tmpFileName);
+		}
+		return null;
 	}
+
 	public void doGet(HttpServletRequest request, HttpServletResponse res) {
 		doPost(request, res);
 	}
@@ -65,12 +64,14 @@ import cc.alcina.framework.entity.SEUtilities;
 		}
 		System.out.println("Download request served: " + id);
 		DownloadItem item = items.get(id);
-		res.setContentType(item.mimeType);
 		final File f = new File(item.tmpFileName);
-		res.setContentLength((int) f.length());
-		if (item.fileName != null) {
-			res.setHeader("Content-Disposition", "attachment; filename=\""
-					+ item.fileName + '"');
+		if (request.getParameter("noheader") == null) {
+			res.setContentType(item.mimeType);
+			res.setContentLength((int) f.length());
+			if (item.fileName != null) {
+				res.setHeader("Content-Disposition", "attachment; filename=\""
+						+ item.fileName + '"');
+			}
 		}
 		try {
 			ResourceUtilities.writeStreamToStream(new BufferedInputStream(

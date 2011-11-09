@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.dialog;
-
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -33,11 +31,10 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class OkCancelDialogBox extends GlassDialogBox {
+public class OkCancelDialogBox extends GlassDialogBox {
 	public static final String CANCEL_ACTION = "cancel";
 
 	public static final String OK_ACTION = "ok";
@@ -48,7 +45,9 @@ import com.totsp.gwittir.client.beans.Binding;
 
 	protected final Widget widget;
 
-	protected  PermissibleActionListener vetoableActionListener;
+	protected PermissibleActionListener vetoableActionListener;
+
+	private HorizontalPanel buttonsPanel;
 
 	public OkCancelDialogBox(String title, Widget widget,
 			final PermissibleActionListener l) {
@@ -62,12 +61,14 @@ import com.totsp.gwittir.client.beans.Binding;
 	protected boolean showAnimated() {
 		return true;
 	}
-	//makes sure richtextareas get a focuslost()
-	public void focusOK(){
+
+	// makes sure richtextareas get a focuslost()
+	public void focusOK() {
 		okButton.setFocus(true);
 	}
+
 	public OkCancelDialogBox(String title, Widget widget,
-			 PermissibleActionListener listener,
+			PermissibleActionListener listener,
 			HorizontalAlignmentConstant widgetAlign) {
 		this.widget = widget;
 		this.vetoableActionListener = listener;
@@ -76,14 +77,15 @@ import com.totsp.gwittir.client.beans.Binding;
 		VerticalPanel vp = new VerticalPanel();
 		vp.add(widget);
 		vp.setCellHorizontalAlignment(widget, widgetAlign);
-		HorizontalPanel hp = new HorizontalPanel();
+		buttonsPanel = new HorizontalPanel();
 		cancelButton = new Button("Cancel");
 		cancelButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				PermissibleAction action = new PermissibleAction();
 				action.setActionName(CANCEL_ACTION);
 				OkCancelDialogBox.this.hide();
-				vetoableActionListener.vetoableAction(new PermissibleActionEvent(this, action));
+				vetoableActionListener
+						.vetoableAction(new PermissibleActionEvent(this, action));
 			}
 		});
 		okButton = new Button(getOKButtonName());
@@ -92,20 +94,20 @@ import com.totsp.gwittir.client.beans.Binding;
 				onOkButtonClicked();
 			}
 		});
-		hp.add(okButton);
-		hp.setCellHorizontalAlignment(okButton,
+		buttonsPanel
+				.setHorizontalAlignment(HasHorizontalAlignment.ALIGN_CENTER);
+		buttonsPanel.setSpacing(8);
+		buttonsPanel.add(okButton);
+		buttonsPanel.add(cancelButton);
+		vp.add(buttonsPanel);
+		vp.setCellHorizontalAlignment(buttonsPanel,
 				HasHorizontalAlignment.ALIGN_CENTER);
-		hp.add(cancelButton);
-		hp.setCellHorizontalAlignment(cancelButton,
-				HasHorizontalAlignment.ALIGN_CENTER);
-		hp.setSpacing(8);
-		vp.add(hp);
-		vp.setCellHorizontalAlignment(hp, HasHorizontalAlignment.ALIGN_CENTER);
 		setWidget(vp);
 		adjustDisplay();
 		center();
 	}
-	protected void onOkButtonClicked(){
+
+	protected void onOkButtonClicked() {
 		if (!checkValid()) {
 			return;
 		}
@@ -114,9 +116,11 @@ import com.totsp.gwittir.client.beans.Binding;
 		action.setActionName(OK_ACTION);
 		OkCancelDialogBox.this.hide();
 		if (vetoableActionListener != null) {
-			vetoableActionListener.vetoableAction(new PermissibleActionEvent(this, action));
+			vetoableActionListener.vetoableAction(new PermissibleActionEvent(
+					this, action));
 		}
 	}
+
 	// for subclasses
 	protected void adjustDisplay() {
 	}
@@ -172,8 +176,8 @@ import com.totsp.gwittir.client.beans.Binding;
 				return true;
 			}
 			GwittirUtils.refreshEmptyTextBoxes(binding);
-			ClientLayerLocator.get().notifications().showWarning(
-					"Please correct the problems in the form");
+			ClientLayerLocator.get().notifications()
+					.showWarning("Please correct the problems in the form");
 			return false;
 		}
 
@@ -181,5 +185,9 @@ import com.totsp.gwittir.client.beans.Binding;
 		protected String getOKButtonName() {
 			return "Save";
 		}
+	}
+
+	public HorizontalPanel getButtonsPanel() {
+		return this.buttonsPanel;
 	}
 }
