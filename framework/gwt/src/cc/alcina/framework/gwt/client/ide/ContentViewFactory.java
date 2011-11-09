@@ -38,6 +38,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
@@ -86,11 +88,22 @@ import com.totsp.gwittir.client.validator.Validator;
  * @author Nick Reddel
  */
 public class ContentViewFactory {
+	public static final String CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS = ContentViewFactory.class
+			+ "::CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS";
+
 	private boolean noButtons;
 
 	private boolean cancelButton;
 
 	private boolean noCaption;
+
+	public static void registerAdditionalProvisionalObjects(Object o) {
+		if (o == null) {
+			return;
+		}
+		LooseContextProvider.getContext().set(
+				CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS, o);
+	}
 
 	public ActionTableHolder createActionTable(Collection beans,
 			Class beanClass, Converter converter,
@@ -107,8 +120,7 @@ public class ContentViewFactory {
 		Field[] fields = GwittirBridge.get()
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
 						false, true);
-		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK
-				;
+		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK;
 		if (withObjectActions) {
 			mask |= BoundTableExt.ROW_HANDLE_MASK
 					| BoundTableExt.HANDLES_AS_CHECKBOXES;
@@ -133,6 +145,13 @@ public class ContentViewFactory {
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
+		return createBeanView(bean, editable, actionListener, autoSave,
+				doNotClone, null);
+	}
+
+	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
+			PermissibleActionListener actionListener, boolean autoSave,
+			boolean doNotClone, Object additionalProvisional) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				bean.getClass());
 		boolean cloned = false;
@@ -176,7 +195,11 @@ public class ContentViewFactory {
 				HasIdAndLocalId hili = (HasIdAndLocalId) bean;
 				provisional = provisional || (hili.getId() == 0);
 			}
-			cp.setProvisionalObjects(provisional);
+			Collection additional = CommonUtils
+					.wrapInCollection(additionalProvisional != null ? additionalProvisional
+							: LooseContextProvider.getContext().get(
+									CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS));
+			cp.setProvisionalObjects(provisional || additional != null);
 			cp.setInitialObjects(list);
 			// this could be more elegant - need to register this before
 			// "prepareforedit.."
@@ -187,6 +210,9 @@ public class ContentViewFactory {
 				supportingObjects = ClientTransformManager.cast()
 						.prepareObject((HasIdAndLocalId) bean, autoSave, false,
 								true);
+			}
+			if (additional != null) {
+				supportingObjects.addAll(additional);
 			}
 			supportingObjects.addAll(list);
 			cp.setObjects(supportingObjects);
@@ -274,6 +300,7 @@ public class ContentViewFactory {
 		}
 		return cp;
 	}
+
 	public BoundTableExt createTable(Collection beans, boolean editable,
 			int tableMask, Object templateBean) {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
@@ -283,7 +310,7 @@ public class ContentViewFactory {
 		int mask = tableMask | BoundTableExt.HEADER_MASK
 				| BoundTableExt.SORT_MASK;
 		CollectionDataProvider cdp = new CollectionDataProvider(beans);
-		if((mask&BoundTableExt.NO_NAV_ROW_MASK)!=0){
+		if ((mask & BoundTableExt.NO_NAV_ROW_MASK) != 0) {
 			cdp.showAllObjectsInCollection();
 		}
 		BoundTableExt table = editable ? new BoundTableExt(mask, factory,
@@ -411,12 +438,9 @@ public class ContentViewFactory {
 		public NiceWidthBoundTable(int mask, BoundWidgetTypeFactory factory,
 				Field[] fields, DataProvider provider) {
 			super(mask | BoundTableExt.NO_SELECT_CELL_MASK
-					| BoundTableExt.NO_SELECT_COL_MASK
-					, factory, fields,
+					| BoundTableExt.NO_SELECT_COL_MASK, factory, fields,
 					provider);
 		}
-
-		
 
 		@Override
 		public void init(Collection c, int numberOfChunks) {
@@ -490,9 +514,6 @@ public class ContentViewFactory {
 			super.onAttach();
 			beautify();
 		}
-
-
-
 	}
 
 	public static class PaneWrapperWithObjects extends FlowPanel implements
