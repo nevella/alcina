@@ -21,11 +21,13 @@
 	</path>
 	<patternset id="project.compile.filter.sources">
 		<include name="**/*.java" />
-	</patternset> 
-		<patternset id="project.jar.filter.exclude">
+	</patternset>
+	<patternset id="project.jar.filter.exclude">
+		<!--ant weirdness - why is this compiled??-->
+		<exclude name="com/totsp/gwittir/**" />
 		<exclude name="cc/alcina/template/cs/remote/**" />
 	</patternset>
-	
+
 	<import file="${alcina.home}/project-build.xml" />
 
 </project>
