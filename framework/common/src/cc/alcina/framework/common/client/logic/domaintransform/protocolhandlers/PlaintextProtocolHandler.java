@@ -27,14 +27,14 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\nDomainTransformEvent:";
 
-	private static Class classFromName(String className) {
-		if (className == null || className.equals("null")) {
-			return null;
-		}
-		return CommonLocator.get().classLookup().getClassForName(className);
+	public static String escape(String newStringValue) {
+		return newStringValue == null
+				|| (newStringValue.indexOf("\n") == -1 && newStringValue
+						.indexOf("\\") != -1) ? newStringValue : newStringValue
+				.replace("\\", "\\\\").replace("\n", "\\n");
 	}
 
-	private static String unescape(String s) {
+	public static String unescape(String s) {
 		int idx = 0, x = 0;
 		StringBuffer sb = new StringBuffer();
 		while ((idx = s.indexOf("\\", x)) != -1) {
@@ -54,26 +54,30 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		return sb.toString();
 	}
 
+	private static Class classFromName(String className) {
+		if (className == null || className.equals("null")) {
+			return null;
+		}
+		return CommonLocator.get().classLookup().getClassForName(className);
+	}
+
+	private SimpleStringParser asyncParser = null;
+
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
-		String ns = domainTransformEvent.getNewStringValue() == null
-				|| (domainTransformEvent.getNewStringValue().indexOf("\n") == -1 && domainTransformEvent
-						.getNewStringValue().indexOf("\\") != -1) ? domainTransformEvent
-				.getNewStringValue()
-				: domainTransformEvent.getNewStringValue()
-						.replace("\\", "\\\\").replace("\n", "\\n");
+		String newStringValue = domainTransformEvent.getNewStringValue();
+		String ns = escape(newStringValue);
 		sb.append(getDomainTransformEventMarker());
 		String newlineTab = "\n\t";
 		sb.append(newlineTab);
 		sb.append(SRC);
 		sb.append(domainTransformEvent.getObjectClass().getName());
 		sb.append(",");
-		sb.append(SimpleStringParser
-				.toString(domainTransformEvent.getObjectId()));
+		sb.append(SimpleStringParser.toString(domainTransformEvent
+				.getObjectId()));
 		sb.append(",");
-		sb.append(SimpleStringParser
-				.toString(domainTransformEvent
-						.getObjectLocalId()));
+		sb.append(SimpleStringParser.toString(domainTransformEvent
+				.getObjectLocalId()));
 		sb.append(newlineTab);
 		sb.append(PARAMS);
 		sb.append(domainTransformEvent.getPropertyName());
@@ -84,8 +88,8 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		sb.append(",");
 		sb.append(SimpleStringParser
 				.toString(domainTransformEvent.getUtcDate() == null ? System
-				.currentTimeMillis() : domainTransformEvent.getUtcDate()
-				.getTime()));
+						.currentTimeMillis() : domainTransformEvent
+						.getUtcDate().getTime()));
 		sb.append(newlineTab);
 		sb.append(STRING_VALUE);
 		sb.append(ns);
@@ -94,12 +98,10 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		sb.append(domainTransformEvent.getValueClass() == null ? null
 				: domainTransformEvent.getValueClass().getName());
 		sb.append(",");
-		sb.append(SimpleStringParser
-				.toString(domainTransformEvent.getValueId()));
+		sb.append(SimpleStringParser.toString(domainTransformEvent.getValueId()));
 		sb.append(",");
-		sb.append(SimpleStringParser
-				.toString(domainTransformEvent
-						.getValueLocalId()));
+		sb.append(SimpleStringParser.toString(domainTransformEvent
+				.getValueLocalId()));
 		sb.append("\n");
 	}
 
@@ -114,11 +116,10 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		return items;
 	}
 
-	private SimpleStringParser asyncParser = null;
 	public String deserialize(String serializedEvents,
 			List<DomainTransformEvent> events, int maxCount) {
-		if (asyncParser==null){
-			asyncParser=new SimpleStringParser(serializedEvents);
+		if (asyncParser == null) {
+			asyncParser = new SimpleStringParser(serializedEvents);
 		}
 		int i = 0;
 		String s;
@@ -132,8 +133,12 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		return s;
 	}
 
-	public  String getDomainTransformEventMarker() {
+	public String getDomainTransformEventMarker() {
 		return DOMAIN_TRANSFORM_EVENT_MARKER;
+	}
+
+	public int getOffset() {
+		return asyncParser == null ? 0 : asyncParser.getOffset();
 	}
 
 	public String handlesVersion() {
@@ -185,9 +190,5 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			dte.setNewStringValue(null);
 		}
 		return dte;
-	}
-
-	public int getOffset() {
-		return asyncParser==null?0:asyncParser.getOffset();
 	}
 }
