@@ -162,8 +162,17 @@ public class SEUtilities {
 
 	// assume slash-delineated
 	public static String combinePaths(String absPath, String relPath) {
-		if (relPath.startsWith("/") || relPath.contains("://")) {
+		if ( relPath.contains("://")) {
 			return relPath;
+		}
+		if(relPath.startsWith("/")){
+			if(absPath.contains("://")){
+				int idx0=absPath.indexOf("://")+3;
+				int idx1=absPath.indexOf("/",idx0);
+				return (idx1==-1?absPath:absPath.substring(0,idx1))+relPath;
+			}else{
+				return relPath;
+			}
 		}
 		String parentSep = "../";
 		String voidSep = "./";
