@@ -72,6 +72,8 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 				new RemoteActionLoggerProvider());
 		ServletLayerLocator.get().registerCommonPersistenceProvider(
 				AlcinaTemplateServerManager.get());
+		ServletLayerLocator.get().registerCommonRemoteServletProvider(
+				new AlcinaTemplateServerProvider());
 		AlcinaTemplateObjects.registerProvider(AlcinaTemplateServerManager
 				.get());
 		PermissionsManager
