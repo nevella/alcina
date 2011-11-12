@@ -46,6 +46,7 @@ public class DtrSimpleAdminPersistenceHandler implements
 			item.setShortDescription(msg);
 			JobRegistry.get().jobComplete(jobInfo);
 		} catch (Exception ex) {
+			ex.printStackTrace();
 			item.setShortDescription("Failed");
 			logger.warn(ex);
 			JobRegistry.get().jobError(jobInfo, ex.toString());
