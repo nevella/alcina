@@ -31,6 +31,7 @@
 			<lib refid="alcina.war.dependencies" />
 			<classes dir="${project.build.dir}">
 				<include name="**/*.class" />
+				<patternset refid="project.jar.filter.exclude" />
 			</classes>
 		</war>
 	</target>
@@ -124,6 +125,7 @@
 			</fileset>
 			<fileset dir="${project.build.dir}">
 				<include name="**/*.class" />
+				<patternset refid="project.jar.filter.exclude" />
 			</fileset>
 		</copy>
 		<copy todir="${j2ee-server.unwar.target}/WEB-INF/lib" preservelastmodified="true">
