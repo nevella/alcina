@@ -74,16 +74,18 @@ public class FuzzyCache<I, O> {
 		SortedMap<Float, I> subMap = map.subMap(around - fuzz, around + fuzz);
 		return converter.convert(subMap);
 	}
-	public static Float weightedMean(SortedMap<Float, List> map){
-		float total=0;
-		float count=0;
-		for(Float key:map.keySet()){
+
+	public static Float weightedMean(SortedMap<Float, List> map) {
+		float total = 0;
+		float count = 0;
+		for (Float key : map.keySet()) {
 			List list = map.get(key);
-			count+=list.size();
-			total+=key*list.size();
+			count += list.size();
+			total += key * list.size();
 		}
-		return total/count;
+		return total / count;
 	}
+
 	public static Integer countNear(SortedMap<Float, Integer> map,
 			float around, float fuzz) {
 		SortedMap<Float, Integer> subMap = map.subMap(around - fuzz, around
@@ -114,12 +116,17 @@ public class FuzzyCache<I, O> {
 		}
 
 		public int count;
-		
+
 		public FloatPair range;
 
 		@Override
 		public int compareTo(FloatPairWithWeight o) {
 			return -CommonUtils.compareInts(count, o.count);
+		}
+
+		@Override
+		public String toString() {
+			return range + ":" + count;
 		}
 	}
 
@@ -129,7 +136,7 @@ public class FuzzyCache<I, O> {
 			return;
 		}
 		float last = map.lastKey();
-		float step = Math.max((last - map.firstKey()) / steps,(float)0.0001);
+		float step = Math.max((last - map.firstKey()) / steps, (float) 0.0001);
 		float firstMatched = Float.MIN_VALUE;
 		float lastMatched = Float.MIN_VALUE;
 		int total = 0;
@@ -139,9 +146,9 @@ public class FuzzyCache<I, O> {
 			for (I v : subMap.values()) {
 				if (v instanceof Integer) {
 					count += (Integer) v;
-				} else if (v instanceof Collection){
-					count+=((Collection)v).size();
-				}else{
+				} else if (v instanceof Collection) {
+					count += ((Collection) v).size();
+				} else {
 					count++;
 				}
 			}
