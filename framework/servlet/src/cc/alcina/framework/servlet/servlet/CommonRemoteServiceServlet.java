@@ -379,7 +379,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		if (cancel) {
 			JobRegistry.get().cancel(id);
 		}
-		return JobRegistry.get().getInfo(id);
+		JobInfo info = JobRegistry.get().getInfo(id);
+		if(info==null){
+			throw new RuntimeException("Unknown job - probably server restarted");
+		}
+		return info;
 	}
 
 	@Override
