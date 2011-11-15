@@ -831,6 +831,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 			getDomainObjects().mapObject(hili);
 		}
 	}
+	public void registerDomainObjects(Collection<HasIdAndLocalId> hilis) {
+		for (HasIdAndLocalId hili : hilis) {
+			registerDomainObject(hili);
+		}
+	}
 
 	/**
 	 * Useful for unit tests, hence here rather than clientTM

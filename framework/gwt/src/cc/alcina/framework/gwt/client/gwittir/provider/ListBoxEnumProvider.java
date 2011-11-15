@@ -50,7 +50,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		this.setWithNull(withNull);
 	}
 
-	public BoundWidget get() {
+	public SetBasedListBox get() {
 		SetBasedListBox listBox = new SetBasedListBox();
 		Enum[] enumValues = clazz.getEnumConstants();
 		List options = new ArrayList(Arrays.asList(enumValues));
