@@ -270,6 +270,8 @@ public class GwittirBridge implements PropertyAccessor {
 						propertyIsCollection);
 			}
 			boolean isEnum = domainType.isEnum();
+			boolean displayWrap = (visualiserInfo.displayInfo()
+					.displayMask() & DisplayInfo.DISPLAY_WRAP) > 0;
 			if (bwp == null && isEnum) {
 				bwp = fieldEditable ? new ListBoxEnumProvider(domainType)
 						: NOWRAP_LABEL_PROVIDER;
@@ -288,7 +290,9 @@ public class GwittirBridge implements PropertyAccessor {
 							|| domainType == Boolean.class) {
 						bwp = YES_NO_LABEL_PROVIDER;
 					} else {
-						bwp = NOWRAP_LABEL_PROVIDER;
+						
+						bwp = displayWrap ? WRAP_LABEL_PROVIDER
+								: NOWRAP_LABEL_PROVIDER;
 					}
 				}
 			}
@@ -448,6 +452,13 @@ public class GwittirBridge implements PropertyAccessor {
 		}
 	};
 
+	public static final BoundWidgetProvider WRAP_LABEL_PROVIDER = new BoundWidgetProvider() {
+		public BoundWidget get() {
+			RenderingLabel label = new RenderingLabel();
+			return label;
+		}
+	};
+
 	public static final BoundWidgetProvider YES_NO_LABEL_PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
@@ -567,11 +578,10 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public static void renameField(Field[] fields, String propertyName,
 			String label) {
-		for(Field f:fields){
-			if(f.getPropertyName().equals(propertyName)){
+		for (Field f : fields) {
+			if (f.getPropertyName().equals(propertyName)) {
 				f.setLabel(label);
 			}
 		}
-		
 	}
 }

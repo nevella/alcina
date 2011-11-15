@@ -18,6 +18,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Text;
+import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.RootPanel;
 
 public class DomUtils implements NodeFromXpathProvider {
@@ -513,5 +514,11 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public NodeFromXpathProvider getNodeProvider() {
 		return nodeProvider;
+	}
+
+	public static String toText(String html) {
+		Element elt = Document.get().createElement("DIV");
+		elt.setInnerHTML(html);
+		return DOM.getInnerText((com.google.gwt.user.client.Element) elt);
 	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -25,8 +24,7 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author Nick Reddel
  */
-
- public @interface DisplayInfo {
+public @interface DisplayInfo {
 	public static final int DISPLAY_AS_PROPERTY = 1;
 
 	public static final int DISPLAY_AS_TREE_NODE = 2;
@@ -34,6 +32,10 @@ import java.lang.annotation.RetentionPolicy;
 	public static final int DISPLAY_RO = 4;
 
 	public static final int DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER = 8;
+
+	public static final int DISPLAY_WRAP = 16;
+
+	public static final int DISPLAY_WRAP_PROPERTY = DISPLAY_WRAP|DISPLAY_AS_PROPERTY;
 
 	String info() default "";
 
