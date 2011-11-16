@@ -14,10 +14,12 @@
 package cc.alcina.framework.entity;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URL;
@@ -218,7 +220,16 @@ public class XmlUtils {
 	}
 
 	public static Document loadDocument(String xml) throws Exception {
-		ByteArrayInputStream bais = new ByteArrayInputStream(xml.getBytes());
+		ByteArrayInputStream bais = null;
+		if (xml.contains("encoding=\"UTF-8\"")) {
+			ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+			OutputStreamWriter out = new OutputStreamWriter(bOut, "UTF-8");
+			out.write(xml);
+			out.close();
+			bais = new ByteArrayInputStream(bOut.toByteArray());
+		} else {
+			bais = new ByteArrayInputStream(xml.getBytes());
+		}
 		return loadDocument(bais);
 	}
 
@@ -395,9 +406,10 @@ public class XmlUtils {
 			}
 		}
 	}
+
 	public static void rebaseImages(Document doc, String baseHref) {
-		if(baseHref.endsWith("/")){
-			baseHref=baseHref.substring(0,baseHref.length()-1);
+		if (baseHref.endsWith("/")) {
+			baseHref = baseHref.substring(0, baseHref.length() - 1);
 		}
 		String[] tags = { "IMG", "img" };
 		for (String tag : tags) {
@@ -406,8 +418,8 @@ public class XmlUtils {
 			for (int i = 0; i < length; i++) {
 				Element img = (Element) imgs.item(i);
 				String src = img.getAttribute("src");
-				if(src.startsWith("/")){
-					img.setAttribute("src", baseHref+src);
+				if (src.startsWith("/")) {
+					img.setAttribute("src", baseHref + src);
 				}
 			}
 		}

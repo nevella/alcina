@@ -291,19 +291,22 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (value == null) {
 			return;
 		}
-		evt.setValueClass(value.getClass());
+		evt.setValueClass(value instanceof Enum ? ((Enum) value)
+				.getDeclaringClass() : value.getClass());
 		if (value.getClass() == Integer.class
 				|| value.getClass() == String.class
 				|| value.getClass() == Double.class
 				|| value.getClass() == Float.class
 				|| value.getClass() == Short.class
-				|| value.getClass() == Boolean.class || value instanceof Enum) {
+				|| value.getClass() == Boolean.class) {
 			evt.setNewStringValue(value.toString());
 		} else if (value.getClass() == Long.class) {
 			evt.setNewStringValue(SimpleStringParser.toString((Long) value));
 		} else if (value.getClass() == Date.class) {
 			evt.setNewStringValue(SimpleStringParser.toString((((Date) value)
 					.getTime())));
+		} else if (value instanceof Enum) {
+			evt.setNewStringValue(((Enum) value).name());
 		} else if (value instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;
 			evt.setValueId(hili.getId());
@@ -659,7 +662,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 								Enum e = (Enum) o2;
 								dte.setNewValue(null);
 								dte.setNewStringValue(e.name());
-								dte.setValueClass(e.getClass());
+								dte.setValueClass(e.getDeclaringClass());
 							}
 							dtes.add(dte);
 						}
@@ -781,7 +784,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						dte = createTransformFromPropertyChange(evt);
 						dte.setNewValue(null);
 						dte.setNewStringValue(e.name());
-						dte.setValueClass(e.getClass());
+						dte.setValueClass(e.getDeclaringClass());
 						dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
 						transforms.add(dte);
 					}
@@ -791,7 +794,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						dte = createTransformFromPropertyChange(evt);
 						dte.setNewValue(null);
 						dte.setNewStringValue(e.name());
-						dte.setValueClass(e.getClass());
+						dte.setValueClass(e.getDeclaringClass());
 						dte.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
 						transforms.add(dte);
 					}
@@ -831,6 +834,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			getDomainObjects().mapObject(hili);
 		}
 	}
+
 	public void registerDomainObjects(Collection<HasIdAndLocalId> hilis) {
 		for (HasIdAndLocalId hili : hilis) {
 			registerDomainObject(hili);
