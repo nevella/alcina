@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Comparator;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 import com.google.gwt.core.client.GWT;
@@ -318,7 +319,7 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 		String old = this.getValue();
 		this.setText(value);
 		if (ensureAllLinesVisible) {
-			base.setVisibleLines((getValue().length()*10/9)
+			base.setVisibleLines((CommonUtils.nullToEmpty(getValue()).length()*10/9)
 					/ base.getCharacterWidth() + 1);
 		}
 		if (this.getValue() != old
