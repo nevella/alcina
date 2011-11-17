@@ -18,6 +18,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -31,6 +32,7 @@ import javax.persistence.ManyToMany;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
@@ -113,7 +115,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	private boolean listenToFoundObjects;
 
-	private Set<SourcesPropertyChangeEvents> listeningTo=new HashSet<SourcesPropertyChangeEvents>();
+	private Set<SourcesPropertyChangeEvents> listeningTo = new HashSet<SourcesPropertyChangeEvents>();
 
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws Exception {
@@ -211,7 +213,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	public void deregisterObject(HasIdAndLocalId hili) {
+	public void performDeleteObject(HasIdAndLocalId hili) {
 		HasIdAndLocalId object = getObject(hili);
 		try {
 			PropertyDescriptor[] pds = Introspector
@@ -245,6 +247,18 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			throw new WrappedRuntimeException(e);
 		}
 		entityManager.remove(object);
+	}
+
+	@Override
+	public void deregisterDomainObjects(Collection<HasIdAndLocalId> hilis) {
+		for (HasIdAndLocalId hili : hilis) {
+			if (hili instanceof SourcesPropertyChangeEvents) {
+				SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) hili;
+				spce.removePropertyChangeListener(this);
+				listeningTo.remove(spce);
+			}
+		}
+		super.deregisterDomainObjects(hilis);
 	}
 
 	public String displayNameForObject(Object o) {
@@ -478,10 +492,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		modifiedObjects = new HashSet<HasIdAndLocalId>();
 		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
-		for(SourcesPropertyChangeEvents spce:listeningTo){
+		for (SourcesPropertyChangeEvents spce : listeningTo) {
 			spce.removePropertyChangeListener(this);
 		}
-		listeningTo=new LinkedHashSet<SourcesPropertyChangeEvents>();
+		listeningTo = new LinkedHashSet<SourcesPropertyChangeEvents>();
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
 		for (DomainTransformListener listener : threadLocalListeners) {

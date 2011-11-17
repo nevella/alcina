@@ -25,7 +25,6 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) ;
 	
-	public void deregisterObject(HasIdAndLocalId bean) ;
 
 	public <T extends HasIdAndLocalId> T  getObject(T bean);
 }

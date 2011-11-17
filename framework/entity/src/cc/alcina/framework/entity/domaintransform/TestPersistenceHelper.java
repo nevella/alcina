@@ -89,9 +89,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 				bean.getClass(), bean.getId(), bean.getLocalId());
 	}
 
-	public void deregisterObject(HasIdAndLocalId bean) {
-		TransformManager.get().deregisterObject(bean);
-	}
 
 	public Object getPropertyValue(Object bean, String propertyName) {
 		return SEUtilities.getPropertyValue(bean, propertyName);

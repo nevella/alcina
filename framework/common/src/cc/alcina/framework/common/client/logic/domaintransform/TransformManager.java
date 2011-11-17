@@ -246,7 +246,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			collectionChanged(obj, tgt);
 			break;
 		case DELETE_OBJECT:
-			deregisterObject((HasIdAndLocalId) obj);
+			performDeleteObject((HasIdAndLocalId) obj);
 			break;
 		case CREATE_OBJECT:
 			if (event.getObjectId() != 0) {
@@ -371,13 +371,21 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public void deregisterObject(HasIdAndLocalId hili) {
+	public void performDeleteObject(HasIdAndLocalId hili) {
 		if (getDomainObjects() != null) {
 			removeAssociations(hili);
 			getDomainObjects().deregisterObject(hili);
 			fireCollectionModificationEvent(new CollectionModificationEvent(
 					this, hili.getClass(), getDomainObjects().getCollection(
 							hili.getClass())));
+		}
+	}
+	public void deregisterDomainObject(Object o){
+		deregisterDomainObjects(CommonUtils.wrapInCollection(o));
+	}
+	public void deregisterDomainObjects(Collection<HasIdAndLocalId> hilis) {
+		if (getDomainObjects() != null) {
+			getDomainObjects().deregisterObjects(hilis);
 		}
 	}
 
