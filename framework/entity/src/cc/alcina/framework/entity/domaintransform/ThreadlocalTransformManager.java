@@ -20,6 +20,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -480,6 +481,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		for(SourcesPropertyChangeEvents spce:listeningTo){
 			spce.removePropertyChangeListener(this);
 		}
+		listeningTo=new LinkedHashSet<SourcesPropertyChangeEvents>();
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
 		for (DomainTransformListener listener : threadLocalListeners) {

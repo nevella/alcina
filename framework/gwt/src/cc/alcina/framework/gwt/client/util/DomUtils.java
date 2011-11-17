@@ -97,7 +97,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (useXpathMap) {
 			if (lastContainer != container) {
 				lastContainer = container;
-				xpathMap = new HashMap<String, Node>();
+				xpathMap = new LinkedHashMap<String, Node>();
 				ClientNofications notifications = ClientLayerLocator.get()
 						.notifications();
 				if (notifications != null) {
