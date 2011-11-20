@@ -41,6 +41,7 @@ import cc.alcina.framework.entity.SEUtilities;
  * @author Nick Reddel
  */
 public class GraphProjection {
+
 	private GraphProjectionFilter dataFilter;
 
 	private GraphProjectionFilter fieldFilter;
@@ -82,9 +83,9 @@ public class GraphProjection {
 			return (T) reached.get(source);
 		}
 		Class<? extends Object> sourceClass = source.getClass();
-		T projected = sourceClass.isArray() ? (T) Array.newInstance(sourceClass
-				.getComponentType(), Array.getLength(source)) : (T) sourceClass
-				.newInstance();
+		T projected = sourceClass.isArray() ? (T) Array.newInstance(
+				sourceClass.getComponentType(), Array.getLength(source))
+				: (T) sourceClass.newInstance();
 		reached.put(source, projected);
 		if (alsoMapTo != null) {
 			reached.put(alsoMapTo, projected);
@@ -140,14 +141,14 @@ public class GraphProjection {
 		for (; itr.hasNext();) {
 			value = itr.next();
 			Object projected = project(value, context);
-			c.add(projected);
+				c.add(projected);
 		}
 		return c;
 	}
 
 	private boolean permitField(Field field, Object source) throws Exception {
-		PropertyPermissions pp = field.getDeclaringClass().getMethod(
-				SEUtilities.getAccessorName(field), new Class[0])
+		PropertyPermissions pp = field.getDeclaringClass()
+				.getMethod(SEUtilities.getAccessorName(field), new Class[0])
 				.getAnnotation(PropertyPermissions.class);
 		if (pp != null) {
 			AnnotatedPermissible ap = new AnnotatedPermissible(pp.read());
@@ -184,8 +185,8 @@ public class GraphProjection {
 				}
 				c = c.getSuperclass();
 			}
-			projectableFields.put(clazz, (Field[]) allFields
-					.toArray(new Field[allFields.size()]));
+			projectableFields.put(clazz,
+					(Field[]) allFields.toArray(new Field[allFields.size()]));
 			perObjectPermissionFields.put(clazz, dynamicPermissionFields);
 		}
 		return projectableFields.get(clazz);
@@ -230,14 +231,16 @@ public class GraphProjection {
 		public boolean permitField(Field field,
 				Set<Field> perObjectPermissionFields) {
 			try {
-				PropertyPermissions pp = field.getDeclaringClass().getMethod(
-						SEUtilities.getAccessorName(field), new Class[0])
+				PropertyPermissions pp = field
+						.getDeclaringClass()
+						.getMethod(SEUtilities.getAccessorName(field),
+								new Class[0])
 						.getAnnotation(PropertyPermissions.class);
 				if (pp != null) {
-					AnnotatedPermissible ap = new AnnotatedPermissible(pp
-							.read());
+					AnnotatedPermissible ap = new AnnotatedPermissible(
+							pp.read());
 					if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
-						if (!PermissionsManager.get().isLoggedIn()){
+						if (!PermissionsManager.get().isLoggedIn()) {
 							return false;
 						}
 						if (!disablePerObjectPermissions) {
@@ -268,8 +271,8 @@ public class GraphProjection {
 			if (original.getClass().isArray()) {
 				int n = Array.getLength(original);
 				for (int i = 0; i < n; i++) {
-					Array.set(projected, i, graphProjection.project(Array.get(
-							original, i), context));
+					Array.set(projected, i, graphProjection.project(
+							Array.get(original, i), context));
 				}
 			}
 			if (original instanceof Collection) {
@@ -295,8 +298,8 @@ public class GraphProjection {
 			for (; itr.hasNext();) {
 				key = itr.next();
 				value = map.get(key);
-				m.put(graphProjection.project(key, context), graphProjection
-						.project(value, context));
+				m.put(graphProjection.project(key, context),
+						graphProjection.project(value, context));
 			}
 			return m;
 		}
