@@ -8,6 +8,7 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 
 public class OfflineUtils {
@@ -21,6 +22,14 @@ public class OfflineUtils {
 		return hostPageCacheReturned;
 	}
 
+	public static void checkCacheLoading(AsyncCallback completionCallback) {
+		AppCache appCache = AppCache.getApplicationCache();
+		AppCacheEventHandler handler = new AppCacheEventHandler(true,
+				completionCallback);
+		registerHandler(appCache, handler);
+		handler.onBrowserEvent(null);
+	}
+
 	public static void waitAndReload() {
 		cd = new NonCancellableRemoteDialog("") {
 			@Override
@@ -28,10 +37,16 @@ public class OfflineUtils {
 				return false;
 			}
 		};
-		cd.getGlass().setOpacity(0);
+		cd.getGlass().setOpacity(50);
 		cd.show();
 		AppCache appCache = AppCache.getApplicationCache();
-		AppCacheEventHandler handler = new AppCacheEventHandler();
+		AppCacheEventHandler handler = new AppCacheEventHandler(false, null);
+		registerHandler(appCache, handler);
+		update(0);
+	}
+
+	protected static void registerHandler(AppCache appCache,
+			AppCacheEventHandler handler) {
 		appCache.addEventListener(AppCache.ONCACHED, handler, true);
 		appCache.addEventListener(AppCache.ONCHECKING, handler, true);
 		appCache.addEventListener(AppCache.ONDOWNLOADING, handler, true);
@@ -39,17 +54,45 @@ public class OfflineUtils {
 		appCache.addEventListener(AppCache.ONNOUPDATE, handler, true);
 		appCache.addEventListener(AppCache.ONPROGRESS, handler, true);
 		appCache.addEventListener(AppCache.ONUPDATEREADY, handler, true);
-		update(0);
 	}
 
 	static class AppCacheEventHandler implements EventListener {
+		private final boolean headless;
+
+		private final AsyncCallback nochangeCallback;
+
+		private boolean cancelled = false;
+
+		public AppCacheEventHandler(boolean headless,
+				AsyncCallback nochangeCallback) {
+			this.headless = headless;
+			this.nochangeCallback = nochangeCallback;
+		}
+
 		@Override
 		public void onBrowserEvent(Event event) {
-			if (event.getType().equals(AppCache.ONERROR)) {
+			if (cancelled) {
+				return;
+			}
+			if (event!=null&&event.getType().equals(AppCache.ONERROR)) {
 				error("App cache error");
 				return;
 			}
-			update(0);
+			if (headless) {
+				int updateStatus = AppCache.getApplicationCache().getStatus();
+				if (updateStatus == AppCache.CHECKING) {
+				} else if (updateStatus == AppCache.DOWNLOADING) {
+					cancelled = true;
+					waitAndReload();
+				} else {
+					if (nochangeCallback != null) {
+						nochangeCallback.onSuccess(null);
+					}
+					return;
+				}
+			} else {
+				update(0);
+			}
 		}
 	}
 
