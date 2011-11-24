@@ -54,6 +54,16 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 
 	protected CollectionFilter filter;
 
+	private PropertyChangeListener cgListener = new PropertyChangeListener() {
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			// note - widget code doesn't change the set - just the members -
+			// hence this is only called by other code and we assume will
+			// deserve a full refresh
+			updateValues();
+		}
+	};
+
 	/**
 	 * note must allow obj==null
 	 */
@@ -72,6 +82,11 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 	public void setModel(Object model) {
 		this.criteriaGroup = (C) model;
 		addPropertyChangeListener("value", pcl);
+		setOptions();
+		updateValues();
+	}
+
+	protected void updateValues() {
 		Set values = new HashSet();
 		SC templateCriterion = newCriterion(null);
 		for (Object sc : criteriaGroup.getCriteria()) {
@@ -80,8 +95,19 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 				values.add(getSearchCriterionDisplayObject((SC) sc));
 			}
 		}
-		setOptions();
 		setValue(values);
+	}
+
+	@Override
+	protected void onLoad() {
+		super.onLoad();
+		criteriaGroup.addPropertyChangeListener("criteria", cgListener);
+	}
+
+	@Override
+	protected void onUnload() {
+		criteriaGroup.removePropertyChangeListener("criteria", cgListener);
+		super.onUnload();
 	}
 
 	protected void setOptions() {

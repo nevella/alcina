@@ -908,7 +908,13 @@ table.results-table {
 	font-size: 11px;
 	color: #F33;
 }
-
+.popupContent{
+	position: relative;
+}
+.popupContent .gwittir-ValidationPopup {
+	background-color: #FEE;
+	border: solid 1px #FCC;
+}
 .gwittir-ValidationPopup.dateChooser, .gwittir-ValidationPopup.withBkg {
 	border: 1px solid rgb(206, 206, 206);
 	padding: 1px 4px 1px 4px;
@@ -1208,6 +1214,10 @@ table.gwittir-BoundTable.editable tr.even td{
 }
 table.gwittir-BoundTable.editable tr.odd td{
 	border: 1px solid  #F0F0FE;
+}
+.gwt-PopupPanel.edit-overlay{
+	border:none;
+	padding:0px;
 }
 /** logging, notification **/
 .logbox {

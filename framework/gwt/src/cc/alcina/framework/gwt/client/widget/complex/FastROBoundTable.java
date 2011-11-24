@@ -29,6 +29,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 
 import com.google.gwt.core.client.GWT;
@@ -164,8 +165,8 @@ public class FastROBoundTable extends BoundTableExt {
 			return;
 		}
 		int row = calculateObjectToRowOffset(i);
-		table.removeRow(i + ((this.masks & BoundTableExt.HEADER_MASK) > 0 ? 1
-				: 0));
+		table.removeRow(i
+				+ ((this.masks & BoundTableExt.HEADER_MASK) > 0 ? 1 : 0));
 		((Collection) getValue()).remove(o);
 	}
 
@@ -325,10 +326,19 @@ public class FastROBoundTable extends BoundTableExt {
 				editableWidget.setAction(action);
 				final BoundWidget tableWidget = (BoundWidget) table.getWidget(
 						rowCol.row, rowCol.col);
+				RelativePopupPanel rpp = new RelativePopupPanel(true);
+				rpp.setAnimationEnabled(true);
+				rpp.addStyleName("edit-overlay");
+				Widget relativeToWidget = (Widget) tableWidget;
+				int tdh = table.getCellFormatter()
+						.getElement(rowCol.row, rowCol.col).getOffsetHeight();
 				RelativePopupPanel relativePopupPanel = RelativePopupPositioning
-						.showPopup((Widget) tableWidget,
-								(Widget) editableWidget, table,
-								RelativePopupPositioning.BOTTOM_LTR);
+						.showPopup(
+								relativeToWidget,
+								(Widget) editableWidget,
+								table,
+								new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
+								null, rpp, -4, -tdh +4);
 				relativePopupPanel
 						.addCloseHandler(new CloseHandler<RelativePopupPanel>() {
 							public void onClose(

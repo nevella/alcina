@@ -64,17 +64,23 @@ public class IntPair implements Comparable<IntPair> {
 	public boolean isZero() {
 		return i1 == 0 && i2 == 0;
 	}
-	//as a possible vector in 1-space
+
+	// as a possible vector in 1-space
 	public boolean isPoint() {
-		return i1 ==i2;
+		return i1 == i2;
 	}
 
 	public IntPair intersection(IntPair other) {
-		IntPair result=new IntPair(Math.max(i1,other.i1),Math.min(i2,other.i2));
-		return result.i1<=result.i2?result:null;
+		IntPair result = new IntPair(Math.max(i1, other.i1), Math.min(i2,
+				other.i2));
+		return result.i1 <= result.i2 ? result : null;
 	}
 
 	public boolean contains(IntPair other) {
-		return other==null?false:other.equals(intersection(other));
+		return other == null ? false : other.equals(intersection(other));
+	}
+
+	public boolean containsExBoundaries(IntPair other) {
+		return contains(other) && i1 < other.i1 && i2 > other.i2;
 	}
 }
