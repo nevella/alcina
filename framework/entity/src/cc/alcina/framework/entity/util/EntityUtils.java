@@ -41,9 +41,14 @@ public class EntityUtils {
 	public static String hasIdsToIdClause(Collection<? extends HasId> hasIds) {
 		return longsToIdClause(hasIdsToIdList(hasIds));
 	}
-
 	public static List<Long> hasIdsToIdList(Collection<? extends HasId> hasIds) {
+		return hasIdsToIdList(hasIds, false);
+	}
+	public static List<Long> hasIdsToIdList(Collection<? extends HasId> hasIds, boolean withMinusOne) {
 		List<Long> ids = new ArrayList<Long>();
+		if(withMinusOne){
+			ids.add(-1L);
+		}
 		for (HasId hasId : hasIds) {
 			ids.add(hasId.getId());
 		}
