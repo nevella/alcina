@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -51,6 +52,12 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 			put(key, (V) new ArrayList());
 		}
 		get(key).add(item);
+	}
+	public void addCollection(K key, Collection collection) {
+		if (!containsKey(key)) {
+			put(key, (V) new ArrayList());
+		}
+		get(key).addAll(collection);
 	}
 
 	public void addIfNotContained(K key, Object item) {

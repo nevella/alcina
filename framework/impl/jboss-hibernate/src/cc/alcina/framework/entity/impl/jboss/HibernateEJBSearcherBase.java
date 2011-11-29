@@ -34,10 +34,13 @@ public abstract class HibernateEJBSearcherBase {
 	protected Map<Class, VTHandler> vtHandlerMap = new HashMap<Class, VTHandler>();
 
 	protected SearchDefinition def;
+
 	protected void conditionalCreate(Class srcClass, Class tgtClass,
 			String propertyName, String alias) {
-		conditionalCreate(srcClass, tgtClass, propertyName, alias, Criteria.INNER_JOIN);
+		conditionalCreate(srcClass, tgtClass, propertyName, alias,
+				Criteria.INNER_JOIN);
 	}
+
 	protected void conditionalCreate(Class srcClass, Class tgtClass,
 			String propertyName, String alias, int joinType) {
 		if (classCriteriaMap.containsKey(srcClass)
@@ -54,7 +57,7 @@ public abstract class HibernateEJBSearcherBase {
 				vtHandler.prepareLink(criteria, detachedCriteria);
 			} else {
 				Criteria criteria2 = criteria.createCriteria(propertyName,
-						alias,joinType);
+						alias, joinType);
 				classCriteriaMap.put(tgtClass, criteria2);
 			}
 		}
@@ -88,7 +91,7 @@ public abstract class HibernateEJBSearcherBase {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		Set<OrderGroup> orderGroups = def.getOrderGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
-			if (!PermissionsManager.get().isPermissible(cg)){
+			if (!PermissionsManager.get().isPermissible(cg)) {
 				continue;
 			}
 			if (!cg.provideIsEmpty() && cg.getEntityClass() != null) {
@@ -106,7 +109,7 @@ public abstract class HibernateEJBSearcherBase {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		Set<OrderGroup> orderGroups = def.getOrderGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
-			if (!PermissionsManager.get().isPermissible(cg)){
+			if (!PermissionsManager.get().isPermissible(cg)) {
 				continue;
 			}
 			if (!cg.provideIsEmpty()) {
@@ -128,9 +131,6 @@ public abstract class HibernateEJBSearcherBase {
 					}
 				}
 				if (!detachedCriteriaMap.containsKey(cg.getEntityClass())) {
-					if (!classCriteriaMap.containsKey(cg.getEntityClass())) {
-						int j = 0;
-					}
 					classCriteriaMap.get(cg.getEntityClass()).add(junction);
 				} else {
 					detachedCriteriaMap.get(cg.getEntityClass()).add(junction);
@@ -139,9 +139,9 @@ public abstract class HibernateEJBSearcherBase {
 			}
 		}
 	}
+
 	protected SearchCriterionHandler getCriterionHandler(SearchCriterion sc) {
-		return handlerMap.get(sc
-				.getClass());
+		return handlerMap.get(sc.getClass());
 	}
 
 	protected void register(Class<? extends SearchCriterion> clazz,
