@@ -31,6 +31,9 @@ public class OfflineUtils {
 				completionCallback);
 		registerHandler(appCache, handler);
 		handler.onBrowserEvent(null);
+		if(appCache.getStatus()==AppCache.UPDATEREADY){
+			waitAndReload();
+		}
 	}
 
 	public static void waitAndReload() {
@@ -77,9 +80,9 @@ public class OfflineUtils {
 			ClientLayerLocator
 					.get()
 					.notifications()
-					.log(CommonUtils.formatJ("OfflineUtils.event - %s,%s,%s",
+					.log(CommonUtils.formatJ("OfflineUtils.event - %s,%s,%s,%s",
 							cancelled, headless,
-							event == null ? "nulla" : event.getType(), AppCache
+							(event == null ? "null" : event.getType()), AppCache
 									.getApplicationCache().getStatus()));
 			if (cancelled) {
 				return;
