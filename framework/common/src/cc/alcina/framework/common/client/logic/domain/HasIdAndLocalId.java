@@ -99,6 +99,9 @@ public interface HasIdAndLocalId extends HasId {
 			return CommonUtils.format("HasId: %1 : %2 ", CommonUtils
 					.simpleClassName(hi.getClass()), hi.getId());
 		}
+		public static Long getIdOrNull(HasId hi){
+			return hi==null?null:hi.getId();
+		}
 		public static <T extends HasId> T getById(Collection<T> values, long id){
 			for(T value:values){
 				if(value.getId()==id){
