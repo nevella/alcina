@@ -1,7 +1,10 @@
 package cc.alcina.framework.gwt.client.ide;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
@@ -12,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
@@ -51,8 +55,8 @@ public class WorkspaceDefaultActionHandlers {
 			PaneWrapperWithObjects view = null;
 			if (object instanceof Collection) {
 				view = getContentViewFactory().createMultipleBeanView(
-						(Collection) object, nodeObjectClass, editView(), workspace,
-						isAutoSave(), false);
+						(Collection) object, nodeObjectClass, editView(),
+						workspace, isAutoSave(), false);
 			} else {
 				view = getContentViewFactory().createBeanView(object,
 						editView(), workspace, isAutoSave(), false);
@@ -70,6 +74,7 @@ public class WorkspaceDefaultActionHandlers {
 			return false;
 		}
 	}
+
 	@RegistryLocation(j2seOnly = false, registryPoint = CreateActionHandler.class)
 	public static class DefaultCreateActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements CreateActionHandler {
@@ -81,14 +86,16 @@ public class WorkspaceDefaultActionHandlers {
 					nodeObjectClass) : TransformManager.get()
 					.createProvisionalObject(nodeObjectClass);
 			handleParentLinks(workspace, node, newObj);
-			ClientTransformManager.cast().prepareObject(newObj,isAutoSave(),true,false);
+			ClientTransformManager.cast().prepareObject(newObj, isAutoSave(),
+					true, false);
 			TextProvider.get().setDecorated(false);
-			String tdn = ClientReflector.get().beanInfoForClass(nodeObjectClass)
-					.getTypeDisplayName();
+			String tdn = ClientReflector.get()
+					.beanInfoForClass(nodeObjectClass).getTypeDisplayName();
 			TextProvider.get().setDecorated(true);
 			TextProvider.get().setObjectName(newObj, "New " + tdn);
-			if (newObj instanceof IVersionableOwnable){
-				((IVersionableOwnable) newObj).setOwner(PermissionsManager.get().getUser());
+			if (newObj instanceof IVersionableOwnable) {
+				((IVersionableOwnable) newObj).setOwner(PermissionsManager
+						.get().getUser());
 			}
 			PaneWrapperWithObjects view = getContentViewFactory()
 					.createBeanView(newObj, true, workspace, isAutoSave(),
@@ -109,9 +116,8 @@ public class WorkspaceDefaultActionHandlers {
 	}
 
 	@RegistryLocation(j2seOnly = false, registryPoint = DeleteActionHandler.class)
-	public static class DefaultDeleteActionHandler  extends
-	WorkspaceDefaultActionHandlerBase implements
-			DeleteActionHandler {
+	public static class DefaultDeleteActionHandler extends
+			WorkspaceDefaultActionHandlerBase implements DeleteActionHandler {
 		public void performAction(final PermissibleActionEvent event,
 				Object node, Object object, final Workspace workspace,
 				Class nodeObjectClass) {
@@ -121,18 +127,21 @@ public class WorkspaceDefaultActionHandlers {
 					return;
 				}
 			}
-			ClientLayerLocator.get().notifications().confirm(
-					"Are you sure you want to delete the selected object",
-					new OkCallback() {
-						public void ok() {
-							TransformManager.get().deleteObject(hili);
-							workspace.getVisualiser().setContentWidget(
-									new HorizontalPanel());
-							workspace
-									.fireVetoableActionEvent(new PermissibleActionEvent(
-											hili, event.getAction()));
-						}
-					});
+			ClientLayerLocator
+					.get()
+					.notifications()
+					.confirm(
+							"Are you sure you want to delete the selected object",
+							new OkCallback() {
+								public void ok() {
+									TransformManager.get().deleteObject(hili);
+									workspace.getVisualiser().setContentWidget(
+											new HorizontalPanel());
+									workspace
+											.fireVetoableActionEvent(new PermissibleActionEvent(
+													hili, event.getAction()));
+								}
+							});
 		}
 	}
 
@@ -143,16 +152,31 @@ public class WorkspaceDefaultActionHandlers {
 				Object node, Object object, final Workspace workspace,
 				Class nodeObjectClass) {
 			final HasIdAndLocalId hili = (HasIdAndLocalId) object;
-			HasIdAndLocalId newObj = ClientTransformManager.cast().clone(hili);
+			HasIdAndLocalId newObj = null;
+			List<Object> provisionals = new ArrayList<Object>();
+			try {
+				DomainObjectCloner cloner = new DomainObjectCloner();
+				newObj = cloner.deepBeanClone(hili);
+				if (isAutoSave()) {
+					ClientTransformManager.cast().promoteToDomainObject(
+							cloner.getProvisionalObjects());
+					newObj = ClientTransformManager.cast().getObject(newObj);
+				} else {
+					provisionals.addAll(cloner.getProvisionalObjects());
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 			handleParentLinks(workspace, node, newObj);
-			ClientTransformManager.cast().prepareObject(newObj,isAutoSave(),true,false);
+			provisionals.addAll(ClientTransformManager.cast().prepareObject(
+					newObj, isAutoSave(), true, false));
 			TextProvider.get().setDecorated(true);
 			String newName = TextProvider.get().getObjectName(newObj)
 					+ " (copy)";
 			TextProvider.get().setDecorated(false);
 			TextProvider.get().setObjectName(newObj, newName);
 			Widget view = getContentViewFactory().createBeanView(newObj, true,
-					workspace, isAutoSave(), false);
+					workspace, isAutoSave(), false, provisionals, true);
 			workspace.getVisualiser().setContentWidget(view);
 			workspace.fireVetoableActionEvent(new PermissibleActionEvent(
 					newObj, event.getAction()));

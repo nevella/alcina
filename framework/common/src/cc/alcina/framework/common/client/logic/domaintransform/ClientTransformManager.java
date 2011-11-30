@@ -61,17 +61,6 @@ public class ClientTransformManager extends TransformManager {
 		return cache;
 	}
 
-	public HasIdAndLocalId clone(HasIdAndLocalId obj) {
-		try {
-			DomainObjectCloner cloner = new DomainObjectCloner();
-			HasIdAndLocalId ret = cloner.deepBeanClone(obj);
-			promoteToDomain(cloner.getProvisionalObjects(), true);
-			return getObject(ret);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	public interface PersistableTransformListener {
 		public void persistableTransform(DomainTransformRequest dtr);
 	}

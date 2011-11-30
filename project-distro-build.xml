@@ -198,6 +198,7 @@
 			</classpath>
 			<jvmarg value="-Xmx850M" />
 			<jvmarg value="-Xss2M" />
+			
 			<arg line=" -style ${gwt.codestyle}" />
 			<arg line="${project.gwt.compile.flags}" />
 			<arg value="${project.gwt.module.name}" />

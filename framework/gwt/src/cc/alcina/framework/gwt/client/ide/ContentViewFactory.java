@@ -146,12 +146,17 @@ public class ContentViewFactory {
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
 		return createBeanView(bean, editable, actionListener, autoSave,
-				doNotClone, null);
+				doNotClone, null,false);
 	}
-
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone, Object additionalProvisional) {
+		return createBeanView(bean, editable, actionListener, autoSave,
+				doNotClone, additionalProvisional,false);
+	}
+	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
+			PermissibleActionListener actionListener, boolean autoSave,
+			boolean doNotClone, Object additionalProvisional, boolean doNotPrepare) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				bean.getClass());
 		boolean cloned = false;
@@ -206,7 +211,7 @@ public class ContentViewFactory {
 			if (provisional) {
 				TransformManager.get().registerProvisionalObject(list);
 			}
-			if (bean instanceof HasIdAndLocalId) {
+			if (bean instanceof HasIdAndLocalId&&!doNotPrepare) {
 				supportingObjects = ClientTransformManager.cast()
 						.prepareObject((HasIdAndLocalId) bean, autoSave, false,
 								true);

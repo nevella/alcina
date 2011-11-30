@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 
@@ -23,7 +24,7 @@ import com.totsp.gwittir.client.ui.Renderer;
  */
 public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup> extends AbstractBoundWidget<CriteriaGroup>{
 	protected C criteriaGroup;
-	protected CriteriaGroupSelectorCustomiser customiser;
+	protected BoundSelectorMinimal customiser;
 	protected RadioButtonList<FilterCombinator> filterRbl;
 	protected Renderer<FilterCombinator, String> fcRend = new Renderer<FilterCombinator, String>() {
 			public String render(FilterCombinator o) {
@@ -49,7 +50,7 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup> ext
 	}
 
 
-	public CriteriaGroupSelectorCustomiserWrapper(CriteriaGroupSelectorCustomiser customiser,
+	public CriteriaGroupSelectorCustomiserWrapper(BoundSelectorMinimal customiser,
 			String groupName) {
 		this.customiser = customiser;
 		filterRbl = new RadioButtonList<FilterCombinator>(
