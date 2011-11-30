@@ -19,6 +19,8 @@ public class OfflineUtils {
 
 	private static NonCancellableRemoteDialog cd;
 
+	private static int updateCount;
+
 	public static boolean resourceStoresCaptured() {
 		return hostPageCacheReturned;
 	}
@@ -31,7 +33,7 @@ public class OfflineUtils {
 				completionCallback);
 		registerHandler(appCache, handler);
 		handler.onBrowserEvent(null);
-		if(appCache.getStatus()==AppCache.UPDATEREADY){
+		if (appCache.getStatus() == AppCache.UPDATEREADY) {
 			waitAndReload();
 		}
 	}
@@ -48,7 +50,7 @@ public class OfflineUtils {
 		AppCache appCache = AppCache.getApplicationCache();
 		AppCacheEventHandler handler = new AppCacheEventHandler(false, null);
 		registerHandler(appCache, handler);
-		update(0);
+		update();
 	}
 
 	protected static void registerHandler(AppCache appCache,
@@ -80,15 +82,20 @@ public class OfflineUtils {
 			ClientLayerLocator
 					.get()
 					.notifications()
-					.log(CommonUtils.formatJ("OfflineUtils.event - %s,%s,%s,%s",
-							cancelled, headless,
-							(event == null ? "null" : event.getType()), AppCache
-									.getApplicationCache().getStatus()));
+					.log(CommonUtils.formatJ(
+							"OfflineUtils.event - %s,%s,%s,%s", cancelled,
+							headless,
+							(event == null ? "null" : event.getType()),
+							AppCache.getApplicationCache().getStatus()));
 			if (cancelled) {
 				return;
 			}
 			if (event != null && event.getType().equals(AppCache.ONERROR)) {
 				error("App cache error");
+				return;
+			}
+			if (event != null && event.getType().equals(AppCache.ONPROGRESS)) {
+				updateCount++;
 				return;
 			}
 			if (headless) {
@@ -104,7 +111,7 @@ public class OfflineUtils {
 					return;
 				}
 			} else {
-				update(0);
+				update();
 			}
 		}
 	}
@@ -116,7 +123,7 @@ public class OfflineUtils {
 		Window.Location.reload();
 	}
 
-	private static void update(double d) {
+	private static void update() {
 		int updateStatus = AppCache.getApplicationCache().getStatus();
 		if (updateStatus == AppCache.CHECKING
 				|| updateStatus == AppCache.DOWNLOADING) {
@@ -124,9 +131,9 @@ public class OfflineUtils {
 			complete();
 			return;
 		}
-		cd.setStatus(CommonUtils.formatJ("%s - %s% complete",
+		cd.setStatus(CommonUtils.formatJ("%s - %s files downloaded",
 				APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT,
-				Math.ceil(d * 100)));
+				Math.ceil(updateCount * 100)));
 	}
 
 	private static void complete() {
