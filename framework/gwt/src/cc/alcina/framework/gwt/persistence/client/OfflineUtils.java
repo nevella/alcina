@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.appcache.client.AppCache;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
 import com.google.gwt.user.client.Event;
@@ -23,6 +24,8 @@ public class OfflineUtils {
 	}
 
 	public static void checkCacheLoading(AsyncCallback completionCallback) {
+		ClientLayerLocator.get().notifications()
+				.log("OfflineUtils.checkCacheLoading");
 		AppCache appCache = AppCache.getApplicationCache();
 		AppCacheEventHandler handler = new AppCacheEventHandler(true,
 				completionCallback);
@@ -71,10 +74,17 @@ public class OfflineUtils {
 
 		@Override
 		public void onBrowserEvent(Event event) {
+			ClientLayerLocator
+					.get()
+					.notifications()
+					.log(CommonUtils.formatJ("OfflineUtils.event - %s,%s,%s",
+							cancelled, headless,
+							event == null ? "nulla" : event.getType(), AppCache
+									.getApplicationCache().getStatus()));
 			if (cancelled) {
 				return;
 			}
-			if (event!=null&&event.getType().equals(AppCache.ONERROR)) {
+			if (event != null && event.getType().equals(AppCache.ONERROR)) {
 				error("App cache error");
 				return;
 			}
