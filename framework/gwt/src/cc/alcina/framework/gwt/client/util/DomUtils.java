@@ -37,7 +37,8 @@ public class DomUtils implements NodeFromXpathProvider {
 	private static final String HTML_INVISIBLE_CONTENT_ELEMENTS = ",STYLE,TEXTAREA,SCRIPT,INPUT,SELECT,";
 
 	public static boolean isBlockHTMLElement(Element e) {
-		return CommonConstants.HTML_BLOCKS.contains("," + e.getTagName().toUpperCase() + ",");
+		return CommonConstants.HTML_BLOCKS.contains(","
+				+ e.getTagName().toUpperCase() + ",");
 	}
 
 	private NodeFromXpathProvider nodeProvider = null;
@@ -520,5 +521,28 @@ public class DomUtils implements NodeFromXpathProvider {
 		Element elt = Document.get().createElement("DIV");
 		elt.setInnerHTML(html);
 		return DOM.getInnerText((com.google.gwt.user.client.Element) elt);
+	}
+
+	public static Element getMinimalParentWithOffsetHeight(Text text) {
+		Element parent=text.getParentElement();
+		while(parent!=null){
+			if(parent.getOffsetHeight()!=0){
+				return parent;
+			}
+			parent=parent.getParentElement();
+		}
+		return null;
+	}
+
+	public static boolean containsBlocks(Element elt) {
+		elt.getChildNodes();
+		for (int i = 0; i < elt.getChildCount(); i++) {
+			Node child = elt.getChild(i);
+			if (child.getNodeType() == Node.ELEMENT_NODE
+					&& isBlockHTMLElement((Element) child)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
