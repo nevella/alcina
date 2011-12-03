@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.appcache.client.AppCache;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -11,7 +12,11 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
-
+/**
+ * TODO: this should be a singleton...with listeners rather than 'registerUpdatingCallback' etc
+ * @author nick@alcina.cc
+ *
+ */
 public class OfflineUtils {
 	private static final String APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT = "Application changed on the server - please wait";
 
@@ -21,8 +26,17 @@ public class OfflineUtils {
 
 	private static int updateCount;
 
+	private static Callback<Void> updatingCallback;
+
 	public static boolean resourceStoresCaptured() {
 		return hostPageCacheReturned;
+	}
+	public static void registerUpdatingCallback(Callback<Void> callback){
+		OfflineUtils.updatingCallback = callback;
+		
+	}
+	public static boolean isUpdating(){
+		return cd!=null;
 	}
 
 	public static void checkCacheLoading(AsyncCallback completionCallback) {
@@ -39,6 +53,9 @@ public class OfflineUtils {
 	}
 
 	public static void waitAndReload() {
+		if(updatingCallback!=null){
+			updatingCallback.callback(null);
+		}
 		cd = new NonCancellableRemoteDialog("") {
 			@Override
 			protected boolean initialAnimationEnabled() {
@@ -96,7 +113,6 @@ public class OfflineUtils {
 			}
 			if (event != null && event.getType().equals(AppCache.ONPROGRESS)) {
 				updateCount++;
-				return;
 			}
 			if (headless) {
 				int updateStatus = AppCache.getApplicationCache().getStatus();
@@ -132,8 +148,7 @@ public class OfflineUtils {
 			return;
 		}
 		cd.setStatus(CommonUtils.formatJ("%s - %s files downloaded",
-				APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT,
-				Math.ceil(updateCount * 100)));
+				APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT, updateCount));
 	}
 
 	private static void complete() {

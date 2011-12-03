@@ -37,6 +37,9 @@ import com.totsp.gwittir.client.validator.ValidationException;
  * @author Nick Reddel
  */
 public class RelativePopupValidationFeedback extends AbstractValidationFeedback {
+	public static final String CONTEXT_FEEDBACK_POSITION = RelativePopupValidationFeedback.class
+			.getName() + "::CONTEXT_FEEDBACK_POSITION";
+
 	public static final int LEFT = 1;
 
 	public static final int TOP = 2;
@@ -69,10 +72,12 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 			super.onDetach();
 		}
 	}
+
 	@SuppressWarnings("unchecked")
-	protected Widget renderExceptionWidget(ValidationException exception){
+	protected Widget renderExceptionWidget(ValidationException exception) {
 		return new Label(this.getMessage(exception));
 	}
+
 	public void handleException(Object source, ValidationException exception) {
 		final Widget w = (Widget) source;
 		resolve(source);

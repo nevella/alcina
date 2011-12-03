@@ -176,9 +176,13 @@ public class OkCancelDialogBox extends GlassDialogBox {
 				return true;
 			}
 			GwittirUtils.refreshEmptyTextBoxes(binding);
+			notifyProblem();
+			return false;
+		}
+
+		protected void notifyProblem() {
 			ClientLayerLocator.get().notifications()
 					.showWarning("Please correct the problems in the form");
-			return false;
 		}
 
 		@Override

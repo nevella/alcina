@@ -68,6 +68,10 @@ public class LooseContext {
 		addedListeners = new Multimap<TopicListener, List<String>>();
 		properties = new HashMap<String, Object>(properties);
 	}
+	public void pushWithKey(String key,Object value) {
+		push();
+		set(key,value);
+	}
 
 	public void remove(String key) {
 		properties.remove(key);

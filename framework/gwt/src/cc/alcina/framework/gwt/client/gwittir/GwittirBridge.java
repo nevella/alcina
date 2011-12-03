@@ -57,6 +57,7 @@ import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.FriendlyEnumLabelProvider;
@@ -238,6 +239,13 @@ public class GwittirBridge implements PropertyAccessor {
 				propertyName);
 		Property p = getProperty(obj, pr.getPropertyName());
 		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType());
+		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
+				: RelativePopupValidationFeedback.RIGHT;
+		int contextPosition = LooseContextProvider.getContext().getInteger(
+				RelativePopupValidationFeedback.CONTEXT_FEEDBACK_POSITION, -1);
+		if (contextPosition != -1) {
+			position = contextPosition;
+		}
 		if (pr != null && pr.getGwPropertyInfo() != null) {
 			PropertyPermissions pp = pr
 					.getAnnotation(PropertyPermissions.class);
@@ -270,8 +278,7 @@ public class GwittirBridge implements PropertyAccessor {
 						propertyIsCollection);
 			}
 			boolean isEnum = domainType.isEnum();
-			boolean displayWrap = (visualiserInfo.displayInfo()
-					.displayMask() & DisplayInfo.DISPLAY_WRAP) > 0;
+			boolean displayWrap = (visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_WRAP) > 0;
 			if (bwp == null && isEnum) {
 				bwp = fieldEditable ? new ListBoxEnumProvider(domainType)
 						: NOWRAP_LABEL_PROVIDER;
@@ -290,7 +297,6 @@ public class GwittirBridge implements PropertyAccessor {
 							|| domainType == Boolean.class) {
 						bwp = YES_NO_LABEL_PROVIDER;
 					} else {
-						
 						bwp = displayWrap ? WRAP_LABEL_PROVIDER
 								: NOWRAP_LABEL_PROVIDER;
 					}
@@ -314,9 +320,7 @@ public class GwittirBridge implements PropertyAccessor {
 				RelativePopupValidationFeedback vf = null;
 				Validator validator = null;
 				if (fieldEditable) {
-					vf = new RelativePopupValidationFeedback(
-							multiple ? RelativePopupValidationFeedback.BOTTOM
-									: RelativePopupValidationFeedback.RIGHT);
+					vf = new RelativePopupValidationFeedback(position);
 					vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
 					validator = getValidator(domainType, obj,
 							pr.getPropertyName(), vf);
@@ -330,8 +334,7 @@ public class GwittirBridge implements PropertyAccessor {
 						op, null, obj, false)) {
 			// no property info, but all writeable
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
-					multiple ? RelativePopupValidationFeedback.BOTTOM
-							: RelativePopupValidationFeedback.RIGHT);
+					position);
 			vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
 			return new Field(pr.getPropertyName(), TextProvider.get()
 					.getLabelText(c, pr), bwp, getValidator(p.getType(), obj,

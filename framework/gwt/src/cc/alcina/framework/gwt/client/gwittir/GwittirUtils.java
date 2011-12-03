@@ -33,6 +33,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
@@ -252,5 +253,17 @@ public class GwittirUtils {
 			result.addAll(m.get(key));
 		}
 		return result;
+	}
+
+	public static void focusFirstInput(Binding binding) {
+		List<Binding> l = binding.getChildren();
+		for (Binding b : l) {
+			boolean isText = CommonUtils.simpleClassName(
+					b.getLeft().object.getClass()).equals("TextBox")
+					|| b.getLeft().object instanceof PasswordTextBox;
+			if (isText) {
+				((Focusable) b.getLeft().object).setFocus(true);
+			}
+		}
 	}
 }

@@ -64,8 +64,10 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 		}
 		if (GWT.isClient()) {
 			if (validating) {
-				validateAfterServerReturns = value;
-				return value;
+				validateAfterServerReturns=value;
+				final ProcessingServerValidationException psve = new ProcessingServerValidationException(
+						getValidatingMessage(), null);
+				throw(psve);
 			}
 		}
 		if ((value == null && lastValidated == null)

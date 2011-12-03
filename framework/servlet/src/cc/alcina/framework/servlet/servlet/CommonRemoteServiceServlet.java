@@ -19,6 +19,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -54,9 +55,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.actions.RequiresHttpRequest;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -69,11 +72,13 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPe
 import cc.alcina.framework.entity.domaintransform.policy.IgnoreMissingPersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
+import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -380,8 +385,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			JobRegistry.get().cancel(id);
 		}
 		JobInfo info = JobRegistry.get().getInfo(id);
-		if(info==null){
-			throw new RuntimeException("Unknown job - probably server restarted");
+		if (info == null) {
+			throw new RuntimeException(
+					"Unknown job - probably server restarted");
 		}
 		return info;
 	}
@@ -508,8 +514,22 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException {
-		return ServletLayerLocator.get().commonPersistenceProvider()
-				.getCommonPersistence().validate(validators);
+		List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
+		List<ServerValidator> results = new ArrayList<ServerValidator>();
+		for (ServerValidator validator : validators) {
+			ServerValidatorHandler handler = (ServerValidatorHandler) ServletLayerRegistry
+					.get().instantiateSingle(ServerValidator.class,
+							validator.getClass());
+			if (handler instanceof ServletLayerValidatorHandler) {
+				handler.handle(validator, null);
+				results.add(validator);
+			} else {
+				results.addAll(ServletLayerLocator.get()
+						.commonPersistenceProvider().getCommonPersistence()
+						.validate(Collections.singletonList(validator)));
+			}
+		}
+		return results;
 	}
 
 	private void logTransformException(DomainTransformResponse response) {
@@ -585,22 +605,27 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	protected DomainTransformLayerWrapper submitAndHandleTransforms(
 			TransformPersistenceToken persistenceToken)
 			throws DomainTransformRequestException {
-		DomainTransformRequestPersistenceSupport persistenceSupport = CommonRemoteServiceServletSupport
-				.get().getRequestPersistenceSupport();
-		persistenceSupport
-				.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
-						persistenceToken, null));
-		DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
-				.transformPersistenceQueue().submit(persistenceToken);
-		wrapper.ignored = persistenceToken.ignored;
-		persistenceSupport
-				.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
-						persistenceToken, wrapper));
-		if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
-			return wrapper;
-		} else {
-			logTransformException(wrapper.response);
-			throw new DomainTransformRequestException(wrapper.response);
+		try {
+			LooseContextProvider.getContext().push();
+			DomainTransformRequestPersistenceSupport persistenceSupport = CommonRemoteServiceServletSupport
+					.get().getRequestPersistenceSupport();
+			persistenceSupport
+					.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
+							persistenceToken, null));
+			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
+					.transformPersistenceQueue().submit(persistenceToken);
+			wrapper.ignored = persistenceToken.ignored;
+			persistenceSupport
+					.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
+							persistenceToken, wrapper));
+			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
+				return wrapper;
+			} else {
+				logTransformException(wrapper.response);
+				throw new DomainTransformRequestException(wrapper.response);
+			}
+		} finally {
+			LooseContextProvider.getContext().pop();
 		}
 	}
 

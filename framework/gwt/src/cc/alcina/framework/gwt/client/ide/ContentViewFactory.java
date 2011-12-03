@@ -69,6 +69,7 @@ import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -146,17 +147,20 @@ public class ContentViewFactory {
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
 		return createBeanView(bean, editable, actionListener, autoSave,
-				doNotClone, null,false);
+				doNotClone, null, false);
 	}
+
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone, Object additionalProvisional) {
 		return createBeanView(bean, editable, actionListener, autoSave,
-				doNotClone, additionalProvisional,false);
+				doNotClone, additionalProvisional, false);
 	}
+
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
-			boolean doNotClone, Object additionalProvisional, boolean doNotPrepare) {
+			boolean doNotClone, Object additionalProvisional,
+			boolean doNotPrepare) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				bean.getClass());
 		boolean cloned = false;
@@ -211,7 +215,7 @@ public class ContentViewFactory {
 			if (provisional) {
 				TransformManager.get().registerProvisionalObject(list);
 			}
-			if (bean instanceof HasIdAndLocalId&&!doNotPrepare) {
+			if (bean instanceof HasIdAndLocalId && !doNotPrepare) {
 				supportingObjects = ClientTransformManager.cast()
 						.prepareObject((HasIdAndLocalId) bean, autoSave, false,
 								true);
@@ -584,7 +588,7 @@ public class ContentViewFactory {
 		public void onClick(ClickEvent clickEvent) {
 			final Widget sender = (Widget) clickEvent.getSource();
 			if (sender == saveButton) {
-				validateAndCommit(sender);
+				validateAndCommit(sender, null);
 				return;
 			} else {
 				if (isProvisionalObjects()) {
@@ -684,9 +688,12 @@ public class ContentViewFactory {
 			});
 		}
 
-		private boolean validateAndCommit(final Widget sender) {
+		public boolean validateAndCommit(final Widget sender,
+				final AsyncCallback<Void> serverValidationCallback) {
 			// makes sure richtextareas get a focuslost()
-			saveButton.setFocus(true);
+			if (saveButton != null) {
+				saveButton.setFocus(true);
+			}
 			if (!validateBean()) {
 				return false;
 			}
@@ -697,9 +704,9 @@ public class ContentViewFactory {
 			} finally {
 				ServerValidator.performingBeanValidation = false;
 			}
+			List<Validator> validators = GwittirUtils.getAllValidators(
+					getBoundWidget().getBinding(), null);
 			if (!bindingValid) {
-				List<Validator> validators = GwittirUtils.getAllValidators(
-						getBoundWidget().getBinding(), null);
 				for (Validator v : validators) {
 					if (v instanceof ServerValidator) {
 						ServerValidator sv = (ServerValidator) v;
@@ -710,9 +717,14 @@ public class ContentViewFactory {
 								@Override
 								public void run() {
 									crd.hide();
-									DomEvent.fireNativeEvent(
-											WidgetUtils.createZeroClick(),
-											sender);
+									if (serverValidationCallback == null) {
+										DomEvent.fireNativeEvent(
+												WidgetUtils.createZeroClick(),
+												sender);
+									} else {
+										validateAndCommit(sender,
+												serverValidationCallback);
+									}
 								}
 							}.schedule(500);
 							return false;
@@ -748,6 +760,14 @@ public class ContentViewFactory {
 				} else {
 				}
 				return false;
+			}// not valid
+			if (serverValidationCallback != null) {
+				for (Validator v : validators) {
+					if (v instanceof ServerValidator) {
+						serverValidationCallback.onSuccess(null);
+						return true;
+					}
+				}
 			}
 			commitChanges(sender != null);
 			return true;
@@ -762,7 +782,7 @@ public class ContentViewFactory {
 								+ " has unsaved changes. Please press 'OK' to save the changes"
 								+ ", or 'Cancel' to ignore them.");
 				if (save) {
-					boolean result = validateAndCommit(null);
+					boolean result = validateAndCommit(null, null);
 					if (!result) {
 						Window.alert("Unable to save changes due to form validation error.");
 						TransformManager.get().deregisterProvisionalObjects(
