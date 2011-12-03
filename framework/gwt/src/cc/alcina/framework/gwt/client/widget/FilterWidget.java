@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.widget;
 
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.core.client.Scheduler;
@@ -229,7 +230,8 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	@Override
 	protected void onAttach() {
 		super.onAttach();
-		if (isFocusOnAttach()) {
+		if (isFocusOnAttach()
+				&& WidgetUtils.getParentWidget(this, GridForm.class) == null) {
 			// just in case this widget is inside a popup panel e.g.
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				@Override

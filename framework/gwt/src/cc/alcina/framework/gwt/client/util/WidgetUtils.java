@@ -681,16 +681,22 @@ public class WidgetUtils {
 	}
 
 	public static boolean isZeroOffsetDims(Element e) {
-		return e.getOffsetHeight()==0&&e.getOffsetWidth()==0;
+		return e.getOffsetHeight() == 0 && e.getOffsetWidth() == 0;
 	}
-	public static boolean isVisibleAncestorChain(Widget w){
-		while(w!=null){
-			if(!w.isVisible()){
+
+	public static boolean isVisibleAncestorChain(Widget w) {
+		while (w != null) {
+			if (!w.isVisible()) {
 				return false;
 			}
-			w=w.getParent();
+			w = w.getParent();
 		}
 		return true;
-		
+	}
+
+	public static FlowPanel wrapInDiv(Widget widget) {
+		FlowPanel fp = new FlowPanel();
+		fp.add(widget);
+		return fp;
 	}
 }
