@@ -81,6 +81,7 @@ public class XmlUtils {
 		boolean inTag = false;
 		boolean inAttr = false;
 		int length = s.length();
+		char closeAttr = ' ';
 		for (int i = 0; i < length; i++) {
 			char c = s.charAt(i);
 			if (c == '<' && i < length) {
@@ -88,13 +89,22 @@ public class XmlUtils {
 				if (next == '/' || ('A' <= next && 'Z' >= next)
 						|| ('a' <= next && 'z' >= next)) {
 					inTag = true;
+					inAttr = false;
 				}
 			}
 			if (c == '>') {
 				inTag = false;
 			}
 			if (inTag && (c == '\'' || c == '"')) {
-				inAttr = !inAttr;
+				if (!inAttr) {
+					closeAttr = c;
+					inAttr = true;
+				} else {
+					if (c == closeAttr) {
+						closeAttr = ' ';
+						inAttr = false;
+					}
+				}
 			}
 			if (inTag && !inAttr && c == ':') {
 				c = '-';
