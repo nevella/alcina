@@ -517,9 +517,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {
-			ServerValidatorHandler handler = (ServerValidatorHandler) ServletLayerRegistry
-					.get().instantiateSingle(ServerValidator.class,
-							validator.getClass());
+			Class clazz = ServletLayerRegistry.get().lookupSingle(
+					ServerValidator.class, validator.getClass());
+			ServerValidatorHandler handler = null;
+			if (ServerValidatorHandler.class.isAssignableFrom(clazz)) {
+				handler = (ServerValidatorHandler) ServletLayerRegistry.get()
+						.instantiateSingle(ServerValidator.class,
+								validator.getClass());
+			}
 			if (handler instanceof ServletLayerValidatorHandler) {
 				handler.handle(validator, null);
 				results.add(validator);
