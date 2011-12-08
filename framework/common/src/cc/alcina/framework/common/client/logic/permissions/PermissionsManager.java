@@ -268,6 +268,9 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	}
 
 	public Map<String, ? extends IGroup> getUserGroups(IUser user) {
+		if (user != this.user) {
+			groupMap = null;
+		}
 		if (groupMap != null) {
 			return groupMap;
 		}
@@ -284,7 +287,11 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 			IGroup group = itr.next();
 			groupMap.put(group.getName(), group);
 		}
-		return groupMap;
+		HashMap<String, IGroup> result = groupMap;
+		if (user != this.user) {
+			groupMap = null;
+		}
+		return result;
 	}
 
 	public long getUserId() {
@@ -318,9 +325,10 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public boolean isMemberOfGroup(String groupName) {
 		return getUserGroups().containsKey(groupName);
 	}
+
 	public boolean isMemberOfGroups(Collection<String> groupNames) {
 		for (String groupName : groupNames) {
-			if(isMemberOfGroup(groupName)){
+			if (isMemberOfGroup(groupName)) {
 				return true;
 			}
 		}
@@ -450,8 +458,8 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public void setLoginState(LoginState loginState) {
 		LoginState old_loginState = this.loginState;
 		this.loginState = loginState;
-		propertyChangeSupport().firePropertyChange("loginState", old_loginState,
-				loginState);
+		propertyChangeSupport().firePropertyChange("loginState",
+				old_loginState, loginState);
 	}
 
 	public void setOnlineState(OnlineState onlineState) {

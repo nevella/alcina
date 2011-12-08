@@ -34,9 +34,6 @@ package cc.alcina.framework.common.client.publication;
 	public boolean isEmailInline();
 	public String getAttachmentMessage() ;
 	public String getAttachmentMessageForRequestor() ;
-	public static interface PaginatedDeliveryModel extends DeliveryModel{
-		public int getPageNumber();
-	}
 	public boolean isNoPersistence();
 	public boolean isTest();
 }
