@@ -682,4 +682,16 @@ public class CommonUtils {
 		}
 		return false;
 	}
+	public static String getUniqueNumberedString(String base,String postfixTemplate, Collection<String> existingValues){
+		if(!existingValues.contains(base)){
+			return base;
+		}
+		int i=1;
+		while(true){
+			String value=base+CommonUtils.formatJ(postfixTemplate,i++);
+			if(!existingValues.contains(value)){
+				return value;
+			}
+		}
+	}
 }

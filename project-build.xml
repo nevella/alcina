@@ -27,6 +27,8 @@
 			<patternset refid="project.compile.filter.sources" />
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
+		<!-- a hack, but then...maybe I don't understand Ant? -->
+		<delete dir="${project.build.dir}/com/totsp" />
 	</target>
 
 	<target name="make-jars" description="Make ${project.module.description} jar" depends="compile">

@@ -531,6 +531,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public void setFocusOnAttach(boolean focusOnAttach) {
 		this.focusOnAttach = focusOnAttach;
+		if(filter!=null){
+			filter.setFocusOnAttach(focusOnAttach);
+		}
 	}
 
 	public void setHint(String hint) {

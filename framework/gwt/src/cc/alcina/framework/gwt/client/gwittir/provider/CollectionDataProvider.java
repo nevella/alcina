@@ -132,7 +132,7 @@ public class CollectionDataProvider implements SortableDataProvider {
 		return null;
 	}
 
-	private Collection getChunk(int chunkNumber) {
+	public <V> Collection<? extends V> getChunk(int chunkNumber) {
 		ArrayList result = new ArrayList();
 		int maxSize = Math.min(getPageSize(), sort.size() - chunkNumber
 				* getPageSize());

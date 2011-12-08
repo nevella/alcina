@@ -485,6 +485,16 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
+	@Override
+	public void deregisterDomainObject(Object o) {
+		if (o instanceof SourcesPropertyChangeEvents) {
+			listeningTo.remove(o);
+			((SourcesPropertyChangeEvents) o)
+					.removePropertyChangeListener(this);
+		}
+		super.deregisterDomainObject(o);
+	}
+
 	public void resetTltm(HiliLocatorMap locatorMap) {
 		setEntityManager(null);
 		this.userSessionHiliMap = locatorMap;

@@ -19,6 +19,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.logic.domain.HasId;
 
 /**
@@ -69,9 +71,10 @@ public class DefaultCollectionFilter {
 		}
 		return result;
 	}
+
 	public static <V> int indexOf(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
-		int i=0;
+		int i = 0;
 		for (V v : collection) {
 			if (filter.allow(v)) {
 				return i;
@@ -80,6 +83,7 @@ public class DefaultCollectionFilter {
 		}
 		return -1;
 	}
+
 	public static <V> V singleNodeFilter(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
 		for (V v : collection) {
@@ -90,10 +94,35 @@ public class DefaultCollectionFilter {
 		return null;
 	}
 
+	public static <T, C> List<C> convert(Collection<? extends T> collection,
+			Converter<T, C> converter) {
+		List<C> result = new ArrayList<C>();
+		for (T t : collection) {
+			result.add(converter.convert(t));
+		}
+		return result;
+	}
+
+	public static <T, C> List<C> convertAndFilter(
+			Collection<? extends T> collection, ConverterFilter<T, C> converter) {
+		List<C> result = new ArrayList<C>();
+		for (T t : collection) {
+			C convert = converter.convert(t);
+			if (converter.allow(convert)) {
+				result.add(convert);
+			}
+		}
+		return result;
+	}
+
 	public static final CollectionFilter PASSTHROUGH_FILTER = new CollectionFilter() {
 		@Override
 		public boolean allow(Object o) {
 			return true;
 		}
 	};
+
+	public static interface ConverterFilter<T, C> extends Converter<T, C>,
+			CollectionFilter<C> {
+	}
 }

@@ -11,14 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.Lob;
 import javax.persistence.Transient;
@@ -33,15 +31,14 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface WrappedObject<T extends WrapperPersistable> extends HasId {
+public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 	@Transient
-	public  T getObject();
+	public T getObject();
+
 	@Transient
 	public abstract T getObject(ClassLoader classLoader);
 
@@ -62,26 +59,32 @@ import cc.alcina.framework.entity.util.JaxbUtils;
 
 	public static class WrappedObjectHelper {
 		public static String xmlSerialize(Object object) throws JAXBException {
-			List<Class> classes = EntityLayerLocator.get().wrappedObjectProvider()
-					.getJaxbSubclasses();
-			Map<String, String> emptyProps = new HashMap<String, String>();
+			List<Class> classes = EntityLayerLocator.get()
+					.wrappedObjectProvider().getJaxbSubclasses();
 			classes.add(0, object.getClass());
-			JAXBContext jc = JaxbUtils.getContext(classes);
-			Marshaller m = jc.createMarshaller();
-			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-			StringWriter s = new StringWriter();
-			m.marshal(object, s);
-			return s.toString();
+			return xmlSerialize(object, classes);
 		}
+
 		@SuppressWarnings("unchecked")
-		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr) throws JAXBException {
-			List<Class> classes = EntityLayerLocator.get().wrappedObjectProvider()
-					.getJaxbSubclasses();
+		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr)
+				throws JAXBException {
+			List<Class> classes = EntityLayerLocator.get()
+					.wrappedObjectProvider().getJaxbSubclasses();
 			classes.add(0, clazz);
 			JAXBContext jc = JaxbUtils.getContext(classes);
 			Unmarshaller um = jc.createUnmarshaller();
 			StringReader sr = new StringReader(xmlStr);
 			return (T) um.unmarshal(sr);
+		}
+
+		public static String xmlSerialize(Object object,
+				Collection<Class> jaxbClasses) throws JAXBException {
+			JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
+			Marshaller m = jc.createMarshaller();
+			m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			StringWriter s = new StringWriter();
+			m.marshal(object, s);
+			return s.toString();
 		}
 	}
 }

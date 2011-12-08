@@ -165,7 +165,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			impl.setHelloDate(new Date());
 			impl.setUser(PermissionsManager.get().getUser());
 			impl.setAuth(Math.abs(new Random().nextInt()));
-			getEntityManager().flush();	
+			getEntityManager().flush();
 			IUser clonedUser = getNewImplementationInstance(IUser.class);
 			ResourceUtilities
 					.copyBeanProperties(
@@ -350,6 +350,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public abstract String getSystemUserName();
 
+	/**
+	 * Note, if you're going to use the user on the servlet layer, always use
+	 * the 'clean' version of this function
+	 */
 	public U getUserByName(String userName) {
 		List<U> l = getEntityManager()
 				.createQuery(
@@ -441,8 +445,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						if (wrapperId != null) {
 							Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
 									.getPropertyType();
-							if(info.defaultImplementationType()!=Void.class){
-								pType=info.defaultImplementationType();
+							if (info.defaultImplementationType() != Void.class) {
+								pType = info.defaultImplementationType();
 							}
 							WrappedObject wrappedObject = (WrappedObject) getObjectWrapperForUser(
 									pType, wrapperId);
@@ -517,8 +521,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						if (wrapperId != null) {
 							Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
 									.getPropertyType();
-							if(info.defaultImplementationType()!=Void.class){
-								pType=info.defaultImplementationType();
+							if (info.defaultImplementationType() != Void.class) {
+								pType = info.defaultImplementationType();
 							}
 							WrappedObject wrappedObject = EntityLayerLocator
 									.get()
@@ -835,5 +839,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 */
 	protected int getSharedTransformWarmupSize() {
 		return 100;
+	}
+
+	@Override
+	public <US extends IUser> US getCleanedUserById(long userId) {
+		Class<? extends IUser> impl = getImplementation(IUser.class);
+		IUser found = getEntityManager().find(impl, userId);
+		if (found != null) {
+			return (US) getUserByName(found.getUserName(), true);
+		}
+		return null;
 	}
 }

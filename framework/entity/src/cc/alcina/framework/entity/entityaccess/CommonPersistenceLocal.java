@@ -141,4 +141,6 @@ public interface CommonPersistenceLocal {
 
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
 			long fromId, long toId);
+
+	public <US extends IUser> US getCleanedUserById(long userId);
 }
