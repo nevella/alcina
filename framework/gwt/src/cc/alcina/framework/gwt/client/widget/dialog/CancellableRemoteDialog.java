@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.dialog;
-
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -28,11 +26,10 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class CancellableRemoteDialog extends GlassDialogBox {
+public class CancellableRemoteDialog extends GlassDialogBox {
 	public static final String CANCEL_ACTION = "cancel";
 
 	private Label statusLabel;
@@ -40,10 +37,17 @@ import com.google.gwt.user.client.ui.Label;
 	protected Button cancelButton;
 
 	private Button retryButton;
-	protected boolean initialAnimationEnabled(){
+
+	protected boolean initialAnimationEnabled() {
 		return true;
 	}
+
 	public CancellableRemoteDialog(String msg, PermissibleActionListener l) {
+		this(msg, l, true);
+	}
+
+	public CancellableRemoteDialog(String msg, PermissibleActionListener l,
+			boolean autoShow) {
 		if (l == null) {
 			l = new PermissibleActionListener() {
 				public void vetoableAction(PermissibleActionEvent evt) {
@@ -78,6 +82,12 @@ import com.google.gwt.user.client.ui.Label;
 		getRetryButton().setVisible(false);
 		grr.setWidget(1, 0, hp);
 		setWidget(grr);
+		if (autoShow) {
+			centerAndShow();
+		}
+	}
+
+	public void centerAndShow() {
 		center();
 		show();
 	}

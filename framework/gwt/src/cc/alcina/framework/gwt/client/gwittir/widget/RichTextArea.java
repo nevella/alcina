@@ -149,8 +149,10 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 	}
 
 	protected native void styleBody(Element elem, String defaultFontSize) /*-{
-		elem.contentWindow.document.body.setAttribute("style",
+		if(elem.contentWindow){
+			elem.contentWindow.document.body.setAttribute("style",
 				"font-family: Arial; margin: 2px;font-size:" + defaultFontSize);
+		}
 	}-*/;
 
 	public int getTabIndex() {

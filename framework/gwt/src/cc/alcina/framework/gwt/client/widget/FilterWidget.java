@@ -90,7 +90,10 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		textBox.addFocusHandler(this);
 		textBox.addBlurHandler(this);
 		holder.setStyleName("alcina-FilterHolder");
-		holder.add(textBox);
+		FlowPanel holder2 = new FlowPanel();
+		holder2.add(textBox);
+		holder2.setStyleName("alcina-FilterHolder-pad");
+		holder.add(holder2);
 		initWidget(holder);
 		setHint(hint);
 		filterDelayMs = ClientLayerLocator.get().getGeneralProperties()

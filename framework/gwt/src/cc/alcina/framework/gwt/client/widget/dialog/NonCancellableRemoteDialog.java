@@ -11,24 +11,26 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.dialog;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class NonCancellableRemoteDialog extends
-		CancellableRemoteDialog {
-	public NonCancellableRemoteDialog(String msg){
-		this(msg,null);
+public class NonCancellableRemoteDialog extends CancellableRemoteDialog {
+	public NonCancellableRemoteDialog(String msg) {
+		this(msg, null, true);
 	}
+
 	public NonCancellableRemoteDialog(String msg, PermissibleActionListener l) {
-		super(msg, l);
+		this(msg, l, true);
+	}
+
+	public NonCancellableRemoteDialog(String msg, PermissibleActionListener l,
+			boolean autoShow) {
+		super(msg, l, autoShow);
 		cancelButton.setVisible(false);
 	}
-	
 }

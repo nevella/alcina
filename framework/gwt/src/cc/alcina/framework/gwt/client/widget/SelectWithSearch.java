@@ -55,6 +55,8 @@ import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasWidgets;
+import com.google.gwt.user.client.ui.IndexedPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
@@ -88,7 +90,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	private FlowPanel holder;
 
-	protected FlowPanel itemHolder;
+	protected Widget itemHolder;
+	
+	protected HasWidgets itemHolderAsHasWidgets(){
+		return (HasWidgets) itemHolder;
+	}
 
 	private Map<G, List<T>> itemMap;
 
@@ -196,8 +202,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				}
 			}
 		});
-		itemHolder = new FlowPanel();
-		itemHolder.setStyleName("select-item-container");
+		createItemHolder();
 		if (inPanelHint != null) {
 			hintLabel = new HTML(inPanelHint);
 			hintLabel.setStyleName("hint");
@@ -205,7 +210,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				showHintStrategy.registerHintWidget(hintLabel);
 				showHintStrategy.registerFilter(filter);
 			}
-			itemHolder.add(hintLabel);
+			itemHolderAsHasWidgets().add(hintLabel);
 		}
 		groupCaptions = new ArrayList<Label>();
 		popdownHider = new ClickHandler() {
@@ -262,6 +267,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			holder.add(scroller);
 		}
 		return holder;
+	}
+
+	protected void createItemHolder() {
+		itemHolder = new FlowPanel();
+		itemHolder.setStyleName("select-item-container");
 	}
 
 	public void hidePopdown() {
@@ -364,6 +374,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 		private int getVisibleFilterableCount() {
 			int visibleIndex = -1;
+			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
 			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
 				Widget widget = itemHolder.getWidget(i);
 				if (widget instanceof VisualFilterable && widget.isVisible()) {
@@ -375,6 +386,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 		private Widget getSelectedWidget() {
 			int visibleIndex = -1;
+			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
 			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
 				Widget widget = itemHolder.getWidget(i);
 				if (widget instanceof VisualFilterable && widget.isVisible()) {
@@ -401,6 +413,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		for (Label l : groupCaptions) {
 			l.setVisible(filterText.length() == 0);
 		}
+		IndexedPanel itemHolder = itemHolderAsIndexedPanel();
 		for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
 			Widget widget = itemHolder.getWidget(i);
 			if (widget instanceof VisualFilterable) {
@@ -410,6 +423,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			}
 		}
 		return b;
+	}
+
+	public IndexedPanel itemHolderAsIndexedPanel() {
+		return (IndexedPanel) itemHolder;
 	}
 
 	public ClickHandler getEnterHandler() {
@@ -599,6 +616,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	protected void updateItems() {
+		HasWidgets itemHolder = itemHolderAsHasWidgets();
 		itemHolder.clear();
 		emptyItems = true;
 		if (hintLabel != null) {
@@ -612,7 +630,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			Label l = new Label(c.toString().toUpperCase());
 			l.setStyleName("group-heading");
 			groupCaptions.add(l);
-			itemHolder.add(l);
+			addGroupHeading(itemHolder, l);
 			if (c.toString().trim().isEmpty()) {
 				l.getElement().getStyle().setVisibility(Visibility.HIDDEN);
 			} else {
@@ -631,11 +649,19 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				}
 				itemHolder.add((Widget) hch);
 				if (ctr != 0 && sep.length() == 0) {
-					itemHolder.add(new InlineHTML(" "));
+					addDefaultSeparator(itemHolder);
 				}
 			}
 		}
 		afterUpdateItems(emptyItems);
+	}
+
+	protected void addDefaultSeparator(HasWidgets itemHolder) {
+		itemHolder.add(new InlineHTML(" "));
+	}
+
+	protected void addGroupHeading(HasWidgets itemHolder, Label l) {
+		itemHolder.add(l);
 	}
 
 	boolean emptyItems = false;
