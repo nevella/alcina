@@ -1,0 +1,10 @@
+<module>
+	<inherits name='cc.alcina.framework.common.AlcinaCommon' />
+	<inherits name='cc.alcina.framework.common.ClientReflector' />
+	<inherits name="cc.alcina.framework.gwt.persistence.DTPersistence" />
+	<inherits name='com.google.gwt.json.JSON'/>
+	<inherits name='cc.alcina.framework.gwt.appcache.AppCache' />
+
+	<public path="public" />
+	<source path="client" />
+</module>

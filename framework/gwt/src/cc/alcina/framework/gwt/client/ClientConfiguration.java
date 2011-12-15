@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client;
 
+import com.google.gwt.dom.client.StyleInjector;
+
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -14,12 +16,14 @@ import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.ClientUTCDateProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.provider.ClientURLComponentEncoder;
+import cc.alcina.framework.gwt.client.res.AlcinaResources;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderGwt;
 
 public class ClientConfiguration {
 	public void initServices() {
 		initNotifications();
+		initCss();
 		ClientLayerLocator.get().notifications().metricLogStart("moduleLoad");
 		initExceptionHandling();
 		initAppCache();
@@ -38,7 +42,9 @@ public class ClientConfiguration {
 	protected void prepareDebugFromHistory() {
 		AlcinaDebugIds.initialise();
 	}
-
+	protected void initCss(){
+		StyleInjector.inject(AlcinaResources.INSTANCE.css().getText());
+	}
 	protected void initAppCache() {
 	}
 
