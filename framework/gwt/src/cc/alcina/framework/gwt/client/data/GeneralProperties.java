@@ -42,13 +42,15 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
  */
 
  public class GeneralProperties extends WrapperPersistable  {
+	public static final transient int DEFAULT_FILTER_DELAY = 500;
+
 	public static final transient String PROPERTY_TRANSIENT_CSS = "transientCss";
 
 	public static final transient String PROPERTY_PERSISTENT_CSS = "persistentCss";
 
 	private boolean autoSave;
 
-	private int filterDelayMs = 500;
+	private int filterDelayMs = DEFAULT_FILTER_DELAY;
 
 	private String transientCss = "";
 

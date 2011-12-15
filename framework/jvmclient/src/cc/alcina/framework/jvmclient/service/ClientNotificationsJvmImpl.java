@@ -101,4 +101,7 @@ public class ClientNotificationsJvmImpl implements ClientNofications {
 		System.out.println(msg);
 		System.out.println(detail);
 	}
+
+	public void notifyOfCompletedSaveFromOffline() {
+	}
 }

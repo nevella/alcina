@@ -129,7 +129,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 							clearAllPersisted(new PersistenceCallbackStd() {
 								@Override
 								public void onSuccess(Object result) {
-									Window.alert("Save work from previous session to server completed");
+									ClientLayerLocator.get().notifications().notifyOfCompletedSaveFromOffline();
 									cb.callback(null);
 								}
 							});

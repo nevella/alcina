@@ -34,6 +34,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -268,7 +269,10 @@ public class ClientNotificationsImpl implements ClientNofications {
 				+ ""
 				+ " If the problem recurs, please try refreshing your browser";
 	}
-
+	@Override
+	public void notifyOfCompletedSaveFromOffline(){
+		Window.alert("Save work from previous session to server completed");
+	}
 	public enum MessageType {
 		INFO, WARN, ERROR
 	}

@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.widget;
 
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -96,8 +97,10 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		holder.add(holder2);
 		initWidget(holder);
 		setHint(hint);
-		filterDelayMs = ClientLayerLocator.get().getGeneralProperties()
-				.getFilterDelayMs();
+		GeneralProperties generalProperties = ClientLayerLocator.get()
+				.getGeneralProperties();
+		filterDelayMs = generalProperties == null ? GeneralProperties.DEFAULT_FILTER_DELAY
+				: generalProperties.getFilterDelayMs();
 	}
 
 	private String hint;

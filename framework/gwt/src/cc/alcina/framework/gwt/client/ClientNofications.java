@@ -47,4 +47,6 @@ public interface ClientNofications extends LogWriter{
 	public abstract void showWarning(String msg);
 
 	public abstract void showWarning(String msg, String detail);
+
+	public abstract void notifyOfCompletedSaveFromOffline();
 }
