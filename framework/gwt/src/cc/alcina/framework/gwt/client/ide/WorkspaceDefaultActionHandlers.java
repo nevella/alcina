@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -82,20 +83,25 @@ public class WorkspaceDefaultActionHandlers {
 
 		public void performAction(PermissibleActionEvent event, Object node,
 				Object object, Workspace workspace, Class nodeObjectClass) {
-			newObj = isAutoSave() ? TransformManager.get().createDomainObject(
-					nodeObjectClass) : TransformManager.get()
-					.createProvisionalObject(nodeObjectClass);
-			handleParentLinks(workspace, node, newObj);
-			ClientTransformManager.cast().prepareObject(newObj, isAutoSave(),
-					true, false);
-			TextProvider.get().setDecorated(false);
-			String tdn = ClientReflector.get()
-					.beanInfoForClass(nodeObjectClass).getTypeDisplayName();
-			TextProvider.get().setDecorated(true);
-			TextProvider.get().setObjectName(newObj, "New " + tdn);
-			if (newObj instanceof IVersionableOwnable) {
-				((IVersionableOwnable) newObj).setOwner(PermissionsManager
-						.get().getUser());
+			try {
+				CollectionModificationSupport.queue(true);
+				newObj = isAutoSave() ? TransformManager.get()
+						.createDomainObject(nodeObjectClass) : TransformManager
+						.get().createProvisionalObject(nodeObjectClass);
+				handleParentLinks(workspace, node, newObj);
+				ClientTransformManager.cast().prepareObject(newObj,
+						isAutoSave(), true, false);
+				TextProvider.get().setDecorated(false);
+				String tdn = ClientReflector.get()
+						.beanInfoForClass(nodeObjectClass).getTypeDisplayName();
+				TextProvider.get().setDecorated(true);
+				TextProvider.get().setObjectName(newObj, "New " + tdn);
+				if (newObj instanceof IVersionableOwnable) {
+					((IVersionableOwnable) newObj).setOwner(PermissionsManager
+							.get().getUser());
+				}
+			} finally {
+				CollectionModificationSupport.queue(false);
 			}
 			PaneWrapperWithObjects view = getContentViewFactory()
 					.createBeanView(newObj, true, workspace, isAutoSave(),

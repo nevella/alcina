@@ -85,7 +85,6 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		this.setComparator(SimpleComparator.INSTANCE);
 		this.base.addBlurHandler(new BlurHandler() {
 			public void onBlur(BlurEvent event) {
-				ClientLayerLocator.get().notifications().log("lostfocus");
 				EventTarget eventTarget = event.getNativeEvent()
 						.getEventTarget();
 				if (Node.is(eventTarget)) {
@@ -147,7 +146,11 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		}.schedule(200);
 		super.onLoad();
 	}
-
+	@Override
+	protected void onDetach() {
+		changes.firePropertyChange("value", old, getValue());
+		super.onDetach();
+	}
 	protected native void styleBody(Element elem, String defaultFontSize) /*-{
 		if(elem.contentWindow){
 			elem.contentWindow.document.body.setAttribute("style",

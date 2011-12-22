@@ -957,7 +957,9 @@ input.alcina-Filter {
 	padding: 1px 1px 1px 15px;
 	height: 14px;
 }
-
+div.alcina-FilterHolder.inlineFilter div.alcina-FilterHolder-pad{
+	display:inline;background:none; border:none;
+}
 div.alcina-FilterHolder {
 	background-color: #DFDFDF;
 	padding: 1px 5px 1px 2px;

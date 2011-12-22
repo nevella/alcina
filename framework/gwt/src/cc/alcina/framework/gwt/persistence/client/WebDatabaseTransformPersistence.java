@@ -149,7 +149,7 @@ public class WebDatabaseTransformPersistence extends
 			final PersistenceCallback callback) {
 		final LocalTransformPersistence listener = this;
 		try {
-			db = Database.openDatabase("alcina-transform-persistence", "1.0",
+			db = Database.openDatabase(getTransformDbName(), "1.0",
 					"Alcina Transforms", 5000000);
 		} catch (Exception e) {
 			// squelch - no gears
@@ -187,6 +187,10 @@ public class WebDatabaseTransformPersistence extends
 			});
 		}
 		callback.onSuccess(null);
+	}
+
+	protected String getTransformDbName() {
+		return "alcina-transform-persistence";
 	}
 
 	private void initSuper(DTESerializationPolicy dteSerializationPolicy,

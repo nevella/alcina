@@ -377,10 +377,14 @@ public class CommonUtils {
 	}
 
 	public static String padStringLeft(String input, int length, char padChar) {
+		return padStringLeft(input, length, String.valueOf(padChar));
+	}
+
+	public static String padStringLeft(String input, int length, String pad) {
 		input = input == null ? "(null)" : input;
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < length - input.length(); i++) {
-			sb.append(padChar);
+			sb.append(pad);
 		}
 		sb.append(input);
 		return sb.toString();
@@ -619,10 +623,11 @@ public class CommonUtils {
 		}
 		return null;
 	}
+
 	public static int indexOf(Iterator iterator, Object obj) {
-		int i=0;
+		int i = 0;
 		while (iterator.hasNext()) {
-			if(obj==iterator.next()){
+			if (obj == iterator.next()) {
 				return i;
 			}
 			i++;
@@ -674,22 +679,25 @@ public class CommonUtils {
 		}
 		return result.toString();
 	}
-	public static boolean isOneOf(Class clazz,Class[] possibleClasses){
+
+	public static boolean isOneOf(Class clazz, Class[] possibleClasses) {
 		for (Class c : possibleClasses) {
-			if(clazz==c){
+			if (clazz == c) {
 				return true;
 			}
 		}
 		return false;
 	}
-	public static String getUniqueNumberedString(String base,String postfixTemplate, Collection<String> existingValues){
-		if(!existingValues.contains(base)){
+
+	public static String getUniqueNumberedString(String base,
+			String postfixTemplate, Collection<String> existingValues) {
+		if (!existingValues.contains(base)) {
 			return base;
 		}
-		int i=1;
-		while(true){
-			String value=base+CommonUtils.formatJ(postfixTemplate,i++);
-			if(!existingValues.contains(value)){
+		int i = 1;
+		while (true) {
+			String value = base + CommonUtils.formatJ(postfixTemplate, i++);
+			if (!existingValues.contains(value)) {
 				return value;
 			}
 		}

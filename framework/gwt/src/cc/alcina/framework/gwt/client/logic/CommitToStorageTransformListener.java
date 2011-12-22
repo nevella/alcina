@@ -61,9 +61,9 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>() ;
 
-	private TimerWrapper queueingFinishedTimer;
+	protected TimerWrapper queueingFinishedTimer;
 
-	private long lastQueueAddMillis;
+	protected long lastQueueAddMillis;
 
 	private boolean suppressErrors = false;
 
@@ -108,22 +108,26 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			if (queueingFinishedTimer == null) {
 				queueingFinishedTimer = ClientLayerLocator.get()
 						.timerWrapperProvider()
-						.getTimer(new CommitLoopRunnable());
+						.getTimer(getCommitLoopRunnable());
 				queueingFinishedTimer.scheduleRepeating(DELAY_MS);
 			}
 			return;
 		}
 	}
 
+	protected Runnable getCommitLoopRunnable() {
+		return new CommitLoopRunnable();
+	}
+
 	class CommitLoopRunnable implements Runnable {
-		long timerAddedMillis = lastQueueAddMillis;
+		long checkMillis = lastQueueAddMillis;
 
 		@Override
 		public void run() {
-			if (lastQueueAddMillis - timerAddedMillis == 0) {
+			if (checkMillis==lastQueueAddMillis ) {
 				commit();
 			}
-			timerAddedMillis = lastQueueAddMillis;
+			checkMillis = lastQueueAddMillis;
 		}
 	}
 
@@ -186,7 +190,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		// eventIdsToIgnore = new HashSet<Long>();
 	}
 
-	void commit() {
+	protected void commit() {
 		if (priorRequestsWithoutResponse.size() == 0
 				&& transformQueue.size() == 0 || isPaused()) {
 			return;

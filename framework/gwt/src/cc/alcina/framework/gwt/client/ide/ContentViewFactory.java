@@ -690,10 +690,6 @@ public class ContentViewFactory {
 
 		public boolean validateAndCommit(final Widget sender,
 				final AsyncCallback<Void> serverValidationCallback) {
-			// makes sure richtextareas get a focuslost()
-			if (saveButton != null) {
-				saveButton.setFocus(true);
-			}
 			if (!validateBean()) {
 				return false;
 			}
@@ -775,7 +771,8 @@ public class ContentViewFactory {
 
 		@Override
 		protected void onDetach() {
-			super.onDetach();
+			super.onDetach();// inter alia, detach children, forcing commit of
+								// richtexts etc
 			if (objects != null && TransformManager.get().dirty(objects)) {
 				boolean save = Window
 						.confirm("You are closing a form that"

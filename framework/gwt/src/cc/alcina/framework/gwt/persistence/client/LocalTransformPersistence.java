@@ -126,13 +126,17 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 						public void onSuccess(Void result) {
 							hideDialog();
-							clearAllPersisted(new PersistenceCallbackStd() {
-								@Override
-								public void onSuccess(Object result) {
-									ClientLayerLocator.get().notifications().notifyOfCompletedSaveFromOffline();
-									cb.callback(null);
-								}
-							});
+							transformPersisted(uncommitted,
+									new PersistenceCallbackStd() {
+										@Override
+										public void onSuccess(Object result) {
+											ClientLayerLocator
+													.get()
+													.notifications()
+													.notifyOfCompletedSaveFromOffline();
+											cb.callback(null);
+										}
+									});
 						}
 
 						private void hideDialog() {
@@ -281,13 +285,12 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		ClientInstance clientInstance = ClientLayerLocator.get()
 				.getClientInstance();
 		String rpcResult = mixedHelper.getBuilder().getRpcResult();
-		if(rpcResult==null){
+		if (rpcResult == null) {
 			persistenceCallback.onSuccess(null);
 			return;
 		}
 		DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(0,
-				rpcResult,
-				System.currentTimeMillis(), PermissionsManager.get()
+				rpcResult, System.currentTimeMillis(), PermissionsManager.get()
 						.getUserId(), clientInstance.getId(), 0,
 				clientInstance.getAuth(),
 				DomainTransformRequestType.CLIENT_OBJECT_LOAD,

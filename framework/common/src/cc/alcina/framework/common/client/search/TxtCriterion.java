@@ -30,6 +30,13 @@ public class TxtCriterion extends SearchCriterion {
 
 	private TxtCriterionType txtCriterionType = TxtCriterionType.CONTAINS;
 
+	public TxtCriterion() {
+	}
+
+	public TxtCriterion(String displayName) {
+		super(displayName);
+	}
+
 	public void setText(String text) {
 		this.text = text;
 	}
@@ -43,8 +50,8 @@ public class TxtCriterion extends SearchCriterion {
 			TxtCriterion otherT = (TxtCriterion) other;
 			return otherT.getDirection() == getDirection()
 					&& otherT.getTxtCriterionType() == getTxtCriterionType()
-					&& CommonUtils.equalsWithNullEquality(getText(), otherT
-							.getText());
+					&& CommonUtils.equalsWithNullEquality(getText(),
+							otherT.getText());
 		}
 		return false;
 	}
