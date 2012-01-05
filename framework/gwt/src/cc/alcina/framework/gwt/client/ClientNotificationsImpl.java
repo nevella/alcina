@@ -215,6 +215,7 @@ public class ClientNotificationsImpl implements ClientNofications {
 	}
 
 	public void showError(String msg, Throwable throwable) {
+		log("error: " + msg.replace("<br>", "\n")+"\n"+throwable.toString());
 		msg += CommonUtils.isNullOrEmpty(msg) ? "" : "<br><br>";
 		msg += getStandardErrorText();
 		msg = "<div class='errorOops'>Ooops - an error has occurred</div>"
@@ -269,10 +270,12 @@ public class ClientNotificationsImpl implements ClientNofications {
 				+ ""
 				+ " If the problem recurs, please try refreshing your browser";
 	}
+
 	@Override
-	public void notifyOfCompletedSaveFromOffline(){
+	public void notifyOfCompletedSaveFromOffline() {
 		Window.alert("Save work from previous session to server completed");
 	}
+
 	public enum MessageType {
 		INFO, WARN, ERROR
 	}

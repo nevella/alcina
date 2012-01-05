@@ -27,7 +27,7 @@ public abstract class CommonRemoteServiceAsyncProvider<CRSA extends CommonRemote
 	public CRSA getServiceInstance() {
 		CRSA service = createAndIntialiseEndpoint();
 		((ServiceDefTarget) service)
-				.setRpcRequestBuilder(new AlcinaRpcRequestBuilder());
+				.setRpcRequestBuilder(getRequestBuilder());
 		return service;
 	}
 	public CRSA getServiceInstance(RpcRequestBuilder builder) {
@@ -36,7 +36,9 @@ public abstract class CommonRemoteServiceAsyncProvider<CRSA extends CommonRemote
 				.setRpcRequestBuilder(builder);
 		return service;
 	}
-
+	public AlcinaRpcRequestBuilder getRequestBuilder(){
+		return new AlcinaRpcRequestBuilder();
+	}
 	protected abstract CRSA createAndIntialiseEndpoint();
 	
 	protected String adjustEndpoint(String endpoint){

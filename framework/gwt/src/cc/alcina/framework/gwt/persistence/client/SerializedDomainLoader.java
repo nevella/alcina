@@ -20,6 +20,8 @@ import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.ClientNofications;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+
 public abstract class SerializedDomainLoader {
 	public static final String OFFLINE_LOAD_METRIC_KEY = "offline-load";
 
@@ -158,7 +160,7 @@ public abstract class SerializedDomainLoader {
 		return loadObjectsHolder;
 	}
 
-	protected void registerRpcDomainModelHolder() {
+	protected void registerRpcDomainModelHolder(ScheduledCommand scheduledCommand) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -205,9 +207,16 @@ public abstract class SerializedDomainLoader {
 					if (hasGwtRpcTransforms()) {
 						displayReplayRpcNotification(false);
 					}
-					replayAfterPossibleDelay();
+					replayAfterPossibleDelay(new ScheduledCommand(){
+
+						@Override
+						public void execute() {
+							persistenceCallback.onSuccess(true);							
+						}
+						
+					});
 				}
-				persistenceCallback.onSuccess(true);
+				
 			}
 		};
 		PersistenceCallback<List<DTRSimpleSerialWrapper>> afterOpenForOffline = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
@@ -238,16 +247,22 @@ public abstract class SerializedDomainLoader {
 				afterOpenForOffline);
 	}
 
-	protected void replaySequence() {
-		List<DomainTransformEvent> initialEvents = handleGwtRpcTransforms();
+	protected void replaySequence(final ScheduledCommand postRegisterCommand) {
+		assert postRegisterCommand!=null;
+		final List<DomainTransformEvent> initialEvents = handleGwtRpcTransforms();
 		if (getLoadObjectsHolder() != null) {
-			registerRpcDomainModelHolder();
+			registerRpcDomainModelHolder(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					replayTransforms(initialEvents);
+					postRegisterCommand.execute();
+				}
+			});
 		}
-		replayTransforms(initialEvents);
 	}
 
-	protected void replayAfterPossibleDelay() {
-		replaySequence();
+	protected void replayAfterPossibleDelay(ScheduledCommand postRegisterCommand) {
+		replaySequence(postRegisterCommand);
 	}
 
 	protected abstract void replayTransforms(

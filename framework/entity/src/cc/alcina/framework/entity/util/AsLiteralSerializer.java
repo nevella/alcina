@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
@@ -289,7 +289,7 @@ public class AsLiteralSerializer {
 				|| (source instanceof Number) || (source instanceof Date));
 	}
 
-	public OutputInstantiation traverse(Object source, ClassFieldPair context)
+	public OutputInstantiation traverse(Object source, GraphProjectionContext context)
 			throws Exception {
 		if (source == null) {
 			return null;

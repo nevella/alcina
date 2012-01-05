@@ -41,7 +41,6 @@ import cc.alcina.framework.entity.SEUtilities;
  * @author Nick Reddel
  */
 public class GraphProjection {
-
 	private GraphProjectionFilter dataFilter;
 
 	private GraphProjectionFilter fieldFilter;
@@ -57,12 +56,13 @@ public class GraphProjection {
 
 	private IdentityHashMap reached = new IdentityHashMap();
 
-	public <T> T project(T source, ClassFieldPair context) throws Exception {
+	public <T> T project(T source, GraphProjectionContext context)
+			throws Exception {
 		return project(source, null, context);
 	}
 
-	public <T> T project(T source, Object alsoMapTo, ClassFieldPair context)
-			throws Exception {
+	public <T> T project(T source, Object alsoMapTo,
+			GraphProjectionContext context) throws Exception {
 		if (source == null) {
 			return null;
 		}
@@ -92,7 +92,7 @@ public class GraphProjection {
 		}
 		if (dataFilter != null) {
 			if (context == null) {
-				context = new ClassFieldPair(c, "");
+				context = new GraphProjectionContext(c, "", null);
 			}
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
@@ -117,15 +117,17 @@ public class GraphProjection {
 					continue;
 				}
 			}
-			Object cv = project(value, new ClassFieldPair(c, field.getName()));
+			GraphProjectionContext childContext = new GraphProjectionContext(c,
+					field.getName(), context);
+			Object cv = project(value, childContext);
 			field.set(projected, cv);
 		}
 		return projected;
 	}
 
 	// TODO - shouldn't this be package-private?
-	public Collection projectCollection(Collection coll, ClassFieldPair context)
-			throws Exception {
+	public Collection projectCollection(Collection coll,
+			GraphProjectionContext context) throws Exception {
 		Collection c = null;
 		if (coll instanceof ArrayList) {
 			c = coll.getClass().newInstance();
@@ -141,7 +143,9 @@ public class GraphProjection {
 		for (; itr.hasNext();) {
 			value = itr.next();
 			Object projected = project(value, context);
+			if (value == null || projected != null) {
 				c.add(projected);
+			}
 		}
 		return c;
 	}
@@ -213,15 +217,16 @@ public class GraphProjection {
 		 * return a value === projected) it must immediately (on new object
 		 * instantiation) register the new value in graphProjection.reached
 		 */
-		<T> T filterData(T original, T projected, ClassFieldPair context,
-				GraphProjection graphProjection) throws Exception;
+		<T> T filterData(T original, T projected,
+				GraphProjectionContext context, GraphProjection graphProjection)
+				throws Exception;
 
 		boolean permitField(Field field, Set<Field> perObjectPermissionFields);
 	}
 
 	public static class PermissibleFieldFilter implements GraphProjectionFilter {
 		public <T> T filterData(T original, T projected,
-				ClassFieldPair context, GraphProjection graphProjection)
+				GraphProjectionContext context, GraphProjection graphProjection)
 				throws Exception {
 			return null;
 		}
@@ -266,13 +271,14 @@ public class GraphProjection {
 			GraphProjectionFilter {
 		@SuppressWarnings("unchecked")
 		public <T> T filterData(T original, T projected,
-				ClassFieldPair context, GraphProjection graphProjection)
+				GraphProjectionContext context, GraphProjection graphProjection)
 				throws Exception {
 			if (original.getClass().isArray()) {
 				int n = Array.getLength(original);
 				for (int i = 0; i < n; i++) {
-					Array.set(projected, i, graphProjection.project(
-							Array.get(original, i), context));
+					Object source = Array.get(original, i);
+					Array.set(projected, i,
+							graphProjection.project(source, context));
 				}
 			}
 			if (original instanceof Collection) {
@@ -285,7 +291,7 @@ public class GraphProjection {
 			return projected;
 		}
 
-		private Object projectMap(Map map, ClassFieldPair context,
+		private Object projectMap(Map map, GraphProjectionContext context,
 				GraphProjection graphProjection) throws Exception {
 			Map m = null;
 			if (map instanceof LinkedHashMap) {
@@ -298,8 +304,10 @@ public class GraphProjection {
 			for (; itr.hasNext();) {
 				key = itr.next();
 				value = map.get(key);
-				m.put(graphProjection.project(key, context),
-						graphProjection.project(value, context));
+				Object pKey = graphProjection.project(key, context);
+				if (key == null || pKey != null) {
+					m.put(pKey, graphProjection.project(value, context));
+				}
 			}
 			return m;
 		}
@@ -310,10 +318,14 @@ public class GraphProjection {
 		}
 	}
 
-	public static class ClassFieldPair {
-		public ClassFieldPair(Class clazz, String fieldName) {
+	public static class GraphProjectionContext {
+		public GraphProjectionContext parent;
+
+		public GraphProjectionContext(Class clazz, String fieldName,
+				GraphProjectionContext parent) {
 			this.clazz = clazz;
 			this.fieldName = fieldName;
+			this.parent = parent;
 		}
 
 		public Class clazz;
@@ -322,8 +334,8 @@ public class GraphProjection {
 
 		@Override
 		public boolean equals(Object obj) {
-			if (obj instanceof ClassFieldPair) {
-				ClassFieldPair o2 = (ClassFieldPair) obj;
+			if (obj instanceof GraphProjectionContext) {
+				GraphProjectionContext o2 = (GraphProjectionContext) obj;
 				return o2.clazz == clazz && o2.fieldName.equals(fieldName);
 			}
 			return false;
@@ -336,18 +348,22 @@ public class GraphProjection {
 
 		@Override
 		public String toString() {
-			return clazz.getSimpleName() + "." + fieldName;
+			return (parent == null ? "" : parent.toString() + "::")
+					+ clazz.getSimpleName() + "." + fieldName;
 		}
 	}
 
 	public interface InstantiateImplCallback<T> {
-		boolean instantiateLazyInitializer(T initializer, ClassFieldPair context);
+		boolean instantiateLazyInitializer(T initializer,
+				GraphProjectionContext context);
 	}
 
 	public interface InstantiateImplCallbackWithShellObject<T> extends
 			InstantiateImplCallback<T> {
-		boolean instantiateLazyInitializer(T initializer, ClassFieldPair context);
+		boolean instantiateLazyInitializer(T initializer,
+				GraphProjectionContext context);
 
-		Object instantiateShellObject(T initializer, ClassFieldPair context);
+		Object instantiateShellObject(T initializer,
+				GraphProjectionContext context);
 	}
 }

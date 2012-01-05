@@ -24,7 +24,7 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.EntityUtils;
-import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.UnixCrypt;
@@ -160,7 +160,7 @@ public class AlcinaTemplatePersistence
 
 	private InstantiateImplCallback userGroupGetterCallback = new InstantiateImplCallback<LazyInitializer>() {
 		public boolean instantiateLazyInitializer(LazyInitializer initializer,
-				ClassFieldPair context) {
+				GraphProjectionContext context) {
 			Class persistentClass = initializer.getPersistentClass();
 			return persistentClass == AlcinaTemplateGroup.class
 					|| persistentClass == AlcinaTemplateUser.class;

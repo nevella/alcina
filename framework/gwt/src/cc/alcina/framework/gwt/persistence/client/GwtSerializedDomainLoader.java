@@ -20,6 +20,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Timer;
 
 public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
@@ -32,11 +33,11 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 	}
 
 	@Override
-	protected void replayAfterPossibleDelay() {
+	protected void replayAfterPossibleDelay(final ScheduledCommand postRegisterCommand) {
 		new Timer() {
 			@Override
 			public void run() {
-				replaySequence();
+				replaySequence(postRegisterCommand);
 			}
 		}.schedule(100);
 	}

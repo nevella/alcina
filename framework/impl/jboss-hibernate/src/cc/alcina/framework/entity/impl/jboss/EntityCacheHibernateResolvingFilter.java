@@ -24,7 +24,7 @@ import org.hibernate.proxy.LazyInitializer;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallbackWithShellObject;
 
@@ -78,7 +78,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	}
 
 	@Override
-	public <T> T filterData(T value, T cloned, ClassFieldPair context,
+	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
 		if (value instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;
@@ -131,7 +131,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	}
 
 	@Override
-	protected Object clonePersistentSet(Set ps, ClassFieldPair context,
+	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
 		HashSet hs = new HashSet();
 		graphCloner.getReached().put(ps, hs);
@@ -140,17 +140,21 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 			Object value;
 			for (; itr.hasNext();) {
 				value = itr.next();
+				Object projected = null;
+				
 				if (value instanceof HibernateProxy) {
 					LazyInitializer lazy = ((HibernateProxy) value)
 							.getHibernateLazyInitializer();
 					Object impl = ((HibernateProxy) value)
 							.getHibernateLazyInitializer().getImplementation();
-					value = graphCloner.project(impl, value, context);
-					getCache().put((HasIdAndLocalId) value);
+					projected = graphCloner.project(impl, value, context);
+					getCache().put((HasIdAndLocalId) projected);
 				} else {
-					value = graphCloner.project(value, context);
+					projected = graphCloner.project(value, context);
 				}
-				hs.add(value);
+				if (value == null || projected != null) {
+					hs.add(projected);
+				}
 			}
 		}
 		return hs;

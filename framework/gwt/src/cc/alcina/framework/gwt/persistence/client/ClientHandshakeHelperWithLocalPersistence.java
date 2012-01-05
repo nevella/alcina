@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -18,7 +20,7 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 
 	@Override
 	protected void locallyPersistDomainModelAndReplayPostLoadTransforms(
-			final LoginState loginState) {
+			final LoginState loginState, final ScheduledCommand postRegisterCommand) {
 		LocalTransformPersistence localPersistence = LocalTransformPersistence
 				.get();
 		try {
@@ -57,7 +59,7 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 								@Override
 								public void onSuccess(Void result) {
 									cleanup();
-									afterLocalPersistenceAndReplay(loginState);
+									afterLocalPersistenceAndReplay(loginState,postRegisterCommand);
 									
 								}
 								void cleanup(){
@@ -81,7 +83,7 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 			ClientSession.get().setInitialObjectsPersisted(false);
 			throw new WrappedRuntimeException(e);
 		}
-		afterLocalPersistenceAndReplay(loginState);
+		afterLocalPersistenceAndReplay(loginState,postRegisterCommand);
 	}
 
 	protected abstract ClientInstance createClientInstance(

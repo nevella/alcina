@@ -144,4 +144,8 @@ public class DetachedEntityCache {
 			invalidate(c);
 		}
 	}
+
+	public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
+		return this.detached;
+	}
 }

@@ -22,7 +22,7 @@ import com.google.gwt.core.client.UnsafeNativeLong;
  *         plain versions
  */
 public class SimpleStringParser {
-	private static long longFromBase64(String value) {
+	public static long longFromBase64(String value) {
 		int pos = 0;
 		long longVal = base64Value(value.charAt(pos++));
 		int len = value.length();

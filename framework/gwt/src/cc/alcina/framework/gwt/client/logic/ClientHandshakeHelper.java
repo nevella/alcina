@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
@@ -44,9 +45,11 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 	public void setLoginResponse(LoginResponse loginResponse) {
 		this.loginResponse = loginResponse;
 	}
-	public boolean permitsOfflineWithEmptyTransforms(){
+
+	public boolean permitsOfflineWithEmptyTransforms() {
 		return false;
 	}
+
 	public void stateChanged(Object source, String newState) {
 		if (newState.equals(STATE_PRE_HELLO)) {
 			boolean logLoadMetrics = AlcinaDebugIds
@@ -89,29 +92,51 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 
 	public void registerDomainModel(DomainModelHolder objects,
 			LoginState loginState) {
+		registerDomainModel(objects, loginState, null);
+	}
+
+	public void registerDomainModel(final DomainModelHolder objects,
+			final LoginState loginState, final ScheduledCommand postRegisterCommand) {
 		objects.registerSelfAsProvider();
 		registerClientObjectListeners(true);
 		ClientLayerLocator.get().setGeneralProperties(
 				objects.getGeneralProperties());
-		
 		PermissionsManager.get().setUser(objects.getCurrentUser());
 		ClientLayerLocator.get().setDomainModelHolder(objects);
 		PermissionsManager.get().setLoginState(loginState);
 		if (!TransformManager.get().isReplayingRemoteEvent()) {
-			ClientMetricLogging.get().start("register-domain");
-			TransformManager.get().registerDomainObjectsInHolder(objects);
-			ClientMetricLogging.get().end("register-domain");
-			if (PermissionsManager.get().getOnlineState() != OnlineState.OFFLINE) {
-				locallyPersistDomainModelAndReplayPostLoadTransforms(loginState);
-				return;
+			ScheduledCommand registerCommand=new ScheduledCommand() {
+
+				@Override
+				public void execute() {
+					ClientMetricLogging.get().start("register-domain");
+					TransformManager.get().registerDomainObjectsInHolder(objects);
+					ClientMetricLogging.get().end("register-domain");
+					if (PermissionsManager.get().getOnlineState() != OnlineState.OFFLINE) {
+						locallyPersistDomainModelAndReplayPostLoadTransforms(
+								loginState, postRegisterCommand);
+						// note, this'll do afterLocal via a callback, hence the return
+					}else{
+						afterLocalPersistenceAndReplay(loginState, postRegisterCommand);	
+					}
+				}
+			};
+			if(postRegisterCommand!=null){
+				Scheduler.get().scheduleDeferred(registerCommand);
+			}else{
+				registerCommand.execute();
 			}
+			return;
 		}
-		afterLocalPersistenceAndReplay(loginState);
+		afterLocalPersistenceAndReplay(loginState, postRegisterCommand);
 	}
 
-	public void afterLocalPersistenceAndReplay(LoginState loginState) {
+	public void afterLocalPersistenceAndReplay(LoginState loginState,
+			ScheduledCommand postRegisterCommand) {
 		registerObjectsPostDomainLoad();
-		
+		if (postRegisterCommand != null) {
+			postRegisterCommand.execute();
+		}
 	}
 
 	protected void registerObjectsPostDomainLoad() {
@@ -120,15 +145,16 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 		ContentProvider.refresh();
 	}
 
-
 	/**
 	 * see <tt>ClientHandshakeHelperWithLocalPersistence</tt>
+	 * 
+	 * @param postRegisterCommand
 	 * 
 	 * @param loadHelper
 	 */
 	protected void locallyPersistDomainModelAndReplayPostLoadTransforms(
-			LoginState loginState) {
-		afterLocalPersistenceAndReplay(loginState);
+			LoginState loginState, ScheduledCommand postRegisterCommand) {
+		afterLocalPersistenceAndReplay(loginState, postRegisterCommand);
 	}
 
 	protected abstract void afterDomainModelRegistration();

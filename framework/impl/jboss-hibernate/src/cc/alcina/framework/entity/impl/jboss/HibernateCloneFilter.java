@@ -22,7 +22,7 @@ import org.hibernate.collection.PersistentSet;
 import org.hibernate.proxy.HibernateProxy;
 
 import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
 
 
@@ -32,18 +32,18 @@ import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilte
  */
 
  public class HibernateCloneFilter extends CollectionProjectionFilter {
-	private Set<ClassFieldPair> instantiateProps = new HashSet<ClassFieldPair>();
+	private Set<GraphProjectionContext> instantiateProps = new HashSet<GraphProjectionContext>();
 
 	public HibernateCloneFilter() {
 	}
 
-	public HibernateCloneFilter(Set<ClassFieldPair> instantiateProps) {
+	public HibernateCloneFilter(Set<GraphProjectionContext> instantiateProps) {
 		this.instantiateProps = instantiateProps;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T filterData(T value, T cloned, ClassFieldPair context,
+	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
 		if (value instanceof HibernateProxy) {
 			if (instantiateProps.contains(context)) {
@@ -64,7 +64,7 @@ import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilte
 
 	@SuppressWarnings("unchecked")
 	protected Object clonePersistentSet(PersistentSet ps,
-			ClassFieldPair context, GraphProjection graphCloner) throws Exception {
+			GraphProjectionContext context, GraphProjection graphCloner) throws Exception {
 		HashSet hs = new HashSet();
 		if (ps.wasInitialized()) {
 			Iterator itr = ps.iterator();

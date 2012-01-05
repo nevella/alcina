@@ -21,7 +21,7 @@ import java.util.Set;
 import org.hibernate.proxy.HibernateProxy;
 
 import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
 
 /**
@@ -29,12 +29,12 @@ import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilte
  * @author Nick Reddel
  */
 public class Hibernate4CloneFilter extends CollectionProjectionFilter {
-	private Set<ClassFieldPair> instantiateProps = new HashSet<ClassFieldPair>();
+	private Set<GraphProjectionContext> instantiateProps = new HashSet<GraphProjectionContext>();
 
 	public Hibernate4CloneFilter() {
 	}
 
-	public Hibernate4CloneFilter(Set<ClassFieldPair> instantiateProps) {
+	public Hibernate4CloneFilter(Set<GraphProjectionContext> instantiateProps) {
 		this.instantiateProps = instantiateProps;
 	}
 
@@ -44,7 +44,7 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T filterData(T value, T cloned, ClassFieldPair context,
+	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
 		if (value instanceof HibernateProxy) {
 			if (instantiateProps.contains(context)) {
@@ -59,25 +59,26 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 		if ((value instanceof Set)
 				&& (value.getClass().getName().equals(cn1) || value.getClass()
 						.getName().equals(cn2))) {
-			return (T) clonePersistentSet((Set) value, context,
-					graphCloner);
+			return (T) clonePersistentSet((Set) value, context, graphCloner);
 		}
 		return super.filterData(value, cloned, context, graphCloner);
 	}
-	
-	private Method wasInitialized=null;
+
+	private Method wasInitialized = null;
+
 	@SuppressWarnings("unchecked")
-	protected Object clonePersistentSet(Set ps,
-			ClassFieldPair context, GraphProjection graphCloner)
-			throws Exception {
+	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
+			GraphProjection graphCloner) throws Exception {
 		HashSet hs = new HashSet();
 		if (shouldClone(ps)) {
 			Iterator itr = ps.iterator();
 			Object value;
 			for (; itr.hasNext();) {
 				value = itr.next();
-				value = graphCloner.project(value, context);
-				hs.add(value);
+				Object projected = graphCloner.project(value, context);
+				if (value == null || projected != null) {
+					hs.add(projected);
+				}
 			}
 		}
 		return hs;
@@ -87,10 +88,10 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 		return getWasInitialized(ps);
 	}
 
-	protected boolean getWasInitialized(Set ps) throws  Exception{
-		if(wasInitialized==null){
-			wasInitialized=ps.getClass().getMethod("wasInitialized");
+	protected boolean getWasInitialized(Set ps) throws Exception {
+		if (wasInitialized == null) {
+			wasInitialized = ps.getClass().getMethod("wasInitialized");
 		}
-		return (Boolean)wasInitialized.invoke(ps);
+		return (Boolean) wasInitialized.invoke(ps);
 	}
 }

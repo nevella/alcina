@@ -120,11 +120,12 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		addAlcinaHeaders(rb);
 	}
 
-	public static void addAlcinaHeaders(RequestBuilder rb) {
+	public void addAlcinaHeaders(RequestBuilder rb) {
 		if (ClientLayerLocator.get().getClientInstance() != null
 				&& PermissionsManager.get().isLoggedIn()) {
-			rb.setHeader(CLIENT_INSTANCE_ID_KEY, String
-					.valueOf(ClientLayerLocator.get().getClientInstance()
+			rb.setHeader(
+					CLIENT_INSTANCE_ID_KEY,
+					String.valueOf(ClientLayerLocator.get().getClientInstance()
 							.getId()));
 			rb.setHeader(CLIENT_INSTANCE_AUTH_KEY, ClientLayerLocator.get()
 					.getClientInstance().getAuth().toString());
@@ -140,6 +141,6 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	}
 
 	public String getRpcResult() {
-		return response==null?null:response.getText();
+		return response == null ? null : response.getText();
 	}
 }

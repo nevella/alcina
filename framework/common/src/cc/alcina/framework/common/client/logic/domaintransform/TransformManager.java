@@ -360,6 +360,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		dte.setObjectLocalId(hili.getLocalId());
 		dte.setObjectClass(hili.getClass());
 		dte.setTransformType(TransformType.DELETE_OBJECT);
+		addTransform(dte);
 		try {
 			fireDomainTransform(dte);
 			return dte;

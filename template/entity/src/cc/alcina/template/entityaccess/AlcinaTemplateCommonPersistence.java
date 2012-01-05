@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.util.GraphProjection.ClassFieldPair;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 import cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants;
 import cc.alcina.template.cs.persistent.AlcinaTemplateGroup;
@@ -79,7 +79,7 @@ public class AlcinaTemplateCommonPersistence
 	protected InstantiateImplCallback createUserAndGroupInstantiator() {
 		return new InstantiateImplCallback<LazyInitializer>() {
 			public boolean instantiateLazyInitializer(
-					LazyInitializer initializer, ClassFieldPair context) {
+					LazyInitializer initializer, GraphProjectionContext context) {
 				Class persistentClass = initializer.getPersistentClass();
 				return IUser.class.isAssignableFrom(persistentClass)
 						|| IGroup.class.isAssignableFrom(persistentClass);
