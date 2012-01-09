@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
-
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -42,8 +40,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  *
  * @author Nick Reddel
  */
-
- public class ChildBeanCustomiser implements Customiser {
+public class ChildBeanCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		return new ChildBeanRenderer(editable, objectClass);
@@ -76,8 +73,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 		public ChildBeanWidget(Class objectClass, boolean editable) {
 			this.objectClass = objectClass;
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			Object bean = ClientReflector.get().getTemplateInstance(
-					objectClass);
+			Object bean = ClientReflector.get()
+					.getTemplateInstance(objectClass);
 			Field[] fields = GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
 							factory, editable, false);
@@ -102,18 +99,21 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 					PaneWrapperWithObjects container = WidgetUtils
 							.getParentWidget(ChildBeanWidget.this,
 									PaneWrapperWithObjects.class);
-					if (container!=null){
-						container.getObjects().add(obj);
+					if (container != null) {
+						if (container.getObjects() != null) {
+							// provisional
+							container.getObjects().add(obj);
+						}
 					}
 					fp.remove(gridForm);
 					setValue(obj);
-					//forces onattach
+					// forces onattach
 					fp.add(gridForm);
 				}
 			});
-			if (editable){
+			if (editable) {
 				createPanel.add(h);
-			}else{
+			} else {
 				createPanel.add(new Label("[null]"));
 			}
 			fp.add(createPanel);
@@ -127,17 +127,18 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 		}
 
 		public void setValue(Object value) {
-			Object old=getValue();
+			Object old = getValue();
 			boolean showCreate = value == null;
 			createPanel.setVisible(showCreate);
 			gridForm.setVisible(!showCreate);
-			if (value!=null){
+			if (value != null) {
 				gridForm.setValue(value);
 			}
-			if( this.getValue() != old && (this.getValue() == null||
-	        		(this.getValue() != null && !this.getValue().equals( old ) ))){
-	            this.changes.firePropertyChange("value", old, this.getValue());
-	        }
+			if (this.getValue() != old
+					&& (this.getValue() == null || (this.getValue() != null && !this
+							.getValue().equals(old)))) {
+				this.changes.firePropertyChange("value", old, this.getValue());
+			}
 		}
 	}
 }

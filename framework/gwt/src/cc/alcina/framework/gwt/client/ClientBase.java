@@ -13,9 +13,14 @@
  */
 package cc.alcina.framework.gwt.client;
 
+import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Window.ClosingEvent;
 import com.google.gwt.user.client.Window.ClosingHandler;
@@ -37,8 +42,16 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 	private boolean displayInitialised = false;
 
 	public void onWindowClosing(ClosingEvent event) {
-		ClientLayerLocator.get().getCommitToStorageTransformListener().setPaused(false);
-		ClientLayerLocator.get().getCommitToStorageTransformListener().flush();
+		CommitToStorageTransformListener storage = ClientLayerLocator.get()
+				.getCommitToStorageTransformListener();
+		storage.setPaused(false);
+		storage.flush();
+		if (storage.getCurrentState() == CommitToStorageTransformListener.COMMITTING) {
+			event.setMessage(TextProvider.get().getUiObjectText(
+					ClientBase.class,
+					"commit-on-close-saving-final-changes-warning",
+					"Please press 'cancel' to save recent changes"));
+		}
 	}
 
 	public void onClose(CloseEvent<Window> event) {

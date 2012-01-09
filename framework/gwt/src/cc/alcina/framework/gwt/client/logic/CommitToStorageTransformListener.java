@@ -59,7 +59,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	private List<DomainTransformEvent> transformQueue;
 
-	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>() ;
+	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
 
 	protected TimerWrapper queueingFinishedTimer;
 
@@ -78,6 +78,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	private boolean reloadRequired = false;
 
 	private Set<Long> eventIdsToIgnore = new HashSet<Long>();
+
+	private String currentState;
 
 	public static final String COMMITTING = "COMMITTING";
 
@@ -124,7 +126,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 		@Override
 		public void run() {
-			if (checkMillis==lastQueueAddMillis ) {
+			if (checkMillis == lastQueueAddMillis) {
 				commit();
 			}
 			checkMillis = lastQueueAddMillis;
@@ -343,7 +345,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		// the ordering here is tricky
 		// 'committing' says 'we have a flat list of rqs without response (incl
 		// current)
-		// wheras the transform rpc call requires rq (current) with prior rqs as a listfield
+		// wheras the transform rpc call requires rq (current) with prior rqs as
+		// a listfield
 		// given listener callbacks can be multi-threaded (jvm version),
 		// use the following ordering - note we use a new list in
 		// dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseCopy)
@@ -356,10 +359,20 @@ public class CommitToStorageTransformListener extends StateListenable implements
 				.transform(dtr, callback);
 	}
 
+	@Override
+	protected void fireStateChanged(String newState) {
+		super.fireStateChanged(newState);
+		currentState = newState;
+	}
+
 	/*
 	 * Unimplemented for the moment. This may or may not be necessary to
 	 * accelerate change conflict checking
 	 */
 	void updateTransformQueueVersions() {
+	}
+
+	public String getCurrentState() {
+		return this.currentState;
 	}
 }
