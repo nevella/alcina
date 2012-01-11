@@ -110,6 +110,12 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		this.setTag(tag);
 	}
 
+	public DTRSimpleSerialWrapper clone() {
+		return new DTRSimpleSerialWrapper(id, text, timestamp, userId,
+				clientInstanceId, requestId, clientInstanceAuth,
+				domainTransformRequestType, text, tag);
+	}
+
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance auth", orderingHint = 30))
 	public int getClientInstanceAuth() {
 		return clientInstanceAuth;
@@ -176,8 +182,9 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 			DomainTransformRequestType domainTransformRequestType) {
 		DomainTransformRequestType old_domainTransformRequestType = this.domainTransformRequestType;
 		this.domainTransformRequestType = domainTransformRequestType;
-		propertyChangeSupport().firePropertyChange("domainTransformRequestType",
-				old_domainTransformRequestType, domainTransformRequestType);
+		propertyChangeSupport().firePropertyChange(
+				"domainTransformRequestType", old_domainTransformRequestType,
+				domainTransformRequestType);
 	}
 
 	public void setId(int id) {
@@ -220,7 +227,8 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 	public void setUserId(long userId) {
 		long old_userId = this.userId;
 		this.userId = userId;
-		propertyChangeSupport().firePropertyChange("userId", old_userId, userId);
+		propertyChangeSupport()
+				.firePropertyChange("userId", old_userId, userId);
 	}
 
 	@Override

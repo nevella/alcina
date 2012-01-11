@@ -164,6 +164,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		DomainTransformEvent dte = new DomainTransformEvent();
 		SimpleStringParser p = new SimpleStringParser(s);
 		String i = p.read(SRC, ",");
+		dte.setObjectClassName(i);//just in case we're in a no-classref environment
 		dte.setObjectClass(classFromName(i));
 		dte.setObjectId(p.readLong("", ","));
 		dte.setObjectLocalId(p.readLong("", "\n"));
@@ -182,6 +183,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		i = p.read(STRING_VALUE, "\n");
 		dte.setNewStringValue(i.indexOf("\\") == -1 ? i : unescape(i));
 		i = p.read(TGT, ",");
+		dte.setValueClassName(i);//just in case we're in a no-classref environment
 		dte.setValueClass(classFromName(i));
 		dte.setValueId(p.readLong("", ","));
 		dte.setValueLocalId(p.readLong("", "\n"));

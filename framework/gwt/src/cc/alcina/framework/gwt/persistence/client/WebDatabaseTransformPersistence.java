@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;
@@ -34,6 +35,7 @@ import com.google.code.gwt.database.client.SQLResultSetRowList;
 import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 @SuppressWarnings("unchecked")
 /**
@@ -71,6 +73,13 @@ public class WebDatabaseTransformPersistence extends
 				callbackFail(callback, error);
 			}
 		});
+	}
+	@Override
+	protected void persistOfflineTransforms(
+			List<DTRSimpleSerialWrapper> uncommitted,ModalNotifier modalNotifier,
+			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
+		new PartialDtrUploader().persistOfflineTransforms(uncommitted,modalNotifier,
+				postPersistOfflineTransformsCallback);
 	}
 
 	@Override

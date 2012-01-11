@@ -8,8 +8,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandl
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 
+import com.google.gwt.user.cellview.client.TreeNode;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -100,9 +101,12 @@ public class WorkspaceDefaultActionHandlers {
 					((IVersionableOwnable) newObj).setOwner(PermissionsManager
 							.get().getUser());
 				}
+			} catch (Exception e) {
+				e.printStackTrace(System.err);
 			} finally {
 				CollectionModificationSupport.queue(false);
 			}
+			workspace.getVisualiser().selectNodeForObject(newObj, true);
 			PaneWrapperWithObjects view = getContentViewFactory()
 					.createBeanView(newObj, true, workspace, isAutoSave(),
 							false);

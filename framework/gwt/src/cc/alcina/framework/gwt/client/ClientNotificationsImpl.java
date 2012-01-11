@@ -28,7 +28,9 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.Link;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
+import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
 import com.google.gwt.core.client.GWT;
@@ -215,7 +217,7 @@ public class ClientNotificationsImpl implements ClientNofications {
 	}
 
 	public void showError(String msg, Throwable throwable) {
-		log("error: " + msg.replace("<br>", "\n")+"\n"+throwable.toString());
+		log("error: " + msg.replace("<br>", "\n") + "\n" + throwable.toString());
 		msg += CommonUtils.isNullOrEmpty(msg) ? "" : "<br><br>";
 		msg += getStandardErrorText();
 		msg = "<div class='errorOops'>Ooops - an error has occurred</div>"
@@ -278,5 +280,15 @@ public class ClientNotificationsImpl implements ClientNofications {
 
 	public enum MessageType {
 		INFO, WARN, ERROR
+	}
+
+	@Override
+	public ModalNotifier getModalNotifier(String message) {
+		return new NonCancellableRemoteDialog(message, null, false) {
+			@Override
+			protected boolean initialAnimationEnabled() {
+				return false;
+			}
+		};
 	}
 }

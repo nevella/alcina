@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.gwt.client;
 
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
@@ -45,14 +47,19 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 		CommitToStorageTransformListener storage = ClientLayerLocator.get()
 				.getCommitToStorageTransformListener();
 		storage.setPaused(false);
+		// String msg = TextProvider.get().getUiObjectText(
+		// ClientBase.class,
+		// "commit-on-close-saving-final-changes-warning",
+		// "Please press 'cancel' to save recent changes");
+		// races can happen
 		storage.flush();
-		if (storage.getCurrentState() == CommitToStorageTransformListener.COMMITTING) {
-			event.setMessage(TextProvider.get().getUiObjectText(
-					ClientBase.class,
-					"commit-on-close-saving-final-changes-warning",
-					"Please press 'cancel' to save recent changes"));
+		if (storage.getCurrentState() == CommitToStorageTransformListener.COMMITTING
+				&& PermissionsManager.get().getOnlineState() != OnlineState.OFFLINE) {
+			event.setMessage(getSaveWhenClosedWarning());
 		}
 	}
+
+	private String saveWhenClosedWarning = "Please press 'cancel' to save recent changes";
 
 	public void onClose(CloseEvent<Window> event) {
 	}
@@ -63,5 +70,13 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 
 	public boolean isDisplayInitialised() {
 		return displayInitialised;
+	}
+
+	public String getSaveWhenClosedWarning() {
+		return this.saveWhenClosedWarning;
+	}
+
+	public void setSaveWhenClosedWarning(String saveWhenClosedWarning) {
+		this.saveWhenClosedWarning = saveWhenClosedWarning;
 	}
 }

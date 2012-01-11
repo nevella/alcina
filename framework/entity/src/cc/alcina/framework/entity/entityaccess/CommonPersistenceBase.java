@@ -798,7 +798,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	protected abstract InstantiateImplCallback createUserAndGroupInstantiator();
 
-	protected <T> T findImplInstance(Class<? extends T> clazz, long id) {
+	@Override
+	public <T> T findImplInstance(Class<? extends T> clazz, long id) {
 		Class<?> implClazz = getImplementation(clazz);
 		return (T) getEntityManager().find(implClazz, id);
 	}

@@ -86,4 +86,8 @@ public class AlcinaTemplateCommonPersistence
 			}
 		};
 	}
+
+	public <T> T findImplInstance(Class<? extends T> clazz, long id) {
+		return null;
+	}
 }

@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 
 
 import cc.alcina.framework.gwt.client.widget.GlassDisplayer;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.user.client.ui.DialogBox;
 
@@ -49,4 +50,7 @@ import com.google.gwt.user.client.ui.DialogBox;
 		glass.show(true);
 		super.show();
 	}
+
+	
+	
 }

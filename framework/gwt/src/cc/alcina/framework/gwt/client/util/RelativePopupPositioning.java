@@ -182,19 +182,19 @@ public class RelativePopupPositioning {
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis) {
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget, axis,
-				null);
+				null,null);
 	}
 
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis,
-			String panelStyleName) {
+			String panelStyleName, Widget relativeContainer) {
 		RelativePopupPanel rpp = new RelativePopupPanel(true);
 		rpp.setAnimationEnabled(true);
 		if (panelStyleName != null) {
 			rpp.addStyleName(panelStyleName);
 		}
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget,
-				new RelativePopupAxis[] { axis }, null, rpp, 0, 0);
+				new RelativePopupAxis[] { axis }, relativeContainer, rpp, 0, 0);
 	}
 
 	public static RelativePopupPanel showPopup(final Widget relativeToWidget,

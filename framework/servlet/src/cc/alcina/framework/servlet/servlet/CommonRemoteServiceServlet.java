@@ -47,6 +47,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWr
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
@@ -639,5 +641,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		ServletLayerLocator.get().remoteActionLoggerProvider()
 				.clearAllThreadLoggers();
 		super.onAfterResponseSerialized(serializedResponse);
+	}
+	@Override
+	public PartialDtrUploadResponse uploadOfflineTransforms(
+			PartialDtrUploadRequest request) throws WebException {
+		return new PartialDtrUploadHandler().uploadOfflineTransforms(request,this);
 	}
 }

@@ -524,6 +524,7 @@ public class WidgetUtils {
 		}
 		return null;
 	}
+	
 
 	public static void ensureNodeDebugIds(TreeItem root, final String prefix) {
 		TreeNodeWalker tnw = new TreeNodeWalker();

@@ -31,10 +31,12 @@ import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasOrderValue;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
@@ -42,6 +44,7 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHan
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
+import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
 import cc.alcina.framework.gwt.client.ide.node.HasVisibleCollection;
 import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;
@@ -252,6 +255,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 								pcp.getDomainObject());
 			}
 		}
+		handleHasOrderValue(node, newObj);
 	}
 
 	protected SimpleWorkspaceVisualiser createVisualiser() {
@@ -268,6 +272,38 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 
 	protected Widget getViewForAction(PermissibleAction action) {
 		return viewProviderMap.get(action.getClass()).getViewForObject(action);
+	}
+
+	protected void handleHasOrderValue(Object node, HasIdAndLocalId newObj) {
+		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
+			DomainNode dn = (DomainNode) node;
+			node = dn.getParentItem();
+		}
+		if (node instanceof ProvidesParenting
+				&& newObj instanceof HasOrderValue) {
+			ProvidesParenting pp = (ProvidesParenting) node;
+			PropertyCollectionProvider pcp = (PropertyCollectionProvider) pp
+					.getPropertyCollectionProvider();
+			ClientPropertyReflector reflector = pcp.getPropertyReflector();
+			String propertyName = reflector.getPropertyName();
+			Object obj = CommonLocator.get().propertyAccessor()
+					.getPropertyValue(pcp.getDomainObject(), propertyName);
+			if (obj instanceof Collection) {
+				Collection c = (Collection) obj;
+				int maxOrderValue = 0;
+				for (Object o : c) {
+					if (o == newObj) {
+						continue;
+					}
+					if (o instanceof HasOrderValue) {
+						HasOrderValue hov = (HasOrderValue) o;
+						maxOrderValue = Math.max(maxOrderValue,
+								CommonUtils.iv(hov.getOrderValue()));
+					}
+				}
+				((HasOrderValue) newObj).setOrderValue(maxOrderValue + 10);
+			}
+		}
 	}
 
 	public static class WSVisualModel {

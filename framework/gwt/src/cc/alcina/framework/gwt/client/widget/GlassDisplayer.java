@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -23,11 +22,10 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.PopupPanel;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class GlassDisplayer {
+public class GlassDisplayer {
 	public static int DEFAULT_OPACITY = 50;
 
 	private int opacity = GlassDisplayer.DEFAULT_OPACITY;
@@ -49,8 +47,7 @@ import com.google.gwt.user.client.ui.PopupPanel;
 			fp.setStyleName("alcina-GlassPanel");
 			fp.setWidth(Window.getClientWidth() + "px");
 			fp.setHeight(Math.max(Document.get().getBody().getOffsetHeight(),
-					Window.getClientHeight())
-					+ "px");
+					Window.getClientHeight()) + "px");
 			DOM.setStyleAttribute(fp.getElement(), "backgroundColor", "#000");
 			updateOpacity();
 			glass.setStyleName("");
@@ -59,9 +56,13 @@ import com.google.gwt.user.client.ui.PopupPanel;
 		}
 		glass.show();
 	}
-	private void updateOpacity(){
-		WidgetUtils.setOpacity(fp, opacity);
+
+	private void updateOpacity() {
+		if (fp != null) {
+			WidgetUtils.setOpacity(fp, opacity);
+		}
 	}
+
 	public void setOpacity(int opacity) {
 		this.opacity = opacity;
 		updateOpacity();

@@ -33,7 +33,6 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.registry.CachingScanner;
@@ -115,7 +114,7 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 	// double.class, float.class, int.class, short.class,
 	// boolean.class }));
 	public void fixEntities(Class entityClass, String strPropName,
-			String crPropName, EntityManager em, CommonPersistenceBase persister) {
+			String crPropName, EntityManager em, CommonPersistenceLocal persister) {
 		Set all = persister.getAll(entityClass);
 		for (Object o : all) {
 			String cName = (String) SEUtilities.getPropertyValue(o,

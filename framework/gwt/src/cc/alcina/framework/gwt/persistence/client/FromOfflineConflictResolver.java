@@ -140,8 +140,9 @@ public class FromOfflineConflictResolver {
 			cn.setDialogAnimationEnabled(false);
 			cn.showMessage(fp);
 			cn.setDialogAnimationEnabled(true);
-			ta.setSelectionRange(0, text.length());
-			copy();
+//			ta.setSelectionRange(0, text.length());
+//			copy();
+			//no browser permits this
 		}
 
 		protected native void copy() /*-{

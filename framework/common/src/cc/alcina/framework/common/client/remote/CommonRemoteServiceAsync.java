@@ -29,6 +29,8 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -82,4 +84,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 	void logClientError(String exceptionToString, String exceptionType,
 			AsyncCallback<Long> callback);
+
+	void uploadOfflineTransforms(PartialDtrUploadRequest request,
+			AsyncCallback<PartialDtrUploadResponse> callback);
 }

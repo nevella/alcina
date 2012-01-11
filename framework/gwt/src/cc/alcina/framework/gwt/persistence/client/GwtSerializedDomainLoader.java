@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -100,7 +100,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 
 		private DTRProtocolHandler protocolHandler;
 
-		private NonCancellableRemoteDialog cd;
+		private ModalNotifier notifier;
 
 		private Iterator<DTRSimpleSerialWrapper> transformIterator;
 
@@ -123,15 +123,9 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 
 		@Override
 		public void start() {
-			this.cd = new NonCancellableRemoteDialog("") {
-				@Override
-				protected boolean initialAnimationEnabled() {
-					return false;
-				}
-			};
-			cd.setAnimationEnabled(false);
-			cd.getGlass().setOpacity(0);
-			cd.show();
+			this.notifier = ClientLayerLocator.get().notifications().getModalNotifier("");
+			notifier.setMasking(false);
+			notifier.modalOn();
 			super.start();
 		}
 
@@ -141,7 +135,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 		}
 
 		protected void onComplete() {
-			cd.hide();
+			notifier.modalOff();
 			new ReplayWorker(items).start();
 		}
 
@@ -172,7 +166,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 			}
 			int pct = (100 * (strlenProcessed + protocolHandler.getOffset()))
 					/ (totalStrlen + 1);
-			cd.setStatus("Loading - " + (pct / 2) + "%");
+			notifier.setStatus("Loading - " + (pct / 2) + "%");
 			List<DomainTransformEvent> events = new ArrayList<DomainTransformEvent>();
 			String s = protocolHandler.deserialize(wr.getText(), events,
 					iterationCount);
@@ -190,7 +184,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 	}
 
 	class ReplayWorker extends ClientUIThreadWorker {
-		private NonCancellableRemoteDialog cd;
+		private ModalNotifier notifier;
 
 		private final List<DomainTransformEvent> items;
 
@@ -201,14 +195,9 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 
 		@Override
 		public void start() {
-			this.cd = new NonCancellableRemoteDialog("") {
-				@Override
-				protected boolean initialAnimationEnabled() {
-					return false;
-				}
-			};
-			cd.getGlass().setOpacity(0);
-			cd.show();
+			this.notifier = ClientLayerLocator.get().notifications().getModalNotifier("");
+			notifier.setMasking(false);
+			notifier.modalOn();
 			MutablePropertyChangeSupport.setMuteAll(true);
 			super.start();
 		}
@@ -220,7 +209,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 
 		@Override
 		protected void onComplete() {
-			cd.hide();
+			notifier.modalOff();
 			MutablePropertyChangeSupport.setMuteAll(false);
 			TransformManager tm = TransformManager.get();
 			tm.setReplayingRemoteEvent(true);
@@ -243,7 +232,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 
 		@Override
 		protected void performIteration() {
-			cd.setStatus("Loading - "
+			notifier.setStatus("Loading - "
 					+ (50 + (index * 50) / (items.size() + 1)) + "%");
 			List v1 = new ArrayList();
 			lastPassIterationsPerformed = Math.min(iterationCount, items.size()

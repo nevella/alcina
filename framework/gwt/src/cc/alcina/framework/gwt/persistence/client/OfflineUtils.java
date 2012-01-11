@@ -4,7 +4,7 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.appcache.client.AppCache;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.EventListener;
@@ -22,7 +22,7 @@ public class OfflineUtils {
 
 	private static boolean hostPageCacheReturned = true;
 
-	private static NonCancellableRemoteDialog cd;
+	private static ModalNotifier cd;
 
 	private static int updateCount;
 
@@ -56,14 +56,9 @@ public class OfflineUtils {
 		if(updatingCallback!=null){
 			updatingCallback.callback(null);
 		}
-		cd = new NonCancellableRemoteDialog("") {
-			@Override
-			protected boolean initialAnimationEnabled() {
-				return false;
-			}
-		};
-		cd.getGlass().setOpacity(50);
-		cd.show();
+		cd = ClientLayerLocator.get().notifications().getModalNotifier("");
+		cd.setMasking(true);
+		cd.modalOn();
 		AppCache appCache = AppCache.getApplicationCache();
 		AppCacheEventHandler handler = new AppCacheEventHandler(false, null);
 		registerHandler(appCache, handler);

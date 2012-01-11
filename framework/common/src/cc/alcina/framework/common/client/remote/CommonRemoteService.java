@@ -33,6 +33,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -82,6 +84,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
 			throws WebException;
 
 	public void persistOfflineTransforms(List<DTRSimpleSerialWrapper> uncommitted) throws WebException;
+	public PartialDtrUploadResponse uploadOfflineTransforms(PartialDtrUploadRequest request) throws WebException;
 
 	@AuthenticationRequired()
 	public JobInfo pollJobStatus(Long id, boolean cancel);

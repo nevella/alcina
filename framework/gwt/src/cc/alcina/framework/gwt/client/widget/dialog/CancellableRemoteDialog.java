@@ -16,6 +16,8 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -29,7 +31,8 @@ import com.google.gwt.user.client.ui.Label;
  * 
  * @author Nick Reddel
  */
-public class CancellableRemoteDialog extends GlassDialogBox {
+public class CancellableRemoteDialog extends GlassDialogBox implements
+		ModalNotifier {
 	public static final String CANCEL_ACTION = "cancel";
 
 	private Label statusLabel;
@@ -37,6 +40,10 @@ public class CancellableRemoteDialog extends GlassDialogBox {
 	protected Button cancelButton;
 
 	private Button retryButton;
+
+	private String status = "";
+
+	private Double progress;
 
 	protected boolean initialAnimationEnabled() {
 		return true;
@@ -59,6 +66,7 @@ public class CancellableRemoteDialog extends GlassDialogBox {
 		setText("Please wait...");
 		setAnimationEnabled(initialAnimationEnabled());
 		Grid grr = new Grid(2, 1);
+		status=msg;
 		statusLabel = new Label(msg);
 		grr.getCellFormatter().setHorizontalAlignment(0, 0,
 				HasHorizontalAlignment.ALIGN_CENTER);
@@ -92,8 +100,15 @@ public class CancellableRemoteDialog extends GlassDialogBox {
 		show();
 	}
 
-	public void setStatus(String s) {
-		statusLabel.setText(s);
+	public void setStatus(String status) {
+		this.status = CommonUtils.nullToEmpty(status);
+		updateStatusLabel();
+	}
+
+	private void updateStatusLabel() {
+		statusLabel.setText(progress == null ? status : CommonUtils.formatJ(
+				"%s - %s% complete", status,
+				CommonUtils.padTwo((int) Math.round(progress * 100))));
 	}
 
 	public void setRetryButton(Button retryButton) {
@@ -102,5 +117,28 @@ public class CancellableRemoteDialog extends GlassDialogBox {
 
 	public Button getRetryButton() {
 		return retryButton;
+	}
+
+	@Override
+	public void modalOn() {
+		centerAndShow();
+	}
+
+	@Override
+	public void modalOff() {
+		hide();
+	}
+
+	@Override
+	public void setMasking(boolean masking) {
+		if (!masking) {
+			getGlass().setOpacity(0);
+		}
+	}
+
+	@Override
+	public void setProgress(double progress) {
+		this.progress = progress;
+		updateStatusLabel();
 	}
 }

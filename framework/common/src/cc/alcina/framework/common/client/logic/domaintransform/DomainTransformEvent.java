@@ -41,9 +41,9 @@ public class DomainTransformEvent implements Serializable,
 
 	private transient Class objectClass;
 
-	private transient String objectClassName;
+	private String objectClassName;
 
-	private transient String valueClassName;
+	private String valueClassName;
 
 	private ClassRef objectClassRef;
 
@@ -106,12 +106,18 @@ public class DomainTransformEvent implements Serializable,
 
 	@Transient
 	public Class getObjectClass() {
-		if (this.objectClass == null && this.objectClassRef != null) {
-			this.objectClass = this.objectClassRef.getRefClass();
+		if (this.objectClass == null) {
+			if (this.objectClassName != null && this.objectClassRef == null) {
+				objectClassRef = ClassRef.forName(objectClassName);
+			}
+			if (this.objectClassRef != null) {
+				this.objectClass = this.objectClassRef.getRefClass();
+			}
 		}
 		return this.objectClass;
 	}
 
+	@Transient
 	public String getObjectClassName() {
 		return this.objectClassName;
 	}
@@ -182,6 +188,7 @@ public class DomainTransformEvent implements Serializable,
 		return this.valueClass;
 	}
 
+	@Transient
 	public String getValueClassName() {
 		if (this.valueClassName == null && this.valueClass != null) {
 			this.valueClassName = this.valueClass.getName();

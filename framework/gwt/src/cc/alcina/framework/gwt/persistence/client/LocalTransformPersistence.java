@@ -25,11 +25,9 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
-import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.PersistenceCallback.PersistenceCallbackStd;
 
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
@@ -113,39 +111,16 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			@Override
 			public void onSuccess(final List<DTRSimpleSerialWrapper> uncommitted) {
 				if (!uncommitted.isEmpty()) {
-					final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
-							"Saving unsaved work from previous session", null);
-					crd.getGlass().setOpacity(0);
-					AsyncCallback<Void> callback = new AsyncCallback<Void>() {
-						public void onFailure(Throwable caught) {
-							hideDialog();
-							new FromOfflineConflictResolver().resolve(
-									uncommitted, caught,
-									LocalTransformPersistence.this, cb);
-						}
-
-						public void onSuccess(Void result) {
-							hideDialog();
-							transformPersisted(uncommitted,
-									new PersistenceCallbackStd() {
-										@Override
-										public void onSuccess(Object result) {
-											ClientLayerLocator
-													.get()
-													.notifications()
-													.notifyOfCompletedSaveFromOffline();
-											cb.callback(null);
-										}
-									});
-						}
-
-						private void hideDialog() {
-							crd.hide();
-						}
-					};
-					crd.show();
-					ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-							.persistOfflineTransforms(uncommitted, callback);
+					final ModalNotifier notifier = ClientLayerLocator
+							.get()
+							.notifications()
+							.getModalNotifier(
+									"Saving unsaved work from previous session");
+					notifier.setMasking(false);
+					AsyncCallback<Void> callback = new PostPersistOfflineTransformsCallback(
+							cb, notifier, uncommitted);
+					notifier.modalOn();
+					persistOfflineTransforms(uncommitted,notifier, callback);
 					return;
 				} else {
 					cb.callback(null);
@@ -153,6 +128,13 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			}
 		};
 		getTransforms(DomainTransformRequestType.TO_REMOTE, pcb1);
+	}
+
+	protected void persistOfflineTransforms(
+			List<DTRSimpleSerialWrapper> uncommitted,
+			ModalNotifier notifier, AsyncCallback<Void> postPersistOfflineTransformsCallback) {
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+				.persistOfflineTransforms(uncommitted, postPersistOfflineTransformsCallback);
 	}
 
 	public void init(DTESerializationPolicy dteSerializationPolicy,
@@ -497,6 +479,45 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	ClientInstance getDomainObjectsPersistedBy() {
 		return this.domainObjectsPersistedBy;
+	}
+
+	protected final class PostPersistOfflineTransformsCallback implements
+			AsyncCallback<Void> {
+		private final Callback cb;
+
+		private final ModalNotifier notifier;
+
+		private final List<DTRSimpleSerialWrapper> uncommitted;
+
+		protected PostPersistOfflineTransformsCallback(
+				Callback successCallback, ModalNotifier notifier,
+				List<DTRSimpleSerialWrapper> uncommitted) {
+			this.cb = successCallback;
+			this.notifier = notifier;
+			this.uncommitted = uncommitted;
+		}
+
+		public void onFailure(Throwable caught) {
+			hideNotifier();
+			new FromOfflineConflictResolver().resolve(this.uncommitted, caught,
+					LocalTransformPersistence.this, this.cb);
+		}
+
+		public void onSuccess(Void result) {
+			hideNotifier();
+			transformPersisted(this.uncommitted, new PersistenceCallbackStd() {
+				@Override
+				public void onSuccess(Object result) {
+					ClientLayerLocator.get().notifications()
+							.notifyOfCompletedSaveFromOffline();
+					cb.callback(null);
+				}
+			});
+		}
+
+		private void hideNotifier() {
+			this.notifier.modalOff();
+		}
 	}
 
 	protected class DTRAsyncSerializer extends ClientUIThreadWorker {

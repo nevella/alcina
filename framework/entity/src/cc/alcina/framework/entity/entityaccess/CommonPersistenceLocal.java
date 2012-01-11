@@ -143,4 +143,6 @@ public interface CommonPersistenceLocal {
 			long fromId, long toId);
 
 	public <US extends IUser> US getCleanedUserById(long userId);
+
+	public <T> T findImplInstance(Class<? extends T> clazz, long id);
 }

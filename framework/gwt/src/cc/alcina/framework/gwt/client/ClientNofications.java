@@ -5,6 +5,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.spi.LogWriter;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
@@ -49,4 +50,6 @@ public interface ClientNofications extends LogWriter{
 	public abstract void showWarning(String msg, String detail);
 
 	public abstract void notifyOfCompletedSaveFromOffline();
+
+	public abstract ModalNotifier getModalNotifier(String message);
 }

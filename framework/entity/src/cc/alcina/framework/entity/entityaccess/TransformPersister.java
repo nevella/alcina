@@ -50,7 +50,7 @@ public class TransformPersister {
 
 	private EntityManager entityManager;
 
-	private CommonPersistenceBase commonPersistenceBase;
+	private CommonPersistenceLocal commonPersistenceBase;
 
 	public EntityManager getEntityManager() {
 		return this.entityManager;
