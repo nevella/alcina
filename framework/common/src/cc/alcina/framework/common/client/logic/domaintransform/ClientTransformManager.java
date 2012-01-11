@@ -26,11 +26,14 @@ import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNofications;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
@@ -155,16 +158,15 @@ public class ClientTransformManager extends TransformManager {
 				callback.onSuccess(null);
 				return;
 			}
-			final CancellableRemoteDialog crd = new NonCancellableRemoteDialog(
-					"Loading", null);
-			crd.show();
+			String message = TextProvider.get().getUiObjectText(ClientTransformManager.class, "domain-sync-update", "Loading");
+			final ModalNotifier notifier = ClientLayerLocator.get().notifications().getModalNotifier(message);
 			final long t1 = System.currentTimeMillis();
 			AsyncCallback<List<ObjectCacheItemResult>> innerCallback = new AsyncCallback<List<ObjectCacheItemResult>>() {
 				public void onSuccess(List<ObjectCacheItemResult> result) {
 					long t2 = System.currentTimeMillis();
 					ClientLayerLocator.get().notifications()
 							.log("Cache load/deser.: " + (t2 - t1));
-					crd.hide();
+					notifier.modalOff();
 					MutablePropertyChangeSupport.setMuteAll(true);
 					ClientTransformManager.PersistableTransformListener pl = getPersistableTransformListener();
 					DomainTransformRequest dtr = null;
@@ -204,12 +206,12 @@ public class ClientTransformManager extends TransformManager {
 				}
 
 				private void cleanup() {
-					crd.hide();
+					notifier.modalOff();
 				}
 			};
 			List<ObjectCacheItemSpec> specs = new ArrayList<ObjectCacheItemSpec>();
 			specs.add(new ObjectCacheItemSpec(hili, propertyName));
-			crd.show();
+			notifier.modalOn();
 			ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 					.cache(specs, innerCallback);
 		}

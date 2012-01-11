@@ -109,6 +109,7 @@ public class CancellableRemoteDialog extends GlassDialogBox implements
 		statusLabel.setText(progress == null ? status : CommonUtils.formatJ(
 				"%s - %s% complete", status,
 				CommonUtils.padTwo((int) Math.round(progress * 100))));
+		center();
 	}
 
 	public void setRetryButton(Button retryButton) {
