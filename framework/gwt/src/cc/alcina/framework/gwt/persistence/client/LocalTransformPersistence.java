@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.GwtRpcProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -111,16 +112,18 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			@Override
 			public void onSuccess(final List<DTRSimpleSerialWrapper> uncommitted) {
 				if (!uncommitted.isEmpty()) {
-					final ModalNotifier notifier = ClientLayerLocator
-							.get()
-							.notifications()
-							.getModalNotifier(
-									"Saving unsaved work from previous session");
+					getCommitToStorageTransformListener().setPaused(true);
+					String message = TextProvider.get().getUiObjectText(
+							LocalTransformPersistence.class,
+							"saving-unsaved-message",
+							"Saving unsaved work from previous session");
+					final ModalNotifier notifier = ClientLayerLocator.get()
+							.notifications().getModalNotifier(message);
 					notifier.setMasking(false);
 					AsyncCallback<Void> callback = new PostPersistOfflineTransformsCallback(
 							cb, notifier, uncommitted);
 					notifier.modalOn();
-					persistOfflineTransforms(uncommitted,notifier, callback);
+					persistOfflineTransforms(uncommitted, notifier, callback);
 					return;
 				} else {
 					cb.callback(null);
@@ -131,10 +134,13 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	protected void persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted,
-			ModalNotifier notifier, AsyncCallback<Void> postPersistOfflineTransformsCallback) {
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-				.persistOfflineTransforms(uncommitted, postPersistOfflineTransformsCallback);
+			List<DTRSimpleSerialWrapper> uncommitted, ModalNotifier notifier,
+			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
+		ClientLayerLocator
+				.get()
+				.commonRemoteServiceAsyncInstance()
+				.persistOfflineTransforms(uncommitted,
+						postPersistOfflineTransformsCallback);
 	}
 
 	public void init(DTESerializationPolicy dteSerializationPolicy,
@@ -498,13 +504,13 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 
 		public void onFailure(Throwable caught) {
-			hideNotifier();
+			cleanup();
 			new FromOfflineConflictResolver().resolve(this.uncommitted, caught,
 					LocalTransformPersistence.this, this.cb);
 		}
 
 		public void onSuccess(Void result) {
-			hideNotifier();
+			cleanup();
 			transformPersisted(this.uncommitted, new PersistenceCallbackStd() {
 				@Override
 				public void onSuccess(Object result) {
@@ -515,7 +521,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			});
 		}
 
-		private void hideNotifier() {
+		private void cleanup() {
 			this.notifier.modalOff();
 		}
 	}

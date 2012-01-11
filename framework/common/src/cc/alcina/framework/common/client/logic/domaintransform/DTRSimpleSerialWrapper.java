@@ -113,7 +113,7 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 	public DTRSimpleSerialWrapper clone() {
 		return new DTRSimpleSerialWrapper(id, text, timestamp, userId,
 				clientInstanceId, requestId, clientInstanceAuth,
-				domainTransformRequestType, text, tag);
+				domainTransformRequestType, protocolVersion, tag);
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance auth", orderingHint = 30))

@@ -64,6 +64,7 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 			ClientMetricLogging.get().setMuted(false);
 			afterDomainModelRegistration();
 			fireStateChanged(STATE_AFTER_DOMAIN_MODEL_REGISTERED);
+			ClientLayerLocator.get().getCommitToStorageTransformListener().setPaused(false);
 		}
 	}
 

@@ -928,7 +928,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		addDomainTransformListener(new CommitToLocalDomainTransformListener());
 	}
 
-	private DomainTransformEvent createTransformFromPropertyChange(
+	public DomainTransformEvent createTransformFromPropertyChange(
 			PropertyChangeEvent evt) {
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setSource(evt.getSource());

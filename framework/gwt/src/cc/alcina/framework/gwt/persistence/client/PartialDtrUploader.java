@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
@@ -25,11 +26,11 @@ public class PartialDtrUploader {
 
 	private Map<DTRSimpleSerialWrapper, List<DomainTransformEvent>> deserTransforms = new LinkedHashMap<DTRSimpleSerialWrapper, List<DomainTransformEvent>>();
 
-	protected static int MIN_SLICE_SIZE = 50;
+	protected static int MIN_SLICE_SIZE = 500;
 
 	protected static int MAX_SLICE_SIZE = 10000;
 
-	protected static int INITIAL_SLICE_SIZE = 500;
+	protected static int INITIAL_SLICE_SIZE = 1500;
 
 	protected static int MAX_COMFORTABLE_ROUNDTRIP_MS_DEFAULT = 10000;
 
@@ -149,6 +150,11 @@ public class PartialDtrUploader {
 			//add a blank request (no transforms) for auth
 			addToRequest(currentRequest, uncommitted.get(0), new ArrayList<DomainTransformEvent>());
 			request.commitOnReceipt = true;
+			String message = TextProvider.get().getUiObjectText(
+					PartialDtrUploader.class,
+					"committing",
+					"Changes uploaded, processing on server");
+			modalNotifier.setStatus(message);
 		}
 	}
 
