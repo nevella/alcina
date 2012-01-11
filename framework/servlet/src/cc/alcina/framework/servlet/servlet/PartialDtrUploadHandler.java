@@ -60,9 +60,8 @@ public class PartialDtrUploadHandler {
 				}
 			});
 			TreeMap<Integer, File> rqs = new TreeMap<Integer, File>();
-			List<DTRSimpleSerialWrapper> forPersistence = new ArrayList<DTRSimpleSerialWrapper>();
+			TreeMap<Integer, DTRSimpleSerialWrapper> fullWrappers = new TreeMap<Integer, DTRSimpleSerialWrapper>();
 			DTRSimpleSerialSerializer dtrSerializer = new DTRSimpleSerialSerializer();
-			// inefficient - but not as big a mem usage as alternatives
 			for (File file : list) {
 				Matcher m = fnP.matcher(file.getName());
 				m.matches();
@@ -72,6 +71,7 @@ public class PartialDtrUploadHandler {
 				DTRSimpleSerialWrapper wrapper = dtrSerializer.read(ser);
 				DomainTransformRequest rq = new DomainTransformRequest();
 				rq.fromString(wrapper.getText());
+				fullWrappers.put(id, wrapper);
 				response.transformsUploadedButNotCommitted += rq.getEvents()
 						.size();
 			}
@@ -85,7 +85,6 @@ public class PartialDtrUploadHandler {
 							.readFileToString(rqs.get(id));
 					wrapper = dtrSerializer.read(ser);
 				}
-				forPersistence.add(wrapper);
 				DomainTransformRequest rq = new DomainTransformRequest();
 				rq.fromString(wrapper.getText());
 				rq.getEvents().addAll(transforms);
@@ -98,6 +97,7 @@ public class PartialDtrUploadHandler {
 				ResourceUtilities.writeStringToFile(
 						dtrSerializer.write(wrapper), file);
 				rqs.put(id, file);
+				fullWrappers.put(id, wrapper);
 			}
 			String ser = ResourceUtilities.readFileToString(rqs.lastEntry()
 					.getValue());
@@ -109,7 +109,8 @@ public class PartialDtrUploadHandler {
 					.size();
 			if (request.commitOnReceipt) {
 				commonRemoteServiceServlet
-						.persistOfflineTransforms(forPersistence);
+						.persistOfflineTransforms(new ArrayList<DTRSimpleSerialWrapper>(
+								fullWrappers.values()));
 				response.committed = true;
 			}
 			ServletLayerLocator
