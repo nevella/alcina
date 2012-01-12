@@ -281,17 +281,27 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		}
 		if (node instanceof ProvidesParenting
 				&& newObj instanceof HasOrderValue) {
+			Collection siblings = null;
 			ProvidesParenting pp = (ProvidesParenting) node;
 			PropertyCollectionProvider pcp = (PropertyCollectionProvider) pp
 					.getPropertyCollectionProvider();
-			ClientPropertyReflector reflector = pcp.getPropertyReflector();
-			String propertyName = reflector.getPropertyName();
-			Object obj = CommonLocator.get().propertyAccessor()
-					.getPropertyValue(pcp.getDomainObject(), propertyName);
-			if (obj instanceof Collection) {
-				Collection c = (Collection) obj;
+			if (pcp == null) {
+				if(node instanceof HasVisibleCollection){
+					siblings = ((HasVisibleCollection) node)
+							.getVisibleCollection();
+				}
+			} else {
+				ClientPropertyReflector reflector = pcp.getPropertyReflector();
+				String propertyName = reflector.getPropertyName();
+				Object obj = CommonLocator.get().propertyAccessor()
+						.getPropertyValue(pcp.getDomainObject(), propertyName);
+				if (obj instanceof Collection) {
+					siblings = (Collection) obj;
+				}
+			}
+			if (siblings != null) {
 				int maxOrderValue = 0;
-				for (Object o : c) {
+				for (Object o : siblings) {
 					if (o == newObj) {
 						continue;
 					}

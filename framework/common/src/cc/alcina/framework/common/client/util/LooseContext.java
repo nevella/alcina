@@ -40,7 +40,7 @@ public class LooseContext {
 	}
 
 	public int getInteger(String key, int i) {
-		return containsKey(key) ? getInteger(key) : 0;
+		return containsKey(key) ? getInteger(key) : i;
 	}
 
 	public String getString(String key) {
