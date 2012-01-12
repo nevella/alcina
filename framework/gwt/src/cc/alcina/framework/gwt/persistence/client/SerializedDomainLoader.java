@@ -20,6 +20,7 @@ import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.ClientNofications;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 public abstract class SerializedDomainLoader {
@@ -160,7 +161,8 @@ public abstract class SerializedDomainLoader {
 		return loadObjectsHolder;
 	}
 
-	protected void registerRpcDomainModelHolder(ScheduledCommand scheduledCommand) {
+	protected void registerRpcDomainModelHolder(
+			ScheduledCommand scheduledCommand) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -207,16 +209,13 @@ public abstract class SerializedDomainLoader {
 					if (hasGwtRpcTransforms()) {
 						displayReplayRpcNotification(false);
 					}
-					replayAfterPossibleDelay(new ScheduledCommand(){
-
+					replayAfterPossibleDelay(new ScheduledCommand() {
 						@Override
 						public void execute() {
-							persistenceCallback.onSuccess(true);							
+							persistenceCallback.onSuccess(true);
 						}
-						
 					});
 				}
-				
 			}
 		};
 		PersistenceCallback<List<DTRSimpleSerialWrapper>> afterOpenForOffline = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
@@ -234,13 +233,12 @@ public abstract class SerializedDomainLoader {
 							.permitsOfflineWithEmptyTransforms()) {
 						localPersistence
 								.openAvailableSessionTransformsForOfflineLoadNeverOnline(replayTransformsCallback);
-					}else{
+					} else {
 						persistenceCallback.onSuccess(true);
 					}
 				} else {
 					replayTransformsCallback.onSuccess(result);
 				}
-				
 			}
 		};
 		localPersistence.openAvailableSessionTransformsForOfflineLoad(notify,
@@ -248,7 +246,7 @@ public abstract class SerializedDomainLoader {
 	}
 
 	protected void replaySequence(final ScheduledCommand postRegisterCommand) {
-		assert postRegisterCommand!=null;
+		assert postRegisterCommand != null;
 		final List<DomainTransformEvent> initialEvents = handleGwtRpcTransforms();
 		if (getLoadObjectsHolder() != null) {
 			registerRpcDomainModelHolder(new ScheduledCommand() {

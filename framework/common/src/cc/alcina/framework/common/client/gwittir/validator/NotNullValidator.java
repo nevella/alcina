@@ -37,7 +37,7 @@ public class NotNullValidator implements Validator {
     public static final NotNullValidator INSTANCE = new NotNullValidator();
     
     /** Creates a new instance of NotNullValidator */
-    private NotNullValidator() {
+    public NotNullValidator() {
     }
 
     public Object validate(Object value) throws ValidationException {
