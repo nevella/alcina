@@ -39,7 +39,7 @@ public class OfflineUtils {
 		return cd!=null;
 	}
 
-	public static void checkCacheLoading(AsyncCallback completionCallback) {
+	public static boolean checkCacheLoading(AsyncCallback completionCallback) {
 		ClientLayerLocator.get().notifications()
 				.log("OfflineUtils.checkCacheLoading");
 		AppCache appCache = AppCache.getApplicationCache();
@@ -50,6 +50,7 @@ public class OfflineUtils {
 		if (appCache.getStatus() == AppCache.UPDATEREADY) {
 			waitAndReload();
 		}
+		return isUpdating();
 	}
 
 	public static void waitAndReload() {

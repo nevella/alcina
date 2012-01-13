@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -61,7 +63,7 @@ public class ChildBeanCustomiser implements Customiser {
 		}
 	}
 
-	public static class ChildBeanWidget extends AbstractBoundWidget {
+	public static class ChildBeanWidget extends AbstractBoundWidget implements MultilineWidget{
 		private FlowPanel fp;
 
 		private GridForm gridForm;
@@ -70,7 +72,7 @@ public class ChildBeanCustomiser implements Customiser {
 
 		private final Class objectClass;
 
-		public ChildBeanWidget(Class objectClass, boolean editable) {
+		public ChildBeanWidget(Class objectClass, final boolean editable) {
 			this.objectClass = objectClass;
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			Object bean = ClientReflector.get()
@@ -92,9 +94,11 @@ public class ChildBeanCustomiser implements Customiser {
 					Class clazz = ChildBeanWidget.this.objectClass;
 					boolean autoSave = ClientLayerLocator.get()
 							.getGeneralProperties().isAutoSave();
-					Object obj = autoSave ? TransformManager.get()
+					HasIdAndLocalId obj = autoSave ? TransformManager.get()
 							.createDomainObject(clazz) : TransformManager.get()
 							.createProvisionalObject(clazz);
+					ClientTransformManager.cast().prepareObject(obj, autoSave,
+							true, editable);
 					// register with the containing savepanel
 					PaneWrapperWithObjects container = WidgetUtils
 							.getParentWidget(ChildBeanWidget.this,
@@ -139,6 +143,11 @@ public class ChildBeanCustomiser implements Customiser {
 							.getValue().equals(old)))) {
 				this.changes.firePropertyChange("value", old, this.getValue());
 			}
+		}
+
+		@Override
+		public boolean isMultiline() {
+			return true;
 		}
 	}
 }
