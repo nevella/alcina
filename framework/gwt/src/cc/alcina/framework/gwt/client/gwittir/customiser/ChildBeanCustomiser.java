@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -30,6 +31,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.table.Field;
@@ -63,7 +65,7 @@ public class ChildBeanCustomiser implements Customiser {
 		}
 	}
 
-	public static class ChildBeanWidget extends AbstractBoundWidget implements MultilineWidget{
+	public static class ChildBeanWidget extends AbstractBoundWidget implements MultilineWidget,HasBinding{
 		private FlowPanel fp;
 
 		private GridForm gridForm;
@@ -148,6 +150,11 @@ public class ChildBeanCustomiser implements Customiser {
 		@Override
 		public boolean isMultiline() {
 			return true;
+		}
+
+		@Override
+		public Binding getBinding() {
+			return gridForm.getBinding();
 		}
 	}
 }

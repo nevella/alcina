@@ -119,6 +119,9 @@ public class AlcinaBeanSerializer {
 		if (value == null) {
 			return JSONNull.getInstance();
 		}
+		if(type==Object.class){
+			type=value.getClass();
+		}
 		if (type == Long.class ||type==long.class|| type == String.class || type.isEnum()) {
 			return new JSONString(value.toString());
 		}

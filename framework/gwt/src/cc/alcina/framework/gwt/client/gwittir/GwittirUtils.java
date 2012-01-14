@@ -72,8 +72,9 @@ public class GwittirUtils {
 			String onlyPropertyName, boolean muteTransformManager,
 			boolean onlyEmpties) {
 		refreshFields(binding, onlyPropertyName, muteTransformManager,
-				onlyEmpties,
-				new FormFieldTypeForRefresh[] { FormFieldTypeForRefresh.TEXT });
+				onlyEmpties, new FormFieldTypeForRefresh[] {
+						FormFieldTypeForRefresh.TEXT,
+						FormFieldTypeForRefresh.TEXT_AREA });
 	}
 
 	public static void refreshTextBoxesAndSelects(Binding binding,
@@ -82,26 +83,30 @@ public class GwittirUtils {
 		refreshFields(binding, onlyPropertyName, muteTransformManager,
 				onlyEmpties, new FormFieldTypeForRefresh[] {
 						FormFieldTypeForRefresh.TEXT,
+						FormFieldTypeForRefresh.TEXT_AREA,
 						FormFieldTypeForRefresh.SELECT });
 	}
 
 	public enum FormFieldTypeForRefresh {
-		TEXT, RADIO, CHECK, SELECT
+		TEXT, RADIO, CHECK, SELECT, TEXT_AREA
 	}
 
 	public static void refreshFields(Binding binding, String onlyPropertyName,
 			boolean muteTransformManager, boolean onlyEmpties,
 			FormFieldTypeForRefresh[] types) {
-		List<Binding> l = binding.getChildren();
+		List<Binding> allBindings = binding.provideAllBindings(null);
 		List<FormFieldTypeForRefresh> lTypes = Arrays.asList(types);
 		try {
 			if (muteTransformManager) {
 				TransformManager.get().setIgnorePropertyChanges(true);
 			}
-			for (Binding b : l) {
+			for (Binding b : allBindings) {
 				if (onlyPropertyName != null
 						&& !onlyPropertyName.equals(b.getRight().property
 								.getName())) {
+					continue;
+				}
+				if (b.getLeft() == null || b.getLeft().object == null) {
 					continue;
 				}
 				boolean satisfiesType = false;
@@ -110,12 +115,24 @@ public class GwittirUtils {
 						|| b.getLeft().object instanceof PasswordTextBox;
 				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.TEXT)
 						&& isText;
+				boolean isTextArea = CommonUtils.simpleClassName(
+						b.getLeft().object.getClass()).equals("TextArea");
+				satisfiesType |= lTypes
+						.contains(FormFieldTypeForRefresh.TEXT_AREA)
+						&& isTextArea;
 				boolean isSetBasedListBox = (b.getLeft().object instanceof SetBasedListBox);
 				satisfiesType |= lTypes
 						.contains(FormFieldTypeForRefresh.SELECT)
 						&& isSetBasedListBox;
+				AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
+				if (tb instanceof HasBinding) {
+					Binding subBinding = ((HasBinding) tb).getBinding();
+					if (subBinding != null) {
+						refreshFields(subBinding, onlyPropertyName,
+								muteTransformManager, onlyEmpties, types);
+					}
+				}
 				if (satisfiesType) {
-					AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
 					Object value = b.getRight().property.getAccessorMethod()
 							.invoke(b.getRight().object,
 									CommonUtils.EMPTY_OBJECT_ARRAY);

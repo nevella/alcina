@@ -16,7 +16,6 @@ package cc.alcina.framework.gwt.client.ide;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import cc.alcina.framework.common.client.CommonLocator;
@@ -74,6 +73,7 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.table.DataProvider;
@@ -545,8 +545,12 @@ public class ContentViewFactory {
 
 		private Button saveButton;
 
+		private FocusPanel preDetachFocus = new FocusPanel();
+
 		public PaneWrapperWithObjects() {
 			getElement().getStyle().setProperty("position", "relative");
+			preDetachFocus.setVisible(false);
+			add(preDetachFocus);
 		}
 
 		public void addExtraActions(Widget w) {
@@ -771,6 +775,10 @@ public class ContentViewFactory {
 
 		@Override
 		protected void onDetach() {
+			preDetachFocus.setVisible(true);
+			preDetachFocus.setFocus(true);
+			GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(), null,
+					false, false);
 			super.onDetach();// inter alia, detach children, forcing commit of
 								// richtexts etc
 			if (objects != null && TransformManager.get().dirty(objects)) {
