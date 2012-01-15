@@ -15,6 +15,14 @@
  */
 package com.gdevelop.gwt.syncrpc;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.InvocationException;
 import com.google.gwt.user.client.rpc.RemoteService;
@@ -22,15 +30,8 @@ import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 import com.google.gwt.user.client.rpc.impl.RequestCallbackAdapter.ResponseReader;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class RemoteServiceInvocationHandler implements InvocationHandler{
+	
   private static final Map<Class, ResponseReader> JPRIMITIVETYPE_TO_RESPONSEREADER = 
       new HashMap<Class, ResponseReader>();
   static{

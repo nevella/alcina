@@ -22,7 +22,9 @@ import java.io.OutputStreamWriter;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.gwt.user.client.rpc.InvocationException;
@@ -56,6 +58,8 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 				throws SerializationException {
 		}
 	}
+
+	public static Map<String, String> headers = new LinkedHashMap<String, String>();
 
 	private String moduleBaseURL;
 
@@ -171,6 +175,10 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 	public Object doInvoke(
 			RequestCallbackAdapter.ResponseReader responseReader,
 			String requestData) throws Throwable {
+		Map<String, String> headersCopy = new LinkedHashMap<String, String>();
+		synchronized (RemoteServiceSyncProxy.class) {
+			headersCopy.putAll(headers);
+		}
 		HttpURLConnection connection = null;
 		InputStream is = null;
 		int statusCode;
@@ -187,6 +195,10 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 					"text/x-gwt-rpc; charset=utf-8");
 			connection.setRequestProperty("Content-Length",
 					"" + requestData.getBytes("UTF-8").length);
+			for (Entry<String, String> header : headersCopy.entrySet()) {
+				connection.setRequestProperty(header.getKey(),
+						header.getValue());
+			}
 			OutputStreamWriter writer = new OutputStreamWriter(
 					connection.getOutputStream());
 			writer.write(requestData);
