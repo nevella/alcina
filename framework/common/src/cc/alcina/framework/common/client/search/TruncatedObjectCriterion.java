@@ -46,9 +46,9 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 
 	public void setValue(E value) {
 		this.value = value;
+		setDisplayText(getDisplayTextFor(value));
 		if (value != null) {
 			setId(value.getId());
-			setDisplayText(getDisplayTextFor(value));
 		} else {
 			setId(0);
 		}
