@@ -100,12 +100,17 @@ public class ClientSession {
 	protected Map<Long, Long> parseCookie() {
 		Map<Long, Long> result = new LinkedHashMap<Long, Long>();
 		String s = Cookies.getCookie(STORAGE_SESSION_COOKIE_NAME);
-		if (s != null) {
-			String[] split = s.split(",");
-			for (int i = 0; i < split.length; i += 2) {
-				result.put(Long.parseLong(split[i]),
-						Long.parseLong(split[i + 1]));
+		try {
+			if (s != null && !s.isEmpty()) {
+				String[] split = s.split(",");
+				for (int i = 0; i < split.length; i += 2) {
+					result.put(Long.parseLong(split[i]),
+							Long.parseLong(split[i + 1]));
+				}
 			}
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			Cookies.removeCookie(STORAGE_SESSION_COOKIE_NAME);
 		}
 		return result;
 	}

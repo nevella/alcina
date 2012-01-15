@@ -434,7 +434,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				.fireCollectionModificationEvent(event);
 	}
 
-	public void fireDomainTransform(DomainTransformEvent event)
+	public synchronized void fireDomainTransform(DomainTransformEvent event)
 			throws DomainTransformException {
 		this.transformListenerSupport.fireDomainTransform(event);
 	}
@@ -742,7 +742,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return null;
 	}
 
-	public void propertyChange(PropertyChangeEvent evt) {
+	public synchronized void propertyChange(PropertyChangeEvent evt) {
 		if (ignorePropertyChanges
 				|| UNSPECIFIC_PROPERTY_CHANGE.equals(evt.getPropertyName())) {
 			return;

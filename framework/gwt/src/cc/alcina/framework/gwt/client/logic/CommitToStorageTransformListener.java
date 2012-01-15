@@ -93,7 +93,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		resetQueue();
 	}
 
-	public void domainTransform(DomainTransformEvent evt) {
+	public synchronized void domainTransform(DomainTransformEvent evt) {
 		if (evt.getCommitType() == CommitType.TO_STORAGE) {
 			String pn = evt.getPropertyName();
 			if (pn != null
@@ -187,12 +187,12 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		this.transformExceptionResolver = transformExceptionResolver;
 	}
 
-	private void resetQueue() {
+	private synchronized void resetQueue() {
 		transformQueue = new ArrayList<DomainTransformEvent>();
 		// eventIdsToIgnore = new HashSet<Long>();
 	}
 
-	protected void commit() {
+	protected synchronized void commit() {
 		if (priorRequestsWithoutResponse.size() == 0
 				&& transformQueue.size() == 0 || isPaused()) {
 			return;
