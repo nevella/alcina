@@ -16,5 +16,9 @@ public class File
 	public String getPath(){
 		throw new UnsupportedOperationException();
 	}
+	public boolean exists(){
+		throw new UnsupportedOperationException();
+	}
+	
 	
 }

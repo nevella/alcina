@@ -38,8 +38,8 @@ public class SessionHelper {
 		if (request.getAttribute(REQUEST_ATTR_INITIALISED) == null) {
 			HttpSession session = request.getSession();
 			synchronized (session) {
-				request.setAttribute(SESSION_ATTR_USERNAME, session
-						.getAttribute(SESSION_ATTR_USERNAME));
+				request.setAttribute(SESSION_ATTR_USERNAME,
+						session.getAttribute(SESSION_ATTR_USERNAME));
 				request.setAttribute(REQUEST_ATTR_INITIALISED, true);
 			}
 		}
@@ -54,13 +54,17 @@ public class SessionHelper {
 					.getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_AUTH_KEY);
 			CommonPersistenceLocal up = ServletLayerLocator.get()
 					.commonPersistenceProvider().getCommonPersistence();
-			String userName = up.validateClientInstance(Long
-					.parseLong(clientInstanceId), Integer
-					.parseInt(clientInstanceAuth));
-			if (userName!=null){
-				request.getSession().setAttribute(SESSION_ATTR_USERNAME,
-						userName);
-				request.setAttribute(SESSION_ATTR_USERNAME, userName);
+			try {
+				String userName = up.validateClientInstance(
+						Long.parseLong(clientInstanceId),
+						Integer.parseInt(clientInstanceAuth));
+				if (userName != null) {
+					request.getSession().setAttribute(SESSION_ATTR_USERNAME,
+							userName);
+					request.setAttribute(SESSION_ATTR_USERNAME, userName);
+				}
+			} catch (NumberFormatException nfe) {
+				//squelch
 			}
 		}
 		reinitialiseUserState(request);
