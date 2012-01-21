@@ -27,4 +27,10 @@ public class TimerWrapperGwt extends Timer implements TimerWrapper {
 			return new TimerWrapperGwt(runnable);
 		}
 	}
+
+	@Override
+	public void scheduleSingle(long delayMillis) {
+		schedule((int)delayMillis);
+		
+	}
 }

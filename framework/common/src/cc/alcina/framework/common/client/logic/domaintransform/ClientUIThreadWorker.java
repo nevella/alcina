@@ -16,11 +16,11 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
-import com.google.gwt.user.client.Timer;
 /**
  * Scheduler.scheduleIncremental much better idea...although this did work fine
+ * 
  * @author nick@alcina.cc
- *
+ * 
  */
 public abstract class ClientUIThreadWorker {
 	protected int iterationCount = 200;
@@ -50,11 +50,12 @@ public abstract class ClientUIThreadWorker {
 
 	protected void iterate() {
 		if (isComplete()) {
-			ClientLayerLocator.get().notifications().log(
-					CommonUtils.format("Itr [%1] [Complete] - %2 ms",
-							CommonUtils.simpleClassName(getClass()), System
-									.currentTimeMillis()
-									- startTime));
+			ClientLayerLocator
+					.get()
+					.notifications()
+					.log(CommonUtils.format("Itr [%1] [Complete] - %2 ms",
+							CommonUtils.simpleClassName(getClass()),
+							System.currentTimeMillis() - startTime));
 			onComplete();
 			return;
 		}
@@ -73,16 +74,19 @@ public abstract class ClientUIThreadWorker {
 			}
 			iterationCount = Math.max(iterationCount, 10);
 		}
-		ClientLayerLocator.get().notifications().log(
-				CommonUtils.format("Itr [%1] [x%3] - %2 ms", CommonUtils
-						.simpleClassName(getClass()), timeTaken,
+		ClientLayerLocator
+				.get()
+				.notifications()
+				.log(CommonUtils.format("Itr [%1] [x%3] - %2 ms",
+						CommonUtils.simpleClassName(getClass()), timeTaken,
 						lastPassIterationsPerformed));
-		new Timer() {
-			@Override
-			public void run() {
-				iterate();
-			}
-		}.schedule((int) timeTaken * allocateToNonWorkerFactor + 1);
+		ClientLayerLocator.get().timerWrapperProvider()
+				.getTimer(new Runnable() {
+					@Override
+					public void run() {
+						iterate();
+					}
+				}).scheduleSingle((int) timeTaken * allocateToNonWorkerFactor + 1);
 	}
 
 	protected abstract void onComplete();

@@ -26,6 +26,7 @@ public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence 
 		String dbName = "persistedtransforms";
 		String connectionUrl = "jdbc:derby:" + dbName + ";create=true";
 		setConnectionUrl(connectionUrl);
+		setLocalStorageInstalled(true);
 		if (!checkDbVersionOK()) {
 			String createSmt = null;
 			try {
@@ -37,6 +38,7 @@ public class EmbeddedDerbyTransformPersistence extends JdbcTransformPersistence 
 				s.close();
 				conn.close();
 			} catch (Exception e) {
+				setLocalStorageInstalled(false);
 				throw new WrappedRuntimeException(e);
 			}
 		}

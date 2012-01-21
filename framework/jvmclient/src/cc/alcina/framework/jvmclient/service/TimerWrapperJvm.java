@@ -4,10 +4,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import cc.alcina.framework.common.client.util.TimerWrapper;
+
 /**
  * XP (JVM/GWT) timer functionality
+ * 
  * @author nreddel@barnet.com.au
- *
+ * 
  */
 public class TimerWrapperJvm extends Timer implements TimerWrapper {
 	private Runnable runnable;
@@ -31,5 +33,15 @@ public class TimerWrapperJvm extends Timer implements TimerWrapper {
 				runnable.run();
 			}
 		}, periodMillis, periodMillis);
+	}
+
+	@Override
+	public void scheduleSingle(long delayMillis) {
+		schedule(new TimerTask() {
+			@Override
+			public void run() {
+				runnable.run();
+			}
+		}, delayMillis);
 	}
 }

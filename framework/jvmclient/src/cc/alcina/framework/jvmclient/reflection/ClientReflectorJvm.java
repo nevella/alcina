@@ -110,4 +110,43 @@ public class ClientReflectorJvm extends ClientReflector {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+		BeanInfo beanInfo = null;
+		try {
+			beanInfo = Introspector.getBeanInfo(clazz);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
+		for (PropertyDescriptor pd : pds) {
+			if (pd.getName().equals("class")
+					|| pd.getName().equals("propertyChangeListeners")
+					|| pd.getWriteMethod() == null) {
+				continue;
+			}
+			infos.add(new PropertyInfoLite(pd.getPropertyType(), pd.getName(),
+					new MethodWrapper(pd.getReadMethod()), clazz));
+		}
+		return infos;
+	}
+
+	class MethodWrapper implements com.totsp.gwittir.client.beans.Method {
+		private final Method method;
+
+		public MethodWrapper(Method method) {
+			this.method = method;
+		}
+
+		@Override
+		public String getName() {
+			return method.getName();
+		}
+
+		@Override
+		public Object invoke(Object target, Object[] args) throws Exception {
+			return method.invoke(target, args);
+		}
+	}
 }

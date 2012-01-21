@@ -108,6 +108,33 @@ public class ClientNotificationsJvmImpl implements ClientNofications {
 
 	@Override
 	public ModalNotifier getModalNotifier(String message) {
-		return null;
+		return new ModalNotifierConsole();
+	}
+
+	static class ModalNotifierConsole implements ModalNotifier {
+		@Override
+		public void modalOn() {
+			System.out.println("modalnotifier::modal-on");
+		}
+
+		@Override
+		public void modalOff() {
+			System.out.println("modalnotifier::modal-off");
+		}
+
+		@Override
+		public void setMasking(boolean masking) {
+			System.out.println("modalnotifier::masking:" + masking);
+		}
+
+		@Override
+		public void setStatus(String status) {
+			System.out.println("modalnotifier::status:" + status);
+		}
+
+		@Override
+		public void setProgress(double progress) {
+			System.out.println("modalnotifier::progress:" + progress);
+		}
 	}
 }
