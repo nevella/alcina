@@ -219,6 +219,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				log("closing on click", null);
 				if (relativePopupPanel != null) {
 					relativePopupPanel.hide();
+					onPopdownShowing(relativePopupPanel,false);
 				}
 				lastClosingClickMillis = System.currentTimeMillis();
 				log("closing on click finished", null);
@@ -237,10 +238,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		holder.add(filter);
 		if (popdown) {
 			panelForPopup = new DecoratedRelativePopupPanel(true);
-			panelForPopup.setStyleName("dropdown-popup");
-			panelForPopup.addStyleName("alcina-Selector");
-			panelForPopup.getElement().getStyle()
-					.setProperty("maxHeight", holderHeight);
+			setPanelForPopupUI(panelForPopup);
 			panelForPopup.add(scroller);
 			filter.getTextBox().addFocusHandler(this);
 			filter.getTextBox().addBlurHandler(this);
@@ -267,6 +265,18 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			holder.add(scroller);
 		}
 		return holder;
+	}
+
+	protected void onPopdownShowing(RelativePopupPanel popup,
+			boolean show) {
+		
+	}
+
+	protected void setPanelForPopupUI(DecoratedRelativePopupPanel panelForPopup) {
+		panelForPopup.setStyleName("dropdown-popup");
+		panelForPopup.addStyleName("alcina-Selector");
+		panelForPopup.getElement().getStyle()
+				.setProperty("maxHeight", holderHeight);
 	}
 
 	protected void createItemHolder() {
@@ -711,9 +721,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 							RootPanel.get(),
 							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
 							RootPanel.get(), panelForPopup, shiftX(), shiftY());
+			onPopdownShowing(relativePopupPanel, true);
 			int border = 2;
 			if (itemHolder.getOffsetHeight() + border > panelForPopup
-					.getOffsetHeight()) {
+					.getOffsetHeight()&&!isAutoHolderHeight()) {
 				int hhInt = holderHeight != null && holderHeight.endsWith("px") ? Integer
 						.parseInt(holderHeight.replace("px", "")) : 0;
 				scroller.setHeight(Math.max(hhInt,
@@ -731,6 +742,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			}
 			afterUpdateItems(emptyItems);
 		}
+	}
+
+	protected boolean isAutoHolderHeight() {
+		return false;
 	}
 
 	protected boolean maybeShowDepdendentOnFilter() {

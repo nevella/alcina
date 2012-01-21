@@ -524,7 +524,19 @@ public class WidgetUtils {
 		}
 		return null;
 	}
-	
+
+	@SuppressWarnings("unchecked")
+	public static <W extends Widget> W getParentWidget(Widget w,
+			String widgetClassName) {
+		while (w != null) {
+			if (CommonUtils.simpleClassName(w.getClass()).equals(
+					widgetClassName)) {
+				return (W) w;
+			}
+			w = w.getParent();
+		}
+		return null;
+	}
 
 	public static void ensureNodeDebugIds(TreeItem root, final String prefix) {
 		TreeNodeWalker tnw = new TreeNodeWalker();

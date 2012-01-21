@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,16 @@ public class DefaultCollectionFilter {
 			}
 		}
 		return result;
+	}
+
+	public static <V> void filterInPlace(Collection<? extends V> collection,
+			CollectionFilter<V> filter) {
+		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr
+				.hasNext();) {
+			if (!filter.allow(itr.next())) {
+				itr.remove();
+			}
+		}
 	}
 
 	public static <V extends HasId> List<V> filterByIds(

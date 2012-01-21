@@ -74,8 +74,8 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 		private void finishDeserialize() {
 			MutablePropertyChangeSupport.setMuteAll(false, true);
 			TransformManager tm = TransformManager.get();
-			tm.setReplayingRemoteEvent(true);
 			ClientInstance clientInstance = beforeEventReplay();
+			tm.setReplayingRemoteEvent(true);
 			CommitToStorageTransformListener tl = ClientLayerLocator.get()
 					.getCommitToStorageTransformListener();
 			ClientLayerLocator.get().setClientInstance(clientInstance);
@@ -86,7 +86,7 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 					dte.getObjectClassRef();
 				}
 			}
-			afterEventReplay();
+			afterEventReplay(); 
 			tm.setReplayingRemoteEvent(false);
 		}
 

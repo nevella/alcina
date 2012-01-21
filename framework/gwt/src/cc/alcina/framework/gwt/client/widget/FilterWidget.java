@@ -13,17 +13,12 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.data.GeneralProperties;
-import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
@@ -77,6 +72,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	private String lastFilteredText = "";
 
 	private String lastQueuedText = "";
+	public static int defaultFilterDelayMs=500;
 
 	public FilterWidget() {
 		this(null);
@@ -97,10 +93,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		holder.add(holder2);
 		initWidget(holder);
 		setHint(hint);
-		GeneralProperties generalProperties = ClientLayerLocator.get()
-				.getGeneralProperties();
-		filterDelayMs = generalProperties == null ? GeneralProperties.DEFAULT_FILTER_DELAY
-				: generalProperties.getFilterDelayMs();
+		filterDelayMs = defaultFilterDelayMs;
 	}
 
 	private String hint;
@@ -237,7 +230,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	protected void onAttach() {
 		super.onAttach();
 		if (isFocusOnAttach()
-				&& WidgetUtils.getParentWidget(this, GridForm.class) == null) {
+				&& WidgetUtils.getParentWidget(this, "GridForm") == null) {
 			// just in case this widget is inside a popup panel e.g.
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				@Override

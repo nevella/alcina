@@ -40,10 +40,12 @@ public abstract class ClientBaseWithLayout extends ClientBase implements
 		if (isLayoutInitialising()) {
 			return;
 		}
-		onWindowResized(Window.getClientWidth(), Window.getClientHeight(), false);
+		onWindowResized(Window.getClientWidth(), Window.getClientHeight(),
+				false);
 	}
-	
+
 	protected abstract boolean isLayoutInitialising();
+
 	public void afterDomainModelRegistration() {
 		if (PermissionsManager.get().getOnlineState() == OnlineState.ONLINE) {
 			ClientLayerLocator.get().getCommitToStorageTransformListener()
@@ -67,5 +69,5 @@ public abstract class ClientBaseWithLayout extends ClientBase implements
 		});
 	}
 
-	protected abstract void redrawLayout() ;
+	protected abstract void redrawLayout();
 }

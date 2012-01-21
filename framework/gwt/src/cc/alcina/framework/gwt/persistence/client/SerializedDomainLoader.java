@@ -245,17 +245,20 @@ public abstract class SerializedDomainLoader {
 				afterOpenForOffline);
 	}
 
-	protected void replaySequence(final ScheduledCommand postRegisterCommand) {
-		assert postRegisterCommand != null;
+	protected void replaySequence(final ScheduledCommand postReplayCommand) {
+		assert postReplayCommand != null;
 		final List<DomainTransformEvent> initialEvents = handleGwtRpcTransforms();
+		ScheduledCommand postRegisterCommand = new ScheduledCommand() {
+			@Override
+			public void execute() {
+				replayTransforms(initialEvents);
+				postReplayCommand.execute();
+			}
+		};
 		if (getLoadObjectsHolder() != null) {
-			registerRpcDomainModelHolder(new ScheduledCommand() {
-				@Override
-				public void execute() {
-					replayTransforms(initialEvents);
-					postRegisterCommand.execute();
-				}
-			});
+			registerRpcDomainModelHolder(postRegisterCommand);
+		}else{
+			postRegisterCommand.execute(); 
 		}
 	}
 

@@ -35,157 +35,136 @@ import com.google.gwt.user.server.rpc.SerializationPolicyLoader;
 
 /**
  * 
- * @author dhartford
- * This is a pretty heavyweight prototype class for use with AutoSyncProxy, can be improved upon.
+ * @author dhartford This is a pretty heavyweight prototype class for use with
+ *         AutoSyncProxy, can be improved upon.
  */
 public class RpcFinderUtil {
-
-
-
-	  private static String getResposeText(String myurl) throws IOException {
-			URL url = new URL(myurl);
-			HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-		      connection.setDoInput(true);
-		      connection.setDoOutput(true);
-		      connection.setInstanceFollowRedirects(true); //follow redirect
-		      connection.setRequestMethod("GET");
-		      connection.connect();
-
-		  
-		    InputStream is = connection.getInputStream();
-		    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		    byte[] buffer = new byte[1024];
-		    int len;
-		    while ((len = is.read(buffer)) > 0){
-		      baos.write(buffer, 0, len);
-		    }
-		    String responseText = baos.toString("UTF8");
-		    return responseText;
-		  }	
-
-
-public static List<String> guessAllGwtPolicyName(String baseurlwithendingslash, String nocachejs){
-	String surl = baseurlwithendingslash + nocachejs;		
-	String responseText = "";
-	try {
-		responseText = getResposeText(surl);
-	} catch (IOException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	}
-//    System.out.println(responseText);
-      
-    List<String> findGwtNames = findGwtNames(responseText);
-    for (Iterator iterator = findGwtNames.iterator(); iterator.hasNext();) {
-		String string = (String) iterator.next();
-//		System.out.println("top: " + string);
-		
-	}
-      
-    String firstCacheHtml = findGwtNames.iterator().next();
-    String cacheurl = baseurlwithendingslash + firstCacheHtml+ ".cache.html";
-	String responseCache = "";
-	try {
-		responseCache = getResposeText(cacheurl);
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}
-	
-
-	
-    List<String> findRpcNames = findGwtNames(responseCache);
-    String secondRpcFind = findRpcNames.get(1);
-   
-    List<String> gwtRpcValidatedList = new ArrayList<String>();
-    boolean skippedfirst = false;
-//    System.out.println("second:" + findRpcNames.get(1));
-    for (Iterator iterator = findRpcNames.iterator(); iterator.hasNext();) {
-		String string = (String) iterator.next();
-		//HERE - THESE ARE THE LIST OF RPC's minus the first one (which is the cache.html file)
-		if(skippedfirst){
-			gwtRpcValidatedList.add(string);
+	private static String getResposeText(String myurl) throws IOException {
+		URL url = new URL(myurl);
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.setDoInput(true);
+		connection.setDoOutput(true);
+		connection.setInstanceFollowRedirects(true); // follow redirect
+		connection.setRequestMethod("GET");
+		connection.connect();
+		InputStream is = connection.getInputStream();
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		byte[] buffer = new byte[1024];
+		int len;
+		while ((len = is.read(buffer)) > 0) {
+			baos.write(buffer, 0, len);
 		}
-		skippedfirst = true;
-		
-	}	
-    
-    return gwtRpcValidatedList;
-}
-
-
-
-public static String findServiceName(String rpcUrl){
-	String result = null;
-	String responseText = null;
-	try {
-		responseText = getResposeText(rpcUrl);
-	} catch (IOException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	}
-	
-	BufferedReader reader;
-    try {
-      reader = new BufferedReader(new java.io.StringReader(responseText));
-      String line = reader.readLine();
-      while (line != null){
-        int pos = line.indexOf(", false, false, false, false, _, ");
-        if (pos > 0){
-        //  String policyName = child.substring(0, child.length() - GWT_PRC_POLICY_FILE_EXT.length());
-        	result = line.substring(0, pos);
-        }
-        line = reader.readLine();
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-      // ignore
-    }
-    return result;
-}
-
-
-public static SerializationPolicy getSchedulePolicy(String rpcUrl){
-	SerializationPolicy result = null;
-	String responseText = null;
-	try {
-		responseText = getResposeText(rpcUrl);
-	} catch (IOException e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	}
-	
-    InputStream is = new java.io.StringBufferInputStream(responseText);
-    try {
-		result = SerializationPolicyLoader.loadFromStream(is, null);
-	} catch (IOException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	} catch (ParseException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+		String responseText = baos.toString("UTF8");
+		return responseText;
 	}
 
-    
-    return result;
-}
+	public static List<String> guessAllGwtPolicyName(
+			String baseurlwithendingslash, String nocachejs) {
+		String surl = baseurlwithendingslash + nocachejs;
+		String responseText = "";
+		try {
+			responseText = getResposeText(surl);
+		} catch (IOException e1) {
+			throw new RuntimeException(e1);
+		}
+		// System.out.println(responseText);
+		List<String> findGwtNames = findGwtNames(responseText);
+		for (Iterator iterator = findGwtNames.iterator(); iterator.hasNext();) {
+			String string = (String) iterator.next();
+			// System.out.println("top: " + string);
+		}
+		String firstCacheHtml = findGwtNames.iterator().next();
+		String cacheurl = baseurlwithendingslash + firstCacheHtml
+				+ ".cache.html";
+		String responseCache = "";
+		try {
+			responseCache = getResposeText(cacheurl);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		List<String> findRpcNames = findGwtNames(responseCache);
+		String secondRpcFind = findRpcNames.get(1);
+		List<String> gwtRpcValidatedList = new ArrayList<String>();
+		boolean skippedfirst = false;
+		// System.out.println("second:" + findRpcNames.get(1));
+		for (Iterator iterator = findRpcNames.iterator(); iterator.hasNext();) {
+			String string = (String) iterator.next();
+			// HERE - THESE ARE THE LIST OF RPC's minus the first one (which is
+			// the cache.html file)
+			if (skippedfirst) {
+				gwtRpcValidatedList.add(string);
+			}
+			skippedfirst = true;
+		}
+		return gwtRpcValidatedList;
+	}
 
- private static List<String> findGwtNames(String responseText){
-	 List<String> result = new ArrayList<String>();
-	 
-	 //32 chars surrounded by apostrophe
-      String regex = "\'([A-Z0-9]){32}\'";
-      Pattern pattern = 
-            Pattern.compile(regex);
-      Matcher matcher = pattern.matcher(responseText);
-      
-     while (matcher.find()) {
-    	 String temp = matcher.group();
-    	 temp = temp.replace("\'","");
-    	 result.add(temp);
-//System.out.println("I found the text " + matcher.group() + " starting at index " + matcher.start() + " and ending at " +matcher.end() );
-     }
-     return result;
+	public static String findServiceName(String rpcUrl) {
+		String result = null;
+		String responseText = null;
+		try {
+			responseText = getResposeText(rpcUrl);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		BufferedReader reader;
+		try {
+			reader = new BufferedReader(new java.io.StringReader(responseText));
+			String line = reader.readLine();
+			while (line != null) {
+				int pos = line.indexOf(", false, false, false, false, _, ");
+				if (pos > 0) {
+					// String policyName = child.substring(0, child.length() -
+					// GWT_PRC_POLICY_FILE_EXT.length());
+					result = line.substring(0, pos);
+				}
+				line = reader.readLine();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+			// ignore
+		}
+		return result;
+	}
 
- }
+	public static SerializationPolicy getSchedulePolicy(String rpcUrl) {
+		SerializationPolicy result = null;
+		String responseText = null;
+		try {
+			responseText = getResposeText(rpcUrl);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		InputStream is = new java.io.StringBufferInputStream(responseText);
+		try {
+			result = SerializationPolicyLoader.loadFromStream(is, null);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	private static List<String> findGwtNames(String responseText) {
+		List<String> result = new ArrayList<String>();
+		// 32 chars surrounded by apostrophe
+		String regex = "\'([A-Z0-9]){32}\'";
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(responseText);
+		while (matcher.find()) {
+			String temp = matcher.group();
+			temp = temp.replace("\'", "");
+			result.add(temp);
+			// System.out.println("I found the text " + matcher.group() +
+			// " starting at index " + matcher.start() + " and ending at "
+			// +matcher.end() );
+		}
+		return result;
+	}
 }
