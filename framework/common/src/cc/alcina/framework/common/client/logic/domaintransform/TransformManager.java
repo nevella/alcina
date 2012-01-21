@@ -743,7 +743,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public synchronized void propertyChange(PropertyChangeEvent evt) {
-		if (ignorePropertyChanges
+		if (isIgnorePropertyChanges()
 				|| UNSPECIFIC_PROPERTY_CHANGE.equals(evt.getPropertyName())) {
 			return;
 		}
