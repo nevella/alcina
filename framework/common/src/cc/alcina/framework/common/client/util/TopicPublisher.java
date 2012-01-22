@@ -12,22 +12,24 @@ public class TopicPublisher {
 			this);
 
 	public void publishTopic(String key, Object message) {
-		support.firePropertyChange(key, null, message);
+		support.firePropertyChange(key, message == null ? "" : null, message);
 	}
 
 	private Map<TopicListener, TopicListenerAdapter> lookup = new HashMap<TopicPublisher.TopicListener, TopicPublisher.TopicListenerAdapter>();
 
-	public void addTopicListener(String key,TopicListener listener) {
+	public void addTopicListener(String key, TopicListener listener) {
 		TopicListenerAdapter adapter = new TopicListenerAdapter(listener);
-		support.addPropertyChangeListener(key,adapter);
-		lookup.put(listener,adapter);
-	}
-	public void removeTopicListener(String key,TopicListener listener) {
-		TopicListenerAdapter adapter = lookup.get(listener);
-		support.removePropertyChangeListener(key,adapter);
+		support.addPropertyChangeListener(key, adapter);
+		lookup.put(listener, adapter);
 	}
 
-	private static class TopicListenerAdapter<T> implements PropertyChangeListener {
+	public void removeTopicListener(String key, TopicListener listener) {
+		TopicListenerAdapter adapter = lookup.get(listener);
+		support.removePropertyChangeListener(key, adapter);
+	}
+
+	private static class TopicListenerAdapter<T> implements
+			PropertyChangeListener {
 		private final TopicListener listener;
 
 		@Override
@@ -50,23 +52,26 @@ public class TopicPublisher {
 			listener.topicPublished(evt.getPropertyName(), evt.getNewValue());
 		}
 	}
-	public static class GlobalTopicPublisher extends TopicPublisher{
+
+	public static class GlobalTopicPublisher extends TopicPublisher {
 		private GlobalTopicPublisher() {
 			super();
 		}
-		
+
 		private static GlobalTopicPublisher theInstance;
-		
+
 		public static GlobalTopicPublisher get() {
 			if (theInstance == null) {
 				theInstance = new GlobalTopicPublisher();
 			}
 			return theInstance;
 		}
-		public void appShutdown(){
+
+		public void appShutdown() {
 			theInstance = null;
 		}
 	}
+
 	public interface TopicListener<T> {
 		void topicPublished(String key, T message);
 	}

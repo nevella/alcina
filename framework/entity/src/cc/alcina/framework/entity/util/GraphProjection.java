@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 
 @SuppressWarnings("unchecked")
@@ -294,7 +295,9 @@ public class GraphProjection {
 		private Object projectMap(Map map, GraphProjectionContext context,
 				GraphProjection graphProjection) throws Exception {
 			Map m = null;
-			if (map instanceof LinkedHashMap) {
+			if (map instanceof Multimap) {
+				m = new Multimap();
+			} else if (map instanceof LinkedHashMap) {
 				m = new LinkedHashMap();
 			} else {
 				m = new HashMap();
