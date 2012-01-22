@@ -186,6 +186,10 @@
 			<istrue value="${developer}" />
 		</condition>
 		<antcall target="patch-module" />
+		<antcall target="compile-gwt-nopatch" />
+		<antcall target="unpatch-module" />
+	</target>
+	<target name="compile-gwt-nopatch" description="Compile the GWT app" depends="compile-client">
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
@@ -203,7 +207,6 @@
 			<arg line="${project.gwt.compile.flags}" />
 			<arg value="${project.gwt.module.name}" />
 		</java>
-		<antcall target="unpatch-module" />
 	</target>
 	<target name="devmode" description="Run development mode" depends="compile,compile-client">
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">
