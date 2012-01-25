@@ -101,12 +101,13 @@ public class GwittirUtils {
 				TransformManager.get().setIgnorePropertyChanges(true);
 			}
 			for (Binding b : allBindings) {
+				if (b.getLeft() == null || b.getLeft().object == null
+						|| b.getRight() == null) {
+					continue;
+				}
 				if (onlyPropertyName != null
 						&& !onlyPropertyName.equals(b.getRight().property
 								.getName())) {
-					continue;
-				}
-				if (b.getLeft() == null || b.getLeft().object == null) {
 					continue;
 				}
 				boolean satisfiesType = false;

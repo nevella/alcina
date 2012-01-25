@@ -15,23 +15,23 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
- *
+ * Override gwittir logging (there's no way to not generate the remote service in gwittir)
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet" Cooper</a>
  */
 public abstract class Logger {
     private static final HashMap LOGGERS = new HashMap();
     private static final String ANON = "Anon" + Math.random();
-    private static final AsyncCallback CALLBACK = new AsyncCallback(){
-        public void onSuccess(Object result) {
-        }
-        
-        public void onFailure(Throwable caught) {
-            GWT.log( "Unable to log to remote serivce.", caught );
-            
-        }
-        
-    };
-    
+//    private static final AsyncCallback CALLBACK = new AsyncCallback(){
+//        public void onSuccess(Object result) {
+//        }
+//        
+//        public void onFailure(Throwable caught) {
+//            GWT.log( "Unable to log to remote serivce.", caught );
+//            
+//        }
+//        
+//    };
+//    
     static{
     }
     

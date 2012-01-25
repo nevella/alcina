@@ -996,6 +996,7 @@ div.alcina-Wizard div.wizard-toolbar {
 	padding-top: 20px;
 	padding-bottom: 10px;
 	background-color: white;
+	border-bottom:none;
 }
 
 div.alcina-Wizard .h2 {

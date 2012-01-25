@@ -56,6 +56,8 @@ import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.totsp.gwittir.client.beans.annotations.Omit;
+import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
+import com.totsp.gwittir.rebind.beans.IntrospectorFilter.IntrospectorFilterHelper;
 
 @SuppressWarnings("unchecked")
 /**
@@ -81,13 +83,16 @@ public class ClientReflectionGenerator extends Generator {
 
 	private ArrayList<Class<? extends Annotation>> visibleAnnotationClasses;
 
+	private GeneratorContext context;
+
 	public SourceWriter getSw() {
 		return this.sw;
 	}
 
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
-//		System.out.println("ClientReflector generation...");
+		this.context = context;
+		// System.out.println("ClientReflector generation...");
 		PrintWriter printWriter = context.tryCreate(logger, packageName,
 				implementationName);
 		if (printWriter == null) {
@@ -123,6 +128,10 @@ public class ClientReflectionGenerator extends Generator {
 										.getQualifiedBinaryName()));
 			}
 			visibleAnnotationClasses.add(Omit.class);
+			IntrospectorFilter filter = getFilter();
+			if (filter != null) {
+				filter.filterAnnotations(jAnns, visibleAnnotationClasses);
+			}
 			writeAnnotations(logger, context, jAnns, crf);
 			List<JClassType> beanInfoTypes = this.getBeanInfoTypes(logger,
 					context.getTypeOracle(), crf);
@@ -130,14 +139,19 @@ public class ClientReflectionGenerator extends Generator {
 					logger, context.getTypeOracle(), crf);
 			Map<JClassType, Set<RegistryLocation>> gwtRegisteringClasses = getRegistryAnnotations(context
 					.getTypeOracle());
+			if (filter != null) {
+				filter.filterReflectionInfo(beanInfoTypes, instantiableTypes,
+						gwtRegisteringClasses);
+			}
 			SourceWriter srcW = createWriter(crf, printWriter);
 			procDomain(beanInfoTypes, instantiableTypes, srcW,
 					gwtRegisteringClasses, implementationName);
-//			srcW.println("bruce");
 			commit(context, logger, printWriter);
-			System.out.println(String.format("Client reflection generation - "
-					+ "%s annotations, %s beans, "
-					+ "%s instantiable types - %s ms", jAnns.size(),
+			System.out.println(String.format(
+					"Client reflection generation %s - "
+							+ "%s annotations, %s beans, "
+							+ "%s instantiable types - %s ms",
+					filter == null ? "[filtered]" : "", jAnns.size(),
 					beanInfoTypes.size(), instantiableTypes.size(),
 					System.currentTimeMillis() - start));
 		} catch (Exception e) {
@@ -145,6 +159,10 @@ public class ClientReflectionGenerator extends Generator {
 			throw new WrappedRuntimeException(e);
 		}
 		return packageName + "." + implementationName;
+	}
+
+	IntrospectorFilter getFilter() {
+		return IntrospectorFilterHelper.getFilter(context);
 	}
 
 	Map<Class, JClassType> ctLookup = new HashMap<Class, JClassType>();
@@ -386,8 +404,7 @@ public class ClientReflectionGenerator extends Generator {
 			for (JMethod method : getPropertyGetters(jct)) {
 				String propertyName = getPropertyNameForReadMethod(method);
 				if (propertyName.equals("class")
-						|| propertyName
-								.equals("propertyChangeListeners")) {
+						|| propertyName.equals("propertyChangeListeners")) {
 					continue;
 				}
 				Collection<Annotation> annotations = getSuperclassAnnotationsForMethod(method);
@@ -405,7 +422,6 @@ public class ClientReflectionGenerator extends Generator {
 				sw.println("{");
 				sw.indent();
 				for (Annotation a : annotations) {
-					
 					if (!a.annotationType().isAnnotationPresent(
 							ClientVisible.class)
 							|| a.annotationType() == RegistryLocation.class) {

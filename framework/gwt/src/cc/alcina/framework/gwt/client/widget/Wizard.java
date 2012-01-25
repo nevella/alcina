@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import java.util.ArrayList;
@@ -24,15 +23,17 @@ import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public abstract class Wizard<M> implements PermissibleActionListener {
+public abstract class Wizard<M> implements PermissibleActionListener {
 	private static final String NEXT = "next";
 
 	private static final String PREVIOUS = "previous";
@@ -59,9 +60,11 @@ import com.google.gwt.user.client.ui.Widget;
 
 	protected PermissibleAction nextPage = new PermissibleAction("Next >", NEXT);
 
-	protected PermissibleAction previousPage = new PermissibleAction("< Back", PREVIOUS);
+	protected PermissibleAction previousPage = new PermissibleAction("< Back",
+			PREVIOUS);
 
-	protected PermissibleAction finished = new PermissibleAction("Finish", FINISH);
+	protected PermissibleAction finished = new PermissibleAction("Finish",
+			FINISH);
 
 	protected PermissibleAction cancel = new PermissibleAction("Cancel", CANCEL);
 
@@ -74,7 +77,6 @@ import com.google.gwt.user.client.ui.Widget;
 	// for subclasses
 	protected void getExtraActions() {
 	}
-
 
 	protected abstract boolean canFinishOnThisPage();
 
@@ -163,6 +165,10 @@ import com.google.gwt.user.client.ui.Widget;
 	private String styleName = "";
 
 	public Widget renderPage() {
+		return renderPage(true);
+	}
+
+	public Widget renderPage(boolean inScrollPanel) {
 		FlowPanel fp = new FlowPanel();
 		currentWidget = fp;
 		fp.setStyleName(FRAME_STYLE_NAME);
@@ -177,7 +183,18 @@ import com.google.gwt.user.client.ui.Widget;
 			renderButtonsPane(fp);
 			toolbar.addVetoableActionListener(this);
 		}
-		return fp;
+		if (inScrollPanel) {
+			ScrollPanel sp = new ScrollPanel();
+			sp.getElement()
+					.getStyle()
+					.setPropertyPx("maxHeight",
+							Window.getClientHeight() * 90 / 100);
+			sp.getElement().getStyle().setPadding(0.8, Unit.EM);
+			sp.add(fp);
+			return sp;
+		} else {
+			return fp;
+		}
 	}
 
 	private void renderTabPane(FlowPanel fp) {
