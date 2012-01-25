@@ -18,6 +18,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
@@ -211,6 +213,14 @@ public class CollectionModification {
 			CollectionModificationListener listener;
 
 			boolean filteringListener;
+
+			@Override
+			public String toString() {
+				return CommonUtils.formatJ("%s - %s - %s",
+						CommonUtils.simpleClassName(listenedClass),
+						CommonUtils.simpleClassName(listener.getClass()),
+						filteringListener);
+			}
 		}
 	}
 }
