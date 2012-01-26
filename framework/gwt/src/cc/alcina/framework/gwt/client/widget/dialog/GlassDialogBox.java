@@ -61,15 +61,14 @@ public class GlassDialogBox extends DialogBox {
 	protected void onDetach() {
 		super.onDetach();
 		forgetScrollback();
-		
 	};
 
 	private void forgetScrollback() {
 		if (handlerRegistration != null) {
 			handlerRegistration.removeHandler();
-			handlerRegistration=null;
-		}		
-		if(scrollBackTimer!=null){
+			handlerRegistration = null;
+		}
+		if (scrollBackTimer != null) {
 			scrollBackTimer.cancel();
 		}
 	}
@@ -92,7 +91,10 @@ public class GlassDialogBox extends DialogBox {
 		glass.show(true);
 		scrollLeft = Window.getScrollLeft();
 		scrollTop = Window.getScrollTop();
-		this.handlerRegistration = Window.addWindowScrollHandler(scrollHandler);
+		if (this.handlerRegistration == null) {
+			this.handlerRegistration = Window
+					.addWindowScrollHandler(scrollHandler);
+		}
 		super.show();
 	}
 }
