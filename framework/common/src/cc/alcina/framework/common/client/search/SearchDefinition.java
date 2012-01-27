@@ -332,4 +332,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	public Object provideResultsType(){
 		return null;
 	}
+
+	public void onBeforeRunSearch() {
+	}
 }
