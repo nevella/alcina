@@ -17,6 +17,8 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
@@ -46,4 +48,6 @@ public @interface DisplayInfo {
 	int orderingHint() default 100;
 
 	int displayMask() default DISPLAY_AS_PROPERTY;
+	
+	Class filterClass() default Void.class;
 }

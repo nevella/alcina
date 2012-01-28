@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 
 /**
  * 
@@ -59,6 +60,17 @@ public class ClientPropertyReflector implements
 				: getGwPropertyInfo().displayInfo().name();
 	}
 
+	public CollectionFilter getCollectionFilter() {
+		if (getGwPropertyInfo() == null
+				|| getGwPropertyInfo().displayInfo() == null) {
+			return null;
+		}
+		DisplayInfo displayInfo = getGwPropertyInfo().displayInfo();
+		Class clazz = displayInfo.filterClass();
+		return (CollectionFilter) (clazz == null||clazz==Void.class ? null : CommonLocator.get().classLookup()
+				.newInstance(clazz));
+	}
+
 	public int getOrderingHint() {
 		return (getGwPropertyInfo() == null) ? 1000 : getGwPropertyInfo()
 				.displayInfo().orderingHint();
@@ -80,12 +92,12 @@ public class ClientPropertyReflector implements
 	}
 
 	public Object getPropertyValue(Object bean) {
-		return CommonLocator.get().propertyAccessor().getPropertyValue(bean,
-				getPropertyName());
+		return CommonLocator.get().propertyAccessor()
+				.getPropertyValue(bean, getPropertyName());
 	}
 
 	public void setPropertyValue(Object bean, Object newValue) {
-		CommonLocator.get().propertyAccessor().setPropertyValue(bean,
-				getPropertyName(), newValue);
+		CommonLocator.get().propertyAccessor()
+				.setPropertyValue(bean, getPropertyName(), newValue);
 	}
 }

@@ -55,6 +55,11 @@ public class PropertyCollectionProvider<E> implements CollectionProvider<E>,
 		this.propertyReflector = propertyReflector;
 		domainObject.addPropertyChangeListener(
 				propertyReflector.getPropertyName(), this);
+		CollectionFilter collectionFilter = propertyReflector
+				.getCollectionFilter();
+		if (collectionFilter != null) {
+			filter = collectionFilter;
+		}
 	}
 
 	public CollectionFilter<E> getFilter() {
