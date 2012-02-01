@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.widget.dialog;
+package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;

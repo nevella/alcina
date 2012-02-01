@@ -43,6 +43,8 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	private NodeFromXpathProvider nodeProvider = null;
 
+	private ClientNodeIterator walker;
+
 	private static void addVisibleTextNodes(Element element, List<Text> texts) {
 		NodeList<Node> nl = element.getChildNodes();
 		int length = nl.getLength();
@@ -115,7 +117,13 @@ public class DomUtils implements NodeFromXpathProvider {
 				node = xpathMap.get(ucXpath.substring(0, ucXpath.length() - 3));
 			}
 			return node;
+		}else{
+			if (lastContainer != container) {
+				lastContainer = container;
+				walker=new ClientNodeIterator(container, ClientNodeIterator.SHOW_ELEMENT|ClientNodeIterator.SHOW_TEXT);
+			}
 		}
+		// keep in sync with sedomutils
 		Node current = container;
 		String[] sections = ucXpath.split("/");
 		for (String section : sections) {
@@ -130,12 +138,21 @@ public class DomUtils implements NodeFromXpathProvider {
 			boolean asText = tagName.equals(DomUtils.TEXT_MARKER);
 			NodeList<Node> nodes = current.getChildNodes();
 			current = null;
+			Node last = null;
 			int length = nodes.getLength();
 			for (int i = 0; i < length; i++) {
 				Node node = nodes.getItem(i);
+				node = unwrapOrIgnore(node);
+				if (node == null) {
+					continue;
+				}
 				boolean foundIndexed = false;
 				if (asText) {
 					foundIndexed = node.getNodeType() == Node.TEXT_NODE;
+					if (foundIndexed && last != null
+							&& last.getNodeType() == Node.TEXT_NODE) {
+						continue;// ignore, split
+					}
 				} else {
 					foundIndexed = node.getNodeType() == Node.ELEMENT_NODE
 							&& node.getNodeName().equals(tagName);
@@ -147,21 +164,9 @@ public class DomUtils implements NodeFromXpathProvider {
 						break;
 					}
 				}
+				last=node;
 			}
 			if (current == null) {
-				// if (ucXpath.contains("TABLE")&&!ucXpath.contains("TBODY")){
-				// return findXpathWithIndexedText(ucXpath.replace("TABLE",
-				// "TABLE/TBODY"), container);
-				// }
-				// System.out.println(nodes.getLength());
-				// for (int i = 0; i < nodes.getLength(); i++) {
-				// Node node = nodes.getItem(i);
-				// if (node.getNodeType() == Node.ELEMENT_NODE) {
-				// System.out.println(DOM.toString((com.google.gwt.user.client.Element)
-				// node));
-				// }
-				// System.out.println(node);
-				// }
 				return null;
 			}
 		}
@@ -170,6 +175,30 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public boolean isUseXpathMap() {
 		return this.useXpathMap;
+	}
+
+	public static String ignoreableElementIdPrefix = "IGNORE__";
+
+	private Node unwrapOrIgnore(Node node) {
+		if (node.getNodeType() == Node.ELEMENT_NODE) {
+			Element e = (Element) node;
+			if (e.getAttribute("id").startsWith(ignoreableElementIdPrefix)) {
+				if (node.getNodeName().equalsIgnoreCase("span")) {
+					walker.setCurrentNode(node);
+					while (walker.nextNode() != null) {
+						node = walker.getCurrentNode();
+						if (node.getNodeType()==Node.ELEMENT_NODE&&((Element)node).getAttribute("id").startsWith(
+								ignoreableElementIdPrefix)) {
+						} else {
+							return node;
+						}
+					}
+				} else {
+					return null;
+				}
+			}
+		}
+		return node;
 	}
 
 	public void setUseXpathMap(boolean useXpathMap) {
@@ -524,12 +553,12 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public static Element getMinimalParentWithOffsetHeight(Text text) {
-		Element parent=text.getParentElement();
-		while(parent!=null){
-			if(parent.getOffsetHeight()!=0){
+		Element parent = text.getParentElement();
+		while (parent != null) {
+			if (parent.getOffsetHeight() != 0) {
 				return parent;
 			}
-			parent=parent.getParentElement();
+			parent = parent.getParentElement();
 		}
 		return null;
 	}

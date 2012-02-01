@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.widget.dialog;
 
+import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.client.widget.GlassDisplayer;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 

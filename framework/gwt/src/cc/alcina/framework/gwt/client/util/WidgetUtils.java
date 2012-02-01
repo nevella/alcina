@@ -169,7 +169,7 @@ public class WidgetUtils {
 		return widgets;
 	}
 
-	private static int getBestOffsetHeight(Element e) {
+	public static int getBestOffsetHeight(Element e) {
 		return getBestOffsetHeight(e, false);
 	}
 

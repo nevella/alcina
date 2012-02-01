@@ -8,11 +8,11 @@ import com.google.gwt.dom.client.Node;
 public class ClientNodeIterator {
 	private Node current;
 
-	public Node getCurrent() {
+	public Node getCurrentNode() {
 		return this.current;
 	}
 
-	public void setCurrent(Node current) {
+	public void setCurrentNode(Node current) {
 		this.current = current;
 	}
 
