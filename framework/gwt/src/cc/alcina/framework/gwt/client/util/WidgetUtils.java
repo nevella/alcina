@@ -400,6 +400,31 @@ public class WidgetUtils {
 		}
 	}
 
+	public static Element getElementForPositioning0(Element from) {
+		boolean hidden = isZeroOffsetDims(from);
+		int kidCount = from.getChildCount();
+		if (kidCount != 0 && !hidden) {
+			return from;
+		}
+		ClientNodeIterator itr = new ClientNodeIterator(from,
+				ClientNodeIterator.SHOW_ALL);
+		Node node = null;
+		while ((node = itr.nextNode()) != null) {
+			if (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
+				if (!isZeroOffsetDims(node.getParentElement())
+						&& node.getNodeName().equalsIgnoreCase("img")) {
+					return (Element) node;
+				}
+			} else {
+				// text
+				if (!isZeroOffsetDims(node.getParentElement())) {
+					return node.getParentElement();
+				}
+			}
+		}
+		return from.getParentElement();
+	}
+
 	// those values might be needed for non-webkit
 	@SuppressWarnings("unused")
 	private static class ElementLayout {
