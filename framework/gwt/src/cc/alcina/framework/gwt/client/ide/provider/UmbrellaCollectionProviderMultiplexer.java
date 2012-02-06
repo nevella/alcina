@@ -132,7 +132,7 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 		return new UmbrellaCollectionProviderChildString(key);
 	}
 
-	public class UmbrellaCollectionProvider implements CollectionProvider,
+	public class UmbrellaCollectionProvider implements LazyCollectionProvider<T>,
 			Comparable<UmbrellaCollectionProvider> {
 		private CollectionModificationSupport collectionModificationSupport = new CollectionModificationSupport();
 
@@ -155,6 +155,7 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 			objects = umbrellaProvider.getUmbrellaObjects(key);
 		}
 
+		@Override
 		public void addCollectionModificationListener(
 				CollectionModificationListener listener) {
 			this.collectionModificationSupport
@@ -173,6 +174,7 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 			return this.objects;
 		}
 
+		@Override
 		public Set<UmbrellaCollectionProvider> getChildProviders() {
 			return this.childProviders;
 		}
@@ -218,26 +220,29 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 		public void onDetach() {
 		}
 
+		@Override
 		public void removeCollectionModificationListener(
 				CollectionModificationListener listener) {
 			this.collectionModificationSupport
 					.removeCollectionModificationListener(listener);
 		}
 
+		@Override
 		public String getTitle() {
 			return key;
 		}
 
+		@Override
 		public boolean filter(String filterText) {
 			if (filterText.isEmpty()) {
 				filteredCollection = null;
-				for (UmbrellaCollectionProvider provider : getChildProviders()) {
+				for (LazyCollectionProvider<T> provider : getChildProviders()) {
 					provider.filter(filterText);
 				}
 				return true;
 			}
 			filteredCollection = new ArrayList();
-			for (UmbrellaCollectionProvider provider : getChildProviders()) {
+			for (LazyCollectionProvider<T> provider : getChildProviders()) {
 				if (provider.filter(filterText)) {
 					filteredCollection.add(provider);
 				}
@@ -254,6 +259,7 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 			return filteredCollection.size() > 0;
 		}
 
+		@Override
 		public Collection getObjectsRecursive(List list) {
 			list = list == null ? new ArrayList() : list;
 			for (Object o : getCollection()) {
@@ -267,15 +273,17 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 			return list;
 		}
 
+		@Override
 		public int getMinFilterableLength() {
 			return minFilterableDepth;
 		}
 
+		@Override
 		public boolean containsObject(Object userObject) {
 			if (objects.contains(userObject)) {
 				return true;
 			}
-			for (UmbrellaCollectionProvider provider : getChildProviders()) {
+			for (LazyCollectionProvider<T> provider : getChildProviders()) {
 				if (provider.containsObject(userObject)) {
 					return true;
 				}

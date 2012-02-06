@@ -36,6 +36,8 @@ public @interface DisplayInfo {
 	public static final int DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER = 8;
 
 	public static final int DISPLAY_WRAP = 16;
+	
+	public static final int DISPLAY_LAZY_COLLECTION_NODE = 32;
 
 	public static final int DISPLAY_WRAP_PROPERTY = DISPLAY_WRAP|DISPLAY_AS_PROPERTY;
 

@@ -1318,7 +1318,9 @@ table.gwittir-BoundTable.editable tr.odd td{
 .alcina-expandableLabel a, .alcina-expandableLabel a:link,.alcina-expandableLabel a:visited,.alcina-expandableLabel a:active{
 	text-decoration: none;
 }
-
+.alcina-expandableLabel{
+	white-space:normal;
+}
 /** Rich text **/
 .alcina-richTextToolbarBkg{
  background: #e3e8f3 url(images/hborder.png) repeat-x 0px -2003px;

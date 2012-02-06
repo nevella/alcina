@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.SortedMultimap;
+import cc.alcina.framework.gwt.client.ide.provider.LazyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.UmbrellaCollectionProviderMultiplexer.UmbrellaCollectionProvider;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
@@ -106,13 +107,13 @@ public class NodeFactory {
 			return getNodeForDomainObject((SourcesPropertyChangeEvents) object);
 		}
 		if (object instanceof UmbrellaCollectionProvider) {
-			return getNodeForUmbrella((UmbrellaCollectionProvider) object);
+			return getNodeForUmbrella((LazyCollectionProvider) object);
 		}
 		return null;
 	}
 
 	private UmbrellaProviderNode getNodeForUmbrella(
-			UmbrellaCollectionProvider providerChild) {
+			LazyCollectionProvider providerChild) {
 		return new UmbrellaProviderNode(providerChild, null, null, this);
 	}
 
@@ -148,6 +149,11 @@ public class NodeFactory {
 			isChildlessPoorThing = false;
 			boolean withoutContainer = (visualiserInfo.displayInfo()
 					.displayMask() & DisplayInfo.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER) != 0;
+			boolean lazyCollectionNode = (visualiserInfo.displayInfo()
+					.displayMask() & DisplayInfo.DISPLAY_LAZY_COLLECTION_NODE) != 0;
+			// this is not implemented - it'd be sort of hard (but possible)
+			// main thing is, we'd need a parallel (tree) structure of
+			// collections
 			PropertyCollectionProvider provider = new PropertyCollectionProvider(
 					domainObject, pr);
 			if (withoutContainer) {
@@ -155,8 +161,15 @@ public class NodeFactory {
 				((DomainCollectionProviderNode) dn)
 						.setCollectionProvider(provider);
 			} else {
-				CollectionProviderNode node = new CollectionProviderNode(
-						provider, TextProvider.get().getLabelText(c, pr),
+				// ContainerNode node = lazyCollectionNode ? new
+				// UmbrellaProviderNode(
+				// provider, TextProvider.get().getLabelText(c, pr),
+				// images.folder(), false, this)
+				// : new CollectionProviderNode(provider, TextProvider
+				// .get().getLabelText(c, pr), images.folder(),
+				// false, this);
+				ContainerNode node = new CollectionProviderNode(provider,
+						TextProvider.get().getLabelText(c, pr),
 						images.folder(), false, this);
 				createdNodes.add(visualiserInfo.displayInfo().orderingHint(),
 						node);

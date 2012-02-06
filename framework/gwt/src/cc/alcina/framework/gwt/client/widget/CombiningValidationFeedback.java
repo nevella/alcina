@@ -46,7 +46,7 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 	}
 
 	public static class CombiningValidationFeedbackCollector {
-		Map<Object, ValidationException> exceptions = new LinkedHashMap<Object, ValidationException>();
+		protected Map<Object, ValidationException> exceptions = new LinkedHashMap<Object, ValidationException>();
 
 		public void clear() {
 			exceptions.clear();

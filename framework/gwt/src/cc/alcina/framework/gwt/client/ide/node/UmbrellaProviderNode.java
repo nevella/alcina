@@ -18,8 +18,8 @@ import java.util.Collection;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
+import cc.alcina.framework.gwt.client.ide.provider.LazyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
-import cc.alcina.framework.gwt.client.ide.provider.UmbrellaCollectionProviderMultiplexer.UmbrellaCollectionProvider;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;
 
 import com.google.gwt.resources.client.ImageResource;
@@ -37,9 +37,9 @@ public class UmbrellaProviderNode extends ContainerNode implements
 
 	private CollectionRenderingSupport support = null;
 
-	private final UmbrellaCollectionProvider provider;
+	private final LazyCollectionProvider provider;
 
-	public UmbrellaProviderNode(UmbrellaCollectionProvider provider,
+	public UmbrellaProviderNode(LazyCollectionProvider provider,
 			String title, ImageResource imageResource,NodeFactory nodeFactory) {
 		super(title, imageResource,nodeFactory);
 		this.provider = provider;

@@ -158,8 +158,11 @@ public class ClientTransformManager extends TransformManager {
 				callback.onSuccess(null);
 				return;
 			}
-			String message = TextProvider.get().getUiObjectText(ClientTransformManager.class, "domain-sync-update", "Loading");
-			final ModalNotifier notifier = ClientLayerLocator.get().notifications().getModalNotifier(message);
+			String message = TextProvider.get().getUiObjectText(
+					ClientTransformManager.class, "domain-sync-update",
+					"Loading");
+			final ModalNotifier notifier = ClientLayerLocator.get()
+					.notifications().getModalNotifier(message);
 			final long t1 = System.currentTimeMillis();
 			AsyncCallback<List<ObjectCacheItemResult>> innerCallback = new AsyncCallback<List<ObjectCacheItemResult>>() {
 				public void onSuccess(List<ObjectCacheItemResult> result) {
@@ -221,12 +224,21 @@ public class ClientTransformManager extends TransformManager {
 		}
 	}
 
+	private DomainTransformExceptionFilter domainTransformExceptionFilter;
+
 	public void replayRemoteEvents(Collection<DomainTransformEvent> evts,
 			boolean fireTransforms) {
 		try {
 			setReplayingRemoteEvent(true);
 			for (DomainTransformEvent dte : evts) {
-				consume(dte);
+				try {
+					consume(dte);
+				} catch (DomainTransformException e) {
+					if (domainTransformExceptionFilter == null
+							|| !domainTransformExceptionFilter.ignore(e)) {
+						throw e;
+					}
+				}
 				if (dte.getTransformType() == TransformType.CREATE_OBJECT
 						&& dte.getObjectId() == 0
 						&& dte.getObjectLocalId() != 0) {
@@ -430,5 +442,14 @@ public class ClientTransformManager extends TransformManager {
 					callback);
 		}
 		return target;
+	}
+
+	public DomainTransformExceptionFilter getDomainTransformExceptionFilter() {
+		return this.domainTransformExceptionFilter;
+	}
+
+	public void setDomainTransformExceptionFilter(
+			DomainTransformExceptionFilter domainTransformExceptionFilter) {
+		this.domainTransformExceptionFilter = domainTransformExceptionFilter;
 	}
 }
