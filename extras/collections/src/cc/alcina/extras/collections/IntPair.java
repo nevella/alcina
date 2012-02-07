@@ -70,6 +70,19 @@ public class IntPair implements Comparable<IntPair> {
 		return i1 == i2;
 	}
 
+	public static IntPair parseIntPair(String string) {
+		try {
+			String[] split = string.replaceAll("[\\[\\]]", "").split("-|,");
+			if (split.length == 2) {
+				return new IntPair(Integer.parseInt(split[0]),
+						Integer.parseInt(split[1]));
+			}
+			return null;
+		} catch (NumberFormatException nfe) {
+			return null;
+		}
+	}
+
 	public IntPair intersection(IntPair other) {
 		IntPair result = new IntPair(Math.max(i1, other.i1), Math.min(i2,
 				other.i2));
