@@ -660,12 +660,14 @@ public class WidgetUtils {
 		}
 		return top;
 	}-*/;
-
 	public static void scrollIntoView(Element e, int fromTop) {
+		scrollIntoView(e, fromTop, false);
+	}
+	public static void scrollIntoView(Element e, int fromTop, boolean forceFromTop) {
 		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
 		int y2 = y1 + Window.getClientHeight();
 		int absoluteTop = e.getAbsoluteTop();
-		if (absoluteTop >= y1 && absoluteTop < y2) {
+		if (!forceFromTop&&(absoluteTop >= y1 && absoluteTop < y2)) {
 			return;
 		}
 		DOM.scrollIntoView((com.google.gwt.user.client.Element) e);

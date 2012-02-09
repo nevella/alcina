@@ -1,4 +1,4 @@
-package cc.alcina.framework.jvmclient.service;
+package cc.alcina.framework.entity.util;
 
 import java.util.Timer;
 import java.util.TimerTask;

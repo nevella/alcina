@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.util.TimerWrapper;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 public class AtEndOfEventSeriesTimer {
@@ -21,9 +22,15 @@ public class AtEndOfEventSeriesTimer {
 
 	private final Runnable action;
 
+	private final TimerWrapperProvider timerWrapperProvider;
+
 	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action) {
+		this(waitToPerformAction, action, ClientLayerLocator.get().timerWrapperProvider());
+	}
+	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action,TimerWrapperProvider timerWrapperProvider) {
 		this.waitToPerformAction = waitToPerformAction;
 		this.action = action;
+		this.timerWrapperProvider = timerWrapperProvider;
 	}
 
 	private TimerWrapper timer = null;
@@ -31,7 +38,7 @@ public class AtEndOfEventSeriesTimer {
 	public void triggerEventOccurred() {
 		lastEventOccurred = System.currentTimeMillis();
 		if (timer == null) {
-			timer = ClientLayerLocator.get().timerWrapperProvider()
+			timer = timerWrapperProvider
 					.getTimer(checkCallback);
 			timer.scheduleRepeating(waitToPerformAction / 2);
 		}
