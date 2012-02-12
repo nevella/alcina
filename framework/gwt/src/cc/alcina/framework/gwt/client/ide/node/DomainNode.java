@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
@@ -90,7 +91,7 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 
 		@Override
 		public boolean satisfiesFilter(T t, String filterText) {
-			if (TextProvider.get().getObjectName(t).toLowerCase()
+			if (CommonUtils.nullToEmpty(TextProvider.get().getObjectName(t)).toLowerCase()
 					.contains(filterText)) {
 				return true;
 			}
