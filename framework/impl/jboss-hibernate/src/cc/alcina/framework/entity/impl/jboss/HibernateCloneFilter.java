@@ -18,12 +18,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.hibernate.collection.PersistentSet;
+import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.proxy.HibernateProxy;
 
 import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 
 
 /**

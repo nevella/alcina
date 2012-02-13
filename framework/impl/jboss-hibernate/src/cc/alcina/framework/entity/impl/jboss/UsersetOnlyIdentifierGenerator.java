@@ -2,7 +2,7 @@ package cc.alcina.framework.entity.impl.jboss;
 
 import java.io.Serializable;
 
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;

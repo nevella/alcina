@@ -22,11 +22,9 @@ import java.util.Collection;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.engine.IdentifierValue;
-import org.hibernate.engine.SessionImplementor;
+import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.tuple.IdentifierProperty;
