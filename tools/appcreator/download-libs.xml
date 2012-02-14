@@ -38,7 +38,7 @@
 			<downloadable-file-list>
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" />
-					<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" />
 
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-javaee.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/jboss-javaee.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-vfs-3.0.1.GA.jar" tocUrl="" url="http://download.jboss.org/jbossas/7.0/jboss-as-7.0.0.Final/jboss-as-7.0.0.Final.zip" containerPath="jboss-as-7.0.0.Final.zip" extractFileName="modules/org/jboss/vfs/main/jboss-vfs-3.0.1.GA.jar" />
