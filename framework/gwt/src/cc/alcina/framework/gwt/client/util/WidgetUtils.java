@@ -87,6 +87,13 @@ public class WidgetUtils {
 			w.addStyleName(styleName);
 		}
 	}
+	public static void addOrRemoveStyleName(Widget w, String styleName,boolean add) {
+		if (!add) {
+			w.removeStyleName(styleName);
+		} else {
+			w.addStyleName(styleName);
+		}
+	}
 
 	// TODO - check all calls here either the cp implements haschildhandlers, or
 	// explain why t'hell not...(doesn't add handlers to the child widgets would
