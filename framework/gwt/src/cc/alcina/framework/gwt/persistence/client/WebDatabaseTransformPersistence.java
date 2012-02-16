@@ -13,6 +13,10 @@
  */
 package cc.alcina.framework.gwt.persistence.client;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -381,6 +385,34 @@ public class WebDatabaseTransformPersistence extends
 						new String[] { Long.toString(clientInstance.getId()),
 								Integer.toString(clientInstance.getAuth()),
 								Integer.toString(wrapper.getId()) });
+			}
+
+			@Override
+			public void onTransactionSuccess() {
+				callback.onSuccess(null);
+			}
+
+			@Override
+			public void onTransactionFailure(SQLError error) {
+				callbackFail(callback, error);
+			}
+		});
+	}
+	
+	@Override
+	public void reparentToClientInstance(
+			final long clientInstanceId,
+			final ClientInstance clientInstance, 
+			final PersistenceCallback callback) {
+		db.transaction(new TransactionCallback() {
+			@Override
+			public void onTransactionStart(SQLTransaction tx) {
+				tx.executeSql("update  TransformRequests  set "
+						+ "clientInstance_id=?,clientInstance_auth=? "
+						+ " where id = ?",
+						new String[] { Long.toString(clientInstance.getId()),
+								Integer.toString(clientInstance.getAuth()),
+								Long.toString(clientInstanceId) });
 			}
 
 			@Override

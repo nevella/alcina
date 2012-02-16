@@ -311,7 +311,7 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	@Override
-	protected void reparentToClientInstance(
+	public void reparentToClientInstance(
 			final DTRSimpleSerialWrapper wrapper,
 			final ClientInstance clientInstance,
 			final PersistenceCallback callback) {
@@ -326,6 +326,29 @@ public abstract class JdbcTransformPersistence extends
 			pstmt.setLong(1, clientInstance.getId());
 			pstmt.setInt(2, clientInstance.getAuth());
 			pstmt.setInt(3, wrapper.getId());
+			callback.onSuccess(null);
+		} catch (SQLException e) {
+			callback.onFailure(e);
+		} finally {
+			cleanup(conn, pstmt, rs);
+		}
+	}
+
+	@Override
+	public void reparentToClientInstance(long clientInstanceId,
+			ClientInstance clientInstance, PersistenceCallback callback) {
+		Connection conn = null;
+		PreparedStatement pstmt = null;
+		ResultSet rs = null;
+		try {
+			conn = getConnection();
+			pstmt = conn.prepareStatement("update TransformRequests set "
+					+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=? "
+					+ "where CLIENTINSTANCE_ID = ?");
+			pstmt.setLong(1, clientInstance.getId());
+			pstmt.setInt(2, clientInstance.getAuth());
+			pstmt.setLong(3, clientInstanceId);
+			int rowsModified = pstmt.executeUpdate();
 			callback.onSuccess(null);
 		} catch (SQLException e) {
 			callback.onFailure(e);

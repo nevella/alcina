@@ -33,11 +33,18 @@ public class DisabledTransformPersistence extends LocalTransformPersistence{
 	}
 
 	@Override
-	protected void reparentToClientInstance(DTRSimpleSerialWrapper wrapper,
+	public void reparentToClientInstance(DTRSimpleSerialWrapper wrapper,
 			ClientInstance clientInstance, PersistenceCallback callback) {
 		
 	}
 
+	@Override
+	public void reparentToClientInstance(long clientInstanceId,
+			ClientInstance clientInstance, PersistenceCallback callback) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	@Override
 	protected void transformPersisted(
 			List<DTRSimpleSerialWrapper> persistedWrappers,
