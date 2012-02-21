@@ -447,10 +447,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			DTRSimpleSerialWrapper wrapper, ClientInstance clientInstance,
 			PersistenceCallback callback);
 	
-	public abstract void reparentToClientInstance(
-			long clientInstanceId, ClientInstance clientInstance,
-			PersistenceCallback callback);
-
+	
 	protected void setClientInstanceIdForGet(Long clientInstanceIdForGet) {
 		this.clientInstanceIdForGet = clientInstanceIdForGet;
 	}

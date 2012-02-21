@@ -396,33 +396,7 @@ public class WebDatabaseTransformPersistence extends
 		});
 	}
 
-	@Override
-	public void reparentToClientInstance(
-			final long clientInstanceId,
-			final ClientInstance clientInstance, 
-			final PersistenceCallback callback) {
-		db.transaction(new TransactionCallback() {
-			@Override
-			public void onTransactionStart(SQLTransaction tx) {
-				tx.executeSql("update  TransformRequests  set "
-						+ "clientInstance_id=?,clientInstance_auth=? "
-						+ " where id = ?",
-						new String[] { Long.toString(clientInstance.getId()),
-								Integer.toString(clientInstance.getAuth()),
-								Long.toString(clientInstanceId) });
-			}
-
-			@Override
-			public void onTransactionSuccess() {
-				callback.onSuccess(null);
-			}
-
-			@Override
-			public void onTransactionFailure(SQLError error) {
-				callbackFail(callback, error);
-			}
-		});
-	}
+	
 	
 	public void callbackFail(final PersistenceCallback callback, SQLError error) {
 		callback.onFailure(new Exception("Problem initalising webdb - "

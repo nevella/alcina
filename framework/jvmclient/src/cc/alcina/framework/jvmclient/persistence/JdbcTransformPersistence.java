@@ -334,7 +334,6 @@ public abstract class JdbcTransformPersistence extends
 		}
 	}
 
-	@Override
 	public void reparentToClientInstance(long clientInstanceId,
 			ClientInstance clientInstance, PersistenceCallback callback) {
 		Connection conn = null;
