@@ -13,15 +13,12 @@
  */
 package cc.alcina.framework.gwt.persistence.client;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
@@ -163,9 +160,9 @@ public class WebDatabaseTransformPersistence extends
 		final LocalTransformPersistence listener = this;
 		try {
 			db = Database.openDatabase(getTransformDbName(), "1.0",
-					"Alcina Transforms", 5000000);
+					"Alcina Transforms", 100000000);
 		} catch (Exception e) {
-			// squelch - no gears
+			throw new WrappedRuntimeException(e);
 		}
 		setLocalStorageInstalled(db != null);
 		if (isLocalStorageInstalled()) {
@@ -372,7 +369,7 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	@Override
-	protected void reparentToClientInstance(
+	public void reparentToClientInstance(
 			final DTRSimpleSerialWrapper wrapper,
 			final ClientInstance clientInstance,
 			final PersistenceCallback callback) {
@@ -398,7 +395,7 @@ public class WebDatabaseTransformPersistence extends
 			}
 		});
 	}
-	
+
 	@Override
 	public void reparentToClientInstance(
 			final long clientInstanceId,
@@ -426,7 +423,7 @@ public class WebDatabaseTransformPersistence extends
 			}
 		});
 	}
-
+	
 	public void callbackFail(final PersistenceCallback callback, SQLError error) {
 		callback.onFailure(new Exception("Problem initalising webdb - "
 				+ error.getMessage() + " - " + error.getCode()));

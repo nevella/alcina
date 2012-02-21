@@ -443,7 +443,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				afterGetTransforms);
 	}
 
-	protected abstract void reparentToClientInstance(
+	public abstract void reparentToClientInstance(
 			DTRSimpleSerialWrapper wrapper, ClientInstance clientInstance,
 			PersistenceCallback callback);
 	

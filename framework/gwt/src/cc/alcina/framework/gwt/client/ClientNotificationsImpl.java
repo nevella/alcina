@@ -230,22 +230,45 @@ public class ClientNotificationsImpl implements ClientNofications {
 		this.showError("", caught);
 	}
 
+	public native String statsString() /*-{
+		if (!($wnd.__stats)) {
+			return "";
+		}
+		var result = "";
+		var lastEvtGroup = -1;
+		var lastMillis = 0;
+		for ( var k in $wnd.__stats) {
+			var stat = $wnd.__stats[k];
+			var deltaStr = '';
+			for ( var j in stat) {
+				var v = stat[j];
+				result += j + ": " + v + "  ";
+
+			}
+			
+			var v = stat.evtGroup;
+			if (lastEvtGroup == v) {
+				if (lastMillis != 0) {
+					result += "\ndelta - " + v + " - " + stat.type + ' - '
+							+ (stat.millis - lastMillis) + 'ms\n';
+				}
+				lastMillis = stat.millis;
+			} else {
+				lastMillis = 0;
+				lastEvtGroup = v;
+			}
+			result += "\n\n";
+		}
+		return result;
+	}-*/;
+
 	public void showLog() {
-		Button b = new Button("clear log", new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				Widget sender = (Widget) event.getSource();
-				logString = "";
-				dialogHtml.setHTML("");
-			}
-		});
-		Button c = new Button("copy to clipboard", new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				Widget sender = (Widget) event.getSource();
-				WidgetUtils.copyTextToClipboard(logString);
-			}
-		});
-		showDialog("Client log - performance metrics", null, logString,
-				MessageType.INFO, Arrays.asList(new Button[] { b, c }), "wide");
+		showDialog(CommonUtils.formatJ("<div>Client log</div><hr>"
+				+ "<div class='logboxpre' style='width:850px'>%s </div>",
+				(logString + statsString()).replace("\n", "<br>")), null, null,
+				MessageType.INFO, null, "wide");
+		dialogBox.setModal(false);
+		dialogBox.setAutoHideEnabled(true);
 	}
 
 	public void showMessage(String msg) {

@@ -13,6 +13,7 @@
 		<delete dir="${framework.servlet.build.dir}" />
 		<delete dir="${framework.impl.jboss-hibernate.build.dir}" />
 		<delete dir="${framework.dist.dir}" />
+		<delete dir="${extras.dist.dir}" />
 		<delete dir="${extras.collections.build.dir}" />
 		<delete dir="${framework.jvmclient.build.dir}" />
 	</target>
@@ -58,10 +59,12 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
+
 	</target>
 
 	<target name="make-jars" description="Make entity, entity-impl, servlet and extras jars " depends="compile">
 		<mkdir dir="${framework.dist.dir}" />
+		<mkdir dir="${extras.dist.dir}" />
 		<delete file="${framework.dist.dir}/${ant.project.name}-entity.jar" />
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-entity.jar">
 			<metainf dir="${framework.entity.base.dir}/META-INF" />
@@ -93,6 +96,12 @@
 				<include name="**/*.*" />
 			</fileset>
 			<fileset dir="${extras.collections.src.dir}">
+				<include name="**/*.*" />
+				<exclude name="**/*.class" />
+			</fileset>
+		</jar>
+		<jar destfile="${extras.dist.dir}/${ant.project.name}-extras-rpc-client.jar">
+			<fileset dir="${extras.rpc.client.src.dir}">
 				<include name="**/*.*" />
 				<exclude name="**/*.class" />
 			</fileset>

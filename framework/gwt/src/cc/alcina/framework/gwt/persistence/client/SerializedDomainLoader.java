@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
@@ -20,8 +21,8 @@ import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.ClientNofications;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class SerializedDomainLoader {
 	public static final String OFFLINE_LOAD_METRIC_KEY = "offline-load";
@@ -31,6 +32,12 @@ public abstract class SerializedDomainLoader {
 	protected List<DTRSimpleSerialWrapper> transforms;
 
 	protected LoadObjectsHolder<DomainModelHolder> loadObjectsHolder;
+
+	private Iterator<DTRSimpleSerialWrapper> initialEventsTransformIterator;
+
+	private AsyncCallback<List<DomainTransformEvent>> initialEventsIteratorCallback;
+
+	private ArrayList<DomainTransformEvent> initialEvents;
 
 	public abstract void afterEventReplay();
 
@@ -55,46 +62,65 @@ public abstract class SerializedDomainLoader {
 			@Override
 			public void onSuccess(List<DTRSimpleSerialWrapper> result) {
 				transforms = result;
-				try {
-					if (!transforms.isEmpty()) {
-						DTRSimpleSerialWrapper wrapper = transforms.get(0);
-						DTRProtocolHandler handler = new DTRProtocolSerializer()
-								.getHandler(wrapper.getProtocolVersion());
-						if (handler instanceof GwtRpcProtocolHandler) {
-							LoadObjectsHolder loadObjectsHolder = replayRpc(wrapper
-									.getText());
-							ClientNofications no = ClientLayerLocator.get()
-									.notifications();
-							no.log("replayRpc - exists - "
-									+ (loadObjectsHolder != null));
-							no.log("replayRpc - domain objects exist - "
-									+ (loadObjectsHolder.getDomainObjects() != null));
-							no.log("replayRpc permutation (ser) - "
-									+ (loadObjectsHolder.getRequest()
-											.getTypeSignature()));
-							no.log("replayRpc permutation(app) - "
-									+ getTransformSignature());
-							no.log("replayRpc userid (ser)- "
-									+ (wrapper.getUserId()));
-							no.log("replayRpc userid (app)- "
-									+ PermissionsManager.get().getUserId());
-							if (loadObjectsHolder != null
-									&& loadObjectsHolder.getDomainObjects() != null
-									&& checkTransformSignature(loadObjectsHolder)
-									&& wrapper.getUserId() == PermissionsManager
-											.get().getUserId()) {
-								setLoadObjectsHolder(loadObjectsHolder);
-								persistenceCallback.onSuccess(true);
-								return;
+				if (!transforms.isEmpty()) {
+					final DTRSimpleSerialWrapper wrapper = transforms.get(0);
+					DTRProtocolHandler handler = new DTRProtocolSerializer()
+							.getHandler(wrapper.getProtocolVersion());
+					if (handler instanceof GwtRpcProtocolHandler) {
+						AsyncCallback<LoadObjectsHolder> replayRpcCallback = new AsyncCallback<LoadObjectsHolder>() {
+							private void _finally() {
+								ClientMetricLogging.get().end(
+										ONLINE_INITIAL_DESER_METRIC_KEY);
 							}
-						}
+
+							@Override
+							public void onSuccess(LoadObjectsHolder loadObjectsHolder) {
+								try {
+									ClientNofications no = ClientLayerLocator
+											.get().notifications();
+									no.log("replayRpc - exists - "
+											+ (loadObjectsHolder != null));
+									no.log("replayRpc - domain objects exist - "
+											+ (loadObjectsHolder
+													.getDomainObjects() != null));
+									no.log("replayRpc permutation (ser) - "
+											+ (loadObjectsHolder.getRequest()
+													.getTypeSignature()));
+									no.log("replayRpc permutation(app) - "
+											+ getTransformSignature());
+									no.log("replayRpc userid (ser)- "
+											+ (wrapper.getUserId()));
+									no.log("replayRpc userid (app)- "
+											+ PermissionsManager.get()
+													.getUserId());
+									if (loadObjectsHolder != null
+											&& loadObjectsHolder
+													.getDomainObjects() != null
+											&& checkTransformSignature(loadObjectsHolder)
+											&& wrapper.getUserId() == PermissionsManager
+													.get().getUserId()) {
+										setLoadObjectsHolder(loadObjectsHolder);
+										persistenceCallback.onSuccess(true);
+										return;
+									}
+								} catch (Exception e) {
+									// squelch
+								}
+								persistenceCallback.onSuccess(false);
+							}
+
+							@Override
+							public void onFailure(Throwable caught) {
+								_finally();
+								persistenceCallback.onFailure(caught);
+							}
+						};
+						replayRpc(wrapper.getText(), replayRpcCallback);
+						return;
 					}
-				} catch (Exception e) {
-				} finally {
-					ClientMetricLogging.get().end(
-							ONLINE_INITIAL_DESER_METRIC_KEY);
 				}
 				persistenceCallback.onSuccess(false);
+				return;
 			}
 		};
 		localPersistence.openAvailableSessionTransformsForOfflineLoad(false,
@@ -112,25 +138,45 @@ public abstract class SerializedDomainLoader {
 	/*
 	 * at most two gwtrpc wrappers - at the top of the list
 	 */
-	private List<DomainTransformEvent> handleGwtRpcTransforms() {
-		List<DomainTransformEvent> initialEvents = new ArrayList<DomainTransformEvent>();
-		for (Iterator<DTRSimpleSerialWrapper> iterator = transforms.iterator(); iterator
-				.hasNext();) {
-			DTRSimpleSerialWrapper wrapper = iterator.next();
+	private void handleGwtRpcTransforms(
+			AsyncCallback<List<DomainTransformEvent>> callback) {
+		initialEvents = new ArrayList<DomainTransformEvent>();
+		initialEventsTransformIterator = transforms.iterator();
+		initialEventsIteratorCallback = callback;
+		iterateInitialEvents();
+	}
+
+	private void iterateInitialEvents() {
+		for (; initialEventsTransformIterator.hasNext();) {
+			DTRSimpleSerialWrapper wrapper = initialEventsTransformIterator
+					.next();
 			DTRProtocolHandler handler = new DTRProtocolSerializer()
 					.getHandler(wrapper.getProtocolVersion());
 			if (handler instanceof GwtRpcProtocolHandler) {
-				LoadObjectsHolder replayRpc = replayRpc(wrapper.getText());
-				iterator.remove();
-				if (replayRpc != null) {
-					if (replayRpc.getDomainObjects() != null) {
-						setLoadObjectsHolder(replayRpc);
-					}
-					initialEvents.addAll(replayRpc.getReplayEvents());
-				}
+				replayRpc(wrapper.getText(),
+						new AsyncCallback<LoadObjectsHolder>() {
+							@Override
+							public void onFailure(Throwable caught) {
+								throw new WrappedRuntimeException(caught);
+							}
+
+							@Override
+							public void onSuccess(LoadObjectsHolder replayRpc) {
+								initialEventsTransformIterator.remove();
+								if (replayRpc != null) {
+									if (replayRpc.getDomainObjects() != null) {
+										setLoadObjectsHolder(replayRpc);
+									}
+									initialEvents.addAll(replayRpc
+											.getReplayEvents());
+								}
+								iterateInitialEvents();
+							}
+						});
+				return;
 			}
 		}
-		return initialEvents;
+		initialEventsIteratorCallback.onSuccess(initialEvents);
 	}
 
 	private boolean hasGwtRpcTransforms() {
@@ -166,9 +212,10 @@ public abstract class SerializedDomainLoader {
 		throw new UnsupportedOperationException();
 	}
 
-	protected LoadObjectsHolder replayRpc(String text) {
-		return ((ClientHandshakeHelperWithLocalPersistence) ClientLayerLocator
-				.get().getClientHandshakeHelper()).replayRpc(text);
+	protected void replayRpc(String text,
+			AsyncCallback<LoadObjectsHolder> callback) {
+		((ClientHandshakeHelperWithLocalPersistence) ClientLayerLocator.get()
+				.getClientHandshakeHelper()).replayRpc(text, callback);
 	}
 
 	protected void setLoadObjectsHolder(
@@ -247,19 +294,29 @@ public abstract class SerializedDomainLoader {
 
 	protected void replaySequence(final ScheduledCommand postReplayCommand) {
 		assert postReplayCommand != null;
-		final List<DomainTransformEvent> initialEvents = handleGwtRpcTransforms();
-		ScheduledCommand postRegisterCommand = new ScheduledCommand() {
+		AsyncCallback<List<DomainTransformEvent>> initialEventsCallback = new AsyncCallback<List<DomainTransformEvent>>() {
 			@Override
-			public void execute() {
-				replayTransforms(initialEvents);
-				postReplayCommand.execute();
+			public void onSuccess(final List<DomainTransformEvent> initialEvents) {
+				ScheduledCommand postRegisterCommand = new ScheduledCommand() {
+					@Override
+					public void execute() {
+						replayTransforms(initialEvents);
+						postReplayCommand.execute();
+					}
+				};
+				if (getLoadObjectsHolder() != null) {
+					registerRpcDomainModelHolder(postRegisterCommand);
+				} else {
+					postRegisterCommand.execute();
+				}
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+				throw new WrappedRuntimeException(caught);
 			}
 		};
-		if (getLoadObjectsHolder() != null) {
-			registerRpcDomainModelHolder(postRegisterCommand);
-		}else{
-			postRegisterCommand.execute(); 
-		}
+		handleGwtRpcTransforms(initialEventsCallback);
 	}
 
 	protected void replayAfterPossibleDelay(ScheduledCommand postRegisterCommand) {

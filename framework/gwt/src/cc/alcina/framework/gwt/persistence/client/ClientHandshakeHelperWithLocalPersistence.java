@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.persistence.client;
 
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -11,6 +9,9 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
+
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class ClientHandshakeHelperWithLocalPersistence extends
 		ClientHandshakeHelper {
@@ -97,7 +98,7 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 	 * Override for gwt deserialization, and call new MixedGwtTransformHelper()
 	 * .replayRpc
 	 */
-	public LoadObjectsHolder replayRpc(String text) {
+	public void replayRpc(String text,AsyncCallback<LoadObjectsHolder> callback) {
 		throw new UnsupportedOperationException();
 	}
 }

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="framework/common/src"/>
+	<classpathentry kind="src" path="extras/rpc/client/src"/>
+	<classpathentry kind="src" path="extras/rpc/servlet/src"/>
 	<classpathentry kind="src" path="framework/jvmclient/src"/>
 	<classpathentry kind="src" path="extras/collections/src"/>
 	<classpathentry kind="src" path="framework/entity/src"/>

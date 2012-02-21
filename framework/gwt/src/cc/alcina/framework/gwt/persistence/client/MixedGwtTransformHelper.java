@@ -126,18 +126,26 @@ public class MixedGwtTransformHelper {
 	}
 
 	public AsyncCallback<LoadObjectsHolder> prepareForReplay(
-			AlcinaRpcRequestBuilder builder, String text) {
+			AlcinaRpcRequestBuilder builder, String text, AsyncCallback<LoadObjectsHolder> onLoadCallback) {
 		builder.setResponsePayload(text);
-		return new LoaderCallback();
+		return new LoaderCallback(onLoadCallback);
 	}
 
 	class LoaderCallback implements AsyncCallback<LoadObjectsHolder> {
+		private final AsyncCallback<LoadObjectsHolder> onLoadCallback;
+
+		public LoaderCallback(AsyncCallback<LoadObjectsHolder> onLoadCallback) {
+			this.onLoadCallback = onLoadCallback;
+		}
+
 		public void onFailure(Throwable caught) {
 			// Different RPC signatures
+			onLoadCallback.onFailure(caught);
 		}
 
 		public void onSuccess(LoadObjectsHolder result) {
 			holder = result;
+			onLoadCallback.onSuccess(result);
 		}
 	}
 }
