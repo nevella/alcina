@@ -202,6 +202,8 @@
 			</classpath>
 			<jvmarg value="-Xmx850M" />
 			<jvmarg value="-Xss2M" />
+			<jvmarg value="-Dgwt.usearchives=false" />
+			
 			
 			<arg line=" -style ${gwt.codestyle}" />
 			<arg line="${project.gwt.compile.flags}" />

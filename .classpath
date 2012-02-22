@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="framework/common/src"/>
-	<classpathentry kind="src" path="extras/rpc/client/src"/>
+	<classpathentry excluding="com/google/gwt/user/client/translatable/" kind="src" path="extras/rpc/client/src"/>
 	<classpathentry kind="src" path="extras/rpc/servlet/src"/>
 	<classpathentry kind="src" path="framework/jvmclient/src"/>
 	<classpathentry kind="src" path="extras/collections/src"/>
@@ -16,7 +16,6 @@
 	<classpathentry kind="lib" path="lib/framework/entity/jsr173_api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/log4j-1.2.6.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwittir-trunk.jar"/>
@@ -28,5 +27,6 @@
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

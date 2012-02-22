@@ -156,7 +156,6 @@ import com.google.gwt.user.client.ui.Widget;
 		public void onClick(ClickEvent event) {
 			// note - mouseOut won't fire - so we'll need to be fancy -
 			// overriding gwt code, alas
-			toggleButton.setHovering(false);
 			if (toggleButton.isDown()) {
 				WidgetUtils.maximiseWidget(widgetToMaximise);
 			} else {

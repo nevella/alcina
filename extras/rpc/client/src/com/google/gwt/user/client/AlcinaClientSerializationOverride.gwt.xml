@@ -1,0 +1,4 @@
+<module>
+	<super-source path="translatable"/>
+	<source path="client" />
+</module>
