@@ -12,10 +12,13 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
+
 /**
- * TODO: this should be a singleton...with listeners rather than 'registerUpdatingCallback' etc
+ * TODO: this should be a singleton...with listeners rather than
+ * 'registerUpdatingCallback' etc
+ * 
  * @author nick@alcina.cc
- *
+ * 
  */
 public class OfflineUtils {
 	private static final String APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT = "Application changed on the server - please wait";
@@ -31,12 +34,13 @@ public class OfflineUtils {
 	public static boolean resourceStoresCaptured() {
 		return hostPageCacheReturned;
 	}
-	public static void registerUpdatingCallback(Callback<Void> callback){
+
+	public static void registerUpdatingCallback(Callback<Void> callback) {
 		OfflineUtils.updatingCallback = callback;
-		
 	}
-	public static boolean isUpdating(){
-		return cd!=null;
+
+	public static boolean isUpdating() {
+		return cd != null;
 	}
 
 	public static boolean checkCacheLoading(AsyncCallback completionCallback) {
@@ -54,7 +58,7 @@ public class OfflineUtils {
 	}
 
 	public static void waitAndReload() {
-		if(updatingCallback!=null){
+		if (updatingCallback != null) {
 			updatingCallback.callback(null);
 		}
 		cd = ClientLayerLocator.get().notifications().getModalNotifier("");
@@ -104,7 +108,9 @@ public class OfflineUtils {
 				return;
 			}
 			if (event != null && event.getType().equals(AppCache.ONERROR)) {
-				error("App cache error");
+				if (updateCount != 0) {
+					error("App cache error");
+				}
 				return;
 			}
 			if (event != null && event.getType().equals(AppCache.ONPROGRESS)) {
