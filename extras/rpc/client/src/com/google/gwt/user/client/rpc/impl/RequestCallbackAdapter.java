@@ -210,7 +210,6 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 						+ methodName);
 			}
 			if (caught != null) {
-				postDeserializationCallback.onFailure(caught);
 			} else {
 				if (RemoteServiceProxy.isReturnValue(encodedResponse)) {
 					ClientSerializationStreamReader reader = (ClientSerializationStreamReader) streamFactory

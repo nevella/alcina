@@ -160,7 +160,7 @@ public class WebDatabaseTransformPersistence extends
 		final LocalTransformPersistence listener = this;
 		try {
 			db = Database.openDatabase(getTransformDbName(), "1.0",
-					"Alcina Transforms", 100000000);
+					"Alcina Transforms", 5000000);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

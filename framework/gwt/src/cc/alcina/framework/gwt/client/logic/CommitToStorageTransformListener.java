@@ -237,7 +237,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 						getTransformExceptionResolver().resolve(dtre, callback);
 						return;
 					}
-					throw new WrappedRuntimeException(caught);
+					throw new UnknownTransformFailedException(caught);
 				}
 				fireStateChanged(ERROR);
 			}
@@ -358,7 +358,13 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 				.transform(dtr, callback);
 	}
+	public static class UnknownTransformFailedException extends WrappedRuntimeException{
 
+		public UnknownTransformFailedException(Throwable cause) {
+			super(cause);
+		}
+		
+	}
 	@Override
 	protected void fireStateChanged(String newState) {
 		super.fireStateChanged(newState);

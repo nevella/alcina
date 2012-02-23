@@ -112,7 +112,7 @@ public abstract class SerializedDomainLoader {
 							@Override
 							public void onFailure(Throwable caught) {
 								_finally();
-								persistenceCallback.onFailure(caught);
+								persistenceCallback.onSuccess(false);
 							}
 						};
 						replayRpc(wrapper.getText(), replayRpcCallback);

@@ -114,7 +114,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 				List<DomainTransformEvent> initialItems) {
 			super(1000, 200);
 			items = initialItems;
-			this.transformIterator = transforms.iterator();
+			this.transformIterator = new ArrayList<DTRSimpleSerialWrapper>(transforms).iterator();
 			for (DTRSimpleSerialWrapper wr : transforms) {
 				totalStrlen += wr.getText().length();
 			}

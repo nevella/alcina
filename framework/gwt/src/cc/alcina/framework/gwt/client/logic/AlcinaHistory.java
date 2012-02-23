@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gwt.user.client.History;
+
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -141,7 +143,11 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 		lastEvent = currentEvent;
 		currentEvent = parseToken(historyToken);
 	}
-
+	public I ensureEventFromCurrentToken() {
+		onHistoryChanged(History.getToken());
+		return getCurrentEvent();
+		
+	}
 	public I parseToken(String historyToken) {
 		I item = createHistoryInfo();
 		Map<String, String> params = item.parseParameters(historyToken);

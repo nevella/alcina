@@ -52,7 +52,10 @@ public class ClientUtils {
 
 	public static boolean maybeOffline(Throwable t) {
 		
-		if (t instanceof WrappedRuntimeException) {
+		while (t instanceof WrappedRuntimeException) {
+			if(t==t.getCause()||t.getCause()==null){
+				break;
+			}
 			t = t.getCause();
 		}
 		if (t instanceof StatusCodeException) {
