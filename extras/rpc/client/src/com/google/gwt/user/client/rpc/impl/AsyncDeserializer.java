@@ -38,7 +38,9 @@ class AsyncDeserializer implements RepeatingCommand {
 				}
 			case DESERIALIZE_NON_COLLECTION_PRE:
 				size = reader.seenArray.size();
-				int toss = reader.readInt();// bypasss first object
+				if (size > 0) {
+					int toss = reader.readInt();// bypasss first object
+				}
 				idx2 = 0;
 				phase = Phase.DESERIALIZE_NON_COLLECTION_RUN;
 				// deliberate fallthrough
@@ -54,14 +56,12 @@ class AsyncDeserializer implements RepeatingCommand {
 				// deliberate fallthrough
 			case DESERIALIZE_COLLECTION_RUN:
 				if (deserializeProperties()) {
-					Scheduler.get().scheduleDeferred(
-							new ScheduledCommand() {
-								@Override
-								public void execute() {
-									reader.postPrepareCallback
-											.onSuccess(null);
-								}
-							});
+					Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+						@Override
+						public void execute() {
+							reader.postPrepareCallback.onSuccess(null);
+						}
+					});
 					return false;
 				} else {
 					break;

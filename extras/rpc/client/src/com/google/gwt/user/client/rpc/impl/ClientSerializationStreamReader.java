@@ -215,7 +215,7 @@ public final class ClientSerializationStreamReader extends
 	 * into a single array literal.
 	 */
 	private static class ConcatEvaler extends JsModVisitor {
-		private List<Object> added=new ArrayList<Object>();
+		private List<Object> added = new ArrayList<Object>();
 
 		@Override
 		public boolean visit(JsInvocation invoke, JsContext ctx) {
@@ -416,7 +416,9 @@ public final class ClientSerializationStreamReader extends
 					}
 				case DESERIALIZE_NON_COLLECTION_PRE:
 					size = reader.getSeenArray().size();
-					int toss = reader.readInt();// bypasss first object
+					if (size > 0) {
+						int toss = reader.readInt();// bypasss first object
+					}
 					idx2 = 0;
 					phase = PhaseDev.DESERIALIZE_NON_COLLECTION_RUN;
 					// deliberate fallthrough
