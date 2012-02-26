@@ -504,7 +504,7 @@ public final class ClientSerializationStreamReader extends
 			return idx2 == typeTableLength;
 		}
 	}
-
+	
 	enum PhaseDev {
 		INSTATIATE_EMPTY_SETUP, INSTATIATE_EMPTY_RUN,
 		DESERIALIZE_NON_COLLECTION_PRE, DESERIALIZE_NON_COLLECTION_RUN,

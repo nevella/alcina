@@ -75,12 +75,14 @@ public class WebDatabaseTransformPersistence extends
 			}
 		});
 	}
+
 	@Override
 	protected void persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted,ModalNotifier modalNotifier,
+			List<DTRSimpleSerialWrapper> uncommitted,
+			ModalNotifier modalNotifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
-		new PartialDtrUploader().persistOfflineTransforms(uncommitted,modalNotifier,
-				postPersistOfflineTransformsCallback);
+		new PartialDtrUploader().persistOfflineTransforms(uncommitted,
+				modalNotifier, postPersistOfflineTransformsCallback);
 	}
 
 	@Override
@@ -285,6 +287,11 @@ public class WebDatabaseTransformPersistence extends
 	@Override
 	protected void persist(final DTRSimpleSerialWrapper wrapper,
 			final PersistenceCallback callback) {
+		persist(wrapper, callback, 0);
+	}
+
+	protected void persist(final DTRSimpleSerialWrapper wrapper,
+			final PersistenceCallback callback, final int persistSpacePass) {
 		if (wrapper.getProtocolVersion() == null) {
 			callback.onFailure(new Exception(
 					"wrapper must have protocol version"));
@@ -336,6 +343,11 @@ public class WebDatabaseTransformPersistence extends
 
 			@Override
 			public void onTransactionFailure(SQLError error) {
+				if ((error.getMessage().contains("storage quota") || error
+						.getCode() == 4) && persistSpacePass == 0) {
+					persist(wrapper, callback, 1);
+					return;
+				}
 				callbackFail(callback, error);
 			}
 		});
@@ -369,8 +381,7 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	@Override
-	public void reparentToClientInstance(
-			final DTRSimpleSerialWrapper wrapper,
+	public void reparentToClientInstance(final DTRSimpleSerialWrapper wrapper,
 			final ClientInstance clientInstance,
 			final PersistenceCallback callback) {
 		db.transaction(new TransactionCallback() {
@@ -396,8 +407,6 @@ public class WebDatabaseTransformPersistence extends
 		});
 	}
 
-	
-	
 	public void callbackFail(final PersistenceCallback callback, SQLError error) {
 		callback.onFailure(new Exception("Problem initalising webdb - "
 				+ error.getMessage() + " - " + error.getCode()));

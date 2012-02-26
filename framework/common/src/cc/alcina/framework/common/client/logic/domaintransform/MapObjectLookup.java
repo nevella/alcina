@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflecto
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -47,7 +48,7 @@ public class MapObjectLookup implements ObjectLookup {
 
 	private Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> collnMap;
 
-	private Map<Class, Boolean> registerChildren = new HashMap<Class, Boolean>();
+	private Multimap<Class, List<ClientPropertyReflector>> registerChildren = new Multimap<Class, List<ClientPropertyReflector>>();
 
 	public MapObjectLookup(PropertyChangeListener listener, List topLevelObjects) {
 		this.listener = listener;
@@ -123,14 +124,18 @@ public class MapObjectLookup implements ObjectLookup {
 
 	public void registerObjects(Collection objects) {
 		for (Object o : objects) {
-			if (o == null) {
-				continue;
-			}
-			if (o instanceof Collection) {
-				flattenCollection((Collection) o);
-			} else {
-				mapObject((HasIdAndLocalId) o);
-			}
+			mapObjectOrCollection(o);
+		}
+	}
+
+	private void mapObjectOrCollection(Object o) {
+		if (o == null) {
+			return;
+		}
+		if (o instanceof Collection) {
+			flattenCollection((Collection) o);
+		} else {
+			mapObject((HasIdAndLocalId) o);
 		}
 	}
 
@@ -166,62 +171,42 @@ public class MapObjectLookup implements ObjectLookup {
 		collnMap.get(clazz).add(obj);
 		if (obj.getId() != 0) {
 			Map<Long, HasIdAndLocalId> clMap = idMap.get(clazz);
-			// if (!clMap.containsKey(obj.getId())) {
 			clMap.put(obj.getId(), obj);
-			// } else {
-			// merge(clMap.get(obj.getId()), obj);
-			// }
 		}
 		if (obj.getLocalId() != 0) {
 			Map<Long, HasIdAndLocalId> clMap = localIdMap.get(clazz);
-			// if (!clMap.containsKey(obj.getLocalId())) {
 			clMap.put(obj.getLocalId(), obj);
-			// } else {
-			// merge(clMap.get(obj.getLocalId()), obj);
-			// }
 		}
 		if (obj instanceof SourcesPropertyChangeEvents) {
 			SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) obj;
 			sb.removePropertyChangeListener(listener);
 			sb.addPropertyChangeListener(listener);
-			// try {
-			// sb.removePropertyChangeListener(listener);
-			// sb.addPropertyChangeListener(listener);
-			// } catch (Exception e) {
-			// // for testing, deserialized objects may not have listeners
-			// // nasty-hack
-			// }
 		}
 		boolean lookupCreated = registerChildren.containsKey(clazz);
-		if (ClientReflector.get().isDefined()
-				&& (!registerChildren.containsKey(clazz) || registerChildren
-						.get(clazz))) {
-			boolean shouldMapChildren = lookupCreated;
-			ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-					clazz);
-			Collection<ClientPropertyReflector> prs = bi == null ? new ArrayList<ClientPropertyReflector>()
-					: bi.getPropertyReflectors().values();
-			for (ClientPropertyReflector pr : prs) {
-				DomainPropertyInfo dpi = pr
-						.getAnnotation(DomainPropertyInfo.class);
-				if (dpi != null && dpi.registerChildren()) {
-					shouldMapChildren = true;
-					Collection<HasIdAndLocalId> colln = (Collection<HasIdAndLocalId>) CommonUtils
-							.wrapInCollection(CommonLocator
-									.get()
-									.propertyAccessor()
-									.getPropertyValue(obj, pr.getPropertyName()));
-					if (colln != null) {
-						for (HasIdAndLocalId hili : colln) {
-							if (getObject(hili) == null) {
-								mapObject(hili);
-							}
-						}
+		if (ClientReflector.get().isDefined()) {
+			if (!registerChildren.containsKey(clazz)) {
+				ClientBeanReflector bi = ClientReflector.get()
+						.beanInfoForClass(clazz);
+				Collection<ClientPropertyReflector> prs = bi == null ? new ArrayList<ClientPropertyReflector>()
+						: bi.getPropertyReflectors().values();
+				List<ClientPropertyReflector> target = new ArrayList<ClientPropertyReflector>();
+				registerChildren.put(clazz, target);
+				for (ClientPropertyReflector pr : prs) {
+					DomainPropertyInfo dpi = pr
+							.getAnnotation(DomainPropertyInfo.class);
+					if (dpi != null && dpi.registerChildren()) {
+						target.add(pr);
 					}
 				}
 			}
-			if (!lookupCreated) {
-				registerChildren.put(clazz, shouldMapChildren);
+			List<ClientPropertyReflector> childRegisterReflectors = registerChildren
+					.get(clazz);
+			if (!childRegisterReflectors.isEmpty()) {
+				for (ClientPropertyReflector pr : childRegisterReflectors) {
+					Object value = CommonLocator.get().propertyAccessor()
+							.getPropertyValue(obj, pr.getPropertyName());
+					mapObjectOrCollection(value);
+				}
 			}
 		}
 	}
