@@ -401,7 +401,6 @@ public final class ClientSerializationStreamReader extends
 				String msg = phase + " - " + idx2 + " - "
 						+ System.currentTimeMillis();
 				consoleLog(msg);
-				System.out.println(msg);
 				switch (phase) {
 				case INSTATIATE_EMPTY_SETUP:
 					typeTableLength = reader.getTypeTableLength();

@@ -79,7 +79,10 @@ class AsyncDeserializer implements RepeatingCommand {
 		return true;
 	}
 
-	private native void consoleLog(String s) /*-{
+	private void consoleLog(String s) {
+	}
+
+	private native void consoleLogOld(String s) /*-{
 		$wnd.console.log(s);
 	}-*/;
 

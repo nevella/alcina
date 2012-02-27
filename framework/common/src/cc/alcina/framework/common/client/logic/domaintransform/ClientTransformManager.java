@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
@@ -348,11 +351,18 @@ public class ClientTransformManager extends TransformManager {
 
 	public void serializeDomainObjects(ClientInstance clientInstance)
 			throws Exception {
-		Map<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>> idMap = getDomainObjects()
-				.getIdMap();
+		Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> collectionMap = getDomainObjects()
+				.getCollnMap();
 		Map<Class, List> objCopy = new LinkedHashMap<Class, List>();
-		for (Class<? extends HasIdAndLocalId> clazz : idMap.keySet()) {
-			ArrayList values = new ArrayList(idMap.get(clazz).values());
+		for (Class<? extends HasIdAndLocalId> clazz : collectionMap.keySet()) {
+			List values = DefaultCollectionFilter.filter(
+					collectionMap.get(clazz),
+					new CollectionFilter<HasIdAndLocalId>() {
+						@Override
+						public boolean allow(HasIdAndLocalId o) {
+							return o.getId() != 0;
+						}
+					});
 			objCopy.put(clazz, values);
 		}
 		new ClientDteWorker(objCopy, clientInstance).start();

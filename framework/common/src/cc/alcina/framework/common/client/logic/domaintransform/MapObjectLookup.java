@@ -20,17 +20,12 @@ import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.UnsafeNativeLong;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
- * some sort of note to self TODO: 3.2 - use case, we've loaded single user &
- * recursive member groups, now we're merging all users/groups we essentially
- * want a recursive scan on all properties (ouch) of incoming objects replacing
- * incoming object refs with local refs if they exist it's going to be
- * linear...but it's going to be long...but it's gotta be done remember, if yr
- * about to replace, merge replacement first (cos replaced will be gone might be
- * a circular ref problem here...aha...something to think on ...wait a sec...why
- * not just clear all current info if humanly possible?
+ * 
  * 
  * @param hasIdAndLocalId
  * @param obj
@@ -38,22 +33,53 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 public class MapObjectLookup implements ObjectLookup {
 	private final PropertyChangeListener listener;
 
-	private Map<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>> idMap;
+	private Map<Class<? extends HasIdAndLocalId>, Map<LongWrapperHash, HasIdAndLocalId>> idMap;
 
-	public Map<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>> getIdMap() {
-		return this.idMap;
-	}
-
-	private Map<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>> localIdMap;
+	private Map<Class<? extends HasIdAndLocalId>, Map<LongWrapperHash, HasIdAndLocalId>> localIdMap;
 
 	private Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> collnMap;
 
 	private Multimap<Class, List<ClientPropertyReflector>> registerChildren = new Multimap<Class, List<ClientPropertyReflector>>();
 
+	public static class LongWrapperHash {
+		private final long value;
+
+		private int hash;
+
+		public LongWrapperHash(long value) {
+			this.value = value;
+		}
+
+		@Override
+		public int hashCode() {
+			if (hash == 0) {
+				hash = GWT.isScript() ? fastHash(value) : Long.valueOf(value)
+						.hashCode();
+				if (hash == 0) {
+					hash = -1;
+				}
+			}
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof LongWrapperHash) {
+				return ((LongWrapperHash) obj).value == value;
+			}
+			return false;
+		}
+
+		@UnsafeNativeLong
+		private native int fastHash(long value)/*-{
+			return value.l ^ value.m ^ value.h;
+		}-*/;
+	}
+
 	public MapObjectLookup(PropertyChangeListener listener, List topLevelObjects) {
 		this.listener = listener;
-		this.idMap = new HashMap<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>>();
-		this.localIdMap = new HashMap<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>>();
+		this.idMap = new HashMap<Class<? extends HasIdAndLocalId>, Map<LongWrapperHash, HasIdAndLocalId>>();
+		this.localIdMap = new HashMap<Class<? extends HasIdAndLocalId>, Map<LongWrapperHash, HasIdAndLocalId>>();
 		this.collnMap = new HashMap<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>>();
 		registerObjects(topLevelObjects);
 	}
@@ -61,8 +87,8 @@ public class MapObjectLookup implements ObjectLookup {
 	public void changeMapping(HasIdAndLocalId obj, long id, long localId) {
 		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
 		ensureCollections(clazz);
-		idMap.get(clazz).remove(id);
-		localIdMap.get(clazz).remove(localId);
+		idMap.get(clazz).remove(new LongWrapperHash(id));
+		localIdMap.get(clazz).remove(new LongWrapperHash(localId));
 		// see discussion in AbstractDomainBase - nuffink's perfect
 		// collnMap.get(clazz).remove(obj);
 		// if (obj instanceof AbstractDomainBase) {
@@ -78,8 +104,8 @@ public class MapObjectLookup implements ObjectLookup {
 		}
 		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
 		ensureCollections(clazz);
-		idMap.get(clazz).remove(hili.getId());
-		localIdMap.get(clazz).remove(hili.getLocalId());
+		idMap.get(clazz).remove(new LongWrapperHash(hili.getId()));
+		localIdMap.get(clazz).remove(new LongWrapperHash(hili.getLocalId()));
 		collnMap.get(clazz).remove(hili);
 		if (hili instanceof SourcesPropertyChangeEvents) {
 			SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) hili;
@@ -111,9 +137,9 @@ public class MapObjectLookup implements ObjectLookup {
 			return null;
 		}
 		if (id != 0) {
-			return (T) idMap.get(c).get(id);
+			return (T) idMap.get(c).get(new LongWrapperHash(id));
 		} else {
-			return (T) localIdMap.get(c).get(localId);
+			return (T) localIdMap.get(c).get(new LongWrapperHash(localId));
 		}
 	}
 
@@ -140,7 +166,7 @@ public class MapObjectLookup implements ObjectLookup {
 	}
 
 	private void removeListenerFromMap(
-			Map<Class<? extends HasIdAndLocalId>, Map<Long, HasIdAndLocalId>> map) {
+			Map<Class<? extends HasIdAndLocalId>, Map<LongWrapperHash, HasIdAndLocalId>> map) {
 		for (Map m : map.values()) {
 			for (Object o : m.values()) {
 				if (o instanceof SourcesPropertyChangeEvents) {
@@ -170,12 +196,12 @@ public class MapObjectLookup implements ObjectLookup {
 		collnMap.get(clazz).remove(obj);
 		collnMap.get(clazz).add(obj);
 		if (obj.getId() != 0) {
-			Map<Long, HasIdAndLocalId> clMap = idMap.get(clazz);
-			clMap.put(obj.getId(), obj);
+			Map<LongWrapperHash, HasIdAndLocalId> clMap = idMap.get(clazz);
+			clMap.put(new LongWrapperHash(obj.getId()), obj);
 		}
 		if (obj.getLocalId() != 0) {
-			Map<Long, HasIdAndLocalId> clMap = localIdMap.get(clazz);
-			clMap.put(obj.getLocalId(), obj);
+			Map<LongWrapperHash, HasIdAndLocalId> clMap = localIdMap.get(clazz);
+			clMap.put(new LongWrapperHash(obj.getLocalId()), obj);
 		}
 		if (obj instanceof SourcesPropertyChangeEvents) {
 			SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) obj;
@@ -218,8 +244,9 @@ public class MapObjectLookup implements ObjectLookup {
 
 	void ensureCollections(Class c) {
 		if (!idMap.containsKey(c)) {
-			idMap.put(c, new LinkedHashMap<Long, HasIdAndLocalId>());
-			localIdMap.put(c, new LinkedHashMap<Long, HasIdAndLocalId>());
+			idMap.put(c, new LinkedHashMap<LongWrapperHash, HasIdAndLocalId>());
+			localIdMap.put(c,
+					new LinkedHashMap<LongWrapperHash, HasIdAndLocalId>());
 			collnMap.put(c, new LinkedHashSet<HasIdAndLocalId>());
 		}
 	}

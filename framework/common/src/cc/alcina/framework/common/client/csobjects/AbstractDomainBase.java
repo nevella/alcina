@@ -5,6 +5,9 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.UnsafeNativeLong;
+
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -62,15 +65,26 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	@Override
 	public int hashCode() {
 		if (hash == 0) {
-			hash = Long.valueOf(getId()).hashCode()
-					^ Long.valueOf(getLocalId()).hashCode()
-					^ getClass().getName().hashCode();
-			if(hash==0){
-				hash=-1;
+			if (GWT.isScript()) {
+				hash = fastHash(getId(), getLocalId(), getClass().getName()
+						.hashCode());
+			} else {
+				hash = Long.valueOf(getId()).hashCode()
+						^ Long.valueOf(getLocalId()).hashCode()
+						^ getClass().getName().hashCode();
+			}
+			if (hash == 0) {
+				hash = -1;
 			}
 		}
 		return hash;
 	}
+
+	@UnsafeNativeLong
+	private  native int fastHash(long id, long localId,
+			int classHashCode)/*-{
+		return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h ^ classHashCode;
+	}-*/;
 
 	/**
 	 * used - and why? Because an object we map will _always_ have either a
@@ -85,15 +99,14 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	 * in a set better to not - and use a set implementation in the tm which
 	 * maybe handles this sort of thing
 	 * 
-	 * in fact...hmmm - used to be gethash/sethash, but _any way_ is really wrong
-	 * objects from db are different to client-created objects - use one of the
-	 * getobject(class,id,localid) methods if you want to look up
+	 * in fact...hmmm - used to be gethash/sethash, but _any way_ is really
+	 * wrong objects from db are different to client-created objects - use one
+	 * of the getobject(class,id,localid) methods if you want to look up
 	 * 
 	 */
-//	public void clearHash() {
-//		hash = 0;
-//	}
-
+	// public void clearHash() {
+	// hash = 0;
+	// }
 	// no listeners - this should be invisible to transform listeners
 	public void setLocalId(long localId) {
 		this.localId = localId;

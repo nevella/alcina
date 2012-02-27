@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.util;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -55,6 +56,8 @@ public class GraphProjection {
 		this.dataFilter = dataFilter;
 	}
 
+	public static boolean replaceTimestampsWithDates = true;
+
 	private IdentityHashMap reached = new IdentityHashMap();
 
 	public <T> T project(T source, GraphProjectionContext context)
@@ -68,6 +71,10 @@ public class GraphProjection {
 			return null;
 		}
 		Class c = source.getClass();
+		if (c == Timestamp.class && replaceTimestampsWithDates) {
+			// actually breaks the (T) contract here - naughty
+			return (T) new Date(((Timestamp) source).getTime());
+		}
 		if (c.isPrimitive()
 				|| c == String.class
 				|| c == Boolean.class
