@@ -106,12 +106,10 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 		ClientLayerLocator.get().setDomainModelHolder(objects);
 		PermissionsManager.get().setLoginState(loginState);
 		if (!TransformManager.get().isReplayingRemoteEvent()) {
-			ScheduledCommand registerCommand=new ScheduledCommand() {
+			final ScheduledCommand postRegisterCleanupCommand=new ScheduledCommand() {
 
 				@Override
 				public void execute() {
-					ClientMetricLogging.get().start("register-domain");
-					TransformManager.get().registerDomainObjectsInHolder(objects);
 					ClientMetricLogging.get().end("register-domain");
 					if (PermissionsManager.get().getOnlineState() != OnlineState.OFFLINE) {
 						locallyPersistDomainModelAndReplayPostLoadTransforms(
@@ -119,13 +117,25 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 						// note, this'll do afterLocal via a callback, hence the return
 					}else{
 						afterLocalPersistenceAndReplay(loginState, postRegisterCommand);	
-					}
+					}					
+				}
+				
+			};
+			ScheduledCommand registerCommand=new ScheduledCommand() {
+
+				@Override
+				public void execute() {
+					ClientMetricLogging.get().start("register-domain");
+					TransformManager.get().registerDomainObjectsInHolderAsync(objects,postRegisterCleanupCommand);
+					
 				}
 			};
 			if(postRegisterCommand!=null){
 				Scheduler.get().scheduleDeferred(registerCommand);
 			}else{
-				registerCommand.execute();
+				ClientMetricLogging.get().start("register-domain");
+				TransformManager.get().registerDomainObjectsInHolder(objects);
+				postRegisterCleanupCommand.execute();
 			}
 			return;
 		}

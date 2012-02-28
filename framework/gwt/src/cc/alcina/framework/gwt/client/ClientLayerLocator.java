@@ -55,7 +55,7 @@ public class ClientLayerLocator {
 
 	private TimerWrapperProvider timerWrapperProvider;
 	
-	private ClientNofications clientNotifications;
+	private ClientNotifications clientNotifications;
 
 	private ClientInstance clientInstance;
 
@@ -110,7 +110,7 @@ public class ClientLayerLocator {
 		return generalProperties;
 	}
 
-	public ClientNofications notifications() {
+	public ClientNotifications notifications() {
 		return clientNotifications;
 	}
 
@@ -131,7 +131,7 @@ public class ClientLayerLocator {
 		this.exceptionHandler = exceptionHandler;
 	}
 
-	public void registerNotifications(ClientNofications clientNotifications) {
+	public void registerNotifications(ClientNotifications clientNotifications) {
 		this.clientNotifications = clientNotifications;
 	}
 

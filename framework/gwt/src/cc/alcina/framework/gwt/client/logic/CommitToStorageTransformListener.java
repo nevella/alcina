@@ -134,6 +134,9 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 
 	public void flush() {
+		if(currentState==RELOAD){
+			return;
+		}
 		commit();
 		priorRequestsWithoutResponse.clear();
 	}
@@ -191,7 +194,12 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		transformQueue = new ArrayList<DomainTransformEvent>();
 		// eventIdsToIgnore = new HashSet<Long>();
 	}
-
+	/**
+	 * Indicates that no further transforms should be processed
+	 */
+	public void putReloadRequired(){
+		currentState=RELOAD;
+	}
 	protected synchronized void commit() {
 		if (priorRequestsWithoutResponse.size() == 0
 				&& transformQueue.size() == 0 || isPaused()) {

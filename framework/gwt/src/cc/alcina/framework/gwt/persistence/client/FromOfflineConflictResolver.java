@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.ClientNofications;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
@@ -136,7 +136,7 @@ public class FromOfflineConflictResolver {
 					uncommitted.toString());
 			ta.setText(text);
 			fp.add(ta);
-			ClientNofications cn = ClientLayerLocator.get().notifications();
+			ClientNotifications cn = ClientLayerLocator.get().notifications();
 			cn.setDialogAnimationEnabled(false);
 			cn.showMessage(fp);
 			cn.setDialogAnimationEnabled(true);

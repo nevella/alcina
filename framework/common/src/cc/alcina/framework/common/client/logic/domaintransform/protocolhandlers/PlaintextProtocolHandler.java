@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -160,12 +161,24 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		return sb2.toString();
 	}
 
+	/*
+	 * Note - the way client handshake works, if this is called from a
+	 * "from-offline upload" (partialdtruploader)we won't have any classrefs -
+	 * so the setXXClassRef calls will just set a nullThis means upload calls
+	 * are not tied to any (app) class structure, so will at least make it and
+	 * be stored on the server.
+	 * 
+	 * Of course, if a class has changed/been deleted on the server, you'll need
+	 * to deal with that on the server :- at least you'll have data somewhere
+	 * reachable, not stuck on a bunch of iPads in some bit-deprived continent
+	 */
 	private DomainTransformEvent fromString(String s) {
 		DomainTransformEvent dte = new DomainTransformEvent();
 		SimpleStringParser p = new SimpleStringParser(s);
 		String i = p.read(SRC, ",");
-		dte.setObjectClassName(i);//just in case we're in a no-classref environment
-		dte.setObjectClass(classFromName(i));
+		dte.setObjectClassName(i);// just in case we're in a no-classref
+									// environment
+		dte.setObjectClassRef(ClassRef.forName(i));
 		dte.setObjectId(p.readLong("", ","));
 		dte.setObjectLocalId(p.readLong("", "\n"));
 		String pName = p.read(PARAMS, ",");
@@ -183,8 +196,9 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		i = p.read(STRING_VALUE, "\n");
 		dte.setNewStringValue(i.indexOf("\\") == -1 ? i : unescape(i));
 		i = p.read(TGT, ",");
-		dte.setValueClassName(i);//just in case we're in a no-classref environment
-		dte.setValueClass(classFromName(i));
+		dte.setValueClassName(i);// just in case we're in a no-classref
+									// environment
+		dte.setValueClassRef(ClassRef.forName(i));
 		dte.setValueId(p.readLong("", ","));
 		dte.setValueLocalId(p.readLong("", "\n"));
 		if (dte.getTransformType() != TransformType.CHANGE_PROPERTY_SIMPLE_VALUE

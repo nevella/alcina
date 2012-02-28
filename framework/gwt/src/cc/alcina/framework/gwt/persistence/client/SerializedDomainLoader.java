@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientMetricLogging;
-import cc.alcina.framework.gwt.client.ClientNofications;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -76,7 +76,7 @@ public abstract class SerializedDomainLoader {
 							@Override
 							public void onSuccess(LoadObjectsHolder loadObjectsHolder) {
 								try {
-									ClientNofications no = ClientLayerLocator
+									ClientNotifications no = ClientLayerLocator
 											.get().notifications();
 									no.log("replayRpc - exists - "
 											+ (loadObjectsHolder != null));

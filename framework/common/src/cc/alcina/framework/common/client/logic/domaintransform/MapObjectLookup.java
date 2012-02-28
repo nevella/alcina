@@ -4,8 +4,10 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,10 +19,14 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.client.UnsafeNativeLong;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -31,6 +37,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  * @param obj
  */
 public class MapObjectLookup implements ObjectLookup {
+	private static final String REGISTERING_OBJECTS = "Registering objects";
+
 	private final PropertyChangeListener listener;
 
 	private Map<Class<? extends HasIdAndLocalId>, Map<LongWrapperHash, HasIdAndLocalId>> idMap;
@@ -40,6 +48,8 @@ public class MapObjectLookup implements ObjectLookup {
 	private Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> collnMap;
 
 	private Multimap<Class, List<ClientPropertyReflector>> registerChildren = new Multimap<Class, List<ClientPropertyReflector>>();
+
+	private int registerCounter;
 
 	public static class LongWrapperHash {
 		private final long value;
@@ -149,19 +159,34 @@ public class MapObjectLookup implements ObjectLookup {
 	}
 
 	public void registerObjects(Collection objects) {
+		mappedObjects = new IdentityHashMap<Object, Boolean>();
 		for (Object o : objects) {
-			mapObjectOrCollection(o);
+			addObjectOrCollectionToEndOfQueue(o);
 		}
+		iterateRegistration();
 	}
 
-	private void mapObjectOrCollection(Object o) {
+	private boolean iterateRegistration() {
+		registerCounter=0;
+		while (!toRegister.isEmpty()
+				&& (postRegisterCommand == null || registerCounter++ < 500)) {
+			mapObjectFromFrontOfQueue();
+		}
+		return !toRegister.isEmpty();
+	}
+
+	LinkedList<HasIdAndLocalId> toRegister = new LinkedList<HasIdAndLocalId>();
+
+	private void addObjectOrCollectionToEndOfQueue(Object o) {
 		if (o == null) {
 			return;
 		}
 		if (o instanceof Collection) {
-			flattenCollection((Collection) o);
+			for (HasIdAndLocalId child : (Collection<HasIdAndLocalId>) o) {
+				toRegister.add(child);
+			}
 		} else {
-			mapObject((HasIdAndLocalId) o);
+			toRegister.add((HasIdAndLocalId) o);
 		}
 	}
 
@@ -177,18 +202,21 @@ public class MapObjectLookup implements ObjectLookup {
 		}
 	}
 
-	protected void flattenCollection(Collection c) {
-		if (c == null) {
-			return;
-		}
-		Collection<HasIdAndLocalId> ch = c;
-		for (HasIdAndLocalId obj : ch) {
-			mapObject(obj);
-		}
-	}
+	private IdentityHashMap<Object, Boolean> mappedObjects;
+
+	private ScheduledCommand postRegisterCommand;
 
 	protected void mapObject(HasIdAndLocalId obj) {
-		if (obj.getId() == 0 && obj.getLocalId() == 0) {
+		mappedObjects = new IdentityHashMap<Object, Boolean>();
+		addObjectOrCollectionToEndOfQueue(obj);
+		iterateRegistration();
+		assert toRegister.isEmpty();
+	}
+
+	private void mapObjectFromFrontOfQueue() {
+		HasIdAndLocalId obj = toRegister.removeFirst();
+		if (mappedObjects.containsKey(obj)
+				|| (obj.getId() == 0 && obj.getLocalId() == 0)) {
 			return;
 		}
 		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
@@ -231,10 +259,11 @@ public class MapObjectLookup implements ObjectLookup {
 				for (ClientPropertyReflector pr : childRegisterReflectors) {
 					Object value = CommonLocator.get().propertyAccessor()
 							.getPropertyValue(obj, pr.getPropertyName());
-					mapObjectOrCollection(value);
+					addObjectOrCollectionToEndOfQueue(value);
 				}
 			}
 		}
+		mappedObjects.put(obj, true);
 	}
 
 	protected void removeListeners() {
@@ -242,12 +271,40 @@ public class MapObjectLookup implements ObjectLookup {
 		removeListenerFromMap(localIdMap);
 	}
 
-	void ensureCollections(Class c) {
+	private void ensureCollections(Class c) {
 		if (!idMap.containsKey(c)) {
 			idMap.put(c, new LinkedHashMap<LongWrapperHash, HasIdAndLocalId>());
 			localIdMap.put(c,
 					new LinkedHashMap<LongWrapperHash, HasIdAndLocalId>());
 			collnMap.put(c, new LinkedHashSet<HasIdAndLocalId>());
 		}
+	}
+
+	public void registerAsync(List registerableDomainObjects,
+			ScheduledCommand postRegisterCommand) {
+		this.postRegisterCommand = postRegisterCommand;
+		mappedObjects = new IdentityHashMap<Object, Boolean>();
+		for (Object o : registerableDomainObjects) {
+			addObjectOrCollectionToEndOfQueue(o);
+		}
+		final ModalNotifier notifier = ClientLayerLocator.get().notifications()
+				.getModalNotifier(REGISTERING_OBJECTS);
+		notifier.modalOn();
+		Scheduler.get().scheduleIncremental(new RepeatingCommand() {
+			private int ctr;
+
+			@Override
+			public boolean execute() {
+				if (iterateRegistration()) {
+					System.out.println("Async register obj:"+ctr++);
+					return true;
+				}
+				notifier.modalOff();
+				ScheduledCommand postRegisterCommandCopy = MapObjectLookup.this.postRegisterCommand;
+				MapObjectLookup.this.postRegisterCommand = null;
+				postRegisterCommandCopy.execute();
+				return false;
+			}
+		});
 	}
 }

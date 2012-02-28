@@ -52,7 +52,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-public class ClientNotificationsImpl implements ClientNofications {
+public class ClientNotificationsImpl implements ClientNotifications {
 	private DialogBox dialogBox;
 
 	private HTML dialogHtml;

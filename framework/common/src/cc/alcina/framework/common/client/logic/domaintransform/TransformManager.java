@@ -57,6 +57,7 @@ import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
@@ -861,6 +862,22 @@ public abstract class TransformManager implements PropertyChangeListener,
 				.registerableDomainObjects()));
 		ClassRef.add(h.getClassRefs());
 	}
+	public void registerDomainObjectsInHolderAsync(final DomainModelHolder h,final ScheduledCommand postRegisterCallback) {
+		if (this.getDomainObjects() != null) {
+			getDomainObjects().removeListeners();
+		}
+		MapObjectLookup lookup = new MapObjectLookup(this,new ArrayList());
+		this.setDomainObjects(lookup);
+		lookup.registerAsync(h.registerableDomainObjects(),new ScheduledCommand() {
+			@Override
+			public void execute() {
+				ClassRef.add(h.getClassRefs());
+				postRegisterCallback.execute();
+			}
+		});
+		
+	}
+	
 
 	public <V extends HasIdAndLocalId> Set<V> registeredObjectsAsSet(
 			Class<V> clazz) {
@@ -1237,5 +1254,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 				return;
 			}
 		}
+	}
+
+	public static long getEventIdCounter() {
+		return eventIdCounter;
 	}
 }

@@ -10,7 +10,7 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
-public interface ClientNofications extends LogWriter{
+public interface ClientNotifications extends LogWriter{
 	public abstract void confirm(String msg, final OkCallback callback);
 
 	public abstract String getLogString();

@@ -343,8 +343,7 @@ public class WebDatabaseTransformPersistence extends
 
 			@Override
 			public void onTransactionFailure(SQLError error) {
-				if ((error.getMessage().contains("storage quota") || error
-						.getCode() == 4) && persistSpacePass == 0) {
+				if (isStorageQuotaError(error) && persistSpacePass == 0) {
 					persist(wrapper, callback, 1);
 					return;
 				}
@@ -408,12 +407,24 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	public void callbackFail(final PersistenceCallback callback, SQLError error) {
-		callback.onFailure(new Exception("Problem initalising webdb - "
-				+ error.getMessage() + " - " + error.getCode()));
+		String message = "Problem initalising webdb - "
+				+ error.getMessage() + " - " + error.getCode();
+		callback.onFailure(isStorageQuotaError(error)?new StorageQuotaException(message):new Exception(message));
 	}
 
 	@Override
 	public String getPersistenceStoreName() {
 		return "Html5 web database";
+	}
+	public static class StorageQuotaException extends Exception{
+
+		public StorageQuotaException(String message) {
+			super(message);
+		}
+		
+	}
+	public static boolean isStorageQuotaError(SQLError error) {
+		return (error.getMessage().contains("storage quota") || error
+				.getCode() == 4);
 	}
 }
