@@ -72,7 +72,9 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		String newlineTab = "\n\t";
 		sb.append(newlineTab);
 		sb.append(SRC);
-		sb.append(domainTransformEvent.getObjectClass().getName());
+		sb.append(domainTransformEvent.getObjectClass() == null ? domainTransformEvent
+				.getObjectClassName() : domainTransformEvent.getObjectClass()
+				.getName());
 		sb.append(",");
 		sb.append(SimpleStringParser.toString(domainTransformEvent
 				.getObjectId()));
@@ -96,8 +98,9 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		sb.append(ns);
 		sb.append(newlineTab);
 		sb.append(TGT);
-		sb.append(domainTransformEvent.getValueClass() == null ? null
-				: domainTransformEvent.getValueClass().getName());
+		sb.append(domainTransformEvent.getValueClass() == null ? domainTransformEvent
+				.getValueClassName() : domainTransformEvent.getValueClass()
+				.getName());
 		sb.append(",");
 		sb.append(SimpleStringParser.toString(domainTransformEvent.getValueId()));
 		sb.append(",");
