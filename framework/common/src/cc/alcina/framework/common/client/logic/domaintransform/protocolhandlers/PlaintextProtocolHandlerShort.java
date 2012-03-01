@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -15,18 +15,12 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 @RegistryLocation(registryPoint = DTRProtocolHandler.class, j2seOnly = false)
 @ClientInstantiable
-public class PlaintextProtocolHandler implements DTRProtocolHandler {
-	public static final String VERSION = "1.1 - plain text, GWT2.1";
+public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
+	private static final String START_OF_STRING_TABLE = "str:\n";
 
-	private static final String TGT = "tgt: ";
+	public static final String VERSION = "1.2 - plain text, short, GWT2.5";
 
-	private static final String STRING_VALUE = "string value: ";
-
-	private static final String PARAMS = "params: ";
-
-	private static final String SRC = "src: ";
-
-	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\nDomainTransformEvent:";
+	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\ndte:";
 
 	public static String escape(String newStringValue) {
 		return newStringValue == null
@@ -57,47 +51,50 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	private SimpleStringParser asyncParser = null;
 
+	private StringBuilder stringLookupBuilder;
+
+	private LinkedHashMap<String, String> stringLookup;
+
+	private LinkedHashMap<String, String> reverseStringLookup;
+
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
 		String newStringValue = domainTransformEvent.getNewStringValue();
 		String ns = escape(newStringValue);
 		sb.append(getDomainTransformEventMarker());
-		String newlineTab = "\n\t";
-		sb.append(newlineTab);
-		sb.append(SRC);
-		sb.append(domainTransformEvent.getObjectClass() == null ? domainTransformEvent
-				.getObjectClassName() : domainTransformEvent.getObjectClass()
-				.getName());
+		sb.append("\n");
+		appendString(
+				(domainTransformEvent.getObjectClass() == null ? domainTransformEvent.getObjectClassName()
+						: domainTransformEvent.getObjectClass().getName()), sb);
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(domainTransformEvent
+		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
 				.getObjectId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(domainTransformEvent
+		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
 				.getObjectLocalId()));
-		sb.append(newlineTab);
-		sb.append(PARAMS);
-		sb.append(domainTransformEvent.getPropertyName());
+		sb.append("\n");
+		appendString(domainTransformEvent.getPropertyName(), sb);
 		sb.append(",");
-		sb.append(domainTransformEvent.getCommitType());
+		appendString(domainTransformEvent.getCommitType().toString(), sb);
 		sb.append(",");
-		sb.append(domainTransformEvent.getTransformType());
-//		sb.append(",");
-//		sb.append(SimpleStringParser
-//				.toString(domainTransformEvent.getUtcDate() == null ? System
-//						.currentTimeMillis() : domainTransformEvent
-//						.getUtcDate().getTime()));
-		sb.append(newlineTab);
-		sb.append(STRING_VALUE);
-		sb.append(ns);
-		sb.append(newlineTab);
-		sb.append(TGT);
-		sb.append(domainTransformEvent.getValueClass() == null ? domainTransformEvent
-				.getValueClassName() : domainTransformEvent.getValueClass()
-				.getName());
+		appendString(domainTransformEvent.getTransformType().toString(), sb);
+		// no date
+		// sb.append(",");
+		// sb.append(SimpleStringParser
+		// .toString(domainTransformEvent.getUtcDate() == null ? System
+		// .currentTimeMillis() : domainTransformEvent
+		// .getUtcDate().getTime()));
+		sb.append("\n");
+		appendString(ns, sb);
+		sb.append("\n");
+		appendString(
+				domainTransformEvent.getValueClass() == null ? domainTransformEvent.getValueClassName()
+						: domainTransformEvent.getValueClass().getName(), sb);
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(domainTransformEvent.getValueId()));
+		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
+				.getValueId()));
 		sb.append(",");
-		sb.append(SimpleStringParser.toString(domainTransformEvent
+		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
 				.getValueLocalId()));
 		sb.append("\n");
 	}
@@ -106,17 +103,34 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		List<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>();
 		SimpleStringParser p = new SimpleStringParser(serializedEvents);
 		String s;
+		maybeDeserializeStringLookup(p);
 		while ((s = p.read(getDomainTransformEventMarker(),
-				getDomainTransformEventMarker(), true, false)) != null) {
+				getDomainTransformEventMarker(), false, false)) != null) {
 			items.add(fromString(s));
 		}
 		return items;
+	}
+
+	public void maybeDeserializeStringLookup(SimpleStringParser p) {
+		String s;
+		if (reverseStringLookup == null) {
+			s = p.read(START_OF_STRING_TABLE, "\n\n");
+			reverseStringLookup = new LinkedHashMap<String, String>();
+			int idx = 0;
+			reverseStringLookup.put(String.valueOf(idx++), null);
+			reverseStringLookup.put(String.valueOf(idx++), "");
+			for (String value : s.split("\n")) {
+				reverseStringLookup.put(
+						String.valueOf(reverseStringLookup.size()), value);
+			}
+		}
 	}
 
 	public String deserialize(String serializedEvents,
 			List<DomainTransformEvent> events, int maxCount) {
 		if (asyncParser == null) {
 			asyncParser = new SimpleStringParser(serializedEvents);
+			maybeDeserializeStringLookup(asyncParser);
 		}
 		int i = 0;
 		String s;
@@ -128,11 +142,6 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			}
 		}
 		return s;
-	}
-
-	@Override
-	public StringBuffer finishSerialization(StringBuffer sb) {
-		return sb;
 	}
 
 	public String getDomainTransformEventMarker() {
@@ -159,7 +168,37 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			appendTo(dte, sb1);
 		}
 		sb2.append(sb1.toString());
-		return sb2.toString();
+		return finishSerialization(sb2).toString();
+	}
+
+	@Override
+	public StringBuffer finishSerialization(StringBuffer sb) {
+		StringBuffer sb1 = new StringBuffer();// table
+		sb1.append(START_OF_STRING_TABLE);
+		Iterator<String> itr = stringLookup.keySet().iterator();
+		itr.next();
+		itr.next();
+		while (itr.hasNext()) {
+			sb1.append(itr.next());
+			sb1.append("\n");
+		}
+		sb1.append("\n");
+		sb1.append(sb);
+		return sb1;
+	}
+
+	private void appendString(String string, StringBuffer sb) {
+		if (stringLookup == null) {
+			stringLookupBuilder = new StringBuilder();
+			stringLookupBuilder.append(START_OF_STRING_TABLE);
+			stringLookup = new LinkedHashMap<String, String>();
+			stringLookup.put(null, String.valueOf(0));
+			stringLookup.put("", String.valueOf(1));
+		}
+		if (!stringLookup.containsKey(string)) {
+			stringLookup.put(string, String.valueOf(stringLookup.size()));
+		}
+		sb.append(stringLookup.get(string));
 	}
 
 	/*
@@ -176,36 +215,29 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 	private DomainTransformEvent fromString(String s) {
 		DomainTransformEvent dte = new DomainTransformEvent();
 		SimpleStringParser p = new SimpleStringParser(s);
-		String i = p.read(SRC, ",");
+		String i = getString(p.read("\n", ","));
 		dte.setObjectClassName(i);// just in case we're in a no-classref
 									// environment
 		dte.setObjectClassRef(ClassRef.forName(i));
-		dte.setObjectId(p.readLong("", ","));
-		dte.setObjectLocalId(p.readLong("", "\n"));
-		String pName = p.read(PARAMS, ",");
-		dte.setPropertyName(pName.equals("null") ? null : pName);
-		String commitTypeStr = p.read("", ",");
-		commitTypeStr = commitTypeStr.equals("TO_REMOTE_STORAGE") ? "TO_STORAGE"
-				: commitTypeStr;
+		dte.setObjectId(p.readLongShort("", ","));
+		dte.setObjectLocalId(p.readLongShort("", "\n"));
+		String pName = getString(p.read("", ","));
+		dte.setPropertyName(pName);
+		String commitTypeStr = getString(p.read("", ","));
 		dte.setCommitType(CommitType.valueOf(commitTypeStr));
-		// TODO - temporary compat
-		if (p.indexOf(",") < p.indexOf("\n")) {
-			dte.setTransformType(TransformType.valueOf(p.read("", ",")));
-			long utcTime = p.readLong("", "\n");
-			dte.setUtcDate(new Date(utcTime));
-		}
-		i = p.read(STRING_VALUE, "\n");
-		dte.setNewStringValue(i.indexOf("\\") == -1 ? i : unescape(i));
-		i = p.read(TGT, ",");
+		dte.setTransformType(TransformType.valueOf(getString(p.read("","\n"))));
+		i = getString(p.read("", "\n"));
+		dte.setNewStringValue(i==null?null:i.indexOf("\\") == -1 ? i : unescape(i));
+		i = getString(p.read("", ","));
 		dte.setValueClassName(i);// just in case we're in a no-classref
 									// environment
 		dte.setValueClassRef(ClassRef.forName(i));
-		dte.setValueId(p.readLong("", ","));
-		dte.setValueLocalId(p.readLong("", "\n"));
-		if (dte.getTransformType() != TransformType.CHANGE_PROPERTY_SIMPLE_VALUE
-				&& dte.getNewStringValue().equals("null")) {
-			dte.setNewStringValue(null);
-		}
+		dte.setValueId(p.readLongShort("", ","));
+		dte.setValueLocalId(p.readLongShort("", "\n"));
 		return dte;
+	}
+
+	private String getString(String key) {
+		return reverseStringLookup.get(key);
 	}
 }

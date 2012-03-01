@@ -37,4 +37,9 @@ public class GwtRpcProtocolHandler implements DTRProtocolHandler {
 	public String serialize(List<DomainTransformEvent> events) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public StringBuffer finishSerialization(StringBuffer sb) {
+		return sb;
+	}
 }

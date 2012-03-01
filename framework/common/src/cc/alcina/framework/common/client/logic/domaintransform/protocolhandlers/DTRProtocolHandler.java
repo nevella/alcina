@@ -26,4 +26,6 @@ public interface DTRProtocolHandler {
 			List<DomainTransformEvent> events, int maxCount);
 	// this should throw an unsupported op for, say, GWTRPC-encoded handlers (offset of text processed)
 	public int getOffset();
+
+	public StringBuffer finishSerialization(StringBuffer sb);
 }

@@ -563,11 +563,12 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			StringBuffer sb2 = new StringBuffer();
 			lastPassIterationsPerformed = max - index;
 			DTRProtocolHandler handler = new DTRProtocolSerializer()
-					.getHandler(PlaintextProtocolHandler.VERSION);
+					.getHandler(getSerializationPolicy().getTransformPersistenceProtocol());
 			for (; index < max; index++) {
 				handler.appendTo(items.get(index), sb2);
 			}
 			sb.append(sb2.toString());
+			sb=handler.finishSerialization(sb);
 		}
 	}
 

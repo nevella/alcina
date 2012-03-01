@@ -33,7 +33,6 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		}
 		return CommonLocator.get().classLookup().getClassForName(className);
 	}
-
 	private static String unescape(String s) {
 		int idx = 0, x = 0;
 		StringBuffer sb = new StringBuffer();
@@ -53,6 +52,7 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		sb.append(s.substring(x));
 		return s.toString();
 	}
+	private SimpleStringParser20 asyncParser = null;
 
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
@@ -113,7 +113,6 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		return items;
 	}
 
-	private SimpleStringParser20 asyncParser = null;
 	public String deserialize(String serializedEvents,
 			List<DomainTransformEvent> events, int maxCount) {
 		if (asyncParser==null){
@@ -130,9 +129,17 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		}
 		return s;
 	}
+	@Override
+	public StringBuffer finishSerialization(StringBuffer sb) {
+		return sb;
+	}
 
 	public  String getDomainTransformEventMarker() {
 		return DOMAIN_TRANSFORM_EVENT_MARKER;
+	}
+
+	public int getOffset() {
+		return asyncParser==null?0:asyncParser.getOffset();
 	}
 
 	public String handlesVersion() {
@@ -188,9 +195,5 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 			dte.setNewStringValue(null);
 		}
 		return dte;
-	}
-
-	public int getOffset() {
-		return asyncParser==null?0:asyncParser.getOffset();
 	}
 }

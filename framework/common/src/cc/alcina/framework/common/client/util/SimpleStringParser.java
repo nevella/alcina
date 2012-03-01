@@ -83,6 +83,9 @@ public class SimpleStringParser {
 				.valueOf(value);
 		return serLong + "/" + toBase64(value);
 	}
+	public static String toStringNoInfo(long value) {
+		return toBase64(value);
+	}
 
 	private static boolean base64Append(StringBuilder sb, int digit,
 			boolean haveNonZero) {
@@ -180,5 +183,10 @@ public class SimpleStringParser {
 
 	public int indexOf(String of) {
 		return s.indexOf(of, offset);
+	}
+
+	public long readLongShort(String start, String end) {
+		String str = read(start, end);
+		return longFromBase64(str);
 	}
 }

@@ -49,6 +49,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
@@ -592,7 +593,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			String propertyName, DomainTransformEvent evt)
 			throws DomainTransformException, IntrospectionException {
 		if (!checkPropertyAccess(hili, propertyName, true)) {
-			throw new DomainTransformException(new Exception(
+			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : write - object/property " + evt));
 		}
 	}
@@ -606,7 +607,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			if (ann != null && ann.silentFailOnIllegalWrites()) {
 				return false;
 			}
-			throw new DomainTransformException(new Exception(
+			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : write - object/property " + evt));
 		}
 		return true;
