@@ -81,11 +81,11 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		sb.append(domainTransformEvent.getCommitType());
 		sb.append(",");
 		sb.append(domainTransformEvent.getTransformType());
-//		sb.append(",");
-//		sb.append(SimpleStringParser
-//				.toString(domainTransformEvent.getUtcDate() == null ? System
-//						.currentTimeMillis() : domainTransformEvent
-//						.getUtcDate().getTime()));
+		sb.append(",");
+		sb.append(SimpleStringParser
+				.toString(domainTransformEvent.getUtcDate() == null ? System
+						.currentTimeMillis() : domainTransformEvent
+						.getUtcDate().getTime()));
 		sb.append(newlineTab);
 		sb.append(STRING_VALUE);
 		sb.append(ns);
@@ -193,6 +193,8 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			dte.setTransformType(TransformType.valueOf(p.read("", ",")));
 			long utcTime = p.readLong("", "\n");
 			dte.setUtcDate(new Date(utcTime));
+		}else{
+			dte.setTransformType(TransformType.valueOf(p.read("", "\n")));
 		}
 		i = p.read(STRING_VALUE, "\n");
 		dte.setNewStringValue(i.indexOf("\\") == -1 ? i : unescape(i));
