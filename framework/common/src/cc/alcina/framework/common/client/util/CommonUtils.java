@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 
 @SuppressWarnings("unchecked")
 /**
@@ -700,6 +703,20 @@ public class CommonUtils {
 			if (!existingValues.contains(value)) {
 				return value;
 			}
+		}
+	}
+
+	public static boolean hasCauseOfClass(Throwable throwable,
+			CollectionFilter<Throwable> causeFilter) {
+		while (true) {
+			if (causeFilter.allow(throwable)) {
+				return true;
+			}
+			if (throwable.getCause() == throwable
+					|| throwable.getCause() == null) {
+				return false;
+			}
+			throwable = throwable.getCause();
 		}
 	}
 }
