@@ -2,6 +2,7 @@ package cc.alcina.framework.jvmclient.domaintransform;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 
+@SuppressWarnings("unchecked")
 public class ThreadedClientTransformManager extends ClientTransformManager {
 	private static ThreadLocal<Boolean> ignorePropertyChanges = new ThreadLocal() {
 		protected synchronized Boolean initialValue() {

@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.VTCriterion;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked","deprecation"})
 public abstract class HibernateEJBSearcherBase {
 	protected Map<Class<? extends SearchCriterion>, SearchCriterionHandler> handlerMap;
 
