@@ -200,7 +200,7 @@
 				<pathelement path="${framework.gwt.classpath.lib}" />
 				<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
 			</classpath>
-			<jvmarg value="-Xmx850M" />
+			<jvmarg value="-Xmx1100M" />
 			<jvmarg value="-Xss2M" />
 			<jvmarg value="-Dgwt.usearchives=false" />
 			
