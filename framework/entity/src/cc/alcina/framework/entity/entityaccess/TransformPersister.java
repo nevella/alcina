@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
@@ -250,6 +251,7 @@ public class TransformPersister {
 			EntityManager entityManager) {
 		this.entityManager = entityManager;
 		this.commonPersistenceBase = commonPersistenceBase;
+		IUser incomingUser = PermissionsManager.get().getUser();
 		commonPersistenceBase.connectPermissionsManagerToLiveObjects(true);
 		HiliLocatorMap locatorMap = token.getLocatorMap();
 		HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.clone();
@@ -502,6 +504,8 @@ public class TransformPersister {
 				token.setPass(Pass.FAIL);
 			}
 			return wrapException(token, e);
+		}finally{
+			PermissionsManager.get().setUser(incomingUser);
 		}
 	}
 

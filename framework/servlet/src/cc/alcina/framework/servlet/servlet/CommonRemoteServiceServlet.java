@@ -383,6 +383,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					if (pushUser) {
 						PermissionsManager.get().popUser();
 					}
+					
 				}
 				if (logger != null) {
 					logger.info(CommonUtils
