@@ -42,6 +42,10 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 				errorBuffer.append(stackTraceElement);
 				errorBuffer.append("\n");
 			}
+			if(e.getCause()!=null&&e.getCause()!=e){
+				errorBuffer.append("\nCaused by:-----\n");
+				unrollUmbrella(e.getCause(), errorBuffer);
+			}
 		}
 	}
 
@@ -63,7 +67,8 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 
 	public String extraInfoForExceptionText() {
 		String extraInfo = "\n\nUser agent: " + BrowserMod.getUserAgent()
-				+ "\n\nHistory token: " + History.getToken();
+				+ "\nHistory token: " + History.getToken()
+				+ "\nModule name: " + GWT.getModuleName();
 		return extraInfo;
 	}
 }

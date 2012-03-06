@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
@@ -167,7 +168,7 @@ public class MapObjectLookup implements ObjectLookup {
 	}
 
 	private boolean iterateRegistration() {
-		registerCounter=0;
+		registerCounter = 0;
 		while (!toRegister.isEmpty()
 				&& (postRegisterCommand == null || registerCounter++ < 500)) {
 			mapObjectFromFrontOfQueue();
@@ -296,14 +297,25 @@ public class MapObjectLookup implements ObjectLookup {
 			@Override
 			public boolean execute() {
 				if (iterateRegistration()) {
-					System.out.println("Async register obj:"+ctr++);
+					System.out.println("Async register obj:" + ctr++);
 					return true;
 				}
-				notifier.modalOff();
-				ScheduledCommand postRegisterCommandCopy = MapObjectLookup.this.postRegisterCommand;
-				MapObjectLookup.this.postRegisterCommand = null;
-				postRegisterCommandCopy.execute();
-				return false;
+				try {
+					notifier.modalOff();
+					ScheduledCommand postRegisterCommandCopy = MapObjectLookup.this.postRegisterCommand;
+					MapObjectLookup.this.postRegisterCommand = null;
+					postRegisterCommandCopy.execute();
+					return false;
+				} catch (Exception e) {
+					ClientLayerLocator
+							.get()
+							.exceptionHandler()
+							.handleException(
+									new WrappedRuntimeException(
+											"Exception in async object registration",
+											e));
+					return false;
+				}
 			}
 		});
 	}
