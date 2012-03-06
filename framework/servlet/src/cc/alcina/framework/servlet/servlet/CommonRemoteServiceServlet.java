@@ -56,12 +56,15 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.actions.RequiresHttpRequest;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -106,6 +109,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	private Logger logger;
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
+	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = CommonRemoteServiceServlet.class.getSimpleName()+"::"+"CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS";
 
 	private int actionCount = 0;
 
@@ -342,21 +346,44 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				clientInstance.setAuth(wr.getClientInstanceAuth());
 				clientInstance.setId(wr.getClientInstanceId());
 				rq.setClientInstance(clientInstance);
-				rq.getClientInstance().setUser(
-						PermissionsManager.get().getUser());
-				// TODO - perhaps allow facility to persist multi-user
-				// transforms. but...perhaps better not (keep as is)
-				rq.setRequestId(wr.getRequestId());
-				rq.fromString(wr.getText());
-				// necessary because event id is used by transformpersister for
-				// pass control etc
-				long idCounter = 1;
-				for (DomainTransformEvent event : rq.getEvents()) {
-					event.setEventId(idCounter++);
+				boolean pushUser = PermissionsManager.get().isAdmin()
+						&& LooseContextProvider.getContext()
+								.getBoolean(
+										CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
+						&& wr.getUserId() != PermissionsManager.get()
+								.getUserId();
+				DomainTransformLayerWrapper transformLayerWrapper;
+				try {
+					if (pushUser) {
+						IUser user = ServletLayerLocator.get()
+								.commonPersistenceProvider()
+								.getCommonPersistence()
+								.getCleanedUserById(wr.getUserId());
+						PermissionsManager.get().pushUser(user,
+								LoginState.LOGGED_IN);
+					} else {
+						rq.getClientInstance().setUser(
+								PermissionsManager.get().getUser());
+					}
+					// TODO - perhaps allow facility to persist multi-user
+					// transforms. but...perhaps better not (keep as is)
+					rq.setRequestId(wr.getRequestId());
+					rq.fromString(wr.getText());
+					// necessary because event id is used by transformpersister
+					// for
+					// pass control etc
+					long idCounter = 1;
+					for (DomainTransformEvent event : rq.getEvents()) {
+						event.setEventId(idCounter++);
+					}
+					transformLayerWrapper = transform(rq, true,
+							isPersistOfflineTransforms(),
+							getOfflineTransformExceptionPolicy());
+				} finally {
+					if (pushUser) {
+						PermissionsManager.get().popUser();
+					}
 				}
-				DomainTransformLayerWrapper transformLayerWrapper = transform(
-						rq, true, isPersistOfflineTransforms(),
-						getOfflineTransformExceptionPolicy());
 				if (logger != null) {
 					logger.info(CommonUtils
 							.format("Request [%1/%2] : %3 transforms written, %4 ignored",
@@ -642,9 +669,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.clearAllThreadLoggers();
 		super.onAfterResponseSerialized(serializedResponse);
 	}
+
 	@Override
 	public PartialDtrUploadResponse uploadOfflineTransforms(
 			PartialDtrUploadRequest request) throws WebException {
-		return new PartialDtrUploadHandler().uploadOfflineTransforms(request,this);
+		return new PartialDtrUploadHandler().uploadOfflineTransforms(request,
+				this);
 	}
 }

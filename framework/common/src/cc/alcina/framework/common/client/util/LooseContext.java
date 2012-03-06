@@ -50,6 +50,9 @@ public class LooseContext {
 	public boolean getBoolean(String key) {
 		return properties.get(key) == Boolean.TRUE;
 	}
+	public boolean getBooleanDefaultTrue(String key) {
+		return properties.get(key) != Boolean.FALSE;
+	}
 
 	public void pop() {
 		TopicPublisher publisher = ensureTopicPublisher();
