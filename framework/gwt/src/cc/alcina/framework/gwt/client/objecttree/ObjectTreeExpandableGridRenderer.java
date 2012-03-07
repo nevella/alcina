@@ -38,6 +38,7 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 	public static final String MIN_CUSTOMISER_WIDTH = "MIN_CUSTOMISER_WIDTH";
 
 	public static final String DEFAULT_SECTION_NAME = "DEFAULT_SECTION_NAME";
+	
 
 	private boolean useExpandableWidgets = true;
 

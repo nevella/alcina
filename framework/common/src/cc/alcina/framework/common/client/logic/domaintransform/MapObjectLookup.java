@@ -312,7 +312,7 @@ public class MapObjectLookup implements ObjectLookup {
 							.exceptionHandler()
 							.handleException(
 									new WrappedRuntimeException(
-											"Exception in async object registration",
+											"Exception in post-register command",
 											e));
 					return false;
 				}

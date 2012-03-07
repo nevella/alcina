@@ -13,8 +13,12 @@
  */
 package cc.alcina.framework.gwt.client.objecttree;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -47,6 +51,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  * @author Nick Reddel
  */
 public class ObjectTreeRenderer {
+	public static final String SEARCH_SECTIONS = "SEARCH_SECTIONS";
+
 	private FlowPanelWithBinding op;
 
 	protected BoundWidgetTypeFactory factory = new BoundWidgetTypeFactorySimpleGenerator();
@@ -97,7 +103,7 @@ public class ObjectTreeRenderer {
 		IsRenderableFilter renderableFilter = renderContext
 				.getRenderableFilter();
 		if (renderableFilter != null
-				&& !renderableFilter.isRenderable(renderable,node)) {
+				&& !renderableFilter.isRenderable(renderable, node)) {
 			renderInstruction = RenderInstruction.NO_RENDER;
 		}
 		if (renderInstruction != RenderInstruction.NO_RENDER) {
@@ -142,10 +148,10 @@ public class ObjectTreeRenderer {
 			String customiserStyleName = node.isSingleLineCustomiser() ? "single-line-customiser"
 					: "customiser";
 			String hint = node.hint();
-			if(hint!=null&&hint.startsWith(TreeRenderer.TOOLTIP_HINT)){
-				hint=hint.substring(TreeRenderer.TOOLTIP_HINT.length());
+			if (hint != null && hint.startsWith(TreeRenderer.TOOLTIP_HINT)) {
+				hint = hint.substring(TreeRenderer.TOOLTIP_HINT.length());
 				customiserWidget.setTitle(hint);
-				hint=null;
+				hint = null;
 			}
 			if (hint != null) {
 				FlowPanel fp2 = new FlowPanel();
@@ -185,14 +191,45 @@ public class ObjectTreeRenderer {
 				level1ContentRendererMap.put(childPanel, node);
 				cp.add(childPanel);
 			}
-			Collection<? extends TreeRenderable> childRenderables = node
-					.renderableChildren();
+			List<? extends TreeRenderable> childRenderables = new ArrayList<TreeRenderable>(
+					node.renderableChildren());
+			maybeSortChildRenderables(childRenderables, renderContext);
 			for (TreeRenderable child : childRenderables) {
 				renderToPanel(child, childPanel, depth + 1, node
 						.renderableChildren().size() == 1, renderContext, node);
 			}
 		}
 		return;
+	}
+
+	private void maybeSortChildRenderables(
+			List<? extends TreeRenderable> childRenderables,
+			final RenderContext renderContext) {
+		if (renderContext.get(SEARCH_SECTIONS) != null) {
+			final List<String> sectionOrder = renderContext
+					.get(SEARCH_SECTIONS);
+			Collections.sort(childRenderables,
+					new Comparator<TreeRenderable>() {
+						Map<TreeRenderable, Integer> lkp = new HashMap<TreeRenderable, Integer>();
+
+						private int getIndex(TreeRenderable r) {
+							if (!lkp.containsKey(r)) {
+								TreeRenderer node1 = TreeRenderingInfoProvider
+										.get().getForRenderable(r,
+												renderContext);
+								String s1 = node1.section();
+								lkp.put(r, sectionOrder.indexOf(s1));
+							}
+							return lkp.get(r);
+						}
+
+						@Override
+						public int compare(TreeRenderable o1, TreeRenderable o2) {
+							return CommonUtils.compareInts(getIndex(o1),
+									getIndex(o2));
+						}
+					});
+		}
 	}
 
 	public static class ObjectTreeBoundWidgetCreator {
