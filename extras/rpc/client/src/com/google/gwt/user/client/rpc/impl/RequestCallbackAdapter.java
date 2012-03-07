@@ -186,7 +186,7 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 	public void onResponseReceived(Request request, Response response) {
 		T result = null;
 		Throwable caught = null;
-		PostDeserializationCallback postDeserializationCallback = new PostDeserializationCallback();
+		final PostDeserializationCallback postDeserializationCallback = new PostDeserializationCallback();
 		try {
 			String encodedResponse = response.getText();
 			int statusCode = response.getStatusCode();
@@ -200,12 +200,31 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 				caught = new InvocationException("No response payload from "
 						+ methodName);
 			} else if (RemoteServiceProxy.isThrownException(encodedResponse)) {
-				caught = (Throwable) streamFactory.createStreamReader(
-						encodedResponse).readObject();
-			} else if (RemoteServiceProxy.isReturnValue(encodedResponse)){
-				//next clause
-			}
-			else {
+				ClientSerializationStreamReader reader = (ClientSerializationStreamReader) streamFactory
+						.createStreamReader(encodedResponse);
+				postDeserializationCallback.streamReader = reader;
+				AsyncCallback exceptionCallback = new AsyncCallback() {
+					@Override
+					public void onFailure(Throwable caught) {
+						postDeserializationCallback.onFailure(caught);
+					}
+
+					@Override
+					public void onSuccess(Object toss) {
+						try {
+							Throwable t = (Throwable) responseReader
+									.read(postDeserializationCallback.streamReader);
+							onFailure(t);
+						} catch (Throwable e) {
+							onFailure(e);
+						}
+					}
+				};
+				reader.doDeserialize(exceptionCallback);
+				return;
+			} else if (RemoteServiceProxy.isReturnValue(encodedResponse)) {
+				// next clause
+			} else {
 				caught = new InvocationException(encodedResponse + " from "
 						+ methodName);
 			}

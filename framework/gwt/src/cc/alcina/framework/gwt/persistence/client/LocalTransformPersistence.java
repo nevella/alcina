@@ -60,6 +60,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public abstract class LocalTransformPersistence implements StateChangeListener,
 		ClientTransformManager.PersistableTransformListener {
+	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED=LocalTransformPersistence.class.getName()+"::"+"CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED";
+
+	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS = LocalTransformPersistence.class.getName()+"::"+"CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS";;
 	public static LocalTransformPersistence get() {
 		return localTransformPersistence;
 	}

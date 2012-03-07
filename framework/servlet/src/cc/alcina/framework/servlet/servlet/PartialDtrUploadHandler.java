@@ -9,6 +9,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
@@ -108,9 +109,21 @@ public class PartialDtrUploadHandler {
 			response.lastUploadedRequestTransformUploadCount = rq.getEvents()
 					.size();
 			if (request.commitOnReceipt) {
-				commonRemoteServiceServlet
-						.persistOfflineTransforms(new ArrayList<DTRSimpleSerialWrapper>(
-								fullWrappers.values()));
+				try {
+					commonRemoteServiceServlet
+							.persistOfflineTransforms(new ArrayList<DTRSimpleSerialWrapper>(
+									fullWrappers.values()));
+				} catch (Exception e) {
+					CommonPersistenceLocal cpl = ServletLayerLocator.get()
+					.commonPersistenceProvider().getCommonPersistence();
+					String errMsg=String.format(
+							"Client instance id:%s - Partial dtr upload - %s",
+							clientInstanceId, response);
+					cpl.log(errMsg,
+							LogMessageType.OFFLINE_TRANSFORM_MERGE_EXCEPTION.toString());
+					
+					throw e;
+				}
 				response.committed = true;
 			}
 			ServletLayerLocator
@@ -121,6 +134,7 @@ public class PartialDtrUploadHandler {
 							clientInstanceId, response));
 			return response;
 		} catch (Exception e) {
+			
 			e.printStackTrace();
 			throw new WebException(e);
 		}

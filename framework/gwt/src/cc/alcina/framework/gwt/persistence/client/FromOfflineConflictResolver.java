@@ -13,7 +13,9 @@
  */
 package cc.alcina.framework.gwt.persistence.client;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -21,6 +23,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWr
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
@@ -60,22 +63,79 @@ public class FromOfflineConflictResolver {
 		this.localTransformPersistence = localTransformPersistence;
 		this.completionCallback = cb;
 		dialog = new GlassDialogBox();
-		dialog.setText("Conflicts saving offline work");
+		String title = TextProvider.get().getUiObjectText(
+				FromOfflineConflictResolver.class, "title",
+				"Problems saving offline work");
+		dialog.setText(title);
 		dialog.add(new ResolutionOptions());
 		dialog.center();
 		dialog.show();
 	}
 
 	public void notResolved() {
-		throw new WrappedRuntimeException("Unable to save prior work. "
-				+ "You'll be unable to use " + "this application"
-				+ " until saving prior work succeeds", caught,
-				SuggestedAction.NOTIFY_WARNING);
+		Window.alert(localisedMessages.get(TextItem.OFFLINE_NO_DISCARD_WARNING));
+		Window.Location.reload();
+	}
+
+	Map<TextItem, String> localisedMessages = new HashMap<FromOfflineConflictResolver.TextItem, String>();
+
+	public void initLocalisedTexts() {
+		localisedMessages
+				.put(TextItem.OFFLINE_UPLOAD_FAILED,
+						TextProvider
+								.get()
+								.getUiObjectText(
+										FromOfflineConflictResolver.class,
+										TextItem.OFFLINE_UPLOAD_FAILED
+												.toString(),
+										"<p>Upload of offline changes failed<p>\n "
+												+ "Please press 'exit' to retry upload of the offline work.\n"
+												+ "<hr>"));
+		localisedMessages
+				.put(TextItem.OFFLINE_UPLOAD_SUCCEEDED4,
+						TextProvider
+								.get()
+								.getUiObjectText(
+										FromOfflineConflictResolver.class,
+										TextItem.OFFLINE_UPLOAD_SUCCEEDED4
+												.toString(),
+										"<p>Merge of offline changes failed, but your changes were uploaded and can be merged "
+												+ "by an administrator.</p><p>Your changes will be available once merged.</p>\n "
+												+ "<p>Please copy the following text into an email and provide to an administrator:</p>"
+												+ "<blockquote><b>%s</b></blockquote>"
+												+ "Once you have done this, select 'discard changes'.<br>\n"
+												+ "<hr>"));
+		localisedMessages.put(
+				TextItem.OFFLINE_DISCARD_CHANGES,
+				TextProvider.get().getUiObjectText(
+						FromOfflineConflictResolver.class,
+						TextItem.OFFLINE_DISCARD_CHANGES.toString(),
+						"Discard changes"));
+		localisedMessages.put(
+				TextItem.OFFLINE_EXIT_NO_DISCARD,
+				TextProvider.get().getUiObjectText(
+						FromOfflineConflictResolver.class,
+						TextItem.OFFLINE_EXIT_NO_DISCARD.toString(),
+						"Exit without discarding changes"));
+		localisedMessages
+				.put(TextItem.OFFLINE_NO_DISCARD_WARNING,
+						TextProvider
+								.get()
+								.getUiObjectText(
+										FromOfflineConflictResolver.class,
+										TextItem.OFFLINE_NO_DISCARD_WARNING
+												.toString(),
+										"Exiting without saving changes.\n\n"
+												+ "You must successfully upload the changes, and press 'discard', to continue using the application."));
+	}
+
+	enum TextItem {
+		OFFLINE_UPLOAD_FAILED, OFFLINE_UPLOAD_SUCCEEDED4,
+		OFFLINE_DISCARD_CHANGES, OFFLINE, OFFLINE_EXIT_NO_DISCARD,
+		OFFLINE_NO_DISCARD_WARNING
 	}
 
 	private class ResolutionOptions extends Composite implements ClickHandler {
-		private BlockLink displayLink;
-
 		private FlowPanel fp;
 
 		private BlockLink discardLink;
@@ -83,47 +143,42 @@ public class FromOfflineConflictResolver {
 		private BlockLink exitLink;
 
 		public ResolutionOptions() {
+			initLocalisedTexts();
 			this.fp = new FlowPanel();
-			displayLink = new BlockLink(TextProvider.get().getUiObjectText(
-					FromOfflineConflictResolver.class, "display-changes-link",
-					"Display changes"), this);
-			displayLink.removeStyleName("gwt-Hyperlink");
-			discardLink = new BlockLink(TextProvider.get().getUiObjectText(
-					FromOfflineConflictResolver.class, "discard-changes-link",
-					"Discard changes"), this);
-			exitLink = new BlockLink(TextProvider.get().getUiObjectText(
-					FromOfflineConflictResolver.class, "exit-link", "Exit"),
+			discardLink = new BlockLink(
+					localisedMessages.get(TextItem.OFFLINE_DISCARD_CHANGES),
 					this);
-			displayLink.removeStyleName("gwt-Hyperlink");
+			exitLink = new BlockLink(
+					localisedMessages.get(TextItem.OFFLINE_EXIT_NO_DISCARD),
+					this);
 			discardLink.removeStyleName("gwt-Hyperlink");
 			exitLink.removeStyleName("gwt-Hyperlink");
-			HTML html = new HTML(
-					TextProvider
-							.get()
-							.getUiObjectText(
-									FromOfflineConflictResolver.class,
-									"resolution-procedure-text-1",
-									"<p>Some conflicts or other problems "
-											+ "with saving your changes need resolution</p>"
-											+ "<p><b>Option 1</b></p><div class='pad-left-15'><p>First, click 'display changes', "
-											+ "then open an email, press 'paste', and "
-											+ "send it to your system administrator.</p>"
-											+ "<p>Then click 'discard changes', to clear your "
-											+ "computer's copy of the changes, and let"
-											+ " you connect"
-											+ " to the application.</p>"
-											+ "<p>Your changes will need to be adjusted by "
-											+ "the administrator, so you may not see them"
-											+ " for a few days.</p></div>"
-											+ "<p><b>Option 2</b></p><div class='pad-left-15'><p>Click 'discard changes'"
-											+ " - your changes will be discarded, but you'll "
-											+ "be able to continue working.</p></div><hr>"));
+			boolean uploadSucceeded = LooseContextProvider
+					.getContext()
+					.getBoolean(
+							LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED);
+			String uploadFailedText = localisedMessages
+					.get(TextItem.OFFLINE_UPLOAD_FAILED);
+			String uploadSucceededText = localisedMessages
+					.get(TextItem.OFFLINE_UPLOAD_SUCCEEDED4);
+			if (uploadSucceeded) {
+				uploadSucceededText = CommonUtils
+						.formatJ(
+								uploadSucceededText,
+								"clientinstance_ids: "
+										+ LooseContextProvider
+												.getContext()
+												.get(LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS));
+			}
+			HTML html = new HTML(uploadSucceeded ? uploadSucceededText
+					: uploadFailedText);
 			fp.add(html);
 			FlowPanel p = new FlowPanel();
 			p.setStyleName("pad-15");
 			fp.add(p);
-			p.add(displayLink);
-			p.add(discardLink);
+			if (uploadSucceeded) {
+				p.add(discardLink);
+			}
 			p.add(exitLink);
 			initWidget(fp);
 		}
@@ -140,21 +195,18 @@ public class FromOfflineConflictResolver {
 			cn.setDialogAnimationEnabled(false);
 			cn.showMessage(fp);
 			cn.setDialogAnimationEnabled(true);
-//			ta.setSelectionRange(0, text.length());
-//			copy();
-			//no browser permits this
+			// ta.setSelectionRange(0, text.length());
+			// copy();
+			// no browser permits this
 		}
 
 		protected native void copy() /*-{
-			$doc.execCommand("Copy");
-		}-*/;
+										$doc.execCommand("Copy");
+										}-*/;
 
 		@SuppressWarnings("unchecked")
 		public void onClick(ClickEvent event) {
 			Widget sender = (Widget) event.getSource();
-			if (sender == displayLink) {
-				showLog();
-			}
 			if (sender == discardLink) {
 				if (Window.confirm(TextProvider.get().getUiObjectText(
 						FromOfflineConflictResolver.class,

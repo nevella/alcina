@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -11,6 +13,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
@@ -47,6 +51,8 @@ public class PartialDtrUploader {
 	private int committedTransforms;
 
 	protected PartialDtrUploadResponse currentResponse;
+
+	private Set<Long> clientInstanceIds = new TreeSet<Long>();
 
 	private AsyncCallback<PartialDtrUploadResponse> responseHandler = new AsyncCallback<PartialDtrUploadResponse>() {
 		@Override
@@ -103,6 +109,7 @@ public class PartialDtrUploader {
 		for (DTRSimpleSerialWrapper wrapper : uncommitted) {
 			DomainTransformRequest rq = new DomainTransformRequest();
 			rq.fromString(wrapper.getText());
+			clientInstanceIds.add(wrapper.getClientInstanceId());
 			deserTransforms.put(wrapper, rq.getEvents());
 			totalTransforms += rq.getEvents().size();
 		}
@@ -147,12 +154,20 @@ public class PartialDtrUploader {
 			}
 		}
 		if (request.wrappers.isEmpty()) {
-			//add a blank request (no transforms) for auth
-			addToRequest(currentRequest, uncommitted.get(0), new ArrayList<DomainTransformEvent>());
+			// add a blank request (no transforms) for auth
+			addToRequest(currentRequest, uncommitted.get(0),
+					new ArrayList<DomainTransformEvent>());
+			LooseContextProvider
+					.getContext()
+					.setBoolean(
+							LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED);
+			LooseContextProvider
+					.getContext()
+					.set(LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS,
+							CommonUtils.join(clientInstanceIds, ","));
 			request.commitOnReceipt = true;
 			String message = TextProvider.get().getUiObjectText(
-					PartialDtrUploader.class,
-					"committing",
+					PartialDtrUploader.class, "committing",
 					"Changes uploaded, processing on server");
 			modalNotifier.setStatus(message);
 		}

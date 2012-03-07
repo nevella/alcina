@@ -18,7 +18,9 @@ import cc.alcina.framework.gwt.client.widget.GlassDisplayer;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Window.ScrollEvent;
 import com.google.gwt.user.client.Window.ScrollHandler;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -97,5 +99,19 @@ public class GlassDialogBox extends DialogBox {
 					.addWindowScrollHandler(scrollHandler);
 		}
 		super.show();
+	}
+	@Override
+	protected void onPreviewNativeEvent(NativePreviewEvent event) {
+		if (event.isFirstHandler()
+		        ) {
+			Event as = Event.as(event.getNativeEvent());
+			int typeInt = as.getTypeInt();
+			if ((typeInt & Event.KEYEVENTS)>0) {
+				if(as.getCtrlKey()||as.getMetaKey()||as.getAltKey()){
+					event.consume();
+				}
+			}
+		}
+		super.onPreviewNativeEvent(event);
 	}
 }
