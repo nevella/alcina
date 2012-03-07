@@ -45,6 +45,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 public class FromOfflineConflictResolver {
+	@SuppressWarnings("unused")
 	private Throwable caught;
 
 	private GlassDialogBox dialog;

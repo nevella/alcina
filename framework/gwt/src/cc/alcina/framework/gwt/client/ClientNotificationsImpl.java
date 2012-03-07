@@ -14,7 +14,6 @@
 package cc.alcina.framework.gwt.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -22,11 +21,11 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
@@ -59,8 +58,9 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	private String logString = "";
 
-	protected static final StandardDataImages images = GWT
-			.create(StandardDataImages.class);
+	protected StandardDataImages images;
+
+	private static final String LT_NOTIFY_COMPLETED_SAVE = "LT_NOTIFY_COMPLETED_SAVE";
 
 	private boolean dialogAnimationEnabled = true;
 
@@ -131,6 +131,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	public void showDialog(String captionHTML, Widget captionWidget,
 			String msg, MessageType messageType, List<Button> extraButtons,
 			String containerStyle) {
+		ensureImages();
 		HorizontalAlignmentConstant align = messageType == MessageType.ERROR ? HasHorizontalAlignment.ALIGN_LEFT
 				: HasHorizontalAlignment.ALIGN_CENTER;
 		if (dialogBox != null) {
@@ -216,6 +217,12 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		closeButton.setFocus(true);
 	}
 
+	private void ensureImages() {
+		if (images == null) {
+			images = GWT.create(StandardDataImages.class);
+		}
+	}
+
 	public void showError(String msg, Throwable throwable) {
 		log("error: " + msg.replace("<br>", "\n") + "\n" + throwable.toString());
 		msg += CommonUtils.isNullOrEmpty(msg) ? "" : "<br><br>";
@@ -245,7 +252,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 				result += j + ": " + v + "  ";
 
 			}
-			
+
 			var v = stat.evtGroup;
 			if (lastEvtGroup == v) {
 				if (lastMillis != 0) {
@@ -296,9 +303,26 @@ public class ClientNotificationsImpl implements ClientNotifications {
 				+ " If the problem recurs, please try refreshing your browser";
 	}
 
+	Map<String, String> localisedMessages;
+
+	public void ensureLocalisedMessages() {
+		if (localisedMessages == null) {
+			localisedMessages = new HashMap<String, String>();
+			localisedMessages
+					.put(LT_NOTIFY_COMPLETED_SAVE,
+							TextProvider
+									.get()
+									.getUiObjectText(
+											ClientNotificationsImpl.class,
+											LT_NOTIFY_COMPLETED_SAVE,
+											"Save work from previous session to server completed"));
+		}
+	}
+
 	@Override
 	public void notifyOfCompletedSaveFromOffline() {
-		Window.alert("Save work from previous session to server completed");
+		ensureLocalisedMessages();
+		Window.alert(localisedMessages.get(LT_NOTIFY_COMPLETED_SAVE));
 	}
 
 	public enum MessageType {
