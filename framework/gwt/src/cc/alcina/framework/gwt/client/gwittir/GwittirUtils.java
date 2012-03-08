@@ -148,6 +148,7 @@ public class GwittirUtils {
 					b.getRight().property.getMutatorMethod().invoke(
 							b.getRight().object, new Object[] { value });
 					tb.setValue(tbValue);
+//					binding.setRight();
 				}
 			}
 		} catch (Exception e) {

@@ -177,6 +177,7 @@ public class ContentViewFactory {
 					+ bean.getClass(), SuggestedAction.NOTIFY_WARNING);
 		}
 		PaneWrapperWithObjects cp = createPaneWrapper(actionListener);
+		cp.editable = editable;
 		if (!noCaption) {
 			cp.add(createCaption(bean, cp));
 		}
@@ -527,6 +528,8 @@ public class ContentViewFactory {
 
 	public static class PaneWrapperWithObjects extends FlowPanel implements
 			ClickHandler, PermissibleActionEvent.PermissibleActionSource {
+		public boolean editable;
+
 		private Validator beanValidator;
 
 		private boolean alwaysDisallowOkIfInvalid;
@@ -777,8 +780,10 @@ public class ContentViewFactory {
 		protected void onDetach() {
 			preDetachFocus.setVisible(true);
 			preDetachFocus.setFocus(true);
-			GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(), null,
-					false, false);
+			if (editable&&isVisible()) {
+				GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(),
+						null, true, false);
+			}
 			super.onDetach();// inter alia, detach children, forcing commit of
 								// richtexts etc
 			if (objects != null && TransformManager.get().dirty(objects)) {

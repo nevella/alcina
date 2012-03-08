@@ -23,10 +23,10 @@ public class ServletLayerUtils {
 	}
 
 	public static int pushTransforms(boolean persistTransforms, boolean asRoot) {
-		int pendingTransforms = TransformManager.get()
+		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (AppPersistenceBase.isTest()) {
-			return pendingTransforms;
+			return pendingTransformCount;
 		}
 		ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
 		Level level = EntityLayerLocator.get().getMetricLogger().getLevel();
@@ -49,6 +49,6 @@ public class ServletLayerUtils {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			EntityLayerLocator.get().getMetricLogger().setLevel(level);
 		}
-		return pendingTransforms;
+		return pendingTransformCount;
 	}
 }

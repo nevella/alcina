@@ -113,7 +113,7 @@ public class SEUtilities {
 		for (int i = 0; i < s.length(); i++) {
 			char c = s.charAt(i);
 			System.out.print(c + ": " + ((short) c) + "\t");
-			if ((i+1) % 4 == 0 ) {
+			if ((i + 1) % 4 == 0) {
 				System.out.println();
 			}
 		}
@@ -162,15 +162,16 @@ public class SEUtilities {
 
 	// assume slash-delineated
 	public static String combinePaths(String absPath, String relPath) {
-		if ( relPath.contains("://")) {
+		if (relPath.contains("://")) {
 			return relPath;
 		}
-		if(relPath.startsWith("/")){
-			if(absPath.contains("://")){
-				int idx0=absPath.indexOf("://")+3;
-				int idx1=absPath.indexOf("/",idx0);
-				return (idx1==-1?absPath:absPath.substring(0,idx1))+relPath;
-			}else{
+		if (relPath.startsWith("/")) {
+			if (absPath.contains("://")) {
+				int idx0 = absPath.indexOf("://") + 3;
+				int idx1 = absPath.indexOf("/", idx0);
+				return (idx1 == -1 ? absPath : absPath.substring(0, idx1))
+						+ relPath;
+			} else {
 				return relPath;
 			}
 		}
@@ -389,10 +390,14 @@ public class SEUtilities {
 	}
 
 	public static String generateId() {
-		StringBuffer sb = new StringBuffer();
-		Random r = new Random();
 		char[][] ranges = { { 'a', 'z' }, { 'A', 'Z' }, { '0', '9' },
 				{ '_', '_' } };
+		return generateId(ranges, 32);
+	}
+
+	public static String generateId(char[][] ranges, int length) {
+		StringBuffer sb = new StringBuffer();
+		Random r = new Random();
 		int maxV = 0;
 		for (int i = 0; i < ranges.length; i++) {
 			maxV += ranges[i][1] - ranges[i][0] + 1;
@@ -409,7 +414,7 @@ public class SEUtilities {
 			l /= maxV;
 		}
 		ints.add(idCounter++);
-		for (int i = 0; i < 32; i++) {
+		for (int i = 0; i < length; i++) {
 			ints.add(r.nextInt(maxV));
 		}
 		for (int k : ints) {
@@ -423,7 +428,10 @@ public class SEUtilities {
 				k -= dv;
 			}
 		}
-		return sb.toString();
+		String string = sb.toString();
+		int pre = length / 2;
+		return string.substring(0, pre)
+				+ string.substring(string.length() - length + pre);
 	}
 
 	public static File getDesktopFolder() {
