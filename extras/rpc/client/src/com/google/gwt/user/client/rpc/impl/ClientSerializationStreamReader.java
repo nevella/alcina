@@ -415,9 +415,6 @@ public final class ClientSerializationStreamReader extends
 					}
 				case DESERIALIZE_NON_COLLECTION_PRE:
 					size = reader.getSeenArray().size();
-					if (size > 0) {
-						int toss = reader.readInt();// bypasss first object
-					}
 					idx2 = 0;
 					phase = PhaseDev.DESERIALIZE_NON_COLLECTION_RUN;
 					// deliberate fallthrough
@@ -474,13 +471,15 @@ public final class ClientSerializationStreamReader extends
 			int sliceCount = sliceSize;
 			for (; sliceCount != 0 && idx2 < size; idx2++) {
 				Object instance = reader.getSeenArray().get(idx2);
-				boolean collectionOrMapNotFirst = idx2 != 0
-						&& (instance instanceof Collection || instance instanceof Map);
-				if (collectionOrMapNotFirst
+				boolean collectionOrMap = instance instanceof Collection
+						|| instance instanceof Map;
+				if (collectionOrMap
 						^ (phase == PhaseDev.DESERIALIZE_COLLECTION_RUN)) {
 					continue;
 				}
-				// System.out.println(CommonUtils.simpleClassName(instance.getClass()));
+				if (idx2 == 0) {
+					int toss = reader.readInt();// bypasss first object
+				}
 				int strId = reader.getTypeId(idx2);
 				String typeSignature = reader.getString(strId);
 				reader.serializer.deserialize(reader, instance, typeSignature);
@@ -503,7 +502,7 @@ public final class ClientSerializationStreamReader extends
 			return idx2 == typeTableLength;
 		}
 	}
-	
+
 	enum PhaseDev {
 		INSTATIATE_EMPTY_SETUP, INSTATIATE_EMPTY_RUN,
 		DESERIALIZE_NON_COLLECTION_PRE, DESERIALIZE_NON_COLLECTION_RUN,
