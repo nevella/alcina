@@ -165,6 +165,10 @@ import com.google.gwt.user.client.ui.Widget;
 								LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 			}
 		}
+
+		public ToggleButton getToggleButton() {
+			return this.toggleButton;
+		}
 	}
 
 	public static class BreadcrumbBarButton extends Composite implements

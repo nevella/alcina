@@ -38,7 +38,6 @@ import com.totsp.gwittir.client.validator.Validator;
 		try {
 			i = Integer.valueOf(value.toString());
 		} catch (NumberFormatException nfe) {
-			GWT.log(null, nfe);
 			throw new ValidationException("Must be an integer value.",
 					InstantiableIntegerValidator.class);
 		}
