@@ -39,9 +39,12 @@ import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
+import cc.alcina.framework.gwt.client.widget.BreadcrumbBar.BreadcrumbBarMaximiseButton;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlersSupport;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -65,6 +68,7 @@ import com.google.gwt.user.client.ui.Widget;
 public class ActionViewProvider implements ViewProvider,
 		PermissibleActionListener {
 	private PaneWrapper wrapper;
+	private BreadcrumbBarMaximiseButton maxButton;
 
 	public Widget getViewForObject(Object obj) {
 		RemoteAction action = (RemoteAction) obj;
@@ -73,7 +77,7 @@ public class ActionViewProvider implements ViewProvider,
 		wrapper.ensureDebugId(AlcinaDebugIds.MISC_ALCINA_BEAN_PANEL);
 		wrapper.addVetoableActionListener(this);
 		wrapper.add(createCaption(action));
-		wrapper.add(new ActionLogPanel(action));
+		wrapper.add(new ActionLogPanel(action,maxButton));
 		wrapper.setAction(action);
 		return wrapper;
 	}
@@ -83,8 +87,10 @@ public class ActionViewProvider implements ViewProvider,
 				.asList(new SimpleHistoryEventInfo[] {
 						new SimpleHistoryEventInfo("Action"),
 						new SimpleHistoryEventInfo(action.getDisplayName()) });
-		return new BreadcrumbBar(null, history, BreadcrumbBar
-				.maxButton(wrapper));
+		List<Widget> maxButtonArr = BreadcrumbBar
+				.maxButton(wrapper);
+		this.maxButton=(BreadcrumbBarMaximiseButton) maxButtonArr.get(0);
+		return new BreadcrumbBar(null, history, maxButtonArr);
 	}
 
 	public static class ActionLogPanel extends VerticalPanel implements
@@ -183,12 +189,22 @@ public class ActionViewProvider implements ViewProvider,
 				ClientLayerLocator.get().actionLogProvider().getLogsForAction(
 						action, logItemCount, outerCallback, true);
 			}
+			maxButton2.getToggleButton().setDown(true);
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					maxButton2.getToggleButton().setDown(false);
+				}
+			});
 		}
 
 		int logItemCount = 5;
 
-		public ActionLogPanel(RemoteAction action) {
+		private final BreadcrumbBarMaximiseButton maxButton2;
+
+		public ActionLogPanel(RemoteAction action, BreadcrumbBarMaximiseButton maxButton) {
 			this.action = action;
+			this.maxButton2 = maxButton;
 			this.handler = LooseActionRegistry.get().getHandler(
 					action.getClass().getName());
 			this.hasChildHandlersSupport = new HasChildHandlersSupport();
