@@ -75,6 +75,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	private boolean noPersistence = false;
 	protected CD contentDefinition;
 	private boolean footer = false;
+	private Long randomSeed;
 	private transient boolean test;
 	private Map<String,String> properties=new LinkedHashMap<String, String>();
 
@@ -370,5 +371,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	public void setProperties(Map<String, String> properties) {
 		this.properties = properties;
+	}
+
+	public Long getRandomSeed() {
+		return this.randomSeed;
+	}
+
+	public void setRandomSeed(Long randomSeed) {
+		this.randomSeed = randomSeed;
 	}
 }
