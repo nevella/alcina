@@ -200,9 +200,9 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 				caught = new InvocationException("No response payload from "
 						+ methodName);
 			} else if (RemoteServiceProxy.isThrownException(encodedResponse)) {
-				ClientSerializationStreamReader reader = (ClientSerializationStreamReader) streamFactory
+				final ClientSerializationStreamReader exceptionReader = (ClientSerializationStreamReader) streamFactory
 						.createStreamReader(encodedResponse);
-				postDeserializationCallback.streamReader = reader;
+				postDeserializationCallback.streamReader = exceptionReader;
 				AsyncCallback exceptionCallback = new AsyncCallback() {
 					@Override
 					public void onFailure(Throwable caught) {
@@ -212,15 +212,14 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 					@Override
 					public void onSuccess(Object toss) {
 						try {
-							Throwable t = (Throwable) responseReader
-									.read(postDeserializationCallback.streamReader);
-							onFailure(t);
+							Object object= exceptionReader.readObject();
+							onFailure((Throwable) object);
 						} catch (Throwable e) {
 							onFailure(e);
 						}
 					}
 				};
-				reader.doDeserialize(exceptionCallback);
+				exceptionReader.doDeserialize(exceptionCallback);
 				return;
 			} else if (RemoteServiceProxy.isReturnValue(encodedResponse)) {
 				// next clause

@@ -15,6 +15,8 @@
 package cc.alcina.framework.common.client.publication.request;
 
 import java.beans.PropertyChangeListener;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
@@ -74,6 +76,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	protected CD contentDefinition;
 	private boolean footer = false;
 	private transient boolean test;
+	private Map<String,String> properties=new LinkedHashMap<String, String>();
 
 	public Class<? extends ContentDeliveryType> deliveryMode() {
 		if (deliveryMode == null) {
@@ -359,5 +362,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	@XmlTransient
 	public boolean isTest() {
 		return test;
+	}
+
+	public Map<String, String> getProperties() {
+		return this.properties;
+	}
+
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
 	}
 }

@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
@@ -127,6 +128,8 @@ public class OkCancelDialogBox extends GlassDialogBox {
 
 	private boolean isCentering = false;
 
+	private Timer checkReCenterTimer;
+
 	@Override
 	public void center() {
 		isCentering = true;
@@ -145,6 +148,30 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		if (!isCentering) {
 			okButton.setFocus(true);
 		}
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		checkReCenterTimer = new Timer() {
+			private int lastCenterHeight;
+
+			@Override
+			public void run() {
+				if (lastCenterHeight != 0
+						&& lastCenterHeight != getOffsetHeight()) {
+					center();
+				}
+				lastCenterHeight = getOffsetHeight();
+			}
+		};
+		checkReCenterTimer.scheduleRepeating(200);
+	}
+
+	@Override
+	protected void onDetach() {
+		checkReCenterTimer.cancel();
+		super.onDetach();
 	}
 
 	protected boolean checkValid() {
