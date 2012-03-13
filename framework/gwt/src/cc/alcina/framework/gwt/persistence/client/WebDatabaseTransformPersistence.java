@@ -343,8 +343,8 @@ public class WebDatabaseTransformPersistence extends
 
 			@Override
 			public void onTransactionFailure(SQLError error) {
-				if (isStorageQuotaError(error) && persistSpacePass == 0) {
-					persist(wrapper, callback, 1);
+				if (isStorageQuotaError(error) && persistSpacePass <= 3) {
+					persist(wrapper, callback, persistSpacePass+1);
 					return;
 				}
 				callbackFail(callback, error);

@@ -182,7 +182,7 @@ public class RequestCallbackAdapter<T> implements RequestCallback {
 		callback.onFailure(exception);
 	}
 
-	@SuppressWarnings(value = { "unchecked", "unused" })
+	@SuppressWarnings(value = { "unchecked" })
 	public void onResponseReceived(Request request, Response response) {
 		T result = null;
 		Throwable caught = null;

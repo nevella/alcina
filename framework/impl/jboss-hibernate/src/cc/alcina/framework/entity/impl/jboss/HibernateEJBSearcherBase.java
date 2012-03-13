@@ -10,6 +10,7 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -21,7 +22,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.VTCriterion;
 
-@SuppressWarnings({"unchecked","deprecation"})
+@SuppressWarnings({"unchecked"})
 public abstract class HibernateEJBSearcherBase {
 	protected Map<Class<? extends SearchCriterion>, SearchCriterionHandler> handlerMap;
 
@@ -38,11 +39,11 @@ public abstract class HibernateEJBSearcherBase {
 	protected void conditionalCreate(Class srcClass, Class tgtClass,
 			String propertyName, String alias) {
 		conditionalCreate(srcClass, tgtClass, propertyName, alias,
-				Criteria.INNER_JOIN);
+				JoinType.INNER_JOIN);
 	}
 
 	protected void conditionalCreate(Class srcClass, Class tgtClass,
-			String propertyName, String alias, int joinType) {
+			String propertyName, String alias, JoinType joinType) {
 		if (classCriteriaMap.containsKey(srcClass)
 				&& !classCriteriaMap.containsKey(tgtClass)
 				&& !detachedCriteriaMap.containsKey(tgtClass)) {

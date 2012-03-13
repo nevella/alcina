@@ -10,7 +10,7 @@
 		<download-libs targetDirectory="${framework.download.dir}" containerDirectory="${container.download.dir}">
 			<downloadable-file-list>
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/jaxb-api.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/xml/bind/jaxb-api/2.1/jaxb-api-2.1.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/persistence-api-1.0.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/persistence/persistence-api/1.0/persistence-api-1.0.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/persistence-api.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/common/persistence-api.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/jsr173_api.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/xml/bind/jsr173_api/1.0/jsr173_api-1.0.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/log4j-1.2.6.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/log4j/log4j/1.2.6/log4j-1.2.6.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/xercesImpl_2.9.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/xerces/xercesImpl/2.9.1/xercesImpl-2.9.1.jar" />

@@ -80,8 +80,10 @@ import java.util.ResourceBundle;
  * @see Scriptable
  * @author Norris Boyd
  * @author Brendan Eich
+ * 
+ * Nick - added with minor variations to fix javascript parsing in clientserializationstreamreader
  */
-
+@SuppressWarnings("unused")
 public class Context {
     public static final String languageVersionProperty = "language version";
     public static final String errorReporterProperty   = "error reporter";
@@ -794,7 +796,8 @@ public class Context {
      * This is the list of names of objects forcing the creation of
      * function activation records.
      */
-    private Hashtable activationNames;
+    
+	private Hashtable activationNames;
 
     // For instruction counting (interpreter only)
     int instructionCount;

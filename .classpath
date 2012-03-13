@@ -11,7 +11,7 @@
 	<classpathentry kind="src" path="framework/servlet/src"/>
 	<classpathentry kind="src" path="extras/cluster/tasks-src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/framework/common/persistence-api-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jsr173_api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/log4j-1.2.6.jar"/>

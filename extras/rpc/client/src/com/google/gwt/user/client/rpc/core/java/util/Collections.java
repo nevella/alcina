@@ -40,19 +40,19 @@ public final class Collections {
       return java.util.Collections.emptyList().getClass().getName();
     }
 
-    @SuppressWarnings("unused")
+    
     public static void deserialize(SerializationStreamReader streamReader,
         List instance) throws SerializationException {
       // Handled in instantiate.
     }
 
-    @SuppressWarnings("unused")
+    
     public static List instantiate(SerializationStreamReader streamReader)
         throws SerializationException {
       return java.util.Collections.emptyList();
     }
 
-    @SuppressWarnings("unused")
+    
     public static void serialize(SerializationStreamWriter streamWriter,
         List instance) throws SerializationException {
       // Nothing to serialize -- instantiate always returns the same thing
@@ -93,19 +93,19 @@ public final class Collections {
       return java.util.Collections.emptyMap().getClass().getName();
     }
 
-    @SuppressWarnings("unused")
+    
     public static void deserialize(SerializationStreamReader streamReader,
         Map instance) throws SerializationException {
       // Handled in instantiate.
     }
 
-    @SuppressWarnings("unused")
+    
     public static Map instantiate(SerializationStreamReader streamReader)
         throws SerializationException {
       return java.util.Collections.emptyMap();
     }
 
-    @SuppressWarnings("unused")
+    
     public static void serialize(SerializationStreamWriter streamWriter,
         Map instance) throws SerializationException {
       // Nothing to serialize -- instantiate always returns the same thing
@@ -146,19 +146,19 @@ public final class Collections {
       return java.util.Collections.emptySet().getClass().getName();
     }
 
-    @SuppressWarnings("unused")
+    
     public static void deserialize(SerializationStreamReader streamReader,
         Set instance) throws SerializationException {
       // Handled in instantiate.
     }
 
-    @SuppressWarnings("unused")
+    
     public static Set instantiate(SerializationStreamReader streamReader)
         throws SerializationException {
       return java.util.Collections.emptySet();
     }
 
-    @SuppressWarnings("unused")
+    
     public static void serialize(SerializationStreamWriter streamWriter,
         Set instance) throws SerializationException {
       // Nothing to serialize -- instantiate always returns the same thing
@@ -199,7 +199,7 @@ public final class Collections {
       return java.util.Collections.singletonList(null).getClass().getName();
     }
 
-    @SuppressWarnings("unused")
+    
     public static void deserialize(SerializationStreamReader streamReader,
         List instance) throws SerializationException {
     }

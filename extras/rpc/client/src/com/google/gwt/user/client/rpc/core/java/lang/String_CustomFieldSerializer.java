@@ -25,7 +25,7 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * Custom field serializer for {@link java.lang.String}.
  */
 public class String_CustomFieldSerializer extends CustomFieldSerializer<String> {
-	@SuppressWarnings("unused")
+	
 	public static void deserialize(SerializationStreamReader streamReader,
 			String instance) {
 		// No fields

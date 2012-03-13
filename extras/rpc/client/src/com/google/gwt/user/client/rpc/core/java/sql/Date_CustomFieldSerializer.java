@@ -30,7 +30,7 @@ import java.sql.Date;
  */
 public final class Date_CustomFieldSerializer extends
 		CustomFieldSerializer<Date> {
-	@SuppressWarnings("unused")
+	
 	public static void deserialize(SerializationStreamReader streamReader,
 			Date instance) {
 		// No fields

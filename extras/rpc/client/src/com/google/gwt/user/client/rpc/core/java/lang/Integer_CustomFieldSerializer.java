@@ -26,7 +26,7 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  */
 public final class Integer_CustomFieldSerializer extends
 		CustomFieldSerializer<Integer> {
-	@SuppressWarnings("unused")
+	
 	public static void deserialize(SerializationStreamReader streamReader,
 			Integer instance) {
 		// No fields

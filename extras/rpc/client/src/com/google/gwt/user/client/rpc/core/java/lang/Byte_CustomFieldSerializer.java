@@ -26,7 +26,7 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  */
 public final class Byte_CustomFieldSerializer extends
 		CustomFieldSerializer<Byte> {
-	@SuppressWarnings("unused")
+	
 	public static void deserialize(SerializationStreamReader streamReader,
 			Byte instance) {
 		// No fields.

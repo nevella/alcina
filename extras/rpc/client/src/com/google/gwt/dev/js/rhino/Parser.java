@@ -49,8 +49,10 @@ import java.io.IOException;
  * 
  * @author Mike McCabe
  * @author Brendan Eich
+ * 
+ * Nick - added with minor variations to fix javascript parsing in clientserializationstreamreader
  */
-
+@SuppressWarnings({"unused","static-access"})
 public class Parser {
 
   public Parser(IRFactory nf) {
