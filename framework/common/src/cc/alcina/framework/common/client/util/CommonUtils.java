@@ -233,8 +233,10 @@ public class CommonUtils {
 		}
 		return date.toString();
 	}
-
 	public static String friendlyConstant(Object o) {
+		return friendlyConstant(o, " ");
+	}
+	public static String friendlyConstant(Object o, String sep) {
 		if (o == null) {
 			return "";
 		}
@@ -243,15 +245,15 @@ public class CommonUtils {
 		while (true) {
 			y = s.indexOf("__");
 			if (y != -1) {
-				s = s.substring(0, x) + ((x == 0) ? "" : " ")
-						+ s.substring(x, y).toUpperCase() + " "
+				s = s.substring(0, x) + ((x == 0) ? "" : sep)
+						+ s.substring(x, y).toUpperCase() + sep
 						+ s.substring(y + 2);
 				x = y + 2;
 			} else {
 				break;
 			}
 		}
-		return s.replace('_', ' ').trim();
+		return s.replace("_", sep).trim();
 	}
 
 	public static String getSimpleTimeBefore(Date d) {
@@ -719,4 +721,6 @@ public class CommonUtils {
 			throwable = throwable.getCause();
 		}
 	}
+
+	
 }
