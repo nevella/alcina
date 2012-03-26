@@ -152,7 +152,7 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		super.onDetach();
 	}
 	protected native void styleBody(Element elem, String defaultFontSize) /*-{
-		if(elem.contentWindow){
+		if(elem.contentWindow&&elem.contentWindow.document){
 			elem.contentWindow.document.body.setAttribute("style",
 				"font-family: Arial; margin: 2px;font-size:" + defaultFontSize);
 		}

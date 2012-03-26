@@ -1,8 +1,11 @@
 <module>
 	<inherits name='cc.alcina.framework.common.AlcinaCommon' />
-	<inherits name='com.google.gwt.json.JSON'/>
+	<inherits name='com.google.gwt.json.JSON' />
 	<stylesheet src='Alcina.css?r422' />
-
+	<replace-with class="cc.alcina.framework.gwt.client.widget.CustomWebkitRichTextArea">
+		<when-type-is class="com.google.gwt.user.client.ui.impl.RichTextAreaImpl" />
+		<when-property-is name="user.agent" value="safari" />
+	</replace-with>
 	<public path="public" />
 	<source path="client" />
 </module>

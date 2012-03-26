@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.code.gwt.database.client.Database;
@@ -282,6 +283,7 @@ public class WebDatabaseTransformPersistence extends
 				callbackFail(callback, error);
 			}
 		});
+		
 	}
 
 	@Override
@@ -344,7 +346,7 @@ public class WebDatabaseTransformPersistence extends
 			@Override
 			public void onTransactionFailure(SQLError error) {
 				if (isStorageQuotaError(error) && persistSpacePass <= 3) {
-					persist(wrapper, callback, persistSpacePass+1);
+					persist(wrapper, callback, persistSpacePass + 1);
 					return;
 				}
 				callbackFail(callback, error);
@@ -407,24 +409,24 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	public void callbackFail(final PersistenceCallback callback, SQLError error) {
-		String message = "Problem initalising webdb - "
-				+ error.getMessage() + " - " + error.getCode();
-		callback.onFailure(isStorageQuotaError(error)?new StorageQuotaException(message):new Exception(message));
+		String message = "Problem initalising webdb - " + error.getMessage()
+				+ " - " + error.getCode();
+		callback.onFailure(isStorageQuotaError(error) ? new StorageQuotaException(
+				message) : new Exception(message));
 	}
 
 	@Override
 	public String getPersistenceStoreName() {
 		return "Html5 web database";
 	}
-	public static class StorageQuotaException extends Exception{
 
+	public static class StorageQuotaException extends Exception {
 		public StorageQuotaException(String message) {
 			super(message);
 		}
-		
 	}
+
 	public static boolean isStorageQuotaError(SQLError error) {
-		return (error.getMessage().contains("storage quota") || error
-				.getCode() == 4);
+		return (error.getMessage().contains("storage quota") || error.getCode() == 4);
 	}
 }

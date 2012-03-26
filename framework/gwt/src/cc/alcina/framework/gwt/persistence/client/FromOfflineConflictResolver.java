@@ -17,8 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
@@ -202,8 +200,8 @@ public class FromOfflineConflictResolver {
 		}
 
 		protected native void copy() /*-{
-										$doc.execCommand("Copy");
-										}-*/;
+			$doc.execCommand("Copy");
+		}-*/;
 
 		@SuppressWarnings("unchecked")
 		public void onClick(ClickEvent event) {
@@ -213,13 +211,30 @@ public class FromOfflineConflictResolver {
 						FromOfflineConflictResolver.class,
 						"discard-confirmation",
 						"Are you sure you want to discard your changes?"))) {
+					ClientLayerLocator.get().notifications()
+							.log("pre-clear-db");
 					localTransformPersistence
-							.clearAllPersisted(PersistenceCallback.VOID_CALLBACK);
-					Window.alert(TextProvider.get().getUiObjectText(
-							FromOfflineConflictResolver.class,
-							"discard-complete", "Changes discarded"));
-					dialog.hide();
-					completionCallback.callback(null);
+							.clearAllPersisted(new PersistenceCallback() {
+								@Override
+								public void onSuccess(Object result) {
+									Window.alert(TextProvider
+											.get()
+											.getUiObjectText(
+													FromOfflineConflictResolver.class,
+													"discard-complete",
+													"Changes discarded"));
+									dialog.hide();
+									completionCallback.callback(null);
+									ClientLayerLocator.get().notifications()
+											.log("post-clear-db");
+								}
+
+								@Override
+								public void onFailure(Throwable caught) {
+									Window.alert(caught.getMessage());
+									Window.Location.reload();
+								}
+							});
 				}
 			}
 			if (sender == exitLink) {

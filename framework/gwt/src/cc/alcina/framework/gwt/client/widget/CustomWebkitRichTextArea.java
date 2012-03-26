@@ -10,6 +10,7 @@ import com.google.gwt.user.client.ui.impl.RichTextAreaImplSafari;
 
 /**
  * TODO remove me when GWT RichTextArea is fixed. See #4279 (vaadin trac)
+ * (readded cos looks like gwt trunk as of jan 2012 has same probs)
  * 
  */
 class CustomWebkitRichTextArea extends RichTextAreaImplSafari {
