@@ -13,11 +13,14 @@
  */
 
 package cc.alcina.framework.common.client.publication;
+
+import java.io.Serializable;
+
 /**
  * Marker interface for second stage of the publication process
  * @author nick@alcina.cc
  *
  *Note - these will want to be xmlroot elt, jaxb registered, because they will be jaxb-serialised for transform
  */
-public interface PublicationContent {
+public interface PublicationContent extends Serializable{
 }

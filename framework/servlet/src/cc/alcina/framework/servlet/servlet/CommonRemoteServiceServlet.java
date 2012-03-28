@@ -219,8 +219,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			public void run() {
 				try {
 					// different thread-local
+					onAfterSpawnedThreadRun(this);
 					pm.copyTo(PermissionsManager.get());
 					ActionLogItem result = null;
+					
 					result = performer.performAction(action);
 					result.setActionClass(action.getClass());
 					result.setActionDate(new Date());
@@ -245,9 +247,20 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 		};
 		thread.setPriority(Thread.MIN_PRIORITY);
+		
 		thread.start();
+		onBeforeSpawnedThreadRun(thread);
 		return thread.getId();
 	}
+
+	protected void onBeforeSpawnedThreadRun(Thread thread) {
+		
+	}
+
+	protected void onAfterSpawnedThreadRun(Thread thread) {
+		
+	}
+
 
 	protected void handleOom(String payload, OutOfMemoryError e) {
 		if (DUMP_STACK_TRACE_ON_OOM) {
@@ -446,6 +459,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
 			String name = rpcRequest.getMethod().getName();
+			onAfterAlcinaAuthentication(name);
 			Method method;
 			try {
 				method = this.getClass().getMethod(name,
@@ -486,6 +500,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 		}
+	}
+
+	protected void onAfterAlcinaAuthentication(String methodName) {
+		
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {

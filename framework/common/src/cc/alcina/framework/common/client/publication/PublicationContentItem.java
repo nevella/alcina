@@ -14,10 +14,12 @@
 
 package cc.alcina.framework.common.client.publication;
 
+import java.io.Serializable;
+
 /**
  *
  * @author Nick Reddel
  */
 
- public interface PublicationContentItem {
+ public interface PublicationContentItem extends Serializable{
 }
