@@ -182,8 +182,10 @@ public class RelativePopupPositioning {
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis) {
 		return showPopup(relativeToWidget, widgetToShow, boundingWidget, axis,
-				null,null);
+				null, null);
 	}
+
+	
 
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
 			Widget widgetToShow, Widget boundingWidget, RelativePopupAxis axis,
@@ -201,23 +203,33 @@ public class RelativePopupPositioning {
 			final Widget widgetToShow, final Widget boundingWidget,
 			final RelativePopupAxis[] axes, Widget relativeContainer,
 			final RelativePopupPanel rpp, final int shiftX, final int shiftY) {
+		relativeContainer = relativeContainer != null ? relativeContainer
+				: WidgetUtils.getPositioningParent(relativeToWidget);
+		return showPopup(relativeToWidget.getElement(), widgetToShow,
+				boundingWidget, axes, relativeContainer, rpp, shiftX, shiftY);
+	}
+
+	public static RelativePopupPanel showPopup(final Element relativeToElement,
+			final Widget widgetToShow, final Widget boundingWidget,
+			final RelativePopupAxis[] axes, Widget relativeContainer,
+			final RelativePopupPanel rpp, final int shiftX, final int shiftY) {
+		final Widget positioningWidget = relativeContainer;
 		if (widgetToShow != null) {
 			rpp.setWidget(widgetToShow);
 		}
-		final Widget positioningWidget = relativeContainer != null ? relativeContainer
-				: WidgetUtils.getPositioningParent(relativeToWidget);
 		ComplexPanel cp = WidgetUtils.complexChildOrSelf(positioningWidget);
 		rpp.setPositioningContainer(cp);
 		rpp.setPopupPositionAndShow(new PositionCallback() {
 			public void setPosition(int offsetWidth, int offsetHeight) {
-				int x = relativeToWidget.getAbsoluteLeft();
-				int y = relativeToWidget.getAbsoluteTop();
-				int relW = relativeToWidget.getOffsetWidth();
-				int relH = relativeToWidget.getOffsetHeight();
-				if(relH==0){
-					Element parentElement = relativeToWidget.getElement().getParentElement();
-					relH=parentElement.getOffsetHeight();
-					y=parentElement.getAbsoluteTop();
+				int x = relativeToElement.getAbsoluteLeft();
+				int y = relativeToElement.getAbsoluteTop();
+				int relW = relativeToElement.getOffsetWidth();
+				int relH = relativeToElement.getOffsetHeight();
+				if (relH == 0) {
+					Element parentElement = relativeToElement
+							.getParentElement();
+					relH = parentElement.getOffsetHeight();
+					y = parentElement.getAbsoluteTop();
 				}
 				x += shiftX;
 				y += shiftY;
@@ -230,8 +242,14 @@ public class RelativePopupPositioning {
 				AxisCoordinate freeAxis = null;
 				int bw = boundingWidget.getOffsetWidth();
 				int bh = boundingWidget.getOffsetHeight();
-				
 				int axisIndex = 0;
+				if(axes==null){
+					//absolute, internal to bounding widget
+					x += boundingWidget.getAbsoluteLeft();
+					y += boundingWidget.getAbsoluteTop();
+					rpp.setPopupPosition(x, y);
+					return;
+				}
 				for (RelativePopupAxis axis : axes) {
 					fixedAxis = axis.fixedAxis;
 					fixedAxisOffset = fixedAxis.fit(x, y, bw, bh, relW, relH,

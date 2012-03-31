@@ -233,9 +233,11 @@ public class CommonUtils {
 		}
 		return date.toString();
 	}
+
 	public static String friendlyConstant(Object o) {
 		return friendlyConstant(o, " ");
 	}
+
 	public static String friendlyConstant(Object o, String sep) {
 		if (o == null) {
 			return "";
@@ -333,6 +335,14 @@ public class CommonUtils {
 	public static String join(Collection objects, String separator) {
 		Object[] objs = (Object[]) objects.toArray(new Object[objects.size()]);
 		return join(objs, separator);
+	}
+
+	public static String join(int[] objects, String separator) {
+		Integer[] wrapped = new Integer[objects.length];
+		for (int idx = 0; idx < objects.length; idx++) {
+			wrapped[idx] = objects[idx];
+		}
+		return join(wrapped, separator, false);
 	}
 
 	public static String join(Object[] objects, String separator) {
@@ -721,6 +731,4 @@ public class CommonUtils {
 			throwable = throwable.getCause();
 		}
 	}
-
-	
 }

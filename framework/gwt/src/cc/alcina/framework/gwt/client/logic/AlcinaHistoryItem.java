@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.HistoryEventType;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SearchHistoryInfo;
@@ -49,7 +50,8 @@ public class AlcinaHistoryItem {
 		for (String pair : pairs) {
 			String[] split = pair.split("=");
 			if (split.length == 2) {
-				params.put(split[0], URL.decodeQueryString(split[1]));
+				params.put(split[0], CommonLocator.get().urlComponentEncoder()
+						.decode(split[1]));
 			}
 		}
 		return params;
@@ -144,6 +146,7 @@ public class AlcinaHistoryItem {
 	public void setParameter(String key, Object value, boolean explicitBlanks) {
 		params.put(key, value == null ? null : value.toString());
 	}
+
 	public void setParameter(String key, Object value) {
 		if (value instanceof Number) {
 			if (((Number) value).longValue() == 0) {
@@ -161,7 +164,7 @@ public class AlcinaHistoryItem {
 	public void setSearchHistoryInfo(
 			AlcinaHistory.SearchHistoryInfo searchHistoryInfo) {
 		if (searchHistoryInfo != null) {
-			setParameter(SEARCH_INDEX, searchHistoryInfo.defId,true);
+			setParameter(SEARCH_INDEX, searchHistoryInfo.defId, true);
 			setParameter(SEARCH_PAGE, searchHistoryInfo.pageNumber);
 		}
 	}
