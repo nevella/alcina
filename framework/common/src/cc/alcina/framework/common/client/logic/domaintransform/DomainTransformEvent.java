@@ -188,7 +188,8 @@ public class DomainTransformEvent implements Serializable,
 			if (this.valueClassRef != null) {
 				this.valueClass = this.valueClassRef.getRefClass();
 			}
-			if (this.valueClass == null && this.valueClassName != null) {
+			if (this.valueClass == null && this.valueClassName != null
+					&& !this.valueClassName.equals("null")) {
 				this.valueClass = CommonLocator.get().classLookup()
 						.getClassForName(this.valueClassName);
 			}
