@@ -113,6 +113,10 @@ public class DomainTransformEvent implements Serializable,
 			if (this.objectClassRef != null) {
 				this.objectClass = this.objectClassRef.getRefClass();
 			}
+			if (this.objectClass == null && this.objectClassName != null) {
+				this.objectClass = CommonLocator.get().classLookup()
+						.getClassForName(this.objectClassName);
+			}
 		}
 		return this.objectClass;
 	}
@@ -183,6 +187,10 @@ public class DomainTransformEvent implements Serializable,
 			}
 			if (this.valueClassRef != null) {
 				this.valueClass = this.valueClassRef.getRefClass();
+			}
+			if (this.valueClass == null && this.valueClassName != null) {
+				this.valueClass = CommonLocator.get().classLookup()
+						.getClassForName(this.valueClassName);
 			}
 		}
 		return this.valueClass;
