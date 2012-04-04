@@ -18,9 +18,9 @@
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwittir-trunk.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwittir-trunk.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="servlet/servlet-api-2.3.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/servlet/servlet-api/2.3/servlet-api-2.3.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwtx-1.5.2.jar" tocUrl="" url="http://gwtx.googlecode.com/files/gwtx-1.5.2.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-servlet.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.4.0.zip" extractFileName="gwt-servlet.jar" containerPath="gwt-2.4.0.zip" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-user.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.4.0.zip" extractFileName="gwt-user.jar" containerPath="gwt-2.4.0.zip" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-dev.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.4.0.zip" extractFileName="gwt-dev.jar" containerPath="gwt-2.4.0.zip" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-servlet.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://alcina.cc/files/framework/lib/gwt/gwt-servlet.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-user.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://alcina.cc/files/framework/lib/gwt/gwt-user.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-dev.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://alcina.cc/files/framework/lib/gwt/gwt-dev.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/validation-api-1.0.0.GA-sources.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.4.0.zip" extractFileName="validation-api-1.0.0.GA-sources.jar" containerPath="gwt-2.4.0.zip" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/validation-api-1.0.0.GA.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.4.0.zip" extractFileName="validation-api-1.0.0.GA.jar" containerPath="gwt-2.4.0.zip" />
 
