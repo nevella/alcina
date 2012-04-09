@@ -92,7 +92,9 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	public CommitToStorageTransformListener() {
 		resetQueue();
 	}
-
+	public int getTransformQueueSize(){
+		return transformQueue.size();
+	}
 	public synchronized void domainTransform(DomainTransformEvent evt) {
 		if (evt.getCommitType() == CommitType.TO_STORAGE) {
 			String pn = evt.getPropertyName();
