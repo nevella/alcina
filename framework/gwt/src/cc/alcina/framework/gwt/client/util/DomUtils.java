@@ -40,7 +40,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		return CommonConstants.HTML_BLOCKS.contains(","
 				+ e.getTagName().toUpperCase() + ",");
 	}
-
+	
 	private NodeFromXpathProvider nodeProvider = null;
 
 	private ClientNodeIterator walker;
@@ -573,5 +573,16 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 		}
 		return false;
+	}
+	public static List<Element> getChildElements(Element elt){
+		List<Element> result=new ArrayList<Element>();
+		for (int i = 0; i < elt.getChildCount(); i++) {
+			Node child = elt.getChild(i);
+			if (child.getNodeType() == Node.ELEMENT_NODE
+					) {
+				result.add((Element) child);
+			}
+		}
+		return result;
 	}
 }

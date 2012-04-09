@@ -459,10 +459,6 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		this.localStorageInstalled = localStorageInstalled;
 	}
 
-	protected void setPersistedTransforms(
-			Map<Integer, DTRSimpleSerialWrapper> persistedTransforms) {
-		this.persistedTransforms = persistedTransforms;
-	}
 
 	protected void showOfflineLimitMessage() {
 		ClientLayerLocator
