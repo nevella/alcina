@@ -498,8 +498,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
 		preloadWrappedObjects(wrappers);
+		RuntimeException lastException = null;
 		for (HasId wrapper : wrappers) {
-			unwrap(wrapper);
+			try {
+				unwrap(wrapper);
+			} catch (RuntimeException e) {
+				System.out.println(e.getMessage());
+				lastException = e;
+			}
+		}
+		if (lastException != null) {
+			throw lastException;
 		}
 		return wrappers;
 	}
