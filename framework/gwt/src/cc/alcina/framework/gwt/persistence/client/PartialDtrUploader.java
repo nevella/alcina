@@ -42,6 +42,7 @@ public class PartialDtrUploader {
 
 	private int errorCountCurrentRequest;
 
+	@SuppressWarnings("unused")
 	private int errorCountCurrentTotal;
 
 	private int currentSliceSize = INITIAL_SLICE_SIZE;

@@ -47,7 +47,7 @@ public class RelativePopupPositioning {
 		RelativePopupPositioningParams params = new RelativePopupPositioningParams();
 		params.positioningStrategy = positioningStrategy;
 		params.mouseEvent = mouseEvent;
-		params.shiftToEventXY=true;
+		params.shiftToEventXY = true;
 		return params;
 	}
 
@@ -159,26 +159,26 @@ public class RelativePopupPositioning {
 						if (x + rw > bw) {
 							x = bw - rw;
 						}
+						y += positioningParams.shiftY;
 						break;
 					case RIGHT_OR_LEFT_WITH_PREFERRED_TOP:
-						x+=2;
+						x += 2;
 						int clientY = positioningParams.mouseEvent.getClientY();
 						int clientHeight = Window.getClientHeight();
-						int oy=0;
-						
-						
-						if(clientY>positioningParams.preferredTop){
-							oy=Math.min(rh, clientY);
-							oy=Math.max(0, oy-positioningParams.preferredFromBottom);
-						}else{
-							oy=Math.min(positioningParams.preferredTop, clientY);
+						int oy = 0;
+						if (clientY > positioningParams.preferredTop) {
+							oy = Math.min(rh, clientY);
+							oy = Math.max(0, oy
+									- positioningParams.preferredFromBottom);
+						} else {
+							oy = Math.min(positioningParams.preferredTop,
+									clientY);
 						}
-						y-=oy;
-						if(rw+x>bw){
-							x-=(rw+4);
-						}else{
+						y -= oy;
+						if (rw + x > bw) {
+							x -= (rw + 4);
+						} else {
 						}
-						
 						break;
 					}
 					x += boundingWidget.getAbsoluteLeft();
@@ -271,6 +271,8 @@ public class RelativePopupPositioning {
 		public OtherPositioningStrategy positioningStrategy;
 
 		public boolean shiftToEventXY = false;
+
+		public int shiftY;
 
 		public int preferredLeft;
 

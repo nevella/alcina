@@ -61,6 +61,7 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 
 		private Iterator<DTRSimpleSerialWrapper> transformIterator;
 
+		@SuppressWarnings("unused")
 		private int strlenProcessed = 0;
 
 		private DTRSimpleSerialWrapper wr;
