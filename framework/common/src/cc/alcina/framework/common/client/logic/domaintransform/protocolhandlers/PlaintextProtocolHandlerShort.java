@@ -100,15 +100,10 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 	}
 
 	public List<DomainTransformEvent> deserialize(String serializedEvents) {
-		List<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>();
-		SimpleStringParser p = new SimpleStringParser(serializedEvents);
-		String s;
-		maybeDeserializeStringLookup(p);
-		while ((s = p.read(getDomainTransformEventMarker(),
-				getDomainTransformEventMarker(), false, false)) != null) {
-			items.add(fromString(s));
-		}
-		return items;
+		List<DomainTransformEvent> events = new ArrayList<DomainTransformEvent>();
+		asyncParser = null;
+		deserialize(serializedEvents, events, Integer.MAX_VALUE);
+		return events;
 	}
 
 	public void maybeDeserializeStringLookup(SimpleStringParser p) {
@@ -135,7 +130,7 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		int i = 0;
 		String s;
 		while ((s = asyncParser.read(getDomainTransformEventMarker(),
-				getDomainTransformEventMarker(), true, false)) != null) {
+				getDomainTransformEventMarker(), false, false)) != null) {
 			events.add(fromString(s));
 			if (i++ == maxCount) {
 				break;
@@ -225,9 +220,10 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		dte.setPropertyName(pName);
 		String commitTypeStr = getString(p.read("", ","));
 		dte.setCommitType(CommitType.valueOf(commitTypeStr));
-		dte.setTransformType(TransformType.valueOf(getString(p.read("","\n"))));
+		dte.setTransformType(TransformType.valueOf(getString(p.read("", "\n"))));
 		i = getString(p.read("", "\n"));
-		dte.setNewStringValue(i==null?null:i.indexOf("\\") == -1 ? i : unescape(i));
+		dte.setNewStringValue(i == null ? null : i.indexOf("\\") == -1 ? i
+				: unescape(i));
 		i = getString(p.read("", ","));
 		dte.setValueClassName(i);// just in case we're in a no-classref
 									// environment

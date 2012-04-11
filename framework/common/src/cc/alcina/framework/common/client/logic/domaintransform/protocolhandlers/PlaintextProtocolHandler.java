@@ -103,14 +103,10 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 	}
 
 	public List<DomainTransformEvent> deserialize(String serializedEvents) {
-		List<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>();
-		SimpleStringParser p = new SimpleStringParser(serializedEvents);
-		String s;
-		while ((s = p.read(getDomainTransformEventMarker(),
-				getDomainTransformEventMarker(), true, false)) != null) {
-			items.add(fromString(s));
-		}
-		return items;
+		List<DomainTransformEvent> events = new ArrayList<DomainTransformEvent>();
+		asyncParser=null;
+		deserialize(serializedEvents, events, Integer.MAX_VALUE);
+		return events;
 	}
 
 	public String deserialize(String serializedEvents,
