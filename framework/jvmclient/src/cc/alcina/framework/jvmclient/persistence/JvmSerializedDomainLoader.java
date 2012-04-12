@@ -52,6 +52,13 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 		new DTEDeserializer(transforms, initialEvents).run();
 	}
 
+	protected void addRemoteNoLocalYesDtrToStorageQueue(
+			DomainTransformRequest persist) {
+		CommitToStorageTransformListener tl = ClientLayerLocator.get()
+				.getCommitToStorageTransformListener();
+		tl.getPriorRequestsWithoutResponse().add(persist);
+	}
+
 	public class DTEDeserializer {
 		private List<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>();
 
@@ -109,7 +116,8 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 						persist.setTag(wr.getTag());
 						LocalTransformPersistence.get()
 								.getPersistedTransforms().put(requestId, wr);
-						tl.getPriorRequestsWithoutResponse().add(persist);
+						
+						addRemoteNoLocalYesDtrToStorageQueue(persist);
 					}
 				}
 				protocolHandler = new DTRProtocolSerializer().getHandler(wr
