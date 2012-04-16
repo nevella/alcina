@@ -996,7 +996,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return true;
 	}
 
-	protected void clearTransforms() {
+	public void clearTransforms() {
 		getTransforms().clear();
 		for (CommitType ct : transformsByType.keySet()) {
 			transformsByType.get(ct).clear();

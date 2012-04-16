@@ -326,4 +326,9 @@ public abstract class SerializedDomainLoader {
 
 	protected abstract void replayTransforms(
 			List<DomainTransformEvent> initialEvents);
+	
+
+	protected void clearInitialEvents() {
+		initialEvents.clear();
+	}
 }

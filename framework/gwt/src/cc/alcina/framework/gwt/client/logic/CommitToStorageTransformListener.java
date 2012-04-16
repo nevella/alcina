@@ -14,7 +14,6 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -94,6 +93,9 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 	public int getTransformQueueSize(){
 		return transformQueue.size();
+	}
+	protected void clearPriorRequestsWithoutResponse() {
+		priorRequestsWithoutResponse.clear();
 	}
 	public synchronized void domainTransform(DomainTransformEvent evt) {
 		if (evt.getCommitType() == CommitType.TO_STORAGE) {
@@ -377,8 +379,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 	@Override
 	protected void fireStateChanged(String newState) {
-		super.fireStateChanged(newState);
 		currentState = newState;
+		super.fireStateChanged(newState);
 	}
 
 	/*
