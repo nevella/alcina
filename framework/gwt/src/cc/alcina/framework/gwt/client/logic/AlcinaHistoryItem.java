@@ -108,7 +108,7 @@ public class AlcinaHistoryItem {
 	}
 
 	public String toTokenString() {
-		return AlcinaHistory.get().toHash(params);
+		return AlcinaHistory.toHash(params);
 	}
 
 	public int getY() {

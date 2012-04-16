@@ -574,15 +574,19 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 		return false;
 	}
-	public static List<Element> getChildElements(Element elt){
+	public static List<Element> nodeListToElementList(NodeList list){
 		List<Element> result=new ArrayList<Element>();
-		for (int i = 0; i < elt.getChildCount(); i++) {
-			Node child = elt.getChild(i);
-			if (child.getNodeType() == Node.ELEMENT_NODE
+		int length = list.getLength();
+		for (int i = 0; i < length; i++) {
+			Node node = list.getItem(i);
+			if (node.getNodeType() == Node.ELEMENT_NODE
 					) {
-				result.add((Element) child);
+				result.add((Element) node);
 			}
 		}
 		return result;
+	}
+	public static List<Element> getChildElements(Element elt){
+		return nodeListToElementList(elt.getChildNodes());
 	}
 }

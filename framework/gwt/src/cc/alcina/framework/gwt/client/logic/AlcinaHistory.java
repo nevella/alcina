@@ -20,8 +20,10 @@ import java.util.Map;
 
 import com.google.gwt.user.client.History;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.URLComponentEncoder;
 
 /**
  * 
@@ -171,9 +173,10 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 		this.noHistoryDisabled = noHistoryDisabled;
 	}
 
-	public String toHash(Map<String, String> params) {
+	public static String toHash(Map<String, String> params) {
 		StringBuffer sb = new StringBuffer();
 		ArrayList<String> keys = new ArrayList<String>(params.keySet());
+		URLComponentEncoder encoder = CommonLocator.get().urlComponentEncoder();
 		Collections.sort(keys);
 		for (String k : keys) {
 			if (params.get(k) == null) {
@@ -184,7 +187,7 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 			}
 			sb.append(k);
 			sb.append("=");
-			sb.append(params.get(k).toString());
+			sb.append(encoder.encode(params.get(k).toString()));
 		}
 		return sb.toString();
 	}
