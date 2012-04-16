@@ -731,4 +731,9 @@ public class CommonUtils {
 			throwable = throwable.getCause();
 		}
 	}
+
+	public static int compareFloats(float f1, float f2) {
+		return (f1 < f2 ? -1 : (f1 == f2 ? 0 : 1));
+		
+	}
 }

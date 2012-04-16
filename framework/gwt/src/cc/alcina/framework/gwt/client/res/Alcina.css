@@ -1411,3 +1411,68 @@ div.popdown-select a,div.popdown-select a:link {
 div.popdown-select a:hover {
 	text-decoration: underline;
 }
+
+/** progress bar **/
+.alcina-ProgressBar-shell {
+	border: 1px solid #faf9f7;
+	border-right: 1px solid #848280;
+	border-bottom: 1px solid #848280;
+	background-color: #AAAAAA;
+	width: 50%;
+	height: 12pt;
+}
+
+.alcina-ProgressBar-shell .alcina-ProgressBar-bar {
+	background-color: #67A7E3;
+}
+
+.alcina-ProgressBar-shell .alcina-ProgressBar-text {
+	padding: 0px;
+	margin: 0px;
+	color: white;
+}
+/** slider bar **/
+
+/**
+ * Applied to SliderBar.
+ */
+.gwt-SliderBar-shell {
+  border: 2px solid #faf9f7;
+  border-right: 2px solid #848280;
+  border-bottom: 2px solid #848280;
+  background-color: #efebe7;
+  height: 34pt;
+  width: 50%;
+}
+.gwt-SliderBar-shell .gwt-SliderBar-line {
+  border: 1px solid black;
+  background-color: white;
+  height: 4px;
+  width: 95%;
+  top: 22pt;
+  overflow: hidden;
+}
+.gwt-SliderBar-shell .gwt-SliderBar-knob {
+  top: 14pt;
+  width: 11px;
+  height: 21px;
+  cursor: pointer;
+}
+.gwt-SliderBar-shell .gwt-SliderBar-tick {
+  top: 12pt;
+  width: 1px;
+  height: 8pt;
+  background: black;
+  overflow: hidden;
+}
+.gwt-SliderBar-shell .gwt-SliderBar-label {
+  top: 2pt;
+  font-size: 8pt;
+  cursor: default;
+}
+.gwt-SliderBar-shell-focused {
+}
+.gwt-SliderBar-shell .gwt-SliderBar-line-sliding {
+  background-color: #DDDDDD;
+  cursor: pointer;
+}
