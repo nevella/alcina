@@ -35,6 +35,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.URIResolver;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
@@ -379,19 +380,25 @@ public class XmlUtils {
 
 	public static void transformDoc(Source xmlSource, Source xsltSource,
 			StreamResult sr) throws Exception {
-		transformDoc(xmlSource, xsltSource, sr, null);
+		transformDoc(xmlSource, xsltSource, sr, null, null);
 	}
 
 	public static String transformDocToString(Source dataSource, Source trSource)
 			throws Exception {
-		return transformDocToString(dataSource, trSource, null);
+		return transformDocToString(dataSource, trSource, null, null);
 	}
 
 	public static String transformDocToString(Source dataSource,
 			Source trSource, String marker) throws Exception {
+		return transformDocToString(dataSource, trSource, marker, null);
+	}
+
+	public static String transformDocToString(Source dataSource,
+			Source trSource, String marker,
+			TransformerFactoryConfigurator configurator) throws Exception {
 		StringWriter wr = new StringWriter();
 		StreamResult streamResult = new StreamResult(wr);
-		transformDoc(dataSource, trSource, streamResult, marker);
+		transformDoc(dataSource, trSource, streamResult, marker, configurator);
 		return wr.toString();
 	}
 
@@ -401,11 +408,19 @@ public class XmlUtils {
 				: new StreamResult(w));
 	}
 
+	public static interface TransformerFactoryConfigurator {
+		public void configure(TransformerFactory transformerFactory);
+	}
+
 	private static void transformDoc(Source xmlSource, Source xsltSource,
-			StreamResult sr, String cacheMarker) throws Exception {
+			StreamResult sr, String cacheMarker,
+			TransformerFactoryConfigurator configurator) throws Exception {
 		Transformer trans = null;
 		if (cacheMarker == null || !transformerMap.containsKey(cacheMarker)) {
 			TransformerFactory transFact = TransformerFactory.newInstance();
+			if (configurator != null) {
+				configurator.configure(transFact);
+			}
 			trans = xsltSource == null ? transFact.newTransformer() : transFact
 					.newTransformer(xsltSource);
 			transformerMap.put(cacheMarker, trans);
