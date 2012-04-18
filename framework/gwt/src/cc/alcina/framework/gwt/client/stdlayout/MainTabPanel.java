@@ -206,6 +206,8 @@ public class MainTabPanel extends TabPanel {
 		int oh = w2.getOffsetHeight();
 		if (w2.getOffsetHeight() < scrollHeight) {
 			w2.setHeight(scrollHeight + "px");
+		}else{
+			w2.setHeight("auto");
 		}
 		return scrollHeight;
 	}
