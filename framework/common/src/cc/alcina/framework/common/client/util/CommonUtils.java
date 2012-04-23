@@ -27,8 +27,6 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 
 @SuppressWarnings("unchecked")
 /**
@@ -734,6 +732,17 @@ public class CommonUtils {
 
 	public static int compareFloats(float f1, float f2) {
 		return (f1 < f2 ? -1 : (f1 == f2 ? 0 : 1));
-		
+	}
+
+	@SuppressWarnings("deprecation")
+	public static Date yearAsDate(Integer year) {
+		if (year == null) {
+			year = 0;
+		}
+		Date d = new Date(0);
+		d.setYear(year - 1900);
+		d.setMonth(0);
+		d.setDate(1);
+		return d;
 	}
 }

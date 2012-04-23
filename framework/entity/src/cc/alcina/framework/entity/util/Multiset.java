@@ -28,11 +28,11 @@ import java.util.Set;
  */
 @SuppressWarnings("unchecked")
 public class Multiset<K, V extends Set> extends LinkedHashMap<K, V> {
-	public void add(K key, Object item) {
+	public boolean add(K key, Object item) {
 		if (!containsKey(key)) {
 			put(key, (V) new LinkedHashSet());
 		}
-		get(key).add(item);
+		return get(key).add(item);
 	}
 
 	public void remove(K key, Object item) {

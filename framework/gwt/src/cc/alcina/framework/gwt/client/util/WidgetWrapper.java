@@ -66,7 +66,9 @@ public class WidgetWrapper extends Composite implements HasClickHandlers {
 					fp.add(w);
 				} else {
 					ctr.appendChild(e2);
-					fp.add(new HTML(ctr.getInnerHTML()));
+					HTML html = new HTML(ctr.getInnerHTML());
+					html.setStyleName("");
+					fp.add(html);
 					ctr.removeChild(e2);
 				}
 			}
