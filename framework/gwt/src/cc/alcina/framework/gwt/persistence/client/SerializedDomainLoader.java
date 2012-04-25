@@ -300,7 +300,8 @@ public abstract class SerializedDomainLoader {
 				ScheduledCommand postRegisterCommand = new ScheduledCommand() {
 					@Override
 					public void execute() {
-						replayTransforms(initialEvents);
+						replayTransforms(new ArrayList<DomainTransformEvent>(initialEvents));
+						initialEvents.clear();//gc
 						postReplayCommand.execute();
 					}
 				};
