@@ -301,7 +301,6 @@ public abstract class SerializedDomainLoader {
 					@Override
 					public void execute() {
 						replayTransforms(initialEvents);
-						initialEvents.clear();
 						postReplayCommand.execute();
 					}
 				};
