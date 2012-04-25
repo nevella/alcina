@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 @BeanInfo(displayNamePropertyName = "displayName")
