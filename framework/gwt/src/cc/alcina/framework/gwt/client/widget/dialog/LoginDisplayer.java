@@ -59,7 +59,7 @@ public class LoginDisplayer {
 
 	private Button okButton;
 
-	private FlexTable grr;
+	private FlexTable table;
 
 	private Widget onProblemWidget = new Label("blank");
 
@@ -81,6 +81,8 @@ public class LoginDisplayer {
 
 	private PasswordTextBox pwdBox;
 
+	private Widget alternateAuthWidget;
+
 	public Label getUsernameLabel() {
 		return this.usernameLabel;
 	}
@@ -99,41 +101,41 @@ public class LoginDisplayer {
 		cancelButton = new Button("Cancel");
 		okButton = new Button("Login");
 		okButton.ensureDebugId(AlcinaDebugIds.LOGIN_SUBMIT);
-		grr = new FlexTable();
-		grr.setWidth("100%");
-		grr.setCellSpacing(2);
+		table = new FlexTable();
+		table.setWidth("100%");
+		table.setCellSpacing(2);
 		this.usernameLabel = new Label("Username: ");
-		grr.setWidget(0, 0, usernameLabel);
+		table.setWidget(0, 0, usernameLabel);
 		nameBox = new TextBox();
 		nameBox.ensureDebugId(AlcinaDebugIds.LOGIN_USERNAME);
-		grr.setWidget(0, 1, nameBox);
-		grr.setWidget(1, 0, new Label("Password: "));
+		table.setWidget(0, 1, nameBox);
+		table.setWidget(1, 0, new Label("Password: "));
 		pwdBox = new PasswordTextBox();
 		pwdBox.ensureDebugId(AlcinaDebugIds.LOGIN_PASSWORD);
-		grr.setWidget(1, 1, pwdBox);
+		table.setWidget(1, 1, pwdBox);
 		pwdBox.addKeyPressHandler(new EnterAsClickKeyboardListener(pwdBox,
 				okButton));
 		rememberMeBox = new CheckBox();
 		rememberMeBox.setValue(true);
-		grr.setWidget(2, 0, rememberMeBox);
-		grr.getCellFormatter().setHorizontalAlignment(2, 0,
+		table.setWidget(2, 0, rememberMeBox);
+		table.getCellFormatter().setHorizontalAlignment(2, 0,
 				HasHorizontalAlignment.ALIGN_RIGHT);
-		grr.getCellFormatter().setHorizontalAlignment(1, 0,
+		table.getCellFormatter().setHorizontalAlignment(1, 0,
 				HasHorizontalAlignment.ALIGN_RIGHT);
-		grr.getCellFormatter().setHorizontalAlignment(0, 0,
+		table.getCellFormatter().setHorizontalAlignment(0, 0,
 				HasHorizontalAlignment.ALIGN_RIGHT);
-		grr.setWidget(2, 1, new Label("Remember me on this computer"));
+		table.setWidget(2, 1, new Label("Remember me on this computer"));
 		statusLabel = new Label("Logging in");
 		statusLabel.setVisible(false);
-		grr.setWidget(4, 1, statusLabel);
+		table.setWidget(4, 1, statusLabel);
 		HorizontalPanel hPanel = new HorizontalPanel();
 		hPanel.setHorizontalAlignment(HorizontalPanel.ALIGN_CENTER);
 		hPanel.setSpacing(5);
 		hPanel.add(okButton);
 		okButton.addStyleName("marginRight10");
 		hPanel.add(cancelButton);
-		grr.setWidget(3, 1, hPanel);
-		fp.add(grr);
+		table.setWidget(3, 1, hPanel);
+		fp.add(table);
 		dialogBox.setWidget(fp);
 	}
 
@@ -185,9 +187,15 @@ public class LoginDisplayer {
 
 	public void setProblemHandlerWidget(Widget onProblemWidget) {
 		this.onProblemWidget = onProblemWidget;
-		grr.setWidget(5, 0, onProblemWidget);
-		grr.getFlexCellFormatter().setHorizontalAlignment(5, 0,
+		table.setWidget(5, 0, onProblemWidget);
+		table.getFlexCellFormatter().setHorizontalAlignment(5, 0,
 				HasHorizontalAlignment.ALIGN_CENTER);
-		grr.getFlexCellFormatter().setColSpan(5, 0, 2);
+		table.getFlexCellFormatter().setColSpan(5, 0, 2);
+	}
+	public void addAlternateAuthWidget(Widget alternateAuthWidget) {
+		table.setWidget(6, 0, alternateAuthWidget);
+		table.getFlexCellFormatter().setHorizontalAlignment(5, 0,
+				HasHorizontalAlignment.ALIGN_CENTER);
+		table.getFlexCellFormatter().setColSpan(5, 0, 2);
 	}
 }
