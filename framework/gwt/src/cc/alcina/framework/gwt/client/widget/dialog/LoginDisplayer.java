@@ -81,7 +81,6 @@ public class LoginDisplayer {
 
 	private PasswordTextBox pwdBox;
 
-	private Widget alternateAuthWidget;
 
 	public Label getUsernameLabel() {
 		return this.usernameLabel;
@@ -194,8 +193,8 @@ public class LoginDisplayer {
 	}
 	public void addAlternateAuthWidget(Widget alternateAuthWidget) {
 		table.setWidget(6, 0, alternateAuthWidget);
-		table.getFlexCellFormatter().setHorizontalAlignment(5, 0,
+		table.getFlexCellFormatter().setHorizontalAlignment(6, 0,
 				HasHorizontalAlignment.ALIGN_CENTER);
-		table.getFlexCellFormatter().setColSpan(5, 0, 2);
+		table.getFlexCellFormatter().setColSpan(6, 0, 2);
 	}
 }

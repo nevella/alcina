@@ -14,6 +14,10 @@
 
 package cc.alcina.framework.gwt.client.widget;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -23,7 +27,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 
- public class SpanPanel extends ComplexPanel {
+ public class SpanPanel extends ComplexPanel implements HasClickHandlers {
 	/**
 	 * Creates an empty span panel.
 	 */
@@ -55,4 +59,7 @@ import com.google.gwt.user.client.ui.Widget;
 	public void insert(Widget w, int beforeIndex) {
 		insert(w, getElement(), beforeIndex, true);
 	}
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+	    return addDomHandler(handler, ClickEvent.getType());
+	  }
 }
