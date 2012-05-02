@@ -81,6 +81,8 @@ public class LoginDisplayer {
 
 	private PasswordTextBox pwdBox;
 
+	private FlowPanel mainPanel;
+
 
 	public Label getUsernameLabel() {
 		return this.usernameLabel;
@@ -90,12 +92,12 @@ public class LoginDisplayer {
 		dialogBox = new GlassDialogBox();
 		dialogBox.setText("Login");
 		dialogBox.setAnimationEnabled(true);
-		FlowPanel fp = new FlowPanel();
-		fp.setStyleName("alcina-Login");
-		fp.ensureDebugId(AlcinaDebugIds.LOGIN_FORM);
+		 mainPanel = new FlowPanel();
+		mainPanel.setStyleName("alcina-Login");
+		mainPanel.ensureDebugId(AlcinaDebugIds.LOGIN_FORM);
 		this.introWidget = new FlowPanel();
 		introWidget.setVisible(false);
-		fp.add(introWidget);
+		mainPanel.add(introWidget);
 		introWidget.setStyleName("intro");
 		cancelButton = new Button("Cancel");
 		okButton = new Button("Login");
@@ -134,8 +136,8 @@ public class LoginDisplayer {
 		okButton.addStyleName("marginRight10");
 		hPanel.add(cancelButton);
 		table.setWidget(3, 1, hPanel);
-		fp.add(table);
-		dialogBox.setWidget(fp);
+		mainPanel.add(table);
+		dialogBox.setWidget(mainPanel);
 	}
 
 	public void showLoginDialog(final PermissibleActionListener listener) {
@@ -196,5 +198,9 @@ public class LoginDisplayer {
 		table.getFlexCellFormatter().setHorizontalAlignment(6, 0,
 				HasHorizontalAlignment.ALIGN_CENTER);
 		table.getFlexCellFormatter().setColSpan(6, 0, 2);
+	}
+
+	public FlowPanel getMainPanel() {
+		return this.mainPanel;
 	}
 }

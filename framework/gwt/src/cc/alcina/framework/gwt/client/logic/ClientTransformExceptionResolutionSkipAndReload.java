@@ -315,7 +315,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 			this.fp = new FlowPanel();
 			blurb = new Label(
 					"Problems occurred saving changes. "
-							+ "The changes you made will be altered for the rest of your work to be saved.");
+							+ "The changes you made will be altered to allow your work to be saved.");
 			blurb.setStyleName("pad-15 italic");
 			fp.add(blurb);
 			fp.add(html);

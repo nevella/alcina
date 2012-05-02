@@ -145,4 +145,7 @@ public interface CommonPersistenceLocal {
 	public <US extends IUser> US getCleanedUserById(long userId);
 
 	public <T> T findImplInstance(Class<? extends T> clazz, long id);
+
+	public abstract <T> T getItemByKeyValue(Class<T> clazz, String key,
+			Object value, boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive);
 }

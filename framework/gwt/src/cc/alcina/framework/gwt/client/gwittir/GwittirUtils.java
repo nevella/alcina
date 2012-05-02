@@ -102,7 +102,8 @@ public class GwittirUtils {
 			}
 			for (Binding b : allBindings) {
 				if (b.getLeft() == null || b.getLeft().object == null
-						|| b.getRight() == null) {
+						|| b.getRight() == null
+						|| !(b.getLeft().object instanceof AbstractBoundWidget)) {
 					continue;
 				}
 				if (onlyPropertyName != null
@@ -148,7 +149,7 @@ public class GwittirUtils {
 					b.getRight().property.getMutatorMethod().invoke(
 							b.getRight().object, new Object[] { value });
 					tb.setValue(tbValue);
-//					binding.setRight();
+					// binding.setRight();
 				}
 			}
 		} catch (Exception e) {

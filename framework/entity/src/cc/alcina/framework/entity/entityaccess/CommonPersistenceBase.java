@@ -637,7 +637,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return result;
 	}
 
-	private <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
+	@Override
+	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
 			boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive) {
 		try {
 			connectPermissionsManagerToLiveObjects();
