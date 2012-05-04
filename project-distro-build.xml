@@ -194,8 +194,8 @@
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
 				<pathelement path="${project.gwt.classpath.bin}" />
-				<pathelement path="${project.gwt.classpath.lib}" />
 				<pathelement path="${framework.gwt.classpath.src}" />
+				<pathelement path="${project.gwt.classpath.lib}" />
 				<pathelement path="${framework.gwt.classpath.bin}" />
 				<pathelement path="${framework.gwt.classpath.lib}" />
 				<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
