@@ -675,7 +675,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
+	public Enum getTargetEnumValue(DomainTransformEvent evt) {
 		return ObjectPersistenceHelper.get().getTargetEnumValue(evt);
 	}
 

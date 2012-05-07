@@ -11,27 +11,34 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
+import com.google.gwt.resources.client.ClientBundle;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Image;
+
 /**
  * Images specific to the current app
+ * 
  * @author nick@alcina.cc
- *
+ * 
  */
-public abstract class ImageProvider {
+public abstract class ImageProvider<CB extends ClientBundle> {
 	protected ImageProvider() {
 	}
 
+	public abstract CB getBundle();
+
 	private static ImageProvider theInstance;
-	public static void register (ImageProvider p){
+
+	public static void register(ImageProvider p) {
 		theInstance = p;
 	}
-	public AbstractImagePrototype getByName(String s){
+
+	public AbstractImagePrototype getByName(String s) {
 		return null;
 	}
+
 	public static ImageProvider get() {
 		return theInstance;
 	}
@@ -39,5 +46,6 @@ public abstract class ImageProvider {
 	public void appShutdown() {
 		theInstance = null;
 	}
+
 	public abstract Image getTransparent();
 }

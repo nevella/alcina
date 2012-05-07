@@ -1011,7 +1011,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
+	public Enum getTargetEnumValue(DomainTransformEvent evt) {
 		if (evt.getNewValue() instanceof Enum) {
 			return (Enum) evt.getNewValue();
 		}
