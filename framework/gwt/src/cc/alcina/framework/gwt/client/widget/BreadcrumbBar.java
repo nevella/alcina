@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import java.util.ArrayList;
@@ -25,10 +24,14 @@ import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -39,11 +42,10 @@ import com.google.gwt.user.client.ui.ToggleButton;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class BreadcrumbBar extends Composite {
+public class BreadcrumbBar extends Composite {
 	private String title;
 
 	public static boolean asHTML = false;
@@ -171,10 +173,86 @@ import com.google.gwt.user.client.ui.Widget;
 		}
 	}
 
+	public static class BreadcrumbBarMaximiseButton2 extends Composite
+			implements ClickHandler {
+		private ToggleButton toggleButton;
+
+		private Widget widgetToMaximise;
+
+
+		private int top;
+
+		private int left;
+
+		public BreadcrumbBarMaximiseButton2() {
+			this.toggleButton = new ToggleButton(AbstractImagePrototype.create(
+					images.maximise2()).createImage(), AbstractImagePrototype
+					.create(images.minimise2()).createImage());
+			toggleButton.getUpHoveringFace().setImage(
+					AbstractImagePrototype.create(images.maximise2over())
+							.createImage());
+			toggleButton.getDownHoveringFace().setImage(
+					AbstractImagePrototype.create(images.minimise2over())
+							.createImage());
+			toggleButton.addClickHandler(this);
+			initWidget(toggleButton);
+		}
+
+		public void setWidgetToMaximise(Widget widgetToMaximise) {
+			this.widgetToMaximise = widgetToMaximise;
+		}
+
+		public Widget getWidgetToMaximise() {
+			return widgetToMaximise;
+		}
+
+		public void toggle() {
+			toggleButton.setDown(!toggleButton.isDown());
+			onClick(null);
+		}
+
+		public void setTitle(String title) {
+			toggleButton.setTitle(title);
+		}
+
+		public void onClick(ClickEvent event) {
+			if (toggleButton.isDown()) {
+				top = Window.getScrollTop();
+				left = Window.getScrollLeft();
+				WidgetUtils.maximiseWidget(widgetToMaximise);
+			} else {
+				WidgetUtils.restoreFromMaximise();
+				LayoutEvents.get().fireLayoutEvent(
+						new LayoutEvent(
+								LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
+				new Timer(){
+
+					@Override
+					public void run() {
+						Window.scrollTo(left, top);						
+					}
+				}.schedule(500);
+			}
+		}
+
+		public ToggleButton getToggleButton() {
+			return this.toggleButton;
+		}
+
+		public boolean isDown() {
+			return this.toggleButton.isDown();
+		}
+
+		public HandlerRegistration addClickHandler(ClickHandler handler) {
+			return this.toggleButton.addClickHandler(handler);
+		}
+	}
+
 	public static class BreadcrumbBarButton extends Composite implements
 			HasClickHandlers {
 		protected APanel panel;
-		private  boolean asHtml;
+
+		private boolean asHtml;
 
 		public BreadcrumbBarButton() {
 			this.panel = new APanel();
@@ -192,9 +270,10 @@ import com.google.gwt.user.client.ui.Widget;
 			this.asHtml = asHtml;
 			setText(text);
 		}
+
 		public void setText(String text) {
 			panel.clear();
-			panel.add(BreadcrumbBar.asHTML ||this.asHtml? new InlineHTML(text)
+			panel.add(BreadcrumbBar.asHTML || this.asHtml ? new InlineHTML(text)
 					: new InlineLabel(text));
 		}
 

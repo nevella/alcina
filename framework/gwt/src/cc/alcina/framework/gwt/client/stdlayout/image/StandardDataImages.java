@@ -38,6 +38,14 @@ public interface StandardDataImages extends ClientBundle, Resources {
 
 	ImageResource minimise();
 
+	ImageResource minimise2();
+
+	ImageResource minimise2over();
+
+	ImageResource maximise2();
+
+	ImageResource maximise2over();
+
 	ImageResource error();
 
 	ImageResource errorSmall();
