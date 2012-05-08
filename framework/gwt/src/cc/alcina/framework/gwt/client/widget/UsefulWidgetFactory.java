@@ -27,7 +27,7 @@ import com.google.gwt.user.client.ui.Widget;
 
  public class UsefulWidgetFactory {
 
-	public static Widget mediumTitleWidget(String title) {
+	public static FlowPanel mediumTitleWidget(String title) {
 		FlowPanel fp = new FlowPanel();
 		fp.setStyleName("medium-title");
 		Label l = new HTML(title);
@@ -35,7 +35,7 @@ import com.google.gwt.user.client.ui.Widget;
 		fp.add(l);
 		return fp;
 	}
-	public static Widget lowTitleWidget(String title) {
+	public static FlowPanel lowTitleWidget(String title) {
 		FlowPanel fp = new FlowPanel();
 		fp.setStyleName("low-title");
 		Label l = new HTML(title);
