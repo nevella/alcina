@@ -21,6 +21,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -69,7 +70,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 				new PermissibleActionListener() {
 					public void vetoableAction(PermissibleActionEvent evt) {
 						if (evt.getAction().getActionName()
-								.equals(OkCancelDialogBox.OK_ACTION)) {
+								.equals(OkAction.INSTANCE)) {
 							callback.ok();
 						}
 					}

@@ -13,9 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.widget.dialog;
 
-import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.CancelAction;
+import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
@@ -36,10 +37,6 @@ import com.totsp.gwittir.client.beans.Binding;
  * @author Nick Reddel
  */
 public class OkCancelDialogBox extends GlassDialogBox {
-	public static final String CANCEL_ACTION = "cancel";
-
-	public static final String OK_ACTION = "ok";
-
 	protected Button cancelButton;
 
 	protected Button okButton;
@@ -82,11 +79,10 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		cancelButton = new Button("Cancel");
 		cancelButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				PermissibleAction action = new PermissibleAction();
-				action.setActionName(CANCEL_ACTION);
 				OkCancelDialogBox.this.hide();
 				vetoableActionListener
-						.vetoableAction(new PermissibleActionEvent(this, action));
+						.vetoableAction(new PermissibleActionEvent(this,
+								CancelAction.INSTANCE));
 			}
 		});
 		okButton = new Button(getOKButtonName());
@@ -113,12 +109,10 @@ public class OkCancelDialogBox extends GlassDialogBox {
 			return;
 		}
 		okButton.setEnabled(false);
-		PermissibleAction action = new PermissibleAction();
-		action.setActionName(OK_ACTION);
 		OkCancelDialogBox.this.hide();
 		if (vetoableActionListener != null) {
 			vetoableActionListener.vetoableAction(new PermissibleActionEvent(
-					this, action));
+					this, OkAction.INSTANCE));
 		}
 	}
 

@@ -3,9 +3,9 @@ package cc.alcina.framework.gwt.client.logic;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
@@ -155,12 +155,10 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 					return;
 				}
 				okButton.setEnabled(false);
-				PermissibleAction action = new PermissibleAction();
-				action.setActionName(OK_ACTION);
 				if (vetoableActionListener != null) {
 					vetoableActionListener
 							.vetoableAction(new PermissibleActionEvent(this,
-									action));
+									OkAction.INSTANCE));
 				}
 			}
 		};

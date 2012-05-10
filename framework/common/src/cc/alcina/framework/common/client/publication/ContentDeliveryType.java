@@ -11,27 +11,24 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.publication;
 
-
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface ContentDeliveryType {
+public interface ContentDeliveryType {
 	public interface DELIVERY_EMAIL extends ContentDeliveryType {
 	}
-	//note, no handler for this - it's pushed to the client earlier in the publish cycle
+
+	// note, no handler for this - it's pushed to the client earlier in the
+	// publish cycle
 	public interface DELIVERY_PRINT extends ContentDeliveryType {
 	}
+
 	public interface DELIVERY_DOWNLOAD_ATTACHMENT extends ContentDeliveryType {
 	}
 
 	public interface DELIVERY_DOWNLOAD_PREVIEW extends ContentDeliveryType {
 	}
-
-	
 }

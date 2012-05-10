@@ -12,13 +12,24 @@
  * the License.
  */
 
-package cc.alcina.framework.common.client.publication.request;
+package cc.alcina.framework.common.client.actions.instances;
+
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.provider.TextProvider;
 
 /**
  *
  * @author Nick Reddel
  */
 
- public enum PublicationDeliveryMode {
-	PREVIEW, DOWNLOAD, PRINT, EMAIL, SEND_TO_REPOSITORY
+ public class OkAction extends PermissibleAction {
+	 public static final OkAction INSTANCE=new OkAction();
+	@Override
+	public String getDisplayName() {
+		return TextProvider.get().getUiObjectText(getClass(),
+				TextProvider.DISPLAY_NAME, "OK");
+	}
+	private OkAction(){
+		
+	}
 }

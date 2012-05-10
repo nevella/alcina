@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
@@ -73,7 +74,7 @@ public class OptionsHandler implements LoginStateVisibleWithWidget,
 	}
 
 	public void vetoableAction(PermissibleActionEvent evt) {
-		if (evt.getAction().getActionName().equals(OkCancelDialogBox.OK_ACTION)) {
+		if (evt.getAction()==OkAction.INSTANCE) {
 			TransformManager.get().promoteToDomainObject(beans);
 		} else {
 			TransformManager.get().deregisterProvisionalObjects(beans);

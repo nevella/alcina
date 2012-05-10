@@ -136,6 +136,9 @@ public class ResourceUtilities {
 		ResourceBundle b = ResourceBundle.getBundle(clazz.getPackage()
 				.getName() + ".Bundle", Locale.getDefault(),
 				clazz.getClassLoader());
+		if(b.keySet().contains(namespacedKey)){
+			return b.getString(namespacedKey);
+		}
 		return b.getString(propertyName);
 	}
 

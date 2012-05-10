@@ -11,20 +11,24 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions.instances;
 
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.provider.TextProvider;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public class CancelAction extends PermissibleAction {
+	public static final CancelAction INSTANCE = new CancelAction();
 
- public class CancelAction extends ToolbarAction {
 	@Override
 	public String getDisplayName() {
 		return TextProvider.get().getUiObjectText(getClass(),
 				TextProvider.DISPLAY_NAME, "Cancel");
+	}
+
+	private CancelAction() {
 	}
 }

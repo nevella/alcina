@@ -15,8 +15,10 @@ package cc.alcina.framework.gwt.client.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.Callback;
@@ -546,12 +548,28 @@ public class WidgetUtils {
 		}
 		hiddenWidgets = null;
 	}
-
 	@SuppressWarnings("unchecked")
 	public static <W extends Widget> W getParentWidget(Widget w,
 			Class<W> widgetClass) {
 		while (w != null) {
 			if (w.getClass() == widgetClass) {
+				return (W) w;
+			}
+			w = w.getParent();
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <W extends Widget> W getParentWidgetWithSupers(Widget w,
+			Class<W> widgetClass) {
+		Set<Class> supers=new HashSet<Class>();
+		while(widgetClass!=Widget.class){
+			supers.add(widgetClass);
+			widgetClass=(Class) widgetClass.getSuperclass();
+		}
+		while (w != null) {
+			if (supers.contains(w.getClass())) {
 				return (W) w;
 			}
 			w = w.getParent();

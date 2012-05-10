@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
@@ -186,7 +187,7 @@ public class LayoutManager {
 		PermissibleActionListener l = new PermissibleActionListener() {
 			public void vetoableAction(PermissibleActionEvent evt) {
 				previewBox.hide();
-				if (evt.getAction().getActionName() == OkCancelDialogBox.OK_ACTION) {
+				if (evt.getAction()==OkAction.INSTANCE) {
 					Window.open(result, "BarNet AlcinaTemplate", null);
 				}
 			}
