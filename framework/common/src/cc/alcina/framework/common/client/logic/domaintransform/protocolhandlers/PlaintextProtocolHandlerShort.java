@@ -22,19 +22,22 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 
 	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\ndte:";
 
-	public static String escape(String newStringValue) {
-		return newStringValue == null
-				|| (newStringValue.indexOf("\n") == -1 && newStringValue
-						.indexOf("\\") != -1) ? newStringValue : newStringValue
-				.replace("\\", "\\\\").replace("\n", "\\n");
+	private static String escape(String str) {
+		return str == null
+		|| (str.indexOf("\n") == -1 && str
+				.indexOf("\\") == -1) ? str : str
+						.replace("\\", "\\\\").replace("\n", "\\n");
 	}
 
-	public static String unescape(String s) {
+	public static String unescape(String str) {
+		if (str == null) {
+			return null;
+		}
 		int idx = 0, x = 0;
-		StringBuffer sb = new StringBuffer();
-		while ((idx = s.indexOf("\\", x)) != -1) {
-			sb.append(s.substring(x, idx));
-			char c = s.charAt(idx + 1);
+		StringBuilder sb = new StringBuilder();
+		while ((idx = str.indexOf("\\", x)) != -1) {
+			sb.append(str.substring(x, idx));
+			char c = str.charAt(idx + 1);
 			switch (c) {
 			case '\\':
 				sb.append("\\");
@@ -45,7 +48,7 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 			}
 			x = idx + 2;
 		}
-		sb.append(s.substring(x));
+		sb.append(str.substring(x));
 		return sb.toString();
 	}
 
@@ -78,12 +81,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		appendString(domainTransformEvent.getCommitType().toString(), sb);
 		sb.append(",");
 		appendString(domainTransformEvent.getTransformType().toString(), sb);
-		// no date
-		// sb.append(",");
-		// sb.append(SimpleStringParser
-		// .toString(domainTransformEvent.getUtcDate() == null ? System
-		// .currentTimeMillis() : domainTransformEvent
-		// .getUtcDate().getTime()));
 		sb.append("\n");
 		appendString(ns, sb);
 		sb.append("\n");
@@ -198,8 +195,8 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 
 	/*
 	 * Note - the way client handshake works, if this is called from a
-	 * "from-offline upload" (partialdtruploader)we won't have any classrefs -
-	 * so the setXXClassRef calls will just set a nullThis means upload calls
+	 * "from-offline upload" (partialdtruploader) we won't have any classrefs -
+	 * so the setXXClassRef calls will just set a null. This means upload calls
 	 * are not tied to any (app) class structure, so will at least make it and
 	 * be stored on the server.
 	 * 
@@ -212,7 +209,7 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		SimpleStringParser p = new SimpleStringParser(s);
 		String i = getString(p.read("\n", ","));
 		dte.setObjectClassName(i);// just in case we're in a no-classref
-									// environment
+		// environment
 		dte.setObjectClassRef(ClassRef.forName(i));
 		dte.setObjectId(p.readLongShort("", ","));
 		dte.setObjectLocalId(p.readLongShort("", "\n"));
@@ -222,11 +219,10 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		dte.setCommitType(CommitType.valueOf(commitTypeStr));
 		dte.setTransformType(TransformType.valueOf(getString(p.read("", "\n"))));
 		i = getString(p.read("", "\n"));
-		dte.setNewStringValue(i == null ? null : i.indexOf("\\") == -1 ? i
-				: unescape(i));
+		dte.setNewStringValue(unescape(i));
 		i = getString(p.read("", ","));
 		dte.setValueClassName(i);// just in case we're in a no-classref
-									// environment
+		// environment
 		dte.setValueClassRef(ClassRef.forName(i));
 		dte.setValueId(p.readLongShort("", ","));
 		dte.setValueLocalId(p.readLongShort("", "\n"));

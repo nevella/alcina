@@ -316,7 +316,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 									.getUiObjectText(
 											ClientNotificationsImpl.class,
 											LT_NOTIFY_COMPLETED_SAVE,
-											"Save work from previous session to server completed"));
+											"Your offline work has been saved to the server"));
 		}
 	}
 

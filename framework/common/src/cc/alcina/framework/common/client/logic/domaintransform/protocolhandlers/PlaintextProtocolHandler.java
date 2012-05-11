@@ -28,19 +28,22 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\nDomainTransformEvent:";
 
-	public static String escape(String newStringValue) {
-		return newStringValue == null
-				|| (newStringValue.indexOf("\n") == -1 && newStringValue
-						.indexOf("\\") != -1) ? newStringValue : newStringValue
-				.replace("\\", "\\\\").replace("\n", "\\n");
+	private static String escape(String str) {
+		return str == null
+		|| (str.indexOf("\n") == -1 && str
+				.indexOf("\\") == -1) ? str : str
+						.replace("\\", "\\\\").replace("\n", "\\n");
 	}
 
-	public static String unescape(String s) {
+	public static String unescape(String str) {
+		if (str == null) {
+			return null;
+		}
 		int idx = 0, x = 0;
-		StringBuffer sb = new StringBuffer();
-		while ((idx = s.indexOf("\\", x)) != -1) {
-			sb.append(s.substring(x, idx));
-			char c = s.charAt(idx + 1);
+		StringBuilder sb = new StringBuilder(str.length()*2);
+		while ((idx = str.indexOf("\\", x)) != -1) {
+			sb.append(str.substring(x, idx));
+			char c = str.charAt(idx + 1);
 			switch (c) {
 			case '\\':
 				sb.append("\\");
@@ -51,7 +54,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			}
 			x = idx + 2;
 		}
-		sb.append(s.substring(x));
+		sb.append(str.substring(x));
 		return sb.toString();
 	}
 
@@ -193,7 +196,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			dte.setTransformType(TransformType.valueOf(p.read("", "\n")));
 		}
 		i = p.read(STRING_VALUE, "\n");
-		dte.setNewStringValue(i.indexOf("\\") == -1 ? i : unescape(i));
+		dte.setNewStringValue(unescape(i));
 		i = p.read(TGT, ",");
 		dte.setValueClassName(i);// just in case we're in a no-classref
 									// environment

@@ -109,6 +109,7 @@ public class PartialDtrUploader {
 		this.postPersistOfflineTransformsCallback = postPersistOfflineTransformsCallback;
 		for (DTRSimpleSerialWrapper wrapper : uncommitted) {
 			DomainTransformRequest rq = new DomainTransformRequest();
+			rq.setProtocolVersion(wrapper.getProtocolVersion());
 			rq.fromString(wrapper.getText());
 			clientInstanceIds.add(wrapper.getClientInstanceId());
 			deserTransforms.put(wrapper, rq.getEvents());

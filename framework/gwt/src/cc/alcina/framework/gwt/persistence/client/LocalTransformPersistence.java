@@ -532,11 +532,14 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		StringBuffer sb = new StringBuffer();
 
 		private List<DomainTransformEvent> items;
+		
+		DTRProtocolHandler handler;
 
 		public DTRAsyncSerializer(DomainTransformRequest dtr) {
 			super(1000, 200);
 			wrapper = new DTRSimpleSerialWrapper(dtr, true);
 			items = dtr.getEvents();
+			handler = new DTRProtocolSerializer().getHandler(getSerializationPolicy().getTransformPersistenceProtocol());
 		}
 
 		@Override
@@ -546,6 +549,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 		protected void onComplete() {
 			ClientLayerLocator.get().notifications().metricLogStart("persist");
+			sb=handler.finishSerialization(sb);
 			wrapper.setText(sb.toString());
 			persist(wrapper, new PersistenceCallbackStd() {
 				@Override
@@ -561,13 +565,10 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			int max = Math.min(index + iterationCount, items.size());
 			StringBuffer sb2 = new StringBuffer();
 			lastPassIterationsPerformed = max - index;
-			DTRProtocolHandler handler = new DTRProtocolSerializer()
-					.getHandler(getSerializationPolicy().getTransformPersistenceProtocol());
 			for (; index < max; index++) {
 				handler.appendTo(items.get(index), sb2);
 			}
 			sb.append(sb2.toString());
-			sb=handler.finishSerialization(sb);
 		}
 	}
 
