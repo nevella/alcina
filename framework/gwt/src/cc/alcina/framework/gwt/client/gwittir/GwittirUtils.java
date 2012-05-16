@@ -52,7 +52,7 @@ import com.totsp.gwittir.client.validator.Validator;
  */
 public class GwittirUtils {
 	public static void refreshEmptyTextBoxes(Binding binding) {
-		refreshTextBoxes(binding, null, true, true);
+		refreshTextBoxes(binding, null, true, true, false);
 	}
 
 	public static Collection convertCollection(Collection source,
@@ -65,23 +65,23 @@ public class GwittirUtils {
 	}
 
 	public static void refreshTextBox(Binding binding, String propertyName) {
-		refreshTextBoxes(binding, propertyName, true, false);
+		refreshTextBoxes(binding, propertyName, true, false, false);
 	}
 
 	public static void refreshTextBoxes(Binding binding,
 			String onlyPropertyName, boolean muteTransformManager,
-			boolean onlyEmpties) {
+			boolean onlyEmpties, boolean onlyCommit) {
 		refreshFields(binding, onlyPropertyName, muteTransformManager,
-				onlyEmpties, new FormFieldTypeForRefresh[] {
+				onlyEmpties, onlyCommit, new FormFieldTypeForRefresh[] {
 						FormFieldTypeForRefresh.TEXT,
 						FormFieldTypeForRefresh.TEXT_AREA });
 	}
 
 	public static void refreshTextBoxesAndSelects(Binding binding,
 			String onlyPropertyName, boolean muteTransformManager,
-			boolean onlyEmpties) {
+			boolean onlyEmpties, boolean onlyCommit) {
 		refreshFields(binding, onlyPropertyName, muteTransformManager,
-				onlyEmpties, new FormFieldTypeForRefresh[] {
+				onlyEmpties, onlyCommit, new FormFieldTypeForRefresh[] {
 						FormFieldTypeForRefresh.TEXT,
 						FormFieldTypeForRefresh.TEXT_AREA,
 						FormFieldTypeForRefresh.SELECT });
@@ -93,7 +93,7 @@ public class GwittirUtils {
 
 	public static void refreshFields(Binding binding, String onlyPropertyName,
 			boolean muteTransformManager, boolean onlyEmpties,
-			FormFieldTypeForRefresh[] types) {
+			boolean onlyCommit, FormFieldTypeForRefresh[] types) {
 		List<Binding> allBindings = binding.provideAllBindings(null);
 		List<FormFieldTypeForRefresh> lTypes = Arrays.asList(types);
 		try {
@@ -131,7 +131,8 @@ public class GwittirUtils {
 					Binding subBinding = ((HasBinding) tb).getBinding();
 					if (subBinding != null) {
 						refreshFields(subBinding, onlyPropertyName,
-								muteTransformManager, onlyEmpties, types);
+								muteTransformManager, onlyEmpties, onlyCommit,
+								types);
 					}
 				}
 				if (satisfiesType) {
@@ -142,13 +143,17 @@ public class GwittirUtils {
 					if (onlyEmpties && tbValue != null) {
 						continue;
 					}
-					Object other = isSetBasedListBox ? ((SetBasedListBox) tb)
-							.provideOtherValue() : " ".equals(tbValue) ? ""
-							: " ";
-					tb.setValue(other);
-					b.getRight().property.getMutatorMethod().invoke(
-							b.getRight().object, new Object[] { value });
-					tb.setValue(tbValue);
+					if (onlyCommit) {
+						binding.setRight();
+					} else {
+						Object other = isSetBasedListBox ? ((SetBasedListBox) tb)
+								.provideOtherValue() : " ".equals(tbValue) ? ""
+								: " ";
+						tb.setValue(other);
+						b.getRight().property.getMutatorMethod().invoke(
+								b.getRight().object, new Object[] { value });
+						tb.setValue(tbValue);
+					}
 					// binding.setRight();
 				}
 			}
@@ -162,7 +167,7 @@ public class GwittirUtils {
 	}
 
 	public static void refreshAllTextBoxes(Binding binding) {
-		refreshTextBoxes(binding, null, true, false);
+		refreshTextBoxes(binding, null, true, false, false);
 	}
 
 	public static List<Validator> getAllValidators(Binding b,

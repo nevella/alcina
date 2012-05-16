@@ -11,21 +11,43 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.domaintransform;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class DomainTransformLayerWrapper {
+public class DomainTransformLayerWrapper {
 	public DomainTransformResponse response;
+
 	public HiliLocatorMap locatorMap;
+
 	public int ignored;
+
 	public List<DomainTransformEventPersistent> persistentEvents;
+
+	public Set<Class<?>> getTransformedClasses() {
+		if (transformedClasses == null) {
+			transformedClasses = new LinkedHashSet<Class<?>>();
+			for (DomainTransformEventPersistent dte : persistentEvents) {
+				transformedClasses.add(dte.getObjectClass());
+			}
+		}
+		return this.transformedClasses;
+	}
+
+	private Set<Class<?>> transformedClasses = null;
+
+	public boolean containsTransformClasses(Class<?>... classes) {
+		return !CommonUtils.intersection(getTransformedClasses(),
+				Arrays.asList(classes)).isEmpty();
+	}
 }

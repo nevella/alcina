@@ -31,8 +31,6 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 public class DetachedEntityCache {
 	private Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>();
 
-	private Map<Class, Map<Long, HasIdAndLocalId>> entities = new HashMap<Class, Map<Long, HasIdAndLocalId>>();
-
 	public DetachedEntityCache() {
 	}
 
@@ -51,34 +49,30 @@ public class DetachedEntityCache {
 
 	public <T> T get(Class<T> clazz, Long id) {
 		ensureMaps(clazz);
-		if (id==null){
+		if (id == null) {
 			return null;
 		}
 		T t = (T) detached.get(clazz).get(id);
-		if (t == null) {
-			t = (T) entities.get(clazz).get(id);
-		}
 		return t;
 	}
 
 	public <T> Set<T> values(Class<T> clazz) {
 		ensureMaps(clazz);
-		if (detached.get(clazz).isEmpty()) {
-			return new LinkedHashSet<T>((Collection<? extends T>) entities.get(
-					clazz).values());
-		} else {
-			return new LinkedHashSet<T>((Collection<? extends T>) detached.get(
-					clazz).values());
+		return new LinkedHashSet<T>((Collection<? extends T>) detached.get(
+				clazz).values());
+	}
+
+	public Set<HasIdAndLocalId> allValues() {
+		Set<HasIdAndLocalId> result = new LinkedHashSet<HasIdAndLocalId>();
+		for (Class clazz : detached.keySet()) {
+			result.addAll(detached.get(clazz).values());
 		}
+		return result;
 	}
 
 	public Set<Long> keys(Class clazz) {
 		ensureMaps(clazz);
-		if (detached.get(clazz).isEmpty()) {
-			return entities.get(clazz).keySet();
-		} else {
-			return detached.get(clazz).keySet();
-		}
+		return detached.get(clazz).keySet();
 	}
 
 	public void put(HasIdAndLocalId hili) {
@@ -90,7 +84,7 @@ public class DetachedEntityCache {
 
 	public void putAll(Class clazz, Collection<? extends HasIdAndLocalId> values) {
 		ensureMaps(clazz);
-		Map<Long, HasIdAndLocalId> m = entities.get(clazz);
+		Map<Long, HasIdAndLocalId> m = detached.get(clazz);
 		for (HasIdAndLocalId hili : values) {
 			long id = hili.getId();
 			m.put(hili.getId(), hili);
@@ -100,9 +94,6 @@ public class DetachedEntityCache {
 	private void ensureMaps(Class clazz) {
 		if (!detached.containsKey(clazz)) {
 			detached.put(clazz, new TreeMap<Long, HasIdAndLocalId>());
-		}
-		if (!entities.containsKey(clazz)) {
-			entities.put(clazz, new TreeMap<Long, HasIdAndLocalId>());
 		}
 	}
 
@@ -114,22 +105,10 @@ public class DetachedEntityCache {
 	public void invalidate(Class clazz) {
 		ensureMaps(clazz);
 		detached.put(clazz, new TreeMap<Long, HasIdAndLocalId>());
-		entities.put(clazz, new TreeMap<Long, HasIdAndLocalId>());
-	}
-
-	public boolean clearEntities() {
-		boolean hasValues = false;
-		for (Entry<Class, Map<Long, HasIdAndLocalId>> entry : entities
-				.entrySet()) {
-			hasValues |= !entry.getValue().isEmpty();
-			entry.getValue().clear();
-		}
-		return hasValues;
 	}
 
 	public void clear() {
 		detached.clear();
-		entities.clear();
 	}
 
 	public DetachedEntityCache clone() {

@@ -782,7 +782,7 @@ public class ContentViewFactory {
 			preDetachFocus.setFocus(true);
 			if (editable&&isVisible()) {
 				GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(),
-						null, false, false);
+						null, false, false,true);
 			}
 			super.onDetach();// inter alia, detach children, forcing commit of
 								// richtexts etc

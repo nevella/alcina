@@ -24,6 +24,8 @@ public class DomainTransformRequestPersistence {
 
 		private final DomainTransformRequestPersistenceEventType persistenceEventType;
 
+		
+
 		public DomainTransformRequestPersistenceEvent(
 				TransformPersistenceToken transformPersistenceToken,
 				DomainTransformLayerWrapper domainTransformLayerWrapper) {
@@ -45,6 +47,8 @@ public class DomainTransformRequestPersistence {
 		public DomainTransformRequestPersistenceEventType getPersistenceEventType() {
 			return this.persistenceEventType;
 		}
+
+		
 	}
 
 	public interface DomainTransformRequestPersistenceSource {
