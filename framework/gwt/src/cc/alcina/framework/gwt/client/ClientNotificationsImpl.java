@@ -69,8 +69,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		new OkCancelDialogBox("Confirmation", new Label(msg),
 				new PermissibleActionListener() {
 					public void vetoableAction(PermissibleActionEvent evt) {
-						if (evt.getAction().getActionName()
-								.equals(OkAction.INSTANCE)) {
+						if (evt.getAction() == OkAction.INSTANCE) {
 							callback.ok();
 						}
 					}
