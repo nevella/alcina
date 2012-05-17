@@ -28,7 +28,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\nDomainTransformEvent:";
 
-	private static String escape(String str) {
+	public static String escape(String str) {
 		return str == null
 		|| (str.indexOf("\n") == -1 && str
 				.indexOf("\\") == -1) ? str : str
