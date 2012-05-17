@@ -40,7 +40,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			return null;
 		}
 		int idx = 0, x = 0;
-		StringBuilder sb = new StringBuilder(str.length()*2);
+		StringBuilder sb = new StringBuilder(str.length());
 		while ((idx = str.indexOf("\\", x)) != -1) {
 			sb.append(str.substring(x, idx));
 			char c = str.charAt(idx + 1);
