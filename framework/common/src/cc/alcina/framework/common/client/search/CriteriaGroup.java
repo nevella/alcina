@@ -123,6 +123,15 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		}
 		return null;
 	}
+	public <S extends SearchCriterion> List<S> findCriteria(Class<S> clazz) {
+		List<S> result=new ArrayList<S>();
+		for (SC sc : getCriteria()) {
+			if (sc.getClass() == clazz) {
+				result.add((S) sc);
+			}
+		}
+		return result;
+	}
 
 	/*
 	 * only used for single-table search, compiled out for client
