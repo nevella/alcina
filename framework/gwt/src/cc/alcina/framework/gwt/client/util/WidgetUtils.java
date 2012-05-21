@@ -560,22 +560,6 @@ public class WidgetUtils {
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <W extends Widget> W getParentWidgetWithSupers(Widget w,
-			Class<W> widgetClass) {
-		Set<Class> supers=new HashSet<Class>();
-		while(widgetClass!=Widget.class){
-			supers.add(widgetClass);
-			widgetClass=(Class) widgetClass.getSuperclass();
-		}
-		while (w != null) {
-			if (supers.contains(w.getClass())) {
-				return (W) w;
-			}
-			w = w.getParent();
-		}
-		return null;
-	}
 
 	@SuppressWarnings("unchecked")
 	public static <W extends Widget> W getParentWidget(Widget w,

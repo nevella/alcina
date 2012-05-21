@@ -24,6 +24,9 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -58,6 +61,7 @@ import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
@@ -76,6 +80,7 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPe
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
 import cc.alcina.framework.entity.domaintransform.policy.IgnoreMissingPersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -92,13 +97,20 @@ import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 import com.google.gwt.user.server.rpc.RPCRequest;
+import com.google.gwt.user.server.rpc.RPCServletUtils;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.user.server.rpc.UnexpectedException;
 import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 
 /**
+ * 
  * Tests (todo) for transform persistence: invalid clientauth multiple
  * simultaneous (identical clientinstance, non-) cross-server-restart
+ * 
+ * <p>
+ * Readonly: most checks happen of simple methods happen at the persistence
+ * layer so not needed here
+ * </p>
  * 
  * @author nick@alcina.cc
  * 
@@ -109,7 +121,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	private Logger logger;
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
-	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = CommonRemoteServiceServlet.class.getName()+"::"+"CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS";
+
+	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = CommonRemoteServiceServlet.class
+			.getName()
+			+ "::"
+			+ "CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS";
 
 	private int actionCount = 0;
 
@@ -222,7 +238,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					onAfterSpawnedThreadRun(this);
 					pm.copyTo(PermissionsManager.get());
 					ActionLogItem result = null;
-					
 					result = performer.performAction(action);
 					result.setActionClass(action.getClass());
 					result.setActionDate(new Date());
@@ -247,20 +262,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 		};
 		thread.setPriority(Thread.MIN_PRIORITY);
-		
 		thread.start();
 		onBeforeSpawnedThreadRun(thread);
 		return thread.getId();
 	}
 
 	protected void onBeforeSpawnedThreadRun(Thread thread) {
-		
 	}
 
 	protected void onAfterSpawnedThreadRun(Thread thread) {
-		
 	}
-
 
 	protected void handleOom(String payload, OutOfMemoryError e) {
 		if (DUMP_STACK_TRACE_ON_OOM) {
@@ -360,7 +371,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				clientInstance.setId(wr.getClientInstanceId());
 				rq.setClientInstance(clientInstance);
 				boolean pushUser = PermissionsManager.get().isAdmin()
-						&& LooseContextProvider.getContext()
+						&& LooseContextProvider
+								.getContext()
 								.getBoolean(
 										CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
 						&& wr.getUserId() != PermissionsManager.get()
@@ -396,7 +408,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					if (pushUser) {
 						PermissionsManager.get().popUser();
 					}
-					
 				}
 				if (logger != null) {
 					logger.info(CommonUtils
@@ -477,6 +488,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								new WebException("Action not permitted: "
 										+ name));
 					}
+					if (!ar.readonlyPermitted()) {
+						AppPersistenceBase.checkNotReadOnly();
+					}
 				}
 			} catch (SecurityException ex) {
 				RPC.encodeResponseForFailure(null, ex);
@@ -503,7 +517,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected void onAfterAlcinaAuthentication(String methodName) {
-		
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
@@ -623,7 +636,21 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			getLogger().debug("Client RPC call aborted by client");
 			return;
 		}
-		super.doUnexpectedFailure(e);
+		if (e instanceof ReadOnlyException) {
+			try {
+				HttpServletResponse response = getThreadLocalResponse();
+				response.reset();
+				ServletContext servletContext = getServletContext();
+				response.setContentType("text/plain");
+				response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				response.getOutputStream()
+						.write(e.toString().getBytes("UTF-8"));
+			} catch (Exception e2) {
+				throw new WrappedRuntimeException(e2);
+			}
+		} else {
+			super.doUnexpectedFailure(e);
+		}
 	}
 
 	protected int nextTransformRequestId() {
@@ -659,6 +686,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			TransformPersistenceToken persistenceToken)
 			throws DomainTransformRequestException {
 		try {
+			AppPersistenceBase.checkNotReadOnly();
 			LooseContextProvider.getContext().push();
 			DomainTransformRequestPersistenceSupport persistenceSupport = CommonRemoteServiceServletSupport
 					.get().getRequestPersistenceSupport();

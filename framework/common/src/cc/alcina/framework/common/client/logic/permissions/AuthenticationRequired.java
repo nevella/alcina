@@ -28,5 +28,5 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 
  public @interface AuthenticationRequired {
 	Permission permission() default @Permission(access=AccessLevel.LOGGED_IN);
-	
+	boolean readonlyPermitted() default true;
 }

@@ -29,7 +29,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -43,12 +45,29 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	public static final String PERSISTENCE_TEST = AppPersistenceBase.class
 			.getName() + ".PERSISTENCE_TEST";
 
+	public static final String READ_ONLY = AppPersistenceBase.class.getName()
+			+ ".READ_ONLY";
+
 	public static boolean isTest() {
 		return Boolean.getBoolean(PERSISTENCE_TEST);
 	}
 
 	public static void setTest() {
 		System.setProperty(PERSISTENCE_TEST, String.valueOf(true));
+	}
+
+	public static boolean isReadOnly() {
+		return Boolean.getBoolean(READ_ONLY);
+	}
+
+	public static void setReadOnly(boolean readonly) {
+		System.setProperty(READ_ONLY, String.valueOf(readonly));
+	}
+
+	public static void checkNotReadOnly() throws ReadOnlyException {
+		if (isReadOnly()) {
+			throw new ReadOnlyException(System.getProperty(READ_ONLY));
+		}
 	}
 
 	protected CommonPersistenceLocal commonPersistence;
@@ -67,7 +86,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			// no custom properties
 		}
 	}
-	
+
 	public void init() throws Exception {
 		loadCustomProperties();
 		initLoggers();
@@ -86,7 +105,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		Logger mainLogger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
-			EntityLayerLocator.get().jpaImplementation().muteClassloaderLogging(true);
+			EntityLayerLocator.get().jpaImplementation()
+					.muteClassloaderLogging(true);
 			Map<String, Date> classes = new ServletClasspathScanner("*", true,
 					false, mainLogger, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] { "WEB-INF/classes",
@@ -96,14 +116,14 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			new ClassrefScanner().scan(classes);
 		} catch (Exception e) {
 			mainLogger.warn("", e);
-		}finally{
-			EntityLayerLocator.get().jpaImplementation().muteClassloaderLogging(false);
+		} finally {
+			EntityLayerLocator.get().jpaImplementation()
+					.muteClassloaderLogging(false);
 		}
 	}
 
 	protected abstract void initServiceImpl();
 
-	
 	protected void createSystemGroupsAndUsers() {
 		// normally, override
 	}

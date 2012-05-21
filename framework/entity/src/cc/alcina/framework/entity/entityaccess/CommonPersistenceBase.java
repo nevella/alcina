@@ -87,6 +87,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	// note - this'll be the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
 
+	private static Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass = DefaultHandshakeObjectProvider.class;
+
 	public CommonPersistenceBase() {
 		ObjectPersistenceHelper.get();
 	}
@@ -101,6 +103,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 * may want to avoid this if the entities to delete require delete/cascade
 	 */
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl) {
+		AppPersistenceBase.checkNotReadOnly();
 		if (!tryImpl
 				|| !EntityLayerLocator.get().jpaImplementation()
 						.bulkDelete(getEntityManager(), clazz, ids)) {
@@ -157,31 +160,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 * layer we (should) always want it lightweight
 	 */
 	public CI createClientInstance() {
-		connectPermissionsManagerToLiveObjects(true);
-		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
-		try {
-			CI impl = clientInstanceImpl.newInstance();
-			getEntityManager().persist(impl);
-			impl.setHelloDate(new Date());
-			impl.setUser(PermissionsManager.get().getUser());
-			impl.setAuth(Math.abs(new Random().nextInt()));
-			getEntityManager().flush();
-			IUser clonedUser = getNewImplementationInstance(IUser.class);
-			ResourceUtilities
-					.copyBeanProperties(
-							PermissionsManager.get().getUser(),
-							clonedUser,
-							null,
-							false,
-							Arrays.asList(new String[] { "primaryGroup",
-									"secondaryGroups" }));
-			clientInstanceAuthMap.put(impl.getId(), impl.getAuth());
-			CI instance = new EntityUtils().detachedClone(impl, false);
-			instance.setUser(new EntityUtils().detachedClone(clonedUser, false));
-			return instance;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return (CI) getHandshakeObjectProvider().createClientInstance();
 	}
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception {
@@ -189,6 +168,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		if (newT != null) {
 			return newT;
 		}
+		AppPersistenceBase.checkNotReadOnly();
 		PropertyDescriptor descriptor = SEUtilities.descriptorByName(
 				t.getClass(), key);
 		descriptor.getWriteMethod().invoke(t, value);
@@ -212,6 +192,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
+	@Override
+	public <T> T findImplInstance(Class<? extends T> clazz, long id) {
+		Class<?> implClazz = getImplementation(clazz);
+		return (T) getEntityManager().find(implClazz, id);
+	}
+
 	public <A> Set<A> getAll(Class<A> clazz) {
 		Query query = getEntityManager().createQuery(
 				String.format("from %s ", clazz.getSimpleName()));
@@ -225,9 +211,32 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public abstract String getAnonymousUserName();
 
+	@Override
+	public <US extends IUser> US getCleanedUserById(long userId) {
+		Class<? extends IUser> impl = getImplementation(IUser.class);
+		IUser found = getEntityManager().find(impl, userId);
+		if (found != null) {
+			return (US) getUserByName(found.getUserName(), true);
+		}
+		return null;
+	}
+
 	public abstract EntityManager getEntityManager();
 
-	public abstract void setEntityManager(EntityManager entityManager);
+	private HandshakeObjectProvider handshakeObjectProvider;
+
+	public HandshakeObjectProvider getHandshakeObjectProvider() {
+		if (handshakeObjectProvider == null) {
+			try {
+				handshakeObjectProvider = handshakeObjectProviderClass
+						.newInstance();
+				handshakeObjectProvider.setCommonPersistence(this);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		return handshakeObjectProvider;
+	}
 
 	public IID getIidByKey(String iid) {
 		List<IID> l = getEntityManager()
@@ -273,6 +282,43 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			boolean createIfNonexistent) {
 		return getItemByKeyValue(clazz, key, value, createIfNonexistent, null,
 				false);
+	}
+
+	@Override
+	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
+			boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive) {
+		try {
+			connectPermissionsManagerToLiveObjects();
+			String eql = String.format(
+					value == null ? "from %s where %s is null"
+							: caseInsensitive ? "from %s where lower(%s) = ?"
+									: "from %s where %s = ?", clazz
+							.getSimpleName(), key);
+			if (ignoreId != null) {
+				eql += " AND id != " + ignoreId;
+			}
+			if (HasId.class.isAssignableFrom(clazz)) {
+				eql += " order by id asc";
+			}
+			Query q = getEntityManager().createQuery(eql);
+			if (value != null) {
+				q.setParameter(1, caseInsensitive ? value.toString()
+						.toLowerCase() : value);
+			}
+			List l = q.getResultList();
+			if (l.size() == 0 && createIfNonexistent) {
+				AppPersistenceBase.checkNotReadOnly();
+				T inst = clazz.newInstance();
+				getEntityManager().persist(inst);
+				PropertyDescriptor descriptor = SEUtilities.descriptorByName(
+						inst.getClass(), key);
+				descriptor.getWriteMethod().invoke(inst, value);
+				return inst;
+			}
+			return (T) ((l.size() == 0) ? null : l.get(0));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
@@ -397,11 +443,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public void logActionItem(ActionLogItem result) {
+		AppPersistenceBase.checkNotReadOnly();
 		connectPermissionsManagerToLiveObjects();
 		getEntityManager().merge(result);
 	}
 
 	public long merge(HasId hi) {
+		AppPersistenceBase.checkNotReadOnly();
 		connectPermissionsManagerToLiveObjects();
 		persistWrappables(hi);
 		HasId merge = getEntityManager().merge(hi);
@@ -409,6 +457,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public IUser mergeUser(IUser user) {
+		AppPersistenceBase.checkNotReadOnly();
 		connectPermissionsManagerToLiveObjects();
 		IUser merge = getEntityManager().merge(user);
 		getEntityManager().flush();
@@ -417,6 +466,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public <WP extends WrapperPersistable> Long persist(WP gwpo)
 			throws Exception {
+		AppPersistenceBase.checkNotReadOnly();
 		connectPermissionsManagerToLiveObjects();
 		WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
 				gwpo.getClass(), gwpo.getId());
@@ -465,6 +515,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public void remove(Object o) {
+		AppPersistenceBase.checkNotReadOnly();
 		getEntityManager().remove(o);
 	}
 
@@ -481,8 +532,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return new EntityUtils().detachedClone(result);
 	}
 
+	public abstract void setEntityManager(EntityManager entityManager);
+
 	public void setField(Class clazz, Long id, String key, Object value)
 			throws Exception {
+		AppPersistenceBase.checkNotReadOnly();
 		Object inst = getEntityManager().find(clazz, id);
 		PropertyDescriptor descriptor = SEUtilities
 				.descriptorByName(clazz, key);
@@ -492,6 +546,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public DomainTransformLayerWrapper transformInPersistenceContext(
 			TransformPersister persister, TransformPersistenceToken token) {
+		AppPersistenceBase.checkNotReadOnly();
 		return persister.transformInPersistenceContext(token, this,
 				getEntityManager());
 	}
@@ -553,14 +608,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public void updateIid(String iidKey, String userName, boolean rememberMe) {
-		IID iid = getIidByKey(iidKey);
-		iid.setInstanceId(iidKey);
-		if (rememberMe) {
-			iid.setRememberMeUser(getUserByName(userName));
-		} else {
-			iid.setRememberMeUser(null);
-		}
-		getEntityManager().merge(iid);
+		getHandshakeObjectProvider().updateIid(iidKey, userName, rememberMe);
 	}
 
 	public <T extends ServerValidator> List<T> validate(List<T> validators) {
@@ -637,43 +685,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return result;
 	}
 
-	@Override
-	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
-			boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive) {
-		try {
-			connectPermissionsManagerToLiveObjects();
-			String eql = String.format(
-					value == null ? "from %s where %s is null"
-							: caseInsensitive ? "from %s where lower(%s) = ?"
-									: "from %s where %s = ?", clazz
-							.getSimpleName(), key);
-			if (ignoreId != null) {
-				eql += " AND id != " + ignoreId;
-			}
-			if (HasId.class.isAssignableFrom(clazz)) {
-				eql += " order by id asc";
-			}
-			Query q = getEntityManager().createQuery(eql);
-			if (value != null) {
-				q.setParameter(1, caseInsensitive ? value.toString()
-						.toLowerCase() : value);
-			}
-			List l = q.getResultList();
-			if (l.size() == 0 && createIfNonexistent) {
-				T inst = clazz.newInstance();
-				getEntityManager().persist(inst);
-				PropertyDescriptor descriptor = SEUtilities.descriptorByName(
-						inst.getClass(), key);
-				descriptor.getWriteMethod().invoke(inst, value);
-				return inst;
-			}
-			return (T) ((l.size() == 0) ? null : l.get(0));
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	private void persistWrappables(HasId hi) {
+		AppPersistenceBase.checkNotReadOnly();
 		try {
 			PropertyDescriptor[] pds = Introspector.getBeanInfo(hi.getClass())
 					.getPropertyDescriptors();
@@ -808,12 +821,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	protected abstract InstantiateImplCallback createUserAndGroupInstantiator();
 
-	@Override
-	public <T> T findImplInstance(Class<? extends T> clazz, long id) {
-		Class<?> implClazz = getImplementation(clazz);
-		return (T) getEntityManager().find(implClazz, id);
-	}
-
 	protected Collection<Class> getPerUserTransformClasses() {
 		return new ArrayList<Class>();
 	}
@@ -852,13 +859,122 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return 100;
 	}
 
-	@Override
-	public <US extends IUser> US getCleanedUserById(long userId) {
-		Class<? extends IUser> impl = getImplementation(IUser.class);
-		IUser found = getEntityManager().find(impl, userId);
-		if (found != null) {
-			return (US) getUserByName(found.getUserName(), true);
+	static class DefaultHandshakeObjectProvider implements
+			HandshakeObjectProvider {
+		private CommonPersistenceBase cp;
+
+		@Override
+		public ClientInstance createClientInstance() {
+			AppPersistenceBase.checkNotReadOnly();
+			cp.connectPermissionsManagerToLiveObjects(true);
+			Class<? extends ClientInstance> clientInstanceImpl = cp
+					.getImplementation(ClientInstance.class);
+			try {
+				ClientInstance impl = clientInstanceImpl.newInstance();
+				cp.getEntityManager().persist(impl);
+				impl.setHelloDate(new Date());
+				impl.setUser(PermissionsManager.get().getUser());
+				impl.setAuth(Math.abs(new Random().nextInt()));
+				cp.getEntityManager().flush();
+				IUser clonedUser = (IUser) cp
+						.getNewImplementationInstance(IUser.class);
+				ResourceUtilities.copyBeanProperties(PermissionsManager.get()
+						.getUser(), clonedUser, null, false, Arrays
+						.asList(new String[] { "primaryGroup",
+								"secondaryGroups" }));
+				clientInstanceAuthMap.put(impl.getId(), impl.getAuth());
+				ClientInstance instance = new EntityUtils().detachedClone(impl,
+						false);
+				instance.setUser(new EntityUtils().detachedClone(clonedUser,
+						false));
+				return instance;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
-		return null;
+
+		@Override
+		public void updateIid(String iidKey, String userName, boolean rememberMe) {
+			Iid iid = cp.getIidByKey(iidKey);
+			iid.setInstanceId(iidKey);
+			if (rememberMe) {
+				iid.setRememberMeUser(cp.getUserByName(userName));
+			} else {
+				iid.setRememberMeUser(null);
+			}
+			cp.getEntityManager().merge(iid);
+		}
+
+		@Override
+		public void setCommonPersistence(CommonPersistenceBase commonPersistence) {
+			this.cp = commonPersistence;
+		}
+	}
+
+	public static class ReadonlyHandshakeObjectProvider implements
+			HandshakeObjectProvider {
+		static long clientInstanceIdCounter = 0;
+
+		private CommonPersistenceBase cp;
+
+		@Override
+		public ClientInstance createClientInstance() {
+			long newId = 0;
+			synchronized (ReadonlyHandshakeObjectProvider.class) {
+				if (clientInstanceIdCounter == 0) {
+					clientInstanceIdCounter = (Long) cp
+							.getEntityManager()
+							.createQuery(
+									String.format(
+											"select max(id) from %s",
+											cp.getImplementationSimpleClassName(ClientInstance.class)))
+							.getSingleResult();
+				}
+				newId = ++clientInstanceIdCounter;
+			}
+			cp.connectPermissionsManagerToLiveObjects(true);
+			Class<? extends ClientInstance> clientInstanceImpl = cp
+					.getImplementation(ClientInstance.class);
+			try {
+				ClientInstance impl = clientInstanceImpl.newInstance();
+				impl.setId(newId);
+				impl.setHelloDate(new Date());
+				impl.setUser(PermissionsManager.get().getUser());
+				impl.setAuth(Math.abs(new Random().nextInt()));
+				IUser clonedUser = (IUser) cp
+						.getNewImplementationInstance(IUser.class);
+				ResourceUtilities.copyBeanProperties(PermissionsManager.get()
+						.getUser(), clonedUser, null, false, Arrays
+						.asList(new String[] { "primaryGroup",
+								"secondaryGroups" }));
+				clientInstanceAuthMap.put(impl.getId(), impl.getAuth());
+				ClientInstance instance = new EntityUtils().detachedClone(impl,
+						false);
+				instance.setUser(new EntityUtils().detachedClone(clonedUser,
+						false));
+				return instance;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		@Override
+		public void updateIid(String iidKey, String userName, boolean rememberMe) {
+			// ignore
+		}
+
+		@Override
+		public void setCommonPersistence(CommonPersistenceBase commonPersistence) {
+			this.cp = commonPersistence;
+		}
+	}
+
+	public static Class<? extends HandshakeObjectProvider> getHandshakeObjectProviderClass() {
+		return handshakeObjectProviderClass;
+	}
+
+	public static void setHandshakeObjectProviderClass(
+			Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass) {
+		CommonPersistenceBase.handshakeObjectProviderClass = handshakeObjectProviderClass;
 	}
 }
