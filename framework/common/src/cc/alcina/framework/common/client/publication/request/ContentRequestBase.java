@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_DOC;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_DOCX;
+import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_EPUB;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_HTML;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_PDF;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_XLS;
@@ -341,6 +342,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 			return FMT_XLS.class;
 		case ZIP:
 			return FMT_ZIP.class;
+		case EPUB:
+			return FMT_EPUB.class;
 		default:
 			return null;
 		}

@@ -11,14 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.publication.request;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public enum PublicationOutputFormat {
-	HTML, DOC, DOCX, PDF, XLSX,XLS,ZIP
+public enum PublicationOutputFormat {
+	HTML, DOC, DOCX, PDF, XLSX, XLS, ZIP, EPUB
 }

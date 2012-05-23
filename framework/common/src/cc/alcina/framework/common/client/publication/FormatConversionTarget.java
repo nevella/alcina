@@ -30,6 +30,8 @@ package cc.alcina.framework.common.client.publication;
 	}
 	public interface FMT_ZIP extends FormatConversionTarget {
 	}
+	public interface FMT_EPUB extends FormatConversionTarget {
+	}
 	public interface FMT_HTML extends FormatConversionTarget {
 	}
 
