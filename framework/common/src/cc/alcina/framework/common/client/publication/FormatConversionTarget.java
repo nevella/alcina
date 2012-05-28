@@ -11,33 +11,49 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.publication;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface FormatConversionTarget {
-	public interface FMT_DOCX extends FormatConversionTarget {
-	}
-	public interface FMT_DOC extends FormatConversionTarget {
-	}
-	public interface FMT_XLSX extends FormatConversionTarget {
-	}
-	public interface FMT_XLS extends FormatConversionTarget {
-	}
-	public interface FMT_ZIP extends FormatConversionTarget {
-	}
-	public interface FMT_EPUB extends FormatConversionTarget {
-	}
-	public interface FMT_HTML extends FormatConversionTarget {
+public abstract class FormatConversionTarget {
+	public static class FMT_DOCX extends FormatConversionTarget {
 	}
 
-	public interface FMT_PDF extends FormatConversionTarget {
+	public static class FMT_DOC extends FormatConversionTarget {
 	}
 
-	public interface FMT_TEXT extends FormatConversionTarget {
+	public static class FMT_XLSX extends FormatConversionTarget {
+	}
+
+	public static class FMT_XLS extends FormatConversionTarget {
+	}
+
+	public static class FMT_ZIP extends FormatConversionTarget {
+	}
+
+	public static class FMT_EPUB extends FormatConversionTarget {
+		@Override
+		public boolean requiresXml() {
+			return true;
+		}
+	}
+
+	public static class FMT_HTML extends FormatConversionTarget {
+	}
+
+	public static class FMT_PDF extends FormatConversionTarget {
+		@Override
+		public boolean requiresXml() {
+			return true;
+		}
+	}
+
+	public static class FMT_TEXT extends FormatConversionTarget {
+	}
+
+	public boolean requiresXml() {
+		return false;
 	}
 }
