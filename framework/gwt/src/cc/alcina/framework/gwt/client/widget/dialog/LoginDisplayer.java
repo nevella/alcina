@@ -18,10 +18,12 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.EnterAsClickKeyboardListener;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -108,10 +110,12 @@ public class LoginDisplayer {
 		this.usernameLabel = new Label("Username: ");
 		table.setWidget(0, 0, usernameLabel);
 		nameBox = new TextBox();
+		WidgetUtils.disableTextBoxHelpers(nameBox);
 		nameBox.ensureDebugId(AlcinaDebugIds.LOGIN_USERNAME);
 		table.setWidget(0, 1, nameBox);
 		table.setWidget(1, 0, new Label("Password: "));
 		pwdBox = new PasswordTextBox();
+		WidgetUtils.disableTextBoxHelpers(pwdBox);
 		pwdBox.ensureDebugId(AlcinaDebugIds.LOGIN_PASSWORD);
 		table.setWidget(1, 1, pwdBox);
 		pwdBox.addKeyPressHandler(new EnterAsClickKeyboardListener(pwdBox,

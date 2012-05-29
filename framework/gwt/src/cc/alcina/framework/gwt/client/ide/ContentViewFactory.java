@@ -603,8 +603,7 @@ public class ContentViewFactory {
 							.deregisterProvisionalObjects(objects);
 				}
 				final PermissibleActionEvent action = new PermissibleActionEvent(
-						initialObjects, ClientReflector.get().newInstance(
-								CancelAction.class));
+						initialObjects, CancelAction.INSTANCE);
 				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 					public void execute() {
 						fireVetoableActionEvent(action);

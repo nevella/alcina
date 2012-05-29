@@ -15,10 +15,8 @@ package cc.alcina.framework.gwt.client.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.Callback;
@@ -548,6 +546,7 @@ public class WidgetUtils {
 		}
 		hiddenWidgets = null;
 	}
+
 	@SuppressWarnings("unchecked")
 	public static <W extends Widget> W getParentWidget(Widget w,
 			Class<W> widgetClass) {
@@ -559,7 +558,6 @@ public class WidgetUtils {
 		}
 		return null;
 	}
-
 
 	@SuppressWarnings("unchecked")
 	public static <W extends Widget> W getParentWidget(Widget w,
@@ -752,5 +750,13 @@ public class WidgetUtils {
 		FlowPanel fp = new FlowPanel();
 		fp.add(widget);
 		return fp;
+	}
+
+	public static void disableTextBoxHelpers(Widget textBox) {
+		com.google.gwt.user.client.Element elt = textBox.getElement();
+		elt.setAttribute("autocapitalize", "off");
+		elt.setAttribute("autocorrect", "off");
+		elt.setAttribute("autocomplete", "off");
+		elt.setAttribute("spellcheck", "false");
 	}
 }

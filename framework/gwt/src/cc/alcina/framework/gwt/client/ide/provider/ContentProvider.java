@@ -66,6 +66,13 @@ import com.google.gwt.user.client.ui.HTML;
 		throw new WrappedRuntimeException("No content provider registered",
 				SuggestedAction.NOTIFY_ERROR);
 	}
+	public static boolean hasContent(String key) {
+		if (provider != null) {
+			return !getContent(key).startsWith("No content for key");
+		}
+		throw new WrappedRuntimeException("No content provider registered",
+				SuggestedAction.NOTIFY_ERROR);
+	}
 
 	public static void refresh() {
 		if (provider != null) {
@@ -78,6 +85,7 @@ import com.google.gwt.user.client.ui.HTML;
 
 	public interface ContentProviderSource {
 		public String getContent(String key);
+
 
 		public void refresh();
 	}
