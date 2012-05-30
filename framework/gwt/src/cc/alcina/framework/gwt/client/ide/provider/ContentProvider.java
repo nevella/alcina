@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
-
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
@@ -21,11 +19,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import com.google.gwt.user.client.ui.HTML;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ContentProvider {
+public class ContentProvider {
 	private static ContentProviderSource provider;
 
 	public static ContentProviderSource getProvider() {
@@ -43,7 +40,6 @@ import com.google.gwt.user.client.ui.HTML;
 	public static HTML getWidget(String key) {
 		return getWidget(key, null);
 	}
-	
 
 	public static HTML getWidget(String key, String styleClassName) {
 		if (provider != null) {
@@ -66,9 +62,11 @@ import com.google.gwt.user.client.ui.HTML;
 		throw new WrappedRuntimeException("No content provider registered",
 				SuggestedAction.NOTIFY_ERROR);
 	}
+
 	public static boolean hasContent(String key) {
 		if (provider != null) {
-			return !getContent(key).startsWith("No content for key");
+			return getContent(key).trim().isEmpty()
+					|| !getContent(key).startsWith("No content for key");
 		}
 		throw new WrappedRuntimeException("No content provider registered",
 				SuggestedAction.NOTIFY_ERROR);
@@ -85,7 +83,6 @@ import com.google.gwt.user.client.ui.HTML;
 
 	public interface ContentProviderSource {
 		public String getContent(String key);
-
 
 		public void refresh();
 	}

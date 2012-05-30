@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,7 +30,7 @@ public class AlcinaBeanSerializer {
 
 	private static final String CLASS_NAME = "cn";
 
-	public <T> T deserialize(String jsonString) {
+	public <T> T deserialize(String jsonString) throws Exception {
 		JSONObject obj = (JSONObject) JSONParser.parseStrict(jsonString);
 		return (T) deserializeObject(obj);
 	}
@@ -40,8 +41,8 @@ public class AlcinaBeanSerializer {
 		}
 		JSONString cn = (JSONString) jsonObj.get(CLASS_NAME);
 		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
-		Class clazz = CommonLocator.get().classLookup().getClassForName(
-				cn.stringValue());
+		Class clazz = CommonLocator.get().classLookup()
+				.getClassForName(cn.stringValue());
 		Object obj = CommonLocator.get().classLookup().newInstance(clazz);
 		GwittirBridge gb = GwittirBridge.get();
 		for (String propertyName : props.keySet()) {
@@ -85,7 +86,7 @@ public class AlcinaBeanSerializer {
 		if (type == HashSet.class) {
 			c = new HashSet();
 		}
-		if (type == ArrayList.class) {
+		if (type == ArrayList.class || type == List.class) {
 			c = new ArrayList();
 		}
 		if (c != null) {
@@ -119,16 +120,18 @@ public class AlcinaBeanSerializer {
 		if (value == null) {
 			return JSONNull.getInstance();
 		}
-		if(type==Object.class){
-			type=value.getClass();
+		if (type == Object.class) {
+			type = value.getClass();
 		}
-		if (type == Long.class ||type==long.class|| type == String.class || type.isEnum()) {
+		if (type == Long.class || type == long.class || type == String.class
+				|| type.isEnum()) {
 			return new JSONString(value.toString());
 		}
-		if (type==Double.class||type==double.class||type==Integer.class||type==int.class) {
+		if (type == Double.class || type == double.class
+				|| type == Integer.class || type == int.class) {
 			return new JSONNumber(((Number) value).doubleValue());
 		}
-		if (type == Boolean.class||type==boolean.class) {
+		if (type == Boolean.class || type == boolean.class) {
 			return JSONBoolean.getInstance((Boolean) value);
 		}
 		if (type == Date.class) {
@@ -172,8 +175,8 @@ public class AlcinaBeanSerializer {
 				continue;
 			}
 			Object value = gb.getPropertyValue(object, name);
-			if (!CommonUtils.equalsWithNullEquality(value, gb.getPropertyValue(
-					template, name))) {
+			if (!CommonUtils.equalsWithNullEquality(value,
+					gb.getPropertyValue(template, name))) {
 				props.put(name, serializeField(value, property.getType()));
 			}
 		}
