@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cc.alcina.extras.collections;
+package cc.alcina.framework.common.client.util;
 
 
 public class FloatPair implements Comparable<FloatPair> {

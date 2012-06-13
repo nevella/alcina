@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cc.alcina.extras.collections;
+package cc.alcina.framework.common.client.util;
 
 public class IntPair implements Comparable<IntPair> {
 	public int i1;

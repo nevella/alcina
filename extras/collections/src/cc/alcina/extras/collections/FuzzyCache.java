@@ -8,6 +8,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FloatPair;
 
 @SuppressWarnings("unchecked")
 public class FuzzyCache<I, O> {

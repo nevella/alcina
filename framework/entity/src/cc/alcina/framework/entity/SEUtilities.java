@@ -56,9 +56,9 @@ import javax.swing.JTree;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import cc.alcina.extras.collections.IntPair;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.IntPair;
 
 /**
  * @author nick@alcina.cc
