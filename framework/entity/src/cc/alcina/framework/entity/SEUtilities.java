@@ -56,6 +56,7 @@ import javax.swing.JTree;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import cc.alcina.extras.collections.IntPair;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -146,15 +147,15 @@ public class SEUtilities {
 		return input.length() == 0 || WS_PATTERN.matcher(input).matches();
 	}
 
-	public static int[] yearRange(String s) {
+	public static IntPair yearRange(String s) {
 		Matcher matcher = yearRangePattern.matcher(s);
-		int[] result = new int[2];
+		IntPair result = new IntPair();
 		if (matcher.matches()) {
-			result[0] = Integer.parseInt(matcher.group(1));
+			result.i1 = Integer.parseInt(matcher.group(1));
 			if (matcher.group(3) != null) {
-				result[1] = Integer.parseInt(matcher.group(3));
+				result.i2 = Integer.parseInt(matcher.group(3));
 			} else {
-				result[1] = result[0];
+				result.i2=result.i1;
 			}
 		}
 		return result;
