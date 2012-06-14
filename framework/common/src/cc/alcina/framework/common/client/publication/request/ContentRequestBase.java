@@ -78,6 +78,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	private boolean footer = false;
 	private Long randomSeed;
 	private transient boolean test;
+	private String publicDescription;
 	private Map<String,String> properties=new LinkedHashMap<String, String>();
 
 	public Class<? extends ContentDeliveryType> deliveryMode() {
@@ -351,6 +352,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	@Override
 	public String toString() {
+		if(publicDescription!=null){
+			return publicDescription;
+		}
 		String s = contentDefinition == null ? "" : getContentDefinition()
 				.toString()
 				+ "\n" + "-";
@@ -382,5 +386,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	public void setRandomSeed(Long randomSeed) {
 		this.randomSeed = randomSeed;
+	}
+
+	public String getPublicDescription() {
+		return this.publicDescription;
+	}
+
+	public void setPublicDescription(String publicDescription) {
+		this.publicDescription = publicDescription;
 	}
 }
