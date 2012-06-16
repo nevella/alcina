@@ -75,7 +75,11 @@ public class AlcinaHistoryItem {
 
 	public int getIntParameter(String key) {
 		String value = params.get(key);
-		return value == null ? 0 : Integer.parseInt(value);
+		try {
+			return value == null ? 0 : Integer.parseInt(value);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
 	}
 
 	public long getLocalId() {
@@ -84,7 +88,11 @@ public class AlcinaHistoryItem {
 
 	public long getLongParameter(String key) {
 		String value = params.get(key);
-		return value == null ? 0 : Long.parseLong(value);
+		try {
+			return value == null ? 0 : Long.parseLong(value);
+		} catch (NumberFormatException e) {
+			return 0;
+		}
 	}
 
 	public AlcinaHistory.SearchHistoryInfo getSearchHistoryInfo() {
