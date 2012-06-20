@@ -18,12 +18,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.gwt.user.client.History;
-
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.URLComponentEncoder;
+
+import com.google.gwt.user.client.History;
 
 /**
  * 
@@ -34,11 +34,9 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	public static final String SEARCH = "SEARCH";
 
-	public static final String TAB_KEY = "t";
+	public static final String LOCATION_KEY = "t";
 
 	public static final String CONTENT_KEY = "c";
-
-	public static final String TAB_SUB_KEY = "ts";
 
 	public static final String SEARCH_INDEX = "sdi";
 
@@ -127,14 +125,28 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 		return tokenDisplayNames.get(token);
 	}
 
-	public boolean isCurrentTabAndSubtab(AlcinaHistoryItem info) {
+	public boolean isEquivalentToCurrent(I info, String... keys) {
 		if (currentEvent == null) {
 			return info == null;
 		}
-		return CommonUtils.equalsWithNullEquality(currentEvent.getTabName(),
-				info.getTabName())
-				&& CommonUtils.equalsWithNullEquality(currentEvent
-						.getSubTabName(), info.getSubTabName());
+		for (int i = 0; i < keys.length; i++) {
+			String key = keys[i];
+			if (key.equals(LOCATION_KEY)) {
+				int locationIndex = Integer.parseInt(keys[++i]);
+				if (!CommonUtils.equalsWithNullEquality(
+						currentEvent.getLocationPart(locationIndex),
+						info.getLocationPart(locationIndex))) {
+					return false;
+				}
+			} else {
+				if (!CommonUtils.equalsWithNullEquality(
+						currentEvent.getStringParameter(key),
+						info.getStringParameter(key))) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	public boolean isNoHistoryDisabled() {
@@ -145,11 +157,12 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 		lastEvent = currentEvent;
 		currentEvent = parseToken(historyToken);
 	}
+
 	public I ensureEventFromCurrentToken() {
 		onHistoryChanged(History.getToken());
 		return getCurrentEvent();
-		
 	}
+
 	public I parseToken(String historyToken) {
 		I item = createHistoryInfo();
 		Map<String, String> params = item.parseParameters(historyToken);
@@ -226,8 +239,12 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 		}
 
 		public SimpleHistoryEventInfo(String displayName) {
+			this(displayName, "");
+		}
+
+		public SimpleHistoryEventInfo(String displayName, String historyToken) {
 			this.displayName = displayName;
-			historyToken = "";
+			this.historyToken = historyToken;
 		}
 	}
 }

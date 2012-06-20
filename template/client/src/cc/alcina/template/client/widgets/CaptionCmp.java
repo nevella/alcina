@@ -40,7 +40,7 @@ public class CaptionCmp extends Composite implements StateChangeListener {
 		FlowPanel panel = new FlowPanel();
 		Hyperlink hl = new Hyperlink(
 				"<img class='main-home-icon'  src='_pix/logo.png'/>", true,
-				CommonUtils.format("%1=%2", AlcinaTemplateHistory.TAB_KEY,
+				CommonUtils.format("%1=%2", AlcinaTemplateHistory.LOCATION_KEY,
 						AlcinaTemplateHistoryTokens.HOME_TAB));
 		SimplePanel sp = new SimplePanel();
 		sp.setStyleName("main-home-icon");

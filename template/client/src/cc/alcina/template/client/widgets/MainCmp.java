@@ -61,7 +61,7 @@ public class MainCmp extends MainCmpBase {
 			if (PermissionsManager.get().isPermissible(tab)) {
 				Hyperlink hl = new Hyperlink(tab.getDisplayName(),
 						CommonUtils.format("%1=%2",
-								AlcinaTemplateHistory.TAB_KEY,
+								AlcinaTemplateHistory.LOCATION_KEY,
 								tab.getHistoryToken()));
 				tabPanel.add(tab, hl);
 				if (tab.getClass() == currentTabClass) {

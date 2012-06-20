@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client.logic;
 import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,11 +109,20 @@ public class AlcinaHistoryItem {
 	}
 
 	public String getSubTabName() {
-		return getStringParameter(TAB_SUB_KEY);
+		return getLocationPart(1);
+	}
+
+	public String getLocation() {
+		return getStringParameter(LOCATION_KEY);
 	}
 
 	public String getTabName() {
-		return getStringParameter(TAB_KEY);
+		return getLocationPart(0);
+	}
+
+	protected String getLocationPart(int idx) {
+		List<String> parts = getLocationParts();
+		return idx < parts.size() ? parts.get(idx) : null;
 	}
 
 	public String toTokenString() {
@@ -147,6 +157,10 @@ public class AlcinaHistoryItem {
 		setParameter(LOCAL_ID_KEY, localId);
 	}
 
+	public void setLocation(String location) {
+		setParameter(LOCATION_KEY, location);
+	}
+
 	public void setNoHistory(boolean noHistory) {
 		setParameter(NO_HISTORY_KEY, noHistory);
 	}
@@ -178,11 +192,32 @@ public class AlcinaHistoryItem {
 	}
 
 	public void setSubTabName(String subTabName) {
-		setParameter(TAB_SUB_KEY, subTabName);
+		setLocationPart(1, subTabName);
 	}
 
 	public void setTabName(String tabName) {
-		setParameter(TAB_KEY, tabName);
+		setLocationPart(0, tabName);
+	}
+
+	protected void setLocationPart(int idx, String name) {
+		List<String> parts = getLocationParts();
+		for (int i = 0; i <= idx; i++) {
+			if (i == parts.size()) {
+				parts.add(i, "");// clearer semantics
+			}
+		}
+		parts.set(idx, name);
+		for (int i = parts.size() - 1; i >= 0; i--) {
+			if (CommonUtils.isNullOrEmpty(parts.get(i))) {
+				parts.remove(i);
+			}
+		}
+		setLocation(CommonUtils.join(parts, "*"));
+	}
+
+	private List<String> getLocationParts() {
+		String[] locs = CommonUtils.nullToEmpty(getLocation()).split("\\*");
+		return new ArrayList<String>(Arrays.asList(locs));
 	}
 
 	public void setY(int y) {
