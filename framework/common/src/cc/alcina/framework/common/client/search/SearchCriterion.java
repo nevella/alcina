@@ -56,7 +56,13 @@ public abstract class SearchCriterion extends BaseBindable implements TreeRender
 	public Direction getDirection() {
 		return this.direction;
 	}
-
+	protected String targetPropertyNameWithTable(){
+		String targetPropertyName = getTargetPropertyName();
+		if(targetPropertyName==null||!targetPropertyName.contains(".")){
+			return targetPropertyName;
+		}
+		return "t."+targetPropertyName;
+	}
 	public String getDisplayName() {
 		return this.displayName;
 	}

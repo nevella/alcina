@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
@@ -25,6 +26,7 @@ import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.ui.table.HasChunks;
 import com.totsp.gwittir.client.ui.table.SortableDataProvider;
@@ -38,10 +40,13 @@ public class SearchDataProvider implements SortableDataProvider {
 
 	private final AsyncCallback completionCallback;
 
+	private final Converter converter;
+
 	public SearchDataProvider(SingleTableSearchDefinition def,
-			AsyncCallback completionCallback) {
+			AsyncCallback completionCallback, Converter converter) {
 		this.def = def;
 		this.completionCallback = completionCallback;
+		this.converter = converter;
 	}
 
 	public void getChunk(HasChunks table, int chunkNumber) {
@@ -95,10 +100,14 @@ public class SearchDataProvider implements SortableDataProvider {
 				if (isCancelled()) {
 					return;
 				}
+				List results = result.getResults();
+				if(converter!=null){
+					results = DefaultCollectionFilter.convert(results, converter);
+				}
 				if (callBackInit) {
-					table.init(result.getResults(), result.pageCount());
+					table.init(results, result.pageCount());
 				} else {
-					table.setChunk(result.getResults());
+					table.setChunk(results);
 				}
 				completionCallback.onSuccess(result);
 				runningCallback = null;

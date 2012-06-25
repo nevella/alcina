@@ -22,7 +22,7 @@ public class PersistentObjectCriterion extends SearchCriterion {
 		if (classRef == null) {
 			return result;
 		}
-		result.eql = "t."+getTargetPropertyName() + ".id = ?";
+		result.eql = targetPropertyNameWithTable() + ".id = ?";
 		result.parameters.add(classRef.getId());
 		return result;
 	}

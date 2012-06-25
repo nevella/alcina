@@ -11,25 +11,23 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import java.util.Set;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface IGroup extends IVersionable{
-
+public interface IGroup extends IVersionable {
 	public long getId();
 
 	public Set<? extends IGroup> getMemberGroups();
+
 	public Set<? extends IGroup> getMemberOfGroups();
 
 	public Set<? extends IUser> getMemberUsers();
-	
+
 	public void setMemberUsers(Set<? extends IUser> memberUsers);
 
 	public String getName();
@@ -37,7 +35,4 @@ import java.util.Set;
 	public Set<IGroup> listMemberGroups();
 
 	public Set<IUser> listMemberUsers();
-	
-	
-	
 }

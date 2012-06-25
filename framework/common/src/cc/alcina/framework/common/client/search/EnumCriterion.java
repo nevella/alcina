@@ -75,7 +75,7 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		E value = getValue();
 		if (value != null
 				&& !CommonUtils.isNullOrEmpty(getTargetPropertyName())) {
-			result.eql = "t." + getTargetPropertyName() + " = ? ";
+			result.eql = targetPropertyNameWithTable() + " = ? ";
 			result.parameters.add(valueAsString() ? value.toString() : value);
 		}
 		return result;

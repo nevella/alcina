@@ -41,6 +41,7 @@ import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
@@ -71,15 +72,18 @@ public class SearchViewProvider implements ViewProvider {
 	public Widget getViewForObject(Object obj) {
 		return getViewForObject(obj, "Search");
 	}
-
 	public Widget getViewForObject(Object obj, String searchButtonTitle) {
+		return getViewForObject(obj, searchButtonTitle, null);
+	}
+	public Widget getViewForObject(Object obj, String searchButtonTitle, Converter converter) {
+		
 		action = (RemoteActionWithParameters<SingleTableSearchDefinition>) obj;
 		FlowPanel vp = new FlowPanel();
 		vp.setStyleName("alcina-BeanPanel");
 		if (!isWithoutCaption()) {
 			vp.add(createCaption(action));
 		}
-		searchPanel = new SearchPanel(action, searchButtonTitle);
+		searchPanel = new SearchPanel(action, searchButtonTitle,converter);
 		vp.add(searchPanel);
 		return vp;
 	}
@@ -128,10 +132,14 @@ public class SearchViewProvider implements ViewProvider {
 
 		private NiceWidthBoundTable table;
 
+		private final Converter converter;
+
+
 		public SearchPanel(
 				RemoteActionWithParameters<SingleTableSearchDefinition> action,
-				String buttonTitle) {
+				String buttonTitle, Converter converter) {
 			this.action = action;
+			this.converter = converter;
 			HTML description = new HTML("<i>" + action.getDescription()
 					+ "</i><br />");
 			this.resultsHolder = new FlowPanel();
@@ -202,7 +210,7 @@ public class SearchViewProvider implements ViewProvider {
 			}
 			mask = addTableMasks(mask);
 			SearchDataProvider dp = new SearchDataProvider(def,
-					completionCallback);
+					completionCallback,converter);
 			this.table = new NiceWidthBoundTable(mask, factory, fields, dp);
 			table.addStyleName("results-table");
 			resultsHolder.add(table);

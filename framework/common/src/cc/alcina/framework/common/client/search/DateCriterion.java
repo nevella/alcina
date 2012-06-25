@@ -39,7 +39,7 @@ public class DateCriterion extends AbstractDateCriterion {
 		if (getDate() == null) {
 			return result;
 		}
-		result.eql = "t." + getTargetPropertyName()
+		result.eql = targetPropertyNameWithTable()
 				+ (getDirection() == Direction.ASCENDING ? ">=" : "<") + " ? ";
 		// round up if it's to...assume we're talking whole days here
 		Date d = new Date(getDate().getTime()

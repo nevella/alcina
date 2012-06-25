@@ -65,15 +65,15 @@ public class TxtCriterion extends SearchCriterion {
 		}
 		switch (txtCriterionType) {
 		case EQUALS:
-			result.eql = "lower(t." + getTargetPropertyName() + ") =  ? ";
+			result.eql = "lower(" + targetPropertyNameWithTable() + ") =  ? ";
 			result.parameters.add(text.toLowerCase());
 			break;
 		case CONTAINS:
-			result.eql = "lower(t." + getTargetPropertyName() + ") like  ? ";
+			result.eql = "lower(" + targetPropertyNameWithTable() + ") like  ? ";
 			result.parameters.add("%" + text.toLowerCase() + "%");
 			break;
 		case EQUALS_OR_LIKE:
-			result.eql = "lower(t." + getTargetPropertyName() + ") "
+			result.eql = "lower(" + targetPropertyNameWithTable() + ") "
 					+ (text.contains("%") ? "like" : "=") + "  ? ";
 			result.parameters.add(text.toLowerCase());
 			break;

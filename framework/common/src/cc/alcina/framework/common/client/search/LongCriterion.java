@@ -39,7 +39,7 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 		if (value == null) {
 			return result;
 		}
-		result.eql = "t." + getTargetPropertyName() + " =  ? ";
+		result.eql = targetPropertyNameWithTable() + " =  ? ";
 		result.parameters.add(value);
 		return result;
 	}

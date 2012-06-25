@@ -240,6 +240,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 							// direct references (parent/one-one) are not
 							// removed, throw a referential integrity exception
 							// instead
+							// i.e. these *must* be handled explicity in code
+							// three years later, not sure why I opted for the
+							// above
+							// but I guess, if it's server layer, the programmer
+							// has more control
+							// and there may be a decent reason
 						}
 					}
 				}

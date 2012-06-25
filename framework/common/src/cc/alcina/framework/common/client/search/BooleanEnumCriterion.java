@@ -32,7 +32,9 @@ public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 	public BooleanEnum getBooleanEnum() {
 		return booleanEnum;
 	}
-
+	public boolean toBoolean() {
+		return booleanEnum==BooleanEnum.TRUE;
+	}
 	public void setBooleanEnum(BooleanEnum booleanEnum) {
 		BooleanEnum old_booleanEnum = this.booleanEnum;
 		this.booleanEnum = booleanEnum;

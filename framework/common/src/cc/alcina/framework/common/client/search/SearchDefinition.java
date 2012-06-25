@@ -24,6 +24,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
@@ -43,7 +44,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		Serializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation, HasEquivalence<SearchDefinition> {
 	static final transient long serialVersionUID = -1L;
-	
+
 	transient final String orderJoin = ", ";
 
 	private int resultsPerPage;
@@ -238,9 +239,18 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		return (C) ogs.get(clazz);
 	}
 
+	/**
+	 * Note, this does not allow multiple orderings by default (to simplify
+	 * injection avoidance) Override if you need multiple orderings
+	 */
 	public String propertyAlias(String propertyName) {
 		if (propertyColumnAliases.containsKey(propertyName)) {
 			return propertyColumnAliases.get(propertyName);
+		}
+		if (!propertyName.matches("[A-Za-z0-9\\.]+")) {
+			throw new RuntimeException(
+					"Possible injection exception - order property: "
+							+ propertyName);
 		}
 		return propertyName;
 	}
@@ -327,10 +337,11 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
 	}
+
 	/**
 	 * For more complex search definitions, override this
 	 */
-	public Object provideResultsType(){
+	public Object provideResultsType() {
 		return null;
 	}
 

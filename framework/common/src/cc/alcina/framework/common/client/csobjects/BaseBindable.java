@@ -36,4 +36,22 @@ public class BaseBindable extends BaseSourcesPropertyChangeEvents implements
 	@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
 	public static class BaseBindableAdapter extends BaseBindable {
 	}
+	public interface HasContext<T>{
+
+		public abstract void _setContext(T _context);
+
+		public abstract T _getContext();
+		
+	}
+	public static class BaseBindableWithContext<T> extends BaseBindable implements HasContext<T>{
+		private transient T _context;
+		@Override
+		public T _getContext(){
+			return _context;
+		}
+		@Override
+		public void _setContext(T _context){
+			this._context=_context;
+		}
+	}
 }
