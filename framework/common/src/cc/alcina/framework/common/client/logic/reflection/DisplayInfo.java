@@ -41,7 +41,9 @@ public @interface DisplayInfo {
 
 	public static final int DISPLAY_WRAP_PROPERTY = DISPLAY_WRAP|DISPLAY_AS_PROPERTY;
 
-	String info() default "";
+	String helpText() default "";
+	
+	String styleName() default "";
 
 	String iconName() default "";// indicates no icon
 

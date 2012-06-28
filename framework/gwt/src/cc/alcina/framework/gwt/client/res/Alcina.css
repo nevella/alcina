@@ -822,6 +822,12 @@ table.alcina-SelectorFrame.minimal div.alcina-Selector{
 	white-space:nowrap;
 	 
 }
+table.alcina-SelectorFrame.minimal .selectx .text {
+	padding-right: 6px;
+	display: inline-block;
+	max-width: 450px;
+	overflow-x: hidden;
+}
 table.alcina-SelectorFrame.minimal .caption-hint{
 	font-style:italic;
 }

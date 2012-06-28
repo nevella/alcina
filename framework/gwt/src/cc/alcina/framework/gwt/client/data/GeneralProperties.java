@@ -67,14 +67,14 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 		return filterDelayMs;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(info = "CSS which will be saved on the server, and reapplied each time you log in", name = "designer.persistentCss"))
+	@VisualiserInfo(displayInfo = @DisplayInfo(helpText = "CSS which will be saved on the server, and reapplied each time you log in", name = "designer.persistentCss"))
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
 	@CustomiserInfo(customiserClass = TextAreaCustomiser.class)
 	public String getPersistentCss() {
 		return this.persistentCss;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(info = "CSS which will be applied in this session, but not saved on the server", name = "designer.transientCss"))
+	@VisualiserInfo(displayInfo = @DisplayInfo(helpText = "CSS which will be applied in this session, but not saved on the server", name = "designer.transientCss"))
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
 	@CustomiserInfo(customiserClass = TextAreaCustomiser.class)
 	@XmlTransient

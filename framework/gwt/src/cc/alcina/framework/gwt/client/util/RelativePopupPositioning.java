@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.util;
 
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.OtherPositioningStrategy;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupPositioningParams;
@@ -8,6 +9,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionC
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.MouseEvent;
 import com.google.gwt.user.client.Event;
@@ -17,6 +19,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class RelativePopupPositioning {
 	public static final String RENDER_CONTEXT_BOUNDING_PARENT = "RENDER_CONTEXT_BOUNDING_PARENT";
+	public static final String CONTEXT_KEEP_RELATIVE_PARENT_CLIP = "CONTEXT_KEEP_RELATIVE_PARENT_CLIP";
 
 	private static int INVALID = -99999;
 
@@ -116,6 +119,10 @@ public class RelativePopupPositioning {
 			Widget relativeContainer, final RelativePopupPanel rpp,
 			final int shiftX, final int shiftY) {
 		final Widget positioningWidget = relativeContainer;
+		if(!LooseContextProvider.getContext().getBoolean(CONTEXT_KEEP_RELATIVE_PARENT_CLIP)){
+			Style style = positioningWidget.getElement().getStyle();
+			style.clearProperty("clip");
+		}
 		if (widgetToShow != null) {
 			rpp.setWidget(widgetToShow);
 		}

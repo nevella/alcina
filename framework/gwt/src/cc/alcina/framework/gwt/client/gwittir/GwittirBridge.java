@@ -251,22 +251,23 @@ public class GwittirBridge implements PropertyAccessor {
 					.getAnnotation(PropertyPermissions.class);
 			VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
 			Association association = pr.getAnnotation(Association.class);
+			DisplayInfo displayInfo = visualiserInfo.displayInfo();
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
 					&& visualiserInfo != null
 					&& PermissionsManager.get().isPermissible(obj,
 							visualiserInfo.visible())
-					&& ((visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_AS_PROPERTY) != 0);
+					&& ((displayInfo.displayMask() & DisplayInfo.DISPLAY_AS_PROPERTY) != 0);
 			if (!fieldVisible) {
 				return null;
 			}
-			boolean focus = visualiserInfo.displayInfo().focus();
+			boolean focus = displayInfo.focus();
 			boolean propertyIsCollection = (p.getType() == Set.class);
 			boolean fieldEditable = editableWidgets
 					&& PermissionsManager.get()
 							.checkEffectivePropertyPermission(op, pp, obj,
 									false)
-					&& ((visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_RO) == 0);
+					&& ((displayInfo.displayMask() & DisplayInfo.DISPLAY_RO) == 0);
 			;
 			Class domainType = p.getType();
 			domainType = (association == null || !propertyIsCollection || association
@@ -279,7 +280,7 @@ public class GwittirBridge implements PropertyAccessor {
 						propertyIsCollection);
 			}
 			boolean isEnum = domainType.isEnum();
-			boolean displayWrap = (visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_WRAP) > 0;
+			boolean displayWrap = (displayInfo.displayMask() & DisplayInfo.DISPLAY_WRAP) > 0;
 			if (bwp == null && isEnum) {
 				bwp = fieldEditable ? new ListBoxEnumProvider(domainType)
 						: NOWRAP_LABEL_PROVIDER;
@@ -326,9 +327,16 @@ public class GwittirBridge implements PropertyAccessor {
 					validator = getValidator(domainType, obj,
 							pr.getPropertyName(), vf);
 				}
-				return new Field(pr.getPropertyName(), TextProvider.get()
-						.getLabelText(c, pr), bwp, validator, vf,
+				Field field = new Field(pr.getPropertyName(), TextProvider
+						.get().getLabelText(c, pr), bwp, validator, vf,
 						getDefaultConverter(bwp, p.getType()));
+				if (!displayInfo.styleName().isEmpty()) {
+					field.setStyleName(displayInfo.styleName());
+				}
+				if (!displayInfo.helpText().isEmpty()) {
+					field.setStyleName(displayInfo.helpText());
+				}
+				return field;
 			}
 		} else if (beanInfo.allPropertiesVisualisable()
 				&& PermissionsManager.get().checkEffectivePropertyPermission(
