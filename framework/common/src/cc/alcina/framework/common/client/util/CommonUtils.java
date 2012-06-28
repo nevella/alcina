@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -320,6 +321,10 @@ public class CommonUtils {
 
 	public static boolean isNullOrEmpty(String string) {
 		return string == null || string.length() == 0;
+	}
+
+	public static boolean isNullOrEmpty(Collection c) {
+		return c == null || c.isEmpty();
 	}
 
 	public static boolean isNotNullOrEmpty(String string) {
@@ -725,6 +730,34 @@ public class CommonUtils {
 			if (throwable.getCause() == throwable
 					|| throwable.getCause() == null) {
 				return false;
+			}
+			throwable = throwable.getCause();
+		}
+	}
+
+	public static boolean isDerivedFrom(Object o, Class c) {
+		if (o == null) {
+			return false;
+		}
+		Class c2 = o.getClass();
+		while (c2 != Object.class) {
+			if (c2 == c) {
+				return true;
+			}
+			c2 = c2.getSuperclass();
+		}
+		return false;
+	}
+
+	public static <T extends Throwable> T extractCauseOfClass(
+			Throwable throwable, Class<T> throwableClass) {
+		while (true) {
+			if (isDerivedFrom(throwable, throwableClass)) {
+				return (T) throwable;
+			}
+			if (throwable.getCause() == throwable
+					|| throwable.getCause() == null) {
+				return null;
 			}
 			throwable = throwable.getCause();
 		}

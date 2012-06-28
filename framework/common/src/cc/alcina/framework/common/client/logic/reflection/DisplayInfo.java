@@ -52,4 +52,6 @@ public @interface DisplayInfo {
 	int displayMask() default DISPLAY_AS_PROPERTY;
 	
 	Class filterClass() default Void.class;
+	
+	boolean focus() default false;
 }

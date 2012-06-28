@@ -11,28 +11,48 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class WebException extends Exception implements Serializable {
+public class WebException extends Exception implements Serializable {
 	public static final String THE_APPLICATION_IS_OUT_OF_DATE = "The application is out of date";
-	public WebException(){
-		
+
+	public WebException() {
 	}
-	public WebException(Exception e){
+
+	public WebException(Exception e) {
 		super(e.getMessage());
 	}
-	public WebException(String message){
+
+	public WebException(String message) {
 		super(message);
 	}
-	public WebException(String message,Exception e){
-		super(message+" Cause: "+e.getClass()+" - "+e.getMessage());
+
+	public WebException(String message, Exception e) {
+		super(message + " Cause: " + e.getClass() + " - " + e.getMessage());
+	}
+
+	public static class ClientMessagingWebException extends WebException {
+		private transient String internalMessage;
+
+		public ClientMessagingWebException() {
+		}
+
+		public ClientMessagingWebException(String clientMessage,
+				String internalMessage) {
+			super(clientMessage);
+			this.internalMessage = internalMessage;
+		}
+
+		@Override
+		public String getMessage() {
+			return internalMessage != null ? internalMessage : super
+					.getMessage();
+		}
 	}
 }

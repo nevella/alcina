@@ -186,6 +186,7 @@ public class ContentViewFactory {
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
 						editable, false);
 		GridForm f = new GridForm(fields, 1, factory);
+		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean,fields));
 		f.setValue(bean);
 		cp.add(f);
 		cp.setBoundWidget(f);
@@ -803,6 +804,8 @@ public class ContentViewFactory {
 				}
 			}
 		}
+
+		
 	}
 
 	public static class SavePanel extends FlowPanel {

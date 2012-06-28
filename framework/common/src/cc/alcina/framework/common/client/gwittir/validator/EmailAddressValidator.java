@@ -11,11 +11,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
 
-
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.totsp.gwittir.client.validator.ValidationException;
@@ -26,15 +25,20 @@ import com.totsp.gwittir.client.validator.Validator;
  *
  * @author Nick Reddel
  */
-
- public class EmailAddressValidator implements Validator {
+public class EmailAddressValidator implements ParameterisedValidator {
 	private boolean ignoreEmpties = true;
 
 	private String multipleSeparator = null;
 
+	public static final String STANDARD_MULTIPLE_SEPARATOR = "(;|,| )+";
+
 	private static final String EMAIL_REGEX = "([a-zA-Z0-9_'+*$%\\^&!\\.\\-])+\\@(([a-zA-Z0-9\\-])+\\.)+([a-zA-Z0-9:]{2,4})+";
 
-	private static final String EMAIL_REGEX_REPLACE = "234IBBDA";
+	private static final String EMAIL_REGEX_REPLACE = "234@@@IBBDA";
+
+	public static final String PARAM_MULTIPLE_SEPARATOR = "multiple-separator";
+
+	public static final String PARAM_IGNORE_EMPTIES = "ignore-empties";
 
 	public Object validate(Object value) throws ValidationException {
 		if ((value == null) || (value.toString().length() < 1)) {
@@ -44,7 +48,7 @@ import com.totsp.gwittir.client.validator.Validator;
 			throw new ValidationException("Not a valid email address",
 					EmailAddressValidator.class);
 		}
-		value=value.toString().trim();
+		value = value.toString().trim();
 		String sz = value.toString();
 		String[] strings = null;
 		if (multipleSeparator != null) {
@@ -77,5 +81,19 @@ import com.totsp.gwittir.client.validator.Validator;
 
 	public String getMultipleSeparator() {
 		return multipleSeparator;
+	}
+
+	@Override
+	public void setParameters(NamedParameter[] params) {
+		NamedParameter p = NamedParameter.Support.getParameter(params,
+				PARAM_IGNORE_EMPTIES);
+		if (p != null) {
+			setIgnoreEmpties(p.booleanValue());
+		}
+		p = NamedParameter.Support.getParameter(params,
+				PARAM_MULTIPLE_SEPARATOR);
+		if (p != null) {
+			setMultipleSeparator(p.stringValue());
+		}
 	}
 }

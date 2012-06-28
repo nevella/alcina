@@ -96,19 +96,27 @@ public class JPAHibernateImpl implements JPAImplementation {
 	}
 
 	public void interpretException(DomainTransformException ex) {
+		DomainTransformExceptionType type = interpretExceptionType(ex);
+		if (type != null) {
+			ex.setType(type);
+		}
+	}
+
+	public DomainTransformExceptionType interpretExceptionType(Exception ex) {
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		ex.printStackTrace(pw);
 		String st = sw.toString();
 		if (st.contains("OptimisticLockException")) {
-			ex.setType(DomainTransformExceptionType.OPTIMISTIC_LOCK_EXCEPTION);
+			return DomainTransformExceptionType.OPTIMISTIC_LOCK_EXCEPTION;
 		}
 		if (st.contains("org.hibernate.exception.ConstraintViolationException")) {
-			ex.setType(DomainTransformExceptionType.FK_CONSTRAINT_EXCEPTION);
+			return DomainTransformExceptionType.FK_CONSTRAINT_EXCEPTION;
 		}
 		if (st.contains("java.beans.IntrospectionException")) {
-			ex.setType(DomainTransformExceptionType.INTROSPECTION_EXCEPTION);
+			return DomainTransformExceptionType.INTROSPECTION_EXCEPTION;
 		}
+		return null;
 	}
 
 	public File getConfigDirectory() {
@@ -159,7 +167,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 	@Override
 	public void muteClassloaderLogging(boolean mute) {
-		java.util.logging.Logger logger = java.util.logging.Logger.getLogger("org.jboss.modules");
+		java.util.logging.Logger logger = java.util.logging.Logger
+				.getLogger("org.jboss.modules");
 		if (mute) {
 			level = logger.getLevel();
 			logger.setLevel(java.util.logging.Level.SEVERE);

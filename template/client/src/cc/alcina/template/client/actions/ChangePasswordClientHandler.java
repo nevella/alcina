@@ -118,7 +118,7 @@ public class ChangePasswordClientHandler implements PermissibleActionHandler {
 				b.getLeft().validator = password2Validator;
 			}
 			RelativePopupValidationFeedback feedback = new RelativePopupValidationFeedback(
-					RelativePopupValidationFeedback.BOTTOM);
+					RelativePopupValidationFeedback.BOTTOM,b.getLeft().feedback);
 			feedback.setCss("withBkg");
 			b.getLeft().feedback = feedback;
 		}

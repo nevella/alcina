@@ -39,13 +39,13 @@ import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 	private String orderPropertyName;
 
 	
-	private transient Class<R> resultClass;
+	private transient Class<? extends R> resultClass;
 
-	public void setResultClass(Class<R> resultClass) {
+	public void setResultClass(Class<? extends R> resultClass) {
 		this.resultClass = resultClass;
 	}
 
-	public Class<R> getResultClass() {
+	public Class<? extends R> getResultClass() {
 		return resultClass;
 	}
 

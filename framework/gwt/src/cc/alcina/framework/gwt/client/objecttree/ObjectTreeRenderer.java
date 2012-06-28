@@ -242,7 +242,7 @@ public class ObjectTreeRenderer {
 			Field f = GwittirBridge.get().getField(renderable.getClass(),
 					propertyName, true, false);
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
-					RelativePopupValidationFeedback.BOTTOM);
+					RelativePopupValidationFeedback.BOTTOM,f.getFeedback());
 			vf.addCssBackground();
 			if (f.getCellProvider() instanceof ListBoxEnumProvider
 					&& renderable instanceof HasWithNull) {

@@ -92,19 +92,25 @@ public interface HasIdAndLocalId extends HasId {
 		public static String asDomainPoint(HasId hi) {
 			if (hi instanceof HasIdAndLocalId) {
 				HasIdAndLocalId hili = (HasIdAndLocalId) hi;
-				return CommonUtils.format("Hili: %1 : %2 / %3", CommonUtils
-						.simpleClassName(hili.getClass()), hili.getId(), hili
-						.getLocalId());
+				return CommonUtils.format("Hili: %1 : %2 / %3",
+						CommonUtils.simpleClassName(hili.getClass()),
+						hili.getId(), hili.getLocalId());
 			}
-			return CommonUtils.format("HasId: %1 : %2 ", CommonUtils
-					.simpleClassName(hi.getClass()), hi.getId());
+			return CommonUtils.format("HasId: %1 : %2 ",
+					CommonUtils.simpleClassName(hi.getClass()), hi.getId());
 		}
-		public static Long getIdOrNull(HasId hi){
-			return hi==null?null:hi.getId();
+
+		public static Long getIdOrNull(HasId hi) {
+			return hi == null ? null : hi.getId();
 		}
-		public static <T extends HasId> T getById(Collection<T> values, long id){
-			for(T value:values){
-				if(value.getId()==id){
+
+		public static long getIdOrZero(HasId hi) {
+			return hi == null ? 0 : hi.getId();
+		}
+
+		public static <T extends HasId> T getById(Collection<T> values, long id) {
+			for (T value : values) {
+				if (value.getId() == id) {
 					return value;
 				}
 			}

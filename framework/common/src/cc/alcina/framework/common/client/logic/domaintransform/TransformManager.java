@@ -382,9 +382,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 							hili.getClass())));
 		}
 	}
-	public void deregisterDomainObject(Object o){
+
+	public void deregisterDomainObject(Object o) {
 		deregisterDomainObjects(CommonUtils.wrapInCollection(o));
 	}
+
 	public void deregisterDomainObjects(Collection<HasIdAndLocalId> hilis) {
 		if (getDomainObjects() != null) {
 			getDomainObjects().deregisterObjects(hilis);
@@ -571,12 +573,18 @@ public abstract class TransformManager implements PropertyChangeListener,
 			String collectionPropertyName, Object delta,
 			CollectionModificationType modificationType) {
 		Collection deltaC = CommonUtils.wrapInCollection(delta);
+		Collection old = (Collection) CommonLocator
+				.get()
+				.propertyAccessor()
+				.getPropertyValue(objectWithCollection,
+						collectionPropertyName);
 		Collection c = CommonUtils
-				.shallowCollectionClone((Collection) CommonLocator
-						.get()
-						.propertyAccessor()
-						.getPropertyValue(objectWithCollection,
-								collectionPropertyName));
+				.shallowCollectionClone(old);
+		if (c == null) {
+			// handles the case when we're working within a transaction and try
+			// to clone, say a PersistentSet
+			c = new LinkedHashSet(old);
+		}
 		if (modificationType == CollectionModificationType.ADD) {
 			c.addAll(deltaC);
 		} else {
@@ -862,22 +870,23 @@ public abstract class TransformManager implements PropertyChangeListener,
 				.registerableDomainObjects()));
 		ClassRef.add(h.getClassRefs());
 	}
-	public void registerDomainObjectsInHolderAsync(final DomainModelHolder h,final ScheduledCommand postRegisterCallback) {
+
+	public void registerDomainObjectsInHolderAsync(final DomainModelHolder h,
+			final ScheduledCommand postRegisterCallback) {
 		if (this.getDomainObjects() != null) {
 			getDomainObjects().removeListeners();
 		}
-		MapObjectLookup lookup = new MapObjectLookup(this,new ArrayList());
+		MapObjectLookup lookup = new MapObjectLookup(this, new ArrayList());
 		this.setDomainObjects(lookup);
-		lookup.registerAsync(h.registerableDomainObjects(),new ScheduledCommand() {
-			@Override
-			public void execute() {
-				ClassRef.add(h.getClassRefs());
-				postRegisterCallback.execute();
-			}
-		});
-		
+		lookup.registerAsync(h.registerableDomainObjects(),
+				new ScheduledCommand() {
+					@Override
+					public void execute() {
+						ClassRef.add(h.getClassRefs());
+						postRegisterCallback.execute();
+					}
+				});
 	}
-	
 
 	public <V extends HasIdAndLocalId> Set<V> registeredObjectsAsSet(
 			Class<V> clazz) {

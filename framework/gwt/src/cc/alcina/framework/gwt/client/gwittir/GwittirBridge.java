@@ -260,6 +260,7 @@ public class GwittirBridge implements PropertyAccessor {
 			if (!fieldVisible) {
 				return null;
 			}
+			boolean focus = visualiserInfo.displayInfo().focus();
 			boolean propertyIsCollection = (p.getType() == Set.class);
 			boolean fieldEditable = editableWidgets
 					&& PermissionsManager.get()
@@ -586,5 +587,19 @@ public class GwittirBridge implements PropertyAccessor {
 				f.setLabel(label);
 			}
 		}
+	}
+
+	public Field getFieldToFocus(Object bean, Field[] fields) {
+		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
+				bean.getClass());
+		Map<String, ClientPropertyReflector> prs = bi.getPropertyReflectors();
+		for (Field field : fields) {
+			ClientPropertyReflector pr = prs.get(field.getPropertyName());
+			if (pr != null && pr.getGwPropertyInfo() != null
+					&& pr.getGwPropertyInfo().displayInfo().focus()) {
+				return field;
+			}
+		}
+		return null;
 	}
 }

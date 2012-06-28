@@ -31,6 +31,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
 import com.totsp.gwittir.client.validator.ValidationException;
+import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 /**
  * 
@@ -65,10 +66,18 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 		this.position = position;
 	}
 
+	public RelativePopupValidationFeedback(int position,
+			ValidationFeedback feedback) {
+		this(position);
+		if (feedback instanceof AbstractValidationFeedback) {
+			getMappings().putAll(
+					((AbstractValidationFeedback) feedback).getMappings());
+		}
+	}
+
 	class RelativePopup extends FlowPanel {
 		@Override
 		protected void onDetach() {
-			// TODO Auto-generated method stub
 			super.onDetach();
 		}
 	}

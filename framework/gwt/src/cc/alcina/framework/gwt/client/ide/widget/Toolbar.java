@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.util.ArrayList;
@@ -41,12 +40,12 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class Toolbar extends Composite implements PermissibleActionEvent.PermissibleActionSource,
-		ClickHandler, HasChildHandlers {
+public class Toolbar extends Composite implements
+		PermissibleActionEvent.PermissibleActionSource, ClickHandler,
+		HasChildHandlers {
 	public void addHandler(HandlerRegistration registration) {
 		this.hasChildHandlersSupport.addHandler(registration);
 	}
@@ -54,7 +53,6 @@ import com.google.gwt.user.client.ui.Widget;
 	public void detachHandlers() {
 		this.hasChildHandlersSupport.detachHandlers();
 	}
-
 
 	private List<PermissibleAction> actions;
 
@@ -153,7 +151,7 @@ import com.google.gwt.user.client.ui.Widget;
 			}
 		}
 	}
-	
+
 	protected void redraw() {
 		WidgetUtils.clearChildren(panel);
 		hasChildHandlersSupport.detachHandlers();
@@ -191,8 +189,7 @@ import com.google.gwt.user.client.ui.Widget;
 			for (PermissibleAction action : actions) {
 				ToolbarButton button = new ToolbarButton(action, asButton);
 				HandlerRegistration registration = button.addClickHandler(this);
-				hasChildHandlersSupport
-						.addHandler(registration);
+				hasChildHandlersSupport.addHandler(registration);
 				button.setEnabled(false);
 				panel.add(button);
 				actionButtons.put(action.getClass(), button);
@@ -255,7 +252,6 @@ import com.google.gwt.user.client.ui.Widget;
 			this(action, false);
 		}
 
-		// TODO-gwt2: check all calls
 		public ToolbarButton(PermissibleAction action, boolean asButton) {
 			this.asButton = asButton;
 			Widget w = null;
@@ -333,8 +329,8 @@ import com.google.gwt.user.client.ui.Widget;
 		if (sender.getParent() instanceof ToolbarButton) {
 			ToolbarButton tb = (ToolbarButton) sender.getParent();
 			vetoableActionSupport
-					.fireVetoableActionEvent(new PermissibleActionEvent(sender, tb
-							.getAction()));
+					.fireVetoableActionEvent(new PermissibleActionEvent(sender,
+							tb.getAction()));
 		}
 	}
 }

@@ -23,6 +23,8 @@ import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -218,6 +220,10 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		}
 	};
 
+	private Field autofocusField;
+
+	private Widget autofocusWidget;
+
 	protected void onUnload() {
 		if (focussedWidget != null && focusOnDetachIfEditorFocussed != null) {
 			focusOnDetachIfEditorFocussed.setFocus(true);
@@ -239,6 +245,9 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 				}
 				Widget widget = (Widget) this.createWidget(this.binding, field,
 						(SourcesPropertyChangeEvents) this.getValue());
+				if (field == autofocusField) {
+					autofocusWidget = widget;
+				}
 				if (widget instanceof HasAllFocusHandlers) {
 					HasAllFocusHandlers haff = (HasAllFocusHandlers) widget;
 					haff.addBlurHandler(blurHandler);
@@ -247,9 +256,8 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 					HasFocus hf = (HasFocus) widget;
 					hf.addFocusListener(focusListener);
 				}
-				widget
-						.ensureDebugId(AlcinaDebugIds.GRID_FORM_FIELD_DEBUG_PREFIX
-								+ field.getPropertyName());
+				widget.ensureDebugId(AlcinaDebugIds.GRID_FORM_FIELD_DEBUG_PREFIX
+						+ field.getPropertyName());
 				HTML label = new HTML(field.getLabel());
 				this.base.setWidget(row, col * 2, label);
 				this.base.getCellFormatter()
@@ -270,9 +278,10 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 							final PopupPanel p = new PopupPanel(true);
 							p.setStyleName("gwittir-GridForm-Help");
 							p.setWidget(new HTML(field.getHelpText()));
-							p.setPopupPosition(sender.getAbsoluteLeft(), sender
-									.getAbsoluteTop()
-									+ sender.getOffsetHeight());
+							p.setPopupPosition(
+									sender.getAbsoluteLeft(),
+									sender.getAbsoluteTop()
+											+ sender.getOffsetHeight());
 							p.show();
 						}
 					});
@@ -289,5 +298,26 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 		}
 		super.setModel(model);
 		this.render();
+	}
+
+	@Override
+	protected void onLoad() {
+		super.onLoad();
+		if (autofocusWidget instanceof Focusable) {
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					((Focusable) autofocusWidget).setFocus(true);
+				}
+			});
+		}
+	}
+
+	public void setAutofocusField(Field autofocusField) {
+		this.autofocusField = autofocusField;
+	}
+
+	public Field getAutofocusField() {
+		return this.autofocusField;
 	}
 }
