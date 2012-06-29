@@ -523,7 +523,7 @@ public class SyncClientSerializationStreamReader extends
 		boolean inStr = false;
 		for (int i = 0; i < encoded.length(); i++) {
 			char ch = encoded.charAt(i);
-			char ch1 = i<encoded.length()+1?encoded.charAt(i+1):0;
+			char ch1 = i<encoded.length()-1?encoded.charAt(i+1):0;
 			String cont = encoded.substring(i);
 			if (inStr) {
 				if (ch == '"') {
