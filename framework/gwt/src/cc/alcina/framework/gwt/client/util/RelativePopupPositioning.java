@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.OtherPositioningStrategy;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupPositioningParams;
@@ -19,6 +20,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class RelativePopupPositioning {
 	public static final String RENDER_CONTEXT_BOUNDING_PARENT = "RENDER_CONTEXT_BOUNDING_PARENT";
+
 	public static final String CONTEXT_KEEP_RELATIVE_PARENT_CLIP = "CONTEXT_KEEP_RELATIVE_PARENT_CLIP";
 
 	private static int INVALID = -99999;
@@ -119,9 +121,12 @@ public class RelativePopupPositioning {
 			Widget relativeContainer, final RelativePopupPanel rpp,
 			final int shiftX, final int shiftY) {
 		final Widget positioningWidget = relativeContainer;
-		if(!LooseContextProvider.getContext().getBoolean(CONTEXT_KEEP_RELATIVE_PARENT_CLIP)){
-			Style style = positioningWidget.getElement().getStyle();
-			style.clearProperty("clip");
+		if (!LooseContextProvider.getContext().getBoolean(
+				CONTEXT_KEEP_RELATIVE_PARENT_CLIP)) {
+			if (!BrowserMod.isIEpre9()) {
+				Style style = positioningWidget.getElement().getStyle();
+				style.clearProperty("clip");
+			}// ie<9 doesn't like zat
 		}
 		if (widgetToShow != null) {
 			rpp.setWidget(widgetToShow);
