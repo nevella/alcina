@@ -47,7 +47,9 @@ public class GlassDialogBox extends DialogBox {
 			100, new Runnable() {
 				@Override
 				public void run() {
-					Window.scrollTo(scrollLeft, scrollTop);
+					if (getOffsetHeight() < Window.getClientHeight() - 40) {
+						Window.scrollTo(scrollLeft, scrollTop);
+					}
 				}
 			});
 
@@ -100,14 +102,14 @@ public class GlassDialogBox extends DialogBox {
 		}
 		super.show();
 	}
+
 	@Override
 	protected void onPreviewNativeEvent(NativePreviewEvent event) {
-		if (event.isFirstHandler()
-		        ) {
+		if (event.isFirstHandler()) {
 			Event as = Event.as(event.getNativeEvent());
 			int typeInt = as.getTypeInt();
-			if ((typeInt & Event.KEYEVENTS)>0) {
-				if(as.getCtrlKey()||as.getMetaKey()||as.getAltKey()){
+			if ((typeInt & Event.KEYEVENTS) > 0) {
+				if (as.getCtrlKey() || as.getMetaKey() || as.getAltKey()) {
 					event.consume();
 				}
 			}
