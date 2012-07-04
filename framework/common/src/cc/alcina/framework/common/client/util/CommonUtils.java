@@ -778,4 +778,15 @@ public class CommonUtils {
 		d.setDate(1);
 		return d;
 	}
+
+	public static String round(float f, int places) {
+		int multiplier = 1;
+		for (int i = 0; i < places; i++) {
+			multiplier *= 10;
+		}
+		String s = String.valueOf((int) (f * multiplier));
+		s = padStringLeft(s, places + 1, '0');
+		int len = s.length();
+		return s.substring(0, len - places) + "." + s.substring(len - places);
+	}
 }
