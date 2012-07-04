@@ -13,12 +13,19 @@
  */
 package cc.alcina.framework.gwt.client.util;
 
+import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
+import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
+import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
+import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -30,9 +37,11 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Hidden;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.totsp.gwittir.client.beans.Binding;
 
 /**
  * 
@@ -152,5 +161,63 @@ public class ClientUtils {
 			History.fireCurrentHistoryState();
 		}
 		History.newItem(token);
+	}
+	public static EditContentViewWidgets editContentView(final Object model,
+			final PermissibleActionListener pal, String caption, String messageHtml) {
+		return editContentView(model, pal, caption, messageHtml, true);
+	}
+	public static EditContentViewWidgets editContentView(final Object model,
+			final PermissibleActionListener pal, String caption, String messageHtml, final boolean hideOnClick) {
+		ContentViewFactory cvf = new ContentViewFactory();
+		cvf.setNoCaption(true);
+		cvf.setNoButtons(false);
+		cvf.setCancelButton(true);
+		FlowPanel fp = new FlowPanel();
+		final GlassDialogBox gdb = new GlassDialogBox();
+		PermissibleActionListener closeWrapper=new PermissibleActionListener() {
+			@Override
+			public void vetoableAction(PermissibleActionEvent evt) {
+				if(hideOnClick){
+					gdb.hide();
+				}
+				if(pal!=null){
+					pal.vetoableAction(evt);
+				}
+			}
+		};
+		PaneWrapperWithObjects view = cvf.createBeanView(model, true, closeWrapper,
+				false, true);
+		view.addStyleName("pwo-center-buttons");
+		List<Binding> bindings = view.getBoundWidget().getBinding()
+				.getChildren();
+		for (Binding b : bindings) {
+			RelativePopupValidationFeedback feedback = new RelativePopupValidationFeedback(
+					RelativePopupValidationFeedback.BOTTOM,
+					b.getLeft().feedback);
+			feedback.setCss("withBkg");
+			b.getLeft().feedback = feedback;
+		}
+		gdb.setText(caption);
+		if (messageHtml != null) {
+			HTML message = new HTML(messageHtml);
+			message.setStyleName("bean-panel-message");
+			fp.add(message);
+		}
+		fp.add(view);
+		gdb.add(fp);
+		gdb.center();
+		gdb.show();
+		return new EditContentViewWidgets(view, gdb);
+	}
+	public static class EditContentViewWidgets {
+		public PaneWrapperWithObjects wrapper;
+	
+		public GlassDialogBox gdb;
+	
+		public EditContentViewWidgets(PaneWrapperWithObjects wrapper,
+				GlassDialogBox gdb) {
+			this.wrapper = wrapper;
+			this.gdb = gdb;
+		}
 	}
 }

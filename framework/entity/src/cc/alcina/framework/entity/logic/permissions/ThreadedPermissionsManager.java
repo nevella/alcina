@@ -61,7 +61,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		return popUser;
 	}
 
-	protected boolean isRoot() {
+	public boolean isRoot() {
 		return root;
 	}
 
@@ -94,5 +94,9 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 
 	public static ThreadedPermissionsManager cast() {
 		return (ThreadedPermissionsManager) PermissionsManager.get();
+	}
+
+	public void setRoot(boolean root) {
+		this.root = root;
 	}
 }

@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.VTCriterion;
 
-@SuppressWarnings({"unchecked"})
+@SuppressWarnings({ "unchecked" })
 public abstract class HibernateEJBSearcherBase {
 	protected Map<Class<? extends SearchCriterion>, SearchCriterionHandler> handlerMap;
 
@@ -119,6 +119,7 @@ public abstract class HibernateEJBSearcherBase {
 				Junction junction = cg.getCombinator() == FilterCombinator.OR
 						|| countingVt ? Restrictions.disjunction()
 						: Restrictions.conjunction();
+				boolean added = false;
 				for (SearchCriterion sc : (Set<SearchCriterion>) cg
 						.getCriteria()) {
 					SearchCriterionHandler handler = getCriterionHandler(sc);
@@ -129,7 +130,11 @@ public abstract class HibernateEJBSearcherBase {
 					Criterion criterion = handler.handle(sc);
 					if (criterion != null) {
 						junction.add(handler.handle(sc));
+						added=true;
 					}
+				}
+				if(!added){
+					return;
 				}
 				if (!detachedCriteriaMap.containsKey(cg.getEntityClass())) {
 					classCriteriaMap.get(cg.getEntityClass()).add(junction);
