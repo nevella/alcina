@@ -130,14 +130,13 @@ public abstract class HibernateEJBSearcherBase {
 					Criterion criterion = handler.handle(sc);
 					if (criterion != null) {
 						junction.add(handler.handle(sc));
-						added=true;
+						added = true;
 					}
 				}
-				if(!added){
-					return;
-				}
 				if (!detachedCriteriaMap.containsKey(cg.getEntityClass())) {
-					classCriteriaMap.get(cg.getEntityClass()).add(junction);
+					if (added) {
+						classCriteriaMap.get(cg.getEntityClass()).add(junction);
+					}
 				} else {
 					detachedCriteriaMap.get(cg.getEntityClass()).add(junction);
 					vtHandlerMap.get(cg.getEntityClass()).link(cg);
