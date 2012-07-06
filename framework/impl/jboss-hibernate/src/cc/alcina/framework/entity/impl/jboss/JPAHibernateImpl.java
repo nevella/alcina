@@ -33,6 +33,8 @@ import org.hibernate.tuple.IdentifierProperty;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
+import cc.alcina.framework.common.client.logic.permissions.IGroup;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.util.EntityUtils;
@@ -162,18 +164,21 @@ public class JPAHibernateImpl implements JPAImplementation {
 		}
 	}
 
-	public static final InstantiateImplCallback CLASSREF_GETTER_CALLBACK = new InstantiateImplCallback<LazyInitializer>() {
+	public static final InstantiateImplCallback CLASSREF_AND_USERLAND_GETTER_CALLBACK = new InstantiateImplCallback<LazyInitializer>() {
 		public boolean instantiateLazyInitializer(LazyInitializer initializer,
 				GraphProjectionContext context) {
 			Class persistentClass = initializer.getPersistentClass();
-			return ClassRef.class.isAssignableFrom(persistentClass);
+			return ClassRef.class.isAssignableFrom(persistentClass)
+					|| IUser.class.isAssignableFrom(persistentClass)
+					|| IGroup.class.isAssignableFrom(persistentClass);
 		}
-
 	};
+
 	@Override
-	public InstantiateImplCallback getClassrefInstantiator(){
-		return CLASSREF_GETTER_CALLBACK;
+	public InstantiateImplCallback getClassrefInstantiator() {
+		return CLASSREF_AND_USERLAND_GETTER_CALLBACK;
 	}
+
 	@Override
 	public void afterSpecificSetId(Object fromBefore) throws Exception {
 		// restore the backuped unsavedValue
