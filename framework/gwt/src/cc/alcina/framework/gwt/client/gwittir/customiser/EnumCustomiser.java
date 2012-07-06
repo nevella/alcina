@@ -14,9 +14,12 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -40,14 +43,16 @@ public class EnumCustomiser implements Customiser {
 
 	public static final String ENUM_CLASS = "enum-class";
 
+	public static final String ENUM_PROVIDER_CLASS = "enum-provider";
+
 	public static final String RENDERER_CLASS = "renderer-class";
 
 	public static final String HIDDEN_VALUES = "hidden-values";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
-		NamedParameter parameter = NamedParameter.Support.getParameter(info
-				.parameters(), ENUM_CLASS);
+		NamedParameter parameter = NamedParameter.Support.getParameter(
+				info.parameters(), ENUM_CLASS);
 		Class<? extends Enum> clazz = parameter.classValue();
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				MULTIPLE);
@@ -64,8 +69,8 @@ public class EnumCustomiser implements Customiser {
 		if (renderer != null) {
 			provider.setRenderer(renderer);
 		}
-		String hiddenValuesStr = NamedParameter.Support.stringValue(info
-				.parameters(), HIDDEN_VALUES, null);
+		String hiddenValuesStr = NamedParameter.Support.stringValue(
+				info.parameters(), HIDDEN_VALUES, null);
 		if (hiddenValuesStr != null) {
 			List<Enum> hiddenValues = new ArrayList<Enum>();
 			String[] enumStrs = hiddenValuesStr.split(",");
@@ -77,6 +82,15 @@ public class EnumCustomiser implements Customiser {
 					}
 				}
 			}
+			provider.setHiddenValues(hiddenValues);
+		}
+		parameter = NamedParameter.Support.getParameter(info.parameters(),
+				ENUM_PROVIDER_CLASS);
+		if (parameter != null) {
+			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
+			hiddenValues.removeAll(((HasValue<Collection>) CommonLocator.get()
+					.classLookup().newInstance(parameter.classValue()))
+					.getValue());
 			provider.setHiddenValues(hiddenValues);
 		}
 		return editable ? provider : new BoundWidgetProvider() {

@@ -47,6 +47,8 @@ import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.logical.shared.AttachEvent;
+import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -167,6 +169,15 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	private boolean autoselectFirst = false;
 
+	private Handler filterAttachHandler=new Handler() {
+		@Override
+		public void onAttachOrDetach(AttachEvent event) {
+			if(!event.isAttached()){
+				hidePopdown();
+			}
+		}
+	};
+
 	// additional problem with ff
 	public SelectWithSearch() {
 	}
@@ -188,6 +199,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		filter.getTextBox().addKeyUpHandler(selectableNavigation);
 		filter.getTextBox().addKeyDownHandler(selectableNavigation);
 		filter.setFocusOnAttach(isFocusOnAttach());
+		filter.addAttachHandler(filterAttachHandler);
 		filter.registerFilterable(this);
 		selectableNavigation.setWrappedEnterListener(new ClickHandler() {
 			// the listeners aren't registered on every source...pretty sure
