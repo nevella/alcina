@@ -144,7 +144,7 @@ public class GwittirUtils {
 						continue;
 					}
 					if (onlyCommit) {
-						binding.setRight();
+						b.setRight();
 					} else {
 						Object other = isSetBasedListBox ? ((SetBasedListBox) tb)
 								.provideOtherValue() : " ".equals(tbValue) ? ""
@@ -154,7 +154,6 @@ public class GwittirUtils {
 								b.getRight().object, new Object[] { value });
 						tb.setValue(tbValue);
 					}
-					// binding.setRight();
 				}
 			}
 		} catch (Exception e) {

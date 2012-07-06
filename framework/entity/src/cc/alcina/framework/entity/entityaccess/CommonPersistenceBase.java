@@ -844,7 +844,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		if (sinceId == 0) {
 			query.setMaxResults(maxTransforms);
 		}
-		return query.getResultList();
+		return new EntityUtils().detachedClone(query.getResultList(),
+				EntityLayerLocator.get().jpaImplementation()
+						.getClassrefInstantiator());
 	}
 
 	protected Collection<Class> getSharedTransformClasses() {

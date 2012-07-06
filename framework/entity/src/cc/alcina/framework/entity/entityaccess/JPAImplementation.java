@@ -56,4 +56,6 @@ public interface JPAImplementation {
 	Object beforeSpecificSetId(EntityManager entityManager, Object toPersist) throws Exception;
 
 	void muteClassloaderLogging(boolean mute);
+
+	public abstract InstantiateImplCallback getClassrefInstantiator();
 }

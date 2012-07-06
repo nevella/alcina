@@ -27,15 +27,19 @@ import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.IdentifierProperty;
 
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.util.EntityUtils;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallbackWithShellObject;
 
 /**
  * 
@@ -158,6 +162,18 @@ public class JPAHibernateImpl implements JPAImplementation {
 		}
 	}
 
+	public static final InstantiateImplCallback CLASSREF_GETTER_CALLBACK = new InstantiateImplCallback<LazyInitializer>() {
+		public boolean instantiateLazyInitializer(LazyInitializer initializer,
+				GraphProjectionContext context) {
+			Class persistentClass = initializer.getPersistentClass();
+			return ClassRef.class.isAssignableFrom(persistentClass);
+		}
+
+	};
+	@Override
+	public InstantiateImplCallback getClassrefInstantiator(){
+		return CLASSREF_GETTER_CALLBACK;
+	}
 	@Override
 	public void afterSpecificSetId(Object fromBefore) throws Exception {
 		// restore the backuped unsavedValue
