@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.common.client.util;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,6 +24,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -524,11 +524,14 @@ public class CommonUtils {
 	}
 
 	public static String trimToWsChars(String s, int maxChars) {
-		return trimToWsChars(s, maxChars, false);
+		return trimToWsChars(s, maxChars, "");
 	}
-
 	public static String trimToWsChars(String s, int maxChars,
 			boolean withDotDot) {
+		return trimToWsChars(s, maxChars, "...");
+	}
+	public static String trimToWsChars(String s, int maxChars,
+			String ellipsis) {
 		if (maxChars < 0) {
 			maxChars = 100;
 		}
@@ -536,10 +539,10 @@ public class CommonUtils {
 			return s;
 		}
 		if (s.substring(maxChars / 2, maxChars).indexOf(" ") == -1) {
-			return s.substring(0, maxChars) + (withDotDot ? "..." : "");
+			return s.substring(0, maxChars) + ellipsis;
 		}
 		return s.substring(0, s.substring(0, maxChars).lastIndexOf(' '))
-				+ (withDotDot ? "..." : "");
+				+ ellipsis;
 	}
 
 	public static String trimToWsReverse(String s, int maxChars) {
@@ -788,5 +791,9 @@ public class CommonUtils {
 		s = padStringLeft(s, places + 1, '0');
 		int len = s.length();
 		return s.substring(0, len - places) + "." + s.substring(len - places);
+	}
+
+	public static String nullSafeToString(Object o) {
+		return o == null ? null : o.toString();
 	}
 }
