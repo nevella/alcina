@@ -311,6 +311,11 @@ public class CommonUtils {
 
 	public static Collection intersection(Collection c1, Collection c2) {
 		ArrayList result = new ArrayList();
+		if(c1.size()>c2.size()){
+			Collection tmp=c1;
+			c1=c2;
+			c2=tmp;
+		}
 		for (Object o : c1) {
 			if (c2.contains(o)) {
 				result.add(o);
