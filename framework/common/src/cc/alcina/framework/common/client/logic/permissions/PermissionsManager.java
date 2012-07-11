@@ -142,6 +142,8 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 
 	protected Stack<LoginState> stateStack = new Stack<LoginState>();
 
+	protected Stack<Boolean> rootStack = new Stack<Boolean>();
+
 	private static PermissionsExtension permissionsExtension;
 
 	protected PermissionsManager() {
@@ -423,6 +425,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		IUser poppedUser = userStack.pop();
 		IUser currentUser = getUser();
 		setUser(poppedUser);
+		setRoot(rootStack.pop());
 		return currentUser;
 	}
 
@@ -437,12 +440,18 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	}
 
 	public void pushUser(IUser user, LoginState loginState) {
+		pushUser(user, loginState, false);
+	}
+
+	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
 		if (getUser() != null) {
 			userStack.push(getUser());
 			stateStack.push(getLoginState());
+			rootStack.push(isRoot());
 		}
 		setLoginState(loginState);
 		setUser(user);
+		setRoot(asRoot);
 	}
 
 	public void setDefaultObjectPermissions(
@@ -515,8 +524,14 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	}
 
 	protected boolean isRoot() {
-		return false;
+		return root;
 	}
+
+	public void setRoot(boolean root) {
+		this.root = root;
+	}
+
+	private boolean root;
 
 	protected void recursivePopulateGroupMemberships(Set<IGroup> members,
 			Set<IGroup> processed) {

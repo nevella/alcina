@@ -40,6 +40,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
@@ -513,6 +514,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			spce.removePropertyChangeListener(this);
 		}
 		listeningTo = new LinkedHashSet<SourcesPropertyChangeEvents>();
+		LinkedHashSet<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		if (!pendingTransforms.isEmpty()) {
+			System.out
+					.println("TLTM - cleared (but still pending) transforms:\n "
+							+ pendingTransforms);
+		}
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
 		for (DomainTransformListener listener : threadLocalListeners) {

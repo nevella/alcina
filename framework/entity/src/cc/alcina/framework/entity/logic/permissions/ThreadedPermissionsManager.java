@@ -47,32 +47,20 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		CommonPersistenceLocal up = EntityLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
 		IUser systemUser = up.getSystemUser(true);
-		pushUser(systemUser, LoginState.LOGGED_IN);
-		root = true;
+		pushUser(systemUser, LoginState.LOGGED_IN, true);
 		return systemUser;
 	}
 
 	public IUser popSystemUser() {
-		IUser popUser = popUser();
-		CommonPersistenceLocal up = EntityLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
-		IUser systemUser = up.getSystemUser(true);
-		root = systemUser.equals(popUser) && !userStack.isEmpty();
-		return popUser;
+		return popUser();
 	}
-
-	public boolean isRoot() {
-		return root;
-	}
-
-	private boolean root;
 
 	// This should never be necessary, if the code always surrounds user
 	// push/pop in try/finally...but...
 	public void reset() {
 		userStack.clear();
 		stateStack.clear();
-		root = false;
+		setRoot(false);
 	}
 
 	@Override
@@ -96,7 +84,15 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		return (ThreadedPermissionsManager) PermissionsManager.get();
 	}
 
-	public void setRoot(boolean root) {
-		this.root = root;
+	public void popSystemOrCurrentUser() {
+		popUser();
+	}
+
+	public void pushSystemOrCurrentUser() {
+		if (isLoggedIn()) {
+			pushUser(getUser(), getLoginState(), true);
+		} else {
+			pushSystemUser();
+		}
 	}
 }

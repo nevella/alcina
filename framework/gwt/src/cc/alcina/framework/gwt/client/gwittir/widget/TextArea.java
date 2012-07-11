@@ -19,6 +19,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.KeyDownHandler;
+import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.ChangeListener;
@@ -107,6 +109,12 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 
 	public HandlerRegistration addKeyUpHandler(KeyUpHandler handler) {
 		return this.base.addKeyUpHandler(handler);
+	}
+	public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
+		return this.base.addKeyDownHandler(handler);
+	}
+	public HandlerRegistration addKeyPressHandler(KeyPressHandler handler) {
+		return this.base.addKeyPressHandler(handler);
 	}
 
 	public void cancelKey() {

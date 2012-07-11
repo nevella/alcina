@@ -33,6 +33,8 @@ import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
 
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
@@ -74,7 +76,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
  * @author Nick Reddel
  */
 public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
-		HasLayoutInfo, BlurHandler {
+		HasLayoutInfo {
 	public static final ClickHandler NOOP_CLICK_HANDLER = new ClickHandler() {
 		@Override
 		public void onClick(ClickEvent event) {
@@ -93,8 +95,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	private FlowPanel holder;
 
 	protected Widget itemHolder;
-	
-	protected HasWidgets itemHolderAsHasWidgets(){
+
+	protected HasWidgets itemHolderAsHasWidgets() {
 		return (HasWidgets) itemHolder;
 	}
 
@@ -123,8 +125,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	private FocusPanel focusPanel;
 
 	private FilterWidget filter;
-
-	boolean waitingToFocus = false;
 
 	private DecoratedRelativePopupPanel panelForPopup;
 
@@ -169,10 +169,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	private boolean autoselectFirst = false;
 
-	private Handler filterAttachHandler=new Handler() {
+	private Handler filterAttachHandler = new Handler() {
 		@Override
 		public void onAttachOrDetach(AttachEvent event) {
-			if(!event.isAttached()){
+			if (!event.isAttached()) {
 				hidePopdown();
 			}
 		}
@@ -228,13 +228,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		popdownHider = new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				closingOnClick = true;
-				log("closing on click", null);
 				if (relativePopupPanel != null) {
 					relativePopupPanel.hide();
-					onPopdownShowing(relativePopupPanel,false);
+					onPopdownShowing(relativePopupPanel, false);
 				}
 				lastClosingClickMillis = System.currentTimeMillis();
-				log("closing on click finished", null);
 				closingOnClick = false;
 			}
 		};
@@ -253,7 +251,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			setPanelForPopupUI(panelForPopup);
 			panelForPopup.add(scroller);
 			filter.getTextBox().addFocusHandler(this);
-			filter.getTextBox().addBlurHandler(this);
 			filter.getTextBox().addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent event) {
 					checkShowPopup();
@@ -279,9 +276,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return holder;
 	}
 
-	protected void onPopdownShowing(RelativePopupPanel popup,
-			boolean show) {
-		
+	protected void onPopdownShowing(RelativePopupPanel popup, boolean show) {
 	}
 
 	protected void setPanelForPopupUI(DecoratedRelativePopupPanel panelForPopup) {
@@ -525,39 +520,13 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	public void onFocus(FocusEvent event) {
 		Widget sender = (Widget) event.getSource();
 		int i = 0;
-		// log("gained focus, flowPanelForFocusPanel vis:"
-		// + panelForPopup.isVisible() + "-widget:"
-		// + sender.getClass().getName(), null);
-		checkShowPopup();
-		waitingToFocus = true;
-		new Timer() {
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
-			public void run() {
-				log("focus timer", null);
+			public void execute() {
+				checkShowPopup();
 				filter.getTextBox().setFocus(true);
-				waitingToFocus = false;
 			}
-		}.schedule(350);
-	}
-
-	public void onBlur(BlurEvent event) {
-		// log("lost focus, fp vis:" + panelForPopup.isVisible() + "-widget:"
-		// + event.getSource().getClass().getName(), null);
-		if (!waitingToFocus) {
-			new Timer() {
-				@Override
-				public void run() {
-					// log("lost focus timer", null);
-					if (!waitingToFocus) {
-						// log("not waiting - lost focus-butc", null);
-						// if ((relativePopupPanel == null || relativePopupPanel
-						// .getParent() == null)) {
-						// relativePopupPanel.hide();
-						// }
-					}
-				}
-			}.schedule(250);
-		}
+		});
 	}
 
 	public void setEnterHandler(ClickHandler enterHandler) {
@@ -570,7 +539,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public void setFocusOnAttach(boolean focusOnAttach) {
 		this.focusOnAttach = focusOnAttach;
-		if(filter!=null){
+		if (filter != null) {
 			filter.setFocusOnAttach(focusOnAttach);
 		}
 	}
@@ -712,7 +681,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				&& !closingOnClick
 				&& System.currentTimeMillis() - lastClosingClickMillis > DELAY_TO_CHECK_FOR_CLOSING
 				&& maybeShowDepdendentOnFilter()) {
-			log("running check show popup", null);
 			if (lazyProvider != null) {
 				LazyData lazyData = lazyProvider.dataRequired();
 				if (lazyData != null) {
@@ -736,7 +704,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			onPopdownShowing(relativePopupPanel, true);
 			int border = 2;
 			if (itemHolder.getOffsetHeight() + border > panelForPopup
-					.getOffsetHeight()&&!isAutoHolderHeight()) {
+					.getOffsetHeight() && !isAutoHolderHeight()) {
 				int hhInt = holderHeight != null && holderHeight.endsWith("px") ? Integer
 						.parseInt(holderHeight.replace("px", "")) : 0;
 				scroller.setHeight(Math.max(hhInt,
@@ -770,11 +738,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	protected int adjustDropdownWidth(int minWidth) {
 		return minWidth;
-	}
-
-	void log(String t, Throwable e) {
-		// JadeClient.theApp.log(t);
-		// GWT.log(t, e);
 	}
 
 	public void setShowHintStrategy(ShowHintStrategy showHintStrategy) {
