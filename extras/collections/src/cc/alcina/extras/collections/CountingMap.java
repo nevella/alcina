@@ -2,6 +2,7 @@ package cc.alcina.extras.collections;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import cc.alcina.framework.common.client.util.SortedMultimap;
@@ -57,6 +58,15 @@ public class CountingMap<K> extends HashMap<K, Integer> {
 				: new SortedMultimap<Integer, List<K>>();
 		for (K key : keySet()) {
 			result.add(get(key), key);
+		}
+		return result;
+	}
+	public LinkedHashMap<K,Integer> toLinkedHashMap(boolean descending){
+		SortedMultimap<Integer, List<K>> m = reverseMap(descending);
+		List<K> allItems = m.allItems();
+		LinkedHashMap<K, Integer> result = new LinkedHashMap<K, Integer>();
+		for (K k : allItems) {
+			result.put(k, get(k));
 		}
 		return result;
 	}

@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class WeightAndDistribute<T> {
-	public void run(Collection<T> items, WeightCallbacks<T> callback) {
+	public void run(Collection<T> items, WeightCallback<T> callback) {
 		List<T> sorted = new ArrayList<T>(items);
 		Collections.sort(sorted, callback);
 		int validCount = 0;
@@ -62,7 +62,7 @@ public class WeightAndDistribute<T> {
 		}
 	}
 
-	public interface WeightCallbacks<T> extends Comparator<T> {
+	public interface WeightCallback<T> extends Comparator<T> {
 		double min();
 
 		void weight(T t, double d);
@@ -77,7 +77,7 @@ public class WeightAndDistribute<T> {
 	}
 
 	public abstract static class CountingCallback<T> implements
-			WeightCallbacks<T> {
+			WeightCallback<T> {
 		CountingMap<T> countingMap = new CountingMap<T>();
 
 		@Override

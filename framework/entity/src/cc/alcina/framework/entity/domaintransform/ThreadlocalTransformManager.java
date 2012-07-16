@@ -517,8 +517,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		LinkedHashSet<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		if (!pendingTransforms.isEmpty()) {
 			System.out
-					.println("TLTM - cleared (but still pending) transforms:\n "
+					.println("**WARNING ** TLTM - cleared (but still pending) transforms:\n "
 							+ pendingTransforms);
+			Thread.dumpStack();
 		}
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
