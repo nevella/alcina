@@ -6,11 +6,13 @@ import java.util.List;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 import cc.alcina.framework.gwt.client.widget.Link;
+import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class ExpandableListPanel extends Composite {
@@ -37,6 +39,10 @@ public class ExpandableListPanel extends Composite {
 		}
 	};
 
+	private String allCaption;
+
+	private String extraText;
+
 	public ExpandableListPanel(String itemNamePlural, int maxItems) {
 		this.itemNamePlural = itemNamePlural;
 		this.maxItems = maxItems;
@@ -55,12 +61,35 @@ public class ExpandableListPanel extends Composite {
 		}
 		if (fp.getWidgetCount() >= maxItems) {
 			if (showAll == null) {
+				FlowPanel allHolder = new FlowPanel();
 				showAll = new Link("", showAllHandler);
 				showAll.setStyleName("no-underline-links");
-				fp.add(showAll);
+				allHolder.add(showAll);
+				fp.add(allHolder);
+				if (extraText != null) {
+					fp.add(UsefulWidgetFactory.createSpacer(2));
+					fp.add(new InlineLabel(extraText));
+				}
 			}
-			showAll.setText(CommonUtils.formatJ("Show all %s %s",
+			showAll.setText(CommonUtils.formatJ("%s%s %s",
+					(allCaption == null ? "Show all " : allCaption),
 					widgets.size(), itemNamePlural));
 		}
+	}
+
+	public String getAllCaption() {
+		return this.allCaption;
+	}
+
+	public void setAllCaption(String allCaption) {
+		this.allCaption = allCaption;
+	}
+
+	public String getExtraText() {
+		return this.extraText;
+	}
+
+	public void setExtraText(String extraText) {
+		this.extraText = extraText;
 	}
 }
