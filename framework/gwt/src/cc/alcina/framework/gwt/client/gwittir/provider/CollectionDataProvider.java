@@ -151,9 +151,14 @@ public class CollectionDataProvider implements SortableDataProvider {
 		}.schedule(1);
 	}
 
-	public void init(HasChunks table) {
-		table.init(getChunk(0), (sort.size() - 1) / Math.max(getPageSize(), 1)
-				+ 1);
+	public void init(final HasChunks table) {
+		new Timer() {
+			@Override
+			public void run() {
+				table.init(getChunk(0),
+						(sort.size() - 1) / Math.max(getPageSize(), 1) + 1);
+			}
+		}.schedule(1);
 	}
 
 	public void setPageSize(int pageSize) {

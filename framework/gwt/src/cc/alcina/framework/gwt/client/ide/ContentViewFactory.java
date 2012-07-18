@@ -186,7 +186,7 @@ public class ContentViewFactory {
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
 						editable, false);
 		GridForm f = new GridForm(fields, 1, factory);
-		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean,fields));
+		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean, fields));
 		f.setValue(bean);
 		cp.add(f);
 		cp.setBoundWidget(f);
@@ -780,9 +780,9 @@ public class ContentViewFactory {
 		protected void onDetach() {
 			preDetachFocus.setVisible(true);
 			preDetachFocus.setFocus(true);
-			if (editable&&isVisible()) {
+			if (editable && isVisible()) {
 				GwittirUtils.refreshTextBoxes(getBoundWidget().getBinding(),
-						null, false, false,true);
+						null, false, false, true);
 			}
 			super.onDetach();// inter alia, detach children, forcing commit of
 								// richtexts etc
@@ -804,8 +804,6 @@ public class ContentViewFactory {
 				}
 			}
 		}
-
-		
 	}
 
 	public static class SavePanel extends FlowPanel {
