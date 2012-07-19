@@ -57,7 +57,16 @@ public abstract class ClientBaseWithLayout extends ClientBase implements
 			History.fireCurrentHistoryState();
 			AlcinaHistory.get().setNoHistoryDisabled(false);
 		}
+		ClientNotifications notifications = ClientLayerLocator.get().notifications();
+		if (notifications instanceof ClientNotificationsImpl) {
+			ClientNotificationsImpl nImpl = (ClientNotificationsImpl) notifications;
+			nImpl.setLogToSysOut(true);
+		}
 		ClientLayerLocator.get().notifications().metricLogEnd("moduleLoad");
+		if (notifications instanceof ClientNotificationsImpl) {
+			ClientNotificationsImpl nImpl = (ClientNotificationsImpl) notifications;
+			nImpl.setLogToSysOut(false);
+		}
 		LayoutEvents.get().fireLayoutEvent(
 				new LayoutEvent(LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {

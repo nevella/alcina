@@ -1,16 +1,19 @@
 package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.Rect;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.OtherPositioningStrategy;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupPositioningParams;
+import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.MouseEvent;
 import com.google.gwt.user.client.Event;
@@ -47,12 +50,13 @@ public class RelativePopupPositioning {
 		return params;
 	}
 
-	public static RelativePopupPositioningParams forMouse(
-			OtherPositioningStrategy positioningStrategy, MouseEvent mouseEvent) {
+	public static RelativePopupPositioningParams forNativeEvent(
+			OtherPositioningStrategy positioningStrategy,
+			NativeEvent nativeEvent) {
 		RelativePopupPositioningParams params = new RelativePopupPositioningParams();
 		params.positioningStrategy = positioningStrategy;
-		params.mouseEvent = mouseEvent;
 		params.shiftToEventXY = true;
+		params.nativeEvent = nativeEvent;
 		return params;
 	}
 
@@ -102,16 +106,55 @@ public class RelativePopupPositioning {
 				: WidgetUtils.getPositioningParent(elementContainer);
 		int shiftX = 0, shiftY = 0;
 		if (positioningParams.shiftToEventXY
-				&& positioningParams.mouseEvent != null) {
+				&& positioningParams.nativeEvent != null) {
 			NativeEvent nativeEvent = Event.as(Event.getCurrentEvent());
-			shiftX = positioningParams.mouseEvent.getRelativeX(elementContainer
-					.getElement());
-			shiftY = positioningParams.mouseEvent.getRelativeY(elementContainer
-					.getElement());
+			shiftX = getRelativeX(elementContainer.getElement(),
+					positioningParams.nativeEvent);
+			shiftY = getRelativeY(elementContainer.getElement(),
+					positioningParams.nativeEvent);
 		}
 		return showPopup(elementContainer.getElement(), widgetToShow,
 				boundingWidget, positioningParams, relativeContainer, rpp,
 				shiftX, shiftY);
+	}
+
+	public static int getRelativeX(Element target, NativeEvent e) {
+		return e.getClientX() - target.getAbsoluteLeft()
+				+ target.getScrollLeft()
+				+ target.getOwnerDocument().getScrollLeft();
+	}
+
+	/**
+	 * Gets the mouse y-position relative to a given element.
+	 * 
+	 * @param target
+	 *            the element whose coordinate system is to be used
+	 * @return the relative y-position
+	 */
+	public static int getRelativeY(Element target, NativeEvent e) {
+		return e.getClientY() - target.getAbsoluteTop() + target.getScrollTop()
+				+ target.getOwnerDocument().getScrollTop();
+	}
+
+	public static void ensurePopupWithin(RelativePopupPanel rpp,
+			Widget boundingWidget) {
+		int rw = rpp.getOffsetWidth();
+		int rh = rpp.getOffsetHeight();
+		int rl = rpp.getAbsoluteLeft();
+		int x = boundingWidget.getAbsoluteLeft();
+		int y = boundingWidget.getAbsoluteTop();
+		int bwW = boundingWidget.getOffsetWidth();
+		int bwH = boundingWidget.getOffsetHeight();
+		if (rl + rw > x + bwW) {
+			String pxl = rpp.getElement().getStyle().getLeft();
+			if (pxl.endsWith("px")) {
+				rpp.getElement()
+						.getStyle()
+						.setLeft(
+								Integer.parseInt(pxl.replace("px", ""))
+										- (rl + rw - x - bwW), Unit.PX);
+			}
+		}
 	}
 
 	private static RelativePopupPanel showPopup(
@@ -164,6 +207,7 @@ public class RelativePopupPositioning {
 					// absolute, internal to bounding widget
 					switch (positioningParams.positioningStrategy) {
 					case BELOW_WITH_PREFERRED_LEFT:
+						x += positioningParams.shiftX;
 						x -= positioningParams.preferredLeft;
 						if (x < 0) {
 							x = 0;
@@ -175,7 +219,8 @@ public class RelativePopupPositioning {
 						break;
 					case RIGHT_OR_LEFT_WITH_PREFERRED_TOP:
 						x += 2;
-						int clientY = positioningParams.mouseEvent.getClientY();
+						int clientY = positioningParams.nativeEvent
+								.getClientY();
 						int clientHeight = Window.getClientHeight();
 						int oy = 0;
 						if (clientY > positioningParams.preferredTop) {
@@ -274,9 +319,9 @@ public class RelativePopupPositioning {
 	}
 
 	public static class RelativePopupPositioningParams {
-		public int preferredFromBottom;
+		public NativeEvent nativeEvent;
 
-		public MouseEvent mouseEvent;
+		public int preferredFromBottom;
 
 		public RelativePopupAxis[] axes;
 
@@ -289,6 +334,8 @@ public class RelativePopupPositioning {
 		public int preferredLeft;
 
 		public int preferredTop;
+
+		public int shiftX;
 	}
 
 	enum AxisCoordinate {
@@ -419,5 +466,10 @@ public class RelativePopupPositioning {
 
 	enum AxisType {
 		NEG, CENTER, POS
+	}
+
+	public static void scrollIntoViewWhileKeepingRect(Rect bounds,
+			DecoratedRelativePopupPanel popup) {
+		// TODO Auto-generated method stub
 	}
 }

@@ -19,10 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
@@ -30,8 +33,6 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.ImageBundle;
-import com.google.gwt.user.client.ui.KeyboardListener;
 
 /**
  * A widget that allows the user to select a value within a range of possible
@@ -69,7 +70,6 @@ import com.google.gwt.user.client.ui.KeyboardListener;
  * line }</li>
  * </ul>
  */
-@SuppressWarnings("deprecation")
 public class SliderBar extends FocusPanel implements
 		HasValueChangeHandlers<Double> {
 	/**
@@ -159,29 +159,28 @@ public class SliderBar extends FocusPanel implements
 	}
 
 	/**
-	 * An {@link ImageBundle} that provides images for {@link SliderBar}.
 	 */
-	public static interface SliderBarImages extends ImageBundle {
+	public static interface SliderBarImages extends ClientBundle {
 		/**
 		 * An image used for the sliding knob.
 		 * 
 		 * @return a prototype of this image
 		 */
-		AbstractImagePrototype slider();
+		ImageResource slider();
 
 		/**
 		 * An image used for the sliding knob.
 		 * 
 		 * @return a prototype of this image
 		 */
-		AbstractImagePrototype sliderDisabled();
+		ImageResource sliderDisabled();
 
 		/**
 		 * An image used for the sliding knob while sliding.
 		 * 
 		 * @return a prototype of this image
 		 */
-		AbstractImagePrototype sliderSliding();
+		ImageResource sliderSliding();
 	}
 
 	/**
@@ -273,6 +272,8 @@ public class SliderBar extends FocusPanel implements
 	 */
 	private List<Element> tickElements = new ArrayList<Element>();
 
+	private boolean lineAlignedLeft;
+
 	/**
 	 * Create a slider bar.
 	 * 
@@ -329,7 +330,7 @@ public class SliderBar extends FocusPanel implements
 		DOM.setStyleAttribute(lineElement, "position", "absolute");
 		DOM.setElementProperty(lineElement, "className", "gwt-SliderBar-line");
 		// Create the knob
-		images.slider().applyTo(knobImage);
+		AbstractImagePrototype.create(images.slider()).applyTo(knobImage);
 		Element knobElement = knobImage.getElement();
 		DOM.appendChild(getElement(), knobElement);
 		DOM.setStyleAttribute(knobElement, "position", "absolute");
@@ -467,22 +468,22 @@ public class SliderBar extends FocusPanel implements
 						multiplier = (int) (getTotalRange() / stepSize / 10);
 					}
 					switch (DOM.eventGetKeyCode(event)) {
-					case KeyboardListener.KEY_HOME:
+					case KeyCodes.KEY_HOME:
 						DOM.eventPreventDefault(event);
 						setCurrentValue(minValue);
 						break;
-					case KeyboardListener.KEY_END:
+					case KeyCodes.KEY_END:
 						DOM.eventPreventDefault(event);
 						setCurrentValue(maxValue);
 						break;
-					case KeyboardListener.KEY_LEFT:
+					case KeyCodes.KEY_LEFT:
 						DOM.eventPreventDefault(event);
 						slidingKeyboard = true;
 						startSliding(false, true);
 						shiftLeft(multiplier);
 						keyTimer.schedule(400, false, multiplier);
 						break;
-					case KeyboardListener.KEY_RIGHT:
+					case KeyCodes.KEY_RIGHT:
 						DOM.eventPreventDefault(event);
 						slidingKeyboard = true;
 						startSliding(false, true);
@@ -551,7 +552,7 @@ public class SliderBar extends FocusPanel implements
 	}
 
 	public void getLineLeftOffset(int width, int lineWidth) {
-		lineLeftOffset = (width / 2) - (lineWidth / 2);
+		lineLeftOffset = lineAlignedLeft?0:(width / 2) - (lineWidth / 2);
 	}
 
 	/**
@@ -611,11 +612,12 @@ public class SliderBar extends FocusPanel implements
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 		if (enabled) {
-			images.slider().applyTo(knobImage);
+			AbstractImagePrototype.create(images.slider()).applyTo(knobImage);
 			DOM.setElementProperty(lineElement, "className",
 					"gwt-SliderBar-line");
 		} else {
-			images.sliderDisabled().applyTo(knobImage);
+			AbstractImagePrototype.create(images.sliderDisabled()).applyTo(
+					knobImage);
 			DOM.setElementProperty(lineElement, "className",
 					"gwt-SliderBar-line gwt-SliderBar-line-disabled");
 		}
@@ -963,7 +965,8 @@ public class SliderBar extends FocusPanel implements
 					"gwt-SliderBar-line gwt-SliderBar-line-sliding");
 			DOM.setElementProperty(knobImage.getElement(), "className",
 					"gwt-SliderBar-knob gwt-SliderBar-knob-sliding");
-			images.sliderSliding().applyTo(knobImage);
+			AbstractImagePrototype.create(images.sliderSliding()).applyTo(
+					knobImage);
 		}
 	}
 
@@ -981,7 +984,7 @@ public class SliderBar extends FocusPanel implements
 					"gwt-SliderBar-line");
 			DOM.setElementProperty(knobImage.getElement(), "className",
 					"gwt-SliderBar-knob");
-			images.slider().applyTo(knobImage);
+			AbstractImagePrototype.create(images.slider()).applyTo(knobImage);
 		}
 	}
 
@@ -996,5 +999,13 @@ public class SliderBar extends FocusPanel implements
 	public HandlerRegistration addValueChangeHandler(
 			ValueChangeHandler<Double> handler) {
 		return addHandler(handler, ValueChangeEvent.getType());
+	}
+
+	public boolean isLineAlignedLeft() {
+		return this.lineAlignedLeft;
+	}
+
+	public void setLineAlignedLeft(boolean lineAlignedLeft) {
+		this.lineAlignedLeft = lineAlignedLeft;
 	}
 }

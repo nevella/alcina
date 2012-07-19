@@ -65,6 +65,8 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	private boolean dialogAnimationEnabled = true;
 
+	private boolean logToSysOut;
+
 	public void confirm(String msg, final OkCallback callback) {
 		new OkCancelDialogBox("Confirmation", new Label(msg),
 				new PermissibleActionListener() {
@@ -94,6 +96,9 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		logString += CommonUtils.formatDate(new Date(),
 				DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
 		consoleLog(s);
+		if (logToSysOut) {
+			System.out.println(s);
+		}
 	}
 
 	private native void consoleLog(String s) /*-{
@@ -308,14 +313,12 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	public void ensureLocalisedMessages() {
 		if (localisedMessages == null) {
 			localisedMessages = new HashMap<String, String>();
-			localisedMessages
-					.put(LT_NOTIFY_COMPLETED_SAVE,
-							TextProvider
-									.get()
-									.getUiObjectText(
-											ClientNotificationsImpl.class,
-											LT_NOTIFY_COMPLETED_SAVE,
-											"Your offline work has been saved to the server"));
+			localisedMessages.put(
+					LT_NOTIFY_COMPLETED_SAVE,
+					TextProvider.get().getUiObjectText(
+							ClientNotificationsImpl.class,
+							LT_NOTIFY_COMPLETED_SAVE,
+							"Your offline work has been saved to the server"));
 		}
 	}
 
@@ -337,5 +340,13 @@ public class ClientNotificationsImpl implements ClientNotifications {
 				return false;
 			}
 		};
+	}
+
+	public boolean isLogToSysOut() {
+		return this.logToSysOut;
+	}
+
+	public void setLogToSysOut(boolean logToSysOut) {
+		this.logToSysOut = logToSysOut;
 	}
 }

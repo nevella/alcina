@@ -398,9 +398,6 @@ public final class ClientSerializationStreamReader extends
 		@Override
 		public boolean execute() {
 			try {
-				String msg = phase + " - " + idx2 + " - "
-						+ System.currentTimeMillis();
-				consoleLog(msg);
 				switch (phase) {
 				case INSTATIATE_EMPTY_SETUP:
 					typeTableLength = reader.getTypeTableLength();
@@ -455,9 +452,6 @@ public final class ClientSerializationStreamReader extends
 			return true;
 		}
 
-		private void consoleLog(String s) {
-			System.out.println(s);
-		}
 
 		private int sliceSize = 500;
 
