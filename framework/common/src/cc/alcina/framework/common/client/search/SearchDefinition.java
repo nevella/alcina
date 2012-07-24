@@ -347,4 +347,12 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	public void onBeforeRunSearch() {
 	}
+
+	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
+		OrderGroup og = orderGroup(clazz);
+		if(og!=null){
+			og.getCriteria().clear();
+		}
+		
+	}
 }
