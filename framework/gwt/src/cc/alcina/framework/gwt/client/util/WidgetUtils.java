@@ -702,35 +702,7 @@ public class WidgetUtils {
 		}
 	}
 
-	/**
-	 * Assumes a fully expanded tree
-	 */
-	public static void wrapAndVtop(Element root) {
-		Stack<Element> stack = new Stack<Element>();
-		stack.push(root);
-		while (!stack.isEmpty()) {
-			Element curr = stack.pop();
-			String wsProp = curr.getStyle().getProperty("whiteSpace");
-			if (wsProp.equals("nowrap")) {
-				curr.getStyle().setProperty("whiteSpace", "");
-			}
-			if (curr.getStyle().getVerticalAlign().equals("middle")) {
-				curr.getStyle().setVerticalAlign(VerticalAlign.TOP);
-			}
-			if (curr.getTagName().equalsIgnoreCase("IMG")
-					&& curr.getParentElement() != null
-					&& curr.getParentElement().getTagName().equals("TD")) {
-				curr.getParentElement().getStyle().setWidth(16, Unit.PX);
-			}
-			int cc = curr.getChildCount();
-			for (int i = 0; i < cc; i++) {
-				Node child = curr.getChild(i);
-				if (child.getNodeType() == Node.ELEMENT_NODE) {
-					stack.push((Element) child);
-				}
-			}
-		}
-	}
+	
 
 	public static boolean isZeroOffsetDims(Element e) {
 		return e.getOffsetHeight() == 0 && e.getOffsetWidth() == 0;

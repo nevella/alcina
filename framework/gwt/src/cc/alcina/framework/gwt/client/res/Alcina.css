@@ -1388,9 +1388,7 @@ div.max .gwt-RichTextArea{
 .alcina-Selector .popupContent div.chooser-item:hover{
 	background-color:#A8D3E6;
 }
-.gwt-Tree.wrapped-tree .gwt-TreeItem{
-	white-space: normal;
-}
+
 /** more misc - added 2011.08.24 **/
  a.link-no-underline:link,a.link-no-underline:visited,a.link-no-underline:active,a.link-no-underline
 	{
@@ -1481,4 +1479,31 @@ div.popdown-select a:hover {
 .gwt-SliderBar-shell .gwt-SliderBar-line-sliding {
   background-color: #DDDDDD;
   cursor: pointer;
+}
+/**fast tree**/
+.gwt-TreeItem-Holder{
+	padding-left: 18px;
+	position:relative;
+	padding-top: 2px;
+	padding-bottom: 4px;
+	cursor: hand;
+	cursor: pointer;
+	zoom: 1;
+}
+.gwt-TreeItem-ImageHolder{
+	left: 0px;
+	width: 15px;
+	height: 15px;
+	position:absolute;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	cursor: hand;
+	cursor: pointer;
+	zoom: 1;
+}
+.gwt-Tree.noLeafImages .gwt-TreeItem-ImageHolder{
+	padding-top: 0px;
+}
+.gwt-Tree.wrappedContent .gwt-TreeItem{
+	white-space:normal;
 }

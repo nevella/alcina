@@ -31,6 +31,7 @@ import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 
 import com.google.gwt.dom.client.DivElement;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -52,10 +53,12 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 	public T getUserObject() {
 		return (T) super.getUserObject();
 	}
+
 	public DomainNode(T object) {
-		this(object,null);
+		this(object, null);
 	}
-	public DomainNode(T object,NodeFactory nodeFactory) {
+
+	public DomainNode(T object, NodeFactory nodeFactory) {
 		super();
 		setUserObject(object);
 		ClientBeanReflector info = ClientReflector.get().beanInfoForClass(
@@ -87,17 +90,16 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 
 	@RegistryLocation(registryPoint = HasSatisfiesFilter.class)
 	@ClientInstantiable
-	public static class DefaultHasSatisfiesFilter<T> implements HasSatisfiesFilter<T> {
-
+	public static class DefaultHasSatisfiesFilter<T> implements
+			HasSatisfiesFilter<T> {
 		@Override
 		public boolean satisfiesFilter(T t, String filterText) {
-			if (CommonUtils.nullToEmpty(TextProvider.get().getObjectName(t)).toLowerCase()
-					.contains(filterText)) {
+			if (CommonUtils.nullToEmpty(TextProvider.get().getObjectName(t))
+					.toLowerCase().contains(filterText)) {
 				return true;
 			}
 			if (t instanceof HasId) {
-				return String.valueOf(((HasId) t).getId()).equals(
-						filterText);
+				return String.valueOf(((HasId) t).getId()).equals(filterText);
 			}
 			return false;
 		}
@@ -128,15 +130,12 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 		removeListeners();
 	}
 
-	protected static DivElement div = Document.get().createDivElement();
-
 	public void refreshFromObject() {
 		ClientBeanReflector info = ClientReflector.get().beanInfoForClass(
 				getUserObject().getClass());
 		displayName = info.getObjectName(getUserObject());
 		if (displayName != null) {
-			div.setInnerText(displayName);
-			displayName = div.getInnerHTML();
+			displayName = SafeHtmlUtils.htmlEscape(displayName);
 		} else {
 			displayName = "[null]";
 		}
