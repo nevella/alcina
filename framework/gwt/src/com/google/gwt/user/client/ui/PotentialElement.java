@@ -15,10 +15,13 @@
  */
 package com.google.gwt.user.client.ui;
 
+import cc.alcina.framework.gwt.client.util.ClientUtils;
+
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.builder.shared.HtmlElementBuilder;
 import com.google.gwt.dom.builder.shared.HtmlBuilderFactory;
+import com.google.gwt.dom.builder.shared.HtmlElementBuilder;
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.DOM;
 
 /**
  * EXPERIMENTAL and subject to change. Do not use this in production code.
@@ -222,4 +225,8 @@ public class PotentialElement extends Element {
 	private native Element resolve() /*-{
 		return this.__gwt_resolve ? this.__gwt_resolve() : this;
 	}-*/;
+
+	public final String getInnerText0() {
+		return ClientUtils.simpleInnerText(getInnerHTML());
+	}
 }

@@ -523,6 +523,10 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 	}
 
 	public String getText() {
+		if(((com.google.gwt.dom.client.Element)contentElem) instanceof PotentialElement){
+			PotentialElement pe=contentElem.cast();
+			return pe.getInnerText0();
+		}
 		return DOM.getInnerText(contentElem);
 	}
 

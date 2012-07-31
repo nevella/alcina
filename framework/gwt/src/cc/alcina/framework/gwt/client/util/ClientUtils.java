@@ -60,23 +60,21 @@ public class ClientUtils {
 	private static final String CSS_TEXT_PROPERTY = "cssText";
 
 	public static boolean maybeOffline(Throwable t) {
-		
 		while (t instanceof WrappedRuntimeException) {
-			if(t==t.getCause()||t.getCause()==null){
+			if (t == t.getCause() || t.getCause() == null) {
 				break;
 			}
 			t = t.getCause();
 		}
 		if (t instanceof StatusCodeException) {
-			if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)){
+			if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)) {
 				return true;
 			}
 			StatusCodeException sce = (StatusCodeException) t;
-			ClientLayerLocator.get().notifications().log(
-					"** Status code exception: " + sce.getStatusCode());
+			ClientLayerLocator.get().notifications()
+					.log("** Status code exception: " + sce.getStatusCode());
 			boolean internetExplorerErrOffline = BrowserMod
-					.isInternetExplorer()
-					&& sce.getStatusCode() > 600;
+					.isInternetExplorer() && sce.getStatusCode() > 600;
 			if ((!GWT.isScript() && sce.getStatusCode() == 500)
 					|| sce.getStatusCode() == 0 || internetExplorerErrOffline) {
 				return true;
@@ -137,56 +135,63 @@ public class ClientUtils {
 	}
 
 	public static void notImplemented() {
-		ClientLayerLocator.get().notifications().showWarning(
-				"Not yet implemented");
+		ClientLayerLocator.get().notifications()
+				.showWarning("Not yet implemented");
 	}
-	public static UrlBuilder getBaseUrlBuilder(){
-		UrlBuilder builder =new UrlBuilder();
+
+	public static UrlBuilder getBaseUrlBuilder() {
+		UrlBuilder builder = new UrlBuilder();
 		builder.setProtocol(Window.Location.getProtocol());
 		builder.setHost(Window.Location.getHostName());
 		String port = Window.Location.getPort();
 		if (port != null && port.length() > 0) {
-	        builder.setPort(Integer.parseInt(port));
-	      }
+			builder.setPort(Integer.parseInt(port));
+		}
 		return builder;
 	}
+
 	public static native void invokeJsDebugger() /*-{
 		debugger;
 	}-*/;
-	public static void fireHistoryToken(String token){
-		if (token==null){
+
+	public static void fireHistoryToken(String token) {
+		if (token == null) {
 			return;
 		}
-		if (token.equals(History.getToken())){
+		if (token.equals(History.getToken())) {
 			History.fireCurrentHistoryState();
 		}
 		History.newItem(token);
 	}
+
 	public static EditContentViewWidgets editContentView(final Object model,
-			final PermissibleActionListener pal, String caption, String messageHtml) {
+			final PermissibleActionListener pal, String caption,
+			String messageHtml) {
 		return editContentView(model, pal, caption, messageHtml, true);
 	}
+
 	public static EditContentViewWidgets editContentView(final Object model,
-			final PermissibleActionListener pal, String caption, String messageHtml, final boolean hideOnClick) {
+			final PermissibleActionListener pal, String caption,
+			String messageHtml, final boolean hideOnClick) {
 		ContentViewFactory cvf = new ContentViewFactory();
 		cvf.setNoCaption(true);
 		cvf.setNoButtons(false);
 		cvf.setCancelButton(true);
 		FlowPanel fp = new FlowPanel();
 		final GlassDialogBox gdb = new GlassDialogBox();
-		PermissibleActionListener closeWrapper=new PermissibleActionListener() {
+		PermissibleActionListener closeWrapper = new PermissibleActionListener() {
 			@Override
 			public void vetoableAction(PermissibleActionEvent evt) {
-				if(hideOnClick){
+				if (hideOnClick) {
 					gdb.hide();
 				}
-				if(pal!=null){
+				if (pal != null) {
 					pal.vetoableAction(evt);
 				}
 			}
 		};
-		PaneWrapperWithObjects view = cvf.createBeanView(model, true, closeWrapper,
-				false, true);
+		PaneWrapperWithObjects view = cvf.createBeanView(model, true,
+				closeWrapper, false, true);
 		view.addStyleName("pwo-center-buttons");
 		List<Binding> bindings = view.getBoundWidget().getBinding()
 				.getChildren();
@@ -209,15 +214,66 @@ public class ClientUtils {
 		gdb.show();
 		return new EditContentViewWidgets(view, gdb);
 	}
+
 	public static class EditContentViewWidgets {
 		public PaneWrapperWithObjects wrapper;
-	
+
 		public GlassDialogBox gdb;
-	
+
 		public EditContentViewWidgets(PaneWrapperWithObjects wrapper,
 				GlassDialogBox gdb) {
 			this.wrapper = wrapper;
 			this.gdb = gdb;
 		}
+	}
+
+	public static String simpleInnerText(String innerHTML) {
+		int idx = 0, idy = 0, x1, x2,min;
+		StringBuilder result = new StringBuilder();
+		while (true) {
+			x1 = innerHTML.indexOf("<", idx);
+			x2 = innerHTML.indexOf("&", idx);
+			if (x1 == -1 && x2 == -1) {
+				break;
+			}
+			min=x1 != -1 && (x2 == -1 || x1 < x2)?x1:x2;
+			result.append(innerHTML.substring(idx,min));
+			if (min==x1) {
+				x2 = innerHTML.indexOf(">", min);
+				if (x2 == -1) {
+					// invalidish html, bail
+					break;
+				} else {
+					idx = x2 + 1;
+				}
+			}else{
+				x2 = innerHTML.indexOf(";", min);
+				if (x2 == -1) {
+					// invalidish html, bail
+					break;
+				} else {
+					String minStr = innerHTML.substring(min+1,x2);
+					if(minStr.equals("amp")){
+						result.append("&");
+					}else 	if(minStr.equals("lt")){
+						result.append("<");
+					}else 	if(minStr.equals("gt")){
+						result.append(">");
+					}else {
+						try{
+							int cc=Integer.parseInt(minStr);
+							result.append((char)cc);
+						}catch(NumberFormatException ne){
+							//ignore
+						}
+					}
+					
+					idx=x2+1;
+				}
+				
+			}
+		}
+		result.append(innerHTML.substring(idx));
+		return result.toString();
 	}
 }
