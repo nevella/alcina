@@ -17,6 +17,7 @@ import java.util.Stack;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;
@@ -180,7 +181,12 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 			TreeItem child = getItem(i);
 			if (child instanceof VisualFilterable) {
 				VisualFilterable vf = (VisualFilterable) child;
-				b |= vf.filter(filterText);
+				boolean match = vf.filter(filterText);
+				b |= match;
+				if(match&&CommonUtils.isNotNullOrEmpty(filterText)){
+					//allow for lazy rendering fuzziness
+					vf.filter(filterText);
+				}
 			}
 		}
 		if (getSelectedItem() != null && !getSelectedItem().isVisible()) {

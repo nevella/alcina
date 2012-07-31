@@ -83,6 +83,7 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 			item.potentialState = state;
 			if (!item.isRoot && parentItem != null
 					&& item.getElement().getParentElement() == null) {
+				ensureState(parentItem, PotentialState.INSTANTIATED);
 				ensureMargin(item, parentItem);
 				Element childContainer = parentItem.isRoot ? item.getTree()
 						.getElement() : parentItem.childSpanElem;
