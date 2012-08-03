@@ -40,7 +40,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		return CommonConstants.HTML_BLOCKS.contains(","
 				+ e.getTagName().toUpperCase() + ",");
 	}
-	
+
 	private NodeFromXpathProvider nodeProvider = null;
 
 	private ClientNodeIterator walker;
@@ -117,10 +117,12 @@ public class DomUtils implements NodeFromXpathProvider {
 				node = xpathMap.get(ucXpath.substring(0, ucXpath.length() - 3));
 			}
 			return node;
-		}else{
+		} else {
 			if (lastContainer != container) {
 				lastContainer = container;
-				walker=new ClientNodeIterator(container, ClientNodeIterator.SHOW_ELEMENT|ClientNodeIterator.SHOW_TEXT);
+				walker = new ClientNodeIterator(container,
+						ClientNodeIterator.SHOW_ELEMENT
+								| ClientNodeIterator.SHOW_TEXT);
 			}
 		}
 		// keep in sync with sedomutils
@@ -164,7 +166,7 @@ public class DomUtils implements NodeFromXpathProvider {
 						break;
 					}
 				}
-				last=node;
+				last = node;
 			}
 			if (current == null) {
 				return null;
@@ -187,8 +189,9 @@ public class DomUtils implements NodeFromXpathProvider {
 					walker.setCurrentNode(node);
 					while (walker.nextNode() != null) {
 						node = walker.getCurrentNode();
-						if (node.getNodeType()==Node.ELEMENT_NODE&&((Element)node).getAttribute("id").startsWith(
-								ignoreableElementIdPrefix)) {
+						if (node.getNodeType() == Node.ELEMENT_NODE
+								&& ((Element) node).getAttribute("id")
+										.startsWith(ignoreableElementIdPrefix)) {
 						} else {
 							return node;
 						}
@@ -207,6 +210,9 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public void generateMap(Element elt, String prefix,
 			Map<String, Node> xpathMap) {
+		if (elt == null) {
+			return;
+		}
 		Map<String, Integer> total = new HashMap<String, Integer>();
 		Map<String, Integer> current = new HashMap<String, Integer>();
 		NodeList<Node> nodes = elt.getChildNodes();
@@ -574,19 +580,20 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 		return false;
 	}
-	public static List<Element> nodeListToElementList(NodeList list){
-		List<Element> result=new ArrayList<Element>();
+
+	public static List<Element> nodeListToElementList(NodeList list) {
+		List<Element> result = new ArrayList<Element>();
 		int length = list.getLength();
 		for (int i = 0; i < length; i++) {
 			Node node = list.getItem(i);
-			if (node.getNodeType() == Node.ELEMENT_NODE
-					) {
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				result.add((Element) node);
 			}
 		}
 		return result;
 	}
-	public static List<Element> getChildElements(Element elt){
+
+	public static List<Element> getChildElements(Element elt) {
 		return nodeListToElementList(elt.getChildNodes());
 	}
 }
