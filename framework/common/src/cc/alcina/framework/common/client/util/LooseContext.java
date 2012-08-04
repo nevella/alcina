@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.util;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -50,6 +51,7 @@ public class LooseContext {
 	public boolean getBoolean(String key) {
 		return properties.get(key) == Boolean.TRUE;
 	}
+
 	public boolean getBooleanDefaultTrue(String key) {
 		return properties.get(key) != Boolean.FALSE;
 	}
@@ -71,9 +73,10 @@ public class LooseContext {
 		addedListeners = new Multimap<TopicListener, List<String>>();
 		properties = new HashMap<String, Object>(properties);
 	}
-	public void pushWithKey(String key,Object value) {
+
+	public void pushWithKey(String key, Object value) {
 		push();
-		set(key,value);
+		set(key, value);
 	}
 
 	public void remove(String key) {
@@ -107,26 +110,18 @@ public class LooseContext {
 		return get(TOPIC_PROPERTY_NAME);
 	}
 
-	public void publishTopic(String key,
-			Object message) {
+	public void publishTopic(String key, Object message) {
 		ensureTopicPublisher().publishTopic(key, message);
-		
 	}
 
 	public void addProperties(String contextProperties) {
-		if(CommonUtils.isNullOrEmpty(contextProperties)){
-			return;
-		}
-		for(String kv:contextProperties.split("\n")){
-			String[] split = kv.split("=", 2);
-			if(split.length==2){
-				if(split[1].equals("true")){
-					setBoolean(split[0]);
-				}else{
-					set(split[0], split[1]);
-				}
+		StringMap sm = StringMap.fromPropertyString(contextProperties);
+		for (Entry<String, String> entry : sm.entrySet()) {
+			if (entry.getValue().equals("true")) {
+				setBoolean(entry.getKey());
+			} else {
+				set(entry.getKey(), entry.getValue());
 			}
 		}
-		
 	}
 }
