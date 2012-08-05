@@ -23,21 +23,24 @@ public class StringMap extends LinkedHashMap<String, String> {
 			}
 			sb.append(entry.getKey());
 			sb.append('=');
-			sb.append(entry.getValue().replace("\\","\\\\").replace("=", "\\=").replace("\n", "\\n"));
+			sb.append(entry.getValue().replace("\\", "\\\\")
+					.replace("=", "\\=").replace("\n", "\\n"));
 		}
 		return sb.toString();
 	}
 
 	public static StringMap fromPropertyString(String props) {
 		StringMap map = new StringMap();
-		if(props==null){
+		if (props == null) {
 			return map;
 		}
 		for (String line : props.split("\n")) {
-			int idx = props.indexOf("=");
-			map.put(line.substring(0, idx),
-					line.substring(idx + 1).replace("\\n", "\n")
-							.replace("\\=", "=").replace("\\\\", "\\"));
+			int idx = line.indexOf("=");
+			if (idx != -1) {
+				map.put(line.substring(0, idx),
+						line.substring(idx + 1).replace("\\n", "\n")
+								.replace("\\=", "=").replace("\\\\", "\\"));
+			}
 		}
 		return map;
 	}
