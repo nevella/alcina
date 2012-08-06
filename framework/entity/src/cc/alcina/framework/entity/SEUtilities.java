@@ -124,28 +124,86 @@ public class SEUtilities {
 	private static Pattern yearRangePattern = Pattern
 			.compile("(\\d{4})(-(\\d{4}))?");
 
-	public static final String WS_PATTERN_STR = "(?:[\\u0009\\u000A\\u000B\\u000C\\u000D\\u0020\\u00A0]+)";
-
-	public static final Pattern WS_PATTERN = Pattern.compile(WS_PATTERN_STR);
-
 	public static String normalizeWhitespace(String input) {
-		return WS_PATTERN.matcher(input).replaceAll(" ");
+		return doWhitespace(input, false, ' ');
+	}
+
+	public static boolean isWhitespace(char c) {
+		switch (c) {
+		case '\u0009':
+		case '\n':
+		case '\u000B':
+		case '\f':
+		case '\r':
+		case '\u00A0':
+		case ' ':
+			return true;
+		}
+		return false;
+	}
+
+	private static String doWhitespace(String input, boolean returnNullIfNonWs,
+			char replace) {
+		StringBuilder sb = null;
+		int sct = 0;
+		int nsct = 0;
+		boolean escaped = false;
+		boolean strip = replace == '-';
+		int maxSpaceCount = strip ? 0 : 1;
+		for (int i = 0; i < input.length(); i++) {
+			char c = input.charAt(i);
+			switch (c) {
+			case '\u0009':
+			case '\n':
+			case '\u000B':
+			case '\f':
+			case '\r':
+			case '\u00A0':
+				nsct++;
+				break;
+			case ' ':
+				sct++;
+				break;
+			default:
+				nsct = 0;
+				sct = 0;
+				escaped = false;
+				if (sb != null) {
+					sb.append(c);
+				}
+				if (returnNullIfNonWs) {
+					return null;
+				}
+			}
+			if (!returnNullIfNonWs && sb == null
+					&& (nsct > 0 || sct > maxSpaceCount)) {
+				sb = new StringBuilder(input.length());
+				sb.append(input.substring(0, i - (sct + nsct - 1)));
+			}
+			if (sb != null && !escaped && (sct > 0 || nsct > 0)) {
+				if (replace != '-') {
+					sb.append(' ');
+				}
+				escaped = true;
+			}
+		}
+		return sb == null ? input : sb.toString();
 	}
 
 	public static String normalizeWhitespaceAndTrim(String input) {
-		return WS_PATTERN.matcher(input).replaceAll(" ").trim();
+		return normalizeWhitespace(input).trim();
 	}
 
 	public static String stripWhitespace(String input) {
-		return WS_PATTERN.matcher(input).replaceAll("");
+		return doWhitespace(input, false, '-');
 	}
 
 	public static boolean isWhitespace(String input) {
-		return WS_PATTERN.matcher(input).matches();
+		return doWhitespace(input, true, '-') != null;
 	}
 
 	public static boolean isWhitespaceOrEmpty(String input) {
-		return input.length() == 0 || WS_PATTERN.matcher(input).matches();
+		return input.length() == 0 || isWhitespace(input);
 	}
 
 	public static IntPair yearRange(String s) {
@@ -794,11 +852,24 @@ public class SEUtilities {
 	}
 
 	public static int getLeadingWsCount(String input) {
-		Matcher m = WS_PATTERN.matcher(input);
-		if (m.find()) {
-			return m.start() == 0 ? m.end() : 0;
+		int sct = 0;
+		itrChars: for (int i = 0; i < input.length(); i++) {
+			char c = input.charAt(i);
+			switch (c) {
+			case '\u0009':
+			case '\n':
+			case '\u000B':
+			case '\f':
+			case '\r':
+			case '\u00A0':
+			case ' ':
+				sct++;
+				break;
+			default:
+				break itrChars;
+			}
 		}
-		return 0;
+		return sct;
 	}
 
 	public static String getFullExceptionMessage(Throwable t) {

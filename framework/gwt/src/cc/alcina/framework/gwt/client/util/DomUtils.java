@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,10 @@ public class DomUtils implements NodeFromXpathProvider {
 	private NodeFromXpathProvider nodeProvider = null;
 
 	private ClientNodeIterator walker;
+
+	public DomUtils() {
+		invalidateUnwrapOrIgnoreCache();
+	}
 
 	private static void addVisibleTextNodes(Element element, List<Text> texts) {
 		NodeList<Node> nl = element.getChildNodes();
@@ -100,6 +105,9 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (useXpathMap) {
 			if (lastContainer != container) {
 				lastContainer = container;
+				walker = new ClientNodeIterator(container,
+						ClientNodeIterator.SHOW_ELEMENT
+								| ClientNodeIterator.SHOW_TEXT);
 				xpathMap = new LinkedHashMap<String, Node>();
 				ClientNotifications notifications = ClientLayerLocator.get()
 						.notifications();
@@ -113,8 +121,12 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 			Node node = xpathMap.get(ucXpath);
 			String singleTextPoss = "TEXT()[1]";
+			String possiblyWrappedTextPost = "TEXT()";
 			if (node == null && ucXpath.endsWith(singleTextPoss)) {
 				node = xpathMap.get(ucXpath.substring(0, ucXpath.length() - 3));
+			}
+			if (node == null && ucXpath.endsWith(possiblyWrappedTextPost)) {
+				node = xpathMap.get(ucXpath + "[1]");
 			}
 			return node;
 		} else {
@@ -181,27 +193,37 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public static String ignoreableElementIdPrefix = "IGNORE__";
 
+	private Map<Node, Node> unwrapOrIgnoreCache;
+
 	private Node unwrapOrIgnore(Node node) {
-		if (node.getNodeType() == Node.ELEMENT_NODE) {
-			Element e = (Element) node;
-			if (e.getAttribute("id").startsWith(ignoreableElementIdPrefix)) {
-				if (node.getNodeName().equalsIgnoreCase("span")) {
-					walker.setCurrentNode(node);
-					while (walker.nextNode() != null) {
-						node = walker.getCurrentNode();
-						if (node.getNodeType() == Node.ELEMENT_NODE
-								&& ((Element) node).getAttribute("id")
-										.startsWith(ignoreableElementIdPrefix)) {
-						} else {
-							return node;
-						}
+		short nodeType = node.getNodeType();
+		if (nodeType != Node.ELEMENT_NODE) {
+			return node;
+		}
+		if (unwrapOrIgnoreCache.containsKey(node)) {
+			return unwrapOrIgnoreCache.get(node);
+		}
+		Node result = node;
+		Element e = (Element) node;
+		if (e.getAttribute("id").startsWith(ignoreableElementIdPrefix)) {
+			if (node.getNodeName().equalsIgnoreCase("span")) {
+				walker.setCurrentNode(node);
+				while (walker.nextNode() != null) {
+					node = walker.getCurrentNode();
+					if (node.getNodeType() == Node.ELEMENT_NODE
+							&& ((Element) node).getAttribute("id").startsWith(
+									ignoreableElementIdPrefix)) {
+					} else {
+						result = node;
+						break;
 					}
-				} else {
-					return null;
 				}
+			} else {
+				result = null;
 			}
 		}
-		return node;
+		unwrapOrIgnoreCache.put(node, result);
+		return result;
 	}
 
 	public void setUseXpathMap(boolean useXpathMap) {
@@ -209,6 +231,11 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public void generateMap(Element elt, String prefix,
+			Map<String, Node> xpathMap) {
+		generateMap0(elt, prefix, xpathMap);
+	}
+
+	private void generateMap0(Element elt, String prefix,
 			Map<String, Node> xpathMap) {
 		if (elt == null) {
 			return;
@@ -220,20 +247,32 @@ public class DomUtils implements NodeFromXpathProvider {
 			xpathMap.put(prefix, elt);
 		}
 		int length = nodes.getLength();
+		short lastNodeType=Node.DOCUMENT_NODE;
+		//ignore sequential texts (with wrapping), as per non-map version
 		for (int i = 0; i < length; i++) {
 			Node node = nodes.getItem(i);
+			node = unwrapOrIgnore(node);
+			if (node == null) {
+				continue;
+			}
 			short nodeType = node.getNodeType();
-			if (nodeType == Node.TEXT_NODE || nodeType == Node.ELEMENT_NODE) {
+			if ((nodeType == Node.TEXT_NODE&&lastNodeType!=Node.TEXT_NODE) || nodeType == Node.ELEMENT_NODE) {
 				String marker = nodeType == Node.TEXT_NODE ? DomUtils.TEXT_MARKER
 						: node.getNodeName().toUpperCase();
 				int c = total.containsKey(marker) ? total.get(marker) : 0;
 				total.put(marker, c + 1);
 			}
+			lastNodeType=nodeType;
 		}
+		lastNodeType=Node.DOCUMENT_NODE;
 		for (int i = 0; i < length; i++) {
 			Node node = nodes.getItem(i);
+			node = unwrapOrIgnore(node);
+			if (node == null) {
+				continue;
+			}
 			short nodeType = node.getNodeType();
-			if (nodeType == Node.TEXT_NODE || nodeType == Node.ELEMENT_NODE) {
+			if ((nodeType == Node.TEXT_NODE&&lastNodeType!=Node.TEXT_NODE)  || nodeType == Node.ELEMENT_NODE) {
 				String marker = nodeType == Node.TEXT_NODE ? DomUtils.TEXT_MARKER
 						: node.getNodeName().toUpperCase();
 				String post = marker;
@@ -249,10 +288,10 @@ public class DomUtils implements NodeFromXpathProvider {
 				}
 				xpathMap.put(xp, node);
 				if (nodeType == Node.ELEMENT_NODE) {
-					generateMap((Element) node, xp + "/", xpathMap);
+					generateMap0((Element) node, xp + "/", xpathMap);
 					// this won't cause ambiguity
 					if (post.equals("TBODY")) {
-						generateMap((Element) node, prefix, xpathMap);
+						generateMap0((Element) node, prefix, xpathMap);
 					}
 				} else {
 					if (debug && !xp.contains("TBODY")) {
@@ -260,6 +299,7 @@ public class DomUtils implements NodeFromXpathProvider {
 					}
 				}
 			}
+			lastNodeType=nodeType;
 		}
 	}
 
@@ -330,12 +370,17 @@ public class DomUtils implements NodeFromXpathProvider {
 		return CommonUtils.join(parts, "/");
 	}
 
-	public void dumpMap() {
-		xpathMap = new LinkedHashMap<String, Node>();
-		generateMap((Element) lastContainer, "", xpathMap);
+	public void dumpMap(boolean regenerate) {
+		if (regenerate) {
+			xpathMap = new LinkedHashMap<String, Node>();
+			generateMap((Element) lastContainer, "", xpathMap);
+		}
 		System.out.println("---dump xpath map");
 		for (String key : xpathMap.keySet()) {
-			System.out.println(key);
+			Node node = xpathMap.get(key);
+			String tc = node.getNodeType() == Node.TEXT_NODE ? " - "
+					+ node.getNodeValue() : "";
+			System.out.println(key + tc);
 		}
 		System.out.println("\n---\n\n");
 	}
@@ -595,5 +640,37 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public static List<Element> getChildElements(Element elt) {
 		return nodeListToElementList(elt.getChildNodes());
+	}
+
+	public void invalidateUnwrapOrIgnoreCache() {
+		unwrapOrIgnoreCache = new IdentityHashMap<Node, Node>(10000);
+	}
+
+	public static interface DomUtilsFactory {
+		public DomUtils create();
+	}
+
+	public static class DomUtilsFactoryDefault implements DomUtilsFactory {
+		public DomUtils create() {
+			return new DomUtils();
+		}
+	}
+
+	public void dumpContainerNoMap() {
+		Node lc = lastContainer;
+		System.out.println("---dump xpath map (no map)");
+		useXpathMap = false;
+		for (String key : xpathMap.keySet()) {
+			Node node = findXpathWithIndexedText(key, lastContainer);
+			if (node == null) {
+				System.out.println("***MISSING***" + key);
+			} else {
+				String tc = node.getNodeType() == Node.TEXT_NODE ? " - "
+						+ node.getNodeValue() : "";
+				System.out.println(key + tc);
+			}
+		}
+		System.out.println("\n---\n\n");
+		useXpathMap = true;
 	}
 }
