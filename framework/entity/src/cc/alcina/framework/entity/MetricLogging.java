@@ -18,8 +18,10 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.apache.log4j.Layout;
 import org.apache.log4j.Logger;
@@ -45,6 +47,8 @@ public class MetricLogging {
 
 	private Map<String, Long> metricStartThreadIds;
 
+	private Map<String, Boolean> sysout;
+
 	private Map<String, Long> ticksSum;
 
 	private Map<String, Long> ticks;
@@ -62,6 +66,8 @@ public class MetricLogging {
 	private Map<String, String> keyToKeyWithParents;
 
 	private WriterAccessWriterAppender wa;
+
+	public static Set<Class> sysoutClasses = new LinkedHashSet<Class>();
 
 	private static Map<Long, WeakReference<MetricLogging>> threadIdLoggingMap = new HashMap<Long, WeakReference<MetricLogging>>();
 
@@ -109,9 +115,8 @@ public class MetricLogging {
 
 	public void average(String key) {
 		if (averageCount.containsKey(key)) {
-			String message = CommonUtils.format("Metric: %1 avg %2ms", key, sum
-					.get(key)
-					/ averageCount.get(key));
+			String message = CommonUtils.format("Metric: %1 avg %2ms", key,
+					sum.get(key) / averageCount.get(key));
 			System.out.println(message);
 		}
 	}
@@ -139,13 +144,18 @@ public class MetricLogging {
 				: System.currentTimeMillis() - metricStart.get(key)
 				: Runtime.getRuntime().freeMemory() - metricStart.get(key);
 		ticksSum.remove(key);
-		String units=time?"ms":"bytes";
-		String message = CommonUtils.formatJ("Metric: %s - %s %s%s", key, delta,units,
-				CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - " + extraInfo);
+		String units = time ? "ms" : "bytes";
+		String message = CommonUtils.formatJ("Metric: %s - %s %s%s", key,
+				delta, units, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
+						+ extraInfo);
 		if (useLog4j && metricLogger != null) {
 			if (!muted) {
 				metricLogger.debug(message);
 				perThreadLogger.info(message);
+				if (sysout.containsKey(key)) {
+					System.out.println(message);
+					sysout.remove(key);
+				}
 			}
 		} else {
 			System.out.println(message);
@@ -165,7 +175,7 @@ public class MetricLogging {
 		if (!ticksSum.containsKey(key)) {
 			ticksSum.put(key, 0L);
 		}
-		if(!ticks.containsKey(key)){
+		if (!ticks.containsKey(key)) {
 			ticks.put(key, cn);
 		}
 		ticksSum.put(key, ticksSum.get(key) + (cn - ticks.get(key)));
@@ -214,6 +224,7 @@ public class MetricLogging {
 		keyToKeyWithParents = new HashMap<String, String>();
 		ticks = new HashMap<String, Long>();
 		ticksSum = new HashMap<String, Long>();
+		sysout = new LinkedHashMap<String, Boolean>();
 		terminated = new HashSet<String>();
 	}
 
@@ -254,5 +265,17 @@ public class MetricLogging {
 		withParents += key;
 		keyToKeyWithParents.put(key, withParents);
 		return withParents;
+	}
+
+	public void start(String key, Class clazz) {
+		start(key);
+		if (sysoutClasses.contains(clazz)) {
+			key = keyWithParents(key, true);
+			sysout.put(key, true);
+		}
+	}
+
+	public void appShutdown() {
+		sysoutClasses = null;
 	}
 }

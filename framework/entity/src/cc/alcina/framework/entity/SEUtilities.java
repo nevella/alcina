@@ -59,6 +59,7 @@ import javax.swing.tree.TreePath;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.LookupMapToMap;
 
 /**
  * @author nick@alcina.cc
@@ -155,7 +156,7 @@ public class SEUtilities {
 			if (matcher.group(3) != null) {
 				result.i2 = Integer.parseInt(matcher.group(3));
 			} else {
-				result.i2=result.i1;
+				result.i2 = result.i1;
 			}
 		}
 		return result;
@@ -233,16 +234,26 @@ public class SEUtilities {
 		return true;
 	}
 
+	private static LookupMapToMap<PropertyDescriptor> pdLookup = new LookupMapToMap<PropertyDescriptor>(
+			2);
+
 	public static PropertyDescriptor descriptorByName(Class clazz,
 			String propertyName) throws IntrospectionException {
+		if (pdLookup.containsKey(clazz, propertyName)) {
+			PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
+			return cached;
+		}
 		PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
 				.getPropertyDescriptors();
+		PropertyDescriptor result = null;
 		for (PropertyDescriptor pd : pds) {
 			if (pd.getName().equals(propertyName)) {
-				return pd;
+				result = pd;
+				break;
 			}
 		}
-		return null;
+		pdLookup.put(clazz, propertyName, result);
+		return result;
 	}
 
 	public static String dumpProperties(Properties p) {
@@ -826,5 +837,9 @@ public class SEUtilities {
 				System.out.println("\t" + stackTraceElement);
 			}
 		}
+	}
+
+	public static void appShutdown() {
+		pdLookup = null;
 	}
 }

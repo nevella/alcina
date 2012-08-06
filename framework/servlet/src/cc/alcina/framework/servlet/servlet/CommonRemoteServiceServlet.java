@@ -27,6 +27,7 @@ import java.util.List;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -68,6 +69,7 @@ import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.actions.RequiresHttpRequest;
@@ -693,8 +695,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			persistenceSupport
 					.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
 							persistenceToken, null));
+			MetricLogging.get().start("transform-commit",
+					CommonRemoteServiceServlet.class);
 			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 					.transformPersistenceQueue().submit(persistenceToken);
+			MetricLogging.get().end("transform-commit");
 			wrapper.ignored = persistenceToken.ignored;
 			persistenceSupport
 					.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(

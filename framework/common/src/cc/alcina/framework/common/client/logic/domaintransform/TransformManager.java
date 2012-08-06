@@ -48,7 +48,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoManager;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
@@ -573,13 +572,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			String collectionPropertyName, Object delta,
 			CollectionModificationType modificationType) {
 		Collection deltaC = CommonUtils.wrapInCollection(delta);
-		Collection old = (Collection) CommonLocator
-				.get()
-				.propertyAccessor()
-				.getPropertyValue(objectWithCollection,
-						collectionPropertyName);
-		Collection c = CommonUtils
-				.shallowCollectionClone(old);
+		Collection old = (Collection) CommonLocator.get().propertyAccessor()
+				.getPropertyValue(objectWithCollection, collectionPropertyName);
+		Collection c = CommonUtils.shallowCollectionClone(old);
 		if (c == null) {
 			// handles the case when we're working within a transaction and try
 			// to clone, say a PersistentSet
@@ -1267,5 +1262,21 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static long getEventIdCounter() {
 		return eventIdCounter;
+	}
+
+	public void deleteObjectOrRemoveTransformsIfLocal(HasIdAndLocalId hili) {
+		if (hili.getId() != 0) {
+			deleteObject(hili);
+			return;
+		}
+		Set<DomainTransformEvent> toRemove = new LinkedHashSet<DomainTransformEvent>();
+		LinkedHashSet<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		for (DomainTransformEvent dte : trs) {
+			if (hili.equals(getObject(dte))) {
+				toRemove.add(dte);
+			}
+		}
+		trs.removeAll(toRemove);
+		transforms.removeAll(toRemove);
 	}
 }

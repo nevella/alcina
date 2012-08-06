@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 
@@ -311,10 +310,10 @@ public class CommonUtils {
 
 	public static Collection intersection(Collection c1, Collection c2) {
 		ArrayList result = new ArrayList();
-		if(c1.size()>c2.size()){
-			Collection tmp=c1;
-			c1=c2;
-			c2=tmp;
+		if (c1.size() > c2.size()) {
+			Collection tmp = c1;
+			c1 = c2;
+			c2 = tmp;
 		}
 		for (Object o : c1) {
 			if (c2.contains(o)) {
@@ -531,12 +530,13 @@ public class CommonUtils {
 	public static String trimToWsChars(String s, int maxChars) {
 		return trimToWsChars(s, maxChars, "");
 	}
+
 	public static String trimToWsChars(String s, int maxChars,
 			boolean withDotDot) {
 		return trimToWsChars(s, maxChars, "...");
 	}
-	public static String trimToWsChars(String s, int maxChars,
-			String ellipsis) {
+
+	public static String trimToWsChars(String s, int maxChars, String ellipsis) {
 		if (maxChars < 0) {
 			maxChars = 100;
 		}
@@ -800,5 +800,20 @@ public class CommonUtils {
 
 	public static String nullSafeToString(Object o) {
 		return o == null ? null : o.toString();
+	}
+
+	public static List<Integer> wrapIntArray(int[] ints) {
+		List<Integer> result = new ArrayList<Integer>();
+		for (int i = 0; i < ints.length; i++) {
+			result.add(ints[i]);
+		}
+		return result;
+	}
+	public static List<Long> wrapLongArray(long[] longs) {
+		List<Long> result = new ArrayList<Long>();
+		for (int i = 0; i < longs.length; i++) {
+			result.add(longs[i]);
+		}
+		return result;
 	}
 }
