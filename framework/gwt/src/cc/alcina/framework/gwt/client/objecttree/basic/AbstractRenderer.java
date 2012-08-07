@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.RenderContext;
@@ -101,7 +102,8 @@ public abstract class AbstractRenderer<T extends TreeRenderable> implements
 	}
 
 	public String renderablePropertyName() {
-		return null;
+		return getRenderable() != null && (getRenderable() instanceof HasValue) ? "value"
+				: null;
 	}
 
 	public String renderableText() {
