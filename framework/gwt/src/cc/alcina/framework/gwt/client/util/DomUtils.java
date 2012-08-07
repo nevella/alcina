@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
@@ -403,7 +404,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public static boolean isAncestorOf(Element ancestor, Node possibleChild) {
-		Element stop = RootPanel.get().getElement();
+		Element stop = GWT.isClient()?RootPanel.get().getElement():null;
 		while (possibleChild != null && possibleChild != stop) {
 			if (possibleChild == ancestor) {
 				return true;
