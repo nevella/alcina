@@ -115,11 +115,14 @@ public class DefaultCollectionFilter {
 	}
 
 	public static <T, C> List<C> convertAndFilter(
-			Collection<? extends T> collection, ConverterFilter<T, C> converter) {
+			Collection<? extends T> collection, ConverterFilter<T, C> converterFilter) {
 		List<C> result = new ArrayList<C>();
 		for (T t : collection) {
-			C convert = converter.convert(t);
-			if (converter.allow(convert)) {
+			if(!converterFilter.allowPreConvert(t)){
+				continue;
+			}
+			C convert = converterFilter.convert(t);
+			if (converterFilter.allowPostConvert(convert)) {
 				result.add(convert);
 			}
 		}
@@ -133,7 +136,9 @@ public class DefaultCollectionFilter {
 		}
 	};
 
-	public static interface ConverterFilter<T, C> extends Converter<T, C>,
-			CollectionFilter<C> {
+	public static interface ConverterFilter<T, C> extends Converter<T, C>
+			 {
+		public boolean allowPreConvert(T t);
+		public boolean allowPostConvert(C c);
 	}
 }

@@ -108,7 +108,6 @@ public abstract class HibernateEJBSearcherBase {
 
 	protected void processHandlers(SearchDefinition def) {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
-		Set<OrderGroup> orderGroups = def.getOrderGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
 			if (!PermissionsManager.get().isPermissible(cg)) {
 				continue;
@@ -123,6 +122,9 @@ public abstract class HibernateEJBSearcherBase {
 				for (SearchCriterion sc : (Set<SearchCriterion>) cg
 						.getCriteria()) {
 					SearchCriterionHandler handler = getCriterionHandler(sc);
+					if(!allowHandler(handler)){
+						continue;
+					}
 					if (handler == null) {
 						System.err.println("No handler for class "
 								+ sc.getClass());
@@ -143,6 +145,10 @@ public abstract class HibernateEJBSearcherBase {
 				}
 			}
 		}
+	}
+
+	protected boolean allowHandler(SearchCriterionHandler handler) {
+		return true;
 	}
 
 	protected SearchCriterionHandler getCriterionHandler(SearchCriterion sc) {
