@@ -31,6 +31,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge.BoundWidgetTypeFactorySimpleGenerator;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer.RenderInstruction;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
@@ -62,12 +63,12 @@ public class ObjectTreeRenderer {
 	protected Map<Widget, TreeRenderer> level1LabelMap = new HashMap<Widget, TreeRenderer>();
 
 	public ComplexPanel render(TreeRenderable root) {
-		return render(root, new RenderContext());
+		return render(root, RenderContext.get());
 	}
 
 	public ComplexPanel render(TreeRenderable root, RenderContext renderContext) {
 		this.op = new FlowPanelWithBinding();
-		op.setRenderContext(renderContext);
+		op.setRenderContext(renderContext.snapshot());
 		renderToPanel(root, op, 0, true, renderContext, null);
 		op.getBinding().bind();
 		op.getBinding().setLeft();

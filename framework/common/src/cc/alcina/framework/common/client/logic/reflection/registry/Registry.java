@@ -104,13 +104,14 @@ public class Registry {
 			boolean errorOnNull) {
 		Class cached = exactMap.get(registryPoint, targetObject);
 		if (cached == null) {
-			List<Class> lookup = lookup(true, registryPoint, targetObject,false);
+			List<Class> lookup = lookup(true, registryPoint, targetObject,
+					false);
 			cached = lookup.size() > 0 ? lookup.get(0) : Void.class;
 			exactMap.put(registryPoint, targetObject, cached);
 		}
 		if (cached == Void.class && errorOnNull) {
-			throw new RuntimeException(CommonUtils.format(
-					"Could not find lookup - %1:%2",
+			throw new RuntimeException(CommonUtils.formatJ(
+					"Could not find lookup - %s:%s",
 					CommonUtils.classSimpleName(registryPoint),
 					CommonUtils.classSimpleName(targetObject)));
 		}
@@ -119,21 +120,20 @@ public class Registry {
 
 	public Object instantiateSingleOrNull(Class registryPoint,
 			Class targetObject) {
-		Class lookupSingle = lookupSingle(registryPoint, targetObject,false);
-		return lookupSingle!=null ? instantiateSingle(registryPoint,
+		Class lookupSingle = lookupSingle(registryPoint, targetObject, false);
+		return lookupSingle != null ? instantiateSingle(registryPoint,
 				targetObject) : null;
 	}
 
 	@SuppressWarnings("unchecked")
 	public Object instantiateSingle(Class registryPoint, Class targetObject) {
-		Class lookupSingle = lookupSingle(registryPoint, targetObject,true);
+		Class lookupSingle = lookupSingle(registryPoint, targetObject, true);
 		return CommonLocator.get().classLookup().newInstance(lookupSingle);
 	}
 
 	public List<Class> lookup(Class registryPoint) {
 		return lookup(false, registryPoint, void.class, true);
 	}
-
 
 	public List<Class> lookup(boolean mostSpecificTarget, Class registryPoint,
 			Class targetObject, boolean required) {
@@ -153,8 +153,8 @@ public class Registry {
 			if (!required) {
 				return new ArrayList<Class>(0);
 			}
-			throw new RuntimeException(CommonUtils.format(
-					"Unable to locate class %1 - %2", registryPoint,
+			throw new RuntimeException(CommonUtils.formatJ(
+					"Unable to locate class %s - %s", registryPoint,
 					targetObject));
 		}
 		for (Class sc : scChain) {

@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 public class LooseContext {
 	private static final String TOPIC_PROPERTY_NAME = LooseContext.class
@@ -123,5 +124,33 @@ public class LooseContext {
 				set(entry.getKey(), entry.getValue());
 			}
 		}
+	}
+	protected  void cloneToSnapshot(LooseContext cloned){
+		cloned.properties=new HashMap<String, Object>(properties);
+	}
+	public LooseContext snapshot() {
+		LooseContext context=new LooseContext();
+		cloneToSnapshot(context);
+		return context;
+	}
+	/* 
+	 * 
+	 */
+	public void pushContext(LooseContext renderContext) {
+		stack.push(properties);
+		listenerStack.push(addedListeners);
+		addedListeners = new Multimap<TopicListener, List<String>>();
+		
+		addedListeners.addAll(renderContext.addedListeners);
+		TopicPublisher publisher = ensureTopicPublisher();
+		for (TopicListener listener : addedListeners.keySet()) {
+			for (String key : addedListeners.get(listener)) {
+				publisher.addTopicListener(key, listener);
+			}
+		}
+		
+		properties = new HashMap<String, Object>(properties);
+		properties.putAll(renderContext.properties);
+		
 	}
 }

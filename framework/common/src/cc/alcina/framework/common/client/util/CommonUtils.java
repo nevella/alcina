@@ -141,7 +141,7 @@ public class CommonUtils {
 		return o1.equals(o2);
 	}
 
-	public static String format(String source, Object... args) {
+	public static String formatNumbered(String source, Object... args) {
 		String[] strs = source.split("%");
 		String s;
 		for (int i = 0; i < strs.length; i++) {
@@ -173,28 +173,28 @@ public class CommonUtils {
 		}
 		switch (style) {
 		case AU_DATE_SLASH:
-			return format("%1/%2/%3", padTwo(date.getDate()),
+			return formatJ("%s/%s/%s", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
 		case AU_DATE_SLASH_MONTH:
-			return format("%1/%2", padTwo(date.getMonth() + 1),
+			return formatJ("%s/%s", padTwo(date.getMonth() + 1),
 					padTwo(date.getYear() + 1900));
 		case AU_DATE_DOT:
-			return format("%1.%2.%3", padTwo(date.getDate()),
+			return formatJ("%s.%s.%s", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
 		case AU_DATE_TIME:
-			return format("%1/%2/%3 - %4:%5:%6", padTwo(date.getDate()),
+			return formatJ("%s/%s/%s - %s:%s:%s", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
 					padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()));
 		case AU_DATE_TIME_HUMAN:
 			return formatDate(date, DateStyle.AU_LONG_DAY)
-					+ format(" at %1:%2 %3",
+					+ formatJ(" at %s:%s %s",
 							padTwo((date.getHours() - 1) % 12 + 1),
 							padTwo(date.getMinutes()),
 							date.getHours() < 12 ? "AM" : "PM");
 		case NAMED_MONTH_DATE_TIME_HUMAN:
 			return formatDate(date, DateStyle.NAMED_MONTH_DAY)
-					+ format(" at %1:%2 %3",
+					+ formatJ(" at %s:%s %s",
 							padTwo((date.getHours() - 1) % 12 + 1),
 							padTwo(date.getMinutes()),
 							date.getHours() < 12 ? "AM" : "PM");
@@ -203,29 +203,29 @@ public class CommonUtils {
 					MONTH_NAMES[date.getMonth() + 1], padTwo(date.getDate()),
 					padTwo(date.getYear() + 1900));
 		case AU_DATE_TIME_MS:
-			return format("%1/%2/%3 - %4:%5:%6:%7", padTwo(date.getDate()),
+			return formatJ("%s/%s/%s - %s:%s:%s:%s", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
 					padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()), date.getTime() % 1000);
 		case AU_DATE_MONTH:
-			return format("%1 %2 %3", padTwo(date.getDate()),
+			return formatJ("%s %s %s", padTwo(date.getDate()),
 					MONTH_NAMES[date.getMonth() + 1],
 					padTwo(date.getYear() + 1900));
 		case AU_SHORT_MONTH:
-			return format("%1 %2 %3", padTwo(date.getDate()),
+			return formatJ("%s %s %s", padTwo(date.getDate()),
 					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
 					padTwo(date.getYear() + 1900));
 		case AU_SHORT_DAY:
-			return format("%4 - %1.%2.%3", padTwo(date.getDate()),
+			return formatJ("%s - %s.%s.%s", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
 					DAY_NAMES[date.getDay()].substring(0, 3));
 		case AU_LONG_DAY:
-			return format("%4, %1.%2.%3", padTwo(date.getDate()),
+			return formatJ("%s, %s.%s.%s", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
 					DAY_NAMES[date.getDay()]);
 		case TIMESTAMP:
-			return format("%3%2%1_%4%5%6_%7", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
+			return formatJ("%s%s%s_%s%s%s_%s", padTwo(date.getYear() + 1900),
+					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
 					padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()), date.getTime() % 1000);
 		}
@@ -809,6 +809,7 @@ public class CommonUtils {
 		}
 		return result;
 	}
+
 	public static List<Long> wrapLongArray(long[] longs) {
 		List<Long> result = new ArrayList<Long>();
 		for (int i = 0; i < longs.length; i++) {

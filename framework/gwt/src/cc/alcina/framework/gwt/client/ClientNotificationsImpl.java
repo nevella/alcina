@@ -113,7 +113,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	public void metricLogEnd(String key) {
 		if (metricStartTimes.containsKey(key)) {
-			log(CommonUtils.format("Metric: %1 - %2 ms", key,
+			log(CommonUtils.formatJ("Metric: %s - %s ms", key,
 					System.currentTimeMillis() - metricStartTimes.get(key)));
 			metricStartTimes.remove(key);
 		}

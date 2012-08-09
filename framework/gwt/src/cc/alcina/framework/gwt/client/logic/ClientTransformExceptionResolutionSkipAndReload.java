@@ -32,7 +32,6 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.ExpandableLabelCustomis
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
-import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
@@ -122,10 +121,11 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 						false, true);
 		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK;
 		CollectionDataProvider cp = new CollectionDataProvider(adapters);
-		RenderContext.setCurrent(new RenderContext());
+		RenderContext.get().push();
 		RelativePopupPositioning.setCurrentBoundingParent(RootPanel.get());
 		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, factory,
 				fields, cp);
+		RenderContext.get().pop();
 		FlowPanel view = new FlowPanel();
 		view.add(table);
 		view.setStyleName("results-table");

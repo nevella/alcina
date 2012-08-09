@@ -54,9 +54,9 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 
 	public String getResultsDescriptionHtml() {
 		SearchDefinition def = getSearchDefinition();
-		String template = "You are on page %1 of %2 with %3 results for: %4. "
-				+ "%5.";
-		String noResultsTemplate = "No results were returned for: %4. ";
+		String template = "You are on page %s of %s with %s results for: %s. "
+				+ "%s.";
+		String noResultsTemplate = "No results were returned for: %s. ";
 		String tplt = (totalResultCount == 0) ? noResultsTemplate : template;
 		String searchDef = def.filterDescription(true);
 		if (!CommonUtils.isNullOrEmpty(def.getName())) {
@@ -64,8 +64,9 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 					+ def.getName() + "</span> - " + searchDef;
 		}
 		String orderDef = def.orderDescription(true);
-		return CommonUtils.format(tplt, pageNumber, pageCount(),
-				totalResultCount, searchDef, orderDef);
+		return tplt == noResultsTemplate ? CommonUtils.formatJ(tplt, searchDef)
+				: CommonUtils.formatJ(tplt, pageNumber, pageCount(),
+						totalResultCount, searchDef, orderDef);
 	}
 
 	public String getResultsDescriptionText() {

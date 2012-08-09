@@ -105,8 +105,8 @@ import cc.alcina.framework.entity.logic.EntityLayerLocator;
 			}
 		}
 		if (debug) {
-			System.out.println(CommonUtils.format(
-					"Classes: %1 -- loadClass: %2", cc,
+			System.out.println(CommonUtils.formatJ(
+					"Classes: %s -- loadClass: %s", cc,
 					loadClassnanos / 1000 / 1000));
 		}
 		putIgnoreMap(outgoingIgnoreMap, cachePath);

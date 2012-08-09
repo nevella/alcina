@@ -578,7 +578,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		List<String> projections = new ArrayList<String>();
 		ClassLookup classLookup = CommonLocator.get().classLookup();
 		String specProperty = null;
-		projections.add(CommonUtils.format("t.%1 as %1", "id"));
+		projections.add(CommonUtils.formatJ("t.%s as %s", "id","id"));
 		List<PropertyInfoLite> pds = classLookup
 				.getWritableProperties(assocClass);
 		for (PropertyInfoLite pd : pds) {
@@ -589,17 +589,17 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			}
 			Class clazz = pd.getPropertyType();
 			if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
-				projections.add(CommonUtils.format("t.%1 as %1", propertyName));
+				projections.add(CommonUtils.formatJ("t.%s as %s", propertyName,propertyName));
 			} else {
-				projections.add(CommonUtils.format("t.%1.id as %1_id",
-						propertyName));
+				projections.add(CommonUtils.formatJ("t.%s.id as %s_id",
+						propertyName,propertyName));
 				if (clazz == refClass) {
 					specProperty = propertyName;
 				}
 			}
 		}
-		String template = "select %1 from %2 t where t.%3.id=%4";
-		return CommonUtils.format(template, CommonUtils.join(projections, ","),
+		String template = "select %s from %s t where t.%s.id=%s";
+		return CommonUtils.formatJ(template, CommonUtils.join(projections, ","),
 				assocClass.getSimpleName(), specProperty, ref.getId());
 	}
 

@@ -53,8 +53,8 @@ public class RegexValidator implements ParameterisedValidator {
 		value = value.toString().trim();
 		String sz = value.toString();
 		if (!sz.replaceAll(getRegex(), REGEX_REPLACE).equals(REGEX_REPLACE)) {
-			throw new ValidationException(CommonUtils.format(
-					"Does not match regex ('%1')", getRegex()),
+			throw new ValidationException(CommonUtils.formatJ(
+					"Does not match regex ('%s')", getRegex()),
 					RegexValidator.class);
 		}
 		return value;

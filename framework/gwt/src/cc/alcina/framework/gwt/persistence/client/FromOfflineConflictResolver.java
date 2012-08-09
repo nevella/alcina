@@ -186,7 +186,7 @@ public class FromOfflineConflictResolver {
 			FlowPanel fp = new FlowPanel();
 			TextArea ta = new TextArea();
 			ta.setSize("600px", "300px");
-			String text = CommonUtils.format("Unsaved transforms\n\n" + "%1",
+			String text = CommonUtils.formatJ("Unsaved transforms\n\n" + "%s",
 					uncommitted.toString());
 			ta.setText(text);
 			fp.add(ta);

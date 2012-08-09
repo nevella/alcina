@@ -45,7 +45,7 @@ import com.totsp.gwittir.client.beans.Property;
 		String message = "";
 		String template = TextProvider.get().getUiObjectText(getClass(),
 				"unable-to-delete-detail",
-				"Referred to by %1 '%2' [id:%3], property '%4'");
+				"Referred to by %s '%s' [id:%s], property '%s'");
 		String msgtitle = TextProvider.get().getUiObjectText(getClass(),
 				"unable-to-delete-msg", "Unable to delete - object is ");
 		try {
@@ -77,7 +77,7 @@ import com.totsp.gwittir.client.beans.Property;
 						Object pValue = p.getAccessorMethod().invoke(o,
 								CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (pValue != null && pValue.equals(singleObj)) {
-							message += CommonUtils.format(template, CommonUtils
+							message += CommonUtils.formatJ(template, CommonUtils
 									.simpleClassName(o.getClass()), TextProvider.get()
 									.getObjectName(o), o.getId(), TextProvider
 									.get().getLabelText(c, p.getName()))

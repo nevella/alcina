@@ -92,11 +92,11 @@ public interface HasIdAndLocalId extends HasId {
 		public static String asDomainPoint(HasId hi) {
 			if (hi instanceof HasIdAndLocalId) {
 				HasIdAndLocalId hili = (HasIdAndLocalId) hi;
-				return CommonUtils.format("Hili: %1 : %2 / %3",
+				return CommonUtils.formatJ("Hili: %s : %s / %s",
 						CommonUtils.simpleClassName(hili.getClass()),
 						hili.getId(), hili.getLocalId());
 			}
-			return CommonUtils.format("HasId: %1 : %2 ",
+			return CommonUtils.formatJ("HasId: %s : %s ",
 					CommonUtils.simpleClassName(hi.getClass()), hi.getId());
 		}
 

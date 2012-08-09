@@ -83,8 +83,8 @@ import com.google.gwt.user.client.ui.Widget;
 				+ model.getViewAreaClassName());
 		List<WorkspaceView> views = model.getViews();
 		for (WorkspaceView view : views) {
-			viewHolder.add(view, CommonUtils.format(
-					"<a href='#' onfocus='blur()'>%1</a>", view.getName()),
+			viewHolder.add(view, CommonUtils.formatJ(
+					"<a href='#' onfocus='blur()'>%s</a>", view.getName()),
 					true);
 			view.ensureDebugId("");
 			view.addVetoableActionListener(actionListener);

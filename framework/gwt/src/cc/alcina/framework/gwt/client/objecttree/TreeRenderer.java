@@ -16,7 +16,9 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.util.Collection;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -82,7 +84,7 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public CollectionFilter collectionFilter();
 
-	public RenderContext getContext();
+	public LooseContext getContext();
 
 	public void setContext(RenderContext context);
 }

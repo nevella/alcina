@@ -16,6 +16,8 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import cc.alcina.framework.gwt.client.logic.RenderContext;
+
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlexTable.FlexCellFormatter;

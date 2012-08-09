@@ -210,7 +210,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								+ object.getClass().getName();
 					}
 				}
-				msg += CommonUtils.format("\t [%1] - %2\n\t   - %3\n", i++,
+				msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n", i++,
 						object, xml);
 			}
 		}
@@ -359,8 +359,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								"requestId", requestId);
 				if (alreadyWritten != null) {
 					if (logger != null) {
-						logger.warn(CommonUtils.format(
-								"Request [%1/%2] already written", requestId,
+						logger.warn(CommonUtils.formatJ(
+								"Request [%s/%s] already written", requestId,
 								clientInstanceId));
 					}
 					continue;
@@ -413,7 +413,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				}
 				if (logger != null) {
 					logger.info(CommonUtils
-							.format("Request [%1/%2] : %3 transforms written, %4 ignored",
+							.formatJ("Request [%s/%s] : %s transforms written, %s ignored",
 									requestId, clientInstanceId, rq.getEvents()
 											.size(),
 									transformLayerWrapper.ignored));

@@ -303,15 +303,15 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	}
 
 	public String toHtml() {
-		return CommonUtils.format("%3%1 - %2", filterDescription(true),
-				orderDescription(true),
+		return CommonUtils.formatJ("%s%s - %s",
 				CommonUtils.isNullOrEmpty(getName()) ? "" : "<b>" + getName()
-						+ "</b> - ");
+						+ "</b> - ", filterDescription(true),
+				orderDescription(true));
 	}
 
 	@Override
 	public String toString() {
-		return CommonUtils.format("%1 - %2", filterDescription(false),
+		return CommonUtils.formatJ("%s - %s", filterDescription(false),
 				orderDescription(false));
 	}
 
@@ -350,9 +350,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
 		OrderGroup og = orderGroup(clazz);
-		if(og!=null){
+		if (og != null) {
 			og.getCriteria().clear();
 		}
-		
 	}
 }

@@ -30,8 +30,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  public class ServletUtil {
 	public static void writeClientSideRedirect(String targetUrl, HttpServletResponse resp) throws IOException {
 		resp.setContentType("text/html");
-		resp.getWriter().write(CommonUtils.format(
+		resp.getWriter().write(CommonUtils.formatJ(
 				"<html><head>  <meta http-equiv=\"Refresh\" "
-						+ "content=\"0; URL=%1\"></head></html>", targetUrl));
+						+ "content=\"0; URL=%s\"></head></html>", targetUrl));
 	}
 }

@@ -72,7 +72,7 @@ public class ClientMetricLogging {
 			return;
 		}
 		long elapsed = System.currentTimeMillis() - metricStartTimes.get(key);
-		String message = CommonUtils.format("[Metric] %1 - %2 ms%3", key,
+		String message = CommonUtils.formatJ("[Metric] %s - %s ms%s", key,
 				elapsed, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
 						+ extraInfo);
 		if (!isMuted()) {

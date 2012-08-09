@@ -87,11 +87,11 @@ public abstract class JdbcTransformPersistence extends
 		String sql = "select * from TransformRequests ";
 		for (int i = 0; i < types.length; i++) {
 			sql += i == 0 ? " where (" : " or ";
-			sql += CommonUtils.format("transform_request_type='%1'", types[i]);
+			sql += CommonUtils.formatJ("transform_request_type='%s'", types[i]);
 		}
 		sql += ") ";
 		if (getClientInstanceIdForGet() != null) {
-			sql += CommonUtils.format(" and clientInstance_id=%1 ",
+			sql += CommonUtils.formatJ(" and clientInstance_id=%s ",
 					getClientInstanceIdForGet());
 		}
 		sql += "  order by id asc";

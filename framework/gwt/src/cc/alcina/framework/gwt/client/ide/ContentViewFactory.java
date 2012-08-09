@@ -50,7 +50,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
-import cc.alcina.framework.gwt.client.objecttree.RenderContext;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;

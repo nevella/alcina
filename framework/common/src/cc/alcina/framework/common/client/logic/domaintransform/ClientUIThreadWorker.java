@@ -53,7 +53,7 @@ public abstract class ClientUIThreadWorker {
 			ClientLayerLocator
 					.get()
 					.notifications()
-					.log(CommonUtils.format("Itr [%1] [Complete] - %2 ms",
+					.log(CommonUtils.formatJ("Itr [%s] [Complete] - %s ms",
 							CommonUtils.simpleClassName(getClass()),
 							System.currentTimeMillis() - startTime));
 			onComplete();
@@ -77,16 +77,19 @@ public abstract class ClientUIThreadWorker {
 		ClientLayerLocator
 				.get()
 				.notifications()
-				.log(CommonUtils.format("Itr [%1] [x%3] - %2 ms",
-						CommonUtils.simpleClassName(getClass()), timeTaken,
-						lastPassIterationsPerformed));
-		ClientLayerLocator.get().timerWrapperProvider()
+				.log(CommonUtils.formatJ("Itr [%s] [x%s] - %s ms",
+						CommonUtils.simpleClassName(getClass()),
+						lastPassIterationsPerformed, timeTaken));
+		ClientLayerLocator
+				.get()
+				.timerWrapperProvider()
 				.getTimer(new Runnable() {
 					@Override
 					public void run() {
 						iterate();
 					}
-				}).scheduleSingle((int) timeTaken * allocateToNonWorkerFactor + 1);
+				})
+				.scheduleSingle((int) timeTaken * allocateToNonWorkerFactor + 1);
 	}
 
 	protected abstract void onComplete();

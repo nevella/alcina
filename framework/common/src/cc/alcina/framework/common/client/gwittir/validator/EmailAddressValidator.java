@@ -59,8 +59,8 @@ public class EmailAddressValidator implements ParameterisedValidator {
 		for (String s : strings) {
 			if (!s.replaceAll(EMAIL_REGEX, EMAIL_REGEX_REPLACE).equals(
 					EMAIL_REGEX_REPLACE)) {
-				throw new ValidationException(CommonUtils.format(
-						"'%1' is not a valid email address", s),
+				throw new ValidationException(CommonUtils.formatJ(
+						"'%s' is not a valid email address", s),
 						EmailAddressValidator.class);
 			}
 		}

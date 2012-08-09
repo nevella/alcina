@@ -233,11 +233,11 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 
 	@Override
 	public String toString() {
-		return CommonUtils.format(" clientInstanceAuth: %1\n"
-				+ "clientInstanceId: %2\n" + "id: %3\n" + "requestId: %4\n"
-				+ "timestamp: %5\n" + "userId: %6\n"
-				+ "DomainTransformRequestType: %7\n" + "tag:\n%8\n"
-				+ "text:\n%9\n", clientInstanceAuth, clientInstanceId, id,
+		return CommonUtils.formatJ(" clientInstanceAuth: %s\n"
+				+ "clientInstanceId: %s\n" + "id: %s\n" + "requestId: %s\n"
+				+ "timestamp: %s\n" + "userId: %s\n"
+				+ "DomainTransformRequestType: %s\n" + "tag:\n%s\n"
+				+ "text:\n%s\n", clientInstanceAuth, clientInstanceId, id,
 				requestId, timestamp, userId, domainTransformRequestType,
 				getTag(), text);
 	}

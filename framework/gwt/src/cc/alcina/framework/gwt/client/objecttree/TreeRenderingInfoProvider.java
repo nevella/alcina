@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.objecttree;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 /**
  * @author nick@alcina.cc

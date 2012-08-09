@@ -115,7 +115,7 @@ public class MetricLogging {
 
 	public void average(String key) {
 		if (averageCount.containsKey(key)) {
-			String message = CommonUtils.format("Metric: %1 avg %2ms", key,
+			String message = CommonUtils.formatJ("Metric: %s avg %sms", key,
 					sum.get(key) / averageCount.get(key));
 			System.out.println(message);
 		}

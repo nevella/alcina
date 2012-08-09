@@ -804,7 +804,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						PermissionsManager.ROOT_PERMISSIBLE)) {
 					System.err
 							.println(CommonUtils
-									.format("Warn - allowing access to %1 : %2 only via admin override",
+									.formatJ("Warn - allowing access to %s : %s only via admin override",
 											wrapper == null ? "(null wrapper)"
 													: HiliHelper
 															.asDomainPoint(wrapper),
@@ -812,9 +812,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				}
 				return;// permitted
 			}
-			throw new PermissionsException(CommonUtils.format(
+			throw new PermissionsException(CommonUtils.formatJ(
 					"Permissions exception: "
-							+ "access denied to object  %1 for user %2",
+							+ "access denied to object  %s for user %s",
 					wrapped.getId(), PermissionsManager.get().getUserId()));
 		}
 	}

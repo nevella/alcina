@@ -25,8 +25,8 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
-import cc.alcina.framework.gwt.client.objecttree.RenderContext;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.framework.gwt.client.widget.InputButton;
 
@@ -58,9 +58,11 @@ public class SearchViewProvider implements ViewProvider {
 	private boolean withoutParameters;
 
 	private List<String> ignoreProperties;
-	
+
 	private SearchPanel searchPanel;
-	private boolean initialSearch=true;
+
+	private boolean initialSearch = true;
+
 	public SearchPanel getSearchPanel() {
 		return this.searchPanel;
 	}
@@ -72,18 +74,20 @@ public class SearchViewProvider implements ViewProvider {
 	public Widget getViewForObject(Object obj) {
 		return getViewForObject(obj, "Search");
 	}
+
 	public Widget getViewForObject(Object obj, String searchButtonTitle) {
 		return getViewForObject(obj, searchButtonTitle, null);
 	}
-	public Widget getViewForObject(Object obj, String searchButtonTitle, Converter converter) {
-		
+
+	public Widget getViewForObject(Object obj, String searchButtonTitle,
+			Converter converter) {
 		action = (RemoteActionWithParameters<SingleTableSearchDefinition>) obj;
 		FlowPanel vp = new FlowPanel();
 		vp.setStyleName("alcina-BeanPanel");
 		if (!isWithoutCaption()) {
 			vp.add(createCaption(action));
 		}
-		searchPanel = new SearchPanel(action, searchButtonTitle,converter);
+		searchPanel = new SearchPanel(action, searchButtonTitle, converter);
 		vp.add(searchPanel);
 		return vp;
 	}
@@ -134,7 +138,6 @@ public class SearchViewProvider implements ViewProvider {
 
 		private final Converter converter;
 
-
 		public SearchPanel(
 				RemoteActionWithParameters<SingleTableSearchDefinition> action,
 				String buttonTitle, Converter converter) {
@@ -143,9 +146,9 @@ public class SearchViewProvider implements ViewProvider {
 			HTML description = new HTML("<i>" + action.getDescription()
 					+ "</i><br />");
 			this.resultsHolder = new FlowPanel();
-			RenderContext renderContext= getRenderContext();
-			beanView = new ObjectTreeGridRenderer().render(action
-					.getParameters(),renderContext);
+			RenderContext renderContext = getRenderContextAndPush();
+			beanView = new ObjectTreeGridRenderer().render(
+					action.getParameters(), renderContext);
 			beanView.addStyleName("no-bottom");
 			beanView.addStyleName(CommonUtils.simpleClassName(action
 					.getParameters().getClass()));
@@ -164,9 +167,10 @@ public class SearchViewProvider implements ViewProvider {
 				beanView.setVisible(false);
 			}
 			add(resultsHolder);
-			if(isInitialSearch()){
-			search();
+			if (isInitialSearch()) {
+				search();
 			}
+			renderContext.pop();
 		}
 
 		public void onClick(ClickEvent event) {
@@ -210,15 +214,17 @@ public class SearchViewProvider implements ViewProvider {
 			}
 			mask = addTableMasks(mask);
 			SearchDataProvider dp = new SearchDataProvider(def,
-					completionCallback,converter);
+					completionCallback, converter);
 			this.table = new NiceWidthBoundTable(mask, factory, fields, dp);
 			table.addStyleName("results-table");
 			resultsHolder.add(table);
 		}
 	}
 
-	protected RenderContext getRenderContext() {
-		return new RenderContext();
+	protected RenderContext getRenderContextAndPush() {
+		RenderContext renderContext = RenderContext.get();
+		renderContext.push();
+		return renderContext;
 	}
 
 	public void setInitialSearch(boolean initialSearch) {

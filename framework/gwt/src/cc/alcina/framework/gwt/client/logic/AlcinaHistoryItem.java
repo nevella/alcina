@@ -42,7 +42,7 @@ public class AlcinaHistoryItem {
 
 	public boolean getBooleanParameter(String key) {
 		String value = params.get(key);
-		return value == null ? false : Boolean.parseBoolean(value);
+		return value == null ? false : value.equals("t")||Boolean.parseBoolean(value);
 	}
 
 	public Map<String, String> parseParameters(String s) {

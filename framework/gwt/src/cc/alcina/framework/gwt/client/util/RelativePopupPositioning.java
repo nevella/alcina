@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.util;
 import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.common.client.util.Rect;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.objecttree.RenderContext;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.OtherPositioningStrategy;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupPositioningParams;
 import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
@@ -61,11 +61,11 @@ public class RelativePopupPositioning {
 	}
 
 	public static Widget getCurrentBoundingParent() {
-		return RenderContext.current().get(RENDER_CONTEXT_BOUNDING_PARENT);
+		return RenderContext.get().get(RENDER_CONTEXT_BOUNDING_PARENT);
 	}
 
 	public static void setCurrentBoundingParent(Widget boundingParent) {
-		RenderContext.current().set(RENDER_CONTEXT_BOUNDING_PARENT,
+		RenderContext.get().set(RENDER_CONTEXT_BOUNDING_PARENT,
 				boundingParent);
 	}
 

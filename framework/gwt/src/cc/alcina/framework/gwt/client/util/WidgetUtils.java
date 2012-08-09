@@ -19,10 +19,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.HasComplexPanel;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
@@ -226,7 +228,7 @@ public class WidgetUtils {
 			int availableWidth = containerWidth;
 			if (widget instanceof HasLayoutInfo) {
 				if (debug) {
-					GWT.log(CommonUtils.format("%1: ",
+					GWT.log(CommonUtils.formatJ("%s: ",
 							CommonUtils.simpleClassName(widget.getClass())),
 							null);
 				}
@@ -278,7 +280,7 @@ public class WidgetUtils {
 						availableHeight = availableHeight - usedHeight
 								- parentAdjustHeight - info.getAdjustHeight();
 						if (debug) {
-							GWT.log(CommonUtils.format("%1: %2 - comp %3",
+							GWT.log(CommonUtils.formatJ("%s: %s - comp %s",
 									CommonUtils.simpleClassName(widget
 											.getClass()), availableHeight,
 									containerHeight), null);
@@ -560,6 +562,18 @@ public class WidgetUtils {
 	}
 
 	@SuppressWarnings("unchecked")
+	public static Widget getParentWidgetSatisfyingCallback(Widget w,
+			CollectionFilter<Object> callback) {
+		while (w != null) {
+			if (callback.allow(w)) {
+				return w;
+			}
+			w = w.getParent();
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unchecked")
 	public static <W extends Widget> W getParentWidget(Widget w,
 			String widgetClassName) {
 		while (w != null) {
@@ -701,8 +715,6 @@ public class WidgetUtils {
 			widget.removeStyleName(styleName);
 		}
 	}
-
-	
 
 	public static boolean isZeroOffsetDims(Element e) {
 		return e.getOffsetHeight() == 0 && e.getOffsetWidth() == 0;
