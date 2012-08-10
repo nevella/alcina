@@ -68,7 +68,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	public String extraInfoForExceptionText() {
 		String extraInfo = "\n\nUser agent: " + BrowserMod.getUserAgent()
 				+ "\nHistory token: " + History.getToken()
-				+ "\nModule name: " + GWT.getModuleName();
+				+ "\nPermutation name: " + GWT.getPermutationStrongName();
 		return extraInfo;
 	}
 }

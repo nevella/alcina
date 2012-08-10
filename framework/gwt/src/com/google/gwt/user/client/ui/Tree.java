@@ -1311,7 +1311,11 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget, HasWidgets
     curSelection = item;
 
     if (curSelection != null) {
-    	maybeExpandTreeItem();
+    	while((item=item.getParentItem())!=root&&item!=null){
+    		if(!item.getState()){
+    			item.setState(true);
+    		}
+    	}
       if (moveFocus) {
         moveFocus();
       }
