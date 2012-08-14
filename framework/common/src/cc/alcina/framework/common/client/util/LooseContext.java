@@ -41,8 +41,8 @@ public class LooseContext {
 		return (Integer) properties.get(key);
 	}
 
-	public int getInteger(String key, int i) {
-		return containsKey(key) ? getInteger(key) : i;
+	public int getInteger(String key, int defaultValue) {
+		return containsKey(key) ? getInteger(key) : defaultValue;
 	}
 
 	public String getString(String key) {

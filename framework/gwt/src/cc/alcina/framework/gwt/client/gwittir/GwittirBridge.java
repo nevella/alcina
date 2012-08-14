@@ -334,7 +334,7 @@ public class GwittirBridge implements PropertyAccessor {
 					field.setStyleName(displayInfo.styleName());
 				}
 				if (!displayInfo.helpText().isEmpty()) {
-					field.setStyleName(displayInfo.helpText());
+					field.setHelpText(displayInfo.helpText());
 				}
 				return field;
 			}
