@@ -21,6 +21,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -341,5 +342,17 @@ public class DomainTransformEvent implements Serializable,
 
 	public int compareTo(DomainTransformEvent o) {
 		return CommonUtils.compareLongs(getEventId(), o.getEventId());
+	}
+
+	public Object provideSourceOrMarker() {
+		Object source = getSource();
+		if (source == null && getObjectLocalId() != 0) {
+			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator.get().classLookup()
+					.newInstance(getObjectClass());
+			source = hili;
+			hili.setId(getObjectId());
+			hili.setLocalId(getObjectLocalId());
+		}
+		return source;
 	}
 }

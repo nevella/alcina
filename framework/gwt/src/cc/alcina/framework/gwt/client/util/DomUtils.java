@@ -19,6 +19,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.NodeList;
+import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -93,6 +94,16 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 		}
 		return null;
+	}
+
+	public static boolean isVisibleAncestorChain(Element e) {
+		while (e != null) {
+			if (e.getStyle().getDisplay().equals(Display.NONE.getCssName())) {
+				return false;
+			}
+			e = e.getParentElement();
+		}
+		return true;
 	}
 
 	public Node findXpathWithIndexedText(String xpathStr, Node container) {
@@ -248,8 +259,8 @@ public class DomUtils implements NodeFromXpathProvider {
 			xpathMap.put(prefix, elt);
 		}
 		int length = nodes.getLength();
-		short lastNodeType=Node.DOCUMENT_NODE;
-		//ignore sequential texts (with wrapping), as per non-map version
+		short lastNodeType = Node.DOCUMENT_NODE;
+		// ignore sequential texts (with wrapping), as per non-map version
 		for (int i = 0; i < length; i++) {
 			Node node = nodes.getItem(i);
 			node = unwrapOrIgnore(node);
@@ -257,15 +268,16 @@ public class DomUtils implements NodeFromXpathProvider {
 				continue;
 			}
 			short nodeType = node.getNodeType();
-			if ((nodeType == Node.TEXT_NODE&&lastNodeType!=Node.TEXT_NODE) || nodeType == Node.ELEMENT_NODE) {
+			if ((nodeType == Node.TEXT_NODE && lastNodeType != Node.TEXT_NODE)
+					|| nodeType == Node.ELEMENT_NODE) {
 				String marker = nodeType == Node.TEXT_NODE ? DomUtils.TEXT_MARKER
 						: node.getNodeName().toUpperCase();
 				int c = total.containsKey(marker) ? total.get(marker) : 0;
 				total.put(marker, c + 1);
 			}
-			lastNodeType=nodeType;
+			lastNodeType = nodeType;
 		}
-		lastNodeType=Node.DOCUMENT_NODE;
+		lastNodeType = Node.DOCUMENT_NODE;
 		for (int i = 0; i < length; i++) {
 			Node node = nodes.getItem(i);
 			node = unwrapOrIgnore(node);
@@ -273,7 +285,8 @@ public class DomUtils implements NodeFromXpathProvider {
 				continue;
 			}
 			short nodeType = node.getNodeType();
-			if ((nodeType == Node.TEXT_NODE&&lastNodeType!=Node.TEXT_NODE)  || nodeType == Node.ELEMENT_NODE) {
+			if ((nodeType == Node.TEXT_NODE && lastNodeType != Node.TEXT_NODE)
+					|| nodeType == Node.ELEMENT_NODE) {
 				String marker = nodeType == Node.TEXT_NODE ? DomUtils.TEXT_MARKER
 						: node.getNodeName().toUpperCase();
 				String post = marker;
@@ -300,7 +313,7 @@ public class DomUtils implements NodeFromXpathProvider {
 					}
 				}
 			}
-			lastNodeType=nodeType;
+			lastNodeType = nodeType;
 		}
 	}
 
@@ -404,7 +417,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public static boolean isAncestorOf(Element ancestor, Node possibleChild) {
-		Element stop = GWT.isClient()?RootPanel.get().getElement():null;
+		Element stop = GWT.isClient() ? RootPanel.get().getElement() : null;
 		while (possibleChild != null && possibleChild != stop) {
 			if (possibleChild == ancestor) {
 				return true;

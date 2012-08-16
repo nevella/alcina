@@ -15,13 +15,17 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 
 @MappedSuperclass
@@ -48,13 +52,32 @@ public class DomainTransformRequest implements Serializable {
 
 	public List<DomainTransformEvent> allTransforms() {
 		List<DomainTransformEvent> all = new ArrayList<DomainTransformEvent>();
-		List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
-		dtrs.addAll(getPriorRequestsWithoutResponse());
-		dtrs.add(this);
+		List<DomainTransformRequest> dtrs = allRequests();
 		for (DomainTransformRequest dtr : dtrs) {
 			all.addAll(dtr.getEvents());
 		}
 		return all;
+	}
+
+	private List<DomainTransformRequest> allRequests() {
+		List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
+		dtrs.addAll(getPriorRequestsWithoutResponse());
+		dtrs.add(this);
+		return dtrs;
+	}
+
+	public void removeTransformsForObject(HasIdAndLocalId object) {
+		for (DomainTransformRequest rq : allRequests()) {
+			for (Iterator<DomainTransformEvent> itr = rq.getEvents().iterator(); itr
+					.hasNext();) {
+				DomainTransformEvent dte = itr.next();
+				Object source = dte.provideSourceOrMarker();
+				
+				if (object.equals(source)) {
+					itr.remove();
+				}
+			}
+		}
 	}
 
 	public void fromString(String eventsStr) {
@@ -142,9 +165,7 @@ public class DomainTransformRequest implements Serializable {
 	}
 
 	public String toStringForError() {
-		List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
-		dtrs.addAll(getPriorRequestsWithoutResponse());
-		dtrs.add(this);
+		List<DomainTransformRequest> dtrs = allRequests();
 		StringBuffer sb = new StringBuffer();
 		for (DomainTransformRequest dtr : dtrs) {
 			sb.append("----");

@@ -141,7 +141,6 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		search.setRenderer(renderer);
 		search.setHint(getHint());
 		customiseLeftWidget();
-		
 		searchWidget = search.createWidget(SelectWithSearch.emptyItems(), this,
 				MAX_SINGLE_LINE_CHARS);
 		search.getScroller().setHeight("");
@@ -152,9 +151,9 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		results.setPopdown(false);
 		results.setHolderHeight("");
 		results.setRenderer(renderer);
-		resultsWidget = results.createWidget(SelectWithSearch.emptyItems(), resultsClickListener,
-				MAX_SINGLE_LINE_CHARS);
-		if (isMultipleSelect()) {
+		resultsWidget = results.createWidget(SelectWithSearch.emptyItems(),
+				resultsClickListener, MAX_SINGLE_LINE_CHARS);
+		if (shouldHideResultFilter()) {
 			results.getFilter().addStyleName("invisible");
 		}
 		results.getScroller().setStyleName("scroller");
@@ -162,6 +161,10 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		customiseRightWidget();
 		searchWidget.setStyleName("alcina-Selector available");
 		resultsWidget.setStyleName("alcina-Selector selected");
+	}
+
+	protected boolean shouldHideResultFilter() {
+		return !isMultipleSelect();
 	}
 
 	protected void createResults() {

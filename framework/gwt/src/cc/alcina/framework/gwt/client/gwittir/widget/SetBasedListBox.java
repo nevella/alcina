@@ -67,7 +67,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 /**
  *
  */
-@SuppressWarnings( { "unchecked", "deprecation" })
+@SuppressWarnings({ "unchecked", "deprecation" })
 public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		HasFocus, SourcesFocusEvents, SourcesChangeEvents, HasEnabled {
 	public static final String VALUE_PROPERTY_NAME = "value";
@@ -225,7 +225,10 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 					.get(0);
 			Object curr = (this.selected.size() == 0) ? null : this.selected
 					.get(0);
-			changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
+			// ignore null-null changes
+			if (prev != curr) {
+				changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
+			}
 		}
 		fireChangeListeners();
 	}
@@ -321,24 +324,29 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 					.get(0);
 			Object curr = (this.selected.size() == 0) ? null : this.selected
 					.get(0);
-			changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
+			if (prev != curr) {
+				changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
+			}
 		}
 		fireChangeListeners();
 	}
-	public Object provideOtherValue(){
+
+	public Object provideOtherValue() {
 		Iterator itr = getOptions().iterator();
 		Object value = getValue();
-		Object other=null;
-		while(other==value&&itr.hasNext()){
-			other=itr.next();
+		Object other = null;
+		while (other == value && itr.hasNext()) {
+			other = itr.next();
 		}
 		return other;
 	}
+
 	public int safeCompare(Object value, Object item) {
 		try {
 			return this.getComparator().compare(value, item);
 		} catch (ClassCastException e) {
-			return value.getClass().getName().compareTo(item.getClass().getName());
+			return value.getClass().getName()
+					.compareTo(item.getClass().getName());
 		}
 	}
 
@@ -398,10 +406,9 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 	}
 
 	public boolean equals(final Object obj) {
-		if (obj == null||!(obj instanceof SetBasedListBox)) {
+		if (obj == null || !(obj instanceof SetBasedListBox)) {
 			return false;
 		}
-		
 		final SetBasedListBox other = (SetBasedListBox) obj;
 		if ((this.options != other.options)
 				&& ((this.options == null) || !this.options
@@ -489,8 +496,8 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 					.get(0);
 			Object curr = (this.selected.size() == 0) ? null : this.selected
 					.get(0);
-			if (prev==null&&curr==null){
-				return;//pcs is not MutablePropertyChangeLister
+			if (prev == null && curr == null) {
+				return;// pcs is not MutablePropertyChangeLister
 			}
 			changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
 		}
@@ -564,7 +571,24 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 				options.add(0, null);
 			}
 			setOptions(options);
-			
+		}
+
+		public boolean isHasNullOption() {
+			return this.hasNullOption;
+		}
+
+		public void setHasNullOption(boolean hasNullOption) {
+			this.hasNullOption = hasNullOption;
+			refreshOptions();
+		}
+
+		public CollectionFilter getFilter() {
+			return this.filter;
+		}
+
+		public void setFilter(CollectionFilter filter) {
+			this.filter = filter;
+			refreshOptions();
 		}
 	}
 }

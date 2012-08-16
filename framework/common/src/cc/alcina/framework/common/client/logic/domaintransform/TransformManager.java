@@ -1128,6 +1128,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
+	
+
 	protected void setDomainObjects(MapObjectLookup domainObjects) {
 		this.domainObjects = domainObjects;
 	}

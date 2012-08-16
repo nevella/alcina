@@ -88,7 +88,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		popUser();
 	}
 
-	public void pushSystemOrCurrentUser() {
+	public void pushSystemOrCurrentUserAsRoot() {
 		if (isLoggedIn()) {
 			pushUser(getUser(), getLoginState(), true);
 		} else {

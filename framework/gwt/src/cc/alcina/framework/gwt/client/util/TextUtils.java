@@ -11,4 +11,9 @@ public class TextUtils {
 		return CommonUtils.isNullOrEmpty(text)
 				|| normaliseAndTrim(text).length() == 0;
 	}
+
+	public static String normalisedLcKey(String key) {
+		return normaliseAndTrim(CommonUtils.nullToEmpty(
+				key).toLowerCase());
+	}
 }

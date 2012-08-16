@@ -53,6 +53,7 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		get(key).add(item);
 	}
+
 	public void addCollection(K key, Collection collection) {
 		if (!containsKey(key)) {
 			put(key, (V) new ArrayList());
@@ -80,5 +81,25 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		for (K k : otherMultimap.keySet()) {
 			getAndEnsure(k).addAll(otherMultimap.get(k));
 		}
+	}
+
+	public K maxKey() {
+		K max = null;
+		for (K k : keySet()) {
+			if (max == null || get(k).size() > get(max).size()) {
+				max = k;
+			}
+		}
+		return max;
+	}
+
+	public K minKey() {
+		K min = null;
+		for (K k : keySet()) {
+			if (min == null || get(k).size() < get(min).size()) {
+				min = k;
+			}
+		}
+		return min;
 	}
 }

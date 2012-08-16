@@ -51,6 +51,11 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	@Override
+	protected boolean shouldHideResultFilter() {
+		return true;
+	}
+
+	@Override
 	protected void initValues() {
 		search.setLazyProvider(new LazyDataMinimal());
 	}
@@ -92,9 +97,8 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	protected void createResults() {
 		results = new SelectWithSearch() {
-			public HasClickHandlers createItem(
-					Object item, boolean asHTML, int charWidth,
-					boolean itemsHaveLinefeeds,
+			public HasClickHandlers createItem(Object item, boolean asHTML,
+					int charWidth, boolean itemsHaveLinefeeds,
 					Label ownerLabel, String sep) {
 				return new SelectWithSearchItemX(item, asHTML, charWidth,
 						itemsHaveLinefeeds, ownerLabel, sep);

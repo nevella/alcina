@@ -467,6 +467,7 @@ public class TransformPersister {
 					MetricLogging.get().lowPriorityEnd(FLUSH_TRANSFORMS);
 				}
 				DomainTransformResponse dtr = new DomainTransformResponse();
+				dtr.getEventsToUseForClientUpdate().addAll(token.getClientUpdateEvents());
 				dtr.getEventsToUseForClientUpdate().addAll(
 						tm.getModificationEvents());
 				dtr.setRequestId(request.getRequestId());

@@ -236,6 +236,17 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				closingOnClick = false;
 			}
 		};
+		filter.getTextBox().addBlurHandler(new BlurHandler() {
+			@Override
+			public void onBlur(BlurEvent event) {
+				new Timer() {
+					@Override
+					public void run() {
+						hidePopdown();
+					}
+				}.schedule(250);
+			}
+		});
 		if (itemMap != null) {
 			setItemMap(itemMap);
 		}

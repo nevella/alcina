@@ -1385,7 +1385,7 @@ div.max .gwt-RichTextArea{
 .alcina-Selector .popupContent a:hover{
 	background-color:transparent;
 }
-.alcina-Selector .popupContent div.chooser-item:hover{
+.alcina-Selector .popupContent .chooser-item:hover{
 	background-color:#A8D3E6;
 }
 
