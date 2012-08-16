@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
@@ -1097,7 +1098,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.setValue(c);
 	}
 
-	private LooseContext renderContext;
+	private RenderContext renderContext;
 
 	private ClickHandler rowSelectHandler = new ClickHandler() {
 		@Override
@@ -1288,8 +1289,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
-		return elem.rows[row];
-	}-*/;
+															return elem.rows[row];
+															}-*/;
 
 	private void insertNestedWidget(int row) {
 		// GWT.log( "Inserting nested for row "+row, null);
@@ -1419,28 +1420,30 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		getIncrementalRenderContainer().add(new RepeatingCommand() {
 			int state = 0;
 
-			private RenderContext saved;
-
 			@Override
 			public boolean execute() {
-				if (state == 0) {
-					saved = RenderContext.get().snapshot();
-					if (!renderCheck()) {
-						return false;
+				try {
+					RenderContext.get().pushContext(renderContext);
+					if (state == 0) {
+						if (!renderCheck()) {
+							return false;
+						}
+						renderTop();
+						state = 1;
 					}
-					renderTop();
-					state = 1;
-				}
-				if (state == 1) {
-					renderRows(20);
-					if (!rowIterator.hasNext()) {
-						state = 2;
+					if (state == 1) {
+						renderRows(20);
+						if (!rowIterator.hasNext()) {
+							state = 2;
+						}
 					}
+					if (state == 2) {
+						renderBottom();
+					}
+					return state != 2;
+				} finally {
+					RenderContext.get().pop();
 				}
-				if (state == 2) {
-					renderBottom(saved);
-				}
-				return state != 2;
 			}
 		});
 	}
@@ -1453,13 +1456,17 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	private void renderNonIncremental() {
-		RenderContext saved = RenderContext.get().snapshot();
 		if (!renderCheck()) {
 			return;
 		}
-		renderTop();
-		renderRows(Integer.MAX_VALUE);
-		renderBottom(saved);
+		try {
+			RenderContext.get().pushContext(renderContext);
+			renderTop();
+			renderRows(Integer.MAX_VALUE);
+			renderBottom();
+		} finally {
+			RenderContext.get().pop();
+		}
 	}
 
 	public boolean renderCheck() {
@@ -1483,8 +1490,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private Iterator rowIterator = null;
 
-	public void renderBottom(RenderContext saved) {
-		RenderContext.get().pushContext(saved);
+	public void renderBottom() {
 		if ((this.provider != null)
 				&& ((this.masks & BoundTableExt.SCROLL_MASK) == 0)
 				&& ((this.masks & BoundTableExt.NO_NAV_ROW_MASK) == 0)
@@ -1497,7 +1503,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					HasHorizontalAlignment.ALIGN_CENTER);
 		}
 		setVisible(true);
-		RenderContext.get().pop();
 	}
 
 	public void renderTop() {

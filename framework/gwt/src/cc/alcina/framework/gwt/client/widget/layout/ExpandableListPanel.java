@@ -25,6 +25,7 @@ public class ExpandableListPanel extends Composite {
 	private final int maxItems;
 
 	private final String itemNamePlural;
+	private boolean commaSeparated;
 
 	private Link showAll;
 
@@ -34,7 +35,7 @@ public class ExpandableListPanel extends Composite {
 			showingAll = true;
 			fp.clear();
 			for (Widget w : widgets) {
-				fp.add(w);
+				maybeAddToFlowPanel(w);
 			}
 		}
 	};
@@ -56,6 +57,9 @@ public class ExpandableListPanel extends Composite {
 
 	private void maybeAddToFlowPanel(Widget widget) {
 		if (showingAll || fp.getWidgetCount() < maxItems) {
+			if(isCommaSeparated()&&fp.getWidgetCount()>0){
+				fp.add(new InlineLabel(", "));
+			}
 			fp.add(widget);
 			return;
 		}
@@ -67,8 +71,8 @@ public class ExpandableListPanel extends Composite {
 				allHolder.add(showAll);
 				fp.add(allHolder);
 				if (extraText != null) {
-					fp.add(UsefulWidgetFactory.createSpacer(2));
-					fp.add(new InlineLabel(extraText));
+					allHolder.add(UsefulWidgetFactory.createSpacer(2));
+					allHolder.add(new InlineLabel(extraText));
 				}
 			}
 			showAll.setText(CommonUtils.formatJ("%s%s %s",
@@ -91,5 +95,13 @@ public class ExpandableListPanel extends Composite {
 
 	public void setExtraText(String extraText) {
 		this.extraText = extraText;
+	}
+
+	public boolean isCommaSeparated() {
+		return this.commaSeparated;
+	}
+
+	public void setCommaSeparated(boolean commaSeparated) {
+		this.commaSeparated = commaSeparated;
 	}
 }

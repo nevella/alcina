@@ -515,8 +515,8 @@ public class ContentViewFactory {
 		/**
 		 * handles beautification of incrementally rendered tables
 		 */
-		public void renderBottom(RenderContext saved) {
-			super.renderBottom(saved);
+		public void renderBottom() {
+			super.renderBottom();
 			beautify();
 		}
 
