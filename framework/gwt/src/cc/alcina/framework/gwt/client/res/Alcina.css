@@ -1507,3 +1507,6 @@ div.popdown-select a:hover {
 .gwt-Tree.wrappedContent .gwt-TreeItem{
 	white-space:normal;
 }
+.gwt-RadioButton {
+	white-space:nowrap;
+}
