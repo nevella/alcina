@@ -91,7 +91,6 @@ import com.totsp.gwittir.client.validator.Validator;
 public class ContentViewFactory {
 	public static final String CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS = ContentViewFactory.class
 			+ "::CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS";
-
 	private boolean noButtons;
 
 	private boolean cancelButton;

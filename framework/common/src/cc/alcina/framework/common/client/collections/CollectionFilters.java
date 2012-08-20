@@ -16,19 +16,23 @@ package cc.alcina.framework.common.client.collections;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import com.totsp.gwittir.client.beans.Converter;
-
+import cc.alcina.framework.common.client.collections.KeyValueMapper.StringKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.util.StringMap;
+
+import com.totsp.gwittir.client.beans.Converter;
 
 /**
  * 
  * @author Nick Reddel
  */
-public class DefaultCollectionFilter {
+public class CollectionFilters {
 	public static <V> List<V> filter(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
 		ArrayList<V> result = new ArrayList<V>();
@@ -115,10 +119,11 @@ public class DefaultCollectionFilter {
 	}
 
 	public static <T, C> List<C> convertAndFilter(
-			Collection<? extends T> collection, ConverterFilter<T, C> converterFilter) {
+			Collection<? extends T> collection,
+			ConverterFilter<T, C> converterFilter) {
 		List<C> result = new ArrayList<C>();
 		for (T t : collection) {
-			if(!converterFilter.allowPreConvert(t)){
+			if (!converterFilter.allowPreConvert(t)) {
 				continue;
 			}
 			C convert = converterFilter.convert(t);
@@ -136,9 +141,28 @@ public class DefaultCollectionFilter {
 		}
 	};
 
-	public static interface ConverterFilter<T, C> extends Converter<T, C>
-			 {
+	public static final <CF extends CollectionFilter> CF inverse(final CF filter) {
+		return (CF) new CollectionFilter() {
+			@Override
+			public boolean allow(Object o) {
+				return !filter.allow(o);
+			}
+		};
+	}
+
+	public static interface ConverterFilter<T, C> extends Converter<T, C> {
 		public boolean allowPreConvert(T t);
+
 		public boolean allowPostConvert(C c);
+	}
+
+	public static <K, V, O> Map<K, V> map(Collection<O> values,
+			KeyValueMapper<K, V, O> mapper) {
+		Map<K, V> result = new LinkedHashMap<K, V>();
+		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
+			O o = itr.next();
+			result.put(mapper.getKey(o), mapper.getValue(o));
+		}
+		return result;
 	}
 }

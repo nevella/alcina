@@ -42,24 +42,8 @@ public class AlcinaHistoryItem {
 
 	public boolean getBooleanParameter(String key) {
 		String value = params.get(key);
-		return value == null ? false : value.equals("t")||Boolean.parseBoolean(value);
-	}
-
-	public Map<String, String> parseParameters(String s) {
-		params = new HashMap<String, String>();
-		String[] pairs = s.split("&");
-		for (String pair : pairs) {
-			String[] split = pair.split("=");
-			if (split.length == 2) {
-				params.put(split[0], CommonLocator.get().urlComponentEncoder()
-						.decode(split[1]));
-			}
-		}
-		return params;
-	}
-
-	public boolean hasParameter(String key) {
-		return params.containsKey(key);
+		return value == null ? false : value.equals("t")
+				|| Boolean.parseBoolean(value);
 	}
 
 	public String getClassName() {
@@ -87,6 +71,10 @@ public class AlcinaHistoryItem {
 		return getLongParameter(LOCAL_ID_KEY);
 	}
 
+	public String getLocation() {
+		return getStringParameter(LOCATION_KEY);
+	}
+
 	public long getLongParameter(String key) {
 		String value = params.get(key);
 		try {
@@ -94,6 +82,10 @@ public class AlcinaHistoryItem {
 		} catch (NumberFormatException e) {
 			return 0;
 		}
+	}
+
+	public String getPreHistory() {
+		return getStringParameter(PRE_HISTORY_KEY);
 	}
 
 	public AlcinaHistory.SearchHistoryInfo getSearchHistoryInfo() {
@@ -112,29 +104,33 @@ public class AlcinaHistoryItem {
 		return getLocationPart(1);
 	}
 
-	public String getLocation() {
-		return getStringParameter(LOCATION_KEY);
-	}
-
 	public String getTabName() {
 		return getLocationPart(0);
-	}
-
-	protected String getLocationPart(int idx) {
-		List<String> parts = getLocationParts();
-		return idx < parts.size() ? parts.get(idx) : null;
-	}
-
-	public String toTokenString() {
-		return AlcinaHistory.toHash(params);
 	}
 
 	public int getY() {
 		return getIntParameter(Y_KEY);
 	}
 
+	public boolean hasParameter(String key) {
+		return params.containsKey(key);
+	}
+
 	public boolean isNoHistory() {
 		return getBooleanParameter(NO_HISTORY_KEY);
+	}
+
+	public Map<String, String> parseParameters(String s) {
+		params = new HashMap<String, String>();
+		String[] pairs = s.split("&");
+		for (String pair : pairs) {
+			String[] split = pair.split("=");
+			if (split.length == 2) {
+				params.put(split[0], CommonLocator.get().urlComponentEncoder()
+						.decode(split[1]));
+			}
+		}
+		return params;
 	}
 
 	public void setActionName(String actionName) {
@@ -165,10 +161,6 @@ public class AlcinaHistoryItem {
 		setParameter(NO_HISTORY_KEY, noHistory);
 	}
 
-	public void setParameter(String key, Object value, boolean explicitBlanks) {
-		params.put(key, value == null ? null : value.toString());
-	}
-
 	public void setParameter(String key, Object value) {
 		if (value instanceof Number) {
 			if (((Number) value).longValue() == 0) {
@@ -181,6 +173,14 @@ public class AlcinaHistoryItem {
 			}
 		}
 		params.put(key, value == null ? null : value.toString());
+	}
+
+	public void setParameter(String key, Object value, boolean explicitBlanks) {
+		params.put(key, value == null ? null : value.toString());
+	}
+
+	public void setPreHistory(String preHistoryName) {
+		setParameter(PRE_HISTORY_KEY, preHistoryName);
 	}
 
 	public void setSearchHistoryInfo(
@@ -197,27 +197,6 @@ public class AlcinaHistoryItem {
 
 	public void setTabName(String tabName) {
 		setLocationPart(0, tabName);
-	}
-
-	protected void setLocationPart(int idx, String name) {
-		List<String> parts = getLocationParts();
-		for (int i = 0; i <= idx; i++) {
-			if (i == parts.size()) {
-				parts.add(i, "");// clearer semantics
-			}
-		}
-		parts.set(idx, name);
-		for (int i = parts.size() - 1; i >= 0; i--) {
-			if (CommonUtils.isNullOrEmpty(parts.get(i))) {
-				parts.remove(i);
-			}
-		}
-		setLocation(CommonUtils.join(parts, "*"));
-	}
-
-	private List<String> getLocationParts() {
-		String[] locs = CommonUtils.nullToEmpty(getLocation()).split("\\*");
-		return new ArrayList<String>(Arrays.asList(locs));
 	}
 
 	public void setY(int y) {
@@ -250,6 +229,36 @@ public class AlcinaHistoryItem {
 		return result;
 	}
 
+	public String toTokenString() {
+		return AlcinaHistory.toHash(params);
+	}
+
+	private List<String> getLocationParts() {
+		String[] locs = CommonUtils.nullToEmpty(getLocation()).split("\\*");
+		return new ArrayList<String>(Arrays.asList(locs));
+	}
+
 	protected void addToToken(Map<String, Object> params) {
+	}
+
+	protected String getLocationPart(int idx) {
+		List<String> parts = getLocationParts();
+		return idx < parts.size() ? parts.get(idx) : null;
+	}
+
+	protected void setLocationPart(int idx, String name) {
+		List<String> parts = getLocationParts();
+		for (int i = 0; i <= idx; i++) {
+			if (i == parts.size()) {
+				parts.add(i, "");// clearer semantics
+			}
+		}
+		parts.set(idx, name);
+		for (int i = parts.size() - 1; i >= 0; i--) {
+			if (CommonUtils.isNullOrEmpty(parts.get(i))) {
+				parts.remove(i);
+			}
+		}
+		setLocation(CommonUtils.join(parts, "*"));
 	}
 }

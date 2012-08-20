@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
@@ -51,6 +52,7 @@ import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventEvent;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListener;
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventType;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.widget.FilterWidget;
 import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
@@ -287,8 +289,10 @@ public class WorkspaceView extends Composite implements HasName,
 			toolbar.processAvailableActions(actions);
 			if (actions.contains(ViewAction.class)
 					&& (item instanceof DomainNode || item instanceof ActionDisplayNode)) {
+				RenderContext.get().pushWithKey(RenderContext.CONTEXT_IGNORE_AUTOFOCUS, true);
 				fireVetoableActionEvent(new PermissibleActionEvent(item,
 						ClientReflector.get().newInstance(ViewAction.class)));
+				RenderContext.get().pop();
 			}
 		}
 
@@ -330,11 +334,11 @@ public class WorkspaceView extends Composite implements HasName,
 
 		public void vetoableAction(PermissibleActionEvent evt) {
 			TreeItem item = dataTree.getSelectedItem();
-			fireVetoableActionEvent(new PermissibleActionEvent(item,
-					evt.getAction()));
 			if (evt.getAction().getClass() == DeleteAction.class) {
 				onTreeItemSelected(item);
 			}
+			fireVetoableActionEvent(new PermissibleActionEvent(item,
+					evt.getAction()));
 		}
 
 		protected List<Class<? extends PermissibleAction>> getAvailableActions(

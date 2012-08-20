@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
@@ -422,7 +422,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		List<V> result = new ArrayList<V>(getDomainObjects().getCollection(
 				clazz));
 		if (filter != null) {
-			result = DefaultCollectionFilter.filter(result, filter);
+			result = CollectionFilters.filter(result, filter);
 		}
 		if (!result.isEmpty() && result.get(0) instanceof Comparable) {
 			Collections.sort((List) result);

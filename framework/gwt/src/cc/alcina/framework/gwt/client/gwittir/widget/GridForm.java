@@ -22,6 +22,7 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -303,7 +304,9 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 	@Override
 	protected void onLoad() {
 		super.onLoad();
-		if (autofocusWidget instanceof Focusable) {
+		if (autofocusWidget instanceof Focusable
+				&& !RenderContext.get().getBoolean(
+						RenderContext.CONTEXT_IGNORE_AUTOFOCUS)) {
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				@Override
 				public void execute() {

@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.widget.dialog;
 
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.client.widget.GlassDisplayer;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
@@ -96,7 +97,7 @@ public class GlassDialogBox extends DialogBox {
 		glass.show(true);
 		scrollLeft = Window.getScrollLeft();
 		scrollTop = Window.getScrollTop();
-		if (this.handlerRegistration == null) {
+		if (this.handlerRegistration == null && !BrowserMod.isMobile()) {
 			this.handlerRegistration = Window
 					.addWindowScrollHandler(scrollHandler);
 		}

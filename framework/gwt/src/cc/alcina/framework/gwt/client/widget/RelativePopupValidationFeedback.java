@@ -18,12 +18,14 @@ import java.beans.PropertyChangeListener;
 import java.util.HashMap;
 
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
+import cc.alcina.framework.gwt.client.logic.WidgetByElementTracker;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -57,6 +59,8 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 
 	private String css;
 
+	private boolean asHtml;
+
 	public void addCssBackground() {
 		css = (css == null ? "" : css + " ") + "withBkg";
 	}
@@ -84,7 +88,8 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 
 	@SuppressWarnings("unchecked")
 	protected Widget renderExceptionWidget(ValidationException exception) {
-		return new Label(this.getMessage(exception));
+		return asHtml ? new HTML(this.getMessage(exception)) : new Label(
+				this.getMessage(exception));
 	}
 
 	public void handleException(Object source, ValidationException exception) {
@@ -93,6 +98,7 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 		final RelativePopup p = new RelativePopup();
 		p.setVisible(false);
 		popups.put(source, p);
+		WidgetByElementTracker.get().register(p);
 		p.setStyleName("gwittir-ValidationPopup");
 		if (getCss() != null) {
 			p.addStyleName(getCss());
@@ -180,5 +186,13 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 
 	public String getCss() {
 		return css;
+	}
+
+	public boolean isAsHtml() {
+		return this.asHtml;
+	}
+
+	public void setAsHtml(boolean asHtml) {
+		this.asHtml = asHtml;
 	}
 }

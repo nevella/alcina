@@ -99,6 +99,7 @@ public class BrowserMod {
 				&& getUserAgent().indexOf(
 						Constants.INTERNET_EXPLORER_8_USER_AGENT) != -1;
 	}
+
 	public static boolean isIE9() {
 		return isInternetExplorer()
 				&& getUserAgent().indexOf(
@@ -179,5 +180,29 @@ public class BrowserMod {
 	 */
 	native static public boolean isQuirksMode()/*-{
 		return "BackCompat" == $doc.compatMode;
+	}-*/;
+
+	public static native boolean isMobile()/*-{
+		var navigator = $wnd.navigator;
+		//will be closer in the closure than window.navigator - not that it matters
+		var isMobile = {
+			Android : function() {
+				return navigator.userAgent.match(/Android/i) ? true : false;
+			},
+			BlackBerry : function() {
+				return navigator.userAgent.match(/BlackBerry/i) ? true : false;
+			},
+			iOS : function() {
+				return navigator.userAgent.match(/iPhone|iPad|iPod/i) ? true : false;
+			},
+			Windows : function() {
+				return navigator.userAgent.match(/IEMobile/i) ? true : false;
+			},
+			any : function() {
+				return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile
+						.Windows());
+			}
+		};
+		return isMobile.any();
 	}-*/;
 }

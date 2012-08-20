@@ -11,7 +11,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
@@ -355,7 +355,7 @@ public class ClientTransformManager extends TransformManager {
 				.getCollnMap();
 		Map<Class, List> objCopy = new LinkedHashMap<Class, List>();
 		for (Class<? extends HasIdAndLocalId> clazz : collectionMap.keySet()) {
-			List values = DefaultCollectionFilter.filter(
+			List values = CollectionFilters.filter(
 					collectionMap.get(clazz),
 					new CollectionFilter<HasIdAndLocalId>() {
 						@Override

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.provider.TextProvider;
@@ -94,7 +94,7 @@ public interface UmbrellaProvider<T> {
 		@Override
 		public void forCollection(Collection<T> collection,
 				CollectionFilter<T> collectionFilter) {
-			objects = DefaultCollectionFilter.filter(collection,
+			objects = CollectionFilters.filter(collection,
 					collectionFilter);
 		}
 

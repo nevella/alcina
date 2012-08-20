@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -107,7 +107,7 @@ public class FastROBoundTable extends BoundTableExt {
 			return;
 		}
 		row += ((this.masks & BoundTableExt.HEADER_MASK) > 0) ? 1 : 0;
-		int col = DefaultCollectionFilter.indexOf(Arrays.asList(columns),
+		int col = CollectionFilters.indexOf(Arrays.asList(columns),
 				new CollectionFilter<Field>() {
 					@Override
 					public boolean allow(Field field) {

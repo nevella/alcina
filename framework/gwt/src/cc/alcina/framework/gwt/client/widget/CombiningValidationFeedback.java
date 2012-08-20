@@ -6,6 +6,7 @@ import java.util.Map;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 import com.google.gwt.safehtml.shared.SafeHtml;
+import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
@@ -89,7 +90,7 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 			exceptions.put(source, exception);
 		}
 	}
-
+	
 	public static class ValidationExceptionWithHtmlMessage extends
 			ValidationException {
 		private ValidationException source;
@@ -97,6 +98,13 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		public ValidationExceptionWithHtmlMessage(ValidationException source) {
 			super(source.getMessage());
 			this.source = source;
+		}
+
+		public ValidationExceptionWithHtmlMessage(String htmlMessage,
+				Class validatorClass) {
+			super(htmlMessage, validatorClass);
+			safeHtml = SafeHtmlUtils.fromTrustedString(htmlMessage);
+			this.source = this;
 		}
 
 		private SafeHtml safeHtml;

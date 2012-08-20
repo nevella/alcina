@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
@@ -102,7 +102,7 @@ public class SearchDataProvider implements SortableDataProvider {
 				}
 				List results = result.getResults();
 				if(converter!=null){
-					results = DefaultCollectionFilter.convert(results, converter);
+					results = CollectionFilters.convert(results, converter);
 				}
 				if (callBackInit) {
 					table.init(results, result.pageCount());

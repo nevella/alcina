@@ -24,7 +24,9 @@ import java.util.Comparator;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ChangeListenerCollection;
 import com.google.gwt.user.client.ui.ClickListener;
@@ -126,6 +128,9 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 
 	public void addClickListener(ClickListener listener) {
 		this.base.addClickListener(listener);
+	}
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return this.base.addClickHandler(handler);
 	}
 
 	public void addFocusListener(FocusListener listener) {

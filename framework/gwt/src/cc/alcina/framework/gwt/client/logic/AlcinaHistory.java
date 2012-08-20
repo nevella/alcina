@@ -21,6 +21,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.URLComponentEncoder;
 
 import com.google.gwt.user.client.History;
@@ -53,6 +54,8 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public static final String CLASS_NAME_KEY = "cn";
 
 	public static final String Y_KEY = "y";
+	
+	public static final String PRE_HISTORY_KEY = "ph";
 
 	private static AlcinaHistory theInstance;
 
@@ -164,6 +167,9 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public I parseToken(String historyToken) {
+		if(historyToken.startsWith("#")){
+			historyToken=historyToken.substring(1);
+		}
 		I item = createHistoryInfo();
 		Map<String, String> params = item.parseParameters(historyToken);
 		if (params.size() == 0) {
@@ -203,6 +209,19 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 			sb.append(encoder.encode(params.get(k).toString()));
 		}
 		return sb.toString();
+	}
+
+	public static StringMap fromHash(String s) {
+		StringMap map = new StringMap();
+		String[] pairs = s.split("&");
+		for (String pair : pairs) {
+			String[] split = pair.split("=");
+			if (split.length == 2) {
+				map.put(split[0], CommonLocator.get().urlComponentEncoder()
+						.decode(split[1]));
+			}
+		}
+		return map;
 	}
 
 	public String tokenForSearch(SearchDefinition def, int pageNumber) {

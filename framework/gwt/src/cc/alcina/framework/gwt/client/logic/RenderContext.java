@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.logic;
 
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.objecttree.IsRenderableFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
@@ -45,6 +46,9 @@ public class RenderContext extends LooseContext {
 		}
 		return theInstance;
 	}
+
+	public static final String CONTEXT_IGNORE_AUTOFOCUS = ContentViewFactory.class
+	+ "::CONTEXT_IGNORE_AUTOFOCUS";
 
 	private RenderContext() {
 		super();

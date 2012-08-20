@@ -606,14 +606,12 @@ public class WidgetUtils {
 		currentEvent.preventDefault();
 	}
 
-	public static boolean currentEventHasModifier() {
-		Event currentEvent = Event.getCurrentEvent();
-		return currentEvent.getAltKey() || currentEvent.getShiftKey()
-				|| currentEvent.getCtrlKey() || currentEvent.getMetaKey();
-	}
-
+	
 	public static boolean isNewTabModifier() {
 		Event event = Event.getCurrentEvent();
+		return isNewTabModifier(event);
+	}
+	public static boolean isNewTabModifier(NativeEvent event ) {
 		return BrowserMod.getOperatingSystem().equals("Macintosh") ? event
 				.getMetaKey() : event.getCtrlKey();
 	}

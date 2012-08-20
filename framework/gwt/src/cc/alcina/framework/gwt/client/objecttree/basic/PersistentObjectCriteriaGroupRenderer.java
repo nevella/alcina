@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.DefaultCollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef.ClassRefSimpleNameRenderer;
@@ -77,7 +77,7 @@ public class PersistentObjectCriteriaGroupRenderer extends
 			this.fp = new FlowPanel();
 			box = new SetBasedListBox();
 			Set<ClassRef> all = ClassRef.all();
-			List<ClassRef> list = DefaultCollectionFilter.filter(all,
+			List<ClassRef> list = CollectionFilters.filter(all,
 					new CollectionFilter<ClassRef>() {
 						public boolean allow(ClassRef o) {
 							try {

@@ -15,8 +15,11 @@
  */
 package com.google.gwt.user.client.ui;
 
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
@@ -1340,6 +1343,8 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		setPopupPosition(left, top);
 	}
 
+	Boolean cachedIsMobile = null;
+
 	/**
 	 * Preview the {@link NativePreviewEvent}.
 	 * 
@@ -1370,7 +1375,23 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		EventTarget eTarget = nativeEvent.getEventTarget();
 		boolean eventTargetsScrollBar = Element.is(eTarget)
 				&& Element.as(eTarget).getTagName().equalsIgnoreCase("html");
-		if (eventTargetsPopupOrPartner || eventTargetsScrollBar) {
+		if (cachedIsMobile == null) {
+			cachedIsMobile = BrowserMod.isMobile();
+		}
+		boolean wasTouchMaybeDrag = cachedIsMobile
+				&& (BrowserEvents.TOUCHSTART.equals(nativeEvent.getType())
+						|| BrowserEvents.TOUCHEND.equals(nativeEvent.getType())
+						|| BrowserEvents.TOUCHMOVE
+								.equals(nativeEvent.getType())
+						|| BrowserEvents.GESTURECHANGE.equals(nativeEvent
+								.getType())
+						|| BrowserEvents.GESTUREEND.equals(nativeEvent
+								.getType())
+						|| BrowserEvents.GESTURESTART.equals(nativeEvent
+								.getType()) || BrowserEvents.SCROLL
+							.equals(nativeEvent.getType()));
+		if (eventTargetsPopupOrPartner || eventTargetsScrollBar
+				|| wasTouchMaybeDrag) {
 			event.consume();
 		}
 		// Cancel the event if it doesn't target the modal popup. Note that the

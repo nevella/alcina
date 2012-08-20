@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -24,17 +23,27 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.METHOD })
+@Target({ ElementType.METHOD })
 @ClientVisible
 /**
  * Specifies runtime creation type for child properties
  */
 public @interface DomainPropertyInfo {
 	boolean eagerCreation() default false;
+
 	boolean cloneForProvisionalEditing() default false;
+
 	boolean cloneForDuplication() default false;
+
 	boolean registerChildren() default false;
-	boolean stripTags() default false;//TODO: check this in threadlocaltransformmanager
+
+	/*
+	 * This instructs TransformManager.objectsToDtes() to serialize the
+	 * collection. It could probably be removed by doing some sort of loop
+	 * checking in objectsToDtes() - or having a per-call policy. But works ok,
+	 * if a bit layer-separation-gunky
+	 */
 	boolean serializeOnClient() default false;
+
 	boolean silentFailOnIllegalWrites() default false;
 }

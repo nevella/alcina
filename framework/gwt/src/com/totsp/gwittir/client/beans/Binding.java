@@ -93,6 +93,13 @@ public class Binding {
 				this.left);
 	}
 
+	public Binding(SourcesPropertyChangeEvents left, String leftProperty,
+			Validator leftValidator, ValidationFeedback leftFeedback,
+			SourcesPropertyChangeEvents right, String rightProperty) {
+		this(left, leftProperty, leftValidator, leftFeedback, right,
+				rightProperty, null, null);
+	}
+
 	/**
 	 * Creates a new Binding instance.
 	 * 
