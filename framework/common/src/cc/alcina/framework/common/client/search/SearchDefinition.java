@@ -344,6 +344,14 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	public Object provideResultsType() {
 		return null;
 	}
+	
+	public Set<SearchCriterion> allCriteria(){
+		LinkedHashSet<SearchCriterion> result=new LinkedHashSet<SearchCriterion>();
+		for(CriteriaGroup cg:getCriteriaGroups()){
+			result.addAll(cg.getCriteria());
+		}
+		return result;
+	}
 
 	public void onBeforeRunSearch() {
 	}

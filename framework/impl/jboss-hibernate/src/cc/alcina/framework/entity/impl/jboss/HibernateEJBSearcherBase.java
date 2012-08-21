@@ -95,15 +95,19 @@ public abstract class HibernateEJBSearcherBase {
 			if (!PermissionsManager.get().isPermissible(cg)) {
 				continue;
 			}
-			if (!cg.provideIsEmpty() && cg.getEntityClass() != null) {
-				linkedEntities.add(cg.getEntityClass());
+			if (!cg.provideIsEmpty() && getEntityClass(cg) != null) {
+				linkedEntities.add(getEntityClass(cg));
 			}
 		}
 		for (OrderGroup og : orderGroups) {
-			if (!og.provideIsEmpty() && og.getEntityClass() != null) {
-				linkedEntities.add(og.getEntityClass());
+			if (!og.provideIsEmpty() && getEntityClass(og) != null) {
+				linkedEntities.add(getEntityClass(og));
 			}
 		}
+	}
+
+	protected Class getEntityClass(CriteriaGroup cg) {
+		return cg.getEntityClass();
 	}
 
 	protected void processHandlers(SearchDefinition def) {
@@ -113,8 +117,7 @@ public abstract class HibernateEJBSearcherBase {
 				continue;
 			}
 			if (!cg.provideIsEmpty()) {
-				boolean countingVt = detachedCriteriaMap.containsKey(cg
-						.getEntityClass());
+				boolean countingVt = detachedCriteriaMap.containsKey(getEntityClass(cg));
 				Junction junction = cg.getCombinator() == FilterCombinator.OR
 						|| countingVt ? Restrictions.disjunction()
 						: Restrictions.conjunction();
@@ -135,13 +138,13 @@ public abstract class HibernateEJBSearcherBase {
 						added = true;
 					}
 				}
-				if (!detachedCriteriaMap.containsKey(cg.getEntityClass())) {
+				if (!detachedCriteriaMap.containsKey(getEntityClass(cg))) {
 					if (added) {
-						classCriteriaMap.get(cg.getEntityClass()).add(junction);
+						classCriteriaMap.get(getEntityClass(cg)).add(junction);
 					}
 				} else {
-					detachedCriteriaMap.get(cg.getEntityClass()).add(junction);
-					vtHandlerMap.get(cg.getEntityClass()).link(cg);
+					detachedCriteriaMap.get(getEntityClass(cg)).add(junction);
+					vtHandlerMap.get(getEntityClass(cg)).link(cg);
 				}
 			}
 		}
