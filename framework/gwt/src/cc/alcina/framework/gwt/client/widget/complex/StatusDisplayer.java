@@ -1,99 +1,158 @@
 package cc.alcina.framework.gwt.client.widget.complex;
 
-import cc.alcina.framework.common.client.logic.StateChangeListener;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.logic.CallManager;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.animation.client.Animation;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.SimplePanel;
 
-public class StatusDisplayer implements StateChangeListener {
-	FaderAnimation faderAnimation = null;
-
+public class StatusDisplayer {
 	private static final int FADER_DURATION = 5000;
 
-	private Label statusLabel;
-
-	StateChangeListener messageListener = new StateChangeListener() {
-		public void stateChanged(Object source, String newState) {
-			showMessage(newState, true);
+	private MouseOverHandler overHandler = new MouseOverHandler() {
+		@Override
+		public void onMouseOver(MouseOverEvent event) {
+			if (statusTuple.fader != null) {
+				statusTuple.fader.cancel();
+			}
 		}
 	};
 
-	private MouseOverHandler overHandler=new MouseOverHandler() {
+	private TopicListener topicListener = new TopicListener<String>() {
 		@Override
-		public void onMouseOver(MouseOverEvent event) {
-			if (faderAnimation != null) {
-				faderAnimation.cancel();
-			}
+		public void topicPublished(String key, String message) {
+			showMessage(message, key, key != CallManager.TOPIC_CALL_MADE);
 		}
-	};;;
+	};
 
 	public StatusDisplayer() {
+		stylePrefixes = new StringMap();
+		stylePrefixes.put(MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, "icy");
+		stylePrefixes.put(MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED,
+				"sd-center-notification");
 	}
 
 	public void attach() {
-		this.statusLabel = new Label();
+		Label statusLabel = new Label();
 		statusLabel.addMouseOverHandler(overHandler);
-		statusLabel.setStyleName("alcina-Status");
-		statusLabel.setVisible(false);
-		CallManager.get().addStateChangeListener(this);
-		MessageManager.get().addStateChangeListener(messageListener);
-		RootPanel.get().add(statusLabel);
+		statusTuple = new FaderTuple(statusLabel, "alcina-Status");
+		Label centerLabel = new Label();
+		centerTuple = new FaderTuple(centerLabel, "alcina-Status-Center");
+		GlobalTopicPublisher.get().addTopicListener(
+				CallManager.TOPIC_CALL_MADE, topicListener);
+		GlobalTopicPublisher.get().addTopicListener(
+				MessageManager.TOPIC_MESSAGE_PUBLISHED, topicListener);
+		GlobalTopicPublisher.get().addTopicListener(
+				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
+		GlobalTopicPublisher.get().addTopicListener(
+				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
+		RootPanel.get().add(statusTuple.holder);
+		RootPanel.get().add(centerTuple.holder);
 	}
 
 	public void detach() {
-		CallManager.get().removeStateChangeListener(this);
-		MessageManager.get().removeStateChangeListener(messageListener);
+		GlobalTopicPublisher.get().removeTopicListener(
+				CallManager.TOPIC_CALL_MADE, topicListener);
+		GlobalTopicPublisher.get().removeTopicListener(
+				MessageManager.TOPIC_MESSAGE_PUBLISHED, topicListener);
+		GlobalTopicPublisher.get().removeTopicListener(
+				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
+		GlobalTopicPublisher.get().removeTopicListener(
+				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
 	}
 
-	public void stateChanged(Object source, String newState) {
-		showMessage(newState, false);
+	private StringMap stylePrefixes;
+
+	class FaderTuple {
+		final String defaultStyle;
+
+		private SimplePanel holder;
+
+		public FaderTuple(Label label, String defaultStyle) {
+			this.label = label;
+			this.holder = new SimplePanel(label);
+			holder.setStyleName("alcina-Status-Holder");
+			if(defaultStyle!=null){
+				holder.addStyleName(defaultStyle);
+			}
+			holder.setVisible(false);
+			this.defaultStyle = defaultStyle;
+		}
+
+		FaderAnimation fader;
+
+		Label label;
 	}
 
-	private void showMessage(String message, boolean withFade) {
-		statusLabel.removeStyleName("icy");
-		if (message != null && message.startsWith(MessageManager.ICY_MESSAGE)) {
-			message = message.substring(MessageManager.ICY_MESSAGE.length());
-			statusLabel.addStyleName("icy");
+	FaderTuple statusTuple;
+
+	FaderTuple centerTuple;
+
+	private void showMessage(String message, String channel, boolean withFade) {
+		boolean center = channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED;
+		FaderTuple ft = center ? centerTuple : statusTuple;
+		Label label = ft.label;
+		FaderAnimation fader = ft.fader;
+		
+		label.setStyleName("");
+		if (stylePrefixes.containsKey(channel)) {
+			label.addStyleName(stylePrefixes.get(channel));
 		}
-		if (faderAnimation != null) {
-			faderAnimation.cancel();
+		if (fader != null) {
+			fader.cancel();
 		}
-		WidgetUtils.setOpacity(statusLabel, 0);
-		statusLabel.setVisible(message != null);
-		statusLabel.setText(message);
-		int w = statusLabel.getOffsetWidth();
-		int bw = Window.getClientWidth();
-		// statusLabel.getElement().getStyle().setProperty("right","");
-		// statusLabel.getElement().getStyle().setPropertyPx("top", 70);
-		// statusLabel.getElement().getStyle().setPropertyPx("left", (bw - w) /
-		// 2);
-		WidgetUtils.setOpacity(statusLabel, 100);
+		SimplePanel holder = ft.holder;
+		WidgetUtils.setOpacity(holder, 0);
+		message = CommonUtils.nullToEmpty(message);
+		label.setText(message);
+		holder.setVisible(!message.isEmpty());
+		if (message.isEmpty()) {
+			return;
+		}
+		if(center){
+			int w = holder.getOffsetWidth();
+			int cw = Window.getClientWidth();
+			holder.getElement().getStyle().setLeft((cw-w)/2, Unit.PX);
+		}
+		WidgetUtils.setOpacity(holder, 100);
 		if (withFade) {
-			faderAnimation = new FaderAnimation();
-			faderAnimation.run(FADER_DURATION);
+			fader = new FaderAnimation(holder);
+			ft.fader = fader;
+			fader.run(FADER_DURATION);
 		}
 	}
 
 	private class FaderAnimation extends Animation {
+		private final SimplePanel holder;
+
+		public FaderAnimation(SimplePanel holder) {
+			this.holder = holder;
+		}
+
 		@Override
 		protected void onComplete() {
-			statusLabel.setVisible(false);
+			holder.setVisible(false);
 		}
 
 		@Override
 		protected void onUpdate(double progress) {
-			WidgetUtils.setOpacity(statusLabel, (int) (100 * (1 - progress)));
+			WidgetUtils.setOpacity(holder, (int) (100 * (1 - progress)));
 		}
 	}
 
 	public void removeWidget() {
-		statusLabel.removeFromParent();
+		statusTuple.label.removeFromParent();
+		centerTuple.label.removeFromParent();
 	}
 }

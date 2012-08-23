@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.stdlayout.MainTabPanel;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
+import cc.alcina.framework.gwt.client.widget.complex.StatusDisplayer;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.template.client.logic.AlcinaTemplateContentProvider;
@@ -58,6 +59,8 @@ public class LayoutManager {
 
 	private EventSinkPanel topPanel;
 
+	private StatusDisplayer statusDisplayer;
+
 	public boolean isInitialising() {
 		return this.initialising;
 	}
@@ -75,6 +78,9 @@ public class LayoutManager {
 
 	public void redraw() {
 		initialising = true;
+		if (statusDisplayer != null) {
+			statusDisplayer.detach();
+		}
 		WidgetUtils.clearChildren(RootPanel.get());
 		topPanel = new EventSinkPanel();
 		this.captionCmp = new CaptionCmp();
@@ -85,6 +91,8 @@ public class LayoutManager {
 		topPanel.add(footerCmp);
 		topPanel.setStylePrimaryName("alcina-TopContainer");
 		RootPanel.get().add(topPanel);
+		statusDisplayer = new StatusDisplayer();
+		statusDisplayer.attach();
 		initialising = false;
 	}
 

@@ -310,6 +310,12 @@ public class Toolbar extends Composite implements
 				aWidget.setText(text);
 			}
 		}
+		public void setWordWrap(boolean wordWrap) {
+			if (asButton) {
+			} else {
+				aWidget.setWordWrap(wordWrap);
+			}
+		}
 
 		public PermissibleAction getAction() {
 			return this.action;

@@ -11,24 +11,31 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.logic;
 
 import cc.alcina.framework.common.client.logic.StateListenable;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.gwt.client.widget.complex.StatusDisplayer;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public class MessageManager {
+	public static final String TOPIC_MESSAGE_PUBLISHED = MessageManager.class
+			.getName() + "::TOPIC_MESSAGE_PUBLISHED";
 
- public class MessageManager extends StateListenable {
-	public static final String ICY_MESSAGE = "MessageManager-ICY:";
+	public static final String TOPIC_ICY_MESSAGE_PUBLISHED = MessageManager.class
+			.getName() + "::TOPIC_ICY_MESSAGE_PUBLISHED";
+
+	public static final String TOPIC_CENTER_MESSAGE_PUBLISHED = MessageManager.class
+			.getName() + "::TOPIC_CENTER_MESSAGE_PUBLISHED";
 
 	public void showMessage(String message) {
-		fireStateChanged(message);
+		GlobalTopicPublisher.get().publishTopic(TOPIC_MESSAGE_PUBLISHED,
+				message);
 	}
 
-	
 	private MessageManager() {
 		super();
 	}
@@ -46,9 +53,13 @@ import cc.alcina.framework.common.client.logic.StateListenable;
 		theInstance = null;
 	}
 
-
 	public void icyMessage(String message) {
-		fireStateChanged(ICY_MESSAGE+message);
-		
+		GlobalTopicPublisher.get().publishTopic(TOPIC_ICY_MESSAGE_PUBLISHED,
+				message);
+	}
+
+	public void centerMessage(String message) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_CENTER_MESSAGE_PUBLISHED,
+				message);
 	}
 }
