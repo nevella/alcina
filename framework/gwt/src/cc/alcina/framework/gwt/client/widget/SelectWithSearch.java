@@ -239,12 +239,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		filter.getTextBox().addBlurHandler(new BlurHandler() {
 			@Override
 			public void onBlur(BlurEvent event) {
-				new Timer() {
-					@Override
-					public void run() {
-						hidePopdown();
-					}
-				}.schedule(250);
+				handleFilterBlur();
 			}
 		});
 		if (itemMap != null) {
@@ -285,6 +280,15 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			holder.add(scroller);
 		}
 		return holder;
+	}
+
+	protected void handleFilterBlur() {
+		new Timer() {
+			@Override
+			public void run() {
+				hidePopdown();
+			}
+		}.schedule(250);
 	}
 
 	protected void onPopdownShowing(RelativePopupPanel popup, boolean show) {
