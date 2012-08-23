@@ -31,6 +31,8 @@ import com.google.gwt.user.client.History;
  * @author Nick Reddel
  */
 public class AlcinaHistory<I extends AlcinaHistoryItem> {
+	private static final String DOUBLE_AMP = "%26%26";
+
 	public static final String LOGIN_EVENT = "LOGIN_EVENT";
 
 	public static final String SEARCH = "SEARCH";
@@ -54,7 +56,7 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public static final String CLASS_NAME_KEY = "cn";
 
 	public static final String Y_KEY = "y";
-	
+
 	public static final String PRE_HISTORY_KEY = "ph";
 
 	private static AlcinaHistory theInstance;
@@ -167,8 +169,8 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public I parseToken(String historyToken) {
-		if(historyToken.startsWith("#")){
-			historyToken=historyToken.substring(1);
+		if (historyToken.startsWith("#")) {
+			historyToken = historyToken.substring(1);
 		}
 		I item = createHistoryInfo();
 		Map<String, String> params = item.parseParameters(historyToken);
@@ -192,6 +194,10 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 		this.noHistoryDisabled = noHistoryDisabled;
 	}
 
+	/**
+	 * '&' in values is encoded as &&, to allow for hotmail escaping '&' in the
+	 * hash as a whole - see fromHash
+	 */
 	public static String toHash(Map<String, String> params) {
 		StringBuffer sb = new StringBuffer();
 		ArrayList<String> keys = new ArrayList<String>(params.keySet());
@@ -206,19 +212,57 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 			}
 			sb.append(k);
 			sb.append("=");
-			sb.append(encoder.encode(params.get(k).toString()));
+			sb.append(encoder.encode(params.get(k).toString()
+					.replace("&", "&&")));
 		}
 		return sb.toString();
 	}
 
 	public static StringMap fromHash(String s) {
 		StringMap map = new StringMap();
-		String[] pairs = s.split("&");
-		for (String pair : pairs) {
-			String[] split = pair.split("=");
-			if (split.length == 2) {
-				map.put(split[0], CommonLocator.get().urlComponentEncoder()
-						.decode(split[1]));
+		String key = null;
+		String value = null;
+		boolean forKey = true;
+		for (int idx = 0; idx < s.length();) {
+			if (forKey) {
+				int idx1 = s.indexOf("=", idx);
+				if (idx1 == -1) {
+					break;
+				} else {
+					key = s.substring(idx, idx1);
+					idx = idx1 + 1;
+					forKey = false;
+				}
+			} else {
+				// terminator index
+				int idx0 = -1;
+				int idxStart = idx;
+				while (true) {
+					int idx1 = s.indexOf("&", idx);
+					// url encoding of '&'
+					int idx2 = s.indexOf("%26", idx);
+					// double-enc of '&' - i.e. part of a value, not a separator
+					int idx3 = s.indexOf(DOUBLE_AMP, idx);
+					// do we have a terminator?
+					if (idx1 == -1 && idx2 == -1) {
+						idx0 = s.length();
+						break;//
+					} else {
+						idx0 = idx1 == -1 ? idx2 : idx2 == -1 ? idx1 : Math
+								.min(idx1, idx2);
+						if (idx0 < idx3 || idx3 == -1) {
+							break;// found terminator
+						}
+						idx = idx3 + DOUBLE_AMP.length();
+					}
+				}
+				map.put(key,
+						CommonLocator.get().urlComponentEncoder()
+								.decode(s.substring(idxStart, idx0))
+								.replace("&&", "&"));
+				forKey = true;
+				idx = idx0;
+				idx += s.indexOf("&", idx) == idx ? 1 : 3;// advance past setp
 			}
 		}
 		return map;

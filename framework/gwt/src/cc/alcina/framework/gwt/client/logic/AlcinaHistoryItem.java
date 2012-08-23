@@ -121,15 +121,7 @@ public class AlcinaHistoryItem {
 	}
 
 	public Map<String, String> parseParameters(String s) {
-		params = new HashMap<String, String>();
-		String[] pairs = s.split("&");
-		for (String pair : pairs) {
-			String[] split = pair.split("=");
-			if (split.length == 2) {
-				params.put(split[0], CommonLocator.get().urlComponentEncoder()
-						.decode(split[1]));
-			}
-		}
+		params = AlcinaHistory.fromHash(s);
 		return params;
 	}
 
