@@ -142,7 +142,8 @@ public class TransformConflicts {
 					+ " have conflicts - same object and field, but changes were made "
 					+ "when the field value visible to the client was stale.  The most recent has been applied"
 					+ " (simple conflict resolution - latest commit wins) - the notification is strictly informational.\n\n"
-					+ " See the Alcina TransformConflicts java class if you need automatic resolution interceptors.\n\n");
+					+ " See the Alcina TransformConflicts java class if you need automatic resolution interceptors.\n\n" +
+					"");
 			for (TransformConflictEventMember member : event.members) {
 				add(member);
 			}
