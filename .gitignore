@@ -1,0 +1,8 @@
+/dist
+/local
+*.DS_Store
+/local.ant.properties
+/bin
+/dist-extras
+/build
+
