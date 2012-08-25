@@ -143,6 +143,9 @@ public class GraphProjection {
 		if (coll instanceof ArrayList) {
 			c = coll.getClass().newInstance();
 			// no "persistentLists", at least
+			//um...persistentBag??
+		}else if (coll instanceof List){
+			c=new ArrayList();
 		} else if (coll instanceof LinkedHashSet) {
 			c = new LinkedHashSet();
 		} else if (coll instanceof Set) {

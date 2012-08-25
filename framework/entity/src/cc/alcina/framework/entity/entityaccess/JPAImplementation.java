@@ -58,4 +58,5 @@ public interface JPAImplementation {
 	void muteClassloaderLogging(boolean mute);
 
 	public abstract InstantiateImplCallback getClassrefInstantiator();
+
 }

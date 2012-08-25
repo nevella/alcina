@@ -370,20 +370,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	@Override
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
 			long fromId, long toId) {
-		List<DomainTransformRequestPersistent> dtes = getEntityManager()
-				.createQuery(
-						String.format(
-								"select distinct dtrp "
-										+ "from %s dtrp "
-										+ "inner join fetch dtrp.events "
-										+ "inner join fetch dtrp.clientInstance "
-										+ " where dtrp.id>=%s and dtrp.id<=%s "
-										+ "order by dtrp.id",
-								getImplementation(
-										DomainTransformRequestPersistent.class)
-										.getSimpleName(), fromId, toId))
-				.getResultList();
-		return dtes;
+		String eql = String.format("select distinct dtrp " + "from %s dtrp "
+				+ "inner join fetch dtrp.events "
+				+ "inner join fetch dtrp.clientInstance "
+				+ " where dtrp.id>=%s and dtrp.id<=%s " + "order by dtrp.id",
+				getImplementation(DomainTransformRequestPersistent.class)
+						.getSimpleName(), fromId, toId);
+		List<DomainTransformRequestPersistent> dtrps = new ArrayList<DomainTransformRequestPersistent>(
+				getEntityManager().createQuery(eql).getResultList());
+		return new EntityUtils().detachedClone(dtrps, EntityLayerLocator.get()
+				.jpaImplementation().getClassrefInstantiator());
 	}
 
 	public U getSystemUser() {
@@ -804,7 +800,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						PermissionsManager.ROOT_PERMISSIBLE)) {
 					System.err
 							.println(CommonUtils
-									.formatJ("Warn - allowing access to %s : %s only via admin override",
+									.formatJ(
+											"Warn - allowing access to %s : %s only via admin override",
 											wrapper == null ? "(null wrapper)"
 													: HiliHelper
 															.asDomainPoint(wrapper),
