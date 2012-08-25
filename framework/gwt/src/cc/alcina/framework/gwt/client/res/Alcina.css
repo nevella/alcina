@@ -630,6 +630,9 @@ div.pad-top-0{
 .relative{
 	position: relative;
 }
+.wide-text{
+	width:450px;
+}
 /** Specific alcina elements (misc) **/
 .alcina-BuildVersion {
 	color: white;
