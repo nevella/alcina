@@ -138,9 +138,11 @@ public class TransformConflicts {
 
 		@Override
 		public void topicPublished(String key, TransformConflictEvent event) {
-			builder.append(">>> Transform conflict <<<\n\nThe first transform in the list conflicts"
-					+ " with subsequent change(s) (same object and field)- but has been applied"
-					+ " (simple conflict resolution - latest commit wins). \n\n");
+			builder.append(">>> Transform conflict <<<\n\nThe transforms below (first is most recent) "
+					+ " have conflicts - same object and field, but changes were made "
+					+ "when the field value visible to the client was stale.  The most recent has been applied"
+					+ " (simple conflict resolution - latest commit wins) - the notification is strictly informational.\n\n"
+					+ " See the Alcina TransformConflicts java class if you need automatic resolution interceptors.\n\n");
 			for (TransformConflictEventMember member : event.members) {
 				add(member);
 			}
