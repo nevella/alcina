@@ -15,8 +15,8 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 @RegistryLocation(registryPoint = DTRProtocolHandler.class, j2seOnly = false)
 @ClientInstantiable
-public class PlaintextProtocolHandler implements DTRProtocolHandler {
-	public static final String VERSION = "1.3 - plain text, with versions, GWT2.5";
+public class PlaintextProtocolHandler1pt1 implements DTRProtocolHandler {
+	public static final String VERSION = "1.1 - plain text, GWT2.1";
 
 	private static final String TGT = "tgt: ";
 
@@ -30,8 +30,9 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 
 	public static String escape(String str) {
 		return str == null
-				|| (str.indexOf("\n") == -1 && str.indexOf("\\") == -1) ? str
-				: str.replace("\\", "\\\\").replace("\n", "\\n");
+		|| (str.indexOf("\n") == -1 && str
+				.indexOf("\\") == -1) ? str : str
+						.replace("\\", "\\\\").replace("\n", "\\n");
 	}
 
 	public static String unescape(String str) {
@@ -76,9 +77,6 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		sb.append(",");
 		sb.append(SimpleStringParser.toString(domainTransformEvent
 				.getObjectLocalId()));
-		sb.append(",");
-		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(domainTransformEvent
-				.getObjectVersionNumber()));
 		sb.append(newlineTab);
 		sb.append(PARAMS);
 		sb.append(domainTransformEvent.getPropertyName());
@@ -104,15 +102,12 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 		sb.append(",");
 		sb.append(SimpleStringParser.toString(domainTransformEvent
 				.getValueLocalId()));
-		sb.append(",");
-		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(domainTransformEvent
-				.getValueVersionNumber()));
 		sb.append("\n");
 	}
 
 	public List<DomainTransformEvent> deserialize(String serializedEvents) {
 		List<DomainTransformEvent> events = new ArrayList<DomainTransformEvent>();
-		asyncParser = null;
+		asyncParser=null;
 		deserialize(serializedEvents, events, Integer.MAX_VALUE);
 		return events;
 	}
@@ -185,8 +180,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 									// environment
 		dte.setObjectClassRef(ClassRef.forName(i));
 		dte.setObjectId(p.readLong("", ","));
-		dte.setObjectLocalId(p.readLong("", ","));
-		dte.setObjectVersionNumber(p.readNonNegativeIntegerOrNull("", "\n"));
+		dte.setObjectLocalId(p.readLong("", "\n"));
 		String pName = p.read(PARAMS, ",");
 		dte.setPropertyName(pName.equals("null") ? null : pName);
 		String commitTypeStr = p.read("", ",");
@@ -198,7 +192,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 			dte.setTransformType(TransformType.valueOf(p.read("", ",")));
 			long utcTime = p.readLong("", "\n");
 			dte.setUtcDate(new Date(utcTime));
-		} else {
+		}else{
 			dte.setTransformType(TransformType.valueOf(p.read("", "\n")));
 		}
 		i = p.read(STRING_VALUE, "\n");
@@ -208,8 +202,7 @@ public class PlaintextProtocolHandler implements DTRProtocolHandler {
 									// environment
 		dte.setValueClassRef(ClassRef.forName(i));
 		dte.setValueId(p.readLong("", ","));
-		dte.setValueLocalId(p.readLong("", ","));
-		dte.setValueVersionNumber(p.readNonNegativeIntegerOrNull("", "\n"));
+		dte.setValueLocalId(p.readLong("", "\n"));
 		if (dte.getTransformType() != TransformType.CHANGE_PROPERTY_SIMPLE_VALUE
 				&& dte.getNewStringValue().equals("null")) {
 			dte.setNewStringValue(null);

@@ -15,10 +15,10 @@ import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 @RegistryLocation(registryPoint = DTRProtocolHandler.class, j2seOnly = false)
 @ClientInstantiable
-public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
+public class PlaintextProtocolHandlerShort1pt2 implements DTRProtocolHandler {
 	private static final String START_OF_STRING_TABLE = "str:\n";
 
-	public static final String VERSION = "1.4 - plain text, short, GWT2.5";
+	public static final String VERSION = "1.2 - plain text, short, GWT2.5";
 
 	private static final String DOMAIN_TRANSFORM_EVENT_MARKER = "\ndte:";
 
@@ -75,9 +75,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		sb.append(",");
 		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
 				.getObjectLocalId()));
-		sb.append(",");
-		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(domainTransformEvent
-				.getObjectVersionNumber()));
 		sb.append("\n");
 		appendString(domainTransformEvent.getPropertyName(), sb);
 		sb.append(",");
@@ -96,9 +93,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		sb.append(",");
 		sb.append(SimpleStringParser.toStringNoInfo(domainTransformEvent
 				.getValueLocalId()));
-		sb.append(",");
-		sb.append(SimpleStringParser.toStringOrNullNonNegativeInteger(domainTransformEvent
-				.getValueVersionNumber()));
 		sb.append("\n");
 	}
 
@@ -219,7 +213,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		dte.setObjectClassRef(ClassRef.forName(i));
 		dte.setObjectId(p.readLongShort("", ","));
 		dte.setObjectLocalId(p.readLongShort("", "\n"));
-		dte.setObjectVersionNumber(p.readNonNegativeIntegerOrNull("", "\n"));
 		String pName = getString(p.read("", ","));
 		dte.setPropertyName(pName);
 		String commitTypeStr = getString(p.read("", ","));
@@ -233,7 +226,6 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		dte.setValueClassRef(ClassRef.forName(i));
 		dte.setValueId(p.readLongShort("", ","));
 		dte.setValueLocalId(p.readLongShort("", "\n"));
-		dte.setValueVersionNumber(p.readNonNegativeIntegerOrNull("", "\n"));
 		return dte;
 	}
 

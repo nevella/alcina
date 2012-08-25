@@ -83,6 +83,11 @@ public class SimpleStringParser {
 				.valueOf(value);
 		return serLong + "/" + toBase64(value);
 	}
+
+	public static String toStringOrNullNonNegativeInteger(Integer value) {
+		return value == null ? "-1" : value.toString();
+	}
+
 	public static String toStringNoInfo(long value) {
 		return toBase64(value);
 	}
@@ -118,10 +123,10 @@ public class SimpleStringParser {
 
 	@UnsafeNativeLong
 	private static native String fastMinSerialisedLong(long value)/*-{
-		if (!value.m&&!value.h){
+		if (!value.m && !value.h) {
 			return value.l.toString();
-		}else{
-			return value.l.toString()+"(lsbits)";
+		} else {
+			return value.l.toString() + "(lsbits)";
 		}
 	}-*/;
 
@@ -130,7 +135,7 @@ public class SimpleStringParser {
 		if (idx == -1) {
 			return Long.parseLong(str);
 		} else {
-			if(str.substring(0,idx).contains(".")){
+			if (str.substring(0, idx).contains(".")) {
 				return SimpleStringParser20.toLong(str);
 			}
 			return longFromBase64(str.substring(idx + 1));
@@ -158,11 +163,12 @@ public class SimpleStringParser {
 			return null;
 		}
 		int y1 = s.indexOf(start, offset);
-		offset = end.length() == 0 ? s.length() : s.indexOf(end, y1
-				+ start.length());
-		String r = includeStartTokenInText ? s.substring(y1, offset == -1 ? s
-				.length() : offset + end.length()) : s.substring(y1
-				+ start.length(), offset == -1 ? s.length() : offset);
+		offset = end.length() == 0 ? s.length() : s.indexOf(end,
+				y1 + start.length());
+		String r = includeStartTokenInText ? s.substring(y1,
+				offset == -1 ? s.length() : offset + end.length()) : s
+				.substring(y1 + start.length(), offset == -1 ? s.length()
+						: offset);
 		if (advanceEndToken) {
 			offset += end.length();
 		}
@@ -176,6 +182,13 @@ public class SimpleStringParser {
 		String str = read(start, end);
 		return toLong(str);
 	}
+
+	public Integer readNonNegativeIntegerOrNull(String start, String end) {
+		String str = read(start, end);
+		int i = Integer.parseInt(str);
+		return i < 0 ? null : i;
+	}
+
 	public long readLongString(String start, String end) {
 		String str = read(start, end);
 		return Long.parseLong(str);

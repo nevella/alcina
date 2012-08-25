@@ -25,7 +25,7 @@
 	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA-sources.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" sourcepath="/hibernate-core"/>
+	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" sourcepath="/hibernate-core/hibernate-core"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
 	<classpathentry kind="output" path="bin"/>
