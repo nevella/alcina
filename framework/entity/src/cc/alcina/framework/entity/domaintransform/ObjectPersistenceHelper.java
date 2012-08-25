@@ -65,6 +65,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	public void appShutdown() {
+		ThreadlocalTransformManager.get().appShutdown();
 		theInstance = null;
 	}
 

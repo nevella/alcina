@@ -59,6 +59,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
@@ -73,7 +74,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		PropertyAccessor, ObjectLookup, ClassLookup {
 	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
 		protected synchronized Object initialValue() {
-			ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
+			ThreadlocalTransformManager tm = ThreadlocalTransformManager
+					.ttmInstance();
 			tm.resetTltm(null);
 			return tm;
 		}
@@ -90,9 +92,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return ThreadlocalTransformManager.cast();
 	}
 
-	public static TransformManager ttmInstance() {
-		return new ThreadlocalTransformManager();
+	public static ThreadlocalTransformManager ttmInstance() {
+		ThreadlocalTransformManager tltm = new ThreadlocalTransformManager();
+		return tltm;
 	}
+
+	private PersistenceLayerTransformExceptionPolicy exceptionPolicy;
 
 	private boolean useObjectCreationId;
 
@@ -215,46 +220,13 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	public void performDeleteObject(HasIdAndLocalId hili) {
-		HasIdAndLocalId object = getObject(hili);
-		try {
-			PropertyDescriptor[] pds = Introspector
-					.getBeanInfo(hili.getClass()).getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (Set.class.isAssignableFrom(pd.getPropertyType())) {
-					Association info = pd.getReadMethod().getAnnotation(
-							Association.class);
-					Set set = (Set) pd.getReadMethod().invoke(hili,
-							CommonUtils.EMPTY_OBJECT_ARRAY);
-					if (info != null && set != null) {
-						for (Object o2 : set) {
-							String accessorName = "get"
-									+ CommonUtils.capitaliseFirst(info
-											.propertyName());
-							Object o3 = o2.getClass()
-									.getMethod(accessorName, new Class[0])
-									.invoke(o2, CommonUtils.EMPTY_OBJECT_ARRAY);
-							if (o3 instanceof Set) {
-								Set assocSet = (Set) o3;
-								assocSet.remove(hili);
-							}
-							// direct references (parent/one-one) are not
-							// removed, throw a referential integrity exception
-							// instead
-							// i.e. these *must* be handled explicity in code
-							// three years later, not sure why I opted for the
-							// above
-							// but I guess, if it's server layer, the programmer
-							// has more control
-							// and there may be a decent reason
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+	public void deregisterDomainObject(Object o) {
+		if (o instanceof SourcesPropertyChangeEvents) {
+			listeningTo.remove(o);
+			((SourcesPropertyChangeEvents) o)
+					.removePropertyChangeListener(this);
 		}
-		entityManager.remove(object);
+		super.deregisterDomainObject(o);
 	}
 
 	@Override
@@ -394,6 +366,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return (TransformManager) threadLocalTLTMInstance.get();
 	}
 
+	@Override
+	public Enum getTargetEnumValue(DomainTransformEvent evt) {
+		return ObjectPersistenceHelper.get().getTargetEnumValue(evt);
+	}
+
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		return ObjectPersistenceHelper.get().getTemplateInstance(clazz);
 	}
@@ -454,6 +431,49 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
+	@Override
+	public void performDeleteObject(HasIdAndLocalId hili) {
+		HasIdAndLocalId object = getObject(hili);
+		try {
+			PropertyDescriptor[] pds = Introspector
+					.getBeanInfo(hili.getClass()).getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				if (Set.class.isAssignableFrom(pd.getPropertyType())) {
+					Association info = pd.getReadMethod().getAnnotation(
+							Association.class);
+					Set set = (Set) pd.getReadMethod().invoke(hili,
+							CommonUtils.EMPTY_OBJECT_ARRAY);
+					if (info != null && set != null) {
+						for (Object o2 : set) {
+							String accessorName = "get"
+									+ CommonUtils.capitaliseFirst(info
+											.propertyName());
+							Object o3 = o2.getClass()
+									.getMethod(accessorName, new Class[0])
+									.invoke(o2, CommonUtils.EMPTY_OBJECT_ARRAY);
+							if (o3 instanceof Set) {
+								Set assocSet = (Set) o3;
+								assocSet.remove(hili);
+							}
+							// direct references (parent/one-one) are not
+							// removed, throw a referential integrity exception
+							// instead
+							// i.e. these *must* be handled explicity in code
+							// three years later, not sure why I opted for the
+							// above
+							// but I guess, if it's server layer, the programmer
+							// has more control
+							// and there may be a decent reason
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		entityManager.remove(object);
+	}
+
 	public void reconstituteHiliMap() {
 		if (clientInstance != null) {
 			CommonPersistenceLocal cp = EntityLayerLocator.get()
@@ -493,18 +513,14 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
-	@Override
-	public void deregisterDomainObject(Object o) {
-		if (o instanceof SourcesPropertyChangeEvents) {
-			listeningTo.remove(o);
-			((SourcesPropertyChangeEvents) o)
-					.removePropertyChangeListener(this);
-		}
-		super.deregisterDomainObject(o);
+	public void resetTltm(HiliLocatorMap locatorMap) {
+		resetTltm(locatorMap, null);
 	}
 
-	public void resetTltm(HiliLocatorMap locatorMap) {
+	public void resetTltm(HiliLocatorMap locatorMap,
+			PersistenceLayerTransformExceptionPolicy exceptionPolicy) {
 		setEntityManager(null);
+		this.exceptionPolicy = exceptionPolicy;
 		this.userSessionHiliMap = locatorMap;
 		localIdToEntityMap = new HashMap<Long, HasIdAndLocalId>();
 		modifiedObjects = new HashSet<HasIdAndLocalId>();
@@ -578,7 +594,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		List<String> projections = new ArrayList<String>();
 		ClassLookup classLookup = CommonLocator.get().classLookup();
 		String specProperty = null;
-		projections.add(CommonUtils.formatJ("t.%s as %s", "id","id"));
+		projections.add(CommonUtils.formatJ("t.%s as %s", "id", "id"));
 		List<PropertyInfoLite> pds = classLookup
 				.getWritableProperties(assocClass);
 		for (PropertyInfoLite pd : pds) {
@@ -589,18 +605,20 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			}
 			Class clazz = pd.getPropertyType();
 			if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
-				projections.add(CommonUtils.formatJ("t.%s as %s", propertyName,propertyName));
+				projections.add(CommonUtils.formatJ("t.%s as %s", propertyName,
+						propertyName));
 			} else {
 				projections.add(CommonUtils.formatJ("t.%s.id as %s_id",
-						propertyName,propertyName));
+						propertyName, propertyName));
 				if (clazz == refClass) {
 					specProperty = propertyName;
 				}
 			}
 		}
 		String template = "select %s from %s t where t.%s.id=%s";
-		return CommonUtils.formatJ(template, CommonUtils.join(projections, ","),
-				assocClass.getSimpleName(), specProperty, ref.getId());
+		return CommonUtils.formatJ(template,
+				CommonUtils.join(projections, ","), assocClass.getSimpleName(),
+				specProperty, ref.getId());
 	}
 
 	private void checkPropertyReadAccessAndThrow(HasIdAndLocalId hili,
@@ -689,11 +707,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	public Enum getTargetEnumValue(DomainTransformEvent evt) {
-		return ObjectPersistenceHelper.get().getTargetEnumValue(evt);
-	}
-
-	@Override
 	protected void objectModified(HasIdAndLocalId hili,
 			DomainTransformEvent evt, boolean targetObject) {
 		boolean addToResults = false;
@@ -701,6 +714,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			addToResults = true;
 			evt.setGeneratedServerId(hili.getId());
 		}
+		//TODO - think about handling this as a postpersist entity listener? that way we ensure correct version numbers
 		if (hili instanceof HasVersionNumber && !modifiedObjects.contains(hili)) {
 			addToResults = true;
 			modifiedObjects.add(hili);
@@ -721,6 +735,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			modificationEvents.add(evt);
 		}
 	}
+
+	
 
 	@Override
 	// No need for property changes here
@@ -746,6 +762,20 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		public HiliLocator(Class<? extends HasIdAndLocalId> clazz, long id) {
 			this.clazz = clazz;
 			this.id = id;
+		}
+	}
+
+	public static class ThreadlocalTransformManagerFactory {
+		public ThreadlocalTransformManager create() {
+			return new ThreadlocalTransformManager();
+		}
+	}
+
+	@Override
+	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
+			throws DomainTransformException {
+		if (exceptionPolicy != null) {
+			exceptionPolicy.checkVersion(obj, event);
 		}
 	}
 }

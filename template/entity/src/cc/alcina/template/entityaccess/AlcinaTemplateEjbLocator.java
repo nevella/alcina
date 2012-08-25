@@ -1,6 +1,7 @@
 package cc.alcina.template.entityaccess;
 
 
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
@@ -24,5 +25,10 @@ public class AlcinaTemplateEjbLocator implements CommonPersistenceProvider {
 	public CommonPersistenceLocal getCommonPersistence(){
 		return AlcinaTemplateBeanProvider.get()
 		.getCommonPersistenceBean();
+	}
+
+	@Override
+	public CommonPersistenceBase getCommonPersistenceExTransaction() {
+		return new AlcinaTemplateCommonPersistence();
 	}
 }

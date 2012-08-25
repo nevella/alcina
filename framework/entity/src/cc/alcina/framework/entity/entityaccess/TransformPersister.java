@@ -59,11 +59,6 @@ public class TransformPersister {
 
 	public DomainTransformLayerWrapper transformExPersistenceContext(
 			TransformPersistenceToken token) {
-		if (token.getTransformExceptionPolicy() == null) {
-			token.setTransformExceptionPolicy(EntityLayerLocator.get()
-					.persistenceLayerTransformExceptionPolicyFactory()
-					.getPolicy(token.getRequest()));
-		}
 		DomainTransformLayerWrapper wrapper = null;
 		while (wrapper == null
 				|| token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
@@ -261,7 +256,8 @@ public class TransformPersister {
 			ObjectPersistenceHelper.get();
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 			// We know this is thread-local, so we can clear the tm transforms
-			tm.resetTltm(locatorMap);
+			// add the entity version checker now
+			tm.resetTltm(locatorMap,token.getTransformExceptionPolicy());
 			tm.setEntityManager(getEntityManager());
 			ClientInstance persistentClientInstance = (ClientInstance) commonPersistenceBase
 					.findImplInstance(ClientInstance.class, request
@@ -359,7 +355,7 @@ public class TransformPersister {
 						try {
 							if (System.currentTimeMillis()
 									- determineExceptionDetailPassStartTime > (determinedExceptionCount == 0 ? MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS
-									: MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS)) {
+										: MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS)) {
 								break loop_dtrs;
 							}
 							tm.fireDomainTransform(event);
@@ -467,7 +463,8 @@ public class TransformPersister {
 					MetricLogging.get().lowPriorityEnd(FLUSH_TRANSFORMS);
 				}
 				DomainTransformResponse dtr = new DomainTransformResponse();
-				dtr.getEventsToUseForClientUpdate().addAll(token.getClientUpdateEvents());
+				dtr.getEventsToUseForClientUpdate().addAll(
+						token.getClientUpdateEvents());
 				dtr.getEventsToUseForClientUpdate().addAll(
 						tm.getModificationEvents());
 				dtr.setRequestId(request.getRequestId());
@@ -505,7 +502,7 @@ public class TransformPersister {
 				token.setPass(Pass.FAIL);
 			}
 			return wrapException(token, e);
-		}finally{
+		} finally {
 			PermissionsManager.get().setUser(incomingUser);
 		}
 	}

@@ -18,6 +18,7 @@ import java.io.File;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.servlet.servlet.NaiveTransformPersistenceQueue;
 import cc.alcina.framework.servlet.servlet.TransformPersistenceQueue;
 
@@ -77,15 +78,9 @@ public class ServletLayerLocator {
 		return remoteActionLoggerProvider;
 	}
 
-	private CommonPersistenceProvider commonPersistenceProvider;
-
-	public void registerCommonPersistenceProvider(
-			CommonPersistenceProvider commonPersistenceProvider) {
-		this.commonPersistenceProvider = commonPersistenceProvider;
-	}
 
 	public CommonPersistenceProvider commonPersistenceProvider() {
-		return commonPersistenceProvider;
+		return EntityLayerLocator.get().commonPersistenceProvider();
 	}
 
 	private Logger metricLogger;

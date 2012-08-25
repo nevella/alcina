@@ -83,6 +83,7 @@
 			</fileset>
 			<fileset dir="${framework.entity.base.dir}/src">
 				<include name="**/*.java" />
+				<include name="**/*.properties" />
 			</fileset>
 
 			<!-- give the server handy access to stylesheets for print, static serving etc -->

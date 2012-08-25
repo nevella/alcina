@@ -1,11 +1,15 @@
 package cc.alcina.framework.entity.domaintransform.policy;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 
 public class BasicPersistenceLayerTransformExceptionPolicyFactory implements
 		PersistenceLayerTransformExceptionPolicyFactory {
 	public PersistenceLayerTransformExceptionPolicy getPolicy(
-			DomainTransformRequest transformRequest) {
-		return new BasicPersistenceLayerTransformExceptionPolicy();
+			TransformPersistenceToken token, boolean forOfflineTransforms) {
+		AbstractPersistenceLayerTransformExceptionPolicy policy = forOfflineTransforms ? new IgnoreMissingPersistenceLayerTransformExceptionPolicy()
+				: new BasicPersistenceLayerTransformExceptionPolicy();
+		policy.setTransformPersistenceToken(token);
+		return policy;
 	}
 }

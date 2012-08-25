@@ -404,8 +404,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						event.setEventId(idCounter++);
 					}
 					transformLayerWrapper = transform(rq, true,
-							isPersistOfflineTransforms(),
-							getOfflineTransformExceptionPolicy());
+							isPersistOfflineTransforms(), true);
 				} finally {
 					if (pushUser) {
 						PermissionsManager.get().popUser();
@@ -413,7 +412,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				}
 				if (logger != null) {
 					logger.info(CommonUtils
-							.formatJ("Request [%s/%s] : %s transforms written, %s ignored",
+							.formatJ(
+									"Request [%s/%s] : %s transforms written, %s ignored",
 									requestId, clientInstanceId, rq.getEvents()
 											.size(),
 									transformLayerWrapper.ignored));
@@ -430,10 +430,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	protected boolean isPersistOfflineTransforms() {
 		// TODO Auto-generated method stub
 		return false;
-	}
-
-	public IgnoreMissingPersistenceLayerTransformExceptionPolicy getOfflineTransformExceptionPolicy() {
-		return new IgnoreMissingPersistenceLayerTransformExceptionPolicy();
 	}
 
 	public JobInfo pollJobStatus(Long id, boolean cancel) {
@@ -528,13 +524,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
-		return transform(request, false, true, null).response;
+		return transform(request, false, true, false).response;
 	}
 
 	public DomainTransformResponse transformFromServletLayer(
 			boolean persistTransforms) throws DomainTransformRequestException {
 		DomainTransformLayerWrapper wrapper = transformFromServletLayer(
-				persistTransforms, null, null);
+				persistTransforms, null);
 		return wrapper == null ? null : wrapper.response;
 	}
 
@@ -543,9 +539,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 * the server layer so special? just another client
 	 */
 	public DomainTransformLayerWrapper transformFromServletLayer(
-			boolean persistTransforms,
-			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy,
-			String tag) throws DomainTransformRequestException {
+			boolean persistTransforms, String tag)
+			throws DomainTransformRequestException {
 		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
 		request.setClientInstance(CommonRemoteServiceServletSupport.get()
@@ -567,8 +562,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, map, persistTransforms, false, false,
-					transformExceptionPolicy);
+					request, map, persistTransforms, false, false, false,getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
@@ -671,15 +665,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	protected DomainTransformLayerWrapper transform(
 			DomainTransformRequest request, boolean ignoreClientAuthMismatch,
-			boolean persistTransforms,
-			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy)
+			boolean persistTransforms, boolean forOfflineTransforms)
 			throws DomainTransformRequestException {
 		HiliLocatorMap locatorMap = CommonRemoteServiceServletSupport.get()
 				.getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, locatorMap, persistTransforms, true,
-					ignoreClientAuthMismatch, transformExceptionPolicy);
+					ignoreClientAuthMismatch, forOfflineTransforms,getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		}
 	}

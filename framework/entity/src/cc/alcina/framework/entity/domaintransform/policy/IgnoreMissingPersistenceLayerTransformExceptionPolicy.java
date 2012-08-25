@@ -1,11 +1,14 @@
 package cc.alcina.framework.entity.domaintransform.policy;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 
-public class IgnoreMissingPersistenceLayerTransformExceptionPolicy implements
-		PersistenceLayerTransformExceptionPolicy {
+public class IgnoreMissingPersistenceLayerTransformExceptionPolicy extends
+		AbstractPersistenceLayerTransformExceptionPolicy {
+
 	private static final int TOO_MANY_EXCEPTIONS = 30;
 
 	public TransformExceptionAction getActionForException(

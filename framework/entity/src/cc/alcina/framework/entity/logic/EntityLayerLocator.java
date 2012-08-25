@@ -32,8 +32,6 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
  * 
  */
 public class EntityLayerLocator {
-	
-
 	private EntityLayerLocator() {
 		super();
 	}
@@ -129,6 +127,7 @@ public class EntityLayerLocator {
 	public JPAImplementation jpaImplementation() {
 		return jpaImplementation;
 	}
+
 	private File dataFolder;
 
 	public void setDataFolder(File dataFolder) {
@@ -138,5 +137,4 @@ public class EntityLayerLocator {
 	public File getDataFolder() {
 		return dataFolder;
 	}
-	
 }

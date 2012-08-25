@@ -5,10 +5,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
 public class TransformPersistenceToken {
 	private final DomainTransformRequest request;
@@ -35,17 +38,24 @@ public class TransformPersistenceToken {
 
 	private final boolean ignoreClientAuthMismatch;
 
+	private boolean forOfflineTransforms;
+
+	private Logger logger;
+
 	public TransformPersistenceToken(DomainTransformRequest request,
 			HiliLocatorMap locatorMap, boolean persistTransforms,
 			boolean possiblyReconstitueLocalIdMap,
-			boolean ignoreClientAuthMismatch,
-			PersistenceLayerTransformExceptionPolicy transformExceptionPolicy) {
+			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms, Logger logger) {
 		this.request = request;
 		this.locatorMap = locatorMap;
 		this.persistTransforms = persistTransforms;
 		this.possiblyReconstitueLocalIdMap = possiblyReconstitueLocalIdMap;
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
-		this.transformExceptionPolicy = transformExceptionPolicy;
+		this.forOfflineTransforms = forOfflineTransforms;
+		this.logger = logger;
+		this.transformExceptionPolicy = EntityLayerLocator.get()
+				.persistenceLayerTransformExceptionPolicyFactory()
+				.getPolicy(this, forOfflineTransforms);
 	}
 
 	public List<DomainTransformEvent> getClientUpdateEvents() {
@@ -112,5 +122,21 @@ public class TransformPersistenceToken {
 
 	public enum Pass {
 		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
+	}
+
+	public boolean isForOfflineTransforms() {
+		return this.forOfflineTransforms;
+	}
+
+	public void setForOfflineTransforms(boolean forClientTransforms) {
+		this.forOfflineTransforms = forClientTransforms;
+	}
+
+	public Logger getLogger() {
+		return this.logger;
+	}
+
+	public void setLogger(Logger logger) {
+		this.logger = logger;
 	}
 }

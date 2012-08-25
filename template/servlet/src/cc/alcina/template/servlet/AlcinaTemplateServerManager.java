@@ -12,8 +12,8 @@ import cc.alcina.template.entityaccess.AlcinaTemplateBeanProvider;
 
 
 public class AlcinaTemplateServerManager implements
-		DomainModelHolderProvider<AlcinaTemplateObjects>,
-		CommonPersistenceProvider {
+		DomainModelHolderProvider<AlcinaTemplateObjects>
+		 {
 	private AlcinaTemplateObjects currentAlcinaTemplateObjects;
 
 	public AlcinaTemplateObjects getDomainModelHolder() {
@@ -23,9 +23,6 @@ public class AlcinaTemplateServerManager implements
 		return currentAlcinaTemplateObjects;
 	}
 
-	public CommonPersistenceLocal getCommonPersistence() {
-		return AlcinaTemplateBeanProvider.get().getCommonPersistenceBean();
-	}
 
 	public AlcinaTemplateObjects loadInitial(boolean internal) {
 		try {

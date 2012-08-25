@@ -23,4 +23,6 @@ package cc.alcina.framework.entity.entityaccess;
 
  public interface CommonPersistenceProvider {
 	public CommonPersistenceLocal getCommonPersistence();
+
+	CommonPersistenceBase getCommonPersistenceExTransaction();
 }

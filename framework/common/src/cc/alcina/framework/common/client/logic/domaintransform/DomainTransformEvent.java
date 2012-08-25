@@ -58,9 +58,9 @@ public class DomainTransformEvent implements Serializable,
 
 	private long generatedServerId;
 
-	private long objectVersionNumber;
+	private Integer objectVersionNumber;
 
-	private long valueVersionNumber;
+	private Integer valueVersionNumber;
 
 	private transient Class valueClass;
 
@@ -75,6 +75,13 @@ public class DomainTransformEvent implements Serializable,
 	private CommitType commitType = CommitType.TO_LOCAL_BEAN;
 
 	private Date utcDate;
+
+	public DomainTransformEvent() {
+	}
+
+	public int compareTo(DomainTransformEvent o) {
+		return CommonUtils.compareLongs(getEventId(), o.getEventId());
+	}
 
 	public CommitType getCommitType() {
 		return this.commitType;
@@ -143,13 +150,7 @@ public class DomainTransformEvent implements Serializable,
 		return this.objectLocalId;
 	}
 
-	/**
-	 * Used to increment the client version number
-	 * 
-	 * @return
-	 */
-	@Transient
-	public long getObjectVersionNumber() {
+	public Integer getObjectVersionNumber() {
 		return objectVersionNumber;
 	}
 
@@ -165,11 +166,6 @@ public class DomainTransformEvent implements Serializable,
 	@Transient
 	public Object getSource() {
 		return this.source;
-	}
-
-	@Transient
-	public long getValueVersionNumber() {
-		return valueVersionNumber;
 	}
 
 	public TransformType getTransformType() {
@@ -222,6 +218,42 @@ public class DomainTransformEvent implements Serializable,
 		return this.valueLocalId;
 	}
 
+	public Integer getValueVersionNumber() {
+		return valueVersionNumber;
+	}
+
+	public Object provideSourceOrMarker() {
+		Object source = getSource();
+		if (source == null && getObjectLocalId() != 0) {
+			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator.get()
+					.classLookup().newInstance(getObjectClass());
+			source = hili;
+			hili.setId(getObjectId());
+			hili.setLocalId(getObjectLocalId());
+		}
+		return source;
+	}
+
+	public boolean related(DomainTransformEvent itrEvent) {
+		if (transformType == TransformType.DELETE_OBJECT) {
+			if (itrEvent.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION
+					&& itrEvent.getValueClass() == getObjectClass()
+					&& itrEvent.getValueId() == getObjectId()
+					&& itrEvent.getValueLocalId() == getObjectLocalId()) {
+				return true;
+			}
+			if (itrEvent.getTransformType() == TransformType.NULL_PROPERTY_REF
+					&& itrEvent.getObjectClass() == getObjectClass()
+					&& itrEvent.getObjectId() == getObjectId()
+					&& itrEvent.getObjectLocalId() == getObjectLocalId()) {
+				Class type = CommonLocator.get().propertyAccessor()
+						.getPropertyType(getObjectClass(), getPropertyName());
+				return !CommonUtils.isStandardJavaClass(type);
+			}
+		}
+		return false;
+	}
+
 	public void setCommitType(CommitType commitType) {
 		this.commitType = commitType;
 	}
@@ -264,8 +296,8 @@ public class DomainTransformEvent implements Serializable,
 		this.objectLocalId = localId;
 	}
 
-	public void setObjectVersionNumber(long generatedObjectVersionId) {
-		this.objectVersionNumber = generatedObjectVersionId;
+	public void setObjectVersionNumber(Integer objectVersionNumber) {
+		this.objectVersionNumber = objectVersionNumber;
 	}
 
 	public void setOldValue(Object oldValue) {
@@ -278,11 +310,6 @@ public class DomainTransformEvent implements Serializable,
 
 	public void setSource(Object source) {
 		this.source = source;
-	}
-
-	@Transient
-	public void setValueVersionNumber(long valueVersionNumber) {
-		this.valueVersionNumber = valueVersionNumber;
 	}
 
 	public void setTransformType(TransformType transformType) {
@@ -315,44 +342,13 @@ public class DomainTransformEvent implements Serializable,
 		this.valueLocalId = valueLocalId;
 	}
 
+	@Transient
+	public void setValueVersionNumber(Integer valueVersionNumber) {
+		this.valueVersionNumber = valueVersionNumber;
+	}
+
 	@Override
 	public String toString() {
 		return new DTRProtocolSerializer().serialize(this);
-	}
-
-	public boolean related(DomainTransformEvent itrEvent) {
-		if (transformType == TransformType.DELETE_OBJECT) {
-			if (itrEvent.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION
-					&& itrEvent.getValueClass() == getObjectClass()
-					&& itrEvent.getValueId() == getObjectId()
-					&& itrEvent.getValueLocalId() == getObjectLocalId()) {
-				return true;
-			}
-			if (itrEvent.getTransformType() == TransformType.NULL_PROPERTY_REF
-					&& itrEvent.getObjectClass() == getObjectClass()
-					&& itrEvent.getObjectId() == getObjectId()
-					&& itrEvent.getObjectLocalId() == getObjectLocalId()) {
-				Class type = CommonLocator.get().propertyAccessor()
-						.getPropertyType(getObjectClass(), getPropertyName());
-				return !CommonUtils.isStandardJavaClass(type);
-			}
-		}
-		return false;
-	}
-
-	public int compareTo(DomainTransformEvent o) {
-		return CommonUtils.compareLongs(getEventId(), o.getEventId());
-	}
-
-	public Object provideSourceOrMarker() {
-		Object source = getSource();
-		if (source == null && getObjectLocalId() != 0) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator.get().classLookup()
-					.newInstance(getObjectClass());
-			source = hili;
-			hili.setId(getObjectId());
-			hili.setLocalId(getObjectLocalId());
-		}
-		return source;
 	}
 }

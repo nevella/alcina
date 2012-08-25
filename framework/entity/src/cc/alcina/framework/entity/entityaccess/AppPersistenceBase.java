@@ -40,6 +40,7 @@ import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
+import cc.alcina.framework.entity.util.JaxbUtils;
 
 public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid> {
 	public static final String PERSISTENCE_TEST = AppPersistenceBase.class
@@ -296,4 +297,14 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	protected abstract EntityManager getEntityManager();
 
 	protected abstract EntityManagerFactory getEntityManagerFactory();
+
+	public void destroy() {
+		try {
+			Registry.get().appShutdown();
+			EntityLayerLocator.get().appShutdown();
+			JaxbUtils.appShutdown();
+		} catch (Exception e) {
+			// squelch, JBoss being frenzied
+		}
+	}
 }

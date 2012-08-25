@@ -223,5 +223,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		GlobalTopicPublisher.get().appShutdown();
 		MetricLogging.get().appShutdown();
 		SEUtilities.appShutdown();
+		ObjectPersistenceHelper.get().appShutdown();
 	}
 }

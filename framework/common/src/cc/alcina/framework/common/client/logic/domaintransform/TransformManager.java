@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
@@ -193,6 +194,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return;
 		}
 		getUndoManager().prepareUndo(event);
+		checkVersion(obj, event);
 		switch (event.getTransformType()) {
 		// these cases will fire a new transform event (temp obj > domain obj),
 		// so should not be processed further
@@ -284,6 +286,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 					+ event.getTransformType();
 		}
 		currentEvent = null;
+	}
+
+	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
+			throws DomainTransformException {
 	}
 
 	public void convertToTargetObject(DomainTransformEvent evt) {
@@ -961,6 +967,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		dte.setObjectLocalId(dObj.getLocalId());
 		dte.setObjectClass(dObj.getClass());
 		dte.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+		maybeAddVersionNumbers(dte, dObj, evt.getNewValue());
 		return dte;
 	}
 
@@ -1128,8 +1135,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	
-
 	protected void setDomainObjects(MapObjectLookup domainObjects) {
 		this.domainObjects = domainObjects;
 	}
@@ -1166,16 +1171,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 		HasIdAndLocalId hTgt = (HasIdAndLocalId) tgt;
 		Object associatedObject = CommonLocator.get().propertyAccessor()
 				.getPropertyValue(tgt, assoc.propertyName());
-		boolean assocOjbIsCollection = associatedObject instanceof Collection;
-		TransformType tt = assocOjbIsCollection ? (remove ? TransformType.REMOVE_REF_FROM_COLLECTION
+		boolean assocObjIsCollection = associatedObject instanceof Collection;
+		TransformType tt = assocObjIsCollection ? (remove ? TransformType.REMOVE_REF_FROM_COLLECTION
 				: TransformType.ADD_REF_TO_COLLECTION)
 				: remove ? TransformType.NULL_PROPERTY_REF
 						: TransformType.CHANGE_PROPERTY_REF;
 		evt = new DomainTransformEvent();
 		evt.setTransformType(tt);
+		maybeAddVersionNumbers(evt, obj, tgt);
 		// No! Only should check one end of the relation for permissions
 		// checkPermissions(hTgt, evt, assoc.propertyName());
-		if (assocOjbIsCollection) {
+		if (assocObjIsCollection) {
 			Collection c = (Collection) associatedObject;
 			if (collectionPropertyChange && !assoc.silentUpdates()) {
 				try {
@@ -1199,8 +1205,24 @@ public abstract class TransformManager implements PropertyChangeListener,
 					.propertyAccessor()
 					.setPropertyValue(tgt, assoc.propertyName(),
 							remove ? null : obj);
+			// shouldn't fire for collection props, probly. also, collection
+			// mods are very unlikely to collide in a nasty way (since
+			// membership is really just a bitset, and colliding colln mods will
+			// often not actually hit each other)
+			objectModified(hTgt, evt, true);
 		}
-		objectModified(hTgt, evt, true);
+	}
+
+	protected void maybeAddVersionNumbers(DomainTransformEvent evt,
+			HasIdAndLocalId obj, Object tgt) {
+		if (obj instanceof HasVersionNumber) {
+			evt.setObjectVersionNumber(((HasVersionNumber) obj)
+					.getVersionNumber());
+		}
+		if (tgt instanceof HasVersionNumber) {
+			evt.setValueVersionNumber(((HasVersionNumber) tgt)
+					.getVersionNumber());
+		}
 	}
 
 	public void setUndoManager(TransformHistoryManager undoManager) {

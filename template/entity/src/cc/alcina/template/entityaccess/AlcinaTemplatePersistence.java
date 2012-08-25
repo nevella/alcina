@@ -167,11 +167,7 @@ public class AlcinaTemplatePersistence
 		}
 	};
 
-	public void destroy() {
-		Registry.get().appShutdown();
-		JaxbUtils.appShutdown();
-		EntityLayerLocator.get().appShutdown();
-	}
+	
 
 	@Override
 	protected void initServiceImpl() {
