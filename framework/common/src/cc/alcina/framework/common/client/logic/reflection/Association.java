@@ -21,7 +21,9 @@ import java.lang.annotation.RetentionPolicy;
 @Documented
 @ClientVisible
 /**
- * Provides information about both ends of an association
+ * Provides information about both ends of an association.
+ * If an association is reflected in the UI (e.g. in a dataobject tree), 
+ * this annotation is required (for listener creation)
  * @author Nick Reddel
  */
 public @interface Association {
@@ -53,5 +55,4 @@ public @interface Association {
 	 * (parent-child associations with 1000s of kids spring to mind)
 	 */
 	boolean silentUpdates() default false;
-	
 }

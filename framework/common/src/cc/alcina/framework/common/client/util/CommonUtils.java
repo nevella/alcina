@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 
@@ -817,5 +816,12 @@ public class CommonUtils {
 			result.add(longs[i]);
 		}
 		return result;
+	}
+
+	public static <T extends Comparable> List<T> order(
+			Collection<T> comparableCollection) {
+		List<T> items=new ArrayList<T>(comparableCollection);
+		Collections.sort(items);
+		return items;
 	}
 }

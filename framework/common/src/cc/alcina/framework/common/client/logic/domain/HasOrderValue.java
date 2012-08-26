@@ -9,7 +9,6 @@ public interface HasOrderValue extends HasId{
 
 	public void setOrderValue(Integer value);
 
-	public Integer indexInParentCollection();
 
 	public static final Comparator<HasOrderValue> COMPARATOR = new Comparator<HasOrderValue>() {
 		public int compare(HasOrderValue o1, HasOrderValue o2) {
