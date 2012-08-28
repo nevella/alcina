@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.gwt.client.ide;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,7 +52,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
@@ -74,8 +75,11 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Converter;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.table.DataProvider;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -113,8 +117,8 @@ public class ContentViewFactory {
 			boolean multiple) {
 		PaneWrapperWithObjects cp = createPaneWrapper(listener);
 		cp.add(createMultiCaption(beanClass, cp));
-		cp.addActionTable(createActionTable(beans, beanClass, converter, actions,
-				listener, withObjectActions, multiple));
+		cp.addActionTable(createActionTable(beans, beanClass, converter,
+				actions, listener, withObjectActions, multiple));
 		return cp;
 	}
 
@@ -202,43 +206,49 @@ public class ContentViewFactory {
 		f.setValue(bean);
 		cp.add(f);
 		cp.setBoundWidget(f);
-		if (editable && !autoSave && !noButtons) {
-			ArrayList list = new ArrayList();
-			list.add(bean);
-			SavePanel sp = new SavePanel(cp, isCancelButton());
-			cp.add(sp);
-			cp.setSaveButton(sp.saveButton);
-			f.setFocusOnDetachIfEditorFocussed(sp.saveButton);
+		if (editable) {
 			Validator beanValidator = GwittirBridge.get().getValidator(
 					bean.getClass(), bean, null, null);
-			cp.setBeanValidator(beanValidator);
-			cp.setBean(bean);
-			boolean provisional = cloned;
-			if (bean instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) bean;
-				provisional = provisional || (hili.getId() == 0);
+			if (autoSave || noButtons) {
+				if (autoSave) {
+					cp.propertyChangeBeanValidator = beanValidator;
+				}
+			} else {
+				cp.setBeanValidator(beanValidator);
+				ArrayList list = new ArrayList();
+				list.add(bean);
+				SavePanel sp = new SavePanel(cp, isCancelButton());
+				cp.add(sp);
+				cp.setSaveButton(sp.saveButton);
+				f.setFocusOnDetachIfEditorFocussed(sp.saveButton);
+				cp.setBean(bean);
+				boolean provisional = cloned;
+				if (bean instanceof HasIdAndLocalId) {
+					HasIdAndLocalId hili = (HasIdAndLocalId) bean;
+					provisional = provisional || (hili.getId() == 0);
+				}
+				Collection additional = CommonUtils
+						.wrapInCollection(additionalProvisional != null ? additionalProvisional
+								: LooseContextProvider.getContext().get(
+										CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS));
+				cp.setProvisionalObjects(provisional || additional != null);
+				cp.setInitialObjects(list);
+				// this could be more elegant - need to register this before
+				// "prepareforedit.."
+				if (provisional) {
+					TransformManager.get().registerProvisionalObject(list);
+				}
+				if (bean instanceof HasIdAndLocalId && !doNotPrepare) {
+					supportingObjects = ClientTransformManager.cast()
+							.prepareObject((HasIdAndLocalId) bean, autoSave,
+									false, true);
+				}
+				if (additional != null) {
+					supportingObjects.addAll(additional);
+				}
+				supportingObjects.addAll(list);
+				cp.setObjects(supportingObjects);
 			}
-			Collection additional = CommonUtils
-					.wrapInCollection(additionalProvisional != null ? additionalProvisional
-							: LooseContextProvider.getContext().get(
-									CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS));
-			cp.setProvisionalObjects(provisional || additional != null);
-			cp.setInitialObjects(list);
-			// this could be more elegant - need to register this before
-			// "prepareforedit.."
-			if (provisional) {
-				TransformManager.get().registerProvisionalObject(list);
-			}
-			if (bean instanceof HasIdAndLocalId && !doNotPrepare) {
-				supportingObjects = ClientTransformManager.cast()
-						.prepareObject((HasIdAndLocalId) bean, autoSave, false,
-								true);
-			}
-			if (additional != null) {
-				supportingObjects.addAll(additional);
-			}
-			supportingObjects.addAll(list);
-			cp.setObjects(supportingObjects);
 		}
 		return cp;
 	}
@@ -541,6 +551,8 @@ public class ContentViewFactory {
 
 	public static class PaneWrapperWithObjects extends FlowPanel implements
 			ClickHandler, PermissibleActionEvent.PermissibleActionSource {
+		Validator propertyChangeBeanValidator;
+
 		public boolean editable;
 
 		private Validator beanValidator;
@@ -565,16 +577,60 @@ public class ContentViewFactory {
 
 		private ActionTableHolder actionTableHolder;
 
+		private FlowPanel propertyChangeValidatorResultPanel;
+
+		private PropertyChangeListener validationListener = new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				String message = "";
+				try {
+					propertyChangeBeanValidator.validate(getModelSpce());
+				} catch (ValidationException e) {
+					message = e.getMessage();
+				}
+				propertyChangeValidatorResultPanel.clear();
+				propertyChangeValidatorResultPanel.add(new HTML(message));
+				propertyChangeValidatorResultPanel.setVisible(!message
+						.isEmpty());
+			}
+		};
+
 		public PaneWrapperWithObjects() {
 			getElement().getStyle().setProperty("position", "relative");
 			preDetachFocus.setVisible(false);
 			add(preDetachFocus);
 		}
 
+		@Override
+		protected void onLoad() {
+			super.onLoad();
+			if (propertyChangeBeanValidator != null) {
+				propertyChangeValidatorResultPanel = new FlowPanel();
+				propertyChangeValidatorResultPanel
+						.setStyleName("property-change-validation-result");
+				propertyChangeValidatorResultPanel.setVisible(false);
+				add(propertyChangeValidatorResultPanel);
+				getModelSpce().addPropertyChangeListener(validationListener);
+			}
+		}
+
+		protected SourcesPropertyChangeEvents getModelSpce() {
+			return (SourcesPropertyChangeEvents) ((AbstractBoundWidget) boundWidget)
+					.getModel();
+		}
+
+		@Override
+		protected void onUnload() {
+			if (propertyChangeBeanValidator != null) {
+				getModelSpce().removePropertyChangeListener(validationListener);
+				remove(propertyChangeValidatorResultPanel);
+			}
+			super.onUnload();
+		}
+
 		public void addActionTable(ActionTableHolder actionTableHolder) {
 			add(actionTableHolder);
 			this.actionTableHolder = actionTableHolder;
-			
 		}
 
 		public void addExtraActions(Widget w) {
