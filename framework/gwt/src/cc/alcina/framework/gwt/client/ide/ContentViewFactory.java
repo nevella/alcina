@@ -91,6 +91,7 @@ import com.totsp.gwittir.client.validator.Validator;
 public class ContentViewFactory {
 	public static final String CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS = ContentViewFactory.class
 			+ "::CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS";
+
 	private boolean noButtons;
 
 	private boolean cancelButton;
@@ -103,6 +104,18 @@ public class ContentViewFactory {
 		}
 		LooseContextProvider.getContext().set(
 				CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS, o);
+	}
+
+	public PaneWrapperWithObjects createActionTableWithCaption(
+			Collection beans, Class beanClass, Converter converter,
+			Collection<PermissibleAction> actions,
+			PermissibleActionListener listener, boolean withObjectActions,
+			boolean multiple) {
+		PaneWrapperWithObjects cp = createPaneWrapper(listener);
+		cp.add(createMultiCaption(beanClass, cp));
+		cp.addActionTable(createActionTable(beans, beanClass, converter, actions,
+				listener, withObjectActions, multiple));
+		return cp;
 	}
 
 	public ActionTableHolder createActionTable(Collection beans,
@@ -550,10 +563,18 @@ public class ContentViewFactory {
 
 		private FocusPanel preDetachFocus = new FocusPanel();
 
+		private ActionTableHolder actionTableHolder;
+
 		public PaneWrapperWithObjects() {
 			getElement().getStyle().setProperty("position", "relative");
 			preDetachFocus.setVisible(false);
 			add(preDetachFocus);
+		}
+
+		public void addActionTable(ActionTableHolder actionTableHolder) {
+			add(actionTableHolder);
+			this.actionTableHolder = actionTableHolder;
+			
 		}
 
 		public void addExtraActions(Widget w) {
@@ -802,6 +823,10 @@ public class ContentViewFactory {
 							.deregisterProvisionalObjects(objects);
 				}
 			}
+		}
+
+		public ActionTableHolder getActionTableHolder() {
+			return this.actionTableHolder;
 		}
 	}
 

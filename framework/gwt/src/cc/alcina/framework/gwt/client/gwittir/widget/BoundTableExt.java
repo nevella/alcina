@@ -1198,6 +1198,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.value = (this.value == null) ? new ArrayList() : this.value;
 		this.columns = (this.columns == null) ? new Field[0] : this.columns;
 		this.setStyleName("gwittir-BoundTable");
+		if((masks & BoundTableExt.HANDLES_AS_CHECKBOXES) > 0){
+			this.addStyleName("handles-as-checkboxes");
+		}
 		if ((this.provider != null) && (this.getCurrentChunk() == -1)) {
 			this.provider.init(this);
 			this.inChunk = true;

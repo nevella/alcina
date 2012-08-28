@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflecto
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHandler;
@@ -92,6 +93,8 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 	}
 
 	private Map<Class<? extends PermissibleAction>, ViewProvider> viewProviderMap = new HashMap<Class<? extends PermissibleAction>, ViewProvider>();
+
+	private PermissibleActionEvent lastEvent;
 
 	public Workspace() {
 		this.visualModel = new WSVisualModel();
@@ -156,6 +159,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 
 	@SuppressWarnings("unchecked")
 	public void vetoableAction(final PermissibleActionEvent evt) {
+		lastEvent=evt;
 		if (evt.getAction().getClass() == CancelAction.class) {
 			visualiser.setContentWidget(new Label("Action cancelled"));
 			fireVetoableActionEvent(evt);
@@ -286,7 +290,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 			PropertyCollectionProvider pcp = (PropertyCollectionProvider) pp
 					.getPropertyCollectionProvider();
 			if (pcp == null) {
-				if(node instanceof HasVisibleCollection){
+				if (node instanceof HasVisibleCollection) {
 					siblings = ((HasVisibleCollection) node)
 							.getVisibleCollection();
 				}
@@ -366,5 +370,23 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		public void setViews(List<WorkspaceView> views) {
 			this.views = views;
 		}
+	}
+
+	public ContentViewFactory getContentViewFactory() {
+		ContentViewFactory viewFactory = new ContentViewFactory();
+		viewFactory.setCancelButton(true);
+		return viewFactory;
+	}
+
+	public Widget createMultipleBeanView(Collection beans,
+			Class beanClass, boolean editable,
+			PermissibleActionListener actionListener, boolean autoSave,
+			boolean doNotClone) {
+		return getContentViewFactory().createMultipleBeanView(beans, beanClass,
+				editable, actionListener, autoSave, false);
+	}
+
+	public PermissibleActionEvent getLastEvent() {
+		return this.lastEvent;
 	}
 }

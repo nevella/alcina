@@ -54,18 +54,19 @@ public class WorkspaceDefaultActionHandlers {
 			WorkspaceDefaultActionHandlerBase implements ViewActionHandler {
 		public void performAction(PermissibleActionEvent event, Object node,
 				Object object, Workspace workspace, Class nodeObjectClass) {
-			PaneWrapperWithObjects view = null;
+			Widget view = null;
 			if (object instanceof Collection) {
-				view = getContentViewFactory().createMultipleBeanView(
+				view=workspace.createMultipleBeanView(
 						(Collection) object, nodeObjectClass, editView(),
 						workspace, isAutoSave(), false);
 			} else {
-				view = getContentViewFactory().createBeanView(object,
+				PaneWrapperWithObjects paneWrapper = getContentViewFactory().createBeanView(object,
 						editView(), workspace, isAutoSave(), false);
+				view=paneWrapper;
 				Widget widge = getContentViewFactory()
 						.createExtraActionsWidget(object);
 				if (widge != null) {
-					view.add(widge);
+					paneWrapper.add(widge);
 				}
 			}
 			workspace.getVisualiser().setContentWidget(view);

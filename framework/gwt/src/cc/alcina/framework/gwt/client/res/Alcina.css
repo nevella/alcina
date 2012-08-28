@@ -1513,3 +1513,6 @@ div.popdown-select a:hover {
 .gwt-RadioButton, .gwt-CheckBox {
 	white-space:nowrap;
 }
+table.gwittir-BoundTable.handles-as-checkboxes td{
+	vertical-align: baseline;
+}
