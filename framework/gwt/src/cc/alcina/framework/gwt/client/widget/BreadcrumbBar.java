@@ -115,7 +115,7 @@ public class BreadcrumbBar extends Composite {
 	protected static final StandardDataImages images = GWT
 			.create(StandardDataImages.class);
 
-	public static List<Widget> maxButton(Widget widgetToMaximise) {
+	public static ArrayList<Widget> maxButton(Widget widgetToMaximise) {
 		ArrayList<Widget> l = new ArrayList<Widget>();
 		BreadcrumbBarMaximiseButton max = new BreadcrumbBarMaximiseButton();
 		max.setWidgetToMaximise(widgetToMaximise);
@@ -281,7 +281,7 @@ public class BreadcrumbBar extends Composite {
 			return panel.addClickHandler(handler);
 		}
 	}
-
+	
 	public static class BreadcrumbBarDropdown extends BreadcrumbBarButton {
 		public BreadcrumbBarDropdown() {
 			this.panel.setStyleName("dropdown");

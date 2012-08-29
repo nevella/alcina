@@ -49,8 +49,16 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 		return value == null ? "" : value.toString();
 	}
 
-	public void setValue(Long value) {
+	public Long getLong() {
+		return value;
+	}
+
+	public void setLong(Long value) {
 		this.value = value;
+	}
+
+	public void setValue(Long value) {
+		setLong(value);
 	}
 
 	public boolean equivalentTo(SearchCriterion other) {
@@ -64,6 +72,6 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 	}
 
 	public Long getValue() {
-		return value;
+		return getLong();
 	}
 }

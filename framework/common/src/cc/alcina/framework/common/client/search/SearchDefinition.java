@@ -114,6 +114,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		return ewp;
 	}
 
+
 	public boolean equivalentTo(SearchDefinition other) {
 		if (other == null || other.getClass() != getClass()) {
 			return false;

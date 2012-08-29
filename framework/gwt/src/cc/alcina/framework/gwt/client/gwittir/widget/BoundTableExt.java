@@ -289,6 +289,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private int selectedRowLastIndex = -1;
 
+	private PropertyChangeListener collectionPropertyChangeListener;
+
 	/** Creates a new instance of BoundTable */
 	public BoundTableExt() {
 		super();
@@ -624,6 +626,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				BoundTableExt.LOG.log(Level.ERROR, widget + "", e);
 			}
 		}
+		if (collectionPropertyChangeListener != null) {
+			o.addPropertyChangeListener(collectionPropertyChangeListener);
+			listenedToByCollectionChangeListener.add(o);
+		}
 		boolean odd = (this.calculateRowToObjectOffset(new Integer(row))
 				.intValue() % 2) != 0;
 		this.table.getRowFormatter().setStyleName(row, odd ? "odd" : "even");
@@ -631,6 +637,13 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			bindingRow.setLeft();
 			bindingRow.bind();
 		}
+	}
+
+	private List<SourcesPropertyChangeEvents> listenedToByCollectionChangeListener = new ArrayList<SourcesPropertyChangeEvents>();
+
+	public void addCollectionPropertyChangeListener(
+			PropertyChangeListener collectionPropertyChangeListener) {
+		this.collectionPropertyChangeListener = collectionPropertyChangeListener;
 	}
 
 	private void addSelectedClickListener(final SourcesClickEvents widget,
@@ -718,6 +731,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	 * Clears the table and cleans up all bindings and listeners.
 	 */
 	public void clear() {
+		for(SourcesPropertyChangeEvents spce:listenedToByCollectionChangeListener){
+			spce.removePropertyChangeListener(collectionPropertyChangeListener);
+		}
+		listenedToByCollectionChangeListener.clear();
 		this.topBinding.unbind();
 		this.topBinding.getChildren().clear();
 		if (this.rowHandles != null) {
@@ -1148,7 +1165,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			this.rowHandles = new ArrayList();
 		}
 		this.table = createTableImpl();
-		this.table.addClickHandler(rowSelectHandler);
+		if ((this.masks & BoundTableExt.SELECT_ROW_MASK) > 0) {
+			this.table.addClickHandler(rowSelectHandler);
+		}
 		this.table.setCellPadding(0);
 		this.table.setCellSpacing(0);
 		esp = new EventingSimplePanel();
@@ -1198,7 +1217,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.value = (this.value == null) ? new ArrayList() : this.value;
 		this.columns = (this.columns == null) ? new Field[0] : this.columns;
 		this.setStyleName("gwittir-BoundTable");
-		if((masks & BoundTableExt.HANDLES_AS_CHECKBOXES) > 0){
+		if ((masks & BoundTableExt.HANDLES_AS_CHECKBOXES) > 0) {
 			this.addStyleName("handles-as-checkboxes");
 		}
 		if ((this.provider != null) && (this.getCurrentChunk() == -1)) {
@@ -1292,8 +1311,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	protected native Element getRow(Element elem, int row)/*-{
-															return elem.rows[row];
-															}-*/;
+		return elem.rows[row];
+	}-*/;
 
 	private void insertNestedWidget(int row) {
 		// GWT.log( "Inserting nested for row "+row, null);

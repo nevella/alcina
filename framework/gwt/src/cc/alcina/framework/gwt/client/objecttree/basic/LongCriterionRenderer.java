@@ -26,6 +26,6 @@ public class LongCriterionRenderer extends
 		SearchCriterionRenderer<LongCriterion> {
 	@Override
 	public String renderablePropertyName() {
-		return "value";
+		return "long";
 	}
 }

@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.gwt.client.ide.provider;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -25,6 +27,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
+import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
@@ -63,6 +66,16 @@ public class SearchViewProvider implements ViewProvider {
 
 	private boolean initialSearch = true;
 
+	private boolean editableWidgets;
+
+	private boolean withMaximise;
+
+	private boolean withLinkedChanges;
+
+	private FlowPanel vp;
+
+	private BreadcrumbBarLinkChangesButton linkButton;
+
 	public SearchPanel getSearchPanel() {
 		return this.searchPanel;
 	}
@@ -82,7 +95,7 @@ public class SearchViewProvider implements ViewProvider {
 	public Widget getViewForObject(Object obj, String searchButtonTitle,
 			Converter converter) {
 		action = (RemoteActionWithParameters<SingleTableSearchDefinition>) obj;
-		FlowPanel vp = new FlowPanel();
+		vp = new FlowPanel();
 		vp.setStyleName("alcina-BeanPanel");
 		if (!isWithoutCaption()) {
 			vp.add(createCaption(action));
@@ -113,7 +126,16 @@ public class SearchViewProvider implements ViewProvider {
 	}
 
 	private Widget createCaption(PermissibleAction action) {
-		BreadcrumbBar bar = new BreadcrumbBar(action.getDisplayName());
+		List<SimpleHistoryEventInfo> history = Arrays
+				.asList(new SimpleHistoryEventInfo[] {
+						new SimpleHistoryEventInfo("Action"),
+						new SimpleHistoryEventInfo(action.getDisplayName()) });
+		ArrayList<Widget> maxButtonArr = BreadcrumbBar.maxButton(vp);
+		if (isWithLinkedChanges()) {
+			linkButton = new BreadcrumbBarLinkChangesButton();
+			maxButtonArr.add(0, linkButton);
+		}
+		BreadcrumbBar bar = new BreadcrumbBar(null, history, maxButtonArr);
 		bar.addStyleName("tlr-borders");
 		return bar;
 	}
@@ -134,9 +156,9 @@ public class SearchViewProvider implements ViewProvider {
 
 		private Widget beanView;
 
-		private NiceWidthBoundTable table;
+		private BoundTableExt table;
 
-		private final Converter converter;
+		private Converter converter;
 
 		public SearchPanel(
 				RemoteActionWithParameters<SingleTableSearchDefinition> action,
@@ -149,7 +171,6 @@ public class SearchViewProvider implements ViewProvider {
 			RenderContext renderContext = getRenderContextAndPush();
 			beanView = new ObjectTreeGridRenderer().render(
 					action.getParameters(), renderContext);
-			beanView.addStyleName("no-bottom");
 			beanView.addStyleName(CommonUtils.simpleClassName(action
 					.getParameters().getClass()));
 			add(beanView);
@@ -161,6 +182,7 @@ public class SearchViewProvider implements ViewProvider {
 			hp.add(button);
 			hp.setVerticalAlignment(HasVerticalAlignment.ALIGN_BOTTOM);
 			this.runningLabel = new Label("...searching");
+			this.runningLabel.setVisible(false);
 			hp.add(runningLabel);
 			ft.setWidget(ft.getRowCount(), 1, hp);
 			if (isWithoutParameters()) {
@@ -178,6 +200,7 @@ public class SearchViewProvider implements ViewProvider {
 		}
 
 		public void search() {
+			beanView.addStyleName("no-bottom");
 			resultsHolder.clear();
 			AsyncCallback completionCallback = new AsyncCallback() {
 				public void onFailure(Throwable caught) {
@@ -206,17 +229,25 @@ public class SearchViewProvider implements ViewProvider {
 			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
 			Field[] fields = GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-							factory, false, true);
+							factory, isEditableWidgets(), true);
 			GwittirBridge.get().setIgnoreProperties(null);
 			int mask = BoundTableExt.HEADER_MASK;
 			if (def.isOrderable()) {
 				mask = mask | BoundTableExt.SORT_MASK;
 			}
 			mask = addTableMasks(mask);
+			if (isEditableWidgets() && converter == null) {
+				converter = new RegisterObjectsConverter();
+			}
 			SearchDataProvider dp = new SearchDataProvider(def,
 					completionCallback, converter);
-			this.table = new NiceWidthBoundTable(mask, factory, fields, dp);
+			this.table = isEditableWidgets() ? new BoundTableExt(mask, factory,
+					fields, dp) : new NiceWidthBoundTable(mask, factory,
+					fields, dp);
 			table.addStyleName("results-table");
+			if (linkButton != null) {
+				linkButton.setTable(this.table);
+			}
 			resultsHolder.add(table);
 		}
 	}
@@ -233,5 +264,29 @@ public class SearchViewProvider implements ViewProvider {
 
 	public boolean isInitialSearch() {
 		return initialSearch;
+	}
+
+	public boolean isEditableWidgets() {
+		return this.editableWidgets;
+	}
+
+	public void setEditableWidgets(boolean editableWidgets) {
+		this.editableWidgets = editableWidgets;
+	}
+
+	public boolean isWithMaximise() {
+		return this.withMaximise;
+	}
+
+	public void setWithMaximise(boolean withMaximise) {
+		this.withMaximise = withMaximise;
+	}
+
+	public boolean isWithLinkedChanges() {
+		return this.withLinkedChanges;
+	}
+
+	public void setWithLinkedChanges(boolean withLinkedChanges) {
+		this.withLinkedChanges = withLinkedChanges;
 	}
 }
