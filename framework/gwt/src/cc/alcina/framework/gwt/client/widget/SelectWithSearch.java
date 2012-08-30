@@ -828,13 +828,13 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 		public SelectWithSearchItemX(T item, boolean asHTML, int charWidth,
 				boolean withLfs, Label ownerLabel, String sep) {
-			Label label = asHTML ? new InlineHTML(item.toString())
-					: new InlineLabel(item.toString());
+			String text = (String) renderer.render(item);
+			Label label = asHTML ? new InlineHTML(text)
+					: new InlineLabel(text);
 			add(label);
 			label.setStyleName("text");
 			this.item = item;
 			this.ownerLabel = ownerLabel;
-			String text = (String) renderer.render(item);
 			filterableText = text.toLowerCase();
 			AbstractImagePrototype aip = AbstractImagePrototype
 					.create(StandardDataImageProvider.get().getDataImages()
