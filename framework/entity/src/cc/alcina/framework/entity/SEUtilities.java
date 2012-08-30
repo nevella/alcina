@@ -112,10 +112,16 @@ public class SEUtilities {
 	}
 
 	public static void dumpStringBytes(String s) {
+		StringBuilder b=new StringBuilder();
 		for (int i = 0; i < s.length(); i++) {
+			
 			char c = s.charAt(i);
-			System.out.print(c + ": " + ((short) c) + "\t");
-			if ((i + 1) % 4 == 0) {
+			System.out.print(c +   "\t");
+			b.append(((short) c)+"\t");
+			if ((i + 1) % 8 == 0) {
+				System.out.println();
+				System.out.println(b.toString());
+				b=new StringBuilder();
 				System.out.println();
 			}
 		}

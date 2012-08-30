@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.client.widget.complex;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
-import cc.alcina.framework.gwt.client.widget.complex.ValueListPopdown.PopdownSelect;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -19,6 +19,12 @@ public class ValueListPopdown<T> {
 	private PopupPanel popupPanel;
 
 	private PopdownSelect select;
+
+	public void showPopdown(Widget eventSource, Collection<T> values,
+			Renderer renderer, Callback<T> callback) {
+		ArrayList<T> list = new ArrayList<T>(values);
+		showPopdown(eventSource, (T[]) list.toArray(), renderer, callback);
+	}
 
 	public void showPopdown(Widget eventSource, T[] values, Renderer renderer,
 			Callback<T> callback) {
