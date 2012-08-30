@@ -32,6 +32,8 @@ public class TextAreaCustomiser implements Customiser {
 	public static final String WIDTH = "width";
 
 	public static final String LINES = "lines";
+	
+	public static final String HINT = "hint";
 
 	public static final String NON_EDITABLE_AS_LABEL = "non-editable-as-label";
 
@@ -45,7 +47,8 @@ public class TextAreaCustomiser implements Customiser {
 		param = NamedParameter.Support.getParameter(info.parameters(),
 				NON_EDITABLE_AS_LABEL);
 		boolean neal = param == null ? false : param.booleanValue();
-		return new TextAreaProvider(editable, width, lines, neal);
+		return new TextAreaProvider(editable, width, lines, neal,NamedParameter.Support.stringValue(info.parameters(),
+				HINT,null));
 	}
 
 	public static class TextAreaProvider implements BoundWidgetProvider {
@@ -57,12 +60,15 @@ public class TextAreaCustomiser implements Customiser {
 
 		private boolean neal;
 
+		private final String hint;
+
 		public TextAreaProvider(boolean editable, int width, int lines,
-				boolean neal) {
+				boolean neal, String hint) {
 			this.editable = editable;
 			this.width = width;
 			this.lines = lines;
 			this.neal = neal;
+			this.hint = hint;
 		}
 
 		public BoundWidget get() {
@@ -74,6 +80,7 @@ public class TextAreaCustomiser implements Customiser {
 			TextArea area = new TextArea();
 			area.setVisibleLines(lines);
 			area.setReadOnly(!editable);
+			area.setHint(hint);
 			if (width != 0) {
 				area.setWidth(width + "px");
 			}

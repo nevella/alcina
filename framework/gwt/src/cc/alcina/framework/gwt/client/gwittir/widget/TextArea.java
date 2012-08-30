@@ -19,6 +19,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.FocusEvent;
+import com.google.gwt.event.dom.client.FocusHandler;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpHandler;
@@ -54,6 +56,10 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 	private String old;
 
 	private boolean ensureAllLinesVisible;
+
+	private String hint;
+
+	private HandlerRegistration addFocusHandlerRegistration;
 
 	public TextArea() {
 		this(false);
@@ -110,9 +116,11 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 	public HandlerRegistration addKeyUpHandler(KeyUpHandler handler) {
 		return this.base.addKeyUpHandler(handler);
 	}
+
 	public HandlerRegistration addKeyDownHandler(KeyDownHandler handler) {
 		return this.base.addKeyDownHandler(handler);
 	}
+
 	public HandlerRegistration addKeyPressHandler(KeyPressHandler handler) {
 		return this.base.addKeyPressHandler(handler);
 	}
@@ -199,12 +207,16 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 
 	public String getValue() {
 		try {
-			return this.base.getText().length() == 0 ? null : this.base
-					.getText();
+			return this.base.getText().length() == 0 || provideIsHinted() ? null
+					: this.base.getText();
 		} catch (RuntimeException re) {
 			GWT.log("" + this.base, re);
 			return null;
 		}
+	}
+
+	protected boolean provideIsHinted() {
+		return hint != null && hint.equals(this.base.getText());
 	}
 
 	public int getVisibleLines() {
@@ -324,10 +336,17 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 	}
 
 	public void setValue(String value) {
+		if (provideIsHinted()) {
+			if (CommonUtils.isNullOrEmpty(value)) {
+				return;
+			} else {
+				removeStyleName("hint");
+			}
+		}
 		String old = this.getValue();
 		this.setText(value);
 		if (ensureAllLinesVisible) {
-			base.setVisibleLines((CommonUtils.nullToEmpty(getValue()).length()*10/9)
+			base.setVisibleLines((CommonUtils.nullToEmpty(getValue()).length() * 10 / 9)
 					/ base.getCharacterWidth() + 1);
 		}
 		if (this.getValue() != old
@@ -359,5 +378,26 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 
 	public void setEnsureAllLinesVisible(boolean ensureAllLinesVisible) {
 		this.ensureAllLinesVisible = ensureAllLinesVisible;
+	}
+
+	public String getHint() {
+		return this.hint;
+	}
+
+	public void setHint(String hint) {
+		this.hint = hint;
+		if (hint != null) {
+			base.setText(hint);
+			base.addStyleName("hint");
+			addFocusHandlerRegistration = base
+					.addFocusHandler(new FocusHandler() {
+						@Override
+						public void onFocus(FocusEvent event) {
+							base.setText(getValue());
+							base.removeStyleName("hint");
+							addFocusHandlerRegistration.removeHandler();
+						}
+					});
+		}
 	}
 }

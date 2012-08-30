@@ -1645,6 +1645,11 @@ table.gwittir-BoundTable.handles-as-checkboxes td {
 	max-width: 45%;
 	padding: 1em;
 	margin: 1em;
-	margin-left:3em;
+	margin-left: 3em;
 	background: #FEF0F0;
+}
+
+textarea.hint {
+	font-style: italic;
+	color:#777;
 }

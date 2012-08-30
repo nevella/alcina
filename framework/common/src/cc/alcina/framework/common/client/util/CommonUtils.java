@@ -216,13 +216,14 @@ public class CommonUtils {
 					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
 					padTwo(date.getYear() + 1900));
 		case AU_SHORT_DAY:
-			return formatJ("%s - %s.%s.%s", DAY_NAMES[date.getDay()].substring(0, 3),padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900)
-					);
+			return formatJ("%s - %s.%s.%s",
+					DAY_NAMES[date.getDay()].substring(0, 3),
+					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900));
 		case AU_LONG_DAY:
-			return formatJ("%s, %s.%s.%s",DAY_NAMES[date.getDay()], padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900)
-					);
+			return formatJ("%s, %s.%s.%s", DAY_NAMES[date.getDay()],
+					padTwo(date.getDate()), padTwo(date.getMonth() + 1),
+					padTwo(date.getYear() + 1900));
 		case TIMESTAMP:
 			return formatJ("%s%s%s_%s%s%s_%s", padTwo(date.getYear() + 1900),
 					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
@@ -314,6 +315,9 @@ public class CommonUtils {
 			Collection tmp = c1;
 			c1 = c2;
 			c2 = tmp;
+		}
+		if (c2.size() > 10) {
+			c2 = new HashSet(c2);
 		}
 		for (Object o : c1) {
 			if (c2.contains(o)) {
@@ -820,7 +824,7 @@ public class CommonUtils {
 
 	public static <T extends Comparable> List<T> order(
 			Collection<T> comparableCollection) {
-		List<T> items=new ArrayList<T>(comparableCollection);
+		List<T> items = new ArrayList<T>(comparableCollection);
 		Collections.sort(items);
 		return items;
 	}
