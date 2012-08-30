@@ -216,13 +216,13 @@ public class CommonUtils {
 					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
 					padTwo(date.getYear() + 1900));
 		case AU_SHORT_DAY:
-			return formatJ("%s - %s.%s.%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					DAY_NAMES[date.getDay()].substring(0, 3));
+			return formatJ("%s - %s.%s.%s", DAY_NAMES[date.getDay()].substring(0, 3),padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900)
+					);
 		case AU_LONG_DAY:
-			return formatJ("%s, %s.%s.%s", padTwo(date.getDate()),
-					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900),
-					DAY_NAMES[date.getDay()]);
+			return formatJ("%s, %s.%s.%s",DAY_NAMES[date.getDay()], padTwo(date.getDate()),
+					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900)
+					);
 		case TIMESTAMP:
 			return formatJ("%s%s%s_%s%s%s_%s", padTwo(date.getYear() + 1900),
 					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
