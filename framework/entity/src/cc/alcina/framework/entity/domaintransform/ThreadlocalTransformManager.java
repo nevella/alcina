@@ -673,8 +673,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				// }
 				// TODO
 				break;
-			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF:
+				//TODO
+			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_SIMPLE_VALUE:
 				return checkPropertyWriteAccessAndThrow(hili, propertyName, evt);
 			case CREATE_OBJECT:
