@@ -206,8 +206,8 @@ public class ClientReflectionGenerator extends Generator {
 	}
 
 	private boolean ignore(JClassType jClassType) {
-		return jClassType.isAbstract() || (jClassType.isInterface() != null)
-				|| !jClassType.isPublic();
+		return (jClassType.isAbstract() && jClassType.isEnum() == null)
+				|| (jClassType.isInterface() != null) || !jClassType.isPublic();
 	}
 
 	private List<JClassType> getInstantiableTypes(TreeLogger logger,
