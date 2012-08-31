@@ -90,9 +90,8 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 	@Override
 	protected void process(Class c, String className, Date modDate,
 			Map<String, Date> outgoingIgnoreMap) {
-		// TODO Auto-generated method stub
 		if ((!Modifier.isPublic(c.getModifiers()))
-				|| (Modifier.isAbstract(c.getModifiers()))) {
+				|| (Modifier.isAbstract(c.getModifiers())&&!c.isEnum())) {
 			outgoingIgnoreMap.put(className, modDate);
 			return;
 		}
