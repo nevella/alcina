@@ -770,9 +770,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 			Set typeCheck = (Set) evt.getNewValue();
 			typeCheck = (Set) (typeCheck.isEmpty() ? evt.getOldValue()
 					: typeCheck);
+			// Note, we explicitly clear nulls here - it would require an
+			// expansion of the protocols to implement them
 			if (typeCheck.iterator().next() instanceof HasIdAndLocalId) {
 				Set<HasIdAndLocalId> oldValues = (Set) evt.getOldValue();
 				Set<HasIdAndLocalId> newValues = (Set) evt.getNewValue();
+				oldValues.remove(null);
+				newValues.remove(null);
 				for (HasIdAndLocalId hili : newValues) {
 					if (!oldValues.contains(hili)) {
 						dte = createTransformFromPropertyChange(evt);
@@ -798,6 +802,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			} else if (typeCheck.iterator().next() instanceof Enum) {
 				Set<Enum> oldValues = (Set) evt.getOldValue();
 				Set<Enum> newValues = (Set) evt.getNewValue();
+				oldValues.remove(null);
+				newValues.remove(null);
 				for (Enum e : newValues) {
 					if (!oldValues.contains(e)) {
 						dte = createTransformFromPropertyChange(evt);
