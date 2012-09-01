@@ -134,4 +134,14 @@ public class LookupMapToMap<V> extends LinkedHashMap {
 		}
 		return null;
 	}
+	public LookupMapToMap<V> swapKeysZeroAndOne(){
+		LookupMapToMap<V> swapped=new LookupMapToMap<V>(depth);
+		for(Object k0:keySet()){
+			LookupMapToMap<V> v=(LookupMapToMap<V>) get(k0);
+			for(Object k1:v.keySet()){
+				swapped.put(k1,k0,v.get(k1));
+			}
+		}
+		return swapped;
+	}
 }

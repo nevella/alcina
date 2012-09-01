@@ -167,12 +167,17 @@ public class ClientUtils {
 	public static EditContentViewWidgets editContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
 			String messageHtml) {
-		return editContentView(model, pal, caption, messageHtml, true);
+		return contentView(model, pal, caption, messageHtml, true,true);
+	}
+	public static EditContentViewWidgets showContentView(final Object model,
+			final PermissibleActionListener pal, String caption,
+			String messageHtml) {
+		return contentView(model, pal, caption, messageHtml, true,false);
 	}
 
-	public static EditContentViewWidgets editContentView(final Object model,
+	public static EditContentViewWidgets contentView(final Object model,
 			final PermissibleActionListener pal, String caption,
-			String messageHtml, final boolean hideOnClick) {
+			String messageHtml, final boolean hideOnClick,boolean editable) {
 		ContentViewFactory cvf = new ContentViewFactory();
 		cvf.setNoCaption(true);
 		cvf.setNoButtons(false);
@@ -190,9 +195,12 @@ public class ClientUtils {
 				}
 			}
 		};
-		PaneWrapperWithObjects view = cvf.createBeanView(model, true,
+		PaneWrapperWithObjects view = cvf.createBeanView(model, editable,
 				closeWrapper, false, true);
 		view.addStyleName("pwo-center-buttons");
+		if(!editable){
+			view.getSaveButton().setText("OK");
+		}
 		List<Binding> bindings = view.getBoundWidget().getBinding()
 				.getChildren();
 		for (Binding b : bindings) {

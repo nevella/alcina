@@ -327,6 +327,26 @@ public class CommonUtils {
 		return result;
 	}
 
+	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
+			Collection<T> c2) {
+		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
+		Collection intersection = intersection(c1, c2);
+		result.intersection = new LinkedHashSet<T>(intersection);
+		result.firstOnly = new LinkedHashSet<T>(c1);
+		result.secondOnly = new LinkedHashSet<T>(c2);
+		result.firstOnly.removeAll(intersection);
+		result.secondOnly.removeAll(intersection);
+		return result;
+	}
+
+	public static class ThreeWaySetResult<T> {
+		public Set<T> firstOnly;
+
+		public Set<T> secondOnly;
+
+		public Set<T> intersection;
+	}
+
 	public static boolean isNullOrEmpty(String string) {
 		return string == null || string.length() == 0;
 	}

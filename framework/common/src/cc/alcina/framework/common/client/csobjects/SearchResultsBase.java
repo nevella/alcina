@@ -16,6 +16,8 @@ package cc.alcina.framework.common.client.csobjects;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -31,9 +33,9 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 	private int pageNumber;
 
 	private int pageResultCount;
-
+	@XmlTransient
 	SearchDefinition searchDefinition;
-
+@XmlTransient
 	private GArrayList<B> results;
 
 	public SearchResultsBase() {
