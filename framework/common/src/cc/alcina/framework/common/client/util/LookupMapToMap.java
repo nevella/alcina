@@ -50,6 +50,22 @@ public class LookupMapToMap<V> extends LinkedHashMap {
 		}
 	}
 
+	public void putLookup(Object... objects) {
+		Map m = this;
+		int mapDepth = depth;
+		for (int i = 0; i < objects.length-1; i++) {
+			Object k = objects[i];
+			if (i == objects.length - 2) {
+				m.put(k, objects[i + 1]);
+				return;
+			}
+			if (!m.containsKey(k)) {
+				m.put(k, new LookupMapToMap(depth - 1));
+			}
+			m = (Map) m.get(k);
+		}
+	}
+
 	public boolean containsKey(Object... objects) {
 		Map m = this;
 		int mapDepth = depth;
@@ -134,12 +150,13 @@ public class LookupMapToMap<V> extends LinkedHashMap {
 		}
 		return null;
 	}
-	public LookupMapToMap<V> swapKeysZeroAndOne(){
-		LookupMapToMap<V> swapped=new LookupMapToMap<V>(depth);
-		for(Object k0:keySet()){
-			LookupMapToMap<V> v=(LookupMapToMap<V>) get(k0);
-			for(Object k1:v.keySet()){
-				swapped.put(k1,k0,v.get(k1));
+
+	public LookupMapToMap<V> swapKeysZeroAndOne() {
+		LookupMapToMap<V> swapped = new LookupMapToMap<V>(depth);
+		for (Object k0 : keySet()) {
+			LookupMapToMap<V> v = (LookupMapToMap<V>) get(k0);
+			for (Object k1 : v.keySet()) {
+				swapped.putLookup(k1, k0, v.get(k1));
 			}
 		}
 		return swapped;

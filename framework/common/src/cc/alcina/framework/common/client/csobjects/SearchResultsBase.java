@@ -16,6 +16,8 @@ package cc.alcina.framework.common.client.csobjects;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -25,6 +27,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * 
  * @author Nick Reddel
  */
+@XmlAccessorType(XmlAccessType.FIELD)
 public class SearchResultsBase<B extends SearchResult> implements Serializable {
 	private String log = "";
 
@@ -33,9 +36,11 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 	private int pageNumber;
 
 	private int pageResultCount;
+
 	@XmlTransient
 	SearchDefinition searchDefinition;
-@XmlTransient
+
+	@XmlTransient
 	private GArrayList<B> results;
 
 	public SearchResultsBase() {

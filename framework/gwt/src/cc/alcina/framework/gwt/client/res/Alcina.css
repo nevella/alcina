@@ -1653,3 +1653,30 @@ textarea.hint {
 	font-style: italic;
 	color:#777;
 }
+.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel {
+	text-align: center;
+	margin-top: 2em;
+}
+
+.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel button,button.flat
+	{
+	background: #E9E9E9;
+	border: 1px solid #CDCDCD;
+	color: black;
+	padding: 5px;
+	font-family: Arial;
+	font-size: 12px;
+	margin-right: 1em;
+	min-width: 5em;
+}
+
+.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel button:hover,button.flat:hover
+	{
+	background: #DDD;
+	border: 1px solid #AAA;
+}
+
+.monospace, .monospace textarea{
+	font-family: monospace;
+	font-size:125%;
+}

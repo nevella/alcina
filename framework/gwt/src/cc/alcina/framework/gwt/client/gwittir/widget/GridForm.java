@@ -287,6 +287,10 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 						}
 					});
 				}
+				if (field.getStyleName() != null) {
+					this.base.getCellFormatter().addStyleName(row,
+							(col * 2) + 1, field.getStyleName());
+				}
 				i++;
 			}
 			row++;

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
@@ -12,6 +11,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -25,7 +25,6 @@ public class ExpandableListPanel extends Composite {
 	private final int maxItems;
 
 	private final String itemNamePlural;
-	private boolean commaSeparated;
 
 	private Link showAll;
 
@@ -39,6 +38,8 @@ public class ExpandableListPanel extends Composite {
 			}
 		}
 	};
+
+	private String separator;
 
 	private String allCaption;
 
@@ -54,11 +55,10 @@ public class ExpandableListPanel extends Composite {
 		widgets.add(widget);
 		maybeAddToFlowPanel(widget);
 	}
-
 	private void maybeAddToFlowPanel(Widget widget) {
 		if (showingAll || fp.getWidgetCount() < maxItems) {
-			if(isCommaSeparated()&&fp.getWidgetCount()>0){
-				fp.add(new InlineLabel(", "));
+			if (separator != null && fp.getWidgetCount() > 0) {
+				fp.add(new InlineHTML(separator));
 			}
 			fp.add(widget);
 			return;
@@ -97,11 +97,11 @@ public class ExpandableListPanel extends Composite {
 		this.extraText = extraText;
 	}
 
-	public boolean isCommaSeparated() {
-		return this.commaSeparated;
+	public String getSeparator() {
+		return this.separator;
 	}
 
-	public void setCommaSeparated(boolean commaSeparated) {
-		this.commaSeparated = commaSeparated;
+	public void setSeparator(String separator) {
+		this.separator = separator;
 	}
 }

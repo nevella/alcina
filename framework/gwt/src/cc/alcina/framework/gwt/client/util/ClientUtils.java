@@ -23,6 +23,7 @@ import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.OkCancelPanel;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
@@ -167,17 +168,18 @@ public class ClientUtils {
 	public static EditContentViewWidgets editContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
 			String messageHtml) {
-		return contentView(model, pal, caption, messageHtml, true,true);
+		return popupContentView(model, pal, caption, messageHtml, true, true);
 	}
+
 	public static EditContentViewWidgets showContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
 			String messageHtml) {
-		return contentView(model, pal, caption, messageHtml, true,false);
+		return popupContentView(model, pal, caption, messageHtml, true, false);
 	}
 
-	public static EditContentViewWidgets contentView(final Object model,
+	public static EditContentViewWidgets popupContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
-			String messageHtml, final boolean hideOnClick,boolean editable) {
+			String messageHtml, final boolean hideOnClick, boolean editable) {
 		ContentViewFactory cvf = new ContentViewFactory();
 		cvf.setNoCaption(true);
 		cvf.setNoButtons(false);
@@ -198,8 +200,9 @@ public class ClientUtils {
 		PaneWrapperWithObjects view = cvf.createBeanView(model, editable,
 				closeWrapper, false, true);
 		view.addStyleName("pwo-center-buttons");
-		if(!editable){
-			view.getSaveButton().setText("OK");
+		if (!editable) {
+			OkCancelPanel sp = new OkCancelPanel("OK", view, false);
+			view.add(sp);
 		}
 		List<Binding> bindings = view.getBoundWidget().getBinding()
 				.getChildren();
@@ -236,7 +239,7 @@ public class ClientUtils {
 	}
 
 	public static String simpleInnerText(String innerHTML) {
-		int idx = 0, idy = 0, x1, x2,min;
+		int idx = 0, idy = 0, x1, x2, min;
 		StringBuilder result = new StringBuilder();
 		while (true) {
 			x1 = innerHTML.indexOf("<", idx);
@@ -244,9 +247,9 @@ public class ClientUtils {
 			if (x1 == -1 && x2 == -1) {
 				break;
 			}
-			min=x1 != -1 && (x2 == -1 || x1 < x2)?x1:x2;
-			result.append(innerHTML.substring(idx,min));
-			if (min==x1) {
+			min = x1 != -1 && (x2 == -1 || x1 < x2) ? x1 : x2;
+			result.append(innerHTML.substring(idx, min));
+			if (min == x1) {
 				x2 = innerHTML.indexOf(">", min);
 				if (x2 == -1) {
 					// invalidish html, bail
@@ -254,31 +257,29 @@ public class ClientUtils {
 				} else {
 					idx = x2 + 1;
 				}
-			}else{
+			} else {
 				x2 = innerHTML.indexOf(";", min);
 				if (x2 == -1) {
 					// invalidish html, bail
 					break;
 				} else {
-					String minStr = innerHTML.substring(min+1,x2);
-					if(minStr.equals("amp")){
+					String minStr = innerHTML.substring(min + 1, x2);
+					if (minStr.equals("amp")) {
 						result.append("&");
-					}else 	if(minStr.equals("lt")){
+					} else if (minStr.equals("lt")) {
 						result.append("<");
-					}else 	if(minStr.equals("gt")){
+					} else if (minStr.equals("gt")) {
 						result.append(">");
-					}else {
-						try{
-							int cc=Integer.parseInt(minStr);
-							result.append((char)cc);
-						}catch(NumberFormatException ne){
-							//ignore
+					} else {
+						try {
+							int cc = Integer.parseInt(minStr);
+							result.append((char) cc);
+						} catch (NumberFormatException ne) {
+							// ignore
 						}
 					}
-					
-					idx=x2+1;
+					idx = x2 + 1;
 				}
-				
 			}
 		}
 		result.append(innerHTML.substring(idx));

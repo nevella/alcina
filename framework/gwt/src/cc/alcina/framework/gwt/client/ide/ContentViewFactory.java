@@ -53,13 +53,14 @@ import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
-import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
+import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 import cc.alcina.framework.gwt.client.widget.complex.FastROBoundTable;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
+import cc.alcina.framework.gwt.client.widget.layout.ExpandableListPanel;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -217,10 +218,10 @@ public class ContentViewFactory {
 				cp.setBeanValidator(beanValidator);
 				ArrayList list = new ArrayList();
 				list.add(bean);
-				SavePanel sp = new SavePanel(cp, isCancelButton());
+				OkCancelPanel sp = new OkCancelPanel("Save",cp, isCancelButton());
 				cp.add(sp);
-				cp.setSaveButton(sp.saveButton);
-				f.setFocusOnDetachIfEditorFocussed(sp.saveButton);
+				cp.setOkButton(sp.okButton);
+				f.setFocusOnDetachIfEditorFocussed(sp.okButton);
 				cp.setBean(bean);
 				boolean provisional = cloned;
 				if (bean instanceof HasIdAndLocalId) {
@@ -260,28 +261,32 @@ public class ContentViewFactory {
 			return null;
 		}
 		FlowPanel fp = null;
+		ExpandableListPanel elp = null;
 		for (Class<? extends PermissibleAction> c : bi.getActions(bean)) {
 			final PermissibleAction v = CommonLocator.get().classLookup()
 					.getTemplateInstance(c);
 			if (v instanceof NonstandardObjectAction) {
 				if (fp == null) {
 					fp = new FlowPanel();
-					fp.setStyleName("margin-top-15");
+					fp.setStyleName("alcina-ObjectAction");
+					fp.addStyleName("margin-top-15");
 					fp.add(UsefulWidgetFactory.mediumTitleWidget(TextProvider
 							.get().getUiObjectText(getClass(), "Extra actions",
 									"Extra actions")));
+					elp = new ExpandableListPanel("actions", 99);
+					elp.setSeparator("\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0");
+					fp.add(elp);
 				}
-				final BlockLink<PermissibleAction> nhd = new BlockLink<PermissibleAction>();
-				nhd.setUserObject(v);
-				nhd.addClickHandler(new ClickHandler() {
+				final Link<PermissibleAction> link = new Link<PermissibleAction>();
+				link.setUserObject(v);
+				link.addClickHandler(new ClickHandler() {
 					public void onClick(ClickEvent event) {
 						DefaultPermissibleActionHandler.handleAction(
-								(Widget) nhd, v, bean);
+								(Widget) link, v, bean);
 					}
 				});
-				nhd.setText(v.getDisplayName());
-				nhd.setStyleName("alcina-ObjectAction");
-				fp.add(nhd);
+				link.setText(v.getDisplayName());
+				elp.add(link);
 			}
 		}
 		return fp;
@@ -325,9 +330,9 @@ public class ContentViewFactory {
 		cp.add(table);
 		cp.setBoundWidget(table);
 		if (editable && !autoSave) {
-			SavePanel sp = new SavePanel(cp, isCancelButton());
+			OkCancelPanel sp = new OkCancelPanel("Save",cp, isCancelButton());
 			cp.add(sp);
-			cp.setSaveButton(sp.saveButton);
+			cp.setOkButton(sp.okButton);
 			cp.setProvisionalObjects(cloned);
 			cp.setObjects(beans);
 		}
@@ -571,7 +576,7 @@ public class ContentViewFactory {
 
 		PermissibleActionEvent.PermissibleActionSupport support = new PermissibleActionEvent.PermissibleActionSupport();
 
-		private Button saveButton;
+		private Button okButton;
 
 		private FocusPanel preDetachFocus = new FocusPanel();
 
@@ -657,8 +662,8 @@ public class ContentViewFactory {
 			return this.objects;
 		}
 
-		public Button getSaveButton() {
-			return this.saveButton;
+		public Button getOkButton() {
+			return this.okButton;
 		}
 
 		public boolean isAlwaysDisallowOkIfInvalid() {
@@ -671,7 +676,7 @@ public class ContentViewFactory {
 
 		public void onClick(ClickEvent clickEvent) {
 			final Widget sender = (Widget) clickEvent.getSource();
-			if (sender == saveButton) {
+			if (sender == okButton) {
 				validateAndCommit(sender, null);
 				return;
 			} else {
@@ -735,8 +740,8 @@ public class ContentViewFactory {
 			this.provisionalObjects = promote;
 		}
 
-		public void setSaveButton(Button saveButton) {
-			this.saveButton = saveButton;
+		public void setOkButton(Button okButton) {
+			this.okButton = okButton;
 		}
 
 		public boolean validateBean() {
@@ -886,17 +891,17 @@ public class ContentViewFactory {
 		}
 	}
 
-	public static class SavePanel extends FlowPanel {
-		private Button saveButton;
+	public static class OkCancelPanel extends FlowPanel {
+		private Button okButton;
 
 		private Button cancelButton;
 
-		public SavePanel(ClickHandler clickHandler, boolean hasCancel) {
+		public OkCancelPanel(String okButtonName,ClickHandler clickHandler, boolean hasCancel) {
 			FlowPanel fp = this;
 			fp.setStyleName("alcina-SavePanel");
-			this.saveButton = new Button("Save");
-			saveButton.addClickHandler(clickHandler);
-			fp.add(saveButton);
+			this.okButton = new Button(okButtonName);
+			okButton.addClickHandler(clickHandler);
+			fp.add(okButton);
 			if (hasCancel) {
 				fp.add(UsefulWidgetFactory.createSpacer(2));
 				this.cancelButton = new Button("Cancel");
@@ -909,8 +914,8 @@ public class ContentViewFactory {
 			return this.cancelButton;
 		}
 
-		public Button getSaveButton() {
-			return this.saveButton;
+		public Button getOkButton() {
+			return this.okButton;
 		}
 	}
 }

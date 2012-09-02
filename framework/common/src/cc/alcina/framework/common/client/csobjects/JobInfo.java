@@ -32,6 +32,8 @@ public class JobInfo implements Serializable, Cloneable {
 	private String progressMessage = "...pending";
 
 	private String jobName;
+	
+	private String jobResult;
 
 	private double percentComplete;
 
@@ -122,5 +124,13 @@ public class JobInfo implements Serializable, Cloneable {
 		combo.setProgressMessage(CommonUtils.formatJ("%s >> %s: %s",
 				progressMessage, kid.getJobName(), kid.progressMessage));
 		return combo;
+	}
+
+	public String getJobResult() {
+		return this.jobResult;
+	}
+
+	public void setJobResult(String jobResult) {
+		this.jobResult = jobResult;
 	}
 }
