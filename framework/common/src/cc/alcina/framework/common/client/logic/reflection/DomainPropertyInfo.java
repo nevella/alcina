@@ -46,4 +46,6 @@ public @interface DomainPropertyInfo {
 	boolean serializeOnClient() default false;
 
 	boolean silentFailOnIllegalWrites() default false;
+	
+	boolean ignoreForDeletionChecking() default false;
 }
