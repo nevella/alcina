@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -44,6 +45,23 @@ public interface HasIdAndLocalId extends HasId {
 		@Override
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			return HiliHelper.compare(o1, o2);
+		}
+	}
+
+	public static class HiliByIdFilter implements
+			CollectionFilter<HasIdAndLocalId> {
+		private final boolean allowAllExceptId;
+
+		private final long id;
+
+		public HiliByIdFilter(long id, boolean allowAllExceptId) {
+			this.id = id;
+			this.allowAllExceptId = allowAllExceptId;
+		}
+
+		@Override
+		public boolean allow(HasIdAndLocalId o) {
+			return o != null && (o.getId() == id ^ allowAllExceptId);
 		}
 	}
 
