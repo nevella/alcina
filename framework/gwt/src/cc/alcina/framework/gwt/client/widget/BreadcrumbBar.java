@@ -108,7 +108,7 @@ public class BreadcrumbBar extends Composite {
 	public void setTitle(String title) {
 		this.title = title;
 		if (titleLabel != null) {
-			titleLabel.setText(title);
+			titleLabel.setHTML(title);
 		}
 	}
 
