@@ -9,20 +9,22 @@
 		<mkdir dir="${tmp.dir}" />
 		<download-libs targetDirectory="${framework.download.dir}" containerDirectory="${container.download.dir}">
 			<downloadable-file-list>
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/jaxb-api.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/xml/bind/jaxb-api/2.1/jaxb-api-2.1.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/persistence-api.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/common/persistence-api.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/jsr173_api.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/xml/bind/jsr173_api/1.0/jsr173_api-1.0.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/log4j-1.2.6.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/log4j/log4j/1.2.6/log4j-1.2.6.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/xercesImpl_2.9.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/xerces/xercesImpl/2.9.1/xercesImpl-2.9.1.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-html5-database.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwt-html5-database.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="servlet/activation.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/servlet/activation.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="servlet/mail-1.4.4.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/servlet/mail-1.4.4.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="servlet/servlet-api-2.3.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/servlet/servlet-api-2.3.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwittir-trunk.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwittir-trunk.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="servlet/servlet-api-2.3.jar" tocUrl="" url="http://mirrors.ibiblio.org/pub/mirrors/maven2/javax/servlet/servlet-api/2.3/servlet-api-2.3.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwtx-1.5.2.jar" tocUrl="" url="http://gwtx.googlecode.com/files/gwtx-1.5.2.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-servlet.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://alcina.cc/files/framework/lib/gwt/gwt-servlet.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-user.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://alcina.cc/files/framework/lib/gwt/gwt-user.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-dev.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://alcina.cc/files/framework/lib/gwt/gwt-dev.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/validation-api-1.0.0.GA-sources.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.4.0.zip" extractFileName="validation-api-1.0.0.GA-sources.jar" containerPath="gwt-2.4.0.zip" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/validation-api-1.0.0.GA.jar" tocUrl="http://code.google.com/webtoolkit/terms.html" url="http://google-web-toolkit.googlecode.com/files/gwt-2.4.0.zip" extractFileName="validation-api-1.0.0.GA.jar" containerPath="gwt-2.4.0.zip" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-dev.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwt-dev.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-html5-database.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwt-html5-database.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-servlet.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwt-servlet.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwt-user.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwt-user.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/gwtx-1.5.2.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/gwtx-1.5.2.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/validation-api-1.0.0.GA-sources.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/validation-api-1.0.0.GA-sources.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="gwt/validation-api-1.0.0.GA.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/gwt/validation-api-1.0.0.GA.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/jsr173_api.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/entity/jsr173_api.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/log4j-1.2.6.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/entity/log4j-1.2.6.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/xercesImpl_2.9.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/entity/xercesImpl_2.9.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/jaxb-api.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/common/jaxb-api.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/persistence-api.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/common/persistence-api.jar" />
 
 			</downloadable-file-list>
 		</download-libs>
@@ -37,11 +39,10 @@
 		<download-libs targetDirectory="${framework.download.dir}" containerDirectory="${container.download.dir}">
 			<downloadable-file-list>
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" />
-
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-javaee.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/jboss-javaee.jar" />
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-vfs-3.0.1.GA.jar" tocUrl="" url="http://download.jboss.org/jbossas/7.0/jboss-as-7.0.0.Final/jboss-as-7.0.0.Final.zip" containerPath="jboss-as-7.0.0.Final.zip" extractFileName="modules/org/jboss/vfs/main/jboss-vfs-3.0.1.GA.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-vfs-3.0.1.GA.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/jboss-vfs-3.0.1.GA.jar" />
 
 			</downloadable-file-list>
 		</download-libs>
