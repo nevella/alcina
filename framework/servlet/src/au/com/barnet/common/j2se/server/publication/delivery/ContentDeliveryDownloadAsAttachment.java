@@ -1,0 +1,45 @@
+package au.com.barnet.common.j2se.server.publication.delivery;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+
+import au.com.barnet.common.j2se.server.publication.FormatConverter;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.publication.ContentDeliveryType;
+import cc.alcina.framework.common.client.publication.DeliveryModel;
+import cc.alcina.framework.common.client.publication.ContentDeliveryType.DELIVERY_DOWNLOAD_ATTACHMENT;
+import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.servlet.servlet.DownloadServlet;
+import cc.alcina.framework.servlet.servlet.DownloadServlet.DownloadItem;
+/**
+ * could extend xxxMimeType - but we'd need to expand the registry, with a "no-inherit"..TODO??
+ * @author nreddel@barnet.com.au
+ *
+ */
+@RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = DELIVERY_DOWNLOAD_ATTACHMENT.class)
+public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
+	
+
+	protected String deliverViaServlet(InputStream stream, 
+			String mimeType, String suggestedFileName, String suffix) throws Exception {
+		File file = File.createTempFile(suggestedFileName, "." + suffix);
+		file.deleteOnExit();
+		ResourceUtilities.writeStreamToStream(stream,
+				new FileOutputStream(file));
+		DownloadItem item = new DownloadServlet.DownloadItem(mimeType,
+				suggestedFileName + "." + suffix, file.getPath());
+		return DownloadServlet.add(item);
+	}
+
+	public String deliver(InputStream convertedContent,
+			DeliveryModel deliveryModel, FormatConverter hfc)
+			throws Exception {
+		return deliverViaServlet(convertedContent,hfc.getMimeType(), getFileName(deliveryModel), hfc.getFileExtension());
+	}
+
+	private String getFileName(DeliveryModel deliveryModel) {
+		return deliveryModel
+				.getSuggestedFileName().replaceAll("[:/]", "_");
+	}
+}

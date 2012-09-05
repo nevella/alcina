@@ -28,5 +28,7 @@
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" sourcepath="/hibernate-core/hibernate-core"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
+	<classpathentry kind="lib" path="lib/framework/servlet/activation.jar"/>
+	<classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
