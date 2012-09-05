@@ -1,4 +1,4 @@
-package au.com.barnet.common.j2se.server.publication.delivery;
+package cc.alcina.framework.servlet.publication.delivery;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -20,14 +20,14 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import au.com.barnet.common.j2se.server.publication.EntityCleaner;
-import au.com.barnet.common.j2se.server.publication.FormatConverter;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.DELIVERY_EMAIL;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.servlet.publication.EntityCleaner;
+import cc.alcina.framework.servlet.publication.FormatConverter;
 
 /**
  * could extend xxxMimeType - but we'd need to expand the registry, with a

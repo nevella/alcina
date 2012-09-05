@@ -12,21 +12,13 @@
  * the License.
  */
 
-package au.com.barnet.common.j2se.server.excel;
+package cc.alcina.framework.servlet.excel;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-@Retention(RetentionPolicy.RUNTIME)
-@Inherited
-@Documented
 /**
  *
  * @author Nick Reddel
  */
 
- public @interface ExcelFormatAnnotation {
-	ExcelDatatype type() default  ExcelDatatype.String;
+ public enum ExcelDatatype {
+	String,DateTime,Number
 }

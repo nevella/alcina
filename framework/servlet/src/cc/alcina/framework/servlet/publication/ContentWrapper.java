@@ -1,4 +1,4 @@
-package au.com.barnet.common.j2se.server.publication;
+package cc.alcina.framework.servlet.publication;
 
 import java.io.InputStream;
 import java.util.Date;
@@ -18,7 +18,6 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Document;
 
-import au.com.barnet.common.j2se.server.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -30,6 +29,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
+import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 
 /**
  * Base for 'wrapper' phase of pipeline - adds headers, footers, does any extra

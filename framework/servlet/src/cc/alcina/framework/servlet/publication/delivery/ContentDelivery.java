@@ -1,9 +1,9 @@
-package au.com.barnet.common.j2se.server.publication.delivery;
+package cc.alcina.framework.servlet.publication.delivery;
 
 import java.io.InputStream;
 
-import au.com.barnet.common.j2se.server.publication.FormatConverter;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
+import cc.alcina.framework.servlet.publication.FormatConverter;
 
 public interface ContentDelivery {
 	public String deliver(InputStream convertedContent,

@@ -1,4 +1,4 @@
-package au.com.barnet.common.j2se.server.publication;
+package cc.alcina.framework.servlet.publication;
 
 import java.io.InputStream;
 import java.io.Serializable;

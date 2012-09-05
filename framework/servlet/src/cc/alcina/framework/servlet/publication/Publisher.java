@@ -1,12 +1,8 @@
-package au.com.barnet.common.j2se.server.publication;
+package cc.alcina.framework.servlet.publication;
 
 import java.io.InputStream;
 import java.util.Date;
 
-import au.com.barnet.common.j2se.server.publication.ContentRenderer.ContentRendererResults;
-import au.com.barnet.common.j2se.server.publication.FormatConverter.FormatConversionModel;
-import au.com.barnet.common.j2se.server.publication.PublicationPersistence.PublicationPersistenceLocator;
-import au.com.barnet.common.j2se.server.publication.delivery.ContentDelivery;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -19,6 +15,10 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
+import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
+import cc.alcina.framework.servlet.publication.FormatConverter.FormatConversionModel;
+import cc.alcina.framework.servlet.publication.PublicationPersistence.PublicationPersistenceLocator;
+import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 
 /**
  * <p>Process a content definition and deliver it to a delivery model (e.g. email a list of documents, convert a document to pdf and serve etc)

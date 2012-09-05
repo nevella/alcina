@@ -1,4 +1,4 @@
-package au.com.barnet.common.j2se.server.publication;
+package cc.alcina.framework.servlet.publication;
 
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;

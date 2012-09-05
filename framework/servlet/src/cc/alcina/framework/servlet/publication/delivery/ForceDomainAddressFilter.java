@@ -1,4 +1,4 @@
-package au.com.barnet.common.j2se.server.publication.delivery;
+package cc.alcina.framework.servlet.publication.delivery;
 
 import cc.alcina.framework.entity.ResourceUtilities;
 
