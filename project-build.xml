@@ -18,7 +18,7 @@
 	</target>
 	<target name="compile" description="Compiles the ${project.module.description} module" depends="build-dependencies">
 		<mkdir dir="${project.build.dir}" />
-		<javac debug="on" sourcepath="" destdir="${project.build.dir}">
+		<javac includeantruntime="false" debug="on" sourcepath="" destdir="${project.build.dir}">
 
 			<src path="${project.src.dirs}" />
 			<classpath>

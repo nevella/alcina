@@ -19,14 +19,14 @@
 	</target>
 	<target name="compile" description="Compiles all J2SE modules">
 		<mkdir dir="${framework.entity.build.dir}" />
-		<javac debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
+		<javac includeantruntime="false"  debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.impl.jboss-hibernate.build.dir}" />
-		<javac debug="on" srcdir="${framework.impl.jboss-hibernate.src.dirs}" destdir="${framework.impl.jboss-hibernate.build.dir}">
+		<javac includeantruntime="false" debug="on" srcdir="${framework.impl.jboss-hibernate.src.dirs}" destdir="${framework.impl.jboss-hibernate.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.impl.jboss-hibernate.lib.path" />
@@ -35,7 +35,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.servlet.build.dir}" />
-		<javac debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
+		<javac includeantruntime="false" debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.servlet.lib.path" />
@@ -44,7 +44,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${extras.collections.build.dir}" />
-		<javac debug="on" srcdir="${extras.collections.src.dir}" destdir="${extras.collections.build.dir}">
+		<javac includeantruntime="false" debug="on" srcdir="${extras.collections.src.dir}" destdir="${extras.collections.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<pathelement path="${framework.entity.build.dir}" />
@@ -52,7 +52,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.jvmclient.build.dir}" />
-		<javac debug="on" srcdir="${framework.jvmclient.src.dir}" destdir="${framework.jvmclient.build.dir}">
+		<javac includeantruntime="false" debug="on" srcdir="${framework.jvmclient.src.dir}" destdir="${framework.jvmclient.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<pathelement path="${framework.entity.build.dir}" />

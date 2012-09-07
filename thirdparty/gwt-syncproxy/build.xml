@@ -14,7 +14,7 @@
 
   <target name="javac" description="Compile java source">
     <mkdir dir="${outDir}/classes"/>
-    <javac srcdir="src" includes="**" 
+    <javac includeantruntime="false" srcdir="src" includes="**" 
       excludes="**/java/**/*.java **/DeployToGAE.java **/StartDevMode.java **/StartDevModeGAE.java **/StartGAEDevServer.java" 
       encoding="utf-8"
         destdir="${outDir}/classes"

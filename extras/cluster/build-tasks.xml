@@ -11,7 +11,7 @@
 	
 	<target name="build" >
 		<mkdir dir="${project.build.dir}" />
-		<javac debug="on" sourcepath="" destdir="${project.build.dir}">
+		<javac includeantruntime="false" debug="on" sourcepath="" destdir="${project.build.dir}">
 			<classpath>
 				<path refid="project.classpath" />
 			</classpath>
