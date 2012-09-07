@@ -363,4 +363,15 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 			og.getCriteria().clear();
 		}
 	}
+
+	protected void ensureCriteriaGroups(CriteriaGroup... criteriaGroups) {
+		resetLookups();
+		for (CriteriaGroup cg : criteriaGroups) {
+			CriteriaGroup existing = criteriaGroup(cg.getClass());
+			if (existing == null) {
+				getCriteriaGroups().add(cg);
+			}
+		}
+		resetLookups();
+	}
 }
