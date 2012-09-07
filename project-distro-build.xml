@@ -2,7 +2,7 @@
 <project name="project-distro-build" basedir="." default="">
 	<import file="project-build.xml" />
 
-	<target name="make-war" description="Create the {project.modules.description} WAR" depends="compile">
+	<target name="make-war" description="Create the project WAR" depends="compile">
 		<mkdir dir="${project.dist.dir}" />
 		<delete file="${project.dist.dir}/${ant.project.name}.war" />
 		<antcall target="prepare-war">
@@ -36,7 +36,7 @@
 		</war>
 	</target>
 
-	<target name="make-ear" description="EARs the Task" depends="make-war">
+	<target name="make-ear" description="Create the project EAR" depends="make-war">
 		<delete file="${project.dist.dir}/${ant.project.name}.ear" />
 		<ear destfile="${project.dist.dir}/${ant.project.name}.ear" appxml="${project.ear-inf.dir}/application.xml">
 			<fileset dir="dist">
@@ -84,7 +84,7 @@
 			</fileset>
 		</copy>
 	</target>
-	<target name="hot-deploy" description="WARs the Task" depends="build-dependencies,compile">
+	<target name="hot-deploy" description="Dev :: copy changed server files, no WAR restart" depends="build-dependencies,compile">
 		<!--the ear -->
 		<mkdir dir="${j2ee-server.unear.target}" />
 		<mkdir dir="${j2ee-server.unear.target}${j2ee-lib.dir}" />
@@ -151,7 +151,7 @@
 			</fileset>
 		</copy>
 	</target>
-	<target name="hot-deploy-restart" description="xx" depends="hot-deploy">
+	<target name="hot-deploy-restart" description="Dev :: copy changed server files, then restart WAR" depends="hot-deploy">
 		<touch file="${j2ee-server.unear.target}/META-INF/application.xml" />
 		<touch file="${j2ee-server.unear.target}/../${j2ee-server.unear.name}.dodeploy" />
 	</target>
@@ -203,8 +203,8 @@
 			<jvmarg value="-Xmx1100M" />
 			<jvmarg value="-Xss2M" />
 			<jvmarg value="-Dgwt.usearchives=false" />
-			
-			
+
+
 			<arg line=" -style ${gwt.codestyle}" />
 			<arg line="${project.gwt.compile.flags}" />
 			<arg value="${project.gwt.module.name}" />
@@ -227,8 +227,8 @@
 		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
 		</copy>
 	</target>
-	<target name="hot-deploy-and-gwt-and-restart" description="WARs the Task" depends="compile-gwt,hot-deploy-restart">
+	<target name="hot-deploy-and-gwt-and-restart" description="dev :: compile GWT js, then hot-deploy and restart WAR" depends="compile-gwt,hot-deploy-restart">
 	</target>
-	<target name="hot-deploy-and-gwt-no-restart" description="WARs the Task" depends="compile-gwt,hot-deploy">
+	<target name="hot-deploy-and-gwt-no-restart" description="dev :: compile GWT js, then hot-deploy without WAR restart" depends="compile-gwt,hot-deploy">
 	</target>
 </project>
