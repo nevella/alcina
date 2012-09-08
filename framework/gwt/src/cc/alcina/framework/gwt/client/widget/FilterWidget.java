@@ -283,6 +283,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 
 	public void clear() {
 		getTextBox().setText("");
+		maybeCommit();
 	}
 
 	public int getFilterDelayMs() {
@@ -296,11 +297,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	private Timer changeListenerTimer = new Timer() {
 		@Override
 		public void run() {
-			if (!getTextBox().getText().equals(lastQueuedText)
-					&& !getTextBox().getStyleName().contains(
-							"alcina-FilterHint")) {
-				queueCommit();
-			}
+			maybeCommit();
 		}
 	};
 
@@ -312,5 +309,13 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	@Override
 	public void onBlur(BlurEvent event) {
 		changeListenerTimer.cancel();
+	}
+
+	protected void maybeCommit() {
+		if (!getTextBox().getText().equals(lastQueuedText)
+				&& !getTextBox().getStyleName().contains(
+						"alcina-FilterHint")) {
+			queueCommit();
+		}
 	}
 }
