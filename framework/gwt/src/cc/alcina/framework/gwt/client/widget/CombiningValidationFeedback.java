@@ -33,8 +33,13 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 
 	@Override
 	public void handleException(Object source, ValidationException exception) {
-		collector.addException(source, message == null ? exception
-				: new ValidationException(message));
+		ValidationException messagingException = exception;
+		// pass-through subtypes
+		if (messagingException.getClass() == ValidationException.class) {
+			messagingException = new ValidationException(
+					message == null ? getMessage(exception) : message);
+		}
+		collector.addException(source, messagingException);
 	}
 
 	public boolean hasExceptions() {
@@ -48,6 +53,8 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 
 	public static class CombiningValidationFeedbackCollector {
 		protected Map<Object, ValidationException> exceptions = new LinkedHashMap<Object, ValidationException>();
+
+		private String caption;
 
 		public void clear() {
 			exceptions.clear();
@@ -78,8 +85,9 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 			showFeedbackPanel(fp);
 		}
 
-		protected String getCaption() {
-			return "Please correct the following";
+		public String getCaption() {
+			caption = "Please correct the following";
+			return caption;
 		}
 
 		protected void showFeedbackPanel(FlowPanel fp) {
@@ -89,8 +97,12 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		void addException(Object source, ValidationException exception) {
 			exceptions.put(source, exception);
 		}
+
+		public void setCaption(String caption) {
+			this.caption = caption;
+		}
 	}
-	
+
 	public static class ValidationExceptionWithHtmlMessage extends
 			ValidationException {
 		private ValidationException source;

@@ -346,6 +346,10 @@ public class WidgetUtils {
 	}
 
 	public static void replace(Widget current, Widget newWidget) {
+		if(current.getParent() instanceof SimplePanel){
+			((SimplePanel)current.getParent()).setWidget(newWidget);
+			return;
+		}
 		ComplexPanel cp = (ComplexPanel) current.getParent();
 		int index = cp.getWidgetIndex(current);
 		cp.remove(index);

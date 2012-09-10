@@ -19,6 +19,7 @@ import java.util.HashMap;
 
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator.ProcessingServerValidationException;
 import cc.alcina.framework.gwt.client.logic.WidgetByElementTracker;
+import cc.alcina.framework.gwt.client.util.DomUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.user.client.DOM;
@@ -95,6 +96,9 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 	public void handleException(Object source, ValidationException exception) {
 		final Widget w = (Widget) source;
 		resolve(source);
+		if (!DomUtils.isVisibleAncestorChain(w.getElement())) {
+			return;
+		}
 		final RelativePopup p = new RelativePopup();
 		p.setVisible(false);
 		popups.put(source, p);
@@ -194,5 +198,13 @@ public class RelativePopupValidationFeedback extends AbstractValidationFeedback 
 
 	public void setAsHtml(boolean asHtml) {
 		this.asHtml = asHtml;
+	}
+
+	public int getPosition() {
+		return this.position;
+	}
+
+	public void setPosition(int position) {
+		this.position = position;
 	}
 }

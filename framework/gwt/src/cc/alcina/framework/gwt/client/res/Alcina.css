@@ -970,6 +970,7 @@ table.results-table {
 .gwittir-ValidationPopup {
 	font-size: 11px;
 	color: #F33;
+	text-align:left;
 }
 
 .popupContent {
@@ -1651,9 +1652,10 @@ table.gwittir-BoundTable.handles-as-checkboxes td {
 
 textarea.hint {
 	font-style: italic;
-	color:#777;
+	color: #777;
 }
-.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel {
+
+.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel, .button-panel {
 	text-align: center;
 	margin-top: 2em;
 }
@@ -1676,7 +1678,11 @@ textarea.hint {
 	border: 1px solid #AAA;
 }
 
-.monospace, .monospace textarea{
+.monospace,.monospace textarea {
 	font-family: monospace;
-	font-size:125%;
+	font-size: 125%;
+}
+
+.radio-button-icon {
+	padding-right:1em;
 }

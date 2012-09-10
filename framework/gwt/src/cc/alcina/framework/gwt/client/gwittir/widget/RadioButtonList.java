@@ -19,11 +19,15 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.widget.SpanPanel;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -46,6 +50,8 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 	private final Renderer<T, String> renderer;
 
 	private final String groupName;
+
+	private Renderer<T, ImageResource> iconRenderer;
 
 	private int columnCount = 1;
 
@@ -130,12 +136,19 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 	private void render() {
 		fp.clear();
 		radioMap.clear();
-		table=new FlexTable();
+		table = new FlexTable();
 		int x = 0, y = 0;
 		for (T o : getValues()) {
 			String displayText = renderer.render(o);
 			labelMap.put(displayText, o);
-			RadioButton rb = new RadioButton(groupName, displayText);
+			if (iconRenderer != null) {
+				String imgHtml = AbstractImagePrototype.create(
+						iconRenderer.render(o)).getHTML();
+				displayText = CommonUtils.formatJ(
+						"<span class='radio-button-icon'>%s</span><span class='radio-button-icon-label'>%s</span>", imgHtml,
+						displayText);
+			}
+			RadioButton rb = new RadioButton(groupName, displayText, true);
 			radioMap.put(o, rb);
 			table.setWidget(y, x++, rb);
 			if (x == getColumnCount()) {
@@ -160,5 +173,14 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 
 	public FlexTable getTable() {
 		return this.table;
+	}
+
+	public Renderer<T, ImageResource> getIconRenderer() {
+		return this.iconRenderer;
+	}
+
+	public void setIconRenderer(Renderer<T, ImageResource> iconRenderer) {
+		this.iconRenderer = iconRenderer;
+		render();
 	}
 }

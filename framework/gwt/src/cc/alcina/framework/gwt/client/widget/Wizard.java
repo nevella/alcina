@@ -95,7 +95,11 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 	protected boolean canMoveForward() {
 		return pageIndex != pages.size() - 1;
 	}
-
+	public void gotoPage(int pageNumber){
+		if(pageNumber<pages.size()){
+			pageIndex=pageNumber;
+		}
+	}
 	public M getModel() {
 		return model;
 	}
@@ -151,7 +155,10 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		getExtraActions();
 		toolbar.setActions(actions);
 		refreshButtonActivation();
-		fp.add(toolbar);
+		FlowPanel holder = new FlowPanel();
+		holder.add(toolbar);
+		holder.setStyleName("wizard-toolbar-outer");
+		fp.add(holder);
 	}
 
 	private void renderHeader(FlowPanel fp) {
@@ -164,11 +171,11 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	private String styleName = "";
 
-	public Widget renderPage() {
-		return renderPage(true);
-	}
+	private boolean renderInScrollPanel = true;
 
-	public Widget renderPage(boolean inScrollPanel) {
+	private int contentScrollPanelHeight = 0;
+
+	public Widget renderPage() {
 		FlowPanel fp = new FlowPanel();
 		currentWidget = fp;
 		fp.setStyleName(FRAME_STYLE_NAME);
@@ -176,19 +183,26 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		renderHeader(fp);
 		if (usePageTabs) {
 			renderTabPane(fp);
-		} else {
-			Widget w = pages.get(pageIndex).getPageWidget();
-			w.addStyleName("wizard-form");
-			fp.add(w);
-			renderButtonsPane(fp);
-			toolbar.addVetoableActionListener(this);
+			return fp;
 		}
-		if (inScrollPanel) {
+		Widget w = pages.get(pageIndex).getPageWidget();
+		w.addStyleName("wizard-form");
+		if (contentScrollPanelHeight != 0) {
+			ScrollPanel sp = new ScrollPanel();
+			sp.setHeight(contentScrollPanelHeight + "px");
+			sp.add(w);
+			fp.add(sp);
+		} else {
+			fp.add(w);
+		}
+		renderButtonsPane(fp);
+		toolbar.addVetoableActionListener(this);
+		if (renderInScrollPanel) {
 			ScrollPanel sp = new ScrollPanel();
 			sp.getElement()
 					.getStyle()
 					.setPropertyPx("maxHeight",
-							Window.getClientHeight() * 90 / 100);
+							Window.getClientHeight() * 70 / 100);
 			sp.getElement().getStyle().setPadding(0.8, Unit.EM);
 			sp.add(fp);
 			return sp;
@@ -266,5 +280,21 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	public static interface WizardPage {
 		public Widget getPageWidget();
+	}
+
+	public boolean isRenderInScrollPanel() {
+		return this.renderInScrollPanel;
+	}
+
+	public void setRenderInScrollPanel(boolean renderInScrollPanel) {
+		this.renderInScrollPanel = renderInScrollPanel;
+	}
+
+	public int getContentScrollPanelHeight() {
+		return this.contentScrollPanelHeight;
+	}
+
+	public void setContentScrollPanelHeight(int contentScrollPanelHeight) {
+		this.contentScrollPanelHeight = contentScrollPanelHeight;
 	}
 }

@@ -19,9 +19,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
 import com.google.gwt.event.dom.client.KeyDownHandler;
+import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -59,7 +62,9 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 
 	private String hint;
 
-	private HandlerRegistration addFocusHandlerRegistration;
+	private HandlerRegistration keypressHandlerRegistration;
+
+	private HandlerRegistration focusHandlerRegistration;
 
 	public TextArea() {
 		this(false);
@@ -354,6 +359,9 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 						.getValue().equals(old)))) {
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
+		if (CommonUtils.isNullOrEmpty(value)) {
+			setHint(hint);
+		}
 	}
 
 	public void setVisibleLines(int lines) {
@@ -389,15 +397,27 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 		if (hint != null) {
 			base.setText(hint);
 			base.addStyleName("hint");
-			addFocusHandlerRegistration = base
-					.addFocusHandler(new FocusHandler() {
+			keypressHandlerRegistration = base
+					.addKeyPressHandler(new KeyPressHandler() {
 						@Override
-						public void onFocus(FocusEvent event) {
+						public void onKeyPress(KeyPressEvent event) {
 							base.setText(getValue());
 							base.removeStyleName("hint");
-							addFocusHandlerRegistration.removeHandler();
+							keypressHandlerRegistration.removeHandler();
+							focusHandlerRegistration.removeHandler();
 						}
 					});
+			focusHandlerRegistration = base.addFocusHandler(new FocusHandler() {
+				@Override
+				public void onFocus(FocusEvent event) {
+					Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+						@Override
+						public void execute() {
+							base.setCursorPos(0);
+						}
+					});
+				};
+			});
 		}
 	}
 }
