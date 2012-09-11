@@ -330,6 +330,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	}
 
 	protected void putCriteriaGroup(CriteriaGroup cg) {
+		
 		cgs.put(cg.getClass(), cg);
 		criteriaGroups.add(cg);
 	}

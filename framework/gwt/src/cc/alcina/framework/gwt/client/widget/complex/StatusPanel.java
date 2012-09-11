@@ -17,7 +17,9 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 
 public class StatusPanel extends Composite {
-	static final String RUNNING_TEMPLATE = "<div>%s...<br><br></div><div class='loading2'></div>";
+	public static final String RUNNING_TEMPLATE = "<div>%s...<br><br></div><div class='loading2'></div>";
+
+	public static final String WAIT_LINE_TEMPLATE = "<div><img src='img/wait.gif'>&#160;%s ...</div>";
 
 	private HTML content;
 
@@ -32,6 +34,8 @@ public class StatusPanel extends Composite {
 	private FlowPanel progressInner;
 
 	public static StatusPanel current;
+
+	private String runningTemplate = RUNNING_TEMPLATE;
 
 	private String problemStyleName = "problemito";
 
@@ -70,6 +74,10 @@ public class StatusPanel extends Composite {
 
 	List<StatusPanelModalNotifier> notifiers = new ArrayList<StatusPanel.StatusPanelModalNotifier>();
 
+	List<StatusPanelModalNotifier> logNotifiers = new ArrayList<StatusPanel.StatusPanelModalNotifier>();
+
+	private boolean keepNotifiersAsLog;
+
 	public static class StatusPanelModalNotifier implements ModalNotifier {
 		StatusPanel panel;
 
@@ -79,16 +87,15 @@ public class StatusPanel extends Composite {
 
 		private String message;
 
+
 		@Override
 		public void modalOn() {
-			panel.notifiers.add(this);
-			panel.notifiersChanged();
+			panel.addNotifier(this);
 		}
 
 		@Override
 		public void modalOff() {
-			panel.notifiers.remove(this);
-			panel.notifiersChanged();
+			panel.removeNotifier(this);
 		}
 
 		@Override
@@ -104,7 +111,6 @@ public class StatusPanel extends Composite {
 		public void setStatus(String status) {
 			this.message = status;
 			panel.notifiersChanged();
-			
 		}
 
 		@Override
@@ -131,6 +137,19 @@ public class StatusPanel extends Composite {
 		}
 	}
 
+	public void removeNotifier(StatusPanelModalNotifier notifier) {
+		notifiers.remove(notifier);
+		if (keepNotifiersAsLog) {
+			logNotifiers.add(notifier);
+		}
+		notifiersChanged();
+	}
+
+	public void addNotifier(StatusPanelModalNotifier notifier) {
+		notifiers.add(notifier);
+		notifiersChanged();
+	}
+
 	public void setProgress(double progress) {
 		progressPanel.setVisible(true);
 		int w = progressPanel.getOffsetWidth();
@@ -139,9 +158,19 @@ public class StatusPanel extends Composite {
 	}
 
 	public void notifiersChanged() {
+		modal = !notifiers.isEmpty();
+		String logHtml = "";
+		if (!logNotifiers.isEmpty()) {
+			for (StatusPanelModalNotifier notifier : logNotifiers) {
+				if (!logHtml.isEmpty()) {
+					logHtml += "<br>";
+				}
+				logHtml += notifier.message;
+			}
+		}
 		if (notifiers.isEmpty()) {
 			modal = false;
-			setContent("", false);
+			setContent(logHtml, false);
 		} else {
 			modal = true;
 			String html = "";
@@ -151,7 +180,7 @@ public class StatusPanel extends Composite {
 				}
 				html += notifier.message;
 			}
-			setRunning(html);
+			setRunning(html, logHtml);
 		}
 	}
 
@@ -177,7 +206,8 @@ public class StatusPanel extends Composite {
 		}
 		content.setHTML(html);
 		if (!inresize
-				&& ClientLayerLocator.get().clientBase().isDisplayInitialised()) {
+				&& ClientLayerLocator.get().clientBase().isDisplayInitialised()
+				&& ClientLayerLocator.get().isUsesRootLayoutPanel()) {
 			inresize = true;
 			RootLayoutPanel.get().onResize();
 			inresize = false;
@@ -186,6 +216,10 @@ public class StatusPanel extends Composite {
 
 	private void adoptNotifiersFromCurrent() {
 		if (current != null && current != this) {
+			for (StatusPanelModalNotifier notifier : current.logNotifiers) {
+				notifier.panel = this;
+				logNotifiers.add(notifier);
+			}
 			for (StatusPanelModalNotifier notifier : current.notifiers) {
 				notifier.panel = this;
 				notifiers.add(notifier);
@@ -205,6 +239,11 @@ public class StatusPanel extends Composite {
 	}
 
 	public void clear() {
+		for (StatusPanelModalNotifier notifier : new ArrayList<StatusPanelModalNotifier>(notifiers)) {
+			notifier.modalOff();
+		}
+		notifiers.clear();
+		logNotifiers.clear();
 		content.setHTML("");
 	}
 
@@ -215,8 +254,17 @@ public class StatusPanel extends Composite {
 	}
 
 	public void setRunning(String html) {
+		setRunning(html, "");
 		setVisible(html != null);
-		setContent(CommonUtils.formatJ(RUNNING_TEMPLATE, html));
+	}
+
+	public void setRunning(String runningHtml, String preRunningHtml) {
+		setVisible(runningHtml != null);
+		String pre = CommonUtils.isNotNullOrEmpty(preRunningHtml) ? preRunningHtml
+				+ "<br>"
+				: "";
+		String running = CommonUtils.formatJ(runningTemplate, runningHtml);
+		setContent(pre + running);
 	}
 
 	public void ensureModalOff() {
@@ -238,5 +286,21 @@ public class StatusPanel extends Composite {
 
 	public void setProblemStyleName(String problemStyleName) {
 		this.problemStyleName = problemStyleName;
+	}
+
+	public boolean isKeepNotifiersAsLog() {
+		return this.keepNotifiersAsLog;
+	}
+
+	public void setKeepNotifiersAsLog(boolean keepNotifiersAsLog) {
+		this.keepNotifiersAsLog = keepNotifiersAsLog;
+	}
+
+	public String getRunningTemplate() {
+		return this.runningTemplate;
+	}
+
+	public void setRunningTemplate(String runningTemplate) {
+		this.runningTemplate = runningTemplate;
 	}
 }

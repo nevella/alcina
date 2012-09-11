@@ -970,7 +970,7 @@ table.results-table {
 .gwittir-ValidationPopup {
 	font-size: 11px;
 	color: #F33;
-	text-align:left;
+	text-align: left;
 }
 
 .popupContent {
@@ -1226,7 +1226,7 @@ table.gwittir-BoundTable td,table.gwittir-GridForm td {
 	vertical-align: top;
 }
 
-table.gwittir-BoundTable .no-content {
+table.gwittir-BoundTable .no-content , .alcina-widgetList .no-content{
 	padding: 15px;
 	text-align: center;
 }
@@ -1655,7 +1655,7 @@ textarea.hint {
 	color: #777;
 }
 
-.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel, .button-panel {
+.alcina-BeanPanel.pwo-center-buttons  .alcina-SavePanel,.button-panel {
 	text-align: center;
 	margin-top: 2em;
 }
@@ -1684,5 +1684,13 @@ textarea.hint {
 }
 
 .radio-button-icon {
-	padding-right:1em;
+	padding-right: 1em;
+}
+
+button.alcina-Button.cancel {
+	margin-left: 1.5em;
+}
+
+button.alcina-Button.finish {
+	margin-left: 3em;
 }

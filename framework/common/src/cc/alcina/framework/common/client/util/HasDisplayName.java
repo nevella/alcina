@@ -14,7 +14,7 @@ public interface HasDisplayName {
 
 		@Override
 		public String render(HasDisplayName o) {
-			return o.displayName();
+			return o==null?"":o.displayName();
 		}
 	}
 }

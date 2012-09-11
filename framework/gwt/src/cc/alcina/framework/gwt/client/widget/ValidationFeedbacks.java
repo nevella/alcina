@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
 import cc.alcina.framework.common.client.gwittir.validator.StringHasLengthValidator;
 import cc.alcina.framework.gwt.client.widget.CombiningValidationFeedback.CombiningValidationFeedbackCollector;
 
+import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
 import com.totsp.gwittir.client.validator.CompositeValidationFeedback;
 import com.totsp.gwittir.client.validator.StyleValidationFeedback;
@@ -45,5 +46,14 @@ public class ValidationFeedbacks {
 		feedback.addMessage(StringHasLengthValidator.class, requiredMessage);
 		feedback.addMessage(NotNullValidator.class, requiredMessage);
 		return wrapCollector(wrapStyleFeedback(feedback), null);
+	}
+
+	public void wrapBindingsInCollector(Binding binding) {
+		for(Binding b:binding.provideAllBindings(null)){
+			if(b.getLeft()!=null&&b.getLeft().feedback!=null){
+				b.getLeft().feedback=wrapCollector(b.getLeft().feedback, null);
+			}
+		}
+		
 	}
 }

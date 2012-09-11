@@ -23,8 +23,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
+import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
-import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -62,7 +62,7 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 
 	private String hint;
 
-	private HandlerRegistration keypressHandlerRegistration;
+	private HandlerRegistration keydownHandlerRegistration;
 
 	private HandlerRegistration focusHandlerRegistration;
 
@@ -393,18 +393,22 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 	}
 
 	public void setHint(String hint) {
-		this.hint = hint;
-		if (hint != null) {
+		if (hint != null
+				&& (provideIsHinted() || CommonUtils.isNullOrEmpty(getValue()))) {
 			base.setText(hint);
 			base.addStyleName("hint");
-			keypressHandlerRegistration = base
-					.addKeyPressHandler(new KeyPressHandler() {
+			keydownHandlerRegistration = base
+					.addKeyDownHandler(new KeyDownHandler() {
 						@Override
-						public void onKeyPress(KeyPressEvent event) {
+						public void onKeyDown(KeyDownEvent event) {
 							base.setText(getValue());
 							base.removeStyleName("hint");
-							keypressHandlerRegistration.removeHandler();
-							focusHandlerRegistration.removeHandler();
+							if (keydownHandlerRegistration != null) {
+								keydownHandlerRegistration.removeHandler();
+								focusHandlerRegistration.removeHandler();
+								keydownHandlerRegistration = null;
+								focusHandlerRegistration = null;
+							}
 						}
 					});
 			focusHandlerRegistration = base.addFocusHandler(new FocusHandler() {
@@ -419,5 +423,6 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 				};
 			});
 		}
+		this.hint = hint;
 	}
 }
