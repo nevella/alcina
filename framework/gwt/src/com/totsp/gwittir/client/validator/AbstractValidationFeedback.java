@@ -35,8 +35,8 @@ public abstract class AbstractValidationFeedback implements ValidationFeedback {
     }
 
     public AbstractValidationFeedback addMessage(
-        Class validationExceptionClass, String message) {
-        mappings.put(validationExceptionClass, message);
+        Class validatorClass, String message) {
+        mappings.put(validatorClass, message);
 
         return this;
     }

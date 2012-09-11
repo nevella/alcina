@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.widget;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -54,7 +55,7 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 	public static class CombiningValidationFeedbackCollector {
 		protected Map<Object, ValidationException> exceptions = new LinkedHashMap<Object, ValidationException>();
 
-		private String caption;
+		private String caption = "Please correct the following";
 
 		public void clear() {
 			exceptions.clear();
@@ -86,7 +87,6 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		}
 
 		public String getCaption() {
-			caption = "Please correct the following";
 			return caption;
 		}
 
@@ -96,6 +96,9 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 
 		void addException(Object source, ValidationException exception) {
 			exceptions.put(source, exception);
+		}
+		public Collection<ValidationException> getExceptions(){
+			return exceptions.values();
 		}
 
 		public void setCaption(String caption) {

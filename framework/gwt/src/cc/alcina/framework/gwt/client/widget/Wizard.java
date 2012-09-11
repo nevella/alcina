@@ -63,8 +63,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 	protected PermissibleAction previousPage = new PermissibleAction("< Back",
 			PREVIOUS);
 
-	protected PermissibleAction finished = new PermissibleAction("Finish",
-			FINISH);
+	protected PermissibleAction finish = new PermissibleAction("Finish", FINISH);
 
 	protected PermissibleAction cancel = new PermissibleAction("Cancel", CANCEL);
 
@@ -95,11 +94,13 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 	protected boolean canMoveForward() {
 		return pageIndex != pages.size() - 1;
 	}
-	public void gotoPage(int pageNumber){
-		if(pageNumber<pages.size()){
-			pageIndex=pageNumber;
+
+	public void gotoPage(int pageNumber) {
+		if (pageNumber < pages.size()) {
+			pageIndex = pageNumber;
 		}
 	}
+
 	public M getModel() {
 		return model;
 	}
@@ -126,7 +127,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		for (PermissibleAction action : actions) {
 			ToolbarButton tb = toolbar.getButtonForAction(action);
 			if (tb != null) {
-				if (action == nextPage || action == finished) {
+				if (action == nextPage || action == finish) {
 					tb.setEnabled(isPageValid());
 				}
 			}
@@ -141,11 +142,11 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		if (canMoveForward()) {
 			actions.add(nextPage);
 		}
-		if (canFinishOnThisPage()) {
-			actions.add(finished);
-		}
 		if (canCancel()) {
 			actions.add(cancel);
+		}
+		if (canFinishOnThisPage()) {
+			actions.add(finish);
 		}
 		this.toolbar = new Toolbar();
 		toolbar.setRemoveListenersOnDetach(false);
@@ -154,6 +155,12 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		toolbar.setWidth("");
 		getExtraActions();
 		toolbar.setActions(actions);
+		if (actions.contains(cancel)) {
+			toolbar.getButtonForAction(cancel).addStyleName("cancel");
+		}
+		if (actions.contains(finish)) {
+			toolbar.getButtonForAction(finish).addStyleName("finish");
+		}
 		refreshButtonActivation();
 		FlowPanel holder = new FlowPanel();
 		holder.add(toolbar);
@@ -241,7 +248,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		if (evt.getAction() == cancel) {
 			onCancel();
 		}
-		if (evt.getAction() == finished) {
+		if (evt.getAction() == finish) {
 			onFinished();
 		}
 	}
