@@ -218,7 +218,7 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		// environment
 		dte.setObjectClassRef(ClassRef.forName(i));
 		dte.setObjectId(p.readLongShort("", ","));
-		dte.setObjectLocalId(p.readLongShort("", "\n"));
+		dte.setObjectLocalId(p.readLongShort("", ","));
 		dte.setObjectVersionNumber(p.readNonNegativeIntegerOrNull("", "\n"));
 		String pName = getString(p.read("", ","));
 		dte.setPropertyName(pName);
@@ -232,7 +232,7 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 		// environment
 		dte.setValueClassRef(ClassRef.forName(i));
 		dte.setValueId(p.readLongShort("", ","));
-		dte.setValueLocalId(p.readLongShort("", "\n"));
+		dte.setValueLocalId(p.readLongShort("", ","));
 		dte.setValueVersionNumber(p.readNonNegativeIntegerOrNull("", "\n"));
 		return dte;
 	}
