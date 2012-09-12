@@ -346,6 +346,10 @@ public class WidgetUtils {
 	}
 
 	public static void replace(Widget current, Widget newWidget) {
+		if (current.getParent() instanceof SimplePanel) {
+			((SimplePanel) current.getParent()).setWidget(newWidget);
+			return;
+		}
 		ComplexPanel cp = (ComplexPanel) current.getParent();
 		int index = cp.getWidgetIndex(current);
 		cp.remove(index);
@@ -606,12 +610,12 @@ public class WidgetUtils {
 		currentEvent.preventDefault();
 	}
 
-	
 	public static boolean isNewTabModifier() {
 		Event event = Event.getCurrentEvent();
 		return isNewTabModifier(event);
 	}
-	public static boolean isNewTabModifier(NativeEvent event ) {
+
+	public static boolean isNewTabModifier(NativeEvent event) {
 		return BrowserMod.getOperatingSystem().equals("Macintosh") ? event
 				.getMetaKey() : event.getCtrlKey();
 	}
@@ -740,5 +744,9 @@ public class WidgetUtils {
 		elt.setAttribute("autocorrect", "off");
 		elt.setAttribute("autocomplete", "off");
 		elt.setAttribute("spellcheck", "false");
+	}
+
+	public static void copySize(Widget from, Widget to) {
+		to.setSize(from.getOffsetWidth() + "px", from.getOffsetHeight() + "px");
 	}
 }

@@ -87,13 +87,20 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			// no custom properties
 		}
 	}
+	protected void initNonDb() throws Exception{
 
-	public void init() throws Exception {
 		loadCustomProperties();
 		initLoggers();
-		createSystemGroupsAndUsers();
 		initServiceImpl();
 		scanRegistryAndClassRefs();
+	}
+	public void init() throws Exception {
+		initNonDb();
+		initDb();
+		
+	}
+	protected void initDb() throws Exception{
+		createSystemGroupsAndUsers();
 		populateEntities();
 	}
 

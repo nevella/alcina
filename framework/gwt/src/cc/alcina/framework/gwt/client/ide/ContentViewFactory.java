@@ -77,6 +77,7 @@ import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -121,6 +122,26 @@ public class ContentViewFactory {
 		cp.addActionTable(createActionTable(beans, beanClass, converter,
 				actions, listener, withObjectActions, multiple));
 		return cp;
+	}
+
+	public static class WidgetList<T> extends Composite {
+		private FlowPanel fp;
+
+		public WidgetList(Collection<T> beans, Converter<T, Widget> converter,
+				String emptyMessage) {
+			this.fp = new FlowPanel();
+			initWidget(fp);
+			fp.setStyleName("alcina-widgetList");
+			if (beans.isEmpty()) {
+				Label l = new Label(emptyMessage);
+				l.setStyleName("no-content");
+				fp.add(l);
+			} else {
+				for (T t : beans) {
+					fp.add(converter.convert(t));
+				}
+			}
+		}
 	}
 
 	public ActionTableHolder createActionTable(Collection beans,
@@ -218,7 +239,8 @@ public class ContentViewFactory {
 				cp.setBeanValidator(beanValidator);
 				ArrayList list = new ArrayList();
 				list.add(bean);
-				OkCancelPanel sp = new OkCancelPanel("Save",cp, isCancelButton());
+				OkCancelPanel sp = new OkCancelPanel("Save", cp,
+						isCancelButton());
 				cp.add(sp);
 				cp.setOkButton(sp.okButton);
 				f.setFocusOnDetachIfEditorFocussed(sp.okButton);
@@ -330,7 +352,7 @@ public class ContentViewFactory {
 		cp.add(table);
 		cp.setBoundWidget(table);
 		if (editable && !autoSave) {
-			OkCancelPanel sp = new OkCancelPanel("Save",cp, isCancelButton());
+			OkCancelPanel sp = new OkCancelPanel("Save", cp, isCancelButton());
 			cp.add(sp);
 			cp.setOkButton(sp.okButton);
 			cp.setProvisionalObjects(cloned);
@@ -896,7 +918,8 @@ public class ContentViewFactory {
 
 		private Button cancelButton;
 
-		public OkCancelPanel(String okButtonName,ClickHandler clickHandler, boolean hasCancel) {
+		public OkCancelPanel(String okButtonName, ClickHandler clickHandler,
+				boolean hasCancel) {
 			FlowPanel fp = this;
 			fp.setStyleName("alcina-SavePanel");
 			this.okButton = new Button(okButtonName);

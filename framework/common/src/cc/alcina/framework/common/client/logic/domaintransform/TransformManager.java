@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHis
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
@@ -312,6 +313,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 			evt.setNewStringValue(SimpleStringParser.toString((((Date) value)
 					.getTime())));
 		} else if (value instanceof Enum) {
+			// make sure the enum is reflect-instantiable (although not strictly
+			// necessary here, it's a common dev problem to miss this
+			// annotation, and here is the best place to catch it
+			Class clazz = CommonLocator.get().classLookup()
+					.getClassForName(evt.getValueClassName());
 			evt.setNewStringValue(((Enum) value).name());
 		} else if (value instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;

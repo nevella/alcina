@@ -28,15 +28,15 @@ import java.util.HashMap;
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet" Cooper</a>
  */
 public abstract class AbstractValidationFeedback implements ValidationFeedback {
-    private HashMap mappings = new HashMap() /*<Class, Message>*/;
+    private HashMap<Class,String> mappings = new HashMap<Class, String>();
 
     public AbstractValidationFeedback() {
         super();
     }
 
     public AbstractValidationFeedback addMessage(
-        Class validationExceptionClass, String message) {
-        mappings.put(validationExceptionClass, message);
+        Class validatorClass, String message) {
+        mappings.put(validatorClass, message);
 
         return this;
     }
@@ -46,13 +46,13 @@ public abstract class AbstractValidationFeedback implements ValidationFeedback {
         String message = null;
 
         if(validationException.getValidatorClass() != null) {
-            message = (String) mappings.get(clazz);
+            message = mappings.get(clazz);
         }
 
         return (message == null) ? validationException.getMessage() : message;
     }
 
-	public HashMap getMappings() {
+	public  HashMap<Class,String> getMappings() {
 		return this.mappings;
 	}
 }

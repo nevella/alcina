@@ -13,19 +13,26 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.ui.AbstractImagePrototype;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.RadioButton;
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 
 @SuppressWarnings("deprecation")
@@ -33,11 +40,11 @@ import com.totsp.gwittir.client.ui.Renderer;
  *
  * @author Nick Reddel
  */
-public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
+public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		ClickHandler {
 	Map<String, T> labelMap = new HashMap<String, T>();
 
-	Map<T, RadioButton> radioMap = new HashMap<T, RadioButton>();
+	Map<T, CheckBox> checkMap = new HashMap<T, CheckBox>();
 
 	private FlowPanel fp;
 
@@ -47,11 +54,13 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 
 	private final String groupName;
 
+	private Renderer<T, ImageResource> iconRenderer;
+
 	private int columnCount = 1;
 
-	private T lastValue;
+	private Collection lastValues;
 
-	private T nonMatchedValue;
+	private Object nonMatchedValue;
 
 	private FlexTable table;
 
@@ -74,14 +83,22 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		return columnCount;
 	}
 
-	public T getValue() {
-		Set<T> keySet = radioMap.keySet();
+	protected boolean singleResult() {
+		return true;
+	}
+
+	public Object getValue() {
+		Set<T> keySet = checkMap.keySet();
+		Set results = new LinkedHashSet();
 		for (T object : keySet) {
-			if (radioMap.get(object).isChecked()) {
-				return object;
+			if (checkMap.get(object).getValue()) {
+				results.add(object);
 			}
 		}
-		return nonMatchedValue;
+		if (results.isEmpty() && singleResult()) {
+			results.add(nonMatchedValue);
+		}
+		return results;
 	}
 
 	public Collection<T> getValues() {
@@ -89,9 +106,9 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 	}
 
 	public boolean hasSelectedButton() {
-		Set<T> keySet = radioMap.keySet();
+		Set<T> keySet = checkMap.keySet();
 		for (T object : keySet) {
-			if (radioMap.get(object).isChecked()) {
+			if (checkMap.get(object).isChecked()) {
 				return true;
 			}
 		}
@@ -103,40 +120,52 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		render();
 	}
 
-	public void setValue(T value) {
-		Set<T> keySet = radioMap.keySet();
+	public void setValue(Object value) {
+		Collection values = CommonUtils.wrapInCollection(value);
+		values = values == null ? new LinkedHashSet() : values;
+		Set<T> keySet = checkMap.keySet();
 		boolean matched = false;
 		for (T object : keySet) {
-			boolean cMatched = object.equals(value);
-			radioMap.get(object).setChecked(cMatched);
+			boolean cMatched = values.contains(object);
+			checkMap.get(object).setValue(cMatched);
 			matched |= cMatched;
 		}
 		nonMatchedValue = matched ? null : value;
-		if (!CommonUtils.equalsWithNullEquality(value, lastValue)) {
-			this.changes
-					.firePropertyChange("value", lastValue, this.getValue());
+		if (!CommonUtils.equalsWithNullEquality(value, lastValues)) {
+			this.changes.firePropertyChange("value",
+					singleResult() ? singleValue((Collection<T>) lastValues)
+							: lastValues,
+					singleResult() ? singleValue() : this.getValue());
 		}
-		lastValue = value;
+		lastValues = values;
 	}
 
 	public void setValues(Collection<T> values) {
 		this.values = values;
 		render();
-		if (lastValue != null) {
-			setValue(lastValue);
+		if (lastValues != null) {
+			setValue(lastValues);
 		}
 	}
 
 	private void render() {
 		fp.clear();
-		radioMap.clear();
-		table=new FlexTable();
+		checkMap.clear();
+		table = new FlexTable();
 		int x = 0, y = 0;
 		for (T o : getValues()) {
 			String displayText = renderer.render(o);
 			labelMap.put(displayText, o);
-			RadioButton rb = new RadioButton(groupName, displayText);
-			radioMap.put(o, rb);
+			if (iconRenderer != null) {
+				String imgHtml = AbstractImagePrototype.create(
+						iconRenderer.render(o)).getHTML();
+				displayText = CommonUtils
+						.formatJ(
+								"<span class='radio-button-icon'>%s</span><span class='radio-button-icon-label'>%s</span>",
+								imgHtml, displayText);
+			}
+			CheckBox rb = createCheckBox(displayText);
+			checkMap.put(o, rb);
 			table.setWidget(y, x++, rb);
 			if (x == getColumnCount()) {
 				x = 0;
@@ -147,18 +176,46 @@ public class RadioButtonList<T> extends AbstractBoundWidget<T> implements
 		fp.add(table);
 	}
 
+	protected CheckBox createCheckBox(String displayText) {
+		return new RadioButton(groupName, displayText, true);
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public void onClick(ClickEvent event) {
-		Set<T> keySet = radioMap.keySet();
+		Set<T> keySet = checkMap.keySet();
 		for (T object : keySet) {
-			if (radioMap.get(object).equals(event.getSource())) {
-				setValue((T) object);
+			if (checkMap.get(object).equals(event.getSource())) {
+				if (singleResult()) {
+					setValue((T) object);
+				} else {
+					Collection c = (Collection) getValue();
+					setValue(c);
+				}
+				break;
 			}
 		}
 	}
 
 	public FlexTable getTable() {
 		return this.table;
+	}
+
+	public Renderer<T, ImageResource> getIconRenderer() {
+		return this.iconRenderer;
+	}
+
+	public void setIconRenderer(Renderer<T, ImageResource> iconRenderer) {
+		this.iconRenderer = iconRenderer;
+		render();
+	}
+
+	private T singleValue(Collection<T> values) {
+		return CommonUtils.isNullOrEmpty(values) ? null : values.iterator()
+				.next();
+	}
+
+	public T singleValue() {
+		return singleValue((Collection<T>) getValue());
 	}
 }

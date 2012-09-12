@@ -19,8 +19,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
+import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpHandler;
@@ -59,7 +62,9 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 
 	private String hint;
 
-	private HandlerRegistration addFocusHandlerRegistration;
+	private HandlerRegistration keydownHandlerRegistration;
+
+	private HandlerRegistration focusHandlerRegistration;
 
 	public TextArea() {
 		this(false);
@@ -354,6 +359,9 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 						.getValue().equals(old)))) {
 			this.changes.firePropertyChange("value", old, this.getValue());
 		}
+		if (CommonUtils.isNullOrEmpty(value)) {
+			setHint(hint);
+		}
 	}
 
 	public void setVisibleLines(int lines) {
@@ -385,19 +393,36 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 	}
 
 	public void setHint(String hint) {
-		this.hint = hint;
-		if (hint != null) {
+		if (hint != null
+				&& (provideIsHinted() || CommonUtils.isNullOrEmpty(getValue()))) {
 			base.setText(hint);
 			base.addStyleName("hint");
-			addFocusHandlerRegistration = base
-					.addFocusHandler(new FocusHandler() {
+			keydownHandlerRegistration = base
+					.addKeyDownHandler(new KeyDownHandler() {
 						@Override
-						public void onFocus(FocusEvent event) {
+						public void onKeyDown(KeyDownEvent event) {
 							base.setText(getValue());
 							base.removeStyleName("hint");
-							addFocusHandlerRegistration.removeHandler();
+							if (keydownHandlerRegistration != null) {
+								keydownHandlerRegistration.removeHandler();
+								focusHandlerRegistration.removeHandler();
+								keydownHandlerRegistration = null;
+								focusHandlerRegistration = null;
+							}
 						}
 					});
+			focusHandlerRegistration = base.addFocusHandler(new FocusHandler() {
+				@Override
+				public void onFocus(FocusEvent event) {
+					Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+						@Override
+						public void execute() {
+							base.setCursorPos(0);
+						}
+					});
+				};
+			});
 		}
+		this.hint = hint;
 	}
 }

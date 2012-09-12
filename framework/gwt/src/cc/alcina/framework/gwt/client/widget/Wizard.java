@@ -63,8 +63,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 	protected PermissibleAction previousPage = new PermissibleAction("< Back",
 			PREVIOUS);
 
-	protected PermissibleAction finished = new PermissibleAction("Finish",
-			FINISH);
+	protected PermissibleAction finish = new PermissibleAction("Finish", FINISH);
 
 	protected PermissibleAction cancel = new PermissibleAction("Cancel", CANCEL);
 
@@ -96,6 +95,12 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		return pageIndex != pages.size() - 1;
 	}
 
+	public void gotoPage(int pageNumber) {
+		if (pageNumber < pages.size()) {
+			pageIndex = pageNumber;
+		}
+	}
+
 	public M getModel() {
 		return model;
 	}
@@ -122,7 +127,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		for (PermissibleAction action : actions) {
 			ToolbarButton tb = toolbar.getButtonForAction(action);
 			if (tb != null) {
-				if (action == nextPage || action == finished) {
+				if (action == nextPage || action == finish) {
 					tb.setEnabled(isPageValid());
 				}
 			}
@@ -137,11 +142,11 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		if (canMoveForward()) {
 			actions.add(nextPage);
 		}
-		if (canFinishOnThisPage()) {
-			actions.add(finished);
-		}
 		if (canCancel()) {
 			actions.add(cancel);
+		}
+		if (canFinishOnThisPage()) {
+			actions.add(finish);
 		}
 		this.toolbar = new Toolbar();
 		toolbar.setRemoveListenersOnDetach(false);
@@ -150,8 +155,17 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		toolbar.setWidth("");
 		getExtraActions();
 		toolbar.setActions(actions);
+		if (actions.contains(cancel)) {
+			toolbar.getButtonForAction(cancel).addStyleName("cancel");
+		}
+		if (actions.contains(finish)) {
+			toolbar.getButtonForAction(finish).addStyleName("finish");
+		}
 		refreshButtonActivation();
-		fp.add(toolbar);
+		FlowPanel holder = new FlowPanel();
+		holder.add(toolbar);
+		holder.setStyleName("wizard-toolbar-outer");
+		fp.add(holder);
 	}
 
 	private void renderHeader(FlowPanel fp) {
@@ -164,11 +178,11 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	private String styleName = "";
 
-	public Widget renderPage() {
-		return renderPage(true);
-	}
+	private boolean renderInScrollPanel = true;
 
-	public Widget renderPage(boolean inScrollPanel) {
+	private int contentScrollPanelHeight = 0;
+
+	public Widget renderPage() {
 		FlowPanel fp = new FlowPanel();
 		currentWidget = fp;
 		fp.setStyleName(FRAME_STYLE_NAME);
@@ -176,19 +190,26 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		renderHeader(fp);
 		if (usePageTabs) {
 			renderTabPane(fp);
-		} else {
-			Widget w = pages.get(pageIndex).getPageWidget();
-			w.addStyleName("wizard-form");
-			fp.add(w);
-			renderButtonsPane(fp);
-			toolbar.addVetoableActionListener(this);
+			return fp;
 		}
-		if (inScrollPanel) {
+		Widget w = pages.get(pageIndex).getPageWidget();
+		w.addStyleName("wizard-form");
+		if (contentScrollPanelHeight != 0) {
+			ScrollPanel sp = new ScrollPanel();
+			sp.setHeight(contentScrollPanelHeight + "px");
+			sp.add(w);
+			fp.add(sp);
+		} else {
+			fp.add(w);
+		}
+		renderButtonsPane(fp);
+		toolbar.addVetoableActionListener(this);
+		if (renderInScrollPanel) {
 			ScrollPanel sp = new ScrollPanel();
 			sp.getElement()
 					.getStyle()
 					.setPropertyPx("maxHeight",
-							Window.getClientHeight() * 90 / 100);
+							Window.getClientHeight() * 70 / 100);
 			sp.getElement().getStyle().setPadding(0.8, Unit.EM);
 			sp.add(fp);
 			return sp;
@@ -227,7 +248,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		if (evt.getAction() == cancel) {
 			onCancel();
 		}
-		if (evt.getAction() == finished) {
+		if (evt.getAction() == finish) {
 			onFinished();
 		}
 	}
@@ -266,5 +287,21 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	public static interface WizardPage {
 		public Widget getPageWidget();
+	}
+
+	public boolean isRenderInScrollPanel() {
+		return this.renderInScrollPanel;
+	}
+
+	public void setRenderInScrollPanel(boolean renderInScrollPanel) {
+		this.renderInScrollPanel = renderInScrollPanel;
+	}
+
+	public int getContentScrollPanelHeight() {
+		return this.contentScrollPanelHeight;
+	}
+
+	public void setContentScrollPanelHeight(int contentScrollPanelHeight) {
+		this.contentScrollPanelHeight = contentScrollPanelHeight;
 	}
 }

@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import java.util.Set;
+import java.util.Stack;
 
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -25,7 +26,15 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 		return new WebException("(Wrapped GWT exception) : "
 				+ errorBuffer.toString());
 	}
-
+	private Stack<UncaughtExceptionHandler> handlerStack=new Stack<GWT.UncaughtExceptionHandler>();
+	
+	public void push(UncaughtExceptionHandler handler){
+		handlerStack.push(GWT.getUncaughtExceptionHandler());
+		GWT.setUncaughtExceptionHandler(handler);
+	}
+	public void pop(){
+		GWT.setUncaughtExceptionHandler(handlerStack.pop());
+	}
 	private void unrollUmbrella(Throwable e, StringBuffer errorBuffer) {
 		if (e instanceof UmbrellaException) {
 			errorBuffer.append("\nUmbrellaException");

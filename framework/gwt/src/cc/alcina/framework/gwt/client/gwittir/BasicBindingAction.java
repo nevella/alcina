@@ -22,7 +22,7 @@ import com.totsp.gwittir.client.ui.BoundWidget;
  * @author Nick Reddel
  */
 public abstract class BasicBindingAction<T extends BoundWidget<?>> implements
-		BindingAction<T> {
+		BindingAction<T>, HasBinding {
 	protected Binding binding = new Binding();
 
 	public Binding getBinding() {
@@ -32,15 +32,16 @@ public abstract class BasicBindingAction<T extends BoundWidget<?>> implements
 	public void bind(T widget) {
 		binding.bind();
 	}
-
+	boolean wasSet = false;
 	public void execute(T model) {
 	}
 
 	public void set(BoundWidget widget) {
-		if (!binding.getChildren().isEmpty()) {
+		if (wasSet) {
 			return;
 		}
 		set0(widget);
+		wasSet=true;
 	}
 
 	protected abstract void set0(BoundWidget widget);

@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import cc.alcina.framework.gwt.client.util.DomUtils;
+
+import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.log.Logger;
 import com.totsp.gwittir.client.ui.BoundWidget;
@@ -275,6 +278,9 @@ public class Binding {
 		}
 		try {
 			if ((left != null) && (right != null)) {
+				if (leftObjectIsHiddenWidget()) {
+					return true;
+				}
 				if (left.validator != null) {
 					left.validator.validate(left.property.getAccessorMethod()
 							.invoke(left.object, null));
@@ -415,6 +421,9 @@ public class Binding {
 		}
 		if ((left != null) && (right != null)) {
 			if (left.validator != null) {
+				if (leftObjectIsHiddenWidget()) {
+					return true;
+				}
 				try {
 					left.validator.validate(left.property.getAccessorMethod()
 							.invoke(left.object, null));
@@ -454,6 +463,16 @@ public class Binding {
 			valid = valid & child.validate();
 		}
 		return valid;
+	}
+
+	protected boolean leftObjectIsHiddenWidget() {
+		if (left.object instanceof Widget) {
+			if (!DomUtils.isVisibleAncestorChain(((Widget) left.object)
+					.getElement())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	BindingInstance createBindingInstance(SourcesPropertyChangeEvents object,
@@ -719,6 +738,7 @@ public class Binding {
 			try {
 				target.property.getMutatorMethod().invoke(target.object, args);
 			} catch (Exception e) {
+				e.printStackTrace();
 				// throw new RuntimeException(
 				// "Exception setting property: "+target.property.getName(), e);
 				LOGGER.log(Level.ERROR, "Exception setting property: "
@@ -790,5 +810,15 @@ public class Binding {
 
 	public boolean isBound() {
 		return bound;
+	}
+
+	public Binding provideBindingByLeftObject(Object left) {
+		List<Binding> bindings = provideAllBindings(null);
+		for (Binding binding : bindings) {
+			if (binding.getLeft() != null && binding.getLeft().object == left) {
+				return binding;
+			}
+		}
+		return null;
 	}
 }

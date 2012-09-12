@@ -63,7 +63,12 @@ public class ObjectActionLinkCustomiser implements Customiser {
 			this.fp = new FlowPanel();
 			initWidget(fp);
 		}
-
+		public ObjectActionLink(List<PermissibleAction> vetoableActions,Object value) {
+			this();
+			setModel(value);
+			setVetoableActions(vetoableActions);
+			setValue(value);
+		}
 		public void setValue(Object value) {
 			setVisible(value!=null);
 		}

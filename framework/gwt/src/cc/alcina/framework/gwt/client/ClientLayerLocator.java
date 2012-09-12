@@ -38,7 +38,7 @@ public class ClientLayerLocator {
 		}
 		return theInstance;
 	}
-
+	private boolean usesRootLayoutPanel;
 	private CommonRemoteServiceAsyncProvider commonRemoteServiceAsyncProvider;
 
 	private ActionLogProvider actionLogProvider;
@@ -168,5 +168,13 @@ public class ClientLayerLocator {
 
 	public TimerWrapperProvider timerWrapperProvider() {
 		return timerWrapperProvider;
+	}
+
+	public boolean isUsesRootLayoutPanel() {
+		return this.usesRootLayoutPanel;
+	}
+
+	public void setUsesRootLayoutPanel(boolean usesRootLayoutPanel) {
+		this.usesRootLayoutPanel = usesRootLayoutPanel;
 	}
 }

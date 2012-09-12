@@ -69,9 +69,11 @@ import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.Introspector;
 import com.totsp.gwittir.client.beans.Property;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.table.Field;
@@ -609,5 +611,31 @@ public class GwittirBridge implements PropertyAccessor {
 			}
 		}
 		return null;
+	}
+
+	public static BoundWidget createWidget(Binding parent, Field field,
+			SourcesPropertyChangeEvents target, Object model) {
+		final BoundWidget widget;
+		Binding binding;
+		if (field.getCellProvider() != null) {
+			widget = field.getCellProvider().get();
+		} else {
+			final Property p = Introspector.INSTANCE.getDescriptor(target)
+					.getProperty(field.getPropertyName());
+			widget = SIMPLE_FACTORY.getWidgetProvider(field.getPropertyName(),
+					p.getType()).get();
+		}
+		binding = new Binding(widget, "value", field.getValidator(),
+				field.getFeedback(), target, field.getPropertyName(), null,
+				null);
+		widget.setModel(model);
+		if (field.getConverter() != null) {
+			binding.getRight().converter = field.getConverter();
+		}
+		if (field.getComparator() != null) {
+			widget.setComparator(field.getComparator());
+		}
+		parent.getChildren().add(binding);
+		return widget;
 	}
 }

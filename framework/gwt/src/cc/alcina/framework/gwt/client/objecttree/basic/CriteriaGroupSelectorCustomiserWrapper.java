@@ -84,7 +84,7 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup> ext
 		this.filterRbl.addPropertyChangeListener("value",
 				new PropertyChangeListener() {
 					public void propertyChange(PropertyChangeEvent evt) {
-						criteriaGroup.setCombinator(filterRbl.getValue());
+						criteriaGroup.setCombinator(filterRbl.singleValue());
 					}
 				});
 		this.customiser.addPropertyChangeListener("value",
