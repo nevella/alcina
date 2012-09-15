@@ -31,9 +31,9 @@ public abstract class DomainBaseVersionable extends DomainBase implements IVersi
 		return this.creationDate;
 	}
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY,targetEntity=AlcinaTemplateUser.class)
 	@JoinColumn(name = "creation_user_id")
-	public AlcinaTemplateUser getCreationUser() {
+	public IUser getCreationUser() {
 		return this.creationUser;
 	}
 
@@ -43,9 +43,9 @@ public abstract class DomainBaseVersionable extends DomainBase implements IVersi
 		return this.lastModificationDate;
 	}
 
-	@ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
+	@ManyToOne( fetch = FetchType.LAZY,targetEntity=AlcinaTemplateUser.class)
 	@JoinColumn(name = "modification_user_id")
-	public AlcinaTemplateUser getLastModificationUser() {
+	public IUser getLastModificationUser() {
 		return this.lastModificationUser;
 	}
 	public void setCreationDate(Date creationDate) {
