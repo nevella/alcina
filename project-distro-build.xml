@@ -155,17 +155,7 @@
 		<touch file="${j2ee-server.unear.target}/META-INF/application.xml" />
 		<touch file="${j2ee-server.unear.target}/../${j2ee-server.unear.name}.dodeploy" />
 	</target>
-	<target name="patch-module" unless="isdev">
-		<copy file="${project.gwt.module.file}" tofile="${project.gwt.module.file}.copy" />
-		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.1}" />
-		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.2}" />
-		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.3}" />
-		<replace file="${project.gwt.module.file}" value="" token="${gwt.replace.4}" />
-	</target>
-	<target name="unpatch-module" unless="isdev">
-		<copy file="${project.gwt.module.file}.copy" tofile="${project.gwt.module.file}" />
-		<delete file="${project.gwt.module.file}.copy" />
-	</target>
+
 	<!-- needed so gwt can see the compiled annotations, if any, from client source -->
 	<target name="compile-client" depends="compile">
 		<mkdir dir="${project.client.bin.dir}" />
@@ -182,14 +172,6 @@
 		</javac>
 	</target>
 	<target name="compile-gwt" description="Compile the GWT app" depends="compile-client">
-		<condition property="isdev">
-			<istrue value="${developer}" />
-		</condition>
-		<antcall target="patch-module" />
-		<antcall target="compile-gwt-nopatch" />
-		<antcall target="unpatch-module" />
-	</target>
-	<target name="compile-gwt-nopatch" description="Compile the GWT app" depends="compile-client">
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
