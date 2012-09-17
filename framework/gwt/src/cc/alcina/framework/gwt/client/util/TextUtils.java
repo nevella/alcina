@@ -29,7 +29,11 @@ public class TextUtils {
 		int r0 = 0;
 		int r1 = s.length();
 		Label l = new Label();
-		l.getElement().setPropertyString("style", style);
+		try {
+			l.getElement().setPropertyString("style", style);
+		} catch (Exception e) {
+			l.getElement().getStyle().setProperty("cssText", style);
+		}
 		Style cStyle = l.getElement().getStyle();
 		cStyle.setPosition(Position.ABSOLUTE);
 		cStyle.setLeft(0, Unit.PX);
