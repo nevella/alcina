@@ -34,9 +34,11 @@ import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -67,6 +69,8 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.logical.shared.AttachEvent;
+import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
@@ -79,8 +83,10 @@ import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import com.totsp.gwittir.client.beans.Binding.BindingInstance;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.table.DataProvider;
 import com.totsp.gwittir.client.ui.table.Field;
@@ -95,6 +101,42 @@ import com.totsp.gwittir.client.validator.Validator;
  * @author Nick Reddel
  */
 public class ContentViewFactory {
+	static class RecheckVisibilityHandler implements Handler {
+		private final GridForm grid;
+
+		public RecheckVisibilityHandler(GridForm grid) {
+			this.grid = grid;
+		}
+
+		@Override
+		public void onAttachOrDetach(AttachEvent event) {
+			if (event.isAttached()) {
+				try {
+					PropertyAccessor pa = CommonLocator.get()
+							.propertyAccessor();
+					int r = 0;
+					for (Binding b : grid.getBinding().getChildren()) {
+						BindingInstance right = b.getRight();
+						VisualiserInfo visualiserInfo = pa
+								.getAnnotationForProperty(
+										right.object.getClass(),
+										VisualiserInfo.class,
+										right.property.getName());
+						if (visualiserInfo != null) {
+							if (!PermissionsManager.get().isPermissible(
+									right.object, visualiserInfo.visible())) {
+								grid.hideRow(r);
+							}
+						}
+						r++;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	public static final String CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS = ContentViewFactory.class
 			+ "::CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS";
 
@@ -224,6 +266,7 @@ public class ContentViewFactory {
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
 						editable, false);
 		GridForm f = new GridForm(fields, 1, factory);
+		f.addAttachHandler(new RecheckVisibilityHandler(f));
 		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean, fields));
 		f.setValue(bean);
 		cp.add(f);

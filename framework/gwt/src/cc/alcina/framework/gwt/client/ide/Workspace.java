@@ -57,6 +57,7 @@ import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * Hooks up the various navigation views and the editor widget
@@ -238,7 +239,20 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		handler.performAction(evt, obj, singleObj != null ? singleObj : colln,
 				this, clazz);
 	}
-
+	public SourcesPropertyChangeEvents getParentDomainObject(Object node){
+		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
+			DomainNode dn = (DomainNode) node;
+			node = dn.getParentItem();
+		}
+		if (node instanceof ProvidesParenting) {
+			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
+					.getPropertyCollectionProvider();
+			if (pcp != null) {
+				return pcp.getDomainObject();
+			}
+		}
+		return null;
+	}
 	public void handleParentLinks(Object node, HasIdAndLocalId newObj) {
 		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
 			DomainNode dn = (DomainNode) node;
