@@ -32,7 +32,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 public class WorkspaceDefaultActionHandlers {
 	@ClientInstantiable
-	protected abstract static class WorkspaceDefaultActionHandlerBase {
+	public abstract static class WorkspaceDefaultActionHandlerBase {
 		protected ContentViewFactory getContentViewFactory() {
 			ContentViewFactory viewFactory = new ContentViewFactory();
 			viewFactory.setCancelButton(true);
