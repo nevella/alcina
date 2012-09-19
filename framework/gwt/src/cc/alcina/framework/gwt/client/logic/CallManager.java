@@ -29,7 +29,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public class CallManager {
 	public static final String TOPIC_CALL_MADE = CallManager.class.getName()
-			+ "::TOPIC_CALL_MADE";
+			+ ".TOPIC_CALL_MADE";
 
 	private ArrayList<AsyncCallback> cancelled;
 

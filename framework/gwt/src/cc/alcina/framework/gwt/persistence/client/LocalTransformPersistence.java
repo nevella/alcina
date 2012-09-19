@@ -60,9 +60,14 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public abstract class LocalTransformPersistence implements StateChangeListener,
 		ClientTransformManager.PersistableTransformListener {
-	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED=LocalTransformPersistence.class.getName()+"::"+"CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED";
+	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED = LocalTransformPersistence.class
+			.getName() + "." + "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED";
 
-	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS = LocalTransformPersistence.class.getName()+"::"+"CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS";;
+	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS = LocalTransformPersistence.class
+			.getName()
+			+ "."
+			+ "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS";;
+
 	public static LocalTransformPersistence get() {
 		return localTransformPersistence;
 	}
@@ -449,8 +454,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	public abstract void reparentToClientInstance(
 			DTRSimpleSerialWrapper wrapper, ClientInstance clientInstance,
 			PersistenceCallback callback);
-	
-	
+
 	protected void setClientInstanceIdForGet(Long clientInstanceIdForGet) {
 		this.clientInstanceIdForGet = clientInstanceIdForGet;
 	}
@@ -458,7 +462,6 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	protected void setLocalStorageInstalled(boolean localStorageInstalled) {
 		this.localStorageInstalled = localStorageInstalled;
 	}
-
 
 	protected void showOfflineLimitMessage() {
 		ClientLayerLocator
@@ -532,14 +535,16 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		StringBuffer sb = new StringBuffer();
 
 		private List<DomainTransformEvent> items;
-		
+
 		DTRProtocolHandler handler;
 
 		public DTRAsyncSerializer(DomainTransformRequest dtr) {
 			super(1000, 200);
 			wrapper = new DTRSimpleSerialWrapper(dtr, true);
 			items = dtr.getEvents();
-			handler = new DTRProtocolSerializer().getHandler(getSerializationPolicy().getTransformPersistenceProtocol());
+			handler = new DTRProtocolSerializer()
+					.getHandler(getSerializationPolicy()
+							.getTransformPersistenceProtocol());
 		}
 
 		@Override
@@ -549,7 +554,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 		protected void onComplete() {
 			ClientLayerLocator.get().notifications().metricLogStart("persist");
-			sb=handler.finishSerialization(sb);
+			sb = handler.finishSerialization(sb);
 			wrapper.setText(sb.toString());
 			persist(wrapper, new PersistenceCallbackStd() {
 				@Override

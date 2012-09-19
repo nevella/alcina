@@ -126,7 +126,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = CommonRemoteServiceServlet.class
 			.getName()
-			+ "::"
+			+ "."
 			+ "CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS";
 
 	private int actionCount = 0;

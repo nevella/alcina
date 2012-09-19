@@ -33,7 +33,7 @@ public class TransformConflicts {
 	private static final String CHECK_TRANSFORM_CONFLICTS_QUERY = "check transform conflicts query";
 
 	public static final String TOPIC_CONFLICT_EVENT = TransformConflicts.class
-			.getName() + "::TOPIC_CONFLICT_EVENT";
+			.getName() + ".TOPIC_CONFLICT_EVENT";
 
 	private boolean ignoreConflicts;
 

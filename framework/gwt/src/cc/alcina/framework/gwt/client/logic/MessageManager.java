@@ -23,13 +23,13 @@ import cc.alcina.framework.gwt.client.widget.complex.StatusDisplayer;
  */
 public class MessageManager {
 	public static final String TOPIC_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + "::TOPIC_MESSAGE_PUBLISHED";
+			.getName() + ".TOPIC_MESSAGE_PUBLISHED";
 
 	public static final String TOPIC_ICY_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + "::TOPIC_ICY_MESSAGE_PUBLISHED";
+			.getName() + ".TOPIC_ICY_MESSAGE_PUBLISHED";
 
 	public static final String TOPIC_CENTER_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + "::TOPIC_CENTER_MESSAGE_PUBLISHED";
+			.getName() + ".TOPIC_CENTER_MESSAGE_PUBLISHED";
 
 	public void showMessage(String message) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_MESSAGE_PUBLISHED,

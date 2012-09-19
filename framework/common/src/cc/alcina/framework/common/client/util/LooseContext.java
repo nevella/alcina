@@ -11,7 +11,7 @@ import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 public class LooseContext {
 	private static final String TOPIC_PROPERTY_NAME = LooseContext.class
-			.getName() + "::Topics";
+			.getName() + ".Topics";
 
 	public Map<String, Object> properties = new HashMap<String, Object>();
 
