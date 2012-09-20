@@ -171,7 +171,8 @@
 			</classpath>
 		</javac>
 	</target>
-	<target name="compile-gwt" description="Compile the GWT app" depends="compile-client">
+	<target name="compile-gwt" description="Compile the GWT app" depends="compile-client,compile-gwt-nodeps" />
+	<target name="compile-gwt-nodeps" description="Compile the GWT app (no dependencies)" depends="">
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
