@@ -257,14 +257,15 @@ public class TransformPersister {
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 			// We know this is thread-local, so we can clear the tm transforms
 			// add the entity version checker now
-			tm.resetTltm(locatorMap,token.getTransformExceptionPolicy());
+			tm.resetTltm(locatorMap, token.getTransformExceptionPolicy());
 			tm.setEntityManager(getEntityManager());
 			ClientInstance persistentClientInstance = (ClientInstance) commonPersistenceBase
 					.findImplInstance(ClientInstance.class, request
 							.getClientInstance().getId());
-			if (persistentClientInstance.getAuth() != null
-					&& !(persistentClientInstance.getAuth().equals(request
-							.getClientInstance().getAuth()))) {
+			if (persistentClientInstance == null
+					|| (persistentClientInstance.getAuth() != null && !(persistentClientInstance
+							.getAuth().equals(request.getClientInstance()
+							.getAuth())))) {
 				DomainTransformException ex = new DomainTransformException(
 						"Invalid client instance authentication");
 				ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
