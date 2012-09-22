@@ -848,4 +848,8 @@ public class CommonUtils {
 		Collections.sort(items);
 		return items;
 	}
+
+	public static List dedupe(List objects) {
+		return new ArrayList(new LinkedHashSet(objects));
+	}
 }
