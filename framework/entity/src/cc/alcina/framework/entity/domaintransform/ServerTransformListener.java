@@ -11,9 +11,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.domaintransform;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -21,24 +21,25 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformLi
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ServerTransformListener implements DomainTransformListener {
-	public void domainTransform(DomainTransformEvent event)
+public class ServerTransformListener implements DomainTransformListener {
+	public void domainTransform(DomainTransformEvent evt)
 			throws DomainTransformException {
-		if (event.getCommitType() == CommitType.TO_STORAGE) {
+		if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
+			evt.setUtcDate(CommonLocator.get().currentUtcDateProvider()
+					.currentUtcDate());
+		} else if (evt.getCommitType() == CommitType.TO_STORAGE) {
 			TransformManager tm = TransformManager.get();
 			try {
-				tm.consume(event);
+				tm.consume(evt);
 			} catch (Exception e) {
-				 
-				 System.out.println("Direct cause:");
-				 System.out.println(event);
-				 throw DomainTransformException.wrap(e, event);
+				System.out.println("Direct cause:");
+				System.out.println(evt);
+				throw DomainTransformException.wrap(e, evt);
 			}
-			tm.setTransformCommitType(event, CommitType.ALL_COMMITTED);
+			tm.setTransformCommitType(evt, CommitType.ALL_COMMITTED);
 		}
 	}
 }
