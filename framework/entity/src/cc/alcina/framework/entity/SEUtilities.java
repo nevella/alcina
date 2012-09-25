@@ -146,6 +146,20 @@ public class SEUtilities {
 		}
 		System.out.println(bd.toString());
 	}
+	public static void dumpChars(String s, int width) {
+		StringBuilder bd = new StringBuilder();
+		int len = s.length();
+		for (int i = 0; i < len;i+=width) {
+			bd.append(CommonUtils.padStringLeft(Integer.toString(i), 8, '0'));
+			bd.append(":  ");
+			for (int j = 0; j < width; j++) {
+				boolean in = j + i < len;
+				bd.append(in ? s.charAt(j+i):' ');
+			}
+			bd.append('\n');
+		}
+		System.out.println(bd.toString());
+	}
 
 	private static Pattern yearRangePattern = Pattern
 			.compile("(\\d{4})(-(\\d{4}))?");
