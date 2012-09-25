@@ -38,6 +38,14 @@ public class LooseContext {
 	}
 
 	public Integer getInteger(String key) {
+		Object obj = properties.get(key);
+		if (obj instanceof String) {
+			try {
+				return Integer.parseInt((String) obj);
+			} catch (Exception e) {
+				return null;
+			}
+		}
 		return (Integer) properties.get(key);
 	}
 
@@ -125,14 +133,17 @@ public class LooseContext {
 			}
 		}
 	}
-	protected  void cloneToSnapshot(LooseContext cloned){
-		cloned.properties=new HashMap<String, Object>(properties);
+
+	protected void cloneToSnapshot(LooseContext cloned) {
+		cloned.properties = new HashMap<String, Object>(properties);
 	}
+
 	public LooseContext snapshot() {
-		LooseContext context=new LooseContext();
+		LooseContext context = new LooseContext();
 		cloneToSnapshot(context);
 		return context;
 	}
+
 	/* 
 	 * 
 	 */
@@ -140,7 +151,6 @@ public class LooseContext {
 		stack.push(properties);
 		listenerStack.push(addedListeners);
 		addedListeners = new Multimap<TopicListener, List<String>>();
-		
 		addedListeners.addAll(renderContext.addedListeners);
 		TopicPublisher publisher = ensureTopicPublisher();
 		for (TopicListener listener : addedListeners.keySet()) {
@@ -148,9 +158,7 @@ public class LooseContext {
 				publisher.addTopicListener(key, listener);
 			}
 		}
-		
 		properties = new HashMap<String, Object>(properties);
 		properties.putAll(renderContext.properties);
-		
 	}
 }
