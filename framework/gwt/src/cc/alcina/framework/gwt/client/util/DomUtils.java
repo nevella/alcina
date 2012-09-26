@@ -333,12 +333,12 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (match == null) {
 				System.out.println("Prefix matched:" + lastMatchedPath
 						+ "\n----------\n");
-				Map<String, Node> xpathMap = new HashMap<String, Node>();
+				Map<String, Node> xpathMap = new LinkedHashMap<String, Node>();
 				generateMap((Element) lastMatched, "", xpathMap);
 				dumpMap0(false, xpathMap);
 				if(count>3){
 					System.out.println("Parent map:");
-					xpathMap = new HashMap<String, Node>();
+					xpathMap = new LinkedHashMap<String, Node>();
 					generateMap((Element) lastMatched.getParentElement(), "", xpathMap);
 					dumpMap0(false, xpathMap);
 				}
@@ -523,7 +523,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (useXpathMap) {
 			if (lastContainer != container) {
 				lastContainer = container;
-				xpathMap = new HashMap<String, Node>();
+				xpathMap = new LinkedHashMap<String, Node>();
 				ClientNotifications notifications = ClientLayerLocator.get()
 						.notifications();
 				if (notifications != null) {

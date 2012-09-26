@@ -523,7 +523,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		return !isPermissible((Permissible) object);
 	}
 
-	protected boolean isRoot() {
+	public boolean isRoot() {
 		return root;
 	}
 
