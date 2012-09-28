@@ -66,7 +66,7 @@ public class RemoteActionLoggerProvider {
 
 	Map<ClassAndThreadToken, Logger> finishedLoggers = new HashMap<ClassAndThreadToken, Logger>();
 
-	public Logger getLogger(Class clazz) {
+	public synchronized Logger getLogger(Class clazz) {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
 		if (finishedLoggers.containsKey(token)) {
 			Logger logger = finishedLoggers.get(token);
@@ -81,7 +81,7 @@ public class RemoteActionLoggerProvider {
 		return l;
 	}
 
-	public void clearAllThreadLoggers() {
+	public synchronized void clearAllThreadLoggers() {
 		long id = Thread.currentThread().getId();
 		Iterator<Entry<ClassAndThreadToken, Logger>> itr = runningLoggers
 				.entrySet().iterator();
@@ -111,7 +111,7 @@ public class RemoteActionLoggerProvider {
 		logger.addAppender(wa);
 	}
 
-	public String resetLogBuffer(Class clazz) throws Exception {
+	public synchronized String resetLogBuffer(Class clazz) throws Exception {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
 		if (runningLoggers.containsKey(token)) {
 			Logger logger = runningLoggers.remove(token);
@@ -126,7 +126,7 @@ public class RemoteActionLoggerProvider {
 		return null;
 	}
 
-	public String closeLogger(Class clazz) {
+	public synchronized String closeLogger(Class clazz) {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
 		if (runningLoggers.containsKey(token)) {
 			Logger logger = runningLoggers.remove(token);
