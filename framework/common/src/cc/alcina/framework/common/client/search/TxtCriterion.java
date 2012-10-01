@@ -88,4 +88,9 @@ public class TxtCriterion extends SearchCriterion {
 	public TxtCriterionType getTxtCriterionType() {
 		return txtCriterionType;
 	}
+	@Override
+	public String toString() {
+		String string = CommonUtils.nullToEmpty(getText());
+		return string.length() == 0 ? "" : getDisplayName() + ": " + string;
+	}
 }
