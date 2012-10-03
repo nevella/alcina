@@ -11,49 +11,25 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-
+import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ObjectRef implements Serializable {
+public class ObjectRef implements Serializable {
 	private long id;
 
 	private long localId;
 
 	private ClassRef classRef;
 
-	public long getId() {
-		return this.id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
-	}
-
-	public long getLocalId() {
-		return this.localId;
-	}
-
-	public void setLocalId(long localId) {
-		this.localId = localId;
-	}
-
-	public ClassRef getClassRef() {
-		return this.classRef;
-	}
-
-	public void setClassRef(ClassRef classRef) {
-		this.classRef = classRef;
-	}
+	private int versionNumber;
 
 	public ObjectRef() {
 	}
@@ -62,5 +38,40 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 		setClassRef(ClassRef.forClass(hili.getClass()));
 		setId(hili.getId());
 		setLocalId(hili.getLocalId());
+		if (hili instanceof HasVersionNumber) {
+			setVersionNumber(((HasVersionNumber) hili).getVersionNumber());
+		}
+	}
+
+	public ClassRef getClassRef() {
+		return this.classRef;
+	}
+
+	public long getId() {
+		return this.id;
+	}
+
+	public long getLocalId() {
+		return this.localId;
+	}
+
+	public int getVersionNumber() {
+		return this.versionNumber;
+	}
+
+	public void setClassRef(ClassRef classRef) {
+		this.classRef = classRef;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public void setLocalId(long localId) {
+		this.localId = localId;
+	}
+
+	public void setVersionNumber(int versionNumber) {
+		this.versionNumber = versionNumber;
 	}
 }
