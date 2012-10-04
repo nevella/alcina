@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.Vetoer;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
@@ -388,7 +389,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 			}
 			if (isLoggedIn()) {
 				if (o instanceof HasOwner) {
-					permitted |= isOwnerOf((HasOwner) o);
+					permitted |= permitDueToOwnership((HasOwner) o);
 				}
 			}
 		}
@@ -403,9 +404,10 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		return permitted;
 	}
 
-	public boolean isOwnerOf(HasOwner hasOwner) {
-		return (hasOwner.getOwner() == null || hasOwner.getOwner().equals(
-				instantiatedUser));
+	public boolean permitDueToOwnership(HasOwner hasOwner) {
+		return hasOwner.getOwner() == null ? hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
+				.getLocalId() != 0 : false
+				: hasOwner.getOwner().equals(instantiatedUser);
 	}
 
 	public boolean isPermissible(Object o, Permission p) {

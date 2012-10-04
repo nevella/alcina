@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 public class LooseContext {
 	private static final String TOPIC_PROPERTY_NAME = LooseContext.class

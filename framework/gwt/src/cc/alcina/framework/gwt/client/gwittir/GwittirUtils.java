@@ -24,6 +24,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -213,9 +214,18 @@ public class GwittirUtils {
 		SetBasedListBox listBox = new SetBasedListBox();
 		Enum[] enumValues = clazz.getEnumConstants();
 		List options = new ArrayList(Arrays.asList(enumValues));
-		for (Enum e : ignore) {
-			options.remove(e);
-		}
+		options.removeAll(ignore);
+		listBox.setRenderer(renderer);
+		listBox.setOptions(options);
+		return listBox;
+	}
+
+	public static SetBasedListBox getForExtensibleEnumAndRenderer(
+			Class<? extends ExtensibleEnum> clazz, Renderer renderer,
+			Collection<? extends ExtensibleEnum> ignore) {
+		SetBasedListBox listBox = new SetBasedListBox();
+		List options = new ArrayList(ExtensibleEnum.values(clazz));
+		options.removeAll(ignore);
 		listBox.setRenderer(renderer);
 		listBox.setOptions(options);
 		return listBox;

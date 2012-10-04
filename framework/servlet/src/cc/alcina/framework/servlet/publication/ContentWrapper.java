@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.PublicationContent;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_PDF;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
@@ -119,7 +118,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		wrapper.printCss = CommonUtils.namedFormat(wrapper.printCss,
 				replacementParameters);
 		marshallToDoc();
-		boolean formatRequiresXml = deliveryModel.targetFormat().newInstance()
+		boolean formatRequiresXml = deliveryModel.provideTargetFormat()
 				.requiresXml();
 		transform(xslPath, formatRequiresXml);
 	}

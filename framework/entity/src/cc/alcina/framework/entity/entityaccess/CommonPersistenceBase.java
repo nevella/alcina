@@ -976,4 +976,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass) {
 		CommonPersistenceBase.handshakeObjectProviderClass = handshakeObjectProviderClass;
 	}
+
+	@Override
+	public <T extends WrapperPersistable> T getWrappedObjectForUser(
+			Class<? extends T> c, long userId) throws Exception {
+		T wofu = (T) EntityLayerLocator.get().wrappedObjectProvider()
+				.getWrappedObjectForUser(c, userId, getEntityManager());
+		return (T) wofu;
+	}
 }

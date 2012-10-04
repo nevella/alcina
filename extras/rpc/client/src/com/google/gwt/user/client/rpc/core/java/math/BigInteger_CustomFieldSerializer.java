@@ -18,12 +18,12 @@
  */
 package com.google.gwt.user.client.rpc.core.java.math;
 
+import java.math.BigInteger;
+
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
-
-import java.math.BigInteger;
 
 /**
  * Custom field serializer for BigInteger.

@@ -38,14 +38,12 @@ import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflecto
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
-import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
 import cc.alcina.framework.gwt.client.ide.node.HasVisibleCollection;
 import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;

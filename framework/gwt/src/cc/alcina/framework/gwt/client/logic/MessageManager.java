@@ -13,9 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
-import cc.alcina.framework.common.client.logic.StateListenable;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.gwt.client.widget.complex.StatusDisplayer;
 
 /**
  * 

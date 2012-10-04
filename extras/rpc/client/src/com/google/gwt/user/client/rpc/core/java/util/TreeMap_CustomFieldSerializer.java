@@ -15,14 +15,14 @@
  */
 package com.google.gwt.user.client.rpc.core.java.util;
 
+import java.util.Comparator;
+import java.util.TreeMap;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
-
-import java.util.Comparator;
-import java.util.TreeMap;
 
 /**
  * Custom field serializer for {@link java.util.TreeMap}.

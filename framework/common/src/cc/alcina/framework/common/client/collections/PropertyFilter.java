@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;

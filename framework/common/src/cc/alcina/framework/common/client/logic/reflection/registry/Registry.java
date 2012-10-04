@@ -46,14 +46,13 @@ public class Registry {
 		exactMap = new LookupMapToMap<Class>(2);
 	}
 
-	private static Registry theInstance = new Registry();
-
+	private static Registry instance = new Registry();
 	public static Registry get() {
-		return theInstance;
+		return instance;
 	}
 
 	public void appShutdown() {
-		theInstance = null;
+		instance = null;
 	}
 
 	public void register(Class registeringClass, RegistryLocation info) {
@@ -201,4 +200,6 @@ public class Registry {
 		}
 		return sb.toString();
 	}
+
+	
 }

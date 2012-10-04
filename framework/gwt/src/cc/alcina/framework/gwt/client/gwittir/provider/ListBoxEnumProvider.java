@@ -21,7 +21,6 @@ import cc.alcina.framework.gwt.client.gwittir.Comparators;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 

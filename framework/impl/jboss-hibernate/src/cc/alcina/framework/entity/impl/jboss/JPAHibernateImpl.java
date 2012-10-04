@@ -41,7 +41,6 @@ import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
-import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallbackWithShellObject;
 
 /**
  * 

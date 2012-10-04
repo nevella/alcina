@@ -20,7 +20,6 @@ import cc.alcina.framework.gwt.client.gwittir.widget.MultilineLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextArea;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
-import com.totsp.gwittir.client.ui.Label;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @ClientInstantiable

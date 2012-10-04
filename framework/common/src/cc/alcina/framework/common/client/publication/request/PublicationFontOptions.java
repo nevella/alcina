@@ -11,14 +11,42 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.publication.request;
 
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
+
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public abstract class PublicationFontOptions extends ExtensibleEnum {
+	public static final PublicationFontOptions ARIAL = new PublicationFontOptions_ARIAL();
 
- public enum PublicationFontOptions {
-	ARIAL,TIMES_NEW_ROMAN,COURIER,GEORGIA,ATHELAS
+	public static final PublicationFontOptions TIMES_NEW_ROMAN = new PublicationFontOptions_TIMES_NEW_ROMAN();
+
+	public static final PublicationFontOptions COURIER = new PublicationFontOptions_COURIER();
+
+	public static final PublicationFontOptions GEORGIA = new PublicationFontOptions_GEORGIA();
+
+	public static final PublicationFontOptions ATHELAS = new PublicationFontOptions_ATHELAS();
+
+	public static class PublicationFontOptions_ARIAL extends
+			PublicationFontOptions {
+	}
+
+	public static class PublicationFontOptions_TIMES_NEW_ROMAN extends
+			PublicationFontOptions {
+	}
+
+	public static class PublicationFontOptions_COURIER extends
+			PublicationFontOptions {
+	}
+
+	public static class PublicationFontOptions_GEORGIA extends
+			PublicationFontOptions {
+	}
+
+	public static class PublicationFontOptions_ATHELAS extends
+			PublicationFontOptions {
+	}
 }

@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
@@ -75,7 +74,7 @@ public class TransformConflicts {
 		}
 		// sigh
 		EntityManager em = ThreadlocalTransformManager.get().getEntityManager();
-		CommonPersistenceBase cpb = EntityLayerLocator.get()
+		CommonPersistenceLocal cpb = EntityLayerLocator.get()
 				.commonPersistenceProvider()
 				.getCommonPersistenceExTransaction();
 		String eql = String

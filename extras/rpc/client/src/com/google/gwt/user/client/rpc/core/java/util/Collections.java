@@ -15,14 +15,14 @@
  */
 package com.google.gwt.user.client.rpc.core.java.util;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Dummy class for nesting the custom serializer.

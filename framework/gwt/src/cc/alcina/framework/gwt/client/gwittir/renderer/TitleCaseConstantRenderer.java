@@ -11,14 +11,23 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-package cc.alcina.framework.common.client.publication.request;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  *
  * @author Nick Reddel
  */
 
- public enum PublicationDeliveryMode {
-	PREVIEW, DOWNLOAD, PRINT, EMAIL, SEND_TO_REPOSITORY
+ public class TitleCaseConstantRenderer extends FlexibleToStringRenderer {
+	public static final TitleCaseConstantRenderer INSTANCE = new TitleCaseConstantRenderer();
+
+	@Override
+	public String render(Object o) {
+		if (o == null) {
+			return "-- Any --";
+		}
+		return CommonUtils.titleCase(CommonUtils.friendlyConstant(o));
+	}
 }

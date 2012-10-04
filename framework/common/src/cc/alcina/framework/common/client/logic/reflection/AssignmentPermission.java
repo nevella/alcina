@@ -14,44 +14,20 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@ClientVisible
+@Target({ ElementType.METHOD })
 /**
- *
- * @author Nick Reddel
+ * Use to control access to the 'target object' (that which is being assigned to the field)
+ * Not needed on the client. 
  */
-public @interface DisplayInfo {
-	public static final int DISPLAY_AS_PROPERTY = 1;
-
-	public static final int DISPLAY_AS_TREE_NODE = 2;
-
-	public static final int DISPLAY_RO = 4;
-
-	public static final int DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER = 8;
-
-	public static final int DISPLAY_WRAP = 16;
-	
-	public static final int DISPLAY_LAZY_COLLECTION_NODE = 32;
-
-	public static final int DISPLAY_WRAP_PROPERTY = DISPLAY_WRAP|DISPLAY_AS_PROPERTY;
-
-	String helpText() default "";
-	
-	String styleName() default "";
-
-	String iconName() default "";// indicates no icon
-
-	String name();
-
-	int orderingHint() default 100;
-
-	int displayMask() default DISPLAY_AS_PROPERTY;
-	
-	Class filterClass() default Void.class;
-	
-	boolean focus() default false;
+public @interface AssignmentPermission {
+	Permission value() default @Permission(access = AccessLevel.ADMIN);
 }

@@ -4,8 +4,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import cc.alcina.framework.gwt.client.ide.provider.UmbrellaCollectionProviderMultiplexer.UmbrellaCollectionProvider;
-
 public interface LazyCollectionProvider<T> extends CollectionProvider {
 
 	public abstract boolean filter(String filterText);

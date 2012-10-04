@@ -32,13 +32,9 @@ import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
-import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 

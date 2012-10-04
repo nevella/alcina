@@ -22,9 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.collections.KeyValueMapper.StringKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.util.StringMap;
 
 import com.totsp.gwittir.client.beans.Converter;
 

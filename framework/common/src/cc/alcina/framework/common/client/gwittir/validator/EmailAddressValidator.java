@@ -18,7 +18,6 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.totsp.gwittir.client.validator.ValidationException;
-import com.totsp.gwittir.client.validator.Validator;
 
 @ClientInstantiable
 /**

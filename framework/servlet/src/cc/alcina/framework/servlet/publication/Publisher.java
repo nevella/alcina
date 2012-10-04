@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
-import cc.alcina.framework.common.client.publication.ContentDeliveryType.DELIVERY_PRINT;
+import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_PRINT;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
@@ -85,16 +85,16 @@ public class Publisher {
 						publicationContent.getClass());
 		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
 				crh.getResults(), publicationId, publicationUserId);
-		if (deliveryModel.deliveryMode() == null) {
+		if (deliveryModel.provideContentDeliveryType().getClass() == null) {
 			return null;
 		}
 		result.content = cw.wrappedContent;
-		if (deliveryModel.deliveryMode() == DELIVERY_PRINT.class) {
+		if (deliveryModel.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
 			return result;
 		}
 		FormatConverter fc = (FormatConverter) ServletLayerRegistry.get()
 				.instantiateSingle(FormatConverter.class,
-						deliveryModel.targetFormat());
+						deliveryModel.provideTargetFormat().getClass());
 		FormatConversionModel fcm = new FormatConversionModel();
 		fcm.html = cw.wrappedContent;
 		fcm.footer = cw.wrappedFooter;
@@ -103,7 +103,7 @@ public class Publisher {
 		InputStream convertedContent = fc.convert(fcm);
 		ContentDelivery deliverer = (ContentDelivery) ServletLayerRegistry
 				.get().instantiateSingle(ContentDeliveryType.class,
-						deliveryModel.deliveryMode());
+						deliveryModel.provideContentDeliveryType().getClass());
 		String token = deliverer.deliver(convertedContent, deliveryModel, fc);
 		result.content=null;
 		result.contentToken=token;

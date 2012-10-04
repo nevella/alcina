@@ -168,10 +168,6 @@ public class TransformPersister {
 		long maxEventId = 0;
 		Date precreDate = new Date();
 		for (DomainTransformEvent dte : items) {
-			if (dte.getObjectClass().getSimpleName().equals("Section")
-					&& dte.getObjectId() == 82) {
-				int j = 3;
-			}
 			if (dte.getObjectId() != 0) {
 				lkp.add(dte.getObjectClass(), dte.getObjectId());
 				if (dte.getTransformType() == TransformType.CREATE_OBJECT) {

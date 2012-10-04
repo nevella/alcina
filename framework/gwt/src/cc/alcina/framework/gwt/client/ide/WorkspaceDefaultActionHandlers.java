@@ -26,7 +26,6 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandl
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 
-import com.google.gwt.user.cellview.client.TreeNode;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Widget;
 

@@ -19,7 +19,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
@@ -43,7 +42,6 @@ import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.action.BindingAction;
 import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.Binding.BindingInstance;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.HasDefaultBinding;

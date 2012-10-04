@@ -22,7 +22,7 @@ import javax.mail.internet.MimeMultipart;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
-import cc.alcina.framework.common.client.publication.ContentDeliveryType.DELIVERY_EMAIL;
+import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_EMAIL;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -36,7 +36,7 @@ import cc.alcina.framework.servlet.publication.FormatConverter;
  * @author nreddel@barnet.com.au
  * 
  */
-@RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = DELIVERY_EMAIL.class)
+@RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = ContentDeliveryType_EMAIL.class)
 public class ContentDeliveryEmail implements ContentDelivery {
 	public static final String PUBLICATION_REASON_MESSAGE = "<!--PUBLICATION_REASON_MESSAGE-->";
 

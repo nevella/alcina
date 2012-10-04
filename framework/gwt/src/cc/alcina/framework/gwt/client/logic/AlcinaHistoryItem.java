@@ -21,13 +21,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.HistoryEventType;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SearchHistoryInfo;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
-
-import com.google.gwt.http.client.URL;
 
 public class AlcinaHistoryItem {
 	public boolean notAHistoryToken;

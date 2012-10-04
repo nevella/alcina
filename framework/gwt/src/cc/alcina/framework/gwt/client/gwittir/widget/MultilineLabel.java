@@ -1,10 +1,7 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import java.util.Comparator;
-
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
-import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Label;
 
 public class MultilineLabel extends Label implements MultilineWidget {

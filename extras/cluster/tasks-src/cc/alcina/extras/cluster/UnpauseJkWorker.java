@@ -9,8 +9,8 @@ import java.io.StringWriter;
 import java.net.URL;
 
 import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Task;
 import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
 
 public class UnpauseJkWorker extends Task {
 	private String workerName;

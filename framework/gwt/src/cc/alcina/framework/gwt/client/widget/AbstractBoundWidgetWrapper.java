@@ -1,12 +1,9 @@
 package cc.alcina.framework.gwt.client.widget;
 
-import java.util.Comparator;
-
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.BoundWidget;
 
 public class AbstractBoundWidgetWrapper<T, C> extends AbstractBoundWidget<T>
 		implements HasComplexPanel {

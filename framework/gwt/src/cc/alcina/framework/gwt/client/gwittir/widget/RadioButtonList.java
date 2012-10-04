@@ -13,15 +13,12 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.event.dom.client.ClickEvent;
