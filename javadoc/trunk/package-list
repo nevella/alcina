@@ -1,6 +1,7 @@
 cc.alcina.framework.common.client
 cc.alcina.framework.common.client.actions
 cc.alcina.framework.common.client.actions.instances
+cc.alcina.framework.common.client.collections
 cc.alcina.framework.common.client.csobjects
 cc.alcina.framework.common.client.entity
 cc.alcina.framework.common.client.gwittir
@@ -26,6 +27,7 @@ cc.alcina.framework.common.client.util
 cc.alcina.framework.gwt.appcache.client
 cc.alcina.framework.gwt.appcache.linker
 cc.alcina.framework.gwt.client
+cc.alcina.framework.gwt.client.action
 cc.alcina.framework.gwt.client.browsermod
 cc.alcina.framework.gwt.client.data
 cc.alcina.framework.gwt.client.gwittir
@@ -41,6 +43,7 @@ cc.alcina.framework.gwt.client.logic
 cc.alcina.framework.gwt.client.objecttree
 cc.alcina.framework.gwt.client.objecttree.basic
 cc.alcina.framework.gwt.client.provider
+cc.alcina.framework.gwt.client.res
 cc.alcina.framework.gwt.client.rpc
 cc.alcina.framework.gwt.client.stdlayout
 cc.alcina.framework.gwt.client.stdlayout.image

@@ -95,11 +95,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	private Map<String, String> properties = new LinkedHashMap<String, String>();
 
-	@Override
-	public ContentDeliveryType provideContentDeliveryType() {
-		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
-	}
-
 	public String getAttachmentMessage() {
 		return attachmentMessage;
 	}
@@ -150,6 +145,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return this.outputFormat;
 	}
 
+	public Map<String, String> getProperties() {
+		return this.properties;
+	}
+
 	@Transient
 	public PropertyChangeListener[] getPropertyChangeListeners() {
 		return this.propertyChangeSupport().getPropertyChangeListeners();
@@ -157,6 +156,14 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public PublicationRange getPublicationRange() {
 		return publicationRange;
+	}
+
+	public String getPublicDescription() {
+		return this.publicDescription;
+	}
+
+	public Long getRandomSeed() {
+		return this.randomSeed;
 	}
 
 	public int getResultCount() {
@@ -202,6 +209,38 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public boolean isPageBreakAfterEachDocument() {
 		return pageBreakAfterEachDocument;
+	}
+
+	@XmlTransient
+	public boolean isTest() {
+		return test;
+	}
+
+	public PublicationFontOptions providePublicationFontOptions() {
+		return ExtensibleEnum.valueOf(PublicationFontOptions.class, fontOptions);
+	}
+	
+	@Override
+	public ContentDeliveryType provideContentDeliveryType() {
+		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
+	}
+
+	@Override
+	public FormatConversionTarget provideTargetFormat() {
+		return ExtensibleEnum.valueOf(FormatConversionTarget.class,
+				outputFormat);
+	}
+
+	public void putContentDeliveryType(ContentDeliveryType type) {
+		setDeliveryMode(type == null ? null : type.name());
+	}
+
+	public void putFormatConversionTarget(FormatConversionTarget target) {
+		setOutputFormat(target == null ? null : target.name());
+	}
+
+	public void putPublicationFontOptions(PublicationFontOptions fontOptions) {
+		setFontOptions(fontOptions == null ? null : fontOptions.name());
 	}
 
 	public void setAttachmentMessage(String attachmentMessage) {
@@ -282,18 +321,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		propertyChangeSupport().firePropertyChange("note", old_note, note);
 	}
 
-	public void putFormatConversionTarget(FormatConversionTarget target) {
-		setOutputFormat(target == null ? null : target.name());
-	}
-
-	public void putContentDeliveryType(ContentDeliveryType type) {
-		setDeliveryMode(type == null ? null : type.name());
-	}
-
-	public void putPublicationFontOptions(PublicationFontOptions fontOptions) {
-		setFontOptions(fontOptions == null ? null : fontOptions.name());
-	}
-
 	public void setOutputFormat(String outputFormat) {
 		String old_outputFormat = this.outputFormat;
 		this.outputFormat = outputFormat;
@@ -309,11 +336,23 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 				pageBreakAfterEachDocument);
 	}
 
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
+	}
+
 	public void setPublicationRange(PublicationRange publicationRange) {
 		PublicationRange old_publicationRange = this.publicationRange;
 		this.publicationRange = publicationRange;
 		propertyChangeSupport().firePropertyChange("publicationRange",
 				old_publicationRange, publicationRange);
+	}
+
+	public void setPublicDescription(String publicDescription) {
+		this.publicDescription = publicDescription;
+	}
+
+	public void setRandomSeed(Long randomSeed) {
+		this.randomSeed = randomSeed;
 	}
 
 	public void setResultCount(int resultCount) {
@@ -345,10 +384,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		this.systemMessage = systemMessage;
 	}
 
-	@Override
-	public FormatConversionTarget provideTargetFormat() {
-		return ExtensibleEnum.valueOf(FormatConversionTarget.class,
-				outputFormat);
+	public void setTest(boolean test) {
+		this.test = test;
 	}
 
 	@Override
@@ -361,38 +398,5 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return s + " Delivery mode: "
 				+ CommonUtils.friendlyConstant(getDeliveryMode()) + " - "
 				+ " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
-	}
-
-	public void setTest(boolean test) {
-		this.test = test;
-	}
-
-	@XmlTransient
-	public boolean isTest() {
-		return test;
-	}
-
-	public Map<String, String> getProperties() {
-		return this.properties;
-	}
-
-	public void setProperties(Map<String, String> properties) {
-		this.properties = properties;
-	}
-
-	public Long getRandomSeed() {
-		return this.randomSeed;
-	}
-
-	public void setRandomSeed(Long randomSeed) {
-		this.randomSeed = randomSeed;
-	}
-
-	public String getPublicDescription() {
-		return this.publicDescription;
-	}
-
-	public void setPublicDescription(String publicDescription) {
-		this.publicDescription = publicDescription;
 	}
 }
