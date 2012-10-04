@@ -322,7 +322,9 @@ public class TransformPersister {
 					if (token.getPass() == Pass.TRY_COMMIT) {
 						try {
 							if (event.getCommitType() == CommitType.TO_STORAGE) {
+								tm.setIgnorePropertyChanges(true);
 								tm.fireDomainTransform(event);
+								tm.setIgnorePropertyChanges(false);
 								eventsPersisted.add(event);
 							}
 						} catch (Exception e) {
