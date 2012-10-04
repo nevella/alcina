@@ -52,6 +52,7 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 			@Override
 			public void onSuccess(Void result) {
 				initServicesPostLocalPersistence();
+				ClientLayerLocator.get().clientBase().afterConfiguration();
 			}
 		};
 		LocalTransformPersistence.get().init(new DTESerializationPolicy(),

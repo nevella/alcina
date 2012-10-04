@@ -53,6 +53,7 @@ public class ClientConfiguration {
 
 	protected void initLocalPersistence() {
 		initServicesPostLocalPersistence();
+		ClientLayerLocator.get().clientBase().afterConfiguration();
 	}
 
 	protected void extraConfiguration() {

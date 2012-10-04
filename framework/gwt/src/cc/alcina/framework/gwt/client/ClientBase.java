@@ -76,4 +76,5 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 	public void setSaveWhenClosedWarning(String saveWhenClosedWarning) {
 		this.saveWhenClosedWarning = saveWhenClosedWarning;
 	}
+	public abstract void afterConfiguration();
 }

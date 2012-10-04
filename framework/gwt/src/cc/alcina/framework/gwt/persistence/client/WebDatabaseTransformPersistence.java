@@ -197,8 +197,9 @@ public class WebDatabaseTransformPersistence extends
 							commitToServerTransformListener, superCallback);
 				}
 			});
+		} else {
+			callback.onSuccess(null);
 		}
-		callback.onSuccess(null);
 	}
 
 	protected String getTransformDbName() {
@@ -282,7 +283,6 @@ public class WebDatabaseTransformPersistence extends
 				callbackFail(callback, error);
 			}
 		});
-		
 	}
 
 	@Override
