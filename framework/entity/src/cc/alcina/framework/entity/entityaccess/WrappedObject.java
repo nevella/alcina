@@ -68,9 +68,6 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 		@SuppressWarnings("unchecked")
 		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr)
 				throws JAXBException {
-			if(xmlStr==null){
-				return null;
-			}
 			List<Class> classes = EntityLayerLocator.get()
 					.wrappedObjectProvider().getJaxbSubclasses();
 			classes.add(0, clazz);

@@ -38,6 +38,9 @@ class AsyncDeserializer implements RepeatingCommand {
 				}
 			case DESERIALIZE_NON_COLLECTION_PRE:
 				size = reader.seenArray.size();
+				if (size > 0) {
+					int toss = reader.readInt();// bypasss first object
+				}
 				idx2 = 0;
 				phase = Phase.DESERIALIZE_NON_COLLECTION_RUN;
 				// deliberate fallthrough
@@ -95,15 +98,13 @@ class AsyncDeserializer implements RepeatingCommand {
 		int sliceCount = sliceSize;
 		for (; sliceCount != 0 && idx2 < size; idx2++) {
 			Object instance = reader.seenArray.get(idx2);
-			boolean collectionOrMap= 
-				instance instanceof Collection || instance instanceof Map;
-			if (collectionOrMap
+			boolean collectionOrMapNotFirst = idx2 != 0
+					&& (instance instanceof Collection || instance instanceof Map);
+			if (collectionOrMapNotFirst
 					^ (phase == Phase.DESERIALIZE_COLLECTION_RUN)) {
 				continue;
 			}
-			if (idx2 == 0) {
-				int toss = reader.readInt();// bypasss first object
-			}
+			// System.out.println(CommonUtils.simpleClassName(instance.getClass()));
 			int strId = reader.getTypeId(idx2);
 			String typeSignature = reader.getString(strId);
 			reader.serializer.deserialize(reader, instance, typeSignature);

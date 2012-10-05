@@ -822,9 +822,9 @@ public final class ServerSerializationStreamWriter extends
 			int idx2 = 0;
 			for (Entry<Integer, List<String>> entry : entries) {
 				Object instance = objectReverseMap.get(entry.getKey());
-				boolean collectionOrMap= 
-						instance instanceof Collection || instance instanceof Map;
-				if (collectionOrMap ^ i == 0) {
+				boolean collectionOrMapNotFirst = idx2++ != 0
+						&& (instance instanceof Collection || instance instanceof Map);
+				if (collectionOrMapNotFirst ^ i == 0) {
 //					System.out.println(instance.getClass().getSimpleName());
 //					for (String s : entry.getValue()) {
 //						System.out.println(s);
