@@ -1,9 +1,14 @@
 package cc.alcina.framework.gwt.client.logic.state;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.gwt.client.logic.IsCancellable;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+/*
+ * Null checks allow reuse as a vanilla asyncCallback
+ *
+ */
 public abstract class AsyncCallbackTransitionHandler<T, M extends MachineModel>
 		implements MachineTransitionHandler<M>, AsyncCallback<T>, IsCancellable {
 	private MachineEvent successEvent;
@@ -21,20 +26,27 @@ public abstract class AsyncCallbackTransitionHandler<T, M extends MachineModel>
 		if (isCancelled()) {
 			return;
 		}
-		model.getMachine().handleAsyncException(caught, this);
+		if (model != null) {
+			model.getMachine().handleAsyncException(caught, this);
+		} else {
+			throw new WrappedRuntimeException(caught);
+		}
 	}
 
 	@Override
 	public void onSuccess(T result) {
 		onSuccess0(result);
-		model.getMachine().newEvent(successEvent);
+		if (model != null) {
+			model.getMachine().newEvent(successEvent);
+		}
 	}
 
-	public abstract  void onSuccess0(T result);
+	public abstract void onSuccess0(T result);
 
 	@Override
 	public void performTransition(M model) {
 		this.model = model;
+		model.setRunningCallback(this);
 		start();
 	}
 

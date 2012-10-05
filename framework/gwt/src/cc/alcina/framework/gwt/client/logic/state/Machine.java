@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.entity.util.Multiset;
+import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.gwt.client.logic.IsCancellable;
 import cc.alcina.framework.gwt.client.logic.state.MachineEvent.MachineEventWithEndpoints;
 
 import com.google.gwt.core.client.Scheduler;
@@ -18,7 +18,7 @@ public class Machine {
 
 	Map<EventStateTuple, MachineTransitionHandler> transitionHandlers = new LinkedHashMap<EventStateTuple, MachineTransitionHandler>();
 
-	Multiset<EventStateTuple, Set<MachineListener>> listeners = new Multiset<EventStateTuple, Set<MachineListener>>();
+	Multimap<EventStateTuple, List<MachineListener>> listeners = new Multimap<EventStateTuple, List<MachineListener>>();
 
 	static class EventStateTuple {
 		MachineEvent event;
@@ -44,6 +44,10 @@ public class Machine {
 			return (event == null ? 0 : event.hashCode())
 					^ (state == null ? 0 : state.hashCode());
 		}
+	}
+
+	protected void registerDefaultStatesEventsAndHandlers() {
+		// TODO - cancel and error handlers
 	}
 
 	public void registerTransitionHandler(MachineState state,
@@ -72,6 +76,10 @@ public class Machine {
 		if (model.isUnset()) {
 			return;
 		} else {
+			Object cb = model.getRunningCallback();
+			if(cb instanceof IsCancellable){
+				((IsCancellable) cb).setCancelled(true);
+			}
 			model.setEvent(MachineEvent.CANCEL);
 			listeners.clear();
 			transitionHandlers.clear();
@@ -93,29 +101,26 @@ public class Machine {
 			tuples.add(new EventStateTuple(model.getState(), null));
 		}
 		for (EventStateTuple tuple : tuples) {
-			for (MachineListener listener : listeners.get(tuple)) {
+			for (MachineListener listener : listeners.getAndEnsure(tuple)) {
 				listener.beforeAction(model);
 			}
 		}
-		boolean transitionHandled = false;
-		for (EventStateTuple tuple : tuples) {
-			if (transitionHandlers.containsKey(tuple)) {
-				// ?? although we can have listeners based on arrows (which
-				// shouldn't affect the FSM), transition should be state only
-				assert tuple.event == null;
-				transitionHandlers.get(tuple).performTransition(model);
-				transitionHandled = true;
-				break;
+		// ?? although we can have listeners based on arrows (which
+		// shouldn't affect the FSM), transition should be state only
+		if (model.getEvent() == null) {
+			for (EventStateTuple tuple : tuples) {
+				if (transitionHandlers.containsKey(tuple)) {
+					transitionHandlers.get(tuple).performTransition(model);
+					break;
+				}
 			}
-		}
-		if (!transitionHandled && model.getEvent() != null) {
+		} else {
 			// which should always be the case for non-null events...
-			if (model.getEvent() instanceof MachineEventWithEndpoints) {
-				newState(((MachineEventWithEndpoints) model.getEvent()).getTo());
-			}
+			assert model.getEvent() instanceof MachineEventWithEndpoints;
+			newState(((MachineEventWithEndpoints) model.getEvent()).getTo());
 		}
 		for (EventStateTuple tuple : tuples) {
-			for (MachineListener listener : listeners.get(tuple)) {
+			for (MachineListener listener : listeners.getAndEnsure(tuple)) {
 				listener.afterAction(model);
 			}
 		}
@@ -139,8 +144,10 @@ public class Machine {
 			}
 		});
 	}
-	public void  handleAsyncException(Throwable caught,MachineTransitionHandler handler){
-		//TODO - transition to state ERR if it exists
+
+	public void handleAsyncException(Throwable caught,
+			MachineTransitionHandler handler) {
+		// TODO - transition to state ERR if it exists
 		throw new WrappedRuntimeException(caught);
 	}
 }

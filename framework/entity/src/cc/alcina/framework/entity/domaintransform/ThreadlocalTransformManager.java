@@ -58,6 +58,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -653,6 +654,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	@Override
 	protected boolean checkPermissions(HasIdAndLocalId hili,
 			DomainTransformEvent evt, String propertyName, Object change) {
+		if (ResourceUtilities.getBoolean(ThreadlocalTransformManager.class,
+				"ignoreTransformPermissions")) {
+			return true;
+		}
 		try {
 			if (hili == null) {
 				hili = (HasIdAndLocalId) evt.getObjectClass().newInstance();
@@ -661,14 +666,18 @@ public class ThreadlocalTransformManager extends TransformManager implements
 						.getInstantiatedObject(hili);
 			}
 			Class<? extends HasIdAndLocalId> objectClass = hili.getClass();
-			ObjectPermissions op = objectClass.getAnnotation(
-					ObjectPermissions.class);
+			ObjectPermissions op = objectClass
+					.getAnnotation(ObjectPermissions.class);
 			op = op == null ? PermissionsManager.get()
 					.getDefaultObjectPermissions() : op;
 			HasIdAndLocalId hiliChange = (HasIdAndLocalId) (change instanceof HasIdAndLocalId ? change
 					: null);
 			ObjectPermissions oph = null;
-			AssignmentPermission aph=CommonLocator.get().propertyAccessor().getAnnotationForProperty(objectClass, AssignmentPermission.class, propertyName);
+			AssignmentPermission aph = CommonLocator
+					.get()
+					.propertyAccessor()
+					.getAnnotationForProperty(objectClass,
+							AssignmentPermission.class, propertyName);
 			if (hiliChange != null) {
 				oph = hiliChange.getClass().getAnnotation(
 						ObjectPermissions.class);
@@ -679,11 +688,13 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 				checkPropertyReadAccessAndThrow(hili, propertyName, evt);
-				checkTargetReadAndAssignmentAccessAndThrow(hiliChange,oph,aph,evt);
+				checkTargetReadAndAssignmentAccessAndThrow(hiliChange, oph,
+						aph, evt);
 				break;
 			case CHANGE_PROPERTY_REF:
-				checkTargetReadAndAssignmentAccessAndThrow(hiliChange,oph,aph,evt);
-				//deliberate fall-through
+				checkTargetReadAndAssignmentAccessAndThrow(hiliChange, oph,
+						aph, evt);
+				// deliberate fall-through
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_SIMPLE_VALUE:
 				return checkPropertyWriteAccessAndThrow(hili, propertyName, evt);
@@ -718,23 +729,20 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	private void checkTargetReadAndAssignmentAccessAndThrow(
 			HasIdAndLocalId target, ObjectPermissions oph,
-			AssignmentPermission aph, DomainTransformEvent evt) throws DomainTransformException {
-		if(target==null){
+			AssignmentPermission aph, DomainTransformEvent evt)
+			throws DomainTransformException {
+		if (target == null) {
 			return;
 		}
-		if (!PermissionsManager.get().isPermissible(target,
-				oph.read())) {
+		if (!PermissionsManager.get().isPermissible(target, oph.read())) {
 			throw new DomainTransformException(new Exception(
-					"Permission denied : read - target object "
-							+ evt));
+					"Permission denied : read - target object " + evt));
 		}
-		if(aph!=null&&!PermissionsManager.get().isPermissible(target,
-				aph.value())){
+		if (aph != null
+				&& !PermissionsManager.get().isPermissible(target, aph.value())) {
 			throw new DomainTransformException(new Exception(
-					"Permission denied : assign - target object "
-							+ evt));
+					"Permission denied : assign - target object " + evt));
 		}
-		
 	}
 
 	@Override

@@ -42,9 +42,11 @@ public class ClientConfiguration {
 	protected void prepareDebugFromHistory() {
 		AlcinaDebugIds.initialise();
 	}
-	protected void initCss(){
+
+	protected void initCss() {
 		StyleInjector.inject(AlcinaResources.INSTANCE.css().getText());
 	}
+
 	protected void initAppCache() {
 	}
 
@@ -53,6 +55,10 @@ public class ClientConfiguration {
 
 	protected void initLocalPersistence() {
 		initServicesPostLocalPersistence();
+		afterConfiguration();
+	}
+
+	protected void afterConfiguration() {
 		ClientLayerLocator.get().clientBase().afterConfiguration();
 	}
 

@@ -81,8 +81,8 @@ public class AlcinaTemplateClient extends ClientBaseWithLayout implements
 	void initServices() {
 		ClientLayerLocator.get().registerCommonRemoteServiceAsyncProvider(
 				remoteServiceAsyncProvider);
-		config.initServices();
 		ClientLayerLocator.get().registerClientBase(this);
+		config.initServices();
 		LayoutEvents.get().addLayoutEventListener(this);
 	}
 

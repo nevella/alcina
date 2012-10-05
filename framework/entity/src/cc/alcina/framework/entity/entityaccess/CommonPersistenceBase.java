@@ -979,9 +979,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public <T extends WrapperPersistable> T getWrappedObjectForUser(
-			Class<? extends T> c, long userId) throws Exception {
+			Class<? extends T> c, long id) throws Exception {
 		T wofu = (T) EntityLayerLocator.get().wrappedObjectProvider()
-				.getWrappedObjectForUser(c, userId, getEntityManager());
+				.getWrappedObjectForUser(c, id, getEntityManager());
 		return (T) wofu;
 	}
 }

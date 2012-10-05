@@ -149,6 +149,6 @@ public interface CommonPersistenceLocal {
 	public abstract <T> T getItemByKeyValue(Class<T> clazz, String key,
 			Object value, boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive);
 
-	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<? extends T> c, long userId)
+	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<? extends T> c, long wrappedObjectId)
 			throws Exception;
 }

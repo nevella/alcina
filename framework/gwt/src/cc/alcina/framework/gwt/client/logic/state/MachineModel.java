@@ -12,7 +12,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
  * @author nick@alcina.cc
  * 
  */
-public abstract class MachineModel {
+public class MachineModel {
 	private MachineState state;
 
 	private MachineEvent event;
@@ -33,7 +33,8 @@ public abstract class MachineModel {
 
 	void setState(MachineState state) {
 		this.state = state;
-		log(CommonUtils.formatJ("state - %s\n", state));
+		log(CommonUtils.formatJ("state - %s\n",
+				state == null ? null : state.name()));
 	}
 
 	public MachineEvent getEvent() {
@@ -42,7 +43,8 @@ public abstract class MachineModel {
 
 	void setEvent(MachineEvent event) {
 		this.event = event;
-		log(CommonUtils.formatJ("event - %s\n", event));
+		log(CommonUtils.formatJ("event - %s\n",
+				event == null ? null : event.name()));
 		machine.performTransition();
 	}
 

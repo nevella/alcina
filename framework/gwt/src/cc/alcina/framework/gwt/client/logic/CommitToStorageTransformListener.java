@@ -22,6 +22,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.StateListenable;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
@@ -375,7 +376,33 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		public UnknownTransformFailedException(Throwable cause) {
 			super(cause);
 		}
+	}
+	 class OneoffListenerWrapper implements StateChangeListener{
+
+		private final AsyncCallback callback;
+
+		public OneoffListenerWrapper(AsyncCallback callback) {
+			this.callback = callback;
+		}
+
+		@Override
+		public void stateChanged(Object source, String newState) {
+			if(newState.equals(COMMITTING)){
+				
+			}else if(newState.equals(COMMITTED)){
+				removeStateChangeListener(OneoffListenerWrapper.this);
+				callback.onSuccess(null);
+			}else{
+				removeStateChangeListener(OneoffListenerWrapper.this);
+				callback.onFailure(new Exception("flush failed on server"));
+			}
+			
+		}
 		
+	}
+	public void flushWithOneoffCallback(AsyncCallback callback){
+		addStateChangeListener(new OneoffListenerWrapper(callback));
+		flush();
 	}
 	@Override
 	protected void fireStateChanged(String newState) {
