@@ -391,6 +391,8 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 				if (o instanceof HasOwner) {
 					permitted |= permitDueToOwnership((HasOwner) o);
 				}
+			} else {
+				permitted |= PermissionsManager.get().getUser().equals(o);
 			}
 		}
 		if (!permitted) {
