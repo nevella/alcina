@@ -548,9 +548,19 @@ public class GwittirBridge implements PropertyAccessor {
 			getProperty(o, propertyName).getMutatorMethod().invoke(o,
 					new Object[] { value });
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(CommonUtils.formatJ(
-					"Unable to set property %s for object %s to value %s",
-					propertyName, o, value), e, SuggestedAction.NOTIFY_WARNING);
+			try {
+				throw new WrappedRuntimeException(CommonUtils.formatJ(
+						"Unable to set property %s for object %s to value %s",
+						propertyName, o, value), e,
+						SuggestedAction.NOTIFY_WARNING);
+			} catch (Exception e1) {
+				//tostring problem
+				throw new WrappedRuntimeException(CommonUtils.formatJ(
+						"Unable to set property %s for object %s to value %s",
+						propertyName, o.getClass(), value == null ? null
+								: value.getClass()), e,
+						SuggestedAction.NOTIFY_WARNING);
+			}
 		}
 	}
 
