@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide;
 
 import java.util.Arrays;
@@ -22,13 +21,10 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.Workspace.WSVisualModel;
 import cc.alcina.framework.gwt.client.ide.WorkspaceView.DataTreeView;
+import cc.alcina.framework.gwt.client.ide.widget.StackPanel100pcHeight;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
-import cc.alcina.framework.gwt.client.widget.DivStackPanel;
 import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -41,11 +37,10 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class SimpleWorkspaceVisualiser extends Composite implements
+public class SimpleWorkspaceVisualiser extends Composite implements
 		HasLayoutInfo {
 	private final WSVisualModel model;
 
@@ -89,7 +84,7 @@ import com.google.gwt.user.client.ui.Widget;
 			view.ensureDebugId("");
 			view.addVetoableActionListener(actionListener);
 		}
-		hsp.addWest(viewHolder,defaultSplitterPosition);
+		hsp.addWest(viewHolder, defaultSplitterPosition);
 		createContentContainer(hsp);
 		hsp.setHeight("100%");
 		// verticalPanel.setHeight("100%");
@@ -156,49 +151,6 @@ import com.google.gwt.user.client.ui.Widget;
 		}
 	}
 
-	public static class StackPanel100pcHeight extends DivStackPanel implements
-			HasLayoutInfo {
-		public LayoutInfo getLayoutInfo() {
-			return new LayoutInfo() {
-				@Override
-				public boolean to100percentOfAvailableHeight() {
-					return true;
-				}
-
-				@Override
-				public int getClientAdjustHeight() {
-					// int captionHeight = getElement().getFirstChildElement()
-					// .getFirstChildElement().getOffsetHeight();
-					// divstack impl below - above is table
-					int captionHeight = getElement().getFirstChildElement()
-							.getOffsetHeight();
-					return getWidgetCount() * captionHeight + 1;// 1==bottom-border
-				}
-
-				@Override
-				public Iterator<Widget> getLayoutWidgets() {
-					return iterator();
-				}
-
-				@Override
-				public boolean useBestOffsetForParentHeight() {
-					return false;
-				}
-			};
-		}
-
-		@Override
-		public void showStack(int index) {
-			int oldIndex = getSelectedIndex();
-			super.showStack(index);
-			if (oldIndex != index) {
-				LayoutEvents.get().fireLayoutEvent(
-						new LayoutEvent(
-								LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
-			}
-		}
-	}
-
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
 			@Override
@@ -208,18 +160,16 @@ import com.google.gwt.user.client.ui.Widget;
 		};
 	}
 
-	public TreeItem selectNodeForObject(Object obj,
-			boolean visibleViewOnly) {
+	public TreeItem selectNodeForObject(Object obj, boolean visibleViewOnly) {
 		for (int i = 0; i < getViewHolder().getWidgetCount(); i++) {
-			if (visibleViewOnly&&i!=getViewHolder().getSelectedIndex()){
+			if (visibleViewOnly && i != getViewHolder().getSelectedIndex()) {
 				continue;
 			}
-			Widget w = getViewHolder().getWidget(
-					i);
+			Widget w = getViewHolder().getWidget(i);
 			if (w instanceof DataTreeView) {
 				DataTreeView dtv = (DataTreeView) w;
 				TreeItem item = dtv.selectNodeForObject(obj);
-				if (item!=null){
+				if (item != null) {
 					getViewHolder().showStack(i);
 					return item;
 				}
@@ -232,7 +182,7 @@ import com.google.gwt.user.client.ui.Widget;
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			public void execute() {
 				int selectedIndex = viewHolder.getSelectedIndex();
-				if (selectedIndex!=-1){
+				if (selectedIndex != -1) {
 					Widget w = viewHolder.getWidget(selectedIndex);
 					if (w instanceof HasFirstFocusable) {
 						HasFirstFocusable hff = (HasFirstFocusable) w;

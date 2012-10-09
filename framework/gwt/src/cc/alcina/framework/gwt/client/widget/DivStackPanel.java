@@ -14,6 +14,11 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
+import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent;
+import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.CollapseHandler;
+import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.HasCollapseHandlers;
+
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
@@ -22,11 +27,10 @@ import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class DivStackPanel extends ComplexPanel {
+public class DivStackPanel extends ComplexPanel {
 	private static final String DEFAULT_STYLENAME = "gwt-StackPanel";
 
 	private static final String DEFAULT_ITEM_STYLENAME = DEFAULT_STYLENAME
@@ -327,6 +331,37 @@ import com.google.gwt.user.client.ui.Widget;
 			} else {
 				setStyleName(childTD, DEFAULT_ITEM_STYLENAME + "-first", false);
 			}
+		}
+	}
+
+	public static class CollapsableDivStackPanel extends DivStackPanel
+			implements HasCollapseHandlers<CollapsableDivStackPanel> {
+		private boolean inClick;
+
+		@Override
+		public void onBrowserEvent(Event event) {
+			if (DOM.eventGetType(event) == Event.ONCLICK) {
+				inClick = true;
+			}
+			try {
+				super.onBrowserEvent(event);
+			} finally {
+				inClick = false;
+			}
+		}
+
+		@Override
+		public void showStack(int index) {
+			if (inClick && index != -1 && index == getSelectedIndex()) {
+				// collapse
+				fireEvent(new CollapseEvent(this, true));
+			}
+			super.showStack(index);
+		}
+
+		@Override
+		public HandlerRegistration addCollapseHandler(CollapseHandler<CollapsableDivStackPanel> handler) {
+			return addHandler(handler, CollapseEvent.getType());
 		}
 	}
 }
