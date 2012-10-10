@@ -21,12 +21,17 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.actions.ActionGroup;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction.PermissibleActionWithChildren;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.widget.SpanPanel;
 import cc.alcina.framework.gwt.client.widget.StyledAWidget;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlersSupport;
 
@@ -34,9 +39,12 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -247,6 +255,8 @@ public class Toolbar extends Composite implements
 		private Button button;
 
 		private final boolean asButton;
+		
+		private StyledAWidget dropDown;
 
 		public ToolbarButton(PermissibleAction action) {
 			this(action, false);
@@ -254,7 +264,9 @@ public class Toolbar extends Composite implements
 
 		public ToolbarButton(PermissibleAction action, boolean asButton) {
 			this.asButton = asButton;
+			this.action = action;
 			Widget w = null;
+			String cn = action.getCssClassName();
 			if (asButton) {
 				button = new Button(action.getDisplayName());
 				button.setStyleName("alcina-Button");
@@ -270,13 +282,44 @@ public class Toolbar extends Composite implements
 				if (action instanceof ClickHandler) {
 					aWidget.addClickHandler((ClickHandler) action);
 				}
+				if(action instanceof PermissibleActionWithChildren){
+					SpanPanel sp=new SpanPanel();
+					w=sp;
+					sp.add(aWidget);
+					if (cn != null) {
+						aWidget.addStyleName(cn);
+					}
+					aWidget.addStyleName("pre-drop-down");
+					AbstractImagePrototype aip = AbstractImagePrototype
+							.create(StandardDataImageProvider.get().getDataImages()
+									.downGrey());
+					dropDown = new StyledAWidget(aip.getHTML(), true);
+					dropDown.addStyleName("button-grey drop-down");
+					sp.add(dropDown);
+					dropDown.addClickHandler(new ClickHandler() {
+						@Override
+						public void onClick(ClickEvent event) {
+							showDropDown();
+						}
+					});
+				}
 			}
-			String cn = action.getCssClassName();
+			
 			if (cn != null) {
 				w.addStyleName(cn);
 			}
-			this.action = action;
 			initWidget(w);
+		}
+
+		protected void showDropDown() {
+			VerticalPanel vp=new VerticalPanel();
+			PermissibleActionWithChildren wKids=(PermissibleActionWithChildren) action;
+			for(PermissibleAction a:wKids.getChildren()){
+				vp.add(new ToolbarButton(a));
+			}
+			RelativePopupPanel rpp = RelativePopupPositioning.showPopup(getWidget(), vp, RootPanel.get(), RelativePopupPositioning.BOTTOM_LTR);
+			rpp.addStyleName("toolbar-button-dropdown");
+			
 		}
 
 		public String getTarget() {
@@ -310,6 +353,7 @@ public class Toolbar extends Composite implements
 				aWidget.setText(text);
 			}
 		}
+
 		public void setWordWrap(boolean wordWrap) {
 			if (asButton) {
 			} else {

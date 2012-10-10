@@ -1694,3 +1694,21 @@ button.alcina-Button.cancel {
 button.alcina-Button.finish {
 	margin-left: 3em;
 }
+/*toolbar button with delegates*/
+.gwt-PopupPanel.toolbar-button-dropdown{
+	padding:5px 5px 0px 5px;
+	border:solid 1px #bbb;
+	background:#f4f4f4;
+	margin: -5px 0 0 5px;
+}
+.toolbar-button-dropdown td{
+	padding-bottom:5px;
+
+	}
+	
+a.button-grey.pre-drop-down{
+	margin-right:0px;
+}
+a.button-grey.drop-down{
+	padding:3px 5px 7px 5px;
+}

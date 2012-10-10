@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
 import java.util.ArrayList;
@@ -19,11 +18,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class ActionGroup {
+public class ActionGroup {
 	public List<PermissibleAction> actions = new ArrayList<PermissibleAction>();
 
 	private final boolean rightAligned;
@@ -31,9 +29,15 @@ import java.util.List;
 	public ActionGroup(PermissibleAction[] actions) {
 		this(actions, false);
 	}
+
 	public ActionGroup(List<PermissibleAction> actions) {
-		this.actions=actions;
-		this.rightAligned=false;
+		this.actions = actions;
+		this.rightAligned = false;
+	}
+
+	public ActionGroup(List<PermissibleAction> actions, boolean rightAligned) {
+		this.actions = actions;
+		this.rightAligned = rightAligned;
 	}
 
 	public ActionGroup(PermissibleAction[] actions, boolean rightAligned) {

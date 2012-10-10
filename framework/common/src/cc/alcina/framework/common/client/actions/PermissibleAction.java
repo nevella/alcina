@@ -11,22 +11,20 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.Vetoer;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class PermissibleAction implements Permissible {
+public class PermissibleAction implements Permissible {
 	private String displayName;
 
 	private String cssClassName;
@@ -77,5 +75,51 @@ import cc.alcina.framework.common.client.logic.permissions.Permissible;
 
 	public String rule() {
 		return null;
+	}
+
+	public static class PermissibleActionWithChildren extends PermissibleAction {
+		private List<PermissibleAction> children = new ArrayList<PermissibleAction>();
+
+		public List<PermissibleAction> getChildren() {
+			return this.children;
+		}
+	}
+
+	public static class PermissibleActionWithChildrenAndDelegate extends
+			PermissibleActionWithChildren {
+		private final PermissibleAction delegate;
+
+		public PermissibleActionWithChildrenAndDelegate(
+				PermissibleAction delegate) {
+			this.delegate = delegate;
+		}
+
+		public String getActionName() {
+			return this.delegate.getActionName();
+		}
+
+		public void setActionName(String actionName) {
+			this.delegate.setActionName(actionName);
+		}
+
+		public String getDisplayName() {
+			return this.delegate.getDisplayName();
+		}
+
+		public String getCssClassName() {
+			return this.delegate.getCssClassName();
+		}
+
+		public List<Vetoer> getDefaultVetoers() {
+			return this.delegate.getDefaultVetoers();
+		}
+
+		public AccessLevel accessLevel() {
+			return this.delegate.accessLevel();
+		}
+
+		public String rule() {
+			return this.delegate.rule();
+		}
 	}
 }
