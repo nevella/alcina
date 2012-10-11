@@ -91,6 +91,7 @@ public class SimpleWorkspaceVisualiser extends Composite implements
 		verticalPanel.setWidth("100%");
 		this.toolbar = new Toolbar();
 		toolbar.setActions(model.getToolbarActions());
+		toolbar.enableAll(false);
 		toolbar.setVisible(model.isToolbarVisible());
 		verticalPanel.add(toolbar);
 		verticalPanel.add(hsp);

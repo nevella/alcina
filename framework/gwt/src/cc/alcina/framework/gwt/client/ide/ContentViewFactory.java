@@ -427,7 +427,6 @@ public class ContentViewFactory {
 		tb.setAsButton(true);
 		tb.setActions(actions);
 		tb.setStyleName("table-toolbar alcina-ToolbarSmall clearfix");
-		tb.enableAll(true);
 		return tb;
 	}
 

@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,7 +160,7 @@ public class Toolbar extends Composite implements
 			}
 		}
 	}
-
+	private String buttonStyleName;
 	protected void redraw() {
 		WidgetUtils.clearChildren(panel);
 		hasChildHandlersSupport.detachHandlers();
@@ -176,10 +177,9 @@ public class Toolbar extends Composite implements
 					fp.addStyleName("float-right");
 				}
 				for (PermissibleAction action : g.actions) {
-					ToolbarButton button = new ToolbarButton(action, asButton);
+					ToolbarButton button = new ToolbarButton(action, buttonStyleName,asButton);
 					hasChildHandlersSupport.addHandler(button
 							.addClickHandler(this));
-					button.setEnabled(false);
 					fp.add(button);
 					actionButtons.put(action.getClass(), button);
 					actionButtonsByAction.put(action, button);
@@ -195,10 +195,9 @@ public class Toolbar extends Composite implements
 			}
 		} else {
 			for (PermissibleAction action : actions) {
-				ToolbarButton button = new ToolbarButton(action, asButton);
+				ToolbarButton button = new ToolbarButton(action,buttonStyleName, asButton);
 				HandlerRegistration registration = button.addClickHandler(this);
 				hasChildHandlersSupport.addHandler(registration);
-				button.setEnabled(false);
 				panel.add(button);
 				actionButtons.put(action.getClass(), button);
 				actionButtonsByAction.put(action, button);
@@ -214,6 +213,10 @@ public class Toolbar extends Composite implements
 
 	public void removeVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
+	}
+
+	public void setActionGroup(ActionGroup actionGroup) {
+		setActionGroups(Collections.singletonList(actionGroup));
 	}
 
 	public void setActionGroups(List<ActionGroup> actionGroups) {
@@ -255,7 +258,7 @@ public class Toolbar extends Composite implements
 		private Button button;
 
 		private final boolean asButton;
-		
+
 		private StyledAWidget dropDown;
 
 		public ToolbarButton(PermissibleAction action) {
@@ -263,36 +266,43 @@ public class Toolbar extends Composite implements
 		}
 
 		public ToolbarButton(PermissibleAction action, boolean asButton) {
+			this(action, null, asButton);
+		}
+
+		public ToolbarButton(PermissibleAction action, String buttonStyleName,
+				boolean asButton) {
 			this.asButton = asButton;
 			this.action = action;
 			Widget w = null;
 			String cn = action.getCssClassName();
 			if (asButton) {
 				button = new Button(action.getDisplayName());
-				button.setStyleName("alcina-Button");
+				button.setStyleName(buttonStyleName != null ? buttonStyleName
+						: "alcina-Button");
 				w = button;
 				if (action instanceof ClickHandler) {
 					button.addClickHandler((ClickHandler) action);
 				}
 			} else {
 				aWidget = new StyledAWidget(action.getDisplayName(), true);
-				aWidget.setStyleName("button-grey");
+				aWidget.setStyleName(buttonStyleName != null ? buttonStyleName
+						: "button-grey");
 				aWidget.setWordWrap(false);
 				w = aWidget;
 				if (action instanceof ClickHandler) {
 					aWidget.addClickHandler((ClickHandler) action);
 				}
-				if(action instanceof PermissibleActionWithChildren){
-					SpanPanel sp=new SpanPanel();
-					w=sp;
+				if (action instanceof PermissibleActionWithChildren) {
+					SpanPanel sp = new SpanPanel();
+					w = sp;
 					sp.add(aWidget);
 					if (cn != null) {
 						aWidget.addStyleName(cn);
 					}
 					aWidget.addStyleName("pre-drop-down");
 					AbstractImagePrototype aip = AbstractImagePrototype
-							.create(StandardDataImageProvider.get().getDataImages()
-									.downGrey());
+							.create(StandardDataImageProvider.get()
+									.getDataImages().downGrey());
 					dropDown = new StyledAWidget(aip.getHTML(), true);
 					dropDown.addStyleName("button-grey drop-down");
 					sp.add(dropDown);
@@ -304,7 +314,6 @@ public class Toolbar extends Composite implements
 					});
 				}
 			}
-			
 			if (cn != null) {
 				w.addStyleName(cn);
 			}
@@ -312,14 +321,15 @@ public class Toolbar extends Composite implements
 		}
 
 		protected void showDropDown() {
-			VerticalPanel vp=new VerticalPanel();
-			PermissibleActionWithChildren wKids=(PermissibleActionWithChildren) action;
-			for(PermissibleAction a:wKids.getChildren()){
+			VerticalPanel vp = new VerticalPanel();
+			PermissibleActionWithChildren wKids = (PermissibleActionWithChildren) action;
+			for (PermissibleAction a : wKids.getChildren()) {
 				vp.add(new ToolbarButton(a));
 			}
-			RelativePopupPanel rpp = RelativePopupPositioning.showPopup(getWidget(), vp, RootPanel.get(), RelativePopupPositioning.BOTTOM_LTR);
+			RelativePopupPanel rpp = RelativePopupPositioning.showPopup(
+					getWidget(), vp, RootPanel.get(),
+					RelativePopupPositioning.BOTTOM_LTR);
 			rpp.addStyleName("toolbar-button-dropdown");
-			
 		}
 
 		public String getTarget() {
@@ -382,5 +392,13 @@ public class Toolbar extends Composite implements
 					.fireVetoableActionEvent(new PermissibleActionEvent(sender,
 							tb.getAction()));
 		}
+	}
+
+	public String getButtonStyleName() {
+		return this.buttonStyleName;
+	}
+
+	public void setButtonStyleName(String buttonStyleName) {
+		this.buttonStyleName = buttonStyleName;
 	}
 }

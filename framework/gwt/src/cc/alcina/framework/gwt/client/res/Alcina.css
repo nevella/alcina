@@ -1712,3 +1712,15 @@ a.button-grey.pre-drop-down{
 a.button-grey.drop-down{
 	padding:3px 5px 7px 5px;
 }
+/*alcina-prompt*/
+div.alcina-prompt{
+	text-align:left;
+	width:350px;
+}
+div.alcina-prompt .sub{
+	margin:1em;
+}
+div.alcina-prompt input{
+	width:300px;
+	margin-left:1em;
+}
