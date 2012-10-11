@@ -655,7 +655,7 @@ div.pad-top-0 {
 	position: relative;
 }
 
-.wide-text {
+input.wide-text , td.wide-text input{
 	width: 450px;
 }
 /** Specific alcina elements (misc) **/
