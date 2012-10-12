@@ -89,9 +89,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private MapObjectLookup domainObjects;
 
-	private static long eventIdCounter = 1;
+	private static long eventIdCounter = 0;
 
-	protected static long localIdCounter = 1;
+	protected static long localIdCounter = 0;
 
 	final Set<DomainTransformEvent> transforms = new LinkedHashSet<DomainTransformEvent>();
 
@@ -604,11 +604,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public synchronized long nextEventIdCounter() {
-		return eventIdCounter++;
+		return ++eventIdCounter;
 	}
 
 	public synchronized long nextLocalIdCounter() {
-		return localIdCounter++;
+		return ++localIdCounter;
 	}
 
 	public List<DomainTransformEvent> objectsToDtes(List objects, Class clazz,
