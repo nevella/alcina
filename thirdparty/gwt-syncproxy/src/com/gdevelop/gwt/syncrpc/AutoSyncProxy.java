@@ -41,20 +41,46 @@ import com.google.gwt.user.server.rpc.SerializationPolicyLoader;
 public class AutoSyncProxy {
 	private static final String GWT_RPC_POLICY_FILE_EXT = ".gwt.rpc";
 
-	private static final String nocachejs = ".nocache.js";
+	private final DefaultSessionManager DEFAULT_SESSION_MANAGER = new DefaultSessionManager();
 
-	private static final DefaultSessionManager DEFAULT_SESSION_MANAGER = new DefaultSessionManager();
-
-	public static SessionManager getDefaultSessionManager() {
+	public SessionManager getDefaultSessionManager() {
 		// return a different Session Manager with the prepopulated values.
 		return DEFAULT_SESSION_MANAGER;
 	}
 
 	// this contains the service and the policyname
-	private static Map<String, String> POLICY_MAP = new HashMap<String, String>();
+	private Map<String, String> POLICY_MAP = new HashMap<String, String>();
 
 	// this contains the policyname and the SerializationPolicy
-	private static Map<String, SerializationPolicy> SERIALIZATIONPOLICY_MAP = new HashMap<String, SerializationPolicy>();
+	private Map<String, SerializationPolicy> SERIALIZATIONPOLICY_MAP = new HashMap<String, SerializationPolicy>();
+
+	private static AutoSyncProxy _instance = null;
+
+	private Proxy proxy = null;
+
+	private static AutoSyncProxy getInstance() {
+		if (_instance == null) {
+			_instance = new AutoSyncProxy();
+		}
+		return _instance;
+	}
+
+	public static Object getProxyInstance(Class serviceIntf, String moduleBaseURL, String remoteServiceRelativePath, boolean failingProxyOnRetrieveFail) {
+		return getProxyInstance(serviceIntf, moduleBaseURL, remoteServiceRelativePath, failingProxyOnRetrieveFail, null);
+	}
+
+	public static Object getProxyInstance(Class serviceIntf, 
+			String moduleBaseURL, 
+			String remoteServiceRelativePath, 
+			boolean failingProxyOnRetrieveFail, 
+			String policyFileName) 
+	{
+		AutoSyncProxy instance = getInstance();
+		if (instance.proxy == null) {
+			instance.proxy = (Proxy)instance.newProxyInstance(serviceIntf, moduleBaseURL, remoteServiceRelativePath, failingProxyOnRetrieveFail, policyFileName);
+		}
+		return instance.proxy;
+	}
 
 	/**
 	 * Create a new Proxy for the specified <code>serviceIntf</code>
@@ -69,23 +95,23 @@ public class AutoSyncProxy {
 	 *         serviceIntf
 	 */
 	@SuppressWarnings("unchecked")
-	public static Object newProxyInstance(Class serviceIntf,
+	private Object newProxyInstance(Class serviceIntf,
 			String moduleBaseURL, String remoteServiceRelativePath,
-			boolean failingProxyOnRetrieveFail) {
+			boolean failingProxyOnRetrieveFail, String policyFileName) {
 		try {
-			retrieveSerializationPolicies(moduleBaseURL);
+			retrieveSerializationPolicies(moduleBaseURL, policyFileName);
 		} catch (RuntimeException e) {
 			if (failingProxyOnRetrieveFail) {
 				return Proxy
-						.newProxyInstance(SyncProxy.class.getClassLoader(),
-								new Class[] { serviceIntf },
-								new FailAsyncCallHandler());
+				.newProxyInstance(SyncProxy.class.getClassLoader(),
+						new Class[] { serviceIntf },
+						new FailAsyncCallHandler());
 			} else {
 				throw e;
 			}
 		}
 		DEFAULT_SESSION_MANAGER
-				.setSerializationPolicyMap(SERIALIZATIONPOLICY_MAP);
+		.setSerializationPolicyMap(SERIALIZATIONPOLICY_MAP);
 		String siName = serviceIntf.getName();
 		siName = siName.replaceAll("Async\\z", "");
 		return Proxy.newProxyInstance(SyncProxy.class.getClassLoader(),
@@ -98,31 +124,25 @@ public class AutoSyncProxy {
 	static class FailAsyncCallHandler implements InvocationHandler {
 		@Override
 		public Object invoke(Object proxy, Method method, Object[] args)
-				throws Throwable {
+		throws Throwable {
 			AsyncCallback callback = (AsyncCallback) args[args.length - 1];
 			callback.onFailure(new StatusCodeException(0, "Offline"));
 			return null;
 		}
 	}
 
-	private static void retrieveSerializationPolicies(String moduleBaseURL) {
+	private void retrieveSerializationPolicies(String moduleBaseURL, String policyFileName) {
 		moduleBaseURL = moduleBaseURL.trim(); // remove outer trim just in case
-		String[] urlparts = moduleBaseURL.split("/");
-		String moduleNoCacheJs = urlparts[urlparts.length - 1] + nocachejs; // get
-																			// last
-																			// word
-																			// of
-																			// url
-																			// appended
-																			// with
-																			// .nocache.js
-		List<String> guessAllGwtPolicyName = RpcFinderUtil
-				.guessAllGwtPolicyName(moduleBaseURL, moduleNoCacheJs);
-		for (Iterator iterator = guessAllGwtPolicyName.iterator(); iterator
-				.hasNext();) {
+		List<String> guessAllGwtPolicyName = null;
+		if (policyFileName != null) {
+			guessAllGwtPolicyName = RpcFinderUtil.guessAllGwtPolicyName(moduleBaseURL, policyFileName);
+		} else {
+			guessAllGwtPolicyName = RpcFinderUtil.guessAllGwtPolicyName(moduleBaseURL);
+		}
+		for (Iterator iterator = guessAllGwtPolicyName.iterator(); iterator.hasNext();) {
 			String policyname = (String) iterator.next();
 			String policyUrl = moduleBaseURL + "/" + policyname
-					+ GWT_RPC_POLICY_FILE_EXT;
+			+ GWT_RPC_POLICY_FILE_EXT;
 			String servicename = RpcFinderUtil.findServiceName(policyUrl);
 			SerializationPolicy p = RpcFinderUtil.getSchedulePolicy(policyUrl);
 			POLICY_MAP.put(servicename, policyname);
