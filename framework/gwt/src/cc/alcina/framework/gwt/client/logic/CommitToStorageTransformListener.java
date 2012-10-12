@@ -40,6 +40,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
@@ -92,12 +93,15 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	public CommitToStorageTransformListener() {
 		resetQueue();
 	}
-	public int getTransformQueueSize(){
+
+	public int getTransformQueueSize() {
 		return transformQueue.size();
 	}
+
 	protected void clearPriorRequestsWithoutResponse() {
 		priorRequestsWithoutResponse.clear();
 	}
+
 	public synchronized void domainTransform(DomainTransformEvent evt) {
 		if (evt.getCommitType() == CommitType.TO_STORAGE) {
 			String pn = evt.getPropertyName();
@@ -139,7 +143,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 
 	public void flush() {
-		if(currentState==RELOAD){
+		if (currentState == RELOAD) {
 			return;
 		}
 		commit();
@@ -199,12 +203,14 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		transformQueue = new ArrayList<DomainTransformEvent>();
 		// eventIdsToIgnore = new HashSet<Long>();
 	}
+
 	/**
 	 * Indicates that no further transforms should be processed
 	 */
-	public void putReloadRequired(){
-		currentState=RELOAD;
+	public void putReloadRequired() {
+		currentState = RELOAD;
 	}
+
 	protected synchronized void commit() {
 		if (priorRequestsWithoutResponse.size() == 0
 				&& transformQueue.size() == 0 || isPaused()) {
@@ -297,7 +303,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 						// race condition
 						// with some other persistence mech
 						// and it definitely _does_ need to be sorted
-						if (dte.getObjectVersionNumber() != 0) {
+						if (CommonUtils.iv(dte.getObjectVersionNumber()) != 0) {
 							DomainTransformEvent idEvt = new DomainTransformEvent();
 							idEvt.setObjectClass(dte.getObjectClass());
 							idEvt.setObjectId(id);
@@ -371,14 +377,15 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 				.transform(dtr, callback);
 	}
-	public static class UnknownTransformFailedException extends WrappedRuntimeException{
 
+	public static class UnknownTransformFailedException extends
+			WrappedRuntimeException {
 		public UnknownTransformFailedException(Throwable cause) {
 			super(cause);
 		}
 	}
-	 class OneoffListenerWrapper implements StateChangeListener{
 
+	class OneoffListenerWrapper implements StateChangeListener {
 		private final AsyncCallback callback;
 
 		public OneoffListenerWrapper(AsyncCallback callback) {
@@ -387,23 +394,22 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 		@Override
 		public void stateChanged(Object source, String newState) {
-			if(newState.equals(COMMITTING)){
-				
-			}else if(newState.equals(COMMITTED)){
+			if (newState.equals(COMMITTING)) {
+			} else if (newState.equals(COMMITTED)) {
 				removeStateChangeListener(OneoffListenerWrapper.this);
 				callback.onSuccess(null);
-			}else{
+			} else {
 				removeStateChangeListener(OneoffListenerWrapper.this);
 				callback.onFailure(new Exception("flush failed on server"));
 			}
-			
 		}
-		
 	}
-	public void flushWithOneoffCallback(AsyncCallback callback){
+
+	public void flushWithOneoffCallback(AsyncCallback callback) {
 		addStateChangeListener(new OneoffListenerWrapper(callback));
 		flush();
 	}
+
 	@Override
 	protected void fireStateChanged(String newState) {
 		currentState = newState;

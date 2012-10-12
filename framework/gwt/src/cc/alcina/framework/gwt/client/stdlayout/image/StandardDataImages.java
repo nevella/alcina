@@ -55,6 +55,8 @@ public interface StandardDataImages extends ClientBundle, Resources {
 	ImageResource info();
 
 	ImageResource deleteItem();
-	
+
 	ImageResource downGrey();
+
+	ImageResource bubbleArrow();
 }
