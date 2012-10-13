@@ -1730,10 +1730,11 @@ div.alcina-prompt input {
 div.gwt-PopupPanel.quiet{
 	border: 2px solid #78A3B6;
 }
-div.gwt-PopupPanel.bubble, div.gwt-PopupPanel {
+div.gwt-PopupPanel.bubble{
 	border: 2px solid #78A3B6;
 	position: relative;
-	margin-top: 8px;
+	margin-top: 9px;
+	background-color:white;
 }
 
 div.gwt-PopupPanel.bubble .bubble-up {

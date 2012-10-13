@@ -121,5 +121,9 @@ public class PermissibleAction implements Permissible {
 		public String rule() {
 			return this.delegate.rule();
 		}
+
+		public PermissibleAction getDelegate() {
+			return this.delegate;
+		}
 	}
 }

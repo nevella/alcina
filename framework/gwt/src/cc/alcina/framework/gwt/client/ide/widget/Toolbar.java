@@ -23,6 +23,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.actions.ActionGroup;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleAction.PermissibleActionWithChildren;
+import cc.alcina.framework.common.client.actions.PermissibleAction.PermissibleActionWithChildrenAndDelegate;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
@@ -160,7 +161,9 @@ public class Toolbar extends Composite implements
 			}
 		}
 	}
+
 	private String buttonStyleName;
+
 	protected void redraw() {
 		WidgetUtils.clearChildren(panel);
 		hasChildHandlersSupport.detachHandlers();
@@ -177,7 +180,8 @@ public class Toolbar extends Composite implements
 					fp.addStyleName("float-right");
 				}
 				for (PermissibleAction action : g.actions) {
-					ToolbarButton button = new ToolbarButton(action, buttonStyleName,asButton);
+					ToolbarButton button = new ToolbarButton(action,
+							buttonStyleName, asButton);
 					hasChildHandlersSupport.addHandler(button
 							.addClickHandler(this));
 					fp.add(button);
@@ -195,7 +199,8 @@ public class Toolbar extends Composite implements
 			}
 		} else {
 			for (PermissibleAction action : actions) {
-				ToolbarButton button = new ToolbarButton(action,buttonStyleName, asButton);
+				ToolbarButton button = new ToolbarButton(action,
+						buttonStyleName, asButton);
 				HandlerRegistration registration = button.addClickHandler(this);
 				hasChildHandlersSupport.addHandler(registration);
 				panel.add(button);
@@ -291,6 +296,13 @@ public class Toolbar extends Composite implements
 				w = aWidget;
 				if (action instanceof ClickHandler) {
 					aWidget.addClickHandler((ClickHandler) action);
+				}
+				if (action instanceof PermissibleActionWithChildrenAndDelegate) {
+					PermissibleAction delegate = ((PermissibleActionWithChildrenAndDelegate) action)
+							.getDelegate();
+					if (delegate instanceof ClickHandler) {
+						aWidget.addClickHandler((ClickHandler) delegate);
+					}
 				}
 				if (action instanceof PermissibleActionWithChildren) {
 					SpanPanel sp = new SpanPanel();
