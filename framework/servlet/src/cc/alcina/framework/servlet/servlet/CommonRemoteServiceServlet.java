@@ -137,6 +137,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw new WebException(e);
 		}
 	}
+	@Override
+	protected void onBeforeRequestDeserialized(String serializedRequest) {
+		super.onBeforeRequestDeserialized(serializedRequest);
+		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
+	}
 
 	public <T extends HasIdAndLocalId> T getItemById(String className, Long id)
 			throws WebException {
