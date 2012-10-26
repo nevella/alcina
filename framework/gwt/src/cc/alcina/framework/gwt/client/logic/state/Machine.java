@@ -81,6 +81,7 @@ public class Machine {
 				((IsCancellable) cb).setCancelled(true);
 			}
 			model.setEvent(MachineEvent.CANCEL);
+			model.setCancelled(true);
 			listeners.clear();
 			transitionHandlers.clear();
 		}

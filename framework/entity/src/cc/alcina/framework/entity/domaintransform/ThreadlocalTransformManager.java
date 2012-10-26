@@ -64,6 +64,7 @@ import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransfo
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 @SuppressWarnings("unchecked")
@@ -797,9 +798,36 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 		public long id;
 
+		private int hash;
+
 		public HiliLocator(Class<? extends HasIdAndLocalId> clazz, long id) {
 			this.clazz = clazz;
 			this.id = id;
+		}
+		public HiliLocator(HasIdAndLocalId obj){
+			this.clazz=obj.getClass();
+			this.id=obj.getId();
+		}
+
+		@Override
+		public int hashCode() {
+			if (hash == 0) {
+				hash = Long.valueOf(id).hashCode()
+						^ getClass().getName().hashCode();
+				if (hash == 0) {
+					hash = -1;
+				}
+			}
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof HiliLocator) {
+				HiliLocator o = (HiliLocator) obj;
+				return id == o.id && clazz == o.clazz;
+			}
+			return super.equals(obj);
 		}
 	}
 

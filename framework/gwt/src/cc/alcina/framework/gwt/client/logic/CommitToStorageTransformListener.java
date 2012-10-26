@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -82,11 +83,15 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	private String currentState;
 
+	private DomainTransformRequest committingRequest;
+
 	public static final String COMMITTING = "COMMITTING";
 
 	public static final String COMMITTED = "COMMITTED";
 
 	public static final String ERROR = "ERROR";
+
+	public static final String OFFLINE = "OFFLINE";
 
 	public static final String RELOAD = "RELOAD";
 
@@ -147,7 +152,6 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			return;
 		}
 		commit();
-		priorRequestsWithoutResponse.clear();
 	}
 
 	private ClientInstance getClientInstance() {
@@ -212,8 +216,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 
 	protected synchronized void commit() {
-		if (priorRequestsWithoutResponse.size() == 0
-				&& transformQueue.size() == 0 || isPaused()) {
+		if ((priorRequestsWithoutResponse.size() == 0 && transformQueue.size() == 0)
+				|| isPaused()) {
 			return;
 		}
 		if (queueingFinishedTimer != null) {
@@ -229,7 +233,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		dtr.setTag(DomainTransformRequestTagProvider.get().getTag());
 		updateTransformQueueVersions();
 		resetQueue();
-		AsyncCallback<DomainTransformResponse> callback = new AsyncCallback<DomainTransformResponse>() {
+		final AsyncCallback<DomainTransformResponse> commitRemoteCallback = new AsyncCallback<DomainTransformResponse>() {
 			public void onFailure(Throwable caught) {
 				// resolve here
 				if (!suppressErrors) {
@@ -255,6 +259,9 @@ public class CommitToStorageTransformListener extends StateListenable implements
 						setPaused(true);
 						getTransformExceptionResolver().resolve(dtre, callback);
 						return;
+					}
+					if (ClientUtils.maybeOffline(caught)) {
+						fireStateChanged(OFFLINE);
 					}
 					throw new UnknownTransformFailedException(caught);
 				}
@@ -369,13 +376,37 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		// given listener callbacks can be multi-threaded (jvm version),
 		// use the following ordering - note we use a new list in
 		// dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseCopy)
-		List<DomainTransformRequest> priorRequestsWithoutResponseCopy = new ArrayList<DomainTransformRequest>(
+		List<DomainTransformRequest> priorRequestsWithoutResponseForCommit = new ArrayList<DomainTransformRequest>(
 				priorRequestsWithoutResponse);
-		priorRequestsWithoutResponse.add(dtr);
+		dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseForCommit);
+		committingRequest = dtr;
 		fireStateChanged(COMMITTING);
-		dtr.setPriorRequestsWithoutResponse(priorRequestsWithoutResponseCopy);
+		priorRequestsWithoutResponse.add(dtr);
+		if (PermissionsManager.get().getOnlineState() == OnlineState.OFFLINE) {
+			ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+					.ping(new AsyncCallback<Void>() {
+						@Override
+						public void onFailure(Throwable caught) {
+							// ignore - expected(ish) behaviour - if it's a
+							// non-'offline' error, it's more graceful to ignore
+							// here than not
+							fireStateChanged(OFFLINE);
+						}
+
+						@Override
+						public void onSuccess(Void result) {
+							commitRemote(commitRemoteCallback);
+						}
+					});
+		} else {
+			commitRemote(commitRemoteCallback);
+		}
+	}
+
+	protected void commitRemote(AsyncCallback<DomainTransformResponse> callback) {
 		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-				.transform(dtr, callback);
+				.transform(committingRequest, callback);
+		committingRequest = null;
 	}
 
 	public static class UnknownTransformFailedException extends
@@ -395,7 +426,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		@Override
 		public void stateChanged(Object source, String newState) {
 			if (newState.equals(COMMITTING)) {
-			} else if (newState.equals(COMMITTED)) {
+			} else if (newState.equals(COMMITTED) || newState.equals(OFFLINE)) {
 				removeStateChangeListener(OneoffListenerWrapper.this);
 				callback.onSuccess(null);
 			} else {
@@ -406,6 +437,16 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 
 	public void flushWithOneoffCallback(AsyncCallback callback) {
+		flushWithOneoffCallback(callback, true);
+	}
+
+	public void flushWithOneoffCallback(AsyncCallback callback,
+			boolean commitIfEmptyTransformQueue) {
+		if (((priorRequestsWithoutResponse.size() == 0 || !commitIfEmptyTransformQueue) && transformQueue
+				.size() == 0) || isPaused()) {
+			callback.onSuccess(null);
+			return;
+		}
 		addStateChangeListener(new OneoffListenerWrapper(callback));
 		flush();
 	}
@@ -425,5 +466,9 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	public String getCurrentState() {
 		return this.currentState;
+	}
+
+	public DomainTransformRequest getCommittingRequest() {
+		return this.committingRequest;
 	}
 }

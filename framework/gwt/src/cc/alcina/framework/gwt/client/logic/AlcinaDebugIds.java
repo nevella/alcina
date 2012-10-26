@@ -63,6 +63,10 @@ public class AlcinaDebugIds {
 	public static boolean hasFlag(String key) {
 		return debugIdsMatched.contains(key);
 	}
+	
+	public static void setFlag(String key) {
+		debugIdsMatched.add(key);
+	}
 
 	public static void initialise() {
 		String token = History.getToken();

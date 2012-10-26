@@ -314,23 +314,27 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	public void stateChanged(Object source, String newState) {
 		if (newState == CommitToStorageTransformListener.COMMITTING) {
-			List<DomainTransformRequest> rqs = getCommitToStorageTransformListener()
-					.getPriorRequestsWithoutResponse();
-			for (DomainTransformRequest rq : rqs) {
-				final int requestId = rq.getRequestId();
-				if (!getPersistedTransforms().containsKey(requestId)
-						&& !rq.getEvents().isEmpty()) {
-					rq.setProtocolVersion(getSerializationPolicy()
-							.getTransformPersistenceProtocol());
-					final DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(
-							rq);
-					persist(wrapper, new PersistenceCallbackStd<Void>() {
-						@Override
-						public void onSuccess(Void result) {
-							getPersistedTransforms().put(requestId, wrapper);
-						}
-					});
-				}
+			DomainTransformRequest rq = getCommitToStorageTransformListener()
+					.getCommittingRequest();
+			final int requestId = rq.getRequestId();
+			if (!getPersistedTransforms().containsKey(requestId)
+					&& !rq.getEvents().isEmpty()) {
+				rq.setProtocolVersion(getSerializationPolicy()
+						.getTransformPersistenceProtocol());
+				final DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(
+						rq);
+				getPersistedTransforms().put(requestId, wrapper);
+				persist(wrapper, new PersistenceCallbackStd<Void>() {
+					@Override
+					public void onFailure(Throwable caught) {
+						getPersistedTransforms().remove(requestId);
+						super.onFailure(caught);
+					}
+
+					@Override
+					public void onSuccess(Void result) {
+					}
+				});
 			}
 		} else if (newState == CommitToStorageTransformListener.COMMITTED) {
 			List<DomainTransformRequest> rqs = getCommitToStorageTransformListener()

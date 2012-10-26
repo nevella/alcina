@@ -2,7 +2,9 @@ package cc.alcina.framework.entity.domaintransform;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -15,10 +17,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
@@ -30,6 +34,9 @@ import cc.alcina.framework.entity.logic.EntityLayerLocator;
  */
 public class TransformConflicts {
 	private static final String CHECK_TRANSFORM_CONFLICTS_QUERY = "check transform conflicts query";
+
+	public static final String CONTEXT_OFFLINE_SUPPORT = TransformConflicts.class
+			.getName() + ".CONTEXT_OFFLINE_SUPPORT";
 
 	public static final String TOPIC_CONFLICT_EVENT = TransformConflicts.class
 			.getName() + ".TOPIC_CONFLICT_EVENT";
@@ -43,6 +50,18 @@ public class TransformConflicts {
 				TransformConflicts.class, "ignoreConflicts");
 	}
 
+	public static class TransformConflictsFromOfflineSupport {
+		private Set<HiliLocator> checked = new LinkedHashSet<HiliLocator>();
+
+		public boolean wasChecked(HasIdAndLocalId obj) {
+			return checked.contains(new HiliLocator(obj));
+		}
+
+		public void checking(HasIdAndLocalId obj) {
+			checked.add(new HiliLocator(obj));
+		}
+	}
+
 	/*
 	 * do all that's humanly possible to avoid a db query
 	 */
@@ -53,6 +72,17 @@ public class TransformConflicts {
 		}
 		if (!(obj instanceof HasVersionNumber)) {
 			return;
+		}
+		TransformConflictsFromOfflineSupport fromOfflineSupport = LooseContextProvider
+				.getContext().get(CONTEXT_OFFLINE_SUPPORT);
+		// because offline dtrs are persisted as separate transactions, this
+		// means we don't have
+		// spurious version conflicts
+		if (fromOfflineSupport != null) {
+			if (fromOfflineSupport.wasChecked(obj)) {
+				return;
+			}
+			fromOfflineSupport.checking(obj);
 		}
 		int persistentVersionNumber = ((HasVersionNumber) obj)
 				.getVersionNumber();
@@ -141,8 +171,8 @@ public class TransformConflicts {
 					+ " have conflicts - same object and field, but changes were made "
 					+ "when the field value visible to the client was stale.  The most recent has been applied"
 					+ " (simple conflict resolution - latest commit wins) - the notification is strictly informational.\n\n"
-					+ " See the Alcina TransformConflicts java class if you need automatic resolution interceptors.\n\n" +
-					"");
+					+ " See the Alcina TransformConflicts java class if you need automatic resolution interceptors.\n\n"
+					+ "");
 			for (TransformConflictEventMember member : event.members) {
 				add(member);
 			}

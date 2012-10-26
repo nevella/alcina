@@ -70,6 +70,8 @@ import com.google.gwt.user.client.rpc.RemoteService;
 
 	public LoginResponse login(LoginBean loginBean);
 	
+	public void ping();
+	
 	public void logout();
 
 	@AuthenticationRequired()

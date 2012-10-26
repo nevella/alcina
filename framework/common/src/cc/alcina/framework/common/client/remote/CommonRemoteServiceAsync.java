@@ -87,4 +87,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 	void uploadOfflineTransforms(PartialDtrUploadRequest request,
 			AsyncCallback<PartialDtrUploadResponse> callback);
+
+	void ping(AsyncCallback<Void> callback);
 }

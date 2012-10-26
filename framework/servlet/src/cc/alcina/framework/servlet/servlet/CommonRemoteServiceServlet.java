@@ -74,6 +74,8 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.domaintransform.TransformConflicts;
+import cc.alcina.framework.entity.domaintransform.TransformConflicts.TransformConflictsFromOfflineSupport;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
@@ -349,6 +351,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
 			int committed = 0;
+			LooseContextProvider.getContext().pushWithKey(TransformConflicts.CONTEXT_OFFLINE_SUPPORT, new TransformConflictsFromOfflineSupport());
 			for (DTRSimpleSerialWrapper wr : uncommitted) {
 				long clientInstanceId = wr.getClientInstanceId();
 				int requestId = (int) wr.getRequestId();
@@ -423,11 +426,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WebException(e);
+		}finally{
+			LooseContextProvider.getContext().pop();
 		}
 	}
 
 	protected boolean isPersistOfflineTransforms() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
@@ -719,5 +723,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			PartialDtrUploadRequest request) throws WebException {
 		return new PartialDtrUploadHandler().uploadOfflineTransforms(request,
 				this);
+	}
+	@Override
+	public void ping() {
+		
 	}
 }

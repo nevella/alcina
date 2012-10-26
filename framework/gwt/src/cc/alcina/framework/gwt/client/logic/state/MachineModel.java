@@ -26,6 +26,8 @@ public class MachineModel {
 	private Machine machine;
 
 	private Object runningCallback;
+	
+	private boolean cancelled=false;
 
 	public MachineState getState() {
 		return this.state;
@@ -93,5 +95,13 @@ public class MachineModel {
 
 	public void setDebug(boolean debug) {
 		this.debug = debug;
+	}
+
+	public boolean isCancelled() {
+		return this.cancelled;
+	}
+
+	public void setCancelled(boolean cancelled) {
+		this.cancelled = cancelled;
 	}
 }
