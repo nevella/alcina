@@ -432,7 +432,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected boolean isPersistOfflineTransforms() {
-		return false;
+		return true;
 	}
 
 	public JobInfo pollJobStatus(Long id, boolean cancel) {
