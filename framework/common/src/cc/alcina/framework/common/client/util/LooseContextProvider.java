@@ -49,4 +49,7 @@ public abstract class LooseContextProvider {
 	public static boolean getBoolean(String key) {
 		return getContext().getBoolean(key);
 	}
+	public static String getString(String key) {
+		return getContext().get(key);
+	}
 }
