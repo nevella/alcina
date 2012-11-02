@@ -15,6 +15,7 @@ package cc.alcina.framework.servlet.servlet;
 
 import java.beans.XMLEncoder;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -68,6 +69,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.actions.RequiresHttpRequest;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -139,6 +141,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw new WebException(e);
 		}
 	}
+
 	@Override
 	protected void onBeforeRequestDeserialized(String serializedRequest) {
 		super.onBeforeRequestDeserialized(serializedRequest);
@@ -351,7 +354,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
 			int committed = 0;
-			LooseContextProvider.getContext().pushWithKey(TransformConflicts.CONTEXT_OFFLINE_SUPPORT, new TransformConflictsFromOfflineSupport());
+			LooseContextProvider.getContext().pushWithKey(
+					TransformConflicts.CONTEXT_OFFLINE_SUPPORT,
+					new TransformConflictsFromOfflineSupport());
 			for (DTRSimpleSerialWrapper wr : uncommitted) {
 				long clientInstanceId = wr.getClientInstanceId();
 				int requestId = (int) wr.getRequestId();
@@ -426,7 +431,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WebException(e);
-		}finally{
+		} finally {
 			LooseContextProvider.getContext().pop();
 		}
 	}
@@ -565,7 +570,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, map, persistTransforms, false, false, false,getLogger());
+					request, map, persistTransforms, false, false, false,
+					getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
@@ -675,7 +681,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, locatorMap, persistTransforms, true,
-					ignoreClientAuthMismatch, forOfflineTransforms,getLogger());
+					ignoreClientAuthMismatch, forOfflineTransforms, getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		}
 	}
@@ -724,8 +730,50 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return new PartialDtrUploadHandler().uploadOfflineTransforms(request,
 				this);
 	}
+
 	@Override
 	public void ping() {
-		
+	}
+
+	@Override
+	public void dumpData(String data) {
+		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
+				"dumpPermitted")) {
+			throw new RuntimeException("Dump not permitted");
+		}
+		String key = String.valueOf(System.currentTimeMillis());
+		File dir = getDataDumpsFolder();
+		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
+		File file = new File(path);
+		try {
+			ResourceUtilities.writeStringToFile(data, file);
+			System.out.println("Client db dumped - key: "+key);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	@Override
+	public String loadData(String key) {
+		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
+				"loadDumpPermitted")) {
+			throw new RuntimeException("Load dump not permitted");
+		}
+		File dir = getDataDumpsFolder();
+		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
+		File file = new File(path);
+		try {
+			return ResourceUtilities.readFileToString(file);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private File getDataDumpsFolder() {
+		File dataFolder = ServletLayerLocator.get().getDataFolder();
+		File dir = new File(dataFolder.getPath() + File.separator
+				+ "client-dumps");
+		dir.mkdirs();
+		return dir;
 	}
 }

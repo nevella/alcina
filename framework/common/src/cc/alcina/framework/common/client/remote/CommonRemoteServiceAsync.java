@@ -89,4 +89,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 			AsyncCallback<PartialDtrUploadResponse> callback);
 
 	void ping(AsyncCallback<Void> callback);
+
+
+	void loadData(String key, AsyncCallback<String> callback);
+
+	void dumpData(String data, AsyncCallback<Void> callback);
 }

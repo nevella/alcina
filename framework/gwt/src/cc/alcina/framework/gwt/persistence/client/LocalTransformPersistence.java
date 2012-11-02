@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRSimpleSerialSerializer;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.GwtRpcProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.provider.TextProvider;
@@ -108,6 +110,75 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	public DTESerializationPolicy getSerializationPolicy() {
 		return serializationPolicy;
+	}
+
+	public void dumpDatabase(final Callback<String> callback) {
+		PersistenceCallback<List<DTRSimpleSerialWrapper>> transformCallback = new PersistenceCallbackStd<List<DTRSimpleSerialWrapper>>() {
+			@Override
+			public void onSuccess(List<DTRSimpleSerialWrapper> result) {
+				StringBuilder sb = new StringBuilder();
+				for (DTRSimpleSerialWrapper wrapper : result) {
+					sb.append(new DTRSimpleSerialSerializer().write(wrapper));
+					sb.append("\n");
+				}
+				callback.callback(sb.toString());
+			}
+		};
+		getTransforms(DomainTransformRequestType.values(), transformCallback);
+	}
+
+	private static class Loader {
+		private enum Phase {
+			CLEAR, LOAD
+		};
+
+		private final Callback callback;
+
+		private final String data;
+
+		private Phase phase = Phase.CLEAR;
+
+		private final LocalTransformPersistence localTransformPersistence;
+
+		public Loader(LocalTransformPersistence localTransformPersistence,
+				String data, Callback callback) {
+			this.localTransformPersistence = localTransformPersistence;
+			this.data = data;
+			this.callback = callback;
+		}
+
+		PersistenceCallbackStd pcb = new PersistenceCallbackStd() {
+			@Override
+			public void onSuccess(Object result) {
+				iterate();
+			}
+		};
+
+		public void start() {
+			List<DTRSimpleSerialWrapper> wrappers = new DTRSimpleSerialSerializer()
+					.readMultiple(data);
+			loadIterator = wrappers.iterator();
+			iterate();
+		}
+
+		private void iterate() {
+			if (phase == Phase.CLEAR) {
+				phase = Phase.LOAD;
+				localTransformPersistence.clearAllPersisted(pcb);
+			} else {
+				if (loadIterator.hasNext()) {
+					localTransformPersistence.persist(loadIterator.next(), pcb);
+				} else {
+					callback.callback(null);
+				}
+			}
+		}
+
+		Iterator<DTRSimpleSerialWrapper> loadIterator;
+	}
+
+	public void restoreDatabase(String data, Callback callback) {
+		new Loader(this, data, callback).start();
 	}
 
 	public void handleUncommittedTransformsOnLoad(final Callback cb) {
