@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BuildHelper {
+public class JvmSerializationPolicyBuildHelper {
 	private static final String nocachejs = ".nocache.js";
 	
 	public static void main(String [] args) throws Exception
