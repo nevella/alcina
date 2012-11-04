@@ -149,8 +149,9 @@ public class StatusDisplayer {
 		@Override
 		protected void onUpdate(double progress) {
 			if (progress > preFade) {
-				WidgetUtils.setOpacity(holder,
-						(int) (100 * (progress - preFade) / (1 - preFade)));
+				int opacityPercent = (int) (100 * (1 - (progress - preFade)
+						/ (1 - preFade)));
+				WidgetUtils.setOpacity(holder, opacityPercent);
 			}
 		}
 	}

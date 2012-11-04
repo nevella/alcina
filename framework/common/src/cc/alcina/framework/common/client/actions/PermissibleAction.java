@@ -25,6 +25,14 @@ import cc.alcina.framework.common.client.logic.permissions.Permissible;
  * @author Nick Reddel
  */
 public class PermissibleAction implements Permissible {
+	public interface HasPermissibleActionDelegate {
+
+		public abstract PermissibleAction getDelegate();
+	}
+	public interface HasPermissibleActionChildren{
+
+		public abstract List<PermissibleAction> getChildren();
+	}
 	private String displayName;
 
 	private String cssClassName;
@@ -77,19 +85,23 @@ public class PermissibleAction implements Permissible {
 		return null;
 	}
 
-	public static class PermissibleActionWithChildren extends PermissibleAction {
+	public static class PermissibleActionWithChildrenAndDelegate extends PermissibleActionWithDelegate implements HasPermissibleActionChildren{
+		public PermissibleActionWithChildrenAndDelegate(
+				PermissibleAction delegate) {
+			super(delegate);
+		}
+
 		private List<PermissibleAction> children = new ArrayList<PermissibleAction>();
 
 		public List<PermissibleAction> getChildren() {
 			return this.children;
 		}
 	}
-
-	public static class PermissibleActionWithChildrenAndDelegate extends
-			PermissibleActionWithChildren {
+	public static class PermissibleActionWithDelegate extends
+			PermissibleAction implements HasPermissibleActionDelegate{
 		private final PermissibleAction delegate;
 
-		public PermissibleActionWithChildrenAndDelegate(
+		public PermissibleActionWithDelegate(
 				PermissibleAction delegate) {
 			this.delegate = delegate;
 		}
@@ -122,6 +134,7 @@ public class PermissibleAction implements Permissible {
 			return this.delegate.rule();
 		}
 
+		@Override
 		public PermissibleAction getDelegate() {
 			return this.delegate;
 		}

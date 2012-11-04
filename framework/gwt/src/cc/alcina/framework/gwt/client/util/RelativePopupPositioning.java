@@ -61,8 +61,7 @@ public class RelativePopupPositioning {
 	}
 
 	public static void setCurrentBoundingParent(Widget boundingParent) {
-		RenderContext.get().set(RENDER_CONTEXT_BOUNDING_PARENT,
-				boundingParent);
+		RenderContext.get().set(RENDER_CONTEXT_BOUNDING_PARENT, boundingParent);
 	}
 
 	public static RelativePopupPanel showPopup(Widget relativeToWidget,
@@ -437,11 +436,13 @@ public class RelativePopupPositioning {
 				if (favour.axisType() != null) {
 					switch (favour.axisType()) {
 					case NEG:
-						result = bDim - ppDim;// make as close to "left-align"
+						result = bDim - ppDim < 0 ? bDim - ppDim : 0;
+						// make as close to "left-align"
 						// as poss
 						break;
 					case POS:
-						result = 0;// as close to 'right-align' as poss
+						result = (result + ppDim > bDim) ? 0 : bDim - ppDim;
+						// as close to 'right-align' as poss
 						break;
 					}
 				} else {

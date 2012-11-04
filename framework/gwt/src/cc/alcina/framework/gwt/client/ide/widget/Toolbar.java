@@ -22,8 +22,9 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.actions.ActionGroup;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.actions.PermissibleAction.PermissibleActionWithChildren;
-import cc.alcina.framework.common.client.actions.PermissibleAction.PermissibleActionWithChildrenAndDelegate;
+import cc.alcina.framework.common.client.actions.PermissibleAction.HasPermissibleActionChildren;
+import cc.alcina.framework.common.client.actions.PermissibleAction.HasPermissibleActionDelegate;
+import cc.alcina.framework.common.client.actions.PermissibleAction.PermissibleActionWithDelegate;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
@@ -254,6 +255,20 @@ public class Toolbar extends Composite implements
 		return removeListenersOnDetach;
 	}
 
+	public static interface HasDropdownPresenter {
+		public Widget presentDropdown();
+
+		public void setPopup(RelativePopupPanel rpp);
+	}
+	public abstract static class PermissibleActionWithDelegateAndDropdown extends PermissibleActionWithDelegate implements HasDropdownPresenter{
+
+		public PermissibleActionWithDelegateAndDropdown(
+				PermissibleAction delegate) {
+			super(delegate);
+		}
+		
+	}
+
 	public static class ToolbarButton extends Composite implements
 			HasClickHandlers {
 		private final PermissibleAction action;
@@ -297,14 +312,15 @@ public class Toolbar extends Composite implements
 				if (action instanceof ClickHandler) {
 					aWidget.addClickHandler((ClickHandler) action);
 				}
-				if (action instanceof PermissibleActionWithChildrenAndDelegate) {
-					PermissibleAction delegate = ((PermissibleActionWithChildrenAndDelegate) action)
+				if (action instanceof PermissibleActionWithDelegate) {
+					PermissibleAction delegate = ((HasPermissibleActionDelegate) action)
 							.getDelegate();
 					if (delegate instanceof ClickHandler) {
 						aWidget.addClickHandler((ClickHandler) delegate);
 					}
 				}
-				if (action instanceof PermissibleActionWithChildren) {
+				if (action instanceof HasPermissibleActionChildren
+						|| action instanceof HasDropdownPresenter) {
 					SpanPanel sp = new SpanPanel();
 					w = sp;
 					sp.add(aWidget);
@@ -333,14 +349,25 @@ public class Toolbar extends Composite implements
 		}
 
 		protected void showDropDown() {
-			VerticalPanel vp = new VerticalPanel();
-			PermissibleActionWithChildren wKids = (PermissibleActionWithChildren) action;
-			for (PermissibleAction a : wKids.getChildren()) {
-				vp.add(new ToolbarButton(a));
+			Widget dropDown = null;
+			if (action instanceof HasDropdownPresenter) {
+				dropDown = ((HasDropdownPresenter) action).presentDropdown();
+			} else {
+				VerticalPanel vp = new VerticalPanel();
+				dropDown = vp;
+				HasPermissibleActionChildren wKids = (HasPermissibleActionChildren) action;
+				for (PermissibleAction a : wKids.getChildren()) {
+					vp.add(new ToolbarButton(a));
+				}
 			}
 			RelativePopupPanel rpp = RelativePopupPositioning.showPopup(
-					getWidget(), vp, RootPanel.get(),
+					getWidget(), dropDown, RootPanel.get(),
 					RelativePopupPositioning.BOTTOM_LTR);
+			if (action instanceof HasDropdownPresenter) {
+				 ((HasDropdownPresenter) action).setPopup(rpp);
+			}else{
+				rpp.addStyleName("child-actions");
+			}
 			rpp.addStyleName("toolbar-button-dropdown");
 		}
 
