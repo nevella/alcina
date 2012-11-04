@@ -136,6 +136,7 @@ public class ClientTransformManager extends TransformManager {
 
 	public class ClientDomainSync {
 		private LookupMapToMap lkp;
+
 		private ModalNotifier notifier;
 
 		public ClientDomainSync() {
@@ -162,8 +163,8 @@ public class ClientTransformManager extends TransformManager {
 			String message = TextProvider.get().getUiObjectText(
 					ClientTransformManager.class, "domain-sync-update",
 					"Loading");
-			notifier = ClientLayerLocator.get()
-					.notifications().getModalNotifier(message);
+			notifier = ClientLayerLocator.get().notifications()
+					.getModalNotifier(message);
 			if (notifier == null) {
 				notifier = new ModalNotifierNull();
 			}
@@ -461,5 +462,10 @@ public class ClientTransformManager extends TransformManager {
 	public void setDomainTransformExceptionFilter(
 			DomainTransformExceptionFilter domainTransformExceptionFilter) {
 		this.domainTransformExceptionFilter = domainTransformExceptionFilter;
+	}
+
+	@Override
+	protected boolean allowUnregisteredHiliTargetObject() {
+		return true;
 	}
 }

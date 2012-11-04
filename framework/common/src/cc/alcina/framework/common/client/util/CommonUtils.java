@@ -852,4 +852,11 @@ public class CommonUtils {
 	public static List dedupe(List objects) {
 		return new ArrayList(new LinkedHashSet(objects));
 	}
+
+	public static <T> T first(Collection<T> coll) {
+		if(coll!=null&&coll.iterator().hasNext()){
+			return coll.iterator().next();
+		}
+		return null;
+	}
 }

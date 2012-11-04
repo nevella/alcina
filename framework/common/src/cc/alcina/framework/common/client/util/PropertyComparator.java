@@ -12,14 +12,12 @@
  * the License.
  */
 
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.SEUtilities;
 
 
 /**
@@ -47,10 +45,9 @@ import cc.alcina.framework.entity.SEUtilities;
 		}
 		try {
 			PropertyAccessor propertyAccessor = CommonLocator.get().propertyAccessor();
-			Object pv1 = SEUtilities.descriptorByName(o1.getClass(),
-					propertyName).getReadMethod().invoke(o1);
-			Object pv2 = SEUtilities.descriptorByName(o2.getClass(),
-					propertyName).getReadMethod().invoke(o2);
+			Object pv1 = propertyAccessor.getPropertyValue(o1, propertyName);
+			Object pv2 = propertyAccessor.getPropertyValue(o2, propertyName);
+			
 			return CommonUtils.compareWithNullMinusOne((Comparable)pv1,(Comparable)pv2);
 		} catch (Exception e) {
 			return 0;
