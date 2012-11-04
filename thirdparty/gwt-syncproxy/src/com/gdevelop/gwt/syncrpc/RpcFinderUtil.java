@@ -39,6 +39,8 @@ import com.google.gwt.user.server.rpc.SerializationPolicyLoader;
  *         AutoSyncProxy, can be improved upon.
  */
 public class RpcFinderUtil {
+	private static final String NOCACHEJS = ".nocache.js";
+	
 	private static String getResposeText(String myurl) throws IOException {
 		URL url = new URL(myurl);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -57,9 +59,37 @@ public class RpcFinderUtil {
 		String responseText = baos.toString("UTF8");
 		return responseText;
 	}
+	
+	public static List<String> guessAllGwtPolicyName(String baseurlwithendingslash, String policyFileName) {
+		String url = baseurlwithendingslash + policyFileName;
+		String response = "";
+		try {
+			response = getResposeText(url);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		List<String> findRpcNames = findGwtNames(response);
+		List<String> gwtRpcValidatedList = new ArrayList<String>();
+		boolean skippedfirst = false;
+		for (Iterator iterator = findRpcNames.iterator(); iterator.hasNext();) {
+			String string = (String) iterator.next();
+			// HERE - THESE ARE THE LIST OF RPC's minus the first one (which is
+			// the cache.html file)
+			if (skippedfirst) {
+				gwtRpcValidatedList.add(string);
+			}
+			skippedfirst = true;
+		}
+		return gwtRpcValidatedList;
+	}
 
 	public static List<String> guessAllGwtPolicyName(
-			String baseurlwithendingslash, String nocachejs) {
+			String baseurlwithendingslash) {
+		
+		String[] urlparts = baseurlwithendingslash.split("/");
+		String nocachejs = urlparts[urlparts.length - 1] + NOCACHEJS;
+		
 		String surl = baseurlwithendingslash + nocachejs;
 		String responseText = "";
 		try {

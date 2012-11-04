@@ -83,6 +83,10 @@
 				<include name="**/*" />
 			</fileset>
 		</copy>
+		<java classname="cc.alcina.framework.servlet.BuildHelper" fork="yes" classpath="${framework.servlet.build.dir}">
+			<arg value="${project.gwt.build.dir}"/>
+			<arg value="${project.gwt.module.name}"/>
+		</java>
 	</target>
 	<target name="hot-deploy" description="Dev :: copy changed server files, no WAR restart" depends="build-dependencies,compile">
 		<!--the ear -->
@@ -159,6 +163,7 @@
 	<!-- needed so gwt can see the compiled annotations, if any, from client source -->
 	<target name="compile-client" depends="compile">
 		<mkdir dir="${project.client.bin.dir}" />
+		<echo message="Client lib dir ${project.client.bin.dir}"/>
 		<javac includeantruntime="false" debug="on" srcdir="${project.client.src.dir}" destdir="${project.client.bin.dir}">
 			<classpath>
 				<path refid="project.classpath" />
