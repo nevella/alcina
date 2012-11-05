@@ -137,4 +137,8 @@ public abstract class AbstractRenderer<T extends TreeRenderable> implements
 	public void setRenderable(T renderable) {
 		this.renderable = renderable;
 	}
+	@Override
+	public String title() {
+		return null;
+	}
 }

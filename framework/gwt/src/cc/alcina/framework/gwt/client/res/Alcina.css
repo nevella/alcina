@@ -1727,6 +1727,9 @@ div.alcina-prompt input {
 	width: 300px;
 	margin-left: 1em;
 }
+div.alcina-prompt .kv-holder{
+	margin: 1em 1.5em;
+}
 div.gwt-PopupPanel.quiet{
 	border: 2px solid #78A3B6;
 }

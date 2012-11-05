@@ -148,12 +148,12 @@ public class ObjectTreeRenderer {
 			}
 			String customiserStyleName = node.isSingleLineCustomiser() ? "single-line-customiser"
 					: "customiser";
-			String hint = node.hint();
-			if (hint != null && hint.startsWith(TreeRenderer.TOOLTIP_HINT)) {
-				hint = hint.substring(TreeRenderer.TOOLTIP_HINT.length());
-				customiserWidget.setTitle(hint);
-				hint = null;
+			String title = node.title();
+			if (title != null) {
+				customiserWidget.setTitle(title);
+				title = null;
 			}
+			String hint = node.hint();
 			if (hint != null) {
 				FlowPanel fp2 = new FlowPanel();
 				Label label = new Label(hint);
@@ -243,7 +243,7 @@ public class ObjectTreeRenderer {
 			Field f = GwittirBridge.get().getField(renderable.getClass(),
 					propertyName, true, false);
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
-					RelativePopupValidationFeedback.BOTTOM,f.getFeedback());
+					RelativePopupValidationFeedback.BOTTOM, f.getFeedback());
 			vf.addCssBackground();
 			if (f.getCellProvider() instanceof ListBoxEnumProvider
 					&& renderable instanceof HasWithNull) {
