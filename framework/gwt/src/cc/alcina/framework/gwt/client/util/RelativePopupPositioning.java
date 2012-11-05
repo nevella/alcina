@@ -153,12 +153,14 @@ public class RelativePopupPositioning {
 	}
 
 	private static RelativePopupPanel showPopup(
-			final Element relativeToElement, final Widget widgetToShow,
+			final Element relativeToElement0, final Widget widgetToShow,
 			final Widget boundingWidget,
 			final RelativePopupPositioningParams positioningParams,
 			Widget relativeContainer, final RelativePopupPanel rpp,
 			final int shiftX, final int shiftY) {
 		final Widget positioningWidget = relativeContainer;
+		final Element relativeToElement =WidgetUtils
+				.getElementForAroundPositioning(relativeToElement0);
 		if (!LooseContextProvider.getContext().getBoolean(
 				CONTEXT_KEEP_RELATIVE_PARENT_CLIP)) {
 			if (!BrowserMod.isIEpre9()) {
@@ -177,12 +179,6 @@ public class RelativePopupPositioning {
 				int y = relativeToElement.getAbsoluteTop();
 				int relW = relativeToElement.getOffsetWidth();
 				int relH = relativeToElement.getOffsetHeight();
-				if (relH == 0) {
-					Element parentElement = relativeToElement
-							.getParentElement();
-					relH = parentElement.getOffsetHeight();
-					y = parentElement.getAbsoluteTop();
-				}
 				x += shiftX;
 				y += shiftY;
 				int rw = rpp.getOffsetWidth();

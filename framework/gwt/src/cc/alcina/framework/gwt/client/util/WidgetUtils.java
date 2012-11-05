@@ -145,13 +145,13 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element elt,
 			String attributeName)/*-{
-		if (elt.currentStyle) {
-			return elt.currentStyle[attributeName];
-		}
-		if ($wnd.getComputedStyle) {
-			return $wnd.getComputedStyle(elt, null)[attributeName];
-		}
-	}-*/;
+									if (elt.currentStyle) {
+									return elt.currentStyle[attributeName];
+									}
+									if ($wnd.getComputedStyle) {
+									return $wnd.getComputedStyle(elt, null)[attributeName];
+									}
+									}-*/;
 
 	public static void clearChildren(TabPanel tp) {
 		for (int i = tp.getWidgetCount() - 1; i >= 0; i--) {
@@ -411,6 +411,28 @@ public class WidgetUtils {
 		}
 	}
 
+	public static Element getElementForAroundPositioning(Element from) {
+		boolean hidden = isZeroOffsetDims(from);
+		if (!isZeroOffsetDims(from)) {
+			return from;
+		}
+		ClientNodeIterator itr = new ClientNodeIterator(from,
+				ClientNodeIterator.SHOW_ELEMENT);
+		Element elt = null;
+		while ((elt = (Element) itr.nextNode()) != null) {
+			if (!isZeroOffsetDims(elt)) {
+				return elt;
+			}
+		}
+		while (elt != null) {
+			if (!isZeroOffsetDims(elt)) {
+				return elt;
+			}
+			elt = elt.getParentElement();
+		}
+		return null;
+	}
+
 	public static Element getElementForPositioning0(Element from) {
 		boolean hidden = isZeroOffsetDims(from);
 		int kidCount = from.getChildCount();
@@ -421,7 +443,7 @@ public class WidgetUtils {
 				ClientNodeIterator.SHOW_ALL);
 		Node node = null;
 		while ((node = itr.nextNode()) != null) {
-			if (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				if (!isZeroOffsetDims(node.getParentElement())
 						&& node.getNodeName().equalsIgnoreCase("img")) {
 					return (Element) node;
@@ -650,8 +672,8 @@ public class WidgetUtils {
 	}
 
 	private static native void copy() /*-{
-		$doc.execCommand("Copy");
-	}-*/;
+										$doc.execCommand("Copy");
+										}-*/;
 
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
@@ -674,13 +696,13 @@ public class WidgetUtils {
 	}
 
 	public native static int getRelativeTopTo(Element elem, Element end) /*-{
-		var top = 0;
-		while (elem != end) {
-			top += elem.offsetTop;
-			elem = elem.offsetParent;
-		}
-		return top;
-	}-*/;
+																			var top = 0;
+																			while (elem != end) {
+																			top += elem.offsetTop;
+																			elem = elem.offsetParent;
+																			}
+																			return top;
+																			}-*/;
 
 	public static void scrollIntoView(Element e, int fromTop) {
 		scrollIntoView(e, fromTop, false);

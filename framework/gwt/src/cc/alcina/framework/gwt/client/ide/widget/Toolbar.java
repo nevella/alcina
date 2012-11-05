@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.widget.SpanPanel;
 import cc.alcina.framework.gwt.client.widget.StyledAWidget;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
@@ -260,13 +261,14 @@ public class Toolbar extends Composite implements
 
 		public void setPopup(RelativePopupPanel rpp);
 	}
-	public abstract static class PermissibleActionWithDelegateAndDropdown extends PermissibleActionWithDelegate implements HasDropdownPresenter{
 
+	public abstract static class PermissibleActionWithDelegateAndDropdown
+			extends PermissibleActionWithDelegate implements
+			HasDropdownPresenter {
 		public PermissibleActionWithDelegateAndDropdown(
 				PermissibleAction delegate) {
 			super(delegate);
 		}
-		
 	}
 
 	public static class ToolbarButton extends Composite implements
@@ -360,12 +362,19 @@ public class Toolbar extends Composite implements
 					vp.add(new ToolbarButton(a));
 				}
 			}
-			RelativePopupPanel rpp = RelativePopupPositioning.showPopup(
-					getWidget(), dropDown, RootPanel.get(),
-					RelativePopupPositioning.BOTTOM_LTR);
+			RelativePopupPanel rpp = new RelativePopupPanel(true);
+			rpp.setAnimationEnabled(false);
+			 RelativePopupPositioning
+					.showPopup(
+							getWidget(),
+							dropDown,
+							RootPanel.get(),
+							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
+							RootPanel.get(), rpp, -6, 6);
+			rpp.setAnimationEnabled(false);
 			if (action instanceof HasDropdownPresenter) {
-				 ((HasDropdownPresenter) action).setPopup(rpp);
-			}else{
+				((HasDropdownPresenter) action).setPopup(rpp);
+			} else {
 				rpp.addStyleName("child-actions");
 			}
 			rpp.addStyleName("toolbar-button-dropdown");
