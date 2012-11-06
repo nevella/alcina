@@ -15,6 +15,7 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class RelativePopupPositioning {
@@ -159,7 +160,7 @@ public class RelativePopupPositioning {
 			Widget relativeContainer, final RelativePopupPanel rpp,
 			final int shiftX, final int shiftY) {
 		final Widget positioningWidget = relativeContainer;
-		final Element relativeToElement =WidgetUtils
+		final Element relativeToElement = WidgetUtils
 				.getElementForAroundPositioning(relativeToElement0);
 		if (!LooseContextProvider.getContext().getBoolean(
 				CONTEXT_KEEP_RELATIVE_PARENT_CLIP)) {
@@ -192,6 +193,8 @@ public class RelativePopupPositioning {
 				AxisCoordinate freeAxis = null;
 				int bw = boundingWidget.getOffsetWidth();
 				int bh = boundingWidget.getOffsetHeight();
+				final int bx = boundingWidget.getAbsoluteLeft();
+				final int by = boundingWidget.getAbsoluteTop();
 				int axisIndex = 0;
 				RelativePopupAxis[] axes = positioningParams.axes;
 				if (axes == null) {
@@ -235,8 +238,8 @@ public class RelativePopupPositioning {
 					for (RelativePopupAxis axis : axes) {
 						fixedAxis = axis.fixedAxis;
 						fixedAxisOffset = fixedAxis.fit(x, y, bw, bh, relW,
-								relH, offsetWidth, offsetHeight, null, false,
-								false);
+								relH, offsetWidth, offsetHeight, bx, by, null,
+								false, false);
 						if (fixedAxisOffset == INVALID) {
 							continue;
 						}
@@ -244,8 +247,8 @@ public class RelativePopupPositioning {
 						for (int i = 0; i < 2; i++) {
 							freeAxis = axis.freeAxis[i];
 							freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW,
-									relH, offsetWidth, offsetHeight, last,
-									true, false);
+									relH, offsetWidth, offsetHeight, bx, by,
+									last, true, false);
 							if (freeAxisOffset != INVALID) {
 								break;
 							}
@@ -257,14 +260,14 @@ public class RelativePopupPositioning {
 						RelativePopupAxis axis = axes[0];
 						fixedAxis = axis.fixedAxis;
 						fixedAxisOffset = fixedAxis.fit(x, y, bw, bh, relW,
-								relH, offsetWidth, offsetHeight, null, false,
-								true);
+								relH, offsetWidth, offsetHeight, bx, by, null,
+								false, true);
 						AxisCoordinate last = null;
 						for (int i = 0; i < 2; i++) {
 							freeAxis = axis.freeAxis[i];
 							freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW,
-									relH, offsetWidth, offsetHeight, last,
-									true, false);
+									relH, offsetWidth, offsetHeight, bx, by,
+									last, true, false);
 							if (freeAxisOffset != INVALID) {
 								break;
 							}
@@ -273,8 +276,8 @@ public class RelativePopupPositioning {
 						if (freeAxisOffset == INVALID) {
 							freeAxis = axis.freeAxis[0];
 							freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW,
-									relH, offsetWidth, offsetHeight, null,
-									true, true);
+									relH, offsetWidth, offsetHeight, bx, by,
+									null, true, true);
 						}
 					}
 					x = fixedAxis.isVertical() ? freeAxisOffset
@@ -407,17 +410,21 @@ public class RelativePopupPositioning {
 		 * 
 		 */
 		int fit(int relX, int relY, int bw, int bh, int relW, int relH,
-				int ppW, int ppH, AxisCoordinate favour,
+				int ppW, int ppH, int bx, int by, AxisCoordinate favour,
 				boolean wrappingRelativeTo, boolean force) {
 			int relC = relX;
 			int bDim = bw;
 			int relDim = relW;
 			int ppDim = ppW;
+			int boDim = bx;
+			int rDim = RootPanel.get().getOffsetWidth();
 			if (isVertical()) {
 				relC = relY;
 				bDim = bh;
 				relDim = relH;
 				ppDim = ppH;
+				boDim = by;
+				rDim = RootPanel.get().getOffsetHeight();
 			}
 			int result = 0;
 			switch (axisType()) {
@@ -432,12 +439,13 @@ public class RelativePopupPositioning {
 				if (favour.axisType() != null) {
 					switch (favour.axisType()) {
 					case NEG:
-						result = bDim - ppDim < 0 ? bDim - ppDim : 0;
+						result = bDim - ppDim;
+						result = Math.max(result, -boDim);
 						// make as close to "left-align"
 						// as poss
 						break;
 					case POS:
-						result = (result + ppDim > bDim) ? 0 : bDim - ppDim;
+						result = Math.min(0, rDim - ppDim - bDim);
 						// as close to 'right-align' as poss
 						break;
 					}
