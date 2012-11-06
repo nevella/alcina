@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermi
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -63,6 +64,9 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public static final String PROP_LOGIN_STATE = "loginState";
 
 	public static final String PROP_ONLINE_STATE = "onlineState";
+
+	public static final String CONTEXT_OVERRIDE_AS_OWNED_OBJECT = PermissionsManager.class
+			.getName() + ".CONTEXT_OVERRIDE_AS_OWNED_OBJECT";
 
 	private long userId;
 
@@ -407,9 +411,12 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	}
 
 	public boolean permitDueToOwnership(HasOwner hasOwner) {
-		return hasOwner.getOwner() == null ? hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
-				.getLocalId() != 0 : false
-				: hasOwner.getOwner().equals(instantiatedUser);
+		boolean override = LooseContextProvider
+				.getBoolean(CONTEXT_OVERRIDE_AS_OWNED_OBJECT);
+		return override ? true
+				: hasOwner.getOwner() == null ? hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
+						.getLocalId() != 0 : false
+						: hasOwner.getOwner().equals(instantiatedUser);
 	}
 
 	public boolean isPermissible(Object o, Permission p) {

@@ -20,9 +20,11 @@ import java.util.List;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
@@ -227,9 +229,17 @@ public class SearchViewProvider implements ViewProvider {
 					def.getResultClass());
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
-			Field[] fields = GwittirBridge.get()
-					.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-							factory, isEditableWidgets(), true);
+			Field[] fields = null;
+			try {
+				LooseContextProvider.getContext().pushWithKey(
+						PermissionsManager.CONTEXT_OVERRIDE_AS_OWNED_OBJECT,
+						true);
+				fields = GwittirBridge.get()
+						.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
+								factory, isEditableWidgets(), true);
+			} finally {
+				LooseContextProvider.getContext().pop();
+			}
 			GwittirBridge.get().setIgnoreProperties(null);
 			int mask = BoundTableExt.HEADER_MASK;
 			if (def.isOrderable()) {
