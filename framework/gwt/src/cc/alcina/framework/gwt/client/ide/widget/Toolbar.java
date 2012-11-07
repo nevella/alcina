@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.gwt.client.logic.HasHref;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -314,6 +315,9 @@ public class Toolbar extends Composite implements
 				if (action instanceof ClickHandler) {
 					aWidget.addClickHandler((ClickHandler) action);
 				}
+				if (action instanceof HasHref) {
+					setHref(((HasHref) action).getHref());
+				}
 				if (action instanceof PermissibleActionWithDelegate) {
 					PermissibleAction delegate = ((HasPermissibleActionDelegate) action)
 							.getDelegate();
@@ -394,6 +398,7 @@ public class Toolbar extends Composite implements
 
 		public void setHref(String href) {
 			this.aWidget.setHref(href);
+			this.aWidget.setPreventDefault(false);
 		}
 
 		public void setEnabled(boolean enabled) {

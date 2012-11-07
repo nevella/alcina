@@ -105,11 +105,11 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	public String getText() {
 		return DOM.getInnerText(anchorElem);
 	}
-
+	private boolean preventDefault=true;
 	@Override
 	public void onBrowserEvent(Event event) {
 		if (DOM.eventGetType(event) == Event.ONCLICK) {
-			if (!WidgetUtils.isNewTabModifier()) {
+			if (!WidgetUtils.isNewTabModifier()&&preventDefault) {
 				DOM.eventPreventDefault(event);
 			}
 			if (enabled) {
@@ -187,5 +187,13 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	@Override
 	public T getItem() {
 		return userObject;
+	}
+
+	public boolean isPreventDefault() {
+		return this.preventDefault;
+	}
+
+	public void setPreventDefault(boolean preventDefault) {
+		this.preventDefault = preventDefault;
 	}
 }
