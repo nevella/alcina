@@ -197,7 +197,7 @@ public class CollectionRenderingSupport implements
 		} else if (o instanceof Comparable) {
 			Collections.sort(currentObjects);
 		}
-		if (CollectionRenderingSupport.REDRAW_CHILDREN_ON_ORDER_CHANGE
+		if ((o instanceof Comparable)&&CollectionRenderingSupport.REDRAW_CHILDREN_ON_ORDER_CHANGE
 				&& existingObjects.size() == currentObjects.size()) {
 			List existingOrderedObjects = new ArrayList(
 					existingObjects.keySet());
