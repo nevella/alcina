@@ -18,13 +18,13 @@
  */
 package com.google.gwt.user.client.rpc.core.java.math;
 
+import java.math.MathContext;
+import java.math.RoundingMode;
+
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
-
-import java.math.MathContext;
-import java.math.RoundingMode;
 
 /**
  * Custom field serializer for MathContext.

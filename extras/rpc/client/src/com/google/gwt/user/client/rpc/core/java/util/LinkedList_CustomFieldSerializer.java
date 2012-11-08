@@ -15,12 +15,12 @@
  */
 package com.google.gwt.user.client.rpc.core.java.util;
 
+import java.util.LinkedList;
+
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
-
-import java.util.LinkedList;
 
 /**
  * Custom field serializer for {@link java.util.ArrayList}.

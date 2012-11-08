@@ -57,4 +57,9 @@ public class SortedMultimap<K, V extends List> extends TreeMap<K, V> {
 			get(key).remove(item);
 		}
 	}
+	public void addAll(SortedMultimap<K, V> otherMultimap) {
+		for (K k : otherMultimap.keySet()) {
+			getAndEnsure(k).addAll(otherMultimap.get(k));
+		}
+	}
 }

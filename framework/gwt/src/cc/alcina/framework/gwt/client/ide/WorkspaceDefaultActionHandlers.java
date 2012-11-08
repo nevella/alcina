@@ -26,13 +26,12 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandl
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 
-import com.google.gwt.user.cellview.client.TreeNode;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public class WorkspaceDefaultActionHandlers {
 	@ClientInstantiable
-	protected abstract static class WorkspaceDefaultActionHandlerBase {
+	public abstract static class WorkspaceDefaultActionHandlerBase {
 		protected ContentViewFactory getContentViewFactory() {
 			ContentViewFactory viewFactory = new ContentViewFactory();
 			viewFactory.setCancelButton(true);

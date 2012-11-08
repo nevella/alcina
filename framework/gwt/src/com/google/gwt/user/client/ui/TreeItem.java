@@ -15,6 +15,9 @@
  */
 package com.google.gwt.user.client.ui;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -24,9 +27,6 @@ import com.google.gwt.safehtml.client.HasSafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * An item that can be contained within a

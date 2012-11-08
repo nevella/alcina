@@ -27,12 +27,7 @@ public class AlcinaTemplateClient extends ClientBaseWithLayout implements
 	public void onModuleLoad() {
 		theApp = this;
 		initServices();
-		GWT.setUncaughtExceptionHandler(ClientLayerLocator.get()
-				.exceptionHandler());
-		ClientHandshakeHelper loginHandshakeHelper = ClientLayerLocator.get()
-				.getClientHandshakeHelper();
-		loginHandshakeHelper.addStateChangeListener(hanshakeListener);
-		loginHandshakeHelper.beginHandshake();
+	
 	}
 
 	public void showMustBeLoggedInWarning() {
@@ -86,8 +81,8 @@ public class AlcinaTemplateClient extends ClientBaseWithLayout implements
 	void initServices() {
 		ClientLayerLocator.get().registerCommonRemoteServiceAsyncProvider(
 				remoteServiceAsyncProvider);
-		config.initServices();
 		ClientLayerLocator.get().registerClientBase(this);
+		config.initServices();
 		LayoutEvents.get().addLayoutEventListener(this);
 	}
 
@@ -101,4 +96,12 @@ public class AlcinaTemplateClient extends ClientBaseWithLayout implements
 			return service;
 		}
 	};
+
+	public void afterConfiguration() {
+		ClientHandshakeHelper loginHandshakeHelper = ClientLayerLocator.get()
+				.getClientHandshakeHelper();
+		loginHandshakeHelper.addStateChangeListener(hanshakeListener);
+		loginHandshakeHelper.beginHandshake();
+		
+	}
 }

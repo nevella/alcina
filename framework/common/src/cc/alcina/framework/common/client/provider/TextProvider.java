@@ -86,6 +86,9 @@ public class TextProvider {
 	}
 
 	public String getObjectName(Object o) {
+		if(o==null){
+			return "null";
+		}
 		ClientBeanReflector beanReflector = ClientReflector.get()
 				.beanInfoForClass(o.getClass());
 		return getObjectName(o, beanReflector);

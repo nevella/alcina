@@ -24,8 +24,6 @@ public class DomainTransformRequestPersistence {
 
 		private final DomainTransformRequestPersistenceEventType persistenceEventType;
 
-		
-
 		public DomainTransformRequestPersistenceEvent(
 				TransformPersistenceToken transformPersistenceToken,
 				DomainTransformLayerWrapper domainTransformLayerWrapper) {
@@ -47,8 +45,6 @@ public class DomainTransformRequestPersistence {
 		public DomainTransformRequestPersistenceEventType getPersistenceEventType() {
 			return this.persistenceEventType;
 		}
-
-		
 	}
 
 	public interface DomainTransformRequestPersistenceSource {
@@ -75,7 +71,8 @@ public class DomainTransformRequestPersistence {
 
 		public void fireDomainTransformRequestPersistenceEvent(
 				DomainTransformRequestPersistenceEvent event) {
-			for (DomainTransformRequestPersistenceListener listener : listenerList) {
+			for (DomainTransformRequestPersistenceListener listener : new ArrayList<DomainTransformRequestPersistenceListener>(
+					listenerList)) {
 				listener.onDomainTransformRequestPersistence(event);
 			}
 		}

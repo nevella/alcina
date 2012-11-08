@@ -738,12 +738,12 @@ public class Binding {
 			try {
 				target.property.getMutatorMethod().invoke(target.object, args);
 			} catch (Exception e) {
-				e.printStackTrace();
-				// throw new RuntimeException(
-				// "Exception setting property: "+target.property.getName(), e);
-				LOGGER.log(Level.ERROR, "Exception setting property: "
-						+ target.property.getName() + " on object "
-						+ target.object, e);
+				// e.printStackTrace();
+				throw new RuntimeException("Exception setting property: "
+						+ target.property.getName(), e);
+				// LOGGER.log(Level.ERROR, "Exception setting property: "
+				// + target.property.getName() + " on object "
+				// + target.object, e);
 			}
 		}
 

@@ -11,22 +11,28 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.Vetoer;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public class PermissibleAction implements Permissible {
+	public interface HasPermissibleActionDelegate {
 
- public class PermissibleAction implements Permissible {
+		public abstract PermissibleAction getDelegate();
+	}
+	public interface HasPermissibleActionChildren{
+
+		public abstract List<PermissibleAction> getChildren();
+	}
 	private String displayName;
 
 	private String cssClassName;
@@ -77,5 +83,60 @@ import cc.alcina.framework.common.client.logic.permissions.Permissible;
 
 	public String rule() {
 		return null;
+	}
+
+	public static class PermissibleActionWithChildrenAndDelegate extends PermissibleActionWithDelegate implements HasPermissibleActionChildren{
+		public PermissibleActionWithChildrenAndDelegate(
+				PermissibleAction delegate) {
+			super(delegate);
+		}
+
+		private List<PermissibleAction> children = new ArrayList<PermissibleAction>();
+
+		public List<PermissibleAction> getChildren() {
+			return this.children;
+		}
+	}
+	public static class PermissibleActionWithDelegate extends
+			PermissibleAction implements HasPermissibleActionDelegate{
+		private final PermissibleAction delegate;
+
+		public PermissibleActionWithDelegate(
+				PermissibleAction delegate) {
+			this.delegate = delegate;
+		}
+
+		public String getActionName() {
+			return this.delegate.getActionName();
+		}
+
+		public void setActionName(String actionName) {
+			this.delegate.setActionName(actionName);
+		}
+
+		public String getDisplayName() {
+			return this.delegate.getDisplayName();
+		}
+
+		public String getCssClassName() {
+			return this.delegate.getCssClassName();
+		}
+
+		public List<Vetoer> getDefaultVetoers() {
+			return this.delegate.getDefaultVetoers();
+		}
+
+		public AccessLevel accessLevel() {
+			return this.delegate.accessLevel();
+		}
+
+		public String rule() {
+			return this.delegate.rule();
+		}
+
+		@Override
+		public PermissibleAction getDelegate() {
+			return this.delegate;
+		}
 	}
 }

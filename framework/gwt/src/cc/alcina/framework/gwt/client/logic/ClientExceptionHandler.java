@@ -4,6 +4,8 @@ import java.util.Set;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.csobjects.WebException;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
@@ -26,15 +28,18 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 		return new WebException("(Wrapped GWT exception) : "
 				+ errorBuffer.toString());
 	}
-	private Stack<UncaughtExceptionHandler> handlerStack=new Stack<GWT.UncaughtExceptionHandler>();
-	
-	public void push(UncaughtExceptionHandler handler){
+
+	private Stack<UncaughtExceptionHandler> handlerStack = new Stack<GWT.UncaughtExceptionHandler>();
+
+	public void push(UncaughtExceptionHandler handler) {
 		handlerStack.push(GWT.getUncaughtExceptionHandler());
 		GWT.setUncaughtExceptionHandler(handler);
 	}
-	public void pop(){
+
+	public void pop() {
 		GWT.setUncaughtExceptionHandler(handlerStack.pop());
 	}
+
 	private void unrollUmbrella(Throwable e, StringBuffer errorBuffer) {
 		if (e instanceof UmbrellaException) {
 			errorBuffer.append("\nUmbrellaException");
@@ -51,7 +56,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 				errorBuffer.append(stackTraceElement);
 				errorBuffer.append("\n");
 			}
-			if(e.getCause()!=null&&e.getCause()!=e){
+			if (e.getCause() != null && e.getCause() != e) {
 				errorBuffer.append("\nCaused by:-----\n");
 				unrollUmbrella(e.getCause(), errorBuffer);
 			}
@@ -75,9 +80,15 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	}
 
 	public String extraInfoForExceptionText() {
-		String extraInfo = "\n\nUser agent: " + BrowserMod.getUserAgent()
-				+ "\nHistory token: " + History.getToken()
-				+ "\nPermutation name: " + GWT.getPermutationStrongName();
+		String extraInfo = "\n\nUser agent: "
+				+ BrowserMod.getUserAgent()
+				+ "\nHistory token: "
+				+ History.getToken()
+				+ "\nPermutation name: "
+				+ GWT.getPermutationStrongName()
+				+ CommonUtils.formatJ("\nUser name/id: [%s/%s]",
+						PermissionsManager.get().getUserName(),
+						PermissionsManager.get().getUserId());
 		return extraInfo;
 	}
 }

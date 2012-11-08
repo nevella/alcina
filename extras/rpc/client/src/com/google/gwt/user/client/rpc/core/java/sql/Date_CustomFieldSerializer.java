@@ -15,13 +15,13 @@
  */
 package com.google.gwt.user.client.rpc.core.java.sql;
 
+import java.sql.Date;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
-
-import java.sql.Date;
 
 /**
  * Custom field serializer for {@link java.sql.Date}. Similar to Time, we use

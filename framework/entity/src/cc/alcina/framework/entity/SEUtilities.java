@@ -112,19 +112,53 @@ public class SEUtilities {
 	}
 
 	public static void dumpStringBytes(String s) {
-		StringBuilder b=new StringBuilder();
-		for (int i = 0; i < s.length(); i++) {
-			
-			char c = s.charAt(i);
-			System.out.print(c +   "\t");
-			b.append(((short) c)+"\t");
-			if ((i + 1) % 8 == 0) {
-				System.out.println();
-				System.out.println(b.toString());
-				b=new StringBuilder();
-				System.out.println();
-			}
+		try {
+			dumpBytes(s.getBytes("UTF-16"), 8);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public static void dumpBytes(byte[] bs, int width) {
+		StringBuilder bd = new StringBuilder();
+		int len = bs.length;
+		for (int i = 0; i < len;i+=width) {
+			bd.append(CommonUtils.padStringLeft(Integer.toHexString(i), 8, '0'));
+			bd.append(":  ");
+			for (int j = 0; j < width; j++) {
+				boolean in = j + i < len;
+				//int rather than byte so we can unsign
+				int b = in ? bs[i + j] : 0;
+				if(b<0){
+					b+=256;
+				}
+				bd.append(in ? CommonUtils.padStringLeft(
+						Integer.toHexString(b), 2, '0') : "  ");
+				bd.append("  ");
+			}
+			for (int j = 0; j < width; j++) {
+				boolean in = j + i < len;
+				char c = in ? (char) bs[i + j] : ' ';
+				c = c < '\u0020' || c >= '\u007F' ? '.' : c;
+				bd.append(c);
+			}
+			bd.append('\n');
+		}
+		System.out.println(bd.toString());
+	}
+	public static void dumpChars(String s, int width) {
+		StringBuilder bd = new StringBuilder();
+		int len = s.length();
+		for (int i = 0; i < len;i+=width) {
+			bd.append(CommonUtils.padStringLeft(Integer.toString(i), 8, '0'));
+			bd.append(":  ");
+			for (int j = 0; j < width; j++) {
+				boolean in = j + i < len;
+				bd.append(in ? s.charAt(j+i):' ');
+			}
+			bd.append('\n');
+		}
+		System.out.println(bd.toString());
 	}
 
 	private static Pattern yearRangePattern = Pattern
@@ -757,7 +791,7 @@ public class SEUtilities {
 				.getenv("USERPROFILE") : System.getProperty("user.home");
 	}
 
-	public static class Byte {
+	public static class Bytes {
 		public static int indexOf(byte[] src, byte[] toFind) {
 			return indexOf(src, toFind, 0);
 		}

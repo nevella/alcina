@@ -15,10 +15,10 @@
  */
 package com.google.gwt.user.client.rpc.impl;
 
+import java.util.ArrayList;
+
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
-
-import java.util.ArrayList;
 
 /**
  * Base class for the client and server serialization streams. This class

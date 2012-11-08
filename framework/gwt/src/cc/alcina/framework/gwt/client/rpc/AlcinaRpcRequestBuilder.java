@@ -121,6 +121,8 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	}
 
 	public void addAlcinaHeaders(RequestBuilder rb) {
+		// iOS 6
+		rb.setHeader("Cache-Control", "no-cache");
 		if (ClientLayerLocator.get().getClientInstance() != null
 				&& PermissionsManager.get().isLoggedIn()) {
 			rb.setHeader(

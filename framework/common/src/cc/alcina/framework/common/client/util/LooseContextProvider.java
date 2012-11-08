@@ -11,7 +11,7 @@ public abstract class LooseContextProvider {
 
 	public static LooseContextProvider get() {
 		if (factoryInstance == null) {
-			factoryInstance=new ClientLooseContextProvider();
+			factoryInstance = new ClientLooseContextProvider();
 		}
 		LooseContextProvider tm = factoryInstance.getT();
 		if (tm != null) {
@@ -25,6 +25,7 @@ public abstract class LooseContextProvider {
 	}
 
 	private LooseContext context;
+
 	public static LooseContext getContext() {
 		return get().getContext0();
 	}
@@ -37,10 +38,18 @@ public abstract class LooseContextProvider {
 	}
 
 	public abstract LooseContextProvider getT();
-	public static class ClientLooseContextProvider extends LooseContextProvider{
+
+	public static class ClientLooseContextProvider extends LooseContextProvider {
 		@Override
 		public LooseContextProvider getT() {
 			return this;
 		}
+	}
+
+	public static boolean getBoolean(String key) {
+		return getContext().getBoolean(key);
+	}
+	public static String getString(String key) {
+		return getContext().get(key);
 	}
 }

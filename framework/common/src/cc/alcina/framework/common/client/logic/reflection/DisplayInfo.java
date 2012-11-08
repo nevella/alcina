@@ -17,8 +17,6 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible

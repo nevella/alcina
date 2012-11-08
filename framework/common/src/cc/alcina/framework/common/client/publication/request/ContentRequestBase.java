@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.publication.request;
 
 import java.beans.PropertyChangeListener;
@@ -23,81 +22,78 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
-import cc.alcina.framework.common.client.publication.ContentDeliveryType.DELIVERY_DOWNLOAD_ATTACHMENT;
-import cc.alcina.framework.common.client.publication.ContentDeliveryType.DELIVERY_DOWNLOAD_PREVIEW;
-import cc.alcina.framework.common.client.publication.ContentDeliveryType.DELIVERY_EMAIL;
-import cc.alcina.framework.common.client.publication.ContentDeliveryType.DELIVERY_PRINT;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_DOC;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_DOCX;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_EPUB;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_HTML;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_PDF;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_XLS;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_XLSX;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget.FMT_ZIP;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public abstract class ContentRequestBase<CD extends ContentDefinition> extends
+public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		WrapperPersistable implements GwtMultiplePersistable, DeliveryModel {
 	static final long serialVersionUID = -1L;
-	private PublicationOutputFormat outputFormat = PublicationOutputFormat.HTML;
-	private PublicationDeliveryMode deliveryMode = PublicationDeliveryMode.DOWNLOAD;
-	private PublicationRange publicationRange = PublicationRange.ALL;
-	private PublicationFontOptions fontOptions = PublicationFontOptions.ARIAL;
-	private boolean coverPage = false;
-	private String suggestedFileName = "";
-	private String emailSubject = "";
-	private String emailSubjectForRequestor = null;
-	private String attachmentMessage = "";
-	private String attachmentMessageForRequestor = "";
-	private String systemEmailAddressOfRequestor;
-	private boolean pageBreakAfterEachDocument = false;
-	private boolean emailInline=true;
-	private Long singleContentObjectId;
-	private int singleContentObjectResultPosition;
-	private int resultCount;
-	private transient String systemMessage;
-	private String contentPageRange;
-	private String emailAddress;
-	private String note;
-	private boolean noPersistence = false;
-	protected CD contentDefinition;
-	private boolean footer = false;
-	private Long randomSeed;
-	private transient boolean test;
-	private String publicDescription;
-	private Map<String,String> properties=new LinkedHashMap<String, String>();
 
-	public Class<? extends ContentDeliveryType> deliveryMode() {
-		if (deliveryMode == null) {
-			return null;
-		}
-		switch (deliveryMode) {
-		case DOWNLOAD:
-			return DELIVERY_DOWNLOAD_ATTACHMENT.class;
-		case EMAIL:
-			return DELIVERY_EMAIL.class;
-		case PREVIEW:
-			return DELIVERY_DOWNLOAD_PREVIEW.class;
-		case PRINT:
-			return DELIVERY_PRINT.class;
-		default:
-			return null;
-		}
-	}
+	private String outputFormat = FormatConversionTarget.HTML.serializedForm();
+
+	private String deliveryMode = ContentDeliveryType.DOWNLOAD.serializedForm();
+
+	private PublicationRange publicationRange = PublicationRange.ALL;
+
+	private String fontOptions = PublicationFontOptions.ARIAL.serializedForm();
+
+	private boolean coverPage = false;
+
+	private String suggestedFileName = "";
+
+	private String emailSubject = "";
+
+	private String emailSubjectForRequestor = null;
+
+	private String attachmentMessage = "";
+
+	private String attachmentMessageForRequestor = "";
+
+	private String systemEmailAddressOfRequestor;
+
+	private boolean pageBreakAfterEachDocument = false;
+
+	private boolean emailInline = true;
+
+	private Long singleContentObjectId;
+
+	private int singleContentObjectResultPosition;
+
+	private int resultCount;
+
+	private transient String systemMessage;
+
+	private String contentPageRange;
+
+	private String emailAddress;
+
+	private String note;
+
+	private boolean noPersistence = false;
+
+	protected CD contentDefinition;
+
+	private boolean footer = false;
+
+	private Long randomSeed;
+
+	private transient boolean test;
+
+	private String publicDescription;
+
+	private Map<String, String> properties = new LinkedHashMap<String, String>();
 
 	public String getAttachmentMessage() {
 		return attachmentMessage;
@@ -115,7 +111,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "deliveryMode"))
-	public PublicationDeliveryMode getDeliveryMode() {
+	public String getDeliveryMode() {
 		return this.deliveryMode;
 	}
 
@@ -136,7 +132,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		return emailSubjectForRequestor;
 	}
 
-	public PublicationFontOptions getFontOptions() {
+	public String getFontOptions() {
 		return fontOptions;
 	}
 
@@ -145,8 +141,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "outputFormat"))
-	public PublicationOutputFormat getOutputFormat() {
+	public String getOutputFormat() {
 		return this.outputFormat;
+	}
+
+	public Map<String, String> getProperties() {
+		return this.properties;
 	}
 
 	@Transient
@@ -156,6 +156,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 	public PublicationRange getPublicationRange() {
 		return publicationRange;
+	}
+
+	public String getPublicDescription() {
+		return this.publicDescription;
+	}
+
+	public Long getRandomSeed() {
+		return this.randomSeed;
 	}
 
 	public int getResultCount() {
@@ -203,11 +211,44 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		return pageBreakAfterEachDocument;
 	}
 
+	@XmlTransient
+	public boolean isTest() {
+		return test;
+	}
+
+	public PublicationFontOptions providePublicationFontOptions() {
+		return ExtensibleEnum.valueOf(PublicationFontOptions.class, fontOptions);
+	}
+	
+	@Override
+	public ContentDeliveryType provideContentDeliveryType() {
+		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
+	}
+
+	@Override
+	public FormatConversionTarget provideTargetFormat() {
+		return ExtensibleEnum.valueOf(FormatConversionTarget.class,
+				outputFormat);
+	}
+
+	public void putContentDeliveryType(ContentDeliveryType type) {
+		setDeliveryMode(type == null ? null : type.name());
+	}
+
+	public void putFormatConversionTarget(FormatConversionTarget target) {
+		setOutputFormat(target == null ? null : target.name());
+	}
+
+	public void putPublicationFontOptions(PublicationFontOptions fontOptions) {
+		setFontOptions(fontOptions == null ? null : fontOptions.name());
+	}
+
 	public void setAttachmentMessage(String attachmentMessage) {
 		this.attachmentMessage = attachmentMessage;
 	}
 
-	public void setAttachmentMessageForRequestor(String attachmentMessageForRequestor) {
+	public void setAttachmentMessageForRequestor(
+			String attachmentMessageForRequestor) {
 		this.attachmentMessageForRequestor = attachmentMessageForRequestor;
 	}
 
@@ -227,8 +268,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 				coverPage);
 	}
 
-	public void setDeliveryMode(PublicationDeliveryMode deliveryMode) {
-		PublicationDeliveryMode old_deliveryMode = this.deliveryMode;
+	public void setDeliveryMode(String deliveryMode) {
+		String old_deliveryMode = this.deliveryMode;
 		this.deliveryMode = deliveryMode;
 		propertyChangeSupport().firePropertyChange("deliveryMode",
 				old_deliveryMode, deliveryMode);
@@ -256,8 +297,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		this.emailSubjectForRequestor = emailSubjectForRequestor;
 	}
 
-	public void setFontOptions(PublicationFontOptions fontOptions) {
-		PublicationFontOptions old_fontOptions = this.fontOptions;
+	public void setFontOptions(String fontOptions) {
+		String old_fontOptions = this.fontOptions;
 		this.fontOptions = fontOptions;
 		propertyChangeSupport().firePropertyChange("fontOptions",
 				old_fontOptions, fontOptions);
@@ -266,7 +307,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	public void setFooter(boolean footer) {
 		boolean old_footer = this.footer;
 		this.footer = footer;
-		propertyChangeSupport().firePropertyChange("footer", old_footer, footer);
+		propertyChangeSupport()
+				.firePropertyChange("footer", old_footer, footer);
 	}
 
 	public void setNoPersistence(boolean noPersistence) {
@@ -279,8 +321,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		propertyChangeSupport().firePropertyChange("note", old_note, note);
 	}
 
-	public void setOutputFormat(PublicationOutputFormat outputFormat) {
-		PublicationOutputFormat old_outputFormat = this.outputFormat;
+	public void setOutputFormat(String outputFormat) {
+		String old_outputFormat = this.outputFormat;
 		this.outputFormat = outputFormat;
 		propertyChangeSupport().firePropertyChange("outputFormat",
 				old_outputFormat, outputFormat);
@@ -289,8 +331,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	public void setPageBreakAfterEachDocument(boolean pageBreakAfterEachDocument) {
 		boolean old_pageBreakAfterEachDocument = this.pageBreakAfterEachDocument;
 		this.pageBreakAfterEachDocument = pageBreakAfterEachDocument;
-		propertyChangeSupport().firePropertyChange("pageBreakAfterEachDocument",
-				old_pageBreakAfterEachDocument, pageBreakAfterEachDocument);
+		propertyChangeSupport().firePropertyChange(
+				"pageBreakAfterEachDocument", old_pageBreakAfterEachDocument,
+				pageBreakAfterEachDocument);
+	}
+
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
 	}
 
 	public void setPublicationRange(PublicationRange publicationRange) {
@@ -298,6 +345,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		this.publicationRange = publicationRange;
 		propertyChangeSupport().firePropertyChange("publicationRange",
 				old_publicationRange, publicationRange);
+	}
+
+	public void setPublicDescription(String publicDescription) {
+		this.publicDescription = publicDescription;
+	}
+
+	public void setRandomSeed(Long randomSeed) {
+		this.randomSeed = randomSeed;
 	}
 
 	public void setResultCount(int resultCount) {
@@ -311,7 +366,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 				old_singleContentObjectId, singleContentObjectId);
 	}
 
-	public void setSingleContentObjectResultPosition(int singleContentObjectResultPosition) {
+	public void setSingleContentObjectResultPosition(
+			int singleContentObjectResultPosition) {
 		this.singleContentObjectResultPosition = singleContentObjectResultPosition;
 	}
 
@@ -319,7 +375,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		this.suggestedFileName = suggestedFileName;
 	}
 
-	public void setSystemEmailAddressOfRequestor(String systemEmailAddressOfRequestor) {
+	public void setSystemEmailAddressOfRequestor(
+			String systemEmailAddressOfRequestor) {
 		this.systemEmailAddressOfRequestor = systemEmailAddressOfRequestor;
 	}
 
@@ -327,72 +384,19 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 		this.systemMessage = systemMessage;
 	}
 
-	public Class<? extends FormatConversionTarget> targetFormat() {
-		switch (outputFormat) {
-		case DOCX:
-			return FMT_DOCX.class;
-		case DOC:
-			return FMT_DOC.class;
-		case PDF:
-			return FMT_PDF.class;
-		case HTML:
-			return FMT_HTML.class;
-		case XLSX:
-			return FMT_XLSX.class;
-		case XLS:
-			return FMT_XLS.class;
-		case ZIP:
-			return FMT_ZIP.class;
-		case EPUB:
-			return FMT_EPUB.class;
-		default:
-			return null;
-		}
-	}
-
-	@Override
-	public String toString() {
-		if(publicDescription!=null){
-			return publicDescription;
-		}
-		String s = contentDefinition == null ? "" : getContentDefinition()
-				.toString()
-				+ "\n" + "-";
-		return s + " Delivery mode: "
-				+ CommonUtils.friendlyConstant(getDeliveryMode()) + " - "
-				+ " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
-	}
-
 	public void setTest(boolean test) {
 		this.test = test;
 	}
 
-	@XmlTransient
-	public boolean isTest() {
-		return test;
-	}
-
-	public Map<String, String> getProperties() {
-		return this.properties;
-	}
-
-	public void setProperties(Map<String, String> properties) {
-		this.properties = properties;
-	}
-
-	public Long getRandomSeed() {
-		return this.randomSeed;
-	}
-
-	public void setRandomSeed(Long randomSeed) {
-		this.randomSeed = randomSeed;
-	}
-
-	public String getPublicDescription() {
-		return this.publicDescription;
-	}
-
-	public void setPublicDescription(String publicDescription) {
-		this.publicDescription = publicDescription;
+	@Override
+	public String toString() {
+		if (publicDescription != null) {
+			return publicDescription;
+		}
+		String s = contentDefinition == null ? "" : getContentDefinition()
+				.toString() + "\n" + "-";
+		return s + " Delivery mode: "
+				+ CommonUtils.friendlyConstant(getDeliveryMode()) + " - "
+				+ " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
 	}
 }

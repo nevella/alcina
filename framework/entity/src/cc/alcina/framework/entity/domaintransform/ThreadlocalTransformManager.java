@@ -32,7 +32,6 @@ import javax.persistence.ManyToMany;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
@@ -52,17 +51,20 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AssignmentPermission;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 @SuppressWarnings("unchecked")
@@ -653,6 +655,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	@Override
 	protected boolean checkPermissions(HasIdAndLocalId hili,
 			DomainTransformEvent evt, String propertyName, Object change) {
+		if (ResourceUtilities.getBoolean(ThreadlocalTransformManager.class,
+				"ignoreTransformPermissions")) {
+			return true;
+		}
 		try {
 			if (hili == null) {
 				hili = (HasIdAndLocalId) evt.getObjectClass().newInstance();
@@ -660,21 +666,36 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				hili = EntityLayerLocator.get().jpaImplementation()
 						.getInstantiatedObject(hili);
 			}
-			ObjectPermissions op = hili.getClass().getAnnotation(
-					ObjectPermissions.class);
+			Class<? extends HasIdAndLocalId> objectClass = hili.getClass();
+			ObjectPermissions op = objectClass
+					.getAnnotation(ObjectPermissions.class);
 			op = op == null ? PermissionsManager.get()
 					.getDefaultObjectPermissions() : op;
+			HasIdAndLocalId hiliChange = (HasIdAndLocalId) (change instanceof HasIdAndLocalId ? change
+					: null);
+			ObjectPermissions oph = null;
+			AssignmentPermission aph = CommonLocator
+					.get()
+					.propertyAccessor()
+					.getAnnotationForProperty(objectClass,
+							AssignmentPermission.class, propertyName);
+			if (hiliChange != null) {
+				oph = hiliChange.getClass().getAnnotation(
+						ObjectPermissions.class);
+				oph = oph == null ? PermissionsManager.get()
+						.getDefaultObjectPermissions() : oph;
+			}
 			switch (evt.getTransformType()) {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 				checkPropertyReadAccessAndThrow(hili, propertyName, evt);
-				// if (change instanceof HasIdAndLocalId){
-				// checkPropertyWriteAccessAndThrow(change, propertyName, evt);
-				// }
-				// TODO
+				checkTargetReadAndAssignmentAccessAndThrow(hiliChange, oph,
+						aph, evt);
 				break;
 			case CHANGE_PROPERTY_REF:
-				//TODO
+				checkTargetReadAndAssignmentAccessAndThrow(hiliChange, oph,
+						aph, evt);
+				// deliberate fall-through
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_SIMPLE_VALUE:
 				return checkPropertyWriteAccessAndThrow(hili, propertyName, evt);
@@ -707,6 +728,24 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return true;
 	}
 
+	private void checkTargetReadAndAssignmentAccessAndThrow(
+			HasIdAndLocalId target, ObjectPermissions oph,
+			AssignmentPermission aph, DomainTransformEvent evt)
+			throws DomainTransformException {
+		if (target == null) {
+			return;
+		}
+		if (!PermissionsManager.get().isPermissible(target, oph.read())) {
+			throw new DomainTransformException(new Exception(
+					"Permission denied : read - target object " + evt));
+		}
+		if (aph != null
+				&& !PermissionsManager.get().isPermissible(target, aph.value())) {
+			throw new DomainTransformException(new Exception(
+					"Permission denied : assign - target object " + evt));
+		}
+	}
+
 	@Override
 	protected void objectModified(HasIdAndLocalId hili,
 			DomainTransformEvent evt, boolean targetObject) {
@@ -715,7 +754,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			addToResults = true;
 			evt.setGeneratedServerId(hili.getId());
 		}
-		//TODO - think about handling this as a postpersist entity listener? that way we ensure correct version numbers
+		// TODO - think about handling this as a postpersist entity listener?
+		// that way we ensure correct version numbers
 		if (hili instanceof HasVersionNumber && !modifiedObjects.contains(hili)) {
 			addToResults = true;
 			modifiedObjects.add(hili);
@@ -736,8 +776,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			modificationEvents.add(evt);
 		}
 	}
-
-	
 
 	@Override
 	// No need for property changes here
@@ -760,9 +798,36 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 		public long id;
 
+		private int hash;
+
 		public HiliLocator(Class<? extends HasIdAndLocalId> clazz, long id) {
 			this.clazz = clazz;
 			this.id = id;
+		}
+		public HiliLocator(HasIdAndLocalId obj){
+			this.clazz=obj.getClass();
+			this.id=obj.getId();
+		}
+
+		@Override
+		public int hashCode() {
+			if (hash == 0) {
+				hash = Long.valueOf(id).hashCode()
+						^ getClass().getName().hashCode();
+				if (hash == 0) {
+					hash = -1;
+				}
+			}
+			return hash;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof HiliLocator) {
+				HiliLocator o = (HiliLocator) obj;
+				return id == o.id && clazz == o.clazz;
+			}
+			return super.equals(obj);
 		}
 	}
 

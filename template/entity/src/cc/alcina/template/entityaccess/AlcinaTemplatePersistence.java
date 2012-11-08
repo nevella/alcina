@@ -94,7 +94,20 @@ public class AlcinaTemplatePersistence
 	}
 
 	public void createSystemGroupsAndUsers() {
-		String n = SYSTEM_GROUP;
+		String n = ANONYMOUS_GROUP;
+		if (getGroupByName(n) == null) {
+			PermissionsManager.get().setUser(null);
+			AlcinaTemplateGroup g = new AlcinaTemplateGroup();
+			g.setGroupName(ANONYMOUS_GROUP);
+			em.persist(g);
+			AlcinaTemplateUser u = new AlcinaTemplateUser();
+			u.setUserName(ANONYMOUS_USER);
+			u.setPrimaryGroup(g);
+			u.setSystem(true);
+			PermissionsManager.get().setUser(u);
+			em.persist(u);
+		}
+		 n = SYSTEM_GROUP;
 		if (getGroupByName(n) == null) {
 			PermissionsManager.get().setUser(null);
 			AlcinaTemplateGroup g = new AlcinaTemplateGroup();
@@ -107,17 +120,7 @@ public class AlcinaTemplatePersistence
 			PermissionsManager.get().setUser(u);
 			em.persist(u);
 		}
-		n = ANONYMOUS_GROUP;
-		if (getGroupByName(n) == null) {
-			AlcinaTemplateGroup g = new AlcinaTemplateGroup();
-			g.setGroupName(ANONYMOUS_GROUP);
-			AlcinaTemplateUser u = new AlcinaTemplateUser();
-			u.setUserName(ANONYMOUS_USER);
-			u.setPrimaryGroup(g);
-			u.setSystem(true);
-			PermissionsManager.get().setUser(u);
-			em.persist(g);
-		}
+		
 		n = AlcinaTemplateAccessConstants.ADMINISTRATORS_GROUP_NAME;
 		if (getGroupByName(n) == null) {
 			AlcinaTemplateGroup g = new AlcinaTemplateGroup();
@@ -132,6 +135,7 @@ public class AlcinaTemplatePersistence
 							.crypt(
 									u.getSalt(),
 									AlcinaTemplateAccessConstants.INITIAL_ADMINISTRATOR_PASSWORD));
+			em.persist(u);
 			PermissionsManager.get().setUser(u);
 			em.persist(g);
 		}

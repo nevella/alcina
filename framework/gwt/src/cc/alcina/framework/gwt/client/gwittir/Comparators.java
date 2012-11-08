@@ -15,6 +15,9 @@ public class Comparators {
 			if (o1 == null) {
 				return o2 == null ? 0 : -1;
 			}
+			if(o2==null){
+				return 1;
+			}
 			return new Long(o1.getId()).compareTo(o2.getId());
 		}
 	}

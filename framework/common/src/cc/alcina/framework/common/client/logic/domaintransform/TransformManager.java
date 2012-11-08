@@ -51,7 +51,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHis
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
@@ -501,10 +500,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 				if (hili != null) {
 					return hili;
 				} else {
-					// this should probably never happen...??
+					// this is perfectly possible - particularly on the client. allow it there, to save lots of unhelpful register/deregister boilerplate
+					if(!allowUnregisteredHiliTargetObject()){
 					throw new WrappedRuntimeException(
 							"Unable to get target object " + evt,
 							SuggestedAction.NOTIFY_ERROR);
+					}
 				}
 			}
 			return evt.getNewValue();
@@ -547,6 +548,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		throw new DomainTransformException(evt,
 				DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND);
+	}
+
+	protected boolean allowUnregisteredHiliTargetObject() {
+		return false;
 	}
 
 	public Set<DomainTransformEvent> getTransforms() {

@@ -87,4 +87,6 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	public LooseContext getContext();
 
 	public void setContext(RenderContext context);
+
+	public String title();
 }

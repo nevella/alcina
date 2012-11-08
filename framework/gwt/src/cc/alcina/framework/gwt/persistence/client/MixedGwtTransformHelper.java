@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.persistence.client;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientMetricLogging;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
@@ -45,13 +46,14 @@ public class MixedGwtTransformHelper {
 					cleanup();
 					ClientLayerLocator.get().notifications()
 							.log(e.getMessage());
-					if(PersistenceExceptionInterceptor.get()
-							.checkTerminateAfterPossiblePersistenceException(e)){
+					if (PersistenceExceptionInterceptor.get()
+							.checkTerminateAfterPossiblePersistenceException(e)) {
 						return;
 					}
 					e.printStackTrace();
-					if (e instanceof MixedGwtLoadException
-							&& ((MixedGwtLoadException) e).isWipeOffline()) {
+					MixedGwtLoadException ex = CommonUtils.extractCauseOfClass(
+							e, MixedGwtLoadException.class);
+					if (ex != null && ex.isWipeOffline()) {
 						LocalTransformPersistence.get().clearPersistedClient(
 								null, PersistenceCallback.VOID_CALLBACK);
 					}
@@ -126,7 +128,8 @@ public class MixedGwtTransformHelper {
 	}
 
 	public AsyncCallback<LoadObjectsHolder> prepareForReplay(
-			AlcinaRpcRequestBuilder builder, String text, AsyncCallback<LoadObjectsHolder> onLoadCallback) {
+			AlcinaRpcRequestBuilder builder, String text,
+			AsyncCallback<LoadObjectsHolder> onLoadCallback) {
 		builder.setResponsePayload(text);
 		return new LoaderCallback(onLoadCallback);
 	}

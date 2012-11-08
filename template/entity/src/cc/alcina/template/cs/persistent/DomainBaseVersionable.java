@@ -2,11 +2,11 @@ package cc.alcina.template.cs.persistent;
 
 import java.util.Date;
 
-import javax.persistence.CascadeType;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
+import javax.xml.bind.annotation.XmlElement;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -31,9 +31,10 @@ public abstract class DomainBaseVersionable extends DomainBase implements IVersi
 		return this.creationDate;
 	}
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY,targetEntity=AlcinaTemplateUser.class)
 	@JoinColumn(name = "creation_user_id")
-	public AlcinaTemplateUser getCreationUser() {
+	@XmlElement(type=AlcinaTemplateUser.class)
+	public IUser getCreationUser() {
 		return this.creationUser;
 	}
 
@@ -43,9 +44,10 @@ public abstract class DomainBaseVersionable extends DomainBase implements IVersi
 		return this.lastModificationDate;
 	}
 
-	@ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY)
+	@ManyToOne( fetch = FetchType.LAZY,targetEntity=AlcinaTemplateUser.class)
 	@JoinColumn(name = "modification_user_id")
-	public AlcinaTemplateUser getLastModificationUser() {
+	@XmlElement(type=AlcinaTemplateUser.class)
+	public IUser getLastModificationUser() {
 		return this.lastModificationUser;
 	}
 	public void setCreationDate(Date creationDate) {

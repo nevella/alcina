@@ -17,8 +17,6 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.util.List;
 import java.util.Set;
 
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 

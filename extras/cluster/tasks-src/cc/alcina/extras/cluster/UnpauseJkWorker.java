@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.net.URL;
 
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 
 public class UnpauseJkWorker extends Task {
@@ -17,24 +18,24 @@ public class UnpauseJkWorker extends Task {
 	private String jkStatusUrl;
 
 	private String balancedWorkerName;
-	
-	private int timeout=30;
-	
+
+	private int timeout = 30;
+
 	private String redeployedMarkerFile;
 
 	@Override
 	public void execute() throws BuildException {
 		File marker = new File(redeployedMarkerFile);
-		if(marker.exists()){
+		if (marker.exists()) {
 			marker.delete();
 		}
 		log(redeployedMarkerFile);
-		while (!marker.exists()&&timeout-->0){
+		while (!marker.exists() && timeout-- > 0) {
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 			}
-			log("..."+timeout);
+			log("..." + timeout);
 		}
 		unpause();
 	}
@@ -43,10 +44,10 @@ public class UnpauseJkWorker extends Task {
 		String url = String.format("%s?cmd=update&from=list&w=%s&sw=%s&vwa=0",
 				getJkStatusUrl(), getBalancedWorkerName(), getWorkerName());
 		try {
-			log("reading "+url);
+			log("reading " + url);
 			readUrlAsString(url);
 		} catch (Exception e) {
-			throw new BuildException(e);
+			log(e.getMessage() + " reading " + url, Project.MSG_WARN);
 		}
 	}
 

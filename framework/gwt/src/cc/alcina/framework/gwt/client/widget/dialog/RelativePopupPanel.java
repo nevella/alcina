@@ -1332,6 +1332,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		int type = nativeEvent.getTypeInt();
 		switch (type) {
 		case Event.ONMOUSEDOWN:
+		case Event.ONTOUCHSTART:
 			// Don't eat events if event capture is enabled, as this can
 			// interfere with dialog dragging, for example.
 			if (DOM.getCaptureElement() != null) {

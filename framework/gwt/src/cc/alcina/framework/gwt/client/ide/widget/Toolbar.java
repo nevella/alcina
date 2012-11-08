@@ -15,18 +15,29 @@ package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.actions.ActionGroup;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.PermissibleAction.HasPermissibleActionChildren;
+import cc.alcina.framework.common.client.actions.PermissibleAction.HasPermissibleActionDelegate;
+import cc.alcina.framework.common.client.actions.PermissibleAction.PermissibleActionWithDelegate;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.logic.HasHref;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
+import cc.alcina.framework.gwt.client.widget.SpanPanel;
 import cc.alcina.framework.gwt.client.widget.StyledAWidget;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlersSupport;
 
@@ -34,9 +45,12 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
@@ -152,6 +166,8 @@ public class Toolbar extends Composite implements
 		}
 	}
 
+	private String buttonStyleName;
+
 	protected void redraw() {
 		WidgetUtils.clearChildren(panel);
 		hasChildHandlersSupport.detachHandlers();
@@ -168,10 +184,10 @@ public class Toolbar extends Composite implements
 					fp.addStyleName("float-right");
 				}
 				for (PermissibleAction action : g.actions) {
-					ToolbarButton button = new ToolbarButton(action, asButton);
+					ToolbarButton button = new ToolbarButton(action,
+							buttonStyleName, asButton);
 					hasChildHandlersSupport.addHandler(button
 							.addClickHandler(this));
-					button.setEnabled(false);
 					fp.add(button);
 					actionButtons.put(action.getClass(), button);
 					actionButtonsByAction.put(action, button);
@@ -187,10 +203,10 @@ public class Toolbar extends Composite implements
 			}
 		} else {
 			for (PermissibleAction action : actions) {
-				ToolbarButton button = new ToolbarButton(action, asButton);
+				ToolbarButton button = new ToolbarButton(action,
+						buttonStyleName, asButton);
 				HandlerRegistration registration = button.addClickHandler(this);
 				hasChildHandlersSupport.addHandler(registration);
-				button.setEnabled(false);
 				panel.add(button);
 				actionButtons.put(action.getClass(), button);
 				actionButtonsByAction.put(action, button);
@@ -206,6 +222,10 @@ public class Toolbar extends Composite implements
 
 	public void removeVetoableActionListener(PermissibleActionListener listener) {
 		this.vetoableActionSupport.removeVetoableActionListener(listener);
+	}
+
+	public void setActionGroup(ActionGroup actionGroup) {
+		setActionGroups(Collections.singletonList(actionGroup));
 	}
 
 	public void setActionGroups(List<ActionGroup> actionGroups) {
@@ -238,6 +258,21 @@ public class Toolbar extends Composite implements
 		return removeListenersOnDetach;
 	}
 
+	public static interface HasDropdownPresenter {
+		public Widget presentDropdown();
+
+		public void setPopup(RelativePopupPanel rpp);
+	}
+
+	public abstract static class PermissibleActionWithDelegateAndDropdown
+			extends PermissibleActionWithDelegate implements
+			HasDropdownPresenter {
+		public PermissibleActionWithDelegateAndDropdown(
+				PermissibleAction delegate) {
+			super(delegate);
+		}
+	}
+
 	public static class ToolbarButton extends Composite implements
 			HasClickHandlers {
 		private final PermissibleAction action;
@@ -248,35 +283,106 @@ public class Toolbar extends Composite implements
 
 		private final boolean asButton;
 
+		private StyledAWidget dropDown;
+
 		public ToolbarButton(PermissibleAction action) {
 			this(action, false);
 		}
 
 		public ToolbarButton(PermissibleAction action, boolean asButton) {
+			this(action, null, asButton);
+		}
+
+		public ToolbarButton(PermissibleAction action, String buttonStyleName,
+				boolean asButton) {
 			this.asButton = asButton;
+			this.action = action;
 			Widget w = null;
+			String cn = action.getCssClassName();
 			if (asButton) {
 				button = new Button(action.getDisplayName());
-				button.setStyleName("alcina-Button");
+				button.setStyleName(buttonStyleName != null ? buttonStyleName
+						: "alcina-Button");
 				w = button;
 				if (action instanceof ClickHandler) {
 					button.addClickHandler((ClickHandler) action);
 				}
 			} else {
 				aWidget = new StyledAWidget(action.getDisplayName(), true);
-				aWidget.setStyleName("button-grey");
+				aWidget.setStyleName(buttonStyleName != null ? buttonStyleName
+						: "button-grey");
 				aWidget.setWordWrap(false);
 				w = aWidget;
 				if (action instanceof ClickHandler) {
 					aWidget.addClickHandler((ClickHandler) action);
 				}
+				if (action instanceof HasHref) {
+					setHref(((HasHref) action).getHref());
+				}
+				if (action instanceof PermissibleActionWithDelegate) {
+					PermissibleAction delegate = ((HasPermissibleActionDelegate) action)
+							.getDelegate();
+					if (delegate instanceof ClickHandler) {
+						aWidget.addClickHandler((ClickHandler) delegate);
+					}
+				}
+				if (action instanceof HasPermissibleActionChildren
+						|| action instanceof HasDropdownPresenter) {
+					SpanPanel sp = new SpanPanel();
+					w = sp;
+					sp.add(aWidget);
+					if (cn != null) {
+						aWidget.addStyleName(cn);
+					}
+					aWidget.addStyleName("pre-drop-down");
+					AbstractImagePrototype aip = AbstractImagePrototype
+							.create(StandardDataImageProvider.get()
+									.getDataImages().downGrey());
+					dropDown = new StyledAWidget(aip.getHTML(), true);
+					dropDown.addStyleName("button-grey drop-down");
+					sp.add(dropDown);
+					dropDown.addClickHandler(new ClickHandler() {
+						@Override
+						public void onClick(ClickEvent event) {
+							showDropDown();
+						}
+					});
+				}
 			}
-			String cn = action.getCssClassName();
 			if (cn != null) {
 				w.addStyleName(cn);
 			}
-			this.action = action;
 			initWidget(w);
+		}
+
+		protected void showDropDown() {
+			Widget dropDown = null;
+			if (action instanceof HasDropdownPresenter) {
+				dropDown = ((HasDropdownPresenter) action).presentDropdown();
+			} else {
+				VerticalPanel vp = new VerticalPanel();
+				dropDown = vp;
+				HasPermissibleActionChildren wKids = (HasPermissibleActionChildren) action;
+				for (PermissibleAction a : wKids.getChildren()) {
+					vp.add(new ToolbarButton(a));
+				}
+			}
+			RelativePopupPanel rpp = new RelativePopupPanel(true);
+			rpp.setAnimationEnabled(false);
+			RelativePopupPositioning
+					.showPopup(
+							getWidget(),
+							dropDown,
+							RootPanel.get(),
+							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
+							RootPanel.get(), rpp, -6, 6);
+			rpp.setAnimationEnabled(false);
+			if (action instanceof HasDropdownPresenter) {
+				((HasDropdownPresenter) action).setPopup(rpp);
+			} else {
+				rpp.addStyleName("child-actions");
+			}
+			rpp.addStyleName("toolbar-button-dropdown");
 		}
 
 		public String getTarget() {
@@ -292,7 +398,10 @@ public class Toolbar extends Composite implements
 		}
 
 		public void setHref(String href) {
-			this.aWidget.setHref(href);
+			if (CommonUtils.isNotNullOrEmpty(href)) {
+				this.aWidget.setHref(href);
+				this.aWidget.setPreventDefault(false);
+			}
 		}
 
 		public void setEnabled(boolean enabled) {
@@ -310,6 +419,7 @@ public class Toolbar extends Composite implements
 				aWidget.setText(text);
 			}
 		}
+
 		public void setWordWrap(boolean wordWrap) {
 			if (asButton) {
 			} else {
@@ -338,5 +448,13 @@ public class Toolbar extends Composite implements
 					.fireVetoableActionEvent(new PermissibleActionEvent(sender,
 							tb.getAction()));
 		}
+	}
+
+	public String getButtonStyleName() {
+		return this.buttonStyleName;
+	}
+
+	public void setButtonStyleName(String buttonStyleName) {
+		this.buttonStyleName = buttonStyleName;
 	}
 }

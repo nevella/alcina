@@ -317,11 +317,13 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 	}
 
-	public void dumpNearestMatch(String xpathStr, Node container) {
+	public Node dumpNearestMatch(String xpathStr, Node container) {
 		String ucXpath = xpathStr.toUpperCase();
 		String[] sections = ucXpath.split("/");
 		String matched = "";
+		String lastMatchedPath = "";
 		Node lastMatched = null;
+		int count=0;
 		for (String section : sections) {
 			if (matched.length() != 0) {
 				matched += "/";
@@ -329,17 +331,25 @@ public class DomUtils implements NodeFromXpathProvider {
 			matched += section;
 			Node match = findXpathWithIndexedText(matched, container);
 			if (match == null) {
-				System.out.println("Prefix matched:" + matched
+				System.out.println("Prefix matched:" + lastMatchedPath
 						+ "\n----------\n");
-				Map<String, Node> xpathMap = new HashMap<String, Node>();
-				debug = true;
+				Map<String, Node> xpathMap = new LinkedHashMap<String, Node>();
 				generateMap((Element) lastMatched, "", xpathMap);
-				debug = false;
-				return;
+				dumpMap0(false, xpathMap);
+				if(count>3){
+					System.out.println("Parent map:");
+					xpathMap = new LinkedHashMap<String, Node>();
+					generateMap((Element) lastMatched.getParentElement(), "", xpathMap);
+					dumpMap0(false, xpathMap);
+				}
+				return lastMatched;
 			} else {
 				lastMatched = match;
+				lastMatchedPath=matched;
+				count++;
 			}
 		}
+		return null;
 	}
 
 	public static String toSimpleXPointer(Node n) {
@@ -383,8 +393,10 @@ public class DomUtils implements NodeFromXpathProvider {
 		Collections.reverse(parts);
 		return CommonUtils.join(parts, "/");
 	}
-
 	public void dumpMap(boolean regenerate) {
+		dumpMap0(regenerate,xpathMap);
+	}
+	private void dumpMap0(boolean regenerate, Map<String, Node> xpathMap) {
 		if (regenerate) {
 			xpathMap = new LinkedHashMap<String, Node>();
 			generateMap((Element) lastContainer, "", xpathMap);
@@ -511,7 +523,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (useXpathMap) {
 			if (lastContainer != container) {
 				lastContainer = container;
-				xpathMap = new HashMap<String, Node>();
+				xpathMap = new LinkedHashMap<String, Node>();
 				ClientNotifications notifications = ClientLayerLocator.get()
 						.notifications();
 				if (notifications != null) {

@@ -18,6 +18,7 @@
 	</condition>
 	<ant antfile="build-dist.xml" target="build">
 	</ant> 
+	<typedef file="typedefs.properties" classpathref="project.classpath" loaderref="moi" />
 	<taskdef file="taskdefs.properties" classpathref="project.classpath" loaderref="moi" />
 	<target name="check-config">
 		<check-config />

@@ -70,6 +70,8 @@ import com.google.gwt.user.client.rpc.RemoteService;
 
 	public LoginResponse login(LoginBean loginBean);
 	
+	public void ping();
+	
 	public void logout();
 
 	@AuthenticationRequired()
@@ -95,4 +97,10 @@ import com.google.gwt.user.client.rpc.RemoteService;
 			throws DomainTransformException, DomainTransformRequestException;
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException;
+	//for dumping dbs
+	@AuthenticationRequired
+	public void dumpData(String data);
+	
+	@AuthenticationRequired
+	public String loadData(String key);
 }

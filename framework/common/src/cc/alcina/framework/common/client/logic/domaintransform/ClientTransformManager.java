@@ -32,13 +32,10 @@ import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
-import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier.ModalNotifierNull;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -140,6 +137,8 @@ public class ClientTransformManager extends TransformManager {
 	public class ClientDomainSync {
 		private LookupMapToMap lkp;
 
+		private ModalNotifier notifier;
+
 		public ClientDomainSync() {
 			clearUserObjects();
 		}
@@ -164,8 +163,11 @@ public class ClientTransformManager extends TransformManager {
 			String message = TextProvider.get().getUiObjectText(
 					ClientTransformManager.class, "domain-sync-update",
 					"Loading");
-			final ModalNotifier notifier = ClientLayerLocator.get()
-					.notifications().getModalNotifier(message);
+			notifier = ClientLayerLocator.get().notifications()
+					.getModalNotifier(message);
+			if (notifier == null) {
+				notifier = new ModalNotifierNull();
+			}
 			final long t1 = System.currentTimeMillis();
 			AsyncCallback<List<ObjectCacheItemResult>> innerCallback = new AsyncCallback<List<ObjectCacheItemResult>>() {
 				public void onSuccess(List<ObjectCacheItemResult> result) {
@@ -355,8 +357,7 @@ public class ClientTransformManager extends TransformManager {
 				.getCollnMap();
 		Map<Class, List> objCopy = new LinkedHashMap<Class, List>();
 		for (Class<? extends HasIdAndLocalId> clazz : collectionMap.keySet()) {
-			List values = CollectionFilters.filter(
-					collectionMap.get(clazz),
+			List values = CollectionFilters.filter(collectionMap.get(clazz),
 					new CollectionFilter<HasIdAndLocalId>() {
 						@Override
 						public boolean allow(HasIdAndLocalId o) {
@@ -461,5 +462,10 @@ public class ClientTransformManager extends TransformManager {
 	public void setDomainTransformExceptionFilter(
 			DomainTransformExceptionFilter domainTransformExceptionFilter) {
 		this.domainTransformExceptionFilter = domainTransformExceptionFilter;
+	}
+
+	@Override
+	protected boolean allowUnregisteredHiliTargetObject() {
+		return true;
 	}
 }

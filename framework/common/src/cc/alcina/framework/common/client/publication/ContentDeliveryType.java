@@ -13,22 +13,48 @@
  */
 package cc.alcina.framework.common.client.publication;
 
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
+
 /**
  * 
  * @author Nick Reddel
  */
-public interface ContentDeliveryType {
-	public interface DELIVERY_EMAIL extends ContentDeliveryType {
+public abstract class ContentDeliveryType extends ExtensibleEnum {
+	public static final ContentDeliveryType PREVIEW = new ContentDeliveryType_DOWNLOAD_PREVIEW();
+
+	public static final ContentDeliveryType DOWNLOAD = new ContentDeliveryType_DOWNLOAD_ATTACHMENT();
+
+	public static final ContentDeliveryType PRINT = new ContentDeliveryType_PRINT();
+
+	public static final ContentDeliveryType EMAIL = new ContentDeliveryType_EMAIL();
+
+	public static final ContentDeliveryType SEND_TO_REPOSITORY = new ContentDeliveryType_SEND_TO_REPOSITORY();
+
+	public static class ContentDeliveryType_DOWNLOAD_PREVIEW extends
+			ContentDeliveryType {
+		@Override
+		public String serializedForm() {
+			return "PREVIEW";
+		}
+	}
+
+	public static class ContentDeliveryType_DOWNLOAD_ATTACHMENT extends
+			ContentDeliveryType {
+		@Override
+		public String serializedForm() {
+			return "DOWNLOAD";
+		}
 	}
 
 	// note, no handler for this - it's pushed to the client earlier in the
 	// publish cycle
-	public interface DELIVERY_PRINT extends ContentDeliveryType {
+	public static class ContentDeliveryType_PRINT extends ContentDeliveryType {
 	}
 
-	public interface DELIVERY_DOWNLOAD_ATTACHMENT extends ContentDeliveryType {
+	public static class ContentDeliveryType_EMAIL extends ContentDeliveryType {
 	}
 
-	public interface DELIVERY_DOWNLOAD_PREVIEW extends ContentDeliveryType {
+	public static class ContentDeliveryType_SEND_TO_REPOSITORY extends
+			ContentDeliveryType {
 	}
 }

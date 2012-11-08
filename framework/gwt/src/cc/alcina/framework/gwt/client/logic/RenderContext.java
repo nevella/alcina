@@ -27,16 +27,16 @@ import com.google.gwt.user.client.ui.Widget;
  */
 public class RenderContext extends LooseContext {
 	private static final String ON_DETACH_CALLBACK = RenderContext.class
-			.getName() + "::ON_DETACH_CALLBACK";
+			.getName() + ".ON_DETACH_CALLBACK";
 
 	private static final String ON_ATTACH_CALLBACK = RenderContext.class
-			.getName() + "::ON_DETACH_CALLBACK";
+			.getName() + ".ON_DETACH_CALLBACK";
 
 	private static final String ROOT_RENDERER = RenderContext.class.getName()
-			+ "::ROOT_RENDERER";
+			+ ".ROOT_RENDERER";
 
 	private static final String IS_RENDERABLE_FILTER = RenderContext.class
-			.getName() + "::IS_RENDERABLE_FILTER";
+			.getName() + ".IS_RENDERABLE_FILTER";
 
 	private static RenderContext theInstance;
 
@@ -48,7 +48,7 @@ public class RenderContext extends LooseContext {
 	}
 
 	public static final String CONTEXT_IGNORE_AUTOFOCUS = ContentViewFactory.class
-	+ "::CONTEXT_IGNORE_AUTOFOCUS";
+			.getName() + ".CONTEXT_IGNORE_AUTOFOCUS";
 
 	private RenderContext() {
 		super();
@@ -108,6 +108,4 @@ public class RenderContext extends LooseContext {
 		cloneToSnapshot(context);
 		return context;
 	}
-
-	
 }

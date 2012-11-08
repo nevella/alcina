@@ -12,7 +12,6 @@ package com.totsp.gwittir.client.log;
 import java.util.HashMap;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * Override gwittir logging (there's no way to not generate the remote service in gwittir)

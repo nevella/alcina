@@ -70,7 +70,7 @@ public class LongPair implements Comparable<LongPair> {
 		return l1 == l2;
 	}
 
-	public static LongPair parseIntPair(String string) {
+	public static LongPair parseLongPair(String string) {
 		try {
 			String[] split = string.replaceAll("[\\[\\]]", "").split("-|,");
 			if (split.length == 2) {

@@ -15,14 +15,11 @@
  */
 package com.google.gwt.user.client.rpc.impl;
 
-import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import cc.alcina.framework.entity.ResourceUtilities;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;

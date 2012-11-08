@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class TxtCriterion extends SearchCriterion {
+	static final transient long serialVersionUID = -2L;
 	@ClientInstantiable
 	public static enum TxtCriterionType {
 		CONTAINS, EQUALS, EQUALS_OR_LIKE
@@ -87,5 +88,10 @@ public class TxtCriterion extends SearchCriterion {
 
 	public TxtCriterionType getTxtCriterionType() {
 		return txtCriterionType;
+	}
+	@Override
+	public String toString() {
+		String string = CommonUtils.nullToEmpty(getText());
+		return string.length() == 0 ? "" : getDisplayName() + ": " + string;
 	}
 }

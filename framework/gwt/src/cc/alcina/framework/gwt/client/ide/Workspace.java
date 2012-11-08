@@ -38,14 +38,12 @@ import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflecto
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
-import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
 import cc.alcina.framework.gwt.client.ide.node.HasVisibleCollection;
 import cc.alcina.framework.gwt.client.ide.node.ProvidesParenting;
@@ -57,6 +55,7 @@ import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * Hooks up the various navigation views and the editor widget
@@ -238,7 +237,20 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		handler.performAction(evt, obj, singleObj != null ? singleObj : colln,
 				this, clazz);
 	}
-
+	public SourcesPropertyChangeEvents getParentDomainObject(Object node){
+		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
+			DomainNode dn = (DomainNode) node;
+			node = dn.getParentItem();
+		}
+		if (node instanceof ProvidesParenting) {
+			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
+					.getPropertyCollectionProvider();
+			if (pcp != null) {
+				return pcp.getDomainObject();
+			}
+		}
+		return null;
+	}
 	public void handleParentLinks(Object node, HasIdAndLocalId newObj) {
 		if (node instanceof DomainNode && !(node instanceof ProvidesParenting)) {
 			DomainNode dn = (DomainNode) node;

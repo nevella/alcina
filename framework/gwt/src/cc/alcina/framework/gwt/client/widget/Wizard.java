@@ -120,7 +120,6 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 	private boolean allButtonsEnabled = false;
 
 	protected void refreshButtonActivation() {
-		toolbar.enableAll(true);
 		if (allButtonsEnabled) {
 			return;
 		}

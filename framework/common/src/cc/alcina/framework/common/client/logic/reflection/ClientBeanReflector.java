@@ -103,10 +103,13 @@ public class ClientBeanReflector {
 	}
 
 	public String getObjectName(Object o) {
-		if (o.getClass() != beanClass) {
+		Class<? extends Object> clazz = o.getClass();
+		if (clazz != beanClass) {
 			throw new WrappedRuntimeException(
-					"Object not of correct class for reflector",
-					SuggestedAction.NOTIFY_ERROR);
+					CommonUtils.formatJ(
+							"Object not of correct class for reflector - %s, %s",
+							clazz != null ? clazz.getName() : null,
+							beanClass.getName()), SuggestedAction.NOTIFY_ERROR);
 		}
 		return TextProvider.get().getObjectName(o, this);
 	}
@@ -128,11 +131,13 @@ public class ClientBeanReflector {
 				.values()) {
 			A annotation = propertyReflector.getAnnotation(annotationClass);
 			if (annotation != null) {
-				callback.callback(annotation,propertyReflector);
+				callback.callback(annotation, propertyReflector);
 			}
 		}
 	}
-	public static interface HasAnnotationCallback<A extends Annotation>{
-		public void callback(A annotation, ClientPropertyReflector propertyReflector);
+
+	public static interface HasAnnotationCallback<A extends Annotation> {
+		public void callback(A annotation,
+				ClientPropertyReflector propertyReflector);
 	}
 }

@@ -8,6 +8,7 @@ import java.io.StringWriter;
 import java.net.URL;
 
 import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 
 public class PauseJkWorker extends Task {
@@ -22,10 +23,10 @@ public class PauseJkWorker extends Task {
 		String url = String.format("%s?cmd=update&from=list&w=%s&sw=%s&vwa=1",
 				getJkStatusUrl(), getBalancedWorkerName(), getWorkerName());
 		try {
-			log("reading "+url);
+			log("reading " + url);
 			readUrlAsString(url);
 		} catch (Exception e) {
-			throw new BuildException(e);
+			log(e.getMessage() + " reading " + url, Project.MSG_WARN);
 		}
 	}
 

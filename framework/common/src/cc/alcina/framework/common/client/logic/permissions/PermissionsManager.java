@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.Vetoer;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
@@ -44,6 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermi
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -62,6 +64,9 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public static final String PROP_LOGIN_STATE = "loginState";
 
 	public static final String PROP_ONLINE_STATE = "onlineState";
+
+	public static final String CONTEXT_OVERRIDE_AS_OWNED_OBJECT = PermissionsManager.class
+			.getName() + ".CONTEXT_OVERRIDE_AS_OWNED_OBJECT";
 
 	private long userId;
 
@@ -388,8 +393,10 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 			}
 			if (isLoggedIn()) {
 				if (o instanceof HasOwner) {
-					permitted |= isOwnerOf((HasOwner) o);
+					permitted |= permitDueToOwnership((HasOwner) o);
 				}
+			} else {
+				permitted |= PermissionsManager.get().getUser().equals(o);
 			}
 		}
 		if (!permitted) {
@@ -403,9 +410,13 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		return permitted;
 	}
 
-	public boolean isOwnerOf(HasOwner hasOwner) {
-		return (hasOwner.getOwner() == null || hasOwner.getOwner().equals(
-				instantiatedUser));
+	public boolean permitDueToOwnership(HasOwner hasOwner) {
+		boolean override = LooseContextProvider
+				.getBoolean(CONTEXT_OVERRIDE_AS_OWNED_OBJECT);
+		return override ? true
+				: hasOwner.getOwner() == null ? hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
+						.getLocalId() != 0 : false
+						: hasOwner.getOwner().equals(instantiatedUser);
 	}
 
 	public boolean isPermissible(Object o, Permission p) {
@@ -523,7 +534,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		return !isPermissible((Permissible) object);
 	}
 
-	protected boolean isRoot() {
+	public boolean isRoot() {
 		return root;
 	}
 

@@ -42,7 +42,7 @@ import com.totsp.gwittir.client.validator.ValidationFeedback;
  */
 public class RelativePopupValidationFeedback extends AbstractValidationFeedback {
 	public static final String CONTEXT_FEEDBACK_POSITION = RelativePopupValidationFeedback.class
-			.getName() + "::CONTEXT_FEEDBACK_POSITION";
+			.getName() + ".CONTEXT_FEEDBACK_POSITION";
 
 	public static final int LEFT = 1;
 

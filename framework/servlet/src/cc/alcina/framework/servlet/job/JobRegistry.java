@@ -16,10 +16,12 @@ package cc.alcina.framework.servlet.job;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -32,6 +34,8 @@ import cc.alcina.framework.common.client.util.Multimap;
 public class JobRegistry {
 	private Map<Long, JobInfo> infoMap;
 
+	private Map<JobInfo, Class> jobClassMap;
+
 	private Multimap<Long, List<JobInfo>> infoChildMap;
 
 	private Map<Long, Boolean> cancelledMap;
@@ -41,6 +45,7 @@ public class JobRegistry {
 		infoMap = new HashMap<Long, JobInfo>();
 		infoChildMap = new Multimap<Long, List<JobInfo>>();
 		cancelledMap = new HashMap<Long, Boolean>();
+		jobClassMap = new WeakHashMap<JobInfo, Class>();
 	}
 
 	private static JobRegistry theInstance;
@@ -83,6 +88,7 @@ public class JobRegistry {
 		JobInfo info = new JobInfo();
 		info.setComplete(false);
 		info.setJobName(jobName == null ? jobClass.getSimpleName() : jobName);
+		jobClassMap.put(info, jobClass);
 		info.setPercentComplete(0);
 		info.setProgressMessage(message != null ? message : "Starting job...");
 		updateInfo(info);
@@ -144,6 +150,15 @@ public class JobRegistry {
 			}
 		}
 		return runningJobids;
+	}
+
+	public Set<Class> getRunningJobClasses() {
+		Set<Class> result = new LinkedHashSet<Class>();
+		List<Long> ids = getRunningJobs();
+		for (Long id : ids) {
+			result.add(jobClassMap.get(infoMap.get(id)));
+		}
+		return result;
 	}
 
 	public void jobComplete(JobInfo info, String message) {

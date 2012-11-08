@@ -6,8 +6,8 @@ import java.io.InputStream;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
+import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_DOWNLOAD_ATTACHMENT;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
-import cc.alcina.framework.common.client.publication.ContentDeliveryType.DELIVERY_DOWNLOAD_ATTACHMENT;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.servlet.DownloadServlet;
@@ -17,7 +17,7 @@ import cc.alcina.framework.servlet.servlet.DownloadServlet.DownloadItem;
  * @author nreddel@barnet.com.au
  *
  */
-@RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = DELIVERY_DOWNLOAD_ATTACHMENT.class)
+@RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = ContentDeliveryType_DOWNLOAD_ATTACHMENT.class)
 public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
 	
 

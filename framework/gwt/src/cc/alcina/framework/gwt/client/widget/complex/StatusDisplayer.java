@@ -18,7 +18,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
 
 public class StatusDisplayer {
-	private static final int FADER_DURATION = 5000;
+	private static final int FADER_DURATION = 3000;
 
 	private MouseOverHandler overHandler = new MouseOverHandler() {
 		@Override
@@ -83,7 +83,7 @@ public class StatusDisplayer {
 			this.label = label;
 			this.holder = new SimplePanel(label);
 			holder.setStyleName("alcina-Status-Holder");
-			if(defaultStyle!=null){
+			if (defaultStyle != null) {
 				holder.addStyleName(defaultStyle);
 			}
 			holder.setVisible(false);
@@ -104,7 +104,6 @@ public class StatusDisplayer {
 		FaderTuple ft = center ? centerTuple : statusTuple;
 		Label label = ft.label;
 		FaderAnimation fader = ft.fader;
-		
 		label.setStyleName("");
 		if (stylePrefixes.containsKey(channel)) {
 			label.addStyleName(stylePrefixes.get(channel));
@@ -120,10 +119,10 @@ public class StatusDisplayer {
 		if (message.isEmpty()) {
 			return;
 		}
-		if(center){
+		if (center) {
 			int w = holder.getOffsetWidth();
 			int cw = Window.getClientWidth();
-			holder.getElement().getStyle().setLeft((cw-w)/2, Unit.PX);
+			holder.getElement().getStyle().setLeft((cw - w) / 2, Unit.PX);
 		}
 		WidgetUtils.setOpacity(holder, 100);
 		if (withFade) {
@@ -145,9 +144,15 @@ public class StatusDisplayer {
 			holder.setVisible(false);
 		}
 
+		double preFade = 0.7;
+
 		@Override
 		protected void onUpdate(double progress) {
-			WidgetUtils.setOpacity(holder, (int) (100 * (1 - progress)));
+			if (progress > preFade) {
+				int opacityPercent = (int) (100 * (1 - (progress - preFade)
+						/ (1 - preFade)));
+				WidgetUtils.setOpacity(holder, opacityPercent);
+			}
 		}
 	}
 

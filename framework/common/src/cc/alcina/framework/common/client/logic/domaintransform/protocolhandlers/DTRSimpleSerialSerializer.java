@@ -1,5 +1,8 @@
 package cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -26,9 +29,23 @@ public class DTRSimpleSerialSerializer {
 	private static final String DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0 = "DTRSimpleSerialSerializer-version:1.0";
 
 	private static final String TRANSFORM_PROTOCOL_VERSION = "Transform-protocol-version:";
-
-	public DTRSimpleSerialWrapper read(String text) {
-		SimpleStringParser parser = new SimpleStringParser(text);
+	public List<DTRSimpleSerialWrapper> readMultiple(String data) {
+		List<DTRSimpleSerialWrapper> wrappers=new ArrayList<DTRSimpleSerialWrapper>();
+		String sep = DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0+"\n";
+		int idx=0,idy=0;
+		while(true){
+			idx=data.indexOf(sep,idy);
+			if(idx==-1){
+				break;
+			}
+			idy=data.indexOf(sep,idx+sep.length());
+			idy=idy==-1?data.length():idy;
+			wrappers.add(read(data.substring(idx,idy)));
+		}
+		return wrappers;
+	}
+	public DTRSimpleSerialWrapper read(String data) {
+		SimpleStringParser parser = new SimpleStringParser(data);
 		String nl = "\n";
 		parser.read(DTR_SIMPLE_SERIAL_SERIALIZER_VERSION_1_0, nl);
 		int clientInstanceAuth = (int) parser.readLongString(

@@ -168,10 +168,6 @@ public class TransformPersister {
 		long maxEventId = 0;
 		Date precreDate = new Date();
 		for (DomainTransformEvent dte : items) {
-			if (dte.getObjectClass().getSimpleName().equals("Section")
-					&& dte.getObjectId() == 82) {
-				int j = 3;
-			}
 			if (dte.getObjectId() != 0) {
 				lkp.add(dte.getObjectClass(), dte.getObjectId());
 				if (dte.getTransformType() == TransformType.CREATE_OBJECT) {
@@ -257,14 +253,15 @@ public class TransformPersister {
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 			// We know this is thread-local, so we can clear the tm transforms
 			// add the entity version checker now
-			tm.resetTltm(locatorMap,token.getTransformExceptionPolicy());
+			tm.resetTltm(locatorMap, token.getTransformExceptionPolicy());
 			tm.setEntityManager(getEntityManager());
 			ClientInstance persistentClientInstance = (ClientInstance) commonPersistenceBase
 					.findImplInstance(ClientInstance.class, request
 							.getClientInstance().getId());
-			if (persistentClientInstance.getAuth() != null
-					&& !(persistentClientInstance.getAuth().equals(request
-							.getClientInstance().getAuth()))) {
+			if (persistentClientInstance == null
+					|| (persistentClientInstance.getAuth() != null && !(persistentClientInstance
+							.getAuth().equals(request.getClientInstance()
+							.getAuth())))) {
 				DomainTransformException ex = new DomainTransformException(
 						"Invalid client instance authentication");
 				ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
@@ -325,7 +322,9 @@ public class TransformPersister {
 					if (token.getPass() == Pass.TRY_COMMIT) {
 						try {
 							if (event.getCommitType() == CommitType.TO_STORAGE) {
+								tm.setIgnorePropertyChanges(true);
 								tm.fireDomainTransform(event);
+								tm.setIgnorePropertyChanges(false);
 								eventsPersisted.add(event);
 							}
 						} catch (Exception e) {

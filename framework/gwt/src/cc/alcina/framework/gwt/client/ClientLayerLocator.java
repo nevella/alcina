@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.gwt.client;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
@@ -129,6 +131,7 @@ public class ClientLayerLocator {
 
 	public void registerExceptionHandler(ClientExceptionHandler exceptionHandler) {
 		this.exceptionHandler = exceptionHandler;
+		GWT.setUncaughtExceptionHandler(exceptionHandler);
 	}
 
 	public void registerNotifications(ClientNotifications clientNotifications) {

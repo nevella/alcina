@@ -15,13 +15,13 @@
  */
 package com.google.gwt.user.client.rpc.core.java.util;
 
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
-
-import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
 
 /**
  * Custom field serializer for {@link java.util.HashMap}.

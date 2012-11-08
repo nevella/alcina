@@ -31,7 +31,7 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 
 	@Override
 	protected void initAppCache() {
-		//html5 appcache doesn't require client init
+		// html5 appcache doesn't require client init
 	}
 
 	@Override
@@ -52,6 +52,7 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 			@Override
 			public void onSuccess(Void result) {
 				initServicesPostLocalPersistence();
+				afterConfiguration();
 			}
 		};
 		LocalTransformPersistence.get().init(new DTESerializationPolicy(),

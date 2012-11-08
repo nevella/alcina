@@ -15,6 +15,7 @@ package cc.alcina.framework.servlet.servlet;
 
 import java.beans.XMLEncoder;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -27,7 +28,6 @@ import java.util.List;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -51,20 +51,19 @@ import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWr
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
+import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -77,11 +76,11 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.domaintransform.TransformConflicts;
+import cc.alcina.framework.entity.domaintransform.TransformConflicts.TransformConflictsFromOfflineSupport;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
-import cc.alcina.framework.entity.domaintransform.policy.IgnoreMissingPersistenceLayerTransformExceptionPolicy;
-import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
@@ -99,7 +98,6 @@ import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.server.rpc.RPC;
 import com.google.gwt.user.server.rpc.RPCRequest;
-import com.google.gwt.user.server.rpc.RPCServletUtils;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.user.server.rpc.UnexpectedException;
 import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
@@ -126,7 +124,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = CommonRemoteServiceServlet.class
 			.getName()
-			+ "::"
+			+ "."
 			+ "CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS";
 
 	private int actionCount = 0;
@@ -142,6 +140,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			e.printStackTrace();
 			throw new WebException(e);
 		}
+	}
+
+	@Override
+	protected void onBeforeRequestDeserialized(String serializedRequest) {
+		super.onBeforeRequestDeserialized(serializedRequest);
+		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
 	}
 
 	public <T extends HasIdAndLocalId> T getItemById(String className, Long id)
@@ -350,6 +354,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
 			int committed = 0;
+			LooseContextProvider.getContext().pushWithKey(
+					TransformConflicts.CONTEXT_OFFLINE_SUPPORT,
+					new TransformConflictsFromOfflineSupport());
 			for (DTRSimpleSerialWrapper wr : uncommitted) {
 				long clientInstanceId = wr.getClientInstanceId();
 				int requestId = (int) wr.getRequestId();
@@ -424,6 +431,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WebException(e);
+		} finally {
+			LooseContextProvider.getContext().pop();
 		}
 	}
 
@@ -561,7 +570,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, map, persistTransforms, false, false, false,getLogger());
+					request, map, persistTransforms, false, false, false,
+					getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
@@ -671,7 +681,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, locatorMap, persistTransforms, true,
-					ignoreClientAuthMismatch, forOfflineTransforms,getLogger());
+					ignoreClientAuthMismatch, forOfflineTransforms, getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		}
 	}
@@ -719,5 +729,51 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			PartialDtrUploadRequest request) throws WebException {
 		return new PartialDtrUploadHandler().uploadOfflineTransforms(request,
 				this);
+	}
+
+	@Override
+	public void ping() {
+	}
+
+	@Override
+	public void dumpData(String data) {
+		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
+				"dumpPermitted")) {
+			throw new RuntimeException("Dump not permitted");
+		}
+		String key = String.valueOf(System.currentTimeMillis());
+		File dir = getDataDumpsFolder();
+		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
+		File file = new File(path);
+		try {
+			ResourceUtilities.writeStringToFile(data, file);
+			System.out.println("Client db dumped - key: "+key);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	@Override
+	public String loadData(String key) {
+		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
+				"loadDumpPermitted")) {
+			throw new RuntimeException("Load dump not permitted");
+		}
+		File dir = getDataDumpsFolder();
+		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
+		File file = new File(path);
+		try {
+			return ResourceUtilities.readFileToString(file);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private File getDataDumpsFolder() {
+		File dataFolder = ServletLayerLocator.get().getDataFolder();
+		File dir = new File(dataFolder.getPath() + File.separator
+				+ "client-dumps");
+		dir.mkdirs();
+		return dir;
 	}
 }

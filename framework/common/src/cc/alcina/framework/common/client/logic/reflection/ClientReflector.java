@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -100,7 +102,10 @@ public class ClientReflector implements ClassLookup {
 		if (clazz != null) {
 			return clazz;
 		}
-		throw new RuntimeException("Class " + fqn + " not reflect-instantiable");
+		throw new WrappedRuntimeException(
+				CommonUtils.formatJ(
+						"Class %s not reflect-instantiable",
+						fqn), SuggestedAction.NOTIFY_ERROR);
 	}
 
 	public Class getPropertyType(Class clazz, String propertyName) {
