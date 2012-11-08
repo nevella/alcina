@@ -428,8 +428,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected boolean isPersistOfflineTransforms() {
-		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
 	public JobInfo pollJobStatus(Long id, boolean cancel) {

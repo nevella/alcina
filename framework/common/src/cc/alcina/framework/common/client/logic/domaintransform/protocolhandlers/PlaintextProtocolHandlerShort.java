@@ -56,7 +56,7 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 
 	private StringBuilder stringLookupBuilder;
 
-	private LinkedHashMap<String, String> stringLookup;
+	private LinkedHashMap<String, String> stringLookup0;
 
 	private LinkedHashMap<String, String> reverseStringLookup;
 
@@ -173,7 +173,7 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 	public StringBuffer finishSerialization(StringBuffer sb) {
 		StringBuffer sb1 = new StringBuffer();// table
 		sb1.append(START_OF_STRING_TABLE);
-		Iterator<String> itr = stringLookup.keySet().iterator();
+		Iterator<String> itr = ensureStringLookup().keySet().iterator();
 		itr.next();
 		itr.next();
 		while (itr.hasNext()) {
@@ -186,17 +186,23 @@ public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 	}
 
 	private void appendString(String string, StringBuffer sb) {
-		if (stringLookup == null) {
-			stringLookupBuilder = new StringBuilder();
-			stringLookupBuilder.append(START_OF_STRING_TABLE);
-			stringLookup = new LinkedHashMap<String, String>();
-			stringLookup.put(null, String.valueOf(0));
-			stringLookup.put("", String.valueOf(1));
-		}
+		LinkedHashMap<String, String> stringLookup = ensureStringLookup();
 		if (!stringLookup.containsKey(string)) {
 			stringLookup.put(string, String.valueOf(stringLookup.size()));
 		}
 		sb.append(stringLookup.get(string));
+	}
+
+	private LinkedHashMap<String, String> ensureStringLookup() {
+		if (stringLookup0 == null) {
+			stringLookupBuilder = new StringBuilder();
+			stringLookupBuilder.append(START_OF_STRING_TABLE);
+			stringLookup0 = new LinkedHashMap<String, String>();
+			stringLookup0.put(null, String.valueOf(0));
+			stringLookup0.put("", String.valueOf(1));
+		}
+		return stringLookup0;
+				
 	}
 
 	/*

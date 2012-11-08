@@ -199,9 +199,6 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 			"text/x-gwt-rpc; charset=utf-8");
 			connection.setRequestProperty("Content-Length",
 					"" + requestData.getBytes("UTF-8").length);
-			// Explicitly set these to override any system properties.
-			connection.setReadTimeout(60000);
-			connection.setConnectTimeout(60000);
 			for (Entry<String, String> header : headersCopy.entrySet()) {
 				connection.setRequestProperty(header.getKey(),
 						header.getValue());
