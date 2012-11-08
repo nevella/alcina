@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.HasHref;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
@@ -368,7 +369,7 @@ public class Toolbar extends Composite implements
 			}
 			RelativePopupPanel rpp = new RelativePopupPanel(true);
 			rpp.setAnimationEnabled(false);
-			 RelativePopupPositioning
+			RelativePopupPositioning
 					.showPopup(
 							getWidget(),
 							dropDown,
@@ -397,8 +398,10 @@ public class Toolbar extends Composite implements
 		}
 
 		public void setHref(String href) {
-			this.aWidget.setHref(href);
-			this.aWidget.setPreventDefault(false);
+			if (CommonUtils.isNotNullOrEmpty(href)) {
+				this.aWidget.setHref(href);
+				this.aWidget.setPreventDefault(false);
+			}
 		}
 
 		public void setEnabled(boolean enabled) {
