@@ -72,6 +72,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	protected CommonPersistenceLocal commonPersistence;
 
+	private Map<String, Date> classInfo;
+
 	protected abstract CommonPersistenceLocal getCommonPersistence();
 
 	protected AppPersistenceBase() {
@@ -86,19 +88,21 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			// no custom properties
 		}
 	}
-	protected void initNonDb() throws Exception{
 
+	protected void initNonDb() throws Exception {
 		loadCustomProperties();
 		initLoggers();
 		initServiceImpl();
-		scanRegistryAndClassRefs();
+		scanRegistry();
 	}
+
 	public void init() throws Exception {
 		initNonDb();
+		scanClassRefs();
 		initDb();
-		
 	}
-	protected void initDb() throws Exception{
+
+	protected void initDb() throws Exception {
 		createSystemGroupsAndUsers();
 		populateEntities();
 	}
@@ -108,19 +112,40 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		// normally do a JVM property check to ensure only once per JVM creation
 	}
 
-	protected void scanRegistryAndClassRefs() {
+	protected void scanRegistry() {
 		Logger mainLogger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
 			EntityLayerLocator.get().jpaImplementation()
 					.muteClassloaderLogging(true);
-			Map<String, Date> classes = new ServletClasspathScanner("*", true,
-					false, mainLogger, Registry.MARKER_RESOURCE,
+			new RegistryScanner().scan(ensureClassInfo(mainLogger),
+					new ArrayList<String>(), Registry.get());
+		} catch (Exception e) {
+			mainLogger.warn("", e);
+		} finally {
+			EntityLayerLocator.get().jpaImplementation()
+					.muteClassloaderLogging(false);
+		}
+	}
+
+	private Map<String, Date> ensureClassInfo(Logger mainLogger)
+			throws Exception {
+		if (classInfo == null) {
+			classInfo = new ServletClasspathScanner("*", true, false,
+					mainLogger, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] { "WEB-INF/classes",
 							"WEB-INF/lib" })).getClasses();
-			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					Registry.get());
-			new ClassrefScanner().scan(classes);
+		}
+		return classInfo;
+	}
+
+	protected void scanClassRefs() {
+		Logger mainLogger = Logger.getLogger(AlcinaServerConfig.get()
+				.getMainLoggerName());
+		try {
+			EntityLayerLocator.get().jpaImplementation()
+					.muteClassloaderLogging(true);
+			new ClassrefScanner().scan(ensureClassInfo(mainLogger));
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {

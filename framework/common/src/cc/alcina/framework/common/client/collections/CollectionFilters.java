@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.util.Multimap;
 
 import com.totsp.gwittir.client.beans.Converter;
 
@@ -160,6 +161,15 @@ public class CollectionFilters {
 		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
 			O o = itr.next();
 			result.put(mapper.getKey(o), mapper.getValue(o));
+		}
+		return result;
+	}
+	public static <K, V, O> Multimap<K, List<V>> multimap(Collection<O> values,
+			KeyValueMapper<K, V, O> mapper) {
+		Multimap<K, List<V>> result = new Multimap<K, List<V>>();
+		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
+			O o = itr.next();
+			result.add(mapper.getKey(o), mapper.getValue(o));
 		}
 		return result;
 	}
