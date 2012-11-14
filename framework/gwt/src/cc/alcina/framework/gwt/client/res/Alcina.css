@@ -144,6 +144,7 @@ table.mainTabPanel .alcina-MainMenu {
 	line-height: 1em;
 	padding: 8px 15px 7px 15px;
 	color: white;
+	white-space:nowrap;
 }
 
 .alcina-MainMenuRight a,.alcina-MainMenuRight a:active,.alcina-MainMenuRight a:visited
