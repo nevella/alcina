@@ -17,8 +17,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.gwt.user.client.History;
-
 /**
  * 
  * @author Nick Reddel
@@ -49,12 +47,14 @@ public class AlcinaDebugIds {
 	public static final String GRID_FORM_FIELD_DEBUG_PREFIX = "GridForm-";
 
 	public static final String DEBUG_SIMULATE_OFFLINE = "d-simulate-offline";
+
 	public static final String DEBUG_LOG_LOAD_METRICS = "d-load-metrics";
 
-	public static final List<String> DEBUG_IDS = new ArrayList(Arrays
-			.asList(new String[] { DEBUG_SIMULATE_OFFLINE ,DEBUG_LOG_LOAD_METRICS}));
+	public static final List<String> DEBUG_IDS = new ArrayList(
+			Arrays.asList(new String[] { DEBUG_SIMULATE_OFFLINE,
+					DEBUG_LOG_LOAD_METRICS }));
 
-	private static List<String> debugIdsMatched = new ArrayList<String>();
+	static List<String> debugIdsMatched = new ArrayList<String>();
 
 	public static String getButtonId(String key) {
 		return TOP_BUTTON + "-" + key;
@@ -63,23 +63,8 @@ public class AlcinaDebugIds {
 	public static boolean hasFlag(String key) {
 		return debugIdsMatched.contains(key);
 	}
-	
+
 	public static void setFlag(String key) {
 		debugIdsMatched.add(key);
-	}
-
-	public static void initialise() {
-		String token = History.getToken();
-		if (token != null) {
-			AlcinaHistoryItem currentEvent = AlcinaHistory.get()
-					.parseToken(token);
-			if (currentEvent != null) {
-				for (String dbgId : DEBUG_IDS) {
-					if (currentEvent.hasParameter(dbgId)) {
-						debugIdsMatched.add(dbgId);
-					}
-				}
-			}
-		}
 	}
 }

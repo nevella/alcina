@@ -461,9 +461,14 @@ public class CommonUtils {
 			return String.valueOf(number);
 		}
 	}
-
 	public static String pluralise(String s, Collection c) {
-		if (c != null && c.size() == 1) {// note 0/null gives a plural form
+		return pluralise(s, c==null?0:c.size(),false);
+	}
+	public static String pluralise(String s, int size,boolean withCount) {
+		if(withCount){
+			s=CommonUtils.formatJ("%s %s", size,s);
+		}
+		if (size==1) {// note 0/null gives a plural form
 			// (what a strange
 			// language...)
 			return s;

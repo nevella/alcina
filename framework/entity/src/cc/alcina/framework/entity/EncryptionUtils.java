@@ -370,9 +370,20 @@ public class EncryptionUtils {
 		MessageDigest md;
 		md = MessageDigest.getInstance("MD5");
 		byte[] md5hash = new byte[32];
+		//iso-8859 not that good an idea, but keep it...
 		md.update(text.getBytes("iso-8859-1"), 0, text.length());
 		md5hash = md.digest();
 		return convertToHex(md5hash);
+	}
+
+	public static String SHA1(String text) throws NoSuchAlgorithmException,
+			UnsupportedEncodingException {
+		MessageDigest md;
+		md = MessageDigest.getInstance("SHA1");
+		byte[] sha1hash = new byte[32];
+		md.update(text.getBytes("utf-8"), 0, text.length());
+		sha1hash = md.digest();
+		return convertToHex(sha1hash);
 	}
 
 	public static String MD5(byte[] bytes) throws NoSuchAlgorithmException,
@@ -396,22 +407,16 @@ public class EncryptionUtils {
 		md5hash = md.digest();
 		return convertToHex(md5hash);
 	}
+
 	public static final byte[] intToByteArray(int value) {
-        return new byte[] {
-                (byte)(value >>> 24),
-                (byte)(value >>> 16),
-                (byte)(value >>> 8),
-                (byte)value};
-}
+		return new byte[] { (byte) (value >>> 24), (byte) (value >>> 16),
+				(byte) (value >>> 8), (byte) value };
+	}
+
 	public static final byte[] longToByteArray(long value) {
-        return new byte[] {
-                (byte)(value >>> 56),
-                (byte)(value >>> 48),
-                (byte)(value >>> 40),
-                (byte)(value >>> 32),
-                (byte)(value >>> 24),
-                (byte)(value >>> 16),
-                (byte)(value >>> 8),
-                (byte)value};
-}
+		return new byte[] { (byte) (value >>> 56), (byte) (value >>> 48),
+				(byte) (value >>> 40), (byte) (value >>> 32),
+				(byte) (value >>> 24), (byte) (value >>> 16),
+				(byte) (value >>> 8), (byte) value };
+	}
 }

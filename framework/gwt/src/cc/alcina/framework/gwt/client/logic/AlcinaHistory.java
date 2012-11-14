@@ -278,6 +278,21 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	protected void initTokenDisplayNames() {
 	}
 
+	public static void initialiseDebugIds() {
+		String token = History.getToken();
+		if (token != null) {
+			AlcinaHistoryItem currentEvent = AlcinaHistory.get()
+					.parseToken(token);
+			if (currentEvent != null) {
+				for (String dbgId : AlcinaDebugIds.DEBUG_IDS) {
+					if (currentEvent.hasParameter(dbgId)) {
+						AlcinaDebugIds.debugIdsMatched.add(dbgId);
+					}
+				}
+			}
+		}
+	}
+
 	public enum HistoryEventType {
 		NO_TAB_SPEC, UNTABBED, TABBED
 	}

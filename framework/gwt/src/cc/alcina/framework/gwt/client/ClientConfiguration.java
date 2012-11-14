@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.common.client.util.LooseContextProvider.ClientLooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
-import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
+import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.ClientUTCDateProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
@@ -40,7 +40,7 @@ public class ClientConfiguration {
 	}
 
 	protected void prepareDebugFromHistory() {
-		AlcinaDebugIds.initialise();
+		AlcinaHistory.initialiseDebugIds();
 	}
 
 	protected void initCss() {
