@@ -8,7 +8,7 @@ import java.io.Serializable;
  *
  */
 public interface FormatConverter {
-	public InputStream convert(FormatConversionModel model) throws Exception;
+	public InputStream convert(PublicationContext ctx, FormatConversionModel model) throws Exception;
 
 	public String getMimeType();
 

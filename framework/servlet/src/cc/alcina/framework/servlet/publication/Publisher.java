@@ -49,11 +49,15 @@ public class Publisher {
 		ContentModelHandler cmh = (ContentModelHandler) ServletLayerRegistry
 				.get().instantiateSingle(ContentModelHandler.class,
 						contentDefinition.getClass());
+		PublicationContext ctx = new PublicationContext();
+		ctx.contentDefinition=contentDefinition;
+		ctx.deliveryModel=deliveryModel;
 		cmh.prepareContent(contentDefinition, deliveryModel);
 		if (!cmh.hasResults) {
 			return null;// throw exception??
 		}
 		PublicationResult result = new PublicationResult();
+		ctx.publicationResult=result;
 		long publicationUserId = 0;
 		long publicationId = 0;
 		boolean forPublication = !deliveryModel.isNoPersistence();
@@ -70,6 +74,7 @@ public class Publisher {
 			}
 		}
 		PublicationContent publicationContent = cmh.getPublicationContent();
+		ctx.publicationContent=publicationContent;
 		ContentRenderer crh = (ContentRenderer) ServletLayerRegistry.get()
 				.instantiateSingle(ContentRenderer.class,
 						publicationContent.getClass());
@@ -100,11 +105,11 @@ public class Publisher {
 		fcm.footer = cw.wrappedFooter;
 		fcm.bytes = cw.wrappedBytes;
 		fcm.custom=cw.custom;
-		InputStream convertedContent = fc.convert(fcm);
+		InputStream convertedContent = fc.convert(ctx,fcm);
 		ContentDelivery deliverer = (ContentDelivery) ServletLayerRegistry
 				.get().instantiateSingle(ContentDeliveryType.class,
 						deliveryModel.provideContentDeliveryType().getClass());
-		String token = deliverer.deliver(convertedContent, deliveryModel, fc);
+		String token = deliverer.deliver(ctx,convertedContent, deliveryModel, fc);
 		result.content=null;
 		result.contentToken=token;
 		return result;

@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.publication.ContentDeliveryType.Content
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.publication.FormatConverter;
+import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.servlet.DownloadServlet;
 import cc.alcina.framework.servlet.servlet.DownloadServlet.DownloadItem;
 
@@ -26,7 +27,7 @@ public class ContentDeliveryDownloadInline implements ContentDelivery {
 		return DownloadServlet.add(item);
 	}
 
-	public String deliver(InputStream convertedContent,
+	public String deliver(PublicationContext ctx,InputStream convertedContent,
 			DeliveryModel deliveryModel, FormatConverter hfc)
 			throws Exception {
 		return deliverViaServlet(convertedContent, hfc.getMimeType(),

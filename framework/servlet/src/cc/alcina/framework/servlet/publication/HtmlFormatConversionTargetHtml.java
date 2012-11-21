@@ -13,7 +13,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
  */
 @RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_HTML.class)
 public class HtmlFormatConversionTargetHtml implements FormatConverter {
-	public InputStream convert(FormatConversionModel hfcm) throws Exception{
+	public InputStream convert(PublicationContext ctx,FormatConversionModel hfcm) throws Exception{
 		return ResourceUtilities.writeStringToInputStream(hfcm.html);
 	}
 

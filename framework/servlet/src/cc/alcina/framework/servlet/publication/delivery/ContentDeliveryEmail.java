@@ -28,6 +28,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.publication.EntityCleaner;
 import cc.alcina.framework.servlet.publication.FormatConverter;
+import cc.alcina.framework.servlet.publication.PublicationContext;
 
 /**
  * could extend xxxMimeType - but we'd need to expand the registry, with a
@@ -40,7 +41,7 @@ import cc.alcina.framework.servlet.publication.FormatConverter;
 public class ContentDeliveryEmail implements ContentDelivery {
 	public static final String PUBLICATION_REASON_MESSAGE = "<!--PUBLICATION_REASON_MESSAGE-->";
 
-	public String deliver(final InputStream convertedContent,
+	public String deliver(PublicationContext ctx,final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc)
 			throws Exception {
 		byte[] msgBytes = ResourceUtilities
