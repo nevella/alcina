@@ -4,10 +4,15 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.widget.ClickableFlowPanel;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
 
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Grid;
@@ -15,6 +20,10 @@ import com.google.gwt.user.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
 
 public class BoundSelectorMinimal extends BoundSelector {
+	private ClickHandler maybeFocusResultsHandler;
+
+	private ClickableFlowPanel cfp;
+
 	public BoundSelectorMinimal() {
 		super();
 	}
@@ -41,13 +50,37 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	public void redrawGrid() {
 		container.clear();
+		cfp = new ClickableFlowPanel();
 		this.grid = new Grid(2, 1);
 		grid.setCellPadding(0);
 		grid.setCellSpacing(0);
 		grid.setWidget(0, 0, resultsWidget);
 		grid.setWidget(1, 0, searchWidget);
 		grid.setStyleName("alcina-SelectorFrame minimal");
-		container.add(grid);
+		cfp.add(grid);
+		if (maybeFocusResultsHandler == null) {
+			maybeFocusResultsHandler = new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					Element elt = Element.as(event.getNativeEvent()
+							.getEventTarget());
+					Element stop = cfp.getElement();
+					Element resultsTop = resultsWidget.getElement();
+					while (true) {
+						if (elt.getTagName().equalsIgnoreCase("A")
+								|| elt == stop) {
+							return;
+						}
+						if (elt == resultsTop) {
+							search.getFilter().getTextBox().setFocus(true);
+						}
+						elt = elt.getParentElement();
+					}
+				}
+			};
+		}
+		cfp.addClickHandler(maybeFocusResultsHandler);
+		container.add(cfp);
 	}
 
 	@Override

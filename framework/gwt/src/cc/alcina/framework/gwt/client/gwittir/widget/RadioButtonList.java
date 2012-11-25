@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -36,6 +37,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 /**
  *
  * @author Nick Reddel
+ * 
  */
 public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		ClickHandler {
@@ -76,6 +78,12 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		setColumnCount(columnCount);
 	}
 
+	public RadioButtonList(String groupName, Object[] values,
+			Renderer<T, String> renderer, int columnCount) {
+		this(groupName, (Collection<T>) Arrays.asList(values), renderer,
+				columnCount);
+	}
+
 	public int getColumnCount() {
 		return columnCount;
 	}
@@ -95,7 +103,7 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		if (results.isEmpty() && singleResult()) {
 			results.add(nonMatchedValue);
 		}
-		return results;
+		return singleResult() ? singleValue(results) : results;
 	}
 
 	public Collection<T> getValues() {
@@ -117,6 +125,10 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		render();
 	}
 
+	/*
+	 * treat the comparison etc as always set based (even if actually
+	 * single-object) to simplify code
+	 */
 	public void setValue(Object value) {
 		Collection values = CommonUtils.wrapInCollection(value);
 		values = values == null ? new LinkedHashSet() : values;
@@ -128,11 +140,14 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 			matched |= cMatched;
 		}
 		nonMatchedValue = matched ? null : value;
+		/*
+		 * i.e. a value not in the // checkbox list - keep it // as a return
+		 * value for // getValue (rather than null)
+		 */
 		if (!CommonUtils.equalsWithNullEquality(value, lastValues)) {
 			this.changes.firePropertyChange("value",
 					singleResult() ? singleValue((Collection<T>) lastValues)
-							: lastValues,
-					singleResult() ? singleValue() : this.getValue());
+							: lastValues, getValue());
 		}
 		lastValues = values;
 	}
