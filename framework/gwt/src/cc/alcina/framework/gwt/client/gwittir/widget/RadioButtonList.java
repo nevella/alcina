@@ -228,6 +228,7 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 	}
 
 	public T singleValue() {
-		return singleValue((Collection<T>) getValue());
+		return (T) (getValue() instanceof Collection ? singleValue((Collection<T>) getValue())
+				: getValue());
 	}
 }

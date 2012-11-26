@@ -500,11 +500,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 				if (hili != null) {
 					return hili;
 				} else {
-					// this is perfectly possible - particularly on the client. allow it there, to save lots of unhelpful register/deregister boilerplate
-					if(!allowUnregisteredHiliTargetObject()){
-					throw new WrappedRuntimeException(
-							"Unable to get target object " + evt,
-							SuggestedAction.NOTIFY_ERROR);
+					// this is perfectly possible - particularly on the client.
+					// allow it there, to save lots of unhelpful
+					// register/deregister boilerplate
+					if (!allowUnregisteredHiliTargetObject()) {
+						throw new WrappedRuntimeException(
+								"Unable to get target object " + evt,
+								SuggestedAction.NOTIFY_ERROR);
 					}
 				}
 			}
@@ -1146,7 +1148,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN).clone();
 		for (DomainTransformEvent dte : trs) {
-			if (c.contains(dte.getSource())) {
+			if (c.contains(dte.getSource()) || c.contains(dte.getNewValue())) {
 				removeTransform(dte);
 			}
 		}
