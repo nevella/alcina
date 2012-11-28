@@ -7,12 +7,12 @@ import cc.alcina.framework.gwt.client.ClientLayerLocator;
 public class AtEndOfEventSeriesTimer {
 	private long lastEventOccurred = 0;
 
-	private Runnable checkCallback=new Runnable() {
+	private Runnable checkCallback = new Runnable() {
 		@Override
 		public void run() {
-			if(System.currentTimeMillis()-lastEventOccurred>=waitToPerformAction){
+			if (System.currentTimeMillis() - lastEventOccurred >= waitToPerformAction) {
 				timer.cancel();
-				timer=null;
+				timer = null;
 				action.run();
 			}
 		}
@@ -25,9 +25,12 @@ public class AtEndOfEventSeriesTimer {
 	private final TimerWrapperProvider timerWrapperProvider;
 
 	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action) {
-		this(waitToPerformAction, action, ClientLayerLocator.get().timerWrapperProvider());
+		this(waitToPerformAction, action, ClientLayerLocator.get()
+				.timerWrapperProvider());
 	}
-	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action,TimerWrapperProvider timerWrapperProvider) {
+
+	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action,
+			TimerWrapperProvider timerWrapperProvider) {
 		this.waitToPerformAction = waitToPerformAction;
 		this.action = action;
 		this.timerWrapperProvider = timerWrapperProvider;
@@ -37,18 +40,16 @@ public class AtEndOfEventSeriesTimer {
 
 	public void triggerEventOccurred() {
 		lastEventOccurred = System.currentTimeMillis();
-		if (timer == null) {
-			timer = timerWrapperProvider
-					.getTimer(checkCallback);
+		if (timer == null && timerWrapperProvider != null) {
+			timer = timerWrapperProvider.getTimer(checkCallback);
 			timer.scheduleRepeating(waitToPerformAction / 2);
 		}
 	}
 
 	public void cancel() {
-		if(timer!=null){
+		if (timer != null) {
 			timer.cancel();
-			timer=null;
+			timer = null;
 		}
-		
 	}
 }
