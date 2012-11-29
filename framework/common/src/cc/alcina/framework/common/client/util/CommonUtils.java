@@ -864,4 +864,13 @@ public class CommonUtils {
 		}
 		return null;
 	}
+
+	@SuppressWarnings("deprecation")
+	public static Date monthsFromNow(int months) {
+		Date d=roundDate(new Date(),false);
+		int m=d.getMonth()+months;
+		d.setMonth(m % 12);
+		d.setYear(d.getYear()+m/12);
+		return d;
+	}
 }
