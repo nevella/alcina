@@ -41,7 +41,6 @@ public class CompositeValidationFeedback extends AbstractValidationFeedback {
 	public CompositeValidationFeedback(ValidationFeedback... feedback) {
 		super();
 		addAll(feedback);
-		this.feedbacks.addAll(Arrays.asList(feedback));
 	}
 
 	private void addAll(ValidationFeedback[] feedbackToAdd) {
