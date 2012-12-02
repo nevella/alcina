@@ -36,6 +36,10 @@ public abstract class AsyncCallbackTransitionHandler<T, M extends MachineModel>
 	@Override
 	public void onSuccess(T result) {
 		onSuccess0(result);
+		afterSuccess();
+	}
+
+	protected void afterSuccess() {
 		if (model != null) {
 			model.getMachine().newEvent(successEvent);
 		}

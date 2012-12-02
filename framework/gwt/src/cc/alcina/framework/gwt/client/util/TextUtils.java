@@ -25,6 +25,9 @@ public class TextUtils {
 
 	public static String trimToWidth(String s, String style, int pxWidth,
 			String ellipsis) {
+		if(pxWidth<=20){
+			return s;
+		}
 		ellipsis = ellipsis == null ? "\u2026" : ellipsis;
 		int r0 = 0;
 		int r1 = s.length();

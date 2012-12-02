@@ -351,4 +351,16 @@ public class DomainTransformEvent implements Serializable,
 	public String toString() {
 		return new DTRProtocolSerializer().serialize(this);
 	}
+
+	/*
+	 * this version handles equality for deleted objects
+	 */
+	public boolean provideSourceEquals(HasIdAndLocalId hili) {
+		if (hili == null) {
+			return false;
+		}
+		return hili.getClass().equals(objectClass)
+				&& hili.getLocalId() == objectLocalId
+				&& hili.getId() == objectId;
+	}
 }
