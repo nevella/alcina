@@ -364,7 +364,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 	}
 
-	protected void ensureCriteriaGroups(CriteriaGroup... criteriaGroups) {
+	public void ensureCriteriaGroups(CriteriaGroup... criteriaGroups) {
 		resetLookups();
 		for (CriteriaGroup cg : criteriaGroups) {
 			CriteriaGroup existing = criteriaGroup(cg.getClass());
