@@ -211,6 +211,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 							Window.getClientHeight() * 70 / 100);
 			sp.getElement().getStyle().setPadding(0.8, Unit.EM);
 			sp.add(fp);
+			currentWidget = sp;
 			return sp;
 		} else {
 			return fp;
