@@ -9,9 +9,9 @@ import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.InlineHTML;
 import com.google.gwt.user.client.ui.InlineLabel;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
 import com.totsp.gwittir.client.validator.ValidationException;
@@ -56,6 +56,8 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		protected Map<Object, ValidationException> exceptions = new LinkedHashMap<Object, ValidationException>();
 
 		private String caption = "Please correct the following";
+		
+		public static boolean forceHtmlValidationMessages=false;
 
 		public void clear() {
 			exceptions.clear();
@@ -68,7 +70,7 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		public void show() {
 			FlowPanel fp = new FlowPanel();
 			fp.setStyleName("combined-validation-feedback");
-			Label caption = new Label(getCaption());
+			HTML caption = new HTML(getCaption());
 			caption.setStyleName("caption");
 			fp.add(caption);
 			ULPanel ulPanel = new ULPanel();
@@ -79,7 +81,7 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 					ValidationExceptionWithHtmlMessage withHtml = (ValidationExceptionWithHtmlMessage) e;
 					child = new InlineHTML(withHtml.getSafeHtml());
 				} else {
-					child = new InlineLabel(e.getMessage());
+					child = forceHtmlValidationMessages?new InlineHTML(e.getMessage()):new InlineLabel(e.getMessage());
 				}
 				ulPanel.add(new LiPanel(child));
 			}
