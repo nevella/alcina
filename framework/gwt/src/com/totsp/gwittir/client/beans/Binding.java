@@ -821,4 +821,17 @@ public class Binding {
 		}
 		return null;
 	}
+
+	public void resolveAllFeedbacks() {
+		List<Binding> bindings = provideAllBindings(null);
+		for (Binding binding : bindings) {
+			if (binding.getLeft() != null && binding.getLeft().feedback != null) {
+				binding.getLeft().feedback.resolve(binding.getLeft().object);
+			}
+			if (binding.getRight() != null
+					&& binding.getRight().feedback != null) {
+				binding.getRight().feedback.resolve(binding.getRight().object);
+			}
+		}
+	}
 }

@@ -41,6 +41,7 @@ import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.ListBox;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -127,7 +128,13 @@ public class GwittirUtils {
 				satisfiesType |= lTypes
 						.contains(FormFieldTypeForRefresh.SELECT)
 						&& isSetBasedListBox;
+				boolean isCheckbox = b.getLeft().object instanceof Checkbox;
+				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.CHECK)
+						&& isCheckbox;
 				AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
+				if (!tb.isVisible()) {
+					continue;
+				}
 				if (tb instanceof HasBinding) {
 					Binding subBinding = ((HasBinding) tb).getBinding();
 					if (subBinding != null) {
@@ -150,6 +157,8 @@ public class GwittirUtils {
 						Object other = isSetBasedListBox ? ((SetBasedListBox) tb)
 								.provideOtherValue() : " ".equals(tbValue) ? ""
 								: " ";
+						other = isCheckbox ? !(CommonUtils.bv((Boolean) tb
+								.getValue())) : other;
 						tb.setValue(other);
 						b.getRight().property.getMutatorMethod().invoke(
 								b.getRight().object, new Object[] { value });

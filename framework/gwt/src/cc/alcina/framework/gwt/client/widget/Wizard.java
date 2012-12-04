@@ -19,6 +19,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -149,7 +150,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		}
 		this.toolbar = new Toolbar();
 		toolbar.setRemoveListenersOnDetach(false);
-		toolbar.setAsButton(true);
+		toolbar.setAsButton(isToolbarAsNativeButtons());
 		toolbar.addStyleName("wizard-toolbar");
 		toolbar.setWidth("");
 		getExtraActions();
@@ -166,7 +167,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		holder.setStyleName("wizard-toolbar-outer");
 		fp.add(holder);
 	}
-
+	private boolean toolbarAsNativeButtons=true;
 	private void renderHeader(FlowPanel fp) {
 		if (titleIsBreadcrumbBar) {
 			fp.add(new BreadcrumbBar(getTitle()));
@@ -191,7 +192,8 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 			renderTabPane(fp);
 			return fp;
 		}
-		Widget w = pages.get(pageIndex).getPageWidget();
+		WizardPage page = pages.get(pageIndex);
+		Widget w = page.getPageWidget();
 		w.addStyleName("wizard-form");
 		if (contentScrollPanelHeight != 0) {
 			ScrollPanel sp = new ScrollPanel();
@@ -202,6 +204,11 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 			fp.add(w);
 		}
 		renderButtonsPane(fp);
+		PermissibleAction highlighted=page.getHighlightedAction();
+		highlighted=highlighted==null?CommonUtils.first(toolbar.getActions()):highlighted;
+		if(highlighted!=null){
+			toolbar.getButtonForAction(highlighted).addStyleName("highlighted");
+		}
 		toolbar.addVetoableActionListener(this);
 		if (renderInScrollPanel) {
 			ScrollPanel sp = new ScrollPanel();
@@ -287,6 +294,8 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	public static interface WizardPage {
 		public Widget getPageWidget();
+
+		public PermissibleAction getHighlightedAction();
 	}
 
 	public boolean isRenderInScrollPanel() {
@@ -303,5 +312,13 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	public void setContentScrollPanelHeight(int contentScrollPanelHeight) {
 		this.contentScrollPanelHeight = contentScrollPanelHeight;
+	}
+
+	public boolean isToolbarAsNativeButtons() {
+		return this.toolbarAsNativeButtons;
+	}
+
+	public void setToolbarAsNativeButtons(boolean toolbarAsNativeButtons) {
+		this.toolbarAsNativeButtons = toolbarAsNativeButtons;
 	}
 }
