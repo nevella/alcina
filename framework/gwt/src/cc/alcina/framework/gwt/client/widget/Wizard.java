@@ -167,7 +167,9 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 		holder.setStyleName("wizard-toolbar-outer");
 		fp.add(holder);
 	}
-	private boolean toolbarAsNativeButtons=true;
+
+	private boolean toolbarAsNativeButtons = true;
+
 	private void renderHeader(FlowPanel fp) {
 		if (titleIsBreadcrumbBar) {
 			fp.add(new BreadcrumbBar(getTitle()));
@@ -204,9 +206,10 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 			fp.add(w);
 		}
 		renderButtonsPane(fp);
-		PermissibleAction highlighted=page.getHighlightedAction();
-		highlighted=highlighted==null?CommonUtils.first(toolbar.getActions()):highlighted;
-		if(highlighted!=null){
+		PermissibleAction highlighted = page.getHighlightedAction();
+		highlighted = highlighted == null ? CommonUtils.first(toolbar
+				.getActions()) : highlighted;
+		if (highlighted != null) {
 			toolbar.getButtonForAction(highlighted).addStyleName("highlighted");
 		}
 		toolbar.addVetoableActionListener(this);
@@ -216,7 +219,7 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 					.getStyle()
 					.setPropertyPx("maxHeight",
 							Window.getClientHeight() * 70 / 100);
-			sp.getElement().getStyle().setPadding(0.8, Unit.EM);
+			fp.getElement().getStyle().setMargin(0.8, Unit.EM);
 			sp.add(fp);
 			currentWidget = sp;
 			return sp;

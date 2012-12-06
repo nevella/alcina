@@ -144,7 +144,7 @@ table.mainTabPanel .alcina-MainMenu {
 	line-height: 1em;
 	padding: 8px 15px 7px 15px;
 	color: white;
-	white-space:nowrap;
+	white-space: nowrap;
 }
 
 .alcina-MainMenuRight a,.alcina-MainMenuRight a:active,.alcina-MainMenuRight a:visited
@@ -1067,6 +1067,7 @@ div.alcina-CustomiserColour {
 /** Wizard **/
 div.alcina-Wizard div.wizard-form {
 	padding: 10px 10px 5px 10px;
+	position: relative;
 }
 
 div.alcina-Wizard div.wizard-toolbar {
@@ -1728,17 +1729,20 @@ div.alcina-prompt input {
 	width: 300px;
 	margin-left: 1em;
 }
-div.alcina-prompt .kv-holder{
+
+div.alcina-prompt .kv-holder {
 	margin: 1em 1.5em;
 }
-div.gwt-PopupPanel.quiet{
+
+div.gwt-PopupPanel.quiet {
 	border: 2px solid #78A3B6;
 }
-div.gwt-PopupPanel.bubble{
+
+div.gwt-PopupPanel.bubble {
 	border: 2px solid #78A3B6;
 	position: relative;
 	margin-top: 9px;
-	background-color:white;
+	background-color: white;
 }
 
 div.gwt-PopupPanel.bubble .bubble-up {
