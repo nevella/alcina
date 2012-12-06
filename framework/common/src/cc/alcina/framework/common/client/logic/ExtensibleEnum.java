@@ -1,15 +1,9 @@
 package cc.alcina.framework.common.client.logic;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.jdt.internal.compiler.env.INameEnvironment;
-
-import cc.alcina.framework.common.client.publication.ContentDeliveryType;
-import cc.alcina.framework.common.client.publication.FormatConversionTarget;
-import cc.alcina.framework.common.client.publication.request.PublicationFontOptions;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -144,13 +138,16 @@ public abstract class ExtensibleEnum {
 		return serializedForm();
 	}
 
+	// due to double-triple conversions, be lenient
 	public static class ToSerializedFormConverter implements
-			Converter<ExtensibleEnum, String> {
+			Converter<Object, String> {
 		public static final ToSerializedFormConverter INSTANCE = new ToSerializedFormConverter();
 
 		@Override
-		public String convert(ExtensibleEnum original) {
-			return original == null ? null : original.serializedForm();
+		public String convert(Object original) {
+			return original == null ? null
+					: original instanceof ExtensibleEnum ? ((ExtensibleEnum) original)
+							.serializedForm() : (String) original;
 		}
 	}
 
