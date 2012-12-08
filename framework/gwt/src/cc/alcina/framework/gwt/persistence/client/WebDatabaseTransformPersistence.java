@@ -428,4 +428,8 @@ public class WebDatabaseTransformPersistence extends
 	public static boolean isStorageQuotaError(SQLError error) {
 		return (error.getMessage().contains("storage quota") || error.getCode() == 4);
 	}
+
+	public Database getDb() {
+		return this.db;
+	}
 }
