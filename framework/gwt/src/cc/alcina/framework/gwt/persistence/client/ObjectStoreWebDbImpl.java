@@ -3,8 +3,6 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.code.gwt.database.client.Database;
@@ -16,12 +14,12 @@ import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
 
-public class ObjectStoreWebDbImpl {
-	private final Database db;
+public class ObjectStoreWebDbImpl implements ObjectStore {
+	private Database db;
 
-	private final String tableName;
+	private String tableName;
 
-	private final PersistenceCallback<Void> postInitCallback;
+	private PersistenceCallback<Void> postInitCallback;
 
 	public ObjectStoreWebDbImpl(Database db, String tableName,
 			PersistenceCallback<Void> postInitCallback) {
@@ -37,7 +35,7 @@ public class ObjectStoreWebDbImpl {
 			public void onTransactionStart(SQLTransaction tx) {
 				String sql = CommonUtils.formatJ("CREATE TABLE IF NOT EXISTS "
 						+ "%s" + " (id INTEGER PRIMARY KEY AUTOINCREMENT,"
-						+ " key TEXT, value TEXT)  ", tableName);
+						+ " key_ TEXT, value_ TEXT)  ", tableName);
 				tx.executeSql(sql, null);
 			}
 
@@ -54,8 +52,8 @@ public class ObjectStoreWebDbImpl {
 		db.transaction(createCallback);
 	}
 
-	public void get(final String key,
-			final PersistenceCallback<String> valueCallback) {
+	@Override
+	public void get(String key, PersistenceCallback<String> valueCallback) {
 		new GetHandler().get(key, valueCallback);
 	}
 
@@ -72,13 +70,13 @@ public class ObjectStoreWebDbImpl {
 			db.transaction(getCallback);
 		}
 
-		final StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
+		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
 			@Override
 			public void onSuccess(SQLTransaction transaction,
 					SQLResultSet<GenericRow> resultSet) {
 				SQLResultSetRowList<GenericRow> rs = resultSet.getRows();
 				getResult = rs.getLength() == 0 ? null : rs.getItem(0)
-						.getString("value");
+						.getString("value_");
 			}
 
 			@Override
@@ -91,7 +89,7 @@ public class ObjectStoreWebDbImpl {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
 				String sql = CommonUtils.formatJ(
-						"select value from %s where key=?", tableName);
+						"select value_ from %s where key_=?", tableName);
 				tx.executeSql(sql, new String[] { key }, okCallback);
 			}
 
@@ -116,7 +114,9 @@ public class ObjectStoreWebDbImpl {
 			@Override
 			public void onSuccess(SQLTransaction transaction,
 					SQLResultSet<GenericRow> resultSet) {
-				id = resultSet.getInsertId();
+				if (id == null) {
+					id = resultSet.getInsertId();
+				}
 			}
 
 			@Override
@@ -146,14 +146,14 @@ public class ObjectStoreWebDbImpl {
 
 		private void update() {
 			String sql = CommonUtils.formatJ(
-					"update %s set key=? and value=? where id=?", tableName);
-			tx.executeSql(sql, new String[] { key, value, id.toString() },
+					"update %s set  value_=? where id=?", tableName);
+			tx.executeSql(sql, new String[] { value, id.toString() },
 					afterInsertCallback);
 		}
 
 		void add() {
 			String sql = CommonUtils.formatJ(
-					"insert into %s (key,value) values(?,?)", tableName);
+					"insert into %s (key_,value_) values(?,?)", tableName);
 			tx.executeSql(sql, new String[] { key, value }, afterInsertCallback);
 		}
 
@@ -165,7 +165,7 @@ public class ObjectStoreWebDbImpl {
 					add();
 				} else {
 					String sql = CommonUtils.formatJ(
-							"select id from %s where key=? ", tableName);
+							"select id from %s where key_=? ", tableName);
 					tx.executeSql(sql, new String[] { key }, getIdCallback);
 				}
 			}
@@ -199,11 +199,13 @@ public class ObjectStoreWebDbImpl {
 		}
 	}
 
+	@Override
 	public void put(String key, String value,
 			PersistenceCallback<Integer> idCallback) {
 		new PutHandler().put(key, value, idCallback, false);
 	}
 
+	@Override
 	public void add(String key, String value,
 			PersistenceCallback<Integer> idCallback) {
 		new PutHandler().put(key, value, idCallback, true);
@@ -212,7 +214,7 @@ public class ObjectStoreWebDbImpl {
 	class GetRangeHandler {
 		protected LinkedHashMap<Integer, String> getResult;
 
-		final StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
+		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
 			@Override
 			public void onSuccess(SQLTransaction transaction,
 					SQLResultSet<GenericRow> resultSet) {
@@ -220,7 +222,7 @@ public class ObjectStoreWebDbImpl {
 				getResult = new LinkedHashMap<Integer, String>();
 				for (int i = 0; i < rs.getLength(); i++) {
 					GenericRow row = rs.getItem(i);
-					getResult.put(row.getInt("id"), row.getString("value"));
+					getResult.put(row.getInt("id"), row.getString("value_"));
 				}
 			}
 
@@ -234,7 +236,7 @@ public class ObjectStoreWebDbImpl {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
 				String sql = CommonUtils.formatJ(
-						"select id,value from %s where id>=? and id<=?",
+						"select id,value_ from %s where id>=? and id<=?",
 						tableName);
 				tx.executeSql(sql, new String[] { String.valueOf(fromId),
 						String.valueOf(toId) }, okCallback);
@@ -266,8 +268,9 @@ public class ObjectStoreWebDbImpl {
 		}
 	}
 
-	public void getRange(final int fromId, final int toId,
-			final PersistenceCallback<Map<Integer, String>> valueCallback) {
+	@Override
+	public void getRange(int fromId, int toId,
+			PersistenceCallback<Map<Integer, String>> valueCallback) {
 	}
 
 	protected void onFailure(PersistenceCallback callback, SQLError error) {
