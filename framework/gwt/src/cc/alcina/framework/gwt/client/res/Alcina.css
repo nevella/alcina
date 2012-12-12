@@ -852,8 +852,8 @@ table.alcina-SelectorFrame.minimal input.alcina-Filter:focus {
 }
 
 table.alcina-SelectorFrame.minimal div.alcina-Selector {
-	height: inherit;
-	width: inherit;
+	width:auto;
+	height:auto;
 	max-width: 300px;
 }
 
