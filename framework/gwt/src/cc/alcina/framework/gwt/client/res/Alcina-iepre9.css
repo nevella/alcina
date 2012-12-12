@@ -1,0 +1,13 @@
+table.alcina-SelectorFrame.minimal div.selected .select-item-container .selectx
+	{
+	padding-top: 0px;
+	padding-bottom: 0px;
+	border-width: 0;
+	margin: 2px;
+	zoom: 1;
+}
+
+table.alcina-SelectorFrame.minimal,table.alcina-SelectorFrame.minimal div.selected
+	{
+	max-width: 500px;
+}
