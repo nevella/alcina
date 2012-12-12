@@ -84,12 +84,12 @@
 			</fileset>
 		</copy>
 
-	</target>
-	<target name="run-jvm-serialization-policy-helper" depends="prepare-war">
 		<java classname="cc.alcina.framework.servlet.JvmSerializationPolicyBuildHelper" fork="yes" classpath="${framework.servlet.build.dir}">
 			<arg value="${project.gwt.build.dir}" />
 			<arg value="${project.gwt.module.name}" />
 		</java>
+	</target>
+	<target name="run-jvm-serialization-policy-helper" depends="prepare-war">
 	</target>
 	<target name="hot-deploy" description="Dev :: copy changed server files, no WAR restart" depends="build-dependencies,compile">
 		<!--the ear -->
