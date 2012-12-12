@@ -78,8 +78,16 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 			items = initialItems;
 			this.transformIterator = transforms.iterator();
 		}
+		
+		public Iterator<DTRSimpleSerialWrapper> getTransformIterator() {
+			return transformIterator;
+		}
+		
+		public List<DomainTransformEvent> getItems() {
+			return items;
+		}
 
-		private void finishDeserialize() {
+		protected void finishDeserialize() {
 			MutablePropertyChangeSupport.setMuteAll(false, true);
 			TransformManager tm = TransformManager.get();
 			ClientInstance clientInstance = beforeEventReplay();
@@ -137,7 +145,7 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 			System.out.println("transforms deser:\n" + items.size());
 		}
 
-		void run() {
+		protected void run() {
 			MutablePropertyChangeSupport.setMuteAll(true, true);
 			while (transformIterator.hasNext()) {
 				performIteration();
