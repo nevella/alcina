@@ -1,7 +1,10 @@
 package cc.alcina.framework.gwt.client.logic.state;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.gwt.client.logic.IsCancellable;
+import cc.alcina.framework.common.client.logic.IsCancellable;
+import cc.alcina.framework.common.client.state.MachineEvent;
+import cc.alcina.framework.common.client.state.MachineModel;
+import cc.alcina.framework.common.client.state.MachineTransitionHandler;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -40,7 +43,7 @@ public abstract class AsyncCallbackTransitionHandler<T, M extends MachineModel>
 	}
 
 	protected void afterSuccess() {
-		if (model != null) {
+		if (model != null && successEvent != null) {
 			model.getMachine().newEvent(successEvent);
 		}
 	}

@@ -1,6 +1,5 @@
 package cc.alcina.template.client;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.RegistryPermissionsExtension;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -13,10 +12,7 @@ import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider.ContentProviderSource;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
-import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
-import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
-import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
-import cc.alcina.framework.gwt.persistence.client.WebDatabaseTransformPersistence;
+import cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LocalPersistenceInitHandler;
 import cc.alcina.template.client.logic.AlcinaTemplateContentProvider;
 import cc.alcina.template.cs.AlcinaTemplateHistory;
 
@@ -30,35 +26,18 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 	}
 
 	@Override
-	protected void initAppCache() {
-		// html5 appcache doesn't require client init
-	}
-
-	@Override
 	protected void initContentProvider() {
 		ContentProvider.registerProvider(new AlcinaTemplateContentProvider());
 	}
 
 	@Override
-	protected void initLocalPersistence() {
-		LocalTransformPersistence
-				.registerLocalTransformPersistence(new WebDatabaseTransformPersistence());
-		PersistenceCallback<Void> callback = new PersistenceCallback<Void>() {
-			@Override
-			public void onFailure(Throwable caught) {
-				throw new WrappedRuntimeException(caught);
-			}
-
-			@Override
-			public void onSuccess(Void result) {
-				initServicesPostLocalPersistence();
-				afterConfiguration();
-			}
-		};
-		LocalTransformPersistence.get().init(new DTESerializationPolicy(),
-				ClientLayerLocator.get().getCommitToStorageTransformListener(),
-				callback);
+	protected void createMachine() {
+		super.createMachine();
+		machine.registerTransitionHandler(machine.localPersistenceInit, null,
+				new LocalPersistenceInitHandler(machine.localPersistenceInitialised));
 	}
+
+	
 
 	@Override
 	protected void extraConfiguration() {

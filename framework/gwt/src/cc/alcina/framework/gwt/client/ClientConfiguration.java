@@ -5,6 +5,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.state.MachineModel;
+import cc.alcina.framework.common.client.state.MachineState;
+import cc.alcina.framework.common.client.state.MachineTransitionHandler;
+import cc.alcina.framework.common.client.state.SimpleTransitionHandler;
 import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.common.client.util.LooseContextProvider.ClientLooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -13,6 +17,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.ClientUTCDateProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.state.MachineSchedulerGwt;
 import cc.alcina.framework.gwt.client.provider.ClientURLComponentEncoder;
 import cc.alcina.framework.gwt.client.res.AlcinaResources;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
@@ -21,14 +26,43 @@ import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderG
 import com.google.gwt.dom.client.StyleInjector;
 
 public class ClientConfiguration {
+	private class ClientConfigurationCompleteHandler implements
+			MachineTransitionHandler<ClientConfigurationModel> {
+		@Override
+		public void performTransition(ClientConfigurationModel model) {
+			machine.clear();
+			afterConfiguration();
+		}
+	}
+
+	protected ClientConfigurationMachine machine;
+
 	public void initServices() {
 		initNotifications();
 		initCss();
 		ClientLayerLocator.get().notifications().metricLogStart("moduleLoad");
 		initExceptionHandling();
-		initAppCache();
 		initCommonClient();
-		initLocalPersistence();
+		createMachine();
+		machine.start();
+	}
+
+	protected void createMachine() {
+		this.machine = new ClientConfigurationMachine();
+		machine.registerTransitionHandler(
+				machine.postLocalPersistenceInitConfig, null,
+				new PostLocalPersistenceInitConfigHandler());
+		machine.registerTransitionHandler(MachineState.END, null,
+				new ClientConfigurationCompleteHandler());
+	}
+
+	private class PostLocalPersistenceInitConfigHandler implements
+			MachineTransitionHandler<ClientConfigurationModel> {
+		@Override
+		public void performTransition(ClientConfigurationModel model) {
+			initServicesPostLocalPersistence();
+			model.getMachine().newEvent(machine.done);
+		}
 	}
 
 	protected void initServicesPostLocalPersistence() {
@@ -47,16 +81,9 @@ public class ClientConfiguration {
 		StyleInjector.inject(AlcinaResources.INSTANCE.css().getText());
 	}
 
-	protected void initAppCache() {
-	}
-
 	protected void initHandshakeHelper() {
 	}
 
-	protected void initLocalPersistence() {
-		initServicesPostLocalPersistence();
-		afterConfiguration();
-	}
 
 	protected void afterConfiguration() {
 		ClientLayerLocator.get().clientBase().afterConfiguration();
@@ -97,6 +124,7 @@ public class ClientConfiguration {
 		CommonLocator.get().registerObjectLookup(TransformManager.get());
 		CommonLocator.get().registerURLComponentEncoder(
 				new ClientURLComponentEncoder());
+		CommonLocator.get().registerMachineScheduler(new MachineSchedulerGwt());
 	}
 
 	protected void registerExtraTransformListenersPreStorage() {

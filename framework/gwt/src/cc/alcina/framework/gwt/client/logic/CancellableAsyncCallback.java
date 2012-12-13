@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.logic;
 
+import cc.alcina.framework.common.client.logic.IsCancellable;
+
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class CancellableAsyncCallback<T> implements AsyncCallback<T>, IsCancellable {

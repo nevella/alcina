@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ImplementationLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.state.MachineScheduler;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.common.client.util.URLComponentEncoder;
 
@@ -102,5 +103,14 @@ import cc.alcina.framework.common.client.util.URLComponentEncoder;
 
 	public URLComponentEncoder urlComponentEncoder() {
 		return urlComponentEncoder;
+	}
+	private MachineScheduler machineScheduler;
+
+	public void registerMachineScheduler(MachineScheduler machineScheduler) {
+		this.machineScheduler = machineScheduler;
+	}
+
+	public MachineScheduler machineScheduler() {
+		return machineScheduler;
 	}
 }

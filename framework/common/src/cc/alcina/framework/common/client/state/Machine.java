@@ -1,20 +1,18 @@
-package cc.alcina.framework.gwt.client.logic.state;
+package cc.alcina.framework.common.client.state;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.IsCancellable;
+import cc.alcina.framework.common.client.state.MachineEvent.MachineEventWithEndpoints;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.gwt.client.logic.IsCancellable;
-import cc.alcina.framework.gwt.client.logic.state.MachineEvent.MachineEventWithEndpoints;
 
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-
-public class Machine {
-	protected MachineModel model;
+public class Machine<T extends MachineModel> {
+	protected T model;
 
 	Map<EventStateTuple, MachineTransitionHandler> transitionHandlers = new LinkedHashMap<EventStateTuple, MachineTransitionHandler>();
 
@@ -77,14 +75,18 @@ public class Machine {
 			return;
 		} else {
 			Object cb = model.getRunningCallback();
-			if(cb instanceof IsCancellable){
+			if (cb instanceof IsCancellable) {
 				((IsCancellable) cb).setCancelled(true);
 			}
 			model.setEvent(MachineEvent.CANCEL);
 			model.setCancelled(true);
-			listeners.clear();
-			transitionHandlers.clear();
+			clear();
 		}
+	}
+
+	public void clear() {
+		listeners.clear();
+		transitionHandlers.clear();
 	}
 
 	/**
@@ -128,27 +130,20 @@ public class Machine {
 	}
 
 	public void newEvent(final MachineEvent newEvent) {
-		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-			@Override
-			public void execute() {
-				model.setEvent(newEvent);
-			}
-		});
+		CommonLocator.get().machineScheduler().newEvent(newEvent, model);
 	}
 
 	public void newState(final MachineState newState) {
-		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-			@Override
-			public void execute() {
-				model.setState(newState);
-				model.setEvent(null);
-			}
-		});
+		CommonLocator.get().machineScheduler().newState(newState, model);
 	}
 
 	public void handleAsyncException(Throwable caught,
 			MachineTransitionHandler handler) {
 		// TODO - transition to state ERR if it exists
 		throw new WrappedRuntimeException(caught);
+	}
+
+	public void start() {
+		start(MachineState.START, null);
 	}
 }

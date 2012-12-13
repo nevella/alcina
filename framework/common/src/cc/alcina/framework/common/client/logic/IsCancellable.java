@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.logic;
+package cc.alcina.framework.common.client.logic;
 
 public interface IsCancellable {
 

@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.client.logic.state;
+package cc.alcina.framework.common.client.state;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
