@@ -309,7 +309,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public void hidePopdown() {
 		if (popdownHider != null) {
-			// popdownHider.onClick(null);
+			popdownHider.onClick(null);
 		}
 	}
 
@@ -717,7 +717,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 							RootPanel.get(),
 							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
 							RootPanel.get(), panelForPopup, shiftX(), shiftY());
-			this.relativePopupPanel.setAutoHideEnabled(false);
 			onPopdownShowing(relativePopupPanel, true);
 			int border = 2;
 			if (itemHolder.getOffsetHeight() + border > panelForPopup
