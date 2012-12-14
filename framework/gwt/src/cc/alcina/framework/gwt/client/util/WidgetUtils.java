@@ -737,7 +737,7 @@ public class WidgetUtils {
 	}
 
 	public static boolean isZeroOffsetDims(Element e) {
-		return e.getOffsetHeight() == 0 && e.getOffsetWidth() == 0;
+		return e.getOffsetHeight() == 0 || e.getOffsetWidth() == 0;
 	}
 
 	public static boolean isVisibleAncestorChain(Widget w) {
