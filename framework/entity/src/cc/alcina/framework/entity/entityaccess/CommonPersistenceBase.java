@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
+import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.entity.PersistentSingleton;
@@ -74,6 +75,8 @@ import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.GraphProjection;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.gwt.persistence.client.ClientLogRecord;
+import cc.alcina.framework.gwt.persistence.client.ClientLogRecord.ClientLogRecords;
 
 @SuppressWarnings("unchecked")
 /**
@@ -984,4 +987,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.getWrappedObjectForUser(c, id, getEntityManager());
 		return (T) wofu;
 	}
+	@Override
+	public void persistClientLogRecords(List<ClientLogRecords> recordsList) {
+		List<ClientLogRecord> records=new ArrayList<ClientLogRecord>();
+		for(ClientLogRecords r:recordsList){
+			records.addAll(r.getLogRecords());
+		}
+		for (ClientLogRecord clr : records) {
+			ClientLogRecordPersistent clrp = getNewImplementationInstance(ClientLogRecordPersistent.class);
+			getEntityManager().persist(clrp);
+			clrp.wrap(clr);
+		}
+		
+	}
+
 }

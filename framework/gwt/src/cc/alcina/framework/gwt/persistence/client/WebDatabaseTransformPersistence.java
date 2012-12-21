@@ -23,7 +23,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
@@ -288,10 +290,14 @@ public class WebDatabaseTransformPersistence extends
 	@Override
 	protected void persist(final DTRSimpleSerialWrapper wrapper,
 			final PersistenceCallback callback) {
+		if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.TO_REMOTE) {
+			AlcinaTopics.logCategorisedMessage(new StringPair(
+					AlcinaTopics.LOG_CATEGORY_TRANSFORM, wrapper.getText()));
+		}
 		persist(wrapper, callback, 0);
 	}
 
-	protected void persist(final DTRSimpleSerialWrapper wrapper,
+	private void persist(final DTRSimpleSerialWrapper wrapper,
 			final PersistenceCallback callback, final int persistSpacePass) {
 		if (wrapper.getProtocolVersion() == null) {
 			callback.onFailure(new Exception(

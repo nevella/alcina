@@ -14,9 +14,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public abstract class AsyncCallbackTransitionHandler<T, M extends MachineModel>
 		implements MachineTransitionHandler<M>, AsyncCallback<T>, IsCancellable {
-	private MachineEvent successEvent;
+	protected MachineEvent successEvent;
 
-	private M model;
+	protected M model;
 
 	private boolean cancelled;
 
@@ -65,5 +65,13 @@ public abstract class AsyncCallbackTransitionHandler<T, M extends MachineModel>
 
 	public void setCancelled(boolean cancelled) {
 		this.cancelled = cancelled;
+	}
+
+	public MachineEvent getSuccessEvent() {
+		return this.successEvent;
+	}
+
+	public void setSuccessEvent(MachineEvent successEvent) {
+		this.successEvent = successEvent;
 	}
 }

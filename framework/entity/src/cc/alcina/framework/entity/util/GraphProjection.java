@@ -103,7 +103,7 @@ public class GraphProjection {
 		}
 		if (dataFilter != null) {
 			if (context == null) {
-				context = new GraphProjectionContext(c, "", null);
+				context = new GraphProjectionContext(c, "", null,projected);
 			}
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
@@ -129,7 +129,7 @@ public class GraphProjection {
 				}
 			}
 			GraphProjectionContext childContext = new GraphProjectionContext(c,
-					field.getName(), context);
+					field.getName(), context,projected);
 			Object cv = project(value, childContext);
 			field.set(projected, cv);
 		}
@@ -343,11 +343,14 @@ public class GraphProjection {
 	public static class GraphProjectionContext {
 		public GraphProjectionContext parent;
 
+		public  Object ownerObject;
+
 		public GraphProjectionContext(Class clazz, String fieldName,
-				GraphProjectionContext parent) {
+				GraphProjectionContext parent, Object ownerObject) {
 			this.clazz = clazz;
 			this.fieldName = fieldName;
 			this.parent = parent;
+			this.ownerObject = ownerObject;
 		}
 
 		public Class clazz;

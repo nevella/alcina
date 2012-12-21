@@ -67,7 +67,10 @@ import com.google.gwt.user.client.rpc.RemoteService;
 	public Long logClientError(String exceptionToString);
 
 	public Long logClientError(String exceptionToString, String exceptionType);
-
+	
+	//to handle rpc interface drift, use escaped log records
+	public void logClientRecords(String serializedLogRecords);
+	
 	public LoginResponse login(LoginBean loginBean);
 	
 	public void ping();

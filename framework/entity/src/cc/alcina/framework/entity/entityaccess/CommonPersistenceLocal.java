@@ -34,6 +34,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.gwt.persistence.client.ClientLogRecord.ClientLogRecords;
 
 /**
  * 
@@ -151,4 +152,6 @@ public interface CommonPersistenceLocal {
 
 	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<? extends T> c, long wrappedObjectId)
 			throws Exception;
+
+	public void persistClientLogRecords(List<ClientLogRecords> records);
 }

@@ -1,9 +1,12 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.IntPair;
 
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;
@@ -211,6 +214,54 @@ public class ObjectStoreWebDbImpl implements ObjectStore {
 		new PutHandler().put(key, value, idCallback, true);
 	}
 
+	class RemoveRangeHandler {
+		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
+			@Override
+			public void onSuccess(SQLTransaction transaction,
+					SQLResultSet<GenericRow> resultSet) {
+			}
+
+			@Override
+			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+				return true;
+			}
+		};
+
+		TransactionCallback removeCallback = new TransactionCallback() {
+			@Override
+			public void onTransactionStart(SQLTransaction tx) {
+				String sql = CommonUtils.formatJ(
+						"delete from %s where id>=? and id<=?", tableName);
+				tx.executeSql(sql, new String[] { String.valueOf(fromId),
+						String.valueOf(toId) }, okCallback);
+			}
+
+			@Override
+			public void onTransactionSuccess() {
+				valueCallback.onSuccess(null);
+			}
+
+			@Override
+			public void onTransactionFailure(SQLError error) {
+				onFailure(valueCallback, error);
+			}
+		};
+
+		private int fromId;
+
+		private int toId;
+
+		private PersistenceCallback<Void> valueCallback;
+
+		public void removeRange(int fromId, int toId,
+				PersistenceCallback<Void> valueCallback) {
+			this.fromId = fromId;
+			this.toId = toId;
+			this.valueCallback = valueCallback;
+			db.transaction(removeCallback);
+		}
+	}
+
 	class GetRangeHandler {
 		protected LinkedHashMap<Integer, String> getResult;
 
@@ -271,10 +322,242 @@ public class ObjectStoreWebDbImpl implements ObjectStore {
 	@Override
 	public void getRange(int fromId, int toId,
 			PersistenceCallback<Map<Integer, String>> valueCallback) {
+		new GetRangeHandler().getRange(fromId, toId, valueCallback);
 	}
 
 	protected void onFailure(PersistenceCallback callback, SQLError error) {
 		callback.onFailure(new Exception(CommonUtils.formatJ("%s: %s",
 				error.getCode(), error.getMessage())));
+	}
+
+	class RemoveHandler {
+		private SQLTransaction tx;
+
+		protected Integer id;
+
+		StatementCallback<GenericRow> doneCallback = new StatementCallback<GenericRow>() {
+			@Override
+			public void onSuccess(SQLTransaction transaction,
+					SQLResultSet<GenericRow> resultSet) {
+			}
+
+			@Override
+			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+				return true;
+			}
+		};
+
+		StatementCallback<GenericRow> getIdCallback = new StatementCallback<GenericRow>() {
+			@Override
+			public void onSuccess(SQLTransaction transaction,
+					SQLResultSet<GenericRow> resultSet) {
+				SQLResultSetRowList<GenericRow> rs = resultSet.getRows();
+				id = rs.getLength() == 0 ? null : rs.getItem(0).getInt("id");
+				if (id == null) {
+				} else {
+					remove();
+				}
+			}
+
+			@Override
+			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+				return true;
+			}
+		};
+
+		private void remove() {
+			String sql = CommonUtils.formatJ("delete from %s  where id=?",
+					tableName);
+			tx.executeSql(sql, new String[] { id.toString() }, doneCallback);
+		}
+
+		TransactionCallback getCallback = new TransactionCallback() {
+			@Override
+			public void onTransactionStart(SQLTransaction tx) {
+				RemoveHandler.this.tx = tx;
+				String sql = CommonUtils.formatJ(
+						"select id from %s where key_=? ", tableName);
+				tx.executeSql(sql, new String[] { key }, getIdCallback);
+			}
+
+			@Override
+			public void onTransactionSuccess() {
+				idCallback.onSuccess(id);
+			}
+
+			@Override
+			public void onTransactionFailure(SQLError error) {
+				onFailure(idCallback, error);
+			}
+		};
+
+		private String key;
+
+		private PersistenceCallback<Integer> idCallback;
+
+		public void remove(String key, PersistenceCallback<Integer> idCallback) {
+			this.key = key;
+			this.idCallback = idCallback;
+			db.transaction(getCallback);
+		}
+	}
+
+	class GetPrefixedHandler {
+		private List<String> getResult = new ArrayList<String>();
+
+		private PersistenceCallback<List<String>> valueCallback;
+
+		private String keyPrefix;
+
+		public void get(String keyPrefix,
+				PersistenceCallback<List<String>> valueCallback) {
+			this.keyPrefix = keyPrefix;
+			this.valueCallback = valueCallback;
+			db.transaction(getCallback);
+		}
+
+		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
+			@Override
+			public void onSuccess(SQLTransaction transaction,
+					SQLResultSet<GenericRow> resultSet) {
+				SQLResultSetRowList<GenericRow> rs = resultSet.getRows();
+				for (int i = 0; i < rs.getLength(); i++) {
+					GenericRow row = rs.getItem(i);
+					getResult.add(row.getString("key_"));
+				}
+				System.out.println(CommonUtils.formatJ(
+						"get prefixed: [%s]\n%s\n", keyPrefix, getResult));
+			}
+
+			@Override
+			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+				return true;
+			}
+		};
+
+		TransactionCallback getCallback = new TransactionCallback() {
+			@Override
+			public void onTransactionStart(SQLTransaction tx) {
+				String sql = CommonUtils.formatJ(
+						"select key_ from %s where key_ like '%s%'", tableName,
+						keyPrefix);
+				tx.executeSql(sql, new String[] {}, okCallback);
+			}
+
+			@Override
+			public void onTransactionSuccess() {
+				valueCallback.onSuccess(getResult);
+			}
+
+			@Override
+			public void onTransactionFailure(SQLError error) {
+				onFailure(valueCallback, error);
+			}
+		};
+	}
+
+	class GetIdRageHandler {
+		private IntPair intPair = new IntPair();
+
+		private PersistenceCallback<IntPair> valueCallback;
+
+		public void get(PersistenceCallback<IntPair> valueCallback) {
+			this.valueCallback = valueCallback;
+			db.transaction(getCallback);
+		}
+
+		StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
+			@Override
+			public void onSuccess(SQLTransaction transaction,
+					SQLResultSet<GenericRow> resultSet) {
+				SQLResultSetRowList<GenericRow> rs = resultSet.getRows();
+				GenericRow row = rs.getItem(0);
+				intPair.i1 = row.getInt("min_");
+				intPair.i2 = row.getInt("max_");
+			}
+
+			@Override
+			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+				return true;
+			}
+		};
+
+		TransactionCallback getCallback = new TransactionCallback() {
+			@Override
+			public void onTransactionStart(SQLTransaction tx) {
+				String sql = CommonUtils.formatJ(
+						"select ifnull(min(id),0) as min_, "
+								+ "ifnull(max(id),0) as max_ from %s",
+						tableName);
+				tx.executeSql(sql, new String[] {}, okCallback);
+			}
+
+			@Override
+			public void onTransactionSuccess() {
+				valueCallback.onSuccess(intPair);
+			}
+
+			@Override
+			public void onTransactionFailure(SQLError error) {
+				onFailure(valueCallback, error);
+			}
+		};
+	}
+
+	public void executeSql(final String sql, final PersistenceCallback callback) {
+		final StatementCallback<GenericRow> cb = new StatementCallback<GenericRow>() {
+			@Override
+			public void onSuccess(SQLTransaction transaction,
+					SQLResultSet<GenericRow> resultSet) {
+			}
+
+			@Override
+			public boolean onFailure(SQLTransaction transaction, SQLError error) {
+				String message = "Problem initalising webdb - "
+						+ error.getMessage() + " - " + error.getCode();
+				System.out.println(message);
+				return true;
+			}
+		};
+		TransactionCallback exCallback = new TransactionCallback() {
+			@Override
+			public void onTransactionStart(SQLTransaction tx) {
+				tx.executeSql(sql, new String[] {}, cb);
+			}
+
+			@Override
+			public void onTransactionSuccess() {
+				callback.onSuccess(null);
+			}
+
+			@Override
+			public void onTransactionFailure(SQLError error) {
+				onFailure(null, error);
+			}
+		};
+		db.transaction(exCallback);
+	}
+
+	@Override
+	public void remove(String key, PersistenceCallback<Integer> idCallback) {
+		new RemoveHandler().remove(key, idCallback);
+	}
+
+	@Override
+	public void getKeysPrefixedBy(String keyPrefix,
+			PersistenceCallback<List<String>> completedCallback) {
+		new GetPrefixedHandler().get(keyPrefix, completedCallback);
+	}
+
+	@Override
+	public void getIdRange(PersistenceCallback<IntPair> completedCallback) {
+		new GetIdRageHandler().get(completedCallback);
+	}
+
+	@Override
+	public void removeIdRange(IntPair range,
+			PersistenceCallback<Void> completedCallback) {
+		new RemoveRangeHandler().removeRange(range.i1, range.i2,
+				completedCallback);
 	}
 }

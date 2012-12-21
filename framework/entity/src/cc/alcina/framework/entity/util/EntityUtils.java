@@ -18,12 +18,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
@@ -35,6 +37,20 @@ import cc.alcina.framework.entity.util.GraphProjection.PermissibleFieldFilter;
  * @author Nick Reddel
  */
 public class EntityUtils {
+	static class MultiIdentityMap extends
+			IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
+		public void add(Object o1, Object o2) {
+			ensureKey(o1);
+			get(o1).put(o2, o2);
+		}
+
+		public void ensureKey(Object o1) {
+			if (!containsKey(o1)) {
+				put(o1, new IdentityHashMap<Object, Object>());
+			}
+		}
+	}
+
 	public static String longArrayToIdClause(Long[] longs) {
 		return longsToIdClause(Arrays.asList(longs));
 	}
@@ -42,12 +58,15 @@ public class EntityUtils {
 	public static String hasIdsToIdClause(Collection<? extends HasId> hasIds) {
 		return longsToIdClause(hasIdsToIdList(hasIds));
 	}
+
 	public static List<Long> hasIdsToIdList(Collection<? extends HasId> hasIds) {
 		return hasIdsToIdList(hasIds, false);
 	}
-	public static List<Long> hasIdsToIdList(Collection<? extends HasId> hasIds, boolean withMinusOne) {
+
+	public static List<Long> hasIdsToIdList(Collection<? extends HasId> hasIds,
+			boolean withMinusOne) {
 		List<Long> ids = new ArrayList<Long>();
-		if(withMinusOne){
+		if (withMinusOne) {
 			ids.add(-1L);
 		}
 		for (HasId hasId : hasIds) {
@@ -58,7 +77,8 @@ public class EntityUtils {
 
 	public static List<Long> idClauseToLongs(String str) {
 		ArrayList<Long> result = new ArrayList<Long>();
-		String[] strs = CommonUtils.nullToEmpty(str).replace("(", "").replace(")", "").split(",\\s*");
+		String[] strs = CommonUtils.nullToEmpty(str).replace("(", "")
+				.replace(")", "").split(",\\s*");
 		for (String s : strs) {
 			String t = s.trim();
 			if (t.length() > 0) {
@@ -154,6 +174,8 @@ public class EntityUtils {
 		}
 	}
 
+	
+
 	public static <T extends HasId> void order(List<T> incoming,
 			List<Long> orderValues) {
 		final TreeMap<Long, Integer> orderPositions = new TreeMap<Long, Integer>();
@@ -169,4 +191,5 @@ public class EntityUtils {
 		};
 		Collections.sort(incoming, cmp);
 	}
+	
 }

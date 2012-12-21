@@ -3,10 +3,10 @@ package cc.alcina.framework.common.client.state;
 
 public abstract class MachineSchedulerBase implements MachineScheduler {
 
-	protected void setModelState(MachineState newState,MachineModel model){
+	protected void handleModelState(MachineState newState,MachineModel model){
 		model.setState(newState);
 	}
-	protected void setModelEvent(MachineEvent newEvent,MachineModel model){
+	protected void handleModelEvent(MachineEvent newEvent,MachineModel model){
 		model.setEvent(newEvent);
 	}
 	@Override

@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.state.MachineEvent;
 import cc.alcina.framework.common.client.state.MachineModel;
 import cc.alcina.framework.common.client.state.MachineSchedulerBase;
 import cc.alcina.framework.common.client.state.MachineState;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -13,7 +14,7 @@ public class MachineSchedulerGwt extends MachineSchedulerBase {
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
 			public void execute() {
-				setModelEvent(newEvent, model);
+				handleModelEvent(newEvent, model);
 			}
 		});
 	}
@@ -22,8 +23,7 @@ public class MachineSchedulerGwt extends MachineSchedulerBase {
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
 			public void execute() {
-				setModelState(newState, model);
-				setModelEvent(null, model);
+				handleModelState(newState, model);
 			}
 		});
 	}
@@ -35,6 +35,6 @@ public class MachineSchedulerGwt extends MachineSchedulerBase {
 			public void execute() {
 				runnable.run();
 			}
-		});		
+		});
 	}
 }

@@ -23,8 +23,11 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.widget.Link;
@@ -91,10 +94,11 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	public boolean isDialogAnimationEnabled() {
 		return dialogAnimationEnabled;
 	}
-
+	
 	public void log(String s) {
 		logString += CommonUtils.formatDate(new Date(),
 				DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
+		AlcinaTopics.logCategorisedMessage(new  StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE, s));
 		consoleLog(s);
 		if (logToSysOut) {
 			System.out.println(s);
@@ -310,6 +314,14 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	Map<String, String> localisedMessages;
 
+	private TopicListener<String> logListener = new TopicListener<String>() {
+		@Override
+		public void topicPublished(String key, String message) {
+			log(message);
+			System.out.println(message);
+		}
+	};
+
 	public void ensureLocalisedMessages() {
 		if (localisedMessages == null) {
 			localisedMessages = new HashMap<String, String>();
@@ -348,5 +360,9 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	public void setLogToSysOut(boolean logToSysOut) {
 		this.logToSysOut = logToSysOut;
+	}
+
+	public ClientNotificationsImpl() {
+		AlcinaTopics.logListenerDelta(logListener, true);
 	}
 }

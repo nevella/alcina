@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 public class TopicPublisher {
 	private MutablePropertyChangeSupport support = new MutablePropertyChangeSupport(
@@ -69,6 +70,15 @@ public class TopicPublisher {
 
 		public void appShutdown() {
 			theInstance = null;
+		}
+
+		public void listenerDelta(String key, TopicListener listener,
+				boolean add) {
+			if (add) {
+				addTopicListener(key, listener);
+			} else {
+				removeTopicListener(key, listener);
+			}
 		}
 	}
 

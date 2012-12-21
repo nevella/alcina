@@ -15,10 +15,11 @@ public interface MachineState {
 	public Map<MachineEvent, MachineState> getEmittedEvents();
 
 	public class MachineStateImpl implements MachineState {
-		private String name;
+		protected String name;
 
 		protected Map<MachineEvent, MachineState> emittedEvents = new LinkedHashMap<MachineEvent, MachineState>();
-
+public MachineStateImpl() {
+}
 		public MachineStateImpl(String name) {
 			this.name = name;
 		}

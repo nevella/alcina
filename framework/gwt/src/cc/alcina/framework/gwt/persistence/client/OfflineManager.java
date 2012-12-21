@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.appcache.client.AppCache;
@@ -20,30 +21,66 @@ import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
  * @author nick@alcina.cc
  * 
  */
-public class OfflineUtils {
-	private static final String APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT = "Application changed on the server - please wait";
+public class OfflineManager {
+	private final String APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT = "Application changed on the server - please wait";
 
-	private static boolean hostPageCacheReturned = true;
+	private boolean hostPageCacheReturned = true;
 
-	private static ModalNotifier cd;
+	private ModalNotifier cd;
 
-	private static int updateCount;
+	private int updateCount;
 
-	private static Callback<Void> updatingCallback;
+	private OfflineManager() {
+		super();
+	}
 
-	public static boolean resourceStoresCaptured() {
+	private static OfflineManager theInstance;
+
+	public static OfflineManager get() {
+		if (theInstance == null) {
+			theInstance = new OfflineManager();
+		}
+		return theInstance;
+	}
+
+	public void appShutdown() {
+		theInstance = null;
+	}
+
+	private Callback<Void> updatingCallback;
+
+	private Timer appCacheResolutionTimer;
+
+	public boolean resourceStoresCaptured() {
 		return hostPageCacheReturned;
 	}
 
-	public static void registerUpdatingCallback(Callback<Void> callback) {
-		OfflineUtils.updatingCallback = callback;
+	public void registerUpdatingCallback(Callback<Void> callback) {
+		updatingCallback = callback;
 	}
 
-	public static boolean isUpdating() {
+	public boolean isUpdating() {
 		return cd != null;
 	}
 
-	public static boolean checkCacheLoading(AsyncCallback completionCallback) {
+	public enum FromRequiresCurrentCachePerspsectiveReccAction {
+		WAIT, CONTINUE
+	}
+
+	public FromRequiresCurrentCachePerspsectiveReccAction shouldIWait() {
+		int status = AppCache.getApplicationCache().getStatus();
+		AlcinaTopics.log(status);
+		switch (status) {
+		case AppCache.IDLE:
+		case AppCache.OBSOLETE:
+		case AppCache.UNCACHED:
+		case AppCache.UPDATEREADY:
+			return FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE;
+		}
+		return FromRequiresCurrentCachePerspsectiveReccAction.WAIT;
+	}
+
+	public boolean checkCacheLoading(AsyncCallback completionCallback) {
 		ClientLayerLocator.get().notifications()
 				.log("OfflineUtils.checkCacheLoading");
 		AppCache appCache = AppCache.getApplicationCache();
@@ -57,7 +94,7 @@ public class OfflineUtils {
 		return isUpdating();
 	}
 
-	public static void waitAndReload() {
+	public void waitAndReload() {
 		if (updatingCallback != null) {
 			updatingCallback.callback(null);
 		}
@@ -70,7 +107,7 @@ public class OfflineUtils {
 		update();
 	}
 
-	protected static void registerHandler(AppCache appCache,
+	protected void registerHandler(AppCache appCache,
 			AppCacheEventHandler handler) {
 		appCache.addEventListener(AppCache.ONCACHED, handler, true);
 		appCache.addEventListener(AppCache.ONCHECKING, handler, true);
@@ -81,7 +118,7 @@ public class OfflineUtils {
 		appCache.addEventListener(AppCache.ONUPDATEREADY, handler, true);
 	}
 
-	static class AppCacheEventHandler implements EventListener {
+	class AppCacheEventHandler implements EventListener {
 		private final boolean headless;
 
 		private final AsyncCallback nochangeCallback;
@@ -134,14 +171,14 @@ public class OfflineUtils {
 		}
 	}
 
-	private static void error(String err) {
+	private void error(String err) {
 		Window.alert(CommonUtils.formatJ("The application reload failed "
 				+ "- \n Reason: %s. \n\n"
 				+ " Please press 'ok' to reload the application", err));
 		Window.Location.reload();
 	}
 
-	private static void update() {
+	private void update() {
 		int updateStatus = AppCache.getApplicationCache().getStatus();
 		if (updateStatus == AppCache.CHECKING
 				|| updateStatus == AppCache.DOWNLOADING) {
@@ -153,18 +190,36 @@ public class OfflineUtils {
 				APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT, updateCount));
 	}
 
-	private static void complete() {
+	private void complete() {
 		cd.setStatus("Complete");
 		new Timer() {
 			@Override
 			public void run() {
 				Window.Location.reload();
 			}
-		}.schedule(1500);
+		}.schedule(1000);
 	}
 
-	public static boolean isInvalidModule(Throwable caught) {
+	public boolean isInvalidModule(Throwable caught) {
 		String s = caught.getMessage();
 		return s.equals(new IncompatibleRemoteServiceException().getMessage());
+	}
+
+	public void waitUntilAppCacheResolved(final Callback callback) {
+		if (shouldIWait() == FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE) {
+			callback.callback(null);
+			return;
+		}
+		appCacheResolutionTimer = new Timer() {
+			@Override
+			public void run() {
+				if (shouldIWait() == FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE) {
+					appCacheResolutionTimer.cancel();
+					callback.callback(null);
+					return;
+				}
+			}
+		};
+		appCacheResolutionTimer.scheduleRepeating(100);
 	}
 }

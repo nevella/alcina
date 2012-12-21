@@ -53,6 +53,7 @@ import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventListene
 import cc.alcina.framework.gwt.client.logic.ExtraTreeEvent.ExtraTreeEventType;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.FilterWidget;
 import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
 import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
@@ -60,6 +61,8 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.SelectionEvent;
@@ -171,6 +174,23 @@ public class WorkspaceView extends Composite implements HasName,
 			return filter.getTextBox();
 		}
 
+		@Override
+		protected void onLoad() {
+			super.onLoad();
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					if (isVisible()
+							&& WidgetUtils
+									.isVisibleAncestorChain(DataTreeView.this)
+							&& !treeInitialised) {
+						treeInitialised = true;
+						resetTree();
+					}
+				}
+			});
+		}
+
 		public DataTreeView(String name, String debugId) {
 			setName(name);
 			this.toolbar = new Toolbar();
@@ -192,26 +212,26 @@ public class WorkspaceView extends Composite implements HasName,
 			filter.registerFilterable(dataTree);
 			this.fp = new FlowPanel100pcHeight();
 			fp.add(toolbar);
-			Widget w=getPreFilterWidget();
-			if(w!=null){
+			Widget w = getPreFilterWidget();
+			if (w != null) {
 				fp.add(w);
 			}
 			fp.add(filter);
-			 w=getPostFilterWidget();
-			if(w!=null){
+			w = getPostFilterWidget();
+			if (w != null) {
 				fp.add(w);
 			}
 			this.scroller = new ScrollPanel100pcHeight(dataTree);
 			fp.add(scroller);
 			fp.setWidth("100%");
 			dataTree.addSelectionHandler(this);
-			resetTree();
 			initWidget(fp);
 		}
 
 		protected Widget getPreFilterWidget() {
 			return null;
 		}
+
 		protected Widget getPostFilterWidget() {
 			return null;
 		}
@@ -288,7 +308,8 @@ public class WorkspaceView extends Composite implements HasName,
 			toolbar.processAvailableActions(actions);
 			if (actions.contains(ViewAction.class)
 					&& (item instanceof DomainNode || item instanceof ActionDisplayNode)) {
-				RenderContext.get().pushWithKey(RenderContext.CONTEXT_IGNORE_AUTOFOCUS, true);
+				RenderContext.get().pushWithKey(
+						RenderContext.CONTEXT_IGNORE_AUTOFOCUS, true);
 				fireVetoableActionEvent(new PermissibleActionEvent(item,
 						ClientReflector.get().newInstance(ViewAction.class)));
 				RenderContext.get().pop();
@@ -325,9 +346,15 @@ public class WorkspaceView extends Composite implements HasName,
 			collapse.setVisible(showCollapseButton);
 		}
 
+		boolean treeInitialised = false;
+
 		@Override
 		public void setVisible(boolean visible) {
 			super.setVisible(visible);
+			if (!treeInitialised && visible && isAttached()) {
+				treeInitialised = true;
+				resetTree();
+			}
 			filter.getTextBox().setFocus(true);
 		}
 
@@ -372,8 +399,8 @@ public class WorkspaceView extends Composite implements HasName,
 						&& isAllowEditCollections()) {
 					actions.add(EditAction.class);
 				}
-				if(item.getParentItem() instanceof DomainNode){
-					obj=((DomainNode)item.getParentItem()).getUserObject();
+				if (item.getParentItem() instanceof DomainNode) {
+					obj = ((DomainNode) item.getParentItem()).getUserObject();
 				}
 			}
 			if (item instanceof ActionDisplayNode) {
@@ -416,41 +443,46 @@ public class WorkspaceView extends Composite implements HasName,
 			}
 			return actions;
 		}
+
 		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getBasicCollectionNode(
-				String name, Class<C> clazz, ImageResource imageResource) {
+		protected <C> ContainerNode getBasicCollectionNode(String name,
+				Class<C> clazz, ImageResource imageResource) {
 			return getBasicCollectionNode(name, clazz, imageResource, null);
 		}
+
 		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getBasicCollectionNode(
-				String name, Class<C> clazz, ImageResource imageResource,NodeFactory nodeFactory) {
+		protected <C> ContainerNode getBasicCollectionNode(String name,
+				Class<C> clazz, ImageResource imageResource,
+				NodeFactory nodeFactory) {
 			Collection domainCollection = TransformManager.get().getCollection(
 					clazz);
 			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
 					domainCollection, clazz);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
-					name, imageResource,false,nodeFactory);
+					name, imageResource, false, nodeFactory);
 			TransformManager.get().addCollectionModificationListener(provider,
 					clazz);
 			return node;
 		}
+
 		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getFilteredCollectionNode(
-				String name, Class<C> clazz, ImageResource imageResource,
-				CollectionFilter cf) {
-			return getFilteredCollectionNode(name, clazz, imageResource, cf, null);
+		protected <C> ContainerNode getFilteredCollectionNode(String name,
+				Class<C> clazz, ImageResource imageResource, CollectionFilter cf) {
+			return getFilteredCollectionNode(name, clazz, imageResource, cf,
+					null);
 		}
+
 		@SuppressWarnings("unchecked")
-		protected <C> ContainerNode getFilteredCollectionNode(
-				String name, Class<C> clazz, ImageResource imageResource,
-				CollectionFilter cf,NodeFactory nodeFactory) {
+		protected <C> ContainerNode getFilteredCollectionNode(String name,
+				Class<C> clazz, ImageResource imageResource,
+				CollectionFilter cf, NodeFactory nodeFactory) {
 			Collection domainCollection = TransformManager.get().getCollection(
 					clazz);
 			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
 					domainCollection, clazz);
 			provider.setFilter(cf);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
-					name, imageResource,false,nodeFactory);
+					name, imageResource, false, nodeFactory);
 			TransformManager.get().addCollectionModificationListener(provider,
 					clazz, true);
 			return node;
@@ -459,14 +491,16 @@ public class WorkspaceView extends Composite implements HasName,
 		@SuppressWarnings("unchecked")
 		protected <C> ContainerNode getUmbrellaProviderNode(String name,
 				Class<C> clazz, ImageResource imageResource,
-				UmbrellaProvider umbrellaProvider,CollectionFilter collectionFilter,NodeFactory nodeFactory) {
+				UmbrellaProvider umbrellaProvider,
+				CollectionFilter collectionFilter, NodeFactory nodeFactory) {
 			Collection domainCollection = TransformManager.get().getCollection(
 					clazz);
 			UmbrellaCollectionProviderMultiplexer<C> collectionProvider = new UmbrellaCollectionProviderMultiplexer<C>(
-					domainCollection, clazz, umbrellaProvider, collectionFilter,3);
+					domainCollection, clazz, umbrellaProvider,
+					collectionFilter, 3);
 			UmbrellaProviderNode node = new UmbrellaProviderNode(
 					collectionProvider.getRootSubprovider(), name,
-					imageResource,nodeFactory);
+					imageResource, nodeFactory);
 			TransformManager.get().addCollectionModificationListener(
 					collectionProvider, clazz, true);
 			return node;

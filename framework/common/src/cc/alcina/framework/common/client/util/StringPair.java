@@ -1,7 +1,7 @@
 /**
  * 
  */
-package cc.alcina.framework.servlet.publication;
+package cc.alcina.framework.common.client.util;
 
 import java.io.Serializable;
 

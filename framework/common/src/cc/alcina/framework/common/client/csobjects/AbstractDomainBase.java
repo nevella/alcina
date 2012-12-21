@@ -19,6 +19,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.UnsafeNativeLong;
+import com.google.gwt.user.client.rpc.GwtTransient;
 
 @MappedSuperclass
 public abstract class AbstractDomainBase extends BaseBindable implements
@@ -28,7 +29,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	protected transient String comparisonString;
 
 	int versionNumber;
-
+	@GwtTransient
 	long localId;
 
 	@Override
@@ -52,6 +53,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Local id"))
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
+	
 	public long getLocalId() {
 		return this.localId;
 	}

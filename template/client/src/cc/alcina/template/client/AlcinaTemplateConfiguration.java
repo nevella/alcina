@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.RegistryPermissionsExtension;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientConfiguration;
+import cc.alcina.framework.gwt.client.ClientConfigurationMachine;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.StandardActionLogProvider;
 import cc.alcina.framework.gwt.client.ide.WorkspaceDeletionChecker;
@@ -33,8 +34,8 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 	@Override
 	protected void createMachine() {
 		super.createMachine();
-		machine.registerTransitionHandler(machine.localPersistenceInit, null,
-				new LocalPersistenceInitHandler(machine.localPersistenceInitialised));
+		machine.registerTransitionHandler(ClientConfigurationMachine.localPersistenceInit, null,
+				new LocalPersistenceInitHandler(ClientConfigurationMachine.localPersistenceInitialised));
 	}
 
 	

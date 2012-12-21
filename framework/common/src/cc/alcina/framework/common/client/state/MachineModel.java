@@ -1,9 +1,12 @@
 package cc.alcina.framework.common.client.state;
 
+import cc.alcina.framework.common.client.state.Machine.EventStateTuple;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.thirdparty.javascript.jscomp.PerformanceTracker;
 
 /**
  * Events are pumped via setEvent() - which can be null (to signify 'arrived at
@@ -26,17 +29,15 @@ public class MachineModel {
 	private Machine machine;
 
 	private Object runningCallback;
-	
-	private boolean cancelled=false;
+
+	private boolean cancelled = false;
 
 	public MachineState getState() {
 		return this.state;
 	}
 
 	void setState(MachineState state) {
-		this.state = state;
-		log(CommonUtils.formatJ("state - %s\n",
-				state == null ? null : state.name()));
+		setEventAndState(new EventStateTuple(state, null));
 	}
 
 	public MachineEvent getEvent() {
@@ -44,16 +45,14 @@ public class MachineModel {
 	}
 
 	void setEvent(MachineEvent event) {
-		this.event = event;
-		log(CommonUtils.formatJ("event - %s\n",
-				event == null ? null : event.name()));
-		machine.performTransition();
+		setEventAndState(new EventStateTuple(null, event));
 	}
 
-	private void log(String message) {
+	 void log(String message) {
 		log += message;
 		if (debug) {
 			System.out.println(message);
+			AlcinaTopics.log(message);
 		}
 	}
 
@@ -84,7 +83,11 @@ public class MachineModel {
 	void setMachine(Machine machine) {
 		this.machine = machine;
 	}
-
+	void setEventAndState(EventStateTuple tuple){
+		this.state=tuple.state;
+		this.event=tuple.event;
+		machine.performTransition();
+	}
 	public boolean isUnset() {
 		return state == null && event == null;
 	}

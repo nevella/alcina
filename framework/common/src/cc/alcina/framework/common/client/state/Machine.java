@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.IsCancellable;
 import cc.alcina.framework.common.client.state.MachineEvent.MachineEventWithEndpoints;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 
 public class Machine<T extends MachineModel> {
@@ -18,7 +19,7 @@ public class Machine<T extends MachineModel> {
 
 	Multimap<EventStateTuple, List<MachineListener>> listeners = new Multimap<EventStateTuple, List<MachineListener>>();
 
-	static class EventStateTuple {
+	public static class EventStateTuple {
 		MachineEvent event;
 
 		MachineState state;
@@ -54,6 +55,11 @@ public class Machine<T extends MachineModel> {
 				actionPermformer);
 	}
 
+	public MachineTransitionHandler getTransitionHandler(MachineState state,
+			MachineEvent event) {
+		return transitionHandlers.get(new EventStateTuple(state, event));
+	}
+
 	public void addListener(MachineState state, MachineEvent event,
 			MachineListener listener) {
 		listeners.add(new EventStateTuple(state, event), listener);
@@ -66,8 +72,7 @@ public class Machine<T extends MachineModel> {
 
 	public void start(MachineState state, MachineEvent event) {
 		model.setMachine(this);
-		model.setState(state);
-		model.setEvent(event);
+		model.setEventAndState(new EventStateTuple(state, event));
 	}
 
 	public void cancel() {
@@ -95,6 +100,12 @@ public class Machine<T extends MachineModel> {
 	 * will queue)
 	 */
 	void performTransition() {
+		String stateName = model.getState() == null ? "null" : model.getState()
+				.name();
+		String eventName = model.getEvent() == null ? "null" : model.getEvent()
+				.name();
+		model.log(CommonUtils.formatJ("transition - %s - s: %s - e: %s",
+				CommonUtils.simpleClassName(getClass()), stateName, eventName));
 		List<EventStateTuple> tuples = new ArrayList<Machine.EventStateTuple>();
 		if (model.getState() == null || model.getEvent() == null) {
 			tuples.add(new EventStateTuple(model.getState(), model.getEvent()));

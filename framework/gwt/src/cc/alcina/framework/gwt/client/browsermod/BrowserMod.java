@@ -205,4 +205,8 @@ public class BrowserMod {
 		};
 		return isMobile.any();
 	}-*/;
+	public static native boolean isIPad()/*-{
+		var navigator = $wnd.navigator;
+		return  navigator.userAgent.match(/iPad/i) ? true : false;
+	}-*/;
 }

@@ -1,0 +1,331 @@
+package cc.alcina.framework.entity.util;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.SortedMultimap;
+import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
+import cc.alcina.framework.entity.util.EntityUtils.MultiIdentityMap;
+import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
+
+public class StatsFilter extends CollectionProjectionFilter {
+	MultiIdentityMap ownerMap = new MultiIdentityMap();
+
+	MultiIdentityMap owneeMap = new MultiIdentityMap();
+
+	private Set<Class> calculateOwnerStatsFor;
+
+	private LinkedHashSet<Class> calculatePathStatsFor;
+
+	IdentityHashMap<Object, Object> visited = new IdentityHashMap<Object, Object>();
+
+	Multimap<Class, List<StatsItem>> statsClassLookup = new Multimap<Class, List<StatsItem>>();
+
+	IdentityHashMap<Object, StatsItem> statsItemLookup = new IdentityHashMap<Object, StatsFilter.StatsItem>();
+
+	Map<Class, CountingMap<String>> ownershipStats = new LinkedHashMap<Class, StatsFilter.CountingMap<String>>();
+
+	CountingMap<Class> nullInstanceMap = new CountingMap<Class>();
+
+	Map<Class, Field[]> projectableFields = new HashMap<Class, Field[]>();
+
+	private StatsFilterSortKey sortKey;
+
+	private boolean reverse;
+
+	public StatsFilter() {
+	}
+
+	@Override
+	public <T> T filterData(T original, T projected,
+			GraphProjectionContext context, GraphProjection graphProjection)
+			throws Exception {
+		T filtered = super.filterData(original, projected, context,
+				graphProjection);
+		visited.put(context.ownerObject, context.ownerObject);
+		visited.put(filtered, filtered);
+		ownerMap.add(context.ownerObject, filtered);
+		ownerMap.ensureKey(filtered);
+		owneeMap.add(filtered, context.ownerObject);
+		return filtered;
+	}
+
+	public void getGraphStats(Object source, Class[] calculateOwnerStatsFor,
+			Class[] calculatePathStatsFor, StatsFilterSortKey sortKey,
+			boolean reverse) {
+		this.sortKey = sortKey;
+		this.reverse = reverse;
+		this.calculateOwnerStatsFor = new LinkedHashSet<Class>(
+				Arrays.asList(calculateOwnerStatsFor));
+		this.calculatePathStatsFor = new LinkedHashSet<Class>(
+				Arrays.asList(calculatePathStatsFor));
+		DetachedEntityCache cache = new DetachedEntityCache();
+		try {
+			new GraphProjection(null, this).project(source, null);
+			dumpStats();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	@Override
+	public boolean permitField(Field field, Set<Field> perObjectPermissionFields) {
+		return true;
+	}
+
+	private Field[] getFieldsForClass(Object projected) {
+		Class<? extends Object> clazz = projected.getClass();
+		if (!projectableFields.containsKey(clazz)) {
+			List<Field> allFields = new ArrayList<Field>();
+			Set<Field> dynamicPermissionFields = new HashSet<Field>();
+			Class c = clazz;
+			while (c != Object.class) {
+				Field[] fields = c.getDeclaredFields();
+				for (Field f : fields) {
+					if (Modifier.isTransient(f.getModifiers())
+							|| Modifier.isStatic(f.getModifiers())) {
+						continue;
+					}
+					f.setAccessible(true);
+					allFields.add(f);
+				}
+				c = c.getSuperclass();
+			}
+			projectableFields.put(clazz,
+					(Field[]) allFields.toArray(new Field[allFields.size()]));
+		}
+		return projectableFields.get(clazz);
+	}
+
+	void dumpStats() {
+		try {
+			Set<Object> owned = new LinkedHashSet<Object>();
+			for (Object o : visited.keySet()) {
+				Class<? extends Object> clazz = o.getClass();
+				StatsItem item = new StatsItem(o);
+				statsClassLookup.add(clazz, item);
+				statsItemLookup.put(o, item);
+				Field[] fields = getFieldsForClass(o);
+				for (Field field : fields) {
+					Object o1 = field.get(o);
+					if (o1 == null) {
+						nullInstanceMap.add(field.getType());
+						item.size++;
+					} else {
+						Class<? extends Object> clazz2 = o1.getClass();
+						if (CommonUtils.stdAndPrimitives.contains(clazz2)) {
+							statsClassLookup.add(clazz2, null);
+							item.size += o1.toString().length();
+						} else {
+							if (calculateOwnerStatsFor.contains(clazz2)) {
+								if (owneeMap.get(o1).size() == 1) {
+									item.owned.add(o1);
+									owned.add(o1);
+								}
+							}
+						}
+						if (calculatePathStatsFor.contains(clazz2)) {
+							if (!ownershipStats.containsKey(clazz2)) {
+								ownershipStats.put(clazz2,
+										new CountingMap<String>());
+							}
+							String key = clazz.getSimpleName() + "."
+									+ field.getName();
+							ownershipStats.get(clazz2).add(key);
+						}
+					}
+				}
+			}
+			for (Object o : owned) {
+				statsItemLookup.get(o).retainedElsewhere = true;
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		List<Class> keys = new ArrayList<Class>(statsClassLookup.keySet());
+		final CountingMap<Class> retainedSizes = new CountingMap<Class>();
+		final CountingMap<Class> rawSizes = new CountingMap<Class>();
+		int objCount = 0;
+		for (Class clazz : keys) {
+			for (StatsItem item : statsClassLookup.get(clazz)) {
+				if (item != null) {
+					retainedSizes.add(clazz, item.retainedSize());
+					rawSizes.add(clazz, item.size());
+				}
+			}
+			objCount += statsClassLookup.size();
+		}
+		Collections.sort(keys, new Comparator<Class>() {
+			@Override
+			public int compare(Class o1, Class o2) {
+				switch (sortKey) {
+				case CLASSNAME:
+					return o1.getSimpleName().compareTo(o2.getSimpleName());
+				case RETAINED_SIZE:
+					return CommonUtils.compareInts(
+							CommonUtils.iv(retainedSizes.get(o1)),
+							CommonUtils.iv(retainedSizes.get(o2)));
+				case RAW_SIZE:
+					return CommonUtils.compareInts(
+							CommonUtils.iv(rawSizes.get(o1)),
+							CommonUtils.iv(rawSizes.get(o2)));
+				}
+				return 0;
+			}
+		});
+		if (reverse) {
+			Collections.reverse(keys);
+		}
+		System.out.println("Graph stats dump\n----------");
+		System.out.format(
+				"%30s -- %10s -- %10s self -- %10s retained -- %10s \n",
+				"Name", "Instances", "Size", "Retained", "Nulls");
+		System.out.println(CommonUtils.padStringLeft("", 70, '-'));
+		for (Class clazz : keys) {
+			System.out.format(
+					"%30s -- %10s -- %10s self -- %10s retained -- %10s \n",
+					clazz.getSimpleName(), statsClassLookup.get(clazz).size(),
+					rawSizes.countFor(clazz), retainedSizes.countFor(clazz),
+					nullInstanceMap.countFor(clazz));
+		}
+		System.out.println(CommonUtils.padStringLeft("", 70, '-'));
+		System.out.format(
+				"%30s -- %10s -- %10s self -- %10s retained -- %10s \n",
+				"Total", objCount, rawSizes.total(), retainedSizes.total(),
+				nullInstanceMap.total());
+		System.out.println("\n----------\n\n");
+		for (Class clazz : keys) {
+			if (ownershipStats.containsKey(clazz)) {
+				System.out.println("Paths: " + clazz.getSimpleName());
+				final CountingMap<String> cm = ownershipStats.get(clazz);
+				List<String> sKeys = new ArrayList<String>(cm.keySet());
+				Collections.sort(sKeys, new Comparator<String>() {
+					@Override
+					public int compare(String o1, String o2) {
+						return cm.get(o2) - cm.get(o1);
+					}
+				});
+				for (String sk : sKeys) {
+					System.out.format("%30s -- %10s\n", sk, cm.get(sk));
+				}
+			}
+		}
+		System.out.println("\n----------\n\n");
+	}
+
+	public enum StatsFilterSortKey {
+		CLASSNAME, RAW_SIZE, RETAINED_SIZE
+	}
+
+	static class CountingMap<K> extends LinkedHashMap<K, Integer> {
+		public void add(K key) {
+			if (!containsKey(key)) {
+				put(key, 1);
+			} else {
+				put(key, get(key) + 1);
+			}
+		}
+
+		public void add(K key, int i) {
+			if (!containsKey(key)) {
+				put(key, i);
+			} else {
+				put(key, get(key) + i);
+			}
+		}
+
+		public int countFor(K key) {
+			if (!containsKey(key)) {
+				return 0;
+			}
+			return get(key);
+		}
+
+		public int total() {
+			int result = 0;
+			for (Integer i : values()) {
+				result += i;
+			}
+			return result;
+		}
+
+		public K max() {
+			K max = null;
+			Integer maxCount = 0;
+			for (K k : keySet()) {
+				if (max == null) {
+					max = k;
+					maxCount = get(k);
+				} else {
+					if (get(k).compareTo(maxCount) > 0) {
+						max = k;
+						maxCount = get(k);
+					}
+				}
+			}
+			return max;
+		}
+
+		public SortedMultimap<Integer, List<K>> reverseMap(boolean descending) {
+			SortedMultimap<Integer, List<K>> result = descending ? new SortedMultimap<Integer, List<K>>(
+					Collections.reverseOrder())
+					: new SortedMultimap<Integer, List<K>>();
+			for (K key : keySet()) {
+				result.add(get(key), key);
+			}
+			return result;
+		}
+
+		public int size(K key) {
+			if (!containsKey(key)) {
+				return 0;
+			}
+			return get(key);
+		}
+	}
+
+	class StatsItem {
+		int size;
+
+		List<Object> owned = new ArrayList<Object>();
+
+		Object o;
+
+		public boolean retainedElsewhere;
+
+		public StatsItem(Object o) {
+			this.o = o;
+		}
+
+		public int retainedSize() {
+			if (retainedElsewhere) {
+				return 0;
+			}
+			int i = size;
+			for (Object o : owned) {
+				i += statsItemLookup.get(o).size;
+			}
+			return i;
+		}
+
+		public int size() {
+			return size;
+		}
+	}
+}

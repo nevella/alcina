@@ -50,7 +50,7 @@ public class ClientConfiguration {
 	protected void createMachine() {
 		this.machine = new ClientConfigurationMachine();
 		machine.registerTransitionHandler(
-				machine.postLocalPersistenceInitConfig, null,
+				ClientConfigurationMachine.postLocalPersistenceInitConfig, null,
 				new PostLocalPersistenceInitConfigHandler());
 		machine.registerTransitionHandler(MachineState.END, null,
 				new ClientConfigurationCompleteHandler());
@@ -61,7 +61,7 @@ public class ClientConfiguration {
 		@Override
 		public void performTransition(ClientConfigurationModel model) {
 			initServicesPostLocalPersistence();
-			model.getMachine().newEvent(machine.done);
+			model.getMachine().newEvent(ClientConfigurationMachine.done);
 		}
 	}
 

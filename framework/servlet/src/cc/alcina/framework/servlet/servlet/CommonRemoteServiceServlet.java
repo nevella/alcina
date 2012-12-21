@@ -20,6 +20,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -35,6 +36,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
@@ -82,10 +84,14 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.gwt.persistence.client.ClientLogRecord;
+import cc.alcina.framework.gwt.persistence.client.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
@@ -101,6 +107,7 @@ import com.google.gwt.user.server.rpc.RPCRequest;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.user.server.rpc.UnexpectedException;
 import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
+import com.totsp.gwittir.client.beans.Converter;
 
 /**
  * 
@@ -775,5 +782,22 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				+ "client-dumps");
 		dir.mkdirs();
 		return dir;
+	}
+	@Override
+	public void logClientRecords(String serializedLogRecords) {
+		Converter<String, ClientLogRecords> converter=new Converter<String, ClientLogRecord.ClientLogRecords>() {
+			@Override
+			public ClientLogRecords convert(String original) {
+				try {
+					return new AlcinaBeanSerializerS().deserialize(original,
+							Thread.currentThread().getContextClassLoader());
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+				
+			}
+		};
+		List<ClientLogRecords> records=CollectionFilters.convert(Arrays.asList(serializedLogRecords.split("\n")), converter);
+		EntityLayerLocator.get().commonPersistenceProvider().getCommonPersistence().persistClientLogRecords(records);
 	}
 }

@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.persistence.client.ClientHandshakeHelperWithLocalPersistence;
-import cc.alcina.framework.gwt.persistence.client.OfflineUtils;
+import cc.alcina.framework.gwt.persistence.client.OfflineManager;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
 import cc.alcina.framework.gwt.persistence.client.SerializedDomainLoader;
@@ -124,8 +124,8 @@ public class AlcinaTemplateHandshakeHelper extends
 					@Override
 					public void onSuccess(Boolean result) {
 						if (!result) {
-							if (OfflineUtils.isInvalidModule(caught)) {
-								OfflineUtils.waitAndReload();
+							if (OfflineManager.get().isInvalidModule(caught)) {
+								OfflineManager.get().waitAndReload();
 							} else {
 								throw new WrappedRuntimeException(caught);
 							}

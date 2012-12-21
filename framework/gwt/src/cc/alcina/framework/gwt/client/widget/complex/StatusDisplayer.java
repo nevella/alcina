@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.logic.CallManager;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
+import cc.alcina.framework.gwt.client.widget.complex.StatusDisplayer.FaderTuple;
 
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.dom.client.Style.Unit;
@@ -32,9 +33,11 @@ public class StatusDisplayer {
 	private TopicListener topicListener = new TopicListener<String>() {
 		@Override
 		public void topicPublished(String key, String message) {
-			showMessage(message, key, key != CallManager.TOPIC_CALL_MADE);
+			showMessage(message, key);
 		}
 	};
+
+	private FaderTuple appTuple;
 
 	public StatusDisplayer() {
 		stylePrefixes = new StringMap();
@@ -47,6 +50,8 @@ public class StatusDisplayer {
 		Label statusLabel = new Label();
 		statusLabel.addMouseOverHandler(overHandler);
 		statusTuple = new FaderTuple(statusLabel, "alcina-Status");
+		Label messageLabel = new Label();
+		appTuple = new FaderTuple(messageLabel, "alcina-Status app-Status");
 		Label centerLabel = new Label();
 		centerTuple = new FaderTuple(centerLabel, "alcina-Status-Center");
 		GlobalTopicPublisher.get().addTopicListener(
@@ -54,9 +59,12 @@ public class StatusDisplayer {
 		GlobalTopicPublisher.get().addTopicListener(
 				MessageManager.TOPIC_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().addTopicListener(
+				MessageManager.TOPIC_APP_MESSAGE_PUBLISHED, topicListener);
+		GlobalTopicPublisher.get().addTopicListener(
 				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().addTopicListener(
 				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
+		RootPanel.get().add(appTuple.holder);
 		RootPanel.get().add(statusTuple.holder);
 		RootPanel.get().add(centerTuple.holder);
 	}
@@ -66,6 +74,8 @@ public class StatusDisplayer {
 				CallManager.TOPIC_CALL_MADE, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
 				MessageManager.TOPIC_MESSAGE_PUBLISHED, topicListener);
+		GlobalTopicPublisher.get().removeTopicListener(
+				MessageManager.TOPIC_APP_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
 				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
@@ -99,9 +109,19 @@ public class StatusDisplayer {
 
 	FaderTuple centerTuple;
 
-	private void showMessage(String message, String channel, boolean withFade) {
-		boolean center = channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED;
-		FaderTuple ft = center ? centerTuple : statusTuple;
+	private void showMessage(String message, String channel) {
+		boolean center = false;
+		FaderTuple ft = statusTuple;
+		boolean withFade = true;
+		if (channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED) {
+			center = true;
+			ft = centerTuple;
+		} else if (channel == CallManager.TOPIC_CALL_MADE) {
+			withFade = false;
+		} else if (channel == MessageManager.TOPIC_APP_MESSAGE_PUBLISHED) {
+			withFade = false;
+			ft = appTuple;
+		}
 		Label label = ft.label;
 		FaderAnimation fader = ft.fader;
 		label.setStyleName("");
@@ -157,6 +177,7 @@ public class StatusDisplayer {
 	}
 
 	public void removeWidget() {
+		appTuple.label.removeFromParent();
 		statusTuple.label.removeFromParent();
 		centerTuple.label.removeFromParent();
 	}

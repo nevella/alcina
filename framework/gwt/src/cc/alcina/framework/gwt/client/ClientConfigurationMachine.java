@@ -4,34 +4,38 @@ import cc.alcina.framework.common.client.state.Machine;
 import cc.alcina.framework.common.client.state.MachineEvent.MachineEventImpl;
 import cc.alcina.framework.common.client.state.MachineState;
 import cc.alcina.framework.common.client.state.MachineState.MachineStateImpl;
+import cc.alcina.framework.common.client.state.MachineTransitionHandler;
 import cc.alcina.framework.common.client.state.SimpleTransitionHandler;
+import cc.alcina.framework.gwt.client.logic.state.AsyncCallbackTransitionHandler;
+import cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers;
+import cc.alcina.framework.gwt.persistence.client.ios.IosStorageExpander;
 
 /*
  * Begin by just modelling CONFIG -> LOCAL PERSISTENCE -> AFTER_CONFIGURATION
  * then expand...
  */
 public class ClientConfigurationMachine extends Machine<ClientConfigurationModel> {
-	MachineStateImpl initialConfiguration = new MachineStateImpl(
-			"after-initial-configuration");
+	public static MachineStateImpl initialConfiguration = new MachineStateImpl(
+			"initial-configuration");
 
-	public MachineStateImpl localPersistenceInit = new MachineStateImpl(
-			"after-local-persistence-init");
+	public static MachineStateImpl localPersistenceInit = new MachineStateImpl(
+			"local-persistence-init");
 
-	MachineStateImpl postLocalPersistenceInitConfig = new MachineStateImpl(
-			"after-post-local-persistence-init-configuration");
+	public static MachineStateImpl postLocalPersistenceInitConfig = new MachineStateImpl(
+			"post-local-persistence-init-configuration");
 
-	MachineEventImpl init = new MachineEventImpl("init", MachineState.START,
+	public static MachineEventImpl init = new MachineEventImpl("init", MachineState.START,
 			initialConfiguration);
 
-	public MachineEventImpl initiallyConfigured = new MachineEventImpl(
+	public static MachineEventImpl initiallyConfigured = new MachineEventImpl(
 			"initially-configured", initialConfiguration,
 			localPersistenceInit);
 
-	public MachineEventImpl localPersistenceInitialised = new MachineEventImpl(
+	public static MachineEventImpl localPersistenceInitialised = new MachineEventImpl(
 			"local-persistence-initialised", localPersistenceInit,
 			postLocalPersistenceInitConfig);
 
-	MachineEventImpl done = new MachineEventImpl("finish",
+	public static MachineEventImpl done = new MachineEventImpl("finish",
 			postLocalPersistenceInitConfig, MachineState.END);
 	
 
@@ -45,5 +49,15 @@ public class ClientConfigurationMachine extends Machine<ClientConfigurationModel
 				new SimpleTransitionHandler(initiallyConfigured));
 		registerTransitionHandler(localPersistenceInit, null,
 				new SimpleTransitionHandler(localPersistenceInitialised));
+	}
+
+
+	public void replaceEvent(MachineStateImpl sourceState,
+			MachineEventImpl successEvent) {
+		AsyncCallbackTransitionHandler transitionHandler = 
+				(AsyncCallbackTransitionHandler) getTransitionHandler(
+				sourceState,
+				null);
+		transitionHandler.setSuccessEvent(successEvent);		
 	}
 }
