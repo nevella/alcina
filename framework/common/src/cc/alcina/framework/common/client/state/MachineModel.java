@@ -52,7 +52,6 @@ public class MachineModel {
 		log += message;
 		if (debug) {
 			System.out.println(message);
-			AlcinaTopics.log(message);
 		}
 	}
 

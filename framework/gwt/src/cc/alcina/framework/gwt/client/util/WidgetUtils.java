@@ -145,13 +145,13 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element elt,
 			String attributeName)/*-{
-									if (elt.currentStyle) {
-									return elt.currentStyle[attributeName];
-									}
-									if ($wnd.getComputedStyle) {
-									return $wnd.getComputedStyle(elt, null)[attributeName];
-									}
-									}-*/;
+		if (elt.currentStyle) {
+			return elt.currentStyle[attributeName];
+		}
+		if ($wnd.getComputedStyle) {
+			return $wnd.getComputedStyle(elt, null)[attributeName];
+		}
+	}-*/;
 
 	public static void clearChildren(TabPanel tp) {
 		for (int i = tp.getWidgetCount() - 1; i >= 0; i--) {
@@ -672,8 +672,8 @@ public class WidgetUtils {
 	}
 
 	private static native void copy() /*-{
-										$doc.execCommand("Copy");
-										}-*/;
+		$doc.execCommand("Copy");
+	}-*/;
 
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
@@ -696,13 +696,13 @@ public class WidgetUtils {
 	}
 
 	public native static int getRelativeTopTo(Element elem, Element end) /*-{
-																			var top = 0;
-																			while (elem != end) {
-																			top += elem.offsetTop;
-																			elem = elem.offsetParent;
-																			}
-																			return top;
-																			}-*/;
+		var top = 0;
+		while (elem != end) {
+			top += elem.offsetTop;
+			elem = elem.offsetParent;
+		}
+		return top;
+	}-*/;
 
 	public static void scrollIntoView(Element e, int fromTop) {
 		scrollIntoView(e, fromTop, false);

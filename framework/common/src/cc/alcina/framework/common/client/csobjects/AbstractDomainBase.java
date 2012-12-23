@@ -29,6 +29,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	protected transient String comparisonString;
 
 	int versionNumber;
+
 	@GwtTransient
 	long localId;
 
@@ -53,7 +54,6 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Local id"))
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
-	
 	public long getLocalId() {
 		return this.localId;
 	}
@@ -83,8 +83,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	}
 
 	@UnsafeNativeLong
-	private  native int fastHash(long id, long localId,
-			int classHashCode)/*-{
+	private native int fastHash(long id, long localId, int classHashCode)/*-{
 		return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h ^ classHashCode;
 	}-*/;
 

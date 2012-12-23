@@ -35,6 +35,7 @@ import cc.alcina.framework.gwt.persistence.client.ClientLogRecord.ClientLogRecor
  * 
  */
 public class LogStore {
+	
 	protected LogStore() {
 		String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);
 		if (cookie != null) {
@@ -66,7 +67,7 @@ public class LogStore {
 
 	// push logs to remote store
 	private AtEndOfEventSeriesTimer remotePersistenceTimer = new AtEndOfEventSeriesTimer(
-			20000, new Runnable() {
+			2000, new Runnable() {
 				@Override
 				public void run() {
 					pushLogsToRemote();
@@ -78,12 +79,14 @@ public class LogStore {
 	private PersistenceCallback<Integer> afterLocalPersistence = new PersistenceCallback<Integer>() {
 		@Override
 		public void onFailure(Throwable caught) {
+			AlcinaTopics.muteStatisticsLogging(false);
 			AlcinaTopics.localPersistenceException(caught);
 			// in general, squelch
 		}
 
 		@Override
 		public void onSuccess(Integer result) {
+			AlcinaTopics.muteStatisticsLogging(false);
 			remotePersistenceTimer.triggerEventOccurred();
 		}
 	};
@@ -151,6 +154,7 @@ public class LogStore {
 		if (useCookieMsgBackup && lastCookieId == localSeriesIdCounter) {
 			Cookies.removeCookie(STORAGE_COOKIE_KEY);
 		}
+		AlcinaTopics.muteStatisticsLogging(true);
 		add(lastTopic, serialized, afterLocalPersistence);
 	}
 

@@ -11,6 +11,8 @@ import cc.alcina.framework.common.client.state.MachineState.MachineStateImpl;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientConfigurationMachine;
 import cc.alcina.framework.gwt.client.ClientConfigurationModel;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -187,6 +189,80 @@ public class PersistenceStateHandlers {
 			}
 		};
 
+		private int statsMuteCounter = 0;
+
+		private TopicListener<Boolean> muteListener = new TopicListener<Boolean>() {
+			@Override
+			public void topicPublished(String key, Boolean message) {
+				statsMuteCounter += message ? 1 : -1;
+			}
+		};
+
+		public void installStats() {
+			AlcinaTopics.muteStatisticsLoggingListenerDelta(muteListener, true);
+			installStats0();
+		}
+
+		native void installStats0()/*-{
+			function format(out) {
+				var idx = 0;
+				var j = 1;
+
+				while (true) {
+					idx = out.indexOf("%s", idx);
+					if (idx == -1) {
+						break;
+					}
+					var ins = arguments[j++];
+					if (ins === null) {
+						ins = "null";
+					} else if (ins === undefined) {
+						ins = "undefined";
+					} else {
+						ins = ins.toString();
+					}
+					out = out.substring(0, idx) + ins + out.substring(idx + 2);
+					idx += ins.length;
+				}
+				return out;
+			}
+			function pad0(s, len) {
+				return pad(s, "0", len);
+			}
+			function pad(s, sup, len) {
+				s = "" + s;
+				while (s.length < len) {
+					s = sup + s;
+				}
+				return s;
+			}
+			var lsi = this;
+			var running = [];
+			function eventToString(event) {
+				// return some string representation of this event
+				var d = new Date(event.millis);
+				var timeStr = format("%s:%s:%s,%s", pad0(d.getHours(), 2), pad0(d
+						.getMinutes(), 2), pad0(d.getSeconds(), 2), pad0(d
+						.getMilliseconds(), 3));
+				return event.evtGroup + " | " + event.moduleName + " | "
+						+ event.subSystem + " | " + event.method + " | "
+						+ pad(event.type, " ", 25) + +" | " + timeStr;
+			}
+			window.$stats = function(evt) {
+				var muted = lsi.@cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LogStoreInterceptors::areStatsMuted()();
+				if (!muted) {
+					var e2s = eventToString(evt);
+					lsi.@cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LogStoreInterceptors::logMetric(Ljava/lang/String;)(e2s);
+				}
+				return true;
+			};
+
+		}-*/;
+
+		boolean areStatsMuted() {
+			return statsMuteCounter > 0;
+		}
+
 		private HandlerRegistration historyHandlerRegistration;
 
 		private HandlerRegistration nativePreviewHandlerRegistration;
@@ -194,6 +270,10 @@ public class PersistenceStateHandlers {
 		public void interceptClientLog() {
 			AlcinaTopics.logCategorisedMessageListenerDelta(LogStore.get()
 					.getStringPairListener(), true);
+		}
+
+		public void logMetric(String stat) {
+			ClientLayerLocator.get().notifications().log(stat);
 		}
 
 		public void logHistoryEvents() {
@@ -241,6 +321,8 @@ public class PersistenceStateHandlers {
 		public void unload() {
 			AlcinaTopics.logCategorisedMessageListenerDelta(LogStore.get()
 					.getStringPairListener(), false);
+			AlcinaTopics
+					.muteStatisticsLoggingListenerDelta(muteListener, false);
 			if (historyHandlerRegistration != null) {
 				historyHandlerRegistration.removeHandler();
 			}

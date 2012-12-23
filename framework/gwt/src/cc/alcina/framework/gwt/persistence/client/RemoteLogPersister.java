@@ -5,17 +5,20 @@ import java.util.Map;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.state.EnumMachine;
-import cc.alcina.framework.common.client.state.EnumMachine.EnumMachineState;
 import cc.alcina.framework.common.client.state.MachineEvent;
 import cc.alcina.framework.common.client.state.MachineEvent.MachineEventImpl;
 import cc.alcina.framework.common.client.state.MachineListener;
 import cc.alcina.framework.common.client.state.MachineModel;
 import cc.alcina.framework.common.client.state.MachineState;
 import cc.alcina.framework.common.client.state.MachineTransitionHandler;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.state.AsyncCallbackTransitionHandler;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+
+import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 //state change listener (OFFLINE), try on state change, loose on app shutdown
 public class RemoteLogPersister {
@@ -111,6 +114,9 @@ public class RemoteLogPersister {
 
 		class LogRecordCheckOnline extends
 				AsyncCallbackTransitionHandler<Void, MachineModel> {
+			MachineEvent jumpToEnd = new MachineEventImpl("checkOnline-end",
+					getStateFor(State.CHECK_ONLINE), MachineState.END);
+
 			public LogRecordCheckOnline(MachineEvent successEvent) {
 				super(successEvent);
 			}
@@ -139,36 +145,57 @@ public class RemoteLogPersister {
 
 			@Override
 			public void onFailure(Throwable caught) {
-				handleExpectableMaybeOffline(caught);
+				handleExpectableMaybeOffline(caught, jumpToEnd);
 			}
 		}
 
 		class LogRecordRemotePusher extends
 				AsyncCallbackTransitionHandler<Void, MachineModel> {
+			MachineEvent jumpToEnd = new MachineEventImpl("push-end",
+					getStateFor(State.PUSH), MachineState.END);
+
+			private boolean rqRun;
+
 			public LogRecordRemotePusher(MachineEvent successEvent) {
 				super(successEvent);
 			}
 
 			@Override
 			public void onSuccess0(Void result) {
-				maybeOffline = false;
+				if (rqRun) {
+					deferredUnmute();
+					maybeOffline = false;
+				}
 			}
 
 			@Override
 			public void start() {
 				if (buffer.length() == 0) {
+					rqRun = false;
 					onSuccess(null);
 				} else {
 					CommonRemoteServiceAsync async = ClientLayerLocator.get()
 							.getCommonRemoteServiceAsyncProvider()
 							.getServiceInstance();
+					rqRun = true;
+					AlcinaTopics.muteStatisticsLogging(true);
 					async.logClientRecords(buffer.toString(), this);
 				}
 			}
 
 			@Override
 			public void onFailure(Throwable caught) {
-				handleExpectableMaybeOffline(caught);
+				deferredUnmute();
+				handleExpectableMaybeOffline(caught, jumpToEnd);
+			}
+
+			public void deferredUnmute() {
+				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+					@Override
+					public void execute() {
+						AlcinaTopics.muteStatisticsLogging(false);
+					}
+				});
 			}
 		}
 
@@ -209,11 +236,10 @@ public class RemoteLogPersister {
 			}
 		}
 
-		public void handleExpectableMaybeOffline(Throwable caught) {
+		public void handleExpectableMaybeOffline(Throwable caught,
+				MachineEvent jumpToEnd) {
 			if (ClientUtils.maybeOffline(caught)) {
-				maybeOffline = true;
-				machine.clear();
-				machine = null;
+				machine.newEvent(jumpToEnd);
 			} else {
 				throw new WrappedRuntimeException(caught);
 			}
@@ -228,7 +254,7 @@ public class RemoteLogPersister {
 	public synchronized void push() {
 		pushCount++;
 		if (machine == null) {
-			pushCount--;
+			pushCount = 0;
 			machine = new RemoteLogPersisterMachine();
 			machine.addListener(MachineState.END, null,
 					new MachineListener<MachineModel>() {
@@ -238,7 +264,11 @@ public class RemoteLogPersister {
 
 						@Override
 						public void afterAction(MachineModel model) {
+							machine.clear();
 							machine = null;
+							if (pushCount > 0) {
+								push();
+							}
 						}
 					});
 			machine.start();

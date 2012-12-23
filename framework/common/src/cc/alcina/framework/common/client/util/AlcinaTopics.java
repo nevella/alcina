@@ -26,6 +26,9 @@ public class AlcinaTopics {
 
 	public static final String LOG_CATEGORY_METRIC = "metric";
 
+	public static final String TOPIC_MUTE_STAT_LOGGING = AlcinaTopics.class
+			.getName() + ".TOPIC_MUTE_STAT_LOGGING";;
+
 	// detach logging from presentation (normally ClientNotifications)
 	public static void log(Object message) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_LOG_MESSAGE_PUBLISHED,
@@ -59,5 +62,16 @@ public class AlcinaTopics {
 			TopicListener<Throwable> listener, boolean add) {
 		GlobalTopicPublisher.get().listenerDelta(
 				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, listener, add);
+	}
+	public static void muteStatisticsLogging(
+			boolean mute) {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_MUTE_STAT_LOGGING, mute);
+	}
+
+	public static void muteStatisticsLoggingListenerDelta(
+			TopicListener<Boolean> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_MUTE_STAT_LOGGING, listener, add);
 	}
 }
