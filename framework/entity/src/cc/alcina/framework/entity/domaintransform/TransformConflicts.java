@@ -38,6 +38,9 @@ public class TransformConflicts {
 	public static final String CONTEXT_OFFLINE_SUPPORT = TransformConflicts.class
 			.getName() + ".CONTEXT_OFFLINE_SUPPORT";
 
+	public static final String CONTEXT_IGNORE_TRANSFORM_CONFLICTS = TransformConflicts.class
+			.getName() + ".CONTEXT_IGNORE_TRANSFORM_CONFLICTS";
+
 	public static final String TOPIC_CONFLICT_EVENT = TransformConflicts.class
 			.getName() + ".TOPIC_CONFLICT_EVENT";
 
@@ -47,7 +50,9 @@ public class TransformConflicts {
 
 	public TransformConflicts() {
 		ignoreConflicts = ResourceUtilities.getBoolean(
-				TransformConflicts.class, "ignoreConflicts");
+				TransformConflicts.class, "ignoreConflicts")
+				|| LooseContextProvider
+						.getBoolean(CONTEXT_IGNORE_TRANSFORM_CONFLICTS);
 	}
 
 	public static class TransformConflictsFromOfflineSupport {

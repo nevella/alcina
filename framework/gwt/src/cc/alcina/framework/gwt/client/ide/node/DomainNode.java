@@ -97,6 +97,9 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 				return true;
 			}
 			if (t instanceof HasId) {
+				if(filterText.startsWith("id:")){
+					return String.valueOf(((HasId) t).getId()).equals(filterText.substring(3));
+				}
 				return String.valueOf(((HasId) t).getId()).equals(filterText);
 			}
 			return false;

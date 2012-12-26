@@ -5,6 +5,8 @@ import java.util.Map;
 
 import com.google.gwt.user.client.Cookies;
 
+import cc.alcina.framework.common.client.entity.ClientLogRecord;
+import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -15,7 +17,6 @@ import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
-import cc.alcina.framework.gwt.persistence.client.ClientLogRecord.ClientLogRecords;
 
 /**
  * At the moment:

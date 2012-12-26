@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.CountingMap;
+
 public class WeightAndDistribute<T> {
 	public void run(Collection<T> items, WeightCallback<T> callback) {
 		List<T> sorted = new ArrayList<T>(items);

@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -34,7 +35,6 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
-import cc.alcina.framework.gwt.persistence.client.ClientLogRecord.ClientLogRecords;
 
 /**
  * 

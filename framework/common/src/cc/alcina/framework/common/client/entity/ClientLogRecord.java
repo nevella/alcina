@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.persistence.client;
+package cc.alcina.framework.common.client.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;

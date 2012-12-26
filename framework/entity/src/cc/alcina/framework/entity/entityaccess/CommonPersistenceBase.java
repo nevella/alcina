@@ -36,11 +36,13 @@ import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
+import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.entity.PersistentSingleton;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -75,8 +77,6 @@ import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.GraphProjection;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
-import cc.alcina.framework.gwt.persistence.client.ClientLogRecord;
-import cc.alcina.framework.gwt.persistence.client.ClientLogRecord.ClientLogRecords;
 
 @SuppressWarnings("unchecked")
 /**

@@ -1,11 +1,11 @@
-package cc.alcina.extras.collections;
+package cc.alcina.framework.common.client.util;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
-import cc.alcina.framework.common.client.util.SortedMultimap;
 
 public class CountingMap<K> extends HashMap<K, Integer> {
 	public void add(K key) {
@@ -69,6 +69,16 @@ public class CountingMap<K> extends HashMap<K, Integer> {
 			result.put(k, get(k));
 		}
 		return result;
+	}
+	public void addMultimap(Multimap<K,List> mm){
+		for (Map.Entry<K, List> entry :  mm.entrySet()) {
+			add(entry.getKey(),entry.getValue().size());
+		}
+	}
+	public CountingMap() {
+	}
+	public CountingMap(Multimap<K,List> mm) {
+		addMultimap(mm);
 	}
 	
 }
