@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.persistence.client.ClientSession;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.event.logical.shared.CloseEvent;
@@ -44,6 +45,9 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 		CommitToStorageTransformListener storage = ClientLayerLocator.get()
 				.getCommitToStorageTransformListener();
 		storage.setPaused(false);
+		if (ClientSession.initialised()) {
+			ClientSession.get().appShutdown();
+		}
 		// String msg = TextProvider.get().getUiObjectText(
 		// ClientBase.class,
 		// "commit-on-close-saving-final-changes-warning",
@@ -76,5 +80,6 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 	public void setSaveWhenClosedWarning(String saveWhenClosedWarning) {
 		this.saveWhenClosedWarning = saveWhenClosedWarning;
 	}
+
 	public abstract void afterConfiguration();
 }

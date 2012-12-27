@@ -252,6 +252,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			final List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
 			if (checkSoleOpenTab && !ClientSession.get().isSoleOpenTab()) {
 				if (finalPass) {
+					ClientSession.get().cancelSession();
 					showOfflineLimitMessage();
 				}
 				persistenceCallback.onSuccess(transforms);

@@ -44,34 +44,48 @@ import com.google.gwt.user.client.Timer;
 public class ClientSession {
 	public static final int KEEP_ALIVE_TIMER = 2000;
 
-	private static final String STORAGE_SESSION_COOKIE_NAME = ClientSession.class
-			.getName() + ".storage-session";
+	private String storageSessionCookieName;
 
-	private static final String HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME = ClientSession.class
-			.getName() + ".initial-objects-persisted";
+	private String hasPersistedInitialObjectsCookieName;
 
 	private ClientSession() {
 		super();
-		init();
+		setAppId("alcina");
+		reset();
 	}
 
-	protected void init() {
+	public void setAppId(String appId) {
+		hasPersistedInitialObjectsCookieName = CommonUtils.formatJ("%s.%s.%s",
+				ClientSession.class.getName(), appId,
+				"initial-objects-persisted");
+		storageSessionCookieName = CommonUtils.formatJ("%s.%s.%s",
+				ClientSession.class.getName(), appId, "storage-session");
+		reset();
+	}
+
+	protected void reset() {
+		if (updateTimer != null) {
+			updateTimer.cancel();
+		}
 		Map<Long, Long> m = parseCookie();
 		Long maxTabId = m.isEmpty() ? 0 : CommonUtils.last(m.keySet()
 				.iterator());
 		tabId = maxTabId + 1;
-		updateCookie();
-		new Timer() {
+		updateCookie(false);
+		updateTimer = new Timer() {
 			@Override
 			public void run() {
-				updateCookie();
+				updateCookie(false);
 			}
-		}.scheduleRepeating(KEEP_ALIVE_TIMER);
+		};
+		updateTimer.scheduleRepeating(KEEP_ALIVE_TIMER);
 	}
 
 	private static ClientSession theInstance;
 
 	private long tabId;
+
+	private Timer updateTimer;
 
 	public static ClientSession get() {
 		if (theInstance == null) {
@@ -79,14 +93,22 @@ public class ClientSession {
 		}
 		return theInstance;
 	}
-
+	public static boolean initialised(){
+		return theInstance!=null;
+	}
 	public void appShutdown() {
+		updateCookie(true);
 		theInstance = null;
 	}
 
-	protected void updateCookie() {
+	protected void updateCookie(boolean remove) {
 		Map<Long, Long> m = parseCookie();
+		if(remove){
+			m.remove(tabId);
+		}else{
 		m.put(tabId, System.currentTimeMillis());
+		}
+		
 		StringBuilder sb = new StringBuilder();
 		for (Long k : m.keySet()) {
 			sb.append(k);
@@ -94,12 +116,12 @@ public class ClientSession {
 			sb.append(m.get(k));
 			sb.append(",");
 		}
-		Cookies.setCookie(STORAGE_SESSION_COOKIE_NAME, sb.toString());
+		Cookies.setCookie(storageSessionCookieName, sb.toString());
 	}
 
 	protected Map<Long, Long> parseCookie() {
 		Map<Long, Long> result = new LinkedHashMap<Long, Long>();
-		String s = Cookies.getCookie(STORAGE_SESSION_COOKIE_NAME);
+		String s = Cookies.getCookie(storageSessionCookieName);
 		try {
 			if (s != null && !s.isEmpty()) {
 				String[] split = s.split(",");
@@ -110,11 +132,16 @@ public class ClientSession {
 			}
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
-			Cookies.removeCookie(STORAGE_SESSION_COOKIE_NAME);
+			Cookies.removeCookie(storageSessionCookieName);
 		}
 		return result;
 	}
-
+	public void cancelSession(){
+		if(updateTimer!=null){
+		updateTimer.cancel();
+		}
+		updateCookie(true);
+	}
 	public boolean isSoleOpenTab() {
 		long l = System.currentTimeMillis();
 		Map<Long, Long> m = parseCookie();
@@ -131,12 +158,12 @@ public class ClientSession {
 	}
 
 	public void setInitialObjectsPersisted(boolean initialObjectsPersisted) {
-		Cookies.setCookie(HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME,
+		Cookies.setCookie(hasPersistedInitialObjectsCookieName,
 				String.valueOf(initialObjectsPersisted));
 	}
 
 	public boolean isInitialObjectsPersisted() {
-		String s = Cookies.getCookie(HAS_PERSISTED_INITIAL_OBJECTS_COOKIE_NAME);
+		String s = Cookies.getCookie(hasPersistedInitialObjectsCookieName);
 		return s != null && Boolean.valueOf(s);
 	}
 
@@ -152,7 +179,7 @@ public class ClientSession {
 		}
 
 		@Override
-		protected void init() {
+		protected void reset() {
 		}
 
 		@Override

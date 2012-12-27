@@ -67,4 +67,9 @@ public class AlcinaDebugIds {
 	public static void setFlag(String key) {
 		debugIdsMatched.add(key);
 	}
+
+	public static void clearFlag(String key) {
+		debugIdsMatched.remove(key);
+		
+	}
 }

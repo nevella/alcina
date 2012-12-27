@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.state.MachineState;
 import cc.alcina.framework.common.client.state.MachineTransitionHandler;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.state.AsyncCallbackTransitionHandler;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -20,13 +21,22 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
-//state change listener (OFFLINE), try on state change, loose on app shutdown
+/**
+ * This class deliberately doesn't listen for other classes
+ * (committoremotetransform...) offline/online events - if we go online for some
+ * reason, that's probably going to be logged and cause a push anyway
+ * 
+ * @author nick@alcina.cc
+ * 
+ */
 public class RemoteLogPersister {
 	private enum State {
-		GET_LOG_RECORD_RANGE, CHECK_ONLINE, ADD_RECORDS, PUSH, DELETE
+		CHECK_ONLINE, GET_LOG_RECORD_RANGE, ADD_RECORDS, PUSH, DELETE
 	}
 
 	public static int PREFERRED_MAX_PUSH_SIZE = 30000;// bytes
+
+	public boolean maybeOffline;
 
 	class RemoteLogPersisterMachine extends EnumMachine<State, MachineModel> {
 		IntPair logRecordRange = null;
@@ -41,14 +51,11 @@ public class RemoteLogPersister {
 
 		private StringBuilder buffer = new StringBuilder();
 
-		public boolean maybeOffline;
-
 		public RemoteLogPersisterMachine() {
 			super();
 			init(State.class);
 			buffer = new StringBuilder();
 			EnumMachineState<State> addingState = getStateFor(State.ADD_RECORDS);
-			EnumMachineState<State> checkOnlineState = getStateFor(State.CHECK_ONLINE);
 			keepAdding = new MachineEventImpl("keep-adding", addingState,
 					addingState);
 		}
@@ -121,13 +128,23 @@ public class RemoteLogPersister {
 				super(successEvent);
 			}
 
+			boolean rqRun = false;
+
 			@Override
 			public void onSuccess0(Void result) {
 				maybeOffline = false;
+				maybeUnmute();
+			}
+
+			public void maybeUnmute() {
+				if (rqRun) {
+					deferredUnmute();
+				}
 			}
 
 			@Override
 			public void start() {
+				rqRun = false;
 				if (!maybeOffline) {
 					onSuccess(null);
 					return;
@@ -139,12 +156,15 @@ public class RemoteLogPersister {
 					CommonRemoteServiceAsync async = ClientLayerLocator.get()
 							.getCommonRemoteServiceAsyncProvider()
 							.getServiceInstance();
+					rqRun = true;
+					AlcinaTopics.muteStatisticsLogging(true);
 					async.ping(this);
 				}
 			}
 
 			@Override
 			public void onFailure(Throwable caught) {
+				maybeUnmute();
 				handleExpectableMaybeOffline(caught, jumpToEnd);
 			}
 		}
@@ -188,15 +208,15 @@ public class RemoteLogPersister {
 				deferredUnmute();
 				handleExpectableMaybeOffline(caught, jumpToEnd);
 			}
+		}
 
-			public void deferredUnmute() {
-				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-					@Override
-					public void execute() {
-						AlcinaTopics.muteStatisticsLogging(false);
-					}
-				});
-			}
+		public void deferredUnmute() {
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					AlcinaTopics.muteStatisticsLogging(false);
+				}
+			});
 		}
 
 		class LogRecordGetter
@@ -256,6 +276,7 @@ public class RemoteLogPersister {
 		if (machine == null) {
 			pushCount = 0;
 			machine = new RemoteLogPersisterMachine();
+			final long start = System.currentTimeMillis();
 			machine.addListener(MachineState.END, null,
 					new MachineListener<MachineModel>() {
 						@Override
@@ -264,10 +285,19 @@ public class RemoteLogPersister {
 
 						@Override
 						public void afterAction(MachineModel model) {
+							boolean pushAgain = machine.lastAddedThisBuffer < machine.logRecordRange.i2;
+							long waitTime = (System.currentTimeMillis() - start) / 2;
 							machine.clear();
 							machine = null;
-							if (pushCount > 0) {
-								push();
+							if ((pushCount > 0 || pushAgain) && !maybeOffline) {
+								TimerWrapper timer = ClientLayerLocator.get().timerWrapperProvider()
+										.getTimer(new Runnable() {
+											@Override
+											public void run() {
+												push();
+											}
+										});
+								timer.scheduleSingle(waitTime);
 							}
 						}
 					});

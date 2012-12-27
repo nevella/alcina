@@ -31,7 +31,9 @@ public class ClientConfiguration {
 		@Override
 		public void performTransition(ClientConfigurationModel model) {
 			machine.clear();
-			afterConfiguration();
+			if (!model.isStartupCancelled()) {
+				afterConfiguration();
+			}
 		}
 	}
 
@@ -50,8 +52,8 @@ public class ClientConfiguration {
 	protected void createMachine() {
 		this.machine = new ClientConfigurationMachine();
 		machine.registerTransitionHandler(
-				ClientConfigurationMachine.postLocalPersistenceInitConfig, null,
-				new PostLocalPersistenceInitConfigHandler());
+				ClientConfigurationMachine.postLocalPersistenceInitConfig,
+				null, new PostLocalPersistenceInitConfigHandler());
 		machine.registerTransitionHandler(MachineState.END, null,
 				new ClientConfigurationCompleteHandler());
 	}
@@ -83,7 +85,6 @@ public class ClientConfiguration {
 
 	protected void initHandshakeHelper() {
 	}
-
 
 	protected void afterConfiguration() {
 		ClientLayerLocator.get().clientBase().afterConfiguration();
