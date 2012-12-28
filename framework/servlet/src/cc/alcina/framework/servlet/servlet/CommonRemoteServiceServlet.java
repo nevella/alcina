@@ -754,7 +754,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		File file = new File(path);
 		try {
 			ResourceUtilities.writeStringToFile(data, file);
-			System.out.println("Client db dumped - key: "+key);
+			System.out.println("Client db dumped - key: " + key);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -783,21 +783,26 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		dir.mkdirs();
 		return dir;
 	}
+
 	@Override
 	public void logClientRecords(String serializedLogRecords) {
-		Converter<String, ClientLogRecords> converter=new Converter<String, ClientLogRecord.ClientLogRecords>() {
+		Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
 			@Override
 			public ClientLogRecords convert(String original) {
 				try {
 					return new AlcinaBeanSerializerS().deserialize(original,
 							Thread.currentThread().getContextClassLoader());
 				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+					e.printStackTrace();
+					return null;
 				}
-				
 			}
 		};
-		List<ClientLogRecords> records=CollectionFilters.convert(Arrays.asList(serializedLogRecords.split("\n")), converter);
-		EntityLayerLocator.get().commonPersistenceProvider().getCommonPersistence().persistClientLogRecords(records);
+		List<String> lines = Arrays.asList(serializedLogRecords.split("\n"));
+		List<ClientLogRecords> records = CollectionFilters.convert(lines,
+				converter);
+		records.remove(null);
+		EntityLayerLocator.get().commonPersistenceProvider()
+				.getCommonPersistence().persistClientLogRecords(records);
 	}
 }
