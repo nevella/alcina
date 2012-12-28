@@ -12,6 +12,8 @@ public class AlcinaTopics {
 	public static final String LOG_CATEGORY_TRANSFORM = "transform";
 
 	public static final String LOG_CATEGORY_HISTORY = "history";
+	
+	public static final String LOG_CATEGORY_STAT = "stat";
 
 	public static final String LOG_CATEGORY_CLICK = "click";
 

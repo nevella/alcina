@@ -9,10 +9,12 @@ import cc.alcina.framework.common.client.state.MachineModel;
 import cc.alcina.framework.common.client.state.MachineTransitionHandler;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.gwt.client.logic.PossiblePanelProvider;
+import cc.alcina.framework.gwt.persistence.client.ObjectStoreWebDbImpl;
 import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
 import cc.alcina.framework.gwt.persistence.client.PersistenceCallback.PersistenceCallbackStd;
 import cc.alcina.framework.gwt.persistence.client.PropertyStore;
 
+import com.google.code.gwt.database.client.Database;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Window;
@@ -21,6 +23,9 @@ import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.HTML;
 
 public class IosStorageExpander {
+	private static final int EXPAND_TO_MB_MULTIPLES = 22;
+
+	// app cache will give us about 7
 	public static final String CHECKED_KEY = IosStorageExpander.class.getName()
 			+ "::CHECKED";
 
@@ -40,11 +45,20 @@ public class IosStorageExpander {
 
 	private AsyncCallback<Void> asyncCallback;
 
+	private Database db;
+
+	private PropertyStore tmpPropertyStore;
+
+	private ObjectStoreWebDbImpl objectStore;
+
+	private ComplexPanel cp;
+
 	public ExpandIosStorageHandler getTransitionHandler(
 			PossiblePanelProvider panelProvider,
-			AsyncCallback<Void> asyncCallback) {
+			AsyncCallback<Void> asyncCallback, Database db) {
 		this.asyncCallback = asyncCallback;
 		this.panelProvider = panelProvider;
+		this.db = db;
 		return new ExpandIosStorageHandler();
 	}
 
@@ -65,11 +79,29 @@ public class IosStorageExpander {
 
 						@Override
 						public void onSuccess(String result) {
-							state = result == null ? State.SHOW_EXPAND_MESSAGE
+							state = result == null ? State.INIT_TMP_STORE
 									: State.DONE;
 							iterate();
 						}
 					});
+			break;
+		case INIT_TMP_STORE:
+			PersistenceCallback<Void> itrCallback = new PersistenceCallback<Void>() {
+				@Override
+				public void onFailure(Throwable caught) {
+					handleException(caught);
+				}
+
+				@Override
+				public void onSuccess(Void result) {
+					tmpPropertyStore = PropertyStore
+							.createNonStandardPropertyStore(objectStore);
+					state = State.SHOW_EXPAND_MESSAGE;
+					iterate();
+				}
+			};
+			objectStore = new ObjectStoreWebDbImpl(db, "tmp_propertyStore",
+					itrCallback);
 			break;
 		case SHOW_EXPAND_MESSAGE:
 			String msg = TextProvider
@@ -84,7 +116,7 @@ public class IosStorageExpander {
 			s.setPadding(2, Unit.EM);
 			s.setPaddingTop(4, Unit.EM);
 			s.setProperty("textAlign", "center");
-			ComplexPanel cp = panelProvider.providePanel();
+			cp = panelProvider.providePanel();
 			cp.add(html);
 			state = State.EXPANDING_GET_COUNT;
 			iterate();
@@ -101,7 +133,7 @@ public class IosStorageExpander {
 						public void onSuccess(String result) {
 							expansionCount = result == null ? 0 : Integer
 									.parseInt(result);
-							if (expansionCount == 30) {
+							if (expansionCount == EXPAND_TO_MB_MULTIPLES) {
 								state = State.EXPANDING_CLEAR_GET_KEYS;
 							} else {
 								state = State.EXPANDING_ADD;
@@ -119,7 +151,7 @@ public class IosStorageExpander {
 				value = value + value;
 			}
 			System.out.println("putting: " + expansionCount);
-			PropertyStore.get().put(key, value,
+			tmpPropertyStore.put(key, value,
 					new PersistenceCallback<Integer>() {
 						@Override
 						public void onFailure(Throwable caught) {
@@ -157,7 +189,7 @@ public class IosStorageExpander {
 					});
 			break;
 		case EXPANDING_CLEAR_GET_KEYS:
-			PropertyStore.get().getKeysPrefixedBy(EXPAND_KEY_PREFIX,
+			tmpPropertyStore.getKeysPrefixedBy(EXPAND_KEY_PREFIX,
 					new PersistenceCallbackStd<List<String>>() {
 						@Override
 						public void onSuccess(List<String> result) {
@@ -183,13 +215,13 @@ public class IosStorageExpander {
 												IosStorageExpander.class,
 												"expansion-complete",
 												"Database expansion complete"));
-								state = State.DONE;
+								state = State.DROP;
 								iterate();
 							}
 						});
 				break;
 			} else {
-				PropertyStore.get().remove(keysToDelete.next(),
+				tmpPropertyStore.remove(keysToDelete.next(),
 						new PersistenceCallbackStd() {
 							@Override
 							public void onSuccess(Object result) {
@@ -198,19 +230,35 @@ public class IosStorageExpander {
 						});
 			}
 			break;
-		// case VACUUM:
-		// ((ObjectStoreWebDbImpl) PropertyStore.get().getObjectStore())
-		// .executeSql("VACUUM;",
-		// new PersistenceCallbackStd<List<String>>() {
-		// @Override
-		// public void onSuccess(List<String> result) {
-		// keysToDelete = result.iterator();
-		// state = State.DONE;
-		// iterate();
-		// }
-		// });
-		// break;
+		case DROP:
+			objectStore.drop(new PersistenceCallback<Void>() {
+				@Override
+				public void onFailure(Throwable caught) {
+					handleException(caught);
+				}
+
+				@Override
+				public void onSuccess(Void result) {
+					state = State.DONE;
+					iterate();
+				}
+			});
+			// case VACUUM:
+			// ((ObjectStoreWebDbImpl) propertyStore.getObjectStore())
+			// .executeSql("VACUUM;",
+			// new PersistenceCallbackStd<List<String>>() {
+			// @Override
+			// public void onSuccess(List<String> result) {
+			// keysToDelete = result.iterator();
+			// state = State.DONE;
+			// iterate();
+			// }
+			// });
+			// break;
 		case DONE:
+			if (cp != null) {
+				cp.removeFromParent();
+			}
 			asyncCallback.onSuccess(null);
 			break;
 		}
@@ -224,8 +272,8 @@ public class IosStorageExpander {
 	}
 
 	private enum State {
-		CHECK_DONE, SHOW_EXPAND_MESSAGE, EXPANDING_GET_COUNT, EXPANDING_ADD,
-		EXPANDING_INCREMENT_COUNT, EXPANDING_CLEAR_GET_KEYS,
-		EXPANDING_CLEAR_REMOVE_KEYS, DONE, VACUUM;
+		INIT_TMP_STORE, CHECK_DONE, SHOW_EXPAND_MESSAGE, EXPANDING_GET_COUNT,
+		EXPANDING_ADD, EXPANDING_INCREMENT_COUNT, EXPANDING_CLEAR_GET_KEYS,
+		EXPANDING_CLEAR_REMOVE_KEYS, DROP, DONE, VACUUM;
 	}
 }

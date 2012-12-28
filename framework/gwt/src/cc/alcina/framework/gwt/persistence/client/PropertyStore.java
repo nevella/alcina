@@ -20,7 +20,14 @@ public class PropertyStore {
 		}
 		return theInstance;
 	}
-
+	/**
+	 * 
+	 */
+	public static PropertyStore createNonStandardPropertyStore(ObjectStore delegate) {
+		PropertyStore store = new PropertyStore();
+		store.registerDelegate(delegate);
+		return store;
+	}
 	public void registerDelegate(ObjectStore objectStore) {
 		this.objectStore = objectStore;
 	}

@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.user.client.Cookies;
@@ -93,9 +94,11 @@ public class ClientSession {
 		}
 		return theInstance;
 	}
-	public static boolean initialised(){
-		return theInstance!=null;
+
+	public static boolean initialised() {
+		return theInstance != null;
 	}
+
 	public void appShutdown() {
 		updateCookie(true);
 		theInstance = null;
@@ -103,12 +106,11 @@ public class ClientSession {
 
 	protected void updateCookie(boolean remove) {
 		Map<Long, Long> m = parseCookie();
-		if(remove){
+		if (remove) {
 			m.remove(tabId);
-		}else{
-		m.put(tabId, System.currentTimeMillis());
+		} else {
+			m.put(tabId, System.currentTimeMillis());
 		}
-		
 		StringBuilder sb = new StringBuilder();
 		for (Long k : m.keySet()) {
 			sb.append(k);
@@ -136,12 +138,14 @@ public class ClientSession {
 		}
 		return result;
 	}
-	public void cancelSession(){
-		if(updateTimer!=null){
-		updateTimer.cancel();
+
+	public void cancelSession() {
+		if (updateTimer != null) {
+			updateTimer.cancel();
 		}
 		updateCookie(true);
 	}
+
 	public boolean isSoleOpenTab() {
 		long l = System.currentTimeMillis();
 		Map<Long, Long> m = parseCookie();
@@ -186,5 +190,29 @@ public class ClientSession {
 		public boolean isSoleOpenTab() {
 			return true;
 		}
+	}
+
+	/**
+	 * Callback with true if sole open tab
+	 */
+	public void checkSoleOpenTab(final Callback<Boolean> callback) {
+		if(isSoleOpenTab()){
+			callback.callback(true);
+			return;
+		}
+		new Timer() {
+			int retryCount = 4;
+
+			@Override
+			public void run() {
+				if (retryCount-- == 0) {
+					cancel();
+					callback.callback(false);
+				} else if (isSoleOpenTab()) {
+					cancel();
+					callback.callback(true);
+				}
+			}
+		}.scheduleRepeating(1000);
 	}
 }

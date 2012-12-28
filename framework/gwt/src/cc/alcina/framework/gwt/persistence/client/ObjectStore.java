@@ -22,4 +22,6 @@ public interface ObjectStore {
 	void getIdRange(PersistenceCallback<IntPair> completedCallback);
 	void removeIdRange(IntPair range,PersistenceCallback<Void> completedCallback);
 
+	void drop(PersistenceCallback<Void> persistenceCallback);
+
 }

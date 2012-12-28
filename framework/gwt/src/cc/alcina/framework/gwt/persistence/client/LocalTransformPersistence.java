@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.util.Lzw;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.PersistenceCallback.PersistenceCallbackStd;
 
@@ -94,23 +95,13 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	private ClientInstance domainObjectsPersistedBy;
 
+	private boolean useLzw;
+
 	public LocalTransformPersistence() {
 	}
 
 	public abstract void clearPersistedClient(ClientInstance exceptFor,
 			PersistenceCallback callback);
-
-	public CommitToStorageTransformListener getCommitToStorageTransformListener() {
-		return commitToStorageTransformListener;
-	}
-
-	public Map<Integer, DTRSimpleSerialWrapper> getPersistedTransforms() {
-		return this.persistedTransforms;
-	}
-
-	public DTESerializationPolicy getSerializationPolicy() {
-		return serializationPolicy;
-	}
 
 	public void dumpDatabase(final Callback<String> callback) {
 		PersistenceCallback<List<DTRSimpleSerialWrapper>> transformCallback = new PersistenceCallbackStd<List<DTRSimpleSerialWrapper>>() {
@@ -127,58 +118,18 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		getTransforms(DomainTransformRequestType.values(), transformCallback);
 	}
 
-	private static class Loader {
-		private enum Phase {
-			CLEAR, LOAD
-		};
-
-		private final Callback callback;
-
-		private final String data;
-
-		private Phase phase = Phase.CLEAR;
-
-		private final LocalTransformPersistence localTransformPersistence;
-
-		public Loader(LocalTransformPersistence localTransformPersistence,
-				String data, Callback callback) {
-			this.localTransformPersistence = localTransformPersistence;
-			this.data = data;
-			this.callback = callback;
-		}
-
-		PersistenceCallbackStd pcb = new PersistenceCallbackStd() {
-			@Override
-			public void onSuccess(Object result) {
-				iterate();
-			}
-		};
-
-		public void start() {
-			List<DTRSimpleSerialWrapper> wrappers = new DTRSimpleSerialSerializer()
-					.readMultiple(data);
-			loadIterator = wrappers.iterator();
-			iterate();
-		}
-
-		private void iterate() {
-			if (phase == Phase.CLEAR) {
-				phase = Phase.LOAD;
-				localTransformPersistence.clearAllPersisted(pcb);
-			} else {
-				if (loadIterator.hasNext()) {
-					localTransformPersistence.persist(loadIterator.next(), pcb);
-				} else {
-					callback.callback(null);
-				}
-			}
-		}
-
-		Iterator<DTRSimpleSerialWrapper> loadIterator;
+	public CommitToStorageTransformListener getCommitToStorageTransformListener() {
+		return commitToStorageTransformListener;
 	}
 
-	public void restoreDatabase(String data, Callback callback) {
-		new Loader(this, data, callback).start();
+	public Map<Integer, DTRSimpleSerialWrapper> getPersistedTransforms() {
+		return this.persistedTransforms;
+	}
+
+	public abstract String getPersistenceStoreName();
+
+	public DTESerializationPolicy getSerializationPolicy() {
+		return serializationPolicy;
 	}
 
 	public void handleUncommittedTransformsOnLoad(final Callback cb) {
@@ -211,16 +162,6 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		getTransforms(DomainTransformRequestType.TO_REMOTE, pcb1);
 	}
 
-	protected void persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted, ModalNotifier notifier,
-			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
-		ClientLayerLocator
-				.get()
-				.commonRemoteServiceAsyncInstance()
-				.persistOfflineTransforms(uncommitted,
-						postPersistOfflineTransformsCallback);
-	}
-
 	public void init(DTESerializationPolicy dteSerializationPolicy,
 			CommitToStorageTransformListener commitToServerTransformListener,
 			PersistenceCallback<Void> callback) {
@@ -237,11 +178,12 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		return this.localStorageInstalled;
 	}
 
-	public void openAvailableSessionTransformsForOfflineLoad(
-			boolean finalPass,
-			PersistenceCallback<List<DTRSimpleSerialWrapper>> persistenceCallback) {
-		openAvailableSessionTransformsForOfflineLoad(finalPass, true,
-				persistenceCallback);
+	/**
+	 * Note - this will be a performance problem for large (1mb+) blobs on
+	 * iDevices
+	 */
+	public boolean isUseLzw() {
+		return this.useLzw;
 	}
 
 	public void openAvailableSessionTransformsForOfflineLoad(
@@ -260,19 +202,24 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			}
 			final PersistenceCallback<List<DTRSimpleSerialWrapper>> pcb2 = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
 				@Override
+				public void onFailure(Throwable caught) {
+					persistenceCallback.onFailure(caught);
+				}
+
+				@Override
 				public void onSuccess(List<DTRSimpleSerialWrapper> result) {
 					transforms.addAll(result);
 					setClientInstanceIdForGet(null);
 					persistenceCallback.onSuccess(transforms);
 					return;
 				}
-
+			};
+			PersistenceCallback<List<DTRSimpleSerialWrapper>> pcb1 = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
 				@Override
 				public void onFailure(Throwable caught) {
 					persistenceCallback.onFailure(caught);
 				}
-			};
-			PersistenceCallback<List<DTRSimpleSerialWrapper>> pcb1 = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
+
 				@Override
 				public void onSuccess(List<DTRSimpleSerialWrapper> loads) {
 					if (loads.size() == 0) {
@@ -305,16 +252,18 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 							DomainTransformRequestType.TO_REMOTE,
 							DomainTransformRequestType.CLIENT_SYNC }, pcb2);
 				}
-
-				@Override
-				public void onFailure(Throwable caught) {
-					persistenceCallback.onFailure(caught);
-				}
 			};
 			getTransforms(DomainTransformRequestType.CLIENT_OBJECT_LOAD, pcb1);
 		} catch (Exception e) {
 			persistenceCallback.onFailure(e);
 		}
+	}
+
+	public void openAvailableSessionTransformsForOfflineLoad(
+			boolean finalPass,
+			PersistenceCallback<List<DTRSimpleSerialWrapper>> persistenceCallback) {
+		openAvailableSessionTransformsForOfflineLoad(finalPass, true,
+				persistenceCallback);
 	}
 
 	public void openAvailableSessionTransformsForOfflineLoadNeverOnline(
@@ -365,6 +314,14 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		persist(wrapper, persistenceCallback);
 	}
 
+	public abstract void reparentToClientInstance(
+			DTRSimpleSerialWrapper wrapper, ClientInstance clientInstance,
+			PersistenceCallback callback);
+
+	public void restoreDatabase(String data, Callback callback) {
+		new Loader(this, data, callback).start();
+	}
+
 	public void setClosing(boolean closing) {
 		this.closing = closing;
 	}
@@ -377,6 +334,10 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	public void setSerializationPolicy(
 			DTESerializationPolicy serializationPolicy) {
 		this.serializationPolicy = serializationPolicy;
+	}
+
+	public void setUseLzw(boolean useLzw) {
+		this.useLzw = useLzw;
 	}
 
 	public boolean shouldPersistClient(boolean clientSupportsRpcPersistence) {
@@ -470,6 +431,25 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	protected abstract void getTransforms(DomainTransformRequestType[] types,
 			PersistenceCallback<List<DTRSimpleSerialWrapper>> callback);
 
+	private static final String LZW_PROTOCOL_ADDITION = "/lzw";
+
+	protected void maybeCompressWrapper(DTRSimpleSerialWrapper wrapper) {
+		if (isUseLzw()
+				&& wrapper.getProtocolVersion() != null
+				&& !wrapper.getProtocolVersion()
+						.endsWith(LZW_PROTOCOL_ADDITION)) {
+			wrapper.setText(new Lzw().compress(wrapper.getText()));
+			wrapper.setProtocolVersion(wrapper.getProtocolVersion()
+					+ LZW_PROTOCOL_ADDITION);
+		}
+	}
+
+	protected void maybeDecompressWrapper(DTRSimpleSerialWrapper wrapper) {
+		if (wrapper.getProtocolVersion().endsWith(LZW_PROTOCOL_ADDITION)) {
+			wrapper.setText(new Lzw().decompress(wrapper.getText()));
+		}
+	}
+
 	protected abstract void persist(DTRSimpleSerialWrapper wrapper,
 			PersistenceCallback callback);
 
@@ -526,9 +506,15 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				afterGetTransforms);
 	}
 
-	public abstract void reparentToClientInstance(
-			DTRSimpleSerialWrapper wrapper, ClientInstance clientInstance,
-			PersistenceCallback callback);
+	protected void persistOfflineTransforms(
+			List<DTRSimpleSerialWrapper> uncommitted, ModalNotifier notifier,
+			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
+		ClientLayerLocator
+				.get()
+				.commonRemoteServiceAsyncInstance()
+				.persistOfflineTransforms(uncommitted,
+						postPersistOfflineTransformsCallback);
+	}
 
 	protected void setClientInstanceIdForGet(Long clientInstanceIdForGet) {
 		this.clientInstanceIdForGet = clientInstanceIdForGet;
@@ -565,42 +551,53 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		return this.domainObjectsPersistedBy;
 	}
 
-	protected final class PostPersistOfflineTransformsCallback implements
-			AsyncCallback<Void> {
-		private final Callback cb;
+	private static class Loader {
+		private final Callback callback;;
 
-		private final ModalNotifier notifier;
+		private final String data;
 
-		private final List<DTRSimpleSerialWrapper> uncommitted;
+		private Phase phase = Phase.CLEAR;
 
-		protected PostPersistOfflineTransformsCallback(
-				Callback successCallback, ModalNotifier notifier,
-				List<DTRSimpleSerialWrapper> uncommitted) {
-			this.cb = successCallback;
-			this.notifier = notifier;
-			this.uncommitted = uncommitted;
+		private final LocalTransformPersistence localTransformPersistence;
+
+		PersistenceCallbackStd pcb = new PersistenceCallbackStd() {
+			@Override
+			public void onSuccess(Object result) {
+				iterate();
+			}
+		};
+
+		Iterator<DTRSimpleSerialWrapper> loadIterator;
+
+		public Loader(LocalTransformPersistence localTransformPersistence,
+				String data, Callback callback) {
+			this.localTransformPersistence = localTransformPersistence;
+			this.data = data;
+			this.callback = callback;
 		}
 
-		public void onFailure(Throwable caught) {
-			cleanup();
-			new FromOfflineConflictResolver().resolve(this.uncommitted, caught,
-					LocalTransformPersistence.this, this.cb);
+		public void start() {
+			List<DTRSimpleSerialWrapper> wrappers = new DTRSimpleSerialSerializer()
+					.readMultiple(data);
+			loadIterator = wrappers.iterator();
+			iterate();
 		}
 
-		public void onSuccess(Void result) {
-			cleanup();
-			transformPersisted(this.uncommitted, new PersistenceCallbackStd() {
-				@Override
-				public void onSuccess(Object result) {
-					ClientLayerLocator.get().notifications()
-							.notifyOfCompletedSaveFromOffline();
-					cb.callback(null);
+		private void iterate() {
+			if (phase == Phase.CLEAR) {
+				phase = Phase.LOAD;
+				localTransformPersistence.clearAllPersisted(pcb);
+			} else {
+				if (loadIterator.hasNext()) {
+					localTransformPersistence.persist(loadIterator.next(), pcb);
+				} else {
+					callback.callback(null);
 				}
-			});
+			}
 		}
 
-		private void cleanup() {
-			this.notifier.modalOff();
+		private enum Phase {
+			CLEAR, LOAD
 		}
 	}
 
@@ -652,5 +649,42 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 	}
 
-	public abstract String getPersistenceStoreName();
+	protected final class PostPersistOfflineTransformsCallback implements
+			AsyncCallback<Void> {
+		private final Callback cb;
+
+		private final ModalNotifier notifier;
+
+		private final List<DTRSimpleSerialWrapper> uncommitted;
+
+		protected PostPersistOfflineTransformsCallback(
+				Callback successCallback, ModalNotifier notifier,
+				List<DTRSimpleSerialWrapper> uncommitted) {
+			this.cb = successCallback;
+			this.notifier = notifier;
+			this.uncommitted = uncommitted;
+		}
+
+		public void onFailure(Throwable caught) {
+			cleanup();
+			new FromOfflineConflictResolver().resolve(this.uncommitted, caught,
+					LocalTransformPersistence.this, this.cb);
+		}
+
+		public void onSuccess(Void result) {
+			cleanup();
+			transformPersisted(this.uncommitted, new PersistenceCallbackStd() {
+				@Override
+				public void onSuccess(Object result) {
+					ClientLayerLocator.get().notifications()
+							.notifyOfCompletedSaveFromOffline();
+					cb.callback(null);
+				}
+			});
+		}
+
+		private void cleanup() {
+			this.notifier.modalOff();
+		}
+	}
 }

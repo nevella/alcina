@@ -133,6 +133,7 @@ public class WebDatabaseTransformPersistence extends
 									(String) map
 											.get("transform_event_protocol"),
 									(String) map.get("tag"));
+							maybeDecompressWrapper(wr);
 							transforms.add(wr);
 						}
 					}
@@ -299,6 +300,7 @@ public class WebDatabaseTransformPersistence extends
 
 	private void persist(final DTRSimpleSerialWrapper wrapper,
 			final PersistenceCallback callback, final int persistSpacePass) {
+		maybeCompressWrapper(wrapper);
 		if (wrapper.getProtocolVersion() == null) {
 			callback.onFailure(new Exception(
 					"wrapper must have protocol version"));
@@ -414,10 +416,12 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	public void callbackFail(final PersistenceCallback callback, SQLError error) {
-		String message = "Problem initalising webdb - " + error.getMessage()
-				+ " - " + error.getCode();
-		callback.onFailure(isStorageQuotaError(error) ? new StorageQuotaException(
-				message) : new Exception(message));
+		String message = "Problem saving work (web database) - "
+				+ error.getMessage() + " - " + error.getCode();
+		Exception exception = isStorageQuotaError(error) ? new StorageQuotaException(
+				message) : new Exception(message);
+		AlcinaTopics.localPersistenceException(exception);
+		callback.onFailure(exception);
 	}
 
 	@Override

@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.state.AsyncCallbackTransitionHandler;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.client.util.Lzw;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -233,7 +234,18 @@ public class RemoteLogPersister {
 						firstAddedThisBuffer = idCtr;
 					}
 					lastAddedThisBuffer = idCtr;
-					buffer.append(result.values().iterator().next());
+					String value = result.values().iterator().next();
+					if (value.startsWith("lzw:")) {
+						try {
+							LogStore.get().setMuted(true);
+							String dec = new Lzw().decompress(value
+									.substring(4));
+							value = dec != null ? dec : value;
+						} finally {
+							LogStore.get().setMuted(false);
+						}
+					}
+					buffer.append(value);
 					buffer.append("\n");
 					if (buffer.length() < PREFERRED_MAX_PUSH_SIZE
 							&& idCtr < logRecordRange.i2) {
@@ -290,7 +302,8 @@ public class RemoteLogPersister {
 							machine.clear();
 							machine = null;
 							if ((pushCount > 0 || pushAgain) && !maybeOffline) {
-								TimerWrapper timer = ClientLayerLocator.get().timerWrapperProvider()
+								TimerWrapper timer = ClientLayerLocator.get()
+										.timerWrapperProvider()
 										.getTimer(new Runnable() {
 											@Override
 											public void run() {

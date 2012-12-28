@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
+import cc.alcina.framework.gwt.client.util.Lzw;
 
 /**
  * At the moment:
@@ -36,14 +37,6 @@ import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
  * 
  */
 public class LogStore {
-	
-	protected LogStore() {
-		String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);
-		if (cookie != null) {
-			log("restart", cookie);
-		}
-	}
-
 	private static LogStore theInstance;
 
 	public static LogStore get() {
@@ -68,7 +61,7 @@ public class LogStore {
 
 	// push logs to remote store
 	private AtEndOfEventSeriesTimer remotePersistenceTimer = new AtEndOfEventSeriesTimer(
-			2000, new Runnable() {
+			20000, new Runnable() {
 				@Override
 				public void run() {
 					pushLogsToRemote();
@@ -94,6 +87,10 @@ public class LogStore {
 
 	private int localSeriesIdCounter = 0;
 
+	private boolean usesLzw;
+
+	private boolean muted;
+
 	private TopicListener<StringPair> stringPairListener = new TopicListener<StringPair>() {
 		@Override
 		public void topicPublished(String key, StringPair message) {
@@ -110,9 +107,48 @@ public class LogStore {
 
 	private int lastCookieId;
 
+	protected ObjectStore objectStore;
+
+	protected LogStore() {
+		String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);
+		if (cookie != null) {
+			log("restart", cookie);
+		}
+	}
+
+	public void add(String key, String value,
+			PersistenceCallback<Integer> idCallback) {
+		this.objectStore.add(key, value, idCallback);
+	}
+
+	public void getIdRange(PersistenceCallback<IntPair> completedCallback) {
+		this.objectStore.getIdRange(completedCallback);
+	}
+
+	public void getRange(int fromId, int toId,
+			PersistenceCallback<Map<Integer, String>> valueCallback) {
+		this.objectStore.getRange(fromId, toId, valueCallback);
+	}
+
+	public RemoteLogPersister getRemoteLogPersister() {
+		return this.remoteLogPersister;
+	}
+
+	public TopicListener<StringPair> getStringPairListener() {
+		return stringPairListener;
+	}
+
+	public void locallyPersistLogs(String serialized) {
+		if (useCookieMsgBackup && lastCookieId == localSeriesIdCounter) {
+			Cookies.removeCookie(STORAGE_COOKIE_KEY);
+		}
+		AlcinaTopics.muteStatisticsLogging(true);
+		add(lastTopic, serialized, afterLocalPersistence);
+	}
+
 	@SuppressWarnings("deprecation")
 	public void log(String topic, String message) {
-		if (CommonUtils.equalsWithNullEquality(message, lastMessage)) {
+		if (CommonUtils.equalsWithNullEquality(message, lastMessage) || muted) {
 			return;
 		}
 		this.lastMessage = message;
@@ -143,48 +179,8 @@ public class LogStore {
 		remoteLogPersister.push();
 	}
 
-	protected void persistLogs() {
-		if (logs.size > 0 && this.objectStore != null) {
-			String serialized = new AlcinaBeanSerializer().serialize(logs);
-			logs = new ClientLogRecords();
-			locallyPersistLogs(serialized);
-		}
-	}
-
-	public void locallyPersistLogs(String serialized) {
-		if (useCookieMsgBackup && lastCookieId == localSeriesIdCounter) {
-			Cookies.removeCookie(STORAGE_COOKIE_KEY);
-		}
-		AlcinaTopics.muteStatisticsLogging(true);
-		add(lastTopic, serialized, afterLocalPersistence);
-	}
-
-	protected ObjectStore objectStore;
-
-	public void add(String key, String value,
-			PersistenceCallback<Integer> idCallback) {
-		this.objectStore.add(key, value, idCallback);
-	}
-
 	public void registerDelegate(ObjectStore objectStore) {
 		this.objectStore = objectStore;
-	}
-
-	public RemoteLogPersister getRemoteLogPersister() {
-		return this.remoteLogPersister;
-	}
-
-	public void setRemoteLogPersister(RemoteLogPersister remoteLogPersister) {
-		this.remoteLogPersister = remoteLogPersister;
-	}
-
-	public void getIdRange(PersistenceCallback<IntPair> completedCallback) {
-		this.objectStore.getIdRange(completedCallback);
-	}
-
-	public void getRange(int fromId, int toId,
-			PersistenceCallback<Map<Integer, String>> valueCallback) {
-		this.objectStore.getRange(fromId, toId, valueCallback);
 	}
 
 	public void removeIdRange(IntPair range,
@@ -192,7 +188,36 @@ public class LogStore {
 		this.objectStore.removeIdRange(range, completedCallback);
 	}
 
-	public TopicListener<StringPair> getStringPairListener() {
-		return stringPairListener;
+	public void setRemoteLogPersister(RemoteLogPersister remoteLogPersister) {
+		this.remoteLogPersister = remoteLogPersister;
+	}
+
+	protected void persistLogs() {
+		if (logs.size > 0 && this.objectStore != null) {
+			String serialized = new AlcinaBeanSerializer().serialize(logs);
+			if (isUsesLzw()) {
+				setMuted(true);
+				serialized = "lzw:" + new Lzw().compress(serialized);
+				setMuted(false);
+			}
+			logs = new ClientLogRecords();
+			locallyPersistLogs(serialized);
+		}
+	}
+
+	public boolean isUsesLzw() {
+		return this.usesLzw;
+	}
+
+	public void setUsesLzw(boolean usesLzw) {
+		this.usesLzw = usesLzw;
+	}
+
+	public boolean isMuted() {
+		return this.muted;
+	}
+
+	public void setMuted(boolean muted) {
+		this.muted = muted;
 	}
 }

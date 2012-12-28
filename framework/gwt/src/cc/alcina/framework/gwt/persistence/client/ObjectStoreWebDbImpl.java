@@ -560,4 +560,26 @@ public class ObjectStoreWebDbImpl implements ObjectStore {
 		new RemoveRangeHandler().removeRange(range.i1, range.i2,
 				completedCallback);
 	}
+
+	@Override
+	public void drop(final PersistenceCallback<Void> persistenceCallback) {
+		TransactionCallback dropCallback = new TransactionCallback() {
+			@Override
+			public void onTransactionStart(SQLTransaction tx) {
+				String sql = CommonUtils.formatJ("DROP TABLE %s;", tableName);
+				tx.executeSql(sql, null);
+			}
+
+			@Override
+			public void onTransactionSuccess() {
+				persistenceCallback.onSuccess(null);
+			}
+
+			@Override
+			public void onTransactionFailure(SQLError error) {
+				onFailure(persistenceCallback, error);
+			}
+		};
+		db.transaction(dropCallback);
+	}
 }

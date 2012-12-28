@@ -252,7 +252,7 @@ public class PersistenceStateHandlers {
 				var muted = lsi.@cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LogStoreInterceptors::areStatsMuted()();
 				if (!muted) {
 					var e2s = eventToString(evt);
-					lsi.@cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LogStoreInterceptors::logMetric(Ljava/lang/String;)(e2s);
+					lsi.@cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LogStoreInterceptors::logStat(Ljava/lang/String;)(e2s);
 				}
 				return true;
 			};
@@ -272,8 +272,9 @@ public class PersistenceStateHandlers {
 					.getStringPairListener(), true);
 		}
 
-		public void logMetric(String stat) {
-			ClientLayerLocator.get().notifications().log(stat);
+		public void logStat(String stat) {
+			AlcinaTopics.logCategorisedMessage(new StringPair(
+					AlcinaTopics.LOG_CATEGORY_STAT, stat));
 		}
 
 		public void logHistoryEvents() {
