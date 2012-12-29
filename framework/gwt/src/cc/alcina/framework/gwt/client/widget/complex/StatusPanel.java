@@ -205,6 +205,7 @@ public class StatusPanel extends Composite {
 			current = this;
 		}
 		content.setHTML(html);
+		setShowingProblem(false);
 		if (!inresize
 				&& ClientLayerLocator.get().clientBase().isDisplayInitialised()
 				&& ClientLayerLocator.get().isUsesRootLayoutPanel()) {

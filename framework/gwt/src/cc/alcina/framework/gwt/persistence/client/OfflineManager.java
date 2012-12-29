@@ -18,6 +18,7 @@ import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
  * TODO: this should be a singleton...with listeners rather than
  * 'registerUpdatingCallback' etc
  * 
+ * and should be a state machine. in fact, izz a mess!
  * @author nick@alcina.cc
  * 
  */
@@ -64,7 +65,7 @@ public class OfflineManager {
 	}
 
 	public enum FromRequiresCurrentCachePerspsectiveReccAction {
-		WAIT, CONTINUE
+		WAIT, CONTINUE, DOWNLOADING
 	}
 
 	public FromRequiresCurrentCachePerspsectiveReccAction shouldIWait() {
@@ -76,8 +77,12 @@ public class OfflineManager {
 		case AppCache.UNCACHED:
 		case AppCache.UPDATEREADY:
 			return FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE;
+		case AppCache.DOWNLOADING:
+			return FromRequiresCurrentCachePerspsectiveReccAction.DOWNLOADING;
+		case AppCache.CHECKING:
+			return FromRequiresCurrentCachePerspsectiveReccAction.WAIT;
 		}
-		return FromRequiresCurrentCachePerspsectiveReccAction.WAIT;
+		return FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE;// unknown
 	}
 
 	public boolean checkCacheLoading(AsyncCallback completionCallback) {
@@ -95,6 +100,9 @@ public class OfflineManager {
 	}
 
 	public void waitAndReload() {
+		if(isUpdating()){
+			return;
+		}
 		if (updatingCallback != null) {
 			updatingCallback.callback(null);
 		}
@@ -213,9 +221,15 @@ public class OfflineManager {
 		appCacheResolutionTimer = new Timer() {
 			@Override
 			public void run() {
-				if (shouldIWait() == FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE) {
+				FromRequiresCurrentCachePerspsectiveReccAction siw = shouldIWait();
+				switch(siw){
+				case CONTINUE:
 					appCacheResolutionTimer.cancel();
 					callback.callback(null);
+					return;
+				case DOWNLOADING:
+					waitAndReload();
+					cancel();
 					return;
 				}
 			}

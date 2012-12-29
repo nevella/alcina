@@ -23,7 +23,7 @@ import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.HTML;
 
 public class IosStorageExpander {
-	private static final int EXPAND_TO_MB_MULTIPLES = 22;
+	private static final int EXPAND_TO_MB_MULTIPLES = 25;
 
 	// app cache will give us about 7
 	public static final String CHECKED_KEY = IosStorageExpander.class.getName()
@@ -110,7 +110,7 @@ public class IosStorageExpander {
 							IosStorageExpander.class,
 							"Explanation",
 							"Expanding storage for ios devices"
-									+ " - please press \"OK\" when asked for more storage");
+									+ " - please press \"Increase\" when asked for more storage");
 			HTML html = new HTML(msg);
 			Style s = html.getElement().getStyle();
 			s.setPadding(2, Unit.EM);
