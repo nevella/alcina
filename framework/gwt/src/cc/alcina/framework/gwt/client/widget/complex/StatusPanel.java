@@ -9,6 +9,7 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.ui.Composite;
@@ -248,9 +249,11 @@ public class StatusPanel extends Composite {
 		content.setHTML("");
 	}
 
-	public static void maybeShowMessage(String message) {
+	public static void showMessageOrAlert(String message) {
 		if (current != null) {
 			current.setContent(message);
+		}else{
+			Window.alert(message);
 		}
 	}
 
