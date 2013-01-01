@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
+import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -44,6 +45,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.ListBox;
+import com.totsp.gwittir.client.ui.RadioButton;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.validator.Validator;
 
@@ -92,7 +94,7 @@ public class GwittirUtils {
 	public enum FormFieldTypeForRefresh {
 		TEXT, RADIO, CHECK, SELECT, TEXT_AREA
 	}
-
+	
 	public static void refreshFields(Binding binding, String onlyPropertyName,
 			boolean muteTransformManager, boolean onlyEmpties,
 			boolean onlyCommit, FormFieldTypeForRefresh[] types) {
@@ -131,6 +133,9 @@ public class GwittirUtils {
 				boolean isCheckbox = b.getLeft().object instanceof Checkbox;
 				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.CHECK)
 						&& isCheckbox;
+				boolean isRadio = (b.getLeft().object instanceof RadioButton||b.getLeft().object instanceof RadioButtonList);
+				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.RADIO)
+						&& isRadio;
 				AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
 				if (!tb.isVisible()) {
 					continue;

@@ -24,6 +24,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.RecheckVisibilityHandler;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.Link;
 
@@ -84,6 +85,7 @@ public class ChildBeanCustomiser implements Customiser {
 							factory, editable, false);
 			this.gridForm = new GridForm(fields, 1, factory);
 			gridForm.setDirectSetModelDisabled(true);
+			gridForm.addAttachHandler(new RecheckVisibilityHandler(gridForm));
 			// the model should be the child
 			// bean(value), not the parent
 			gridForm.setStyleName("alcina-ChildBean");

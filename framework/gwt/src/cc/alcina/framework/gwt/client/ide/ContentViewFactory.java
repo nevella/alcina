@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
@@ -88,6 +89,7 @@ import com.totsp.gwittir.client.beans.Binding.BindingInstance;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.table.DataProvider;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -101,7 +103,7 @@ import com.totsp.gwittir.client.validator.Validator;
  * @author Nick Reddel
  */
 public class ContentViewFactory {
-	static class RecheckVisibilityHandler implements Handler {
+	public static class RecheckVisibilityHandler implements Handler {
 		private final GridForm grid;
 
 		public RecheckVisibilityHandler(GridForm grid) {
@@ -126,6 +128,20 @@ public class ContentViewFactory {
 							if (!PermissionsManager.get().isPermissible(
 									right.object, visualiserInfo.visible())) {
 								grid.hideRow(r);
+							}
+						}
+						PropertyPermissions pp = pa.getAnnotationForProperty(
+								right.object.getClass(),
+								PropertyPermissions.class,
+								right.property.getName());
+						if (pp != null) {
+							if (!PermissionsManager.get().isPermissible(
+									right.object, pp.write())) {
+								SourcesPropertyChangeEvents left = b.getLeft().object;
+								if (left instanceof HasEnabled
+										&& !(left instanceof Link)) {
+									((HasEnabled) left).setEnabled(false);
+								}
 							}
 						}
 						r++;

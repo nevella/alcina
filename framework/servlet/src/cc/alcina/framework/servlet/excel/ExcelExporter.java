@@ -177,8 +177,8 @@ public class ExcelExporter {
 			table.appendChild(row);
 		}
 	}
-	private Pattern percentPattern = Pattern.compile("([0-9]+\\.?[0-9]*)|([0-9]*\\.?[0-9]+)%");
-	private Pattern numericPattern = Pattern.compile("([0-9]+\\.?[0-9]*)|([0-9]*\\.?[0-9]+)");
+	private Pattern percentPattern = Pattern.compile("-?(([0-9]+\\.?[0-9]*)|([0-9]*\\.?[0-9]+))%");
+	private Pattern numericPattern = Pattern.compile("-?([0-9]+\\.?[0-9]*)|([0-9]*\\.?[0-9]+)");
 
 	private boolean isNumeric(String strVal) {
 		return strVal != null && numericPattern.matcher(strVal).matches();

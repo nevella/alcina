@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -16,6 +17,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.state.AsyncCallbackTransitionHandler;
+import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.Lzw;
 
@@ -235,12 +237,15 @@ public class RemoteLogPersister {
 					}
 					lastAddedThisBuffer = idCtr;
 					String value = result.values().iterator().next();
-					if (value.startsWith("lzw:")) {
+					if (value.startsWith("lzwb:")) {
 						try {
 							LogStore.get().setMuted(true);
-							String dec = new Lzw().decompress(value
-									.substring(4));
+							String dec = new Lzw().decompress(new String(
+									Base64Utils.fromBase64(value.substring(5)),
+									"UTF-8"));
 							value = dec != null ? dec : value;
+						} catch (UnsupportedEncodingException e) {
+							throw new WrappedRuntimeException(e);
 						} finally {
 							LogStore.get().setMuted(false);
 						}

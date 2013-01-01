@@ -13,7 +13,7 @@ public abstract class EnumMachine<E extends Enum, M extends MachineModel>
 
 	protected void initModel() {
 		model = (M) new MachineModel();
-		model.setDebug(true);
+		model.setDebug(false);
 	}
 
 	Map<E, EnumMachineState<E>> statesForElements = new LinkedHashMap<E, EnumMachineState<E>>();

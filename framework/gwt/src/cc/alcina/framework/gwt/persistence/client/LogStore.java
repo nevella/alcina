@@ -3,8 +3,7 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.Date;
 import java.util.Map;
 
-import com.google.gwt.user.client.Cookies;
-
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
@@ -17,7 +16,10 @@ import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
+import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.Lzw;
+
+import com.google.gwt.user.client.Cookies;
 
 /**
  * At the moment:
@@ -197,7 +199,19 @@ public class LogStore {
 			String serialized = new AlcinaBeanSerializer().serialize(logs);
 			if (isUsesLzw()) {
 				setMuted(true);
-				serialized = "lzw:" + new Lzw().compress(serialized);
+				locallyPersistLogs(serialized);
+				try {
+					// unfortunately, have to encode to base64 here - unless we
+					// want to be trixy with SQLLite
+					String maybeShorter = "lzwb:"
+							+ Base64Utils.toBase64(new Lzw().compress(
+									serialized).getBytes("UTF-8"));
+					if (maybeShorter.length() < serialized.length()) {
+						serialized = maybeShorter;
+					}
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
 				setMuted(false);
 			}
 			logs = new ClientLogRecords();

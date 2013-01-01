@@ -28,7 +28,7 @@ public class AlcinaBeanSerializerS {
 
 	private ClassLoader cl;
 
-	public <T> T deserialize(String jsonString) throws Exception {
+	private <T> T deserialize(String jsonString) throws Exception {
 		JSONObject obj = new JSONObject(jsonString);
 		return (T) deserializeObject(obj);
 	}

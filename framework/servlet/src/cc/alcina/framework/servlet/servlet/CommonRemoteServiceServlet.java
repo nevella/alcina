@@ -793,7 +793,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					return new AlcinaBeanSerializerS().deserialize(original,
 							Thread.currentThread().getContextClassLoader());
 				} catch (Exception e) {
+					System.out.format("problem deserializing clientlogrecord:\n%s\n",original);
 					e.printStackTrace();
+					if(ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class, "throwLogClientRecordExceptions")){
+						throw new WrappedRuntimeException(e);
+					}
 					return null;
 				}
 			}

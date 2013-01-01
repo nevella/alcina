@@ -25,6 +25,7 @@ import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.widget.HasComplexPanel;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo.LayoutInfo;
@@ -39,6 +40,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -766,5 +768,20 @@ public class WidgetUtils {
 
 	public static void copySize(Widget from, Widget to) {
 		to.setSize(from.getOffsetWidth() + "px", from.getOffsetHeight() + "px");
+	}
+
+	public static void maybeClosePopupParent(ClickEvent clickEvent) {
+		Widget w = (Widget) clickEvent.getSource();
+		CollectionFilter<Object> callback = new CollectionFilter<Object>() {
+			@Override
+			public boolean allow(Object o) {
+				return o instanceof RelativePopupPanel;
+			}
+		};
+		RelativePopupPanel pp = (RelativePopupPanel) getParentWidgetSatisfyingCallback(
+				w, callback);
+		if (pp != null) {
+			pp.hide();
+		}
 	}
 }

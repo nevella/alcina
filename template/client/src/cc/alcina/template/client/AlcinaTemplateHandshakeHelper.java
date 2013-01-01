@@ -23,6 +23,7 @@ import cc.alcina.template.cs.persistent.ClientInstanceImpl;
 
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class AlcinaTemplateHandshakeHelper extends
@@ -158,11 +159,7 @@ public class AlcinaTemplateHandshakeHelper extends
 
 			public void onSuccess(Object result) {
 				CallManager.get().completed(this);
-				PermissionsManager.get().setUser(null);
-				LoginState loginState = LoginState.NOT_LOGGED_IN;
-				PermissionsManager.get().setLoginState(loginState);
-				clearPerInstanceState();
-				loadUserObjects("", null, LoginState.NOT_LOGGED_IN);
+				Window.Location.reload();
 			}
 		};
 		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()

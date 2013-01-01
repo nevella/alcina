@@ -10,22 +10,13 @@ import com.google.gwt.dom.client.Element;
 public class Lzw {
 	public String compress(String data) {
 		JavaScriptObject encoder = createEncoder();
-		ClientMetricLogging.get().start("compress");
 		String encoded = encode(encoder, data);
-		ClientMetricLogging.get().end("compress");
-		ClientLayerLocator
-				.get()
-				.notifications()
-				.log(CommonUtils.formatJ("raw/comp size: %s %s", data.length(),
-						encoded.length()));
 		return encoded;
 	}
 
 	public String decompress(String data) {
 		JavaScriptObject encoder = createEncoder();
-		ClientMetricLogging.get().start("decompress");
 		String decoded = decode(encoder, data);
-		ClientMetricLogging.get().end("decompress");
 		return decoded;
 	}
 
