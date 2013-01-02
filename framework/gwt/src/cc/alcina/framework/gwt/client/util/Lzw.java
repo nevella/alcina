@@ -20,6 +20,11 @@ public class Lzw {
 		return decoded;
 	}
 
+	public boolean checkRoundtrip(String data) {
+		JavaScriptObject encoder = createEncoder();
+		return checkRoundtrip0(encoder, data);
+	}
+
 	private native String encode(JavaScriptObject encoder, String data) /*-{
 		return encoder.compressToUtf16Str(data);
 	}-*/;
@@ -28,9 +33,18 @@ public class Lzw {
 		return encoder.decompressUtf16Str(data);
 	}-*/;
 
+	native boolean checkRoundtrip0(JavaScriptObject encoder, String data) /*-{
+		var arr = encoder.compress(data);
+		var s2 = encoder.decompress(arr);
+		return data == s2;
+	}-*/;
+
 	/**
 	 * Could have done something fancy with utf8 - but given target string is
 	 * sqllite/utf-16, don't bother
+	 * 
+	 * !!Note the use of arr.hasOwnProperty(instead of arr[]) - otherwise words
+	 * like 'pop', 'push' and other array methods will cause tricky corruption
 	 */
 	native JavaScriptObject createEncoder()/*-{
 		//http://rosettacode.org/wiki/LZW_compression#JavaScript
@@ -97,7 +111,7 @@ public class Lzw {
 					}
 					c = uncompressed.charAt(i);
 					wc = w + c;
-					if (dictionary[wc]) {
+					if (dictionary.hasOwnProperty(wc)) {
 						w = wc;
 					} else {
 						result.push(dictionary[w]);
@@ -115,7 +129,6 @@ public class Lzw {
 			},
 
 			decompress : function(compressed) {
-				"use strict";
 				// Build the dictionary.
 				var i, j, dictionary = null, w, result, k, entry = "", dictSize = 256;
 
