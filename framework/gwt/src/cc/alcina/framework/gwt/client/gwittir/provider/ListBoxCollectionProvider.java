@@ -17,6 +17,7 @@ import java.util.Comparator;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.gwittir.Comparators;
+import cc.alcina.framework.gwt.client.gwittir.customiser.ListAddItemHandler;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox.DomainListBox;
 
@@ -37,27 +38,35 @@ public  class ListBoxCollectionProvider implements
 
 	private  Comparator comparator;
 
+	private final ListAddItemHandler addHandler;
+
 	public ListBoxCollectionProvider(Class clazz,
 			boolean propertyIsCollection) {
 		this(clazz, propertyIsCollection, false);
 	}
 	public ListBoxCollectionProvider(Class clazz,
 			boolean propertyIsCollection, boolean noNullOption){
-		this(clazz, propertyIsCollection, noNullOption, null,null);
+		this(clazz, propertyIsCollection, noNullOption, null,null,null);
 	}
 	public ListBoxCollectionProvider(Class clazz,
 			boolean propertyIsCollection, boolean noNullOption,
-			Renderer renderer, Comparator comparator) {
+			Renderer renderer, Comparator comparator){
+		this(clazz, propertyIsCollection, noNullOption, renderer, comparator, null);
+	}
+	public ListBoxCollectionProvider(Class clazz,
+			boolean propertyIsCollection, boolean noNullOption,
+			Renderer renderer, Comparator comparator, ListAddItemHandler addHandler) {
 		this.clazz = clazz;
 		this.propertyIsCollection = propertyIsCollection;
 		this.noNullOption = noNullOption;
 		this.renderer = renderer;
 		this.comparator = comparator;
+		this.addHandler = addHandler;
 	}
 
 	public DomainListBox get() {
 		DomainListBox listBox = new DomainListBox(clazz, filter,
-				!propertyIsCollection && !noNullOption);
+				!propertyIsCollection && !noNullOption,addHandler);
 		listBox.setRenderer(renderer == null ? DisplayNameRenderer.INSTANCE
 				: renderer);
 		listBox.setComparator(comparator==null?Comparators.EqualsComparator.INSTANCE:comparator);

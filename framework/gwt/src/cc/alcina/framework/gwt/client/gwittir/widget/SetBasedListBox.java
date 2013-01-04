@@ -40,15 +40,28 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import cc.alcina.framework.common.client.actions.InlineButtonHandler;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
+import cc.alcina.framework.gwt.client.gwittir.customiser.ListAddItemHandler;
+import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
+import cc.alcina.framework.gwt.client.widget.SpanPanel;
+import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
+import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
+import cc.alcina.framework.gwt.client.widget.dialog.Prompter;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ClickListener;
+import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.HasFocus;
 import com.google.gwt.user.client.ui.KeyboardListener;
@@ -79,15 +92,29 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 
 	private Collection options = new ArrayList();
 
-	private com.google.gwt.user.client.ui.ListBox base;
+	protected com.google.gwt.user.client.ui.ListBox base;
 
 	private Vector changeListeners = new Vector();
 
 	private boolean sortOptionsByToString = true;
 
-	/** Creates a new instance of ListBox */
+	private ListAddItemHandler listAddItemHandler;
+
+	private ToolbarButton addButton;
+
 	public SetBasedListBox() {
 		super();
+		init0();
+	}
+
+	/** Creates a new instance of ListBox */
+	public SetBasedListBox(ListAddItemHandler listAddItemHandler) {
+		super();
+		this.listAddItemHandler = listAddItemHandler;
+		init0();
+	}
+
+	private void init0() {
 		this.base = new com.google.gwt.user.client.ui.ListBox();
 		this.setRenderer(ToStringRenderer.INSTANCE);
 		this.setComparator(SimpleComparator.INSTANCE);
@@ -102,7 +129,18 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			}
 			// foo!
 		});
-		super.initWidget(base);
+		Widget delegate = base;
+		if (listAddItemHandler != null) {
+			FlowPanel fp = new FlowPanel();
+			fp.setStyleName("nowrap");
+			delegate=fp;
+			fp.add(base);
+			InlineButtonHandler addItemAction = new AddItemHandler();
+			addButton = new ToolbarButton(addItemAction, true);
+			fp.add(UsefulWidgetFactory.createSpacer(2));
+			fp.add(addButton);
+		}
+		super.initWidget(delegate);
 	}
 
 	public int getAbsoluteLeft() {
@@ -512,6 +550,53 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return sortOptionsByToString;
 	}
 
+	private class AddItemHandler extends InlineButtonHandler {
+		@Override
+		public String getDisplayName() {
+			return "+";
+		}
+
+		@Override
+		public void onClick(ClickEvent event) {
+			String validationMessage = listAddItemHandler
+					.validateCanAdd(getValue());
+			if (validationMessage != null) {
+				ClientLayerLocator.get().notifications()
+						.showMessage(validationMessage);
+				return;
+			}
+			String namePrompt = listAddItemHandler.getPrompt();
+			String nameValue = null;
+			Callback<String> actionCallback = new Callback<String>() {
+				@Override
+				public void callback(String nameValue) {
+					Object newItem = listAddItemHandler
+							.createNewItem(nameValue);
+					List optionsCopy = new ArrayList(getOptions());
+					optionsCopy.add(newItem);
+					setOptions(optionsCopy);
+					setValue(newItem);
+				}
+			};
+			Callback<OkCancelDialogBox> positioningCallback = new Callback<OkCancelDialogBox>() {
+				@Override
+				public void callback(OkCancelDialogBox box) {
+					box.setPopupPosition(
+							addButton.getAbsoluteLeft(),
+							addButton.getAbsoluteTop()
+									+ addButton.getOffsetHeight());
+				}
+			};
+			if (namePrompt != null) {
+				String defaultName = listAddItemHandler.getDefaultName();
+				new Prompter("Message", namePrompt, defaultName, null,
+						positioningCallback, actionCallback);
+			} else {
+				actionCallback.callback(null);
+			}
+		}
+	}
+
 	public static class DomainListBox extends SetBasedListBox {
 		private Class domainClass;
 
@@ -520,8 +605,8 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		private boolean hasNullOption;
 
 		public DomainListBox(Class domainClass, CollectionFilter filter,
-				boolean hasNullOption) {
-			super();
+				boolean hasNullOption, ListAddItemHandler addHandler) {
+			super(addHandler);
 			this.domainClass = domainClass;
 			this.filter = filter;
 			this.hasNullOption = hasNullOption;

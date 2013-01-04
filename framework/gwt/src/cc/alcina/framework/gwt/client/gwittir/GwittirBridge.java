@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,13 +101,26 @@ public class GwittirBridge implements PropertyAccessor {
 	private Map<Class, BeanDescriptor> descriptorClassLookup = new HashMap<Class, BeanDescriptor>();
 
 	public BeanDescriptor getDescriptorForClass(Class c) {
-		BeanDescriptor bd = descriptorClassLookup.get(c);
-		if (bd == null) {
-			Object o = ClientReflector.get().getTemplateInstance(c);
-			bd = Introspector.INSTANCE.getDescriptor(o);
-			descriptorClassLookup.put(c, bd);
+		return getDescriptorForClass(c, true);
+	}
+
+	public BeanDescriptor getDescriptorForClass(Class c,
+			boolean exceptionIfNotFound) {
+		try {
+			BeanDescriptor bd = descriptorClassLookup.get(c);
+			if (bd == null) {
+				Object o = ClientReflector.get().getTemplateInstance(c);
+				bd = Introspector.INSTANCE.getDescriptor(o);
+				descriptorClassLookup.put(c, bd);
+			}
+			return bd;
+		} catch (RuntimeException re) {
+			if (exceptionIfNotFound) {
+				throw re;
+			} else {
+				return null;
+			}
 		}
-		return bd;
 	}
 
 	// private Set<String> reffedDescriptor = new LinkedHashSet<String>();
@@ -554,7 +568,7 @@ public class GwittirBridge implements PropertyAccessor {
 						propertyName, o, value), e,
 						SuggestedAction.NOTIFY_WARNING);
 			} catch (Exception e1) {
-				//tostring problem
+				// tostring problem
 				throw new WrappedRuntimeException(CommonUtils.formatJ(
 						"Unable to set property %s for object %s to value %s",
 						propertyName, o.getClass(), value == null ? null
@@ -598,15 +612,6 @@ public class GwittirBridge implements PropertyAccessor {
 
 	public Class getPropertyType(Class objectClass, String propertyName) {
 		return ClientReflector.get().getPropertyType(objectClass, propertyName);
-	}
-
-	public static void renameField(Field[] fields, String propertyName,
-			String label) {
-		for (Field f : fields) {
-			if (f.getPropertyName().equals(propertyName)) {
-				f.setLabel(label);
-			}
-		}
 	}
 
 	public Field getFieldToFocus(Object bean, Field[] fields) {

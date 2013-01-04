@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.csobjects;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
+import cc.alcina.framework.common.client.logic.domain.ObjectWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
@@ -36,22 +37,41 @@ public class BaseBindable extends BaseSourcesPropertyChangeEvents implements
 	@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
 	public static class BaseBindableAdapter extends BaseBindable {
 	}
-	public interface HasContext<T>{
 
+	public interface HasContext<T> {
 		public abstract void _setContext(T _context);
 
 		public abstract T _getContext();
-		
 	}
-	public static class BaseBindableWithContext<T> extends BaseBindable implements HasContext<T>{
-		private transient T _context;
-		@Override
-		public T _getContext(){
-			return _context;
+
+	@BeanInfo(displayNamePropertyName = "null")
+	public static class BaseBindableWrapper<T> extends BaseBindable implements
+			ObjectWrapper<T> {
+		protected  T wrapee;
+		public BaseBindableWrapper() {
+		}
+		public BaseBindableWrapper(T wrapee) {
+			this.wrapee = wrapee;
 		}
 		@Override
-		public void _setContext(T _context){
-			this._context=_context;
+		public T provideWrappee() {
+			return wrapee;
+		}
+	}
+
+
+	public static class BaseBindableWithContext<T> extends BaseBindable
+			implements HasContext<T> {
+		private transient T _context;
+
+		@Override
+		public T _getContext() {
+			return _context;
+		}
+
+		@Override
+		public void _setContext(T _context) {
+			this._context = _context;
 		}
 	}
 }

@@ -30,6 +30,7 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.event.logical.shared.HasCloseHandlers;
@@ -202,8 +203,8 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 						curPanel.setPopupPosition(curPanel.leftPosition,
 								curPanel.topPosition);
 					}
-					impl.setClip(curPanel.getElement(), getRectString(0, 0, 0,
-							0));
+					impl.setClip(curPanel.getElement(),
+							getRectString(0, 0, 0, 0));
 					curPanel.getPositioningContainer().add(curPanel);
 					impl.onShow(curPanel.getElement());
 				}
@@ -270,8 +271,8 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 				break;
 			}
 			// Set the rect clipping
-			impl.setClip(curPanel.getElement(), getRectString(top, right,
-					bottom, left));
+			impl.setClip(curPanel.getElement(),
+					getRectString(top, right, bottom, left));
 		}
 
 		/**
@@ -376,6 +377,9 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	private boolean autoHide, previewAllNativeEvents, modal, showing;
 
 	private boolean autoHideOnHistoryEvents;
+
+	private boolean hideOnEscape;
+
 
 	private List<Element> autoHidePartners;
 
@@ -497,8 +501,8 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		}
 		int left = (Window.getClientWidth() - getOffsetWidth()) >> 1;
 		int top = (Window.getClientHeight() - getOffsetHeight()) >> 1;
-		setPopupPosition(Math.max(Window.getScrollLeft() + left, 0), Math.max(
-				Window.getScrollTop() + top, 0));
+		setPopupPosition(Math.max(Window.getScrollLeft() + left, 0),
+				Math.max(Window.getScrollTop() + top, 0));
 		if (!initiallyShowing) {
 			setAnimationEnabled(initiallyAnimated);
 			// Run the animation. The popup is already visible, so we can skip
@@ -1114,7 +1118,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	private native void blur(Element elt) /*-{
 		// Issue 2390: blurring the body causes IE to disappear to the background
 		if (elt.blur && elt != $doc.body) {
-		elt.blur();
+			elt.blur();
 		}
 	}-*/;
 
@@ -1365,6 +1369,16 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 			}
 			break;
 		}
+		case Event.ONKEYPRESS: {
+			if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ESCAPE
+					&& isHideOnEscape()
+					) {
+				hide(false);
+				event.cancel();
+				return;
+			}
+			break;
+		}
 		}
 	}
 
@@ -1421,4 +1435,14 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	public ComplexPanel getPositioningContainer() {
 		return positioningContainer;
 	}
+
+	public boolean isHideOnEscape() {
+		return this.hideOnEscape;
+	}
+
+	public void setHideOnEscape(boolean hideOnEscape) {
+		this.hideOnEscape = hideOnEscape;
+	}
+
+
 }

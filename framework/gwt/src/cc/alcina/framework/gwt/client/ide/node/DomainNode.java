@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -81,12 +82,11 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 	@Override
 	protected boolean satisfiesFilter(String filterText) {
 		T userObject = getUserObject();
-		return ((HasSatisfiesFilter) Registry.get().lookupSingleton(
-				HasSatisfiesFilter.class, userObject.getClass()))
+		return Registry.impl(HasSatisfiesFilter.class, userObject.getClass())
 				.satisfiesFilter(userObject, filterText);
 	}
 
-	@RegistryLocation(registryPoint = HasSatisfiesFilter.class)
+	@RegistryLocation(registryPoint = HasSatisfiesFilter.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class DefaultHasSatisfiesFilter<T> implements
 			HasSatisfiesFilter<T> {
@@ -97,8 +97,9 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 				return true;
 			}
 			if (t instanceof HasId) {
-				if(filterText.startsWith("id:")){
-					return String.valueOf(((HasId) t).getId()).equals(filterText.substring(3));
+				if (filterText.startsWith("id:")) {
+					return String.valueOf(((HasId) t).getId()).equals(
+							filterText.substring(3));
 				}
 				return String.valueOf(((HasId) t).getId()).equals(filterText);
 			}

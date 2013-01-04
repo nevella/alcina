@@ -15,6 +15,12 @@ public interface KeyValueMapper<K, V, O> {
 			return o;
 		};
 	}
+	public abstract class FromObjectKeyValueMapper<K,V> implements
+	KeyValueMapper<K,V,V> {
+public V getValue(V o) {
+	return o;
+};
+}
 	
 	public static class PropertyConverter<T> implements Converter<Object, T> {
 		private final String key;

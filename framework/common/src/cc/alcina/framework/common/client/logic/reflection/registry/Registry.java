@@ -20,6 +20,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
 
@@ -36,17 +37,21 @@ public class Registry {
 
 	protected LookupMapToMap<Class> exactMap;
 
-	protected HashMap<Class, Object> singletons;
+	protected LookupMapToMap<ImplementationType> implementationTypeMap;
+
+	protected LookupMapToMap<Object> singletons;
 
 	protected Registry() {
 		super();
 		registry = new HashMap<Class, Map<Class, List<Class>>>();
 		targetPriority = new HashMap<Class, Map<Class, Integer>>();
-		singletons = new HashMap<Class, Object>();
+		singletons = new LookupMapToMap<Object>(2);
 		exactMap = new LookupMapToMap<Class>(2);
+		implementationTypeMap = new LookupMapToMap<ImplementationType>(2);
 	}
 
 	private static Registry instance = new Registry();
+
 	public static Registry get() {
 		return instance;
 	}
@@ -55,6 +60,10 @@ public class Registry {
 		instance = null;
 	}
 
+	/*
+	 * In some parts (e.g. assignment to implementationTypeMap) we assume only
+	 * one (winning) registering class for
+	 */
 	public void register(Class registeringClass, RegistryLocation info) {
 		Class registryPoint = info.registryPoint();
 		Map<Class, List<Class>> pointMap = registry.get(registryPoint);
@@ -71,32 +80,25 @@ public class Registry {
 			registered = new ArrayList<Class>();
 			pointMap.put(targetClass, registered);
 		}
-		if (registered.size() == 1 && targetClass != void.class) {
+		ImplementationType implementationType = info.implementationType();
+		if (registered.size() == 1
+				&& (targetClass != void.class || implementationType != ImplementationType.MULTIPLE)) {
 			Integer currentPriority = pointPriority.get(targetClass);
 			int infoPriority = info.priority();
 			if (currentPriority > infoPriority) {
-				registered.clear();
-			} else {
 				return;
+			} else {
+				registered.clear();
 			}
 		}
 		registered.add(registeringClass);
+		implementationTypeMap.put(registryPoint, targetClass,
+				implementationType);
 		pointPriority.put(targetClass, info.priority());
 	}
 
 	public Class lookupSingle(Class registryPoint, Class targetObject) {
 		return lookupSingle(registryPoint, targetObject, false);
-	}
-
-	public Object lookupSingleton(Class registryPoint, Class targetObject) {
-		Class markerClass = lookupSingle(registryPoint, targetObject, false);
-		Object singleton = singletons.get(markerClass);
-		if (singleton == null) {
-			singleton = CommonLocator.get().classLookup()
-					.newInstance(markerClass);
-			singletons.put(markerClass, singleton);
-		}
-		return singleton;
 	}
 
 	public Class lookupSingle(Class registryPoint, Class targetObject,
@@ -120,8 +122,8 @@ public class Registry {
 	public Object instantiateSingleOrNull(Class registryPoint,
 			Class targetObject) {
 		Class lookupSingle = lookupSingle(registryPoint, targetObject, false);
-		return lookupSingle != null ? instantiateSingle(registryPoint,
-				targetObject) : null;
+		return lookupSingle != Void.class && lookupSingle != null ? instantiateSingle(
+				registryPoint, targetObject) : null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -201,5 +203,40 @@ public class Registry {
 		return sb.toString();
 	}
 
-	
+	public interface RegistryFactory<V> {
+		public V create(Class<V> registryPoint, Class targetObjectClass);
+	}
+
+	public static <V> V impl(Class<V> registryPoint) {
+		return get().impl0(registryPoint, void.class);
+	}
+
+	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass) {
+		return get().impl0(registryPoint, targetObjectClass);
+	}
+
+	protected <V> V impl0(Class<V> registryPoint, Class targetObjectClass) {
+		// optimisation
+		Object singleton = singletons.get(registryPoint, targetObjectClass);
+		if (singleton != null) {
+			if (singleton instanceof RegistryFactory) {
+				return (V) ((RegistryFactory) singleton).create(registryPoint,
+						targetObjectClass);
+			}
+			return (V) singleton;
+		}
+		ImplementationType type = implementationTypeMap.get(registryPoint,
+				targetObjectClass);
+		Object obj = instantiateSingle(registryPoint, targetObjectClass);
+		type = type == null ? ImplementationType.MULTIPLE : type;
+		switch (type) {
+		case FACTORY:
+		case SINGLETON:
+			singletons.put(registryPoint, targetObjectClass, obj);
+			break;
+		case INSTANCE:
+		case MULTIPLE:
+		}
+		return (V) obj;
+	}
 }

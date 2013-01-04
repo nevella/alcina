@@ -47,6 +47,7 @@ import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.ListBox;
 import com.totsp.gwittir.client.ui.RadioButton;
 import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.validator.Validator;
 
 @SuppressWarnings("unchecked")
@@ -89,6 +90,15 @@ public class GwittirUtils {
 						FormFieldTypeForRefresh.TEXT,
 						FormFieldTypeForRefresh.TEXT_AREA,
 						FormFieldTypeForRefresh.SELECT });
+	}
+
+	public static void renameField(Field[] fields, String propertyName,
+			String label) {
+		for (Field f : fields) {
+			if (f.getPropertyName().equals(propertyName)) {
+				f.setLabel(label);
+			}
+		}
 	}
 
 	public enum FormFieldTypeForRefresh {
@@ -313,5 +323,15 @@ public class GwittirUtils {
 				((Focusable) b.getLeft().object).setFocus(true);
 			}
 		}
+	}
+	public static int getFieldIndex(Field[] fields, String propertyName){
+		int i=0;
+		for (Field f : fields) {
+			if (f.getPropertyName().equals(propertyName)) {
+				return i;
+			}
+			i++;
+		}		
+		return -1;
 	}
 }

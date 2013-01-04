@@ -48,4 +48,6 @@ public @interface DomainPropertyInfo {
 	boolean silentFailOnIllegalWrites() default false;
 	
 	boolean ignoreForDeletionChecking() default false;
+	
+	boolean cascadeDeletionFromRef() default false;
 }

@@ -328,7 +328,11 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 	public Field getAutofocusField() {
 		return this.autofocusField;
 	}
-	public void hideRow(int row){
-		base.getRowFormatter().setVisible(row, false);
+	public void setRowVisibility(int row, boolean visible){
+		base.getRowFormatter().setVisible(row, visible);
+	}
+
+	public Field[] getFields() {
+		return this.fields;
 	}
 }

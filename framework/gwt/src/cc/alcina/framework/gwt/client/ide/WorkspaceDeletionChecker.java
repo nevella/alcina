@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.ide;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +26,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -35,10 +38,12 @@ import com.totsp.gwittir.client.beans.Property;
  * 
  * @author Nick Reddel
  */
+@SuppressWarnings("unchecked")
 public class WorkspaceDeletionChecker {
 	public static boolean enabled = false;
 
-	@SuppressWarnings("unchecked")
+	public List<HasIdAndLocalId> cascadedDeletions = new ArrayList<HasIdAndLocalId>();
+
 	public boolean checkPropertyRefs(HasIdAndLocalId singleObj) {
 		Class<? extends Object> clazz = singleObj.getClass();
 		Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> map = TransformManager
@@ -85,14 +90,23 @@ public class WorkspaceDeletionChecker {
 						Object pValue = p.getAccessorMethod().invoke(o,
 								CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (pValue != null && pValue.equals(singleObj)) {
-							message += CommonUtils.formatJ(
-									template,
-									CommonUtils.simpleClassName(o.getClass()),
-									TextProvider.get().getObjectName(o),
-									o.getId(),
-									TextProvider.get().getLabelText(c,
-											p.getName()))
-									+ "\n";
+							DomainPropertyInfo dpi = CommonLocator
+									.get()
+									.propertyAccessor()
+									.getAnnotationForProperty(c,
+											DomainPropertyInfo.class,
+											p.getName());
+							if (dpi != null && dpi.cascadeDeletionFromRef()) {
+								cascadedDeletions.add(o);
+							} else {
+								message += CommonUtils.formatJ(template,
+										CommonUtils.simpleClassName(o
+												.getClass()), TextProvider
+												.get().getObjectName(o), o
+												.getId(), TextProvider.get()
+												.getLabelText(c, p.getName()))
+										+ "\n";
+							}
 						}
 					}
 				}
@@ -104,8 +118,11 @@ public class WorkspaceDeletionChecker {
 			TextProvider.get().setTrimmed(false);
 		}
 		if (message.length() > 0) {
+			LooseContextProvider.getContext().pushWithKey(
+					ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL, true);
 			ClientLayerLocator.get().notifications()
 					.showWarning(msgtitle, message.replace("\n", "<br>\n"));
+			LooseContextProvider.getContext().pop();
 		}
 		return message.length() == 0;
 	}

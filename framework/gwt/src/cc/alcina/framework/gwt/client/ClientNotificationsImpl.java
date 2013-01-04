@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -198,6 +200,9 @@ public class ClientNotificationsImpl implements ClientNotifications {
 					sp.setVisible(!sp.isVisible());
 				}
 			});
+			if(LooseContextProvider.getBoolean(ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL)){
+				sp.setVisible(true);
+			}
 			fp.add(nh);
 			fp.add(sp);
 		}

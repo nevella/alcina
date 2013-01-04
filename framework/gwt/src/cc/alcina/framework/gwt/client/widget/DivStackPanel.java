@@ -14,6 +14,9 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent;
 import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.CollapseHandler;
 import cc.alcina.framework.gwt.client.ide.widget.CollapseEvent.HasCollapseHandlers;
@@ -152,6 +155,10 @@ public class DivStackPanel extends ComplexPanel {
 			if (index != -1) {
 				showStack(index);
 			}
+			if (target.getTagName().equalsIgnoreCase("A")
+					&& target.getAttribute("href").isEmpty()) {
+				event.preventDefault();
+			}
 		}
 	}
 
@@ -193,12 +200,26 @@ public class DivStackPanel extends ComplexPanel {
 		}
 		Element tdWrapper = DOM.getChild(body, index * 2);
 		Element headerElem = tdWrapper;
+		rowTexts.put(index, new StackTextRow(text, asHTML));
 		if (asHTML) {
 			DOM.setInnerHTML(getHeaderTextElem(headerElem), text);
 		} else {
 			DOM.setInnerText(getHeaderTextElem(headerElem), text);
 		}
 	}
+
+	static class StackTextRow {
+		String text;
+
+		boolean asHTML;
+
+		public StackTextRow(String text, boolean asHTML) {
+			this.text = text;
+			this.asHTML = asHTML;
+		}
+	}
+
+	Map<Integer, StackTextRow> rowTexts = new HashMap<Integer, DivStackPanel.StackTextRow>();
 
 	/**
 	 * Shows the widget at the specified child index.
@@ -360,8 +381,17 @@ public class DivStackPanel extends ComplexPanel {
 		}
 
 		@Override
-		public HandlerRegistration addCollapseHandler(CollapseHandler<CollapsableDivStackPanel> handler) {
+		public HandlerRegistration addCollapseHandler(
+				CollapseHandler<CollapsableDivStackPanel> handler) {
 			return addHandler(handler, CollapseEvent.getType());
+		}
+	}
+
+	public void moveChildrenTo(DivStackPanel other) {
+		int i = 0;
+		while (getWidgetCount() != 0) {
+			StackTextRow rt = rowTexts.get(i++);
+			other.add(getWidget(0), rt.text, rt.asHTML);
 		}
 	}
 }

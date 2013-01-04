@@ -143,10 +143,13 @@ public class BreadcrumbBar extends Composite {
 		public Widget getWidgetToMaximise() {
 			return widgetToMaximise;
 		}
-
-		public void toggle() {
-			toggleButton.setDown(!toggleButton.isDown());
+		public void setDown(boolean down){
+			toggleButton.setDown(down);
 			onClick(null);
+			
+		}
+		public void toggle() {
+			setDown(!toggleButton.isDown());
 		}
 
 		public void setTitle(String title) {

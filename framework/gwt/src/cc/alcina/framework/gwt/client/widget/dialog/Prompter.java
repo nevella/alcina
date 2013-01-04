@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
 
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -28,9 +29,9 @@ public class Prompter implements PermissibleActionListener {
 		this.callback = callback;
 		FlowPanel fp = new FlowPanel();
 		fp.setStyleName("alcina-prompt");
-//		Label titleLabel = new Label(title);
-//		titleLabel.setStyleName("title");
-//		fp.add(titleLabel);
+		// Label titleLabel = new Label(title);
+		// titleLabel.setStyleName("title");
+		// fp.add(titleLabel);
 		Label subLabel = new Label(sub);
 		subLabel.setStyleName("sub");
 		fp.add(subLabel);
@@ -43,7 +44,7 @@ public class Prompter implements PermissibleActionListener {
 				return false;
 			}
 		};
-		if(positioningCallback!=null){
+		if (positioningCallback != null) {
 			positioningCallback.callback(box);
 		}
 		text.setFocus(true);
@@ -55,9 +56,10 @@ public class Prompter implements PermissibleActionListener {
 			if (requiredMessage != null) {
 				box.show();
 				Window.alert(requiredMessage);
+			} else {
+				callback.callback(text.getValue());
 			}
-			callback.callback(text.getValue());
+		} else {
 		}
-		callback.callback(null);
 	}
 }

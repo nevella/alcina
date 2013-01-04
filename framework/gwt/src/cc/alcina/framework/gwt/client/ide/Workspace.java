@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasOrderValue;
+import cc.alcina.framework.common.client.logic.domain.HasOrderValue.HasOrderValueHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
@@ -316,17 +317,8 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 				}
 			}
 			if (siblings != null) {
-				int maxOrderValue = 0;
-				for (Object o : siblings) {
-					if (o == newObj) {
-						continue;
-					}
-					if (o instanceof HasOrderValue) {
-						HasOrderValue hov = (HasOrderValue) o;
-						maxOrderValue = Math.max(maxOrderValue,
-								CommonUtils.iv(hov.getOrderValue()));
-					}
-				}
+				int maxOrderValue = HasOrderValueHelper.maxValue(siblings, newObj);
+				
 				((HasOrderValue) newObj).setOrderValue(maxOrderValue + 10);
 			}
 		}

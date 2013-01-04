@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
@@ -142,6 +143,7 @@ public class WorkspaceView extends Composite implements HasName,
 	public static abstract class DataTreeView extends WorkspaceView implements
 			ExtraTreeEventListener, PermissibleActionListener, HasLayoutInfo,
 			SelectionHandler<TreeItem>, HasFirstFocusable {
+		public static final String CONTEXT_IGNORE_TREE_SELECTION=DataTreeView.class.getName()+".CONTEXT_IGNORE_TREE_SELECTION";
 		private boolean showCollapseButton;
 
 		private DataTree dataTree;
@@ -155,6 +157,7 @@ public class WorkspaceView extends Composite implements HasName,
 		private boolean allowEditCollections = true;
 
 		private FilterWidget filter;
+		
 
 		public FilterWidget getFilter() {
 			return this.filter;
@@ -296,6 +299,9 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		public void onSelection(SelectionEvent<TreeItem> event) {
+			if(LooseContextProvider.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)){
+				return;
+			}
 			TreeItem item = event.getSelectedItem();
 			onTreeItemSelected(item);
 		}

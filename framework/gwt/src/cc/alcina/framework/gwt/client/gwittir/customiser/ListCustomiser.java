@@ -46,7 +46,9 @@ public class ListCustomiser implements Customiser {
 	public static final String MAX_SELECTED_ITEMS = "maxSelectedItems";
 
 	public static final String NO_NULL = "noNull";
-
+	
+	public static final String ADD_HANDLER_CLASS = "addHandlerClass";
+	
 	@SuppressWarnings("unchecked")
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, CustomiserInfo info) {
@@ -58,12 +60,14 @@ public class ListCustomiser implements Customiser {
 					parameters, RENDERER_CLASS);
 			Comparator comparator = NamedParameter.Support.instantiateClass(
 					parameters, COMPARATOR_CLASS);
+			ListAddItemHandler addHandler = NamedParameter.Support.instantiateClass(
+					parameters, ADD_HANDLER_CLASS);
 			int maxSelectedItems = NamedParameter.Support.intValue(parameters,
 					MAX_SELECTED_ITEMS, 1);
 			boolean nonull = NamedParameter.Support.booleanValue(parameters,
 					NO_NULL);
 			ListBoxCollectionProvider lbcp = new ListBoxCollectionProvider(
-					clazz, maxSelectedItems != 1, nonull, renderer,comparator);
+					clazz, maxSelectedItems != 1, nonull, renderer,comparator,addHandler);
 			lbcp.setFilter(filter);
 			return lbcp;
 		} else {

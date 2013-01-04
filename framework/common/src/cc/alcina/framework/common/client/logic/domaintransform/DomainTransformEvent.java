@@ -363,4 +363,8 @@ public class DomainTransformEvent implements Serializable,
 				&& hili.getLocalId() == objectLocalId
 				&& hili.getId() == objectId;
 	}
+
+	public boolean provideIsIdEvent(Class clazz) {
+		return objectClass == clazz && "id".equals(propertyName);
+	}
 }

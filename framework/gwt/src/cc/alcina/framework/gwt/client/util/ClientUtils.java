@@ -177,12 +177,26 @@ public class ClientUtils {
 		return popupContentView(model, pal, caption, messageHtml, true, false);
 	}
 
+	public static EditContentViewWidgets makeContentView(final Object model,
+			boolean editable) {
+		return makeContentView(model, null, null, null, false, editable, false,
+				true);
+	}
+
 	public static EditContentViewWidgets popupContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, final boolean hideOnClick, boolean editable) {
+		return makeContentView(model, pal, caption, messageHtml, hideOnClick,
+				editable, true, false);
+	}
+
+	private static EditContentViewWidgets makeContentView(final Object model,
+			final PermissibleActionListener pal, String caption,
+			String messageHtml, final boolean hideOnClick, boolean editable,
+			boolean inDialog, boolean noButtons) {
 		ContentViewFactory cvf = new ContentViewFactory();
 		cvf.setNoCaption(true);
-		cvf.setNoButtons(false);
+		cvf.setNoButtons(noButtons);
 		cvf.setCancelButton(true);
 		FlowPanel fp = new FlowPanel();
 		final GlassDialogBox gdb = new GlassDialogBox();
@@ -198,9 +212,9 @@ public class ClientUtils {
 			}
 		};
 		PaneWrapperWithObjects view = cvf.createBeanView(model, editable,
-				closeWrapper, false, true);
+				inDialog ? closeWrapper : null, false, true);
 		view.addStyleName("pwo-center-buttons");
-		if (!editable) {
+		if (!editable && inDialog) {
 			OkCancelPanel sp = new OkCancelPanel("OK", view, false);
 			view.add(sp);
 		}
@@ -220,10 +234,12 @@ public class ClientUtils {
 			fp.add(message);
 		}
 		fp.add(view);
-		gdb.add(fp);
-		gdb.center();
-		gdb.show();
-		return new EditContentViewWidgets(view, gdb);
+		if (inDialog) {
+			gdb.add(fp);
+			gdb.center();
+			gdb.show();
+		}
+		return new EditContentViewWidgets(view, inDialog ? gdb : null);
 	}
 
 	public static class EditContentViewWidgets {

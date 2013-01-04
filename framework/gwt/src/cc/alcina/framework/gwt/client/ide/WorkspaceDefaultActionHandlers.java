@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandl
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -55,13 +56,14 @@ public class WorkspaceDefaultActionHandlers {
 				Object object, Workspace workspace, Class nodeObjectClass) {
 			Widget view = null;
 			if (object instanceof Collection) {
-				view=workspace.createMultipleBeanView(
-						(Collection) object, nodeObjectClass, editView(),
-						workspace, isAutoSave(), false);
+				view = workspace.createMultipleBeanView((Collection) object,
+						nodeObjectClass, editView(), workspace, isAutoSave(),
+						false);
 			} else {
-				PaneWrapperWithObjects paneWrapper = getContentViewFactory().createBeanView(object,
-						editView(), workspace, isAutoSave(), false);
-				view=paneWrapper;
+				PaneWrapperWithObjects paneWrapper = getContentViewFactory()
+						.createBeanView(object, editView(), workspace,
+								isAutoSave(), false);
+				view = paneWrapper;
 				Widget widge = getContentViewFactory()
 						.createExtraActionsWidget(object);
 				if (widge != null) {
@@ -126,15 +128,78 @@ public class WorkspaceDefaultActionHandlers {
 	}
 
 	@RegistryLocation(j2seOnly = false, registryPoint = DeleteActionHandler.class)
+	/*
+	 * TODO - Alcina - the separation of 'deletion of reffing' and 'deletion'
+	 * into two transactions was caused by weird EJB3 behaviour - it works, and
+	 * works offline->online (for 'fromofflinepersistence') -- but there's
+	 * something dodgy going on with Hibernate PersistentSets if they're
+	 * combined in the one transaction and problem needs to be fixd
+	 */
 	public static class DefaultDeleteActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements DeleteActionHandler {
+		private class DoDeleteCallback implements OkCallback {
+			private final PermissibleActionEvent event;
+
+			private final Workspace workspace;
+
+			private final HasIdAndLocalId hili;
+
+			private final WorkspaceDeletionChecker workspaceDeletionChecker;
+
+			private DoDeleteCallback(PermissibleActionEvent event,
+					Workspace workspace, HasIdAndLocalId hili,
+					WorkspaceDeletionChecker workspaceDeletionChecker) {
+				this.event = event;
+				this.workspace = workspace;
+				this.hili = hili;
+				this.workspaceDeletionChecker = workspaceDeletionChecker;
+			}
+
+			public void ok() {
+				AsyncCallback deleteObjectCallback = new AsyncCallback<Void>() {
+					@Override
+					public void onFailure(Throwable caught) {
+						finish();
+					}
+
+					@Override
+					public void onSuccess(Void result) {
+						finish();
+					}
+
+					private void finish() {
+						TransformManager.get().deleteObject(hili);
+						if (workspace != null) {
+							workspace.getVisualiser().setContentWidget(
+									new HorizontalPanel());
+							workspace
+									.fireVetoableActionEvent(new PermissibleActionEvent(
+											hili, event.getAction()));
+						}
+					}
+				};
+				if (!this.workspaceDeletionChecker.cascadedDeletions.isEmpty()) {
+					for (HasIdAndLocalId cascade : this.workspaceDeletionChecker.cascadedDeletions) {
+						TransformManager.get().deleteObject(cascade);
+					}
+					ClientLayerLocator.get()
+							.getCommitToStorageTransformListener()
+							.flushWithOneoffCallback(deleteObjectCallback);
+				} else {
+					deleteObjectCallback.onSuccess(null);
+				}
+			}
+		}
+
 		public void performAction(final PermissibleActionEvent event,
 				Object node, Object object, final Workspace workspace,
 				Class nodeObjectClass) {
 			final HasIdAndLocalId hili = (HasIdAndLocalId) object;
+			final WorkspaceDeletionChecker workspaceDeletionChecker = new WorkspaceDeletionChecker();
 			if (WorkspaceDeletionChecker.enabled) {
-				if (!new WorkspaceDeletionChecker().checkPropertyRefs(hili)) {
+				if (!workspaceDeletionChecker.checkPropertyRefs(hili)) {
 					return;
+				} else {
 				}
 			}
 			ClientLayerLocator
@@ -142,16 +207,8 @@ public class WorkspaceDefaultActionHandlers {
 					.notifications()
 					.confirm(
 							"Are you sure you want to delete the selected object",
-							new OkCallback() {
-								public void ok() {
-									TransformManager.get().deleteObject(hili);
-									workspace.getVisualiser().setContentWidget(
-											new HorizontalPanel());
-									workspace
-											.fireVetoableActionEvent(new PermissibleActionEvent(
-													hili, event.getAction()));
-								}
-							});
+							new DoDeleteCallback(event, workspace, hili,
+									workspaceDeletionChecker));
 		}
 	}
 

@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContextProvider;
 import cc.alcina.framework.gwt.client.logic.HasHref;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
@@ -60,6 +61,9 @@ import com.google.gwt.user.client.ui.Widget;
 public class Toolbar extends Composite implements
 		PermissibleActionEvent.PermissibleActionSource, ClickHandler,
 		HasChildHandlers {
+	public static final String CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH = Toolbar.class
+			.getName() + ".CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH";
+
 	public void addHandler(HandlerRegistration registration) {
 		this.hasChildHandlersSupport.addHandler(registration);
 	}
@@ -144,7 +148,7 @@ public class Toolbar extends Composite implements
 	@Override
 	protected void onDetach() {
 		super.onDetach();
-		if (removeListenersOnDetach) {
+		if (removeListenersOnDetach && !LooseContextProvider.getBoolean(CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH)) {
 			vetoableActionSupport.removeAllListeners();
 		}
 	}

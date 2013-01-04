@@ -156,9 +156,12 @@ public class ClientReflector implements ClassLookup {
 	}
 
 	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
 		BeanDescriptor descriptor = GwittirBridge.get().getDescriptorForClass(
 				clazz);
-		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
+		if(descriptor==null){
+			return infos;
+		}
 		for (Property p : descriptor.getProperties()) {
 			if (p.getMutatorMethod() == null) {
 				continue;

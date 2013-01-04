@@ -19,6 +19,7 @@ import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.Lzw;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Cookies;
 
 /**
@@ -199,7 +200,6 @@ public class LogStore {
 			String serialized = new AlcinaBeanSerializer().serialize(logs);
 			if (isUsesLzw()) {
 				setMuted(true);
-				locallyPersistLogs(serialized);
 				try {
 					// unfortunately, have to encode to base64 here - unless we
 					// want to be trixy with SQLLite
@@ -207,6 +207,9 @@ public class LogStore {
 							+ Base64Utils.toBase64(new Lzw().compress(
 									serialized).getBytes("UTF-8"));
 					if (maybeShorter.length() < serialized.length()) {
+						if(!GWT.isScript()){
+							locallyPersistLogs(serialized);
+						}
 						serialized = maybeShorter;
 					}
 				} catch (Exception e) {

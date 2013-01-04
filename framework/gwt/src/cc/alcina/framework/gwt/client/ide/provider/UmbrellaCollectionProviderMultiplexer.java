@@ -132,8 +132,8 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 		return new UmbrellaCollectionProviderChildString(key);
 	}
 
-	public class UmbrellaCollectionProvider implements LazyCollectionProvider<T>,
-			Comparable<UmbrellaCollectionProvider> {
+	public class UmbrellaCollectionProvider implements
+			LazyCollectionProvider<T>, Comparable<UmbrellaCollectionProvider> {
 		private CollectionModificationSupport collectionModificationSupport = new CollectionModificationSupport();
 
 		protected final String key;
@@ -249,9 +249,7 @@ public class UmbrellaCollectionProviderMultiplexer<T> implements
 			}
 			TextProvider tp = TextProvider.get();
 			for (Object object : objects) {
-				object.getClass();
-				if (((HasSatisfiesFilter) Registry.get().lookupSingleton(
-						HasSatisfiesFilter.class, object.getClass()))
+				if (Registry.impl(HasSatisfiesFilter.class, object.getClass())
 						.satisfiesFilter(object, filterText)) {
 					filteredCollection.add(object);
 				}

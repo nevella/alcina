@@ -17,8 +17,11 @@ import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
+import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
@@ -259,6 +262,16 @@ public class ClientTransformManager extends TransformManager {
 			throw new WrappedRuntimeException(e);
 		} finally {
 			setReplayingRemoteEvent(false);
+		}
+	}
+
+	@Override
+	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
+			throws DomainTransformException {
+		if (isReplayingRemoteEvent() && obj instanceof HasVersionNumber
+				&& CommonUtils.iv(event.getObjectVersionNumber()) > 0) {
+			((HasVersionNumber) obj).setVersionNumber(event
+					.getObjectVersionNumber());
 		}
 	}
 

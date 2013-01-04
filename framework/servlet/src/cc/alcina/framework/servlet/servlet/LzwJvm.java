@@ -48,6 +48,7 @@ public class LzwJvm {
 				boolean reset = (dictSize == maxDictSize);
 				if (dictionary == null || reset) {
 					dictionary = new LinkedHashMap<String, Integer>();
+					dictSize=256;
 					for (int i = 0; i < 256; i++) {
 						dictionary.put("" + (char) i, i);
 					}
@@ -78,6 +79,7 @@ public class LzwJvm {
 				String entry;
 				boolean reset = (dictSize == maxDictSize);
 				if (dictionary == null || reset) {
+					dictSize=256;
 					dictionary = new HashMap<Integer, String>();
 					for (int i = 0; i < 256; i++) {
 						dictionary.put(i, "" + (char) i);

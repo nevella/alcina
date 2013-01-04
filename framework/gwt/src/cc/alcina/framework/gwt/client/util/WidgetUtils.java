@@ -195,7 +195,7 @@ public class WidgetUtils {
 				parentPass);
 	}
 
-	private static int getBestOffsetWidth(Element e) {
+	public static int getBestOffsetWidth(Element e) {
 		return getBestOffsetWidth(e, false);
 	}
 

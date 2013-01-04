@@ -61,4 +61,13 @@ public abstract class LooseContextProvider {
 	public static void set(String key, Object value) {
 		getContext().set(key, value);
 	}
+	public static void pop(){
+		getContext().pop();
+	}
+	public static void push(){
+		getContext().push();
+	}
+	public static void pushWithKey(String key, Object value){
+		getContext().pushWithKey(key, value);
+	}
 }

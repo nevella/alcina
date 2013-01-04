@@ -11,6 +11,7 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
 public interface ClientNotifications extends LogWriter{
+	public static final String CONTEXT_AUTOSHOW_DIALOG_DETAIL=ClientNotifications.class.getName()+".CONTEXT_AUTOSHOW_DIALOG_DETAIL";
 	public abstract void confirm(String msg, final OkCallback callback);
 
 	public abstract String getLogString();

@@ -276,6 +276,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	protected void onDetach() {
 		if (queueingFinishedTimer != null) {
 			queueingFinishedTimer.cancel();
+			queueingFinishedTimer=null;
 		}
 		changeListenerTimer.cancel();
 		super.onDetach();

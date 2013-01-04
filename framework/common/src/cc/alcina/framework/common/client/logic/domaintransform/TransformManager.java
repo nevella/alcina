@@ -55,6 +55,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflecto
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -1148,7 +1150,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN).clone();
 		for (DomainTransformEvent dte : trs) {
-			if (c.contains(dte.provideSourceOrMarker()) || c.contains(dte.getNewValue())) {
+			if (c.contains(dte.provideSourceOrMarker())
+					|| c.contains(dte.getNewValue())) {
 				removeTransform(dte);
 			}
 		}
@@ -1321,5 +1324,95 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		trs.removeAll(toRemove);
 		transforms.removeAll(toRemove);
+	}
+
+	public static class DomainObjectReverseLookup<K extends HasIdAndLocalId, V extends HasIdAndLocalId>
+			implements DomainTransformListener {
+		private final Class<K> childClass;
+
+		private final Class<V> parentClass;
+
+		private Set<PropertyInfoLite> pils = new LinkedHashSet<PropertyInfoLite>();
+
+		private Multimap<K, List<V>> lookup;
+
+		public DomainObjectReverseLookup(Class<K> childClass,
+				Class<V> parentClass) {
+			this.childClass = childClass;
+			this.parentClass = parentClass;
+			TransformManager.get().addDomainTransformListener(this);
+		}
+
+		public List<V> get(K k) {
+			ensureLookup();
+			return lookup.get(k);
+		}
+
+		private void ensureLookup() {
+			if (lookup == null) {
+				lookup = new Multimap<K, List<V>>();
+				pils.clear();
+				Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> m = TransformManager
+						.get().getDomainObjects().getCollnMap();
+				for (Class clazz : m.keySet()) {
+					if (parentClass != null && parentClass != clazz) {
+						continue;
+					}
+					Set<HasIdAndLocalId> objs = (Set) m.get(clazz);
+					if (objs.isEmpty()) {
+						continue;
+					}
+					ClassLookup classLookup = CommonLocator.get().classLookup();
+					List<PropertyInfoLite> pds = classLookup
+							.getWritableProperties(clazz);
+					Object templateInstance = classLookup
+							.getTemplateInstance(clazz);
+					PropertyAccessor accessor = CommonLocator.get()
+							.propertyAccessor();
+					for (Iterator<PropertyInfoLite> itr = pds.iterator(); itr
+							.hasNext();) {
+						PropertyInfoLite info = itr.next();
+						if (info.getPropertyType() != childClass) {
+							itr.remove();
+						}
+					}
+					pils.addAll(pds);
+					Object[] args = new Object[0];
+					try {
+						for (V o : (Set<V>) (Set) m.get(clazz)) {
+							for (PropertyInfoLite info : pds) {
+								K k = (K) info.getReadMethod().invoke(o, args);
+								if (k != null) {
+									lookup.add(k, o);
+								}
+							}
+						}
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void domainTransform(DomainTransformEvent evt)
+				throws DomainTransformException {
+			if (lookup != null) {
+				if (evt.getTransformType() == TransformType.NULL_PROPERTY_REF
+						|| evt.getTransformType() == TransformType.CHANGE_PROPERTY_REF) {
+					if (pils.contains(new PropertyInfoLite(
+							evt.getObjectClass(), evt.getPropertyName()))) {
+						lookup = null;
+					}
+				}
+				if (evt.provideIsIdEvent(childClass)) {
+					lookup = null;
+				}
+			}
+		}
+
+		public void detach() {
+			TransformManager.get().removeDomainTransformListener(this);
+		}
 	}
 }

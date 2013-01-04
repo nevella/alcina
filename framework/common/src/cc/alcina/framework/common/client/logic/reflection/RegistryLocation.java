@@ -33,11 +33,19 @@ import java.lang.annotation.Target;
  */
 
  public @interface RegistryLocation {
+	public enum ImplementationType{
+		MULTIPLE,INSTANCE,FACTORY,SINGLETON
+	}
 	Class registryPoint();
 	Class targetClass() default void.class;
+	/**
+	 * !!not implemented - since this can be filtered via IntrospectorFilter, better there
+	 * ALC-REFACTORING
+	 */
 	boolean j2seOnly() default true;
 	/**
-	 * Allows overriding of default registrees (lower values override)
+	 * Allows overriding of default registrees (higher values override)
 	 */
 	int priority() default 10;
+	ImplementationType implementationType() default ImplementationType.MULTIPLE;
 }

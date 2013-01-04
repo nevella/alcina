@@ -41,7 +41,7 @@ public class ClientConfigurationMachine extends Machine<ClientConfigurationModel
 
 	public ClientConfigurationMachine() {
 		model=new ClientConfigurationModel();
-		model.setDebug(true);
+		model.setDebug(false);
 		registerDefaultStatesEventsAndHandlers();
 		registerTransitionHandler(MachineState.START, null,
 				new SimpleTransitionHandler(init));

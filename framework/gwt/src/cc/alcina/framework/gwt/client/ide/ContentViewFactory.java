@@ -127,7 +127,7 @@ public class ContentViewFactory {
 						if (visualiserInfo != null) {
 							if (!PermissionsManager.get().isPermissible(
 									right.object, visualiserInfo.visible())) {
-								grid.hideRow(r);
+								grid.setRowVisibility(r, false);
 							}
 						}
 						PropertyPermissions pp = pa.getAnnotationForProperty(
