@@ -96,15 +96,21 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	public boolean isDialogAnimationEnabled() {
 		return dialogAnimationEnabled;
 	}
-	
+
 	public void log(String s) {
-		logString += CommonUtils.formatDate(new Date(),
-				DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
-		AlcinaTopics.logCategorisedMessage(new  StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE, s));
-		consoleLog(s);
+		log(s, AlcinaTopics.LOG_CATEGORY_MESSAGE);
+	}
+
+	public void log(String s, String category) {
+		if (logString.length() < 30000) {
+			logString += CommonUtils.formatDate(new Date(),
+					DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
+			consoleLog(s);
+		}
 		if (logToSysOut) {
 			System.out.println(s);
 		}
+		AlcinaTopics.logCategorisedMessage(new StringPair(category, s));
 	}
 
 	private native void consoleLog(String s) /*-{
@@ -120,7 +126,8 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	public void metricLogEnd(String key) {
 		if (metricStartTimes.containsKey(key)) {
 			log(CommonUtils.formatJ("Metric: %s - %s ms", key,
-					System.currentTimeMillis() - metricStartTimes.get(key)));
+					System.currentTimeMillis() - metricStartTimes.get(key)),
+					AlcinaTopics.LOG_CATEGORY_METRIC);
 			metricStartTimes.remove(key);
 		}
 	}
@@ -200,7 +207,8 @@ public class ClientNotificationsImpl implements ClientNotifications {
 					sp.setVisible(!sp.isVisible());
 				}
 			});
-			if(LooseContextProvider.getBoolean(ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL)){
+			if (LooseContextProvider
+					.getBoolean(ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL)) {
 				sp.setVisible(true);
 			}
 			fp.add(nh);
