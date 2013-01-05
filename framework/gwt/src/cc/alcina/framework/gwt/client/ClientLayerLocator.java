@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
@@ -136,6 +137,7 @@ public class ClientLayerLocator {
 
 	public void registerNotifications(ClientNotifications clientNotifications) {
 		this.clientNotifications = clientNotifications;
+		Registry.get().registerSingleton(clientNotifications,ClientNotifications.class);
 	}
 
 	public void registerTimerWrapperProvider(TimerWrapperProvider timerWrapperProvider) {

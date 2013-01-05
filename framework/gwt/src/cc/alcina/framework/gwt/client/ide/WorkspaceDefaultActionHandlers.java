@@ -104,7 +104,7 @@ public class WorkspaceDefaultActionHandlers {
 							.get().getUser());
 				}
 			} catch (Exception e) {
-				e.printStackTrace(System.err);
+				throw new WrappedRuntimeException(e);
 			} finally {
 				CollectionModificationSupport.queue(false);
 			}

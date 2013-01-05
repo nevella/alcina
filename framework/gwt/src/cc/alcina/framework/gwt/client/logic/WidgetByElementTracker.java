@@ -2,6 +2,10 @@ package cc.alcina.framework.gwt.client.logic;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.logical.shared.AttachEvent;
@@ -14,6 +18,7 @@ public class WidgetByElementTracker implements Handler {
 	private WidgetByElementTracker() {
 		super();
 	}
+
 
 	private static WidgetByElementTracker theInstance;
 
@@ -30,10 +35,23 @@ public class WidgetByElementTracker implements Handler {
 
 	Map<Element, Widget> perElementWidgets = new LinkedHashMap<Element, Widget>();
 
-	Map<Element, HandlerRegistration> perElementHandlers = new LinkedHashMap<Element, HandlerRegistration>();
+	private static class WidgetAttachHandler implements Handler {
+		private final WidgetByElementTracker tracker;
+
+		public WidgetAttachHandler(
+				WidgetByElementTracker widgetByElementTracker, Widget w) {
+			this.tracker = widgetByElementTracker;
+			w.addAttachHandler(this);
+		}
+
+		@Override
+		public void onAttachOrDetach(AttachEvent event) {
+			tracker.onAttachOrDetach(event);
+		}
+	}
 
 	public void register(Widget w) {
-		registerOrUnregister(w, true);
+		new WidgetAttachHandler(this, w);
 	}
 
 	public Widget getWidget(Element e) {
@@ -47,25 +65,15 @@ public class WidgetByElementTracker implements Handler {
 		return null;
 	}
 
-	private void registerOrUnregister(Widget source, boolean register) {
-		Element element = source.getElement();
-		if (register) {
-			if (!perElementWidgets.containsKey(element)) {
-				perElementWidgets.put(element, source);
-				HandlerRegistration handler = source.addAttachHandler(this);
-				perElementHandlers.put(element, handler);
-			}
-		} else {
-			perElementWidgets.remove(element);
-			perElementHandlers.get(element).removeHandler();
-			perElementHandlers.remove(element);
-		}
-	}
-
 	@Override
 	public void onAttachOrDetach(AttachEvent event) {
 		Widget source = (Widget) event.getSource();
-		registerOrUnregister(source, event.isAttached());
+		Element element = source.getElement();
+		if (event.isAttached()) {
+			perElementWidgets.put(element, source);
+		} else {
+			perElementWidgets.remove(element);
+		}
 	}
 
 	public Widget findBestWidgetForElement(ForIsWidget fiw, Element elt) {

@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.gwt.client.ide.provider.LazyCollectionProvider;
 import cc.alcina.framework.gwt.client.ide.provider.PropertyCollectionProvider;
@@ -117,6 +118,8 @@ public class NodeFactory {
 		return new UmbrellaProviderNode(providerChild, null, null, this);
 	}
 
+	private Multimap<Class, List<ClientPropertyReflector>> subCollectionFolders = new Multimap<Class, List<ClientPropertyReflector>>();
+
 	public DomainNode getNodeForDomainObject(
 			SourcesPropertyChangeEvents domainObject) {
 		DomainNode dn = createDomainNode(domainObject);
@@ -132,20 +135,26 @@ public class NodeFactory {
 		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
 		BeanInfo beanInfo = bi.getAnnotation(BeanInfo.class);
 		SortedMultimap<Integer, List<TreeItem>> createdNodes = new SortedMultimap<Integer, List<TreeItem>>();
-		for (ClientPropertyReflector pr : prs) {
-			PropertyPermissions pp = pr
-					.getAnnotation(PropertyPermissions.class);
-			VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
-			boolean fieldVisible = PermissionsManager.get()
-					.checkEffectivePropertyPermission(op, pp, domainObject,
-							true)
-					&& visualiserInfo != null
-					&& PermissionsManager.get().isPermissible(domainObject,
-							visualiserInfo.visible())
-					&& ((visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_AS_TREE_NODE) != 0);
-			if (!fieldVisible) {
-				continue;
+		if (!subCollectionFolders.containsKey(c)) {
+			subCollectionFolders.getAndEnsure(c);
+			for (ClientPropertyReflector pr : prs) {
+				PropertyPermissions pp = pr
+						.getAnnotation(PropertyPermissions.class);
+				VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
+				boolean fieldVisible = visualiserInfo != null
+						&& ((visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_AS_TREE_NODE) != 0)
+						&& PermissionsManager.get()
+								.checkEffectivePropertyPermission(op, pp,
+										domainObject, true)
+						&& PermissionsManager.get().isPermissible(domainObject,
+								visualiserInfo.visible());
+				if (fieldVisible) {
+					subCollectionFolders.add(c, pr);
+				}
 			}
+		}
+		for (ClientPropertyReflector pr : subCollectionFolders.get(c)) {
+			VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
 			isChildlessPoorThing = false;
 			boolean withoutContainer = (visualiserInfo.displayInfo()
 					.displayMask() & DisplayInfo.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER) != 0;

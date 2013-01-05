@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 
 /**
  * 
@@ -238,5 +239,9 @@ public class Registry {
 		case MULTIPLE:
 		}
 		return (V) obj;
+	}
+
+	public void registerSingleton(Object object, Class<?> clazz) {
+		singletons.put(clazz, void.class, object);
 	}
 }
