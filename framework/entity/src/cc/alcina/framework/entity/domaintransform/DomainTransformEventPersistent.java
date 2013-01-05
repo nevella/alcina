@@ -20,6 +20,7 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.ResourceUtilities;
 
@@ -78,7 +79,16 @@ public abstract class DomainTransformEventPersistent extends
 	public DomainTransformEvent toNonPersistentEvent() {
 		DomainTransformEvent event = new DomainTransformEvent();
 		ResourceUtilities.copyBeanProperties(this, event, null, true);
+		// this is purely decorative, so client reflection can show the server
+		// id of the transform (since raw DTE has no id field)
 		event.setEventId(getId());
 		return event;
+	}
+
+	public void copyFromNonPersistentEvent(DomainTransformEvent event) {
+		ResourceUtilities.copyBeanProperties(event, this, null, true);
+		if(event.getTransformType()==TransformType.CREATE_OBJECT){
+			setGeneratedServerId(event.getObjectId());
+		}
 	}
 }

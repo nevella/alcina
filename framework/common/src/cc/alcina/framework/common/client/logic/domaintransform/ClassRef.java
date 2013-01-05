@@ -38,9 +38,39 @@ import com.totsp.gwittir.client.ui.Renderer;
 public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 	private static Map<String, ClassRef> refMap = new HashMap<String, ClassRef>();
 
+	private static Map<Long, ClassRef> idMap = new HashMap<Long, ClassRef>();
+
+	public static void add(Collection<? extends ClassRef> refs) {
+		for (ClassRef classRef : refs) {
+			refMap.put(classRef.getRefClassName(), classRef);
+			idMap.put(classRef.getId(), classRef);
+		}
+	}
+
+	public static Set<ClassRef> all() {
+		return new LinkedHashSet<ClassRef>(refMap.values());
+	}
+
 	public static ClassRef forClass(Class clazz) {
 		return forName(clazz.getName());
 	}
+
+	public static ClassRef forId(long id) {
+		return idMap.get(id);
+	}
+
+	public static ClassRef forName(String className) {
+		return refMap.get(className);
+	}
+
+	public static void remove(ClassRef ref) {
+		refMap.remove(ref.getRefClassName());
+		idMap.remove(ref.getId());
+	}
+
+	private String refClassName;
+
+	private transient Class refClass;
 
 	@Override
 	public boolean equals(Object obj) {
@@ -51,39 +81,16 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 				&& getRefClass().equals(((ClassRef) obj).getRefClass());
 	}
 
-	@Override
-	public int hashCode() {
-		return getRefClass() != null ? getRefClass().hashCode() : super
-				.hashCode();
-	}
-
-	public static ClassRef forName(String className) {
-		if (refMap.containsKey(className)) {
-			return refMap.get(className);
-		}
-		return null;
-	}
-
-	public static void remove(ClassRef ref) {
-		refMap.remove(ref.getRefClassName());
-	}
-
-	public static void add(Collection<? extends ClassRef> refs) {
-		for (ClassRef classRef : refs) {
-			refMap.put(classRef.getRefClassName(), classRef);
-		}
-	}
-
-	public static Set<ClassRef> all() {
-		return new LinkedHashSet<ClassRef>(refMap.values());
-	}
-
-	private String refClassName;
-
-	private transient Class refClass;
-
 	@Transient
 	public abstract long getId();
+
+	@Transient
+	/**
+	 * Here for HasIdAndLocalId compatibility, but always 0 since always server-generated
+	 */
+	public long getLocalId() {
+		return 0;
+	}
 
 	@Transient
 	@XmlTransient
@@ -104,28 +111,27 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 		return refClassName;
 	}
 
+	@Override
+	public int hashCode() {
+		return getRefClass() != null ? getRefClass().hashCode() : super
+				.hashCode();
+	}
+
 	public abstract void setId(long id);
+
+	public void setLocalId(long localId) {
+		// noop.
+	}
 
 	public void setRefClass(Class refClass) {
 		this.refClass = refClass;
-		this.refClassName = (refClass == null) ? null : this.refClass.getName();// .replace('$',
-																				// '.');
+		this.refClassName = (refClass == null) ? null : this.refClass.getName();
+		// .replace('$',
+		// '.');
 	}
 
 	public void setRefClassName(String refClassName) {
 		this.refClassName = refClassName;
-	}
-
-	@Transient
-	/**
-	 * Here for HasIdAndLocalId compatibility, but always 0 since always server-generated
-	 */
-	public long getLocalId() {
-		return 0;
-	}
-
-	public void setLocalId(long localId) {
-		// noop.
 	}
 
 	public static class ClassRefSimpleNameRenderer implements
@@ -133,7 +139,6 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 		public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
 
 		public String render(ClassRef o) {
-			// TODO Auto-generated method stub
 			return o == null ? "(undefined)" : CommonUtils.simpleClassName(o
 					.getRefClass());
 		}

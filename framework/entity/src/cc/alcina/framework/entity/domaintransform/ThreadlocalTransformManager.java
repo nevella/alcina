@@ -804,9 +804,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			this.clazz = clazz;
 			this.id = id;
 		}
-		public HiliLocator(HasIdAndLocalId obj){
-			this.clazz=obj.getClass();
-			this.id=obj.getId();
+
+		public HiliLocator(HasIdAndLocalId obj) {
+			this.clazz = obj.getClass();
+			this.id = obj.getId();
 		}
 
 		@Override
@@ -828,6 +829,16 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				return id == o.id && clazz == o.clazz;
 			}
 			return super.equals(obj);
+		}
+
+		@Override
+		public String toString() {
+			return CommonUtils.formatJ("%s - %s",
+					CommonUtils.simpleClassName(clazz), id);
+		}
+
+		public static HiliLocator fromDte(DomainTransformEvent dte) {
+			return new HiliLocator(dte.getObjectClass(), dte.getObjectId());
 		}
 	}
 
