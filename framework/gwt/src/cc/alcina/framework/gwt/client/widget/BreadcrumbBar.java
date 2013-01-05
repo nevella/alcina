@@ -143,11 +143,15 @@ public class BreadcrumbBar extends Composite {
 		public Widget getWidgetToMaximise() {
 			return widgetToMaximise;
 		}
-		public void setDown(boolean down){
-			toggleButton.setDown(down);
-			onClick(null);
-			
+
+		public void setDown(boolean down) {
+			boolean wasDown = toggleButton.isDown();
+			if (wasDown != down) {
+				toggleButton.setDown(down);
+				onClick(null);
+			}
 		}
+
 		public void toggle() {
 			setDown(!toggleButton.isDown());
 		}
@@ -179,7 +183,6 @@ public class BreadcrumbBar extends Composite {
 		private ToggleButton toggleButton;
 
 		private Widget widgetToMaximise;
-
 
 		private int top;
 
@@ -226,11 +229,10 @@ public class BreadcrumbBar extends Composite {
 				LayoutEvents.get().fireLayoutEvent(
 						new LayoutEvent(
 								LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
-				new Timer(){
-
+				new Timer() {
 					@Override
 					public void run() {
-						Window.scrollTo(left, top);						
+						Window.scrollTo(left, top);
 					}
 				}.schedule(500);
 			}
@@ -282,7 +284,7 @@ public class BreadcrumbBar extends Composite {
 			return panel.addClickHandler(handler);
 		}
 	}
-	
+
 	public static class BreadcrumbBarDropdown extends BreadcrumbBarButton {
 		public BreadcrumbBarDropdown() {
 			this.panel.setStyleName("dropdown");

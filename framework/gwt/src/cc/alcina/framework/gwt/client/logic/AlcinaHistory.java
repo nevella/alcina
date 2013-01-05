@@ -281,12 +281,12 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public static void initialiseDebugIds() {
 		String token = History.getToken();
 		if (token != null) {
-			AlcinaHistoryItem currentEvent = AlcinaHistory.get()
-					.parseToken(token);
+			AlcinaHistoryItem currentEvent = AlcinaHistory.get().parseToken(
+					token);
 			if (currentEvent != null) {
 				for (String dbgId : AlcinaDebugIds.DEBUG_IDS) {
 					if (currentEvent.hasParameter(dbgId)) {
-						AlcinaDebugIds.debugIdsMatched.add(dbgId);
+						AlcinaDebugIds.setFlag(dbgId);
 					}
 				}
 			}
