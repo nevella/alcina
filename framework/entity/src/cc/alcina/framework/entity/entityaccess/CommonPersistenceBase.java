@@ -37,12 +37,12 @@ import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
+import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.entity.PersistentSingleton;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
-import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -63,6 +63,7 @@ import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
@@ -368,6 +369,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.getObjectWrapperForUser(c, id, getEntityManager());
 		checkWrappedObjectAccess(null, wrapper, c);
 		return wrapper;
+	}
+
+	@Override
+	public LongPair getMinMaxIdRange(Class clazz) {
+		Class implClass = getImplementation(clazz);
+		clazz = implClass == null ? clazz : implClass;
+		String eql = String.format("select min(id),max(id) from %s",
+				clazz.getSimpleName());
+		Object[] result = (Object[]) getEntityManager().createQuery(eql)
+				.getSingleResult();
+		return result[0] == null ? new LongPair() : new LongPair(
+				(Long) result[0], (Long) result[1]);
 	}
 
 	@Override
@@ -987,10 +1000,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.getWrappedObjectForUser(c, id, getEntityManager());
 		return (T) wofu;
 	}
+
 	@Override
 	public void persistClientLogRecords(List<ClientLogRecords> recordsList) {
-		List<ClientLogRecord> records=new ArrayList<ClientLogRecord>();
-		for(ClientLogRecords r:recordsList){
+		List<ClientLogRecord> records = new ArrayList<ClientLogRecord>();
+		for (ClientLogRecords r : recordsList) {
 			records.addAll(r.getLogRecords());
 		}
 		for (ClientLogRecord clr : records) {
@@ -998,7 +1012,5 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			getEntityManager().persist(clrp);
 			clrp.wrap(clr);
 		}
-		
 	}
-
 }
