@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -118,11 +118,11 @@ public class WorkspaceDeletionChecker {
 			TextProvider.get().setTrimmed(false);
 		}
 		if (message.length() > 0) {
-			LooseContextProvider.getContext().pushWithKey(
+			LooseContext.getContext().pushWithKey(
 					ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL, true);
 			ClientLayerLocator.get().notifications()
 					.showWarning(msgtitle, message.replace("\n", "<br>\n"));
-			LooseContextProvider.getContext().pop();
+			LooseContext.getContext().pop();
 		}
 		return message.length() == 0;
 	}

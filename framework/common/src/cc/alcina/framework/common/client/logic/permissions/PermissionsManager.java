@@ -45,7 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermi
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -411,7 +411,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	}
 
 	public boolean permitDueToOwnership(HasOwner hasOwner) {
-		boolean override = LooseContextProvider
+		boolean override = LooseContext
 				.getBoolean(CONTEXT_OVERRIDE_AS_OWNED_OBJECT);
 		return override ? true
 				: hasOwner.getOwner() == null ? hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)

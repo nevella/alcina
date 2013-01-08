@@ -30,4 +30,5 @@ import java.lang.annotation.Annotation;
 			Class<A> annotationClass, String propertyName);
 
 	public Class getPropertyType(Class objectClass, String propertyName);
+	
 }

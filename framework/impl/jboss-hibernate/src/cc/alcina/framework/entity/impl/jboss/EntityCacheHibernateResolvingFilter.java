@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.impl.jboss;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.proxy.HibernateProxy;
@@ -35,6 +36,8 @@ import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallbackWi
  */
 public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	private DetachedEntityCache cache;
+
+	private Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId> ensureInjected;
 
 	private InstantiateImplCallbackWithShellObject shellInstantiator;
 
@@ -82,6 +85,17 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 			GraphProjection graphCloner) throws Exception {
 		if (value instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) value;
+			if (ensureInjected != null && ensureInjected.containsKey(hili)) {
+				hili = ensureInjected.get(hili);
+				ensureInjected.remove(hili);
+				// if it does, just proceed as normal (hili will already be the
+				// key in the reached map, so .project() wouldn't work)
+				if (hili != value) {
+					hili = graphCloner.project(hili, value, context);
+					getCache().put((HasIdAndLocalId) hili);
+					return (T) hili;
+				}
+			}
 			if (value instanceof HibernateProxy) {
 				LazyInitializer lazy = ((HibernateProxy) value)
 						.getHibernateLazyInitializer();
@@ -107,12 +121,10 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				if (impl != null) {
 					return (T) impl;
 				} else {
-					// System.out.println("discarded "
-					// + context
-					// + ":"
-					// + ((HibernateProxy) value)
-					// .getHibernateLazyInitializer()
-					// .getIdentifier());
+//					Serializable identifier = ((HibernateProxy) value)
+//							.getHibernateLazyInitializer().getIdentifier();
+//					System.out
+//							.format("discarded %s: %s\n", context, identifier);
 					return null;
 				}
 			} else {
@@ -141,7 +153,6 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 			for (; itr.hasNext();) {
 				value = itr.next();
 				Object projected = null;
-				
 				if (value instanceof HibernateProxy) {
 					LazyInitializer lazy = ((HibernateProxy) value)
 							.getHibernateLazyInitializer();
@@ -158,5 +169,14 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 			}
 		}
 		return hs;
+	}
+
+	public Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId> getEnsureInjected() {
+		return this.ensureInjected;
+	}
+
+	public void setEnsureInjected(
+			Map<? extends HasIdAndLocalId, ? extends HasIdAndLocalId> ensureInjected) {
+		this.ensureInjected = ensureInjected;
 	}
 }

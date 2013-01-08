@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
@@ -299,7 +299,7 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		public void onSelection(SelectionEvent<TreeItem> event) {
-			if(LooseContextProvider.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)){
+			if(LooseContext.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)){
 				return;
 			}
 			TreeItem item = event.getSelectedItem();

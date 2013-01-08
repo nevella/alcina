@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -103,7 +104,7 @@ public class GraphProjection {
 		}
 		if (dataFilter != null) {
 			if (context == null) {
-				context = new GraphProjectionContext(c, "", null,projected);
+				context = new GraphProjectionContext(c, "", null, projected);
 			}
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
@@ -129,7 +130,7 @@ public class GraphProjection {
 				}
 			}
 			GraphProjectionContext childContext = new GraphProjectionContext(c,
-					field.getName(), context,projected);
+					field.getName(), context, projected);
 			Object cv = project(value, childContext);
 			field.set(projected, cv);
 		}
@@ -143,9 +144,9 @@ public class GraphProjection {
 		if (coll instanceof ArrayList) {
 			c = coll.getClass().newInstance();
 			// no "persistentLists", at least
-			//um...persistentBag??
-		}else if (coll instanceof List){
-			c=new ArrayList();
+			// um...persistentBag??
+		} else if (coll instanceof List) {
+			c = new ArrayList();
 		} else if (coll instanceof LinkedHashSet) {
 			c = new LinkedHashSet();
 		} else if (coll instanceof Set) {
@@ -343,7 +344,7 @@ public class GraphProjection {
 	public static class GraphProjectionContext {
 		public GraphProjectionContext parent;
 
-		public  Object ownerObject;
+		public Object ownerObject;
 
 		public GraphProjectionContext(Class clazz, String fieldName,
 				GraphProjectionContext parent, Object ownerObject) {

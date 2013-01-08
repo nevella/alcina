@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadR
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
@@ -159,11 +159,11 @@ public class PartialDtrUploader {
 			// add a blank request (no transforms) for auth
 			addToRequest(currentRequest, uncommitted.get(0),
 					new ArrayList<DomainTransformEvent>());
-			LooseContextProvider
+			LooseContext
 					.getContext()
 					.setBoolean(
 							LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED);
-			LooseContextProvider
+			LooseContext
 					.getContext()
 					.set(LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS,
 							CommonUtils.join(clientInstanceIds, ","));

@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -190,7 +190,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				new RemoteActionLoggerProvider());
 		ObjectPersistenceHelper.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-		LooseContextProvider.register(ThreadlocalLooseContextProvider.ttmInstance());
+		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 	}
 
 	protected void initServletLayerRegistry() {

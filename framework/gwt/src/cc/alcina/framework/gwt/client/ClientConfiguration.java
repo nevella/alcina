@@ -9,8 +9,8 @@ import cc.alcina.framework.common.client.state.MachineModel;
 import cc.alcina.framework.common.client.state.MachineState;
 import cc.alcina.framework.common.client.state.MachineTransitionHandler;
 import cc.alcina.framework.common.client.state.SimpleTransitionHandler;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
-import cc.alcina.framework.common.client.util.LooseContextProvider.ClientLooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
@@ -105,7 +105,7 @@ public class ClientConfiguration {
 
 	protected void initCommonClient() {
 		TransformManager.register(createTransformManager());
-		LooseContextProvider.register(new ClientLooseContextProvider());
+		LooseContext.register(new ClientLooseContextProvider());
 		CommonLocator.get().registerPropertyAccessor(GwittirBridge.get());
 		CommonLocator.get().registerCurrentUtcDateProvider(
 				new ClientUTCDateProvider());

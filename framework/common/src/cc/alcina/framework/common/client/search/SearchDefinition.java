@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 //
@@ -139,7 +139,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	public String filterDescription(boolean html) {
 		StringBuffer result = new StringBuffer();
 		try {
-			LooseContextProvider.getContext().set(
+			LooseContext.getContext().set(
 					CONTEXT_CURRENT_SEARCH_DEFINITION, this);
 			for (CriteriaGroup criteriaGroup : criteriaGroups) {
 				String s = html ? criteriaGroup.toHtml() : criteriaGroup
@@ -152,7 +152,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 				}
 			}
 		} finally {
-			LooseContextProvider.getContext().remove(
+			LooseContext.getContext().remove(
 					CONTEXT_CURRENT_SEARCH_DEFINITION);
 		}
 		return (result.length() == 0) ? defaultFilterDescription : result

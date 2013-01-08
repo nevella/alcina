@@ -24,6 +24,7 @@ import java.util.List;
 public class DomainTransformResponse implements Serializable {
 	private long requestId;
 
+	private int transformsProcessed;
 	private String message;
 	public String getMessage() {
 		return this.message;
@@ -85,5 +86,13 @@ public class DomainTransformResponse implements Serializable {
 			sb.append("\n");
 		}
 		return sb.toString();
+	}
+
+	public int getTransformsProcessed() {
+		return this.transformsProcessed;
+	}
+
+	public void setTransformsProcessed(int transformsProcessed) {
+		this.transformsProcessed = transformsProcessed;
 	}
 }

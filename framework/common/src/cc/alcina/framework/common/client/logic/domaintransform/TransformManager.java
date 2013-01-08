@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
@@ -55,7 +56,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflecto
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
@@ -843,23 +843,30 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} else {
 			transforms.add(dte);
 		}
-		for (DomainTransformEvent domainTransformEvent : transforms) {
-			addTransform(domainTransformEvent);
-			try {
-				fireDomainTransform(domainTransformEvent);
-			} catch (DomainTransformException e) {
-				DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
-						e.getMessage());
-				dtre.setEvent(e.getEvent());
-				throw dtre;
-			}
-		}
+		addTransforms(transforms, true);
 		Object hili = evt.getSource();
 		if (this.getDomainObjects() != null) {
 			if (!provisionalObjects.contains(hili)) {
 				fireCollectionModificationEvent(new CollectionModificationEvent(
 						this, hili.getClass(), getDomainObjects()
 								.getCollection(hili.getClass()), true));
+			}
+		}
+	}
+
+	public void addTransforms(List<DomainTransformEvent> transforms,
+			boolean fireEvents) {
+		for (DomainTransformEvent domainTransformEvent : transforms) {
+			addTransform(domainTransformEvent);
+			if (fireEvents) {
+				try {
+					fireDomainTransform(domainTransformEvent);
+				} catch (DomainTransformException e) {
+					DomainTransformRuntimeException dtre = new DomainTransformRuntimeException(
+							e.getMessage());
+					dtre.setEvent(e.getEvent());
+					throw dtre;
+				}
 			}
 		}
 	}
@@ -1414,5 +1421,66 @@ public abstract class TransformManager implements PropertyChangeListener,
 		public void detach() {
 			TransformManager.get().removeDomainTransformListener(this);
 		}
+	}
+
+	public <V extends HasIdAndLocalId> V find(Class<V> clazz, String key,
+			Object value) {
+		return CommonUtils.first(filter(clazz,
+				new PropertyFilter<V>(key, value)));
+	}
+
+	public <V extends HasIdAndLocalId> V ensure(Collection<V> instances,
+			Class<V> clazz, String key, Object value, HasIdAndLocalId parent,
+			String parentPropertyName) {
+		V instance = CommonUtils.first(CollectionFilters.filter(instances,
+				new PropertyFilter<V>(key, value)));
+		if (instance != null) {
+			return instance;
+		}
+		instance = createDomainObject(clazz);
+		CommonLocator.get().propertyAccessor()
+				.setPropertyValue(instance, key, value);
+		if (parent != null) {
+			CommonLocator.get().propertyAccessor()
+					.setPropertyValue(instance, parentPropertyName, parent);
+		}
+		return instance;
+	}
+
+	public <V extends HasIdAndLocalId> List<V> fromIdList(Class<V> clazz,
+			String idStr) {
+		List<Long> ids = idListToLongs(idStr);
+		List<V> result = new ArrayList<V>();
+		for (Long id : ids) {
+			result.add(getObject(clazz, id, 0));
+		}
+		return result;
+	}
+
+	public String toIdList(Collection<? extends HasIdAndLocalId> hilis) {
+		StringBuffer sb = new StringBuffer();
+		for (HasIdAndLocalId hili : hilis) {
+			if (sb.length() != 0) {
+				sb.append(", ");
+			}
+			sb.append(hili.getId());
+		}
+		return sb.toString();
+	}
+
+	public static List<Long> idListToLongs(String str) {
+		ArrayList<Long> result = new ArrayList<Long>();
+		String[] strs = CommonUtils.nullToEmpty(str).replace("(", "")
+				.replace(")", "").split(",\\s*");
+		for (String s : strs) {
+			String t = s.trim();
+			if (t.length() > 0) {
+				long value = Long.parseLong(t);
+				if (value > 0) {
+					result.add(value);
+				}
+			}
+		}
+		return result;
 	}
 }

@@ -71,7 +71,7 @@ import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -361,7 +361,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					.getImplementation(DomainTransformRequestPersistent.class);
 			long currentClientInstanceId = 0;
 			int committed = 0;
-			LooseContextProvider.getContext().pushWithKey(
+			LooseContext.getContext().pushWithKey(
 					TransformConflicts.CONTEXT_OFFLINE_SUPPORT,
 					new TransformConflictsFromOfflineSupport());
 			for (DTRSimpleSerialWrapper wr : uncommitted) {
@@ -387,7 +387,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				clientInstance.setId(wr.getClientInstanceId());
 				rq.setClientInstance(clientInstance);
 				boolean pushUser = PermissionsManager.get().isAdmin()
-						&& LooseContextProvider
+						&& LooseContext
 								.getContext()
 								.getBoolean(
 										CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
@@ -439,7 +439,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			e.printStackTrace();
 			throw new WebException(e);
 		} finally {
-			LooseContextProvider.getContext().pop();
+			LooseContext.getContext().pop();
 		}
 	}
 
@@ -698,7 +698,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws DomainTransformRequestException {
 		try {
 			AppPersistenceBase.checkNotReadOnly();
-			LooseContextProvider.getContext().push();
+			LooseContext.getContext().push();
 			DomainTransformRequestPersistenceSupport persistenceSupport = CommonRemoteServiceServletSupport
 					.get().getRequestPersistenceSupport();
 			persistenceSupport
@@ -720,7 +720,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				throw new DomainTransformRequestException(wrapper.response);
 			}
 		} finally {
-			LooseContextProvider.getContext().pop();
+			LooseContext.getContext().pop();
 		}
 	}
 

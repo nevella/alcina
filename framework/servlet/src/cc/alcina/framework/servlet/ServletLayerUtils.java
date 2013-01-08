@@ -4,6 +4,7 @@ import org.apache.log4j.Level;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
@@ -18,12 +19,18 @@ public class ServletLayerUtils {
 	public static int pushTransformsAsRoot(boolean persistTransforms) {
 		return pushTransforms(persistTransforms, true);
 	}
-
 	public static int pushTransforms(boolean persistTransforms, boolean asRoot) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (AppPersistenceBase.isTest()) {
 			return pendingTransformCount;
+		}
+		pushTransforms(persistTransforms, asRoot, true);
+		return pendingTransformCount;
+	}
+	public static DomainTransformResponse pushTransforms(boolean persistTransforms, boolean asRoot, boolean returnResponse) {
+		if (AppPersistenceBase.isTest()) {
+			return null;
 		}
 		ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
 		Level level = EntityLayerLocator.get().getMetricLogger().getLevel();
@@ -33,7 +40,7 @@ public class ServletLayerUtils {
 				tpm.pushSystemUser();
 			}
 			try {
-				ServletLayerLocator.get().commonRemoteServletProvider()
+				return ServletLayerLocator.get().commonRemoteServletProvider()
 						.getCommonRemoteServiceServlet()
 						.transformFromServletLayer(persistTransforms);
 			} catch (Exception e) {
@@ -46,6 +53,5 @@ public class ServletLayerUtils {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			EntityLayerLocator.get().getMetricLogger().setLevel(level);
 		}
-		return pendingTransformCount;
 	}
 }

@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWr
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
@@ -152,7 +152,7 @@ public class FromOfflineConflictResolver {
 					this);
 			discardLink.removeStyleName("gwt-Hyperlink");
 			exitLink.removeStyleName("gwt-Hyperlink");
-			boolean uploadSucceeded = LooseContextProvider
+			boolean uploadSucceeded = LooseContext
 					.getContext()
 					.getBoolean(
 							LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED);
@@ -165,7 +165,7 @@ public class FromOfflineConflictResolver {
 						.formatJ(
 								uploadSucceededText,
 								"clientinstance_ids: "
-										+ LooseContextProvider
+										+ LooseContext
 												.getContext()
 												.get(LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS));
 			}

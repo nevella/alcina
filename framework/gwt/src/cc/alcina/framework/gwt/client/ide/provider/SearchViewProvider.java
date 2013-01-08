@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
@@ -231,14 +231,14 @@ public class SearchViewProvider implements ViewProvider {
 			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
 			Field[] fields = null;
 			try {
-				LooseContextProvider.getContext().pushWithKey(
+				LooseContext.getContext().pushWithKey(
 						PermissionsManager.CONTEXT_OVERRIDE_AS_OWNED_OBJECT,
 						true);
 				fields = GwittirBridge.get()
 						.fieldsForReflectedObjectAndSetupWidgetFactory(bean,
 								factory, isEditableWidgets(), true);
 			} finally {
-				LooseContextProvider.getContext().pop();
+				LooseContext.getContext().pop();
 			}
 			GwittirBridge.get().setIgnoreProperties(null);
 			int mask = BoundTableExt.HEADER_MASK;

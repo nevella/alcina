@@ -17,7 +17,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.widget.ToggleLink;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
@@ -118,7 +118,7 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 		private HalfBindableDisplayer bindableDisplayer;
 
 		public ExpandableWidgetWithRendererWrapper(Widget level1ContentWidget,
-				TreeRenderer renderer, LooseContext renderContext) {
+				TreeRenderer renderer, LooseContextInstance renderContext) {
 			this.level1ContentWidget = level1ContentWidget;
 			this.fp = new FlowPanel();
 			this.bindableDisplayer = new HalfBindableDisplayer(renderer);

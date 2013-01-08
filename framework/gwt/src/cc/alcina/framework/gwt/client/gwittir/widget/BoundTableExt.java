@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
@@ -1955,7 +1955,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	}
 
 	@Override
-	public LooseContext getRenderContext() {
+	public LooseContextInstance getRenderContext() {
 		return this.renderContext;
 	}
 }

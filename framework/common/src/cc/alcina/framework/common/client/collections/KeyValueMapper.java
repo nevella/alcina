@@ -15,13 +15,14 @@ public interface KeyValueMapper<K, V, O> {
 			return o;
 		};
 	}
-	public abstract class FromObjectKeyValueMapper<K,V> implements
-	KeyValueMapper<K,V,V> {
-public V getValue(V o) {
-	return o;
-};
-}
-	
+
+	public abstract class FromObjectKeyValueMapper<K, V> implements
+			KeyValueMapper<K, V, V> {
+		public V getValue(V o) {
+			return o;
+		};
+	}
+
 	public static class PropertyConverter<T> implements Converter<Object, T> {
 		private final String key;
 
@@ -35,13 +36,14 @@ public V getValue(V o) {
 					.getPropertyValue(o, key);
 		};
 	}
-	public static class StringPropertyConverter extends PropertyConverter<String>{
 
+	public static class StringPropertyConverter extends
+			PropertyConverter<String> {
 		public StringPropertyConverter(String key) {
 			super(key);
 		}
-		
 	}
+
 	public static class PropertyKeyValueMapper<V> implements
 			KeyValueMapper<String, V, V> {
 		private final String propertyName;
@@ -58,5 +60,19 @@ public V getValue(V o) {
 		public V getValue(V o) {
 			return o;
 		};
+	}
+
+	public static class SelfMapper<V> implements KeyValueMapper<V, V, V> {
+		
+		@Override
+		public V getKey(V o) {
+			return o;
+		}
+
+		@Override
+		public V getValue(V o) {
+			return o;
+		}
+		
 	}
 }

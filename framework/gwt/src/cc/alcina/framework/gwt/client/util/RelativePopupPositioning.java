@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.util;
 
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Rect;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
@@ -162,7 +162,7 @@ public class RelativePopupPositioning {
 		final Widget positioningWidget = relativeContainer;
 		final Element relativeToElement = WidgetUtils
 				.getElementForAroundPositioning(relativeToElement0);
-		if (!LooseContextProvider.getContext().getBoolean(
+		if (!LooseContext.getContext().getBoolean(
 				CONTEXT_KEEP_RELATIVE_PARENT_CLIP)) {
 			if (!BrowserMod.isIEpre9()) {
 				Style style = positioningWidget.getElement().getStyle();

@@ -27,4 +27,5 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 	
 
 	public <T extends HasIdAndLocalId> T  getObject(T bean);
+	
 }

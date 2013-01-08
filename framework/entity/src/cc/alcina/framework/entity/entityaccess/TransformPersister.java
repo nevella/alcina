@@ -326,6 +326,7 @@ public class TransformPersister {
 								tm.fireDomainTransform(event);
 								tm.setIgnorePropertyChanges(false);
 								eventsPersisted.add(event);
+								transformCount++;
 							}
 						} catch (Exception e) {
 							DomainTransformException transformException = DomainTransformException
@@ -467,6 +468,7 @@ public class TransformPersister {
 				dtr.getEventsToUseForClientUpdate().addAll(
 						tm.getModificationEvents());
 				dtr.setRequestId(request.getRequestId());
+				dtr.setTransformsProcessed(transformCount);
 				DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 				wrapper.locatorMap = locatorMap;
 				wrapper.response = dtr;

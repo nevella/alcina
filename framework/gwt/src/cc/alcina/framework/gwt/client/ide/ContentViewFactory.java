@@ -43,7 +43,7 @@ import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
@@ -166,7 +166,7 @@ public class ContentViewFactory {
 		if (o == null) {
 			return;
 		}
-		LooseContextProvider.getContext().set(
+		LooseContext.getContext().set(
 				CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS, o);
 	}
 
@@ -311,7 +311,7 @@ public class ContentViewFactory {
 				}
 				Collection additional = CommonUtils
 						.wrapInCollection(additionalProvisional != null ? additionalProvisional
-								: LooseContextProvider.getContext().get(
+								: LooseContext.getContext().get(
 										CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS));
 				cp.setProvisionalObjects(provisional || additional != null);
 				cp.setInitialObjects(list);

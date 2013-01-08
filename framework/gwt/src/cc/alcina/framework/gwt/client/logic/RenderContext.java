@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.objecttree.IsRenderableFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
@@ -25,7 +25,7 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author Nick Reddel
  */
-public class RenderContext extends LooseContext {
+public class RenderContext extends LooseContextInstance {
 	private static final String ON_DETACH_CALLBACK = RenderContext.class
 			.getName() + ".ON_DETACH_CALLBACK";
 

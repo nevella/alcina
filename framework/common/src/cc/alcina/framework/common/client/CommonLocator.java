@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.util.URLComponentEncoder;
 	private PropertyAccessor propertyAccessor;
 
 	public void registerPropertyAccessor(PropertyAccessor accessor) {
+		
 		this.propertyAccessor = accessor;
 	}
 

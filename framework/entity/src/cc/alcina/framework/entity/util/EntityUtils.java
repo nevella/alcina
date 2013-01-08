@@ -24,7 +24,6 @@ import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -73,22 +72,6 @@ public class EntityUtils {
 			ids.add(hasId.getId());
 		}
 		return ids;
-	}
-
-	public static List<Long> idClauseToLongs(String str) {
-		ArrayList<Long> result = new ArrayList<Long>();
-		String[] strs = CommonUtils.nullToEmpty(str).replace("(", "")
-				.replace(")", "").split(",\\s*");
-		for (String s : strs) {
-			String t = s.trim();
-			if (t.length() > 0) {
-				long value = Long.parseLong(t);
-				if (value > 0) {
-					result.add(value);
-				}
-			}
-		}
-		return result;
 	}
 
 	public static String longsToIdClause(Collection<Long> longs) {

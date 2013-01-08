@@ -28,10 +28,13 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.ManyToMany;
+import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
@@ -62,6 +65,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
 import com.google.gwt.core.client.GWT;
@@ -125,6 +129,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	private boolean listenToFoundObjects;
 
 	private Set<SourcesPropertyChangeEvents> listeningTo = new HashSet<SourcesPropertyChangeEvents>();
+
+	private DetachedEntityCache detachedEntityCache;
 
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws Exception {
@@ -522,6 +528,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public void resetTltm(HiliLocatorMap locatorMap,
 			PersistenceLayerTransformExceptionPolicy exceptionPolicy) {
 		setEntityManager(null);
+		setDetachedEntityCache(null);
 		this.exceptionPolicy = exceptionPolicy;
 		this.userSessionHiliMap = locatorMap;
 		localIdToEntityMap = new HashMap<Long, HasIdAndLocalId>();
@@ -854,5 +861,44 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		if (exceptionPolicy != null) {
 			exceptionPolicy.checkVersion(obj, event);
 		}
+	}
+
+	@Override
+	public <V extends HasIdAndLocalId> V find(Class<V> clazz, String key,
+			Object value) {
+		V first =null;
+		if (getEntityManager() != null) {
+			String eql = String.format(
+					value == null ? "from %s where %s is null"
+							: "from %s where %s = ?", clazz.getSimpleName(),
+					key);
+			Query q = getEntityManager().createQuery(eql);
+			if (value != null) {
+				q.setParameter(1, value);
+			}
+			List<V> l = q.getResultList();
+			first=CommonUtils.first(l);
+			if(first!=null){
+				return first;
+			}
+		}
+		if (detachedEntityCache != null) {
+			 first = CommonUtils.first(CollectionFilters.filter(
+					detachedEntityCache.values(clazz), new PropertyFilter<V>(
+							key, value)));
+			 if(first!=null){
+					return first;
+				}
+		}
+		//maybe created in this 'transaction'
+		return super.find(clazz, key, value);
+	}
+
+	public DetachedEntityCache getDetachedEntityCache() {
+		return this.detachedEntityCache;
+	}
+
+	public void setDetachedEntityCache(DetachedEntityCache detachedEntityCache) {
+		this.detachedEntityCache = detachedEntityCache;
 	}
 }

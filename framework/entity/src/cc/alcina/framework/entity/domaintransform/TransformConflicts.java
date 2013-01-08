@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
@@ -51,7 +51,7 @@ public class TransformConflicts {
 	public TransformConflicts() {
 		ignoreConflicts = ResourceUtilities.getBoolean(
 				TransformConflicts.class, "ignoreConflicts")
-				|| LooseContextProvider
+				|| LooseContext
 						.getBoolean(CONTEXT_IGNORE_TRANSFORM_CONFLICTS);
 	}
 
@@ -78,7 +78,7 @@ public class TransformConflicts {
 		if (!(obj instanceof HasVersionNumber)) {
 			return;
 		}
-		TransformConflictsFromOfflineSupport fromOfflineSupport = LooseContextProvider
+		TransformConflictsFromOfflineSupport fromOfflineSupport = LooseContext
 				.getContext().get(CONTEXT_OFFLINE_SUPPORT);
 		// because offline dtrs are persisted as separate transactions, this
 		// means we don't have

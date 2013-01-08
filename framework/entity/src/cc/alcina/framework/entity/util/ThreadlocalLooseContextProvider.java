@@ -1,8 +1,8 @@
 package cc.alcina.framework.entity.util;
 
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 
-public class ThreadlocalLooseContextProvider extends LooseContextProvider {
+public class ThreadlocalLooseContextProvider extends LooseContext {
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		protected synchronized Object initialValue() {
 			ThreadlocalLooseContextProvider provider = new ThreadlocalLooseContextProvider();
@@ -11,7 +11,7 @@ public class ThreadlocalLooseContextProvider extends LooseContextProvider {
 	};
 
 	public static ThreadlocalLooseContextProvider cast() {
-		return (ThreadlocalLooseContextProvider) LooseContextProvider.get();
+		return (ThreadlocalLooseContextProvider) LooseContext.getInstance();
 	}
 
 	/**
@@ -21,12 +21,12 @@ public class ThreadlocalLooseContextProvider extends LooseContextProvider {
 		return ThreadlocalLooseContextProvider.cast();
 	}
 
-	public static LooseContextProvider ttmInstance() {
+	public static LooseContext ttmInstance() {
 		return new ThreadlocalLooseContextProvider();
 	}
 
 	@Override
-	public LooseContextProvider getT() {
-		return (LooseContextProvider) threadLocalInstance.get();
+	public LooseContext getT() {
+		return (LooseContext) threadLocalInstance.get();
 	}
 }

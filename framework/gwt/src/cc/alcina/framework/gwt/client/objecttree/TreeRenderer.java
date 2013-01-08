@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.objecttree;
 import java.util.Collection;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 
@@ -84,7 +84,7 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public CollectionFilter collectionFilter();
 
-	public LooseContext getContext();
+	public LooseContextInstance getContext();
 
 	public void setContext(RenderContext context);
 

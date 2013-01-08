@@ -244,4 +244,20 @@ public class Registry {
 	public void registerSingleton(Object object, Class<?> clazz) {
 		singletons.put(clazz, void.class, object);
 	}
+
+	public static <T> T singleton(Class<T> clazz) {
+		return get().singleton0(clazz);
+	}
+
+	protected <T> T singleton0(Class<T> clazz) {
+		if (clazz == null) {
+			return null;
+		}
+		T impl = (T) singletons.get(clazz, void.class);
+		if (impl == null) {
+			impl = CommonLocator.get().classLookup().newInstance(clazz);
+			registerSingleton(impl, clazz);
+		}
+		return impl;
+	}
 }

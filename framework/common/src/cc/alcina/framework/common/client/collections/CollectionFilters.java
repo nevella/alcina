@@ -164,6 +164,7 @@ public class CollectionFilters {
 		}
 		return result;
 	}
+
 	public static <K, V, O> Multimap<K, List<V>> multimap(Collection<O> values,
 			KeyValueMapper<K, V, O> mapper) {
 		Multimap<K, List<V>> result = new Multimap<K, List<V>>();
@@ -172,5 +173,21 @@ public class CollectionFilters {
 			result.add(mapper.getKey(o), mapper.getValue(o));
 		}
 		return result;
+	}
+
+	public static void filterInPlaceByProperty(Collection collection,
+			String key, Object value) {
+		filterInPlace(collection, new PropertyFilter(key, value));
+	}
+	public static <V> V first(Collection<V> values,
+			String key, Object value) {
+		PropertyFilter<V> filter = new PropertyFilter<V>(key,value);
+		for (Iterator<V> itr = values.iterator(); itr.hasNext();) {
+			V v=itr.next();
+			if(filter.allow(v)){
+				return v;
+			}
+		}
+		return null;
 	}
 }

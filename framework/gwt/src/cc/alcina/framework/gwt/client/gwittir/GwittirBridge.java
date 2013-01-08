@@ -58,7 +58,7 @@ import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.common.client.util.LooseContextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
 import cc.alcina.framework.gwt.client.gwittir.provider.FriendlyEnumLabelProvider;
@@ -257,7 +257,7 @@ public class GwittirBridge implements PropertyAccessor {
 		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType());
 		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
 				: RelativePopupValidationFeedback.RIGHT;
-		int contextPosition = LooseContextProvider.getContext().getInteger(
+		int contextPosition = LooseContext.getContext().getInteger(
 				RelativePopupValidationFeedback.CONTEXT_FEEDBACK_POSITION, -1);
 		if (contextPosition != -1) {
 			position = contextPosition;
