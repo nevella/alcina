@@ -355,12 +355,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	public Object getPropertyValue(Object bean, String propertyName) {
-		if (!(bean instanceof HasIdAndLocalId)) {
-			throw new WrappedRuntimeException(
-					"Bean not an instance of HasIdAndLocalId: " + bean,
-					SuggestedAction.NOTIFY_WARNING);
-		}
-		HasIdAndLocalId hili = (HasIdAndLocalId) bean;
 		try {
 			return SEUtilities.descriptorByName(bean.getClass(), propertyName)
 					.getReadMethod().invoke(bean);
@@ -866,7 +860,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	@Override
 	public <V extends HasIdAndLocalId> V find(Class<V> clazz, String key,
 			Object value) {
-		V first =null;
+		V first = null;
 		if (getEntityManager() != null) {
 			String eql = String.format(
 					value == null ? "from %s where %s is null"
@@ -877,20 +871,20 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				q.setParameter(1, value);
 			}
 			List<V> l = q.getResultList();
-			first=CommonUtils.first(l);
-			if(first!=null){
+			first = CommonUtils.first(l);
+			if (first != null) {
 				return first;
 			}
 		}
 		if (detachedEntityCache != null) {
-			 first = CommonUtils.first(CollectionFilters.filter(
+			first = CommonUtils.first(CollectionFilters.filter(
 					detachedEntityCache.values(clazz), new PropertyFilter<V>(
 							key, value)));
-			 if(first!=null){
-					return first;
-				}
+			if (first != null) {
+				return first;
+			}
 		}
-		//maybe created in this 'transaction'
+		// maybe created in this 'transaction'
 		return super.find(clazz, key, value);
 	}
 
