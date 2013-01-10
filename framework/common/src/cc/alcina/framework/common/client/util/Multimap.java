@@ -102,4 +102,10 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		return min;
 	}
+
+	public void removeValue(Object value) {
+		for (V v : values()) {
+			v.remove(value);
+		}
+	}
 }
