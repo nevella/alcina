@@ -3,10 +3,13 @@ package cc.alcina.framework.common.client.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
@@ -33,6 +36,14 @@ public class AlcinaBeanSerializer {
 	public <T> T deserialize(String jsonString) throws Exception {
 		JSONObject obj = (JSONObject) JSONParser.parseStrict(jsonString);
 		return (T) deserializeObject(obj);
+	}
+
+	private Object deserializeValue(JSONValue jv) {
+		if (jv.isNull() != null) {
+			return null;
+		} else {
+			return deserializeObject((JSONObject) jv);
+		}
 	}
 
 	private Object deserializeObject(JSONObject jsonObj) {
@@ -94,13 +105,26 @@ public class AlcinaBeanSerializer {
 			int size = array.size();
 			for (int i = 0; i < size; i++) {
 				JSONValue jv = array.get(i);
-				if (jv.isNull() != null) {
-					c.add(null);
-				} else {
-					c.add(deserializeObject((JSONObject) jv));
-				}
+				c.add(deserializeValue(jv));
 			}
 			return c;
+		}
+		Map m = null;
+		if (type == Map.class || type == LinkedHashMap.class) {
+			m = new LinkedHashMap();
+		}
+		if (type == HashMap.class) {
+			m = new HashMap();
+		}
+		if (m != null) {
+			JSONArray array = jsonValue.isArray();
+			int size = array.size();
+			for (int i = 0; i < size; i += 2) {
+				JSONValue jv = array.get(i);
+				JSONValue jv2 = array.get(i + 1);
+				m.put(deserializeValue(jv), deserializeValue(jv2));
+			}
+			return m;
 		}
 		return deserializeObject(jsonValue.isObject());
 	}
@@ -141,15 +165,23 @@ public class AlcinaBeanSerializer {
 		if (type == Date.class) {
 			return new JSONString(String.valueOf(((Date) value).getTime()));
 		}
-		if (value instanceof Map) {
-			return null;
-		}
 		if (value instanceof Collection) {
 			Collection c = (Collection) value;
 			JSONArray arr = new JSONArray();
 			int i = 0;
 			for (Object o : c) {
 				arr.set(i++, serializeObject(o));
+			}
+			return arr;
+		}
+		if (value instanceof Map) {
+			Map m = (Map) value;
+			JSONArray arr = new JSONArray();
+			int i = 0;
+			for (Object o : m.entrySet()) {
+				Entry e=(Entry) o;
+				arr.set(i++, serializeObject(e.getKey()));
+				arr.set(i++, serializeObject(e.getValue()));
 			}
 			return arr;
 		}

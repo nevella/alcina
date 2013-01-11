@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -148,7 +149,6 @@ public class CollectionFilters {
 			}
 		};
 	}
-
 	public static interface ConverterFilter<T, C> extends Converter<T, C> {
 		public boolean allowPreConvert(T t);
 
@@ -189,5 +189,12 @@ public class CollectionFilters {
 			}
 		}
 		return null;
+	}
+	public static <K,V> Map<K,V> invert(Map<V,K> map){
+		Map<K,V> result=new LinkedHashMap<K,V>();
+		for(Entry<V,K> entry:map.entrySet()){
+			result.put(entry.getValue(), entry.getKey());
+		}
+		return result;
 	}
 }

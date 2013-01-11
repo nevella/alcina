@@ -6,14 +6,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import com.google.gwt.json.client.JSONValue;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -41,10 +46,10 @@ public class AlcinaBeanSerializerS {
 		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
 		Class clazz = cl.loadClass(cn);
 		Object obj = CommonLocator.get().classLookup().newInstance(clazz);
-
 		for (String propertyName : Arrays.asList(JSONObject.getNames(props))) {
 			Object jsonValue = props.get(propertyName);
-			Object value2 = deserializeField(jsonValue, SEUtilities.descriptorByName(clazz, propertyName).getPropertyType());
+			Object value2 = deserializeField(jsonValue, SEUtilities
+					.descriptorByName(clazz, propertyName).getPropertyType());
 			SEUtilities.setPropertyValue(obj, propertyName, value2);
 		}
 		return obj;
@@ -91,14 +96,27 @@ public class AlcinaBeanSerializerS {
 				int size = array.length();
 				for (int i = 0; i < size; i++) {
 					Object jv = array.get(i);
-					if (jv == null) {
-						c.add(null);
-					} else {
-						c.add(deserializeObject((JSONObject) jv));
-					}
+					c.add(deserializeObject((JSONObject) jv));
 				}
 			}
 			return c;
+		}
+		Map m = null;
+		if (type == Map.class || type == LinkedHashMap.class) {
+			m = new LinkedHashMap();
+		}
+		if (type == HashMap.class) {
+			m = new HashMap();
+		}
+		if (m != null) {
+			JSONArray array = (JSONArray) o;
+			int size = array.length();
+			for (int i = 0; i < size; i += 2) {
+				JSONObject jv = (JSONObject) array.get(i);
+				JSONObject jv2 = (JSONObject) array.get(i + 1);
+				m.put(deserializeObject(jv), deserializeObject(jv2));
+			}
+			return m;
 		}
 		return deserializeObject((JSONObject) o);
 	}
@@ -137,7 +155,15 @@ public class AlcinaBeanSerializerS {
 			return (String.valueOf(((Date) value).getTime()));
 		}
 		if (value instanceof Map) {
-			return null;
+			Map m = (Map) value;
+			JSONArray arr = new JSONArray();
+			int i = 0;
+			for (Object o : m.entrySet()) {
+				Entry e=(Entry) o;
+				arr.put(i++, serializeObject(e.getKey()));
+				arr.put(i++, serializeObject(e.getValue()));
+			}
+			return arr;
 		}
 		if (value instanceof Collection) {
 			Collection c = (Collection) value;
@@ -180,7 +206,7 @@ public class AlcinaBeanSerializerS {
 		return jo;
 	}
 
-	public <T> T deserialize (String json, ClassLoader cl) throws Exception {
+	public <T> T deserialize(String json, ClassLoader cl) throws Exception {
 		this.cl = cl;
 		return deserialize(json);
 	}
