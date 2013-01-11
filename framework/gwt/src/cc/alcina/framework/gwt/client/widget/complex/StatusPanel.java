@@ -307,4 +307,12 @@ public class StatusPanel extends Composite {
 	public void setRunningTemplate(String runningTemplate) {
 		this.runningTemplate = runningTemplate;
 	}
+
+	public boolean isModal() {
+		return this.modal;
+	}
+
+	public void setModal(boolean modal) {
+		this.modal = modal;
+	}
 }
