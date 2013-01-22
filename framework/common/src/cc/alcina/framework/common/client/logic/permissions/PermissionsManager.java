@@ -332,6 +332,14 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public boolean isMemberOfGroup(String groupName) {
 		return getUserGroups().containsKey(groupName);
 	}
+	public boolean isMemberOfGroup(long groupId) {
+		for(IGroup group:getUserGroups().values()){
+			if(group.getId()==groupId){
+				return true;
+			}
+		}
+		return false;
+	}
 
 	public boolean isMemberOfGroups(Collection<String> groupNames) {
 		for (String groupName : groupNames) {
