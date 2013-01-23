@@ -161,4 +161,8 @@ public class LookupMapToMap<V> extends LinkedHashMap {
 		}
 		return swapped;
 	}
+
+	public int getDepth() {
+		return this.depth;
+	}
 }

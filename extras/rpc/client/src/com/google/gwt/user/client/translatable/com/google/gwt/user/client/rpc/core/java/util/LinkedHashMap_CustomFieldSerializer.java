@@ -26,7 +26,7 @@ import java.util.LinkedHashMap;
  * Custom field serializer for {@link java.util.LinkedHashMap}, which uses
  * JSNI.
  */
-public final class LinkedHashMap_CustomFieldSerializer extends
+public  class LinkedHashMap_CustomFieldSerializer extends
     CustomFieldSerializer<LinkedHashMap> {
 
   public static void deserialize(SerializationStreamReader streamReader,

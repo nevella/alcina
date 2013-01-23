@@ -66,7 +66,7 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxCollectionProvider
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
-import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
+import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -322,15 +322,9 @@ public class GwittirBridge implements PropertyAccessor {
 			}
 			CustomiserInfo customiserInfo = pr
 					.getAnnotation(CustomiserInfo.class);
-			if (customiserInfo != null || (obj instanceof HasCustomiser)) {
-				Customiser customiser;
-				if (customiserInfo == null) {
-					customiser = ((HasCustomiser) obj).customiser();
-				} else {
-					customiser = (Customiser) ClientReflector
-							.get()
-							.newInstance(customiserInfo.customiserClass(), 0, 0);
-				}
+			if (customiserInfo != null) {
+				Customiser customiser = (Customiser) ClientReflector.get()
+						.newInstance(customiserInfo.customiserClass(), 0, 0);
 				bwp = customiser.getProvider(fieldEditable, domainType,
 						multiple, customiserInfo);
 			}

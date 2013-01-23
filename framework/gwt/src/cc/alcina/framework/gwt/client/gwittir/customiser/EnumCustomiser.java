@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
-import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
+import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;

@@ -31,7 +31,7 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
  * (uses reflection).
  */
 @SuppressWarnings("rawtypes")
-public final class LinkedHashMap_CustomFieldSerializer extends
+public  class LinkedHashMap_CustomFieldSerializer extends
 		CustomFieldSerializer<LinkedHashMap> {
 	/**
 	 * We use an atomic reference to avoid having to synchronize. This is safe

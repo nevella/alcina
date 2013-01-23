@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameIdRefRenderer;
-import cc.alcina.framework.gwt.client.ide.widget.RenderingLabel;
+import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;

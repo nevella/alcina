@@ -11,16 +11,17 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
-import cc.alcina.framework.gwt.client.gwittir.renderer.ClassSimpleNameRenderer;
+import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.gwt.client.gwittir.widget.BoundHTML;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @ClientInstantiable
@@ -28,19 +29,25 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  *
  * @author Nick Reddel
  */
+public class BoundHtmlCustomiser implements Customiser,
+		BoundWidgetProvider<BoundHTML> {
+	public static final String WIDGET_CSS_CLASS = "WIDGET_CSS_CLASS";
 
- public class ClassSimpleNameCustomiser implements Customiser {
+	private String widgetCssClass;
+
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
-		return CLASS_SIMPLE_NAME_PROVIDER;
+		widgetCssClass = NamedParameter.Support.stringValue(info.parameters(),
+				WIDGET_CSS_CLASS, null);
+		return this;
 	}
 
-	public static final BoundWidgetProvider CLASS_SIMPLE_NAME_PROVIDER = new BoundWidgetProvider() {
-		public BoundWidget get() {
-			RenderingLabel label = new RenderingLabel();
-			label.setWordWrap(false);
-			label.setRenderer(ClassSimpleNameRenderer.INSTANCE);
-			return label;
+	@Override
+	public BoundHTML get() {
+		BoundHTML w = new BoundHTML();
+		if (widgetCssClass != null) {
+			w.addStyleName(widgetCssClass);
 		}
-	};
+		return w;
+	}
 }
