@@ -182,6 +182,9 @@ public class Toolbar extends Composite implements
 		if (hasActionGroups) {
 			actions.removeAll(actions);
 			for (ActionGroup g : actionGroups) {
+				if(g.actions.isEmpty()){
+					continue;
+				}
 				FlowPanel fp = new FlowPanel();
 				fp.setStyleName("group");
 				if (g.isRightAligned()) {
