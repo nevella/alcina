@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("unchecked")
 /**
@@ -107,5 +108,14 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		for (V v : values()) {
 			v.remove(value);
 		}
+	}
+	public Multimap invert(){
+		Multimap result=new Multimap();
+		for (Map.Entry<K, V> entry : entrySet()) {
+			for(Object o:entry.getValue()){
+				result.add(o,entry.getKey());
+			}
+		}
+		return result;
 	}
 }
