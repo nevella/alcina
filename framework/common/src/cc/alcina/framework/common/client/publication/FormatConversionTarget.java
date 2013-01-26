@@ -41,6 +41,8 @@ public abstract class FormatConversionTarget extends ExtensibleEnum implements
 
 	public static final FormatConversionTarget TEXT = new FormatConversionTarget_TEXT();
 
+	public static final FormatConversionTarget XML = new FormatConversionTarget_XML();
+
 	public static class FormatConversionTarget_DOCX extends
 			FormatConversionTarget {
 		@Override
@@ -91,6 +93,14 @@ public abstract class FormatConversionTarget extends ExtensibleEnum implements
 		@Override
 		public String displayName() {
 			return "PDF";
+		}
+	}
+
+	public static class FormatConversionTarget_XML extends
+			FormatConversionTarget {
+		@Override
+		public boolean requiresXml() {
+			return true;
 		}
 	}
 
