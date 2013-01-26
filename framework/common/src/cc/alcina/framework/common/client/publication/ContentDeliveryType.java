@@ -30,6 +30,8 @@ public abstract class ContentDeliveryType extends ExtensibleEnum {
 
 	public static final ContentDeliveryType SEND_TO_REPOSITORY = new ContentDeliveryType_SEND_TO_REPOSITORY();
 
+	public static final ContentDeliveryType PERMALINK = new ContentDeliveryType_PERMALINK();
+
 	public static class ContentDeliveryType_DOWNLOAD_PREVIEW extends
 			ContentDeliveryType {
 		@Override
@@ -52,6 +54,10 @@ public abstract class ContentDeliveryType extends ExtensibleEnum {
 	}
 
 	public static class ContentDeliveryType_EMAIL extends ContentDeliveryType {
+	}
+
+	public static class ContentDeliveryType_PERMALINK extends
+			ContentDeliveryType {
 	}
 
 	public static class ContentDeliveryType_SEND_TO_REPOSITORY extends

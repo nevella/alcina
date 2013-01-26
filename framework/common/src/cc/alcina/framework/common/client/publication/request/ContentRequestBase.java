@@ -78,7 +78,11 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	private String contentPageRange;
 
 	private String emailAddress;
+	
+	private String permalinkQuery = null;
 
+	private String mimeType = null;
+	
 	private String note;
 
 	private boolean noPersistence = false;
@@ -398,5 +402,25 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return s + " Delivery mode: "
 				+ CommonUtils.friendlyConstant(getDeliveryMode()) + " - "
 				+ " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
+	}
+
+	public String getPermalinkQuery() {
+		return permalinkQuery;
+	}
+
+	public void setPermalinkQuery(String permalinkQuery) {
+		String old_permalinkQuery = this.permalinkQuery;
+		propertyChangeSupport().firePropertyChange("permalinkQuery", old_permalinkQuery, permalinkQuery);
+		this.permalinkQuery = permalinkQuery;
+	}
+	
+	public String getMimeType(){
+		return this.mimeType;
+	}
+	
+	public void setMimeType(String MimeType) {
+		String old_MimeType = this.mimeType;
+		propertyChangeSupport().firePropertyChange("MimeType", old_MimeType, MimeType);
+		this.mimeType = MimeType;
 	}
 }

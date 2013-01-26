@@ -31,6 +31,16 @@ package cc.alcina.framework.common.client.publication;
 	public String getSuggestedFileName();
 	public String getEmailSubject();
 	public String getEmailSubjectForRequestor();
+	/**
+	 * comma separated fields which indicate the queryString to be put at the
+	 * end of a URL.  eg link.do?alert,97,a987db34. (link.do? is not included)
+	 * first field is always the type.
+	 */
+	public String getPermalinkQuery();
+	/**
+	 * The mime type of the content
+	 */
+	public String getMimeType();
 	public boolean isEmailInline();
 	public String getAttachmentMessage() ;
 	public String getAttachmentMessageForRequestor() ;
