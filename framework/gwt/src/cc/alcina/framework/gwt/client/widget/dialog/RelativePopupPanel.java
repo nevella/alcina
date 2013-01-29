@@ -18,6 +18,8 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
@@ -379,7 +381,6 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	private boolean autoHideOnHistoryEvents;
 
 	private boolean hideOnEscape;
-
 
 	private List<Element> autoHidePartners;
 
@@ -1371,8 +1372,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		}
 		case Event.ONKEYPRESS: {
 			if (event.getNativeEvent().getKeyCode() == KeyCodes.KEY_ESCAPE
-					&& isHideOnEscape()
-					) {
+					&& isHideOnEscape()) {
 				hide(false);
 				event.cancel();
 				return;
@@ -1444,5 +1444,11 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		this.hideOnEscape = hideOnEscape;
 	}
 
-
+	public static class RelativePopupPanelFilter implements
+			CollectionFilter<Widget> {
+		@Override
+		public boolean allow(Widget o) {
+			return o instanceof RelativePopupPanel;
+		}
+	}
 }

@@ -596,6 +596,17 @@ public class WidgetUtils {
 		}
 		return null;
 	}
+	@SuppressWarnings("unchecked")
+	public static <T extends Widget> T getParentWidgetSatisfyingTypedCallback(Widget w,
+			CollectionFilter<Widget> callback) {
+		while (w != null) {
+			if (callback.allow(w)) {
+				return (T) w;
+			}
+			w = w.getParent();
+		}
+		return null;
+	}
 
 	@SuppressWarnings("unchecked")
 	public static <W extends Widget> W getParentWidget(Widget w,
