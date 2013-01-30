@@ -60,4 +60,8 @@ import com.google.gwt.user.client.ui.Widget;
 		}
 		return new InlineHTML(s);
 	}
+	public static Widget createBulletSeparator() {
+		return new InlineHTML(
+				"\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0");
+	}
 }
