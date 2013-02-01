@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 
@@ -169,6 +170,7 @@ public class JobRegistry {
 		info.setPercentComplete(1);
 		info.setProgressMessage(message);
 		info.setEndTime(new Date());
+		AlcinaTopics.jobComplete(info);
 		updateInfo(info);
 	}
 

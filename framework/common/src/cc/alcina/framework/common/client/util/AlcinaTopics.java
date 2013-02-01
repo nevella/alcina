@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
+import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
@@ -12,7 +13,7 @@ public class AlcinaTopics {
 	public static final String LOG_CATEGORY_TRANSFORM = "transform";
 
 	public static final String LOG_CATEGORY_HISTORY = "history";
-	
+
 	public static final String LOG_CATEGORY_STAT = "stat";
 
 	public static final String LOG_CATEGORY_CLICK = "click";
@@ -29,7 +30,10 @@ public class AlcinaTopics {
 	public static final String LOG_CATEGORY_METRIC = "metric";
 
 	public static final String TOPIC_MUTE_STAT_LOGGING = AlcinaTopics.class
-			.getName() + ".TOPIC_MUTE_STAT_LOGGING";;
+			.getName() + ".TOPIC_MUTE_STAT_LOGGING";
+
+	public static final String TOPIC_JOB_COMPLETE = AlcinaTopics.class
+			.getName() + ".TOPIC_JOB_COMPLETE";
 
 	// detach logging from presentation (normally ClientNotifications)
 	public static void log(Object message) {
@@ -65,15 +69,24 @@ public class AlcinaTopics {
 		GlobalTopicPublisher.get().listenerDelta(
 				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, listener, add);
 	}
-	public static void muteStatisticsLogging(
-			boolean mute) {
-		GlobalTopicPublisher.get().publishTopic(
-				TOPIC_MUTE_STAT_LOGGING, mute);
+
+	public static void muteStatisticsLogging(boolean mute) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_MUTE_STAT_LOGGING, mute);
 	}
 
 	public static void muteStatisticsLoggingListenerDelta(
 			TopicListener<Boolean> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_MUTE_STAT_LOGGING,
+				listener, add);
+	}
+
+	public static void jobComplete(JobInfo info) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_COMPLETE	, info);
+	}
+
+	public static void jobCompletionListenerDelta(
+			TopicListener<JobInfo> listener, boolean add) {
 		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_MUTE_STAT_LOGGING, listener, add);
+				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, listener, add);
 	}
 }

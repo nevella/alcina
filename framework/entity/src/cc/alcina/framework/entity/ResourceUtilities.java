@@ -100,7 +100,7 @@ public class ResourceUtilities {
 	}
 
 	public static boolean getBoolean(Class clazz, String propertyName) {
-		String s = getBundledString(clazz, propertyName);
+		String s = getBundledString(clazz, propertyName,"false");
 		return Boolean.valueOf(s);
 	}
 
@@ -126,8 +126,10 @@ public class ResourceUtilities {
 			return defaultValue;
 		}
 	}
-
 	public static String getBundledString(Class clazz, String propertyName) {
+		return getBundledString(clazz, propertyName,null);
+	}
+	public static String getBundledString(Class clazz, String propertyName, String defaultValue) {
 		String namespacedKey = (clazz == null) ? propertyName : clazz
 				.getSimpleName() + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {
@@ -138,6 +140,9 @@ public class ResourceUtilities {
 				clazz.getClassLoader());
 		if(b.keySet().contains(namespacedKey)){
 			return b.getString(namespacedKey);
+		}
+		if(!b.keySet().contains(propertyName)&&defaultValue!=null){
+			return defaultValue;
 		}
 		return b.getString(propertyName);
 	}

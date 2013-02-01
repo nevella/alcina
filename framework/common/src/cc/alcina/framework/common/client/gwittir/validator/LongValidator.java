@@ -14,6 +14,8 @@
 
 package cc.alcina.framework.common.client.gwittir.validator;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
@@ -22,6 +24,7 @@ import com.totsp.gwittir.client.validator.Validator;
  * 
  * @author nick@alcina.cc
  */
+@ClientInstantiable
 public class LongValidator implements Validator {
 	public static final LongValidator INSTANCE = new LongValidator();
 
