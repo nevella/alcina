@@ -15,13 +15,15 @@ import com.google.gwt.event.shared.UmbrellaException;
 import com.google.gwt.user.client.History;
 
 public class ClientExceptionHandler implements UncaughtExceptionHandler {
+	public static final String PRE_STACKTRACE_MARKER = "\n\t-----\n";
+
 	protected String getStandardErrorText() {
 		return "Sorry for the inconvenience, and we'll fix this problem as soon as possible."
 				+ ""
 				+ " If the problem recurs, please try refreshing your browser";
 	}
 
-	protected Throwable wrapException(Throwable e) {
+	public Throwable wrapException(Throwable e) {
 		StringBuffer errorBuffer = new StringBuffer();
 		unrollUmbrella(e, errorBuffer);
 		errorBuffer.append(extraInfoForExceptionText());
@@ -50,7 +52,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 			}
 		} else {
 			errorBuffer.append("\n" + e.toString());
-			errorBuffer.append("\n\t-----\n");
+			errorBuffer.append(PRE_STACKTRACE_MARKER);
 			StackTraceElement[] stackTrace = e.getStackTrace();
 			for (StackTraceElement stackTraceElement : stackTrace) {
 				errorBuffer.append(stackTraceElement);
