@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
-import cc.alcina.framework.gwt.client.ClientNotifications;
 
 /**
  * 
@@ -66,7 +65,23 @@ public class Registry {
 	 * one (winning) registering class for
 	 */
 	public void register(Class registeringClass, RegistryLocation info) {
-		Class registryPoint = info.registryPoint();
+		register(registeringClass, info.registryPoint(), info.targetClass(),
+				info.implementationType(), info.priority());
+	}
+
+	public void register(Class registeringClass, Class registryPoint) {
+		register(registeringClass, registryPoint, void.class,
+				ImplementationType.MULTIPLE, 10);
+	}
+
+	public void unregister(Class registeringClass, Class registryPoint) {
+		Class tc = void.class;
+		registry.get(registryPoint).get(tc).remove(registeringClass);
+	}
+
+	public void register(Class registeringClass, Class registryPoint,
+			Class targetClass, ImplementationType implementationType,
+			int infoPriority) {
 		Map<Class, List<Class>> pointMap = registry.get(registryPoint);
 		Map<Class, Integer> pointPriority = targetPriority.get(registryPoint);
 		if (pointMap == null) {
@@ -75,17 +90,14 @@ public class Registry {
 			registry.put(registryPoint, pointMap);
 			targetPriority.put(registryPoint, pointPriority);
 		}
-		Class targetClass = info.targetClass();
 		List<Class> registered = pointMap.get(targetClass);
 		if (registered == null) {
 			registered = new ArrayList<Class>();
 			pointMap.put(targetClass, registered);
 		}
-		ImplementationType implementationType = info.implementationType();
 		if (registered.size() == 1
 				&& (targetClass != void.class || implementationType != ImplementationType.MULTIPLE)) {
 			Integer currentPriority = pointPriority.get(targetClass);
-			int infoPriority = info.priority();
 			if (currentPriority > infoPriority) {
 				return;
 			} else {
@@ -95,7 +107,7 @@ public class Registry {
 		registered.add(registeringClass);
 		implementationTypeMap.put(registryPoint, targetClass,
 				implementationType);
-		pointPriority.put(targetClass, info.priority());
+		pointPriority.put(targetClass, infoPriority);
 	}
 
 	public Class lookupSingle(Class registryPoint, Class targetObject) {
@@ -210,6 +222,16 @@ public class Registry {
 
 	public static <V> V impl(Class<V> registryPoint) {
 		return get().impl0(registryPoint, void.class);
+	}
+
+	public static <V> List<V> impls(Class<V> registryPoint) {
+		List<Class> impls = get().lookup(false, registryPoint, void.class,
+				false);
+		List<V> result = new ArrayList<V>();
+		for (Class c : impls) {
+			result.add((V) CommonLocator.get().classLookup().newInstance(c));
+		}
+		return result;
 	}
 
 	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass) {

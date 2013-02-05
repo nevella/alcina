@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.util.HashMap;
@@ -23,13 +22,11 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler.LooseTargetedActionHandler;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class LooseActionRegistry {
+public class LooseActionRegistry {
 	private LooseActionRegistry() {
 		super();
 		actionHandlers = new HashMap<String, LooseActionHandler>();
@@ -58,20 +55,20 @@ import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler.LooseTarge
 	public LooseActionHandler getHandler(String name) {
 		return actionHandlers.get(name);
 	}
+
 	@SuppressWarnings("unchecked")
-	public void performForTargetActionAndObject(PermissibleAction action, Object target) {
+	public void performForTargetActionAndObject(PermissibleAction action,
+			Object target) {
 		LooseTargetedActionHandler handler = (LooseTargetedActionHandler) Registry
-				.get().instantiateSingle(action.getClass(),
-						target.getClass());
+				.get().instantiateSingle(action.getClass(), target.getClass());
 		handler.performAction(target);
 	}
+
 	@SuppressWarnings("unchecked")
 	void loadFromRegistry() {
-		List<Class> handlers = Registry.get().lookup(false,
-				LooseActionHandler.class, void.class, false);
-		for (Class c : handlers) {
-			LooseActionHandler handler = (LooseActionHandler) CommonLocator
-					.get().classLookup().newInstance(c);
+		List<LooseActionHandler> handlers = Registry
+				.impls(LooseActionHandler.class);
+		for (LooseActionHandler handler : handlers) {
 			registerHandler(handler);
 		}
 	}

@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -154,12 +156,26 @@ public class CollectionFilters {
 
 		public boolean allowPostConvert(C c);
 	}
-
+	public static <K, V, O> SortedMap<K, V> sortedMap(Collection<O> values,
+			KeyValueMapper<K, V, O> mapper) {
+		SortedMap<K, V> result = new TreeMap<K, V>();
+		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
+			O o = itr.next();
+			if(mapper instanceof CollectionFilter&&!((CollectionFilter)mapper).allow(o)){
+				continue;
+			}
+			result.put(mapper.getKey(o), mapper.getValue(o));
+		}
+		return result;
+	}
 	public static <K, V, O> Map<K, V> map(Collection<O> values,
 			KeyValueMapper<K, V, O> mapper) {
 		Map<K, V> result = new LinkedHashMap<K, V>();
 		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
 			O o = itr.next();
+			if(mapper instanceof CollectionFilter&&!((CollectionFilter)mapper).allow(o)){
+				continue;
+			}
 			result.put(mapper.getKey(o), mapper.getValue(o));
 		}
 		return result;

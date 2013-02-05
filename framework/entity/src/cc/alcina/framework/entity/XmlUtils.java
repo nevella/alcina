@@ -57,6 +57,7 @@ public class XmlUtils {
 
 	private static Map<String, Transformer> transformerMap = new HashMap<String, Transformer>();
 
+	public static boolean noTransformCaching;
 	private static DocumentBuilder db;
 
 	public static String cleanXmlHeaders(String htmlContent) {
@@ -415,7 +416,7 @@ public class XmlUtils {
 			StreamResult sr, String cacheMarker,
 			TransformerFactoryConfigurator configurator) throws Exception {
 		Transformer trans = null;
-		if (cacheMarker == null || !transformerMap.containsKey(cacheMarker)) {
+		if (cacheMarker == null || !transformerMap.containsKey(cacheMarker)||noTransformCaching) {
 			TransformerFactory transFact = TransformerFactory.newInstance();
 			if (configurator != null) {
 				configurator.configure(transFact);
