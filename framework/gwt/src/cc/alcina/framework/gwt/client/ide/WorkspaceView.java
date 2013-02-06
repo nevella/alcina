@@ -352,7 +352,7 @@ public class WorkspaceView extends Composite implements HasName,
 			collapse.setVisible(showCollapseButton);
 		}
 
-		boolean treeInitialised = false;
+		protected boolean treeInitialised = false;
 
 		@Override
 		public void setVisible(boolean visible) {
