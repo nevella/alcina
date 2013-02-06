@@ -967,7 +967,9 @@ public class SEUtilities {
 			}
 		}
 	}
-
+	public static File getChildFile(File folder, String path){
+		return new File(String.format("%s/%s",folder.getPath(),path));
+	}
 	public static void appShutdown() {
 		pdLookup = null;
 	}

@@ -96,4 +96,18 @@ public class IntPair implements Comparable<IntPair> {
 	public boolean containsExBoundaries(IntPair other) {
 		return contains(other) && i1 < other.i1 && i2 > other.i2;
 	}
+
+
+	public int trimToRange(int i) {
+		if(isPoint()){
+			return i1-1;
+		}
+		if(i<i1){
+			return i1;
+		}
+		if(i>=i2){
+			return i2-1;
+		}
+		return i;
+	}
 }
