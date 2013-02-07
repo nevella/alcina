@@ -100,7 +100,7 @@ public class ResourceUtilities {
 	}
 
 	public static boolean getBoolean(Class clazz, String propertyName) {
-		String s = getBundledString(clazz, propertyName, "false");
+		String s = getBundledString(clazz, propertyName);
 		return Boolean.valueOf(s);
 	}
 
@@ -127,32 +127,18 @@ public class ResourceUtilities {
 		}
 	}
 
-	public static String getBundledString(Class clazz, String propertyName) {
-		return getBundledString(clazz, propertyName, null);
-	}
 
-	public static String getBundledString(Class clazz, String propertyName,
-			String defaultValue) {
+	public static String getBundledString(Class clazz, String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName : clazz
 				.getSimpleName() + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {
 			return customProperties.get(namespacedKey);
 		}
 		ResourceBundle b = null;
-		try {
 			b = ResourceBundle.getBundle(clazz.getPackage().getName()
 					+ ".Bundle", Locale.getDefault(), clazz.getClassLoader());
-		} catch (RuntimeException re) {
-			if (defaultValue != null) {
-				return defaultValue;
-			}
-			throw re;
-		}
 		if (b.keySet().contains(namespacedKey)) {
 			return b.getString(namespacedKey);
-		}
-		if (!b.keySet().contains(propertyName) && defaultValue != null) {
-			return defaultValue;
 		}
 		return b.getString(propertyName);
 	}
