@@ -80,4 +80,8 @@ public abstract class LooseContext {
 			return this;
 		}
 	}
+
+	public static Integer getInteger(String key) {
+		return getContext().getInteger(key);
+	}
 }
