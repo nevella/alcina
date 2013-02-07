@@ -195,6 +195,10 @@ public class CollectionFilters {
 			String key, Object value) {
 		filterInPlace(collection, new PropertyFilter(key, value));
 	}
+	public static <V> List<V> filterByProperty(Collection<? extends V> collection,
+			String key, Object value) {
+		return filter(collection, new PropertyFilter(key, value));
+	}
 	public static <V> V first(Collection<V> values,
 			String key, Object value) {
 		PropertyFilter<V> filter = new PropertyFilter<V>(key,value);

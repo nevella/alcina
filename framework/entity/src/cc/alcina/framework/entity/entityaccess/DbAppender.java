@@ -13,9 +13,13 @@
  */
 package cc.alcina.framework.entity.entityaccess;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Layout;
 import org.apache.log4j.spi.LoggingEvent;
+import org.apache.log4j.spi.ThrowableInformation;
 
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
@@ -32,11 +36,19 @@ public class DbAppender extends AppenderSkeleton {
 	protected void append(LoggingEvent event) {
 		String renderedMessage = event.getRenderedMessage();
 		String[] split = renderedMessage.split(" - ", 2);
+		ThrowableInformation ti = event.getThrowableInformation();
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		if (ti.getThrowable() != null) {
+			ti.getThrowable().printStackTrace(pw);
+		}
 		if (split.length == 2) {
-			EntityLayerLocator.get().persistentLog(split[1], split[0]);
+			EntityLayerLocator.get().persistentLog(
+					String.format("%s\n%s", split[1], sw.toString()), split[0]);
 		} else {
-			EntityLayerLocator.get().persistentLog("Unknown exception type",
-					renderedMessage);
+			EntityLayerLocator.get().persistentLog(
+					String.format("%s\n%s", renderedMessage, sw.toString()),
+					"Unknown exception type");
 		}
 	}
 
