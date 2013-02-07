@@ -12,6 +12,7 @@ import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -107,7 +108,16 @@ public abstract class HibernateEJBSearcherBase {
 	}
 
 	protected Class getEntityClass(CriteriaGroup cg) {
-		return cg.getEntityClass();
+		Class ec = cg.getEntityClass();
+		if (ec == null) {
+			try {
+				// serialization wiping transient field??
+				ec = cg.getClass().newInstance().getEntityClass();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		return ec;
 	}
 
 	protected void processHandlers(SearchDefinition def) {
@@ -117,7 +127,8 @@ public abstract class HibernateEJBSearcherBase {
 				continue;
 			}
 			if (!cg.provideIsEmpty()) {
-				boolean countingVt = detachedCriteriaMap.containsKey(getEntityClass(cg));
+				boolean countingVt = detachedCriteriaMap
+						.containsKey(getEntityClass(cg));
 				Junction junction = cg.getCombinator() == FilterCombinator.OR
 						|| countingVt ? Restrictions.disjunction()
 						: Restrictions.conjunction();
@@ -125,7 +136,7 @@ public abstract class HibernateEJBSearcherBase {
 				for (SearchCriterion sc : (Set<SearchCriterion>) cg
 						.getCriteria()) {
 					SearchCriterionHandler handler = getCriterionHandler(sc);
-					if(!allowHandler(handler)){
+					if (!allowHandler(handler)) {
 						continue;
 					}
 					if (handler == null) {

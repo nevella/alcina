@@ -3,6 +3,8 @@ package cc.alcina.framework.servlet.publication;
 import java.io.InputStream;
 import java.util.Date;
 
+import org.apache.log4j.Logger;
+
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -12,6 +14,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
@@ -21,14 +24,20 @@ import cc.alcina.framework.servlet.publication.PublicationPersistence.Publicatio
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 
 /**
- * <p>Process a content definition and deliver it to a delivery model (e.g. email a list of documents, convert a document to pdf and serve etc)
+ * <p>
+ * Process a content definition and deliver it to a delivery model (e.g. email a
+ * list of documents, convert a document to pdf and serve etc)
  * </p>
  * <h3>Pipeline</h3>
  * <ol>
- * <li>ContentModelHandler: convert a content definition (say a search description) to a list of objects (say search results)
- * <li>ContentRenderer: convert the list of objects to an output format (most often xhtml)
- * <li>ContentWrapper: wrap content (add header, footer, that sort of decoration)
- * <li>FormatConverter: at this stage output is either html or some binary format - if html, can convert to Word, PDF etc
+ * <li>ContentModelHandler: convert a content definition (say a search
+ * description) to a list of objects (say search results)
+ * <li>ContentRenderer: convert the list of objects to an output format (most
+ * often xhtml)
+ * <li>ContentWrapper: wrap content (add header, footer, that sort of
+ * decoration)
+ * <li>FormatConverter: at this stage output is either html or some binary
+ * format - if html, can convert to Word, PDF etc
  * <li>ContentDelivery: deliver (email, download etc)
  * </ol>
  * 
@@ -38,6 +47,8 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
  * 
  */
 public class Publisher {
+	private PublicationContext ctx;
+
 	public PublicationResult publish(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel) throws Exception {
 		return publish(contentDefinition, deliveryModel, null);
@@ -46,18 +57,34 @@ public class Publisher {
 	@SuppressWarnings("unchecked")
 	public PublicationResult publish(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original) throws Exception {
+		try {
+			ctx = new PublicationContext();
+			ctx.logger = Logger.getLogger(getClass());
+			ctx.contentDefinition = contentDefinition;
+			ctx.deliveryModel = deliveryModel;
+			LooseContext.pushWithKey(
+					PublicationContext.CONTEXT_PUBLICATION_CONTEXT, ctx);
+			return publish0(contentDefinition, deliveryModel, original);
+		} catch (Exception e) {
+			ctx.logPublicationException(e);
+			throw e;
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private PublicationResult publish0(ContentDefinition contentDefinition,
+			DeliveryModel deliveryModel, Publication original) throws Exception {
 		ContentModelHandler cmh = (ContentModelHandler) ServletLayerRegistry
 				.get().instantiateSingle(ContentModelHandler.class,
 						contentDefinition.getClass());
-		PublicationContext ctx = new PublicationContext();
-		ctx.contentDefinition=contentDefinition;
-		ctx.deliveryModel=deliveryModel;
 		cmh.prepareContent(contentDefinition, deliveryModel);
 		if (!cmh.hasResults) {
 			return null;// throw exception??
 		}
 		PublicationResult result = new PublicationResult();
-		ctx.publicationResult=result;
+		ctx.publicationResult = result;
 		long publicationUserId = 0;
 		long publicationId = 0;
 		boolean forPublication = !deliveryModel.isNoPersistence();
@@ -74,7 +101,7 @@ public class Publisher {
 			}
 		}
 		PublicationContent publicationContent = cmh.getPublicationContent();
-		ctx.publicationContent=publicationContent;
+		ctx.publicationContent = publicationContent;
 		ContentRenderer crh = (ContentRenderer) ServletLayerRegistry.get()
 				.instantiateSingle(ContentRenderer.class,
 						publicationContent.getClass());
@@ -104,14 +131,15 @@ public class Publisher {
 		fcm.html = cw.wrappedContent;
 		fcm.footer = cw.wrappedFooter;
 		fcm.bytes = cw.wrappedBytes;
-		fcm.custom=cw.custom;
-		InputStream convertedContent = fc.convert(ctx,fcm);
+		fcm.custom = cw.custom;
+		InputStream convertedContent = fc.convert(ctx, fcm);
 		ContentDelivery deliverer = (ContentDelivery) ServletLayerRegistry
 				.get().instantiateSingle(ContentDeliveryType.class,
 						deliveryModel.provideContentDeliveryType().getClass());
-		String token = deliverer.deliver(ctx,convertedContent, deliveryModel, fc);
-		result.content=null;
-		result.contentToken=token;
+		String token = deliverer.deliver(ctx, convertedContent, deliveryModel,
+				fc);
+		result.content = null;
+		result.contentToken = token;
 		return result;
 	}
 

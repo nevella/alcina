@@ -84,6 +84,13 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			logger.addAppender(a);
 		}
 		logger.setAdditivity(true);
+		//and alcina
+		logger = Logger.getLogger("cc.alcina.framework");
+		if (logger.getAppender(mainLoggerAppenderName) == null) {
+			logger.addAppender(a);
+		}
+		logger.setAdditivity(true);
+		//metric
 		String metricLoggerName = AlcinaServerConfig.get()
 				.getMetricLoggerName();
 		if (metricLoggerName != null) {
