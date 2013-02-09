@@ -39,7 +39,7 @@ public class DbAppender extends AppenderSkeleton {
 		ThrowableInformation ti = event.getThrowableInformation();
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
-		if (ti.getThrowable() != null) {
+		if (ti != null && ti.getThrowable() != null) {
 			ti.getThrowable().printStackTrace(pw);
 		}
 		if (split.length == 2) {

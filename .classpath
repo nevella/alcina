@@ -10,6 +10,7 @@
 	<classpathentry kind="src" path="framework/gwt/src"/>
 	<classpathentry kind="src" path="framework/servlet/src"/>
 	<classpathentry kind="src" path="extras/cluster/tasks-src"/>
+	<classpathentry kind="src" path="extras/dev/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>

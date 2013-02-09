@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.entityaccess;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -27,13 +28,13 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  *
  * @author Nick Reddel
  */
-public class DetachedEntityCache {
+public class DetachedEntityCache implements Serializable {
 	private Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>();
 
 	public DetachedEntityCache() {
 	}
 
-	private static DetachedEntityCache commonInstance;
+	private static transient DetachedEntityCache commonInstance;
 
 	public static DetachedEntityCache get() {
 		if (commonInstance == null) {

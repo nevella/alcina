@@ -1,0 +1,482 @@
+package cc.alcina.extras.dev;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.prefs.Preferences;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.Layout;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.PatternLayout;
+
+import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.domaintransform.TestPersistenceHelper;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.registry.RegistryScanner;
+import cc.alcina.framework.entity.util.ClasspathScanner;
+import cc.alcina.framework.entity.util.ServerURLComponentEncoder;
+import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
+import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
+import cc.alcina.framework.gwt.client.logic.OkCallback;
+import cc.alcina.framework.gwt.client.widget.ModalNotifier;
+import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
+import cc.alcina.framework.servlet.ServletLayerLocator;
+import cc.alcina.framework.servlet.ServletLayerRegistry;
+
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Widget;
+
+public abstract class DevHelper {
+	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
+
+	private MessagingWriter messagingWriter;
+
+	public interface StringPrompter {
+		String getValue(String prompt);
+	}
+
+	static class ConsolePrompter implements StringPrompter {
+		@Override
+		public String getValue(String prompt) {
+			return SEUtilities.consoleReadline(String.format("%s\n> ", prompt));
+		}
+	}
+
+	public void loadJbossConfig() {
+		loadJbossConfig(new ConsolePrompter());
+	}
+
+	public abstract void initPostObjectServices();
+
+	public abstract void readAppObjectGraph();
+
+	public void loadJbossConfig(StringPrompter prompter) {
+		Preferences prefs = Preferences.userNodeForPackage(getClass());
+		String path = null;
+		while (true) {
+			try {
+				path = prefs.get(JBOSS_CONFIG_PATH, "");
+				ResourceUtilities.registerCustomProperties(new FileInputStream(
+						path));
+				break;
+			} catch (Exception e) {
+				String prompt = getJbossConfigPrompt(path);
+				path = prompter.getValue(prompt);
+				prefs.put(JBOSS_CONFIG_PATH, path);
+			}
+		}
+	}
+
+	protected abstract String getJbossConfigPrompt(String path);
+
+	class Ralp extends RemoteActionLoggerProvider {
+		@Override
+		public Logger getLogger(Class clazz) {
+			return getTestLogger();
+		}
+	}
+
+	private Connection connLocal;
+
+	private Connection connDev;
+
+	private Connection connProduction;
+
+	private TopicListener<JobInfo> jobCompletionLister = new TopicListener<JobInfo>() {
+		@Override
+		public void topicPublished(String key, JobInfo message) {
+			System.out.format("Job complete:\n%s\n", message);
+		}
+	};
+
+	public void dumpTransforms() {
+		Set<DomainTransformEvent> transforms = TransformManager.get()
+				.getTransforms();
+		for (DomainTransformEvent transform : transforms) {
+			transform.setCommitType(CommitType.TO_STORAGE);
+		}
+		System.out.println(transforms);
+	}
+
+	public MessagingWriter getMessagingWriter() {
+		return this.messagingWriter;
+	}
+
+	public void initDataFolder() {
+		EntityLayerLocator.get().setDataFolder(getDataFolder());
+		ServletLayerLocator.get().setDataFolder(getDataFolder());
+	}
+
+	public abstract File getDataFolder();
+
+	public void solidTestEnvFirstHalf() {
+		loadJbossConfig();
+		initLightweightServices();
+	}
+
+	public void initLightweightServices() {
+		initDataFolder();
+		scanRegistry();
+		initDummyServices();
+		ObjectPersistenceHelper.get();
+		initCustomServicesFirstHalf();
+		AppPersistenceBase.setTest();
+		setupJobsToSysout();
+		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
+		XmlUtils.noTransformCaching = true;
+		EntityLayerLocator.get().setPersistentLogger(getTestLogger());
+	}
+
+	protected abstract void initCustomServicesFirstHalf();
+
+	public void initDummyServices() {
+		ServletLayerLocator.get()
+				.registerRemoteActionLoggerProvider(new Ralp());
+		CommonLocator.get().registerURLComponentEncoder(
+				new ServerURLComponentEncoder());
+		CommonLocator.get().registerCurrentUtcDateProvider(
+				TestPersistenceHelper.get());
+		TransformManager.register(new ClientTransformManager());
+	}
+
+	public void scanRegistry() {
+		try {
+			Logger logger = getTestLogger();
+			long t1 = System.currentTimeMillis();
+			Map<String, Date> classes = new ClasspathScanner("*", true, true)
+					.getClasses();
+			new RegistryScanner().scan(classes, new ArrayList<String>(),
+					ServletLayerRegistry.get());
+			new RegistryScanner().scan(classes, new ArrayList<String>(),
+					Registry.get());
+			long t2 = System.currentTimeMillis();
+			// System.out.println("Registry scan: " + (t2 - t1));
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static class MessagingWriter extends PrintWriter {
+		private static boolean written;
+
+		public boolean getNReset() {
+			boolean b = written;
+			written = false;
+			return b;
+		}
+
+		public MessagingWriter(OutputStream out) {
+			super(out);
+		}
+
+		@Override
+		public void write(String s) {
+			written = true;
+			super.write(s);
+		}
+	}
+
+	public static class NotificationsImpl implements ClientNotifications {
+		@Override
+		public void confirm(String msg, OkCallback callback) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public String getLogString() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public void hideDialog() {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public boolean isDialogAnimationEnabled() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void log(String s) {
+			System.out.println(s);
+		}
+
+		@Override
+		public void metricLogEnd(String key) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void metricLogStart(String key) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void setDialogAnimationEnabled(boolean dialogAnimationEnabled) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void showDialog(String captionHTML, Widget captionWidget,
+				String msg, MessageType messageType, List<Button> extraButtons) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void showDialog(String captionHTML, Widget captionWidget,
+				String msg, MessageType messageType, List<Button> extraButtons,
+				String containerStyle) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void showError(String msg, Throwable throwable) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void showError(Throwable caught) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void showLog() {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void showMessage(String msg) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void showMessage(Widget msg) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void showWarning(String msg) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void showWarning(String msg, String detail) {
+			// TODO Auto-generated method stub
+		}
+
+		public void notifyOfCompletedSaveFromOffline() {
+		}
+
+		@Override
+		public ModalNotifier getModalNotifier(String message) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+	}
+
+	public Logger getTestLogger() {
+		return getTestLogger(getClass().getName());
+	}
+
+	private Logger logger = null;
+
+	public Logger getTestLogger(String name) {
+		if (logger == null) {
+			logger = Logger.getLogger("");
+			logger.setLevel(Level.INFO);
+			Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
+			ConsoleAppender a = new ConsoleAppender(l);
+			messagingWriter = new MessagingWriter(System.out);
+			a.setWriter(messagingWriter);
+			String stdAppndrName = "Standard_appender";
+			a.setName(stdAppndrName);
+			if (logger.getAppender(stdAppndrName) == null) {
+				logger.addAppender(a);
+			}
+			logger.setAdditivity(false);
+			Logger mlogger = MetricLogging.metricLogger;
+			mlogger.setLevel(Level.DEBUG);
+			Layout l2 = new PatternLayout("%m%n");
+			ConsoleAppender a2 = new ConsoleAppender(l2);
+			a2.setWriter(messagingWriter);
+			mlogger.addAppender(a2);
+			mlogger.setAdditivity(false);
+		}
+		return logger;
+	}
+
+	public File getTestFolder() {
+		File file = SEUtilities.getChildFile(getDataFolder(), "ser");
+		file.mkdirs();
+		return file;
+	}
+
+	public File getDevFolder() {
+		File file = SEUtilities.getChildFile(getDataFolder(), "dev");
+		file.mkdirs();
+		return file;
+	}
+
+	public <V> V readObject(V template) {
+		return readObject(template, template.getClass().getSimpleName());
+	}
+
+	public <V> V readObjectGz(V template) {
+		return readObject(template, template.getClass().getSimpleName(), true);
+	}
+
+	public <V> V readObject(V template, String lkpName) {
+		File cacheFile = new File(getTestFolder().getPath() + File.separator
+				+ lkpName + ".ser");
+		try {
+			ObjectInputStream ois = new ObjectInputStream(
+					new BufferedInputStream(new FileInputStream(cacheFile)));
+			return (V) ois.readObject();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public <V> V readObject(V template, String lkpName, boolean gz) {
+		File cacheFile = getFile(lkpName, gz);
+		try {
+			InputStream in = new FileInputStream(cacheFile);
+			if (gz) {
+				in = new GZIPInputStream(in);
+			}
+			in = new BufferedInputStream(in);
+			ObjectInputStream ois = new ObjectInputStream(in);
+			return (V) ois.readObject();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void writeObject(Object obj) {
+		writeObject(obj, obj.getClass().getSimpleName());
+	}
+
+	public void writeObjectGz(Object obj) {
+		writeObject(obj, obj.getClass().getSimpleName(), true);
+	}
+
+	public void writeObject(Object obj, String lkpName) {
+		writeObject(obj, lkpName, false);
+	}
+
+	public void writeObject(Object obj, String lkpName, boolean gz) {
+		File cacheFile = getFile(lkpName, gz);
+		try {
+			cacheFile.createNewFile();
+			OutputStream out = new FileOutputStream(cacheFile);
+			if (gz) {
+				out = new GZIPOutputStream(out);
+			}
+			out = new BufferedOutputStream(out);
+			ObjectOutputStream oos = new ObjectOutputStream(out);
+			oos.writeObject(obj);
+			oos.close();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private File getFile(String lkpName, boolean gz) {
+		File cacheFile = new File(getTestFolder().getPath() + File.separator
+				+ lkpName + ".ser" + (gz ? ".gz" : ""));
+		return cacheFile;
+	}
+
+	public void setupJobsToSysout() {
+		AlcinaTopics.jobCompletionListenerDelta(jobCompletionLister, true);
+	}
+
+	public DevHelper solidTestEnv() {
+		solidTestEnvFirstHalf();
+		solidTestEnvSecondHalf();
+		return this;
+	}
+
+	public abstract DevHelper solidTestEnvSecondHalf();
+
+	public Connection getConnLocal() throws Exception {
+		if (connLocal == null) {
+			Class.forName("org.postgresql.Driver");
+			connLocal = DriverManager.getConnection(
+					"jdbc:postgresql://127.0.0.1:5432/jade", "jade", "jade");
+		}
+		return connLocal;
+	}
+
+	public void useMountSshfsFs() {
+		try {
+			FileInputStream fis = new FileInputStream(
+					"/Users/ouiji/git/jade/server/src/au/com/barnet/jade/test/sshfs.properties");
+			ResourceUtilities.registerCustomProperties(fis);
+		} catch (FileNotFoundException e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public Connection getConnDev() throws Exception {
+		if (connDev == null) {
+			Class.forName("org.postgresql.Driver");
+			connDev = DriverManager.getConnection(
+					"jdbc:postgresql://127.0.0.1:5433/jade", "jade", "jade");
+		}
+		return connDev;
+	}
+
+	public Connection getConnProduction() throws Exception {
+		if (connProduction == null) {
+			Class.forName("org.postgresql.Driver");
+			connProduction = DriverManager.getConnection(
+					"jdbc:postgresql://127.0.0.1:5434/jade", "jade", "jade");
+		}
+		return connProduction;
+	}
+
+	public DevHelper() {
+		super();
+	}
+}

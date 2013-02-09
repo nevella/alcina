@@ -16,6 +16,8 @@ import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
@@ -122,6 +124,9 @@ public class Publisher {
 		}
 		result.content = cw.wrappedContent;
 		if (deliveryModel.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
+			if(result.content==null&AppPersistenceBase.isTest()){
+				result.content=Base64Utils.toBase64(cw.wrappedBytes);
+			}
 			return result;
 		}
 		FormatConverter fc = (FormatConverter) ServletLayerRegistry.get()
