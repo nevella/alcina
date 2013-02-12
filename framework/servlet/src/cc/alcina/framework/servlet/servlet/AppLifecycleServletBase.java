@@ -49,7 +49,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			ClientInstance serverAsClientInstance = ServletLayerLocator.get()
 					.commonPersistenceProvider().getCommonPersistence()
-					.createClientInstance();
+					.createClientInstance(null);
 			CommonRemoteServiceServletSupport.get().setServerAsClientInstance(
 					serverAsClientInstance);
 		} finally {

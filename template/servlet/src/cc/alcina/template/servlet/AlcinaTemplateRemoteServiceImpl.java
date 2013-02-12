@@ -68,7 +68,8 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 			if (lrb.isOk()) {
 				processValidLogin(lrb, loginBean.getUserName());
 				lrb.setClientInstance(AlcinaTemplateBeanProvider.get()
-						.getCommonPersistenceBean().createClientInstance());
+						.getCommonPersistenceBean()
+						.createClientInstance(getUserAgent()));
 				CookieHelper.get().setRememberMeCookie(getThreadLocalRequest(),
 						getThreadLocalResponse(), loginBean.isRememberMe());
 			}
@@ -117,7 +118,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 			}
 		}
 		lrb.setClientInstance(AlcinaTemplateBeanProvider.get()
-				.getCommonPersistenceBean().createClientInstance());
+				.getCommonPersistenceBean().createClientInstance(getUserAgent()));
 		return lrb;
 	}
 

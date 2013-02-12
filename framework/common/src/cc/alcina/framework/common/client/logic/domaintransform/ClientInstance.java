@@ -41,6 +41,8 @@ public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
 	private Date helloDate;
 
 	private Integer auth;
+	
+	private String userAgent;
 
 	public Integer getAuth() {
 		return auth;
@@ -74,5 +76,13 @@ public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
 
 	public void setLocalId(long localId) {
 		this.localId = localId;
+	}
+
+	public String getUserAgent() {
+		return this.userAgent;
+	}
+
+	public void setUserAgent(String userAgent) {
+		this.userAgent = userAgent;
 	}
 }

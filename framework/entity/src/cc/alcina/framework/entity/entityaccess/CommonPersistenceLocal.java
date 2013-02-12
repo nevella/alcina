@@ -45,7 +45,7 @@ public interface CommonPersistenceLocal {
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws Exception;
 
-	public abstract ClientInstance createClientInstance();
+	public abstract ClientInstance createClientInstance(String userAgent);
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception;
 

@@ -163,8 +163,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 * Note...we deliberately crop the client instance user - at the servlet
 	 * layer we (should) always want it lightweight
 	 */
-	public CI createClientInstance() {
-		return (CI) getHandshakeObjectProvider().createClientInstance();
+	@Override
+	public CI createClientInstance(String userAgent) {
+		return (CI) getHandshakeObjectProvider().createClientInstance(userAgent);
 	}
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception {
@@ -879,7 +880,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		private CommonPersistenceBase cp;
 
 		@Override
-		public ClientInstance createClientInstance() {
+		public ClientInstance createClientInstance(String userAgent) {
 			AppPersistenceBase.checkNotReadOnly();
 			cp.connectPermissionsManagerToLiveObjects(true);
 			Class<? extends ClientInstance> clientInstanceImpl = cp
@@ -890,6 +891,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setHelloDate(new Date());
 				impl.setUser(PermissionsManager.get().getUser());
 				impl.setAuth(Math.abs(new Random().nextInt()));
+				impl.setUserAgent(userAgent);
 				cp.getEntityManager().flush();
 				IUser clonedUser = (IUser) cp
 						.getNewImplementationInstance(IUser.class);
@@ -933,7 +935,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		private CommonPersistenceBase cp;
 
 		@Override
-		public ClientInstance createClientInstance() {
+		public ClientInstance createClientInstance(String userAgent) {
 			long newId = 0;
 			synchronized (ReadonlyHandshakeObjectProvider.class) {
 				if (clientInstanceIdCounter == 0) {
@@ -956,6 +958,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setHelloDate(new Date());
 				impl.setUser(PermissionsManager.get().getUser());
 				impl.setAuth(Math.abs(new Random().nextInt()));
+				impl.setUserAgent(userAgent);
 				IUser clonedUser = (IUser) cp
 						.getNewImplementationInstance(IUser.class);
 				ResourceUtilities.copyBeanProperties(PermissionsManager.get()

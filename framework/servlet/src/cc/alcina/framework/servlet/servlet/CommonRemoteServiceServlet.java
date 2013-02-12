@@ -27,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
@@ -813,5 +814,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 		EntityLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().persistClientLogRecords(records);
+	}
+	protected String getUserAgent(){
+		return getUserAgent(getThreadLocalRequest());
+	}
+
+	protected String getUserAgent(HttpServletRequest rq) {
+		return rq==null?"null/server":rq.getHeader("User-Agent");
 	}
 }
