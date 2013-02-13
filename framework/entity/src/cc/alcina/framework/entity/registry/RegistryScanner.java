@@ -16,12 +16,14 @@ package cc.alcina.framework.entity.registry;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
+import java.security.CodeSource;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -63,6 +65,14 @@ public class RegistryScanner extends CachingScanner {
 				|| (Modifier.isAbstract(c.getModifiers()) && !c.isInterface())) {
 			outgoingIgnoreMap.put(className, modDate);
 			return;
+		}
+		if (c.getClassLoader() != this.getClass().getClassLoader()) {
+			try {
+				c = this.getClass().getClassLoader().loadClass(c.getName());
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			
 		}
 		{
 			RegistryLocations rls = (RegistryLocations) c

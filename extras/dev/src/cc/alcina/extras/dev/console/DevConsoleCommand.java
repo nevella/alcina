@@ -324,11 +324,11 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			List<String> keys = new ArrayList<String>(
 					console.commandsById.keySet());
 			Collections.sort(keys);
-			System.out.format("%-20s%-30s%s\n", "Command", "Usage",
+			System.out.format("%-20s%-50s%s\n", "Command", "Usage",
 					"Description");
-			System.out.println(CommonUtils.padStringLeft("", 90, "-"));
+			System.out.println(CommonUtils.padStringLeft("", 100, "-"));
 			Set<DevConsoleCommand> seen = new LinkedHashSet<DevConsoleCommand>();
-			String descPad = "\n" + CommonUtils.padStringLeft("", 53, " ");
+			String descPad = "\n" + CommonUtils.padStringLeft("", 73, " ");
 			for (String k : keys) {
 				Map<String, DevConsoleCommand> commandsById = console.commandsById;
 				DevConsoleCommand cmd2 = commandsById.get(k);
@@ -338,7 +338,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				seen.add(cmd2);
 				String desc = cmd2.getDescription();
 				desc = desc.replace("\n", descPad);
-				System.out.format("%-20s%-30s%s\n",
+				System.out.format("%-20s%-50s%s\n",
 						CommonUtils.join(cmd2.getCommandIds(), ", "),
 						cmd2.getUsage(), desc);
 			}

@@ -239,30 +239,28 @@ public class MapObjectLookup implements ObjectLookup {
 			sb.addPropertyChangeListener(listener);
 		}
 		boolean lookupCreated = registerChildren.containsKey(clazz);
-		if (ClientReflector.get().isDefined()) {
-			if (!registerChildren.containsKey(clazz)) {
-				ClientBeanReflector bi = ClientReflector.get()
-						.beanInfoForClass(clazz);
-				Collection<ClientPropertyReflector> prs = bi == null ? new ArrayList<ClientPropertyReflector>()
-						: bi.getPropertyReflectors().values();
-				List<ClientPropertyReflector> target = new ArrayList<ClientPropertyReflector>();
-				registerChildren.put(clazz, target);
-				for (ClientPropertyReflector pr : prs) {
-					DomainPropertyInfo dpi = pr
-							.getAnnotation(DomainPropertyInfo.class);
-					if (dpi != null && dpi.registerChildren()) {
-						target.add(pr);
-					}
+		if (!registerChildren.containsKey(clazz)) {
+			ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
+					clazz);
+			Collection<ClientPropertyReflector> prs = bi == null ? new ArrayList<ClientPropertyReflector>()
+					: bi.getPropertyReflectors().values();
+			List<ClientPropertyReflector> target = new ArrayList<ClientPropertyReflector>();
+			registerChildren.put(clazz, target);
+			for (ClientPropertyReflector pr : prs) {
+				DomainPropertyInfo dpi = pr
+						.getAnnotation(DomainPropertyInfo.class);
+				if (dpi != null && dpi.registerChildren()) {
+					target.add(pr);
 				}
 			}
-			List<ClientPropertyReflector> childRegisterReflectors = registerChildren
-					.get(clazz);
-			if (!childRegisterReflectors.isEmpty()) {
-				for (ClientPropertyReflector pr : childRegisterReflectors) {
-					Object value = CommonLocator.get().propertyAccessor()
-							.getPropertyValue(obj, pr.getPropertyName());
-					addObjectOrCollectionToEndOfQueue(value);
-				}
+		}
+		List<ClientPropertyReflector> childRegisterReflectors = registerChildren
+				.get(clazz);
+		if (!childRegisterReflectors.isEmpty()) {
+			for (ClientPropertyReflector pr : childRegisterReflectors) {
+				Object value = CommonLocator.get().propertyAccessor()
+						.getPropertyValue(obj, pr.getPropertyName());
+				addObjectOrCollectionToEndOfQueue(value);
 			}
 		}
 		mappedObjects.put(obj, true);

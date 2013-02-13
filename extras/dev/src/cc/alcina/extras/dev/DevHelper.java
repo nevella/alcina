@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -153,6 +154,7 @@ public abstract class DevHelper {
 	public void initLightweightServices() {
 		initDataFolder();
 		scanRegistry();
+		initClientReflector();
 		initDummyServices();
 		ObjectPersistenceHelper.get();
 		initCustomServicesFirstHalf();
@@ -161,6 +163,18 @@ public abstract class DevHelper {
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		XmlUtils.noTransformCaching = true;
 		EntityLayerLocator.get().setPersistentLogger(getTestLogger());
+	}
+
+	protected void initClientReflector() {
+		try {
+			Object clientReflectorJvm = Class
+					.forName(
+							"cc.alcina.framework.jvmclient.reflection.ClientReflectorJvm")
+					.newInstance();
+			ClientReflector.register((ClientReflector) clientReflectorJvm);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	protected abstract void initCustomServicesFirstHalf();

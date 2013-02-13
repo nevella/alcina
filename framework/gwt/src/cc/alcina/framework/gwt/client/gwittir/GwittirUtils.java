@@ -277,7 +277,7 @@ public class GwittirUtils {
 	 * on server
 	 */
 	public static boolean isIntrospectable(Class clazz) {
-		if (GWT.isClient()) {
+		if (GWT.isScript()) {
 			return ClientReflector.get().beanInfoForClass(clazz) != null;
 		}
 		ClassLookup cl = CommonLocator.get().classLookup();

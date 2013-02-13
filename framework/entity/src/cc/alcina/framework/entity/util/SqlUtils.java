@@ -71,30 +71,50 @@ public class SqlUtils {
 	}
 
 	public static void dumpResultSet(ResultSet rs) throws SQLException {
+		dumpResultSet(rs, new HashMap<String, SqlUtils.ColumnFormatter>());
+	}
+
+	public static interface ColumnFormatter {
+		public String format(ResultSet rs, int columnIndex) throws SQLException;
+	}
+
+	public static void dumpResultSet(ResultSet rs,
+			Map<String, ColumnFormatter> formatters) throws SQLException {
 		LookupMapToMap<String> values = new LookupMapToMap<String>(2);
 		int row = 0;
 		List<String> columnNames = new ArrayList<String>();
+		for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+			columnNames.add(rs.getMetaData().getColumnName(i));
+		}
 		while (rs.next()) {
 			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-				String value = CommonUtils.nullToEmpty(rs.getString(i));
-				int j = i - 1;
-				if (j >= columnNames.size()) {
-					columnNames.add(rs.getMetaData().getColumnName(i));
+				String columnName = columnNames.get(i - 1);
+				String value = null;
+				if (formatters.containsKey(columnName)) {
+					value = formatters.get(columnName).format(rs, i);
+				} else {
+					value = CommonUtils.nullToEmpty(rs.getString(i));
 				}
+				int j = i - 1;
 				values.put(row, j, value);
 			}
 			row++;
 		}
 		dumpTable(values, columnNames);
+		if (row == 0) {
+			System.out.println("No rows returned");
+		}
 	}
 
 	private static void dumpTable(LookupMapToMap<String> values,
 			List<String> columnNames) {
 		Map<Integer, Integer> colWidthMap = new HashMap<Integer, Integer>();
 		int rows = values.keySet().size();
-		int cols = 0;
+		int cols = columnNames.size();
+		for (int col = 0; col < cols; col++) {
+			colWidthMap.put(col, 5);
+		}
 		for (int row = 0; row < rows; row++) {
-			cols = ((Map) values.get(row)).size();
 			for (int col = 0; col < cols; col++) {
 				int max = Math.max(CommonUtils.iv(colWidthMap.get(col)), values
 						.get(row, col).length());
@@ -109,7 +129,7 @@ public class SqlUtils {
 		System.out.println();
 		for (int col = 0; col < cols; col++) {
 			System.out.format(CommonUtils.padStringLeft("----",
-					colWidthMap.get(col) + 4, "-"));
+					colWidthMap.get(col) + 6, "-"));
 		}
 		System.out.println();
 		for (int row = 0; row < rows; row++) {

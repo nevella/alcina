@@ -1,8 +1,68 @@
 package cc.alcina.extras.dev.console;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.persistence.Table;
+
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
+import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.util.EntityUtils;
+import cc.alcina.framework.entity.util.SqlUtils;
+import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 
 public class DevConsoleCommandTransforms {
+	static class ClassRefNameFormatter implements ColumnFormatter {
+		@Override
+		public String format(ResultSet rs, int columnIndex) throws SQLException {
+			long objRefId = rs.getLong(columnIndex);
+			return ClassRef.forId(objRefId).getRefClass().getSimpleName();
+		}
+	}
+
+	static class DateTimeFormatter implements ColumnFormatter {
+		@Override
+		public String format(ResultSet rs, int columnIndex) throws SQLException {
+			Timestamp ts = rs.getTimestamp(columnIndex);
+			return CommonUtils.formatDate(ts, DateStyle.AU_DATE_TIME_HUMAN);
+		}
+	}
+
+	static class TrimmedStringFormatter implements ColumnFormatter {
+		private int length;
+
+		public TrimmedStringFormatter(int length) {
+			this.length = length;
+		}
+
+		@Override
+		public String format(ResultSet rs, int columnIndex) throws SQLException {
+			return CommonUtils.trimToWsChars(
+					CommonUtils.nullToEmpty(rs.getString(columnIndex)), length);
+		}
+	}
+
 	public static class CmdListClientInstances extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
@@ -21,9 +81,10 @@ public class DevConsoleCommandTransforms {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String sql = "select ci.*, users.username  "
-					+ "from client_instance ci inner join users u on ci.user_id=u.id "
-					+ "where ci.id!=-1 %s order by id desc";
+			String sql = "select ci.*, u.username  "
+					+ "from client_instance ci "
+					+ "inner join users u on ci.user_id=u.id "
+					+ "where ci.id != -1 %s order by ci.id desc";
 			String arg0 = argv[0];
 			String arg1 = argv.length < 2 ? "0" : argv[1];
 			String arg2 = argv.length < 3 ? "7" : argv[2];
@@ -34,11 +95,309 @@ public class DevConsoleCommandTransforms {
 				filter += arg1.matches("\\d+") ? String.format(" and u.id=%s ",
 						arg1) : String.format(" and u.username='%s' ", arg1);
 			}
-			filter += arg0.equals("0") ? "" : String.format("  age(hellodate)<'%s days'  ",
+			filter += arg2.equals("0") ? "" : String.format(
+					"  and age(ci.hellodate)<'%s days'  ", arg2);
+			Connection conn = getConn();
+			sql = String.format(sql, filter);
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			SqlUtils.dumpResultSet(rs);
+			return "";
+		}
+	}
+
+	public static class CmdListUsers extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "trus" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "list users with filters";
+		}
+
+		@Override
+		public String getUsage() {
+			return "trus {user_id|username substring}";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String sql = "select  u.id, u.username  " + "from users u  "
+					+ "where u.id != -1 %s order by u.id desc";
+			String arg0 = argv[0];
+			String filter = "";
+			filter += arg0.matches("\\d+") ? String.format(" and u.id=%s ",
+					arg0) : String.format(" and u.username ilike '%%%s%%' ",
 					arg0);
-			console.props.idOrSet = arg0;
-			console.saveConfig();
+			Connection conn = getConn();
+			sql = String.format(sql, filter);
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ResultSet rs = ps.executeQuery();
+			SqlUtils.dumpResultSet(rs);
 			return String.format("set id to '%s'", console.props.idOrSet);
+		}
+	}
+
+	public abstract static class DevConsoleFilter {
+		public abstract String getKey();
+
+		public abstract String getFilter(String value);
+
+		public static String getFilters(
+				Class<? extends DevConsoleFilter> registryPoint, String[] argv) {
+			return getFilters(registryPoint, argv, null);
+		}
+
+		public static String getFilters(
+				Class<? extends DevConsoleFilter> registryPoint, String[] argv,
+				CollectionFilter<String> allowFilter) {
+			List<String> filters = new ArrayList<String>();
+			List<? extends DevConsoleFilter> impls = Registry
+					.impls(registryPoint);
+			StringMap kv = new StringMap();
+			for (int i = 0; i < argv.length; i += 2) {
+				kv.put(argv[i], argv[i + 1]);
+			}
+			for (DevConsoleFilter impl : impls) {
+				if (kv.containsKey(impl.getKey()) || impl.hasDefault()) {
+					String filterString = impl.getFilter(kv.get(impl.getKey()));
+					if (allowFilter == null || allowFilter.allow(filterString)) {
+						filters.add(filterString);
+					}
+				}
+			}
+			return CommonUtils.join(filters, " and ");
+		}
+
+		protected boolean hasDefault() {
+			return false;
+		}
+	}
+
+	public static class CmdListTransforms extends DevConsoleCommand {
+		@RegistryLocation(registryPoint = CmdListTransformsFilter.class)
+		public abstract static class CmdListTransformsFilter extends
+				DevConsoleFilter {
+		}
+
+		public static class CmdListTransformsFilterClientInstance extends
+				CmdListTransformsFilter {
+			@Override
+			public String getKey() {
+				return "ci";
+			}
+
+			@Override
+			public String getFilter(String value) {
+				return value == null ? "ci.id != -1" : String.format(
+						"ci.id=%s", value);
+			}
+
+			@Override
+			protected boolean hasDefault() {
+				return true;
+			}
+		}
+
+		public static class CmdListTransformsFilterDays extends
+				CmdListTransformsFilter {
+			@Override
+			public String getKey() {
+				return "days";
+			}
+
+			@Override
+			public String getFilter(String value) {
+				return String.format("age(ci.hellodate)<'%s days'",
+						value == null ? "3" : value);
+			}
+
+			protected boolean hasDefault() {
+				return true;
+			}
+		}
+
+		public static class CmdListTransformsFilterDtrId extends
+				CmdListTransformsFilter {
+			@Override
+			public String getKey() {
+				return "dtr";
+			}
+
+			@Override
+			public String getFilter(String value) {
+				return String.format(value.contains(",") ? "dtr.id in (%s)"
+						: "dtr.id=%s", value);
+			}
+		}
+
+		public static class CmdListTransformsFilterUser extends
+				CmdListTransformsFilter {
+			@Override
+			public String getKey() {
+				return "user";
+			}
+
+			@Override
+			public String getFilter(String arg1) {
+				return arg1.matches("\\d+") ? String.format("u.id=%s", arg1)
+						: String.format("u.username='%s'", arg1);
+			}
+		}
+
+		public static class CmdListTransformsFilterClass extends
+				CmdListTransformsFilter {
+			@Override
+			public String getKey() {
+				return "class";
+			}
+
+			@Override
+			public String getFilter(final String arg1) {
+				Set<ClassRef> refs = ClassRef.all();
+				CollectionFilter<ClassRef> classNameFilter = new CollectionFilter<ClassRef>() {
+					Pattern namePattern = Pattern.compile(arg1,
+							Pattern.CASE_INSENSITIVE);
+
+					@Override
+					public boolean allow(ClassRef o) {
+						return namePattern.matcher(o.getRefClassName()).find();
+					}
+				};
+				List<ClassRef> filteredRefs = CollectionFilters.filter(refs,
+						classNameFilter);
+				return String.format("dte.objectclassref_id in %s",
+						EntityUtils.hasIdsToIdClause(filteredRefs));
+			}
+		}
+
+		public static class CmdListTransformsFilterValueId extends
+				CmdListTransformsFilter {
+			@Override
+			public String getKey() {
+				return "valueid";
+			}
+
+			@Override
+			public String getFilter(String value) {
+				return String.format(
+						value.contains(",") ? "dte.valueid in (%s)"
+								: "dte.valueid=%s", value);
+			}
+		}
+
+		public static class CmdListTransformsPropertyName extends
+				CmdListTransformsFilter {
+			@Override
+			public String getKey() {
+				return "pn";
+			}
+
+			@Override
+			public String getFilter(String value) {
+				return String.format("dte.propertyname ='%s'", value);
+			}
+		}
+
+		public static class CmdListTransformsObjectId extends
+				CmdListTransformsFilter {
+			@Override
+			public String getKey() {
+				return "objid";
+			}
+
+			@Override
+			public String getFilter(String value) {
+				return String.format("dte.objectid =%s", value);
+			}
+		}
+
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "trt" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "list transforms with filters";
+		}
+
+		@Override
+		public String getUsage() {
+			return "trt {params or none for usage}";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			if (argv.length == 0) {
+				printFullUsage();
+				return "";
+			}
+			Connection conn = getConn();
+			CommonPersistenceLocal cpl = EntityLayerLocator.get()
+					.commonPersistenceProvider()
+					.getCommonPersistenceExTransaction();
+			Class<? extends DomainTransformRequestPersistent> clazz = cpl
+					.getImplementation(DomainTransformRequestPersistent.class);
+			String dtrName = clazz.getAnnotation(Table.class).name();
+			Class<? extends DomainTransformEventPersistent> class1 = cpl
+					.getImplementation(DomainTransformEventPersistent.class);
+			String dteName = class1.getAnnotation(Table.class).name();
+			String sql1 = "select dtr.id as id" + " from client_instance ci "
+					+ "inner join users u on ci.user_id=u.id "
+					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
+					+ "where %s order by dtr.id desc";
+			String sql2 = "select ci.id as cli_id, u.username,  "
+					+ "  dtr.id as dtr_id, dte.id as dte_id, "
+					+ " dte.objectclassref_id as dte_objref, dte.propertyname as propertyname, "
+					+ " dte.newstringvalue as newstringvalue,dte.valueid,"
+					+ " dte.servercommitdate as servercommitdate "
+					+ "from client_instance ci "
+					+ "inner join users u on ci.user_id=u.id "
+					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
+					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
+					+ " where %s order by dte.id desc";
+			{
+				CollectionFilter<String> allowFilter = new CollectionFilter<String>() {
+					@Override
+					public boolean allow(String o) {
+						return !o.contains("dte.");
+					}
+				};
+				String filter = DevConsoleFilter.getFilters(
+						CmdListTransformsFilter.class, argv, allowFilter);
+				sql1 = String.format(sql1, dtrName, filter);
+				Statement ps = conn.createStatement();
+				Set<Long> ids = SqlUtils.toIdList(ps, sql1, "id");
+				ps.close();
+				List<String> args = new ArrayList<String>(Arrays.asList(argv));
+				args.add("dtr");
+				args.add(CommonUtils.join(ids, ", "));
+				argv = (String[]) args.toArray(new String[args.size()]);
+			}
+			{
+				String filter = DevConsoleFilter.getFilters(
+						CmdListTransformsFilter.class, argv);
+				sql2 = String.format(sql2, dtrName, dteName, filter);
+				PreparedStatement ps = conn.prepareStatement(sql2);
+				ResultSet rs = ps.executeQuery();
+				Map<String, ColumnFormatter> formatters = new HashMap<String, SqlUtils.ColumnFormatter>();
+				formatters.put("dte_objref", new ClassRefNameFormatter());
+				formatters.put("servercommitdate", new DateTimeFormatter());
+				formatters
+						.put("newstringvalue", new TrimmedStringFormatter(30));
+				SqlUtils.dumpResultSet(rs, formatters);
+				rs.close();
+				ps.close();
+			}
+			return "";
+		}
+
+		private void printFullUsage() {
+			System.out
+					.println("trt {[days|user|ci|class|dtr|pn|objid|valueid] value}+");
 		}
 	}
 }

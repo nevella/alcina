@@ -38,18 +38,20 @@ import com.totsp.gwittir.client.beans.Property;
 public class ClientReflector implements ClassLookup {
 	private static ClientReflector domainReflector;
 
-	public  boolean isDefined() {
-		return GWT.isClient();
-	}
 
 	/**
 	 * Because ClientReflector is used from server code as well (via
 	 * TransformManager), we don't use a public static final INSTANCE generated
 	 * instance (see defined())
+	 * <p>
+	 * -- correction to this, it's minimally reffed - and that should probably
+	 * go
+	 * </p>
+	 * 
 	 */
 	public static ClientReflector get() {
 		if (domainReflector == null) {
-			domainReflector = ClientReflectorFactory.create();
+			domainReflector = ClientReflectorFactoryJvm.create();
 		}
 		return domainReflector;
 	}
@@ -102,10 +104,9 @@ public class ClientReflector implements ClassLookup {
 		if (clazz != null) {
 			return clazz;
 		}
-		throw new WrappedRuntimeException(
-				CommonUtils.formatJ(
-						"Class %s not reflect-instantiable",
-						fqn), SuggestedAction.NOTIFY_ERROR);
+		throw new WrappedRuntimeException(CommonUtils.formatJ(
+				"Class %s not reflect-instantiable", fqn),
+				SuggestedAction.NOTIFY_ERROR);
 	}
 
 	public Class getPropertyType(Class clazz, String propertyName) {
@@ -159,7 +160,7 @@ public class ClientReflector implements ClassLookup {
 		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
 		BeanDescriptor descriptor = GwittirBridge.get().getDescriptorForClass(
 				clazz);
-		if(descriptor==null){
+		if (descriptor == null) {
 			return infos;
 		}
 		for (Property p : descriptor.getProperties()) {

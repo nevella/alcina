@@ -60,7 +60,7 @@ public class CloneHelper {
 		if (o instanceof Date) {
 			return ((Date) o).clone();
 		} else if (CommonUtils.isStandardJavaClass(o.getClass())
-				|| o.getClass().isEnum()) {
+				|| o instanceof Enum) {
 			return o;
 		} else if (o instanceof Collection) {
 			return deepCollectionClone((Collection) o);
@@ -90,7 +90,7 @@ public class CloneHelper {
 			}
 			if (val != null) {
 				if (!ignore(o.getClass(), pr.getName(), o)) {
-					args[0] = deepProperty(o, pr.getName()) ? deepObjectClone(val)
+					args[0] = deepProperty(o, pr.getName())? deepObjectClone(val)
 							: shallowishObjectClone(val);
 					pr.getMutatorMethod().invoke(ret, args);
 				}
@@ -104,7 +104,8 @@ public class CloneHelper {
 	}
 
 	protected <T> T newInstance(T o) {
-		return (T) ClientReflector.get().newInstance(o.getClass(), 0, 0);
+		Class<? extends Object> clazz = o.getClass();
+		return (T) ClientReflector.get().newInstance(clazz, 0, 0);
 	}
 
 	protected boolean deepProperty(Object o, String propertyName) {
