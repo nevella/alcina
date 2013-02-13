@@ -16,8 +16,11 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
+
+import org.hibernate.annotations.Type;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
@@ -41,7 +44,7 @@ public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
 	private Date helloDate;
 
 	private Integer auth;
-	
+
 	private String userAgent;
 
 	public Integer getAuth() {
@@ -78,6 +81,8 @@ public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
 		this.localId = localId;
 	}
 
+	@Lob
+	@Type(type = "org.hibernate.type.StringClobType")
 	public String getUserAgent() {
 		return this.userAgent;
 	}

@@ -24,4 +24,6 @@ public interface ObjectStore {
 
 	void drop(PersistenceCallback<Void> persistenceCallback);
 
+	
+
 }

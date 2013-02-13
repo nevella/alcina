@@ -26,6 +26,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 
 import com.totsp.gwittir.client.beans.Converter;
@@ -35,6 +36,20 @@ import com.totsp.gwittir.client.beans.Converter;
  * @author Nick Reddel
  */
 public class CollectionFilters {
+	public static class PrefixedFilter implements CollectionFilter<String> {
+		private String lcPrefix;
+
+		public PrefixedFilter(String prefix) {
+			this.lcPrefix = prefix.toLowerCase();
+		}
+
+		@Override
+		public boolean allow(String o) {
+			return CommonUtils.nullToEmpty(o).toLowerCase()
+					.startsWith(lcPrefix);
+		}
+	}
+
 	public static <V> List<V> filter(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
 		ArrayList<V> result = new ArrayList<V>();
@@ -151,29 +166,34 @@ public class CollectionFilters {
 			}
 		};
 	}
+
 	public static interface ConverterFilter<T, C> extends Converter<T, C> {
 		public boolean allowPreConvert(T t);
 
 		public boolean allowPostConvert(C c);
 	}
+
 	public static <K, V, O> SortedMap<K, V> sortedMap(Collection<O> values,
 			KeyValueMapper<K, V, O> mapper) {
 		SortedMap<K, V> result = new TreeMap<K, V>();
 		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
 			O o = itr.next();
-			if(mapper instanceof CollectionFilter&&!((CollectionFilter)mapper).allow(o)){
+			if (mapper instanceof CollectionFilter
+					&& !((CollectionFilter) mapper).allow(o)) {
 				continue;
 			}
 			result.put(mapper.getKey(o), mapper.getValue(o));
 		}
 		return result;
 	}
+
 	public static <K, V, O> Map<K, V> map(Collection<O> values,
 			KeyValueMapper<K, V, O> mapper) {
 		Map<K, V> result = new LinkedHashMap<K, V>();
 		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
 			O o = itr.next();
-			if(mapper instanceof CollectionFilter&&!((CollectionFilter)mapper).allow(o)){
+			if (mapper instanceof CollectionFilter
+					&& !((CollectionFilter) mapper).allow(o)) {
 				continue;
 			}
 			result.put(mapper.getKey(o), mapper.getValue(o));
@@ -195,24 +215,26 @@ public class CollectionFilters {
 			String key, Object value) {
 		filterInPlace(collection, new PropertyFilter(key, value));
 	}
-	public static <V> List<V> filterByProperty(Collection<? extends V> collection,
-			String key, Object value) {
+
+	public static <V> List<V> filterByProperty(
+			Collection<? extends V> collection, String key, Object value) {
 		return filter(collection, new PropertyFilter(key, value));
 	}
-	public static <V> V first(Collection<V> values,
-			String key, Object value) {
-		PropertyFilter<V> filter = new PropertyFilter<V>(key,value);
+
+	public static <V> V first(Collection<V> values, String key, Object value) {
+		PropertyFilter<V> filter = new PropertyFilter<V>(key, value);
 		for (Iterator<V> itr = values.iterator(); itr.hasNext();) {
-			V v=itr.next();
-			if(filter.allow(v)){
+			V v = itr.next();
+			if (filter.allow(v)) {
 				return v;
 			}
 		}
 		return null;
 	}
-	public static <K,V> Map<K,V> invert(Map<V,K> map){
-		Map<K,V> result=new LinkedHashMap<K,V>();
-		for(Entry<V,K> entry:map.entrySet()){
+
+	public static <K, V> Map<K, V> invert(Map<V, K> map) {
+		Map<K, V> result = new LinkedHashMap<K, V>();
+		for (Entry<V, K> entry : map.entrySet()) {
 			result.put(entry.getValue(), entry.getKey());
 		}
 		return result;

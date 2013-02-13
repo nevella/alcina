@@ -57,6 +57,7 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CancelledException;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -693,11 +694,17 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	public String padLeft(String str, int tabCount) {
-		return "\t" + str.replace("\n", "\n\t");
+	public String padLeft(String str, int tabCount, int charCount) {
+		if (tabCount != 0) {
+			return "\t" + str.replace("\n", "\n\t");
+		} else {
+			String pad = "\n" + CommonUtils.padStringLeft("", charCount, " ");
+			return str.replace("\n", pad);
+		}
 	}
 
-	public String breakAndPad(int tabCount, int width, String text) {
+	public String breakAndPad(int tabCount, int width, String text,
+			int charCount) {
 		StringBuilder sb = new StringBuilder();
 		int idx0 = 0;
 		for (int idx1 = width; idx1 < text.length(); idx1 += width) {
@@ -712,7 +719,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			}
 		}
 		sb.append(text.substring(idx0));
-		return padLeft(sb.toString(), width);
+		return padLeft(sb.toString(), tabCount, charCount);
 	}
 
 	public void resetObjects() {

@@ -4,6 +4,8 @@ import java.util.Set;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.csobjects.WebException;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -82,15 +84,17 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	}
 
 	public String extraInfoForExceptionText() {
+		ClientInstance clientInstance = ClientLayerLocator.get().getClientInstance();
+		long clientInstanceId=HiliHelper.getIdOrZero(clientInstance);
 		String extraInfo = "\n\nUser agent: "
 				+ BrowserMod.getUserAgent()
 				+ "\nHistory token: "
 				+ History.getToken()
 				+ "\nPermutation name: "
 				+ GWT.getPermutationStrongName()
-				+ CommonUtils.formatJ("\nUser name/id: [%s/%s]",
+				+ CommonUtils.formatJ("\nUser name/id/cli: [%s/%s%s]",
 						PermissionsManager.get().getUserName(),
-						PermissionsManager.get().getUserId());
+						PermissionsManager.get().getUserId(),clientInstanceId);
 		return extraInfo;
 	}
 }

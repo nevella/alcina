@@ -11,16 +11,19 @@ import cc.alcina.framework.common.client.state.MachineState.MachineStateImpl;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.ClientConfigurationMachine;
 import cc.alcina.framework.gwt.client.ClientConfigurationModel;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.util.ClientNodeIterator;
+import cc.alcina.framework.gwt.client.util.TextUtils;
 
 import com.google.code.gwt.database.client.Database;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -299,6 +302,15 @@ public class PersistenceStateHandlers {
 				if (Element.is(eTarget)) {
 					List<String> tags = new ArrayList<String>();
 					Element e = Element.as(eTarget);
+					String text = "";
+					ClientNodeIterator itr = new ClientNodeIterator(e,
+							ClientNodeIterator.SHOW_TEXT);
+					itr.nextNode();
+					while (text.length() < 50 && itr.getCurrentNode() != null) {
+						Text t = (Text) itr.getCurrentNode();
+						text += TextUtils.normaliseAndTrim(t.getData());
+						itr.nextNode();
+					}
 					while (e != null) {
 						List<String> parts = new ArrayList<String>();
 						parts.add(e.getTagName());
@@ -314,7 +326,8 @@ public class PersistenceStateHandlers {
 					Collections.reverse(tags);
 					String path = CommonUtils.join(tags, "/");
 					AlcinaTopics.logCategorisedMessage(new StringPair(
-							AlcinaTopics.LOG_CATEGORY_CLICK, path));
+							AlcinaTopics.LOG_CATEGORY_CLICK, CommonUtils
+									.formatJ("%s :: [%s]", path, text)));
 				}
 			}
 		}

@@ -58,7 +58,7 @@ public class LogStore {
 			1000, new Runnable() {
 				@Override
 				public void run() {
-					persistLogs();
+					flushToLocalPersistence();
 				}
 			});
 
@@ -172,14 +172,16 @@ public class LogStore {
 			lastCookieId = localSeriesIdCounter;
 		}
 		if (logs.size > RemoteLogPersister.PREFERRED_MAX_PUSH_SIZE) {
-			persistLogs();
+			flushToLocalPersistence();
 		} else {
 			localPersistenceTimer.triggerEventOccurred();
 		}
 	}
 
 	public void pushLogsToRemote() {
-		remoteLogPersister.push();
+		if (remoteLogPersister != null) {
+			remoteLogPersister.push();
+		}
 	}
 
 	public void registerDelegate(ObjectStore objectStore) {
@@ -195,7 +197,7 @@ public class LogStore {
 		this.remoteLogPersister = remoteLogPersister;
 	}
 
-	protected void persistLogs() {
+	public void flushToLocalPersistence() {
 		if (logs.size > 0 && this.objectStore != null) {
 			String serialized = new AlcinaBeanSerializer().serialize(logs);
 			if (isUsesLzw()) {
@@ -207,7 +209,7 @@ public class LogStore {
 							+ Base64Utils.toBase64(new Lzw().compress(
 									serialized).getBytes("UTF-8"));
 					if (maybeShorter.length() < serialized.length()) {
-						if(!GWT.isScript()){
+						if (!GWT.isScript()) {
 							locallyPersistLogs(serialized);
 						}
 						serialized = maybeShorter;
@@ -219,6 +221,15 @@ public class LogStore {
 			}
 			logs = new ClientLogRecords();
 			locallyPersistLogs(serialized);
+		}
+	}
+
+	public String dumpLogsAsString() {
+		if (objectStore != null && objectStore instanceof SyncObjectStore) {
+			flushToLocalPersistence();
+			return ((SyncObjectStore) objectStore).dumpValuesAsStringList();
+		} else {
+			return "Incorrect object store type for dump";
 		}
 	}
 

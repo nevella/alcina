@@ -530,7 +530,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			pg = pg.isEmpty() ? console.getClipboardContents() : pg;
 			System.out.format("Inserting into query:\n%s\n\n",
-					console.padLeft(pg, 1));
+					console.padLeft(pg, 1,0));
 			Pattern p1 = Pattern
 					.compile("LOG:  execute <unnamed>: (.+)\nDETAIL:  parameters: (.+)");
 			Pattern p3 = Pattern.compile("(\\$\\d+) = ('.+?')");
