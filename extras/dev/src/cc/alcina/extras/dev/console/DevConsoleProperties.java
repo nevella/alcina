@@ -55,7 +55,8 @@ public class DevConsoleProperties {
 	public String connection_local = "jdbc:postgresql://127.0.0.1:5432/jade,jade,jade";
 
 	@SetPropInfo(key = "conn-production", description = "obviously never write - also, you'll need to tunnel (pg_hba.conf): \n"
-			+ "ssh -A root@jade.int.barnet.com.au -L 5434:jade.int.barnet.com.au:5432")
+			+ "ssh -A nreddel@nat2.barnet.com.au -L 5434:jade.int.barnet.com.au:5432\n" +
+			"ssh -A nreddel@nat2.barnet.com.au -L 5434:cosa.int.barnet.com.au:5432")
 	public String connection_production = "jdbc:postgresql://127.0.0.1:5434/jade,jade,jade";
 
 	@SetPropInfo(key = "remote-home-dir")
