@@ -4,8 +4,8 @@ import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm
 
 import com.google.gwt.core.client.GWT;
 
-public class ClientReflectorFactoryJvm {
-	private ClientReflectorFactoryJvm() {
+public class ClientReflectorFactory {
+	private ClientReflectorFactory() {
 	}
 
 	public static ClientReflector create() {

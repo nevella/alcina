@@ -44,11 +44,5 @@ public class ServletLayerRegistry extends Registry {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-	public static <V> V impl(Class<V> registryPoint) {
-		return get().impl0(registryPoint, null);
-	}
-
-	public static <V> V impl(Class<V> registryPoint, Class targetClass) {
-		return get().impl0(registryPoint, targetClass);
-	}
+	
 }

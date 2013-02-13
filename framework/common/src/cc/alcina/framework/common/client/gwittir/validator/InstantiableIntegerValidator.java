@@ -26,7 +26,7 @@ import com.totsp.gwittir.client.validator.Validator;
 
  public class InstantiableIntegerValidator implements Validator {
 	/** Creates a new instance of IntegerValidator */
-	private InstantiableIntegerValidator() {
+	public InstantiableIntegerValidator() {
 	}
 
 	public Object validate(Object value) throws ValidationException {

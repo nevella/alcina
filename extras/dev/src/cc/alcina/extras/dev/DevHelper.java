@@ -169,7 +169,7 @@ public abstract class DevHelper {
 		try {
 			Object clientReflectorJvm = Class
 					.forName(
-							"cc.alcina.framework.jvmclient.reflection.ClientReflectorJvm")
+							"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm")
 					.newInstance();
 			ClientReflector.register((ClientReflector) clientReflectorJvm);
 		} catch (Exception e) {

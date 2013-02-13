@@ -66,14 +66,10 @@ public class RegistryScanner extends CachingScanner {
 			outgoingIgnoreMap.put(className, modDate);
 			return;
 		}
-		if (c.getClassLoader() != this.getClass().getClassLoader()) {
-			try {
-				c = this.getClass().getClassLoader().loadClass(c.getName());
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			
+		if(c.getName().contains("ServletLayerUpdater")){
+			int j=3;
 		}
+		c = maybeNormaliseClass(c);
 		{
 			RegistryLocations rls = (RegistryLocations) c
 					.getAnnotation(RegistryLocations.class);
@@ -97,5 +93,9 @@ public class RegistryScanner extends CachingScanner {
 		for (RegistryLocation rl : rls) {
 			toRegistry.register(c, rl);
 		}
+	}
+
+	protected Class maybeNormaliseClass(Class c) {
+		return c;
 	}
 }

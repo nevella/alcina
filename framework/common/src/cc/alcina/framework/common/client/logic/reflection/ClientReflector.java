@@ -27,7 +27,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
-import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Property;
 
@@ -51,7 +50,7 @@ public class ClientReflector implements ClassLookup {
 	 */
 	public static ClientReflector get() {
 		if (domainReflector == null) {
-			domainReflector = ClientReflectorFactoryJvm.create();
+			domainReflector = ClientReflectorFactory.create();
 		}
 		return domainReflector;
 	}

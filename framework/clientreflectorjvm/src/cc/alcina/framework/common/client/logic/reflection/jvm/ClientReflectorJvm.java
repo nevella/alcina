@@ -50,6 +50,18 @@ public class ClientReflectorJvm extends ClientReflector {
 					file.mkdirs();
 					return file;
 				};
+
+				protected Class maybeNormaliseClass(Class c) {
+					if (c.getClassLoader() != this.getClass().getClassLoader()) {
+						try {
+							c = this.getClass().getClassLoader()
+									.loadClass(c.getName());
+						} catch (Exception e) {
+							throw new WrappedRuntimeException(e);
+						}
+					}
+					return c;
+				}
 			}.scan(classes, new ArrayList<String>(), Registry.get());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
