@@ -78,11 +78,11 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	private String contentPageRange;
 
 	private String emailAddress;
-	
+
 	private String permalinkQuery = null;
 
 	private String mimeType = null;
-	
+
 	private String note;
 
 	private boolean noPersistence = false;
@@ -107,6 +107,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return attachmentMessageForRequestor;
 	}
 
+	/**
+	 * Don't assume non-null anywhere along the publication chain - use the
+	 * contentDefinition field of the ContentModelHandler etc
+	 */
 	@XmlTransient
 	public abstract CD getContentDefinition();
 
@@ -221,9 +225,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	}
 
 	public PublicationFontOptions providePublicationFontOptions() {
-		return ExtensibleEnum.valueOf(PublicationFontOptions.class, fontOptions);
+		return ExtensibleEnum
+				.valueOf(PublicationFontOptions.class, fontOptions);
 	}
-	
+
 	@Override
 	public ContentDeliveryType provideContentDeliveryType() {
 		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
@@ -410,17 +415,19 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public void setPermalinkQuery(String permalinkQuery) {
 		String old_permalinkQuery = this.permalinkQuery;
-		propertyChangeSupport().firePropertyChange("permalinkQuery", old_permalinkQuery, permalinkQuery);
+		propertyChangeSupport().firePropertyChange("permalinkQuery",
+				old_permalinkQuery, permalinkQuery);
 		this.permalinkQuery = permalinkQuery;
 	}
-	
-	public String getMimeType(){
+
+	public String getMimeType() {
 		return this.mimeType;
 	}
-	
+
 	public void setMimeType(String MimeType) {
 		String old_MimeType = this.mimeType;
-		propertyChangeSupport().firePropertyChange("MimeType", old_MimeType, MimeType);
+		propertyChangeSupport().firePropertyChange("MimeType", old_MimeType,
+				MimeType);
 		this.mimeType = MimeType;
 	}
 }
