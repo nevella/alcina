@@ -124,8 +124,8 @@ public class Publisher {
 		}
 		result.content = cw.wrappedContent;
 		if (deliveryModel.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
-			if(result.content==null&AppPersistenceBase.isTest()){
-				result.content=Base64Utils.toBase64(cw.wrappedBytes);
+			if (result.content == null & AppPersistenceBase.isTest()) {
+				result.content = Base64Utils.toBase64(cw.wrappedBytes);
 			}
 			return result;
 		}
