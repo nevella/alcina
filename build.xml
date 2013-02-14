@@ -62,6 +62,17 @@
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
+		<mkdir dir="${extras.misc.build.dir}" />
+		<javac includeantruntime="false" debug="on" destdir="${extras.misc.build.dir}">
+			<classpath>
+				<path refid="framework.common.lib.path" />
+				<pathelement path="${framework.entity.build.dir}" />
+			</classpath>
+			<src path="${extras.misc.src.dir}" />
+			<include name="cc/alcina/extras/misc/ie/client/**" />
+			<exclude name="cc/alcina/extras/misc/ie/override/**" />
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
 		<mkdir dir="${framework.jvmclient.build.dir}" />
 		<javac includeantruntime="false" debug="on" srcdir="${framework.jvmclient.src.dir}" destdir="${framework.jvmclient.build.dir}">
 			<classpath>
@@ -113,16 +124,25 @@
 			</fileset>
 		</jar>
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-extras-dev.jar">
-					<fileset dir="${extras.dev.build.dir}">
-						<include name="**/*.*" />
-					</fileset>
-					<fileset dir="${extras.dev.src.dir}">
-						<include name="**/*.*" />
-						<exclude name="**/*.class" />
-					</fileset>
-				</jar>
+			<fileset dir="${extras.dev.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${extras.dev.src.dir}">
+				<include name="**/*.*" />
+				<exclude name="**/*.class" />
+			</fileset>
+		</jar>
 		<jar destfile="${extras.dist.dir}/${ant.project.name}-extras-rpc-client.jar">
 			<fileset dir="${extras.rpc.client.src.dir}">
+				<include name="**/*.*" />
+				<exclude name="**/*.class" />
+			</fileset>
+		</jar>
+		<jar destfile="${extras.dist.dir}/${ant.project.name}-extras-misc.jar">
+			<fileset dir="${extras.misc.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${extras.misc.src.dir}">
 				<include name="**/*.*" />
 				<exclude name="**/*.class" />
 			</fileset>
