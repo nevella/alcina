@@ -92,7 +92,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 				+ History.getToken()
 				+ "\nPermutation name: "
 				+ GWT.getPermutationStrongName()
-				+ CommonUtils.formatJ("\nUser name/id/cli: [%s/%s%s]",
+				+ CommonUtils.formatJ("\nUser name/id/cli: [%s/%s/%s]",
 						PermissionsManager.get().getUserName(),
 						PermissionsManager.get().getUserId(),clientInstanceId);
 		return extraInfo;

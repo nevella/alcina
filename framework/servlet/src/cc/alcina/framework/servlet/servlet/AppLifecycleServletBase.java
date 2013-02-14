@@ -45,6 +45,9 @@ import cc.alcina.framework.servlet.ServletLayerRegistry;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void createServletTransformClientInstance() {
+		if (CommonRemoteServiceServletSupport.get().getServerAsClientInstance() != null) {
+			return;
+		}
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			ClientInstance serverAsClientInstance = ServletLayerLocator.get()
@@ -84,13 +87,13 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			logger.addAppender(a);
 		}
 		logger.setAdditivity(true);
-		//and alcina
+		// and alcina
 		logger = Logger.getLogger("cc.alcina.framework");
 		if (logger.getAppender(mainLoggerAppenderName) == null) {
 			logger.addAppender(a);
 		}
 		logger.setAdditivity(true);
-		//metric
+		// metric
 		String metricLoggerName = AlcinaServerConfig.get()
 				.getMetricLoggerName();
 		if (metricLoggerName != null) {
@@ -203,9 +206,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void initServletLayerRegistry() {
 		Logger logger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
-		
 		try {
-			EntityLayerLocator.get().jpaImplementation().muteClassloaderLogging(true);
+			EntityLayerLocator.get().jpaImplementation()
+					.muteClassloaderLogging(true);
 			Map<String, Date> classes = new ServletClasspathScanner("*", true,
 					false, logger, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
@@ -213,8 +216,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					ServletLayerRegistry.get());
 		} catch (Exception e) {
 			logger.warn("", e);
-		}finally{
-			EntityLayerLocator.get().jpaImplementation().muteClassloaderLogging(false);
+		} finally {
+			EntityLayerLocator.get().jpaImplementation()
+					.muteClassloaderLogging(false);
 		}
 	}
 
