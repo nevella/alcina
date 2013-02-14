@@ -61,12 +61,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	
-
 	public abstract String[] getCommandIds();
 
 	public abstract String getDescription();
-	
 
 	public abstract String getUsage();
 
@@ -79,8 +76,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	public void configure() {
 	}
-
-	
 
 	public Connection getConn() throws Exception {
 		if (conn == null) {
@@ -285,8 +280,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 								.tagStrings();
 						for (String tag : tags) {
 							for (String arg : argv) {
-								if (tag.toLowerCase()
-										.startsWith(arg.toLowerCase())) {
+								if (tag.toLowerCase().startsWith(
+										arg.toLowerCase())) {
 									return true;
 								}
 							}
@@ -388,12 +383,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		@Override
 		public String run(String[] argv) throws Exception {
 			console.resetObjects();
-			
 			return "Lookups reset";
 		}
 	}
-
-	
 
 	public static class CmdSetId extends DevConsoleCommand {
 		@Override
@@ -472,9 +464,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return "rsync  [get|put] local remote";
 		}
 
-		private void importViaRsync(String from, String to) throws Exception {
+		private void importViaRsync(String arg1, String remotePort,
+				String from, String to) throws Exception {
 			ProcessBuilder pb = new ProcessBuilder("/usr/bin/rsync", "-avz",
-					"--progress", from, to);
+					"--progress", arg1, remotePort, from, to);
 			Process proc = pb.start();
 			StreamBuffer errorGobbler = new StreamBuffer(proc.getErrorStream(),
 					"ERROR");
@@ -489,14 +482,16 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		public String run(String[] argv) throws Exception {
 			String homeDir = (System.getenv("USERPROFILE") != null) ? System
 					.getenv("USERPROFILE") : System.getProperty("user.home");
-			String localPath = String.format("%s/%s", homeDir, argv[1]);
-			String remotePath = String.format("%s%s/%s",
-					console.props.remoteSsh, console.props.remoteHomeDir,
-					argv[2]);
+			String localPath = SEUtilities.combinePaths(homeDir+"/", argv[1]);
+			String remotePath = String.format("%s:%s", console.props.remoteSsh,
+					SEUtilities.combinePaths(console.props.remoteHomeDir,
+							argv[2]));
+			String remotePortStr = String.format("/usr/bin/ssh -o StrictHostKeychecking=no -p %s",
+					console.props.remoteSshPort);
 			boolean put = argv[0].equals("put");
 			String f1 = put ? localPath : remotePath;
 			String f2 = put ? remotePath : localPath;
-			importViaRsync(f1, f2);
+			importViaRsync("--rsh", remotePortStr, f1, f2);
 			return String.format("%s -> %s", f1, f2);
 		}
 	}
@@ -530,7 +525,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			pg = pg.isEmpty() ? console.getClipboardContents() : pg;
 			System.out.format("Inserting into query:\n%s\n\n",
-					console.padLeft(pg, 1,0));
+					console.padLeft(pg, 1, 0));
 			Pattern p1 = Pattern
 					.compile("LOG:  execute <unnamed>: (.+)\nDETAIL:  parameters: (.+)");
 			Pattern p3 = Pattern.compile("(\\$\\d+) = ('.+?')");

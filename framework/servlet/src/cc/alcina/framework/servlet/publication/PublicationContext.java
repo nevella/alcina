@@ -59,8 +59,10 @@ public class PublicationContext {
 		EntityLayerLocator.get().log(LogMessageType.PUBLICATION_EXCEPTION,
 				message, e);
 	}
-	public static String getContextInfoForPublicationExceptionT(){
-		PublicationContext ctx=LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
-		return ctx.getContextInfoForPublicationException();
+
+	public static String getContextInfoForPublicationExceptionT() {
+		PublicationContext ctx = LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
+		return ctx == null ? "--no publication context--" : ctx
+				.getContextInfoForPublicationException();
 	}
 }

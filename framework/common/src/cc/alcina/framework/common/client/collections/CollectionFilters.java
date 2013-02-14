@@ -158,6 +158,19 @@ public class CollectionFilters {
 		}
 	};
 
+	public static final class InverseFilter implements CollectionFilter {
+		private final CollectionFilter invert;
+
+		public InverseFilter(CollectionFilter invert) {
+			this.invert = invert;
+		}
+
+		@Override
+		public boolean allow(Object o) {
+			return !invert.allow(o);
+		}
+	};
+
 	public static final <CF extends CollectionFilter> CF inverse(final CF filter) {
 		return (CF) new CollectionFilter() {
 			@Override

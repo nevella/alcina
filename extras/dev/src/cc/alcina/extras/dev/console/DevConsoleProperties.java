@@ -64,6 +64,9 @@ public class DevConsoleProperties {
 
 	@SetPropInfo(key = "remote-ssh")
 	public String remoteSsh = "root@jade.int.barnet.com.au:";
+	
+	@SetPropInfo(key = "remote-ssh-port")
+	public String remoteSshPort = "22";
 
 	@SetPropInfo(key = "font-name")
 	/*
