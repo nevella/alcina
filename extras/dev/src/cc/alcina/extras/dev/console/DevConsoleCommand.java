@@ -94,9 +94,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			long id = Long.parseLong(idOrSet);
 			return Collections.singletonList(idOrSet);
 		} catch (NumberFormatException e) {
-			String idList = ResourceUtilities
-					.readStreamToString(DevConsole.class
-							.getResourceAsStream(idOrSet + ".txt"));
+			String idList = ResourceUtilities.readFileToString(String.format(
+					"%s/%s.txt", console.setsFolder.getPath(),
+					console.props.idOrSet));
 			List<String> idlStr = new ArrayList<String>();
 			List<Long> idListL = TransformManager.idListToLongs(idList);
 			for (Long id : idListL) {
@@ -482,11 +482,12 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		public String run(String[] argv) throws Exception {
 			String homeDir = (System.getenv("USERPROFILE") != null) ? System
 					.getenv("USERPROFILE") : System.getProperty("user.home");
-			String localPath = SEUtilities.combinePaths(homeDir+"/", argv[1]);
+			String localPath = SEUtilities.combinePaths(homeDir + "/", argv[1]);
 			String remotePath = String.format("%s:%s", console.props.remoteSsh,
 					SEUtilities.combinePaths(console.props.remoteHomeDir,
 							argv[2]));
-			String remotePortStr = String.format("/usr/bin/ssh -o StrictHostKeychecking=no -p %s",
+			String remotePortStr = String.format(
+					"/usr/bin/ssh -o StrictHostKeychecking=no -p %s",
 					console.props.remoteSshPort);
 			boolean put = argv[0].equals("put");
 			String f1 = put ? localPath : remotePath;

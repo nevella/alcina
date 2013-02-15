@@ -30,9 +30,9 @@ public class DevConsoleProperties {
 
 	@SetPropInfo(key = "max-id", description = "Max id for id list creation")
 	public long maxId = 999999;
-
+	@SetPropInfo(key = "diff-file-1", description = "First file for a regression test diff")
 	public String diffFile1 = "";
-
+	@SetPropInfo(key = "diff-file-2", description = "Second file for a regression test diff")
 	public String diffFile2 = "";
 
 	@Retention(RetentionPolicy.RUNTIME)
