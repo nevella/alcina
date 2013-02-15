@@ -22,7 +22,7 @@ public class ObjectStoreMemoryImpl implements ObjectStore, SyncObjectStore {
 	@Override
 	public void getRange(int fromId, int toId,
 			PersistenceCallback<Map<Integer, String>> valueCallback) {
-		valueCallback.onSuccess(values.subMap(fromId, toId));
+		valueCallback.onSuccess(values.subMap(fromId, toId+1));
 	}
 
 	@Override

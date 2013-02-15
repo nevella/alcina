@@ -26,7 +26,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	}
 
 	public Throwable wrapException(Throwable e) {
-		StringBuffer errorBuffer = new StringBuffer();
+		StringBuilder errorBuffer = new StringBuilder();
 		unrollUmbrella(e, errorBuffer);
 		errorBuffer.append(extraInfoForExceptionText());
 		return new WebException("(Wrapped GWT exception) : "
@@ -44,7 +44,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 		GWT.setUncaughtExceptionHandler(handlerStack.pop());
 	}
 
-	private void unrollUmbrella(Throwable e, StringBuffer errorBuffer) {
+	public static  void unrollUmbrella(Throwable e, StringBuilder errorBuffer) {
 		if (e instanceof UmbrellaException) {
 			errorBuffer.append("\nUmbrellaException");
 			UmbrellaException umbrella = (UmbrellaException) e;

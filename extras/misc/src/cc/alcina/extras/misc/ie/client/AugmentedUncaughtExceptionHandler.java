@@ -15,7 +15,9 @@ package cc.alcina.extras.misc.ie.client;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWT.UncaughtExceptionHandler;
@@ -57,9 +59,24 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 	}-*/;
 
 	public static void throwToHandler(String message) {
-		handler.onUncaughtException(new WrappedRuntimeException(message,
+		Object lastGwtThrowable = getLastGwtException();
+		String gwtExceptionMessage = "";
+		if (lastGwtThrowable instanceof Throwable) {
+			StringBuilder builder = new StringBuilder();
+			ClientExceptionHandler.unrollUmbrella((Throwable) lastGwtThrowable,
+					builder);
+			gwtExceptionMessage = "\n\n-------\n(gwt)\n\n" + builder.toString();
+		}
+		handler.onUncaughtException(new WrappedRuntimeException(CommonUtils
+				.formatJ("%s%s", message, gwtExceptionMessage),
 				SuggestedAction.NOTIFY_WARNING));
 	}
+
+	private static native Object getLastGwtException() /*-{
+		var r = $wnd._com_google_gwt_core_client_impl_Impl_lastEntryException;
+		$wnd._com_google_gwt_core_client_impl_Impl_lastEntryException = null;
+		return r;
+	}-*/;
 
 	public void onWindowClosed() {
 		deregisterWindowErrorListener();
