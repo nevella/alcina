@@ -58,9 +58,17 @@ public abstract class ContentDeliveryType extends ExtensibleEnum {
 
 	public static class ContentDeliveryType_PERMALINK extends
 			ContentDeliveryType {
+		@Override
+		public boolean isRepublishable() {
+			return false;
+		}
 	}
 
 	public static class ContentDeliveryType_SEND_TO_REPOSITORY extends
 			ContentDeliveryType {
+	}
+
+	public boolean isRepublishable() {
+		return true;
 	}
 }

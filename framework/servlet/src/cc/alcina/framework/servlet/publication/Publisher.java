@@ -89,7 +89,7 @@ public class Publisher {
 		ctx.publicationResult = result;
 		long publicationUserId = 0;
 		long publicationId = 0;
-		boolean forPublication = !deliveryModel.isNoPersistence();
+		boolean forPublication = !deliveryModel.isNoPersistence()&&deliveryModel.provideContentDeliveryType().isRepublishable();
 		if (!SEUtilities.localTestMode()) {
 			if (forPublication && publicationPersister != null) {
 				publicationUserId = PublicationPersistenceLocator
