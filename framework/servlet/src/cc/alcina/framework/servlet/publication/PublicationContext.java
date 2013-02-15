@@ -33,6 +33,8 @@ public class PublicationContext {
 	public PublicationResult publicationResult;
 
 	public Map<String, Object> properties = new LinkedHashMap<String, Object>();
+	
+	public PublicationVisitor visitor;
 
 	public Logger logger;
 
@@ -61,8 +63,20 @@ public class PublicationContext {
 	}
 
 	public static String getContextInfoForPublicationExceptionT() {
-		PublicationContext ctx = LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
+		PublicationContext ctx = get();
 		return ctx == null ? "--no publication context--" : ctx
 				.getContextInfoForPublicationException();
+	}
+
+	public static PublicationContext get() {
+		return LooseContext.get(CONTEXT_PUBLICATION_CONTEXT);
+	}
+
+	public PublicationVisitor getVisitor() {
+		return this.visitor;
+	}
+
+	public void setVisitor(PublicationVisitor visitor) {
+		this.visitor = visitor;
 	}
 }

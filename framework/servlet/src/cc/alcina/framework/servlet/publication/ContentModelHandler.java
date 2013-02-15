@@ -33,5 +33,7 @@ public abstract class ContentModelHandler<D extends ContentDefinition, M extends
 	public M getPublicationContent() {
 		return publicationContent;
 	}
-	
+	public PublicationVisitor getVisitor(){
+		return PublicationContext.get().getVisitor();
+	}
 }
