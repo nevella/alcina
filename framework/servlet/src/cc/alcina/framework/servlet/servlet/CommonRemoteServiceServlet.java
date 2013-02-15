@@ -137,6 +137,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private int actionCount = 0;
 
+	private int looseContextDepth;
+
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
@@ -153,6 +155,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	protected void onBeforeRequestDeserialized(String serializedRequest) {
 		super.onBeforeRequestDeserialized(serializedRequest);
+		looseContextDepth=LooseContext.depth();
 		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
 	}
 
@@ -245,10 +248,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		final PermissionsManager pm = PermissionsManager.get();
 		Thread thread = new Thread(performer.getClass().getSimpleName() + " - "
 				+ (++actionCount)) {
+			private int tLooseContextDepth;
+
 			@Override
 			public void run() {
 				try {
 					// different thread-local
+					tLooseContextDepth=LooseContext.depth();
 					onAfterSpawnedThreadRun(this);
 					pm.copyTo(PermissionsManager.get());
 					ActionLogItem result = null;
@@ -272,6 +278,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				} finally {
 					ServletLayerLocator.get().remoteActionLoggerProvider()
 							.clearAllThreadLoggers();
+					LooseContext.confirmDepth(tLooseContextDepth);
 				}
 			}
 		};
@@ -729,6 +736,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	protected void onAfterResponseSerialized(String serializedResponse) {
 		ServletLayerLocator.get().remoteActionLoggerProvider()
 				.clearAllThreadLoggers();
+		LooseContext.confirmDepth(looseContextDepth);
 		super.onAfterResponseSerialized(serializedResponse);
 	}
 

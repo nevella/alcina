@@ -64,7 +64,19 @@ public class LooseContextInstance {
 		return properties.get(key) != Boolean.FALSE;
 	}
 
+	private void maybeDebugStack(boolean push) {
+		if (debug) {
+			Thread t = Thread.currentThread();
+			System.err.println(CommonUtils.formatJ("%s-%s-%s-%s: %s\n%s\n",
+					t.getId(), hashCode(), push, stack.size(),
+					t.getStackTrace()[3], t.getStackTrace()[4]));
+		}
+	}
+
+	private boolean debug = false;
+
 	public void pop() {
+		maybeDebugStack(false);
 		TopicPublisher publisher = ensureTopicPublisher();
 		for (TopicListener listener : addedListeners.keySet()) {
 			for (String key : addedListeners.get(listener)) {
@@ -76,6 +88,7 @@ public class LooseContextInstance {
 	}
 
 	public void push() {
+		maybeDebugStack(true);
 		stack.push(properties);
 		listenerStack.push(addedListeners);
 		addedListeners = new Multimap<TopicListener, List<String>>();
@@ -159,5 +172,9 @@ public class LooseContextInstance {
 		}
 		properties = new HashMap<String, Object>(properties);
 		properties.putAll(renderContext.properties);
+	}
+
+	public int depth() {
+		return stack.size();
 	}
 }

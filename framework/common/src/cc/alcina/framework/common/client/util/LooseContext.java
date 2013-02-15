@@ -84,4 +84,19 @@ public abstract class LooseContext {
 	public static Integer getInteger(String key) {
 		return getContext().getInteger(key);
 	}
+
+	public static int depth() {
+		return getContext().depth();
+	}
+
+	public static void confirmDepth(int depth) {
+		if(depth!=depth()){
+			throw new LooseContextStackException();
+		}
+		
+		
+	}
+	public static class LooseContextStackException extends RuntimeException{
+		
+	}
 }

@@ -59,6 +59,7 @@ public class Publisher {
 	@SuppressWarnings("unchecked")
 	public PublicationResult publish(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original) throws Exception {
+		int depth=LooseContext.depth();
 		try {
 			ctx = new PublicationContext();
 			ctx.logger = Logger.getLogger(getClass());
@@ -72,6 +73,7 @@ public class Publisher {
 			throw e;
 		} finally {
 			LooseContext.pop();
+			LooseContext.confirmDepth(depth);
 		}
 	}
 
