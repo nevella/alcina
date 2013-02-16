@@ -373,6 +373,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		dte.setObjectLocalId(hili.getLocalId());
 		dte.setObjectClass(hili.getClass());
 		dte.setTransformType(TransformType.DELETE_OBJECT);
+		dte.setSource(hili);
 		addTransform(dte);
 		try {
 			fireDomainTransform(dte);
@@ -1148,7 +1149,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	protected void removeTransform(DomainTransformEvent evt) {
+	public void removeTransform(DomainTransformEvent evt) {
 		transforms.remove(evt);
 		getTransformsByCommitType(evt.getCommitType()).remove(evt);
 	}

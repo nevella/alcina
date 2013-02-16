@@ -211,6 +211,9 @@ public class CommonUtils {
 			return formatJ("%s %s %s", padTwo(date.getDate()),
 					MONTH_NAMES[date.getMonth() + 1],
 					padTwo(date.getYear() + 1900));
+		case AU_DATE_MONTH_DAY:
+			return formatJ("%s %s, %s", MONTH_NAMES[date.getMonth() + 1],
+					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
 		case AU_SHORT_MONTH:
 			return formatJ("%s %s %s", padTwo(date.getDate()),
 					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
@@ -461,14 +464,16 @@ public class CommonUtils {
 			return String.valueOf(number);
 		}
 	}
+
 	public static String pluralise(String s, Collection c) {
-		return pluralise(s, c==null?0:c.size(),false);
+		return pluralise(s, c == null ? 0 : c.size(), false);
 	}
-	public static String pluralise(String s, int size,boolean withCount) {
-		if(withCount){
-			s=CommonUtils.formatJ("%s %s", size,s);
+
+	public static String pluralise(String s, int size, boolean withCount) {
+		if (withCount) {
+			s = CommonUtils.formatJ("%s %s", size, s);
 		}
-		if (size==1) {// note 0/null gives a plural form
+		if (size == 1) {// note 0/null gives a plural form
 			// (what a strange
 			// language...)
 			return s;
@@ -619,9 +624,9 @@ public class CommonUtils {
 	}
 
 	public enum DateStyle {
-		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_TIME, AU_DATE_TIME_HUMAN,
-		AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT, AU_LONG_DAY,
-		AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
+		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
+		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
+		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
 		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY
 	}
 
@@ -859,7 +864,7 @@ public class CommonUtils {
 	}
 
 	public static <T> T first(Collection<T> coll) {
-		if(coll!=null&&coll.iterator().hasNext()){
+		if (coll != null && coll.iterator().hasNext()) {
 			return coll.iterator().next();
 		}
 		return null;
@@ -867,10 +872,10 @@ public class CommonUtils {
 
 	@SuppressWarnings("deprecation")
 	public static Date monthsFromNow(int months) {
-		Date d=roundDate(new Date(),false);
-		int m=d.getMonth()+months;
+		Date d = roundDate(new Date(), false);
+		int m = d.getMonth() + months;
 		d.setMonth(m % 12);
-		d.setYear(d.getYear()+m/12);
+		d.setYear(d.getYear() + m / 12);
 		return d;
 	}
 }
