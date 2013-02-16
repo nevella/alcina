@@ -75,4 +75,17 @@ public interface KeyValueMapper<K, V, O> {
 		}
 		
 	}
+	public static class LongArray2Mapper implements KeyValueMapper<Long, Long, Object[]>{
+
+		@Override
+		public Long getKey(Object[] o) {
+			return (Long) o[0];
+		}
+
+		@Override
+		public Long getValue(Object[] o) {
+			return (Long) o[1];
+		}
+		
+	}
 }

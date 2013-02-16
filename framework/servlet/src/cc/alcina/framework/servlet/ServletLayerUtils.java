@@ -23,7 +23,7 @@ public class ServletLayerUtils {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (AppPersistenceBase.isTest()) {
-			ThreadlocalTransformManager.cast().resetTltm(null);
+			TransformManager.get().clearTransforms();
 			return pendingTransformCount;
 		}
 		pushTransforms(persistTransforms, asRoot, true);
