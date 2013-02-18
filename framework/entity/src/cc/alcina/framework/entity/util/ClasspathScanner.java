@@ -139,6 +139,7 @@ public class ClasspathScanner {
 					add(jarEntry.getName(), jarEntry.getTime());
 				}
 			} while (jarEntry != null);
+			jarFile.close();
 		}
 
 		@Override

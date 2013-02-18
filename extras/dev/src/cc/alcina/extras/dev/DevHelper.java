@@ -385,7 +385,9 @@ public abstract class DevHelper {
 		try {
 			ObjectInputStream ois = new ObjectInputStream(
 					new BufferedInputStream(new FileInputStream(cacheFile)));
-			return (V) ois.readObject();
+			V value = (V) ois.readObject();
+			ois.close();
+			return value;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -400,7 +402,9 @@ public abstract class DevHelper {
 			}
 			in = new BufferedInputStream(in);
 			ObjectInputStream ois = new ObjectInputStream(in);
-			return (V) ois.readObject();
+			V value = (V) ois.readObject();
+			ois.close();
+			return value;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

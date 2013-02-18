@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 import cc.alcina.extras.dev.console.DevConsoleProperties.SetPropInfo;
+import cc.alcina.extras.dev.console.DevConsoleStrings.DevConsoleString;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -33,10 +35,12 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.ReportUtils;
 import cc.alcina.framework.entity.util.StreamBuffer;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)
@@ -756,6 +760,87 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		if (conn != null) {
 			conn.close();
 			conn = null;
+		}
+	}
+
+	public static class CmdTags extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "t" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Tagged strings - add, use, tag";
+		}
+
+		@Override
+		public String getUsage() {
+			return "t a|d|l|lt name tags content";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			if (argv.length == 0) {
+				printFullUsage();
+				return "";
+			}
+			String cmd = argv[0];
+			if (cmd.equals("a")) {
+				String name = argv[1];
+				List<String> tags = new ArrayList<String>(Arrays.asList(argv[2]
+						.split(",")));
+				String content = argv[3].replace("\\n", "\n");
+				console.strings.remove(name);
+				console.strings.add(name, tags, content);
+			}
+			else if (cmd.equals("d")) {
+				String name = argv[1];
+				console.strings.remove(name);
+			}
+			else if (cmd.equals("c")) {
+				String name = argv[1];
+				DevConsoleString cs = console.strings.get(name);
+				if (cs != null) {
+					console.setClipboardContents(cs.content);
+					System.out.format("Copied to clipboard: %s\n\t%s\n",
+							cs.name, cs.content);
+				}
+			}
+			else 	if (cmd.equals("l")) {
+				List<String> tags = new ArrayList<String>(
+						Arrays.asList((argv.length < 2 ? "" : argv[1])
+								.split(",")));
+				List<DevConsoleString> list = console.strings.list(tags);
+				LookupMapToMap<String> tableData = new LookupMapToMap<String>(2);
+				int r = 0;
+				for (DevConsoleString s : list) {
+					tableData.put(r, 0, s.name);
+					tableData.put(r, 1, CommonUtils.join(s.tags, ","));
+					tableData.put(r, 2, s.content.replace("\n","\\n"));
+					r++;
+				}
+				List<String> columnNames = Arrays.asList(new String[] { "name",
+						"tags", "content" });
+				ReportUtils.dumpTable(tableData, columnNames);
+			}
+			else	if (cmd.equals("lt")) {
+				ArrayList<String> tags = new ArrayList<String>(
+						console.strings.listTags());
+				Collections.sort(tags);
+				System.out.println(CommonUtils.join(tags, "\n"));
+			}else{
+				System.err.format("Unknown subcommand - %s\n",cmd);
+			}
+			return "";
+		}
+
+		private void printFullUsage() {
+			System.out.println("a: add (name, tags, content)");
+			System.out.println("c: copy to clipboard (name)");
+			System.out.println("d: delete (name)");
+			System.out.println("l: list matching (tags)");
+			System.out.println("lt: list tags");
 		}
 	}
 }

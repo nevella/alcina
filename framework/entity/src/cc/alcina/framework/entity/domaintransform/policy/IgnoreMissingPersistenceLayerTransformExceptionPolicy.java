@@ -17,6 +17,8 @@ public class IgnoreMissingPersistenceLayerTransformExceptionPolicy extends
 		case TARGET_ENTITY_NOT_FOUND:
 		case INTROSPECTION_EXCEPTION:
 			return TransformExceptionAction.IGNORE_AND_WARN;
+		default:
+			break;
 		}
 		if (persistenceToken.getTransformExceptions().size() < tooManyExceptions()) {
 			return TransformExceptionAction.RESOLVE;

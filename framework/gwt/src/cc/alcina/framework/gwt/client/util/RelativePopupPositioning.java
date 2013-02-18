@@ -448,6 +448,8 @@ public class RelativePopupPositioning {
 						result = Math.min(0, rDim - ppDim - bDim);
 						// as close to 'right-align' as poss
 						break;
+					default:
+						break;
 					}
 				} else {
 					result = INVALID;

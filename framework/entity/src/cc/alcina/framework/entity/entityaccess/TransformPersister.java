@@ -399,6 +399,8 @@ public class TransformPersister {
 							case THROW:
 								token.setPass(Pass.FAIL);
 								break;
+							default:
+								break;
 							}
 							if (!actionForException.ignoreable()) {
 								MetricLogging.get().lowPriorityEnd(

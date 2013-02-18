@@ -179,6 +179,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		promoteToDomain(c, false);
 	}
 
+	@SuppressWarnings("incomplete-switch")
 	public void consume(DomainTransformEvent event)
 			throws DomainTransformException {
 		currentEvent = event;
@@ -1291,6 +1292,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}
+					break;
+				default:
 					break;
 				}
 				tm.setTransformCommitType(evt, CommitType.TO_STORAGE);

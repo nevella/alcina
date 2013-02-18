@@ -225,6 +225,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 				break;
 			case TOO_MANY_EXCEPTIONS:
 			case INVALID_AUTHENTICATION:
+			default:
 				break;
 			}
 		}

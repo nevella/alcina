@@ -138,6 +138,8 @@ public class ObjectTreeRenderer {
 				}
 				widgetsAdded = true;
 			}
+		default:
+			break;
 		}
 		if (customiserWidget != null) {
 			// note - must be responsible for own detach - cleanup

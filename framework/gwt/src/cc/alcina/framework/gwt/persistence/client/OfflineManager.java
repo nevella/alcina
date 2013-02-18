@@ -231,6 +231,8 @@ public class OfflineManager {
 					waitAndReload();
 					cancel();
 					return;
+				default:
+					break;
 				}
 			}
 		};

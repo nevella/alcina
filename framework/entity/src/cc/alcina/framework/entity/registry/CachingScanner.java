@@ -57,7 +57,9 @@ import cc.alcina.framework.entity.logic.EntityLayerLocator;
 		try {
 			ObjectInputStream ois = new ObjectInputStream(
 					new BufferedInputStream(new FileInputStream(cachePath)));
-			return (Map<String, Date>) ois.readObject();
+			 Map<String, Date> value = (Map<String, Date>) ois.readObject();
+			 ois.close();
+			 return value;
 		} catch (Exception e) {
 			return new LinkedHashMap<String, Date>();
 		}

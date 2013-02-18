@@ -112,6 +112,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public P props;
 
 	public DevConsoleHistory history;
+	public DevConsoleStrings strings;
 
 	private String lastCommand;
 
@@ -126,6 +127,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	File consolePropertiesFile;
 
 	File consoleHistoryFile;
+	File consoleStringsFile;
 
 	public File devFolder;
 
@@ -201,6 +203,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		profileFolder.mkdir();
 		consolePropertiesFile = getDevFile("console-properties.xml");
 		consoleHistoryFile = getDevFile("console-history.xml");
+		consoleStringsFile = getDevFile("console-strings.xml");
 	}
 
 	public File getDevFile(String path) {
@@ -222,6 +225,13 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					ResourceUtilities.readFileToString(consoleHistoryFile));
 		} else {
 			history = new DevConsoleHistory();
+		}
+		if (consoleStringsFile.exists()) {
+			strings = WrappedObjectHelper.xmlDeserialize(
+					DevConsoleStrings.class,
+					ResourceUtilities.readFileToString(consoleStringsFile));
+		} else {
+			strings = new DevConsoleStrings();
 		}
 		saveConfig();
 		if (props.useMountSshfsFs) {
@@ -342,6 +352,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				WrappedObjectHelper.xmlSerialize(props), consolePropertiesFile);
 		ResourceUtilities.writeStringToFile(
 				WrappedObjectHelper.xmlSerialize(history), consoleHistoryFile);
+		ResourceUtilities.writeStringToFile(
+				WrappedObjectHelper.xmlSerialize(strings), consoleStringsFile);
 	}
 
 	private class JCommandLine extends JTextField {
@@ -727,4 +739,5 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		devHelper.readAppObjectGraph();
 		devHelper.initPostObjectServices();
 	}
+
 }

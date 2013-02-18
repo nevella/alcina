@@ -261,6 +261,8 @@ public class IosStorageExpander {
 			}
 			asyncCallback.onSuccess(null);
 			break;
+		default:
+			break;
 		}
 	}
 
