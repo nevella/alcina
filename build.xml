@@ -73,6 +73,15 @@
 			<exclude name="cc/alcina/extras/misc/ie/override/**" />
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
+		<javac includeantruntime="false" debug="on" destdir="${extras.cluster.tasks.build.dir}">
+			<classpath>
+				<path refid="extras.cluster.lib.path" />
+				<path refid="framework.common.lib.path" />
+				<pathelement path="${framework.entity.build.dir}" />
+			</classpath>
+			<src path="${extras.cluster.tasks.src.dir}" />
+			<compilerarg value="${alcina.compiler.args}" />
+		</javac>
 		<mkdir dir="${framework.jvmclient.build.dir}" />
 		<javac includeantruntime="false" debug="on" srcdir="${framework.jvmclient.src.dir}" destdir="${framework.jvmclient.build.dir}">
 			<classpath>
@@ -143,6 +152,15 @@
 				<include name="**/*.*" />
 			</fileset>
 			<fileset dir="${extras.misc.src.dir}">
+				<include name="**/*.*" />
+				<exclude name="**/*.class" />
+			</fileset>
+		</jar>
+		<jar destfile="${extras.dist.dir}/${ant.project.name}-cluster-tasks.jar">
+			<fileset dir="${extras.cluster.tasks.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+			<fileset dir="${extras.cluster.tasks.src.dir}">
 				<include name="**/*.*" />
 				<exclude name="**/*.class" />
 			</fileset>

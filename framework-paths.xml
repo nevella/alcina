@@ -31,6 +31,11 @@
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
+	<path id="extras.cluster.lib.path">
+		<fileset dir="${extras.cluster.lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
 	<path id="framework.impl.jboss-hibernate.lib.path">
 		<fileset dir="${framework.impl.jboss-hibernate.lib.dir}">
 			<include name="**/*.jar" />

@@ -81,6 +81,7 @@ public class SEUtilities {
 		}
 		return null;
 	}
+
 	public static String consoleReadline(String prompt) {
 		System.out.println(prompt);
 		InputStreamReader converter = new InputStreamReader(System.in);
@@ -757,23 +758,28 @@ public class SEUtilities {
 				+ CommonUtils.capitaliseFirst(field.getName());
 	}
 
-	public static void copyFile(File in, File out) throws IOException {
+	public static int copyFile(File in, File out) throws IOException {
 		if (in.isDirectory()) {
-			copyDirectory(in, out);
-			return;
+			return copyDirectory(in, out);
 		}
 		if (!out.exists()) {
 			out.getParentFile().mkdirs();
 			out.createNewFile();
+		} else {
+			if (out.lastModified() >= in.lastModified()) {
+				return 0;
+			}
 		}
 		FileInputStream ins = new FileInputStream(in);
 		FileOutputStream os = new FileOutputStream(out);
 		ResourceUtilities.writeStreamToStream(ins, os);
 		out.setLastModified(in.lastModified());
 		ins.close();
+		return 1;
 	}
 
-	private static void copyDirectory(File in, File out) throws IOException {
+	private static int copyDirectory(File in, File out) throws IOException {
+		int fc = 0;
 		if (out.exists()) {
 			if (out.isDirectory()) {
 				deleteDirectory(out);
@@ -786,8 +792,9 @@ public class SEUtilities {
 		for (File subIn : files) {
 			File subOut = new File(out.getPath() + File.separator
 					+ subIn.getName());
-			copyFile(subIn, subOut);
+			fc += copyFile(subIn, subOut);
 		}
+		return fc;
 	}
 
 	public static String getHomeDir() {
@@ -967,9 +974,11 @@ public class SEUtilities {
 			}
 		}
 	}
-	public static File getChildFile(File folder, String path){
-		return new File(String.format("%s/%s",folder.getPath(),path));
+
+	public static File getChildFile(File folder, String path) {
+		return new File(String.format("%s/%s", folder.getPath(), path));
 	}
+
 	public static void appShutdown() {
 		pdLookup = null;
 	}
