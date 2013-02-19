@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.registry;
 
 import java.io.BufferedInputStream;
@@ -31,15 +30,13 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public abstract class CachingScanner {
-
-	protected void putIgnoreMap(Map<String, Date> outgoingIgnoreMap, String cachePath) {
+public abstract class CachingScanner {
+	protected void putIgnoreMap(Map<String, Date> outgoingIgnoreMap,
+			String cachePath) {
 		try {
 			File cacheFile = new File(cachePath);
 			cacheFile.getParentFile().mkdirs();
@@ -52,14 +49,15 @@ import cc.alcina.framework.entity.logic.EntityLayerLocator;
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
 	@SuppressWarnings("unchecked")
 	protected Map<String, Date> getIgnoreMap(String cachePath) {
 		try {
 			ObjectInputStream ois = new ObjectInputStream(
 					new BufferedInputStream(new FileInputStream(cachePath)));
-			 Map<String, Date> value = (Map<String, Date>) ois.readObject();
-			 ois.close();
-			 return value;
+			Map<String, Date> value = (Map<String, Date>) ois.readObject();
+			ois.close();
+			return value;
 		} catch (Exception e) {
 			return new LinkedHashMap<String, Date>();
 		}
@@ -69,7 +67,8 @@ import cc.alcina.framework.entity.logic.EntityLayerLocator;
 		return EntityLayerLocator.get().getDataFolder();
 	}
 
-	public void scan(Map<String, Date> classes, String cachePath) throws Exception {
+	public void scan(Map<String, Date> classes, String cachePath)
+			throws Exception {
 		ClassLoader classLoader = Thread.currentThread()
 				.getContextClassLoader();
 		int cc = 0;
@@ -97,7 +96,7 @@ import cc.alcina.framework.entity.logic.EntityLayerLocator;
 				long nt = System.nanoTime();
 				c = classLoader.loadClass(className);
 				loadClassnanos += (System.nanoTime() - nt);
-				process(c,className,modDate,outgoingIgnoreMap);
+				process(c, className, modDate, outgoingIgnoreMap);
 			} catch (Error eiie) {
 				outgoingIgnoreMap.put(className, modDate);
 				continue;
@@ -113,5 +112,7 @@ import cc.alcina.framework.entity.logic.EntityLayerLocator;
 		}
 		putIgnoreMap(outgoingIgnoreMap, cachePath);
 	}
-	protected abstract void process(Class c, String className, Date modDate, Map<String, Date> outgoingIgnoreMap) ;
+
+	protected abstract void process(Class c, String className, Date modDate,
+			Map<String, Date> outgoingIgnoreMap);
 }

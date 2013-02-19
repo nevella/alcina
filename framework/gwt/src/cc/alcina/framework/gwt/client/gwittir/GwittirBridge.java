@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,6 +51,7 @@ import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.ValidatorInfo;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
@@ -67,6 +67,7 @@ import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
+import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -88,7 +89,8 @@ import com.totsp.gwittir.client.validator.Validator;
  *
  * @author Nick Reddel
  */
-public class GwittirBridge implements PropertyAccessor {
+@RegistryLocation(registryPoint=BeanDescriptorProvider.class)
+public class GwittirBridge implements PropertyAccessor,BeanDescriptorProvider {
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
 	{
 		validatorMap.put(Integer.class, IntegerValidator.INSTANCE);

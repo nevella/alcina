@@ -223,11 +223,12 @@ public class Registry {
 	public static <V> V impl(Class<V> registryPoint) {
 		return get().impl0(registryPoint, void.class);
 	}
+
 	public static <V> List<V> impls(Class<V> registryPoint) {
-		return impls(registryPoint, void.class
-				);
+		return impls(registryPoint, void.class);
 	}
-	public static <V> List<V> impls(Class<V> registryPoint,Class targetClass) {
+
+	public static <V> List<V> impls(Class<V> registryPoint, Class targetClass) {
 		List<Class> impls = get().lookup(false, registryPoint, targetClass,
 				false);
 		List<V> result = new ArrayList<V>();

@@ -25,8 +25,9 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
+import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 import com.totsp.gwittir.client.beans.Property;
 
@@ -39,7 +40,7 @@ import com.totsp.gwittir.client.beans.Property;
 @SuppressWarnings("unchecked")
 public class CloneHelper {
 	private Map createdMap = new IdentityHashMap();
-
+	private BeanDescriptorProvider beanDescriptorProvider=Registry.impl(BeanDescriptorProvider.class);
 	public <T extends Collection> T deepCollectionClone(T coll)
 			throws Exception {
 		T c = null;
@@ -77,7 +78,8 @@ public class CloneHelper {
 		}
 		T ret = newInstance(o);
 		createdMap.put(o, ret);
-		Property[] prs = GwittirBridge.get().getDescriptor(ret).getProperties();
+		Property[] prs = beanDescriptorProvider.getDescriptor(ret)
+				.getProperties();
 		for (Property pr : prs) {
 			if (pr.getMutatorMethod() == null) {
 				continue;
@@ -90,7 +92,7 @@ public class CloneHelper {
 			}
 			if (val != null) {
 				if (!ignore(o.getClass(), pr.getName(), o)) {
-					args[0] = deepProperty(o, pr.getName())? deepObjectClone(val)
+					args[0] = deepProperty(o, pr.getName()) ? deepObjectClone(val)
 							: shallowishObjectClone(val);
 					pr.getMutatorMethod().invoke(ret, args);
 				}
@@ -129,7 +131,7 @@ public class CloneHelper {
 	 */
 	public void copyBeanProperties(Object source, Object target,
 			Set<String> excludeProperties) throws Exception {
-		Property[] prs = GwittirBridge.get().getDescriptor(target)
+		Property[] prs = beanDescriptorProvider.getDescriptor(target)
 				.getProperties();
 		for (Property pr : prs) {
 			if (pr.getMutatorMethod() == null) {
