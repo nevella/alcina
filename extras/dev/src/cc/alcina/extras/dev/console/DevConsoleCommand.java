@@ -65,6 +65,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
+	public boolean canUseProductionConn() {
+		return false;
+	}
+
 	public abstract String[] getCommandIds();
 
 	public abstract String getDescription();
@@ -83,6 +87,11 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	public Connection getConn() throws Exception {
 		if (conn == null) {
+			if (console.props.connection_useProduction
+					&& !canUseProductionConn()) {
+				throw new Exception(String.format("Cmd %s is local only",
+						getClass().getSimpleName()));
+			}
 			Class.forName("org.postgresql.Driver");
 			String connStr = console.props.connection_useProduction ? console.props.connection_production
 					: console.props.connection_local;
@@ -488,7 +497,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					.getenv("USERPROFILE") : System.getProperty("user.home");
 			String localPath = SEUtilities.combinePaths(homeDir + "/", argv[1]);
 			String remotePath = String.format("%s:%s", console.props.remoteSsh,
-					SEUtilities.combinePaths(console.props.remoteHomeDir+"/",
+					SEUtilities.combinePaths(console.props.remoteHomeDir + "/",
 							argv[2]));
 			String remotePortStr = String.format(
 					"/usr/bin/ssh -o StrictHostKeychecking=no -p %s",
@@ -793,12 +802,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				String content = argv[3].replace("\\n", "\n");
 				console.strings.remove(name);
 				console.strings.add(name, tags, content);
-			}
-			else if (cmd.equals("d")) {
+			} else if (cmd.equals("d")) {
 				String name = argv[1];
 				console.strings.remove(name);
-			}
-			else if (cmd.equals("c")) {
+			} else if (cmd.equals("c")) {
 				String name = argv[1];
 				DevConsoleString cs = console.strings.get(name);
 				if (cs != null) {
@@ -806,8 +813,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					System.out.format("Copied to clipboard: %s\n\t%s\n",
 							cs.name, cs.content);
 				}
-			}
-			else 	if (cmd.equals("l")) {
+			} else if (cmd.equals("l")) {
 				List<String> tags = new ArrayList<String>(
 						Arrays.asList((argv.length < 2 ? "" : argv[1])
 								.split(",")));
@@ -817,20 +823,19 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				for (DevConsoleString s : list) {
 					tableData.put(r, 0, s.name);
 					tableData.put(r, 1, CommonUtils.join(s.tags, ","));
-					tableData.put(r, 2, s.content.replace("\n","\\n"));
+					tableData.put(r, 2, s.content.replace("\n", "\\n"));
 					r++;
 				}
 				List<String> columnNames = Arrays.asList(new String[] { "name",
 						"tags", "content" });
 				ReportUtils.dumpTable(tableData, columnNames);
-			}
-			else	if (cmd.equals("lt")) {
+			} else if (cmd.equals("lt")) {
 				ArrayList<String> tags = new ArrayList<String>(
 						console.strings.listTags());
 				Collections.sort(tags);
 				System.out.println(CommonUtils.join(tags, "\n"));
-			}else{
-				System.err.format("Unknown subcommand - %s\n",cmd);
+			} else {
+				System.err.format("Unknown subcommand - %s\n", cmd);
 			}
 			return "";
 		}
