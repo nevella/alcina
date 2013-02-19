@@ -44,6 +44,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -55,6 +56,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.ValidatorInfo;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -89,7 +92,7 @@ import com.totsp.gwittir.client.validator.Validator;
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint=BeanDescriptorProvider.class)
+
 public class GwittirBridge implements PropertyAccessor,BeanDescriptorProvider {
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
 	{
@@ -105,7 +108,16 @@ public class GwittirBridge implements PropertyAccessor,BeanDescriptorProvider {
 	public BeanDescriptor getDescriptorForClass(Class c) {
 		return getDescriptorForClass(c, true);
 	}
+	@RegistryLocation(registryPoint=BeanDescriptorProvider.class,implementationType=ImplementationType.FACTORY)
+	@ClientInstantiable
+	public static class GwittirBridgeBdpFactory implements RegistryFactory{
 
+		@Override
+		public Object create(Class registryPoint, Class targetObjectClass) {
+			return GwittirBridge.get();
+		}
+		
+	}
 	public BeanDescriptor getDescriptorForClass(Class c,
 			boolean exceptionIfNotFound) {
 		try {

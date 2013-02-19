@@ -260,6 +260,9 @@ public class Registry {
 		case FACTORY:
 		case SINGLETON:
 			singletons.put(registryPoint, targetObjectClass, obj);
+			if(type==ImplementationType.FACTORY){
+				return impl0(registryPoint, targetObjectClass); 
+			}
 			break;
 		case INSTANCE:
 		case MULTIPLE:
