@@ -73,6 +73,7 @@
 			<exclude name="cc/alcina/extras/misc/ie/override/**" />
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
+		<mkdir dir="${extras.cluster.tasks.build.dir}" />
 		<javac includeantruntime="false" debug="on" destdir="${extras.cluster.tasks.build.dir}">
 			<classpath>
 				<path refid="extras.cluster.lib.path" />
