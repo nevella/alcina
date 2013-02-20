@@ -30,8 +30,10 @@ public class DevConsoleProperties {
 
 	@SetPropInfo(key = "max-id", description = "Max id for id list creation")
 	public long maxId = 999999;
+
 	@SetPropInfo(key = "diff-file-1", description = "First file for a regression test diff")
 	public String diffFile1 = "";
+
 	@SetPropInfo(key = "diff-file-2", description = "Second file for a regression test diff")
 	public String diffFile2 = "";
 
@@ -55,8 +57,8 @@ public class DevConsoleProperties {
 	public String connection_local = "jdbc:postgresql://127.0.0.1:5432/jade,jade,jade";
 
 	@SetPropInfo(key = "conn-production", description = "obviously never write - also, you'll need to tunnel (pg_hba.conf): \n"
-			+ "ssh -A nreddel@nat2.barnet.com.au -L 5434:jade.int.barnet.com.au:5432\n" +
-			"ssh -A nreddel@nat2.barnet.com.au -L 5434:cosa.int.barnet.com.au:5432")
+			+ "ssh -A nreddel@nat2.barnet.com.au -L 5434:jade.int.barnet.com.au:5432\n"
+			+ "ssh -A nreddel@nat2.barnet.com.au -L 5434:cosa.int.barnet.com.au:5432")
 	public String connection_production = "jdbc:postgresql://127.0.0.1:5434/jade,jade,jade";
 
 	@SetPropInfo(key = "remote-home-dir")
@@ -64,7 +66,7 @@ public class DevConsoleProperties {
 
 	@SetPropInfo(key = "remote-ssh")
 	public String remoteSsh = "root@jade.int.barnet.com.au:";
-	
+
 	@SetPropInfo(key = "remote-ssh-port")
 	public String remoteSshPort = "22";
 
@@ -73,4 +75,7 @@ public class DevConsoleProperties {
 	 * Mac - "Prestige Elite Std"
 	 */
 	public String fontName = "Courier New";
+
+	@SetPropInfo(key = "conn-production-tunnel-cmd", description = "e.g. (rundeck) run -j jade/db/production_tunnel"  )
+	public String connectionProductionTunnelCmd = "";
 }
