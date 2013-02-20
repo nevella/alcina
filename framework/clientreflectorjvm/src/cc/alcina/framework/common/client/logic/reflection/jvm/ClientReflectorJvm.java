@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
@@ -35,10 +37,29 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
 public class ClientReflectorJvm extends ClientReflector {
 	Map<Class, ClientBeanReflector> reflectors = new HashMap<Class, ClientBeanReflector>();
 
+	public static final String PROP_FILTER_CLASSNAME = "ClientReflectorJvm.filterClassName";
+
 	public ClientReflectorJvm() {
 		try {
-			Map<String, Date> classes = new ClasspathScanner("*", true, true)
-					.getClasses();
+			ClasspathScanner classpathScanner = new ClasspathScanner("*", true,
+					true);
+			Map<String, Date> classes = classpathScanner.getClasses();
+			String filterClassName = System.getProperty(PROP_FILTER_CLASSNAME);
+			/*
+			 * The reason for this is that gwt needs the compiled annotation
+			 * classes (in say, /bin) - so we may be getting classes here that
+			 * shouldn't be visible via the registry
+			 * 
+			 * It's a bit sad (duplicating the exclusion code of the gwt
+			 * module), but the performance gains the jvm reflector gives us
+			 * outweigh the (possible) crud IMO
+			 */
+			if (filterClassName != null) {
+				CollectionFilters.filterInPlace(
+						classes.keySet(),
+						(CollectionFilter<String>) Class.forName(
+								filterClassName).newInstance());
+			}
 			new RegistryScanner() {
 				protected File getHomeDir() {
 					String testStr = "";
