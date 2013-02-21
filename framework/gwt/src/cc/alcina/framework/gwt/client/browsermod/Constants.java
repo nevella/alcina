@@ -47,4 +47,6 @@ package cc.alcina.framework.gwt.client.browsermod;
 			+ "\". "
 			+ "This is especially important as InternetExplorer in quirks mode has a broken box model (http://css.maxdesign.com.au/listamatic/about-boxmodel.htm).";
 
+	public static String CHROME_IOS_USER_AGENT="CriOS/";
+
 }

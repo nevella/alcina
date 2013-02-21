@@ -129,11 +129,16 @@ public class BrowserMod {
 
 	public static boolean isSafari() {
 		return getUserAgent().indexOf(Constants.SAFARI_USER_AGENT) != -1
-				&& !isOpera() && !isChrome();
+				&& !isOpera() && !isChrome()&&!isChromeIos();
 	}
 
 	public static boolean isChrome() {
 		return getUserAgent().indexOf(Constants.CHROME_USER_AGENT) != -1
+				&& !isOpera();
+	}
+
+	public static boolean isChromeIos() {
+		return getUserAgent().indexOf(Constants.CHROME_IOS_USER_AGENT) != -1
 				&& !isOpera();
 	}
 
@@ -205,8 +210,9 @@ public class BrowserMod {
 		};
 		return isMobile.any();
 	}-*/;
+
 	public static native boolean isIPad()/*-{
 		var navigator = $wnd.navigator;
-		return  navigator.userAgent.match(/iPad/i) ? true : false;
+		return navigator.userAgent.match(/iPad/i) ? true : false;
 	}-*/;
 }
