@@ -25,7 +25,8 @@ public class DevProxySupport implements InvocationHandler {
 			throws Throwable {
 		DevRemoter remoter = new DevRemoter();
 		if(remoter.tryInterception(proxy, method, args)){
-			return remoter.getInterceptionResult();
+			Object result = remoter.getInterceptionResult();
+			return result;
 		}
 		
 		Class<?> clazz = proxy.getClass().getInterfaces()[0];
