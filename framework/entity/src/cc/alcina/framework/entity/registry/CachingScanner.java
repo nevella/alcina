@@ -83,7 +83,6 @@ public abstract class CachingScanner {
 				continue;
 			}
 			Date modDate = classes.get(className);
-			boolean ignored = false;
 			if (incomingIgnoreMap.containsKey(className)) {
 				if (incomingIgnoreMap.get(className) != null
 						&& incomingIgnoreMap.get(className).equals(modDate)) {

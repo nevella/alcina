@@ -11,8 +11,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet;
+
+import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -20,6 +21,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 /**
  * To prevent classloader problems if we were to have the same for server/ejb
  * layer
+ * 
+ * We duplicate all the static methods from Registry to get the correct get()
  * 
  * @author nick@alcina.cc
  * 
@@ -35,14 +38,23 @@ public class ServletLayerRegistry extends Registry {
 		return theInstance;
 	}
 
-	@Override
-	public Object instantiateSingle(Class registryPoint, Class targetObject) {
-		Class lookupSingle = lookupSingle(registryPoint, targetObject);
-		try {
-			return lookupSingle.newInstance();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	public static <V> V impl(Class<V> registryPoint) {
+		return get().impl0(registryPoint, void.class);
 	}
-	
+
+	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass) {
+		return get().impl0(registryPoint, targetObjectClass);
+	}
+
+	public static <V> List<V> impls(Class<V> registryPoint) {
+		return impls(registryPoint, void.class);
+	}
+
+	public static <V> List<V> impls(Class<V> registryPoint, Class targetClass) {
+		return get().impls0(registryPoint, targetClass);
+	}
+
+	public static <T> T singleton(Class<T> clazz) {
+		return get().singleton0(clazz);
+	}
 }
