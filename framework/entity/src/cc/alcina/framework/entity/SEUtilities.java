@@ -122,12 +122,14 @@ public class SEUtilities {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-
 	public static void dumpBytes(byte[] bs, int width) {
+		dumpBytes(bs, width,true);
+	}
+	public static void dumpBytes(byte[] bs, int width, boolean indexAsHex) {
 		StringBuilder bd = new StringBuilder();
 		int len = bs.length;
 		for (int i = 0; i < len; i += width) {
-			bd.append(CommonUtils.padStringLeft(Integer.toHexString(i), 8, '0'));
+			bd.append(CommonUtils.padStringLeft((indexAsHex?Integer.toHexString(i):String.valueOf(i)), 8, '0'));
 			bd.append(":  ");
 			for (int j = 0; j < width; j++) {
 				boolean in = j + i < len;

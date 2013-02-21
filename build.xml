@@ -7,16 +7,22 @@
 		Please create a local.ant.properties file,
 		template is local.ant.properties.template in this directory</fail>
 	<import file="${alcina.home}/framework-paths.xml" />
-
+	<!-- ensure there's something for ant task refs -->
+	<mkdir dir="${framework.dist.dir}"/>
+	<mkdir dir="${extras.dist.dir}"/>
+	<mkdir dir="${extras.tasks.dist.dir}"/>
 	<target name="clean" description="Delete all generated files">
 		<delete dir="${framework.entity.build.dir}" />
 		<delete dir="${framework.servlet.build.dir}" />
 		<delete dir="${framework.impl.jboss-hibernate.build.dir}" />
 		<delete dir="${framework.dist.dir}" />
+		<!--
 		<delete dir="${extras.dist.dir}" />
+		-->
 		<delete dir="${extras.collections.build.dir}" />
 		<delete dir="${extras.dev.build.dir}" />
 		<delete dir="${framework.jvmclient.build.dir}" />
+		<mkdir dir="${framework.dist.dir}"/>
 	</target>
 	<target name="compile" description="Compiles all J2SE modules">
 		<mkdir dir="${framework.entity.build.dir}" />
@@ -157,7 +163,8 @@
 				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
-		<jar destfile="${extras.dist.dir}/${ant.project.name}-cluster-tasks.jar">
+		<mkdir dir="${extras.tasks.dist.dir}"/>
+		<jar destfile="${extras.tasks.dist.dir}/${ant.project.name}-cluster-tasks.jar">
 			<fileset dir="${extras.cluster.tasks.build.dir}">
 				<include name="**/*.*" />
 			</fileset>
