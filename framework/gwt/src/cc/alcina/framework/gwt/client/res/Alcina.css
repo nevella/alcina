@@ -652,6 +652,10 @@ div.pad-top-0 {
 	white-space: nowrap;
 }
 
+.pre {
+	white-space: pre;
+}
+
 .relative {
 	position: relative;
 }
@@ -852,8 +856,8 @@ table.alcina-SelectorFrame.minimal input.alcina-Filter:focus {
 }
 
 table.alcina-SelectorFrame.minimal div.alcina-Selector {
-	width:auto;
-	height:auto;
+	width: auto;
+	height: auto;
 	max-width: 300px;
 }
 
