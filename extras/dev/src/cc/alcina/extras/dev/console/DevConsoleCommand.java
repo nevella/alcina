@@ -469,7 +469,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			Set<String> matches = console.history.getMatches(argv[0]);
+			List<String> matches = new ArrayList<String>(console.history.getMatches(argv[0]));
+			Collections.reverse(matches);
 			CollectionFilter<String> filter = new CollectionFilter<String>() {
 				@Override
 				public boolean allow(String o) {

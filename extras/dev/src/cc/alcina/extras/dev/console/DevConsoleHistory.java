@@ -42,7 +42,8 @@ public class DevConsoleHistory {
 	public Set<String> getMatches(String regex) {
 		Set<String> matches=new LinkedHashSet<String>();
 		Pattern p = Pattern.compile(String.format(".*%s.*",regex),Pattern.CASE_INSENSITIVE);
-		for(String cmd:commands){
+		for (int i =  commands.size()-1;i>=0; i--) {
+			String cmd=commands.get(i);
 			if(p.matcher(cmd).matches()){
 				matches.add(cmd);
 			}
