@@ -30,6 +30,7 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 
 import com.totsp.gwittir.client.beans.annotations.Omit;
+import com.totsp.gwittir.client.beans.internal.JVMIntrospector.MethodWrapper;
 
 /**
  *
@@ -213,21 +214,5 @@ public class ClientReflectorJvm extends ClientReflector {
 		return infos;
 	}
 
-	class MethodWrapper implements com.totsp.gwittir.client.beans.Method {
-		private final Method method;
-
-		public MethodWrapper(Method method) {
-			this.method = method;
-		}
-
-		@Override
-		public String getName() {
-			return method.getName();
-		}
-
-		@Override
-		public Object invoke(Object target, Object[] args) throws Exception {
-			return method.invoke(target, args);
-		}
-	}
+	
 }

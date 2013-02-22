@@ -91,10 +91,10 @@ public class JVMIntrospector implements Introspector,BeanDescriptorProvider {
 
     }
 
-    private static class MethodWrapper implements Method {
+    public static class MethodWrapper implements Method {
         private final java.lang.reflect.Method inner;
 
-        MethodWrapper(java.lang.reflect.Method inner){
+        public MethodWrapper(java.lang.reflect.Method inner){
             assert inner != null;
             this.inner = inner;
         }
