@@ -54,11 +54,10 @@ public class WeightAndDistribute<T> {
 				total -= itemWeight;
 			}
 		}
-		while (total > 0) {
+		while (total > 0 && !items.isEmpty()) {
 			for (T t : items) {
 				if (total-- > 0) {
 					callback.countingMap.add(t, 1);
-					
 				}
 			}
 		}

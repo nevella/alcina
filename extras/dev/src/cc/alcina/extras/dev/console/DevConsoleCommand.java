@@ -106,7 +106,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					runShell(console.props.connectionProductionTunnelCmd);
 					for (int i = 1; i < 15; i++) {
 						try {
-							System.out.format("opening tunnel ... %s ...\n",i);
+							System.out.format("opening tunnel ... %s ...\n", i);
 							conn = DriverManager.getConnection(parts[0],
 									parts[1], parts[2]);
 							return conn;
@@ -118,8 +118,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 							}
 						}
 					}
-					conn = DriverManager.getConnection(parts[0],
-							parts[1], parts[2]);
+					conn = DriverManager.getConnection(parts[0], parts[1],
+							parts[2]);
 				} else {
 					throw e;
 				}
@@ -196,6 +196,34 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				cmd.cancel();
 			}
 			return "cancel message sent";
+		}
+	}
+
+	public static class CmdFind extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "f" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "Find text in main console";
+		}
+
+		@Override
+		public String getUsage() {
+			return "f <text|last text>";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			console.find(argv.length == 0 ? null : argv[0]);
+			return null;
+		}
+
+		@Override
+		public boolean silent() {
+			return true;
 		}
 	}
 
@@ -469,7 +497,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			List<String> matches = new ArrayList<String>(console.history.getMatches(argv[0]));
+			List<String> matches = new ArrayList<String>(
+					console.history.getMatches(argv[0]));
 			Collections.reverse(matches);
 			CollectionFilter<String> filter = new CollectionFilter<String>() {
 				@Override
@@ -891,5 +920,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			System.out.println("l: list matching (tags)");
 			System.out.println("lt: list tags");
 		}
+	}
+
+	public boolean silent() {
+		return false;
 	}
 }

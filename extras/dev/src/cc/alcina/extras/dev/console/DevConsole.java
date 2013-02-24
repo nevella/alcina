@@ -44,6 +44,9 @@ import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Element;
+import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
@@ -79,6 +82,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		System.setOut(out);
 	}
 
+	protected static void stdSysOut() {
+		System.setErr(err.s1);
+		System.setOut(out.s1);
+	}
+
 	private MainFrame mainFrame;
 
 	public D devHelper;
@@ -112,6 +120,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public P props;
 
 	public DevConsoleHistory history;
+
 	public DevConsoleStrings strings;
 
 	private String lastCommand;
@@ -127,6 +136,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	File consolePropertiesFile;
 
 	File consoleHistoryFile;
+
 	File consoleStringsFile;
 
 	public File devFolder;
@@ -315,7 +325,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			LooseContext.push();
 			runningJobs.add(c);
 			history.addCommand(lastCommand);
-			System.out.format("%s...\n", lastCommand);
+			if (!c.silent()) {
+				System.out.format("%s...\n", lastCommand);
+			}
 			consoleRight.setText("");
 			long l1 = System.currentTimeMillis();
 			c.configure();
@@ -323,7 +335,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					.run((String[]) args.toArray(new String[args.size()]));
 			c.cleanup();
 			long l2 = System.currentTimeMillis();
-			consoleLeft.ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
+			if (msg != null) {
+				consoleLeft.ok(String.format("  %s - ok - %s ms\n", msg, l2
+						- l1));
+			}
 			if (topLevel) {
 				props.lastCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
 						: "";
@@ -415,6 +430,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 		private SimpleAttributeSet[] attrs;
 
+		private SimpleAttributeSet highlightRange;
+
+		private SimpleAttributeSet normalRange;
+
 		public JConsole() {
 			setCaretPosition(0);
 			setMargin(new Insets(5, 5, 5, 5));
@@ -435,12 +454,19 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			}
 			StyleConstants.setForeground(attrs[1], GREEN);
 			StyleConstants.setForeground(attrs[2], RED);
+			highlightRange = new SimpleAttributeSet();
+			normalRange = new SimpleAttributeSet();
+			StyleConstants.setBackground(highlightRange, new Color(190, 210,
+					250));
+//			StyleConstants.setForeground(highlightRange, Color.PINK);
+			StyleConstants.setBackground(normalRange, Color.WHITE);
 		}
 
 		public void append(final String str) {
 			StyledDocument doc = getStyledDocument();
 			try {
 				doc.insertString(doc.getLength(), str, current);
+				docIndex = 0;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -542,6 +568,52 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				break;
 			case NORMAL:
 				current = attrs[0];
+			}
+		}
+
+		public void find(final String text) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					find0(text);
+				}
+			});
+		}
+
+		String lastText = null;
+
+		private int docIndex;
+
+		private Element lastHighlight;
+
+		protected void find0(String text) {
+			if (text == null) {
+				text = CommonUtils.nullToEmpty(lastText);
+			}
+			if (!text.equals(lastText)) {
+				docIndex = 0;
+			}
+			StyledDocument doc = getStyledDocument();
+			try {
+				int idx = doc.getText(0, doc.getLength()).indexOf(text,
+						docIndex);
+				if (idx == -1) {
+					System.out.println("not found");
+				} else {
+					if (lastHighlight != null) {
+						doc.setCharacterAttributes(idx, text.length(),
+								normalRange, false);
+					}
+					Rectangle rect = modelToView(idx);
+					lastHighlight = doc.getCharacterElement(idx);
+					doc.setCharacterAttributes(idx, text.length(),
+							highlightRange, false);
+					scrollRectToVisible(rect);
+					docIndex = idx + 1;
+				}
+				lastText = text;
+			} catch (BadLocationException e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -740,4 +812,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		devHelper.initPostObjectServices();
 	}
 
+	public void find(String text) {
+		consoleLeft.find(text);
+	}
 }
