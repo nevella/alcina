@@ -101,6 +101,7 @@ public class ClientUtils {
 			} catch (Exception e) {
 				// fall through to IE
 				try {
+					setCssTextIE(styleElement, css);
 					styleElement.setPropertyString(CSS_TEXT_PROPERTY, css);
 				} catch (Exception e1) {
 					if (BrowserMod.isInternetExplorer()) {
@@ -116,6 +117,14 @@ public class ClientUtils {
 		}
 		return styleElement;
 	}
+
+	public static native void setCssTextIE(Element e, String css) /*-{
+		if (e.styleSheet) {
+			e.styleSheet.cssText = css;
+		} else {
+			e.cssText = css;
+		}
+	}-*/;
 
 	private static void addHidden(Panel p, String key, String value) {
 		p.add(new Hidden(key, value));
