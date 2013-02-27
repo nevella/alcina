@@ -161,7 +161,7 @@ public class LogStore {
 				.valueOf(cli.getAuth());
 		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,
 				clientInstanceAuth, HiliHelper.getIdOrZero(cli), new Date(),
-				topic, message);
+				topic, message,null);
 		logs.addLogRecord(logRecord);
 		if (useCookieMsgBackup) {
 			String value = logs.buf.substring(Math.max(

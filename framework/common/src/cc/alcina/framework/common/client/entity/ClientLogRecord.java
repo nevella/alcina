@@ -31,17 +31,20 @@ public class ClientLogRecord implements Serializable {
 
 	private String message;
 
+	private String ipAddress;
+
 	public ClientLogRecord() {
 	}
 
 	public ClientLogRecord(int localSeriesId, String clientInstanceAuth,
-			long clientInstanceId, Date time, String topic, String message) {
+			long clientInstanceId, Date time, String topic, String message, String ipAddr) {
 		this.localSeriesId = localSeriesId;
 		this.clientInstanceAuth = clientInstanceAuth;
 		this.clientInstanceId = clientInstanceId;
 		this.time = time;
 		this.topic = topic;
 		this.message = message;
+		this.ipAddress = ipAddr;
 	}
 
 	public String getClientInstanceAuth() {
@@ -116,5 +119,13 @@ public class ClientLogRecord implements Serializable {
 		public void setLogRecords(List<ClientLogRecord> logRecords) {
 			this.logRecords = logRecords;
 		}
+	}
+
+	public String getIpAddress() {
+		return this.ipAddress;
+	}
+
+	public void setIpAddress(String ipAddress) {
+		this.ipAddress = ipAddress;
 	}
 }

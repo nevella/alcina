@@ -820,6 +820,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				converter);
 		while (records.remove(null)) {
 		}
+		String remoteAddr=getThreadLocalRequest()==null?null:getThreadLocalRequest().getRemoteAddr();
+		for (ClientLogRecords r : records) {
+			for (ClientLogRecord clr : r.getLogRecords()) {
+				clr.setIpAddress(remoteAddr);
+			}
+		}
 		EntityLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().persistClientLogRecords(records);
 	}
