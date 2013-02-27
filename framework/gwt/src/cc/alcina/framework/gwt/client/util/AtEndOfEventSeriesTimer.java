@@ -11,8 +11,10 @@ public class AtEndOfEventSeriesTimer {
 		@Override
 		public void run() {
 			if (System.currentTimeMillis() - lastEventOccurred >= waitToPerformAction) {
-				timer.cancel();
-				timer = null;
+				if (timer != null) {
+					timer.cancel();
+					timer = null;
+				}
 				action.run();
 			}
 		}
