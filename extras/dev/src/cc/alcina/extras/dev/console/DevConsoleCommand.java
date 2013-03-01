@@ -41,7 +41,7 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.ReportUtils;
-import cc.alcina.framework.entity.util.StreamBuffer;
+import cc.alcina.framework.entity.util.ShellUtils;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)
 public abstract class DevConsoleCommand<C extends DevConsole> {
@@ -64,6 +64,21 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			throw new CancelledException("Action cancelled");
 		}
 	}
+	protected void format(String format, Object... args) {
+		String out = String.format(format,args);
+		System.out.print(out);
+		commandOutputBuffer.append(out);
+	}
+	private StringBuilder commandOutputBuffer=new  StringBuilder();
+	public String dumpCommandOutputBuffer(){
+		return commandOutputBuffer.toString();
+	}
+	protected void println(String string) {
+		System.out.println(string);
+		commandOutputBuffer.append(string);
+		commandOutputBuffer.append("\n");
+		
+	};
 
 	public boolean canUseProductionConn() {
 		return false;
@@ -103,7 +118,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				if (console.props.connection_useProduction
 						&& !console.props.connectionProductionTunnelCmd
 								.isEmpty()) {
-					runShell(console.props.connectionProductionTunnelCmd);
+					ShellUtils.runShell(console.props.connectionProductionTunnelCmd);
 					for (int i = 1; i < 15; i++) {
 						try {
 							System.out.format("opening tunnel ... %s ...\n", i);
@@ -538,7 +553,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				String from, String to) throws Exception {
 			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
 					"--progress", arg1, remotePort, from, to };
-			runProcessCatchOutputAndWait(cmdAndArgs);
+			ShellUtils.runProcessCatchOutputAndWait(cmdAndArgs);
 		}
 
 		@Override
@@ -820,29 +835,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			conn.close();
 			conn = null;
 		}
-	}
-
-	protected void runShell(String argString) throws Exception {
-		List<String> args = new ArrayList<String>();
-		args.add("/bin/sh");
-		args.addAll(Arrays.asList(argString.split(" ")));
-		String[] argv = (String[]) args.toArray(new String[args.size()]);
-		runProcessCatchOutputAndWait(argv);
-	}
-
-	protected void runProcessCatchOutputAndWait(String[] cmdAndArgs)
-			throws Exception {
-		System.out.format("launching process: %s\n",
-				CommonUtils.join(cmdAndArgs, " "));
-		ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
-		Process proc = pb.start();
-		StreamBuffer errorGobbler = new StreamBuffer(proc.getErrorStream(),
-				"ERROR");
-		StreamBuffer outputGobbler = new StreamBuffer(proc.getInputStream(),
-				"OUTPUT");
-		errorGobbler.start();
-		outputGobbler.start();
-		proc.waitFor();
 	}
 
 	public static class CmdTags extends DevConsoleCommand {

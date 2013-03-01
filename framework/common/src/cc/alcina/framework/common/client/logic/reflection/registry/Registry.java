@@ -156,7 +156,17 @@ public class Registry {
 		register(registeringClass, registryPoint, void.class,
 				ImplementationType.MULTIPLE, 10);
 	}
+	public static class RegistryException extends RuntimeException{
 
+		public RegistryException() {
+			super();
+		}
+
+		public RegistryException(String message) {
+			super(message);
+		}
+		
+	}
 	public void register(Class registeringClass, Class registryPoint,
 			Class targetClass, ImplementationType implementationType,
 			int infoPriority) {
@@ -172,6 +182,14 @@ public class Registry {
 		if (registered == null) {
 			registered = new ArrayList<Class>();
 			pointMap.put(targetClass, registered);
+		}
+		if (implementationType == ImplementationType.MULTIPLE
+				&& targetClass == void.class
+				&& infoPriority != RegistryLocation.DEFAULT_PRIORITY) {
+			throw new RegistryException(CommonUtils.formatJ("Non-default priority "
+					+ "with Multiple impl type -"
+					+ " probably should be instance - %s",
+					registeringClass.getName()));
 		}
 		if (registered.size() == 1
 				&& (targetClass != void.class || implementationType != ImplementationType.MULTIPLE)) {
@@ -200,6 +218,7 @@ public class Registry {
 	public void registerSingleton(Object object, Class<?> clazz) {
 		singletons.put(clazz, void.class, object);
 	}
+
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
@@ -228,6 +247,7 @@ public class Registry {
 		}
 		return sb.toString();
 	}
+
 	public void unregister(Class registeringClass, Class registryPoint) {
 		Class tc = void.class;
 		registry.get(registryPoint).get(tc).remove(registeringClass);
@@ -256,8 +276,8 @@ public class Registry {
 		case FACTORY:
 		case SINGLETON:
 			singletons.put(registryPoint, targetObjectClass, obj);
-			if(type==ImplementationType.FACTORY){
-				return impl0(registryPoint, targetObjectClass); 
+			if (type == ImplementationType.FACTORY) {
+				return impl0(registryPoint, targetObjectClass);
 			}
 			break;
 		case INSTANCE:
@@ -266,8 +286,7 @@ public class Registry {
 		return (V) obj;
 	}
 
-	protected  <V> List<V> impls0(Class<V> registryPoint, Class targetClass) {
-		
+	protected <V> List<V> impls0(Class<V> registryPoint, Class targetClass) {
 		List<Class> impls = get().lookup(false, registryPoint, targetClass,
 				false);
 		List<V> result = new ArrayList<V>();

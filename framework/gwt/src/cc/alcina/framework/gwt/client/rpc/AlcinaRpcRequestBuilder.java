@@ -16,9 +16,9 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 
 	public static final String CLIENT_INSTANCE_AUTH_KEY = "X-ALCINA-CLIENT-INSTANCE-AUTH";
 
-	private boolean recordResult;
+	protected boolean recordResult;
 
-	private Response response;
+	protected Response response;
 
 	private String payload;
 

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -21,31 +20,43 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.TYPE })
+@Target({ ElementType.TYPE })
 @ClientVisible
 /**
  *
  * @author Nick Reddel
  */
+public @interface RegistryLocation {
+	public static final int DEFAULT_PRIORITY = 10;
 
- public @interface RegistryLocation {
-	public enum ImplementationType{
-		MULTIPLE,INSTANCE,FACTORY,SINGLETON
+	public enum ImplementationType {
+		// multiple implementation classes allowed
+		MULTIPLE,
+		// single implementation class allowed
+		INSTANCE, 
+		//registree is a factory, instantiate as a singleton
+		FACTORY, 
+		//registree is the impl, should be instantiated as a singleton
+		SINGLETON
 	}
+
 	Class registryPoint();
+
 	Class targetClass() default void.class;
+
 	/**
-	 * !!not implemented - since this can be filtered via IntrospectorFilter, better there
-	 * ALC-REFACTORING
+	 * !!not implemented - since this can be filtered via IntrospectorFilter,
+	 * better there ALC-REFACTORING
 	 */
 	boolean j2seOnly() default true;
+
 	/**
 	 * Allows overriding of default registrees (higher values override)
 	 */
-	int priority() default 10;
+	int priority() default DEFAULT_PRIORITY;
+
 	ImplementationType implementationType() default ImplementationType.MULTIPLE;
 }

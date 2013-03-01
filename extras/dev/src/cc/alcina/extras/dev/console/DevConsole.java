@@ -458,7 +458,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			normalRange = new SimpleAttributeSet();
 			StyleConstants.setBackground(highlightRange, new Color(190, 210,
 					250));
-//			StyleConstants.setForeground(highlightRange, Color.PINK);
+			// StyleConstants.setForeground(highlightRange, Color.PINK);
 			StyleConstants.setBackground(normalRange, Color.WHITE);
 		}
 

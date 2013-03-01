@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.MachineModel;
 import cc.alcina.framework.common.client.state.MachineState;
 import cc.alcina.framework.common.client.state.MachineTransitionHandler;
@@ -45,8 +46,12 @@ public class ClientConfiguration {
 		ClientLayerLocator.get().notifications().metricLogStart("moduleLoad");
 		initExceptionHandling();
 		initCommonClient();
-		createMachine();
-		machine.start();
+		ClientConfiguration impl = Registry.impl(ClientConfiguration.class);
+		if(impl==null){
+			impl=this;
+		}
+		impl.createMachine();
+		impl.machine.start();
 	}
 
 	protected void createMachine() {

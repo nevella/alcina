@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
@@ -96,6 +97,8 @@ public abstract class CachingScanner {
 				c = classLoader.loadClass(className);
 				loadClassnanos += (System.nanoTime() - nt);
 				process(c, className, modDate, outgoingIgnoreMap);
+			}catch (RegistryException rre){
+				throw rre;
 			} catch (Error eiie) {
 				outgoingIgnoreMap.put(className, modDate);
 				continue;

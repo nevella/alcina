@@ -249,7 +249,7 @@ public class PersistenceStateHandlers {
 						.getMilliseconds(), 3));
 				return event.evtGroup + " | " + event.moduleName + " | "
 						+ event.subSystem + " | " + event.method + " | "
-						+ pad(event.type, " ", 25) + +" | " + timeStr;
+						+ pad(event.type, " ", 25) + " | " + timeStr;
 			}
 			window.$stats = function(evt) {
 				var muted = lsi.@cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LogStoreInterceptors::areStatsMuted()();
@@ -259,6 +259,21 @@ public class PersistenceStateHandlers {
 				}
 				return true;
 			};
+			//if there were stats collected prior to this install, flush 'em
+			if (window["stats_pre"]) {
+				for ( var k in window.stats_pre) {
+					var pre = window.stats_pre[k];
+					lsi.@cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+				}
+				window.$stats_pre = [];
+			}
+			if ($wnd["stats_pre"]) {
+				for ( var k in $wnd.stats_pre) {
+					var pre = $wnd.stats_pre[k];
+					lsi.@cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+				}
+				$wnd.$stats_pre = [];
+			}
 
 		}-*/;
 
