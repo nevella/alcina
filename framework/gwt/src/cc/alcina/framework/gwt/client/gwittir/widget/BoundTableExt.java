@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
@@ -730,7 +731,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	 * Clears the table and cleans up all bindings and listeners.
 	 */
 	public void clear() {
-		for(SourcesPropertyChangeEvents spce:listenedToByCollectionChangeListener){
+		for (SourcesPropertyChangeEvents spce : listenedToByCollectionChangeListener) {
 			spce.removePropertyChangeListener(collectionPropertyChangeListener);
 		}
 		listenedToByCollectionChangeListener.clear();
@@ -1437,12 +1438,19 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 	}
 
+	public static class IncrementalRenderException extends RuntimeException {
+		public IncrementalRenderException(String message, Throwable cause) {
+			super(message, cause);
+		}
+	}
+
 	private void renderIncremental() {
 		getIncrementalRenderContainer().add(new RepeatingCommand() {
 			int state = 0;
 
 			@Override
 			public boolean execute() {
+				int rc = 0;
 				try {
 					RenderContext.get().pushContext(renderContext);
 					if (state == 0) {
@@ -1454,6 +1462,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					}
 					if (state == 1) {
 						renderRows(20);
+						rc += 20;
 						if (!rowIterator.hasNext()) {
 							state = 2;
 						}
@@ -1462,6 +1471,14 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 						renderBottom();
 					}
 					return state != 2;
+				} catch (Exception e) {
+					e.printStackTrace();
+					throw new IncrementalRenderException(CommonUtils.formatJ(
+							"Incremental render exception:"
+									+ "\nRow:%s\nTable html:\n%s\n",
+							rc,
+							CommonUtils.trimToWsChars(
+									BoundTableExt.this.toString(), 2000)), e);
 				} finally {
 					RenderContext.get().pop();
 				}

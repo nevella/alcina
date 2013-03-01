@@ -58,6 +58,7 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 		if (tasks.isEmpty()) {
 			return false;
 		}
+		boolean ok=false;
 		try {
 			long t1 = System.currentTimeMillis();
 			boolean result = tasks.get(0).execute();
@@ -74,9 +75,11 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 			if (!result) {
 				tasks.remove(0);
 			}
-		} catch (Exception e) {
-			cancel();
-			throw new WrappedRuntimeException(e);
+			ok=true;
+		} finally{
+			if(!ok){
+				cancel();
+			}
 		}
 		return !tasks.isEmpty();
 	}
