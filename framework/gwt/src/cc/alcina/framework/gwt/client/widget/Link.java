@@ -34,7 +34,7 @@ import com.totsp.gwittir.client.ui.HasEnabled;
  * @author Nick Reddel
  */
 public class Link<T> extends Widget implements HasHTML, HasEnabled,
-		HasClickHandlers,HasItem<T> {
+		HasClickHandlers, HasItem<T> {
 	protected Element anchorElem;
 
 	private T userObject;
@@ -68,10 +68,12 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	public Link(String text) {
 		this(text, false);
 	}
-	public Link(String text,AlcinaHistoryItem historyItem) {
+
+	public Link(String text, AlcinaHistoryItem historyItem) {
 		this(text, false);
-		setHref("#"+historyItem.toTokenString());
+		setHref("#" + historyItem.toTokenString());
 	}
+
 	public Link(String text, boolean asHTML) {
 		this();
 		if (asHTML) {
@@ -105,11 +107,13 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	public String getText() {
 		return DOM.getInnerText(anchorElem);
 	}
-	private boolean preventDefault=true;
+
+	private boolean preventDefault = true;
+
 	@Override
 	public void onBrowserEvent(Event event) {
 		if (DOM.eventGetType(event) == Event.ONCLICK) {
-			if (!WidgetUtils.isNewTabModifier()&&preventDefault) {
+			if (!WidgetUtils.isNewTabModifier() && preventDefault) {
 				DOM.eventPreventDefault(event);
 			}
 			if (enabled) {
@@ -137,7 +141,6 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	@Override
 	protected void onEnsureDebugId(String baseID) {
 		ensureDebugId(anchorElem, "", baseID);
-		ensureDebugId(getElement(), baseID, "wrapper");
 	}
 
 	public void setWordWrap(boolean wrap) {
