@@ -168,7 +168,6 @@
 	<!-- needed so gwt can see the compiled annotations, if any, from client source -->
 	<target name="compile-client" depends="compile">
 		<mkdir dir="${project.client.bin.dir}" />
-		<echo message="Client lib dir ${project.client.bin.dir}" />
 		<javac includeantruntime="false" debug="on" srcdir="${project.client.src.dir}" destdir="${project.client.bin.dir}">
 			<classpath>
 				<path refid="project.classpath" />

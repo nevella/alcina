@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.logic.reflection.jvm;
+package cc.alcina.framework.common.client.logic.reflection;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 

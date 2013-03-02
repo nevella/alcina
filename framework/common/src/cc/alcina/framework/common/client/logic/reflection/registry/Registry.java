@@ -270,7 +270,7 @@ public class Registry {
 		}
 		ImplementationType type = implementationTypeMap.get(registryPoint,
 				targetObjectClass);
-		Object obj = instantiateSingle(registryPoint, targetObjectClass);
+		Object obj = instantiateSingleOrNull(registryPoint, targetObjectClass);
 		type = type == null ? ImplementationType.MULTIPLE : type;
 		switch (type) {
 		case FACTORY:
