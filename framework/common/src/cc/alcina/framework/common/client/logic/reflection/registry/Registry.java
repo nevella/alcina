@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.registry.RegistryException;
+
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -144,14 +146,20 @@ public class Registry {
 			exactMap.put(registryPoint, targetObject, cached);
 		}
 		if (cached == Void.class && errorOnNull) {
-			throw new RuntimeException(CommonUtils.formatJ(
+			throw new NoImplementationException(CommonUtils.formatJ(
 					"Could not find lookup - %s:%s",
 					CommonUtils.classSimpleName(registryPoint),
 					CommonUtils.classSimpleName(targetObject)));
 		}
 		return cached;
 	}
+	public static class NoImplementationException extends RegistryException{
 
+		public NoImplementationException(String message) {
+			super(message);
+		}
+		
+	}
 	public void register(Class registeringClass, Class registryPoint) {
 		register(registeringClass, registryPoint, void.class,
 				ImplementationType.MULTIPLE, 10);
@@ -270,7 +278,7 @@ public class Registry {
 		}
 		ImplementationType type = implementationTypeMap.get(registryPoint,
 				targetObjectClass);
-		Object obj = instantiateSingleOrNull(registryPoint, targetObjectClass);
+		Object obj = instantiateSingle(registryPoint, targetObjectClass);
 		type = type == null ? ImplementationType.MULTIPLE : type;
 		switch (type) {
 		case FACTORY:
