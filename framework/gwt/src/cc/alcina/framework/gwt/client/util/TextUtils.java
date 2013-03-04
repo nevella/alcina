@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Position;
@@ -23,20 +24,24 @@ public class TextUtils {
 		return normaliseAndTrim(CommonUtils.nullToEmpty(key).toLowerCase());
 	}
 
+	public static native void setElementStyle(Element e, String css) /*-{
+		if (e.style && typeof (e.style.cssText)=="string") {
+			e.style.cssText = css;
+		} else {
+			e.style = css;
+		}
+	}-*/;
+
 	public static String trimToWidth(String s, String style, int pxWidth,
 			String ellipsis) {
-		if(pxWidth<=20){
+		if (pxWidth <= 20) {
 			return s;
 		}
 		ellipsis = ellipsis == null ? "\u2026" : ellipsis;
 		int r0 = 0;
 		int r1 = s.length();
 		Label l = new Label();
-		try {
-			l.getElement().setPropertyString("style", style);
-		} catch (Exception e) {
-			l.getElement().getStyle().setProperty("cssText", style);
-		}
+		setElementStyle(l.getElement(), style);
 		Style cStyle = l.getElement().getStyle();
 		cStyle.setPosition(Position.ABSOLUTE);
 		cStyle.setLeft(0, Unit.PX);

@@ -1404,6 +1404,9 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	@Override
 	protected void onDetach() {
 		super.onDetach();
+		if (incrementalRenderer != null) {
+			incrementalRenderer.cancel();
+		}
 		this.clear();
 		this.setActive(false);
 	}
@@ -1438,52 +1441,56 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 	}
 
-	public static class IncrementalRenderException extends RuntimeException {
-		public IncrementalRenderException(String message, Throwable cause) {
-			super(message, cause);
+	private class BoundTableExtIncrementalRenderer implements RepeatingCommand {
+		int state = 0;
+
+		protected boolean cancelled;
+
+		@Override
+		public boolean execute() {
+			int rc = 0;
+			if (cancelled) {
+				return false;
+			}
+			try {
+				RenderContext.get().pushContext(renderContext);
+				if (state == 0) {
+					if (!renderCheck()) {
+						return false;
+					}
+					renderTop();
+					state = 1;
+				}
+				if (state == 1) {
+					renderRows(20);
+					rc += 20;
+					if (!rowIterator.hasNext()) {
+						state = 2;
+					}
+				}
+				if (state == 2) {
+					renderBottom();
+				}
+				return state != 2;
+			} finally {
+				RenderContext.get().pop();
+			}
+		}
+
+		public void cancel() {
+			cancelled = true;
 		}
 	}
 
-	private void renderIncremental() {
-		getIncrementalRenderContainer().add(new RepeatingCommand() {
-			int state = 0;
 
-			@Override
-			public boolean execute() {
-				int rc = 0;
-				try {
-					RenderContext.get().pushContext(renderContext);
-					if (state == 0) {
-						if (!renderCheck()) {
-							return false;
-						}
-						renderTop();
-						state = 1;
-					}
-					if (state == 1) {
-						renderRows(20);
-						rc += 20;
-						if (!rowIterator.hasNext()) {
-							state = 2;
-						}
-					}
-					if (state == 2) {
-						renderBottom();
-					}
-					return state != 2;
-				} catch (Exception e) {
-					e.printStackTrace();
-					throw new IncrementalRenderException(CommonUtils.formatJ(
-							"Incremental render exception:"
-									+ "\nRow:%s\nTable html:\n%s\n",
-							rc,
-							CommonUtils.trimToWsChars(
-									BoundTableExt.this.toString(), 2000)), e);
-				} finally {
-					RenderContext.get().pop();
-				}
-			}
-		});
+	private BoundTableExtIncrementalRenderer incrementalRenderer;
+
+	private void renderIncremental() {
+		if (incrementalRenderer != null) {
+			incrementalRenderer.cancel();
+		}
+		incrementalRenderer = new BoundTableExtIncrementalRenderer();
+		getIncrementalRenderContainer().add(incrementalRenderer);
 	}
 
 	private void renderRows(int numberOfRows) {

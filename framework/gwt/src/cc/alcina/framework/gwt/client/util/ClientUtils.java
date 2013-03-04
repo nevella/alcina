@@ -97,33 +97,32 @@ public class ClientUtils {
 		}
 		if (css.length() != 0) {
 			try {
-				styleElement.setInnerText(css);
+				if (!setCssText(styleElement, css)) {
+					styleElement.setInnerText(css);
+				}
 			} catch (Exception e) {
-				// fall through to IE
-				try {
-					setCssTextIE(styleElement, css);
-					styleElement.setPropertyString(CSS_TEXT_PROPERTY, css);
-				} catch (Exception e1) {
-					if (BrowserMod.isInternetExplorer()) {
-						ClientLayerLocator
-								.get()
-								.notifications()
-								.showMessage(
-										"Sorry, this action is not supported "
-												+ "on some versions of Internet Explorer");
-					}
+				if (BrowserMod.isInternetExplorer()) {
+					ClientLayerLocator
+							.get()
+							.notifications()
+							.showMessage(
+									"Sorry, this action is not supported "
+											+ "on some versions of Internet Explorer");
 				}
 			}
 		}
 		return styleElement;
 	}
 
-	public static native void setCssTextIE(Element e, String css) /*-{
+	public static native boolean setCssText(Element e, String css) /*-{
 		if (e.styleSheet) {
 			e.styleSheet.cssText = css;
+			return true;
 		} else {
 			e.cssText = css;
+			return true;
 		}
+		return false;
 	}-*/;
 
 	private static void addHidden(Panel p, String key, String value) {

@@ -878,4 +878,17 @@ public class CommonUtils {
 		d.setYear(d.getYear() + m / 12);
 		return d;
 	}
+
+	private static LookupMapToMap<Enum> enumValueLookup = new LookupMapToMap<Enum>(
+			2);
+
+	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
+			String value) {
+		if (!enumValueLookup.containsKey(enumClass)) {
+			for (E ev : enumClass.getEnumConstants()) {
+				enumValueLookup.put(enumClass, ev.toString(), ev);
+			}
+		}
+		return (E) enumValueLookup.get(enumClass, value);
+	}
 }
