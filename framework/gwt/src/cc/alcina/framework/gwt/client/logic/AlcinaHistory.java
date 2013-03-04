@@ -104,6 +104,11 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 		return this.currentEvent;
 	}
 
+	public I getCurrentEventOrEmpty() {
+		return this.currentEvent != null ? this.currentEvent
+				: createHistoryInfo();
+	}
+
 	public I getLastEvent() {
 		return this.lastEvent;
 	}
