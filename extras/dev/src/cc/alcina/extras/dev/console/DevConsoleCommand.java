@@ -282,6 +282,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	}
 
 	public static class CmdExecRunnable extends DevConsoleCommand {
+		private DevConsoleRunnable r;
+
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "x" };
@@ -300,7 +302,11 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		public boolean rerunIfMostRecentOnRestart() {
 			return true;
 		}
-
+		
+		@Override
+		public boolean canUseProductionConn() {
+			return r.canUseProductionConn();
+		}
 		@Override
 		public String run(String[] argv) throws Exception {
 			List<Class> classes = Registry.get().lookup(
@@ -308,7 +314,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String runnableName = argv.length == 0 ? "" : argv[0];
 			for (Class clazz : classes) {
 				if (clazz.getSimpleName().equals(runnableName)) {
-					DevConsoleRunnable r = (DevConsoleRunnable) clazz
+					r = (DevConsoleRunnable) clazz
 							.newInstance();
 					r.console = console;
 					r.command = this;

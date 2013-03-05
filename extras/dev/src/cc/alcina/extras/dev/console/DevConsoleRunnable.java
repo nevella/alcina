@@ -44,4 +44,8 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 								outPath));
 		return outPath;
 	}
+
+	public boolean canUseProductionConn() {
+		return false;
+	}
 }
