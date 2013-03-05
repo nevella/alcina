@@ -257,16 +257,23 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 						+ getCommonPersistence()
 								.getImplementationSimpleClassName(IUser.class))
 				.getResultList();
-		G blankGroup = (G) getCommonPersistence().getNewImplementationInstance(
-				IGroup.class);
-		Set<U> usersNotInGroups = new LinkedHashSet<U>();
-		blankGroup.setMemberUsers(usersNotInGroups);
-		for (U ju : users) {
-			if (!usersInGroups.contains(ju)) {
-				usersNotInGroups.add(ju);
+		G blankGroup = createBlankGroup();
+		if (blankGroup != null && blankGroup.getName() != null) {
+			Set<U> usersNotInGroups = new LinkedHashSet<U>();
+			blankGroup.setMemberUsers(usersNotInGroups);
+			for (U ju : users) {
+				if (!usersInGroups.contains(ju)) {
+					usersNotInGroups.add(ju);
+				}
 			}
+			resultList.add(blankGroup);
 		}
 		return resultList;
+	}
+
+	protected G createBlankGroup() {
+		return (G) getCommonPersistence().getNewImplementationInstance(
+				IGroup.class);
 	}
 
 	public abstract Collection<G> getAllGroups();

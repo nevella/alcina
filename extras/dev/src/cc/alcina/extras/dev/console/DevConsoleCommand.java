@@ -64,21 +64,36 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			throw new CancelledException("Action cancelled");
 		}
 	}
+
 	protected void format(String format, Object... args) {
-		String out = String.format(format,args);
+		String out = String.format(format, args);
 		System.out.print(out);
 		commandOutputBuffer.append(out);
 	}
-	private StringBuilder commandOutputBuffer=new  StringBuilder();
-	public String dumpCommandOutputBuffer(){
+
+	private StringBuilder commandOutputBuffer = new StringBuilder();
+
+	public String dumpCommandOutputBuffer() {
 		return commandOutputBuffer.toString();
 	}
+
 	protected void println(String string) {
 		System.out.println(string);
 		commandOutputBuffer.append(string);
 		commandOutputBuffer.append("\n");
-		
 	};
+
+	public static class FilterArgvResult {
+		public boolean contains;
+
+		public String[] argv;
+
+		public FilterArgvResult(String[] argv, String flag) {
+			List<String> strs = new ArrayList<String>(Arrays.asList(argv));
+			this.contains = strs.remove(flag);
+			this.argv = (String[]) strs.toArray(new String[strs.size()]);
+		}
+	}
 
 	public boolean canUseProductionConn() {
 		return false;
@@ -118,7 +133,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				if (console.props.connection_useProduction
 						&& !console.props.connectionProductionTunnelCmd
 								.isEmpty()) {
-					ShellUtils.runShell(console.props.connectionProductionTunnelCmd);
+					ShellUtils
+							.runShell(console.props.connectionProductionTunnelCmd);
 					for (int i = 1; i < 15; i++) {
 						try {
 							System.out.format("opening tunnel ... %s ...\n", i);

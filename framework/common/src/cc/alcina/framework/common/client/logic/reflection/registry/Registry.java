@@ -123,7 +123,7 @@ public class Registry {
 				}
 			}
 		}
-		return result;
+		return CommonUtils.dedupe(result);
 	}
 
 	public List<Class> lookup(Class registryPoint) {

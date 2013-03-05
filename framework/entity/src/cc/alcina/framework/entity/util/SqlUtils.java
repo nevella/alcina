@@ -47,8 +47,15 @@ public class SqlUtils {
 
 	public static Set<Long> toIdList(Statement stmt, String sql,
 			String fieldName) throws SQLException {
+		return toIdList(stmt, sql, fieldName, true);
+	}
+
+	public static Set<Long> toIdList(Statement stmt, String sql,
+			String fieldName, boolean dumpQuerySql) throws SQLException {
 		MetricLogging.get().start("query");
-		System.out.println("Query: " + sql);
+		if (dumpQuerySql) {
+			System.out.println(sql);
+		}
 		ResultSet rs = stmt.executeQuery(sql);
 		Set<Long> result = toIdList(rs, fieldName);
 		rs.close();
