@@ -40,7 +40,6 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 	public static final String MIN_CUSTOMISER_WIDTH = "MIN_CUSTOMISER_WIDTH";
 
 	public static final String DEFAULT_SECTION_NAME = "DEFAULT_SECTION_NAME";
-	
 
 	private boolean useExpandableWidgets = true;
 
@@ -71,7 +70,7 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 									expandableWidgetWrapper.showExpanded(event
 											.getSelectedItem() == 0);
 									LayoutEvents.get()
-											.deferRequiresGlobalRelayout();
+											.fireDeferredGlobalRelayout();
 								}
 							}));
 					cellFormatter.setVerticalAlignment(level1Row,

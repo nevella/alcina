@@ -46,14 +46,13 @@ public class LayoutEvents {
 		fireLayoutEvent(new LayoutEvent(
 				LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 	}
+
 	public void fireDeferredGlobalRelayout() {
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			public void execute() {
-				fireLayoutEvent(new LayoutEvent(
-						LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
+				fireRequiresGlobalRelayout();
 			}
 		});
-		
 	}
 
 	public static class LayoutEvent {
@@ -103,13 +102,5 @@ public class LayoutEvents {
 		} finally {
 			firingEvents.remove(event.getEventType());
 		}
-	}
-
-	public void deferRequiresGlobalRelayout() {
-		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-			public void execute() {
-				fireRequiresGlobalRelayout();
-			}
-		});
 	}
 }
