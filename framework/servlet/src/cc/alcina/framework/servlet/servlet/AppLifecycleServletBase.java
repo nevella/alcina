@@ -79,7 +79,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				File propertiesListFile = SEUtilities.getChildFile(
 						propertiesFile.getParentFile(),
 						"alcina-properties-files.txt");
-				if (propertiesFile.exists()) {
+				if (propertiesListFile.exists()) {
 					String[] paths = ResourceUtilities.readFileToString(
 							propertiesListFile).split("\n");
 					for (String path : paths) {
