@@ -79,18 +79,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	protected AppPersistenceBase() {
 	}
 
-	protected void loadCustomProperties() {
-		try {
-			FileInputStream fis = new FileInputStream(AlcinaServerConfig.get()
-					.getCustomPropertiesFilePath());
-			ResourceUtilities.registerCustomProperties(fis);
-		} catch (FileNotFoundException fnfe) {
-			// no custom properties
-		}
-	}
-
 	protected void initNonDb() throws Exception {
-		loadCustomProperties();
 		initLoggers();
 		initServiceImpl();
 		scanRegistry();

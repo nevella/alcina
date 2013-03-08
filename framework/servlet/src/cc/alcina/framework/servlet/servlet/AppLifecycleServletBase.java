@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.servlet;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -22,6 +23,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -68,11 +70,28 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void loadCustomProperties() {
 		try {
-			FileInputStream fis = new FileInputStream(AlcinaServerConfig.get()
+			File propertiesFile = new File(AlcinaServerConfig.get()
 					.getCustomPropertiesFilePath());
-			ResourceUtilities.registerCustomProperties(fis);
+			if (propertiesFile.exists()) {
+				FileInputStream fis = new FileInputStream(propertiesFile);
+				ResourceUtilities.registerCustomProperties(fis);
+			} else {
+				File propertiesListFile = SEUtilities.getChildFile(
+						propertiesFile.getParentFile(),
+						"alcina-properties-files.txt");
+				if (propertiesFile.exists()) {
+					String[] paths = ResourceUtilities.readFileToString(
+							propertiesListFile).split("\n");
+					for (String path : paths) {
+						FileInputStream fis = new FileInputStream(path);
+						ResourceUtilities.registerCustomProperties(fis);
+					}
+				}
+			}
 		} catch (FileNotFoundException fnfe) {
 			// no custom properties
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 
