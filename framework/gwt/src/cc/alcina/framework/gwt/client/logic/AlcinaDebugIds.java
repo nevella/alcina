@@ -50,9 +50,11 @@ public class AlcinaDebugIds {
 
 	public static final String DEBUG_LOG_LOAD_METRICS = "d-load-metrics";
 
+	public static final String DEBUG_SUPPRESS_UI_EXCEPTION_NOTIFICATIONS = "d-suppress-ui-exceptions";
+
 	public static final List<String> DEBUG_IDS = new ArrayList(
 			Arrays.asList(new String[] { DEBUG_SIMULATE_OFFLINE,
-					DEBUG_LOG_LOAD_METRICS }));
+					DEBUG_LOG_LOAD_METRICS,DEBUG_SUPPRESS_UI_EXCEPTION_NOTIFICATIONS }));
 
 	static List<String> debugIdsMatched = new ArrayList<String>();
 
