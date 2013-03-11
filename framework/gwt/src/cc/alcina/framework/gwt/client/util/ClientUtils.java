@@ -97,7 +97,7 @@ public class ClientUtils {
 		}
 		if (css.length() != 0) {
 			try {
-				if (!setCssText(styleElement, css)) {
+				if (!setCssTextViaCssTextProperty(styleElement, css)) {
 					styleElement.setInnerText(css);
 				}
 			} catch (Exception e) {
@@ -114,15 +114,15 @@ public class ClientUtils {
 		return styleElement;
 	}
 
-	public static native boolean setCssText(Element e, String css) /*-{
-		if (e.styleSheet) {
-			e.styleSheet.cssText = css;
-			return true;
-		} else {
-			e.cssText = css;
+	public static native boolean setCssTextViaCssTextProperty(Element styleTag, String css) /*-{
+		var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+
+		if ('cssText' in sheet) { // Internet Explorer
+			sheet.cssText = css;
 			return true;
 		}
-		return false;
+
+		return false;//do innerText
 	}-*/;
 
 	private static void addHidden(Panel p, String key, String value) {

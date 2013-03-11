@@ -34,9 +34,9 @@ import com.totsp.gwittir.client.beans.Property;
  * 
  * @author Nick Reddel
  */
-public class ClientReflector implements ClassLookup {
+@ReflectionModule("Initial")
+public abstract class ClientReflector implements ClassLookup {
 	private static ClientReflector domainReflector;
-
 
 	/**
 	 * Because ClientReflector is used from server code as well (via
@@ -56,16 +56,27 @@ public class ClientReflector implements ClassLookup {
 	}
 
 	public static void register(ClientReflector r) {
+		System.out.println(r.getClass().getName());
 		domainReflector = r;
 	}
 
 	protected Map<Class, ClientBeanReflector> gwbiMap = new HashMap<Class, ClientBeanReflector>();
 
-	protected ClassLookup child = null;
+	private List<ClientReflector> reflectors = new ArrayList<ClientReflector>();
+
+	public void registerChild(ClientReflector child) {
+		reflectors.add(0, child);
+		gwbiMap.putAll(child.gwbiMap);
+		forNameMap.putAll(child.forNameMap);
+	}
 
 	private Map<Class, Object> templateInstances = new HashMap<Class, Object>();
 
 	public ClientReflector() {
+		{
+			forNameMap.putAll(CommonUtils.stdAndPrimitivesMap);
+		}
+		reflectors.add(this);
 	}
 
 	public ClientBeanReflector beanInfoForClass(Class clazz) {
@@ -140,20 +151,20 @@ public class ClientReflector implements ClassLookup {
 
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-		throw new RuntimeException("Operation not implemented");
+		for (ClientReflector reflector : reflectors) {
+			T instance = reflector.newInstance0(clazz, objectId, localId);
+			if (instance != null) {
+				return instance;
+			}
+		}
+		throw new RuntimeException("Class " + clazz
+				+ " not reflect-instantiable");
 	}
 
-	public void registerWithParent(ClientReflector parent) {
-		parent.child = this;
-		for (Class c : gwbiMap.keySet()) {
-			parent.gwbiMap.put(c, gwbiMap.get(c));
-		}
-	}
+	protected abstract <T> T newInstance0(Class<T> clazz, long objectId,
+			long localId);
 
 	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
-	{
-		forNameMap.putAll(CommonUtils.stdAndPrimitivesMap);
-	}
 
 	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
 		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();

@@ -24,7 +24,7 @@ import com.google.gwt.core.client.GwtScriptOnly;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 /**
- *
+ * never actually used, but means we don't have to do weird s**t for the hosted-mode version
  */
 @GwtScriptOnly
 public class ClientReflectorJvm extends ClientReflector {
@@ -40,7 +40,11 @@ public class ClientReflectorJvm extends ClientReflector {
 	public Class getClassForName(String fqn) {
 		return null;
 	}
-
+	@Override
+	protected <T> T newInstance0(Class<T> clazz, long objectId, long localId) {
+		//not called
+		return null;
+	}
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		return null;

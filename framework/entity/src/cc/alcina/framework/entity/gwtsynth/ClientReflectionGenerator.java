@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -65,12 +66,10 @@ import com.totsp.gwittir.rebind.beans.IntrospectorFilter.IntrospectorFilterHelpe
  * of usages of JVM vs GWT reflection - 
  * it does, however, work, it's acceptably fast, it can be beautified later
  * 
+ * -- update, pretty sure all usages of class changed to jclasstype where appropriate...
  * @author Nick Reddel
  */
 public class ClientReflectionGenerator extends Generator {
-	private String implementationName = ClientReflector.class.getSimpleName()
-			+ "_Impl";
-
 	private String packageName = ClientReflector.class.getCanonicalName()
 			.substring(0,
 					ClientReflector.class.getCanonicalName().lastIndexOf("."));
@@ -83,41 +82,51 @@ public class ClientReflectionGenerator extends Generator {
 
 	private ArrayList<Class<? extends Annotation>> visibleAnnotationClasses;
 
-	private GeneratorContext context;
-
 	public SourceWriter getSw() {
 		return this.sw;
 	}
 
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
-		this.context = context;
+		filter = IntrospectorFilterHelper.getFilter(context);
 		// System.out.println("ClientReflector generation...");
-		PrintWriter printWriter = context.tryCreate(logger, packageName,
-				implementationName);
-		if (printWriter == null) {
-			// System.out.println("Reflector generate skipped.");
-			return packageName + "." + implementationName;
-		}
 		long start = System.currentTimeMillis();
 		Map<Class, String> ann2impl = new HashMap<Class, String>();
 		Map<String, String> simpleNameCheck = new HashMap<String, String>();
-		ClassSourceFileComposerFactory crf = null;
-		crf = new ClassSourceFileComposerFactory(this.packageName,
-				this.implementationName);
-		crf.addImport(HashMap.class.getName());
-		crf.addImport(Map.class.getName());
-		crf.addImport(GWT.class.getName());
-		crf.addImport(Registry.class.getName());
-		crf.addImport(Annotation.class.getName());
-		crf.setSuperclass(ClientReflector.class.getName());
-		crf.addImport(ClientBeanReflector.class.getName());
-		crf.addImport(ClientPropertyReflector.class.getName());
-		crf.addImport(ClientReflector.class.getName());
-		crf.addImport(RegistryLocation.class.getName());
-		ctLookup.clear();
-		// scan for reflectable annotations etc
 		try {
+			ClassSourceFileComposerFactory crf = null;
+			// scan for reflectable annotations etc
+			String superClassName = null;
+			JClassType intrType = context.getTypeOracle().getType(typeName);
+			if (intrType.isInterface() != null) {
+				intrType = context.getTypeOracle().getType(
+						ClientReflector.class.getName());
+			}
+			ReflectionModule module = intrType
+					.getAnnotation(ReflectionModule.class);
+			String moduleName = module.value();
+			filter.setModuleName(moduleName);
+			String implementationName = String.format(
+					"ClientReflector_%s_Impl", moduleName);
+			superClassName = intrType.getQualifiedSourceName();
+			crf = new ClassSourceFileComposerFactory(this.packageName,
+					implementationName);
+			PrintWriter printWriter = context.tryCreate(logger, packageName,
+					implementationName);
+			if (printWriter == null) {
+				return packageName + "." + implementationName;
+			}
+			crf.addImport(HashMap.class.getName());
+			crf.addImport(Map.class.getName());
+			crf.addImport(GWT.class.getName());
+			crf.addImport(Registry.class.getName());
+			crf.addImport(Annotation.class.getName());
+			crf.setSuperclass(superClassName);
+			crf.addImport(ClientBeanReflector.class.getName());
+			crf.addImport(ClientPropertyReflector.class.getName());
+			crf.addImport(ClientReflector.class.getName());
+			crf.addImport(RegistryLocation.class.getName());
+			ctLookup.clear();
 			visibleAnnotationClasses = new ArrayList<Class<? extends Annotation>>();
 			List<JAnnotationType> jAnns = this.getClientVisibleAnnotations(
 					logger, context.getTypeOracle());
@@ -128,41 +137,31 @@ public class ClientReflectionGenerator extends Generator {
 										.getQualifiedBinaryName()));
 			}
 			visibleAnnotationClasses.add(Omit.class);
-			IntrospectorFilter filter = getFilter();
-			if (filter != null) {
-				filter.filterAnnotations(jAnns, visibleAnnotationClasses);
-			}
-			writeAnnotations(logger, context, jAnns, crf);
+			filter.filterAnnotations(jAnns, visibleAnnotationClasses);
+			writeAnnotations(logger, context, jAnns, crf,
+					moduleName.equals(ReflectionModule.INITIAL));
 			List<JClassType> beanInfoTypes = this.getBeanInfoTypes(logger,
 					context.getTypeOracle(), crf);
 			List<JClassType> instantiableTypes = this.getInstantiableTypes(
 					logger, context.getTypeOracle(), crf);
 			Map<JClassType, Set<RegistryLocation>> gwtRegisteringClasses = getRegistryAnnotations(context
 					.getTypeOracle());
-			if (filter != null) {
-				filter.filterReflectionInfo(beanInfoTypes, instantiableTypes,
-						gwtRegisteringClasses);
-			}
+			filter.filterReflectionInfo(beanInfoTypes, instantiableTypes,
+					gwtRegisteringClasses);
 			SourceWriter srcW = createWriter(crf, printWriter);
 			procDomain(beanInfoTypes, instantiableTypes, srcW,
 					gwtRegisteringClasses, implementationName);
 			commit(context, logger, printWriter);
-			System.out.println(String.format(
-					"Client reflection generation %s - "
-							+ "%s annotations, %s beans, "
-							+ "%s instantiable types - %s ms",
-					filter == null ? "[filtered]" : "", jAnns.size(),
+			System.out.println(String.format("Client reflection generation  - "
+					+ "%s annotations, %s beans, "
+					+ "%s instantiable types - %s ms", jAnns.size(),
 					beanInfoTypes.size(), instantiableTypes.size(),
 					System.currentTimeMillis() - start));
+			return packageName + "." + implementationName;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
-		return packageName + "." + implementationName;
-	}
-
-	IntrospectorFilter getFilter() {
-		return IntrospectorFilterHelper.getFilter(context);
 	}
 
 	Map<Class, JClassType> ctLookup = new HashMap<Class, JClassType>();
@@ -207,7 +206,8 @@ public class ClientReflectionGenerator extends Generator {
 
 	private boolean ignore(JClassType jClassType) {
 		return (jClassType.isAbstract() && jClassType.isEnum() == null)
-				|| (jClassType.isInterface() != null) || !jClassType.isPublic();
+				|| (jClassType.isInterface() != null) || !jClassType.isPublic()
+				|| filter.omitForModule(jClassType);
 	}
 
 	private List<JClassType> getInstantiableTypes(TreeLogger logger,
@@ -246,8 +246,8 @@ public class ClientReflectionGenerator extends Generator {
 	}
 
 	private void writeAnnotations(TreeLogger logger, GeneratorContext context,
-			List<JAnnotationType> jAnns, ClassSourceFileComposerFactory crf)
-			throws Exception {
+			List<JAnnotationType> jAnns, ClassSourceFileComposerFactory crf,
+			boolean initial) throws Exception {
 		for (JAnnotationType type : jAnns) {
 			Class<? extends Annotation> annClass = forName(type);
 			String implementationName = type.getName() + "_Impl";
@@ -274,39 +274,43 @@ public class ClientReflectionGenerator extends Generator {
 			}
 			PrintWriter printWriter = context.tryCreate(logger, packageName,
 					implementationName);
-			SourceWriter sw = createWriter(annf, printWriter);
-			for (Method method : declaredMethods) {
-				Class<?> returnType = method.getReturnType();
-				String rn = returnType.getSimpleName();
-				String mn = method.getName();
-				sw.println(String.format("private %s %s;", rn, mn));
-				sw.println(String.format("public %s %s(){return %s;}", rn, mn,
-						mn));
-				if (!first) {
-					constrParams.append(", ");
+			// if calling from a non-initial module, we just want to add imports
+			// without rewriting (indeed, we can't...) the annotation impls
+			if (printWriter != null) {
+				SourceWriter sw = createWriter(annf, printWriter);
+				for (Method method : declaredMethods) {
+					Class<?> returnType = method.getReturnType();
+					String rn = returnType.getSimpleName();
+					String mn = method.getName();
+					sw.println(String.format("private %s %s;", rn, mn));
+					sw.println(String.format("public %s %s(){return %s;}", rn,
+							mn, mn));
+					if (!first) {
+						constrParams.append(", ");
+					}
+					constrParams.append(rn + " " + mn);
+					constrLines.add(String.format("this.%s = %s;", mn, mn));
+					first = false;
+					sw.println();
 				}
-				constrParams.append(rn + " " + mn);
-				constrLines.add(String.format("this.%s = %s;", mn, mn));
-				first = false;
 				sw.println();
+				sw.println("public Class<? extends Annotation> annotationType() {");
+				sw.indentln(String.format("return %s.class;",
+						annClass.getSimpleName()));
+				sw.println("}");
+				sw.println();
+				sw.println(String.format("public %s (%s){", implementationName,
+						constrParams));
+				sw.indent();
+				for (String s : constrLines) {
+					sw.println(s);
+				}
+				sw.outdent();
+				sw.println("}");
+				sw.outdent();
+				sw.println("}");
+				commit(context, logger, printWriter);
 			}
-			sw.println();
-			sw.println("public Class<? extends Annotation> annotationType() {");
-			sw.indentln(String.format("return %s.class;",
-					annClass.getSimpleName()));
-			sw.println("}");
-			sw.println();
-			sw.println(String.format("public %s (%s){", implementationName,
-					constrParams));
-			sw.indent();
-			for (String s : constrLines) {
-				sw.println(s);
-			}
-			sw.outdent();
-			sw.println("}");
-			sw.outdent();
-			sw.println("}");
-			commit(context, logger, printWriter);
 		}
 	}
 
@@ -356,12 +360,10 @@ public class ClientReflectionGenerator extends Generator {
 			Map<JClassType, Set<RegistryLocation>> gwtRegisteringClasses,
 			String implName) throws Exception {
 		sw.indent();
-		sw.println("Map<Class, ClientBeanReflector> gwbiMap = new HashMap<Class, ClientBeanReflector>();");
 		sw.println(String.format("public %s() {", implName));
 		sw.indent();
 		sw.println("super();");
 		sw.println("init();");
-		sw.println("ClientReflector.register(this);");
 		sw.outdent();
 		sw.println("}");
 		sw.println("public ClientBeanReflector beanInfoForClass(Class clazz) {");
@@ -372,7 +374,7 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println();
 		sw.println();
 		sw.println("@Override");
-		sw.println("public <T> T newInstance(Class<T> clazz, long objectId, long localId) {");
+		sw.println("protected <T> T newInstance0(Class<T> clazz, long objectId, long localId) {");
 		sw.indent();
 		for (JClassType c : beanInfoTypes) {
 			sw.println(String
@@ -387,8 +389,7 @@ public class ClientReflectionGenerator extends Generator {
 					.format("if (clazz.equals(%s.class)){return (T)GWT.create(%s.class);} ",
 							c.getSimpleSourceName(), c.getSimpleSourceName()));
 		}
-		sw.println("if (child!=null){return child.newInstance(clazz,objectId,localId);}");
-		sw.println("throw new RuntimeException(\"Class \"+clazz+\" not reflect-instantiable\");");
+		sw.println("return null;");
 		sw.outdent();
 		sw.println("}");
 		sw.println();
@@ -635,6 +636,8 @@ public class ClientReflectionGenerator extends Generator {
 
 	private LookupMapToMap<Set<Annotation>> superAnnotationMap = new LookupMapToMap<Set<Annotation>>(
 			2);
+
+	private IntrospectorFilter filter;
 
 	public Set<Annotation> getClassAnnotations(JClassType clazz,
 			List<Class<? extends Annotation>> annotationClasses) {

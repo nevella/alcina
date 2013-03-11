@@ -34,6 +34,8 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.TreeLogger;
@@ -47,7 +49,7 @@ import com.google.gwt.core.ext.typeinfo.NotFoundException;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
-import com.totsp.gwittir.client.beans.SelfDescribed;
+import com.totsp.gwittir.client.beans.TreeIntrospector;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilter.IntrospectorFilterHelper;
 
@@ -58,8 +60,9 @@ import com.totsp.gwittir.rebind.beans.IntrospectorFilter.IntrospectorFilterHelpe
  */
 @SuppressWarnings({ "deprecation", "unused" })
 public class IntrospectorGenerator extends Generator {
-	private String implementationName = com.totsp.gwittir.client.beans.Introspector.class
-			.getSimpleName() + "_Impl";
+	private String implementationName;
+
+	
 
 	private String packageName = com.totsp.gwittir.client.beans.Introspector.class
 			.getCanonicalName().substring(
@@ -67,13 +70,15 @@ public class IntrospectorGenerator extends Generator {
 					com.totsp.gwittir.client.beans.Introspector.class
 							.getCanonicalName().lastIndexOf("."));
 
-	private String methodsImplementationName = "MethodsList";
+	private String methodsImplementationName;
 
 	private JType objectType = null;
 
 	private Map<MethodWrapper, Integer> methodWrapperLookup;
 
 	private GeneratorContext context;
+
+	private IntrospectorFilter filter;
 
 	/** Creates a new instance of IntrospectorGenerator */
 	public IntrospectorGenerator() {
@@ -183,11 +188,25 @@ public class IntrospectorGenerator extends Generator {
 
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
+		filter = IntrospectorFilterHelper.getFilter(context);
 		this.context = context;
 		// .println("Introspector Generate.");
+		String superClassName = null;
 		try {
 			this.objectType = context.getTypeOracle().getType(
 					"java.lang.Object");
+			JClassType intrType = context.getTypeOracle().getType(typeName);
+			if(intrType.isInterface()!=null){
+				intrType=context.getTypeOracle().getType(TreeIntrospector.class.getName());
+			}
+			ReflectionModule module = intrType
+					.getAnnotation(ReflectionModule.class);
+			filter.setModuleName(module.value());
+			this.methodsImplementationName = String.format("%s_%s",
+					"MethodsList", module.value());
+			this.implementationName = String.format("Introspector_impl_%s",
+					module.value());
+			superClassName=intrType.getQualifiedSourceName();
 		} catch (NotFoundException ex) {
 			logger.log(TreeLogger.ERROR, typeName, ex);
 			return null;
@@ -210,7 +229,7 @@ public class IntrospectorGenerator extends Generator {
 		}
 		ClassSourceFileComposerFactory cfcf = new ClassSourceFileComposerFactory(
 				this.packageName, this.implementationName);
-		cfcf.addImplementedInterface(typeName);
+		cfcf.setSuperclass(superClassName);
 		cfcf.addImport("java.util.HashMap");
 		cfcf.addImport(com.totsp.gwittir.client.beans.Method.class
 				.getCanonicalName());
@@ -227,32 +246,10 @@ public class IntrospectorGenerator extends Generator {
 		SourceWriter writer = cfcf.createSourceWriter(context, printWriter);
 		this.writeIntrospectables(logger, introspectables, methods, writer);
 		this.writeResolver(introspectables, writer);
-		writer.println("private HashMap<Class,BeanDescriptor> beanDescriptorLookup = new HashMap<Class,BeanDescriptor>();");
 		writer.println();
-		writer.println("public BeanDescriptor getDescriptor( Object object ){ ");
-		writer.indent();
-		writer.println("if( object == null ) throw new NullPointerException(\"Attempt to introspect null object\");");
-		writer.println("BeanDescriptor descriptor = beanDescriptorLookup.get(object.getClass());");
-		writer.println("if (descriptor!=null){");
-		writer.indentln("return descriptor;");
-		writer.outdent();
-		writer.println("}");
-		writer.println("if( object instanceof "
-				+ SelfDescribed.class.getCanonicalName()
-				+ " ) return ((SelfDescribed)object).__descriptor();");
-		writer.println("descriptor=_getDescriptor(object);");
-		writer.println("beanDescriptorLookup.put(object.getClass(),descriptor);");
-		writer.println("return descriptor;");
-		writer.outdent();
-		writer.println("}");
-		writer.println("private BeanDescriptor _getDescriptor( Object object ){ ");
-		System.out.println("patched IG");
+		writer.println("protected BeanDescriptor getDescriptor0( Object object ){ ");
 		writer.indent();
 		for (BeanResolver resolver : introspectables) {
-			// clNames.add(resolver.getType().getQualifiedSourceName());
-			// if (ignore(resolver)) {
-			// continue;
-			// }
 			writer.println("if( object instanceof "
 					+ resolver.getType().getQualifiedSourceName() + " ) {");
 			writer.indent();
@@ -265,7 +262,7 @@ public class IntrospectorGenerator extends Generator {
 			writer.outdent();
 			writer.println("}");
 		}
-		writer.println(" throw new IllegalArgumentException(\"Unknown type\" + object.getClass() ); ");
+		writer.println(" return null; ");
 		writer.outdent();
 		writer.println("}");
 		writer.outdent();
@@ -275,21 +272,6 @@ public class IntrospectorGenerator extends Generator {
 		return packageName + "." + implementationName;
 	}
 
-	// private String[] ignorePkgs = {
-	// "au.com.barnet.jade.cs.trans.othersearch",
-	// "au.com.barnet.jade.cs.csobjects.action",
-	// "au.com.barnet.jade.client.widgets.panel",
-	// "com.totsp.gwittir.client.fx", "com.totsp.gwittir.client.jsni" };
-	//
-	// private boolean ignore(BeanResolver resolver) {
-	// String sn = resolver.getType().getQualifiedSourceName();
-	// for (String p : ignorePkgs) {
-	// if (sn.startsWith(p)) {
-	// return true;
-	// }
-	// }
-	// return false;
-	// }
 	protected List<BeanResolver> getIntrospectableTypes(TreeLogger logger,
 			TypeOracle oracle) {
 		ArrayList<BeanResolver> results = new ArrayList<BeanResolver>();
@@ -302,23 +284,14 @@ public class IntrospectorGenerator extends Generator {
 					.getType(com.totsp.gwittir.client.beans.Introspectable.class
 							.getCanonicalName());
 			for (JClassType type : types) {
-				// if(type.getQualifiedSourceName().endsWith("gwittir.client.ui.TextBox")){
-				// logger.log(
-				// TreeLogger.WARN,
-				// type.getQualifiedSourceName() + " is assignable to " +
-				// introspectable + " " +
-				// type.isAssignableTo(introspectable) + " isInterface = " +
-				// type.isInterface() +
-				// "isIntrospectable = "+isIntrospectable(logger,type),
-				// null
-				// );
-				// }
 				if (!found.contains(type.getQualifiedSourceName())
 						&& (isIntrospectable(logger, type) || type
 								.isAssignableTo(introspectable))
 						&& (type.isInterface() == null)) {
 					found.add(type.getQualifiedSourceName());
-					resolvers.add(new BeanResolver(logger, type));
+					BeanResolver resolver = new BeanResolver(logger, type);
+					filter.filterProperties(resolver);
+					resolvers.add(resolver);
 				}
 			}
 			// Do a crazy assed sort to make sure least
@@ -348,13 +321,7 @@ public class IntrospectorGenerator extends Generator {
 			logger.log(TreeLogger.ERROR,
 					"Unable to finad Introspectable types.", e);
 		}
-		// for(BeanResolver rs:results){
-		// logger.log(TreeLogger.ERROR, rs.toString());
-		// }
-		IntrospectorFilter filter = IntrospectorFilterHelper.getFilter(context);
-		if (filter != null) {
-			filter.filterIntrospectorResults(results);
-		}
+		filter.filterIntrospectorResults(results);
 		System.out
 				.println("Found " + results.size() + " introspectable types.");
 		return results;
@@ -617,17 +584,7 @@ public class IntrospectorGenerator extends Generator {
 	}
 
 	private void writeResolver(List introspectables, SourceWriter writer) {
-		writer.println("public Class resolveClass(Object object){");
-		writer.indent();
-		for (Iterator it = introspectables.iterator(); it.hasNext();) {
-			BeanResolver type = (BeanResolver) it.next();
-			writer.println("if( object instanceof "
-					+ type.getType().getQualifiedSourceName() + " ) return "
-					+ type.getType().getQualifiedSourceName() + ".class;");
-		}
-		writer.println("throw new RuntimeException( \"Object \"+object+\"could not be resolved.\" );");
-		writer.outdent();
-		writer.println("}");
+		// now does nothing
 	}
 
 	private JType resolveType(final JType type) {

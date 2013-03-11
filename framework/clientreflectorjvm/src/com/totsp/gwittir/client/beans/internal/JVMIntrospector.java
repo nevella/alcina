@@ -10,6 +10,7 @@ import java.util.HashMap;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -20,9 +21,9 @@ import com.totsp.gwittir.client.beans.SelfDescribed;
 
 /**
  * 
- * @author kebernet
+ * @author nreddel
+ * NOTE: registery registration in the constructor - may want to bypass this for testing 
  */
-@RegistryLocation(registryPoint = BeanDescriptorProvider.class, priority = 20, implementationType = ImplementationType.INSTANCE)
 public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
 
@@ -45,6 +46,11 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 
 	public Class resolveClass(Object instance) {
 		return instance.getClass();
+	}
+
+	public JVMIntrospector() {
+		Registry.get().register(getClass(), BeanDescriptorProvider.class,
+				void.class, ImplementationType.INSTANCE, 20);
 	}
 
 	private static class ReflectionBeanDescriptor implements BeanDescriptor {
