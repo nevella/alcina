@@ -100,7 +100,7 @@ public interface IntrospectorFilter {
 
 	public static abstract class IntrospectorFilterBase implements
 			IntrospectorFilter {
-		private String moduleName;
+		private String moduleName="";
 
 		private Map<JClassType, Boolean> implBoundWidgetMap = new LinkedHashMap<JClassType, Boolean>();
 
