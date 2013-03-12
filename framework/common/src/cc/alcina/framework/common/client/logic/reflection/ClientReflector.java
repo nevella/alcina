@@ -56,7 +56,6 @@ public abstract class ClientReflector implements ClassLookup {
 	}
 
 	public static void register(ClientReflector r) {
-		System.out.println(r.getClass().getName());
 		domainReflector = r;
 	}
 
