@@ -211,6 +211,12 @@ public class IntrospectorGenerator extends Generator {
 			logger.log(TreeLogger.ERROR, typeName, ex);
 			return null;
 		}
+		PrintWriter printWriter = context.tryCreate(logger, packageName,
+				implementationName);
+		if (printWriter == null) {
+			// .println( "Introspector Generate skipped.");
+			return packageName + "." + implementationName;
+		}
 		List<BeanResolver> introspectables = this.getIntrospectableTypes(
 				logger, context.getTypeOracle());
 		MethodWrapper[] methods = this.findMethods(logger, introspectables);
@@ -237,12 +243,7 @@ public class IntrospectorGenerator extends Generator {
 				.getCanonicalName());
 		cfcf.addImport(com.totsp.gwittir.client.beans.BeanDescriptor.class
 				.getCanonicalName());
-		PrintWriter printWriter = context.tryCreate(logger, packageName,
-				implementationName);
-		if (printWriter == null) {
-			// .println( "Introspector Generate skipped.");
-			return packageName + "." + implementationName;
-		}
+		
 		SourceWriter writer = cfcf.createSourceWriter(context, printWriter);
 		this.writeIntrospectables(logger, introspectables, methods, writer);
 		this.writeResolver(introspectables, writer);
@@ -268,6 +269,7 @@ public class IntrospectorGenerator extends Generator {
 		writer.outdent();
 		writer.println("}");
 		context.commit(logger, printWriter);
+		filter.generationComplete();
 		// .println( "Introspector Generate completed.");
 		return packageName + "." + implementationName;
 	}
@@ -319,7 +321,7 @@ public class IntrospectorGenerator extends Generator {
 			// System.out.println();
 		} catch (Exception e) {
 			logger.log(TreeLogger.ERROR,
-					"Unable to finad Introspectable types.", e);
+					"Unable to find Introspectable types.", e);
 		}
 		filter.filterIntrospectorResults(results);
 		System.out

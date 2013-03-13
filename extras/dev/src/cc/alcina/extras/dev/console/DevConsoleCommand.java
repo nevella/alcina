@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -58,7 +57,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public void cancel() {
 		cancelled = true;
 	}
-
 	public void checkCancelled() {
 		if (cancelled) {
 			throw new CancelledException("Action cancelled");

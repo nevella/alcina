@@ -23,12 +23,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Target({ ElementType.TYPE })
-@ClientVisible
 /**
  *
  * @author Nick Reddel
  */
 public @interface ReflectionModule {
 	public static final String INITIAL = "Initial";
+	public static final String LEFTOVER = "Leftover";
 	public String value();
 }

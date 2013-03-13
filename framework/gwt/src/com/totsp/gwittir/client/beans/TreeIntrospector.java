@@ -6,7 +6,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 
-@ReflectionModule("Initial")
+@ReflectionModule(ReflectionModule.INITIAL)
 public abstract class TreeIntrospector implements Introspector {
 	private HashMap<Class, BeanDescriptor> beanDescriptorLookup = new HashMap<Class, BeanDescriptor>();
 

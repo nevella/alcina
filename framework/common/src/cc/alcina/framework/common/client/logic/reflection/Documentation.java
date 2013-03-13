@@ -6,7 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@ClientVisible
 
 public @interface Documentation {
 	public String value();

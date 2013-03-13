@@ -157,6 +157,7 @@ public class ClientReflectionGenerator extends Generator {
 					+ "%s instantiable types - %s ms", jAnns.size(),
 					beanInfoTypes.size(), instantiableTypes.size(),
 					System.currentTimeMillis() - start));
+			filter.generationComplete();
 			return packageName + "." + implementationName;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -177,12 +178,9 @@ public class ClientReflectionGenerator extends Generator {
 		HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jct : types) {
-			if (ignore(jct)) {
-				continue;
-			}
 			if ((jct.isAnnotationPresent(RegistryLocation.class) || jct
 					.isAnnotationPresent(RegistryLocations.class))
-					&& !jct.isAbstract()) {
+					&& !ignore(jct) && !jct.isAbstract()) {
 				Set<RegistryLocation> rls = getClassAnnotations(jct,
 						RegistryLocation.class);
 				Set<RegistryLocations> rlsSet = getClassAnnotations(jct,
