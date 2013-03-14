@@ -129,11 +129,18 @@ public class ModuleIntrospectionHelper {
 		case PER_CLASS_FORGIVING:
 			ModuleIntrospectionHelper.ModuleIntrospectionClassInfo classInfo = info
 					.getInfo(type.getQualifiedSourceName(), true);
-			if (classInfo.modules.isEmpty()
+			Set<String> modules = classInfo.modules;
+			if (modules.isEmpty()
 					&& info.mode == ModuleIntrospectionHelper.ModuleIntrospectionMode.PER_CLASS_FORGIVING) {
 				return !filter.getModuleName().equals(ReflectionModule.INITIAL);
 			} else {
-				return !classInfo.modules.contains(filter.getModuleName());
+				if(modules.contains(ReflectionModule.INITIAL)){
+					return !filter.getModuleName().equals(ReflectionModule.INITIAL);
+				}
+				if(modules.size()>1){
+					return !filter.getModuleName().equals(ReflectionModule.LEFTOVER);
+				}
+				return !modules.contains(filter.getModuleName());
 			}
 		}
 		return true;

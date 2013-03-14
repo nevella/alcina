@@ -23,7 +23,7 @@ public class IntrospectorFactory {
 
 
     public static Introspector create(){
-        if(!ReflectionConstants.useJvmIntrospector()){
+        if(GWT.isScript()){
             GWT.log("Using generated introspector.", null);
             System.out.println("Using generated introspector");
             return GWT.create(Introspector.class);

@@ -332,8 +332,9 @@ public class PersistenceStateHandlers {
 						if (!e.getId().isEmpty()) {
 							parts.add("#" + e.getId());
 						}
-						if (!e.getClassName().isEmpty()) {
-							parts.add("." + e.getClassName());
+						String cn = getClassName(e);
+						if (!cn.isEmpty()) {
+							parts.add("." + cn);
 						}
 						tags.add(CommonUtils.join(parts, ""));
 						e = e.getParentElement();
@@ -346,6 +347,22 @@ public class PersistenceStateHandlers {
 				}
 			}
 		}
+
+		final native String getClassName(Element elt) /*-{
+			var cn = elt.className;
+			//note - someone says IE DOM objects don't support - hence try/catch
+			try {
+				if (cn.hasOwnProperty("baseVal")) {
+					cn = cn.baseVal;
+				}
+				if ((typeof cn).toLowerCase() != "string") {
+					debugger;
+				}
+			} catch (e) {
+				return "";
+			}
+			return cn;
+		}-*/;
 
 		public void unload() {
 			AlcinaTopics.logCategorisedMessageListenerDelta(LogStore.get()
