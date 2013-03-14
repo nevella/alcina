@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
-@RegistryLocation(registryPoint = DTRProtocolHandler.class, j2seOnly = false)
+@RegistryLocation(registryPoint = DTRProtocolHandler.class)
 @ClientInstantiable
 public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {
 	private static final String START_OF_STRING_TABLE = "str:\n";

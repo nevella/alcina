@@ -624,7 +624,7 @@ public class WidgetUtils {
 	public static void ensureNodeDebugIds(TreeItem root, final String prefix) {
 		TreeNodeWalker tnw = new TreeNodeWalker();
 		tnw.walk(root, new Callback<TreeItem>() {
-			public void callback(TreeItem target) {
+			public void apply(TreeItem target) {
 				target.ensureDebugId(prefix);
 			}
 		});

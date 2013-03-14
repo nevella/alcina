@@ -112,7 +112,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 					sb.append(new DTRSimpleSerialSerializer().write(wrapper));
 					sb.append("\n");
 				}
-				callback.callback(sb.toString());
+				callback.apply(sb.toString());
 			}
 		};
 		getTransforms(DomainTransformRequestType.values(), transformCallback);
@@ -134,7 +134,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	public void handleUncommittedTransformsOnLoad(final Callback cb) {
 		if (!isLocalStorageInstalled()) {
-			cb.callback(null);
+			cb.apply(null);
 			return;
 		}
 		PersistenceCallbackStd<List<DTRSimpleSerialWrapper>> pcb1 = new PersistenceCallbackStd<List<DTRSimpleSerialWrapper>>() {
@@ -155,7 +155,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 					persistOfflineTransforms(uncommitted, notifier, callback);
 					return;
 				} else {
-					cb.callback(null);
+					cb.apply(null);
 				}
 			}
 		};
@@ -591,7 +591,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				if (loadIterator.hasNext()) {
 					localTransformPersistence.persist(loadIterator.next(), pcb);
 				} else {
-					callback.callback(null);
+					callback.apply(null);
 				}
 			}
 		}
@@ -678,7 +678,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				public void onSuccess(Object result) {
 					ClientLayerLocator.get().notifications()
 							.notifyOfCompletedSaveFromOffline();
-					cb.callback(null);
+					cb.apply(null);
 				}
 			});
 		}

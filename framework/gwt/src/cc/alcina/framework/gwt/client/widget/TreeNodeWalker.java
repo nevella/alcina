@@ -35,7 +35,7 @@ import com.google.gwt.user.client.ui.TreeItem;
 		}
 		while (!items.isEmpty()) {
 			TreeItem pop = items.pop();
-			callback.callback(pop);
+			callback.apply(pop);
 			for (int i = 0; i < pop.getChildCount(); i++) {
 				items.push(pop.getChild(i));
 			}
@@ -46,7 +46,7 @@ import com.google.gwt.user.client.ui.TreeItem;
 		items.push(item);
 		while (!items.isEmpty()) {
 			TreeItem pop = items.pop();
-			callback.callback(pop);
+			callback.apply(pop);
 			for (int i = 0; i < pop.getChildCount(); i++) {
 				items.push(pop.getChild(i));
 			}

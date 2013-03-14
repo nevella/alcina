@@ -60,7 +60,7 @@ public interface ClientTransformExceptionResolver {
 			ClientTransformExceptionResolver {
 		public void resolve(DomainTransformRequestException dtre,
 				Callback<ClientTransformExceptionResolutionToken> callback) {
-			callback.callback(new ClientTransformExceptionResolutionToken());
+			callback.apply(new ClientTransformExceptionResolutionToken());
 		}
 	}
 }

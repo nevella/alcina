@@ -93,7 +93,7 @@ public class NodeFactory {
 				SourcesPropertyChangeEvents domainObject, NodeFactory factory);
 	}
 
-	@RegistryLocation(j2seOnly = false, registryPoint = NodeCreator.class)
+	@RegistryLocation( registryPoint = NodeCreator.class)
 	@ClientInstantiable
 	public static class DefaultNodeCreator implements NodeCreator {
 		@Override

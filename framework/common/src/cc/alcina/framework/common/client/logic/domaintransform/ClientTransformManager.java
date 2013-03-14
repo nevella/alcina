@@ -403,7 +403,7 @@ public class ClientTransformManager extends TransformManager {
 				.beanInfoForClass(referrer.getClass());
 		beanReflector.iterateForPropertyWithAnnotation(WrapperInfo.class,
 				new HasAnnotationCallback<WrapperInfo>() {
-					public void callback(WrapperInfo annotation,
+					public void apply(WrapperInfo annotation,
 							ClientPropertyReflector propertyReflector) {
 						WrapperPersistable obj = (WrapperPersistable) propertyReflector
 								.getPropertyValue(referrer);
@@ -424,7 +424,7 @@ public class ClientTransformManager extends TransformManager {
 				// copy, because at the moment wrapped refs don't get handled by
 				// the TM
 				HasAnnotationCallback<WrapperInfo> callback = new HasAnnotationCallback<WrapperInfo>() {
-					public void callback(WrapperInfo annotation,
+					public void apply(WrapperInfo annotation,
 							ClientPropertyReflector propertyReflector) {
 						propertyReflector.setPropertyValue(promoted,
 								propertyReflector.getPropertyValue(referrer));
@@ -438,7 +438,7 @@ public class ClientTransformManager extends TransformManager {
 		}
 		final HasIdAndLocalId finalTarget = target;
 		HasAnnotationCallback<WrapperInfo> callback = new HasAnnotationCallback<WrapperInfo>() {
-			public void callback(final WrapperInfo annotation,
+			public void apply(final WrapperInfo annotation,
 					final ClientPropertyReflector propertyReflector) {
 				WrapperPersistable persistableObject = (WrapperPersistable) propertyReflector
 						.getPropertyValue(finalTarget);

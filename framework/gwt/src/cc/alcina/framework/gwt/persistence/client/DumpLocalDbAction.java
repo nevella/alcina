@@ -47,7 +47,7 @@ public class DumpLocalDbAction implements LooseActionHandler {
 		};
 		Callback<String> sendRpcCallback = new Callback<String>() {
 			@Override
-			public void callback(String value) {
+			public void apply(String value) {
 				ClientLayerLocator.get().getCommonRemoteServiceAsyncProvider()
 						.getServiceInstance().dumpData(value, asyncCallback);
 			}

@@ -197,7 +197,7 @@ public class ClientSession {
 	 */
 	public void checkSoleOpenTab(final Callback<Boolean> callback) {
 		if(isSoleOpenTab()){
-			callback.callback(true);
+			callback.apply(true);
 			return;
 		}
 		new Timer() {
@@ -207,10 +207,10 @@ public class ClientSession {
 			public void run() {
 				if (retryCount-- == 0) {
 					cancel();
-					callback.callback(false);
+					callback.apply(false);
 				} else if (isSoleOpenTab()) {
 					cancel();
-					callback.callback(true);
+					callback.apply(true);
 				}
 			}
 		}.scheduleRepeating(1000);

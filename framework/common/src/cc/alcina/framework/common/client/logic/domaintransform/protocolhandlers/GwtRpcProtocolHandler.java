@@ -5,7 +5,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-@RegistryLocation(registryPoint = DTRProtocolHandler.class, j2seOnly = false)
+@RegistryLocation(registryPoint = DTRProtocolHandler.class)
 @ClientInstantiable
 public class GwtRpcProtocolHandler implements DTRProtocolHandler {
 

@@ -47,11 +47,6 @@ public @interface RegistryLocation {
 
 	Class targetClass() default void.class;
 
-	/**
-	 * !!not implemented - since this can be filtered via IntrospectorFilter,
-	 * better there ALC-REFACTORING
-	 */
-	boolean j2seOnly() default true;
 
 	/**
 	 * Allows overriding of default registrees (higher values override)

@@ -28,6 +28,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -51,7 +52,6 @@ import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.totsp.gwittir.client.beans.TreeIntrospector;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
-import com.totsp.gwittir.rebind.beans.IntrospectorFilter.IntrospectorFilterHelper;
 
 /**
  * 
@@ -204,7 +204,7 @@ public class IntrospectorGenerator extends Generator {
 			filter.setModuleName(module.value());
 			this.methodsImplementationName = String.format("%s_%s",
 					"MethodsList", module.value());
-			this.implementationName = String.format("Introspector_impl_%s",
+			this.implementationName = String.format("Introspector_Impl_%s",
 					module.value());
 			superClassName=intrType.getQualifiedSourceName();
 		} catch (NotFoundException ex) {
@@ -213,13 +213,11 @@ public class IntrospectorGenerator extends Generator {
 		}
 		PrintWriter printWriter = context.tryCreate(logger, packageName,
 				implementationName);
-		if (printWriter == null) {
-			// .println( "Introspector Generate skipped.");
-			return packageName + "." + implementationName;
-		}
+		
 		List<BeanResolver> introspectables = this.getIntrospectableTypes(
 				logger, context.getTypeOracle());
 		MethodWrapper[] methods = this.findMethods(logger, introspectables);
+		methodWrapperLookup=new LinkedHashMap<MethodWrapper, Integer>();
 		ClassSourceFileComposerFactory mcf = new ClassSourceFileComposerFactory(
 				this.packageName, this.methodsImplementationName);
 		mcf.addImport(com.totsp.gwittir.client.beans.Method.class
@@ -244,6 +242,12 @@ public class IntrospectorGenerator extends Generator {
 		cfcf.addImport(com.totsp.gwittir.client.beans.BeanDescriptor.class
 				.getCanonicalName());
 		
+		if (printWriter == null) {
+			// .println( "Introspector Generate skipped.");
+			return packageName + "." + implementationName;
+		}
+		System.out
+		.format("Introspector - %s - %s introsepctable types\n",filter.getModuleName(),introspectables.size());
 		SourceWriter writer = cfcf.createSourceWriter(context, printWriter);
 		this.writeIntrospectables(logger, introspectables, methods, writer);
 		this.writeResolver(introspectables, writer);
@@ -292,6 +296,9 @@ public class IntrospectorGenerator extends Generator {
 						&& (type.isInterface() == null)) {
 					found.add(type.getQualifiedSourceName());
 					BeanResolver resolver = new BeanResolver(logger, type);
+					if(type.getSimpleSourceName().contains("CitableListEditableAdapter")){
+						int j=3;
+					}
 					filter.filterProperties(resolver);
 					resolvers.add(resolver);
 				}
@@ -324,8 +331,7 @@ public class IntrospectorGenerator extends Generator {
 					"Unable to find Introspectable types.", e);
 		}
 		filter.filterIntrospectorResults(results);
-		System.out
-				.println("Found " + results.size() + " introspectable types.");
+		
 		return results;
 	}
 

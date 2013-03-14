@@ -131,13 +131,13 @@ public class ClientBeanReflector {
 				.values()) {
 			A annotation = propertyReflector.getAnnotation(annotationClass);
 			if (annotation != null) {
-				callback.callback(annotation, propertyReflector);
+				callback.apply(annotation, propertyReflector);
 			}
 		}
 	}
 
 	public static interface HasAnnotationCallback<A extends Annotation> {
-		public void callback(A annotation,
+		public void apply(A annotation,
 				ClientPropertyReflector propertyReflector);
 	}
 }

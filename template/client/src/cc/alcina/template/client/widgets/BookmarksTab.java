@@ -208,7 +208,7 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 		}
 	}
 
-	@RegistryLocation(j2seOnly = false, registryPoint = CreateActionHandler.class, targetClass = Bookmark.class)
+	@RegistryLocation( registryPoint = CreateActionHandler.class, targetClass = Bookmark.class)
 	public static class BookmarkCreateActionHandler extends
 			DefaultCreateActionHandler implements CreateActionHandler {
 		public void performAction(PermissibleActionEvent event, Object node,
@@ -219,7 +219,7 @@ public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 		}
 	}
 
-	@RegistryLocation(j2seOnly = false, registryPoint = NodeCreator.class, targetClass = Bookmark.class)
+	@RegistryLocation( registryPoint = NodeCreator.class, targetClass = Bookmark.class)
 	@ClientInstantiable
 	public static class BookmarkNodeCreator implements NodeCreator {
 		@Override

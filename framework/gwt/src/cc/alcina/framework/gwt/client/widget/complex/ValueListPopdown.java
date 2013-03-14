@@ -72,7 +72,7 @@ public class ValueListPopdown<T> {
 
 		public void onClick(ClickEvent clickEvent) {
 			Widget sender = (Widget) clickEvent.getSource();
-			callback.callback((T) ((BlockLink) sender).getUserObject());
+			callback.apply((T) ((BlockLink) sender).getUserObject());
 			popupPanel.hide();
 		}
 	}

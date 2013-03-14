@@ -48,8 +48,10 @@ public abstract class Logger {
         Logger logger = (Logger) LOGGERS.get(name);
         if( logger == null ){
             logger = (Logger) GWT.create( Logger.class );
+            if( logger != null ){
             logger.name = name;
             LOGGERS.put( name, logger );
+            }
         }
         return logger;
     }

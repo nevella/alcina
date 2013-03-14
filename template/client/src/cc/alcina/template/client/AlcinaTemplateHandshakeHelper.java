@@ -86,7 +86,7 @@ public class AlcinaTemplateHandshakeHelper extends
 				loginResponse.getClientInstance());
 		LocalTransformPersistence.get().handleUncommittedTransformsOnLoad(
 				new Callback() {
-					public void callback(Object target) {
+					public void apply(Object target) {
 						loadUserObjects("Loading domain objects", null,
 								LoginState.LOGGED_IN);
 					}

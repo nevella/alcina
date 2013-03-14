@@ -14,10 +14,12 @@
 
 package cc.alcina.framework.common.client.logic.reflection.misc;
 
+import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
+
 /**
  *
  * @author Nick Reddel
  */
-
+@NonClientRegistryPointType
  public interface JaxbContextRegistration {
 }

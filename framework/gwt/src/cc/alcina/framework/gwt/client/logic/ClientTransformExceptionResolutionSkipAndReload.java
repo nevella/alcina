@@ -110,7 +110,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 			// unknown exception - throw
 			token
 					.setResolverAction(ClientTransformExceptionResolverAction.THROW);
-			callback.callback(token);
+			callback.apply(token);
 			return;
 		}
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
@@ -186,7 +186,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 		} else {
 			token
 					.setResolverAction(ClientTransformExceptionResolverAction.RESUBMIT);
-			callback.callback(token);
+			callback.apply(token);
 		}
 	}
 

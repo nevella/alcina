@@ -97,7 +97,7 @@ public class DataTree extends FilterableTree implements ExtraTreeEventSource,
 		result = null;
 		final boolean classNameTest = (obj instanceof String);
 		Callback<TreeItem> callback = new Callback<TreeItem>() {
-			public void callback(TreeItem target) {
+			public void apply(TreeItem target) {
 				Object userObject = target.getUserObject();
 				if (userObject != null) {
 					if ((classNameTest && userObject.getClass().getName()

@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.ArrayList;
@@ -60,10 +61,33 @@ import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
 
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
 public abstract class DevHelper {
+	public class GWTBridgeDummy extends GWTBridge {
+		@Override
+		public <T> T create(Class<?> classLiteral) {
+			return null;
+		}
+
+		@Override
+		public String getVersion() {
+			return null;
+		}
+
+		@Override
+		public boolean isClient() {
+			return false;
+		}
+
+		@Override
+		public void log(String message, Throwable e) {
+		}
+	}
+
 	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
 
 	private MessagingWriter messagingWriter;
@@ -163,6 +187,14 @@ public abstract class DevHelper {
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		XmlUtils.noTransformCaching = true;
 		EntityLayerLocator.get().setPersistentLogger(getTestLogger());
+		try {
+			Method m = GWT.class
+					.getDeclaredMethod("setBridge", GWTBridge.class);
+			m.setAccessible(true);
+			m.invoke(null, new GWTBridgeDummy());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	protected void initClientReflector() {

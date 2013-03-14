@@ -45,7 +45,7 @@ public class Prompter implements PermissibleActionListener {
 			}
 		};
 		if (positioningCallback != null) {
-			positioningCallback.callback(box);
+			positioningCallback.apply(box);
 		}
 		text.setFocus(true);
 	}
@@ -57,7 +57,7 @@ public class Prompter implements PermissibleActionListener {
 				box.show();
 				Window.alert(requiredMessage);
 			} else {
-				callback.callback(text.getValue());
+				callback.apply(text.getValue());
 			}
 		} else {
 		}

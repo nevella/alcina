@@ -22,7 +22,7 @@ import cc.alcina.template.cs.misc.search.UserCriterion;
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetClass = UserCriterion.class)
+@RegistryLocation( registryPoint = TreeRenderer.class, targetClass = UserCriterion.class)
 public class UserCriterionRenderer extends
 		SearchCriterionRenderer<UserCriterion> {
 	@Override

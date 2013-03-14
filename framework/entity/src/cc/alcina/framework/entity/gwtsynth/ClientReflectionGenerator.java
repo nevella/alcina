@@ -30,11 +30,15 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
+import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
@@ -58,7 +62,7 @@ import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
-import com.totsp.gwittir.rebind.beans.IntrospectorFilter.IntrospectorFilterHelper;
+import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
 @SuppressWarnings("unchecked")
 /**
@@ -85,6 +89,14 @@ public class ClientReflectionGenerator extends Generator {
 	public SourceWriter getSw() {
 		return this.sw;
 	}
+
+	public static final CollectionFilter<RegistryLocation> CLIENT_VISIBLE_ANNOTATION_FILTER = new CollectionFilter<RegistryLocation>() {
+		@Override
+		public boolean allow(RegistryLocation o) {
+			return o.registryPoint().getAnnotation(
+					NonClientRegistryPointType.class) == null;
+		}
+	};
 
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
@@ -152,11 +164,12 @@ public class ClientReflectionGenerator extends Generator {
 			procDomain(beanInfoTypes, instantiableTypes, srcW,
 					gwtRegisteringClasses, implementationName);
 			commit(context, logger, printWriter);
-			System.out.println(String.format("Client reflection generation  - "
+			System.out.format("Client reflection generation  [%s] - "
 					+ "%s annotations, %s beans, "
-					+ "%s instantiable types - %s ms", jAnns.size(),
-					beanInfoTypes.size(), instantiableTypes.size(),
-					System.currentTimeMillis() - start));
+					+ "%s instantiable types - %s ms\n",
+					filter.getModuleName(), jAnns.size(), beanInfoTypes.size(),
+					instantiableTypes.size(), System.currentTimeMillis()
+							- start);
 			filter.generationComplete();
 			return packageName + "." + implementationName;
 		} catch (Exception e) {
@@ -180,7 +193,7 @@ public class ClientReflectionGenerator extends Generator {
 		for (JClassType jct : types) {
 			if ((jct.isAnnotationPresent(RegistryLocation.class) || jct
 					.isAnnotationPresent(RegistryLocations.class))
-					&& !ignore(jct) && !jct.isAbstract()) {
+					&& !jct.isAbstract()) {
 				Set<RegistryLocation> rls = getClassAnnotations(jct,
 						RegistryLocation.class);
 				Set<RegistryLocations> rlsSet = getClassAnnotations(jct,
@@ -190,7 +203,12 @@ public class ClientReflectionGenerator extends Generator {
 						rls.add(rl);
 					}
 				}
-				results.put(jct, new LinkedHashSet<RegistryLocation>(rls));
+				rls = new LinkedHashSet<RegistryLocation>(rls);
+				CollectionFilters.filterInPlace(rls,
+						CLIENT_VISIBLE_ANNOTATION_FILTER);
+				if (!rls.isEmpty() && !ignore(jct)) {
+					results.put(jct, rls);
+				}
 			}
 		}
 		return results;
@@ -201,11 +219,13 @@ public class ClientReflectionGenerator extends Generator {
 		return (Set) getClassAnnotations(jct,
 				(List) Collections.singletonList(annotationType));
 	}
-
 	private boolean ignore(JClassType jClassType) {
+		return ignore(jClassType,null);
+	}
+	private boolean ignore(JClassType jClassType, ReflectionAction reflectionAction) {
 		return (jClassType.isAbstract() && jClassType.isEnum() == null)
 				|| (jClassType.isInterface() != null) || !jClassType.isPublic()
-				|| filter.omitForModule(jClassType);
+				|| filter.omitForModule(jClassType,reflectionAction);
 	}
 
 	private List<JClassType> getInstantiableTypes(TreeLogger logger,
@@ -214,7 +234,7 @@ public class ClientReflectionGenerator extends Generator {
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jClassType : types) {
 			if (jClassType.isAnnotationPresent(ClientInstantiable.class)
-					&& !ignore(jClassType)) {
+					&& !ignore(jClassType,ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
 				crf.addImport(jClassType.getQualifiedSourceName());
 			}
@@ -229,7 +249,7 @@ public class ClientReflectionGenerator extends Generator {
 		for (JClassType jClassType : types) {
 			if (jClassType
 					.isAnnotationPresent(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class)
-					&& !ignore(jClassType)) {
+					&& !ignore(jClassType,ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
 				crf.addImport(jClassType.getQualifiedSourceName());
 			}
@@ -375,17 +395,21 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("protected <T> T newInstance0(Class<T> clazz, long objectId, long localId) {");
 		sw.indent();
 		for (JClassType c : beanInfoTypes) {
+			if(!filter.omitForModule(c, ReflectionAction.NEW_INSTANCE)){
 			sw.println(String
 					.format("if (clazz.equals(%s.class)){return (T)GWT.create(%s.class);} ",
 							c.getSimpleSourceName(), c.getSimpleSourceName()));
+			}
 		}
 		for (JClassType c : instantiableTypes) {
 			if (c.isEnum() != null) {
 				continue;
 			}
+			if(!filter.omitForModule(c, ReflectionAction.NEW_INSTANCE)){
 			sw.println(String
 					.format("if (clazz.equals(%s.class)){return (T)GWT.create(%s.class);} ",
 							c.getSimpleSourceName(), c.getSimpleSourceName()));
+			}
 		}
 		sw.println("return null;");
 		sw.outdent();
@@ -395,6 +419,9 @@ public class ClientReflectionGenerator extends Generator {
 		List<String> methodNames = new ArrayList<String>();
 		int methodCount = 0;
 		for (JClassType jct : beanInfoTypes) {
+			if(filter.omitForModule(jct, ReflectionAction.BEAN_INFO_DESCRIPTOR)){
+				continue;
+			}
 			String methodName = "initClass" + (methodCount++);
 			methodNames.add(methodName);
 			sw.println(String.format("private void %s(){", methodName));
@@ -467,8 +494,10 @@ public class ClientReflectionGenerator extends Generator {
 		qt.addAll(instantiableTypes);
 		qt.addAll(beanInfoTypes);
 		for (JClassType t : qt) {
+			if(!filter.omitForModule(t, ReflectionAction.NEW_INSTANCE)){
 			sw.println(String.format("forNameMap.put(\"%s\",%s.class);",
 					t.getQualifiedBinaryName(), t.getQualifiedSourceName()));
+			}
 		}
 		for (String methodName : methodNames) {
 			sw.println(String.format("%s();", methodName));

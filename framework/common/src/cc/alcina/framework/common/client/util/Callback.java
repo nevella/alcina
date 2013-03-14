@@ -20,5 +20,5 @@ package cc.alcina.framework.common.client.util;
  */
 
  public interface Callback<V> {
-	public void callback(V value);
+	public void apply(V value);
 }

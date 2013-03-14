@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -38,6 +39,7 @@ import com.google.gwt.core.client.GWT;
  *
  * @author Nick Reddel
  */
+@ReflectionModule("Admin")
 public class DTRSimpleSerialWrapper extends BaseBindable implements
 		RemoteParameters {
 	private int id;

@@ -22,6 +22,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Inherited
 @Target({ ElementType.TYPE })
 /**
  *

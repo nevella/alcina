@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.SimpleStringParser20;
 
-@RegistryLocation(registryPoint = DTRProtocolHandler.class, j2seOnly = false)
+@RegistryLocation(registryPoint = DTRProtocolHandler.class)
 @ClientInstantiable
 public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 	public static final String VERSION = "1.0 - plain text";

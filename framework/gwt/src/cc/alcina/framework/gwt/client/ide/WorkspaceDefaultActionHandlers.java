@@ -49,7 +49,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation(j2seOnly = false, registryPoint = ViewActionHandler.class)
+	@RegistryLocation( registryPoint = ViewActionHandler.class)
 	public static class DefaultViewActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements ViewActionHandler {
 		public void performAction(PermissibleActionEvent event, Object node,
@@ -79,7 +79,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation(j2seOnly = false, registryPoint = CreateActionHandler.class)
+	@RegistryLocation( registryPoint = CreateActionHandler.class)
 	public static class DefaultCreateActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements CreateActionHandler {
 		protected HasIdAndLocalId newObj;
@@ -118,7 +118,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation(j2seOnly = false, registryPoint = EditActionHandler.class)
+	@RegistryLocation( registryPoint = EditActionHandler.class)
 	public static class DefaultEditActionHandler extends
 			DefaultViewActionHandler implements ViewActionHandler {
 		@Override
@@ -127,7 +127,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation(j2seOnly = false, registryPoint = DeleteActionHandler.class)
+	@RegistryLocation( registryPoint = DeleteActionHandler.class)
 	/*
 	 * TODO - Alcina - the separation of 'deletion of reffing' and 'deletion'
 	 * into two transactions was caused by weird EJB3 behaviour - it works, and
@@ -212,7 +212,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation(j2seOnly = false, registryPoint = CloneActionHandler.class)
+	@RegistryLocation( registryPoint = CloneActionHandler.class)
 	public static class DefaultCloneActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements CloneActionHandler {
 		public void performAction(final PermissibleActionEvent event,

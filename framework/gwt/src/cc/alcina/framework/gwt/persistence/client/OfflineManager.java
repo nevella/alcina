@@ -104,7 +104,7 @@ public class OfflineManager {
 			return;
 		}
 		if (updatingCallback != null) {
-			updatingCallback.callback(null);
+			updatingCallback.apply(null);
 		}
 		cd = ClientLayerLocator.get().notifications().getModalNotifier("");
 		cd.setMasking(true);
@@ -215,7 +215,7 @@ public class OfflineManager {
 
 	public void waitUntilAppCacheResolved(final Callback callback) {
 		if (shouldIWait() == FromRequiresCurrentCachePerspsectiveReccAction.CONTINUE) {
-			callback.callback(null);
+			callback.apply(null);
 			return;
 		}
 		appCacheResolutionTimer = new Timer() {
@@ -225,7 +225,7 @@ public class OfflineManager {
 				switch(siw){
 				case CONTINUE:
 					appCacheResolutionTimer.cancel();
-					callback.callback(null);
+					callback.apply(null);
 					return;
 				case DOWNLOADING:
 					waitAndReload();

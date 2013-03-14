@@ -22,7 +22,7 @@ import cc.alcina.template.cs.misc.search.UserCriteriaGroup;
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetClass = UserCriteriaGroup.class)
+@RegistryLocation( registryPoint = TreeRenderer.class, targetClass = UserCriteriaGroup.class)
 public class UserCriteriaGroupRenderer extends
 		CriteriaGroupRenderer<UserCriteriaGroup> {
 	@Override

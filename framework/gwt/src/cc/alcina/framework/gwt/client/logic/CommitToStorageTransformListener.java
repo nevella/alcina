@@ -240,7 +240,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 					if (caught instanceof DomainTransformRequestException) {
 						final DomainTransformRequestException dtre = (DomainTransformRequestException) caught;
 						Callback<ClientTransformExceptionResolutionToken> callback = new Callback<ClientTransformExceptionResolutionToken>() {
-							public void callback(
+							public void apply(
 									ClientTransformExceptionResolutionToken resolutionToken) {
 								if (resolutionToken.getResolverAction() == ClientTransformExceptionResolverAction.RESUBMIT) {
 									eventIdsToIgnore = resolutionToken

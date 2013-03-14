@@ -31,7 +31,7 @@ public class RestoreLocalDbAction implements LooseActionHandler {
 				.getStringParameter(ALCINA_RESTORE_LOCAL_DB_KEY);
 		final Callback afterRestoreCallback = new Callback() {
 			@Override
-			public void callback(Object value) {
+			public void apply(Object value) {
 				modalNotifier.modalOff();
 				MessageManager.get().centerMessage(
 						"Local database dump restored");

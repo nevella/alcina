@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-@RegistryLocation(registryPoint = DTRProtocolHandler.class, j2seOnly = false)
+@RegistryLocation(registryPoint = DTRProtocolHandler.class)
 public class PlaintextProtocolHandler0pt1 extends PlaintextProtocolHandler1pt0 {
 	public static final String VERSION = "0.1 - plain text - old";
 

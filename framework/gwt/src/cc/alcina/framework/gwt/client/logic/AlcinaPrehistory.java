@@ -59,7 +59,7 @@ public class AlcinaPrehistory {
 	}
 
 	@ClientInstantiable
-	@RegistryLocation(registryPoint = PreHistoryHandler.class, j2seOnly = false)
+	@RegistryLocation(registryPoint = PreHistoryHandler.class)
 	public abstract static class PreHistoryHandler<I extends AlcinaHistoryItem> {
 		public abstract String key();
 

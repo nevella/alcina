@@ -40,7 +40,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetClass = PersistentObjectCriteriaGroup.class)
+@RegistryLocation( registryPoint = TreeRenderer.class, targetClass = PersistentObjectCriteriaGroup.class)
 public class PersistentObjectCriteriaGroupRenderer extends
 		CriteriaGroupRenderer<PersistentObjectCriteriaGroup> {
 	@Override

@@ -610,14 +610,14 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		public Boolean isPermitted(Object o, Permissible p);
 	}
 
-	@RegistryLocation(registryPoint = PermissionsExtensionForClass.class, j2seOnly = false)
+	@RegistryLocation(registryPoint = PermissionsExtensionForClass.class)
 	@ClientInstantiable
 	public static abstract class PermissionsExtensionForClass<C> implements
 			PermissionsExtension {
 		public abstract Class<C> getGenericClass();
 	}
 
-	@RegistryLocation(registryPoint = PermissionsExtensionForRule.class, j2seOnly = false)
+	@RegistryLocation(registryPoint = PermissionsExtensionForRule.class)
 	@ClientInstantiable
 	public static abstract class PermissionsExtensionForRule implements
 			PermissionsExtension {

@@ -36,7 +36,7 @@ import com.totsp.gwittir.client.validator.Validator;
  * @author nreddel@barnet.com.au
  * 
  */
-@RegistryLocation(j2seOnly = false, registryPoint = PermissibleActionHandler.class, targetClass = ChangePasswordClientAction.class)
+@RegistryLocation( registryPoint = PermissibleActionHandler.class, targetClass = ChangePasswordClientAction.class)
 @ClientInstantiable
 public class ChangePasswordClientHandler implements PermissibleActionHandler {
 	private GlassDialogBox gdb;

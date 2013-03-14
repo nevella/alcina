@@ -22,7 +22,7 @@ import cc.alcina.template.cs.misc.search.LogMessageTypeEnumCriterion;
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(j2seOnly = false, registryPoint = TreeRenderer.class, targetClass = LogMessageTypeEnumCriterion.class)
+@RegistryLocation( registryPoint = TreeRenderer.class, targetClass = LogMessageTypeEnumCriterion.class)
 public class LogMessageTypeEnumCriterionRenderer extends
 		EnumCriterionRenderer<LogMessageTypeEnumCriterion> {
 	@Override

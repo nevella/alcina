@@ -569,7 +569,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			String nameValue = null;
 			Callback<String> actionCallback = new Callback<String>() {
 				@Override
-				public void callback(String nameValue) {
+				public void apply(String nameValue) {
 					Object newItem = listAddItemHandler
 							.createNewItem(nameValue);
 					List optionsCopy = new ArrayList(getOptions());
@@ -580,7 +580,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			};
 			Callback<OkCancelDialogBox> positioningCallback = new Callback<OkCancelDialogBox>() {
 				@Override
-				public void callback(OkCancelDialogBox box) {
+				public void apply(OkCancelDialogBox box) {
 					box.setPopupPosition(
 							addButton.getAbsoluteLeft(),
 							addButton.getAbsoluteTop()
@@ -592,7 +592,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 				new Prompter("Message", namePrompt, defaultName, null,
 						positioningCallback, actionCallback);
 			} else {
-				actionCallback.callback(null);
+				actionCallback.apply(null);
 			}
 		}
 	}

@@ -89,7 +89,7 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 	public void collapseToFirstLevel() {
 		TreeItem item = getSelectedItem();
 		new TreeNodeWalker().walk(this, new Callback<TreeItem>() {
-			public void callback(TreeItem target) {
+			public void apply(TreeItem target) {
 				boolean open = target.getParentItem() == null;
 				if (shouldExpandCallback != null
 						&& !shouldExpandCallback.allow(target)) {
@@ -166,7 +166,7 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 			counter = 200;
 			walk();
 			if (counter > 0) {
-				callback.callback(null);
+				callback.apply(null);
 				return false;
 			}
 			return true;

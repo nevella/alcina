@@ -26,6 +26,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 
@@ -68,6 +69,13 @@ public class CollectionFilters {
 			if (!filter.allow(itr.next())) {
 				itr.remove();
 			}
+		}
+	}
+	public static <V> void apply(Collection<? extends V> collection,
+			Callback<V> callback) {
+		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr
+				.hasNext();) {
+			callback.apply(itr.next());
 		}
 	}
 

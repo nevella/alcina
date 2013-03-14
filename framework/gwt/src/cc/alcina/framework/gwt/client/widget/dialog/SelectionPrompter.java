@@ -24,7 +24,7 @@ public class SelectionPrompter<T> implements PermissibleActionListener {
 		@Override
 		public void onClick(ClickEvent event) {
 			box.hide();
-			callback.callback((T) ((Link)event.getSource()).getUserObject());
+			callback.apply((T) ((Link)event.getSource()).getUserObject());
 					
 		}
 	};
@@ -59,12 +59,12 @@ public class SelectionPrompter<T> implements PermissibleActionListener {
 			}
 		};
 		if (positioningCallback != null) {
-			positioningCallback.callback(box);
+			positioningCallback.apply(box);
 		}
 	}
 
 	@Override
 	public void vetoableAction(PermissibleActionEvent evt) {
-		callback.callback(null);
+		callback.apply(null);
 	}
 }

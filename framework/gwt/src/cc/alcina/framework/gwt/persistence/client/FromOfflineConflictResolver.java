@@ -224,7 +224,7 @@ public class FromOfflineConflictResolver {
 													"discard-complete",
 													"Changes discarded"));
 									dialog.hide();
-									completionCallback.callback(null);
+									completionCallback.apply(null);
 									ClientLayerLocator.get().notifications()
 											.log("post-clear-db");
 								}
