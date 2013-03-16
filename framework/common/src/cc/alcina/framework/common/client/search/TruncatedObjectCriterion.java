@@ -61,4 +61,13 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 	public String toString() {
 		return getDisplayText();
 	}
+	@Override
+	protected TruncatedObjectCriterion copyProperties(
+			SearchCriterion searchCriterion) {
+		TruncatedObjectCriterion sc = (TruncatedObjectCriterion) searchCriterion;
+		sc.displayText=displayText;
+		sc.id=id;
+		sc.value=value;
+		return super.copyProperties(sc);
+	}
 }

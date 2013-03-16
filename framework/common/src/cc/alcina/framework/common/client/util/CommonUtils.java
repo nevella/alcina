@@ -891,4 +891,8 @@ public class CommonUtils {
 		}
 		return (E) enumValueLookup.get(enumClass, value);
 	}
+
+	public static void formatOut(String string, Object... objects) {
+		System.out.println(formatJ(string, objects));
+	}
 }

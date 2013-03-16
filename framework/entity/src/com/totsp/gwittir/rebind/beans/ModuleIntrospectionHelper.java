@@ -127,18 +127,27 @@ public class ModuleIntrospectionHelper {
 			return true;
 		case PER_CLASS_STRICT:
 		case PER_CLASS_FORGIVING:
+		case PER_CLASS_FORGIVING_LEFTOVER:
 			ModuleIntrospectionHelper.ModuleIntrospectionClassInfo classInfo = info
 					.getInfo(type.getQualifiedSourceName(), true);
 			Set<String> modules = classInfo.modules;
-			if (modules.isEmpty()
-					&& info.mode == ModuleIntrospectionHelper.ModuleIntrospectionMode.PER_CLASS_FORGIVING) {
-				return !filter.getModuleName().equals(ReflectionModule.INITIAL);
-			} else {
-				if(modules.contains(ReflectionModule.INITIAL)){
-					return !filter.getModuleName().equals(ReflectionModule.INITIAL);
+			if (modules.isEmpty()) {
+				switch (info.mode) {
+				case PER_CLASS_FORGIVING:
+					return !filter.getModuleName().equals(
+							ReflectionModule.INITIAL);
+				case PER_CLASS_FORGIVING_LEFTOVER:
+					return !filter.getModuleName().equals(
+							ReflectionModule.LEFTOVER);
 				}
-				if(modules.size()>1){
-					return !filter.getModuleName().equals(ReflectionModule.LEFTOVER);
+			} else {
+				if (modules.contains(ReflectionModule.INITIAL)) {
+					return !filter.getModuleName().equals(
+							ReflectionModule.INITIAL);
+				}
+				if (modules.size() > 1) {
+					return !filter.getModuleName().equals(
+							ReflectionModule.LEFTOVER);
 				}
 				return !modules.contains(filter.getModuleName());
 			}
@@ -208,7 +217,8 @@ public class ModuleIntrospectionHelper {
 	}
 
 	public static enum ModuleIntrospectionMode {
-		INITIAL_ONLY, DISALLOW_ALL, PER_CLASS_STRICT, PER_CLASS_FORGIVING
+		INITIAL_ONLY, DISALLOW_ALL, PER_CLASS_STRICT, PER_CLASS_FORGIVING,
+		PER_CLASS_FORGIVING_LEFTOVER
 	}
 
 	public static enum ModuleIntrospectionClassInfoProvenance {

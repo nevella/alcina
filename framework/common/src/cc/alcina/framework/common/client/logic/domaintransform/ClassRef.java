@@ -113,8 +113,7 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 
 	@Override
 	public int hashCode() {
-		return getRefClass() != null ? getRefClass().hashCode() : super
-				.hashCode();
+		return refClassName.hashCode();
 	}
 
 	public abstract void setId(long id);

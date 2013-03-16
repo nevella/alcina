@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.SynchronousAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -65,21 +66,28 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author Nick Reddel
  */
-public class ActionViewProvider implements ViewProvider,
+public abstract class ActionViewProvider implements ViewProvider,
 		PermissibleActionListener {
 	private PaneWrapper wrapper;
+
 	private BreadcrumbBarMaximiseButton maxButton;
 
+	protected RemoteAction action;
+
 	public Widget getViewForObject(Object obj) {
-		RemoteAction action = (RemoteAction) obj;
+		action = (RemoteAction) obj;
 		wrapper = new PaneWrapper();
 		wrapper.setStyleName("alcina-BeanPanel");
 		wrapper.ensureDebugId(AlcinaDebugIds.MISC_ALCINA_BEAN_PANEL);
 		wrapper.addVetoableActionListener(this);
 		wrapper.add(createCaption(action));
-		wrapper.add(new ActionLogPanel(action,maxButton));
+		wrapper.add(new ActionLogPanel());
 		wrapper.setAction(action);
 		return wrapper;
+	}
+
+	public void vetoableAction(PermissibleActionEvent evt) {
+		// no response at the mo'
 	}
 
 	private Widget createCaption(PermissibleAction action) {
@@ -87,41 +95,40 @@ public class ActionViewProvider implements ViewProvider,
 				.asList(new SimpleHistoryEventInfo[] {
 						new SimpleHistoryEventInfo("Action"),
 						new SimpleHistoryEventInfo(action.getDisplayName()) });
-		List<Widget> maxButtonArr = BreadcrumbBar
-				.maxButton(wrapper);
-		this.maxButton=(BreadcrumbBarMaximiseButton) maxButtonArr.get(0);
+		List<Widget> maxButtonArr = BreadcrumbBar.maxButton(wrapper);
+		this.maxButton = (BreadcrumbBarMaximiseButton) maxButtonArr.get(0);
 		return new BreadcrumbBar(null, history, maxButtonArr);
 	}
 
-	public static class ActionLogPanel extends VerticalPanel implements
-			ClickHandler {
+	protected void getActionLogs(
+			AsyncCallback<List<ActionLogItem>> outerCallback, int logItemCount) {
+		ClientLayerLocator
+				.get()
+				.actionLogProvider()
+				.getLogsForAction(action, logItemCount, outerCallback,
+						true);
+	}
+	protected abstract void performAction(AsyncCallback<Long> asyncCallback,
+			AsyncCallback<ActionLogItem> syncCallback) ;
+	
+	public static class ActionViewProviderCommon extends ActionViewProvider{
+		protected void performAction(AsyncCallback<Long> asyncCallback,
+				AsyncCallback<ActionLogItem> syncCallback) {
+			if (action instanceof SynchronousAction) {
+				((CommonRemoteServiceExtAsync)ClientLayerLocator.get().commonRemoteServiceAsyncInstance())
+						.performActionAndWait(action, syncCallback);
+			} else {
+				((CommonRemoteServiceExtAsync)ClientLayerLocator.get().commonRemoteServiceAsyncInstance())
+						.performAction(action, asyncCallback);
+			}
+		}
+	}
+	public class ActionLogPanel extends VerticalPanel implements ClickHandler {
 		private static final String RUNNING = "...running";
 
 		private Button button;
 
-		private final RemoteAction action;
-
 		private FlowPanel fp;
-
-		public void addHandler(HandlerRegistration registration) {
-			this.hasChildHandlersSupport.addHandler(registration);
-		}
-
-		public void detachHandlers() {
-			this.hasChildHandlersSupport.detachHandlers();
-		}
-
-		public boolean equals(Object obj) {
-			return this.hasChildHandlersSupport.equals(obj);
-		}
-
-		public int hashCode() {
-			return this.hasChildHandlersSupport.hashCode();
-		}
-
-		public String toString() {
-			return this.hasChildHandlersSupport.toString();
-		}
 
 		private Label runningLabel;
 
@@ -143,68 +150,9 @@ public class ActionViewProvider implements ViewProvider,
 
 		private LooseActionHandler handler;
 
-		private void running(boolean running) {
-			button.setText("Run now");
-			button.setEnabled(!running);
-			runningLabel.setVisible(running);
-		}
-
-		protected void redraw() {
-			WidgetUtils.clearChildren(fp);
-			hasChildHandlersSupport.detachHandlers();
-			AsyncCallback<List<ActionLogItem>> outerCallback = new AsyncCallback<List<ActionLogItem>>() {
-				public void onFailure(Throwable caught) {
-					throw new WrappedRuntimeException(caught);
-				}
-
-				public void onSuccess(List<ActionLogItem> result) {
-					for (ActionLogItem actionLogItem : result) {
-						fp.add(new ActionLogItemVisualiser(actionLogItem));
-					}
-					HorizontalPanel more = new HorizontalPanel();
-					more.setStyleName("pad-15");
-					more.setSpacing(2);
-					more.add(new InlineLabel("Show more - "));
-					int[] counts = { 10, 20, 40, 80, 160, 320 };
-					for (int c : counts) {
-						final int fc = c;
-						more.add(new Link(String.valueOf(c),
-								new ClickHandler() {
-									public void onClick(ClickEvent event) {
-										logItemCount = fc;
-										redraw();
-									}
-								}));
-						more.add(new InlineHTML("&nbsp;"));
-					}
-					fp.add(more);
-				}
-			};
-			if (beanView != null) {
-				beanView.setVisible(true);
-			}
-			running(false);
-			button.setEnabled(true);
-			if (handler == null) {
-				ClientLayerLocator.get().actionLogProvider().getLogsForAction(
-						action, logItemCount, outerCallback, true);
-			}
-			maxButton2.getToggleButton().setDown(true);
-			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-				@Override
-				public void execute() {
-					maxButton2.getToggleButton().setDown(false);
-				}
-			});
-		}
-
 		int logItemCount = 5;
 
-		private final BreadcrumbBarMaximiseButton maxButton2;
-
-		public ActionLogPanel(RemoteAction action, BreadcrumbBarMaximiseButton maxButton) {
-			this.action = action;
-			this.maxButton2 = maxButton;
+		public ActionLogPanel() {
 			this.handler = LooseActionRegistry.get().getHandler(
 					action.getClass().getName());
 			this.hasChildHandlersSupport = new HasChildHandlersSupport();
@@ -244,6 +192,22 @@ public class ActionViewProvider implements ViewProvider,
 			add(fp);
 			setWidth("80%");
 			redraw();
+		}
+
+		public void addHandler(HandlerRegistration registration) {
+			this.hasChildHandlersSupport.addHandler(registration);
+		}
+
+		public void detachHandlers() {
+			this.hasChildHandlersSupport.detachHandlers();
+		}
+
+		public boolean equals(Object obj) {
+			return this.hasChildHandlersSupport.equals(obj);
+		}
+
+		public int hashCode() {
+			return this.hasChildHandlersSupport.hashCode();
 		}
 
 		public void onClick(ClickEvent event) {
@@ -292,18 +256,72 @@ public class ActionViewProvider implements ViewProvider,
 			GwittirUtils.refreshEmptyTextBoxes(beanView.getBoundWidget()
 					.getBinding());
 			if (!beanView.getBoundWidget().getBinding().validate()) {
-				ClientLayerLocator.get().notifications().showWarning(
-						"Please correct the problems in the form");
+				ClientLayerLocator.get().notifications()
+						.showWarning("Please correct the problems in the form");
 				return;
 			}
 			running(true);
-			if (action instanceof SynchronousAction) {
-				ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-						.performActionAndWait(action, syncCallback);
-			} else {
-				ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-						.performAction(action, asyncCallback);
+			performAction(asyncCallback, syncCallback);
+		}
+
+		
+
+		public String toString() {
+			return this.hasChildHandlersSupport.toString();
+		}
+
+		private void running(boolean running) {
+			button.setText("Run now");
+			button.setEnabled(!running);
+			runningLabel.setVisible(running);
+		}
+
+		protected void redraw() {
+			WidgetUtils.clearChildren(fp);
+			hasChildHandlersSupport.detachHandlers();
+			AsyncCallback<List<ActionLogItem>> outerCallback = new AsyncCallback<List<ActionLogItem>>() {
+				public void onFailure(Throwable caught) {
+					throw new WrappedRuntimeException(caught);
+				}
+
+				public void onSuccess(List<ActionLogItem> result) {
+					for (ActionLogItem actionLogItem : result) {
+						fp.add(new ActionLogItemVisualiser(actionLogItem));
+					}
+					HorizontalPanel more = new HorizontalPanel();
+					more.setStyleName("pad-15");
+					more.setSpacing(2);
+					more.add(new InlineLabel("Show more - "));
+					int[] counts = { 10, 20, 40, 80, 160, 320 };
+					for (int c : counts) {
+						final int fc = c;
+						more.add(new Link(String.valueOf(c),
+								new ClickHandler() {
+									public void onClick(ClickEvent event) {
+										logItemCount = fc;
+										redraw();
+									}
+								}));
+						more.add(new InlineHTML("&nbsp;"));
+					}
+					fp.add(more);
+				}
+			};
+			if (beanView != null) {
+				beanView.setVisible(true);
 			}
+			running(false);
+			button.setEnabled(true);
+			if (handler == null) {
+				getActionLogs(outerCallback,logItemCount);
+			}
+			maxButton.getToggleButton().setDown(true);
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					maxButton.getToggleButton().setDown(false);
+				}
+			});
 		}
 	}
 
@@ -319,7 +337,8 @@ public class ActionViewProvider implements ViewProvider,
 			this.vp = new VerticalPanel();
 			this.link = new Link(CommonUtils.formatDate(item.getActionDate(),
 					DateStyle.AU_DATE_TIME)
-					+ " - " + item.getShortDescription());
+					+ " - "
+					+ item.getShortDescription());
 			link.addClickHandler(this);
 			this.html = new HTML("<pre>" + item.getActionLog() + "</pre>", true);
 			html.setVisible(false);
@@ -340,28 +359,15 @@ public class ActionViewProvider implements ViewProvider,
 
 		PermissibleActionEvent.PermissibleActionSupport support = new PermissibleActionEvent.PermissibleActionSupport();
 
+		@SuppressWarnings("unused")
+		private Button saveButton;
+
 		public void addVetoableActionListener(PermissibleActionListener listener) {
 			this.support.addVetoableActionListener(listener);
 		}
 
 		public void fireVetoableActionEvent(PermissibleActionEvent event) {
 			this.support.fireVetoableActionEvent(event);
-		}
-
-		public void removeVetoableActionListener(
-				PermissibleActionListener listener) {
-			this.support.removeVetoableActionListener(listener);
-		}
-
-		@SuppressWarnings("unused")
-		private Button saveButton;
-
-		public void setSaveButton(Button saveButton) {
-			this.saveButton = saveButton;
-		}
-
-		public void setAction(PermissibleAction action) {
-			this.action = action;
 		}
 
 		public PermissibleAction getAction() {
@@ -374,9 +380,18 @@ public class ActionViewProvider implements ViewProvider,
 							ViewAction.class));
 			fireVetoableActionEvent(action);
 		}
-	}
 
-	public void vetoableAction(PermissibleActionEvent evt) {
-		// no response at the mo'
+		public void removeVetoableActionListener(
+				PermissibleActionListener listener) {
+			this.support.removeVetoableActionListener(listener);
+		}
+
+		public void setAction(PermissibleAction action) {
+			this.action = action;
+		}
+
+		public void setSaveButton(Button saveButton) {
+			this.saveButton = saveButton;
+		}
 	}
 }

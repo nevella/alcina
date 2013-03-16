@@ -56,4 +56,8 @@ public class DateCriterion extends AbstractDateCriterion {
 						+ CommonUtils.formatDate(getDate(),
 								DateStyle.AU_DATE_SLASH);
 	}
+	@Override
+	public SearchCriterion clone() throws CloneNotSupportedException {
+		return new DateCriterion().copyProperties(this);
+	}
 }

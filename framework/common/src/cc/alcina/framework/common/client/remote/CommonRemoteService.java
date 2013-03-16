@@ -11,21 +11,16 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.remote;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
 import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
-import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
@@ -35,29 +30,17 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
-import cc.alcina.framework.common.client.logic.reflection.Permission;
-import cc.alcina.framework.common.client.search.SearchDefinition;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface CommonRemoteService extends RemoteService {
+public interface CommonRemoteService extends RemoteService {
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws WebException;
-
-	// TODO: permissions
-	public <T extends HasIdAndLocalId> T getItemById(String className, Long id)
-			throws WebException;
-
-	@AuthenticationRequired(permission = @Permission(access = AccessLevel.ADMIN))
-	public List<ActionLogItem> getLogsForAction(RemoteAction action,
-			Integer count);
 
 	public LoginResponse hello();
 
@@ -67,43 +50,36 @@ import com.google.gwt.user.client.rpc.RemoteService;
 	public Long logClientError(String exceptionToString);
 
 	public Long logClientError(String exceptionToString, String exceptionType);
-	
-	//to handle rpc interface drift, use escaped log records
+
+	// to handle rpc interface drift, use escaped log records
 	public void logClientRecords(String serializedLogRecords);
-	
+
 	public LoginResponse login(LoginBean loginBean);
-	
+
 	public void ping();
-	
+
 	public void logout();
 
-	@AuthenticationRequired()
-	public Long performAction(RemoteAction action);
+	public void persistOfflineTransforms(
+			List<DTRSimpleSerialWrapper> uncommitted) throws WebException;
 
-	@AuthenticationRequired()
-	public ActionLogItem performActionAndWait(RemoteAction action)
-			throws WebException;
-
-	@AuthenticationRequired
-	public <G extends WrapperPersistable> Long persist(G gwpo)
-			throws WebException;
-
-	public void persistOfflineTransforms(List<DTRSimpleSerialWrapper> uncommitted) throws WebException;
-	public PartialDtrUploadResponse uploadOfflineTransforms(PartialDtrUploadRequest request) throws WebException;
+	public PartialDtrUploadResponse uploadOfflineTransforms(
+			PartialDtrUploadRequest request) throws WebException;
 
 	@AuthenticationRequired()
 	public JobInfo pollJobStatus(Long id, boolean cancel);
 
-	public SearchResultsBase search(SearchDefinition def, int pageNumber);
 	@AuthenticationRequired
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformException, DomainTransformRequestException;
+
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException;
-	//for dumping dbs
+
+	// for dumping dbs
 	@AuthenticationRequired
 	public void dumpData(String data);
-	
+
 	@AuthenticationRequired
 	public String loadData(String key);
 }

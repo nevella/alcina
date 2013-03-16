@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.search.DeepCloneable;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
@@ -73,8 +74,12 @@ public class CloneHelper {
 	}
 
 	public <T> T deepBeanClone(T o) throws Exception {
+		
 		if (createdMap.containsKey(o)) {
 			return (T) createdMap.get(o);
+		}
+		if(o instanceof DeepCloneable){
+			return (T)((DeepCloneable)o).deepClone();
 		}
 		T ret = newInstance(o);
 		createdMap.put(o, ret);

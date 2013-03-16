@@ -40,4 +40,12 @@ public class LogMessageTypeEnumCriterion extends EnumCriterion<LogMessageType> {
 	public void setValue(LogMessageType value) {
 		setLogMessageType(value);
 	}
+	@Override
+	public LogMessageTypeEnumCriterion clone()
+			throws CloneNotSupportedException {
+		LogMessageTypeEnumCriterion copy = new LogMessageTypeEnumCriterion();
+		copy.copyProperties(this);
+		copy.logMessageType=logMessageType;
+		return copy;
+	}
 }

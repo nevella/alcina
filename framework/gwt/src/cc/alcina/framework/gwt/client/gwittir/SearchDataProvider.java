@@ -18,6 +18,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -35,8 +36,8 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
  * 
  * @author Nick Reddel
  */
-public class SearchDataProvider implements SortableDataProvider {
-	private SingleTableSearchDefinition def;
+public abstract class SearchDataProvider implements SortableDataProvider {
+	protected SingleTableSearchDefinition def;
 
 	private final AsyncCallback completionCallback;
 
@@ -70,7 +71,7 @@ public class SearchDataProvider implements SortableDataProvider {
 		return (String[]) pNames.toArray(new String[pNames.size()]);
 	}
 
-	abstract class SearchCallback extends
+	public abstract static class SearchCallback extends
 			CancellableAsyncCallback<SearchResultsBase> {
 		private final boolean callBackInit;
 
@@ -101,7 +102,7 @@ public class SearchDataProvider implements SortableDataProvider {
 					return;
 				}
 				List results = result.getResults();
-				if(converter!=null){
+				if (converter != null) {
 					results = CollectionFilters.convert(results, converter);
 				}
 				if (callBackInit) {
@@ -121,9 +122,24 @@ public class SearchDataProvider implements SortableDataProvider {
 				runningCallback = null;
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-				.search(def, pageNumber, callback);
+		search(pageNumber, callback);
 	}
+
+	public static class SearchDataProviderCommon extends SearchDataProvider {
+		public SearchDataProviderCommon(SingleTableSearchDefinition def,
+				AsyncCallback completionCallback, Converter converter) {
+			super(def, completionCallback, converter);
+		}
+
+		@Override
+		protected void search(int pageNumber, SearchCallback callback) {
+			((CommonRemoteServiceExtAsync) ClientLayerLocator.get()
+					.commonRemoteServiceAsyncInstance()).search(def,
+					pageNumber, callback);
+		}
+	}
+
+	protected abstract void search(int pageNumber, SearchCallback callback);
 
 	public void sortOnProperty(HasChunks table, String propertyName,
 			boolean ascending) {

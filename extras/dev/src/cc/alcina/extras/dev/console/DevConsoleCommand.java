@@ -179,6 +179,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return argv.length <= argIndex ? defaultValue : Integer
 				.parseInt(argv[argIndex]);
 	}
+	protected String getStringArg(String[] argv, int argIndex, String defaultValue) {
+		return argv.length <= argIndex ? defaultValue : argv[argIndex];
+	}
 
 	protected String getSitename(long id) throws Exception {
 		Statement stmt = getConn().createStatement();
@@ -936,5 +939,19 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	public boolean silent() {
 		return false;
+	}
+	protected int getIntArg(String[] argv, String argName, int defaultValue) {
+		String stringArg = getStringArg(argv, argName, null);
+		return stringArg==null?defaultValue:Integer.parseInt(stringArg);
+	}
+	protected String getStringArg(String[] argv, String argName, String defaultValue) {
+		Pattern argMatcher=Pattern.compile(String.format("%s=(.+)",argName));
+		for(String arg:argv){
+			Matcher m = argMatcher.matcher(arg);
+			if(m.matches()){
+				return m.group(1);
+			}
+		}
+		return defaultValue;
 	}
 }

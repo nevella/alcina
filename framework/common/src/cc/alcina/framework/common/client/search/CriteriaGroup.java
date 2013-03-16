@@ -82,15 +82,15 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		}
 		List<SC> otherCriteria = new ArrayList<SC>(other.getCriteria());
 		for (SC sc : getCriteria()) {
-			boolean foundEquiv=false;
-			for(SC otherCriterion:otherCriteria){
-				if (sc.equivalentTo(otherCriterion)){
+			boolean foundEquiv = false;
+			for (SC otherCriterion : otherCriteria) {
+				if (sc.equivalentTo(otherCriterion)) {
 					otherCriteria.remove(otherCriterion);
-					foundEquiv=true;
+					foundEquiv = true;
 					break;
 				}
 			}
-			if (!foundEquiv){
+			if (!foundEquiv) {
 				return false;
 			}
 		}
@@ -123,8 +123,9 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		}
 		return null;
 	}
+
 	public <S extends SearchCriterion> List<S> findCriteria(Class<S> clazz) {
-		List<S> result=new ArrayList<S>();
+		List<S> result = new ArrayList<S>();
 		for (SC sc : getCriteria()) {
 			if (sc.getClass() == clazz) {
 				result.add((S) sc);
@@ -243,10 +244,12 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 	}
 
 	protected String provideDisplayNamePrefix(boolean withGroupName) {
-		return CommonUtils.isNullOrEmpty(getDisplayName())
-				|| !withGroupName ? "" : CommonUtils.pluralise(CommonUtils
-				.capitaliseFirst(getDisplayName()), criteria)
-				+ ": ";
+		return CommonUtils.isNullOrEmpty(getDisplayName()) || !withGroupName ? ""
+				: CommonUtils
+						.pluralise(
+								CommonUtils.capitaliseFirst(getDisplayName()),
+								criteria)
+						+ ": ";
 	}
 
 	protected String combinatorString() {
@@ -263,6 +266,20 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 
 	public String rule() {
 		return "";
+	}
+
+	protected <T extends CriteriaGroup> T deepCopy(T cg) throws CloneNotSupportedException{
+		cg.combinator = combinator;
+		cg.displayName = displayName;
+		cg.entityClass = entityClass;
+		for (SearchCriterion sc : criteria) {
+			cg.criteria.add(sc.clone());
+		}
+		return cg;
+	}
+
+	public CriteriaGroup clone() throws CloneNotSupportedException {
+		throw new CloneNotSupportedException();
 	}
 
 	public String validatePermissions() {

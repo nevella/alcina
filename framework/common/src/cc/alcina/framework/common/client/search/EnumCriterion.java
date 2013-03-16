@@ -112,4 +112,10 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	public boolean isWithNull() {
 		return withNull;
 	}
+	@Override
+	protected EnumCriterion copyProperties(SearchCriterion searchCriterion) {
+		EnumCriterion sc = (EnumCriterion) searchCriterion;
+		sc.withNull=withNull;
+		return super.copyProperties(sc);
+	}
 }

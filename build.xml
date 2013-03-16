@@ -109,8 +109,8 @@
 			<fileset dir="${framework.entity.build.dir}">
 				<include name="**/*.*" />
 				<!-- put in server (servlet/war) jar due to GWT/RPC classloader issues -->
-				<exclude name="${framework.remote.interface.class}" />
-				<exclude name="${framework.remote.asyncinterface.class}" />
+				<exclude name="${framework.remote.interface.package}" />
+				
 			</fileset>
 
 			<fileset dir="${framework.dir}/common/src">
@@ -220,8 +220,7 @@
 				<exclude name="**/*.class" />
 			</fileset>
 			<fileset dir="${framework.entity.build.dir}">
-				<include name="${framework.remote.interface.class}" />
-				<include name="${framework.remote.asyncinterface.class}" />
+				<include name="${framework.remote.interface.package}" />
 			</fileset>
 		</jar>
 

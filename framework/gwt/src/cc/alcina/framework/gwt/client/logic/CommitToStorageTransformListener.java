@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimerWrapper;
@@ -57,7 +58,6 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		DomainTransformListener {
 	public static final int DELAY_MS = 100;
 
-	private ClientTransformExceptionResolver transformExceptionResolver = new ClientTransformExceptionResolutionSkipAndReload();
 
 	private List<DomainTransformEvent> transformQueue;
 
@@ -170,10 +170,6 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		return this.synthesisedEvents;
 	}
 
-	public ClientTransformExceptionResolver getTransformExceptionResolver() {
-		return transformExceptionResolver;
-	}
-
 	public boolean isPaused() {
 		return paused;
 	}
@@ -198,11 +194,6 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		this.suppressErrors = suppressErrors;
 	}
 
-	public void setTransformExceptionResolver(
-			ClientTransformExceptionResolver transformExceptionResolver) {
-		this.transformExceptionResolver = transformExceptionResolver;
-	}
-
 	private synchronized void resetQueue() {
 		transformQueue = new ArrayList<DomainTransformEvent>();
 		// eventIdsToIgnore = new HashSet<Long>();
@@ -214,7 +205,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	public void putReloadRequired() {
 		currentState = RELOAD;
 	}
-
+	
 	protected synchronized void commit() {
 		if ((priorRequestsWithoutResponse.size() == 0 && transformQueue.size() == 0)
 				|| isPaused()) {
@@ -401,6 +392,10 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		} else {
 			commitRemote(commitRemoteCallback);
 		}
+	}
+
+	protected ClientTransformExceptionResolver getTransformExceptionResolver() {
+		return Registry.impl(ClientTransformExceptionResolver.class);
 	}
 
 	protected void commitRemote(AsyncCallback<DomainTransformResponse> callback) {

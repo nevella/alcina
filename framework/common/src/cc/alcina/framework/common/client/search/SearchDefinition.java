@@ -75,9 +75,51 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
 			.getName() + ":" + "current-search-definition";
 
+	public Set<SearchCriterion> allCriteria() {
+		LinkedHashSet<SearchCriterion> result = new LinkedHashSet<SearchCriterion>();
+		for (CriteriaGroup cg : getCriteriaGroups()) {
+			result.addAll(cg.getCriteria());
+		}
+		return result;
+	}
+
+	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
+		OrderGroup og = orderGroup(clazz);
+		if (og != null) {
+			og.getCriteria().clear();
+		}
+	}
+
+	public void deepCopy(SearchDefinition def) throws CloneNotSupportedException{
+		def.charWidth=charWidth;
+		def.clientSearchIndex=clientSearchIndex;
+		for(CriteriaGroup cg: criteriaGroups){
+			def.criteriaGroups.add(cg.clone());
+		}
+		def.name=name;
+		for(OrderGroup og: orderGroups){
+			def.orderGroups.add(og.clone());
+		}
+		def.orderName=orderName;
+		def.publicationType=publicationType;
+		def.resultsPerPage=resultsPerPage;
+		def.resetLookups();
+	}
+
 	@SuppressWarnings("unchecked")
 	public <C extends CriteriaGroup> C criteriaGroup(Class<C> clazz) {
 		return (C) cgs.get(clazz);
+	}
+
+	public void ensureCriteriaGroups(CriteriaGroup... criteriaGroups) {
+		resetLookups();
+		for (CriteriaGroup cg : criteriaGroups) {
+			CriteriaGroup existing = criteriaGroup(cg.getClass());
+			if (existing == null) {
+				getCriteriaGroups().add(cg);
+			}
+		}
+		resetLookups();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -113,7 +155,6 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		return ewp;
 	}
 
-
 	public boolean equivalentTo(SearchDefinition other) {
 		if (other == null || other.getClass() != getClass()) {
 			return false;
@@ -139,8 +180,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	public String filterDescription(boolean html) {
 		StringBuffer result = new StringBuffer();
 		try {
-			LooseContext.getContext().set(
-					CONTEXT_CURRENT_SEARCH_DEFINITION, this);
+			LooseContext.getContext().set(CONTEXT_CURRENT_SEARCH_DEFINITION,
+					this);
 			for (CriteriaGroup criteriaGroup : criteriaGroups) {
 				String s = html ? criteriaGroup.toHtml() : criteriaGroup
 						.toString();
@@ -152,8 +193,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 				}
 			}
 		} finally {
-			LooseContext.getContext().remove(
-					CONTEXT_CURRENT_SEARCH_DEFINITION);
+			LooseContext.getContext().remove(CONTEXT_CURRENT_SEARCH_DEFINITION);
 		}
 		return (result.length() == 0) ? defaultFilterDescription : result
 				.toString();
@@ -219,6 +259,9 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 	}
 
+	public void onBeforeRunSearch() {
+	}
+
 	public String orderDescription(boolean html) {
 		StringBuffer result = new StringBuffer();
 		for (OrderGroup orderGroup : orderGroups) {
@@ -253,6 +296,13 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 							+ propertyName);
 		}
 		return propertyName;
+	}
+
+	/**
+	 * For more complex search definitions, override this
+	 */
+	public Object provideResultsType() {
+		return null;
 	}
 
 	public void resetLookups() {
@@ -329,7 +379,6 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	}
 
 	protected void putCriteriaGroup(CriteriaGroup cg) {
-		
 		cgs.put(cg.getClass(), cg);
 		criteriaGroups.add(cg);
 	}
@@ -337,41 +386,5 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	protected void putOrderGroup(OrderGroup og) {
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
-	}
-
-	/**
-	 * For more complex search definitions, override this
-	 */
-	public Object provideResultsType() {
-		return null;
-	}
-	
-	public Set<SearchCriterion> allCriteria(){
-		LinkedHashSet<SearchCriterion> result=new LinkedHashSet<SearchCriterion>();
-		for(CriteriaGroup cg:getCriteriaGroups()){
-			result.addAll(cg.getCriteria());
-		}
-		return result;
-	}
-
-	public void onBeforeRunSearch() {
-	}
-
-	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
-		OrderGroup og = orderGroup(clazz);
-		if (og != null) {
-			og.getCriteria().clear();
-		}
-	}
-
-	public void ensureCriteriaGroups(CriteriaGroup... criteriaGroups) {
-		resetLookups();
-		for (CriteriaGroup cg : criteriaGroups) {
-			CriteriaGroup existing = criteriaGroup(cg.getClass());
-			if (existing == null) {
-				getCriteriaGroups().add(cg);
-			}
-		}
-		resetLookups();
 	}
 }

@@ -17,13 +17,16 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -45,6 +48,8 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+@RegistryLocation(registryPoint = ClientTransformExceptionResolver.class, implementationType = ImplementationType.SINGLETON)
+@ClientInstantiable
 public class ClientTransformExceptionResolutionSkipAndReload implements
 		ClientTransformExceptionResolver, StateChangeListener,
 		PermissibleActionListener {
@@ -72,14 +77,12 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 			@Override
 			protected void onAttach() {
 				super.onAttach();
-				storage
-						.addStateChangeListener(ClientTransformExceptionResolutionSkipAndReload.this);
+				storage.addStateChangeListener(ClientTransformExceptionResolutionSkipAndReload.this);
 			}
 
 			@Override
 			protected void onDetach() {
-				storage
-						.removeStateChangeListener(ClientTransformExceptionResolutionSkipAndReload.this);
+				storage.removeStateChangeListener(ClientTransformExceptionResolutionSkipAndReload.this);
 				super.onDetach();
 			}
 		};
@@ -108,8 +111,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 		}
 		if (adapters.isEmpty() && irresolvable == null) {
 			// unknown exception - throw
-			token
-					.setResolverAction(ClientTransformExceptionResolverAction.THROW);
+			token.setResolverAction(ClientTransformExceptionResolverAction.THROW);
 			callback.apply(token);
 			return;
 		}
@@ -184,8 +186,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 		if (status.isIrresolvable()) {
 			Window.Location.reload();
 		} else {
-			token
-					.setResolverAction(ClientTransformExceptionResolverAction.RESUBMIT);
+			token.setResolverAction(ClientTransformExceptionResolverAction.RESUBMIT);
 			callback.apply(token);
 		}
 	}
@@ -344,8 +345,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 		}
 
 		public void reloadRequired() {
-			html
-					.setText("The application will need to be reloaded after the problems are resolved.");
+			html.setText("The application will need to be reloaded after the problems are resolved.");
 		}
 	}
 }

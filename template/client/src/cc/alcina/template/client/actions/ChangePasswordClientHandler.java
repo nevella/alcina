@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.gwittir.validator.CallbackValidator.Val
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
@@ -36,18 +37,19 @@ import com.totsp.gwittir.client.validator.Validator;
  * @author nreddel@barnet.com.au
  * 
  */
-@RegistryLocation( registryPoint = PermissibleActionHandler.class, targetClass = ChangePasswordClientAction.class)
+@RegistryLocation(registryPoint = PermissibleActionHandler.class, targetClass = ChangePasswordClientAction.class)
 @ClientInstantiable
 public class ChangePasswordClientHandler implements PermissibleActionHandler {
 	private GlassDialogBox gdb;
 
 	public void handleAction(Widget sourceWidget, PermissibleAction action,
 			Object target) {
-
 		IUser user = (IUser) target;
 		if (user.getId() == 0) {
-			ClientLayerLocator.get().notifications().showWarning(
-					"This user has not been saved to the database");
+			ClientLayerLocator
+					.get()
+					.notifications()
+					.showWarning("This user has not been saved to the database");
 			return;
 		}
 		gdb = new GlassDialogBox();
@@ -81,13 +83,14 @@ public class ChangePasswordClientHandler implements PermissibleActionHandler {
 						}
 
 						public void onSuccess(ActionLogItem item) {
-							ClientLayerLocator.get().notifications().showMessage(
-									"Password changed");
+							ClientLayerLocator.get().notifications()
+									.showMessage("Password changed");
 							gdb.hide();
 						}
 					};
 					changePasswordView.setVisible(false);
-					ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+					((CommonRemoteServiceExtAsync) ClientLayerLocator.get()
+							.commonRemoteServiceAsyncInstance())
 							.performActionAndWait(cp, callback);
 				}
 				if (evt.getAction() instanceof CancelAction) {
@@ -118,7 +121,8 @@ public class ChangePasswordClientHandler implements PermissibleActionHandler {
 				b.getLeft().validator = password2Validator;
 			}
 			RelativePopupValidationFeedback feedback = new RelativePopupValidationFeedback(
-					RelativePopupValidationFeedback.BOTTOM,b.getLeft().feedback);
+					RelativePopupValidationFeedback.BOTTOM,
+					b.getLeft().feedback);
 			feedback.setCss("withBkg");
 			b.getLeft().feedback = feedback;
 		}

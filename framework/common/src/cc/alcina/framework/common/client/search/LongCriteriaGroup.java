@@ -38,4 +38,8 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 		setDisplayName(displayName);
 		getCriteria().add(lc);
 	}
+	@Override
+	public CriteriaGroup clone() throws CloneNotSupportedException {
+		return new LongCriteriaGroup().deepCopy(this);
+	}
 }

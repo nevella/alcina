@@ -32,7 +32,7 @@ import org.apache.log4j.PatternLayout;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -218,7 +218,7 @@ public abstract class DevHelper {
 				new ServerURLComponentEncoder());
 		CommonLocator.get().registerCurrentUtcDateProvider(
 				TestPersistenceHelper.get());
-		TransformManager.register(new ClientTransformManager());
+		TransformManager.register(new ClientTransformManagerCommon());
 	}
 
 	public void scanRegistry() {

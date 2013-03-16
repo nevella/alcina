@@ -1,9 +1,9 @@
 package cc.alcina.framework.jvmclient.domaintransform;
 
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 
 @SuppressWarnings("unchecked")
-public class ThreadedClientTransformManager extends ClientTransformManager {
+public class ThreadedClientTransformManager extends ClientTransformManagerCommon {
 	private static ThreadLocal<Boolean> ignorePropertyChanges = new ThreadLocal() {
 		protected synchronized Boolean initialValue() {
 			return false;
@@ -35,4 +35,5 @@ public class ThreadedClientTransformManager extends ClientTransformManager {
 	public void setReplayingRemoteEvent(boolean _replayingRemoteEvent) {
 		replayingRemoteEvent.set(_replayingRemoteEvent);
 	}
+	
 }

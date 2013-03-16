@@ -36,7 +36,7 @@ public class AlcinaTemplateClient extends ClientBaseWithLayout implements
 	}
 
 	public AlcinaTemplateRemoteServiceAsync getAppRemoteService() {
-		return remoteServiceAsyncProvider.getServiceInstance();
+		return  remoteServiceAsyncProvider.getServiceInstance();
 	}
 
 	@Override

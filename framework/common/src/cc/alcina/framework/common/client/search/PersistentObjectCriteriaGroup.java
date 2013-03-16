@@ -5,12 +5,17 @@ import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClass
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 
 @BeanInfo(displayNamePropertyName = "displayName")
-@PermissibleChildClasses( { PersistentObjectCriterion.class })
+@PermissibleChildClasses({ PersistentObjectCriterion.class })
 public class PersistentObjectCriteriaGroup extends
 		CriteriaGroup<PersistentObjectCriterion> {
 	public PersistentObjectCriteriaGroup() {
 		super();
 		setEntityClass(ClassRef.class);
 		setDisplayName("Object type");
+	}
+
+	@Override
+	public CriteriaGroup clone() throws CloneNotSupportedException {
+		return new PersistentObjectCriteriaGroup().deepCopy(this);
 	}
 }

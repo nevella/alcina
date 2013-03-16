@@ -66,7 +66,6 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 
-@SuppressWarnings("unused")
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
 		implements ClipboardOwner {
 	private static BiPrintStream out;
@@ -266,6 +265,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		tokenizer.wordChars('-', '-');
 		tokenizer.wordChars('/', '/');
 		tokenizer.wordChars('_', '_');
+		tokenizer.wordChars('=', '=');
+		tokenizer.wordChars(':', ':');
 		int token;
 		try {
 			String cmd = null;
@@ -425,7 +426,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	private static class JConsole extends JTextPane {
+	public static class JConsole extends JTextPane {
 		private SimpleAttributeSet current = null;
 
 		private SimpleAttributeSet[] attrs;
@@ -814,5 +815,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public void find(String text) {
 		consoleLeft.find(text);
+	}
+
+	public JConsole getConsoleLeft() {
+		return this.consoleLeft;
 	}
 }

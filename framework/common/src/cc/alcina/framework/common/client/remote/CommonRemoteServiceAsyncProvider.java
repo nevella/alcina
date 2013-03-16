@@ -23,30 +23,7 @@ import com.google.gwt.user.client.rpc.ServiceDefTarget;
  * 
  * @author Nick Reddel
  */
-public abstract class CommonRemoteServiceAsyncProvider<CRSA extends CommonRemoteServiceAsync> {
-	public CRSA getServiceInstance() {
-		CRSA service = createAndIntialiseEndpoint();
-		((ServiceDefTarget) service)
-				.setRpcRequestBuilder(getRequestBuilder());
-		return service;
-	}
-	public CRSA getServiceInstance(RpcRequestBuilder builder) {
-		CRSA service = createAndIntialiseEndpoint();
-		((ServiceDefTarget) service)
-				.setRpcRequestBuilder(builder);
-		return service;
-	}
-	public AlcinaRpcRequestBuilder getRequestBuilder(){
-		return new AlcinaRpcRequestBuilder();
-	}
-	protected abstract CRSA createAndIntialiseEndpoint();
-	
-	protected String adjustEndpoint(String endpoint){
-		if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)){
-			endpoint+="-not";
-		}
-		return endpoint;
-	}
+public abstract class CommonRemoteServiceAsyncProvider<CRSA extends CommonRemoteServiceAsync> extends RemoteServiceProvider<CRSA> {
 	
 	
 }

@@ -50,4 +50,11 @@ public class PersistentObjectCriterion extends SearchCriterion {
 	public ClassRef getClassRef() {
 		return classRef;
 	}
+	@Override
+	public PersistentObjectCriterion clone() throws CloneNotSupportedException {
+		PersistentObjectCriterion copy = new PersistentObjectCriterion();
+		copy.copyProperties(this);
+		copy.classRef=classRef;
+		return copy;
+	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
@@ -22,29 +21,33 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  *
  * @author Nick Reddel
  */
-@PermissibleChildClasses({TxtCriterion.class})
- public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
+@PermissibleChildClasses({ TxtCriterion.class })
+public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 	public TxtCriteriaGroup() {
 		super();
 		setDisplayName("Text");
 	}
 
-	public TxtCriteriaGroup( 
-			String displayName) {
+	public TxtCriteriaGroup(String displayName) {
 		this();
 		TxtCriterion tc = new TxtCriterion();
 		tc.setDisplayName(displayName);
 		setDisplayName(displayName);
-		
 		getCriteria().add(tc);
 	}
+
+	@Override
+	public CriteriaGroup clone() throws CloneNotSupportedException {
+		return new TxtCriteriaGroup().deepCopy(this);
+	}
+
 	/**
 	 * for multiple tcgs, mapping to different properties
+	 * 
 	 * @author nick@alcina.cc
-	 *
+	 * 
 	 */
 	public static class TxtCriteriaGroup2 extends TxtCriteriaGroup {
-
 		public TxtCriteriaGroup2() {
 			super();
 		}
@@ -52,10 +55,14 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 		public TxtCriteriaGroup2(String displayName) {
 			super(displayName);
 		}
-		
-	}
-	public static class TxtCriteriaGroup3 extends TxtCriteriaGroup {
 
+		@Override
+		public CriteriaGroup clone() throws CloneNotSupportedException {
+			return new TxtCriteriaGroup2().deepCopy(this);
+		}
+	}
+
+	public static class TxtCriteriaGroup3 extends TxtCriteriaGroup {
 		public TxtCriteriaGroup3() {
 			super();
 		}
@@ -63,6 +70,10 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 		public TxtCriteriaGroup3(String displayName) {
 			super(displayName);
 		}
-		
+
+		@Override
+		public CriteriaGroup clone() throws CloneNotSupportedException {
+			return new TxtCriteriaGroup3().deepCopy(this);
+		}
 	}
 }

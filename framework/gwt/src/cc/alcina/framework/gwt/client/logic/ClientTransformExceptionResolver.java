@@ -4,6 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Callback;
 /*
  * REVISIT: At the moment, there's a mismatch between local and remote 
@@ -15,6 +17,7 @@ import cc.alcina.framework.common.client.util.Callback;
  * marked as all_committed locally, so they won't be retried and shouldn't
  * cause inconsistency...I think). 
  */
+
 public interface ClientTransformExceptionResolver {
 	public void resolve(DomainTransformRequestException dtre,
 			Callback<ClientTransformExceptionResolutionToken> callback);

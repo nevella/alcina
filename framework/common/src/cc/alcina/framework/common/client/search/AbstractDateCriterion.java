@@ -36,6 +36,11 @@ public class AbstractDateCriterion extends SearchCriterion implements
 	public AbstractDateCriterion(Date date) {
 		setDate(date);
 	}
+	@Override
+	protected <SC extends SearchCriterion> SC copyProperties(SC searchCriterion) {
+		((AbstractDateCriterion)searchCriterion).date=date==null?null:new Date(date.getTime());
+		return super.copyProperties(searchCriterion);
+	}
 
 	public AbstractDateCriterion(String displayName, Date date) {
 		this(displayName);

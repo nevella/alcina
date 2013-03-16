@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
+import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
@@ -42,7 +43,8 @@ public class ClientLayerLocator {
 		return theInstance;
 	}
 	private boolean usesRootLayoutPanel;
-	private CommonRemoteServiceAsyncProvider commonRemoteServiceAsyncProvider;
+
+	private RemoteServiceProvider<? extends CommonRemoteServiceAsync> commonRemoteServiceAsyncProvider;
 
 	private ActionLogProvider actionLogProvider;
 
@@ -101,7 +103,7 @@ public class ClientLayerLocator {
 		return commitToStorageTransformListener;
 	}
 
-	public CommonRemoteServiceAsyncProvider getCommonRemoteServiceAsyncProvider() {
+	public RemoteServiceProvider<? extends CommonRemoteServiceAsync> getCommonRemoteServiceAsyncProvider() {
 		return this.commonRemoteServiceAsyncProvider;
 	}
 
@@ -126,7 +128,7 @@ public class ClientLayerLocator {
 	}
 
 	public void registerCommonRemoteServiceAsyncProvider(
-			CommonRemoteServiceAsyncProvider commonRemoteServiceAsyncProvider) {
+			RemoteServiceProvider<? extends CommonRemoteServiceAsync> commonRemoteServiceAsyncProvider) {
 		this.commonRemoteServiceAsyncProvider = commonRemoteServiceAsyncProvider;
 	}
 

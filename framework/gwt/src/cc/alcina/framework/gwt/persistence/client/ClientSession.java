@@ -21,6 +21,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.Window.ClosingEvent;
+import com.google.gwt.user.client.Window.ClosingHandler;
 
 /**
  * 
@@ -42,7 +45,7 @@ import com.google.gwt.user.client.Timer;
  *         </ul>
  * 
  */
-public class ClientSession {
+public class ClientSession implements ClosingHandler {
 	public static final int KEEP_ALIVE_TIMER = 2000;
 
 	private String storageSessionCookieName;
@@ -53,6 +56,7 @@ public class ClientSession {
 		super();
 		setAppId("alcina");
 		reset();
+		Window.addWindowClosingHandler((ClosingHandler) this);
 	}
 
 	public void setAppId(String appId) {
@@ -93,10 +97,6 @@ public class ClientSession {
 			theInstance = new ClientSession();
 		}
 		return theInstance;
-	}
-
-	public static boolean initialised() {
-		return theInstance != null;
 	}
 
 	public void appShutdown() {
@@ -196,7 +196,7 @@ public class ClientSession {
 	 * Callback with true if sole open tab
 	 */
 	public void checkSoleOpenTab(final Callback<Boolean> callback) {
-		if(isSoleOpenTab()){
+		if (isSoleOpenTab()) {
 			callback.apply(true);
 			return;
 		}
@@ -214,5 +214,10 @@ public class ClientSession {
 				}
 			}
 		}.scheduleRepeating(1000);
+	}
+
+	@Override
+	public void onWindowClosing(ClosingEvent event) {
+		ClientSession.get().appShutdown();
 	}
 }

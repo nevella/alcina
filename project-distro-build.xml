@@ -196,8 +196,6 @@
 			<jvmarg value="-XX:MaxPermSize=${framework.gwt.jvm.maxPermSizeMb}m" />
 			<jvmarg value="-Xss2M" />
 			<jvmarg value="-Dgwt.usearchives=false" />
-
-
 			<arg line=" -style ${gwt.codestyle}" />
 			<arg line="${project.gwt.compile.flags}" />
 			<arg value="${project.gwt.module.name}" />

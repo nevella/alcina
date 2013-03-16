@@ -22,7 +22,9 @@ import cc.alcina.framework.gwt.client.ide.WorkspaceView.DataTreeView;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
 import cc.alcina.framework.gwt.client.ide.provider.ActionViewProvider;
+import cc.alcina.framework.gwt.client.ide.provider.ActionViewProvider.ActionViewProviderCommon;
 import cc.alcina.framework.gwt.client.ide.provider.SearchViewProvider;
+import cc.alcina.framework.gwt.client.ide.provider.SearchViewProvider.SearchViewProviderCommon;
 import cc.alcina.framework.gwt.client.stdlayout.TabDisplaysAsFullHeight;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
@@ -113,10 +115,10 @@ public class AdminTab extends BaseTab implements HasLayoutInfo,
 	}
 
 	protected void initialiseViewProviders() {
-		ActionViewProvider avp = new ActionViewProvider();
+		ActionViewProvider avp = new ActionViewProviderCommon();
 		// workspace.registerViewProvider(avp,
 		// ArticleRenderPreparationAction.class);
-		SearchViewProvider svp = new SearchViewProvider();
+		SearchViewProvider svp = new SearchViewProviderCommon();
 		workspace.registerViewProvider(svp,
 				DomainTransformRecordSearchAction.class);
 	}

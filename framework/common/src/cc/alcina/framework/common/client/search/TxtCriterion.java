@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public class TxtCriterion extends SearchCriterion {
 	static final transient long serialVersionUID = -2L;
+
 	@ClientInstantiable
 	public static enum TxtCriterionType {
 		CONTAINS, EQUALS, EQUALS_OR_LIKE
@@ -70,7 +71,8 @@ public class TxtCriterion extends SearchCriterion {
 			result.parameters.add(text.toLowerCase());
 			break;
 		case CONTAINS:
-			result.eql = "lower(" + targetPropertyNameWithTable() + ") like  ? ";
+			result.eql = "lower(" + targetPropertyNameWithTable()
+					+ ") like  ? ";
 			result.parameters.add("%" + text.toLowerCase() + "%");
 			break;
 		case EQUALS_OR_LIKE:
@@ -89,9 +91,24 @@ public class TxtCriterion extends SearchCriterion {
 	public TxtCriterionType getTxtCriterionType() {
 		return txtCriterionType;
 	}
+
 	@Override
 	public String toString() {
 		String string = CommonUtils.nullToEmpty(getText());
 		return string.length() == 0 ? "" : getDisplayName() + ": " + string;
+	}
+
+	@Override
+	protected TxtCriterion copyProperties(SearchCriterion searchCriterion) {
+		TxtCriterion sc = (TxtCriterion) searchCriterion;
+		sc.text = text;
+		sc.txtCriterionType = txtCriterionType;
+		return super.copyProperties(sc);
+	}
+	@Override
+	public TxtCriterion clone() throws CloneNotSupportedException {
+		TxtCriterion copy = new TxtCriterion();
+		copy.copyProperties(this);
+		return copy;
 	}
 }

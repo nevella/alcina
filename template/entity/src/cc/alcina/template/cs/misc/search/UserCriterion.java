@@ -3,7 +3,6 @@ package cc.alcina.template.cs.misc.search;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
-import cc.alcina.framework.common.client.search.AbstractDateCriterion;
 import cc.alcina.framework.common.client.search.AbstractUserCriterion;
 import cc.alcina.framework.common.client.search.EqlWithParameters;
 import cc.alcina.framework.common.client.search.SearchCriterion;
@@ -12,6 +11,7 @@ import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 public class UserCriterion extends AbstractUserCriterion {
 	static final transient long serialVersionUID = -1L;
+
 	public UserCriterion() {
 	}
 
@@ -49,8 +49,8 @@ public class UserCriterion extends AbstractUserCriterion {
 		}
 		UserCriterion otherImpl = (UserCriterion) other;
 		return otherImpl.getDirection() == getDirection()
-				&& CommonUtils.equalsWithNullEquality(getUserId(), otherImpl
-						.getUserId());
+				&& CommonUtils.equalsWithNullEquality(getUserId(),
+						otherImpl.getUserId());
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "AlcinaTemplate user", orderingHint = 10))
@@ -64,5 +64,13 @@ public class UserCriterion extends AbstractUserCriterion {
 		this.user = user;
 		this.userId = user == null ? 0 : user.getId();
 		propertyChangeSupport().firePropertyChange("user", old_user, user);
+	}
+
+	@Override
+	public UserCriterion clone() throws CloneNotSupportedException {
+		UserCriterion userCriterion = new UserCriterion();
+		userCriterion.user=user;
+		userCriterion.userId=userId;
+		return userCriterion.copyProperties(this);
 	}
 }

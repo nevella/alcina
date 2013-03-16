@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.actions.RemoteAction;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -46,8 +47,8 @@ public class StandardActionLogProvider implements ActionLogProvider {
 					outerCallback.onSuccess(logs.get(action.getClass()));
 				}
 			};
-			ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-					.getLogsForAction(action, count, callback);
+			((CommonRemoteServiceExtAsync) ClientLayerLocator.get()
+					.commonRemoteServiceAsyncInstance()).getLogsForAction(action, count, callback);
 		} else {
 			outerCallback.onSuccess(logs.get(action.getClass()));
 		}

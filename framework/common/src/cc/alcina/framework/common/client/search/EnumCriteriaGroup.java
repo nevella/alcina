@@ -45,4 +45,9 @@ public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 		}
 		return null;// either subclass, or rely on property mappings
 	}
+
+	@Override
+	public CriteriaGroup clone() throws CloneNotSupportedException {
+		return new EnumCriteriaGroup().deepCopy(this);
+	}
 }

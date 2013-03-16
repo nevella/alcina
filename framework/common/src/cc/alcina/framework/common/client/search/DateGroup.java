@@ -56,4 +56,9 @@ public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 		}
 		return null;
 	}
+
+	@Override
+	public CriteriaGroup clone() throws CloneNotSupportedException {
+		return new DateGroup().deepCopy(this);
+	}
 }

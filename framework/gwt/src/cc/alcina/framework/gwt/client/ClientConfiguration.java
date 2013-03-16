@@ -2,15 +2,14 @@ package cc.alcina.framework.gwt.client;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.NoImplementationException;
-import cc.alcina.framework.common.client.state.MachineModel;
 import cc.alcina.framework.common.client.state.MachineState;
 import cc.alcina.framework.common.client.state.MachineTransitionHandler;
-import cc.alcina.framework.common.client.state.SimpleTransitionHandler;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -142,7 +141,7 @@ public class ClientConfiguration {
 	}
 
 	protected ClientTransformManager createTransformManager() {
-		return new ClientTransformManager();
+		return new ClientTransformManagerCommon();
 	}
 
 	protected void initExceptionHandling() {

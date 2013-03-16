@@ -18,8 +18,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
+import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider.SearchDataProviderCommon;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
@@ -55,8 +56,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  *
  * @author Nick Reddel
  */
-public class SearchViewProvider implements ViewProvider {
-	private RemoteActionWithParameters<SingleTableSearchDefinition> action;
+public abstract class SearchViewProvider implements ViewProvider {
+	private LocalActionWithParameters<SingleTableSearchDefinition> action;
 
 	private boolean withoutCaption;
 
@@ -78,6 +79,10 @@ public class SearchViewProvider implements ViewProvider {
 
 	private BreadcrumbBarLinkChangesButton linkButton;
 
+	private String searchButtonTitle;
+
+	protected Converter converter;
+
 	public SearchPanel getSearchPanel() {
 		return this.searchPanel;
 	}
@@ -96,13 +101,15 @@ public class SearchViewProvider implements ViewProvider {
 
 	public Widget getViewForObject(Object obj, String searchButtonTitle,
 			Converter converter) {
-		action = (RemoteActionWithParameters<SingleTableSearchDefinition>) obj;
+		this.searchButtonTitle = searchButtonTitle;
+		this.converter = converter;
+		action = (LocalActionWithParameters<SingleTableSearchDefinition>) obj;
 		vp = new FlowPanel();
 		vp.setStyleName("alcina-BeanPanel");
 		if (!isWithoutCaption()) {
 			vp.add(createCaption(action));
 		}
-		searchPanel = new SearchPanel(action, searchButtonTitle, converter);
+		searchPanel = new SearchPanel();
 		vp.add(searchPanel);
 		return vp;
 	}
@@ -150,8 +157,6 @@ public class SearchViewProvider implements ViewProvider {
 	public class SearchPanel extends FlowPanel implements ClickHandler {
 		private InputButton button;
 
-		private final RemoteActionWithParameters<SingleTableSearchDefinition> action;
-
 		private FlowPanel resultsHolder;
 
 		private Label runningLabel;
@@ -160,13 +165,7 @@ public class SearchViewProvider implements ViewProvider {
 
 		private BoundTableExt table;
 
-		private Converter converter;
-
-		public SearchPanel(
-				RemoteActionWithParameters<SingleTableSearchDefinition> action,
-				String buttonTitle, Converter converter) {
-			this.action = action;
-			this.converter = converter;
+		public SearchPanel() {
 			HTML description = new HTML("<i>" + action.getDescription()
 					+ "</i><br />");
 			this.resultsHolder = new FlowPanel();
@@ -176,7 +175,7 @@ public class SearchViewProvider implements ViewProvider {
 			beanView.addStyleName(CommonUtils.simpleClassName(action
 					.getParameters().getClass()));
 			add(beanView);
-			this.button = new InputButton(buttonTitle);
+			this.button = new InputButton(searchButtonTitle);
 			button.setStyleName("button-submit");
 			button.addClickHandler(this);
 			FlexTable ft = (FlexTable) ((ComplexPanel) beanView).getWidget(0);
@@ -249,8 +248,8 @@ public class SearchViewProvider implements ViewProvider {
 			if (isEditableWidgets() && converter == null) {
 				converter = new RegisterObjectsConverter();
 			}
-			SearchDataProvider dp = new SearchDataProvider(def,
-					completionCallback, converter);
+			SearchDataProvider dp = createSearchDataProvider(
+					completionCallback, def);
 			this.table = isEditableWidgets() ? new BoundTableExt(mask, factory,
 					fields, dp) : new NiceWidthBoundTable(mask, factory,
 					fields, dp);
@@ -298,5 +297,16 @@ public class SearchViewProvider implements ViewProvider {
 
 	public void setWithLinkedChanges(boolean withLinkedChanges) {
 		this.withLinkedChanges = withLinkedChanges;
+	}
+
+	protected abstract SearchDataProvider createSearchDataProvider(
+			AsyncCallback completionCallback, SingleTableSearchDefinition def);
+
+	public static class SearchViewProviderCommon extends SearchViewProvider {
+		protected SearchDataProvider createSearchDataProvider(
+				AsyncCallback completionCallback,
+				SingleTableSearchDefinition def) {
+			return new SearchDataProviderCommon(def, completionCallback, converter);
+		}
 	}
 }

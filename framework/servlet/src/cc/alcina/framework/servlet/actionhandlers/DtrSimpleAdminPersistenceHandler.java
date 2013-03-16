@@ -20,7 +20,7 @@ public class DtrSimpleAdminPersistenceHandler implements
 		RemoteActionPerformer<DtrSimpleAdminPersistenceAction> {
 	private JobInfo jobInfo;
 
-	private ActionLogItem commit(DTRSimpleSerialWrapper wrapper) {
+	public ActionLogItem commit(DTRSimpleSerialWrapper wrapper) {
 		Logger logger = ServletLayerLocator.get().remoteActionLoggerProvider()
 				.getLogger(this.getClass());
 		ActionLogItem item = null;

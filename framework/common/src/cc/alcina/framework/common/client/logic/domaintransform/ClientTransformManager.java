@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
@@ -40,7 +41,7 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier.ModalNotifierNull;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class ClientTransformManager extends TransformManager {
+public abstract class ClientTransformManager extends TransformManager {
 	protected ClientDomainSync cache;
 
 	private ClientTransformManager.PersistableTransformListener persistableTransformListener;
@@ -455,8 +456,7 @@ public class ClientTransformManager extends TransformManager {
 										annotation.idPropertyName(), result);
 					}
 				};
-				ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-						.persist(persistableObject, savedCallback);
+				callRemotePersistence(persistableObject, savedCallback);
 			}
 		};
 		if (!onlyLocalGraph) {
@@ -478,5 +478,16 @@ public class ClientTransformManager extends TransformManager {
 	@Override
 	protected boolean allowUnregisteredHiliTargetObject() {
 		return true;
+	}
+
+	protected abstract void callRemotePersistence(WrapperPersistable persistableObject,
+			AsyncCallback<Long> savedCallback);
+	public  static class ClientTransformManagerCommon extends ClientTransformManager {
+		protected void callRemotePersistence(WrapperPersistable persistableObject,
+				AsyncCallback<Long> savedCallback) {
+			((CommonRemoteServiceExtAsync) ClientLayerLocator.get()
+					.commonRemoteServiceAsyncInstance()).persist(persistableObject,
+					savedCallback);
+		}
 	}
 }

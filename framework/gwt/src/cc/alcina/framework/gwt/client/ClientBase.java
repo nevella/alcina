@@ -45,9 +45,6 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 		CommitToStorageTransformListener storage = ClientLayerLocator.get()
 				.getCommitToStorageTransformListener();
 		storage.setPaused(false);
-		if (ClientSession.initialised()) {
-			ClientSession.get().appShutdown();
-		}
 		// String msg = TextProvider.get().getUiObjectText(
 		// ClientBase.class,
 		// "commit-on-close-saving-final-changes-warning",
@@ -59,6 +56,7 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 			event.setMessage(getSaveWhenClosedWarning());
 		}
 	}
+
 
 	private String saveWhenClosedWarning = "Please press 'cancel' to save recent changes";
 
