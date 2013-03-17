@@ -38,7 +38,24 @@ public interface HasIdAndLocalId extends HasId {
 	public long getLocalId();
 
 	public void setLocalId(long localId);
-
+	public static class HiliComparatorPreferLocals implements Comparator<HasIdAndLocalId> {
+		@Override
+		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+			int i = o1.getClass().getName().compareTo(o2.getClass().getName());
+			if (i != 0) {
+				return i;
+			}
+			i = CommonUtils.compareLongs(o1.getLocalId(), o2.getLocalId());
+			if (i != 0) {
+				return i;
+			}
+			i = CommonUtils.compareLongs(o1.getId(), o2.getId());
+			if (i != 0) {
+				return i;
+			}
+			return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
+		}
+	}
 	public static class HiliComparator implements Comparator<HasIdAndLocalId> {
 		public static final HiliComparator INSTANCE = new HiliComparator();
 

@@ -113,7 +113,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		AlcinaTopics.logCategorisedMessage(new StringPair(category, s));
 	}
 
-	private native void consoleLog(String s) /*-{
+	protected native void consoleLog(String s) /*-{
 		try {
 			$wnd.console.log(s);
 		} catch (e) {

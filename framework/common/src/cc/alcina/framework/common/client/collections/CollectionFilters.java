@@ -71,6 +71,7 @@ public class CollectionFilters {
 			}
 		}
 	}
+
 	public static <V> void apply(Collection<? extends V> collection,
 			Callback<V> callback) {
 		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr
@@ -260,4 +261,18 @@ public class CollectionFilters {
 		}
 		return result;
 	}
+
+	public static class IsClassFilter implements CollectionFilter {
+		private Class clazz;
+
+		public IsClassFilter(Class clazz) {
+			this.clazz = clazz;
+		}
+
+		@Override
+		public boolean allow(Object o) {
+			return o.getClass() == clazz;
+		}
+	}
+
 }

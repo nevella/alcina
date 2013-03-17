@@ -151,19 +151,19 @@ public class Registry {
 		}
 		return cached;
 	}
-	public static class NoImplementationException extends RegistryException{
 
+	public static class NoImplementationException extends RegistryException {
 		public NoImplementationException(String message) {
 			super(message);
 		}
-		
 	}
+
 	public void register(Class registeringClass, Class registryPoint) {
 		register(registeringClass, registryPoint, void.class,
 				ImplementationType.MULTIPLE, 10);
 	}
-	public static class RegistryException extends RuntimeException{
 
+	public static class RegistryException extends RuntimeException {
 		public RegistryException() {
 			super();
 		}
@@ -171,8 +171,8 @@ public class Registry {
 		public RegistryException(String message) {
 			super(message);
 		}
-		
 	}
+
 	public void register(Class registeringClass, Class registryPoint,
 			Class targetClass, ImplementationType implementationType,
 			int infoPriority) {
@@ -192,9 +192,9 @@ public class Registry {
 		if (implementationType == ImplementationType.MULTIPLE
 				&& targetClass == void.class
 				&& infoPriority != RegistryLocation.DEFAULT_PRIORITY) {
-			throw new RegistryException(CommonUtils.formatJ("Non-default priority "
-					+ "with Multiple impl type -"
-					+ " probably should be instance - %s",
+			throw new RegistryException(CommonUtils.formatJ(
+					"Non-default priority " + "with Multiple impl type -"
+							+ " probably should be instance - %s",
 					registeringClass.getName()));
 		}
 		if (registered.size() == 1
@@ -219,6 +219,12 @@ public class Registry {
 	public void register(Class registeringClass, RegistryLocation info) {
 		register(registeringClass, info.registryPoint(), info.targetClass(),
 				info.implementationType(), info.priority());
+	}
+
+	public static void putSingleton(Object object, Class<?> clazz) {
+		get().singletons.put(clazz, void.class, object);
+		get().register(object.getClass(), clazz, void.class,
+				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
 	}
 
 	public void registerSingleton(Object object, Class<?> clazz) {

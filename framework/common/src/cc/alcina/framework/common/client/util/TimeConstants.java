@@ -11,17 +11,18 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.util;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class TimeConstants {
-
-	public static final long ONE_DAY_MS = 1000 * 3600 * 24;
-	public static final long ONE_HOUR_MS = 1000 * 3600;
+public class TimeConstants {
 	public static final long ONE_MINUTE_MS = 1000 * 60;
+
+	public static final long ONE_HOUR_MS = ONE_MINUTE_MS * 60;
+
+	public static final long ONE_DAY_MS = ONE_HOUR_MS * 24;
+
+	public static final long ONE_YEAR_MS = ONE_DAY_MS * 365;
 }

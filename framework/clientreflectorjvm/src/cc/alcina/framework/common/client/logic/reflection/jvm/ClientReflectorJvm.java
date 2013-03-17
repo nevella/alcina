@@ -216,9 +216,7 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	@Override
 	protected <T> T newInstance0(Class<T> clazz, long objectId, long localId) {
-		//not called
+		// not called
 		return null;
 	}
-
-	
 }

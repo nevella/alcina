@@ -8,9 +8,11 @@ import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.util.HashMap;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -21,9 +23,10 @@ import com.totsp.gwittir.client.beans.SelfDescribed;
 
 /**
  * 
- * @author nreddel
- * NOTE: registery registration in the constructor - may want to bypass this for testing 
+ * @author nreddel NOTE: registery registration in the constructor - may want to
+ *         bypass this for testing
  */
+@ClientInstantiable
 public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
 
@@ -49,8 +52,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	}
 
 	public JVMIntrospector() {
-		Registry.get().register(getClass(), BeanDescriptorProvider.class,
-				void.class, ImplementationType.INSTANCE, 20);
+		Registry.putSingleton(this, BeanDescriptorProvider.class);
 	}
 
 	private static class ReflectionBeanDescriptor implements BeanDescriptor {
@@ -66,12 +68,25 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 				info = java.beans.Introspector.getBeanInfo(clazz);
 				props = new Property[info.getPropertyDescriptors().length - 1];
 				int index = 0;
+				Class enumSubclass = null;
 				for (PropertyDescriptor d : info.getPropertyDescriptors()) {
+					Class<?> propertyType = d.getPropertyType();
+					if (propertyType != null && propertyType.isEnum()
+							&& propertyType.getSuperclass() == Enum.class) {
+						enumSubclass = propertyType;
+					}
+				}
+				for (PropertyDescriptor d : info.getPropertyDescriptors()) {
+					Class<?> propertyType = d.getPropertyType();
+					if (propertyType == Enum.class
+							&& d.getName().equals("value")) {
+						propertyType = enumSubclass;
+						assert propertyType != null;
+					}
 					if (d.getName().equals("class")) {
 						continue;
 					}
-					props[index] = new Property(d.getName(),
-							d.getPropertyType(),
+					props[index] = new Property(d.getName(), propertyType,
 							d.getReadMethod() == null ? null
 									: new MethodWrapper(d.getReadMethod()),
 							d.getWriteMethod() == null ? null
