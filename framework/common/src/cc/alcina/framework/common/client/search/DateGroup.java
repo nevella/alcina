@@ -26,6 +26,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
+	static final transient long serialVersionUID = -1L;
+
 	public DateGroup() {
 		super();
 		setCombinator(FilterCombinator.AND);

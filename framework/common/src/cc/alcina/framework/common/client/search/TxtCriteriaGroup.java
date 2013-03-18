@@ -23,6 +23,8 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  */
 @PermissibleChildClasses({ TxtCriterion.class })
 public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
+	static final transient long serialVersionUID = -1L;
+
 	public TxtCriteriaGroup() {
 		super();
 		setDisplayName("Text");

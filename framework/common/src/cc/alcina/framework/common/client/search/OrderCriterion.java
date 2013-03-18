@@ -19,6 +19,8 @@ package cc.alcina.framework.common.client.search;
  * @author Nick Reddel
  */
 public class OrderCriterion extends SearchCriterion {
+	static final transient long serialVersionUID = -1L;
+
 	public String addDirection(String criterionName) {
 		return criterionName == null || getDirection() == Direction.ASCENDING ? criterionName
 				: criterionName + " (reverse)";

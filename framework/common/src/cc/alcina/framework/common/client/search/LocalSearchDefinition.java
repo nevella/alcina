@@ -26,6 +26,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
  */
 
  public class LocalSearchDefinition extends SearchDefinition {
+	static final transient long serialVersionUID = -1L;
+
 	protected CollectionFilter buildFilter(){
 		return null;
 	}

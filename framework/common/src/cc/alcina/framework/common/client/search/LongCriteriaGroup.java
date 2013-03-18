@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  */
 @PermissibleChildClasses( { LongCriterion.class })
  public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
+	static final transient long serialVersionUID = -1L;
+
 	public LongCriteriaGroup() {
 		super();
 		setCombinator(FilterCombinator.OR);

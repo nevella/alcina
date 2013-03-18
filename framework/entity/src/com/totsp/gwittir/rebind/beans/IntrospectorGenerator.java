@@ -255,8 +255,8 @@ public class IntrospectorGenerator extends Generator {
 		writer.println("protected BeanDescriptor getDescriptor0( Object object ){ ");
 		writer.indent();
 		for (BeanResolver resolver : introspectables) {
-			writer.println("if( object instanceof "
-					+ resolver.getType().getQualifiedSourceName() + " ) {");
+			writer.println("if( object.getClass() ==  "
+					+ resolver.getType().getQualifiedSourceName() + ".class ) {");
 			writer.indent();
 			String name = resolver.getType().getQualifiedSourceName()
 					.replaceAll("\\.", "_");

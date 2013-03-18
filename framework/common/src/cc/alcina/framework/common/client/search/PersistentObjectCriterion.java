@@ -6,6 +6,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class PersistentObjectCriterion extends SearchCriterion {
+	static final transient long serialVersionUID = -1L;
+
 	public PersistentObjectCriterion() {
 	}
 

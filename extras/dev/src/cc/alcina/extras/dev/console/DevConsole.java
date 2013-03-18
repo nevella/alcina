@@ -81,7 +81,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		System.setOut(out);
 	}
 
-	protected static void stdSysOut() {
+	public static void stdSysOut() {
 		System.setErr(err.s1);
 		System.setOut(out.s1);
 	}

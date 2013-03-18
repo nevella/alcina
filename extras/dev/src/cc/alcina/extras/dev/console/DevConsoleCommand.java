@@ -63,7 +63,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	protected void format(String format, Object... args) {
+	public void format(String format, Object... args) {
 		String out = String.format(format, args);
 		System.out.print(out);
 		commandOutputBuffer.append(out);

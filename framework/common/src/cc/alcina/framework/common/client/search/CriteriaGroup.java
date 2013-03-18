@@ -43,6 +43,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		BaseBindable implements TreeRenderable, Permissible,
 		HasPermissionsValidation, HasEquivalence<CriteriaGroup> {
+	static final transient long serialVersionUID = -1L;
 	private transient String displayName;
 
 	private FilterCombinator combinator = FilterCombinator.AND;

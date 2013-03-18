@@ -21,6 +21,8 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
  * @author Nick Reddel
  */
 public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
+	static final transient long serialVersionUID = -1L;
+
 	public EnumCriteriaGroup() {
 		super();
 		setDisplayName("");
