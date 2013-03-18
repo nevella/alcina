@@ -149,7 +149,7 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 		}
 	}
 
-	protected void registerObjectsPostDomainLoad() {
+	public void registerObjectsPostDomainLoad() {
 		DevCSSHelper.get().addCssListeners(
 				ClientLayerLocator.get().getGeneralProperties());
 		ContentProvider.refresh();

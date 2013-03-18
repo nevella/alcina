@@ -43,13 +43,18 @@ public class ContentProvider {
 
 	public static HTML getWidget(String key, String styleClassName) {
 		if (provider != null) {
-			String content = provider.getContent(key);
-			content = content == null ? "[" + key + "]" : content;
-			HTML html = new HTML(content);
-			if (styleClassName != null) {
-				html.setStyleName(styleClassName);
+			if (provider instanceof AsyncContentProvider) {
+				return ((AsyncContentProvider) provider).getWidget(key,
+						styleClassName);
+			} else {
+				String content = provider.getContent(key);
+				content = content == null ? "[" + key + "]" : content;
+				HTML html = new HTML(content);
+				if (styleClassName != null) {
+					html.setStyleName(styleClassName);
+				}
+				return html;
 			}
-			return html;
 		}
 		throw new WrappedRuntimeException("No content provider registered",
 				SuggestedAction.NOTIFY_ERROR);

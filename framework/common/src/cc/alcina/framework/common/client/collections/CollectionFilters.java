@@ -275,4 +275,13 @@ public class CollectionFilters {
 		}
 	}
 
+	public static <V> boolean contains(Collection<? extends V> collection,
+			CollectionFilter<V> filter) {
+		for (V v : collection) {
+			if (filter.allow(v)) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
