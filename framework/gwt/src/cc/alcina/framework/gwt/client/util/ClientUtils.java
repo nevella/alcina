@@ -114,7 +114,8 @@ public class ClientUtils {
 		return styleElement;
 	}
 
-	public static native boolean setCssTextViaCssTextProperty(Element styleTag, String css) /*-{
+	public static native boolean setCssTextViaCssTextProperty(Element styleTag,
+			String css) /*-{
 		var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
 		if ('cssText' in sheet) { // Internet Explorer
@@ -308,5 +309,15 @@ public class ClientUtils {
 		}
 		result.append(innerHTML.substring(idx));
 		return result.toString();
+	}
+
+	public static void refireHistoryTokenIfSame(String token) {
+		if (token == null) {
+			return;
+		}
+		if (token.equals(History.getToken())) {
+			History.fireCurrentHistoryState();
+		}
+		// do nothing if we've moved on
 	}
 }

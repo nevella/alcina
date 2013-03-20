@@ -166,8 +166,8 @@ public class ContentViewFactory {
 		if (o == null) {
 			return;
 		}
-		LooseContext.getContext().set(
-				CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS, o);
+		LooseContext.getContext()
+				.set(CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS, o);
 	}
 
 	public PaneWrapperWithObjects createActionTableWithCaption(
@@ -607,8 +607,11 @@ public class ContentViewFactory {
 					int pct = hmw.getMinPercentOfTable();
 					if (pct != 0) {
 						int offsetWidth = table.getOffsetWidth();
-						getCellFormatter().setWidth(0, i,
-								(pct * offsetWidth / 100) + "px");
+						int pxWidth = pct * offsetWidth / 100;
+						// IE won't like set-to-zero
+						if (pxWidth != 0) {
+							getCellFormatter().setWidth(0, i, pxWidth + "px");
+						}
 					}
 				}
 				i++;

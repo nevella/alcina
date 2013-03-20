@@ -284,4 +284,12 @@ public class CollectionFilters {
 		}
 		return false;
 	}
+
+	public static <V> Collection<V> filterOrReturn(Collection<V> collection,
+			CollectionFilter<V> filter) {
+		if(contains(collection, filter)){
+			return filter(collection, filter);
+		}
+		return collection;
+	}
 }
