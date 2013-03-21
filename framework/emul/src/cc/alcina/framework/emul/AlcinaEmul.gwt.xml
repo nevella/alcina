@@ -1,4 +1,5 @@
 <module>
 	<super-source path="jre" />
 	<super-source path="alcina" />
+	<super-source path="gwt" />
 </module>
