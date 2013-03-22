@@ -273,6 +273,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		cg.combinator = combinator;
 		cg.displayName = displayName;
 		cg.entityClass = entityClass;
+		cg.criteria.clear();
 		for (SearchCriterion sc : criteria) {
 			cg.criteria.add(sc.clone());
 		}
