@@ -225,6 +225,7 @@ public class MapObjectLookup implements ObjectLookup {
 		ensureCollections(clazz);
 		collnMap.get(clazz).remove(obj);
 		collnMap.get(clazz).add(obj);
+		
 		if (obj.getId() != 0) {
 			Map<LongWrapperHash, HasIdAndLocalId> clMap = idMap.get(clazz);
 			clMap.put(new LongWrapperHash(obj.getId()), obj);

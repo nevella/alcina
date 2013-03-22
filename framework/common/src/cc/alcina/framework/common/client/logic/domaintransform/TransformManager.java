@@ -478,6 +478,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 				.objectLookup()
 				.getObject(dte.getObjectClass(), dte.getObjectId(),
 						dte.getObjectLocalId());
+		if (obj == null && dte.getSource() != null) {
+			throw new RuntimeException(
+					"calling getobject() on a provisional/deregistered object transform "
+							+ "- will harm the transform. use getsource()");
+		}
 		dte.setSource(obj);
 		return obj;
 	}
