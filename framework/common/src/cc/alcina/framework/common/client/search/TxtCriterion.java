@@ -101,8 +101,8 @@ public class TxtCriterion extends SearchCriterion {
 	@Override
 	protected TxtCriterion copyProperties(SearchCriterion searchCriterion) {
 		TxtCriterion sc = (TxtCriterion) searchCriterion;
-		sc.text = text;
-		sc.txtCriterionType = txtCriterionType;
+		text=sc.text;
+		txtCriterionType=sc.txtCriterionType;
 		return super.copyProperties(sc);
 	}
 	@Override

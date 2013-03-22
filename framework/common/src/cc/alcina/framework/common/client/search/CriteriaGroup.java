@@ -270,12 +270,13 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 	}
 
 	protected <T extends CriteriaGroup> T deepCopy(T cg) throws CloneNotSupportedException{
-		cg.combinator = combinator;
-		cg.displayName = displayName;
-		cg.entityClass = entityClass;
-		cg.criteria.clear();
-		for (SearchCriterion sc : criteria) {
-			cg.criteria.add(sc.clone());
+		combinator=cg.combinator ;
+		displayName=cg.displayName;
+		entityClass=cg.entityClass;
+		criteria.clear();
+		Set<SC> cgCriteria = cg.getCriteria();
+		for (SC sc : cgCriteria) {
+			criteria.add((SC) sc.clone());
 		}
 		return cg;
 	}

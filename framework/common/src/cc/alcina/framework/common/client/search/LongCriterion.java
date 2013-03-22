@@ -77,7 +77,7 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 	@Override
 	protected LongCriterion copyProperties(SearchCriterion searchCriterion) {
 		LongCriterion sc = (LongCriterion) searchCriterion;
-		sc.value=value;
+		value=sc.value;
 		return super.copyProperties(sc);
 	}
 	@Override

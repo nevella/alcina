@@ -27,9 +27,10 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 @BeanInfo(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
-public abstract class SearchCriterion extends BaseBindable implements TreeRenderable, HasEquivalence<SearchCriterion>,GwtCloneable {
+public abstract class SearchCriterion extends BaseBindable implements
+		TreeRenderable, HasEquivalence<SearchCriterion>, GwtCloneable {
 	// TODO: great big injection hole here - should be checked server-side
-	//FIXED: - transient, and set in the server validation phase
+	// FIXED: - transient, and set in the server validation phase
 	private transient String targetPropertyName;
 
 	private Direction direction = Direction.ASCENDING;
@@ -43,8 +44,6 @@ public abstract class SearchCriterion extends BaseBindable implements TreeRender
 		this.displayName = displayName;
 	}
 
-	
-
 	public CollectionProvider collectionProvider() {
 		return null;
 	}
@@ -56,13 +55,15 @@ public abstract class SearchCriterion extends BaseBindable implements TreeRender
 	public Direction getDirection() {
 		return this.direction;
 	}
-	protected String targetPropertyNameWithTable(){
+
+	protected String targetPropertyNameWithTable() {
 		String targetPropertyName = getTargetPropertyName();
-		if(targetPropertyName==null||targetPropertyName.contains(".")){
+		if (targetPropertyName == null || targetPropertyName.contains(".")) {
 			return targetPropertyName;
 		}
-		return "t."+targetPropertyName;
+		return "t." + targetPropertyName;
 	}
+
 	public String getDisplayName() {
 		return this.displayName;
 	}
@@ -89,16 +90,18 @@ public abstract class SearchCriterion extends BaseBindable implements TreeRender
 	public String toHtml() {
 		return toString();
 	}
-	protected <SC extends SearchCriterion> SC copyProperties(SC searchCriterion){
-		searchCriterion.direction=direction;
-		searchCriterion.displayName=displayName;
-		
+
+	protected <SC extends SearchCriterion> SC copyProperties(SC searchCriterion) {
+		direction = searchCriterion.direction;
+		displayName = searchCriterion.displayName;
 		return searchCriterion;
 	}
+
 	@Override
 	public SearchCriterion clone() throws CloneNotSupportedException {
 		throw new CloneNotSupportedException();
 	}
+
 	/**
 	 * Can also apply to things like date criteria, not just order - so leave
 	 * here rather than in OrderCriterion
