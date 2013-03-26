@@ -154,12 +154,17 @@ public class ExcelExporter {
 		for (Iterator it = topItr; it.hasNext();) {
 			rowCollection = (Collection) it.next();
 			row = book.createElement("Row");
+			int colIndex=1;
 			for (Iterator itr = rowCollection.iterator(); itr.hasNext();) {
+				Object value = itr.next();
 				cell = book.createElement("Cell");
 				data = book.createElement("Data");
+				cell.setAttributeNS(SS_NS, "ss:Index",String.valueOf(colIndex++));
+				if(value==null){
+					continue;
+				}
 				row.appendChild(cell);
 				cell.appendChild(data);
-				Object value = itr.next();
 				String strVal = strVal(value);
 				data.setAttributeNS(SS_NS, "ss:Type",
 						isNumeric(strVal) ? "Number" : "String");
