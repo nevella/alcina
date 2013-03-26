@@ -71,6 +71,6 @@ public class UserCriterion extends AbstractUserCriterion {
 		UserCriterion userCriterion = new UserCriterion();
 		userCriterion.user=user;
 		userCriterion.userId=userId;
-		return userCriterion.copyProperties(this);
+		return userCriterion.copyPropertiesFrom(this);
 	}
 }

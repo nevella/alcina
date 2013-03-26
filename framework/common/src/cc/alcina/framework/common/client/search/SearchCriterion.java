@@ -91,10 +91,10 @@ public abstract class SearchCriterion extends BaseBindable implements
 		return toString();
 	}
 
-	protected <SC extends SearchCriterion> SC copyProperties(SC searchCriterion) {
-		direction = searchCriterion.direction;
-		displayName = searchCriterion.displayName;
-		return searchCriterion;
+	protected <SC extends SearchCriterion> SC copyPropertiesFrom(SC copyFromCriterion) {
+		direction = copyFromCriterion.direction;
+		displayName = copyFromCriterion.displayName;
+		return (SC) this;
 	}
 
 	@Override

@@ -113,9 +113,9 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		return withNull;
 	}
 	@Override
-	protected EnumCriterion copyProperties(SearchCriterion searchCriterion) {
-		EnumCriterion sc = (EnumCriterion) searchCriterion;
-		withNull=sc.withNull;
-		return super.copyProperties(sc);
+	protected EnumCriterion copyPropertiesFrom(SearchCriterion searchCriterion) {
+		EnumCriterion copyFromCriterion = (EnumCriterion) searchCriterion;
+		withNull=copyFromCriterion.withNull;
+		return super.copyPropertiesFrom(copyFromCriterion);
 	}
 }

@@ -58,6 +58,6 @@ public class DateCriterion extends AbstractDateCriterion {
 	}
 	@Override
 	public SearchCriterion clone() throws CloneNotSupportedException {
-		return new DateCriterion().copyProperties(this);
+		return new DateCriterion().copyPropertiesFrom(this);
 	}
 }

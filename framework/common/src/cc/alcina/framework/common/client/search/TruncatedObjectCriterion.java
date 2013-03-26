@@ -64,12 +64,12 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 	}
 
 	@Override
-	protected TruncatedObjectCriterion copyProperties(
+	protected TruncatedObjectCriterion copyPropertiesFrom(
 			SearchCriterion searchCriterion) {
-		TruncatedObjectCriterion<E> sc = (TruncatedObjectCriterion) searchCriterion;
-		displayText = sc.displayText;
-		id = sc.id;
-		value =  sc.value;
-		return super.copyProperties(sc);
+		TruncatedObjectCriterion<E> copyFromCriterion = (TruncatedObjectCriterion) searchCriterion;
+		displayText = copyFromCriterion.displayText;
+		id = copyFromCriterion.id;
+		value =  copyFromCriterion.value;
+		return super.copyPropertiesFrom(copyFromCriterion);
 	}
 }

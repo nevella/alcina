@@ -44,7 +44,7 @@ public class LogMessageTypeEnumCriterion extends EnumCriterion<LogMessageType> {
 	public LogMessageTypeEnumCriterion clone()
 			throws CloneNotSupportedException {
 		LogMessageTypeEnumCriterion copy = new LogMessageTypeEnumCriterion();
-		copy.copyProperties(this);
+		copy.copyPropertiesFrom(this);
 		copy.logMessageType=logMessageType;
 		return copy;
 	}

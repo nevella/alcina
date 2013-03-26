@@ -99,16 +99,16 @@ public class TxtCriterion extends SearchCriterion {
 	}
 
 	@Override
-	protected TxtCriterion copyProperties(SearchCriterion searchCriterion) {
-		TxtCriterion sc = (TxtCriterion) searchCriterion;
-		text=sc.text;
-		txtCriterionType=sc.txtCriterionType;
-		return super.copyProperties(sc);
+	protected TxtCriterion copyPropertiesFrom(SearchCriterion searchCriterion) {
+		TxtCriterion copyFromCriterion = (TxtCriterion) searchCriterion;
+		text=copyFromCriterion.text;
+		txtCriterionType=copyFromCriterion.txtCriterionType;
+		return super.copyPropertiesFrom(copyFromCriterion);
 	}
 	@Override
 	public TxtCriterion clone() throws CloneNotSupportedException {
 		TxtCriterion copy = new TxtCriterion();
-		copy.copyProperties(this);
+		copy.copyPropertiesFrom(this);
 		return copy;
 	}
 }
