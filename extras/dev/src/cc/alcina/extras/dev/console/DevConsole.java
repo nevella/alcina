@@ -144,6 +144,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	File profileFolder;
 
+	public boolean runningLastCommand;
+
 	public void clear() {
 		consoleLeft.setText("");
 	}
@@ -187,6 +189,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			return;
 		}
 		if (!props.lastCommand.isEmpty()) {
+			runningLastCommand=true;
 			performCommand(props.lastCommand);
 		} else {
 			consoleLeft.ok("Enter 'h' for help\n\n");
@@ -319,7 +322,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			throw new WrappedRuntimeException(e);
 		}
 	}
-
+	
 	protected void performCommandInThread(List<String> args,
 			DevConsoleCommand c, boolean topLevel) {
 		try {
@@ -332,6 +335,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			consoleRight.setText("");
 			long l1 = System.currentTimeMillis();
 			c.configure();
+			
 			String msg = c
 					.run((String[]) args.toArray(new String[args.size()]));
 			c.cleanup();
@@ -354,6 +358,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				e.printStackTrace();
 			}
 		} finally {
+			runningLastCommand=false;
 			LooseContext.pop();
 			runningJobs.remove(c);
 		}

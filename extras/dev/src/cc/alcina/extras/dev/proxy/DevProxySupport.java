@@ -18,6 +18,9 @@ public class DevProxySupport implements InvocationHandler {
 				throws Throwable;
 
 		public boolean handles(Object proxy, Method method, Object[] args);
+
+		public void hookParams(String methodName, Object[] args,
+				DevRemoterParams params);
 	}
 
 	@Override

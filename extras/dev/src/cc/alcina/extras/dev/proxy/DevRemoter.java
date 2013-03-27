@@ -60,6 +60,7 @@ public class DevRemoter {
 			DevRemoterParams params) throws Exception, URISyntaxException,
 			IOException, UnsupportedEncodingException, ClientProtocolException,
 			ClassNotFoundException {
+		hookParams(methodName, args, params);
 		String address = ResourceUtilities.getBundledString(DevRemoter.class,
 				"address");
 		PostAndClient png = getHttpPost(new URI(address));
@@ -91,6 +92,7 @@ public class DevRemoter {
 		return obj;
 	}
 
+
 	public boolean tryInterception(Object proxy, Method method, Object[] args)
 			throws Throwable {
 		for (DevProxyInterceptor interceptor : Registry
@@ -101,6 +103,14 @@ public class DevRemoter {
 			}
 		}
 		return false;
+	}
+	public void hookParams(String methodName, Object[] args,
+			DevRemoterParams params)
+			 {
+		for (DevProxyInterceptor interceptor : Registry
+				.impls(DevProxyInterceptor.class)) {
+			interceptor.hookParams(methodName,args,params);
+		}
 	}
 
 	public Object getInterceptionResult() {
