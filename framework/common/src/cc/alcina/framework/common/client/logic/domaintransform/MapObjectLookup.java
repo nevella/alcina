@@ -84,8 +84,8 @@ public class MapObjectLookup implements ObjectLookup {
 
 		@UnsafeNativeLong
 		private native int fastHash(long value)/*-{
-			return value.l ^ value.m ^ value.h;
-		}-*/;
+												return value.l ^ value.m ^ value.h;
+												}-*/;
 	}
 
 	public MapObjectLookup(PropertyChangeListener listener, List topLevelObjects) {
@@ -212,7 +212,9 @@ public class MapObjectLookup implements ObjectLookup {
 		mappedObjects = new IdentityHashMap<Object, Boolean>();
 		addObjectOrCollectionToEndOfQueue(obj);
 		iterateRegistration();
-		assert toRegister.isEmpty();
+		// assert toRegister.isEmpty();
+		// it'd be nice, but not always possible to assert this (counterexample: using a
+		// complicated handshake, say, where code can map objects while a big block is still being registered)
 	}
 
 	private void mapObjectFromFrontOfQueue() {
@@ -225,7 +227,6 @@ public class MapObjectLookup implements ObjectLookup {
 		ensureCollections(clazz);
 		collnMap.get(clazz).remove(obj);
 		collnMap.get(clazz).add(obj);
-		
 		if (obj.getId() != 0) {
 			Map<LongWrapperHash, HasIdAndLocalId> clMap = idMap.get(clazz);
 			clMap.put(new LongWrapperHash(obj.getId()), obj);
