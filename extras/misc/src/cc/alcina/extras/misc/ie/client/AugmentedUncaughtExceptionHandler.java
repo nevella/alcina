@@ -35,7 +35,8 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 
 	public void registerUncaughtExceptionHandler(
 			UncaughtExceptionHandler handler) {
-		if (GWT.isScript() && BrowserMod.isInternetExplorer()) {
+		if (GWT.isScript() && BrowserMod.isInternetExplorer()
+				&& !BrowserMod.isIE10()) {
 			AugmentedUncaughtExceptionHandler.handler = handler;
 			registerIEWindowErrorListener();
 			Window.addCloseHandler(this);

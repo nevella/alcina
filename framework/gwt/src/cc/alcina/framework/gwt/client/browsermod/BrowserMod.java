@@ -105,6 +105,11 @@ public class BrowserMod {
 				&& getUserAgent().indexOf(
 						Constants.INTERNET_EXPLORER_9_USER_AGENT) != -1;
 	}
+	public static boolean isIE10() {
+		return isInternetExplorer()
+				&& getUserAgent().indexOf(
+						Constants.INTERNET_EXPLORER_10_USER_AGENT) != -1;
+	}
 
 	public static boolean isIEpre9() {
 		return isInternetExplorer() && !isIE9();

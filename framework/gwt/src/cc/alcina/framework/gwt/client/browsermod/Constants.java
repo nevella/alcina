@@ -16,17 +16,19 @@
 package cc.alcina.framework.gwt.client.browsermod;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class Constants {
+public class Constants {
 	final static String IMAGES = "/images";
 
 	final static String INTERNET_EXPLORER_USER_AGENT = "MSIE";
-	
+
 	final static String INTERNET_EXPLORER_8_USER_AGENT = "MSIE8";
+
 	final static String INTERNET_EXPLORER_9_USER_AGENT = "MSIE9";
+
+	final static String INTERNET_EXPLORER_10_USER_AGENT = "MSIE10";
 
 	final static String FIREFOX_USER_AGENT = "Firefox";
 
@@ -37,7 +39,7 @@ package cc.alcina.framework.gwt.client.browsermod;
 	final static String OPERA_USER_AGENT = "Opera";
 
 	final static String SAFARI_USER_AGENT = "WebKit";
-	
+
 	final static String CHROME_USER_AGENT = "Chrome/";
 
 	final static String STRICT_DOCTYPE = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">";
@@ -47,6 +49,5 @@ package cc.alcina.framework.gwt.client.browsermod;
 			+ "\". "
 			+ "This is especially important as InternetExplorer in quirks mode has a broken box model (http://css.maxdesign.com.au/listamatic/about-boxmodel.htm).";
 
-	public static String CHROME_IOS_USER_AGENT="CriOS/";
-
+	public static String CHROME_IOS_USER_AGENT = "CriOS/";
 }
