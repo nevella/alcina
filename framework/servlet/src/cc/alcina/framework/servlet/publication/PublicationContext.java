@@ -40,6 +40,7 @@ public class PublicationContext {
 
 	public String getContextInfoForPublicationException() {
 		String xmlForm = "Unable to serialize publication request";
+		String modelString=xmlForm;
 		try {
 			Set<Class> jaxbClasses = new HashSet<Class>(ServletLayerRegistry
 					.get().lookup(JaxbContextRegistration.class));
@@ -47,11 +48,12 @@ public class PublicationContext {
 					+ "Delivery model:\n%s", WrappedObjectHelper.xmlSerialize(
 					contentDefinition, jaxbClasses), WrappedObjectHelper
 					.xmlSerialize(deliveryModel, jaxbClasses));
+			modelString=deliveryModel.toString();
 		} catch (Exception e2) {
 			e2.printStackTrace();
 		}
 		String message = String.format("Publication exception: %s %s\n%s",
-				PermissionsManager.get().getUserName(), deliveryModel, xmlForm);
+				PermissionsManager.get().getUserName(), modelString, xmlForm);
 		return message;
 	}
 
