@@ -41,177 +41,26 @@ public class ClientReflectorJvm extends ClientReflector {
 	public static final String PROP_FILTER_CLASSNAME = "ClientReflectorJvm.filterClassName";
 
 	public ClientReflectorJvm() {
-		try {
-			ClasspathScanner classpathScanner = new ClasspathScanner("*", true,
-					true);
-			Map<String, Date> classes = classpathScanner.getClasses();
-			String filterClassName = System.getProperty(PROP_FILTER_CLASSNAME);
-			/*
-			 * The reason for this is that gwt needs the compiled annotation
-			 * classes (in say, /bin) - so we may be getting classes here that
-			 * shouldn't be visible via the registry
-			 * 
-			 * It's a bit sad (duplicating the exclusion code of the gwt
-			 * module), but the performance gains the jvm reflector gives us
-			 * outweigh the (possible) crud IMO
-			 */
-			if (filterClassName != null) {
-				CollectionFilters.filterInPlace(
-						classes.keySet(),
-						(CollectionFilter<String>) Class.forName(
-								filterClassName).newInstance());
-			}
-			new RegistryScanner() {
-				protected File getHomeDir() {
-					String testStr = "";
-					String homeDir = (System.getenv("USERPROFILE") != null) ? System
-							.getenv("USERPROFILE") : System
-							.getProperty("user.home");
-					File file = new File(homeDir + File.separator + ".alcina"
-							+ testStr + File.separator + "/gwt-client");
-					file.mkdirs();
-					return file;
-				};
-
-				protected Class maybeNormaliseClass(Class c) {
-					if (c.getClassLoader() != this.getClass().getClassLoader()) {
-						try {
-							c = this.getClass().getClassLoader()
-									.loadClass(c.getName());
-						} catch (Exception e) {
-							throw new WrappedRuntimeException(e);
-						}
-					}
-					return c;
-				}
-			}.scan(classes, new ArrayList<String>(), Registry.get());
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		
 	}
 
 	public ClientBeanReflector beanInfoForClass(Class clazz) {
-		if (!hasBeanInfo(clazz)) {
-			return null;
-		}
-		if (!reflectors.containsKey(clazz)) {
-			Map<String, ClientPropertyReflector> propertyReflectors = new HashMap<String, ClientPropertyReflector>();
-			BeanInfo beanInfo = null;
-			try {
-				beanInfo = Introspector.getBeanInfo(clazz);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals("class")
-						|| pd.getName().equals("propertyChangeListeners")) {
-					continue;
-				}
-				Method m = pd.getReadMethod();
-				Collection<Annotation> annotations = AnnotationUtils
-						.getSuperclassAnnotationsForMethod(m);
-				int aCount = 0;
-				boolean ignore = false;
-				for (Annotation a : annotations) {
-					if (a.annotationType().getName() == Omit.class.getName()) {
-						ignore = true;
-					}
-				}
-				if (ignore) {
-					continue;
-				}
-				List<Annotation> retained = new ArrayList<Annotation>();
-				for (Annotation a : annotations) {
-					if (a.annotationType().getName() == Omit.class.getName()) {
-						ignore = true;
-					}
-					if (getAnnotation(a.annotationType(), ClientVisible.class) == null
-							|| a.annotationType().getName() == RegistryLocation.class
-									.getName()) {
-						continue;
-					}
-					retained.add(a);
-				}
-				propertyReflectors.put(
-						pd.getName(),
-						new ClientPropertyReflector(pd.getName(), pd
-								.getPropertyType(), (Annotation[]) retained
-								.toArray(new Annotation[retained.size()])));
-			}
-			reflectors.put(clazz,
-					new ClientBeanReflector(clazz, clazz.getAnnotations(),
-							propertyReflectors));
-		}
-		return reflectors.get(clazz);
+		return null;
 	}
 
-	private boolean hasBeanInfo(Class clazz) {
-		return (clazz.getModifiers() & Modifier.ABSTRACT) == 0
-				&& (clazz.getModifiers() & Modifier.PUBLIC) > 0
-				&& !clazz.isInterface()
-				&& !clazz.isEnum()
-				&& getAnnotation(
-						clazz,
-						cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) != null;
-	}
-
-	// we use annotation classnames because the annotation and class may be from
-	// different classloaders (gwt compiling classloader)
-	private <A extends Annotation> A getAnnotation(Class from,
-			Class<A> annotationClass) {
-		if (!annotationLookup.containsKey(from)) {
-			for (Annotation a : from.getAnnotations()) {
-				annotationLookup.put(from, a.annotationType().getName(), a);
-			}
-		}
-		return (A) annotationLookup.get(from, annotationClass.getName());
-	}
-
-	LookupMapToMap<Annotation> annotationLookup = new LookupMapToMap<Annotation>(
-			2);
+	
 
 	public Class getClassForName(String fqn) {
-		try {
-			return Class.forName(fqn);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return null;
 	}
 
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-		try {
-			T newInstance = clazz.newInstance();
-			if (localId != 0) {
-				HasIdAndLocalId hili = (HasIdAndLocalId) newInstance;
-				hili.setLocalId(localId);
-			}
-			return newInstance;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return  null;
 	}
 
 	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
-		BeanInfo beanInfo = null;
-		try {
-			beanInfo = Introspector.getBeanInfo(clazz);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-		List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
-		for (PropertyDescriptor pd : pds) {
-			if (pd.getName().equals("class")
-					|| pd.getName().equals("propertyChangeListeners")
-					|| pd.getWriteMethod() == null) {
-				continue;
-			}
-			infos.add(new PropertyInfoLite(pd.getPropertyType(), pd.getName(),
-					new MethodWrapper(pd.getReadMethod()), clazz));
-		}
-		return infos;
+		return null;
 	}
 
 	@Override
