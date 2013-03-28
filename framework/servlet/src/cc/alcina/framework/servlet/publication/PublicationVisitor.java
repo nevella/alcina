@@ -1,8 +1,13 @@
 package cc.alcina.framework.servlet.publication;
+
+import cc.alcina.framework.servlet.publication.ContentWrapper.WrapperModel;
+
 /**
  * To allow custom behaviour/composition in the publication pipeline
  * @author nick@alcina.cc
  *
  */
 public class PublicationVisitor {
+	public void customCss(WrapperModel wrapper) throws Exception {
+	}
 }

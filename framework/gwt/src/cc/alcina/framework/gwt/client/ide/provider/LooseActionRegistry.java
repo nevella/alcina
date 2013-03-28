@@ -53,7 +53,12 @@ public class LooseActionRegistry {
 	}
 
 	public LooseActionHandler getHandler(String name) {
-		return actionHandlers.get(name);
+		LooseActionHandler handler = actionHandlers.get(name);
+		if(handler==null){
+			//handle reflection/code splitting
+			loadFromRegistry();
+		}
+		return handler;
 	}
 
 	@SuppressWarnings("unchecked")
