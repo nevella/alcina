@@ -18,6 +18,8 @@ package com.google.gwt.core.client.impl;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map.Entry;
 
 import com.google.gwt.core.client.Duration;
@@ -29,6 +31,16 @@ import com.google.gwt.core.client.JavaScriptObject;
  * considered public or stable.
  */
 public final class Impl {
+	public static native boolean isEventBusExceptionCatchDisabled() /*-{
+		return !!$wnd["__com_google_web_bindery_event_shared_SimpleEventBus_disableEventBusExceptionCatch"];
+	}-*/;
+	private static Boolean exceptionCatchDisabled;
+
+	public static void ensureIsExceptionCatch() {
+		if (exceptionCatchDisabled == null) {
+			exceptionCatchDisabled = isEventBusExceptionCatchDisabled();
+		}
+	}
 	private static final int WATCHDOG_ENTRY_DEPTH_CHECK_INTERVAL_MS = 2000;
 
 	/**
@@ -48,6 +60,22 @@ public final class Impl {
 	 */
 	private static int watchdogEntryDepthTimerId = -1;
 
+	private static List<Throwable> ieThrowables;
+	public static void clearThrowables(){
+		ieThrowables=new ArrayList<Throwable>();
+		putThrowablesToJs(ieThrowables);
+	}
+	private static native void putThrowablesToJs(Object throwables) /*-{
+		$wnd.__com_google_gwt_core_client_impl_Impl_ieThrowables=throwables;
+	}-*/;
+	public static List<Throwable> getThrowables(){
+		return ieThrowables;
+	}
+	public static void maybeStoreThrowable(Throwable throwable){
+		if(ieThrowables!=null){
+			ieThrowables.add(throwable);
+		}
+	}
 	/**
 	 * This method should be used whenever GWT code is entered from a JS context
 	 * and there is no GWT code in the same module on the call stack. Examples
@@ -74,6 +102,7 @@ public final class Impl {
 		return function() {
 			var exceptionHandler = @com.google.gwt.core.client.GWT::getUncaughtExceptionHandler()();
 			if (exceptionHandler == null) {//IE
+				@com.google.gwt.core.client.impl.Impl::clearThrowables()();
 				return @com.google.gwt.core.client.impl.Impl::entry0(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)(jsFunction, this, arguments);
 			} else {
 				try {
@@ -83,7 +112,6 @@ public final class Impl {
 					// will be executed correctly on IE6/7.  We can't put a catch Throwable
 					// in entry0 because this would always cause the unhandled exception to
 					// be wrapped in a JavaScriptException type.
-					$wnd["_com_google_gwt_core_client_impl_Impl_lastEntryException"] = e;
 					throw e;
 				}
 			}
@@ -230,7 +258,7 @@ public final class Impl {
 	 */
 	private static Object entry0(Object jsFunction, Object thisObj,
 			Object arguments) throws Throwable {
-		if (GWT.getUncaughtExceptionHandler() == null) {
+		if (isEventBusExceptionCatchDisabled()) {
 			if (entriesWithoutExits.size() > entryDepth) {
 				for (Iterator<Entry<Integer, Boolean>> itr = entriesWithoutExits
 						.entrySet().iterator(); itr.hasNext();) {

@@ -16,6 +16,7 @@
 package com.google.gwt.event.shared;
 
 import com.google.web.bindery.event.shared.Event;
+import com.google.gwt.core.client.impl.Impl;
 
 /**
  * Manager responsible for adding handlers to event sources and firing those
@@ -30,16 +31,7 @@ import com.google.web.bindery.event.shared.Event;
  * instance as a global event dispatch mechanism.
  */
 public class HandlerManager implements HasHandlers {
-	private static native boolean isEventBusExceptionCatchDisabled() /*-{
-	return !!$wnd["__com_google_web_bindery_event_shared_SimpleEventBus_disableEventBusExceptionCatch"];
-}-*/;
-	private static Boolean exceptionCatchDisabled;
 
-	private static void ensureIsExceptionCatch() {
-		if (exceptionCatchDisabled == null) {
-			exceptionCatchDisabled = isEventBusExceptionCatchDisabled();
-		}
-	}
   @SuppressWarnings("deprecation")
   private static class Bus extends com.google.web.bindery.event.shared.SimpleEventBus {
     public Bus(boolean fireInReverseOrder) {
@@ -124,7 +116,7 @@ public class HandlerManager implements HasHandlers {
    * @param event the event
    */
   public void fireEvent(GwtEvent<?> event) {
-	  ensureIsExceptionCatch();
+	  Impl.ensureIsExceptionCatch();
 	  
     // If it not live we should revive it.
     if (!event.isLive()) {
@@ -132,7 +124,8 @@ public class HandlerManager implements HasHandlers {
     }
     Object oldSource = event.getSource();
     event.overrideSource(source);
-    if(exceptionCatchDisabled){
+    if(Impl.isEventBusExceptionCatchDisabled()){
+    	Impl.clearThrowables();
     	eventBus.fireEvent(event);
     	if (oldSource == null) {
 	        // This was my event, so I should kill it now that I'm done.

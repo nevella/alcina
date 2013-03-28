@@ -26,16 +26,7 @@ import com.google.gwt.core.client.Scheduler;
  * FinallyCommands executed.
  */
 public class SchedulerImpl extends Scheduler {
-	private static native boolean isEventBusExceptionCatchDisabled() /*-{
-	return !!$wnd["__com_google_web_bindery_event_shared_SimpleEventBus_disableEventBusExceptionCatch"];
-}-*/;
-	private static Boolean exceptionCatchDisabled;
-
-	private static void ensureIsExceptionCatch() {
-		if (exceptionCatchDisabled == null) {
-			exceptionCatchDisabled = isEventBusExceptionCatchDisabled();
-		}
-	}
+	
   /**
    * Metadata bag for command objects. It's a JSO so that a lightweight JsArray
    * can be used instead of a Collections type.
@@ -223,12 +214,13 @@ public class SchedulerImpl extends Scheduler {
       JsArray<Task> rescheduled) {
     assert tasks != null : "tasks";
 
-    ensureIsExceptionCatch();
+    Impl.ensureIsExceptionCatch();
     for (int i = 0, j = tasks.length(); i < j; i++) {
       assert tasks.length() == j : "Working array length changed "
           + tasks.length() + " != " + j;
       Task t = tasks.get(i);
-      if (exceptionCatchDisabled) {
+      if (Impl.isEventBusExceptionCatchDisabled()) {
+    	  Impl.clearThrowables();
     	  // Move repeating commands to incremental commands queue
           if (t.isRepeating()) {
             if (t.executeRepeating()) {
