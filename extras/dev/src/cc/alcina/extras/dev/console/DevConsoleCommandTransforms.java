@@ -8,7 +8,6 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +19,7 @@ import javax.persistence.Table;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -184,17 +184,16 @@ public class DevConsoleCommandTransforms {
 			if (argv.length == 0) {
 				return "Usage: trl {-t: trim message} ({ci|top|mes} value)+ - top is topic {!}{s|m|c|t}";
 			}
-			
 			String sql = "select time, topic,%s from clientlogrecord where "
 					+ " %s order by id desc";
-			FilterArgvResult f = new FilterArgvResult(argv,"-t");
-			String messageSelect = f.contains?"substr(replace(message,'\\n','\\\\n'),0,80)":"message";
-			argv=f.argv;
+			FilterArgvResult f = new FilterArgvResult(argv, "-t");
+			String messageSelect = f.contains ? "substr(replace(message,'\\n','\\\\n'),0,80)"
+					: "message";
+			argv = f.argv;
 			String filter = DevConsoleFilter.getFilters(
 					CmdListClientLogRecordsFilter.class, argv, null);
-			
 			Connection conn = getConn();
-			sql = String.format(sql, messageSelect,  filter);
+			sql = String.format(sql, messageSelect, filter);
 			System.out.println(console.breakAndPad(1, 80, sql, 0));
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ResultSet rs = ps.executeQuery();
@@ -246,8 +245,10 @@ public class DevConsoleCommandTransforms {
 					+ "where %s order by dtr.id desc";
 			String sql2 = "select ci.id as cli_id, u.username,  "
 					+ "  dtr.id as dtr_id, dte.id as dte_id, "
-					+ " dte.objectclassref_id as dte_objref, dte.propertyname as propertyname, "
-					+ " dte.newstringvalue as newstringvalue,dte.valueid,"
+					+ " dte.objectclassref_id as dte_objref, dte.objectid as object_id, " +
+					"dte.propertyname as propertyname, "
+					+ " dte.newstringvalue as newstringvalue,dte.transformtype as transformtype, "
+					+ " dte.valueid,"
 					+ " dte.servercommitdate as servercommitdate "
 					+ "from client_instance ci "
 					+ "inner join users u on ci.user_id=u.id "
@@ -283,6 +284,8 @@ public class DevConsoleCommandTransforms {
 				Map<String, ColumnFormatter> formatters = new HashMap<String, SqlUtils.ColumnFormatter>();
 				formatters.put("dte_objref", new ClassRefNameFormatter());
 				formatters.put("servercommitdate", new DateTimeFormatter());
+				formatters.put("transformtype", new EnumFormatter(
+						TransformType.class));
 				formatters
 						.put("newstringvalue", new TrimmedStringFormatter(30));
 				SqlUtils.dumpResultSet(rs, formatters);
@@ -538,6 +541,20 @@ public class DevConsoleCommandTransforms {
 		public String format(ResultSet rs, int columnIndex) throws SQLException {
 			Timestamp ts = rs.getTimestamp(columnIndex);
 			return CommonUtils.formatDate(ts, DateStyle.AU_DATE_TIME_HUMAN);
+		}
+	}
+
+	static class EnumFormatter implements ColumnFormatter {
+		private Class<? extends Enum> clazz;
+
+		public EnumFormatter(Class<? extends Enum> clazz) {
+			this.clazz = clazz;
+		}
+
+		@Override
+		public String format(ResultSet rs, int columnIndex) throws SQLException {
+			int i = rs.getInt(columnIndex);
+			return rs.wasNull() ? null : clazz.getEnumConstants()[i].toString();
 		}
 	}
 

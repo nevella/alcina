@@ -41,7 +41,10 @@ import com.totsp.gwittir.client.beans.Property;
 @SuppressWarnings("unchecked")
 public class CloneHelper {
 	private Map createdMap = new IdentityHashMap();
-	private BeanDescriptorProvider beanDescriptorProvider=Registry.impl(BeanDescriptorProvider.class);
+
+	private BeanDescriptorProvider beanDescriptorProvider = Registry
+			.impl(BeanDescriptorProvider.class);
+
 	public <T extends Collection> T deepCollectionClone(T coll)
 			throws Exception {
 		T c = null;
@@ -74,12 +77,11 @@ public class CloneHelper {
 	}
 
 	public <T> T deepBeanClone(T o) throws Exception {
-		
 		if (createdMap.containsKey(o)) {
 			return (T) createdMap.get(o);
 		}
-		if(o instanceof DeepCloneable){
-			return (T)((DeepCloneable)o).deepClone();
+		if (o instanceof DeepCloneable) {
+			return (T) ((DeepCloneable) o).deepClone();
 		}
 		T ret = newInstance(o);
 		createdMap.put(o, ret);
@@ -102,6 +104,11 @@ public class CloneHelper {
 					pr.getMutatorMethod().invoke(ret, args);
 				}
 			}
+		}
+		DeepBeanClonePostHandler postHandler = Registry.impl(
+				DeepBeanClonePostHandler.class, o.getClass(), true);
+		if (postHandler != null) {
+			postHandler.postClone(ret);
 		}
 		return ret;
 	}

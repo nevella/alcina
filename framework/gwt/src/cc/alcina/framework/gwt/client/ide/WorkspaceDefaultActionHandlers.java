@@ -49,7 +49,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation( registryPoint = ViewActionHandler.class)
+	@RegistryLocation(registryPoint = ViewActionHandler.class)
 	public static class DefaultViewActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements ViewActionHandler {
 		public void performAction(PermissibleActionEvent event, Object node,
@@ -79,7 +79,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation( registryPoint = CreateActionHandler.class)
+	@RegistryLocation(registryPoint = CreateActionHandler.class)
 	public static class DefaultCreateActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements CreateActionHandler {
 		protected HasIdAndLocalId newObj;
@@ -118,7 +118,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation( registryPoint = EditActionHandler.class)
+	@RegistryLocation(registryPoint = EditActionHandler.class)
 	public static class DefaultEditActionHandler extends
 			DefaultViewActionHandler implements ViewActionHandler {
 		@Override
@@ -127,7 +127,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation( registryPoint = DeleteActionHandler.class)
+	@RegistryLocation(registryPoint = DeleteActionHandler.class)
 	/*
 	 * TODO - Alcina - the separation of 'deletion of reffing' and 'deletion'
 	 * into two transactions was caused by weird EJB3 behaviour - it works, and
@@ -212,7 +212,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@RegistryLocation( registryPoint = CloneActionHandler.class)
+	@RegistryLocation(registryPoint = CloneActionHandler.class)
 	public static class DefaultCloneActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements CloneActionHandler {
 		public void performAction(final PermissibleActionEvent event,
@@ -222,6 +222,7 @@ public class WorkspaceDefaultActionHandlers {
 			HasIdAndLocalId newObj = null;
 			List<Object> provisionals = new ArrayList<Object>();
 			try {
+				CollectionModificationSupport.queue(true);
 				DomainObjectCloner cloner = new DomainObjectCloner();
 				newObj = cloner.deepBeanClone(hili);
 				if (isAutoSave()) {
@@ -231,17 +232,23 @@ public class WorkspaceDefaultActionHandlers {
 				} else {
 					provisionals.addAll(cloner.getProvisionalObjects());
 				}
+				handleParentLinks(workspace, node, newObj);
+				provisionals.addAll(ClientTransformManager.cast().prepareObject(
+						newObj, isAutoSave(), true, false));
+				TextProvider.get().setDecorated(true);
+				String newName = TextProvider.get().getObjectName(newObj)
+						+ " (copy)";
+				TextProvider.get().setDecorated(false);
+				TextProvider.get().setObjectName(newObj, newName);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-			handleParentLinks(workspace, node, newObj);
-			provisionals.addAll(ClientTransformManager.cast().prepareObject(
-					newObj, isAutoSave(), true, false));
-			TextProvider.get().setDecorated(true);
-			String newName = TextProvider.get().getObjectName(newObj)
-					+ " (copy)";
-			TextProvider.get().setDecorated(false);
-			TextProvider.get().setObjectName(newObj, newName);
+			finally{
+				CollectionModificationSupport.queue(false);	
+			}
+			if (isAutoSave()) {
+				workspace.getVisualiser().selectNodeForObject(newObj, true);
+			}
 			Widget view = getContentViewFactory().createBeanView(newObj, true,
 					workspace, isAutoSave(), false, provisionals, true);
 			workspace.getVisualiser().setContentWidget(view);

@@ -94,6 +94,16 @@ public class DataTree extends FilterableTree implements ExtraTreeEventSource,
 	private TreeItem result;
 
 	public TreeItem selectNodeForObject(final Object obj) {
+		getNodeForObject(obj);
+		if (result != null) {
+			setSelectedItem(null);
+			setSelectedItem(result);
+			ensureSelectedItemVisible();
+		}
+		return result;
+	}
+
+	public TreeItem getNodeForObject(final Object obj) {
 		result = null;
 		final boolean classNameTest = (obj instanceof String);
 		Callback<TreeItem> callback = new Callback<TreeItem>() {
@@ -109,12 +119,6 @@ public class DataTree extends FilterableTree implements ExtraTreeEventSource,
 			}
 		};
 		new TreeNodeWalker().walk(this, callback);
-		if (result != null) {
-			setSelectedItem(null);
-			setSelectedItem(result);
-			ensureSelectedItemVisible();
-		}
 		return result;
 	}
-
 }

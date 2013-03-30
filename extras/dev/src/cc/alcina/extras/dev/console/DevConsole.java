@@ -270,6 +270,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		tokenizer.wordChars('_', '_');
 		tokenizer.wordChars('=', '=');
 		tokenizer.wordChars(':', ':');
+		tokenizer.wordChars('@', '@');
 		int token;
 		try {
 			String cmd = null;

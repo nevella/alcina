@@ -296,9 +296,6 @@ public class IntrospectorGenerator extends Generator {
 						&& (type.isInterface() == null)) {
 					found.add(type.getQualifiedSourceName());
 					BeanResolver resolver = new BeanResolver(logger, type);
-					if(type.getSimpleSourceName().contains("CitableListEditableAdapter")){
-						int j=3;
-					}
 					filter.filterProperties(resolver);
 					resolvers.add(resolver);
 				}

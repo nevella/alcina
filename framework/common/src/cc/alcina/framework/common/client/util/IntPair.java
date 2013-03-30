@@ -82,6 +82,9 @@ public class IntPair implements Comparable<IntPair> {
 			return null;
 		}
 	}
+	public static IntPair point(int i){
+		return new IntPair(i,i);
+	}
 
 	public IntPair intersection(IntPair other) {
 		IntPair result = new IntPair(Math.max(i1, other.i1), Math.min(i2,

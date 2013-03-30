@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
+import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
@@ -104,7 +105,7 @@ public class GwittirUtils {
 	public enum FormFieldTypeForRefresh {
 		TEXT, RADIO, CHECK, SELECT, TEXT_AREA
 	}
-	
+
 	public static void refreshFields(Binding binding, String onlyPropertyName,
 			boolean muteTransformManager, boolean onlyEmpties,
 			boolean onlyCommit, FormFieldTypeForRefresh[] types) {
@@ -143,7 +144,8 @@ public class GwittirUtils {
 				boolean isCheckbox = b.getLeft().object instanceof Checkbox;
 				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.CHECK)
 						&& isCheckbox;
-				boolean isRadio = (b.getLeft().object instanceof RadioButton||b.getLeft().object instanceof RadioButtonList);
+				boolean isRadio = (b.getLeft().object instanceof RadioButton || b
+						.getLeft().object instanceof RadioButtonList);
 				satisfiesType |= lTypes.contains(FormFieldTypeForRefresh.RADIO)
 						&& isRadio;
 				AbstractBoundWidget tb = (AbstractBoundWidget) b.getLeft().object;
@@ -282,7 +284,8 @@ public class GwittirUtils {
 		}
 		ClassLookup cl = CommonLocator.get().classLookup();
 		while (clazz != null && clazz != Object.class) {
-			if (cl.getAnnotationForClass(clazz, Introspectable.class) != null) {
+			if (cl.getAnnotationForClass(clazz, Introspectable.class) != null
+					|| cl.getAnnotationForClass(clazz, BeanInfo.class) != null) {
 				return true;
 			}
 			clazz = clazz.getSuperclass();
@@ -324,14 +327,15 @@ public class GwittirUtils {
 			}
 		}
 	}
-	public static int getFieldIndex(Field[] fields, String propertyName){
-		int i=0;
+
+	public static int getFieldIndex(Field[] fields, String propertyName) {
+		int i = 0;
 		for (Field f : fields) {
 			if (f.getPropertyName().equals(propertyName)) {
 				return i;
 			}
 			i++;
-		}		
+		}
 		return -1;
 	}
 }

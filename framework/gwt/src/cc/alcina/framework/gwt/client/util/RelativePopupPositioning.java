@@ -174,126 +174,158 @@ public class RelativePopupPositioning {
 		}
 		ComplexPanel cp = WidgetUtils.complexChildOrSelf(positioningWidget);
 		rpp.setPositioningContainer(cp);
-		rpp.setPopupPositionAndShow(new PositionCallback() {
-			public void setPosition(int offsetWidth, int offsetHeight) {
-				int x = relativeToElement.getAbsoluteLeft();
-				int y = relativeToElement.getAbsoluteTop();
-				int relW = relativeToElement.getOffsetWidth();
-				int relH = relativeToElement.getOffsetHeight();
-				x += shiftX;
-				y += shiftY;
-				int rw = rpp.getOffsetWidth();
-				int rh = rpp.getOffsetHeight();
-				// work in coordinate space of bounding widget
-				x -= boundingWidget.getAbsoluteLeft();
-				y -= boundingWidget.getAbsoluteTop();
-				int fixedAxisOffset = INVALID;
-				int freeAxisOffset = INVALID;
-				AxisCoordinate fixedAxis = null;
-				AxisCoordinate freeAxis = null;
-				int bw = boundingWidget.getOffsetWidth();
-				int bh = boundingWidget.getOffsetHeight();
-				final int bx = boundingWidget.getAbsoluteLeft();
-				final int by = boundingWidget.getAbsoluteTop();
-				int axisIndex = 0;
-				RelativePopupAxis[] axes = positioningParams.axes;
-				if (axes == null) {
-					// absolute, internal to bounding widget
-					switch (positioningParams.positioningStrategy) {
-					case BELOW_WITH_PREFERRED_LEFT:
-						x += positioningParams.shiftX;
-						x -= positioningParams.preferredLeft;
-						if (x < 0) {
-							x = 0;
-						}
-						if (x + rw > bw) {
-							x = bw - rw;
-						}
-						y += positioningParams.shiftY;
-						break;
-					case RIGHT_OR_LEFT_WITH_PREFERRED_TOP:
-						x += 2;
-						int clientY = positioningParams.nativeEvent
-								.getClientY();
-						int clientHeight = Window.getClientHeight();
-						int oy = 0;
-						if (clientY > positioningParams.preferredTop) {
-							oy = Math.min(rh, clientY);
-							oy = Math.max(0, oy
-									- positioningParams.preferredFromBottom);
-						} else {
-							oy = Math.min(positioningParams.preferredTop,
-									clientY);
-						}
-						y -= oy;
-						if (rw + x > bw) {
-							x -= (rw + 4);
-						} else {
-						}
-						break;
-					}
-					x += boundingWidget.getAbsoluteLeft();
-					y += boundingWidget.getAbsoluteTop();
-				} else {
-					for (RelativePopupAxis axis : axes) {
-						fixedAxis = axis.fixedAxis;
-						fixedAxisOffset = fixedAxis.fit(x, y, bw, bh, relW,
-								relH, offsetWidth, offsetHeight, bx, by, null,
-								false, false);
-						if (fixedAxisOffset == INVALID) {
-							continue;
-						}
-						AxisCoordinate last = null;
-						for (int i = 0; i < 2; i++) {
-							freeAxis = axis.freeAxis[i];
-							freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW,
-									relH, offsetWidth, offsetHeight, bx, by,
-									last, true, false);
-							if (freeAxisOffset != INVALID) {
-								break;
-							}
-							last = freeAxis;
-						}
-					}
-					// always fall back to the first axis
-					if (fixedAxisOffset == INVALID || freeAxisOffset == INVALID) {
-						RelativePopupAxis axis = axes[0];
-						fixedAxis = axis.fixedAxis;
-						fixedAxisOffset = fixedAxis.fit(x, y, bw, bh, relW,
-								relH, offsetWidth, offsetHeight, bx, by, null,
-								false, true);
-						AxisCoordinate last = null;
-						for (int i = 0; i < 2; i++) {
-							freeAxis = axis.freeAxis[i];
-							freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW,
-									relH, offsetWidth, offsetHeight, bx, by,
-									last, true, false);
-							if (freeAxisOffset != INVALID) {
-								break;
-							}
-							last = freeAxis;
-						}
-						if (freeAxisOffset == INVALID) {
-							freeAxis = axis.freeAxis[0];
-							freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW,
-									relH, offsetWidth, offsetHeight, bx, by,
-									null, true, true);
-						}
-					}
-					x = fixedAxis.isVertical() ? freeAxisOffset
-							: fixedAxisOffset;
-					y = freeAxis.isVertical() ? freeAxisOffset
-							: fixedAxisOffset;
-					// adjust to relative container
-					x += boundingWidget.getAbsoluteLeft();
-					y += boundingWidget.getAbsoluteTop();
-					x -= positioningWidget.getAbsoluteLeft();
-					y -= positioningWidget.getAbsoluteTop();
-				}
-				rpp.setPopupPosition(x, y);
-			}
-		});
+		rpp.setPopupPositionAndShow(new RelativePositioningCallback(rpp,
+				relativeToElement, shiftX, shiftY, boundingWidget,
+				positioningParams, positioningWidget));
 		return rpp;
+	}
+
+	static class RelativePositioningCallback implements PositionCallback {
+		private RelativePopupPanel rpp;
+
+		private Element relativeToElement;
+
+		private int shiftX;
+
+		private int shiftY;
+
+		private Widget boundingWidget;
+
+		private RelativePopupPositioningParams positioningParams;
+
+		private Widget positioningWidget;
+
+		public RelativePositioningCallback(RelativePopupPanel rpp,
+				Element relativeToElement, int shiftX, int shiftY,
+				Widget boundingWidget,
+				RelativePopupPositioningParams positioningParams,
+				Widget positioningWidget) {
+			this.rpp = rpp;
+			this.relativeToElement = relativeToElement;
+			this.shiftX = shiftX;
+			this.shiftY = shiftY;
+			this.boundingWidget = boundingWidget;
+			this.positioningParams = positioningParams;
+			this.positioningWidget = positioningWidget;
+		}
+
+		@Override
+		public void setPosition(int offsetWidth, int offsetHeight) {
+			int x = relativeToElement.getAbsoluteLeft();
+			int y = relativeToElement.getAbsoluteTop();
+			int relW = relativeToElement.getOffsetWidth();
+			int relH = relativeToElement.getOffsetHeight();
+			x += shiftX;
+			y += shiftY;
+			int rw = rpp.getOffsetWidth();
+			int rh = rpp.getOffsetHeight();
+			// work in coordinate space of bounding widget
+			x -= boundingWidget.getAbsoluteLeft();
+			y -= boundingWidget.getAbsoluteTop();
+			int fixedAxisOffset = INVALID;
+			int freeAxisOffset = INVALID;
+			AxisCoordinate fixedAxis = null;
+			AxisCoordinate freeAxis = null;
+			int bw = boundingWidget.getOffsetWidth();
+			int bh = boundingWidget.getOffsetHeight();
+			final int bx = boundingWidget.getAbsoluteLeft();
+			final int by = boundingWidget.getAbsoluteTop();
+			int axisIndex = 0;
+			RelativePopupAxis[] axes = positioningParams.axes;
+			if (axes == null) {
+				// absolute, internal to bounding widget
+				switch (positioningParams.positioningStrategy) {
+				case BELOW_WITH_PREFERRED_LEFT:
+					x += positioningParams.shiftX;
+					x -= positioningParams.preferredLeft;
+					if (x < 0) {
+						x = 0;
+					}
+					if (x + rw > bw) {
+						x = bw - rw;
+					}
+					y += positioningParams.shiftY;
+					break;
+				case RIGHT_OR_LEFT_WITH_PREFERRED_TOP:
+					x += 2;
+					int clientY = positioningParams.nativeEvent.getClientY();
+					int clientHeight = Window.getClientHeight();
+					int oy = 0;
+					if (clientY > positioningParams.preferredTop) {
+						oy = Math.min(rh, clientY);
+						oy = Math.max(0, oy
+								- positioningParams.preferredFromBottom);
+					} else {
+						oy = Math.min(positioningParams.preferredTop, clientY);
+					}
+					y -= oy;
+					if (rw + x > bw) {
+						x -= (rw + 4);
+					} else {
+					}
+					break;
+				}
+				x += boundingWidget.getAbsoluteLeft();
+				y += boundingWidget.getAbsoluteTop();
+			} else {
+				for (RelativePopupAxis axis : axes) {
+					fixedAxis = axis.fixedAxis;
+					fixedAxisOffset = fixedAxis.fit(x, y, bw, bh, relW, relH,
+							offsetWidth, offsetHeight, bx, by, null, false,
+							false);
+					if (fixedAxisOffset == INVALID) {
+						continue;
+					}
+					AxisCoordinate last = null;
+					for (int i = 0; i < 2; i++) {
+						freeAxis = axis.freeAxis[i];
+						freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW, relH,
+								offsetWidth, offsetHeight, bx, by, last, true,
+								false);
+						if (freeAxisOffset != INVALID) {
+							break;
+						}
+						last = freeAxis;
+					}
+				}
+				// always fall back to the first axis
+				if (fixedAxisOffset == INVALID || freeAxisOffset == INVALID) {
+					RelativePopupAxis axis = axes[0];
+					fixedAxis = axis.fixedAxis;
+					fixedAxisOffset = fixedAxis.fit(x, y, bw, bh, relW, relH,
+							offsetWidth, offsetHeight, bx, by, null, false,
+							true);
+					AxisCoordinate last = null;
+					for (int i = 0; i < 2; i++) {
+						freeAxis = axis.freeAxis[i];
+						freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW, relH,
+								offsetWidth, offsetHeight, bx, by, last, true,
+								false);
+						if (freeAxisOffset != INVALID) {
+							break;
+						}
+						last = freeAxis;
+					}
+					if (freeAxisOffset == INVALID) {
+						freeAxis = axis.freeAxis[0];
+						freeAxisOffset = freeAxis.fit(x, y, bw, bh, relW, relH,
+								offsetWidth, offsetHeight, bx, by, null, true,
+								true);
+					}
+				}
+				x = fixedAxis.isVertical() ? freeAxisOffset : fixedAxisOffset;
+				y = freeAxis.isVertical() ? freeAxisOffset : fixedAxisOffset;
+				// adjust to relative container
+				x += boundingWidget.getAbsoluteLeft();
+				y += boundingWidget.getAbsoluteTop();
+				x -= positioningWidget.getAbsoluteLeft();
+				y -= positioningWidget.getAbsoluteTop();
+				//since we're relative, cancel the scroll
+//				x+=WidgetUtils.getScrollLeft(positioningWidget.getElement());
+//				y+=WidgetUtils.getScrollTop(positioningWidget.getElement());
+			}
+			rpp.setPopupPosition(x, y);
+		}
 	}
 
 	public enum OtherPositioningStrategy {

@@ -795,4 +795,26 @@ public class WidgetUtils {
 			pp.hide();
 		}
 	}
+	 public static native int getScrollLeft(Element elem) /*-{
+	    var left = 0;
+	    var curr = elem;
+	    // This intentionally excludes body which has a null offsetParent.    
+	    while (curr.offsetParent) {
+	      left -= curr.scrollLeft;
+	      curr = curr.parentNode;
+	    }
+	   
+	    return left;
+	  }-*/;
+
+	  public static native int getScrollTop(Element elem) /*-{
+	    var top = 0;
+	    var curr = elem;
+	    // This intentionally excludes body which has a null offsetParent.    
+	    while (curr.offsetParent) {
+	      top -= curr.scrollTop;
+	      curr = curr.parentNode;
+	    }
+	    return top;
+	  }-*/;
 }

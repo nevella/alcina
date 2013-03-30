@@ -24,6 +24,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * 
  * We duplicate all the static methods from Registry to get the correct get()
  * 
+ * now i understand more...we can do something with thread.getcontextclassloader and probably drop this
+ * 
  * @author nick@alcina.cc
  * 
  */
@@ -39,11 +41,16 @@ public class ServletLayerRegistry extends Registry {
 	}
 
 	public static <V> V impl(Class<V> registryPoint) {
-		return get().impl0(registryPoint, void.class);
+		return get().impl0(registryPoint, void.class, false);
 	}
 
 	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass) {
-		return get().impl0(registryPoint, targetObjectClass);
+		return get().impl0(registryPoint, targetObjectClass, false);
+	}
+
+	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass,
+			boolean allowNull) {
+		return get().impl0(registryPoint, targetObjectClass, allowNull);
 	}
 
 	public static <V> List<V> impls(Class<V> registryPoint) {

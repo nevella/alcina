@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.core.client.Scheduler;
@@ -213,8 +214,13 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	}
 
 	protected void queueCommit() {
+		String filterText = getTextBox().getText();
+		if (CommonUtils.isNullOrEmpty(lastQueuedText)
+				&& CommonUtils.isNullOrEmpty(filterText)) {
+			return;
+		}
 		lastQueueAddMillis = System.currentTimeMillis();
-		lastQueuedText = getTextBox().getText();
+		lastQueuedText = filterText;
 		if (queueingFinishedTimer == null) {
 			queueingFinishedTimer = new Timer() {
 				long timerAddedMillis = lastQueueAddMillis;
@@ -276,7 +282,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	protected void onDetach() {
 		if (queueingFinishedTimer != null) {
 			queueingFinishedTimer.cancel();
-			queueingFinishedTimer=null;
+			queueingFinishedTimer = null;
 		}
 		changeListenerTimer.cancel();
 		super.onDetach();
@@ -314,8 +320,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 
 	protected void maybeCommit() {
 		if (!getTextBox().getText().equals(lastQueuedText)
-				&& !getTextBox().getStyleName().contains(
-						"alcina-FilterHint")) {
+				&& !getTextBox().getStyleName().contains("alcina-FilterHint")) {
 			queueCommit();
 		}
 	}

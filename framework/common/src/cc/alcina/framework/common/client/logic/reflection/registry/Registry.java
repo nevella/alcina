@@ -36,11 +36,16 @@ public class Registry {
 	}
 
 	public static <V> V impl(Class<V> registryPoint) {
-		return get().impl0(registryPoint, void.class);
+		return get().impl0(registryPoint, void.class, false);
 	}
 
 	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass) {
-		return get().impl0(registryPoint, targetObjectClass);
+		return get().impl0(registryPoint, targetObjectClass, false);
+	}
+
+	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass,
+			boolean allowNull) {
+		return get().impl0(registryPoint, targetObjectClass, allowNull);
 	}
 
 	public static <V> List<V> impls(Class<V> registryPoint) {
@@ -270,7 +275,8 @@ public class Registry {
 				.substring(c.getName().lastIndexOf(".") + 1) : c.getName();
 	}
 
-	protected <V> V impl0(Class<V> registryPoint, Class targetObjectClass) {
+	protected <V> V impl0(Class<V> registryPoint, Class targetObjectClass,
+			boolean allowNull) {
 		// optimisation
 		Object singleton = singletons.get(registryPoint, targetObjectClass);
 		if (singleton != null) {
@@ -282,14 +288,22 @@ public class Registry {
 		}
 		ImplementationType type = implementationTypeMap.get(registryPoint,
 				targetObjectClass);
-		Object obj = instantiateSingle(registryPoint, targetObjectClass);
+		Object obj = null;
+		if (allowNull) {
+			obj = instantiateSingleOrNull(registryPoint, targetObjectClass);
+			if (obj == null) {
+				return null;
+			}
+		} else {
+			obj = instantiateSingle(registryPoint, targetObjectClass);
+		}
 		type = type == null ? ImplementationType.MULTIPLE : type;
 		switch (type) {
 		case FACTORY:
 		case SINGLETON:
 			singletons.put(registryPoint, targetObjectClass, obj);
 			if (type == ImplementationType.FACTORY) {
-				return impl0(registryPoint, targetObjectClass);
+				return impl0(registryPoint, targetObjectClass, allowNull);
 			}
 			break;
 		case INSTANCE:
