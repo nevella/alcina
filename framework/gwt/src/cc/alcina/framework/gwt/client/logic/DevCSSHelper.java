@@ -22,6 +22,7 @@ public class DevCSSHelper {
 		this.styleElement = ClientUtils.updateCss(styleElement, css);
 	}
 	private Element styleElement;
+
 	public void addCssListeners(GeneralProperties props) {
 		props.addPropertyChangeListener(
 				GeneralProperties.PROPERTY_PERSISTENT_CSS, cssPropertyListener);

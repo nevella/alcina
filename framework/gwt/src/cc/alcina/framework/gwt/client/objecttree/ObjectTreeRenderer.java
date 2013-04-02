@@ -63,13 +63,18 @@ public class ObjectTreeRenderer {
 	protected Map<Widget, TreeRenderer> level1LabelMap = new HashMap<Widget, TreeRenderer>();
 
 	public ComplexPanel render(TreeRenderable root) {
-		return render(root, RenderContext.get());
+		try {
+			return render(root, RenderContext.branch());
+		} finally {
+			RenderContext.merge();
+		}
 	}
 
 	public ComplexPanel render(TreeRenderable root, RenderContext renderContext) {
 		this.op = new FlowPanelWithBinding();
-		op.setRenderContext(renderContext.snapshot());
+		op.setRenderContext(renderContext);
 		renderToPanel(root, op, 0, true, renderContext, null);
+		op.setRenderContext(renderContext);
 		op.getBinding().bind();
 		op.getBinding().setLeft();
 		op.setStyleName("alcina-ObjectTree");

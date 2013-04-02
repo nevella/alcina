@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContext.LooseContextStackException;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
@@ -59,7 +60,7 @@ public class Publisher {
 	@SuppressWarnings("unchecked")
 	public PublicationResult publish(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original) throws Exception {
-		int depth=LooseContext.depth();
+		int depth = LooseContext.depth();
 		try {
 			ctx = new PublicationContext();
 			ctx.logger = Logger.getLogger(getClass());
@@ -91,7 +92,8 @@ public class Publisher {
 		ctx.publicationResult = result;
 		long publicationUserId = 0;
 		long publicationId = 0;
-		boolean forPublication = !deliveryModel.isNoPersistence()&&deliveryModel.provideContentDeliveryType().isRepublishable();
+		boolean forPublication = !deliveryModel.isNoPersistence()
+				&& deliveryModel.provideContentDeliveryType().isRepublishable();
 		if (!SEUtilities.localTestMode()) {
 			if (forPublication && publicationPersister != null) {
 				publicationUserId = PublicationPersistenceLocator

@@ -166,34 +166,38 @@ public abstract class SearchViewProvider implements ViewProvider {
 		private BoundTableExt table;
 
 		public SearchPanel() {
-			HTML description = new HTML("<i>" + action.getDescription()
-					+ "</i><br />");
-			this.resultsHolder = new FlowPanel();
-			RenderContext renderContext = getRenderContextAndPush();
-			beanView = new ObjectTreeGridRenderer().render(
-					action.getParameters(), renderContext);
-			beanView.addStyleName(CommonUtils.simpleClassName(action
-					.getParameters().getClass()));
-			add(beanView);
-			this.button = new InputButton(searchButtonTitle);
-			button.setStyleName("button-submit");
-			button.addClickHandler(this);
-			FlexTable ft = (FlexTable) ((ComplexPanel) beanView).getWidget(0);
-			HorizontalPanel hp = new HorizontalPanel();
-			hp.add(button);
-			hp.setVerticalAlignment(HasVerticalAlignment.ALIGN_BOTTOM);
-			this.runningLabel = new Label("...searching");
-			this.runningLabel.setVisible(false);
-			hp.add(runningLabel);
-			ft.setWidget(ft.getRowCount(), 1, hp);
-			if (isWithoutParameters()) {
-				beanView.setVisible(false);
+			try {
+				HTML description = new HTML("<i>" + action.getDescription()
+						+ "</i><br />");
+				this.resultsHolder = new FlowPanel();
+				RenderContext renderContext = RenderContext.branch();
+				beanView = new ObjectTreeGridRenderer().render(
+						action.getParameters(), renderContext);
+				beanView.addStyleName(CommonUtils.simpleClassName(action
+						.getParameters().getClass()));
+				add(beanView);
+				this.button = new InputButton(searchButtonTitle);
+				button.setStyleName("button-submit");
+				button.addClickHandler(this);
+				FlexTable ft = (FlexTable) ((ComplexPanel) beanView)
+						.getWidget(0);
+				HorizontalPanel hp = new HorizontalPanel();
+				hp.add(button);
+				hp.setVerticalAlignment(HasVerticalAlignment.ALIGN_BOTTOM);
+				this.runningLabel = new Label("...searching");
+				this.runningLabel.setVisible(false);
+				hp.add(runningLabel);
+				ft.setWidget(ft.getRowCount(), 1, hp);
+				if (isWithoutParameters()) {
+					beanView.setVisible(false);
+				}
+				add(resultsHolder);
+				if (isInitialSearch()) {
+					search();
+				}
+			} finally {
+				RenderContext.merge();
 			}
-			add(resultsHolder);
-			if (isInitialSearch()) {
-				search();
-			}
-			renderContext.pop();
 		}
 
 		public void onClick(ClickEvent event) {
@@ -261,12 +265,6 @@ public abstract class SearchViewProvider implements ViewProvider {
 		}
 	}
 
-	protected RenderContext getRenderContextAndPush() {
-		RenderContext renderContext = RenderContext.get();
-		renderContext.push();
-		return renderContext;
-	}
-
 	public void setInitialSearch(boolean initialSearch) {
 		this.initialSearch = initialSearch;
 	}
@@ -306,7 +304,8 @@ public abstract class SearchViewProvider implements ViewProvider {
 		protected SearchDataProvider createSearchDataProvider(
 				AsyncCallback completionCallback,
 				SingleTableSearchDefinition def) {
-			return new SearchDataProviderCommon(def, completionCallback, converter);
+			return new SearchDataProviderCommon(def, completionCallback,
+					converter);
 		}
 	}
 }

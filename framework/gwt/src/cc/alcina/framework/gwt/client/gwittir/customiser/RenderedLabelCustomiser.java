@@ -21,6 +21,7 @@ import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
+import com.totsp.gwittir.client.ui.ToStringRenderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 @ClientInstantiable
@@ -30,31 +31,34 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  */
 public class RenderedLabelCustomiser implements Customiser {
 	public static final String RENDERER_CLASS = "RENDERER_CLASS";
+
 	public static final String WIDGET_CSS_CLASS = "WIDGET_CSS_CLASS";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
-		Class rendererClass= NamedParameter.Support.classValue(info
-				.parameters(), RENDERER_CLASS,null);
-		String widgetCssClass = NamedParameter.Support.stringValue(info
-				.parameters(), WIDGET_CSS_CLASS,null);
-		return new RenderedLabelProvider(rendererClass,widgetCssClass);
+		Class rendererClass = NamedParameter.Support.classValue(
+				info.parameters(), RENDERER_CLASS, null);
+		String widgetCssClass = NamedParameter.Support.stringValue(
+				info.parameters(), WIDGET_CSS_CLASS, null);
+		return new RenderedLabelProvider(rendererClass, widgetCssClass);
 	}
 
 	public static class RenderedLabelProvider implements BoundWidgetProvider {
-		private final Class rendererClass;
 		private final String widgetCssClass;
 
+		private Renderer renderer;
+
 		public RenderedLabelProvider(Class rendererClass, String widgetCssClass) {
-			this.rendererClass = rendererClass;
 			this.widgetCssClass = widgetCssClass;
+			renderer = rendererClass == null ? ToStringRenderer.INSTANCE
+					: (Renderer) CommonLocator.get().classLookup()
+							.newInstance(rendererClass);
 		}
 
 		public BoundWidget get() {
 			RenderingLabel label = new RenderingLabel();
-			label.setRenderer((Renderer) CommonLocator.get().classLookup()
-					.newInstance(rendererClass));
-			if (widgetCssClass!=null){
+			label.setRenderer(renderer);
+			if (widgetCssClass != null) {
 				label.addStyleName(widgetCssClass);
 			}
 			return label;

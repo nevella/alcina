@@ -67,9 +67,10 @@ public class LooseContextInstance {
 	private void maybeDebugStack(boolean push) {
 		if (debug) {
 			Thread t = Thread.currentThread();
-			System.err.println(CommonUtils.formatJ("%s-%s-%s-%s: %s\n%s\n",
+			System.err.println(CommonUtils.formatJ("%s-%s-%s-%s: %s\n%s\n%s\n",
 					t.getId(), hashCode(), push, stack.size(),
-					t.getStackTrace()[3], t.getStackTrace()[4]));
+					t.getStackTrace()[3], t.getStackTrace()[4],
+					t.getStackTrace()[5]));
 		}
 	}
 
@@ -176,5 +177,11 @@ public class LooseContextInstance {
 
 	public int depth() {
 		return stack.size();
+	}
+
+	void clearStack() {
+		while (!stack.isEmpty()) {
+			pop();
+		}
 	}
 }

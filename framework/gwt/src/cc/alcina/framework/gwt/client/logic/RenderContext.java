@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
+import javax.media.jai.SnapshotImage;
+
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
@@ -30,7 +32,7 @@ public class RenderContext extends LooseContextInstance {
 			.getName() + ".ON_DETACH_CALLBACK";
 
 	private static final String ON_ATTACH_CALLBACK = RenderContext.class
-			.getName() + ".ON_DETACH_CALLBACK";
+			.getName() + ".ON_ATTACH_CALLBACK";
 
 	private static final String ROOT_RENDERER = RenderContext.class.getName()
 			+ ".ROOT_RENDERER";
@@ -102,10 +104,46 @@ public class RenderContext extends LooseContextInstance {
 		set(ROOT_RENDERER, rootRenderer);
 	}
 
+	/**
+	 * Snapshotting is sort of complex - basically, we want two contradictory
+	 * things:
+	 * <ul>
+	 * <li>Ease of access - via RenderContext.get()
+	 * <li>The ability to freeze sets of parameters
+	 * </ul>
+	 * <p>
+	 * We use snapshot() for bound tables (which means RenderContext.get() won't
+	 * work during setup), but branch()/merge() for object trees (heavier use of
+	 * alcina) (.get() *will* work during setup)
+	 * 
+	 * </p>
+	 */
 	@Override
 	public RenderContext snapshot() {
 		RenderContext context = new RenderContext();
 		cloneToSnapshot(context);
 		return context;
+	}
+
+	private static RenderContext trunk = null;
+
+	/**
+	 * In the case of object tree rendering, it makes sense to temporarily make
+	 * the get() instance totally independent - until the initial (sychronous)
+	 * setup has finished
+	 */
+	public static RenderContext branch() {
+		if (trunk != null) {
+			throw new RuntimeException(
+					"Branching from already branched RenderContext");
+		}
+		trunk = get();
+		theInstance = theInstance.snapshot();
+		return get();
+	}
+
+	public static void merge() {
+		theInstance = trunk;
+		trunk = null;
 	}
 }

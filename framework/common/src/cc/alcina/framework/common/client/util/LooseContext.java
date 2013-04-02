@@ -90,13 +90,12 @@ public abstract class LooseContext {
 	}
 
 	public static void confirmDepth(int depth) {
-		if(depth!=depth()){
+		if (depth != depth()) {
+			getContext().clearStack();
 			throw new LooseContextStackException();
 		}
-		
-		
 	}
-	public static class LooseContextStackException extends RuntimeException{
-		
+
+	public static class LooseContextStackException extends RuntimeException {
 	}
 }

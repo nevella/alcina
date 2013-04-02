@@ -31,8 +31,8 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 					saved.add(sc);
 				}
 			}
-			criteriaGroup.getCriteria().clear();
-			criteriaGroup.getCriteria().addAll(saved);
+			Set newCriterionSet = new HashSet();
+			newCriterionSet.addAll(saved);
 			Object obj = evt.getNewValue();
 			Set newValue = null;
 			if (!(obj == null || obj instanceof Set)) {
@@ -41,12 +41,13 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 				newValue = (Set) evt.getNewValue();
 			}
 			if (newValue == null) {
-				return;
+			} else {
+				for (Object member : newValue) {
+					SC tc = newCriterion((O) member);
+					newCriterionSet.add(tc);
+				}
 			}
-			for (Object member : newValue) {
-				SC tc = newCriterion((O) member);
-				criteriaGroup.getCriteria().add(tc);
-			}
+			criteriaGroup.setCriteria(newCriterionSet);
 		}
 	};
 

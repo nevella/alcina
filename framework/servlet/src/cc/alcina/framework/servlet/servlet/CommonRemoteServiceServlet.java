@@ -154,7 +154,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	protected void onBeforeRequestDeserialized(String serializedRequest) {
 		super.onBeforeRequestDeserialized(serializedRequest);
-		looseContextDepth=LooseContext.depth();
+		looseContextDepth = LooseContext.depth();
 		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
 	}
 
@@ -253,7 +253,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			public void run() {
 				try {
 					// different thread-local
-					tLooseContextDepth=LooseContext.depth();
+					tLooseContextDepth = LooseContext.depth();
 					onAfterSpawnedThreadRun(this);
 					pm.copyTo(PermissionsManager.get());
 					ActionLogItem result = null;
@@ -819,7 +819,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				converter);
 		while (records.remove(null)) {
 		}
-		String remoteAddr=getThreadLocalRequest()==null?null:getThreadLocalRequest().getRemoteAddr();
+		String remoteAddr = getThreadLocalRequest() == null ? null
+				: getThreadLocalRequest().getRemoteAddr();
 		for (ClientLogRecords r : records) {
 			for (ClientLogRecord clr : r.getLogRecords()) {
 				clr.setIpAddress(remoteAddr);
@@ -828,11 +829,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		EntityLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().persistClientLogRecords(records);
 	}
-	protected String getUserAgent(){
+
+	protected String getUserAgent() {
 		return getUserAgent(getThreadLocalRequest());
 	}
 
 	protected String getUserAgent(HttpServletRequest rq) {
-		return rq==null?"null/server":rq.getHeader("User-Agent");
+		return rq == null ? "null/server" : rq.getHeader("User-Agent");
 	}
 }
