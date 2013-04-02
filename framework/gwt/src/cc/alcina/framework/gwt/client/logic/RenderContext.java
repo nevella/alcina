@@ -13,8 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
-import javax.media.jai.SnapshotImage;
-
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
