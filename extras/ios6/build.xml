@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="alcina-ios6-gwt-patches" basedir="." default="build">
+	<property file="build.properties" />
+	<property name="project.jar.file" value="${project.dist.dir}/${ant.project.name}.jar">
+	</property>
+	<path id="project.classpath">
+		<fileset dir="${project.lib.dir.1}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	
+	<target name="build" >
+		<mkdir dir="${project.build.dir}" />
+		<javac includeantruntime="false" debug="on" sourcepath="" destdir="${project.build.dir}">
+			<classpath>
+				<path refid="project.classpath" />
+			</classpath>
+			<src path="${project.src.dir}" />
+		</javac>
+		<mkdir dir="${project.dist.dir}" />
+		<delete file="${project.jar.file}" />
+		<copy todir="${project.build.dir}">
+			<fileset dir="${project.src.dir}">
+				<include name="**/*.java" />
+				<exclude name="**/*.class" />
+			</fileset>
+		</copy>
+		<jar destfile="${project.jar.file}">
+			<fileset dir="${project.build.dir}">
+				<include name="**/*.*" />
+			</fileset>
+		</jar>
+	</target>
+</project>

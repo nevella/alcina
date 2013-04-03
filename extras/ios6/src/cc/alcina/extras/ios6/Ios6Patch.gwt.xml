@@ -1,0 +1,29 @@
+<module>
+	<define-property name="mobile.user.agent" values="ios6,non_ios6" />
+	<property-provider name="mobile.user.agent"><![CDATA[
+  {
+    var ua = window.navigator.userAgent.toLowerCase();
+    if (ua.indexOf('iphone') != -1) { return 'ios6'; }
+    return 'non_ios6';
+  }
+]]></property-provider>
+
+	<!-- Constrain the value for non-webkit browsers -->
+	<set-property name="mobile.user.agent" value="non_ios6">
+		<none> <!-- Actually means NOR, in this case "not safari" -->
+			<when-property-is name="user.agent" value="safari" />
+		</none>
+	</set-property>
+	 <replace-with class="cc.alcina.extras.ios6.client.IosSplitNonIos6">
+        <when-type-is class="cc.alcina.extras.ios6.client.IosSplit"/>
+        <all>
+            <when-property-is name="mobile.user.agent" value="non_ios6"/>
+        </all>
+    </replace-with>
+    	 <replace-with class="cc.alcina.extras.ios6.client.IosSplitIos6">
+        <when-type-is class="cc.alcina.extras.ios6.client.IosSplit"/>
+        <all>
+            <when-property-is name="mobile.user.agent" value="ios6"/>
+        </all>
+    </replace-with>
+</module>

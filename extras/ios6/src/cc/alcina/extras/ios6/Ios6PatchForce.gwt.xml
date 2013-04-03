@@ -1,0 +1,16 @@
+<module>
+	<define-property name="mobile.user.agent" values="ios6" />
+	<property-provider name="mobile.user.agent"><![CDATA[
+  {
+    return 'ios6';
+  }
+]]></property-provider>
+
+	
+    	 <replace-with class="cc.alcina.extras.ios6.client.IosSplitIos6">
+        <when-type-is class="cc.alcina.extras.ios6.client.IosSplit"/>
+        <all>
+            <when-property-is name="mobile.user.agent" value="ios6"/>
+        </all>
+    </replace-with>
+</module>
