@@ -1334,7 +1334,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Set<DomainTransformEvent> toRemove = new LinkedHashSet<DomainTransformEvent>();
 		LinkedHashSet<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent dte : trs) {
-			if (hili.equals(getObject(dte))) {
+			Object source=dte.getSource()!=null?dte.getSource():getObject(dte);
+			if (hili.equals(source)) {
 				toRemove.add(dte);
 			}
 		}

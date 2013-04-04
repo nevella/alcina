@@ -74,4 +74,5 @@ public interface CommonRemoteServiceAsync {
 
 	void uploadOfflineTransforms(PartialDtrUploadRequest request,
 			AsyncCallback<PartialDtrUploadResponse> callback);
+
 }

@@ -7,13 +7,13 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.logic.CallManager;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
-import cc.alcina.framework.gwt.client.widget.complex.StatusDisplayer.FaderTuple;
 
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -39,6 +39,8 @@ public class StatusDisplayer {
 
 	private FaderTuple appTuple;
 
+	private FaderTuple exceptionTuple;
+
 	public StatusDisplayer() {
 		stylePrefixes = new StringMap();
 		stylePrefixes.put(MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, "icy");
@@ -54,6 +56,9 @@ public class StatusDisplayer {
 		appTuple = new FaderTuple(messageLabel, "alcina-Status app-Status");
 		Label centerLabel = new Label();
 		centerTuple = new FaderTuple(centerLabel, "alcina-Status-Center");
+		HTML exceptionLabel = new HTML();
+		exceptionTuple = new FaderTuple(exceptionLabel,
+				"alcina-Status-Exception");
 		GlobalTopicPublisher.get().addTopicListener(
 				CallManager.TOPIC_CALL_MADE, topicListener);
 		GlobalTopicPublisher.get().addTopicListener(
@@ -64,9 +69,14 @@ public class StatusDisplayer {
 				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().addTopicListener(
 				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
+		GlobalTopicPublisher.get()
+				.addTopicListener(
+						MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
+						topicListener);
 		RootPanel.get().add(appTuple.holder);
 		RootPanel.get().add(statusTuple.holder);
 		RootPanel.get().add(centerTuple.holder);
+		RootPanel.get().add(exceptionTuple.holder);
 	}
 
 	public void detach() {
@@ -80,6 +90,10 @@ public class StatusDisplayer {
 				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
 				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
+		GlobalTopicPublisher.get()
+				.removeTopicListener(
+						MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
+						topicListener);
 	}
 
 	private StringMap stylePrefixes;
@@ -111,6 +125,7 @@ public class StatusDisplayer {
 
 	private void showMessage(String message, String channel) {
 		boolean center = false;
+		int duration=FADER_DURATION;
 		FaderTuple ft = statusTuple;
 		boolean withFade = true;
 		if (channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED) {
@@ -121,6 +136,9 @@ public class StatusDisplayer {
 		} else if (channel == MessageManager.TOPIC_APP_MESSAGE_PUBLISHED) {
 			withFade = false;
 			ft = appTuple;
+		} else if (channel == MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED) {
+			duration=8000;
+			ft = exceptionTuple;
 		}
 		Label label = ft.label;
 		FaderAnimation fader = ft.fader;
@@ -134,7 +152,11 @@ public class StatusDisplayer {
 		SimplePanel holder = ft.holder;
 		WidgetUtils.setOpacity(holder, 0);
 		message = CommonUtils.nullToEmpty(message);
-		label.setText(message);
+		if (label instanceof HTML) {
+			((HTML) label).setHTML(message);
+		} else {
+			label.setText(message);
+		}
 		holder.setVisible(!message.isEmpty());
 		if (message.isEmpty()) {
 			return;
@@ -148,7 +170,7 @@ public class StatusDisplayer {
 		if (withFade) {
 			fader = new FaderAnimation(holder);
 			ft.fader = fader;
-			fader.run(FADER_DURATION);
+			fader.run(duration);
 		}
 	}
 
@@ -180,5 +202,6 @@ public class StatusDisplayer {
 		appTuple.label.removeFromParent();
 		statusTuple.label.removeFromParent();
 		centerTuple.label.removeFromParent();
+		exceptionTuple.label.removeFromParent();
 	}
 }
