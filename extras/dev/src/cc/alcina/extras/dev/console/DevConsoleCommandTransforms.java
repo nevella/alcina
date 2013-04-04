@@ -245,11 +245,11 @@ public class DevConsoleCommandTransforms {
 					+ "where %s order by dtr.id desc";
 			String sql2 = "select ci.id as cli_id, u.username,  "
 					+ "  dtr.id as dtr_id, dte.id as dte_id, "
-					+ " dte.objectclassref_id as dte_objref, dte.objectid as object_id, " +
-					"dte.propertyname as propertyname, "
+					+ " dte.objectclassref_id as dte_objref, dte.objectid as object_id, "
+					+ "dte.propertyname as propertyname, "
 					+ " dte.newstringvalue as newstringvalue,dte.transformtype as transformtype, "
 					+ " dte.valueid,"
-					+ " dte.servercommitdate as servercommitdate "
+					+ " dte.servercommitdate as servercommitdate, dte.objectlocalid "
 					+ "from client_instance ci "
 					+ "inner join users u on ci.user_id=u.id "
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
@@ -322,6 +322,19 @@ public class DevConsoleCommandTransforms {
 			@Override
 			protected boolean hasDefault() {
 				return true;
+			}
+		}
+
+		public static class CmdListTransformsFilterCreationIds extends
+				CmdListTransformsFilter {
+			@Override
+			public String getFilter(final String arg1) {
+				return "dte.transformType=0";
+			}
+
+			@Override
+			public String getKey() {
+				return "creationIds";
 			}
 		}
 

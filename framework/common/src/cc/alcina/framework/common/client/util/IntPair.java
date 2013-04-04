@@ -60,6 +60,9 @@ public class IntPair implements Comparable<IntPair> {
 	public String toString() {
 		return "[" + i1 + "," + i2 + "]";
 	}
+	public String simpleString() {
+		return  i1 + "," + i2 ;
+	}
 
 	public boolean isZero() {
 		return i1 == 0 && i2 == 0;
