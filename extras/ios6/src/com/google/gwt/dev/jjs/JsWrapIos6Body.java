@@ -83,7 +83,6 @@ public class JsWrapIos6Body {
       try {
         SelectionProperty prop = oracle.getSelectionProperty(logger,
             "mobile.user.agent");
-        System.out.println("prop value:"+prop.getCurrentValue()); 
         // TODO(jat): more checks if we split up the safari permutation
         if ("ios6".equals(prop.getCurrentValue())) {
           seenWebKit = true;
