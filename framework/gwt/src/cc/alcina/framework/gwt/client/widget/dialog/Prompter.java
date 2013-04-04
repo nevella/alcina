@@ -4,15 +4,19 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
 
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 
-public class Prompter implements PermissibleActionListener {
+public class Prompter implements PermissibleActionListener, KeyDownHandler {
 	private final String requiredMessage;
 
 	private OkCancelDialogBox box;
@@ -36,6 +40,7 @@ public class Prompter implements PermissibleActionListener {
 		subLabel.setStyleName("sub");
 		fp.add(subLabel);
 		text = new TextBox();
+		initialValue=CommonUtils.nullToEmpty(initialValue);
 		text.setValue(initialValue);
 		fp.add(text);
 		this.box = new OkCancelDialogBox(title, fp, this) {
@@ -47,7 +52,9 @@ public class Prompter implements PermissibleActionListener {
 		if (positioningCallback != null) {
 			positioningCallback.apply(box);
 		}
+		text.setSelectionRange(0, initialValue.length());
 		text.setFocus(true);
+		text.addKeyDownHandler(this);
 	}
 
 	@Override
@@ -60,6 +67,21 @@ public class Prompter implements PermissibleActionListener {
 				callback.apply(text.getValue());
 			}
 		} else {
+		}
+	}
+
+	@Override
+	public void onKeyDown(KeyDownEvent event) {
+		int nativeKeyCode = event.getNativeKeyCode();
+		if(nativeKeyCode==KeyCodes.KEY_ESCAPE){
+			event.preventDefault();
+			event.stopPropagation();
+			box.hide();
+		}else if(nativeKeyCode==KeyCodes.KEY_ENTER){
+			event.preventDefault();
+			event.stopPropagation();
+			box.hide();
+			callback.apply(text.getValue());
 		}
 	}
 }
