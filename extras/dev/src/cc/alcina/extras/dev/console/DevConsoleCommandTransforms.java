@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +19,7 @@ import javax.persistence.Table;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -230,6 +232,7 @@ public class DevConsoleCommandTransforms {
 				return "";
 			}
 			Connection conn = getConn();
+			ensureClassRefs(conn);
 			CommonPersistenceLocal cpl = EntityLayerLocator.get()
 					.commonPersistenceProvider()
 					.getCommonPersistenceExTransaction();
@@ -294,6 +297,29 @@ public class DevConsoleCommandTransforms {
 			}
 			return "";
 		}
+		static boolean classRefsEnsured; 
+
+		private void ensureClassRefs(Connection conn) throws Exception {
+			if(classRefsEnsured){
+				return;
+			}
+			System.out.println("getting classrefs...");
+			Statement ps = conn.createStatement();
+			ResultSet rs = ps.executeQuery("select * from classref");
+			while(rs.next()){
+				long id=rs.getLong("id");
+				String cn=rs.getString("refclassname");
+				Class clazz = Registry.get().lookupSingle(AlcinaPersistentEntityImpl.class,
+						ClassRef.class);
+				ClassRef cr=(ClassRef) clazz.newInstance();
+				cr.setId(id);
+				cr.setRefClassName(cn);
+				cr.setRefClass(Class.forName(cn));
+				ClassRef.add(Collections.singleton(cr));
+			}
+			ps.close();
+			classRefsEnsured=true;
+		}
 
 		private void printFullUsage() {
 			System.out
@@ -321,7 +347,7 @@ public class DevConsoleCommandTransforms {
 
 			@Override
 			protected boolean hasDefault() {
-				return true;
+				return false;
 			}
 		}
 
