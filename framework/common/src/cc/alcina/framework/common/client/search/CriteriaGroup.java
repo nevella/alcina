@@ -208,7 +208,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 
 	@SuppressWarnings("unchecked")
 	public <S extends SearchCriterion> S soleCriterion() {
-		return (S) criteria.iterator().next();
+		return criteria.isEmpty()?null:(S) criteria.iterator().next();
 	}
 
 	public void toSoleCriterion(SC criterion) {

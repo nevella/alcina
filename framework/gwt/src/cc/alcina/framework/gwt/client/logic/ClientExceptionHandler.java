@@ -32,7 +32,9 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 		return new WebException("(Wrapped GWT exception) : "
 				+ errorBuffer.toString());
 	}
-
+	public boolean handleNetworkException(Throwable e) {
+		return false;
+	}
 	private Stack<UncaughtExceptionHandler> handlerStack = new Stack<GWT.UncaughtExceptionHandler>();
 
 	public void push(UncaughtExceptionHandler handler) {

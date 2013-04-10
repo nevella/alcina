@@ -67,6 +67,12 @@ public class AugmentedUncaughtExceptionHandler implements CloseHandler<Window> {
 		if (lastGwtThrowables != null) {
 			StringBuilder builder = new StringBuilder();
 			for (Throwable t : lastGwtThrowables) {
+				if (handler instanceof ClientExceptionHandler) {
+					if (((ClientExceptionHandler) handler)
+							.handleNetworkException(t)) {
+						return;
+					}
+				}
 				ClientExceptionHandler.unrollUmbrella(t, builder);
 			}
 			gwtExceptionMessage = "\n\n-------\n(gwt)\n\n" + builder.toString();
