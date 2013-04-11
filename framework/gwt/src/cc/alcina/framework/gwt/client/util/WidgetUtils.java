@@ -39,6 +39,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -596,9 +597,10 @@ public class WidgetUtils {
 		}
 		return null;
 	}
+
 	@SuppressWarnings("unchecked")
-	public static <T extends Widget> T getParentWidgetSatisfyingTypedCallback(Widget w,
-			CollectionFilter<Widget> callback) {
+	public static <T extends Widget> T getParentWidgetSatisfyingTypedCallback(
+			Widget w, CollectionFilter<Widget> callback) {
 		while (w != null) {
 			if (callback.allow(w)) {
 				return (T) w;
@@ -725,6 +727,7 @@ public class WidgetUtils {
 			boolean forceFromTop) {
 		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
 		int y2 = y1 + Window.getClientHeight();
+		Element parent = e.getParentElement();
 		int absoluteTop = e.getAbsoluteTop();
 		if (!forceFromTop && (absoluteTop >= y1 && absoluteTop < y2)) {
 			return;
@@ -795,26 +798,38 @@ public class WidgetUtils {
 			pp.hide();
 		}
 	}
-	 public static native int getScrollLeft(Element elem) /*-{
-	    var left = 0;
-	    var curr = elem;
-	    // This intentionally excludes body which has a null offsetParent.    
-	    while (curr.offsetParent) {
-	      left -= curr.scrollLeft;
-	      curr = curr.parentNode;
-	    }
-	   
-	    return left;
-	  }-*/;
 
-	  public static native int getScrollTop(Element elem) /*-{
-	    var top = 0;
-	    var curr = elem;
-	    // This intentionally excludes body which has a null offsetParent.    
-	    while (curr.offsetParent) {
-	      top -= curr.scrollTop;
-	      curr = curr.parentNode;
-	    }
-	    return top;
-	  }-*/;
+	public static native int getScrollLeft(Element elem) /*-{
+		var left = 0;
+		var curr = elem;
+		// This intentionally excludes body which has a null offsetParent.    
+		while (curr.offsetParent) {
+			left -= curr.scrollLeft;
+			curr = curr.parentNode;
+		}
+
+		return left;
+	}-*/;
+
+	public static native int getScrollTop(Element elem) /*-{
+		var top = 0;
+		var curr = elem;
+		// This intentionally excludes body which has a null offsetParent.    
+		while (curr.offsetParent) {
+			top -= curr.scrollTop;
+			curr = curr.parentNode;
+		}
+		return top;
+	}-*/;
+
+	public static native Element getElementByNameOrId(Document doc, String name) /*-{
+
+		var e = doc.getElementById(name);
+		if (!e) {
+			e = doc.getElementsByName(name) && doc.getElementsByName(name).length == 1 ? doc
+					.getElementsByName(name)[0]
+					: null;
+		}
+		return e;
+	}-*/;
 }
