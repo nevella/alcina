@@ -70,8 +70,8 @@ public class ContentProvider {
 
 	public static boolean hasContent(String key) {
 		if (provider != null) {
-			return getContent(key).trim().isEmpty()
-					|| !getContent(key).startsWith("No content for key");
+			String trim = getContent(key).trim();
+			return !trim.isEmpty() && !trim.startsWith("No content for key");
 		}
 		throw new WrappedRuntimeException("No content provider registered",
 				SuggestedAction.NOTIFY_ERROR);

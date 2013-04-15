@@ -254,19 +254,23 @@ public abstract class SearchViewProvider implements ViewProvider {
 			}
 			SearchDataProvider dp = createSearchDataProvider(
 					completionCallback, def);
-			this.table = isEditableWidgets() ? new BoundTableExt(mask, factory,
-					fields, dp) : new NiceWidthBoundTable(mask, factory,
-					fields, dp);
+			this.table = createTableWidget(factory, fields, mask, dp);
 			table.addStyleName("results-table");
 			if (linkButton != null) {
 				linkButton.setTable(this.table);
 			}
+			addTableWidgetToHolder(resultsHolder, table);
 			resultsHolder.add(table);
 		}
 	}
 
 	public void setInitialSearch(boolean initialSearch) {
 		this.initialSearch = initialSearch;
+	}
+
+	public void addTableWidgetToHolder(FlowPanel resultsHolder,
+			BoundTableExt table) {
+		resultsHolder.add(table);
 	}
 
 	public boolean isInitialSearch() {
@@ -299,6 +303,12 @@ public abstract class SearchViewProvider implements ViewProvider {
 
 	protected abstract SearchDataProvider createSearchDataProvider(
 			AsyncCallback completionCallback, SingleTableSearchDefinition def);
+
+	public BoundTableExt createTableWidget(BoundWidgetTypeFactory factory,
+			Field[] fields, int mask, SearchDataProvider dp) {
+		return isEditableWidgets() ? new BoundTableExt(mask, factory, fields,
+				dp) : new NiceWidthBoundTable(mask, factory, fields, dp);
+	}
 
 	public static class SearchViewProviderCommon extends SearchViewProvider {
 		protected SearchDataProvider createSearchDataProvider(

@@ -139,4 +139,10 @@ public class PermissibleAction implements Permissible {
 			return this.delegate;
 		}
 	}
+	public static class PermissibleActionEveryone extends PermissibleAction{
+		@Override
+		public AccessLevel accessLevel() {
+			return AccessLevel.EVERYONE;
+		}
+	}
 }
