@@ -287,7 +287,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		container.add(visualiser);
 	}
 
-	protected Widget getViewForAction(PermissibleAction action) {
+	public Widget getViewForAction(PermissibleAction action) {
 		return viewProviderMap.get(action.getClass()).getViewForObject(action);
 	}
 

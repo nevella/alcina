@@ -123,7 +123,9 @@ public class SimpleWorkspaceVisualiser extends Composite implements
 	void resetHsbPos() {
 		hsp.setWidgetSize(viewHolder, defaultSplitterPosition);
 	}
-
+	public Widget getContentWidget(){
+		return ((SimplePanel) contentContainer).getWidget(); 
+	}
 	public void setContentWidget(Widget w) {
 		((SimplePanel) contentContainer).setWidget(w);
 	}

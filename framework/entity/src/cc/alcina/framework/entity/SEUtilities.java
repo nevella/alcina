@@ -984,4 +984,9 @@ public class SEUtilities {
 	public static void appShutdown() {
 		pdLookup = null;
 	}
+	
+
+	public static String sanitiseFileName(String string) {
+		return string.replaceAll("[\\?/<>\\|\\*:\\\\\"\\{\\}]", "_");
+	}
 }

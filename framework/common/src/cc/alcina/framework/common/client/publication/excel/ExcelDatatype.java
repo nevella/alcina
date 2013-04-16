@@ -12,7 +12,7 @@
  * the License.
  */
 
-package cc.alcina.framework.servlet.excel;
+package cc.alcina.framework.common.client.publication.excel;
 
 /**
  *

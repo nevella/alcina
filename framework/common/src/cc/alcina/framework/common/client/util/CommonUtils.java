@@ -884,12 +884,22 @@ public class CommonUtils {
 
 	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
 			String value) {
+		return getEnumValueOrNull(enumClass, value, false, null);
+	}
+
+	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
+			String value, boolean withFriendlyNames, E defaultValue) {
 		if (!enumValueLookup.containsKey(enumClass)) {
 			for (E ev : enumClass.getEnumConstants()) {
 				enumValueLookup.put(enumClass, ev.toString(), ev);
+				if (withFriendlyNames) {
+					enumValueLookup.put(enumClass, friendlyConstant(ev, "-")
+							.toLowerCase(), ev);
+				}
 			}
 		}
-		return (E) enumValueLookup.get(enumClass, value);
+		E result = (E) enumValueLookup.get(enumClass, value);
+		return result == null ? defaultValue : result;
 	}
 
 	public static void formatOut(String string, Object... objects) {

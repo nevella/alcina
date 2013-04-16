@@ -37,40 +37,12 @@ import com.totsp.gwittir.client.beans.Converter;
  * @author Nick Reddel
  */
 public class CollectionFilters {
-	public static class PrefixedFilter implements CollectionFilter<String> {
-		private String lcPrefix;
-
-		public PrefixedFilter(String prefix) {
-			this.lcPrefix = prefix.toLowerCase();
-		}
-
+	public static final CollectionFilter PASSTHROUGH_FILTER = new CollectionFilter() {
 		@Override
-		public boolean allow(String o) {
-			return CommonUtils.nullToEmpty(o).toLowerCase()
-					.startsWith(lcPrefix);
+		public boolean allow(Object o) {
+			return true;
 		}
-	}
-
-	public static <V> List<V> filter(Collection<? extends V> collection,
-			CollectionFilter<V> filter) {
-		ArrayList<V> result = new ArrayList<V>();
-		for (V v : collection) {
-			if (filter.allow(v)) {
-				result.add(v);
-			}
-		}
-		return result;
-	}
-
-	public static <V> void filterInPlace(Collection<? extends V> collection,
-			CollectionFilter<V> filter) {
-		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr
-				.hasNext();) {
-			if (!filter.allow(itr.next())) {
-				itr.remove();
-			}
-		}
-	}
+	};
 
 	public static <V> void apply(Collection<? extends V> collection,
 			Callback<V> callback) {
@@ -80,59 +52,14 @@ public class CollectionFilters {
 		}
 	}
 
-	public static <V extends HasId> List<V> filterByIds(
-			Collection<? extends V> collection, Collection<Long> ids) {
-		ArrayList<V> result = new ArrayList<V>();
-		for (V v : collection) {
-			if (ids.contains(v.getId())) {
-				result.add(v);
-			}
-		}
-		return result;
-	}
-
-	public static <I, O> List<O> filterByClass(
-			Collection<? extends I> collection, Class<? extends O> filterClass) {
-		ArrayList<O> result = new ArrayList<O>();
-		for (I i : collection) {
-			if (i.getClass() == filterClass) {
-				result.add((O) i);
-			}
-		}
-		return result;
-	}
-
-	public static <V> Set<V> filterAsSet(Collection<? extends V> collection,
-			CollectionFilter<V> filter) {
-		LinkedHashSet<V> result = new LinkedHashSet<V>();
-		for (V v : collection) {
-			if (filter.allow(v)) {
-				result.add(v);
-			}
-		}
-		return result;
-	}
-
-	public static <V> int indexOf(Collection<? extends V> collection,
-			CollectionFilter<V> filter) {
-		int i = 0;
-		for (V v : collection) {
-			if (filter.allow(v)) {
-				return i;
-			}
-			i++;
-		}
-		return -1;
-	}
-
-	public static <V> V singleNodeFilter(Collection<? extends V> collection,
+	public static <V> boolean contains(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
 		for (V v : collection) {
 			if (filter.allow(v)) {
-				return v;
+				return true;
 			}
 		}
-		return null;
+		return false;
 	}
 
 	public static <T, C> List<C> convert(Collection<? extends T> collection,
@@ -160,25 +87,107 @@ public class CollectionFilters {
 		return result;
 	}
 
-	public static final CollectionFilter PASSTHROUGH_FILTER = new CollectionFilter() {
-		@Override
-		public boolean allow(Object o) {
-			return true;
+	public static <V> List<V> filter(Collection<? extends V> collection,
+			CollectionFilter<V> filter) {
+		ArrayList<V> result = new ArrayList<V>();
+		for (V v : collection) {
+			if (filter.allow(v)) {
+				result.add(v);
+			}
 		}
+		return result;
+	}
+
+	public static <V> Set<V> filterAsSet(Collection<? extends V> collection,
+			CollectionFilter<V> filter) {
+		LinkedHashSet<V> result = new LinkedHashSet<V>();
+		for (V v : collection) {
+			if (filter.allow(v)) {
+				result.add(v);
+			}
+		}
+		return result;
+	}
+
+	public static <I, O> List<O> filterByClass(
+			Collection<? extends I> collection, Class<? extends O> filterClass) {
+		ArrayList<O> result = new ArrayList<O>();
+		for (I i : collection) {
+			if (i.getClass() == filterClass) {
+				result.add((O) i);
+			}
+		}
+		return result;
+	}
+
+	public static <V extends HasId> List<V> filterByIds(
+			Collection<? extends V> collection, Collection<Long> ids) {
+		ArrayList<V> result = new ArrayList<V>();
+		for (V v : collection) {
+			if (ids.contains(v.getId())) {
+				result.add(v);
+			}
+		}
+		return result;
+	}
+
+	public static <V> List<V> filterByProperty(
+			Collection<? extends V> collection, String key, Object value) {
+		return filter(collection, new PropertyFilter(key, value));
+	}
+
+	public static <V> void filterInPlace(Collection<? extends V> collection,
+			CollectionFilter<V> filter) {
+		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr
+				.hasNext();) {
+			if (!filter.allow(itr.next())) {
+				itr.remove();
+			}
+		}
+	}
+
+	public static void filterInPlaceByProperty(Collection collection,
+			String key, Object value) {
+		filterInPlace(collection, new PropertyFilter(key, value));
+	}
+
+	public static <V> Collection<V> filterOrReturn(Collection<V> collection,
+			CollectionFilter<V> filter) {
+		if(contains(collection, filter)){
+			return filter(collection, filter);
+		}
+		return collection;
 	};
 
-	public static final class InverseFilter implements CollectionFilter {
-		private final CollectionFilter invert;
-
-		public InverseFilter(CollectionFilter invert) {
-			this.invert = invert;
+	public static <V> V first(Collection<V> values, CollectionFilter<V> filter) {
+		for (Iterator<V> itr = values.iterator(); itr.hasNext();) {
+			V v = itr.next();
+			if (filter.allow(v)) {
+				return v;
+			}
 		}
+		return null;
+	}
+	public static <V> V firstOfClass(Collection values, Class<? extends V> clazz) {
+		IsClassFilter filter=new IsClassFilter(clazz);
+		return (V) first(values, filter);
+	}
+	public static <V> V first(Collection<V> values, String key, Object value) {
+		PropertyFilter<V> filter = new PropertyFilter<V>(key, value);
+		return first(values, filter);
+	}
 
-		@Override
-		public boolean allow(Object o) {
-			return !invert.allow(o);
+	public static <V> int indexOf(Collection<? extends V> collection,
+			CollectionFilter<V> filter) {
+		int i = 0;
+		for (V v : collection) {
+			if (filter.allow(v)) {
+				return i;
+			}
+			i++;
 		}
-	};
+		return -1;
+	}
 
 	public static final <CF extends CollectionFilter> CF inverse(final CF filter) {
 		return (CF) new CollectionFilter() {
@@ -189,22 +198,10 @@ public class CollectionFilters {
 		};
 	}
 
-	public static interface ConverterFilter<T, C> extends Converter<T, C> {
-		public boolean allowPreConvert(T t);
-
-		public boolean allowPostConvert(C c);
-	}
-
-	public static <K, V, O> SortedMap<K, V> sortedMap(Collection<O> values,
-			KeyValueMapper<K, V, O> mapper) {
-		SortedMap<K, V> result = new TreeMap<K, V>();
-		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
-			O o = itr.next();
-			if (mapper instanceof CollectionFilter
-					&& !((CollectionFilter) mapper).allow(o)) {
-				continue;
-			}
-			result.put(mapper.getKey(o), mapper.getValue(o));
+	public static <K, V> Map<K, V> invert(Map<V, K> map) {
+		Map<K, V> result = new LinkedHashMap<K, V>();
+		for (Entry<V, K> entry : map.entrySet()) {
+			result.put(entry.getValue(), entry.getKey());
 		}
 		return result;
 	}
@@ -232,64 +229,61 @@ public class CollectionFilters {
 		}
 		return result;
 	}
-
-	public static void filterInPlaceByProperty(Collection collection,
-			String key, Object value) {
-		filterInPlace(collection, new PropertyFilter(key, value));
-	}
-
-	public static <V> List<V> filterByProperty(
-			Collection<? extends V> collection, String key, Object value) {
-		return filter(collection, new PropertyFilter(key, value));
-	}
-
-	public static <V> V first(Collection<V> values, String key, Object value) {
-		PropertyFilter<V> filter = new PropertyFilter<V>(key, value);
-		for (Iterator<V> itr = values.iterator(); itr.hasNext();) {
-			V v = itr.next();
+	public static <V> V singleNodeFilter(Collection<? extends V> collection,
+			CollectionFilter<V> filter) {
+		for (V v : collection) {
 			if (filter.allow(v)) {
 				return v;
 			}
 		}
 		return null;
 	}
-
-	public static <K, V> Map<K, V> invert(Map<V, K> map) {
-		Map<K, V> result = new LinkedHashMap<K, V>();
-		for (Entry<V, K> entry : map.entrySet()) {
-			result.put(entry.getValue(), entry.getKey());
+	public static <K, V, O> SortedMap<K, V> sortedMap(Collection<O> values,
+			KeyValueMapper<K, V, O> mapper) {
+		SortedMap<K, V> result = new TreeMap<K, V>();
+		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
+			O o = itr.next();
+			if (mapper instanceof CollectionFilter
+					&& !((CollectionFilter) mapper).allow(o)) {
+				continue;
+			}
+			result.put(mapper.getKey(o), mapper.getValue(o));
 		}
 		return result;
 	}
 
-	public static class IsClassFilter implements CollectionFilter {
-		private Class clazz;
+	public static interface ConverterFilter<T, C> extends Converter<T, C> {
+		public boolean allowPostConvert(C c);
 
-		public IsClassFilter(Class clazz) {
-			this.clazz = clazz;
+		public boolean allowPreConvert(T t);
+	}
+
+	public static final class InverseFilter implements CollectionFilter {
+		private final CollectionFilter invert;
+
+		public InverseFilter(CollectionFilter invert) {
+			this.invert = invert;
 		}
 
 		@Override
 		public boolean allow(Object o) {
-			return o.getClass() == clazz;
+			return !invert.allow(o);
 		}
 	}
 
-	public static <V> boolean contains(Collection<? extends V> collection,
-			CollectionFilter<V> filter) {
-		for (V v : collection) {
-			if (filter.allow(v)) {
-				return true;
-			}
+	public static class PrefixedFilter implements CollectionFilter<String> {
+		private String lcPrefix;
+
+		public PrefixedFilter(String prefix) {
+			this.lcPrefix = prefix.toLowerCase();
 		}
-		return false;
+
+		@Override
+		public boolean allow(String o) {
+			return CommonUtils.nullToEmpty(o).toLowerCase()
+					.startsWith(lcPrefix);
+		}
 	}
 
-	public static <V> Collection<V> filterOrReturn(Collection<V> collection,
-			CollectionFilter<V> filter) {
-		if(contains(collection, filter)){
-			return filter(collection, filter);
-		}
-		return collection;
-	}
+
 }

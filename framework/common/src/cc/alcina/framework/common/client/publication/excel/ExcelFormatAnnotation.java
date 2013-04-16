@@ -11,8 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
-package cc.alcina.framework.servlet.excel;
+package cc.alcina.framework.common.client.publication.excel;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.Inherited;
@@ -26,7 +25,16 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @author Nick Reddel
  */
+public @interface ExcelFormatAnnotation {
+	public static final int DEFAULT_ORDER_POS = 100;
 
- public @interface ExcelFormatAnnotation {
-	ExcelDatatype type() default  ExcelDatatype.String;
+	ExcelDatatype type() default ExcelDatatype.String;
+
+	int order() default DEFAULT_ORDER_POS;
+
+	String displayName() default "";
+
+	boolean omit() default false;
+
+	String styleId() default "";
 }

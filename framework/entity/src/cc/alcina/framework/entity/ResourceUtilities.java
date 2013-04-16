@@ -127,7 +127,6 @@ public class ResourceUtilities {
 		}
 	}
 
-
 	public static String getBundledString(Class clazz, String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName : clazz
 				.getSimpleName() + "." + propertyName;
@@ -135,8 +134,8 @@ public class ResourceUtilities {
 			return customProperties.get(namespacedKey);
 		}
 		ResourceBundle b = null;
-			b = ResourceBundle.getBundle(clazz.getPackage().getName()
-					+ ".Bundle", Locale.getDefault(), clazz.getClassLoader());
+		b = ResourceBundle.getBundle(clazz.getPackage().getName() + ".Bundle",
+				Locale.getDefault(), clazz.getClassLoader());
 		if (b.keySet().contains(namespacedKey)) {
 			return b.getString(namespacedKey);
 		}
@@ -407,5 +406,12 @@ public class ResourceUtilities {
 	public static byte[] readFileToByteArray(File f) throws IOException {
 		FileInputStream fis = new FileInputStream(f);
 		return readStreamToByteArray(fis);
+	}
+
+	public static byte[] readUrlAsByteArray(String strUrl) throws IOException {
+		URL url = new URL(strUrl);
+		InputStream is = null;
+		is = url.openConnection().getInputStream();
+		return readStreamToByteArray(is);
 	}
 }

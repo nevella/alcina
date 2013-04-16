@@ -118,4 +118,8 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		withNull=copyFromCriterion.withNull;
 		return super.copyPropertiesFrom(copyFromCriterion);
 	}
+	@Override
+	public String toString() {
+		return String.valueOf(getValue());
+	}
 }

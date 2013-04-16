@@ -30,6 +30,7 @@ import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.SearchDataProvider.SearchDataProviderCommon;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
+import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
@@ -57,6 +58,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  * @author Nick Reddel
  */
 public abstract class SearchViewProvider implements ViewProvider {
+	public static final String CONTEXT_NO_INITIAL_SEARCH = SearchViewProvider.class.getName()+".CONTEXT_NO_INITIAL_SEARCH";
+
 	private LocalActionWithParameters<SingleTableSearchDefinition> action;
 
 	private boolean withoutCaption;
@@ -165,6 +168,9 @@ public abstract class SearchViewProvider implements ViewProvider {
 
 		private BoundTableExt table;
 
+		public SearchViewProvider getSearchViewProvider(){
+			return SearchViewProvider.this;
+		}
 		public SearchPanel() {
 			try {
 				HTML description = new HTML("<i>" + action.getDescription()
@@ -192,7 +198,7 @@ public abstract class SearchViewProvider implements ViewProvider {
 					beanView.setVisible(false);
 				}
 				add(resultsHolder);
-				if (isInitialSearch()) {
+				if (isInitialSearch()&&!LooseContext.getBoolean(CONTEXT_NO_INITIAL_SEARCH)) {
 					search();
 				}
 			} finally {
@@ -259,18 +265,31 @@ public abstract class SearchViewProvider implements ViewProvider {
 			if (linkButton != null) {
 				linkButton.setTable(this.table);
 			}
-			addTableWidgetToHolder(resultsHolder, table);
 			resultsHolder.add(table);
 		}
+
+		public BoundTableExt createTableWidget(BoundWidgetTypeFactory factory,
+				Field[] fields, int mask, SearchDataProvider dp) {
+			List<PermissibleAction> actions = getTableActions();
+			if (actions != null && !isEditableWidgets()) {
+				Toolbar tb = new Toolbar();
+				tb.setAsButton(true);
+				tb.setActions(actions);
+				tb.setStyleName("table-toolbar alcina-ToolbarSmall clearfix");
+				resultsHolder.add(tb);
+			}
+			return isEditableWidgets() ? new BoundTableExt(mask, factory,
+					fields, dp) : new NiceWidthBoundTable(mask, factory,
+					fields, dp);
+		}
+	}
+
+	protected List<PermissibleAction> getTableActions() {
+		return null;
 	}
 
 	public void setInitialSearch(boolean initialSearch) {
 		this.initialSearch = initialSearch;
-	}
-
-	public void addTableWidgetToHolder(FlowPanel resultsHolder,
-			BoundTableExt table) {
-		resultsHolder.add(table);
 	}
 
 	public boolean isInitialSearch() {
@@ -304,12 +323,6 @@ public abstract class SearchViewProvider implements ViewProvider {
 	protected abstract SearchDataProvider createSearchDataProvider(
 			AsyncCallback completionCallback, SingleTableSearchDefinition def);
 
-	public BoundTableExt createTableWidget(BoundWidgetTypeFactory factory,
-			Field[] fields, int mask, SearchDataProvider dp) {
-		return isEditableWidgets() ? new BoundTableExt(mask, factory, fields,
-				dp) : new NiceWidthBoundTable(mask, factory, fields, dp);
-	}
-
 	public static class SearchViewProviderCommon extends SearchViewProvider {
 		protected SearchDataProvider createSearchDataProvider(
 				AsyncCallback completionCallback,
@@ -317,5 +330,9 @@ public abstract class SearchViewProvider implements ViewProvider {
 			return new SearchDataProviderCommon(def, completionCallback,
 					converter);
 		}
+	}
+
+	public LocalActionWithParameters<SingleTableSearchDefinition> getAction() {
+		return this.action;
 	}
 }

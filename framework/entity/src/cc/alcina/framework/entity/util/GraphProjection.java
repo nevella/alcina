@@ -26,6 +26,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -79,16 +80,7 @@ public class GraphProjection {
 			// is expensive
 			return (T) new Date(((Timestamp) source).getTime());
 		}
-		if (c.isPrimitive()
-				|| c == String.class
-				|| c == Boolean.class
-				|| c == Character.class
-				|| c.isEnum()
-				|| c == Class.class
-				|| (source instanceof Number)
-				|| (source instanceof Date)
-				|| (c.getEnclosingClass() != null && c.getEnclosingClass()
-						.isEnum())) {
+		if (isPrimitiveOrDataClass(c)) {
 			return source;
 		}
 		if (reached.containsKey(source)) {
@@ -137,11 +129,24 @@ public class GraphProjection {
 		return projected;
 	}
 
+	public static boolean isPrimitiveOrDataClass(Class c) {
+		return c.isPrimitive()
+				|| c == String.class
+				|| c == Boolean.class
+				|| c == Character.class
+				|| c.isEnum()
+				|| c == Class.class
+				|| Number.class.isAssignableFrom(c)
+				|| Date.class.isAssignableFrom(c)
+				|| (c.getEnclosingClass() != null && c.getEnclosingClass()
+						.isEnum());
+	}
+
 	// TODO - shouldn't this be package-private?
 	public Collection projectCollection(Collection coll,
 			GraphProjectionContext context) throws Exception {
 		Collection c = null;
-		if (coll instanceof ArrayList) {
+		if (coll instanceof ArrayList || coll instanceof LinkedList) {
 			c = coll.getClass().newInstance();
 			// no "persistentLists", at least
 			// um...persistentBag??

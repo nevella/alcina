@@ -38,9 +38,13 @@
   <Style ss:ID="sPercent">
      <NumberFormat ss:Format="0.00%"/>
   </Style>
-  <Style ss:ID="s23">
+  <Style ss:ID="sHeaderRow">
   <Font x:Family="Swiss" ss:Bold="1"/>
   </Style>
+    <Style ss:ID="sLongDate">
+   <NumberFormat ss:Format="m/d/yy\ h:mm"/>
+  </Style>
+  
   
   </Styles>
   <Worksheet ss:Name="Data export" >

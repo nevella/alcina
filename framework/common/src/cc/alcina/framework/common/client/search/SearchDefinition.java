@@ -68,7 +68,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	protected transient String defaultFilterDescription = "";
 
-	protected transient Map<String, String> propertyColumnAliases = new HashMap<String, String>();
+	protected transient Map<String, String> propertyColumnAliases;
 
 	public static final transient int LARGE_SEARCH = 0xFF0000;
 
@@ -287,7 +287,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	 * injection avoidance) Override if you need multiple orderings
 	 */
 	public String propertyAlias(String propertyName) {
-		if (propertyColumnAliases.containsKey(propertyName)) {
+		if (propertyColumnAliases!=null&&propertyColumnAliases.containsKey(propertyName)) {
 			return propertyColumnAliases.get(propertyName);
 		}
 		if (!propertyName.matches("[A-Za-z0-9\\.]+")) {

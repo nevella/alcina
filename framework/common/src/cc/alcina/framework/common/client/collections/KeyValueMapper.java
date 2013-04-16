@@ -45,15 +45,15 @@ public interface KeyValueMapper<K, V, O> {
 	}
 
 	public static class PropertyKeyValueMapper<V> implements
-			KeyValueMapper<String, V, V> {
+			KeyValueMapper<Object, V, V> {
 		private final String propertyName;
 
 		public PropertyKeyValueMapper(String propertyName) {
 			this.propertyName = propertyName;
 		}
 
-		public String getKey(V o) {
-			return (String) CommonLocator.get().propertyAccessor()
+		public Object getKey(V o) {
+			return CommonLocator.get().propertyAccessor()
 					.getPropertyValue(o, propertyName);
 		};
 
@@ -63,7 +63,6 @@ public interface KeyValueMapper<K, V, O> {
 	}
 
 	public static class SelfMapper<V> implements KeyValueMapper<V, V, V> {
-		
 		@Override
 		public V getKey(V o) {
 			return o;
@@ -73,10 +72,10 @@ public interface KeyValueMapper<K, V, O> {
 		public V getValue(V o) {
 			return o;
 		}
-		
 	}
-	public static class LongArray2Mapper implements KeyValueMapper<Long, Long, Object[]>{
 
+	public static class LongArray2Mapper implements
+			KeyValueMapper<Long, Long, Object[]> {
 		@Override
 		public Long getKey(Object[] o) {
 			return (Long) o[0];
@@ -86,6 +85,5 @@ public interface KeyValueMapper<K, V, O> {
 		public Long getValue(Object[] o) {
 			return (Long) o[1];
 		}
-		
 	}
 }
