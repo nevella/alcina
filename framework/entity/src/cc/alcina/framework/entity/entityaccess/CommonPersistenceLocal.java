@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.LongPair;
@@ -157,4 +158,8 @@ public interface CommonPersistenceLocal {
 	public void persistClientLogRecords(List<ClientLogRecords> records);
 
 	public abstract LongPair getMinMaxIdRange(Class clazz);
+
+	public abstract IGroup getGroupByName(String groupName, boolean clean);
+
+	public abstract IGroup getGroupByName(String groupName);
 }

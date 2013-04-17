@@ -86,7 +86,4 @@ public class AlcinaTemplateCommonPersistence
 			}
 		};
 	}
-
-
-
 }

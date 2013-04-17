@@ -270,6 +270,7 @@ public class CollectionFilters {
 			return !invert.allow(o);
 		}
 	}
+	
 
 	public static class PrefixedFilter implements CollectionFilter<String> {
 		private String lcPrefix;

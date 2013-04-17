@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -66,9 +67,9 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
-import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 @SuppressWarnings("unchecked")
@@ -253,6 +254,37 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return ObjectPersistenceHelper.get().displayNameForObject(o);
 	}
 
+	@Override
+	public <V extends HasIdAndLocalId> V find(Class<V> clazz, String key,
+			Object value) {
+		V first = null;
+		if (getEntityManager() != null) {
+			String eql = String.format(
+					value == null ? "from %s where %s is null"
+							: "from %s where %s = ?", clazz.getSimpleName(),
+					key);
+			Query q = getEntityManager().createQuery(eql);
+			if (value != null) {
+				q.setParameter(1, value);
+			}
+			List<V> l = q.getResultList();
+			first = CommonUtils.first(l);
+			if (first != null) {
+				return first;
+			}
+		}
+		if (detachedEntityCache != null) {
+			first = CommonUtils.first(CollectionFilters.filter(
+					detachedEntityCache.values(clazz), new PropertyFilter<V>(
+							key, value)));
+			if (first != null) {
+				return first;
+			}
+		}
+		// maybe created in this 'transaction'
+		return super.find(clazz, key, value);
+	}
+
 	public List<String> getAnnotatedPropertyNames(Class clazz) {
 		return ObjectPersistenceHelper.get().getAnnotatedPropertyNames(clazz);
 	}
@@ -289,6 +321,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	public ClientInstance getClientInstance() {
 		return this.clientInstance;
+	}
+
+	public DetachedEntityCache getDetachedEntityCache() {
+		return this.detachedEntityCache;
 	}
 
 	public EntityManager getEntityManager() {
@@ -551,6 +587,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		this.clientInstance = clientInstance;
 	}
 
+	public void setDetachedEntityCache(DetachedEntityCache detachedEntityCache) {
+		this.detachedEntityCache = detachedEntityCache;
+	}
+
 	public void setEntityManager(EntityManager entityManager) {
 		this.entityManager = entityManager;
 	}
@@ -648,6 +688,24 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return true;
 	}
 
+	private void checkTargetReadAndAssignmentAccessAndThrow(
+			HasIdAndLocalId target, ObjectPermissions oph,
+			AssignmentPermission aph, DomainTransformEvent evt)
+			throws DomainTransformException {
+		if (target == null) {
+			return;
+		}
+		if (!PermissionsManager.get().isPermissible(target, oph.read())) {
+			throw new DomainTransformException(new Exception(
+					"Permission denied : read - target object " + evt));
+		}
+		if (aph != null
+				&& !PermissionsManager.get().isPermissible(target, aph.value())) {
+			throw new DomainTransformException(new Exception(
+					"Permission denied : assign - target object " + evt));
+		}
+	}
+
 	private void listenTo(SourcesPropertyChangeEvents spce) {
 		listeningTo.add(spce);
 		spce.addPropertyChangeListener(this);
@@ -729,21 +787,25 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return true;
 	}
 
-	private void checkTargetReadAndAssignmentAccessAndThrow(
-			HasIdAndLocalId target, ObjectPermissions oph,
-			AssignmentPermission aph, DomainTransformEvent evt)
+	@Override
+	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
 			throws DomainTransformException {
-		if (target == null) {
-			return;
+		if (exceptionPolicy != null) {
+			exceptionPolicy.checkVersion(obj, event);
 		}
-		if (!PermissionsManager.get().isPermissible(target, oph.read())) {
-			throw new DomainTransformException(new Exception(
-					"Permission denied : read - target object " + evt));
-		}
-		if (aph != null
-				&& !PermissionsManager.get().isPermissible(target, aph.value())) {
-			throw new DomainTransformException(new Exception(
-					"Permission denied : assign - target object " + evt));
+	}
+
+	@Override
+	protected void doubleCheckRemoval(Collection collection, Object tgt) {
+		JPAImplementation jpaImplementation = EntityLayerLocator.get()
+				.jpaImplementation();
+		tgt = jpaImplementation.getInstantiatedObject(tgt);
+		for (Iterator itr = collection.iterator(); itr.hasNext();) {
+			Object next = itr.next();
+			if (jpaImplementation.getInstantiatedObject(next) == tgt) {
+				itr.remove();
+				break;
+			}
 		}
 	}
 
@@ -795,6 +857,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	public static class HiliLocator {
+		public static HiliLocator fromDte(DomainTransformEvent dte) {
+			return new HiliLocator(dte.getObjectClass(), dte.getObjectId());
+		}
+
 		public Class<? extends HasIdAndLocalId> clazz;
 
 		public long id;
@@ -812,6 +878,15 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 
 		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof HiliLocator) {
+				HiliLocator o = (HiliLocator) obj;
+				return id == o.id && clazz == o.clazz;
+			}
+			return super.equals(obj);
+		}
+
+		@Override
 		public int hashCode() {
 			if (hash == 0) {
 				hash = Long.valueOf(id).hashCode()
@@ -824,22 +899,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof HiliLocator) {
-				HiliLocator o = (HiliLocator) obj;
-				return id == o.id && clazz == o.clazz;
-			}
-			return super.equals(obj);
-		}
-
-		@Override
 		public String toString() {
 			return CommonUtils.formatJ("%s - %s",
 					CommonUtils.simpleClassName(clazz), id);
-		}
-
-		public static HiliLocator fromDte(DomainTransformEvent dte) {
-			return new HiliLocator(dte.getObjectClass(), dte.getObjectId());
 		}
 	}
 
@@ -847,52 +909,5 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		public ThreadlocalTransformManager create() {
 			return new ThreadlocalTransformManager();
 		}
-	}
-
-	@Override
-	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
-			throws DomainTransformException {
-		if (exceptionPolicy != null) {
-			exceptionPolicy.checkVersion(obj, event);
-		}
-	}
-
-	@Override
-	public <V extends HasIdAndLocalId> V find(Class<V> clazz, String key,
-			Object value) {
-		V first = null;
-		if (getEntityManager() != null) {
-			String eql = String.format(
-					value == null ? "from %s where %s is null"
-							: "from %s where %s = ?", clazz.getSimpleName(),
-					key);
-			Query q = getEntityManager().createQuery(eql);
-			if (value != null) {
-				q.setParameter(1, value);
-			}
-			List<V> l = q.getResultList();
-			first = CommonUtils.first(l);
-			if (first != null) {
-				return first;
-			}
-		}
-		if (detachedEntityCache != null) {
-			first = CommonUtils.first(CollectionFilters.filter(
-					detachedEntityCache.values(clazz), new PropertyFilter<V>(
-							key, value)));
-			if (first != null) {
-				return first;
-			}
-		}
-		// maybe created in this 'transaction'
-		return super.find(clazz, key, value);
-	}
-
-	public DetachedEntityCache getDetachedEntityCache() {
-		return this.detachedEntityCache;
-	}
-
-	public void setDetachedEntityCache(DetachedEntityCache detachedEntityCache) {
-		this.detachedEntityCache = detachedEntityCache;
 	}
 }

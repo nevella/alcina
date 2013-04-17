@@ -437,6 +437,32 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				clean ? createUserAndGroupInstantiator() : null);
 		return cleaned;
 	}
+	
+	@Override
+	public G getGroupByName(String groupName) {
+		List<G> l = getEntityManager()
+				.createQuery(
+						"select distinct g from "
+								+ getImplementationSimpleClassName(IGroup.class)
+								+ " g " 
+								+ "left join fetch g.memberOfGroups sg "
+								+ "left join fetch g.memberUsers su "
+								+ "where g.groupName = ?")
+				.setParameter(1, groupName).getResultList();
+		return (l.size() == 0) ? null : l.get(0);
+	}
+
+	/**
+	 * Assume that this is always an in-system call (since we're after a
+	 * specific user) so _don't clean based on permissions_
+	 */
+	@Override
+	public G getGroupByName(String groupName, boolean clean) {
+		G group= getGroupByName(groupName);
+		G cleaned = new EntityUtils().detachedCloneIgnorePermissions(group,
+				clean ? createUserAndGroupInstantiator() : null);
+		return cleaned;
+	}
 
 	public List<ActionLogItem> listLogItemsForClass(String className, int count) {
 		List list = getEntityManager()

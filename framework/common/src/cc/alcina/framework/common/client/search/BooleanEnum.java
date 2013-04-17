@@ -8,4 +8,8 @@ public enum BooleanEnum {
 	public static BooleanEnum fromBoolean(Boolean b) {
 		return b == null ? null : b ? TRUE : FALSE;
 	}
+
+	public static Boolean toBoolean(BooleanEnum b) {
+		return b == null ? null : b == FALSE ? Boolean.FALSE : Boolean.TRUE;
+	}
 }

@@ -236,17 +236,23 @@ public abstract class TransformManager implements PropertyChangeListener,
 			break;
 		// add and removeref will not cause a property change, so no transform
 		// removal
-		case ADD_REF_TO_COLLECTION:
-			((Set) CommonLocator.get().propertyAccessor()
-					.getPropertyValue(obj, event.getPropertyName())).add(tgt);
+		case ADD_REF_TO_COLLECTION: {
+			Set set = (Set) CommonLocator.get().propertyAccessor()
+					.getPropertyValue(obj, event.getPropertyName());
+			set.add(tgt);
 			objectModified(obj, event, false);
 			updateAssociation(event, obj, tgt, false, true);
 			collectionChanged(obj, tgt);
+		}
 			break;
-		case REMOVE_REF_FROM_COLLECTION:
-			((Set) CommonLocator.get().propertyAccessor()
-					.getPropertyValue(obj, event.getPropertyName()))
-					.remove(tgt);
+		case REMOVE_REF_FROM_COLLECTION: {
+			Set set = (Set) CommonLocator.get().propertyAccessor()
+					.getPropertyValue(obj, event.getPropertyName());
+			boolean wasContained = set.remove(tgt);
+			if (!wasContained) {
+				doubleCheckRemoval(set, tgt);
+			}
+		}
 			updateAssociation(event, obj, tgt, true, true);
 			collectionChanged(obj, tgt);
 			break;
@@ -289,6 +295,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 					+ event.getTransformType();
 		}
 		currentEvent = null;
+	}
+
+	protected void doubleCheckRemoval(Collection c, Object tgt) {
 	}
 
 	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
@@ -1227,6 +1236,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 				}
 			}
 			if (remove) {
+				boolean wasContained = c.remove(obj);
+				if (!wasContained) {
+					doubleCheckRemoval(c, obj);
+				}
 				c.remove(obj);
 			} else {
 				c.add(obj);
@@ -1334,7 +1347,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Set<DomainTransformEvent> toRemove = new LinkedHashSet<DomainTransformEvent>();
 		LinkedHashSet<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent dte : trs) {
-			Object source=dte.getSource()!=null?dte.getSource():getObject(dte);
+			Object source = dte.getSource() != null ? dte.getSource()
+					: getObject(dte);
 			if (hili.equals(source)) {
 				toRemove.add(dte);
 			}
