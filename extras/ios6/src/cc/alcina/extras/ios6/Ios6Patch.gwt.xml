@@ -14,16 +14,16 @@
 			<when-property-is name="user.agent" value="safari" />
 		</none>
 	</set-property>
-	 <replace-with class="cc.alcina.extras.ios6.client.IosSplitNonIos6">
-        <when-type-is class="cc.alcina.extras.ios6.client.IosSplit"/>
-        <all>
-            <when-property-is name="mobile.user.agent" value="non_ios6"/>
-        </all>
-    </replace-with>
-    	 <replace-with class="cc.alcina.extras.ios6.client.IosSplitIos6">
-        <when-type-is class="cc.alcina.extras.ios6.client.IosSplit"/>
-        <all>
-            <when-property-is name="mobile.user.agent" value="ios6"/>
-        </all>
-    </replace-with>
+	<replace-with class="cc.alcina.extras.ios6.client.IosSplitNonIos6">
+		<when-type-is class="cc.alcina.extras.ios6.client.IosSplit" />
+		<all>
+			<when-property-is name="mobile.user.agent" value="non_ios6" />
+		</all>
+	</replace-with>
+	<replace-with class="cc.alcina.extras.ios6.client.IosSplitIos6">
+		<when-type-is class="cc.alcina.extras.ios6.client.IosSplit" />
+		<all>
+			<when-property-is name="mobile.user.agent" value="ios6" />
+		</all>
+	</replace-with>
 </module>
