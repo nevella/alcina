@@ -54,6 +54,14 @@ public class TopicPublisher {
 		}
 	}
 
+	public void listenerDelta(String key, TopicListener listener, boolean add) {
+		if (add) {
+			addTopicListener(key, listener);
+		} else {
+			removeTopicListener(key, listener);
+		}
+	}
+
 	public static class GlobalTopicPublisher extends TopicPublisher {
 		private GlobalTopicPublisher() {
 			super();
@@ -70,15 +78,6 @@ public class TopicPublisher {
 
 		public void appShutdown() {
 			theInstance = null;
-		}
-
-		public void listenerDelta(String key, TopicListener listener,
-				boolean add) {
-			if (add) {
-				addTopicListener(key, listener);
-			} else {
-				removeTopicListener(key, listener);
-			}
 		}
 	}
 
