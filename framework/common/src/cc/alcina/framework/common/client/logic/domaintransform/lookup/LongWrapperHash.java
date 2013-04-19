@@ -30,13 +30,13 @@ public class LongWrapperHash {
 	@UnsafeNativeLong
 	public static native int lowBitsValue(long value)/*-{
 		if (value.h != 0) {
-			throw new RuntimeException("losing higher bits from long");
+			throw "losing higher bits from long";
 		}
 		if (value.m != 0) {
-			if (value.m > MASK_M) {
-				throw new RuntimeException("losing higher bits from long");
+			if (value.m > @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::MASK_M) {
+				throw "losing higher bits from long";
 			}
-			return value.m << BITS + value.l;
+			return value.m << @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::BITS + value.l;
 		}
 		return value.l;
 	}-*/;
