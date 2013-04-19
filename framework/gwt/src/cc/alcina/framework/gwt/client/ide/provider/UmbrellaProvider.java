@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.ide.provider;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -94,10 +95,8 @@ public interface UmbrellaProvider<T> {
 		@Override
 		public void forCollection(Collection<T> collection,
 				CollectionFilter<T> collectionFilter) {
-			objects = CollectionFilters.filter(collection,
-					collectionFilter);
+			objects = CollectionFilters.filter(collection, collectionFilter);
 		}
-
 
 		private List<T> objects;
 

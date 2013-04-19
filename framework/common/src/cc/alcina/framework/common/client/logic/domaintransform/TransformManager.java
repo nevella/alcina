@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
@@ -911,9 +912,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (this.getDomainObjects() != null) {
 			getDomainObjects().removeListeners();
 		}
-		this.setDomainObjects(new MapObjectLookup(this, h
-				.registerableDomainObjects()));
+		createObjectLookup();
 		ClassRef.add(h.getClassRefs());
+	}
+
+	protected void createObjectLookup() {
+		setDomainObjects(new MapObjectLookup(this));
 	}
 
 	public void registerDomainObjectsInHolderAsync(final DomainModelHolder h,
@@ -921,9 +925,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (this.getDomainObjects() != null) {
 			getDomainObjects().removeListeners();
 		}
-		MapObjectLookup lookup = new MapObjectLookup(this, new ArrayList());
-		this.setDomainObjects(lookup);
-		lookup.registerAsync(h.registerableDomainObjects(),
+		createObjectLookup();
+		getDomainObjects().registerAsync(h.registerableDomainObjects(),
 				new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -1383,13 +1386,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (lookup == null) {
 				lookup = new Multimap<K, List<V>>();
 				pils.clear();
-				Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> m = TransformManager
+				Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> m = TransformManager
 						.get().getDomainObjects().getCollnMap();
 				for (Class clazz : m.keySet()) {
 					if (parentClass != null && parentClass != clazz) {
 						continue;
 					}
-					Set<HasIdAndLocalId> objs = (Set) m.get(clazz);
+					Collection<HasIdAndLocalId> objs = m.get(clazz);
 					if (objs.isEmpty()) {
 						continue;
 					}
@@ -1410,7 +1413,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					pils.addAll(pds);
 					Object[] args = new Object[0];
 					try {
-						for (V o : (Set<V>) (Set) m.get(clazz)) {
+						for (V o : (Collection<V>) m.get(clazz)) {
 							for (PropertyInfoLite info : pds) {
 								K k = (K) info.getReadMethod().invoke(o, args);
 								if (k != null) {

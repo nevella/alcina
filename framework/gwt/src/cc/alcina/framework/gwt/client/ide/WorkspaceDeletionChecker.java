@@ -14,10 +14,9 @@
 package cc.alcina.framework.gwt.client.ide;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -46,7 +45,7 @@ public class WorkspaceDeletionChecker {
 
 	public boolean checkPropertyRefs(HasIdAndLocalId singleObj) {
 		Class<? extends Object> clazz = singleObj.getClass();
-		Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> map = TransformManager
+		Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> map = TransformManager
 				.get().getDomainObjects().getCollnMap();
 		String message = "";
 		String template = TextProvider.get().getUiObjectText(getClass(),
@@ -58,7 +57,7 @@ public class WorkspaceDeletionChecker {
 			TextProvider.get().setDecorated(false);
 			TextProvider.get().setTrimmed(true);
 			for (Class c : map.keySet()) {
-				Set<HasIdAndLocalId> objs = (Set) map.get(c);
+				Collection<HasIdAndLocalId> objs = map.get(c);
 				if (objs.isEmpty()) {
 					continue;
 				}

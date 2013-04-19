@@ -568,6 +568,10 @@ input.button-submit,button.button-submit {
 	font-weight: bold;
 }
 
+.right {
+	text-align: right;
+}
+
 .italic {
 	font-style: italic;
 }

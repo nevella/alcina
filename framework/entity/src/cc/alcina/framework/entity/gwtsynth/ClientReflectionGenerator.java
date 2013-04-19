@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -128,7 +129,7 @@ public class ClientReflectionGenerator extends Generator {
 			if (printWriter == null) {
 				return packageName + "." + implementationName;
 			}
-			crf.addImport(HashMap.class.getName());
+			crf.addImport(LinkedHashMap.class.getName());
 			crf.addImport(Map.class.getName());
 			crf.addImport(GWT.class.getName());
 			crf.addImport(Registry.class.getName());
@@ -426,7 +427,7 @@ public class ClientReflectionGenerator extends Generator {
 			methodNames.add(methodName);
 			sw.println(String.format("private void %s(){", methodName));
 			sw.indent();
-			sw.println("Map<String,ClientPropertyReflector> propertyReflectors = new HashMap<String,ClientPropertyReflector>();");
+			sw.println("Map<String,ClientPropertyReflector> propertyReflectors = new LinkedHashMap<String,ClientPropertyReflector>();");
 			for (JMethod method : getPropertyGetters(jct)) {
 				String propertyName = getPropertyNameForReadMethod(method);
 				if (propertyName.equals("class")

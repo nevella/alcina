@@ -152,11 +152,9 @@ public class GraphProjection {
 			// um...persistentBag??
 		} else if (coll instanceof List) {
 			c = new ArrayList();
-		} else if (coll instanceof LinkedHashSet) {
-			c = new LinkedHashSet();
 		} else if (coll instanceof Set) {
-			c = new HashSet();
-		}
+			c = new LinkedHashSet();
+		} 
 		reached.put(coll, c);
 		Iterator itr = coll.iterator();
 		Object value;

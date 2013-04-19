@@ -365,7 +365,7 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	public void serializeDomainObjects(ClientInstance clientInstance)
 			throws Exception {
-		Map<Class<? extends HasIdAndLocalId>, Set<HasIdAndLocalId>> collectionMap = getDomainObjects()
+		Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> collectionMap = getDomainObjects()
 				.getCollnMap();
 		Map<Class, List> objCopy = new LinkedHashMap<Class, List>();
 		for (Class<? extends HasIdAndLocalId> clazz : collectionMap.keySet()) {
