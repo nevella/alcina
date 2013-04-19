@@ -91,7 +91,6 @@ public class FastIdLookupScript implements FastIdLookup {
 
 		@Override
 		public int size() {
-			ClientUtils.invokeJsDebugger();
 			return localIdLookup.size() + idLookup.size();
 		}
 
@@ -189,7 +188,6 @@ public class FastIdLookupScript implements FastIdLookup {
 
 	@Override
 	public String toString() {
-		ClientUtils.invokeJsDebugger();
 		return CommonUtils.formatJ("Lkp - %s - [%s,%s]",
 				CommonUtils.classSimpleName(clazz), idLookup.size(),
 				localIdLookup.size());
@@ -201,7 +199,6 @@ public class FastIdLookupScript implements FastIdLookup {
 		if (local) {
 			return localIdLookup.get(idi);
 		} else {
-			// ClientUtils.invokeJsDebugger();
 			return idLookup.get(idi);
 		}
 	}

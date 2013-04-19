@@ -21,6 +21,7 @@
 		-->
 		<delete dir="${extras.collections.build.dir}" />
 		<delete dir="${extras.dev.build.dir}" />
+		<delete dir="${extras.dev.build.dir}" />
 		<delete dir="${framework.jvmclient.build.dir}" />
 		<mkdir dir="${framework.dist.dir}"/>
 	</target>
