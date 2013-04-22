@@ -43,6 +43,10 @@ public class GlassDialogBox extends DialogBox {
 
 	private int scrollTop;
 
+	public GlassDialogBox() {
+		setAutoHideOnHistoryEventsEnabled(true);
+	}
+
 	private AtEndOfEventSeriesTimer scrollBackTimer = new AtEndOfEventSeriesTimer(
 			100, new Runnable() {
 				@Override

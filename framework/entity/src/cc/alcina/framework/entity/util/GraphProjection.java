@@ -96,7 +96,7 @@ public class GraphProjection {
 		}
 		if (dataFilter != null) {
 			if (context == null) {
-				context = new GraphProjectionContext(c, "", null, projected);
+				context = new GraphProjectionContext(c, null, null, projected);
 			}
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
@@ -122,7 +122,7 @@ public class GraphProjection {
 				}
 			}
 			GraphProjectionContext childContext = new GraphProjectionContext(c,
-					field.getName(), context, projected);
+					field, context, projected);
 			Object cv = project(value, childContext);
 			field.set(projected, cv);
 		}
@@ -154,7 +154,7 @@ public class GraphProjection {
 			c = new ArrayList();
 		} else if (coll instanceof Set) {
 			c = new LinkedHashSet();
-		} 
+		}
 		reached.put(coll, c);
 		Iterator itr = coll.iterator();
 		Object value;
@@ -349,17 +349,20 @@ public class GraphProjection {
 
 		public Object ownerObject;
 
-		public GraphProjectionContext(Class clazz, String fieldName,
+		public String fieldName;
+
+		public GraphProjectionContext(Class clazz, Field field,
 				GraphProjectionContext parent, Object ownerObject) {
 			this.clazz = clazz;
-			this.fieldName = fieldName;
+			this.field = field;
+			this.fieldName = field == null ? "" : field.getName();
 			this.parent = parent;
 			this.ownerObject = ownerObject;
 		}
 
 		public Class clazz;
 
-		public String fieldName;
+		public Field field;
 
 		@Override
 		public boolean equals(Object obj) {

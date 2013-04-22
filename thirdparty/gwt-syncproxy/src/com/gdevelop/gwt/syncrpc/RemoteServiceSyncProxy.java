@@ -32,6 +32,7 @@ import com.google.gwt.user.client.rpc.RpcRequestBuilder;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamFactory;
 import com.google.gwt.user.client.rpc.StatusCodeException;
+import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamReader;
 import com.google.gwt.user.client.rpc.impl.RequestCallbackAdapter;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
 import com.google.gwt.user.server.rpc.SerializationPolicyLoader;
@@ -51,11 +52,11 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 		}
 
 		public void validateDeserialize(Class<?> clazz)
-		throws SerializationException {
+				throws SerializationException {
 		}
 
 		public void validateSerialize(Class<?> clazz)
-		throws SerializationException {
+				throws SerializationException {
 		}
 	}
 
@@ -79,7 +80,7 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 			int idx = moduleBaseURL.indexOf("//") + 2;
 			idx = moduleBaseURL.indexOf("/", idx);
 			this.remoteServiceURL = moduleBaseURL.substring(0, idx)
-			+ remoteServiceRelativePath;
+					+ remoteServiceRelativePath;
 		} else {
 			this.remoteServiceURL = moduleBaseURL + remoteServiceRelativePath;
 		}
@@ -94,24 +95,24 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 				// return;
 			}
 			String policyFileName = SerializationPolicyLoader
-			.getSerializationPolicyFileName(serializationPolicyName);
+					.getSerializationPolicyFileName(serializationPolicyName);
 			// if pre-loaded, use the pre-loaded version.
 			if (connectionManager instanceof DefaultSessionManager) {
 				// may be unnecessary check and instead modify SessionManager
 				// interface
 				serializationPolicy = ((DefaultSessionManager) connectionManager)
-				.getSerializationPolicy(serializationPolicyName);
+						.getSerializationPolicy(serializationPolicyName);
 			}
 			if (serializationPolicy == null) {
 				InputStream is = getClass().getResourceAsStream(
 						"/" + policyFileName);
 				try {
 					serializationPolicy = SerializationPolicyLoader
-					.loadFromStream(is, null);
+							.loadFromStream(is, null);
 				} catch (Exception e) {
 					throw new InvocationException(
 							"Error while loading serialization policy "
-							+ serializationPolicyName, e);
+									+ serializationPolicyName, e);
 				} finally {
 					if (is != null) {
 						try {
@@ -126,12 +127,22 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 		unionizeWhitelists();
 	}
 
-	public SyncClientSerializationStreamReader createStreamReader(String encoded)
-	throws SerializationException {
-		SyncClientSerializationStreamReader reader = new SyncClientSerializationStreamReader(
-				serializationPolicy);
-		reader.prepareToRead(encoded);
-		return reader;
+	public AbstractSerializationStreamReader createStreamReader(String encoded)
+			throws SerializationException {
+		return streamReaderConstructor.createStreamReader(encoded, serializationPolicy);
+	}
+	private static StreamReaderConstructor streamReaderConstructor=new StreamReaderConstructor() {
+		@Override
+		public AbstractSerializationStreamReader createStreamReader(String encoded,
+				SerializationPolicy serializationPolicy) throws SerializationException {
+			SyncClientSerializationStreamReader reader = new SyncClientSerializationStreamReader(
+					serializationPolicy);
+			reader.prepareToRead(encoded);
+			return reader;
+		}
+	};
+	public interface StreamReaderConstructor{
+		public AbstractSerializationStreamReader createStreamReader(String encoded,SerializationPolicy serializationPolicy) throws SerializationException;
 	}
 
 	public SyncClientSerializationStreamWriter createStreamWriter() {
@@ -146,25 +157,25 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 		if (serializationPolicy instanceof StandardSerializationPolicy) {
 			try {
 				Field f = StandardSerializationPolicy.class
-				.getDeclaredField("serializationWhitelist");
+						.getDeclaredField("serializationWhitelist");
 				f.setAccessible(true);
 				Map<Class<?>, Boolean> serializationWhitelist = (Map<Class<?>, Boolean>) f
-				.get(serializationPolicy);
+						.get(serializationPolicy);
 				f = StandardSerializationPolicy.class
-				.getDeclaredField("deserializationWhitelist");
+						.getDeclaredField("deserializationWhitelist");
 				f.setAccessible(true);
 				Map<Class<?>, Boolean> deserializationWhitelist = (Map<Class<?>, Boolean>) f
-				.get(serializationPolicy);
+						.get(serializationPolicy);
 				f = StandardSerializationPolicy.class
-				.getDeclaredField("typeIds");
+						.getDeclaredField("typeIds");
 				f.setAccessible(true);
 				Map<Class<?>, String> obfuscatedTypeIds = (Map<Class<?>, String>) f
-				.get(serializationPolicy);
+						.get(serializationPolicy);
 				f = StandardSerializationPolicy.class
-				.getDeclaredField("clientFields");
+						.getDeclaredField("clientFields");
 				f.setAccessible(true);
 				Map<Class<?>, Set<String>> clientFields = (Map<Class<?>, Set<String>>) f
-				.get(serializationPolicy);
+						.get(serializationPolicy);
 				serializationWhitelist.putAll(deserializationWhitelist);
 				deserializationWhitelist = serializationWhitelist;
 				serializationPolicy = new StandardSerializationPolicy(
@@ -196,7 +207,7 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 			connection.setRequestProperty(RpcRequestBuilder.STRONG_NAME_HEADER,
 					serializationPolicyName);
 			connection.setRequestProperty("Content-Type",
-			"text/x-gwt-rpc; charset=utf-8");
+					"text/x-gwt-rpc; charset=utf-8");
 			connection.setRequestProperty("Content-Length",
 					"" + requestData.getBytes("UTF-8").length);
 			// Explicitly set these to override any system properties.
@@ -272,4 +283,15 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 	static boolean isThrownException(String encodedResponse) {
 		return encodedResponse.startsWith("//EX");
 	}
+
+	public static StreamReaderConstructor getStreamReaderConstructor() {
+		return streamReaderConstructor;
+	}
+
+	public static void setStreamReaderConstructor(
+			StreamReaderConstructor streamReaderConstructor) {
+		RemoteServiceSyncProxy.streamReaderConstructor = streamReaderConstructor;
+	}
+
+	
 }

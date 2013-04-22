@@ -121,6 +121,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 		resetLookups();
 	}
+	
 
 	@SuppressWarnings("unchecked")
 	public EqlWithParameters eql(boolean withOrderClause) {
@@ -386,5 +387,15 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	protected void putOrderGroup(OrderGroup og) {
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
+	}
+
+	public <V extends OrderGroup> V ensureOrderGroup(V orderGroup) {
+		V og = (V) orderGroup(orderGroup.getClass());
+		if(og!=null){
+			return og;
+		}
+		putOrderGroup(orderGroup);
+		resetLookups();
+		return orderGroup;
 	}
 }

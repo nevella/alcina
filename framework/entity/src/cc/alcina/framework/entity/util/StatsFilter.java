@@ -4,16 +4,20 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -39,7 +43,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	IdentityHashMap<Object, StatsItem> statsItemLookup = new IdentityHashMap<Object, StatsFilter.StatsItem>();
 
-	Map<Class, CountingMap<String>> ownershipStats = new LinkedHashMap<Class, StatsFilter.CountingMap<String>>();
+	Map<Class, Multiset<String, Set>> ownershipStats = new LinkedHashMap<Class, StatsFilter.Multiset<String, Set>>();
 
 	CountingMap<Class> nullInstanceMap = new CountingMap<Class>();
 
@@ -48,6 +52,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 	private StatsFilterSortKey sortKey;
 
 	private boolean reverse;
+
+	private boolean bypassGwtTransient;
 
 	public StatsFilter() {
 	}
@@ -58,12 +64,25 @@ public class StatsFilter extends CollectionProjectionFilter {
 			throws Exception {
 		T filtered = super.filterData(original, projected, context,
 				graphProjection);
+		if (bypass(context.field)) {
+			return null;
+		}
 		visited.put(context.ownerObject, context.ownerObject);
 		visited.put(filtered, filtered);
 		ownerMap.add(context.ownerObject, filtered);
 		ownerMap.ensureKey(filtered);
 		owneeMap.add(filtered, context.ownerObject);
 		return filtered;
+	}
+
+	private boolean bypass(Field field) {
+		if (bypassGwtTransient) {
+			if (field != null
+					&& field.getAnnotation(GwtTransient.class) != null) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public void getGraphStats(Object source, Class[] calculateOwnerStatsFor,
@@ -123,31 +142,63 @@ public class StatsFilter extends CollectionProjectionFilter {
 				statsItemLookup.put(o, item);
 				Field[] fields = getFieldsForClass(o);
 				for (Field field : fields) {
-					Object o1 = field.get(o);
-					if (o1 == null) {
+					if (bypass(field)) {
+						continue;
+					}
+					Object o3 = field.get(o);
+					if (o3 == null) {
 						nullInstanceMap.add(field.getType());
 						item.size++;
-					} else {
-						Class<? extends Object> clazz2 = o1.getClass();
-						if (CommonUtils.stdAndPrimitives.contains(clazz2)) {
-							statsClassLookup.add(clazz2, null);
-							item.size += o1.toString().length();
-						} else {
-							if (calculateOwnerStatsFor.contains(clazz2)) {
-								if (owneeMap.get(o1).size() == 1) {
-									item.owned.add(o1);
-									owned.add(o1);
-								}
+						continue;
+					}
+					Collection coll = new ArrayList();
+					coll.add(o3);
+					while (true) {
+						int size = coll.size();
+						LinkedHashSet add = new LinkedHashSet();
+						for (Iterator i = coll.iterator(); i.hasNext();) {
+							Object o2 = i.next();
+							if (o2 instanceof Collection) {
+								add.addAll((Collection) o2);
+								i.remove();
+							} else if (o2 instanceof Map) {
+								add.addAll(((Map) o2).values());
+								add.addAll(((Map) o2).keySet());
+								i.remove();
 							}
 						}
-						if (calculatePathStatsFor.contains(clazz2)) {
-							if (!ownershipStats.containsKey(clazz2)) {
-								ownershipStats.put(clazz2,
-										new CountingMap<String>());
+						if (add.isEmpty()) {
+							break;
+						} else {
+							coll.addAll(add);
+						}
+					}
+					for (Object o1 : coll) {
+						if (o1 == null) {
+							nullInstanceMap.add(field.getType());
+							item.size++;
+						} else {
+							Class<? extends Object> clazz2 = o1.getClass();
+							if (CommonUtils.stdAndPrimitives.contains(clazz2)) {
+								statsClassLookup.add(clazz2, null);
+								item.size += o1.toString().length();
+							} else {
+								if (calculateOwnerStatsFor.contains(clazz2)) {
+									if (owneeMap.get(o1).size() == 1) {
+										item.owned.add(o1);
+										owned.add(o1);
+									}
+								}
 							}
-							String key = clazz.getSimpleName() + "."
-									+ field.getName();
-							ownershipStats.get(clazz2).add(key);
+							if (calculatePathStatsFor.contains(clazz2)) {
+								String key = clazz.getSimpleName() + "."
+										+ field.getName();
+								if (!ownershipStats.containsKey(clazz2)) {
+									ownershipStats.put(clazz2,
+											new Multiset<String, Set>());
+								}
+								ownershipStats.get(clazz2).add(key, o1);
+							}
 						}
 					}
 				}
@@ -213,16 +264,17 @@ public class StatsFilter extends CollectionProjectionFilter {
 		for (Class clazz : keys) {
 			if (ownershipStats.containsKey(clazz)) {
 				System.out.println("Paths: " + clazz.getSimpleName());
-				final CountingMap<String> cm = ownershipStats.get(clazz);
+				final Multiset<String, Set> cm = ownershipStats.get(clazz);
 				List<String> sKeys = new ArrayList<String>(cm.keySet());
 				Collections.sort(sKeys, new Comparator<String>() {
 					@Override
 					public int compare(String o1, String o2) {
-						return cm.get(o2) - cm.get(o1);
+						return cm.getAndEnsure(o2).size()
+								- cm.getAndEnsure(o1).size();
 					}
 				});
 				for (String sk : sKeys) {
-					System.out.format("%30s -- %10s\n", sk, cm.get(sk));
+					System.out.format("%30s -- %10s\n", sk, cm.get(sk).size());
 				}
 			}
 		}
@@ -231,6 +283,35 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	public enum StatsFilterSortKey {
 		CLASSNAME, RAW_SIZE, RETAINED_SIZE
+	}
+
+	public class Multiset<K, V extends Set> extends LinkedHashMap<K, V> {
+		public boolean add(K key, Object item) {
+			if (!containsKey(key)) {
+				put(key, (V) new LinkedHashSet());
+			}
+			return get(key).add(item);
+		}
+
+		public void remove(K key, Object item) {
+			if (containsKey(key)) {
+				get(key).remove(item);
+			}
+		}
+
+		public V getAndEnsure(K key) {
+			if (!containsKey(key)) {
+				put(key, (V) new LinkedHashSet());
+			}
+			return get(key);
+		}
+
+		public void addCollection(K key, Collection collection) {
+			if (!containsKey(key)) {
+				put(key, (V) new LinkedHashSet());
+			}
+			get(key).addAll(collection);
+		}
 	}
 
 	static class CountingMap<K> extends LinkedHashMap<K, Integer> {
@@ -327,5 +408,10 @@ public class StatsFilter extends CollectionProjectionFilter {
 		public int size() {
 			return size;
 		}
+	}
+
+	public StatsFilter bypassGwtTransient() {
+		this.bypassGwtTransient = true;
+		return this;
 	}
 }

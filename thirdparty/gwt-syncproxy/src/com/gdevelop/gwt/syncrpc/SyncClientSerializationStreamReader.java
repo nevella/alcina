@@ -359,6 +359,8 @@ public class SyncClientSerializationStreamReader extends
 
 	private SerializationPolicy serializationPolicy;
 
+	public static boolean notifyUnhandledControlChars = true;
+
 	public SyncClientSerializationStreamReader(
 			SerializationPolicy serializationPolicy) {
 		this.serializationPolicy = serializationPolicy;
@@ -523,12 +525,12 @@ public class SyncClientSerializationStreamReader extends
 		boolean inStr = false;
 		for (int i = 0; i < encoded.length(); i++) {
 			char ch = encoded.charAt(i);
-			char ch1 = i<encoded.length()-1?encoded.charAt(i+1):0;
+			char ch1 = i < encoded.length() - 1 ? encoded.charAt(i + 1) : 0;
 			String cont = encoded.substring(i);
 			if (inStr) {
 				if (ch == '"') {
 					inStr = false;
-				} else if (ch == '\\'&&ch1=='"') {
+				} else if (ch == '\\' && ch1 == '"') {
 					i++;// we just need to get clear of \"
 				}
 			} else {
@@ -753,7 +755,9 @@ public class SyncClientSerializationStreamReader extends
 					break;
 				default:
 					// TODO:
-					System.out.println("???");
+					if (notifyUnhandledControlChars) {
+						System.out.println("???");
+					}
 				}
 			} else {
 				buffer.append(ch);
