@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
-
 import com.google.gwt.core.client.JavaScriptObject;
 
 public final class JavascriptIntLookup extends JavaScriptObject {
@@ -27,14 +26,18 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 	}-*/;
 
 	public native void remove(int key)/*-{
-		if (delete this.valueLookup[key]) {
+		if (this.valueLookup[key] === undefined) {
+
+		} else {
+			delete this.valueLookup[key];
 			this.length--;
 		}
 		;
 	}-*/;
 
 	public native int size()/*-{
-		return this.length;
+		//should really be an assert here...
+		return this.length >= 0 ? this.length : 0;
 	}-*/;
 
 	public native JavascriptJavaObjectArray values()/*-{

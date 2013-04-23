@@ -3,8 +3,9 @@
 	<property-provider name="mobile.user.agent"><![CDATA[
   {
     var ua = window.navigator.userAgent.toLowerCase();
-    if (ua.indexOf('iphone') != -1) { return 'ios6'; }
+    if (ua.indexOf('iphone') != -1 || ua.indexOf('ipad') !=-1) { return 'ios6'; }
     return 'non_ios6';
+    //playing it safe, and making this apply even for pre-ios6 instances
   }
 ]]></property-provider>
 
