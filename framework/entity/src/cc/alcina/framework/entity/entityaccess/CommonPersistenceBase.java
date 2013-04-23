@@ -64,6 +64,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LongPair;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
@@ -165,7 +166,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 */
 	@Override
 	public CI createClientInstance(String userAgent) {
-		return (CI) getHandshakeObjectProvider().createClientInstance(userAgent);
+		return (CI) getHandshakeObjectProvider()
+				.createClientInstance(userAgent);
 	}
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception {
@@ -437,14 +439,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				clean ? createUserAndGroupInstantiator() : null);
 		return cleaned;
 	}
-	
+
 	@Override
 	public G getGroupByName(String groupName) {
 		List<G> l = getEntityManager()
 				.createQuery(
 						"select distinct g from "
 								+ getImplementationSimpleClassName(IGroup.class)
-								+ " g " 
+								+ " g "
 								+ "left join fetch g.memberOfGroups sg "
 								+ "left join fetch g.memberUsers su "
 								+ "where g.groupName = ?")
@@ -458,7 +460,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	 */
 	@Override
 	public G getGroupByName(String groupName, boolean clean) {
-		G group= getGroupByName(groupName);
+		G group = getGroupByName(groupName);
 		G cleaned = new EntityUtils().detachedCloneIgnorePermissions(group,
 				clean ? createUserAndGroupInstantiator() : null);
 		return cleaned;
@@ -566,9 +568,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 		Searcher searcher = (Searcher) Registry.get().instantiateSingle(
 				Searcher.class, def.getClass());
-		SearchResultsBase result = searcher.search(def, pageNumber,
-				getEntityManager());
-		return new EntityUtils().detachedClone(result);
+		try {
+			LooseContext.push();
+			SearchResultsBase result = searcher.search(def, pageNumber,
+					getEntityManager());
+			if (LooseContext.getBoolean(Searcher.CONTEXT_RESULTS_ARE_DETACHED)) {
+				return result;
+			} else {
+				return new EntityUtils().detachedClone(result);
+			}
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	public abstract void setEntityManager(EntityManager entityManager);

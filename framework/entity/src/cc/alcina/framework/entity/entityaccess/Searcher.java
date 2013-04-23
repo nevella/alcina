@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import javax.persistence.EntityManager;
@@ -19,12 +18,13 @@ import javax.persistence.EntityManager;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public interface Searcher<T extends SearchDefinition> {
+	public static final  String CONTEXT_RESULTS_ARE_DETACHED = Searcher.class
+			.getName() + ".CONTEXT_RESULTS_ARE_DETACHED";
 
- public interface Searcher<T extends SearchDefinition> {
-	public SearchResultsBase search(T def, int pageNumber, EntityManager em) ;
+	public SearchResultsBase search(T def, int pageNumber, EntityManager em);
 }
