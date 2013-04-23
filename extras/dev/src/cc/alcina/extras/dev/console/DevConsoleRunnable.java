@@ -19,6 +19,8 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 
 	public CmdExecRunnable command;
 
+	public String[] argv;
+
 	public static final String CONTEXT_ACTION_RESULT = CmdExecRunnable.class
 			.getName() + ".CONTEXT_ACTION_RESULT";
 

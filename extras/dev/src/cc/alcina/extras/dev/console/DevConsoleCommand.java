@@ -321,6 +321,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					r.command = this;
 					r.value = argv.length == 1 ? null : argv[1];
 					r.actionLogger = console.logger;
+					r.argv=argv;
 					try {
 						LooseContext.pushWithKey(
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
