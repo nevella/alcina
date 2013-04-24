@@ -10,4 +10,10 @@ import cc.alcina.framework.servlet.publication.ContentWrapper.WrapperModel;
 public class PublicationVisitor {
 	public void customCss(WrapperModel wrapper) throws Exception {
 	}
+
+	public void adjustWrapper(ContentWrapper mainWrapper, WrapperModel wrapper) { }
+
+	public String adjustWrapperXslPath(String suggested) { 
+		return suggested;
+	}
 }
