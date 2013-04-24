@@ -892,6 +892,7 @@ public class CommonUtils {
 		if (!enumValueLookup.containsKey(enumClass)) {
 			for (E ev : enumClass.getEnumConstants()) {
 				enumValueLookup.put(enumClass, ev.toString(), ev);
+				enumValueLookup.put(enumClass, ev.toString().toLowerCase(), ev);
 				if (withFriendlyNames) {
 					enumValueLookup.put(enumClass, friendlyConstant(ev, "-")
 							.toLowerCase(), ev);

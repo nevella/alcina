@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.state.MachineEvent;
 import cc.alcina.framework.common.client.state.MachineEvent.MachineEventImpl;
 import cc.alcina.framework.common.client.state.MachineModel;
@@ -17,6 +18,7 @@ import cc.alcina.framework.gwt.client.ClientConfigurationMachine;
 import cc.alcina.framework.gwt.client.ClientConfigurationModel;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.ClientNodeIterator;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
 import com.google.code.gwt.database.client.Database;
@@ -300,7 +302,7 @@ public class PersistenceStateHandlers {
 					.addValueChangeHandler(historyListener);
 		}
 
-		public void logClicks() {
+		public void logClicksAndChanges() {
 			nativePreviewHandlerRegistration = Event
 					.addNativePreviewHandler(new NativePreviewHandler() {
 						public void onPreviewNativeEvent(
@@ -312,11 +314,23 @@ public class PersistenceStateHandlers {
 
 		protected void previewNativeEvent(NativePreviewEvent event) {
 			Event nativeEvent = Event.as(event.getNativeEvent());
-			if (BrowserEvents.CLICK.equals(nativeEvent.getType())) {
-				EventTarget eTarget = nativeEvent.getEventTarget();
+			String type = nativeEvent.getType();
+			boolean click = BrowserEvents.CLICK.equals(type);
+			boolean blur = BrowserEvents.BLUR.equals(type)||BrowserEvents.FOCUSOUT.equals(type);
+			if (click||blur) {
+ 				EventTarget eTarget = nativeEvent.getEventTarget();
 				if (Element.is(eTarget)) {
-					List<String> tags = new ArrayList<String>();
 					Element e = Element.as(eTarget);
+					if(blur){
+						String tag=e.getTagName().toLowerCase();
+						if(tag.equals("input")&&e.getAttribute("type").equals("button")){
+							return;
+						}
+						if(!(tag.equals("input")||tag.equals("select")||tag.equals("textarea"))){
+							return;
+						}
+					}
+					List<String> tags = new ArrayList<String>();
 					String text = "";
 					ClientNodeIterator itr = new ClientNodeIterator(e,
 							ClientNodeIterator.SHOW_TEXT);
@@ -341,9 +355,16 @@ public class PersistenceStateHandlers {
 					}
 					Collections.reverse(tags);
 					String path = CommonUtils.join(tags, "/");
+					String valueMessage="";
+					if(blur){
+						String value = Element.as(eTarget).getPropertyString("value");
+						String ih=Element.as(eTarget).getInnerHTML();
+						valueMessage=CommonUtils.formatJ("%s%s",ClientLogRecord.VALUE_SEPARATOR,value);
+					}
 					AlcinaTopics.logCategorisedMessage(new StringPair(
-							AlcinaTopics.LOG_CATEGORY_CLICK, CommonUtils
-									.formatJ("%s :: [%s]", path, text)));
+							click ? AlcinaTopics.LOG_CATEGORY_CLICK
+									: AlcinaTopics.LOG_CATEGORY_CHANGE, CommonUtils
+									.formatJ("%s :: [%s]%s", path, text,valueMessage)));
 				}
 			}
 		}

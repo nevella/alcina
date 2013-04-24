@@ -35,6 +35,8 @@ public class AlcinaTopics {
 	public static final String TOPIC_JOB_COMPLETE = AlcinaTopics.class
 			.getName() + ".TOPIC_JOB_COMPLETE";
 
+	public static final String LOG_CATEGORY_CHANGE = "change";
+
 	// detach logging from presentation (normally ClientNotifications)
 	public static void log(Object message) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_LOG_MESSAGE_PUBLISHED,

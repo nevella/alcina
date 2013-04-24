@@ -14,6 +14,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.StringPair;
 
 @BeanInfo(displayNamePropertyName = "time")
 @Introspectable
@@ -33,11 +34,14 @@ public class ClientLogRecord implements Serializable {
 
 	private String ipAddress;
 
+	public static final String VALUE_SEPARATOR = "\tvalue :: ";
+
 	public ClientLogRecord() {
 	}
 
 	public ClientLogRecord(int localSeriesId, String clientInstanceAuth,
-			long clientInstanceId, Date time, String topic, String message, String ipAddr) {
+			long clientInstanceId, Date time, String topic, String message,
+			String ipAddr) {
 		this.localSeriesId = localSeriesId;
 		this.clientInstanceAuth = clientInstanceAuth;
 		this.clientInstanceId = clientInstanceId;
@@ -127,5 +131,12 @@ public class ClientLogRecord implements Serializable {
 
 	public void setIpAddress(String ipAddress) {
 		this.ipAddress = ipAddress;
+	}
+
+	public static StringPair parseXpathValue(String str) {
+		int idx = str.indexOf(VALUE_SEPARATOR);
+		return idx == -1 ? new StringPair(str, null) : new StringPair(
+				str.substring(0, idx), str.substring(idx
+						+ VALUE_SEPARATOR.length()));
 	}
 }
