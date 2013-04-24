@@ -576,7 +576,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		private void importViaRsync(String arg1, String remotePort,
 				String from, String to) throws Exception {
 			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
-					"--progress", arg1, remotePort, from, to };
+					"--progress","--partial", arg1, remotePort, from, to };
 			ShellUtils.runProcessCatchOutputAndWait(cmdAndArgs);
 		}
 
