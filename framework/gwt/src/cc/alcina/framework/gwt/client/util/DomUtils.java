@@ -5,12 +5,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
@@ -162,22 +164,19 @@ public class DomUtils implements NodeFromXpathProvider {
 						.toUpperCase();
 			}
 			boolean asText = tagName.equals(DomUtils.TEXT_MARKER);
-			NodeList<Node> nodes = current.getChildNodes();
-			current = null;
+			WrappingAwareNodeIterator awareNodeIterator = new WrappingAwareNodeIterator(
+					current);
+			Node node = null;
 			Node last = null;
-			int length = nodes.getLength();
-			for (int i = 0; i < length; i++) {
-				Node node = nodes.getItem(i);
-				node = unwrapOrIgnore(node);
-				if (node == null) {
-					continue;
-				}
+			while ((node = awareNodeIterator.next()) != null) {
 				boolean foundIndexed = false;
 				if (asText) {
 					foundIndexed = node.getNodeType() == Node.TEXT_NODE;
 					if (foundIndexed && last != null
 							&& last.getNodeType() == Node.TEXT_NODE) {
-						continue;// ignore, split
+						continue;// ignore - this was orginally a single text
+									// node, now split (and "siblings" because
+									// of wrapping)
 					}
 				} else {
 					foundIndexed = node.getNodeType() == Node.ELEMENT_NODE
@@ -199,44 +198,167 @@ public class DomUtils implements NodeFromXpathProvider {
 		return current;
 	}
 
+	interface MaybeWrappedNodeCollection {
+		public abstract Node getItem(int index);
+
+		public abstract int getLength();
+	}
+
+	static class MaybeWrappedNodeCollectionList implements
+			MaybeWrappedNodeCollection {
+		public MaybeWrappedNodeCollectionList(NodeList list) {
+			int length = list.getLength();
+			boolean inWrap = false;
+			for (int i = 0; i < length; i++) {
+				Node n = list.getItem(i);
+				boolean nHasUnwrap = false;
+				if (!inWrap) {
+					aList.add(n);
+				}
+				if (n.getNodeType() == Node.ELEMENT_NODE) {
+					Element e = (Element) n;
+					nHasUnwrap = e.getAttribute(ATTR_UNWRAP_EXPANDO_ID)
+							.length() > 0;
+					if (nHasUnwrap) {
+						inWrap = !inWrap;
+					}
+				}
+			}
+		}
+
+		@Override
+		public final Node getItem(int index) {
+			return aList.get(index);
+		}
+
+		@Override
+		public final int getLength() {
+			return aList.size();
+		}
+
+		List<Node> aList = new ArrayList<Node>();
+	}
+
+	/*
+	 * this makes a linear list of unwrapped elts - including wrapped (they're
+	 * filtered elsewhere) e.g.
+	 * <a-uw><span></a-uw><a-w>blah</a-w><a-uw><i></a-uw> becomes
+	 * <span><a-w>blah</a-w><i>
+	 */
+	static class NodeWrapList implements MaybeWrappedNodeCollection {
+		List<Node> kids = new ArrayList<Node>();
+
+		public NodeWrapList(Element hasUnwrap) {
+			NodeList<Node> sibs = hasUnwrap.getParentNode().getChildNodes();
+			int length = sibs.getLength();
+			boolean inWrap = false;
+			for (int i = 0; i < length; i++) {
+				Node n = sibs.getItem(i);
+				boolean nHasUnwrap = false;
+				if (!inWrap) {
+					if (n == hasUnwrap) {
+						inWrap = true;
+					} else {
+						continue;
+					}
+				}
+				if (n.getNodeType() == Node.ELEMENT_NODE) {
+					Element e = (Element) n;
+					nHasUnwrap = e.getAttribute(ATTR_UNWRAP_EXPANDO_ID)
+							.length() > 0;
+					if (nHasUnwrap) {
+						kids.addAll(nodeListToArrayList(hasUnwrap
+								.getChildNodes()));
+						if (n != hasUnwrap) {
+							break;// reached second wrap, break (at the mo
+									// there's no distinct expando id)
+						} else {
+							continue;
+						}
+					}// normal node
+					kids.add(n);
+				}
+			}
+		}
+
+		@Override
+		public final Node getItem(int index) {
+			return kids.get(index);
+		}
+
+		@Override
+		public final int getLength() {
+			return kids.size();
+		}
+	}
+
+	class WrappingAwareNodeIterator {
+		private MaybeWrappedNodeCollection nodes;
+
+		private int length;
+
+		private int idx = 0;
+
+		private boolean parentHasUnwrap = false;
+
+		WrappingAwareNodeIterator(Node parent) {
+			nodes = new MaybeWrappedNodeCollectionList(parent.getChildNodes());
+			if (parent.getNodeType() == Node.ELEMENT_NODE) {
+				Element parentElt = (Element) parent;
+				parentHasUnwrap = parentElt
+						.getAttribute(ATTR_UNWRAP_EXPANDO_ID).length() > 0;
+				if (parentHasUnwrap) {
+					nodes = new NodeWrapList(parentElt);
+				}
+			}
+			length = nodes.getLength();
+		}
+
+		// covers both old and new variants of wrap() {span id=bnj_ or a
+		// __unwrap =}
+		Node next() {
+			while (idx < length) {
+				Node node = nodes.getItem(idx++);
+				short nodeType = node.getNodeType();
+				if (nodeType != Node.ELEMENT_NODE) {
+					return node;
+				}
+				Element e = (Element) node;
+				if (e.getAttribute("id").startsWith(ignoreableElementIdPrefix)
+						|| e.getAttribute(ATTR_WRAP_EXPANDO_ID).length() > 0) {
+					if (node.getNodeName().equalsIgnoreCase("span")
+							|| e.getAttribute(ATTR_WRAP_EXPANDO_ID).length() > 0) {
+						walker.setCurrentNode(node);
+						while (walker.nextNode() != null) {
+							node = walker.getCurrentNode();
+							if (node.getNodeType() == Node.ELEMENT_NODE
+									&& ((Element) node).getAttribute("id")
+											.startsWith(
+													ignoreableElementIdPrefix)) {
+							} else {
+								return node;
+							}
+						}
+					} else {
+						// fallthrough, continue while
+					}
+				} else {
+					return e;
+				}
+			}
+			return null;
+		}
+	}
+
 	public boolean isUseXpathMap() {
 		return this.useXpathMap;
 	}
 
 	public static String ignoreableElementIdPrefix = "IGNORE__";
 
-	private Map<Node, Node> unwrapOrIgnoreCache;
+	public static final String ATTR_UNWRAP_EXPANDO_ID = "__j_unwrap_id";
 
-	private Node unwrapOrIgnore(Node node) {
-		short nodeType = node.getNodeType();
-		if (nodeType != Node.ELEMENT_NODE) {
-			return node;
-		}
-		if (unwrapOrIgnoreCache.containsKey(node)) {
-			return unwrapOrIgnoreCache.get(node);
-		}
-		Node result = node;
-		Element e = (Element) node;
-		if (e.getAttribute("id").startsWith(ignoreableElementIdPrefix)) {
-			if (node.getNodeName().equalsIgnoreCase("span")) {
-				walker.setCurrentNode(node);
-				while (walker.nextNode() != null) {
-					node = walker.getCurrentNode();
-					if (node.getNodeType() == Node.ELEMENT_NODE
-							&& ((Element) node).getAttribute("id").startsWith(
-									ignoreableElementIdPrefix)) {
-					} else {
-						result = node;
-						break;
-					}
-				}
-			} else {
-				result = null;
-			}
-		}
-		unwrapOrIgnoreCache.put(node, result);
-		return result;
-	}
+	public static final String ATTR_WRAP_EXPANDO_ID = "__j_wrap_id";
 
 	public void setUseXpathMap(boolean useXpathMap) {
 		this.useXpathMap = useXpathMap;
@@ -258,15 +380,12 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (prefix.length() <= 1) {
 			xpathMap.put(prefix, elt);
 		}
-		int length = nodes.getLength();
 		short lastNodeType = Node.DOCUMENT_NODE;
 		// ignore sequential texts (with wrapping), as per non-map version
-		for (int i = 0; i < length; i++) {
-			Node node = nodes.getItem(i);
-			node = unwrapOrIgnore(node);
-			if (node == null) {
-				continue;
-			}
+		WrappingAwareNodeIterator awareNodeIterator = new WrappingAwareNodeIterator(
+				elt);
+		Node node = null;
+		while ((node = awareNodeIterator.next()) != null) {
 			short nodeType = node.getNodeType();
 			if ((nodeType == Node.TEXT_NODE && lastNodeType != Node.TEXT_NODE)
 					|| nodeType == Node.ELEMENT_NODE) {
@@ -278,12 +397,8 @@ public class DomUtils implements NodeFromXpathProvider {
 			lastNodeType = nodeType;
 		}
 		lastNodeType = Node.DOCUMENT_NODE;
-		for (int i = 0; i < length; i++) {
-			Node node = nodes.getItem(i);
-			node = unwrapOrIgnore(node);
-			if (node == null) {
-				continue;
-			}
+		awareNodeIterator = new WrappingAwareNodeIterator(elt);
+		while ((node = awareNodeIterator.next()) != null) {
 			short nodeType = node.getNodeType();
 			if ((nodeType == Node.TEXT_NODE && lastNodeType != Node.TEXT_NODE)
 					|| nodeType == Node.ELEMENT_NODE) {
@@ -323,7 +438,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		String matched = "";
 		String lastMatchedPath = "";
 		Node lastMatched = null;
-		int count=0;
+		int count = 0;
 		for (String section : sections) {
 			if (matched.length() != 0) {
 				matched += "/";
@@ -336,16 +451,17 @@ public class DomUtils implements NodeFromXpathProvider {
 				Map<String, Node> xpathMap = new LinkedHashMap<String, Node>();
 				generateMap((Element) lastMatched, "", xpathMap);
 				dumpMap0(false, xpathMap);
-				if(count>3){
+				if (count > 3) {
 					System.out.println("Parent map:");
 					xpathMap = new LinkedHashMap<String, Node>();
-					generateMap((Element) lastMatched.getParentElement(), "", xpathMap);
+					generateMap((Element) lastMatched.getParentElement(), "",
+							xpathMap);
 					dumpMap0(false, xpathMap);
 				}
 				return lastMatched;
 			} else {
 				lastMatched = match;
-				lastMatchedPath=matched;
+				lastMatchedPath = matched;
 				count++;
 			}
 		}
@@ -393,9 +509,11 @@ public class DomUtils implements NodeFromXpathProvider {
 		Collections.reverse(parts);
 		return CommonUtils.join(parts, "/");
 	}
+
 	public void dumpMap(boolean regenerate) {
-		dumpMap0(regenerate,xpathMap);
+		dumpMap0(regenerate, xpathMap);
 	}
+
 	private void dumpMap0(boolean regenerate, Map<String, Node> xpathMap) {
 		if (regenerate) {
 			xpathMap = new LinkedHashMap<String, Node>();
@@ -411,7 +529,85 @@ public class DomUtils implements NodeFromXpathProvider {
 		System.out.println("\n---\n\n");
 	}
 
-	public static void wrap(Element wrapper, Node toWrap) {
+	boolean requiresSplit(Element ancestor, Element wrapper) {
+		if (ancestor.getTagName().toLowerCase().equals("a")
+				&& wrapper.getTagName().toLowerCase().equals("a")) {
+			return true;
+		}
+		return false;
+	}
+
+	static class DomRequiredSplitInfo {
+		public DomRequiredSplitInfo(Element splitFrom, Node splitAround) {
+			this.splitFrom = splitFrom;
+			this.splitAround = splitAround;
+		}
+
+		public void split() {
+			splitFrom.setAttribute(ATTR_UNWRAP_EXPANDO_ID, "2");
+			Element grand = splitFrom.getParentElement();
+			NodeList<Node> nl = splitFrom.getChildNodes();
+			Node[] tmp = new Node[nl.getLength()];
+			splitEnd = (Element) splitFrom.cloneNode(false);
+			boolean found = false;
+			for (int i = 0; i < nl.getLength(); i++) {
+				Node n = nl.getItem(i);
+				if (n == splitAround) {
+					found = true;
+				}
+				if (found) {
+					contents.add(n);
+				}
+			}
+			for (int i = 1; i < contents.size(); i++) {
+				splitEnd.appendChild(contents.get(i));
+			}
+			grand.insertAfter(splitAround, splitFrom);
+			grand.insertAfter(splitEnd, splitAround);
+		}
+
+		List<Node> contents = new ArrayList<Node>();
+
+		public Node splitAround;
+
+		public Element splitFrom;
+
+		public Element splitEnd;
+
+		public void unsplit() {
+			splitFrom.appendChild(splitAround);
+			for (Node n : contents) {
+				splitFrom.appendChild(n);
+			}
+			splitFrom.removeAttribute(ATTR_UNWRAP_EXPANDO_ID);
+			splitEnd.removeFromParent();
+		}
+	}
+
+	Map<Element, DomRequiredSplitInfo> domRequiredSplitInfo = new LinkedHashMap<Element, DomRequiredSplitInfo>();
+
+	public void wrap(Element wrapper, Text toWrap) {
+		wrapper.setAttribute(ATTR_WRAP_EXPANDO_ID, "1");
+		Node t = toWrap;
+		Node lastT = null;
+		Node splitAround = toWrap;
+		while (t != null) {
+			if (t.getNodeType() == Node.ELEMENT_NODE) {
+				Element ancestor = (Element) t;
+				if (isBlockHTMLElement(ancestor)) {
+					break;
+				}
+				if (requiresSplit(ancestor, wrapper)) {
+					DomRequiredSplitInfo info = new DomRequiredSplitInfo(
+							ancestor, lastT);
+					info.split();
+					domRequiredSplitInfo.put(wrapper, info);
+					break;
+				}
+			}
+			lastT = t;
+			t = t.getParentNode();
+		}
 		Element parent = (Element) toWrap.getParentNode();
 		parent.insertBefore(wrapper, toWrap);
 		parent.removeChild(toWrap);
@@ -502,7 +698,6 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 		}
 	}
-
 	public static class HighlightInfo {
 		public String cssClassName;
 
@@ -510,12 +705,25 @@ public class DomUtils implements NodeFromXpathProvider {
 
 		public Map<String, String> properties;
 
+		public String tag = "a";
+
+		public HighlightInfo() {
+		}
+
 		public HighlightInfo(String cssClassName,
 				Map<String, String> styleProperties,
 				Map<String, String> properties) {
 			this.cssClassName = cssClassName;
 			this.styleProperties = styleProperties;
 			this.properties = properties;
+		}
+		public HighlightInfo span() {
+			this.tag="span";
+			return this;
+		}
+		public HighlightInfo tag(String tag) {
+			this.tag = tag;
+			return this;
 		}
 	}
 
@@ -664,22 +872,22 @@ public class DomUtils implements NodeFromXpathProvider {
 		return result;
 	}
 
+	public static List<Node> nodeListToArrayList(NodeList list) {
+		List<Node> result = new ArrayList<Node>();
+		int length = list.getLength();
+		for (int i = 0; i < length; i++) {
+			Node node = list.getItem(i);
+			result.add(node);
+		}
+		return result;
+	}
+
 	public static List<Element> getChildElements(Element elt) {
 		return nodeListToElementList(elt.getChildNodes());
 	}
 
 	public void invalidateUnwrapOrIgnoreCache() {
-		unwrapOrIgnoreCache = new IdentityHashMap<Node, Node>(10000);
-	}
-
-	public static interface DomUtilsFactory {
-		public DomUtils create();
-	}
-
-	public static class DomUtilsFactoryDefault implements DomUtilsFactory {
-		public DomUtils create() {
-			return new DomUtils();
-		}
+		// unwrapOrIgnoreCache = new IdentityHashMap<Node, Node>(10000);
 	}
 
 	public void dumpContainerNoMap() {
@@ -698,5 +906,24 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 		System.out.println("\n---\n\n");
 		useXpathMap = true;
+	}
+
+	public void unwrap(Element el) {
+		Element parent = el.getParentElement();
+		NodeList<Node> nl = el.getChildNodes();
+		Node[] tmp = new Node[nl.getLength()];
+		for (int i = 0; i < nl.getLength(); i++) {
+			tmp[i] = nl.getItem(i);
+		}
+		for (int i = 0; i < tmp.length; i++) {
+			Node n = tmp[i];
+			el.removeChild(n);
+			parent.insertBefore(n, el);
+		}
+		parent.removeChild(el);
+		if (domRequiredSplitInfo.containsKey(el)) {
+			domRequiredSplitInfo.get(el).unsplit();
+			domRequiredSplitInfo.remove(el);
+		}
 	}
 }
