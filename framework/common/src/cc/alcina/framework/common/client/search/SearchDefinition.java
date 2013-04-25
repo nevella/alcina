@@ -83,6 +83,21 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		return result;
 	}
 
+	public <V extends SearchCriterion> V firstCriterion(Class<V> clazz) {
+		for (CriteriaGroup cg : getCriteriaGroups()) {
+			for (SearchCriterion c : (Set<SearchCriterion>)(Set)cg.getCriteria()) {
+				if (c.getClass() == clazz) {
+					return (V) c;
+				}
+			}
+		}
+		return null;
+	}
+	public <V extends SearchCriterion> V firstCriterion(V sub) {
+		V first = (V) firstCriterion(sub.getClass());
+		return first!=null?first:sub;
+	}
+
 	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
 		OrderGroup og = orderGroup(clazz);
 		if (og != null) {
@@ -90,19 +105,20 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 	}
 
-	public void deepCopy(SearchDefinition def) throws CloneNotSupportedException{
-		def.charWidth=charWidth;
-		def.clientSearchIndex=clientSearchIndex;
-		for(CriteriaGroup cg: criteriaGroups){
+	public void deepCopy(SearchDefinition def)
+			throws CloneNotSupportedException {
+		def.charWidth = charWidth;
+		def.clientSearchIndex = clientSearchIndex;
+		for (CriteriaGroup cg : criteriaGroups) {
 			def.criteriaGroups.add(cg.clone());
 		}
-		def.name=name;
-		for(OrderGroup og: orderGroups){
+		def.name = name;
+		for (OrderGroup og : orderGroups) {
 			def.orderGroups.add(og.clone());
 		}
-		def.orderName=orderName;
-		def.publicationType=publicationType;
-		def.resultsPerPage=resultsPerPage;
+		def.orderName = orderName;
+		def.publicationType = publicationType;
+		def.resultsPerPage = resultsPerPage;
 		def.resetLookups();
 	}
 
@@ -121,7 +137,6 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 		resetLookups();
 	}
-	
 
 	@SuppressWarnings("unchecked")
 	public EqlWithParameters eql(boolean withOrderClause) {
@@ -288,7 +303,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	 * injection avoidance) Override if you need multiple orderings
 	 */
 	public String propertyAlias(String propertyName) {
-		if (propertyColumnAliases!=null&&propertyColumnAliases.containsKey(propertyName)) {
+		if (propertyColumnAliases != null
+				&& propertyColumnAliases.containsKey(propertyName)) {
 			return propertyColumnAliases.get(propertyName);
 		}
 		if (!propertyName.matches("[A-Za-z0-9\\.]+")) {
@@ -391,7 +407,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	public <V extends OrderGroup> V ensureOrderGroup(V orderGroup) {
 		V og = (V) orderGroup(orderGroup.getClass());
-		if(og!=null){
+		if (og != null) {
 			return og;
 		}
 		putOrderGroup(orderGroup);
