@@ -120,8 +120,9 @@ public class ExcelExporter {
 		}
 
 		public String name() {
-			return xfa != null ? xfa.displayName() : via != null ? via
-					.displayInfo().name() : pd.getName();
+			return xfa != null && !xfa.displayName().isEmpty() ? xfa
+					.displayName() : via != null ? via.displayInfo().name()
+					: pd.getName();
 		}
 
 		@Override
@@ -196,7 +197,6 @@ public class ExcelExporter {
 			for (PdMultiplexer pdm : pds) {
 				cell = book.createElement("Cell");
 				data = book.createElement("Data");
-				
 				cell.appendChild(data);
 				String type = "String";
 				Object value = pdm.pd.getReadMethod().invoke(o,
