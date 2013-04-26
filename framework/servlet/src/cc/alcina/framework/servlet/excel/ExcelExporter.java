@@ -258,7 +258,7 @@ public class ExcelExporter {
 		Element data;
 		Text txt;
 		row = book.createElement("Row");
-		row.setAttributeNS(SS_NS, "ss:StyleID", "s23");
+		row.setAttributeNS(SS_NS, "ss:StyleID", "sHeaderRow");
 		for (Iterator itr = rowCollection.iterator(); itr.hasNext();) {
 			Object value = itr.next();
 			Element col = book.createElement("Column");
