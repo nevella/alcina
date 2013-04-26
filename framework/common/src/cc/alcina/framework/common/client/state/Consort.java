@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher;
  * @author nick@alcina.cc
  * 
  */
-public class Zone {
+public class Consort {
 	public static final transient String BEFORE_PLAY = "BEFORE_PLAY";
 
 	public static final transient String AFTER_PLAY = "AFTER_PLAY";
@@ -30,7 +30,7 @@ public class Zone {
 	LinkedList<Player> players = new LinkedList<Player>();
 
 	public void addPlayer(Player player) {
-		player.setZone(this);
+		player.setConsort(this);
 		players.addLast(player);
 		consumeQueue();
 	}
@@ -87,7 +87,7 @@ public class Zone {
 	}
 
 	private void maybeRemovePlayersFromQueue(Player player) {
-		if (player.isPerZoneSingleton()) {
+		if (player.isPerConsortSingleton()) {
 			CollectionFilters.filterInPlace(players, new InverseFilter(
 					new IsClassFilter(player.getClass())));
 		} else {

@@ -17,7 +17,7 @@ public abstract class Player {
 
 	private Runnable runnable;
 
-	private Zone zone;
+	private Consort consort;
 
 	public Player(Runnable runnable) {
 		this.runnable = runnable;
@@ -39,8 +39,8 @@ public abstract class Player {
 		return null;
 	}
 
-	public Zone getZone() {
-		return this.zone;
+	public Consort getConsort() {
+		return this.consort;
 	}
 
 	public boolean isCancellable() {
@@ -52,17 +52,17 @@ public abstract class Player {
 		wasPlayed();
 	}
 
-	public void setZone(Zone zone) {
-		this.zone = zone;
+	public void setConsort(Consort consort) {
+		this.consort = consort;
 	}
 
 	protected void wasPlayed() {
-		if (zone != null) {
-			zone.wasPlayed(this);
+		if (consort != null) {
+			consort.wasPlayed(this);
 		}
 	}
 
-	public boolean isPerZoneSingleton() {
+	public boolean isPerConsortSingleton() {
 		return false;
 	}
 
