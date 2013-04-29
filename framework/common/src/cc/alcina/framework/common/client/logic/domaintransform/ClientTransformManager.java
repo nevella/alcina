@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -186,6 +185,7 @@ public abstract class ClientTransformManager extends TransformManager {
 								.getClientInstance());
 						dtr.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 					}
+					
 					for (ObjectCacheItemResult item : result) {
 						replayRemoteEvents(item.getTransforms(), fireTransforms);
 						if (pl != null) {

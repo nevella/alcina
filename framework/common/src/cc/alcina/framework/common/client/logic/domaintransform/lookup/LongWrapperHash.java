@@ -10,8 +10,9 @@ public class LongWrapperHash {
 		if (GWT.isScript()) {
 			return lowBitsValue(value);
 		} else {
-			if (value > Integer.MAX_VALUE || value < 0) {
-				throw new RuntimeException("losing higher bits from long");
+			if (value > MAX || value < 0) {
+				throw new RuntimeException("losing higher bits from long: "
+						+ value);
 			}
 			return (int) value;
 		}
@@ -30,15 +31,25 @@ public class LongWrapperHash {
 	@UnsafeNativeLong
 	public static native int lowBitsValue(long value)/*-{
 		if (value.h != 0) {
-			throw "losing higher bits from long";
+			@cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
 		}
 		if (value.m != 0) {
 			if (value.m > @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::MASK_M) {
-				throw "losing higher bits from long";
+				@cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::logAndThrowTooLarge(Ljava/lang/Object;)(value);
 			}
-			return value.m << @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::BITS + value.l;
+			// << precedence < +/- !!
+			return (value.m << @cc.alcina.framework.common.client.logic.domaintransform.lookup.LongWrapperHash::BITS)
+					| value.l;
 		}
 		return value.l;
+	}-*/;
+
+	public static native void logAndThrowTooLarge(Object value)/*-{
+		debugger;
+		var message = "losing higher bits from long: " + value.h + "," + value.m + ","
+				+ value.l;
+		console.log(message);
+		throw message;
 	}-*/;
 
 	private final long value;

@@ -32,7 +32,7 @@ public class FastIdLookupScript implements FastIdLookup {
 		public boolean add(HasIdAndLocalId o) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) o;
 			boolean contains = contains(o);
-			put(hili, hili.getLocalId() == 0);
+			put(hili, hili.getId() == 0);
 			return !contains;
 		}
 
