@@ -320,4 +320,9 @@ public class ClientUtils {
 		}
 		// do nothing if we've moved on
 	}
+
+	public static native void invokeJsDebugger(Element e) /*-{
+		var v = e;
+		debugger;
+	}-*/;
 }

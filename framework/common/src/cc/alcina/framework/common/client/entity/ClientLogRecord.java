@@ -133,7 +133,7 @@ public class ClientLogRecord implements Serializable {
 		this.ipAddress = ipAddress;
 	}
 
-	public static StringPair parseXpathValue(String str) {
+	public static StringPair parseLocationValue(String str) {
 		int idx = str.indexOf(VALUE_SEPARATOR);
 		return idx == -1 ? new StringPair(str, null) : new StringPair(
 				str.substring(0, idx), str.substring(idx

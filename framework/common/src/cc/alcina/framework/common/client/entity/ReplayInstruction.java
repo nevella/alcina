@@ -10,23 +10,43 @@ public class ReplayInstruction {
 
 	public ReplayInstructionType type;
 
-	public String xpath;
+	public String param1;
 
-	public String value;
+	public String param2;
 
 	public ReplayInstruction() {
 	}
 
-	public ReplayInstruction(ReplayInstructionType type, String xpath,
-			String value) {
+	public ReplayInstruction(ReplayInstructionType type, String param1,
+			String param2) {
 		this.type = type;
-		this.xpath = xpath;
-		this.value = value;
+		this.param1 = param1;
+		this.param2 = param2;
 	}
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("%s\t%s\t%s", type, xpath, value==null?"":value);
+		return CommonUtils.formatJ("%s\t%s\t%s", type, param1,
+				param2 == null ? "" : param2);
+	}
+
+	public static ReplayInstruction fromString(String s) {
+		ReplayInstruction replayInstruction = new ReplayInstruction();
+		int idx = 0, idx1 = s.indexOf("\t");
+		if (idx1 == -1) {
+			return replayInstruction;
+		}
+		replayInstruction.type = ReplayInstructionType.valueOf(s.substring(idx,
+				idx1));
+		idx = idx1;
+		idx1 = s.indexOf("\t", idx1+1);
+		if (idx1 == -1) {
+			replayInstruction.param1 = s.substring(idx+1);
+		} else {
+			replayInstruction.param1 = s.substring(idx+1, idx1);
+			replayInstruction.param2 = s.substring(idx1 + 1);
+		}
+		return replayInstruction;
 	}
 
 	public static String escape(String str) {
@@ -66,7 +86,7 @@ public class ReplayInstruction {
 		ReplayInstructionType type = CommonUtils.getEnumValueOrNull(
 				ReplayInstructionType.class, record.getTopic());
 		if (type != null) {
-			StringPair pair = ClientLogRecord.parseXpathValue(record
+			StringPair pair = ClientLogRecord.parseLocationValue(record
 					.getMessage());
 			return new ReplayInstruction(type, pair.s1, pair.s2);
 		} else {

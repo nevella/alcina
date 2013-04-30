@@ -351,6 +351,9 @@ public class PersistenceStateHandlers {
 							parts.add("." + cn);
 						}
 						tags.add(CommonUtils.join(parts, ""));
+						if(e.getParentElement()==null&&!e.getTagName().equals("HTML")){
+							//probably doing something drastic in a previous native handler - try to defer
+						}
 						e = e.getParentElement();
 					}
 					Collections.reverse(tags);
@@ -368,7 +371,6 @@ public class PersistenceStateHandlers {
 				}
 			}
 		}
-
 		final native String getClassName(Element elt) /*-{
 			var cn = elt.className;
 			//note - someone says IE DOM objects don't support - hence try/catch

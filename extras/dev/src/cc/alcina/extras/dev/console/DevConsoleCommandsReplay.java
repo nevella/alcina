@@ -48,9 +48,18 @@ public class DevConsoleCommandsReplay {
 		while (m1.find()) {
 			ReplayInstructionType type = CommonUtils.getEnumValueOrNull(
 					ReplayInstructionType.class, m1.group(1));
+			if(m1.group().contains("DIV.test-overlay")){
+				continue;
+			}
 			if (type != null) {
-				StringPair xpathValue=ClientLogRecord.parseXpathValue(m1.group(2));
-				instructions.add(new ReplayInstruction(type, xpathValue.s1,xpathValue.s2));
+				String g2 = m1.group(2);
+				if(g2.contains("\\tvalue :: ")){
+					g2=ReplayInstruction.unescape(g2);
+				}
+				StringPair locValuePair = ClientLogRecord
+						.parseLocationValue(g2);
+				instructions.add(new ReplayInstruction(type, locValuePair.s1,
+						locValuePair.s2));
 			}
 		}
 		return CommonUtils.join(instructions, "\n");

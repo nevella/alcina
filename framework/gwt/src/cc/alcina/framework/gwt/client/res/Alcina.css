@@ -1338,8 +1338,11 @@ table.gwittir-BoundTable.editable tr.odd td {
 	color: #000000;
 }
 
-.alcina-Notification.wide {
-	width: 650px;
+.code-area textarea{
+	font-family: Courier New, Courier, monospace;
+	font-size: 1.1em;
+	color: #111;
+	white-space: nowrap;
 }
 
 .alcina-Notification.medium {
@@ -1412,8 +1415,8 @@ table.gwittir-BoundTable.editable tr.odd td {
 .inlineTabDisplay .gwt-TabBar .gwt-TabBarItem {
 	display: inline-block;
 	text-align: left;
-	zoom: 1;
-	*display:inline;
+	zoom: 1; *
+	display: inline;
 }
 
 .inlineTabDisplay .gwt-HTML {
