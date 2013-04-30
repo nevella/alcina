@@ -38,10 +38,17 @@ public abstract class BasicBindingAction<T extends BoundWidget<?>> implements
 
 	public void set(BoundWidget widget) {
 		if (wasSet) {
+			if(isSetLeftOnLaterSets()){
+				binding.setLeft();
+			}
 			return;
 		}
 		set0(widget);
 		wasSet=true;
+	}
+
+	protected boolean isSetLeftOnLaterSets() {
+		return false;
 	}
 
 	protected abstract void set0(BoundWidget widget);
