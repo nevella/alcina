@@ -197,6 +197,7 @@ public abstract class DOMImplTrident extends DOMImpl {
     $doc.body.attachEvent('ondblclick', bodyDblClickDispatcher);
     $doc.body.attachEvent('oncontextmenu', bodyDispatcher);
     $doc.body.attachEvent('onfocusout', bodyDispatcher);
+    $doc.body.attachEvent('onfocusin', bodyDispatcher);
   }-*/;
 
   @Override

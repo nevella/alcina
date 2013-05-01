@@ -311,17 +311,19 @@ public class PersistenceStateHandlers {
 						}
 					});
 		}
-
+		
+		private String lastFocussedValueMessage;
 		protected void previewNativeEvent(NativePreviewEvent event) {
 			Event nativeEvent = Event.as(event.getNativeEvent());
 			String type = nativeEvent.getType();
 			boolean click = BrowserEvents.CLICK.equals(type);
 			boolean blur = BrowserEvents.BLUR.equals(type)||BrowserEvents.FOCUSOUT.equals(type);
-			if (click||blur) {
+			boolean focus = BrowserEvents.FOCUS.equals(type)||BrowserEvents.FOCUSIN.equals(type);
+			if (click||blur||focus) {
  				EventTarget eTarget = nativeEvent.getEventTarget();
 				if (Element.is(eTarget)) {
 					Element e = Element.as(eTarget);
-					if(blur){
+					if(blur||focus){
 						String tag=e.getTagName().toLowerCase();
 						if(tag.equals("input")&&e.getAttribute("type").equals("button")){
 							return;
@@ -359,10 +361,19 @@ public class PersistenceStateHandlers {
 					Collections.reverse(tags);
 					String path = CommonUtils.join(tags, "/");
 					String valueMessage="";
-					if(blur){
+					if(blur||focus){
 						String value = Element.as(eTarget).getPropertyString("value");
 						String ih=Element.as(eTarget).getInnerHTML();
 						valueMessage=CommonUtils.formatJ("%s%s",ClientLogRecord.VALUE_SEPARATOR,value);
+						if(focus){
+							lastFocussedValueMessage=valueMessage;
+							return;
+						}else{
+							if(valueMessage.equals(lastFocussedValueMessage)){
+								lastFocussedValueMessage=null;
+								return;//no change
+							}
+						}
 					}
 					AlcinaTopics.logCategorisedMessage(new StringPair(
 							click ? AlcinaTopics.LOG_CATEGORY_CLICK

@@ -7,12 +7,16 @@ public class ReplayInstruction {
 	public enum ReplayInstructionType {
 		CLICK, CHANGE, HISTORY
 	}
-
+	public static final String ALLOW_MULTIPLE_TARGETS = "allow-multiple-targets";
 	public ReplayInstructionType type;
 
 	public String param1;
 
 	public String param2;
+	
+	public boolean isAllowMultipleTargets(){
+		return type==ReplayInstructionType.CLICK&&param2!=null&&param2.contains(ALLOW_MULTIPLE_TARGETS);
+	}
 
 	public ReplayInstruction() {
 	}

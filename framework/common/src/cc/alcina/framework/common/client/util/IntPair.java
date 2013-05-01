@@ -3,6 +3,9 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class IntPair implements Comparable<IntPair> {
 	public int i1;
 
@@ -60,8 +63,9 @@ public class IntPair implements Comparable<IntPair> {
 	public String toString() {
 		return "[" + i1 + "," + i2 + "]";
 	}
+
 	public String simpleString() {
-		return  i1 + "," + i2 ;
+		return i1 + "," + i2;
 	}
 
 	public boolean isZero() {
@@ -85,8 +89,9 @@ public class IntPair implements Comparable<IntPair> {
 			return null;
 		}
 	}
-	public static IntPair point(int i){
-		return new IntPair(i,i);
+
+	public static IntPair point(int i) {
+		return new IntPair(i, i);
 	}
 
 	public IntPair intersection(IntPair other) {
@@ -103,16 +108,32 @@ public class IntPair implements Comparable<IntPair> {
 		return contains(other) && i1 < other.i1 && i2 > other.i2;
 	}
 
+	/**
+	 * say, to provide a model of string regions not matched by
+	 * regex.matcher().find()
+	 */
+	public static List<IntPair> provideUncovered(List<IntPair> covered,
+			IntPair container) {
+		List<IntPair> result=new ArrayList<IntPair>();
+		for(int i=0;i<=covered.size();i++){
+			int from=i==0?container.i1:covered.get(i-1).i2;
+			int to=i==covered.size()?container.i2:covered.get(i).i1;
+			if(from!=to){
+				result.add(new IntPair(from, to));
+			}
+		}
+		return result;
+	}
 
 	public int trimToRange(int i) {
-		if(isPoint()){
-			return i1-1;
+		if (isPoint()) {
+			return i1 - 1;
 		}
-		if(i<i1){
+		if (i < i1) {
 			return i1;
 		}
-		if(i>=i2){
-			return i2-1;
+		if (i >= i2) {
+			return i2 - 1;
 		}
 		return i;
 	}
