@@ -19,6 +19,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
@@ -93,6 +94,11 @@ public class ClientUtils {
 			styleElement = Document.get().createStyleElement();
 			NodeList<Element> headList = Document.get().getElementsByTagName(
 					HEAD);
+			if(headList==null||headList.getLength()==0){
+				//something wrong with the client here -- bail
+				AlcinaTopics.notifyDevWarning(new Exception("headList - "+headList==null?"null":"length 0"));
+				return null;
+			}
 			headList.getItem(0).appendChild(styleElement);
 		}
 		if (css.length() != 0) {
@@ -101,14 +107,7 @@ public class ClientUtils {
 					styleElement.setInnerText(css);
 				}
 			} catch (Exception e) {
-				if (BrowserMod.isInternetExplorer()) {
-					ClientLayerLocator
-							.get()
-							.notifications()
-							.showMessage(
-									"Sorry, this action is not supported "
-											+ "on some versions of Internet Explorer");
-				}
+				//squelch
 			}
 		}
 		return styleElement;

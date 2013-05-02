@@ -226,6 +226,8 @@ public class ModuleIntrospectionHelper {
 		public String classSourceName;
 
 		public ModuleIntrospectionClassInfoProvenance provenance;
+		
+		public String note;
 
 		public Set<String> modules = new LinkedHashSet<String>();
 

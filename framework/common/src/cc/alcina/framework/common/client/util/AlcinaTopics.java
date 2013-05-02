@@ -34,6 +34,9 @@ public class AlcinaTopics {
 	public static final String TOPIC_JOB_COMPLETE = AlcinaTopics.class
 			.getName() + ".TOPIC_JOB_COMPLETE";
 
+	public static final String TOPIC_DEV_WARNING = AlcinaTopics.class.getName()
+			+ ".TOPIC_DEV_WARNING";
+
 	public static final String LOG_CATEGORY_CHANGE = "change";
 
 	// detach logging from presentation (normally ClientNotifications)
@@ -82,12 +85,22 @@ public class AlcinaTopics {
 	}
 
 	public static void jobComplete(JobInfo info) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_COMPLETE	, info);
+		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_COMPLETE, info);
 	}
 
 	public static void jobCompletionListenerDelta(
 			TopicListener<JobInfo> listener, boolean add) {
 		GlobalTopicPublisher.get().listenerDelta(
 				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, listener, add);
+	}
+
+	public static void notifyDevWarning(Exception ex) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_DEV_WARNING, ex);
+	}
+
+	public static void notifyDevWarningListenerDelta(
+			TopicListener<Exception> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_DEV_WARNING, listener,
+				add);
 	}
 }
