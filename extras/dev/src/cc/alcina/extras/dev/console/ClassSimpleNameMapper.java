@@ -1,6 +1,5 @@
 package cc.alcina.extras.dev.console;
 
-import cc.alcina.framework.common.client.collections.KeyValueMapper;
 import cc.alcina.framework.common.client.collections.KeyValueMapper.StringKeyValueMapper;
 
 public class ClassSimpleNameMapper extends StringKeyValueMapper<Class> {

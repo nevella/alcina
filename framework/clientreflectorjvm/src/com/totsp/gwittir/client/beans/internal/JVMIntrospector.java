@@ -9,10 +9,7 @@ import java.beans.PropertyDescriptor;
 import java.util.HashMap;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;

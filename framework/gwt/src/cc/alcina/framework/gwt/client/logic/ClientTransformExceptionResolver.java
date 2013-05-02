@@ -4,8 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Callback;
 /*
  * REVISIT: At the moment, there's a mismatch between local and remote 

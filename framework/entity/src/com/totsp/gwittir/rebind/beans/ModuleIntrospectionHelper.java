@@ -29,10 +29,6 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
-import com.totsp.gwittir.rebind.beans.ModuleIntrospectionHelper.ModuleIntrospectionClassInfo;
-import com.totsp.gwittir.rebind.beans.ModuleIntrospectionHelper.ModuleIntrospectionClassInfoProvenance;
-import com.totsp.gwittir.rebind.beans.ModuleIntrospectionHelper.ModuleIntrospectionInfo;
-import com.totsp.gwittir.rebind.beans.ModuleIntrospectionHelper.ModuleIntrospectionMode;
 
 public class ModuleIntrospectionHelper {
 	private IntrospectorFilterBase filter;

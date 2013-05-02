@@ -7,7 +7,6 @@ import java.util.NoSuchElementException;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class FastIdLookupScript implements FastIdLookup {
 	@SuppressWarnings("unused")

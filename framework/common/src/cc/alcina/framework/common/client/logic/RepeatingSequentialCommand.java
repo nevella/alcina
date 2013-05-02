@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.logic;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 

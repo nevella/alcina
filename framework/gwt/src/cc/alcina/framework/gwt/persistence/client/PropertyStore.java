@@ -1,9 +1,6 @@
 package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.List;
-import java.util.Map;
-
-import cc.alcina.framework.common.client.util.IntPair;
 
 public class PropertyStore {
 	protected PropertyStore() {

@@ -4,7 +4,6 @@ import cc.alcina.framework.common.client.state.MachineEvent;
 import cc.alcina.framework.common.client.state.MachineModel;
 import cc.alcina.framework.common.client.state.MachineSchedulerBase;
 import cc.alcina.framework.common.client.state.MachineState;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;

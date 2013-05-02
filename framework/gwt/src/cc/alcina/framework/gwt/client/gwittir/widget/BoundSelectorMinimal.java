@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.ClickableFlowPanel;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;

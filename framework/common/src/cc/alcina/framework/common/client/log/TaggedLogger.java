@@ -2,8 +2,6 @@ package cc.alcina.framework.common.client.log;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
-
 public class TaggedLogger {
 	private List<TaggedLoggerRegistration> registrations;
 

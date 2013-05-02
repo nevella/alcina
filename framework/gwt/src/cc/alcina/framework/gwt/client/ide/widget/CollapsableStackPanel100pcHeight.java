@@ -5,7 +5,6 @@ import java.util.Iterator;
 import cc.alcina.framework.gwt.client.widget.DivStackPanel.CollapsableDivStackPanel;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo.LayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
 

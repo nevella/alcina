@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.publication.excel;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import cc.alcina.framework.common.client.csobjects.GArrayList;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;

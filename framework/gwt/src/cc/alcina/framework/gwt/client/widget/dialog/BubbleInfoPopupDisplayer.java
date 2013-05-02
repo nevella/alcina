@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
-import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.OtherPositioningStrategy;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupPositioningParams;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;

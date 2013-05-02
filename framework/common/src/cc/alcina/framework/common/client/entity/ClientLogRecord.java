@@ -9,12 +9,11 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
-
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.StringPair;
+
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 @BeanInfo(displayNamePropertyName = "time")
 @Introspectable

@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.util;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.logic.MessageManager;
 
 public class AlcinaTopics {
 	public static final String LOG_CATEGORY_MESSAGE = "message";

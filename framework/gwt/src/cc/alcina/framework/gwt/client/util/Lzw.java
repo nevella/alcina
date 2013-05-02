@@ -1,11 +1,6 @@
 package cc.alcina.framework.gwt.client.util;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.ClientMetricLogging;
-
 import com.google.gwt.core.client.JavaScriptObject;
-import com.google.gwt.dom.client.Element;
 
 public class Lzw {
 	public String compress(String data) {

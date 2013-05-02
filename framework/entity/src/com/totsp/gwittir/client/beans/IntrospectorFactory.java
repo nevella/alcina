@@ -5,8 +5,6 @@
 
 package com.totsp.gwittir.client.beans;
 
-import cc.alcina.framework.common.client.logic.reflection.ReflectionConstants;
-
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.internal.JVMIntrospector;
 

@@ -15,7 +15,6 @@ package cc.alcina.framework.servlet;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**

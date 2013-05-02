@@ -4,11 +4,8 @@ import cc.alcina.framework.common.client.state.Machine;
 import cc.alcina.framework.common.client.state.MachineEvent.MachineEventImpl;
 import cc.alcina.framework.common.client.state.MachineState;
 import cc.alcina.framework.common.client.state.MachineState.MachineStateImpl;
-import cc.alcina.framework.common.client.state.MachineTransitionHandler;
 import cc.alcina.framework.common.client.state.SimpleTransitionHandler;
 import cc.alcina.framework.gwt.client.logic.state.AsyncCallbackTransitionHandler;
-import cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers;
-import cc.alcina.framework.gwt.persistence.client.ios.IosStorageExpander;
 
 /*
  * Begin by just modelling CONFIG -> LOCAL PERSISTENCE -> AFTER_CONFIGURATION

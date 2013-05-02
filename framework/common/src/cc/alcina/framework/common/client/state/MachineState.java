@@ -1,13 +1,7 @@
 package cc.alcina.framework.common.client.state;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-
-import cc.alcina.framework.common.client.state.MachineEvent.MachineEventImpl;
 
 public interface MachineState {
 	public String name();

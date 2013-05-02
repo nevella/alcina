@@ -19,15 +19,15 @@
  */
 package com.totsp.gwittir.rebind.beans;
 
-import com.google.gwt.core.ext.TreeLogger;
-import com.google.gwt.core.ext.typeinfo.JClassType;
-import com.google.gwt.core.ext.typeinfo.JMethod;
-
-import com.totsp.gwittir.client.beans.annotations.Omit;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+
+import com.google.gwt.core.ext.TreeLogger;
+import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JMethod;
+import com.totsp.gwittir.client.beans.annotations.Omit;
 
 /**
  * 

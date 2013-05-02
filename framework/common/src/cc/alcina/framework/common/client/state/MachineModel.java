@@ -1,12 +1,6 @@
 package cc.alcina.framework.common.client.state;
 
 import cc.alcina.framework.common.client.state.Machine.EventStateTuple;
-import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.CommonUtils;
-
-import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.thirdparty.javascript.jscomp.PerformanceTracker;
 
 /**
  * Events are pumped via setEvent() - which can be null (to signify 'arrived at

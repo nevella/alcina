@@ -18,9 +18,7 @@ package com.google.gwt.user.client.ui;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
