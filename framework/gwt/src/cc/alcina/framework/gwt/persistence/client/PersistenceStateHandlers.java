@@ -20,6 +20,7 @@ import cc.alcina.framework.gwt.client.util.ClientNodeIterator;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
 import com.google.code.gwt.database.client.Database;
+import com.google.code.gwt.database.client.DatabaseException;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
@@ -152,8 +153,15 @@ public class PersistenceStateHandlers {
 		private void iterate() {
 			switch (state) {
 			case PRE_PROPERTY_IMPL: {
-				Database db = Database.openDatabase(dbPrefix, "1.0",
-						"Property store", 5000000);
+				Database db;
+				try {
+					db = Database.openDatabase(dbPrefix, "1.0",
+							"Property store", 5000000);
+				} catch (DatabaseException e) {
+					//no db access
+					itrCallback.afterSuccess();
+					break;
+				}
 				this.propImpl = new ObjectStoreWebDbImpl(db, dbPrefix
 						+ "_propertyStore", itrCallback);
 				state = State.POST_PROPERTY_IMPL;
