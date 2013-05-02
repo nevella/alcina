@@ -167,7 +167,8 @@ public class WebDatabaseTransformPersistence extends
 			db = Database.openDatabase(getTransformDbName(), "1.0",
 					"Alcina Transforms", 5000000);
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			callback.onFailure(e);
+			return;
 		}
 		setLocalStorageInstalled(db != null);
 		if (isLocalStorageInstalled()) {
