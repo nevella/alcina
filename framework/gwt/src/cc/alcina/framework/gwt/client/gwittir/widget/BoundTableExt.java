@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.RepeatingSequentialCommand;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
@@ -1481,7 +1483,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 	}
 
-
 	private BoundTableExtIncrementalRenderer incrementalRenderer;
 
 	private void renderIncremental() {
@@ -1904,8 +1905,12 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				}
 			}
 			if (!canSort) {
-				throw new RuntimeException(
-						"That is not a sortable field from this data provider.");
+				AlcinaTopics.notifyDevWarning(new RuntimeException(CommonUtils
+						.formatJ("Field %s is not a"
+								+ " sortable field from data provider %s.",
+								this.columns[index].getPropertyName(),
+								this.provider.getClass().getName())));
+				return;
 			}
 			sortedColumn = index;
 			sdp.sortOnProperty(this, this.columns[index].getPropertyName(),
