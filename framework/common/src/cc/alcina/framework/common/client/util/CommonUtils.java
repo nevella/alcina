@@ -342,6 +342,31 @@ public class CommonUtils {
 		return result;
 	}
 
+	public static Integer friendlyParseInt(String toParse) {
+		if (isNullOrEmpty(toParse)) {
+			return null;
+		}
+		int i = 0;
+		for (; i < toParse.length(); i++) {
+			if (toParse.charAt(i) > '9' || toParse.charAt(i) < '0') {
+				break;
+			}
+		}
+		return i == 0 ? null : Integer.parseInt(toParse.substring(0, i));
+	}
+	public static Long friendlyParseLong(String toParse) {
+		if (isNullOrEmpty(toParse)) {
+			return null;
+		}
+		int i = 0;
+		for (; i < toParse.length(); i++) {
+			if (toParse.charAt(i) > '9' || toParse.charAt(i) < '0') {
+				break;
+			}
+		}
+		return i == 0 ? null : Long.parseLong(toParse.substring(0, i));
+	}
+
 	public static class ThreeWaySetResult<T> {
 		public Set<T> firstOnly;
 

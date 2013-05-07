@@ -1,7 +1,11 @@
 package cc.alcina.extras.dev.console;
 
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.Connection;
@@ -57,6 +61,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public void cancel() {
 		cancelled = true;
 	}
+
 	public void checkCancelled() {
 		if (cancelled) {
 			throw new CancelledException("Action cancelled");
@@ -179,7 +184,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return argv.length <= argIndex ? defaultValue : Integer
 				.parseInt(argv[argIndex]);
 	}
-	protected String getStringArg(String[] argv, int argIndex, String defaultValue) {
+
+	protected String getStringArg(String[] argv, int argIndex,
+			String defaultValue) {
 		return argv.length <= argIndex ? defaultValue : argv[argIndex];
 	}
 
@@ -303,11 +310,12 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		public boolean rerunIfMostRecentOnRestart() {
 			return true;
 		}
-		
+
 		@Override
 		public boolean canUseProductionConn() {
 			return r.canUseProductionConn();
 		}
+
 		@Override
 		public String run(String[] argv) throws Exception {
 			List<Class> classes = Registry.get().lookup(
@@ -315,13 +323,12 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String runnableName = argv.length == 0 ? "" : argv[0];
 			for (Class clazz : classes) {
 				if (clazz.getSimpleName().equals(runnableName)) {
-					r = (DevConsoleRunnable) clazz
-							.newInstance();
+					r = (DevConsoleRunnable) clazz.newInstance();
 					r.console = console;
 					r.command = this;
 					r.value = argv.length == 1 ? null : argv[1];
 					r.actionLogger = console.logger;
-					r.argv=argv;
+					r.argv = argv;
 					try {
 						LooseContext.pushWithKey(
 								DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
@@ -576,7 +583,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		private void importViaRsync(String arg1, String remotePort,
 				String from, String to) throws Exception {
 			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
-					"--progress","--partial", arg1, remotePort, from, to };
+					"--progress", "--partial", arg1, remotePort, from, to };
 			ShellUtils.runProcessCatchOutputAndWait(cmdAndArgs);
 		}
 
@@ -941,18 +948,78 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public boolean silent() {
 		return false;
 	}
+
 	protected int getIntArg(String[] argv, String argName, int defaultValue) {
 		String stringArg = getStringArg(argv, argName, null);
-		return stringArg==null?defaultValue:Integer.parseInt(stringArg);
+		return stringArg == null ? defaultValue : Integer.parseInt(stringArg);
 	}
-	protected String getStringArg(String[] argv, String argName, String defaultValue) {
-		Pattern argMatcher=Pattern.compile(String.format("%s=(.+)",argName));
-		for(String arg:argv){
+
+	protected String getStringArg(String[] argv, String argName,
+			String defaultValue) {
+		Pattern argMatcher = Pattern.compile(String.format("%s=(.+)", argName));
+		for (String arg : argv) {
 			Matcher m = argMatcher.matcher(arg);
-			if(m.matches()){
+			if (m.matches()) {
 				return m.group(1);
 			}
 		}
 		return defaultValue;
+	}
+
+	public static class CmdExtractChromeCacheFile extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "chrx" };
+		}
+
+		@Override
+		/**
+		 * LOG:  execute S_1: BEGIN
+		 LOG:  execute <unnamed>: select distinct article2_.id as id521_, article2_.OPTLOCK as OPTLOCK521_, article2_.before_ as before3_521_, article2_.checkedBy_id as checkedBy23_521_, article2_.checkedOn as checkedOn521_, article2_.detachedFromAutomaticUpdate as detached5_521_, article2_.disabled as disabled521_, article2_.documentTitle as document7_521_, article2_.effectiveDate as effectiv8_521_, article2_.ignoreForAlerts as ignoreFo9_521_, article2_.incomingCitationCount as incomin10_521_, article2_.incomingCitationRank as incomin11_521_, article2_.listOfAuthorities as listOfA12_521_, article2_.mediumNeutralCitationSortKey as mediumN13_521_, article2_.mediumNeutralId as mediumN14_521_, article2_.modificationDate as modific15_521_, article2_.outgoingCitationCount as outgoin16_521_, article2_.outgoingCitationRank as outgoin17_521_, article2_.overview_id as overview18_521_, article2_.restrictedToGroup_id as restric24_521_, article2_.restrictedToUser_id as restric25_521_, article2_.retrievedOn as retriev19_521_, article2_.standardCitationSortKey as standar20_521_, article2_.structuralPages as structu21_521_, article2_.url as url521_ from documentoverlaynode documentov0_ inner join articledocumentoverlay articledoc1_ on documentov0_.ownerDocument_id=articledoc1_.id inner join public.article article2_ on articledoc1_.article_id=article2_.id inner join citation citation3_ on documentov0_.citation_id=citation3_.id where citation3_.id=$1 limit $2
+		 DETAIL:  parameters: $1 = '57051626', $2 = '2'
+		 * @see DevConsoleCommand#getDescription()
+		 */
+		public String getDescription() {
+			return "extract chrome cache file text";
+		}
+
+		@Override
+		public String getUsage() {
+			return "chrx (will prompt for text, or copy from clipboard)";
+		}
+
+		static String lastFileName = "";
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String chrx = console
+					.getMultilineInput("Enter the chrome cache file text, or blank for clipboard: ");
+			chrx = chrx.isEmpty() ? console.getClipboardContents() : chrx;
+			lastFileName = console.getSingleLineInput("Save to file:",
+					lastFileName);
+			Pattern p = Pattern.compile("00000000:");
+			Matcher m1 = p.matcher(chrx);
+			m1.find();
+			m1.find();
+			int idx0 = m1.start();
+			Pattern p2 = Pattern.compile("[0-9a-f]{8}:(?:  [0-9a-f]{2}){1,16}");
+			Pattern p3 = Pattern.compile("  ([0-9a-f]{2})");
+			Matcher m2 = p2.matcher(chrx.substring(idx0));
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			while (m2.find()) {
+				Matcher m3 = p3.matcher(m2.group());
+				while (m3.find()) {
+					baos.write(Integer.parseInt(m3.group(1), 16));
+				}
+			}
+			int size = baos.size();
+			BufferedOutputStream bos = new BufferedOutputStream(
+					new FileOutputStream(lastFileName));
+			ResourceUtilities.writeStreamToStream(
+					new ByteArrayInputStream(baos.toByteArray()), bos);
+			System.out.format("Wrote %s bytes to \n\t'%s'\n", size,
+					lastFileName);
+			return "";
+		}
 	}
 }

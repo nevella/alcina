@@ -105,6 +105,7 @@ public class BrowserMod {
 				&& getUserAgent().indexOf(
 						Constants.INTERNET_EXPLORER_9_USER_AGENT) != -1;
 	}
+
 	public static boolean isIE10() {
 		return isInternetExplorer()
 				&& getUserAgent().indexOf(
@@ -112,7 +113,11 @@ public class BrowserMod {
 	}
 
 	public static boolean isIEpre9() {
-		return isInternetExplorer() && !isIE9();
+		return isInternetExplorer() && !isIE9() && !isIE10();
+	}
+
+	public static boolean isIEpre10() {
+		return isInternetExplorer() && !isIE10();
 	}
 
 	public static boolean isFireFox() {
@@ -134,7 +139,7 @@ public class BrowserMod {
 
 	public static boolean isSafari() {
 		return getUserAgent().indexOf(Constants.SAFARI_USER_AGENT) != -1
-				&& !isOpera() && !isChrome()&&!isChromeIos();
+				&& !isOpera() && !isChrome() && !isChromeIos();
 	}
 
 	public static boolean isChrome() {

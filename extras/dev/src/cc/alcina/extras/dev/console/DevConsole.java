@@ -783,6 +783,31 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			return null;
 		}
 	}
+	public String getSingleLineInput(String prompt,String defaultValue) {
+		final JTextField textArea = new JTextField( 40);
+		textArea.addAncestorListener(new AncestorListener() {
+			@Override
+			public void ancestorRemoved(AncestorEvent event) {
+			}
+
+			@Override
+			public void ancestorMoved(AncestorEvent event) {
+			}
+
+			@Override
+			public void ancestorAdded(AncestorEvent event) {
+				textArea.requestFocusInWindow();
+			}
+		});
+		textArea.setText(defaultValue);
+		int result = JOptionPane.showConfirmDialog(null, textArea, prompt,
+				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+		if (result == JOptionPane.OK_OPTION) {
+			return textArea.getText();
+		} else {
+			return null;
+		}
+	}
 
 	public String padLeft(String str, int tabCount, int charCount) {
 		if (tabCount != 0) {
