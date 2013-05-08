@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.util.StringPair;
 
 public class ReplayInstruction {
 	public enum ReplayInstructionType {
-		CLICK, CHANGE, HISTORY
+		CLICK, CHANGE, HISTORY, COMMENT, CONTAINER
 	}
 	public static final String ALLOW_MULTIPLE_TARGETS = "allow-multiple-targets";
 	public ReplayInstructionType type;

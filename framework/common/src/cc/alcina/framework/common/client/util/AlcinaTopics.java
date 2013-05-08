@@ -38,6 +38,10 @@ public class AlcinaTopics {
 			+ ".TOPIC_DEV_WARNING";
 
 	public static final String LOG_CATEGORY_CHANGE = "change";
+	
+	public static final String LOG_CATEGORY_COMMENT = "comment";
+	
+	public static final String LOG_CATEGORY_CONTAINER = "container";
 
 	// detach logging from presentation (normally ClientNotifications)
 	public static void log(Object message) {
