@@ -324,4 +324,15 @@ public class ClientUtils {
 		var v = e;
 		debugger;
 	}-*/;
+	
+	public static String getHashIfSelfrefUrl(Element anchor){
+		String href = anchor.getAttribute("href");
+		String selfHref=Window.Location.getHref();
+		int idx=selfHref.indexOf("#");
+		selfHref=idx==-1?selfHref:selfHref.substring(0,idx);
+		if(href.startsWith(selfHref)){
+			href=href.substring(selfHref.length());
+		}
+		return  href.startsWith("#") && href.length() > 1 ? href.substring(1):null;
+	}
 }
