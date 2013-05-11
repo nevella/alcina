@@ -40,6 +40,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
 import com.google.gwt.dom.client.Style.Display;
+import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -382,6 +383,18 @@ public class WidgetUtils {
 
 	private static List<ElementLayout> elementLayouts;
 
+	private static Text tempPositioningText;
+
+	public static void releaseTempPositioningText() {
+		if (tempPositioningText != null) {
+			tempPositioningText.removeFromParent();
+			tempPositioningText = null;
+		}
+	}
+	public static boolean hasTempPositioningText(){
+		return tempPositioningText!=null;
+	}
+
 	public static void maximiseWidget(Widget widget) {
 		restoreFromMaximise();
 		hiddenWidgets = new ArrayList<Widget>();
@@ -436,6 +449,7 @@ public class WidgetUtils {
 	}
 
 	public static Element getElementForPositioning0(Element from) {
+		assert tempPositioningText == null;
 		boolean hidden = isZeroOffsetDims(from);
 		int kidCount = from.getChildCount();
 		if (kidCount != 0 && !hidden) {
@@ -443,7 +457,22 @@ public class WidgetUtils {
 		}
 		ClientNodeIterator itr = new ClientNodeIterator(from,
 				ClientNodeIterator.SHOW_ALL);
-		Node node = null;
+		Node node = from;
+		int insertTextIfOffsetMoreThanXChars = 100;
+		while ((node = node.getPreviousSibling()) != null) {
+			if (node.getNodeType() == Node.TEXT_NODE) {
+				insertTextIfOffsetMoreThanXChars -= TextUtils.normaliseAndTrim(
+						node.getNodeValue()).length();
+				if (insertTextIfOffsetMoreThanXChars < 0) {
+					// this causes a relayout - so we try and avoid. most of the
+					// time, positioning elements will contain text (or be from
+					// a friendly browser), or be at the start of a block elt)
+					tempPositioningText = Document.get().createTextNode("---");
+					from.appendChild(tempPositioningText);
+					return from;
+				}
+			}
+		}
 		while ((node = itr.nextNode()) != null) {
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				if (!isZeroOffsetDims(node.getParentElement())
