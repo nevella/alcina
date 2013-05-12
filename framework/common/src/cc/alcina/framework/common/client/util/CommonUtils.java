@@ -343,28 +343,35 @@ public class CommonUtils {
 	}
 
 	public static Integer friendlyParseInt(String toParse) {
-		if (isNullOrEmpty(toParse)) {
-			return null;
-		}
-		int i = 0;
-		for (; i < toParse.length(); i++) {
-			if (toParse.charAt(i) > '9' || toParse.charAt(i) < '0') {
-				break;
-			}
-		}
-		return i == 0 ? null : Integer.parseInt(toParse.substring(0, i));
+		String sub = getNumericSubstring(toParse);
+		return sub == null ? null : Integer.parseInt(sub);
 	}
-	public static Long friendlyParseLong(String toParse) {
-		if (isNullOrEmpty(toParse)) {
+
+	private static String getNumericSubstring(String toParse) {
+		if (toParse == null) {
+			return null;
+		}
+		toParse = toParse.trim();
+		if (toParse.isEmpty()) {
 			return null;
 		}
 		int i = 0;
+		char c = toParse.charAt(0);
+		if (c == '+' || c == '-') {
+			i++;
+		}
 		for (; i < toParse.length(); i++) {
-			if (toParse.charAt(i) > '9' || toParse.charAt(i) < '0') {
+			c = toParse.charAt(i);
+			if (c > '9' || c < '0') {
 				break;
 			}
 		}
-		return i == 0 ? null : Long.parseLong(toParse.substring(0, i));
+		return i == 0 ? null : toParse.substring(0, i);
+	}
+
+	public static Long friendlyParseLong(String toParse) {
+		String sub = getNumericSubstring(toParse);
+		return sub == null ? null : Long.parseLong(sub);
 	}
 
 	public static class ThreeWaySetResult<T> {

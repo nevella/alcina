@@ -13,6 +13,7 @@ public class ReplayInstruction {
 	public String param1;
 
 	public String param2;
+	public static final String REPLAY_TEXT_WILDCARD = "::replay-wildcard";
 	
 	public boolean isAllowMultipleTargets(){
 		return type==ReplayInstructionType.CLICK&&param2!=null&&param2.contains(ALLOW_MULTIPLE_TARGETS);
