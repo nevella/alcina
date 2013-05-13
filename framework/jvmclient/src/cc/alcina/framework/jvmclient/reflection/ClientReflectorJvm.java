@@ -4,7 +4,9 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -126,10 +128,27 @@ public class ClientReflectorJvm extends ClientReflector {
 					|| pd.getWriteMethod() == null) {
 				continue;
 			}
+			Field field = getField(clazz, pd.getName());
+			if (field != null && Modifier.isTransient(field.getModifiers())) {
+				continue;
+			}
 			infos.add(new PropertyInfoLite(pd.getPropertyType(), pd.getName(),
 					new MethodWrapper(pd.getReadMethod()), clazz));
 		}
 		return infos;
+	}
+
+	public static Field getField(Class<?> clazz, String fieldName) {
+		try {
+			return clazz.getDeclaredField(fieldName);
+		} catch (NoSuchFieldException e) {
+			Class<?> superClass = clazz.getSuperclass();
+			if (superClass == null) {
+				return null;
+			} else {
+				return getField(superClass, fieldName);
+			}
+		}
 	}
 
 	class MethodWrapper implements com.totsp.gwittir.client.beans.Method {
