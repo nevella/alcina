@@ -10,8 +10,11 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.MouseOverEvent;
 import com.google.gwt.event.dom.client.MouseOverHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
@@ -101,11 +104,11 @@ public class StatusDisplayer {
 	class FaderTuple {
 		final String defaultStyle;
 
-		private SimplePanel holder;
+		private SimplePanelWClick holder;
 
 		public FaderTuple(Label label, String defaultStyle) {
 			this.label = label;
-			this.holder = new SimplePanel(label);
+			this.holder = new SimplePanelWClick(label);
 			holder.setStyleName("alcina-Status-Holder");
 			if (defaultStyle != null) {
 				holder.addStyleName(defaultStyle);
@@ -114,18 +117,37 @@ public class StatusDisplayer {
 			this.defaultStyle = defaultStyle;
 		}
 
+
 		FaderAnimation fader;
 
 		Label label;
+	}
+
+	static class SimplePanelWClick extends SimplePanel {
+		private ClickHandler hideHandler=new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				setVisible(false);
+			}
+		};
+
+		public SimplePanelWClick(Label label) {
+			super(label);
+			addDomHandler(hideHandler, ClickEvent.getType());
+		}
+
+		
 	}
 
 	FaderTuple statusTuple;
 
 	FaderTuple centerTuple;
 
+	
+
 	private void showMessage(String message, String channel) {
 		boolean center = false;
-		int duration=FADER_DURATION;
+		int duration = FADER_DURATION;
 		FaderTuple ft = statusTuple;
 		boolean withFade = true;
 		if (channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED) {
@@ -137,7 +159,7 @@ public class StatusDisplayer {
 			withFade = false;
 			ft = appTuple;
 		} else if (channel == MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED) {
-			duration=8000;
+			duration = 8000;
 			ft = exceptionTuple;
 		}
 		Label label = ft.label;
@@ -149,7 +171,7 @@ public class StatusDisplayer {
 		if (fader != null) {
 			fader.cancel();
 		}
-		SimplePanel holder = ft.holder;
+		SimplePanelWClick holder = ft.holder;
 		WidgetUtils.setOpacity(holder, 0);
 		message = CommonUtils.nullToEmpty(message);
 		if (label instanceof HTML) {
@@ -172,6 +194,7 @@ public class StatusDisplayer {
 			ft.fader = fader;
 			fader.run(duration);
 		}
+		
 	}
 
 	private class FaderAnimation extends Animation {

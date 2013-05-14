@@ -179,6 +179,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		}
 	};
 
+	protected long ignoreNextBlur = 0;
+
 	// additional problem with ff
 	public SelectWithSearch() {
 	}
@@ -228,6 +230,12 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		groupCaptions = new ArrayList<Label>();
 		popdownHider = new ClickHandler() {
 			public void onClick(ClickEvent event) {
+				if (event != null && WidgetUtils.isNewTabModifier()) {
+					event.preventDefault();
+					ignoreNextBlur = System.currentTimeMillis();
+					// otherwise popup will be closed by blur
+					return;
+				}
 				closingOnClick = true;
 				if (relativePopupPanel != null) {
 					relativePopupPanel.hide();
@@ -240,7 +248,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		filter.getTextBox().addBlurHandler(new BlurHandler() {
 			@Override
 			public void onBlur(BlurEvent event) {
-				handleFilterBlur();
+				if (System.currentTimeMillis() - ignoreNextBlur < 100) {
+					handleFilterBlur();
+				} else {
+					ignoreNextBlur = 0;
+				}
 			}
 		});
 		if (itemMap != null) {
