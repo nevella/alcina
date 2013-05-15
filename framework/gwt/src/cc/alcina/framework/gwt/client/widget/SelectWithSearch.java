@@ -230,11 +230,17 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		groupCaptions = new ArrayList<Label>();
 		popdownHider = new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				if (event != null && WidgetUtils.isNewTabModifier()) {
-					event.preventDefault();
-					ignoreNextBlur = System.currentTimeMillis();
-					// otherwise popup will be closed by blur
-					return;
+				if (event != null) {
+					try {
+						if (WidgetUtils.isNewTabModifier()) {
+							event.preventDefault();
+							ignoreNextBlur = System.currentTimeMillis();
+							// otherwise popup will be closed by blur
+							return;
+						}
+					} catch (Exception e) {
+						// probably a synth click
+					}
 				}
 				closingOnClick = true;
 				if (relativePopupPanel != null) {

@@ -297,28 +297,29 @@ public class DevConsoleCommandTransforms {
 			}
 			return "";
 		}
-		static boolean classRefsEnsured; 
+
+		static boolean classRefsEnsured;
 
 		private void ensureClassRefs(Connection conn) throws Exception {
-			if(classRefsEnsured){
+			if (classRefsEnsured) {
 				return;
 			}
 			System.out.println("getting classrefs...");
 			Statement ps = conn.createStatement();
 			ResultSet rs = ps.executeQuery("select * from classref");
-			while(rs.next()){
-				long id=rs.getLong("id");
-				String cn=rs.getString("refclassname");
-				Class clazz = Registry.get().lookupSingle(AlcinaPersistentEntityImpl.class,
-						ClassRef.class);
-				ClassRef cr=(ClassRef) clazz.newInstance();
+			while (rs.next()) {
+				long id = rs.getLong("id");
+				String cn = rs.getString("refclassname");
+				Class clazz = Registry.get().lookupSingle(
+						AlcinaPersistentEntityImpl.class, ClassRef.class);
+				ClassRef cr = (ClassRef) clazz.newInstance();
 				cr.setId(id);
 				cr.setRefClassName(cn);
 				cr.setRefClass(Class.forName(cn));
 				ClassRef.add(Collections.singleton(cr));
 			}
 			ps.close();
-			classRefsEnsured=true;
+			classRefsEnsured = true;
 		}
 
 		private void printFullUsage() {
@@ -420,6 +421,21 @@ public class DevConsoleCommandTransforms {
 			@Override
 			public String getKey() {
 				return "dtr";
+			}
+		}
+
+		public static class CmdListTransformsFilterDteId extends
+				CmdListTransformsFilter {
+			@Override
+			public String getFilter(String value) {
+				value = value.isEmpty() ? "-1" : value;
+				return String.format(value.contains(",") ? "dte.id in (%s)"
+						: "dte.id=%s", value);
+			}
+
+			@Override
+			public String getKey() {
+				return "dte";
 			}
 		}
 

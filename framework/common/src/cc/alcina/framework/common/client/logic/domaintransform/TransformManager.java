@@ -913,6 +913,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			getDomainObjects().removeListeners();
 		}
 		createObjectLookup();
+		getDomainObjects().registerObjects(h.registerableDomainObjects());
 		ClassRef.add(h.getClassRefs());
 	}
 
