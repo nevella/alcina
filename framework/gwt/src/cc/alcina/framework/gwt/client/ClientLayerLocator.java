@@ -133,6 +133,7 @@ public class ClientLayerLocator {
 
 	public void registerExceptionHandler(ClientExceptionHandler exceptionHandler) {
 		this.exceptionHandler = exceptionHandler;
+		Registry.get().registerSingleton(clientNotifications,ClientExceptionHandler.class);
 		GWT.setUncaughtExceptionHandler(exceptionHandler);
 	}
 

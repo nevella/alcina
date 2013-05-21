@@ -32,11 +32,14 @@ import com.google.gwt.user.client.ui.DialogBox;
 public class GlassDialogBox extends DialogBox {
 	@Override
 	public void hide() {
+		if(HIDE_INSTANTLY){
+			setAnimationEnabled(false);
+		}
 		super.hide();
 		forgetScrollback();
 		glass.show(false);
 	}
-
+	public static boolean HIDE_INSTANTLY=false;
 	private GlassDisplayer glass = new GlassDisplayer();
 
 	private int scrollLeft;
