@@ -512,7 +512,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public Object getTargetObject(DomainTransformEvent evt, boolean oldValue)
 			throws DomainTransformException {
-		if (evt.getNewValue() != null || evt.getValueClass() == null) {
+		Class valueClass = evt.getValueClass();
+		if (evt.getNewValue() != null || valueClass == null) {
 			if (evt.getNewValue() instanceof HasIdAndLocalId) {
 				HasIdAndLocalId hili = CommonLocator.get().objectLookup()
 						.getObject((HasIdAndLocalId) evt.getNewValue());
@@ -531,22 +532,22 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 			return evt.getNewValue();
 		}
-		if (evt.getValueClass() == String.class) {
+		if (valueClass == String.class) {
 			return evt.getNewStringValue();
 		}
-		if (evt.getValueClass() == Long.class) {
+		if (valueClass == Long.class) {
 			return SimpleStringParser.toLong(evt.getNewStringValue());
 		}
-		if (evt.getValueClass() == Double.class) {
+		if (valueClass == Double.class) {
 			return Double.valueOf(evt.getNewStringValue());
 		}
-		if (evt.getValueClass() == Integer.class) {
+		if (valueClass == Integer.class) {
 			return Integer.valueOf(evt.getNewStringValue());
 		}
-		if (evt.getValueClass() == Boolean.class) {
+		if (valueClass == Boolean.class) {
 			return Boolean.valueOf(evt.getNewStringValue());
 		}
-		if (evt.getValueClass() == Date.class) {
+		if (valueClass == Date.class) {
 			return new Date(SimpleStringParser.toLong(evt.getNewStringValue()));
 		}
 		Enum e = getTargetEnumValue(evt);
@@ -557,7 +558,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			HasIdAndLocalId object = CommonLocator
 					.get()
 					.objectLookup()
-					.getObject(evt.getValueClass(), evt.getValueId(),
+					.getObject(valueClass, evt.getValueId(),
 							evt.getValueLocalId());
 			if (object != null) {
 				return object;
