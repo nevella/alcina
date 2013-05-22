@@ -1,0 +1,23 @@
+package cc.alcina.framework.entity.entityaccess.cache;
+
+import javax.print.attribute.SetOfIntegerSyntax;
+
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
+import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
+
+public class SubgraphTransformManager extends TransformManager{
+	private DetachedCacheObjectStore store;
+	public SubgraphTransformManager(){
+		super();
+		createObjectLookup();
+	}
+	@Override
+	protected void createObjectLookup() {
+		store = new DetachedCacheObjectStore();
+		setDomainObjects(store);
+	}
+	public DetachedEntityCache getDetachedEntityCache(){
+		return store.cache;
+	}
+}

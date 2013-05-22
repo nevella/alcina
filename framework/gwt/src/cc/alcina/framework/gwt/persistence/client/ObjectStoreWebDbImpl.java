@@ -17,7 +17,7 @@ import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
 
-public class ObjectStoreWebDbImpl implements ObjectStore {
+public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	private Database db;
 
 	private String tableName;

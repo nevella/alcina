@@ -5,7 +5,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.util.IntPair;
 
-public interface ObjectStore {
+public interface PersistenceObjectStore {
 
 	public abstract void getRange( int fromId,  int toId,  PersistenceCallback<Map<Integer, String>> valueCallback);
 

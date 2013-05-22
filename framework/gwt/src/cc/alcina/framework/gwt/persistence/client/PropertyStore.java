@@ -9,7 +9,7 @@ public class PropertyStore {
 
 	private static PropertyStore theInstance;
 
-	protected ObjectStore objectStore;
+	protected PersistenceObjectStore objectStore;
 
 	public static PropertyStore get() {
 		if (theInstance == null) {
@@ -20,12 +20,12 @@ public class PropertyStore {
 	/**
 	 * 
 	 */
-	public static PropertyStore createNonStandardPropertyStore(ObjectStore delegate) {
+	public static PropertyStore createNonStandardPropertyStore(PersistenceObjectStore delegate) {
 		PropertyStore store = new PropertyStore();
 		store.registerDelegate(delegate);
 		return store;
 	}
-	public void registerDelegate(ObjectStore objectStore) {
+	public void registerDelegate(PersistenceObjectStore objectStore) {
 		this.objectStore = objectStore;
 	}
 
@@ -52,7 +52,7 @@ public class PropertyStore {
 		this.objectStore.getKeysPrefixedBy(keyPrefix, completedCallback);
 	}
 
-	public ObjectStore getObjectStore() {
+	public PersistenceObjectStore getObjectStore() {
 		return this.objectStore;
 	}
 }

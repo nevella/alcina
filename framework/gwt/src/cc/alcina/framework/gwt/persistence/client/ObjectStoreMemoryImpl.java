@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
 
-public class ObjectStoreMemoryImpl implements ObjectStore, SyncObjectStore {
+public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObjectStore {
 	private TreeMap<Integer, String> values = new TreeMap<Integer, String>();
 
 	private Multimap<String, List<Integer>> reverseKeys = new Multimap<String, List<Integer>>();

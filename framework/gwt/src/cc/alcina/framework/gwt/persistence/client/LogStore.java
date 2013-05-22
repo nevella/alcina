@@ -110,7 +110,7 @@ public class LogStore {
 
 	private int lastCookieId;
 
-	protected ObjectStore objectStore;
+	protected PersistenceObjectStore objectStore;
 
 	protected LogStore() {
 		String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);
@@ -184,7 +184,7 @@ public class LogStore {
 		}
 	}
 
-	public void registerDelegate(ObjectStore objectStore) {
+	public void registerDelegate(PersistenceObjectStore objectStore) {
 		this.objectStore = objectStore;
 	}
 

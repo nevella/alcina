@@ -13,7 +13,7 @@ import java.util.Map.Entry;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -34,7 +34,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  * @param hasIdAndLocalId
  * @param obj
  */
-public class MapObjectLookup implements ObjectLookup {
+public class MapObjectLookup implements ObjectStore {
 	private static final String REGISTERING_OBJECTS = "Registering objects";
 
 	private final PropertyChangeListener listener;
@@ -99,6 +99,7 @@ public class MapObjectLookup implements ObjectLookup {
 				: new FastIdLookupDev(c, fastInfo.get(c));
 	}
 
+	@Override
 	public void changeMapping(HasIdAndLocalId obj, long id, long localId) {
 		Class<? extends HasIdAndLocalId> clazz = obj.getClass();
 		FastIdLookup lookup = ensureLookup(clazz);
@@ -113,6 +114,7 @@ public class MapObjectLookup implements ObjectLookup {
 		mapObject(obj);
 	}
 
+	@Override
 	public void deregisterObject(HasIdAndLocalId hili) {
 		if (hili == null) {
 			return;
@@ -127,6 +129,7 @@ public class MapObjectLookup implements ObjectLookup {
 		}
 	}
 
+	@Override
 	public void deregisterObjects(Collection<HasIdAndLocalId> objects) {
 		if (objects == null) {
 			return;
@@ -136,10 +139,12 @@ public class MapObjectLookup implements ObjectLookup {
 		}
 	}
 
-	public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> getCollnMap() {
+	@Override
+	public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> getCollectionMap() {
 		return this.perClassLookups.getCollnMap();
 	}
 
+	@Override
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		FastIdLookup lookup = perClassLookups.getLookup(c);
@@ -153,6 +158,7 @@ public class MapObjectLookup implements ObjectLookup {
 		}
 	}
 
+	@Override
 	public HasIdAndLocalId getObject(HasIdAndLocalId bean) {
 		return (HasIdAndLocalId) getObject(bean.getClass(), bean.getId(),
 				bean.getLocalId());
@@ -197,6 +203,7 @@ public class MapObjectLookup implements ObjectLookup {
 		});
 	}
 
+	@Override
 	public void registerObjects(Collection objects) {
 		mappedObjects = new PerClassLookup();
 		for (Object o : objects) {
@@ -273,6 +280,7 @@ public class MapObjectLookup implements ObjectLookup {
 		mappedObjects.put(obj);
 	}
 
+	@Override
 	public void mapObject(HasIdAndLocalId obj) {
 		mappedObjects = new PerClassLookup();
 		addObjectOrCollectionToEndOfQueue(obj);
@@ -284,6 +292,7 @@ public class MapObjectLookup implements ObjectLookup {
 		// block is still being registered)
 	}
 
+	@Override
 	public void removeListeners() {
 		for (FastIdLookup lookup : perClassLookups.lookups.values()) {
 			for (HasIdAndLocalId o : lookup.values()) {
@@ -295,6 +304,7 @@ public class MapObjectLookup implements ObjectLookup {
 		}
 	}
 
+	@Override
 	public <T> Collection<T> getCollection(Class<T> clazz) {
 		return (Collection<T>) ensureLookup(clazz).values();
 	}

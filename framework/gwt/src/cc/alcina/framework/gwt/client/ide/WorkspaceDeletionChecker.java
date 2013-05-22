@@ -46,7 +46,7 @@ public class WorkspaceDeletionChecker {
 	public boolean checkPropertyRefs(HasIdAndLocalId singleObj) {
 		Class<? extends Object> clazz = singleObj.getClass();
 		Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> map = TransformManager
-				.get().getDomainObjects().getCollnMap();
+				.get().getDomainObjects().getCollectionMap();
 		String message = "";
 		String template = TextProvider.get().getUiObjectText(getClass(),
 				"unable-to-delete-detail",

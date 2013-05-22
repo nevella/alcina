@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectL
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoManager;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
@@ -90,7 +91,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return hili.getId() != 0 ? hili.getId() + "" : hili.getLocalId() + "L";
 	}
 
-	private MapObjectLookup domainObjects;
+	private ObjectStore domainObjects;
 
 	private static long eventIdCounter = 0;
 
@@ -278,6 +279,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 							event.getObjectLocalId());
 			hili.setLocalId(event.getObjectLocalId());
 			if (hili.getId() == 0) {// replay from server -
+				//huh? unless newInstance does something weird, should never reach here
 				hili.setId(event.getObjectId());
 			}
 			event.setObjectId(hili.getId());
@@ -470,7 +472,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return getDomainObjects().getCollection(clazz);
 	}
 
-	public MapObjectLookup getDomainObjects() {
+	public ObjectStore getDomainObjects() {
 		return this.domainObjects;
 	}
 
@@ -928,7 +930,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			getDomainObjects().removeListeners();
 		}
 		createObjectLookup();
-		getDomainObjects().registerAsync(h.registerableDomainObjects(),
+		((MapObjectLookup)getDomainObjects()).registerAsync(h.registerableDomainObjects(),
 				new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -1185,7 +1187,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	protected void setDomainObjects(MapObjectLookup domainObjects) {
+	protected void setDomainObjects(ObjectStore domainObjects) {
 		this.domainObjects = domainObjects;
 	}
 
@@ -1389,7 +1391,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				lookup = new Multimap<K, List<V>>();
 				pils.clear();
 				Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> m = TransformManager
-						.get().getDomainObjects().getCollnMap();
+						.get().getDomainObjects().getCollectionMap();
 				for (Class clazz : m.keySet()) {
 					if (parentClass != null && parentClass != clazz) {
 						continue;
