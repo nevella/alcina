@@ -485,9 +485,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public HasIdAndLocalId getObject(DomainTransformEvent dte) {
-		HasIdAndLocalId obj = CommonLocator
-				.get()
-				.objectLookup()
+		HasIdAndLocalId obj = getObjectLookup()
 				.getObject(dte.getObjectClass(), dte.getObjectId(),
 						dte.getObjectLocalId());
 		if (obj == null && dte.getSource() != null) {
@@ -499,8 +497,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return obj;
 	}
 
+	protected ObjectLookup getObjectLookup() {
+		return CommonLocator
+				.get()
+				.objectLookup();
+	}
+
 	public <T extends HasIdAndLocalId> T getObject(T hili) {
-		return (T) CommonLocator.get().objectLookup()
+		return (T) getObjectLookup()
 				.getObject(hili.getClass(), hili.getId(), hili.getLocalId());
 	}
 
@@ -517,7 +521,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Class valueClass = evt.getValueClass();
 		if (evt.getNewValue() != null || valueClass == null) {
 			if (evt.getNewValue() instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = CommonLocator.get().objectLookup()
+				HasIdAndLocalId hili = getObjectLookup()
 						.getObject((HasIdAndLocalId) evt.getNewValue());
 				if (hili != null) {
 					return hili;
@@ -557,9 +561,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return e;
 		}
 		if (evt.getValueId() != 0 || evt.getValueLocalId() != 0) {
-			HasIdAndLocalId object = CommonLocator
-					.get()
-					.objectLookup()
+			HasIdAndLocalId object = getObjectLookup()
 					.getObject(valueClass, evt.getValueId(),
 							evt.getValueLocalId());
 			if (object != null) {
@@ -1112,7 +1114,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			CollectionModificationSupport.queue(true);
 			for (Object o : objects) {
 				if (o instanceof HasIdAndLocalId
-						&& CommonLocator.get().objectLookup()
+						&& getObjectLookup()
 								.getObject((HasIdAndLocalId) o) == null) {
 					HasIdAndLocalId hili = (HasIdAndLocalId) o;
 					// if this is a new object, we want to register a blank

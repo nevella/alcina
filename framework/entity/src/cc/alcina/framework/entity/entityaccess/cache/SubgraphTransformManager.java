@@ -4,20 +4,29 @@ import javax.print.attribute.SetOfIntegerSyntax;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 
-public class SubgraphTransformManager extends TransformManager{
+public class SubgraphTransformManager extends TransformManager {
 	private DetachedCacheObjectStore store;
-	public SubgraphTransformManager(){
+
+	public SubgraphTransformManager() {
 		super();
 		createObjectLookup();
 	}
+
 	@Override
 	protected void createObjectLookup() {
 		store = new DetachedCacheObjectStore();
 		setDomainObjects(store);
 	}
-	public DetachedEntityCache getDetachedEntityCache(){
+
+	public DetachedEntityCache getDetachedEntityCache() {
 		return store.cache;
+	}
+
+	@Override
+	protected ObjectLookup getObjectLookup() {
+		return store;
 	}
 }

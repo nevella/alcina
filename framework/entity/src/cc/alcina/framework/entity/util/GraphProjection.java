@@ -168,9 +168,7 @@ public class GraphProjection {
 	}
 
 	private boolean permitField(Field field, Object source) throws Exception {
-		PropertyPermissions pp = field.getDeclaringClass()
-				.getMethod(SEUtilities.getAccessorName(field), new Class[0])
-				.getAnnotation(PropertyPermissions.class);
+		PropertyPermissions pp = perFieldPermission.get(field);
 		if (pp != null) {
 			AnnotatedPermissible ap = new AnnotatedPermissible(pp.read());
 			return PermissionsManager.get().isPermissible(source, ap);
@@ -182,7 +180,9 @@ public class GraphProjection {
 
 	Map<Class, Set<Field>> perObjectPermissionFields = new HashMap<Class, Set<Field>>();
 
-	private Field[] getFieldsForClass(Object projected) {
+	Map<Field, PropertyPermissions> perFieldPermission = new HashMap<Field, PropertyPermissions>();
+
+	private Field[] getFieldsForClass(Object projected) throws Exception {
 		Class<? extends Object> clazz = projected.getClass();
 		if (!projectableFields.containsKey(clazz)) {
 			List<Field> allFields = new ArrayList<Field>();
@@ -209,6 +209,14 @@ public class GraphProjection {
 			projectableFields.put(clazz,
 					(Field[]) allFields.toArray(new Field[allFields.size()]));
 			perObjectPermissionFields.put(clazz, dynamicPermissionFields);
+			for (Field field : dynamicPermissionFields) {
+				PropertyPermissions pp = field
+						.getDeclaringClass()
+						.getMethod(SEUtilities.getAccessorName(field),
+								new Class[0])
+						.getAnnotation(PropertyPermissions.class);
+				perFieldPermission.put(field, pp);
+			}
 		}
 		return projectableFields.get(clazz);
 	}
