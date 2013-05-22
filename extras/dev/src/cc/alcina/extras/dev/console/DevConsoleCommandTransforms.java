@@ -116,9 +116,8 @@ public class DevConsoleCommandTransforms {
 			@Override
 			public String getFilter(String value) {
 				value = CommonUtils.isNullOrEmpty(value) ? "-1" : value;
-				return String.format(
-						value.contains(",") ? "clientinstanceid in (%s)"
-								: "clientinstanceid=%s", value);
+				return String.format(value.contains(",") ? "ci.id in (%s)"
+						: "ci.id=%s", value);
 			}
 
 			@Override
@@ -128,7 +127,27 @@ public class DevConsoleCommandTransforms {
 
 			@Override
 			protected boolean hasDefault() {
-				return true;
+				return false;
+			}
+		}
+
+		public static class CmdListClientLogRecordsFilterUserId extends
+				CmdListClientLogRecordsFilter {
+			@Override
+			public String getFilter(String value) {
+				value = CommonUtils.isNullOrEmpty(value) ? "-1" : value;
+				return String.format(value.contains(",") ? "u.id in (%s)"
+						: "u.id=%s", value);
+			}
+
+			@Override
+			public String getKey() {
+				return "us";
+			}
+
+			@Override
+			protected boolean hasDefault() {
+				return false;
 			}
 		}
 
@@ -136,7 +155,7 @@ public class DevConsoleCommandTransforms {
 				CmdListClientLogRecordsFilter {
 			@Override
 			public String getFilter(String value) {
-				return String.format("message ilike '%%%s%%'", value);
+				return String.format("clr.message ilike '%%%s%%'", value);
 			}
 
 			@Override
@@ -166,7 +185,7 @@ public class DevConsoleCommandTransforms {
 						strs.add(keys.get(key));
 					}
 				}
-				return String.format("%s topic in %s", notClause,
+				return String.format("%s clr.topic in %s", notClause,
 						EntityUtils.stringListToClause(strs));
 			}
 
@@ -184,14 +203,19 @@ public class DevConsoleCommandTransforms {
 		@Override
 		public String run(String[] argv) throws Exception {
 			if (argv.length == 0) {
-				return "Usage: trl {-t: trim message} ({ci|top|mes} value)+ - top is topic {!}{s|m|c|t}";
+				return "Usage: trl {-t: trim message}{-l: single-line message} ({ci|top|mes|us} value)+ - top is topic {!}{s|m|c|t}";
 			}
-			String sql = "select time, topic,%s from clientlogrecord where "
-					+ " %s order by id desc";
+			String sql = "select clr.time, clr.topic,%s from "
+					+ "clientlogrecord clr inner join "
+					+ " client_instance ci on clr.clientinstanceid = ci.id "
+					+ " inner join users u " + "on ci.user_id=u.id " + "where "
+					+ " %s order by clr.id desc";
 			FilterArgvResult f = new FilterArgvResult(argv, "-t");
-			String messageSelect = f.contains ? "substr(replace(message,'\\n','\\\\n'),0,80)"
-					: "message";
-			argv = f.argv;
+			FilterArgvResult f2 = new FilterArgvResult(f.argv, "-l");
+			String messageSelect = f.contains ? "substr(replace(clr.message,'\\n','\\\\n'),0,80)"
+					: f2.contains ? "replace(clr.message,'\\n','\\\\n')"
+							: "clr.message";
+			argv = f2.argv;
 			String filter = DevConsoleFilter.getFilters(
 					CmdListClientLogRecordsFilter.class, argv, null);
 			Connection conn = getConn();
