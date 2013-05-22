@@ -8,6 +8,7 @@ public class ReplayInstruction {
 		CLICK, CHANGE, HISTORY, COMMENT, CONTAINER
 	}
 	public static final String ALLOW_MULTIPLE_TARGETS = "allow-multiple-targets";
+	public static final String LONG_TIMEOUT = "long-timeout";
 	public ReplayInstructionType type;
 
 	public String param1;
@@ -17,6 +18,10 @@ public class ReplayInstruction {
 	
 	public boolean isAllowMultipleTargets(){
 		return type==ReplayInstructionType.CLICK&&param2!=null&&param2.contains(ALLOW_MULTIPLE_TARGETS);
+	}
+	
+	public boolean isLongTimeout(){
+		return type==ReplayInstructionType.CLICK&&param2!=null&&param2.contains(LONG_TIMEOUT);
 	}
 
 	public ReplayInstruction() {
