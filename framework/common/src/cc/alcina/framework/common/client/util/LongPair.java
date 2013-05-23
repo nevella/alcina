@@ -3,7 +3,9 @@
  */
 package cc.alcina.framework.common.client.util;
 
-public class LongPair implements Comparable<LongPair> {
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+
+public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 	public long l1;
 
 	public long l2;
@@ -22,7 +24,7 @@ public class LongPair implements Comparable<LongPair> {
 
 	@Override
 	public int hashCode() {
-		return Long.valueOf(l1).hashCode()^ Long.valueOf(l2).hashCode();
+		return Long.valueOf(l1).hashCode() ^ Long.valueOf(l2).hashCode();
 	}
 
 	public LongPair(long l1, long l2) {
@@ -95,5 +97,10 @@ public class LongPair implements Comparable<LongPair> {
 
 	public boolean containsExBoundaries(LongPair other) {
 		return contains(other) && l1 < other.l1 && l2 > other.l2;
+	}
+
+	@Override
+	public boolean allow(Long o) {
+		return o != null && o >= l1 && o < l2;
 	}
 }

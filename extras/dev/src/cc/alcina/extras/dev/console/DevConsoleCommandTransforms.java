@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.persistence.Table;
@@ -21,10 +22,13 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
@@ -36,6 +40,29 @@ import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 
 public class DevConsoleCommandTransforms {
+	public static class LogsToDtrs{
+		public LogsToDtrs() {
+		}
+		
+		public Multimap<Long, List<DomainTransformEvent>> logsToDtrs(String logFile){
+			Pattern lfPat=Pattern.compile("\\s*(\\d{4}.+?)\\s+\\| transform\\s+\\| (\\d+)\\s+\\|(.+)");
+			Multimap<Long, List<DomainTransformEvent>> result=new Multimap<Long, List<DomainTransformEvent>>();
+			String[] split = logFile.split("\n");
+			List<String> strs=new ArrayList<String>(Arrays.asList(split));
+			Collections.reverse(strs);
+			for(String line:strs){
+				Matcher m = lfPat.matcher(line);
+				if(m.matches()){
+					long clId=Long.parseLong(m.group(2));
+					String transforms=m.group(3);
+					transforms=transforms.replace("\\nlc7x--", "\n");
+					List<DomainTransformEvent> dtes = new PlaintextProtocolHandler().deserialize(transforms);
+					result.addCollection(clId, dtes);
+				}
+			}
+			return result;
+		}
+	}
 	public static class CmdListClientInstances extends DevConsoleCommand {
 		@Override
 		public boolean canUseProductionConn() {
@@ -213,7 +240,7 @@ public class DevConsoleCommandTransforms {
 					+ " client_instance ci on clr.clientinstanceid = ci.id "
 					+ " inner join users u " + "on ci.user_id=u.id " + "where "
 					+ " %s order by clr.id desc";
-			String metaSelect = f3.contains ? "" : "clr.time, clr.topic,";
+			String metaSelect = f3.contains ? "" : "clr.time, clr.topic, ci.id, ";
 			String messageSelect = f.contains ? "substr(replace(clr.message,'\\n','\\\\n'),0,80)"
 					: f2.contains ? "replace(clr.message,'\\n','\\\\nlc7x--')"
 							: "clr.message";
