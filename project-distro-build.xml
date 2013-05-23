@@ -66,7 +66,7 @@
 		<delete file="${j2ee-server.unear.target}.deployed" />
 		<delete dir="${j2ee-server.unear.target}" />
 	</target>
-	<target name="prepare-war">
+	<target name="prepare-war-base">
 		<mkdir dir="${project.gwt.build.dir}" />
 		<mkdir dir="${project.gwt.client.imgs.2.tgt}" />
 		<mkdir dir="${project.gwt.client.imgs.1.tgt}" />
@@ -85,7 +85,8 @@
 				<include name="**/*" />
 			</fileset>
 		</copy>
-
+	</target>
+	<target name="prepare-war" depends="prepare-war-base">
 	</target>
 	<target name="run-jvm-serialization-policy-helper" depends="prepare-war">
 		<java classname="cc.alcina.framework.servlet.JvmSerializationPolicyBuildHelper" fork="yes" classpath="${framework.servlet.build.dir}">
