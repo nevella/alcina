@@ -1,5 +1,8 @@
 package cc.alcina.extras.dev.console;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,7 +12,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,15 +27,19 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRSimpleSerialSerializer;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -60,8 +69,60 @@ public class DevConsoleCommandTransforms {
 					result.addCollection(clId, dtes);
 				}
 			}
+			for(List<DomainTransformEvent> dtes:result.values()){
+				Collections.sort(dtes,DomainTransformEvent.UTC_DATE_COMPARATOR);
+				DomainTransformEvent last=null;
+				for(Iterator<DomainTransformEvent> itr=dtes.iterator();itr.hasNext();){
+					DomainTransformEvent current = itr.next();
+					if(last!=null&&last.toString().equals(current.toString())){
+						itr.remove();
+					}
+					last=current;
+				}
+			}
 			return result;
 		}
+
+		public Multimap<Long, List<DomainTransformEvent>> dtrExpsToCliDteMap(
+				String folderPath) throws Exception {
+			Multimap<Long, List<DomainTransformEvent>> result=new Multimap<Long, List<DomainTransformEvent>>();
+			List<DTRSimpleSerialWrapper> wrappers = new ArrayList<DTRSimpleSerialWrapper>();
+			List<File> files = new ArrayList<File>(Arrays.asList(new File(folderPath)
+					.listFiles(new FileFilter() {
+						@Override
+						public boolean accept(File pathname) {
+							return NUMERIC_FN_PATTERN.matcher(
+									pathname.getName()).matches();
+						}
+					})));
+			Collections.sort(files, new LongFnComparator());
+			int processedIndex = 0;
+			for (; processedIndex < files.size();) {
+				File f = files.get(processedIndex++);
+				String ser = ResourceUtilities.readFileToStringGz(f);
+				DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialSerializer()
+						.read(ser);
+				DomainTransformRequest rq = new DomainTransformRequest();
+				rq.fromString(wrapper.getText());
+				result.addCollection(wrapper.getClientInstanceId(), rq.getEvents());
+			}
+			return result;
+		}
+		private static final Pattern NUMERIC_FN_PATTERN = Pattern
+				.compile("(\\d+)\\.(?:txt\\.gz|txt)");
+		private static class LongFnComparator implements Comparator<File> {
+			@Override
+			public int compare(File o1, File o2) {
+				Matcher m1 = NUMERIC_FN_PATTERN.matcher(o1.getName());
+				m1.find();
+				long l1 = Long.parseLong(m1.group(1));
+				Matcher m2 = NUMERIC_FN_PATTERN.matcher(o2.getName());
+				m2.find();
+				long l2 = Long.parseLong(m2.group(1));
+				return CommonUtils.compareLongs(l1, l2);
+			}
+		}
+
 	}
 	public static class CmdListClientInstances extends DevConsoleCommand {
 		@Override

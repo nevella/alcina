@@ -98,6 +98,26 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
+	public static class FilterArgvParam {
+		public String[] argv;
+
+		public String value;
+
+		public FilterArgvParam(String[] argv, String key) {
+			List<String> strs = new ArrayList<String>(Arrays.asList(argv));
+			int i = strs.indexOf(key);
+			if (i != -1) {
+				strs.remove(i);
+				value = strs.remove(i);
+			}
+			this.argv = (String[]) strs.toArray(new String[strs.size()]);
+		}
+
+		public String valueOrDefault(String defaultValue) {
+			return value != null ? value : defaultValue;
+		}
+	}
+
 	public boolean canUseProductionConn() {
 		return false;
 	}
