@@ -138,22 +138,23 @@ public interface CommonPersistenceLocal {
 	 */
 	public TransformCache warmupTransformCache();
 
-
-	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz, Collection<Long> ids,
+	public <T> List<T> getItemsByIdsAndClean(Class<T> clazz,
+			Collection<Long> ids,
 			InstantiateImplCallback instantiateImplCallback);
 
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId);
+			long fromId, long toId, String specificIds);
 
 	public <US extends IUser> US getCleanedUserById(long userId);
 
 	public <T> T findImplInstance(Class<? extends T> clazz, long id);
 
 	public abstract <T> T getItemByKeyValue(Class<T> clazz, String key,
-			Object value, boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive);
+			Object value, boolean createIfNonexistent, Long ignoreId,
+			boolean caseInsensitive);
 
-	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<? extends T> c, long wrappedObjectId)
-			throws Exception;
+	public <T extends WrapperPersistable> T getWrappedObjectForUser(
+			Class<? extends T> c, long wrappedObjectId) throws Exception;
 
 	public void persistClientLogRecords(List<ClientLogRecords> records);
 

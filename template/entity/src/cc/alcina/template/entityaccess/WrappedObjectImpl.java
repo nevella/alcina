@@ -90,17 +90,7 @@ public class WrappedObjectImpl<T extends WrapperPersistable> extends
 
 	private String serializedXml;
 
-	private String key;
-
 	private T object;
-
-	public String getKey() {
-		return this.key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
-	}
 
 	public String getClassName() {
 		return className;

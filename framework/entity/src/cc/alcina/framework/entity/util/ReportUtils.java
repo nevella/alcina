@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
 
 public class ReportUtils {
-
 	public static void dumpTable(LookupMapToMap<String> values,
 			List<String> columnNames) {
 		Map<Integer, Integer> colWidthMap = new HashMap<Integer, Integer>();
@@ -25,22 +24,28 @@ public class ReportUtils {
 				colWidthMap.put(col, max);
 			}
 		}
-		for (int col = 0; col < cols; col++) {
-			System.out.format(" %-" + colWidthMap.get(col) + "s  |",
-					columnNames.get(col));
-		}
-		System.out.println();
-		for (int col = 0; col < cols; col++) {
-			System.out.format(CommonUtils.padStringLeft("----",
-					colWidthMap.get(col) + 6, "-"));
+		if (cols > 1) {
+			for (int col = 0; col < cols; col++) {
+				System.out.format(" %-" + colWidthMap.get(col) + "s  |",
+						columnNames.get(col));
+			}
+			System.out.println();
+			for (int col = 0; col < cols; col++) {
+				System.out.format(CommonUtils.padStringLeft("----",
+						colWidthMap.get(col) + 6, "-"));
+			}
 		}
 		System.out.println();
 		for (int row = 0; row < rows; row++) {
-			for (int col = 0; col < cols; col++) {
-				System.out.format(" %-" + colWidthMap.get(col) + "s  |",
-						values.get(row, col));
+			if (cols == 1) {
+				System.out.println(values.get(row, 0));
+			} else {
+				for (int col = 0; col < cols; col++) {
+					System.out.format(" %-" + colWidthMap.get(col) + "s  |",
+							values.get(row, col));
+				}
+				System.out.println();
 			}
-			System.out.println();
 		}
 	}
 }

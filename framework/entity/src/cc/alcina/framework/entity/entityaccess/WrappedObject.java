@@ -44,10 +44,6 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 
 	public abstract void setObject(T object);
 
-	public abstract String getKey();
-
-	public abstract void setKey(String key);
-
 	@Lob
 	public abstract String getSerializedXml();
 

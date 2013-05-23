@@ -938,4 +938,10 @@ public class CommonUtils {
 	public static void formatOut(String string, Object... objects) {
 		System.out.println(formatJ(string, objects));
 	}
+
+	public static int compareDates(Date d1, Date d2) {
+		long t1 = d1 == null ? 0 : d1.getTime();
+		long t2 = d2 == null ? 0 : d2.getTime();
+		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
+	}
 }

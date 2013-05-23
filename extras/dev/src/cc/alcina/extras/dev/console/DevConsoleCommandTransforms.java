@@ -203,23 +203,25 @@ public class DevConsoleCommandTransforms {
 		@Override
 		public String run(String[] argv) throws Exception {
 			if (argv.length == 0) {
-				return "Usage: trl {-t: trim message}{-l: single-line message} ({ci|top|mes|us} value)+ - top is topic {!}{s|m|c|t}";
+				return "Usage: trl {-t: trim message}{-l: single-line message}{-m: message only} ({ci|top|mes|us} value)+ - top is topic {!}{s|m|c|t}";
 			}
-			String sql = "select clr.time, clr.topic,%s from "
+			FilterArgvResult f = new FilterArgvResult(argv, "-t");
+			FilterArgvResult f2 = new FilterArgvResult(f.argv, "-l");
+			FilterArgvResult f3 = new FilterArgvResult(f2.argv, "-m");
+			String sql = "select %s%s from "
 					+ "clientlogrecord clr inner join "
 					+ " client_instance ci on clr.clientinstanceid = ci.id "
 					+ " inner join users u " + "on ci.user_id=u.id " + "where "
 					+ " %s order by clr.id desc";
-			FilterArgvResult f = new FilterArgvResult(argv, "-t");
-			FilterArgvResult f2 = new FilterArgvResult(f.argv, "-l");
+			String metaSelect = f3.contains ? "" : "clr.time, clr.topic,";
 			String messageSelect = f.contains ? "substr(replace(clr.message,'\\n','\\\\n'),0,80)"
-					: f2.contains ? "replace(clr.message,'\\n','\\\\n')"
+					: f2.contains ? "replace(clr.message,'\\n','\\\\nlc7x--')"
 							: "clr.message";
-			argv = f2.argv;
+			argv = f3.argv;
 			String filter = DevConsoleFilter.getFilters(
 					CmdListClientLogRecordsFilter.class, argv, null);
 			Connection conn = getConn();
-			sql = String.format(sql, messageSelect, filter);
+			sql = String.format(sql, metaSelect, messageSelect, filter);
 			System.out.println(console.breakAndPad(1, 80, sql, 0));
 			PreparedStatement ps = conn.prepareStatement(sql);
 			ResultSet rs = ps.executeQuery();

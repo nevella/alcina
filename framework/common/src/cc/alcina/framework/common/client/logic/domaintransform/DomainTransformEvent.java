@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Date;
 
 import javax.persistence.Lob;
@@ -370,4 +371,11 @@ public class DomainTransformEvent implements Serializable,
 	public boolean provideIsIdEvent(Class clazz) {
 		return objectClass == clazz && "id".equals(propertyName);
 	}
+
+	public static transient final Comparator<DomainTransformEvent> UTC_DATE_COMPARATOR = new Comparator<DomainTransformEvent>() {
+		@Override
+		public int compare(DomainTransformEvent o1, DomainTransformEvent o2) {
+			return CommonUtils.compareDates(o1.getUtcDate(), o2.getUtcDate());
+		}
+	};
 }

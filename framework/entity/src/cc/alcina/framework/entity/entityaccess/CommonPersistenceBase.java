@@ -388,13 +388,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId) {
+			long fromId, long toId, String specificIds) {
+		String idFilter = specificIds == null ? String.format(
+				"dtrp.id>=%s and dtrp.id<=%s", fromId, toId) : String.format(
+				"dtrp.id in (%s)", specificIds);
 		String eql = String.format("select distinct dtrp " + "from %s dtrp "
 				+ "inner join fetch dtrp.events "
-				+ "inner join fetch dtrp.clientInstance "
-				+ " where dtrp.id>=%s and dtrp.id<=%s " + "order by dtrp.id",
+				+ "inner join fetch dtrp.clientInstance " + " where %s "
+				+ "order by dtrp.id",
 				getImplementation(DomainTransformRequestPersistent.class)
-						.getSimpleName(), fromId, toId);
+						.getSimpleName(), idFilter);
 		List<DomainTransformRequestPersistent> dtrps = new ArrayList<DomainTransformRequestPersistent>(
 				getEntityManager().createQuery(eql).getResultList());
 		return new EntityUtils().detachedClone(dtrps, EntityLayerLocator.get()
