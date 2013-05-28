@@ -83,6 +83,13 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		}
 	}
 
+	public static Link createHrefNoUnderline(String text, String href) {
+		Link link = new Link(text);
+		link.setHref(href);
+		link.setStyleName("link-no-underline");
+		return link;
+	}
+
 	public Link(String string, ClickHandler handler) {
 		this(string, false, handler);
 	}

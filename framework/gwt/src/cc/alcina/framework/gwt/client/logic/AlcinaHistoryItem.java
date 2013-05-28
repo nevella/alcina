@@ -210,6 +210,9 @@ public class AlcinaHistoryItem {
 		return result;
 	}
 
+	public String toHref(){
+		return "#"+toTokenString();
+	}
 	public String toTokenString() {
 		return AlcinaHistory.toHash(params);
 	}

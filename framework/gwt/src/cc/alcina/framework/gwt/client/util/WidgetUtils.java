@@ -391,8 +391,9 @@ public class WidgetUtils {
 			tempPositioningText = null;
 		}
 	}
-	public static boolean hasTempPositioningText(){
-		return tempPositioningText!=null;
+
+	public static boolean hasTempPositioningText() {
+		return tempPositioningText != null;
 	}
 
 	public static void maximiseWidget(Widget widget) {
@@ -859,5 +860,35 @@ public class WidgetUtils {
 					: null;
 		}
 		return e;
+	}-*/;
+
+	public static native String getComputedStyleProperty(Element elem,
+			String strCssRule) /*-{
+		if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
+			strValue = $doc.defaultView.getComputedStyle(elem, "").getPropertyValue(
+					strCssRule);
+		} else if (oElm.currentStyle) {
+			strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
+				return p1.toUpperCase();
+			});
+			strValue = oElm.currentStyle[strCssRule];
+		}
+		return strValue;
+	}-*/;
+
+	public static native int getOffsetHeightWithMargins(Element elem) /*-{
+		if(elem.style.display=='none'){
+			return 0;
+		}
+		var h = elem.offsetHeight;
+		var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+		var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+		if(marginTop.indexOf("px")!=-1){
+			h+=parseInt(marginTop.substring(0,marginTop.length-2));
+		}
+		if(marginBottom.indexOf("px")!=-1){
+			h+=parseInt(marginBottom.substring(0,marginBottom.length-2));
+		}
+		return h;
 	}-*/;
 }
