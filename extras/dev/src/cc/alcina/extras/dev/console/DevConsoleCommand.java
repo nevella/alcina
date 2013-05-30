@@ -1042,4 +1042,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return "";
 		}
 	}
+
+	public boolean clsBeforeRun() {
+		return false;
+	}
 }

@@ -335,7 +335,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			consoleRight.setText("");
 			long l1 = System.currentTimeMillis();
 			c.configure();
-			
+			if(c.clsBeforeRun()){
+				clear();
+			}
 			String msg = c
 					.run((String[]) args.toArray(new String[args.size()]));
 			c.cleanup();
