@@ -255,9 +255,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			@Override
 			public void onBlur(BlurEvent event) {
 				if (System.currentTimeMillis() - ignoreNextBlur < 100) {
-					handleFilterBlur();
-				} else {
 					ignoreNextBlur = 0;
+				} else {
+					handleFilterBlur();
 				}
 			}
 		});

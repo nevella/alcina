@@ -877,17 +877,17 @@ public class WidgetUtils {
 	}-*/;
 
 	public static native int getOffsetHeightWithMargins(Element elem) /*-{
-		if(elem.style.display=='none'){
+		if (elem.style.display == 'none') {
 			return 0;
 		}
 		var h = elem.offsetHeight;
 		var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
 		var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-		if(marginTop.indexOf("px")!=-1){
-			h+=parseInt(marginTop.substring(0,marginTop.length-2));
+		if (marginTop.indexOf("px") != -1) {
+			h += parseInt(marginTop.substring(0, marginTop.length - 2));
 		}
-		if(marginBottom.indexOf("px")!=-1){
-			h+=parseInt(marginBottom.substring(0,marginBottom.length-2));
+		if (marginBottom.indexOf("px") != -1) {
+			h += parseInt(marginBottom.substring(0, marginBottom.length - 2));
 		}
 		return h;
 	}-*/;
