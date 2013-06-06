@@ -86,7 +86,6 @@ public class BreadcrumbBar extends Composite {
 		addButtons();
 		initWidget(fp);
 	}
-
 	private void addButtons() {
 		if (buttons == null) {
 			return;
