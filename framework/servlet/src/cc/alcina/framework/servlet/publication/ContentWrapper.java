@@ -184,6 +184,8 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		public String description;
 
 		public boolean footer;
+		
+		public boolean narrow;
 
 		public boolean css31;
 
