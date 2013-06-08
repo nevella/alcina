@@ -62,6 +62,20 @@ public interface KeyValueMapper<K, V, O> {
 		};
 	}
 
+	public static class ConverterMapper<K, V> extends
+			FromObjectKeyValueMapper<K, V> {
+		private Converter<? super V, K> converter;
+
+		public ConverterMapper(Converter<? super V, K> converter) {
+			this.converter = converter;
+		}
+
+		@Override
+		public K getKey(V o) {
+			return converter.convert(o);
+		}
+	}
+
 	public static class SelfMapper<V> implements KeyValueMapper<V, V, V> {
 		@Override
 		public V getKey(V o) {
