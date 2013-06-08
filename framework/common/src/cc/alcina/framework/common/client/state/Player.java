@@ -8,26 +8,32 @@ import java.util.Collection;
  * -- provides :: use to satisfy other dependencies (only run if required, as well)
  *
  */
-public abstract class Player {
+public abstract class Player<D> {
 	public static final transient int LOW = 1;
 
 	public static final transient int PRIORITY_NORMAL = 100;
 
 	public static final transient int PRIORITY_IMMEDIATE = 1000;
 
-	private Runnable runnable;
+	protected Runnable runnable;
 
-	private Consort consort;
+	private Consort<D> consort;
 
 	public Player(Runnable runnable) {
 		this.runnable = runnable;
 	}
-
-	public Collection getDependencies() {
+	/*
+	 * normally, call resolveRequires()
+	 */
+	public Collection<D> getRequires() {
 		return null;
 	}
+	
+	public Collection<D> resolveRequires(){
+		return consort.resolveRequires(this);
+	}
 
-	public Collection getPreconditions() {
+	public Collection<D> getPreconditions() {
 		return null;
 	}
 
@@ -35,11 +41,12 @@ public abstract class Player {
 		return PRIORITY_NORMAL;
 	}
 
-	public Collection getProvides() {
+	public Collection<D> getProvides() {
 		return null;
 	}
+	
 
-	public Consort getConsort() {
+	public Consort<D> getConsort() {
 		return this.consort;
 	}
 
@@ -52,7 +59,7 @@ public abstract class Player {
 		wasPlayed();
 	}
 
-	public void setConsort(Consort consort) {
+	public void setConsort(Consort<D> consort) {
 		this.consort = consort;
 	}
 
@@ -68,5 +75,13 @@ public abstract class Player {
 
 	public boolean isRemoveAfterPlay() {
 		return true;
+	}
+
+	public abstract static class RunnablePlayer<D> extends Player<D> implements
+			Runnable {
+		public RunnablePlayer() {
+			super(null);
+			runnable = this;
+		}
 	}
 }

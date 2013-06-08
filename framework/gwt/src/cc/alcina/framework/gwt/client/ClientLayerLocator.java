@@ -124,16 +124,18 @@ public class ClientLayerLocator {
 
 	public void registerClientBase(ClientBase base) {
 		this.clientBase = base;
+		Registry.get().registerSingleton(base,ClientBase.class);
 	}
 
 	public void registerCommonRemoteServiceAsyncProvider(
 			RemoteServiceProvider<? extends CommonRemoteServiceAsync> commonRemoteServiceAsyncProvider) {
 		this.commonRemoteServiceAsyncProvider = commonRemoteServiceAsyncProvider;
+		Registry.get().registerSingleton(commonRemoteServiceAsyncProvider,RemoteServiceProvider.class);
 	}
 
 	public void registerExceptionHandler(ClientExceptionHandler exceptionHandler) {
 		this.exceptionHandler = exceptionHandler;
-		Registry.get().registerSingleton(clientNotifications,ClientExceptionHandler.class);
+		Registry.get().registerSingleton(exceptionHandler,ClientExceptionHandler.class);
 		GWT.setUncaughtExceptionHandler(exceptionHandler);
 	}
 

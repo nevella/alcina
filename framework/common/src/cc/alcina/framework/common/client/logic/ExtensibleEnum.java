@@ -100,12 +100,12 @@ import com.totsp.gwittir.client.beans.Converter;
  * 
  */
 public abstract class ExtensibleEnum {
-	private static Map<Class<? extends ExtensibleEnum>, ExtensibleEnum> instanceLookup = new LinkedHashMap<Class<? extends ExtensibleEnum>, ExtensibleEnum>();
-
 	private static Multimap<Class<? extends ExtensibleEnum>, List<ExtensibleEnum>> superLookup = new Multimap<Class<? extends ExtensibleEnum>, List<ExtensibleEnum>>();
 
 	private static LookupMapToMap<ExtensibleEnum> valueLookup = new LookupMapToMap<ExtensibleEnum>(
 			2);
+
+	private String key;
 
 	public static <E extends ExtensibleEnum> E valueOf(Class<E> enumClass,
 			String name) {
@@ -116,11 +116,25 @@ public abstract class ExtensibleEnum {
 		return (List<E>) superLookup.get(enumClass);
 	}
 
+	public ExtensibleEnum(String key) {
+		this.key = key;
+		Class<? extends ExtensibleEnum> registryPoint = getClass();
+		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
+			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
+					.getSuperclass();
+		}
+		ExtensibleEnum existing = valueLookup.get(registryPoint,
+				serializedForm());
+		if (existing != null) {
+			throw new RuntimeException("Duplicate xtensible enum - "
+					+ serializedForm());
+		}
+		valueLookup.put(registryPoint, serializedForm(), this);
+		superLookup.add(registryPoint, this);
+	}
+
 	protected ExtensibleEnum() {
-		instanceLookup.put(getClass(), this);
-		superLookup.add((Class<? extends ExtensibleEnum>) getClass()
-				.getSuperclass(), this);
-		valueLookup.put(getClass().getSuperclass(), serializedForm(), this);
+		this(null);
 	}
 
 	public String name() {
@@ -129,8 +143,10 @@ public abstract class ExtensibleEnum {
 
 	public String serializedForm() {
 		String name = CommonUtils.simpleClassName(getClass());
-		return name.contains("_") ? name.substring(name.indexOf("_") + 1)
+		name = name.contains("_") ? name.substring(name.indexOf("_") + 1)
 				: name;
+		name += key == null ? "" : "$" + name;
+		return name;
 	}
 
 	@Override

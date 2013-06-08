@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -31,10 +31,16 @@ import cc.alcina.framework.common.client.util.LookupMapToMap;
 public class Registry {
 	public static final String MARKER_RESOURCE = "registry.properties";
 
+	private ClassLookup classLookup;
+
 	public static Registry get() {
 		return instance;
 	}
 
+	public void registerBootstrapServices(ClassLookup classLookup){
+		this.classLookup = classLookup;
+		
+	}
 	public static <V> V impl(Class<V> registryPoint) {
 		return get().impl0(registryPoint, void.class, false);
 	}
@@ -88,7 +94,7 @@ public class Registry {
 	@SuppressWarnings("unchecked")
 	public Object instantiateSingle(Class registryPoint, Class targetObject) {
 		Class lookupSingle = lookupSingle(registryPoint, targetObject, true);
-		return CommonLocator.get().classLookup().newInstance(lookupSingle);
+		return classLookup.newInstance(lookupSingle);
 	}
 
 	public Object instantiateSingleOrNull(Class registryPoint,
@@ -317,7 +323,7 @@ public class Registry {
 				false);
 		List<V> result = new ArrayList<V>();
 		for (Class c : impls) {
-			result.add((V) CommonLocator.get().classLookup().newInstance(c));
+			result.add((V) classLookup.newInstance(c));
 		}
 		return result;
 	}
@@ -328,7 +334,7 @@ public class Registry {
 		}
 		T impl = (T) singletons.get(clazz, void.class);
 		if (impl == null) {
-			impl = CommonLocator.get().classLookup().newInstance(clazz);
+			impl = classLookup.newInstance(clazz);
 			registerSingleton(impl, clazz);
 		}
 		return impl;

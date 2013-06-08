@@ -15,6 +15,8 @@ package cc.alcina.framework.gwt.client;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 import com.google.gwt.core.client.EntryPoint;
@@ -28,55 +30,28 @@ import com.google.gwt.user.client.Window.ClosingHandler;
  */
 public abstract class ClientBase implements EntryPoint, ClosingHandler,
 		CloseHandler<Window> {
-	public boolean isTestMode() {
-		return testMode;
-	}
-
-	public void setTestMode(boolean testMode) {
-		this.testMode = testMode;
-	}
-
-	private boolean testMode;
-
-	private boolean displayInitialised = false;
-
 	public void onWindowClosing(ClosingEvent event) {
+		windowClosing = true;
 		CommitToStorageTransformListener storage = ClientLayerLocator.get()
 				.getCommitToStorageTransformListener();
 		storage.setPaused(false);
-		// String msg = TextProvider.get().getUiObjectText(
-		// ClientBase.class,
-		// "commit-on-close-saving-final-changes-warning",
-		// "Please press 'cancel' to save recent changes");
-		// races can happen
+		String msg = TextProvider.get().getUiObjectText(ClientBase.class,
+				"commit-on-close-saving-final-changes-warning",
+				"Please press 'cancel' to save recent changes");
 		storage.flush();
 		if (storage.getCurrentState() == CommitToStorageTransformListener.COMMITTING
 				&& PermissionsManager.get().getOnlineState() != OnlineState.OFFLINE) {
-			event.setMessage(getSaveWhenClosedWarning());
+			event.setMessage(msg);
 		}
+		windowClosing = false;
 	}
 
-
-	private String saveWhenClosedWarning = "Please press 'cancel' to save recent changes";
+	private boolean windowClosing;
 
 	public void onClose(CloseEvent<Window> event) {
 	}
 
-	public void setDisplayInitialised(boolean displayInitialised) {
-		this.displayInitialised = displayInitialised;
+	public boolean isWindowClosing() {
+		return this.windowClosing;
 	}
-
-	public boolean isDisplayInitialised() {
-		return displayInitialised;
-	}
-
-	public String getSaveWhenClosedWarning() {
-		return this.saveWhenClosedWarning;
-	}
-
-	public void setSaveWhenClosedWarning(String saveWhenClosedWarning) {
-		this.saveWhenClosedWarning = saveWhenClosedWarning;
-	}
-
-	public abstract void afterConfiguration();
 }

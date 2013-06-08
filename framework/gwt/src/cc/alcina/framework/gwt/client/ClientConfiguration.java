@@ -46,13 +46,18 @@ public class ClientConfiguration {
 		ClientLayerLocator.get().notifications().metricLogStart("moduleLoad");
 		initExceptionHandling();
 		initCommonClient();
-		ClientConfiguration impl = this;
-		try {
-			impl = Registry.impl(ClientConfiguration.class);
-		} catch (NoImplementationException e) {
-		}
-		impl.createMachine();
-		impl.machine.start();
+		initContentProvider();
+		initImageProvider();
+		initHandshakeHelper();
+		prepareDebugFromHistory();
+		extraConfiguration();
+//		ClientConfiguration impl = this;
+//		try {
+//			impl = Registry.impl(ClientConfiguration.class);
+//		} catch (NoImplementationException e) {
+//		}
+//		impl.createMachine();
+//		impl.machine.start();
 	}
 
 	protected void createMachine() {
@@ -68,18 +73,10 @@ public class ClientConfiguration {
 			MachineTransitionHandler<ClientConfigurationModel> {
 		@Override
 		public void performTransition(ClientConfigurationModel model) {
-			initServicesPostLocalPersistence();
 			model.getMachine().newEvent(ClientConfigurationMachine.done);
 		}
 	}
 
-	protected void initServicesPostLocalPersistence() {
-		initContentProvider();
-		initImageProvider();
-		initHandshakeHelper();
-		extraConfiguration();
-		prepareDebugFromHistory();
-	}
 
 	protected void prepareDebugFromHistory() {
 		AlcinaHistory.initialiseDebugIds();
