@@ -13,7 +13,6 @@ import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider.ContentProviderSource;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
-import cc.alcina.framework.gwt.persistence.client.PersistenceStateHandlers.LocalPersistenceInitHandler;
 import cc.alcina.template.client.logic.AlcinaTemplateContentProvider;
 import cc.alcina.template.cs.AlcinaTemplateHistory;
 

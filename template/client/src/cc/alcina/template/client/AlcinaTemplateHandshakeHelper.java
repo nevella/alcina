@@ -3,7 +3,6 @@ package cc.alcina.template.client;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -12,9 +11,8 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.dialog.CancellableRemoteDialog;
 import cc.alcina.framework.gwt.client.widget.dialog.NonCancellableRemoteDialog;
 import cc.alcina.framework.gwt.persistence.client.ClientHandshakeHelperWithLocalPersistence;
-import cc.alcina.framework.gwt.persistence.client.OfflineManager;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
-import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
+import cc.alcina.framework.gwt.persistence.client.OfflineManager;
 import cc.alcina.framework.gwt.persistence.client.SerializedDomainLoader;
 import cc.alcina.template.client.logic.AlcinaTemplateSerializedDomainLoader;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
@@ -116,7 +114,7 @@ public class AlcinaTemplateHandshakeHelper extends
 	protected void hello() {
 		AsyncCallback<LoginResponse> callback = new AsyncCallback<LoginResponse>() {
 			public void onFailure(final Throwable caught) {
-				PersistenceCallback<Boolean> tryOfflineHandler = new PersistenceCallback<Boolean>() {
+				AsyncCallback<Boolean> tryOfflineHandler = new AsyncCallback<Boolean>() {
 					@Override
 					public void onFailure(Throwable caught) {
 						throw new WrappedRuntimeException(caught);

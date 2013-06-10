@@ -7,35 +7,37 @@ import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWr
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 public class DisabledTransformPersistence extends LocalTransformPersistence {
 	@Override
 	public void clearPersistedClient(ClientInstance exceptFor,
-			PersistenceCallback callback) {
+			AsyncCallback callback) {
 	}
 
 	@Override
-	protected void clearAllPersisted(PersistenceCallback callback) {
+	protected void clearAllPersisted(AsyncCallback callback) {
 	}
 
 	@Override
 	protected void getTransforms(DomainTransformRequestType[] types,
-			PersistenceCallback<List<DTRSimpleSerialWrapper>> callback) {
+			AsyncCallback<List<DTRSimpleSerialWrapper>> callback) {
 	}
 
 	@Override
 	protected void persist(DTRSimpleSerialWrapper wrapper,
-			PersistenceCallback callback) {
+			AsyncCallback callback) {
 	}
 
 	@Override
 	public void reparentToClientInstance(DTRSimpleSerialWrapper wrapper,
-			ClientInstance clientInstance, PersistenceCallback callback) {
+			ClientInstance clientInstance, AsyncCallback callback) {
 	}
 
 	@Override
 	protected void transformPersisted(
 			List<DTRSimpleSerialWrapper> persistedWrappers,
-			PersistenceCallback callback) {
+			AsyncCallback callback) {
 	}
 
 	@Override
@@ -46,7 +48,7 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 	@Override
 	public void init(DTESerializationPolicy dteSerializationPolicy,
 			CommitToStorageTransformListener commitToServerTransformListener,
-			PersistenceCallback<Void> callback) {
+			AsyncCallback<Void> callback) {
 		super.init(dteSerializationPolicy, commitToServerTransformListener,
 				callback);
 	}

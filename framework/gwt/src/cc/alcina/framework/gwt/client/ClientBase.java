@@ -16,7 +16,6 @@ package cc.alcina.framework.gwt.client;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.provider.TextProvider;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 import com.google.gwt.core.client.EntryPoint;
@@ -40,7 +39,7 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 				"Please press 'cancel' to save recent changes");
 		storage.flush();
 		if (storage.getCurrentState() == CommitToStorageTransformListener.COMMITTING
-				&& PermissionsManager.get().getOnlineState() != OnlineState.OFFLINE) {
+				&& PermissionsManager.isOnline()) {
 			event.setMessage(msg);
 		}
 		windowClosing = false;

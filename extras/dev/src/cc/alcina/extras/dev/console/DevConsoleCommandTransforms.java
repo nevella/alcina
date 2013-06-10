@@ -2,7 +2,6 @@ package cc.alcina.extras.dev.console;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

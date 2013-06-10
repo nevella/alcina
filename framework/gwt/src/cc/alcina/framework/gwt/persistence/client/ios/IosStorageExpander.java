@@ -9,9 +9,8 @@ import cc.alcina.framework.common.client.state.MachineModel;
 import cc.alcina.framework.common.client.state.MachineTransitionHandler;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.gwt.client.logic.PossiblePanelProvider;
+import cc.alcina.framework.gwt.persistence.client.AsyncCallbackStd;
 import cc.alcina.framework.gwt.persistence.client.ObjectStoreWebDbImpl;
-import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
-import cc.alcina.framework.gwt.persistence.client.PersistenceCallback.PersistenceCallbackStd;
 import cc.alcina.framework.gwt.persistence.client.PropertyStore;
 
 import com.google.code.gwt.database.client.Database;
@@ -71,7 +70,7 @@ public class IosStorageExpander {
 		switch (state) {
 		case CHECK_DONE:
 			PropertyStore.get().get(CHECKED_KEY,
-					new PersistenceCallback<String>() {
+					new AsyncCallback<String>() {
 						@Override
 						public void onFailure(Throwable caught) {
 							handleException(caught);
@@ -86,7 +85,7 @@ public class IosStorageExpander {
 					});
 			break;
 		case INIT_TMP_STORE:
-			PersistenceCallback<Void> itrCallback = new PersistenceCallback<Void>() {
+			AsyncCallback<Void> itrCallback = new AsyncCallback<Void>() {
 				@Override
 				public void onFailure(Throwable caught) {
 					handleException(caught);
@@ -123,7 +122,7 @@ public class IosStorageExpander {
 			return;
 		case EXPANDING_GET_COUNT:
 			PropertyStore.get().get(EXPAND_COUNT_KEY,
-					new PersistenceCallback<String>() {
+					new AsyncCallback<String>() {
 						@Override
 						public void onFailure(Throwable caught) {
 							handleException(caught);
@@ -152,7 +151,7 @@ public class IosStorageExpander {
 			}
 			System.out.println("putting: " + expansionCount);
 			tmpPropertyStore.put(key, value,
-					new PersistenceCallback<Integer>() {
+					new AsyncCallback<Integer>() {
 						@Override
 						public void onFailure(Throwable caught) {
 							if (caught.getMessage().toLowerCase()
@@ -175,7 +174,7 @@ public class IosStorageExpander {
 			expansionCount++;
 			PropertyStore.get().put(EXPAND_COUNT_KEY,
 					String.valueOf(expansionCount),
-					new PersistenceCallback<Integer>() {
+					new AsyncCallback<Integer>() {
 						@Override
 						public void onFailure(Throwable caught) {
 							handleException(caught);
@@ -190,7 +189,7 @@ public class IosStorageExpander {
 			break;
 		case EXPANDING_CLEAR_GET_KEYS:
 			tmpPropertyStore.getKeysPrefixedBy(EXPAND_KEY_PREFIX,
-					new PersistenceCallbackStd<List<String>>() {
+					new AsyncCallbackStd<List<String>>() {
 						@Override
 						public void onSuccess(List<String> result) {
 							keysToDelete = result.iterator();
@@ -202,7 +201,7 @@ public class IosStorageExpander {
 		case EXPANDING_CLEAR_REMOVE_KEYS:
 			if (!keysToDelete.hasNext()) {
 				PropertyStore.get().put(CHECKED_KEY, "true",
-						new PersistenceCallback<Integer>() {
+						new AsyncCallback<Integer>() {
 							@Override
 							public void onFailure(Throwable caught) {
 								handleException(caught);
@@ -222,7 +221,7 @@ public class IosStorageExpander {
 				break;
 			} else {
 				tmpPropertyStore.remove(keysToDelete.next(),
-						new PersistenceCallbackStd() {
+						new AsyncCallbackStd() {
 							@Override
 							public void onSuccess(Object result) {
 								iterate();
@@ -231,7 +230,7 @@ public class IosStorageExpander {
 			}
 			break;
 		case DROP:
-			objectStore.drop(new PersistenceCallback<Void>() {
+			objectStore.drop(new AsyncCallback<Void>() {
 				@Override
 				public void onFailure(Throwable caught) {
 					handleException(caught);
@@ -246,7 +245,7 @@ public class IosStorageExpander {
 			// case VACUUM:
 			// ((ObjectStoreWebDbImpl) propertyStore.getObjectStore())
 			// .executeSql("VACUUM;",
-			// new PersistenceCallbackStd<List<String>>() {
+			// new AsyncCallbackStd<List<String>>() {
 			// @Override
 			// public void onSuccess(List<String> result) {
 			// keysToDelete = result.iterator();

@@ -1,8 +1,6 @@
 package cc.alcina.framework.common.client.logic;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
@@ -145,7 +143,7 @@ public abstract class ExtensibleEnum {
 		String name = CommonUtils.simpleClassName(getClass());
 		name = name.contains("_") ? name.substring(name.indexOf("_") + 1)
 				: name;
-		name += key == null ? "" : "$" + name;
+		name += key == null ? "" : "$" + key;
 		return name;
 	}
 

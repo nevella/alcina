@@ -5,24 +5,26 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.util.IntPair;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 public interface PersistenceObjectStore {
 
-	public abstract void getRange( int fromId,  int toId,  PersistenceCallback<Map<Integer, String>> valueCallback);
+	public abstract void getRange( int fromId,  int toId,  AsyncCallback<Map<Integer, String>> valueCallback);
 
-	public abstract void add(String key, String value, PersistenceCallback<Integer> idCallback);
+	public abstract void add(String key, String value, AsyncCallback<Integer> idCallback);
 
-	public abstract void put(String key, String value, PersistenceCallback<Integer> idCallback);
+	public abstract void put(String key, String value, AsyncCallback<Integer> idCallback);
 
-	public abstract void get( String key,  PersistenceCallback<String> valueCallback);
-	public abstract void remove( String key,  PersistenceCallback<Integer> valueCallback);
+	public abstract void get( String key,  AsyncCallback<String> valueCallback);
+	public abstract void remove( String key,  AsyncCallback<Integer> valueCallback);
 
 	public abstract void getKeysPrefixedBy(String keyPrefix,
-			PersistenceCallback<List<String>> completedCallback);
+			AsyncCallback<List<String>> completedCallback);
 
-	void getIdRange(PersistenceCallback<IntPair> completedCallback);
-	void removeIdRange(IntPair range,PersistenceCallback<Void> completedCallback);
+	void getIdRange(AsyncCallback<IntPair> completedCallback);
+	void removeIdRange(IntPair range,AsyncCallback<Void> completedCallback);
 
-	void drop(PersistenceCallback<Void> persistenceCallback);
+	void drop(AsyncCallback<Void> AsyncCallback);
 
 	
 

@@ -82,7 +82,7 @@ public class RemoteLogPersister {
 		}
 
 		class LogRecordRangeGetter extends
-				PersistenceCallbackTransitionHandler<IntPair, MachineModel> {
+				AsyncCallbackTransitionHandler<IntPair, MachineModel> {
 			public LogRecordRangeGetter(MachineEvent successEvent) {
 				super(successEvent);
 			}
@@ -101,7 +101,7 @@ public class RemoteLogPersister {
 		}
 
 		class LogRecordRangeDeleter extends
-				PersistenceCallbackTransitionHandler<Void, MachineModel> {
+				AsyncCallbackTransitionHandler<Void, MachineModel> {
 			public LogRecordRangeDeleter(MachineEvent successEvent) {
 				super(successEvent);
 			}
@@ -224,7 +224,7 @@ public class RemoteLogPersister {
 
 		class LogRecordGetter
 				extends
-				PersistenceCallbackTransitionHandler<Map<Integer, String>, MachineModel> {
+				AsyncCallbackTransitionHandler<Map<Integer, String>, MachineModel> {
 			public LogRecordGetter(MachineEvent successEvent) {
 				super(successEvent);
 			}

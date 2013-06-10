@@ -5,22 +5,16 @@ import java.util.Collections;
 import java.util.List;
 
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
-import cc.alcina.framework.common.client.state.MachineEvent;
 import cc.alcina.framework.common.client.state.MachineEvent.MachineEventImpl;
-import cc.alcina.framework.common.client.state.MachineModel;
 import cc.alcina.framework.common.client.state.MachineState.MachineStateImpl;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientConfigurationMachine;
-import cc.alcina.framework.gwt.client.ClientConfigurationModel;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.ClientNodeIterator;
 import cc.alcina.framework.gwt.client.util.TextUtils;
 
-import com.google.code.gwt.database.client.Database;
-import com.google.code.gwt.database.client.DatabaseException;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
@@ -34,27 +28,7 @@ import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.History;
 
 public class PersistenceStateHandlers {
-	public static class LocalPersistenceInitHandler
-			extends
-			PersistenceCallbackTransitionHandler<Void, ClientConfigurationModel> {
-		public LocalPersistenceInitHandler(MachineEvent successEvent) {
-			super(successEvent);
-		}
-
-		@Override
-		public void onSuccess0(Void result) {
-		}
-
-		@Override
-		public void start() {
-			LocalTransformPersistence
-					.registerLocalTransformPersistence(new WebDatabaseTransformPersistence());
-			LocalTransformPersistence.get().init(
-					new DTESerializationPolicy(),
-					ClientLayerLocator.get()
-							.getCommitToStorageTransformListener(), this);
-		}
-	}
+	
 
 	public static MachineStateImpl localPersistenceInitPropertyStore = new MachineStateImpl(
 			"local-persistence-init-property-store");
@@ -76,121 +50,7 @@ public class PersistenceStateHandlers {
 			localPersistenceInitLogStore,
 			ClientConfigurationMachine.postLocalPersistenceInitConfig);
 
-	public static class PersistencePropAndLogWebDbInitaliser {
-		class InitCallback extends PersistenceCallbackTransitionHandler {
-			public InitCallback(MachineEvent successEvent) {
-				super(successEvent);
-			}
-
-			@Override
-			public void onSuccess(Object result) {
-				iterate();
-			}
-
-			@Override
-			public void performTransition(MachineModel model) {
-				this.model = model;
-				iterate();
-			}
-
-			@Override
-			public void onSuccess0(Object result) {
-			}
-
-			@Override
-			public void start() {
-			}
-
-			@Override
-			public void afterSuccess() {
-				super.afterSuccess();
-			};
-		}
-
-		private enum State {
-			PRE_PROPERTY_IMPL, POST_PROPERTY_IMPL, PRE_LOG_IMPL, POST_LOG_IMPL
-		}
-
-		private State state = State.PRE_PROPERTY_IMPL;
-
-		private final String dbPrefix;
-
-		private InitCallback itrCallback;
-
-		private ObjectStoreWebDbImpl propImpl;
-
-		private ObjectStoreWebDbImpl logImpl;
-
-		private ClientConfigurationMachine machine;
-
-		private final RemoteLogPersister remoteLogPersister;
-
-		public PersistencePropAndLogWebDbInitaliser(String dbPrefix,
-				ClientConfigurationMachine machine,
-				RemoteLogPersister remoteLogPersister,
-				MachineEventImpl successEvent) {
-			this.dbPrefix = dbPrefix;
-			this.machine = machine;
-			this.remoteLogPersister = remoteLogPersister;
-			itrCallback = new InitCallback(successEvent);
-			registerStatesAndEvents();
-		}
-
-		private void registerStatesAndEvents() {
-			machine.replaceEvent(
-					ClientConfigurationMachine.localPersistenceInit,
-					localPersistenceInitialised);
-			machine.registerTransitionHandler(
-					localPersistenceInitPropertyStore, null, itrCallback);
-			machine.registerTransitionHandler(localPersistenceInitLogStore,
-					null, itrCallback);
-		}
-
-		public void start() {
-			iterate();
-		}
-
-		private void iterate() {
-			switch (state) {
-			case PRE_PROPERTY_IMPL: {
-				Database db;
-				try {
-					db = Database.openDatabase(dbPrefix, "1.0",
-							"Property store", 5000000);
-				} catch (DatabaseException e) {
-					//no db access
-					itrCallback.afterSuccess();
-					break;
-				}
-				this.propImpl = new ObjectStoreWebDbImpl(db, dbPrefix
-						+ "_propertyStore", itrCallback);
-				state = State.POST_PROPERTY_IMPL;
-				break;
-			}
-			case POST_PROPERTY_IMPL:
-				PropertyStore.get().registerDelegate(propImpl);
-				state = State.PRE_LOG_IMPL;
-				iterate();
-				break;
-			case PRE_LOG_IMPL:
-				Database db = Database.openDatabase(dbPrefix, "1.0",
-						"Log store", 5000000);
-				this.logImpl = new ObjectStoreWebDbImpl(db, dbPrefix
-						+ "_logStore", itrCallback);
-				state = State.POST_LOG_IMPL;
-				break;
-			case POST_LOG_IMPL:
-				LogStore.get().registerDelegate(logImpl);
-				if (remoteLogPersister != null) {
-					LogStore.get().setRemoteLogPersister(remoteLogPersister);
-					remoteLogPersister.push();
-				}
-				itrCallback.afterSuccess();
-				break;
-			}
-		}
-	}
-
+	
 	public static class LogStoreInterceptors {
 		private ValueChangeHandler<String> historyListener = new ValueChangeHandler<String>() {
 			@Override

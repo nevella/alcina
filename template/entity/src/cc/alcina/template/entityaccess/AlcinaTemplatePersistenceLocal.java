@@ -2,7 +2,6 @@ package cc.alcina.template.entityaccess;
 
 import java.util.List;
 
-
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
 import cc.alcina.template.cs.persistent.AlcinaTemplateGroup;
 

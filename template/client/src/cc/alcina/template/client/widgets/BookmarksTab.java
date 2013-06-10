@@ -22,7 +22,6 @@ import cc.alcina.framework.gwt.client.ide.Workspace.WSVisualModel;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceDefaultActionHandlers.DefaultCreateActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceView.DataTreeView;
-import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainCollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;

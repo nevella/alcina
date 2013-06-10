@@ -1,9 +1,8 @@
 package cc.alcina.template.client;
 
 import cc.alcina.framework.common.client.logic.StateChangeListener;
-import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
-import cc.alcina.framework.gwt.client.ClientBaseWithLayout;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
@@ -18,7 +17,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
-public class AlcinaTemplateClient extends ClientBaseWithLayout implements
+public class AlcinaTemplateClient extends ClientBase implements
 		EntryPoint {
 	public static AlcinaTemplateClient theApp;
 

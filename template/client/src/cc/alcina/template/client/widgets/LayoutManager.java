@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.LayoutManagerBase;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
@@ -34,7 +35,7 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 
-public class LayoutManager {
+public class LayoutManager extends LayoutManagerBase {
 	private LayoutManager() {
 		super();
 	}

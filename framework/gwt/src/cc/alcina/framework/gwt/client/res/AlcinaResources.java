@@ -13,5 +13,8 @@ public interface AlcinaResources extends ClientBundle {
 	  @Source("Alcina-iepre9.css")
 	  public TextResource cssIePre9();
 	  
+	  @Source("app-properties.txt")
+	  public TextResource appProperties();
+	  
 	
 }

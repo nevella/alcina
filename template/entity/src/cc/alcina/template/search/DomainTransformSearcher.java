@@ -7,7 +7,6 @@ import javax.persistence.EntityManager;
 
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.entity.entityaccess.BasicSearcher;
 import cc.alcina.framework.entity.entityaccess.Searcher;

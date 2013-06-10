@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 	public GwtSerializedDomainLoader() {
@@ -44,28 +45,28 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 
 	@Override
 	public void tryOffline(final Throwable t,
-			final PersistenceCallback<Boolean> persistenceCallback) {
-		final PersistenceCallback<Boolean> secondPassCallback = new PersistenceCallback<Boolean>() {
+			final AsyncCallback<Boolean> AsyncCallback) {
+		final AsyncCallback<Boolean> secondPassCallback = new AsyncCallback<Boolean>() {
 			@Override
 			public void onFailure(Throwable caught) {
-				persistenceCallback.onFailure(caught);
+				AsyncCallback.onFailure(caught);
 			}
 
 			@Override
 			public void onSuccess(Boolean result) {
-				persistenceCallback.onSuccess(result);
+				AsyncCallback.onSuccess(result);
 			}
 		};
-		PersistenceCallback<Boolean> firstPassCallback = new PersistenceCallback<Boolean>() {
+		AsyncCallback<Boolean> firstPassCallback = new AsyncCallback<Boolean>() {
 			@Override
 			public void onFailure(Throwable caught) {
-				persistenceCallback.onFailure(caught);
+				AsyncCallback.onFailure(caught);
 			}
 
 			@Override
 			public void onSuccess(Boolean result) {
 				if (!result) {
-					persistenceCallback.onSuccess(false);
+					AsyncCallback.onSuccess(false);
 				}
 				if (transforms!=null&&transforms.isEmpty()
 						&& !ClientSession.get().isSoleOpenTab()) {

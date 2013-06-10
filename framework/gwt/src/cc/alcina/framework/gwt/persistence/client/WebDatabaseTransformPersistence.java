@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
@@ -47,14 +46,24 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  */
 public class WebDatabaseTransformPersistence extends
 		LocalTransformPersistenceGwt {
+	public static final String ALCINA_TRANSFORM_PERSISTENCE = "alcina-transform-persistence";
+
 	private Database db;
+
+	private String transformDatabaseName = ALCINA_TRANSFORM_PERSISTENCE;
 
 	public WebDatabaseTransformPersistence() {
 	}
 
+	public WebDatabaseTransformPersistence(String transformDatabaseName) {
+		if (transformDatabaseName != null) {
+			this.transformDatabaseName = transformDatabaseName;
+		}
+	}
+
 	@Override
 	public void clearPersistedClient(final ClientInstance exceptFor,
-			final PersistenceCallback callback) {
+			final AsyncCallback callback) {
 		db.transaction(new TransactionCallback() {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
@@ -89,7 +98,7 @@ public class WebDatabaseTransformPersistence extends
 
 	@Override
 	protected void getTransforms(final DomainTransformRequestType[] types,
-			final PersistenceCallback<List<DTRSimpleSerialWrapper>> callback) {
+			final AsyncCallback<List<DTRSimpleSerialWrapper>> callback) {
 		final Object[] params = { "id", Integer.class, "transform",
 				String.class, "timestamp", Long.class, "user_id", Long.class,
 				"clientInstance_id", Long.class, "request_id", Integer.class,
@@ -161,7 +170,7 @@ public class WebDatabaseTransformPersistence extends
 	public void init(
 			final DTESerializationPolicy dteSerializationPolicy,
 			final CommitToStorageTransformListener commitToServerTransformListener,
-			final PersistenceCallback callback) {
+			final AsyncCallback callback) {
 		final LocalTransformPersistence listener = this;
 		try {
 			db = Database.openDatabase(getTransformDbName(), "1.0",
@@ -172,7 +181,7 @@ public class WebDatabaseTransformPersistence extends
 		}
 		setLocalStorageInstalled(db != null);
 		if (isLocalStorageInstalled()) {
-			final PersistenceCallback superCallback = new PersistenceCallback() {
+			final AsyncCallback superCallback = new AsyncCallback() {
 				@Override
 				public void onSuccess(Object result) {
 					getCommitToStorageTransformListener()
@@ -188,7 +197,7 @@ public class WebDatabaseTransformPersistence extends
 					callback.onFailure(caught);
 				}
 			};
-			ensureDb(new PersistenceCallback() {
+			ensureDb(new AsyncCallback() {
 				@Override
 				public void onFailure(Throwable caught) {
 					setLocalStorageInstalled(false);
@@ -207,17 +216,17 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	protected String getTransformDbName() {
-		return "alcina-transform-persistence";
+		return transformDatabaseName;
 	}
 
 	private void initSuper(DTESerializationPolicy dteSerializationPolicy,
 			CommitToStorageTransformListener commitToServerTransformListener,
-			final PersistenceCallback superCallback) {
+			final AsyncCallback superCallback) {
 		super.init(dteSerializationPolicy, commitToServerTransformListener,
 				superCallback);
 	}
 
-	private void ensureDb(final PersistenceCallback callback) {
+	private void ensureDb(final AsyncCallback callback) {
 		TransactionCallback createCallback = new TransactionCallback() {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
@@ -270,7 +279,7 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	@Override
-	protected void clearAllPersisted(final PersistenceCallback callback) {
+	protected void clearAllPersisted(final AsyncCallback callback) {
 		db.transaction(new TransactionCallback() {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
@@ -291,7 +300,7 @@ public class WebDatabaseTransformPersistence extends
 
 	@Override
 	protected void persist(final DTRSimpleSerialWrapper wrapper,
-			final PersistenceCallback callback) {
+			final AsyncCallback callback) {
 		if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.TO_REMOTE) {
 			AlcinaTopics.logCategorisedMessage(new StringPair(
 					AlcinaTopics.LOG_CATEGORY_TRANSFORM, wrapper.getText()));
@@ -300,7 +309,7 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	private void persist(final DTRSimpleSerialWrapper wrapper,
-			final PersistenceCallback callback, final int persistSpacePass) {
+			final AsyncCallback callback, final int persistSpacePass) {
 		maybeCompressWrapper(wrapper);
 		if (wrapper.getProtocolVersion() == null) {
 			callback.onFailure(new Exception(
@@ -365,7 +374,7 @@ public class WebDatabaseTransformPersistence extends
 	@Override
 	protected void transformPersisted(
 			final List<DTRSimpleSerialWrapper> persistedWrappers,
-			final PersistenceCallback callback) {
+			final AsyncCallback callback) {
 		db.transaction(new TransactionCallback() {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
@@ -391,8 +400,7 @@ public class WebDatabaseTransformPersistence extends
 
 	@Override
 	public void reparentToClientInstance(final DTRSimpleSerialWrapper wrapper,
-			final ClientInstance clientInstance,
-			final PersistenceCallback callback) {
+			final ClientInstance clientInstance, final AsyncCallback callback) {
 		db.transaction(new TransactionCallback() {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
@@ -416,7 +424,7 @@ public class WebDatabaseTransformPersistence extends
 		});
 	}
 
-	public void callbackFail(final PersistenceCallback callback, SQLError error) {
+	public void callbackFail(final AsyncCallback callback, SQLError error) {
 		String message = "Problem saving work (web database) - "
 				+ error.getMessage() + " - " + error.getCode();
 		Exception exception = isStorageQuotaError(error) ? new StorageQuotaException(

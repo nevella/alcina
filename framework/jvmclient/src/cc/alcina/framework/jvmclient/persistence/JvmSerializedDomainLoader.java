@@ -17,22 +17,23 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
-import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
 import cc.alcina.framework.gwt.persistence.client.SerializedDomainLoader;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 	@Override
 	public void tryOffline(final Throwable t,
-			final PersistenceCallback<Boolean> persistenceCallback) {
-		PersistenceCallback<Boolean> firstPassCallback = new PersistenceCallback<Boolean>() {
+			final AsyncCallback<Boolean> AsyncCallback) {
+		AsyncCallback<Boolean> firstPassCallback = new AsyncCallback<Boolean>() {
 			@Override
 			public void onFailure(Throwable caught) {
-				persistenceCallback.onFailure(caught);
+				AsyncCallback.onFailure(caught);
 			}
 
 			@Override
 			public void onSuccess(Boolean result) {
-				persistenceCallback.onSuccess(result);
+				AsyncCallback.onSuccess(result);
 			}
 		};
 		tryOfflinePass(t, false, firstPassCallback);

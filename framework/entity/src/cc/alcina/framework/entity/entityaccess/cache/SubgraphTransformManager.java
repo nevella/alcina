@@ -1,9 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import javax.print.attribute.SetOfIntegerSyntax;
-
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 

@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 

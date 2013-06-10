@@ -1,0 +1,4 @@
+# use class.prop (as per ResourceUtilities) - override for testing etc by adding a
+# cc/alcina/framework/gwt/client/res/app-properties.txt file higher in the classpath
+AlcinaProperties.debug=false
+AlcinaProperties.debugPersistence=false

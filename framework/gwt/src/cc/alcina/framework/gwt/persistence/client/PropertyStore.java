@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.List;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 public class PropertyStore {
 	protected PropertyStore() {
 		super();
@@ -34,21 +36,21 @@ public class PropertyStore {
 	}
 
 	public void put(String key, String value,
-			PersistenceCallback<Integer> idCallback) {
+			AsyncCallback<Integer> idCallback) {
 		this.objectStore.put(key, value, idCallback);
 	}
 
-	public void get(String key, PersistenceCallback<String> valueCallback) {
+	public void get(String key, AsyncCallback<String> valueCallback) {
 		this.objectStore.get(key, valueCallback);
 	}
 
 	public void remove(String key,
-			PersistenceCallback<Integer> completedCallback) {
+			AsyncCallback<Integer> completedCallback) {
 		this.objectStore.remove(key, completedCallback);
 	}
 
 	public void getKeysPrefixedBy(String keyPrefix,
-			PersistenceCallback<List<String>> completedCallback) {
+			AsyncCallback<List<String>> completedCallback) {
 		this.objectStore.getKeysPrefixedBy(keyPrefix, completedCallback);
 	}
 

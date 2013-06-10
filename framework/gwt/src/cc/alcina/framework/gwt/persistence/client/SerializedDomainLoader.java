@@ -46,17 +46,17 @@ public abstract class SerializedDomainLoader {
 	public abstract DomainModelHolder createDummyModel();
 
 	public void loadSerializedTransformsForOnline(
-			final PersistenceCallback<Boolean> persistenceCallback) {
+			final AsyncCallback<Boolean> AsyncCallback) {
 		LocalTransformPersistence localPersistence = LocalTransformPersistence
 				.get();
 		if (!localPersistence.isLocalStorageInstalled()) {
-			persistenceCallback.onSuccess(false);
+			AsyncCallback.onSuccess(false);
 		}
 		ClientMetricLogging.get().start(ONLINE_INITIAL_DESER_METRIC_KEY);
-		PersistenceCallback<List<DTRSimpleSerialWrapper>> afterOpenTransforms = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
+		AsyncCallback<List<DTRSimpleSerialWrapper>> afterOpenTransforms = new AsyncCallback<List<DTRSimpleSerialWrapper>>() {
 			@Override
 			public void onFailure(Throwable caught) {
-				persistenceCallback.onSuccess(false);
+				AsyncCallback.onSuccess(false);
 			}
 
 			@Override
@@ -100,26 +100,26 @@ public abstract class SerializedDomainLoader {
 											&& wrapper.getUserId() == PermissionsManager
 													.get().getUserId()) {
 										setLoadObjectsHolder(loadObjectsHolder);
-										persistenceCallback.onSuccess(true);
+										AsyncCallback.onSuccess(true);
 										return;
 									}
 								} catch (Exception e) {
 									// squelch
 								}
-								persistenceCallback.onSuccess(false);
+								AsyncCallback.onSuccess(false);
 							}
 
 							@Override
 							public void onFailure(Throwable caught) {
 								_finally();
-								persistenceCallback.onSuccess(false);
+								AsyncCallback.onSuccess(false);
 							}
 						};
 						replayRpc(wrapper.getText(), replayRpcCallback);
 						return;
 					}
 				}
-				persistenceCallback.onSuccess(false);
+				AsyncCallback.onSuccess(false);
 				return;
 			}
 		};
@@ -133,7 +133,7 @@ public abstract class SerializedDomainLoader {
 			LoadObjectsHolder loadObjectsHolder);
 
 	public abstract void tryOffline(final Throwable t,
-			PersistenceCallback<Boolean> persistenceCallback);
+			AsyncCallback<Boolean> AsyncCallback);
 
 	/*
 	 * at most two gwtrpc wrappers - at the top of the list
@@ -230,21 +230,21 @@ public abstract class SerializedDomainLoader {
 	}
 
 	protected void tryOfflinePass(Throwable t, boolean notify,
-			final PersistenceCallback<Boolean> persistenceCallback) {
+			final AsyncCallback<Boolean> AsyncCallback) {
 		final LocalTransformPersistence localPersistence = LocalTransformPersistence
 				.get();
 		if (!shouldTryOffline(t, localPersistence)) {
-			persistenceCallback.onSuccess(false);
+			AsyncCallback.onSuccess(false);
 		}
 		ClientMetricLogging.get().start(OFFLINE_LOAD_METRIC_KEY);
 		PermissionsManager.get().setOnlineState(OnlineState.OFFLINE);
 		TransformManager tm = TransformManager.get();
 		tm.registerDomainObjectsInHolder(createDummyModel());
-		final PersistenceCallback<List<DTRSimpleSerialWrapper>> replayTransformsCallback = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
+		final AsyncCallback<List<DTRSimpleSerialWrapper>> replayTransformsCallback = new AsyncCallback<List<DTRSimpleSerialWrapper>>() {
 			@Override
 			public void onFailure(Throwable caught) {
 				ClientMetricLogging.get().end(OFFLINE_LOAD_METRIC_KEY);
-				persistenceCallback.onFailure(caught);
+				AsyncCallback.onFailure(caught);
 			}
 
 			@Override
@@ -259,17 +259,17 @@ public abstract class SerializedDomainLoader {
 					replayAfterPossibleDelay(new ScheduledCommand() {
 						@Override
 						public void execute() {
-							persistenceCallback.onSuccess(true);
+							AsyncCallback.onSuccess(true);
 						}
 					});
 				}
 			}
 		};
-		PersistenceCallback<List<DTRSimpleSerialWrapper>> afterOpenForOffline = new PersistenceCallback<List<DTRSimpleSerialWrapper>>() {
+		AsyncCallback<List<DTRSimpleSerialWrapper>> afterOpenForOffline = new AsyncCallback<List<DTRSimpleSerialWrapper>>() {
 			@Override
 			public void onFailure(Throwable caught) {
 				ClientMetricLogging.get().end(OFFLINE_LOAD_METRIC_KEY);
-				persistenceCallback.onFailure(caught);
+				AsyncCallback.onFailure(caught);
 			}
 
 			@Override
@@ -281,7 +281,7 @@ public abstract class SerializedDomainLoader {
 						localPersistence
 								.openAvailableSessionTransformsForOfflineLoadNeverOnline(replayTransformsCallback);
 					} else {
-						persistenceCallback.onSuccess(true);
+						AsyncCallback.onSuccess(true);
 					}
 				} else {
 					replayTransformsCallback.onSuccess(result);

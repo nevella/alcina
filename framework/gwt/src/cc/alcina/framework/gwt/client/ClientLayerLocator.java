@@ -51,7 +51,6 @@ public class ClientLayerLocator {
 
 	private ClientBase clientBase;
 
-	private GeneralProperties generalProperties;
 
 	private DomainModelHolder domainModelHolder;
 
@@ -111,7 +110,7 @@ public class ClientLayerLocator {
 	}
 
 	public GeneralProperties getGeneralProperties() {
-		return generalProperties;
+		return Registry.impl(GeneralProperties.class);
 	}
 
 	public ClientNotifications notifications() {
@@ -151,6 +150,7 @@ public class ClientLayerLocator {
 	public void setClientHandshakeHelper(
 			ClientHandshakeHelper clientHandshakeHelper) {
 		this.clientHandshakeHelper = clientHandshakeHelper;
+		Registry.get().registerSingleton(clientHandshakeHelper,ClientHandshakeHelper.class);
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
@@ -171,9 +171,6 @@ public class ClientLayerLocator {
 		this.domainModelHolder = domainModelHolder;
 	}
 
-	public void setGeneralProperties(GeneralProperties generalProperties) {
-		this.generalProperties = generalProperties;
-	}
 
 	public TimerWrapperProvider timerWrapperProvider() {
 		return timerWrapperProvider;

@@ -48,7 +48,7 @@ public abstract class ClientHandshakeHelperWithLocalPersistence extends
 							ClientMetricLogging.get().end("replay-transforms");
 						} else {
 							ClientMetricLogging.get().start("persist-rpc");
-							PersistenceCallback<Void> callback=new PersistenceCallback<Void>(){
+							AsyncCallback<Void> callback=new AsyncCallback<Void>(){
 
 								@Override
 								public void onFailure(Throwable caught) {

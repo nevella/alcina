@@ -1,14 +1,12 @@
 package cc.alcina.framework.common.client.state;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.CollectionFilters.InverseFilter;
@@ -16,6 +14,9 @@ import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * Manages an ecology of players - a sort of organic state machine
@@ -24,22 +25,22 @@ import cc.alcina.framework.common.client.util.TopicPublisher;
  * 
  */
 public class Consort<D> {
+	private static final String PLAYERS_WITH_EQUAL_DEPS_ERR = "Players with equal"
+			+ " dependencies and priorities: \n%s\n%s";
+
 	public static final transient String BEFORE_PLAY = "BEFORE_PLAY";
 
 	public static final transient String AFTER_PLAY = "AFTER_PLAY";
 
 	public static final transient String STATES = "STATES";
 
+	public static final transient String ERROR = "ERROR";
+
+	public static final transient String FINISHED = "FINISHED";
+
 	private TopicPublisher topicPublisher = new TopicPublisher();
 
 	LinkedList<Player<D>> players = new LinkedList<Player<D>>();
-
-	public Collection<D> addPlayer(Player<D> player) {
-		player.setConsort(this);
-		players.addLast(player);
-		consumeQueue();
-		return player.resolveRequires();
-	}
 
 	private boolean executingPlayer = false;
 
@@ -49,9 +50,33 @@ public class Consort<D> {
 
 	private boolean trace;
 
-	public void start() {
-		running = true;
+	private boolean simulate;
+
+	private int playedCount = 0;
+
+	private int indent = 0;
+
+	private Set<D> reachedStates = new LinkedHashSet<D>();
+
+	public void addEndpointPlayer(AsyncCallback completionCallback) {
+		D lastRequired = CommonUtils.last(players).getProvides().iterator()
+				.next();
+		addPlayer(new EndpointPlayer(lastRequired, completionCallback));
+	}
+
+	public void addEndpointPlayer() {
+		addEndpointPlayer(null);
+	}
+
+	public void addPlayer(Player<D> player) {
+		player.setConsort(this);
+		players.addLast(player);
 		consumeQueue();
+	}
+
+	public void addPlayer(Player<D> player, D... extraRequires) {
+		player.addRequires(extraRequires);
+		addPlayer(player);
 	}
 
 	public void clear() {
@@ -65,17 +90,179 @@ public class Consort<D> {
 		reachedStates.clear();
 	}
 
+	public boolean containsState(D state) {
+		return reachedStates.contains(state);
+	}
+
+	public boolean containsTask(Class<?> clazz) {
+		return CollectionFilters.contains(players, new IsClassFilter(clazz));
+	}
+
+	public void finished() {
+		topicPublisher.publishTopic(FINISHED, null);
+	}
+
+	public boolean isSimulate() {
+		return this.simulate;
+	}
+
+	public boolean isTrace() {
+		return this.trace;
+	}
+
+	public void listenerDelta(String key, TopicListener listener, boolean add) {
+		topicPublisher.listenerDelta(key, listener, add);
+	}
+
+	public void nudge() {
+		consumeQueue();
+	}
+
+	public void onFailure(Throwable throwable) {
+		topicPublisher.publishTopic(ERROR, throwable);
+		throw new WrappedRuntimeException(throwable);
+	}
+
+	public void setSimulate(boolean simulate) {
+		this.simulate = simulate;
+	}
+
+	public void setTrace(boolean trace) {
+		this.trace = trace;
+	}
+
+	public void start() {
+		running = true;
+		playedCount = 0;
+		consumeQueue();
+	}
+
 	public void wasPlayed(Player<D> player) {
+		wasPlayed(player, player.getProvides());
+	}
+
+	public void wasPlayed(Player<D> player, Collection<D> resultantStates) {
+		playedCount++;
 		executingPlayer = false;
-		if (player.getProvides() != null) {
-			reachedStates.addAll(player.getProvides());
+		// TODO - warn if resultantstates >1 and a non-parallel consort?
+		if (reachedStates.addAll(resultantStates)) {
+			topicPublisher.publishTopic(STATES, null);
 		}
 		topicPublisher.publishTopic(AFTER_PLAY, player);
 		consumeQueue();
 	}
 
-	public void nudge() {
-		consumeQueue();
+	private boolean isActive(Player<D> player) {
+		return reachedStates.containsAll(player.getPreconditions());
+	}
+
+	private void maybeRemovePlayersFromQueue(Player<D> player) {
+		if (player.isPerConsortSingleton()) {
+			CollectionFilters.filterInPlace(players, new InverseFilter(
+					new IsClassFilter(player.getClass())));
+		} else {
+			players.remove(player);
+		}
+		if (!player.isRemoveAfterPlay()) {
+			players.add(player);
+		}
+	}
+
+	private Player<D> nextPlayer() {
+		Player<D> result = null;
+		// dependecy pass
+		Multimap<Object, List<Player>> satisfiers = new Multimap<Object, List<Player>>();
+		for (Player player : players) {
+			if (isActive(player) && player.getProvides().size() > 0) {
+				for (Object provides : player.getProvides()) {
+					satisfiers.add(provides, player);
+				}
+			}
+		}
+		int lastCheckedCount = -1;
+		Set<D> providerDependencies = new LinkedHashSet<D>();
+		Set<Player> addedDependencies = new LinkedHashSet<Player>();
+		Player lastAdded = null;
+		boolean hasNonProviders = false;
+		while (true) {
+			Set<D> seenDependencies = new LinkedHashSet<D>();
+			for (Player<D> player : players) {
+				if (isActive(player)) {
+					hasNonProviders |= player.getProvides().isEmpty();
+					if (satisfiesDeps(player, providerDependencies)) {
+						if (result == null) {
+							result = player;
+						} else {
+							int relPriority = getRelativePriority(player,
+									result);
+							if (relPriority > 0) {
+								result = player;
+							} else if (relPriority < 0) {
+								// keep current;
+							} else {
+								if (!player.isAllowEqualPriority()
+										|| result.isAllowEqualPriority()) {
+									throw new RuntimeException(
+											CommonUtils
+													.formatJ(
+															PLAYERS_WITH_EQUAL_DEPS_ERR,
+															player, result));
+								}
+							}
+						}
+					} else {
+						if (satisfiesSomeSoughtDependenciesOrIsNotASatisfier(
+								player, providerDependencies)) {
+							if (addedDependencies.add(player)) {
+								lastAdded = player;
+							}
+							seenDependencies.addAll(player.getRequires());
+						}
+					}
+				}
+			}
+			if (result != null) {
+				break;
+			}
+			providerDependencies.addAll(seenDependencies);
+			providerDependencies.removeAll(reachedStates);
+			if (providerDependencies.size() == lastCheckedCount) {
+				if (isTrace() && (playedCount == 0 || hasNonProviders)) {
+					if (players.size() > 0) {
+						Player missed = lastAdded != null ? lastAdded : players
+								.iterator().next();
+						System.out.println(CommonUtils.formatJ(
+								"Unable to resolve dependencies: %s\n\t%s",
+								missed.getRequires(), missed));
+						int j = 3;
+					}
+				}
+				break;
+			}
+			lastCheckedCount = providerDependencies.size();
+		}
+		return result;
+	}
+
+	/*
+	 * In first pass, just go for immediately satisfied, non-state-provider
+	 * players
+	 * 
+	 * In the second, we look for state-providers in an expanding loop, (for
+	 * dependency chains), looking for any path forward
+	 */
+	private boolean satisfiesDeps(Player<D> player,
+			Collection<D> providerDependencies) {
+		return satisfiesSomeSoughtDependenciesOrIsNotASatisfier(player,
+				providerDependencies)
+				&& reachedStates.containsAll(player.getRequires());
+	}
+
+	private boolean satisfiesSomeSoughtDependenciesOrIsNotASatisfier(
+			Player<D> player, Collection<D> providerDependencies) {
+		return player.getProvides().isEmpty()
+				|| CommonUtils.intersection(player.getProvides(),
+						providerDependencies).size() > 0;
 	}
 
 	protected void consumeQueue() {
@@ -96,13 +283,36 @@ public class Consort<D> {
 				break;
 			}
 		}
+		if (players.isEmpty()) {
+			finished();
+		}
 		consumingQueue = false;
 	}
 
 	protected void executePlayer(Player<D> player) {
 		if (isTrace()) {
-			System.out.println("Playing: "
-					+ CommonUtils.simpleClassName(player.getClass()));
+			System.out.println(CommonUtils.formatJ("%s%s -> %s",
+					CommonUtils.padStringLeft("", indent, '\t'),
+					CommonUtils.simpleClassName(getClass()),
+					CommonUtils.simpleClassName(player.getClass())));
+			if (player instanceof ConsortPlayer) {
+				Consort stateConsort = ((ConsortPlayer) player)
+						.getStateConsort();
+				if (stateConsort != null) {
+					stateConsort.indent = indent + 1;
+					stateConsort.setTrace(true);
+					stateConsort.setSimulate(isSimulate());
+				}
+			}
+		}
+		if (isSimulate()) {
+			if (player instanceof ConsortPlayer) {
+				Consort stateConsort = ((ConsortPlayer) player)
+						.getStateConsort();
+				if (stateConsort != null) {
+					((ConsortPlayer) player).getStateConsort().start();
+				}
+			}
 			wasPlayed(player);
 		} else {
 			topicPublisher.publishTopic(BEFORE_PLAY, player);
@@ -110,141 +320,11 @@ public class Consort<D> {
 		}
 	}
 
-	private void maybeRemovePlayersFromQueue(Player<D> player) {
-		if (player.isPerConsortSingleton()) {
-			CollectionFilters.filterInPlace(players, new InverseFilter(
-					new IsClassFilter(player.getClass())));
-		} else {
-			players.remove(player);
-		}
-		if (!player.isRemoveAfterPlay()) {
-			players.add(player);
-		}
+	protected int getRelativePriority(Player<D> player1, Player<D> player2) {
+		return player1.getPriority() - player2.getPriority();
 	}
 
-	private Set<D> reachedStates = new LinkedHashSet<D>();
-
-	private Player<D> nextPlayer() {
-		Player<D> result = null;
-		// dependecy pass
-		Multimap<Object, List<Player>> satisfiers = new Multimap<Object, List<Player>>();
-		for (Player player : players) {
-			if (isActive(player) && player.getProvides().size() > 0) {
-				for (Object provides : player.getProvides()) {
-					satisfiers.add(provides, player);
-				}
-			}
-		}
-		int lastCheckedCount = -1;
-		Set<D> providerDependencies = new LinkedHashSet<D>();
-		while (true) {
-			Set<D> seenDependencies = new LinkedHashSet<D>();
-			for (Player<D> player : players) {
-				if (isActive(player)) {
-					if (satisfiesDeps(player, providerDependencies)) {
-						if (result == null || hasHigherPriority(player, result)) {
-							result = player;
-						}
-					} else {
-						if (satisfiesSomeSoughtDependenciesOrIsNotASatisfier(
-								player, providerDependencies)) {
-							seenDependencies.addAll(player.resolveRequires());
-						}
-					}
-				}
-			}
-			if (result != null) {
-				break;
-			}
-			providerDependencies.addAll(seenDependencies);
-			if (providerDependencies.size() == lastCheckedCount) {
-				break;
-			}
-			lastCheckedCount = providerDependencies.size();
-		}
-		return result;
-	}
-
-	Collection<D> resolveRequires(Player player) {
-		Collection<D> requires = player.getRequires();
-		if (requires == null || requires.isEmpty()) {
-			return requires;
-		}
-		Collection<D> resolved = new ArrayList<D>();
-		for (D d : requires) {
-			boolean tryIntercept = true;
-			while (tryIntercept) {
-				tryIntercept = false;
-				if (dependencyInterceptors.containsKey(d)) {
-					Player<D> interceptor = dependencyInterceptors.get(d);
-					if (interceptor == player) {
-						// keep
-					} else {
-						d = interceptor.getProvides().iterator().next();
-						tryIntercept = true;
-					}
-				}
-			}
-			resolved.add(d);
-		}
-		return resolved;
-	}
-
-	protected boolean hasHigherPriority(Player<D> player1, Player<D> player2) {
-		return player1.getPriority() > player2.getPriority();
-	}
-
-	/*
-	 * In first pass, just go for immediately satisfied, non-state-provider
-	 * players
-	 * 
-	 * In the second, we look for state-providers in an expanding loop, (for
-	 * dependency chains), looking for any path forward
-	 */
-	private boolean satisfiesDeps(Player<D> player,
-			Collection<D> providerDependencies) {
-		return satisfiesSomeSoughtDependenciesOrIsNotASatisfier(player,
-				providerDependencies)
-				&& (player.resolveRequires() == null || reachedStates
-						.containsAll(player.resolveRequires()));
-	}
-
-	private boolean satisfiesSomeSoughtDependenciesOrIsNotASatisfier(
-			Player<D> player, Collection<D> providerDependencies) {
-		return player.getProvides() == null
-				|| providerDependencies != null
-				&& !CommonUtils.intersection(player.getProvides(),
-						providerDependencies).isEmpty();
-	}
-
-	private boolean isActive(Player<D> player) {
-		return player.getPreconditions() == null
-				|| reachedStates.containsAll(player.getPreconditions());
-	}
-
-	public boolean containsTask(Class<?> clazz) {
-		return CollectionFilters.contains(players, new IsClassFilter(clazz));
-	}
-
-	public Set<D> getReachedStates() {
+	Set<D> getReachedStates() {
 		return this.reachedStates;
-	}
-
-	Map<D, Player<D>> dependencyInterceptors = new LinkedHashMap<D, Player<D>>();
-
-	public Collection<D> insertDependency(Collection<D> states, Player<D> player) {
-		addPlayer(player);
-		assert states.size() == 1;
-		assert player.getProvides().size() == 1;
-		dependencyInterceptors.put(states.iterator().next(), player);
-		return player.getProvides();
-	}
-
-	public boolean isTrace() {
-		return this.trace;
-	}
-
-	public void setTrace(boolean trace) {
-		this.trace = trace;
 	}
 }

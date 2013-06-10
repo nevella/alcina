@@ -19,7 +19,6 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.provider.TextProvider;
-import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -30,6 +29,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -52,15 +52,16 @@ public class FromOfflineConflictResolver {
 
 	private LocalTransformPersistence localTransformPersistence;
 
-	private Callback completionCallback;
+
+	private AsyncCallback<Void> completionCallback;
 
 	public void resolve(List<DTRSimpleSerialWrapper> uncommitted,
 			Throwable caught,
-			LocalTransformPersistence localTransformPersistence, Callback cb) {
+			LocalTransformPersistence localTransformPersistence, AsyncCallback<Void> completionCallback) {
 		this.uncommitted = uncommitted;
 		this.caught = caught;
 		this.localTransformPersistence = localTransformPersistence;
-		this.completionCallback = cb;
+		this.completionCallback = completionCallback;
 		dialog = new GlassDialogBox();
 		String title = TextProvider.get().getUiObjectText(
 				FromOfflineConflictResolver.class, "title",
@@ -214,7 +215,7 @@ public class FromOfflineConflictResolver {
 					ClientLayerLocator.get().notifications()
 							.log("pre-clear-db");
 					localTransformPersistence
-							.clearAllPersisted(new PersistenceCallback() {
+							.clearAllPersisted(new AsyncCallback() {
 								@Override
 								public void onSuccess(Object result) {
 									Window.alert(TextProvider
@@ -224,7 +225,7 @@ public class FromOfflineConflictResolver {
 													"discard-complete",
 													"Changes discarded"));
 									dialog.hide();
-									completionCallback.apply(null);
+									completionCallback.onSuccess(null);
 									ClientLayerLocator.get().notifications()
 											.log("post-clear-db");
 								}

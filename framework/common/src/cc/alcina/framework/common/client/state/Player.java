@@ -1,6 +1,12 @@
 package cc.alcina.framework.common.client.state;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /*
  * -- dependencies :: always attempt to resolve
@@ -17,24 +23,30 @@ public abstract class Player<D> {
 
 	protected Runnable runnable;
 
-	private Consort<D> consort;
+	protected Consort<D> consort;
+
+	private List<D> requires = new ArrayList<D>();
+
+	private List<D> provides = new ArrayList<D>();
 
 	public Player(Runnable runnable) {
 		this.runnable = runnable;
 	}
-	/*
-	 * normally, call resolveRequires()
-	 */
-	public Collection<D> getRequires() {
-		return null;
+
+	public void addProvides(D... providesStates) {
+		provides.addAll(Arrays.asList(providesStates));
 	}
-	
-	public Collection<D> resolveRequires(){
-		return consort.resolveRequires(this);
+
+	public void addRequires(D... requiresStates) {
+		requires.addAll(Arrays.asList(requiresStates));
+	}
+
+	public Consort<D> getConsort() {
+		return this.consort;
 	}
 
 	public Collection<D> getPreconditions() {
-		return null;
+		return Collections.emptyList();
 	}
 
 	public int getPriority() {
@@ -42,16 +54,27 @@ public abstract class Player<D> {
 	}
 
 	public Collection<D> getProvides() {
-		return null;
+		return provides;
 	}
-	
 
-	public Consort<D> getConsort() {
-		return this.consort;
+	public Collection<D> getRequires() {
+		return requires;
+	}
+
+	public boolean isAllowEqualPriority() {
+		return false;
 	}
 
 	public boolean isCancellable() {
 		return true;
+	}
+
+	public boolean isPerConsortSingleton() {
+		return false;
+	}
+
+	public boolean isRemoveAfterPlay() {
+		return getProvides().isEmpty();
 	}
 
 	public void play() {
@@ -64,17 +87,29 @@ public abstract class Player<D> {
 	}
 
 	protected void wasPlayed() {
-		if (consort != null) {
-			consort.wasPlayed(this);
+		consort.wasPlayed(this);
+	}
+
+	protected void wasPlayed(D dep) {
+		consort.wasPlayed(this, Collections.singletonList(dep));
+	}
+
+	public abstract static class RunnableAsyncCallbackPlayer<C, D> extends
+			Player<D> implements Runnable, AsyncCallback<C> {
+		public RunnableAsyncCallbackPlayer() {
+			super(null);
+			runnable = this;
 		}
-	}
 
-	public boolean isPerConsortSingleton() {
-		return false;
-	}
+		@Override
+		public void onFailure(Throwable caught) {
+			consort.onFailure(caught);
+		}
 
-	public boolean isRemoveAfterPlay() {
-		return true;
+		@Override
+		public void onSuccess(C result) {
+			wasPlayed();
+		}
 	}
 
 	public abstract static class RunnablePlayer<D> extends Player<D> implements

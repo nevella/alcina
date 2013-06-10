@@ -6,9 +6,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry.NoImplementationException;
-import cc.alcina.framework.common.client.state.MachineState;
 import cc.alcina.framework.common.client.state.MachineTransitionHandler;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
@@ -51,32 +48,7 @@ public class ClientConfiguration {
 		initHandshakeHelper();
 		prepareDebugFromHistory();
 		extraConfiguration();
-//		ClientConfiguration impl = this;
-//		try {
-//			impl = Registry.impl(ClientConfiguration.class);
-//		} catch (NoImplementationException e) {
-//		}
-//		impl.createMachine();
-//		impl.machine.start();
 	}
-
-	protected void createMachine() {
-		this.machine = new ClientConfigurationMachine();
-		machine.registerTransitionHandler(
-				ClientConfigurationMachine.postLocalPersistenceInitConfig,
-				null, new PostLocalPersistenceInitConfigHandler());
-		machine.registerTransitionHandler(MachineState.END, null,
-				new ClientConfigurationCompleteHandler());
-	}
-
-	private class PostLocalPersistenceInitConfigHandler implements
-			MachineTransitionHandler<ClientConfigurationModel> {
-		@Override
-		public void performTransition(ClientConfigurationModel model) {
-			model.getMachine().newEvent(ClientConfigurationMachine.done);
-		}
-	}
-
 
 	protected void prepareDebugFromHistory() {
 		AlcinaHistory.initialiseDebugIds();
@@ -90,7 +62,6 @@ public class ClientConfiguration {
 	}
 
 	protected void afterConfiguration() {
-		ClientLayerLocator.get().clientBase().afterConfiguration();
 	}
 
 	protected void extraConfiguration() {

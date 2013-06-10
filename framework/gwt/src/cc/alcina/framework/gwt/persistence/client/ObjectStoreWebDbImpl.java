@@ -16,16 +16,17 @@ import com.google.code.gwt.database.client.SQLResultSetRowList;
 import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.code.gwt.database.client.StatementCallback;
 import com.google.code.gwt.database.client.TransactionCallback;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	 Database db;
 
 	private String tableName;
 
-	private PersistenceCallback<Void> postInitCallback;
+	private AsyncCallback<Void> postInitCallback;
 
 	public ObjectStoreWebDbImpl(Database db, String tableName,
-			PersistenceCallback<Void> postInitCallback) {
+			AsyncCallback<Void> postInitCallback) {
 		this.db = db;
 		this.tableName = tableName;
 		this.postInitCallback = postInitCallback;
@@ -56,18 +57,18 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	}
 
 	@Override
-	public void get(String key, PersistenceCallback<String> valueCallback) {
+	public void get(String key, AsyncCallback<String> valueCallback) {
 		new GetHandler().get(key, valueCallback);
 	}
 
 	class GetHandler {
 		private String getResult;
 
-		private PersistenceCallback<String> valueCallback;
+		private AsyncCallback<String> valueCallback;
 
 		private String key;
 
-		public void get(String key, PersistenceCallback<String> valueCallback) {
+		public void get(String key, AsyncCallback<String> valueCallback) {
 			this.key = key;
 			this.valueCallback = valueCallback;
 			db.transaction(getCallback);
@@ -188,12 +189,12 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		private String value;
 
-		private PersistenceCallback<Integer> idCallback;
+		private AsyncCallback<Integer> idCallback;
 
 		private boolean add;
 
 		public void put(String key, String value,
-				PersistenceCallback<Integer> idCallback, boolean add) {
+				AsyncCallback<Integer> idCallback, boolean add) {
 			this.key = key;
 			this.value = value;
 			this.idCallback = idCallback;
@@ -204,13 +205,13 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 	@Override
 	public void put(String key, String value,
-			PersistenceCallback<Integer> idCallback) {
+			AsyncCallback<Integer> idCallback) {
 		new PutHandler().put(key, value, idCallback, false);
 	}
 
 	@Override
 	public void add(String key, String value,
-			PersistenceCallback<Integer> idCallback) {
+			AsyncCallback<Integer> idCallback) {
 		new PutHandler().put(key, value, idCallback, true);
 	}
 
@@ -251,10 +252,10 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		private int toId;
 
-		private PersistenceCallback<Void> valueCallback;
+		private AsyncCallback<Void> valueCallback;
 
 		public void removeRange(int fromId, int toId,
-				PersistenceCallback<Void> valueCallback) {
+				AsyncCallback<Void> valueCallback) {
 			this.fromId = fromId;
 			this.toId = toId;
 			this.valueCallback = valueCallback;
@@ -308,10 +309,10 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		private int toId;
 
-		private PersistenceCallback<Map<Integer, String>> valueCallback;
+		private AsyncCallback<Map<Integer, String>> valueCallback;
 
 		public void getRange(int fromId, int toId,
-				PersistenceCallback<Map<Integer, String>> valueCallback) {
+				AsyncCallback<Map<Integer, String>> valueCallback) {
 			this.fromId = fromId;
 			this.toId = toId;
 			this.valueCallback = valueCallback;
@@ -321,11 +322,11 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 	@Override
 	public void getRange(int fromId, int toId,
-			PersistenceCallback<Map<Integer, String>> valueCallback) {
+			AsyncCallback<Map<Integer, String>> valueCallback) {
 		new GetRangeHandler().getRange(fromId, toId, valueCallback);
 	}
 
-	protected void onFailure(PersistenceCallback callback, SQLError error) {
+	protected void onFailure(AsyncCallback callback, SQLError error) {
 		callback.onFailure(new Exception(CommonUtils.formatJ("%s: %s",
 				error.getCode(), error.getMessage())));
 	}
@@ -393,9 +394,9 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 		private String key;
 
-		private PersistenceCallback<Integer> idCallback;
+		private AsyncCallback<Integer> idCallback;
 
-		public void remove(String key, PersistenceCallback<Integer> idCallback) {
+		public void remove(String key, AsyncCallback<Integer> idCallback) {
 			this.key = key;
 			this.idCallback = idCallback;
 			db.transaction(getCallback);
@@ -405,12 +406,12 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	class GetPrefixedHandler {
 		private List<String> getResult = new ArrayList<String>();
 
-		private PersistenceCallback<List<String>> valueCallback;
+		private AsyncCallback<List<String>> valueCallback;
 
 		private String keyPrefix;
 
 		public void get(String keyPrefix,
-				PersistenceCallback<List<String>> valueCallback) {
+				AsyncCallback<List<String>> valueCallback) {
 			this.keyPrefix = keyPrefix;
 			this.valueCallback = valueCallback;
 			db.transaction(getCallback);
@@ -459,9 +460,9 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	class GetIdRageHandler {
 		private IntPair intPair = new IntPair();
 
-		private PersistenceCallback<IntPair> valueCallback;
+		private AsyncCallback<IntPair> valueCallback;
 
-		public void get(PersistenceCallback<IntPair> valueCallback) {
+		public void get(AsyncCallback<IntPair> valueCallback) {
 			this.valueCallback = valueCallback;
 			db.transaction(getCallback);
 		}
@@ -504,7 +505,7 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		};
 	}
 
-	public void executeSql(final String sql, final PersistenceCallback callback) {
+	public void executeSql(final String sql, final AsyncCallback callback) {
 		final StatementCallback<GenericRow> cb = new StatementCallback<GenericRow>() {
 			@Override
 			public void onSuccess(SQLTransaction transaction,
@@ -539,30 +540,30 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	}
 
 	@Override
-	public void remove(String key, PersistenceCallback<Integer> idCallback) {
+	public void remove(String key, AsyncCallback<Integer> idCallback) {
 		new RemoveHandler().remove(key, idCallback);
 	}
 
 	@Override
 	public void getKeysPrefixedBy(String keyPrefix,
-			PersistenceCallback<List<String>> completedCallback) {
+			AsyncCallback<List<String>> completedCallback) {
 		new GetPrefixedHandler().get(keyPrefix, completedCallback);
 	}
 
 	@Override
-	public void getIdRange(PersistenceCallback<IntPair> completedCallback) {
+	public void getIdRange(AsyncCallback<IntPair> completedCallback) {
 		new GetIdRageHandler().get(completedCallback);
 	}
 
 	@Override
 	public void removeIdRange(IntPair range,
-			PersistenceCallback<Void> completedCallback) {
+			AsyncCallback<Void> completedCallback) {
 		new RemoveRangeHandler().removeRange(range.i1, range.i2,
 				completedCallback);
 	}
 
 	@Override
-	public void drop(final PersistenceCallback<Void> persistenceCallback) {
+	public void drop(final AsyncCallback<Void> AsyncCallback) {
 		TransactionCallback dropCallback = new TransactionCallback() {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
@@ -572,12 +573,12 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 
 			@Override
 			public void onTransactionSuccess() {
-				persistenceCallback.onSuccess(null);
+				AsyncCallback.onSuccess(null);
 			}
 
 			@Override
 			public void onTransactionFailure(SQLError error) {
-				onFailure(persistenceCallback, error);
+				onFailure(AsyncCallback, error);
 			}
 		};
 		db.transaction(dropCallback);

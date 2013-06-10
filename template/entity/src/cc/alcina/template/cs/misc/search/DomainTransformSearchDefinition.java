@@ -11,11 +11,11 @@ import cc.alcina.framework.common.client.search.LongCriteriaGroup;
 import cc.alcina.framework.common.client.search.LongCriterion;
 import cc.alcina.framework.common.client.search.PersistentObjectCriteriaGroup;
 import cc.alcina.framework.common.client.search.PersistentObjectCriterion;
+import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.search.TxtCriteriaGroup;
-import cc.alcina.framework.common.client.search.TxtCriterion;
-import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.TxtCriteriaGroup.TxtCriteriaGroup2;
+import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.search.TxtCriterion.TxtCriterionType;
 
 @CriterionPropertyNameMappings( {

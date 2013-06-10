@@ -37,10 +37,10 @@ public class MixedGwtTransformHelper {
 
 	public <T extends DomainModelHolder> void handleLoad(
 			LoadObjectsHolder<T> holder, AlcinaRpcRequestBuilder builder,
-			final PersistenceCallback<T> onLoadCallback) {
+			final AsyncCallback<T> onLoadCallback) {
 		this.holder = holder;
 		if (this.holder.getDomainObjects() == null) {
-			PersistenceCallback<Void> postPersistCallback = new PersistenceCallback<Void>() {
+			AsyncCallback<Void> postPersistCallback = new AsyncCallback<Void>() {
 				@Override
 				public void onFailure(Throwable e) {
 					cleanup();
@@ -55,7 +55,7 @@ public class MixedGwtTransformHelper {
 							e, MixedGwtLoadException.class);
 					if (ex != null && ex.isWipeOffline()) {
 						LocalTransformPersistence.get().clearPersistedClient(
-								null, PersistenceCallback.VOID_CALLBACK);
+								null, AsyncCallbackStd.VOID_CALLBACK);
 					}
 					onLoadCallback.onSuccess((T) getDomainLoader()
 							.getLoadObjectsHolder().getDomainObjects());
@@ -97,15 +97,15 @@ public class MixedGwtTransformHelper {
 	}
 
 	public void prepareRequest(AlcinaRpcRequestBuilder builder,
-			final PersistenceCallback<LoadObjectsRequest> persistenceCallback) {
+			final AsyncCallback<LoadObjectsRequest> AsyncCallback) {
 		this.builder = builder;
 		builder.setRecordResult(true);
 		final LoadObjectsRequest request = new LoadObjectsRequest();
 		final SerializedDomainLoader loader = getDomainLoader();
-		PersistenceCallback<Boolean> loadSerializedTransformsHandler = new PersistenceCallback<Boolean>() {
+		AsyncCallback<Boolean> loadSerializedTransformsHandler = new AsyncCallback<Boolean>() {
 			@Override
 			public void onFailure(Throwable caught) {
-				persistenceCallback.onFailure(caught);
+				AsyncCallback.onFailure(caught);
 			}
 
 			@Override
@@ -116,13 +116,13 @@ public class MixedGwtTransformHelper {
 					request.setLastTransformId(holder.getLastTransformId());
 				}
 				request.setTypeSignature(GWT.getPermutationStrongName());
-				persistenceCallback.onSuccess(request);
+				AsyncCallback.onSuccess(request);
 			}
 		};
 		loader.loadSerializedTransformsForOnline(loadSerializedTransformsHandler);
 	}
 
-	public void persistGwtObjectGraph(PersistenceCallback<Void> callback) {
+	public void persistGwtObjectGraph(AsyncCallback<Void> callback) {
 		LocalTransformPersistence.get()
 				.persistInitialRpcPayload(this, callback);
 	}

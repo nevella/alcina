@@ -676,4 +676,11 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 			return null;
 		}
 	}
+
+	public static boolean isOffline() {
+		return get().getOnlineState()==OnlineState.OFFLINE;
+	}
+	public static boolean isOnline() {
+		return !isOffline();
+	}
 }

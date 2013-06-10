@@ -97,10 +97,11 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 
 	public void registerDomainModel(final DomainModelHolder objects,
 			final LoginState loginState, final ScheduledCommand postRegisterCommand) {
+		//can remove - hs2
 		objects.registerSelfAsProvider();
 		registerClientObjectListeners(true);
-		ClientLayerLocator.get().setGeneralProperties(
-				objects.getGeneralProperties());
+//		ClientLayerLocator.get().setGeneralProperties(
+//				objects.getGeneralProperties());
 		PermissionsManager.get().setUser(objects.getCurrentUser());
 		ClientLayerLocator.get().setDomainModelHolder(objects);
 		PermissionsManager.get().setLoginState(loginState);

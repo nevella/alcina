@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventListener;
@@ -20,6 +21,7 @@ LayoutEventListener, ResizeHandler{
 	public LayoutManagerBase() {
 		Window.addResizeHandler(this);
 		LayoutEvents.get().addLayoutEventListener(this);
+		Registry.get().registerSingleton(this, LayoutManagerBase.class);
 	}
 	private boolean displayInitialised = false;
 	
@@ -50,6 +52,6 @@ LayoutEventListener, ResizeHandler{
 	}
 
 	public boolean isLayoutInitialising(){
-		return displayInitialised;
+		return !displayInitialised;
 	}
 }

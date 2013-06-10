@@ -21,6 +21,7 @@ import cc.alcina.framework.gwt.client.util.Lzw;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.Cookies;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * At the moment:
@@ -73,7 +74,7 @@ public class LogStore {
 
 	private String lastTopic;
 
-	private PersistenceCallback<Integer> afterLocalPersistence = new PersistenceCallback<Integer>() {
+	private AsyncCallback<Integer> afterLocalPersistence = new AsyncCallback<Integer>() {
 		@Override
 		public void onFailure(Throwable caught) {
 			AlcinaTopics.muteStatisticsLogging(false);
@@ -120,16 +121,16 @@ public class LogStore {
 	}
 
 	public void add(String key, String value,
-			PersistenceCallback<Integer> idCallback) {
+			AsyncCallback<Integer> idCallback) {
 		this.objectStore.add(key, value, idCallback);
 	}
 
-	public void getIdRange(PersistenceCallback<IntPair> completedCallback) {
+	public void getIdRange(AsyncCallback<IntPair> completedCallback) {
 		this.objectStore.getIdRange(completedCallback);
 	}
 
 	public void getRange(int fromId, int toId,
-			PersistenceCallback<Map<Integer, String>> valueCallback) {
+			AsyncCallback<Map<Integer, String>> valueCallback) {
 		this.objectStore.getRange(fromId, toId, valueCallback);
 	}
 
@@ -189,7 +190,7 @@ public class LogStore {
 	}
 
 	public void removeIdRange(IntPair range,
-			PersistenceCallback<Void> completedCallback) {
+			AsyncCallback<Void> completedCallback) {
 		this.objectStore.removeIdRange(range, completedCallback);
 	}
 

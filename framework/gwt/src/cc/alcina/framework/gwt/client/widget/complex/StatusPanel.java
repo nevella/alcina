@@ -3,8 +3,10 @@ package cc.alcina.framework.gwt.client.widget.complex;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.LayoutManagerBase;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -87,7 +89,6 @@ public class StatusPanel extends Composite {
 		}
 
 		private String message;
-
 
 		@Override
 		public void modalOn() {
@@ -208,7 +209,8 @@ public class StatusPanel extends Composite {
 		content.setHTML(html);
 		setShowingProblem(false);
 		if (!inresize
-				&& ClientLayerLocator.get().clientBase().isDisplayInitialised()
+				&& Registry.impl(LayoutManagerBase.class)
+						.isDisplayInitialised()
 				&& ClientLayerLocator.get().isUsesRootLayoutPanel()) {
 			inresize = true;
 			RootLayoutPanel.get().onResize();
@@ -241,7 +243,8 @@ public class StatusPanel extends Composite {
 	}
 
 	public void clear() {
-		for (StatusPanelModalNotifier notifier : new ArrayList<StatusPanelModalNotifier>(notifiers)) {
+		for (StatusPanelModalNotifier notifier : new ArrayList<StatusPanelModalNotifier>(
+				notifiers)) {
 			notifier.modalOff();
 		}
 		notifiers.clear();
@@ -252,7 +255,7 @@ public class StatusPanel extends Composite {
 	public static void showMessageOrAlert(String message) {
 		if (current != null) {
 			current.setContent(message);
-		}else{
+		} else {
 			Window.alert(message);
 		}
 	}

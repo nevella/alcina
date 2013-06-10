@@ -10,6 +10,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObjectStore {
 	private TreeMap<Integer, String> values = new TreeMap<Integer, String>();
 
@@ -21,19 +23,19 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObject
 
 	@Override
 	public void getRange(int fromId, int toId,
-			PersistenceCallback<Map<Integer, String>> valueCallback) {
+			AsyncCallback<Map<Integer, String>> valueCallback) {
 		valueCallback.onSuccess(values.subMap(fromId, toId+1));
 	}
 
 	@Override
 	public void add(String key, String value,
-			PersistenceCallback<Integer> idCallback) {
+			AsyncCallback<Integer> idCallback) {
 		int id = nextId();
 		_put(key, value, idCallback, id);
 	}
 
 	protected void _put(String key, String value,
-			PersistenceCallback<Integer> idCallback, int id) {
+			AsyncCallback<Integer> idCallback, int id) {
 		keys.put(id, key);
 		values.put(id, value);
 		reverseKeys.remove(key, id);
@@ -52,7 +54,7 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObject
 
 	@Override
 	public void put(String key, String value,
-			PersistenceCallback<Integer> idCallback) {
+			AsyncCallback<Integer> idCallback) {
 		int id = getFirstId(key);
 		id = id == 0 ? nextId() : id;
 		_put(key, value, idCallback, id);
@@ -68,14 +70,14 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObject
 	}
 
 	@Override
-	public void get(String key, PersistenceCallback<String> valueCallback) {
+	public void get(String key, AsyncCallback<String> valueCallback) {
 		int id = getFirstId(key);
 		String value = id == 0 ? null : values.get(id);
 		valueCallback.onSuccess(value);
 	}
 
 	@Override
-	public void remove(String key, PersistenceCallback<Integer> valueCallback) {
+	public void remove(String key, AsyncCallback<Integer> valueCallback) {
 		int id = getFirstId(key);
 		if (id != 0) {
 			remove(id);
@@ -93,14 +95,14 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObject
 
 	@Override
 	public void getKeysPrefixedBy(String keyPrefix,
-			PersistenceCallback<List<String>> completedCallback) {
+			AsyncCallback<List<String>> completedCallback) {
 		List<String> prefixed = CollectionFilters.filter(reverseKeys.keySet(),
 				new PrefixedFilter(keyPrefix));
 		completedCallback.onSuccess(prefixed);
 	}
 
 	@Override
-	public void getIdRange(PersistenceCallback<IntPair> completedCallback) {
+	public void getIdRange(AsyncCallback<IntPair> completedCallback) {
 		IntPair range = keys.isEmpty() ? new IntPair() : new IntPair(
 				keys.firstKey(), keys.lastKey());
 		completedCallback.onSuccess(range);
@@ -108,7 +110,7 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObject
 
 	@Override
 	public void removeIdRange(IntPair range,
-			PersistenceCallback<Void> completedCallback) {
+			AsyncCallback<Void> completedCallback) {
 		for (int id = range.i1; id <= range.i2; id++) {
 			remove(id);
 		}
@@ -116,7 +118,7 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObject
 	}
 
 	@Override
-	public void drop(PersistenceCallback<Void> persistenceCallback) {
+	public void drop(AsyncCallback<Void> AsyncCallback) {
 		values.clear();
 		reverseKeys.clear();
 		keys.clear();

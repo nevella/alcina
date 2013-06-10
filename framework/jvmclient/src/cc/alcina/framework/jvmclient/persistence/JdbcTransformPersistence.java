@@ -36,7 +36,8 @@ import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
-import cc.alcina.framework.gwt.persistence.client.PersistenceCallback;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 @SuppressWarnings("unchecked")
 /**
@@ -60,7 +61,7 @@ public abstract class JdbcTransformPersistence extends
 
 	@Override
 	public void clearPersistedClient(final ClientInstance exceptFor,
-			final PersistenceCallback callback) {
+			final AsyncCallback callback) {
 		try {
 			executeStatement("DELETE from TransformRequests"
 					+ " where (transform_request_type='CLIENT_OBJECT_LOAD'"
@@ -76,7 +77,7 @@ public abstract class JdbcTransformPersistence extends
 
 	@Override
 	protected void getTransforms(final DomainTransformRequestType[] types,
-			final PersistenceCallback<List<DTRSimpleSerialWrapper>> callback) {
+			final AsyncCallback<List<DTRSimpleSerialWrapper>> callback) {
 		Object[] params = { "id", Integer.class, "transform", String.class,
 				"timestamp", Long.class, "user_id", Long.class,
 				"clientInstance_id", Long.class, "request_id", Integer.class,
@@ -128,9 +129,9 @@ public abstract class JdbcTransformPersistence extends
 	public void init(
 			final DTESerializationPolicy dteSerializationPolicy,
 			final CommitToStorageTransformListener commitToServerTransformListener,
-			final PersistenceCallback callback) {
+			final AsyncCallback callback) {
 		final LocalTransformPersistence listener = this;
-		final PersistenceCallback superCallback = new PersistenceCallback() {
+		final AsyncCallback superCallback = new AsyncCallback() {
 			@Override
 			public void onSuccess(Object result) {
 				getCommitToStorageTransformListener().addStateChangeListener(
@@ -146,7 +147,7 @@ public abstract class JdbcTransformPersistence extends
 				callback.onFailure(caught);
 			}
 		};
-		ensureDb(new PersistenceCallback() {
+		ensureDb(new AsyncCallback() {
 			@Override
 			public void onFailure(Throwable caught) {
 				setLocalStorageInstalled(false);
@@ -164,7 +165,7 @@ public abstract class JdbcTransformPersistence extends
 
 	private void initSuper(DTESerializationPolicy dteSerializationPolicy,
 			CommitToStorageTransformListener commitToServerTransformListener,
-			final PersistenceCallback superCallback) {
+			final AsyncCallback superCallback) {
 		super.init(dteSerializationPolicy, commitToServerTransformListener,
 				superCallback);
 	}
@@ -205,7 +206,7 @@ public abstract class JdbcTransformPersistence extends
 		}
 	}
 
-	protected void ensureDb(final PersistenceCallback callback) {
+	protected void ensureDb(final AsyncCallback callback) {
 		// should be done elsewhere (for generic jdbc)(generally done in
 		// constructor, so this is a noop)
 		callback.onSuccess(null);
@@ -236,7 +237,7 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	@Override
-	protected void clearAllPersisted(final PersistenceCallback callback) {
+	protected void clearAllPersisted(final AsyncCallback callback) {
 		try {
 			executeStatement("DELETE from TransformRequests");
 			callback.onSuccess(null);
@@ -247,7 +248,7 @@ public abstract class JdbcTransformPersistence extends
 
 	@Override
 	protected void persist(final DTRSimpleSerialWrapper wrapper,
-			final PersistenceCallback callback) {
+			final AsyncCallback callback) {
 		Connection conn = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
@@ -297,7 +298,7 @@ public abstract class JdbcTransformPersistence extends
 	@Override
 	protected void transformPersisted(
 			final List<DTRSimpleSerialWrapper> persistedWrappers,
-			final PersistenceCallback callback) {
+			final AsyncCallback callback) {
 		try {
 			for (DTRSimpleSerialWrapper wrapper : persistedWrappers) {
 				executeStatement("update  TransformRequests  set "
@@ -314,7 +315,7 @@ public abstract class JdbcTransformPersistence extends
 	public void reparentToClientInstance(
 			final DTRSimpleSerialWrapper wrapper,
 			final ClientInstance clientInstance,
-			final PersistenceCallback callback) {
+			final AsyncCallback callback) {
 		Connection conn = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
@@ -335,7 +336,7 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	public void reparentToClientInstance(long clientInstanceId,
-			ClientInstance clientInstance, PersistenceCallback callback) {
+			ClientInstance clientInstance, AsyncCallback callback) {
 		Connection conn = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;

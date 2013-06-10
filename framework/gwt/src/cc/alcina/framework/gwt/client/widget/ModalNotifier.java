@@ -10,6 +10,7 @@ public interface ModalNotifier {
 	public void setStatus(String status);
 	
 	public void setProgress(double progress);
+	
 	public static class ModalNotifierNull implements ModalNotifier{
 
 		@Override

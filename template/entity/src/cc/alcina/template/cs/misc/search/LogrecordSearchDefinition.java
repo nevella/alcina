@@ -8,10 +8,10 @@ import cc.alcina.framework.common.client.search.CriterionPropertyNameMappings;
 import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.search.DateGroup;
 import cc.alcina.framework.common.client.search.EnumCriteriaGroup;
+import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.search.TxtCriteriaGroup;
 import cc.alcina.framework.common.client.search.TxtCriterion;
-import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.template.cs.persistent.LogRecord;
 
 @CriterionPropertyNameMappings( {

@@ -52,7 +52,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.ValidatorInfo;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
-
 import cc.alcina.framework.gwt.client.gwittir.customiser.SelectorCustomiser;
 import cc.alcina.template.cs.constants.AlcinaTemplateSiteConstants;
 

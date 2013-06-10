@@ -37,7 +37,6 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
-
 import cc.alcina.framework.gwt.client.gwittir.customiser.SelectorCustomiser;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;

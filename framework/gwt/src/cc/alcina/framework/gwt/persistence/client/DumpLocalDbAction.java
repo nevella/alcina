@@ -6,7 +6,6 @@ import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-import cc.alcina.framework.gwt.persistence.client.PersistenceCallback.PersistenceCallbackStd;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -26,7 +25,7 @@ public class DumpLocalDbAction implements LooseActionHandler {
 		this.modalNotifier = ClientLayerLocator.get().notifications()
 				.getModalNotifier("Uploading local database dump");
 		this.modalNotifier.modalOn();
-		final PersistenceCallbackStd postClearCallback = new PersistenceCallbackStd() {
+		final AsyncCallbackStd postClearCallback = new AsyncCallbackStd() {
 
 			@Override
 			public void onSuccess(Object result) {

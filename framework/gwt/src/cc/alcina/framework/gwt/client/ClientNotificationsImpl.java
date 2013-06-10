@@ -356,14 +356,20 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		INFO, WARN, ERROR
 	}
 
+	NonCancellableRemoteDialog notifier = null;
+
 	@Override
 	public ModalNotifier getModalNotifier(String message) {
-		return new NonCancellableRemoteDialog(message, null, false) {
-			@Override
-			protected boolean initialAnimationEnabled() {
-				return false;
-			}
-		};
+		if (notifier == null || !notifier.isAttached()) {
+			notifier = new NonCancellableRemoteDialog(message, null, false) {
+				@Override
+				protected boolean initialAnimationEnabled() {
+					return false;
+				}
+			};
+		}
+		notifier.setText(message);
+		return notifier;
 	}
 
 	public boolean isLogToSysOut() {
