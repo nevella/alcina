@@ -41,6 +41,7 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 		public EnumRunnableAsyncCallbackPlayer(E state) {
 			super(state);
 			runnable = this;
+			setAsynchronous(true);
 		}
 
 		public EnumRunnableAsyncCallbackPlayer(E from, E to) {
@@ -52,6 +53,7 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 		public void onFailure(Throwable caught) {
 			consort.onFailure(caught);
 		}
+
 
 		@Override
 		public void onSuccess(C result) {

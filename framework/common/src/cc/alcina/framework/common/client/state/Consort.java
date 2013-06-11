@@ -260,8 +260,13 @@ public class Consort<D> {
 
 	private boolean satisfiesSomeSoughtDependenciesOrIsNotASatisfier(
 			Player<D> player, Collection<D> providerDependencies) {
-		return player.getProvides().isEmpty()
-				|| CommonUtils.intersection(player.getProvides(),
+		if (player.getProvides().isEmpty()) {
+			return true;
+		}
+		//make sure this player hasn't already provided a state
+		return CommonUtils.intersection(player.getProvides(), reachedStates)
+				.isEmpty()
+				&& CommonUtils.intersection(player.getProvides(),
 						providerDependencies).size() > 0;
 	}
 
@@ -282,9 +287,6 @@ public class Consort<D> {
 			} else {
 				break;
 			}
-		}
-		if (players.isEmpty()) {
-			finished();
 		}
 		consumingQueue = false;
 	}

@@ -187,10 +187,10 @@ public class StatusPanel extends Composite {
 	}
 
 	protected void previewNativeEvent(NativePreviewEvent event) {
-		if (modal) {
-			event.cancel();
-			return;
-		}
+//		if (modal) {
+//			event.cancel();
+//			return;
+//		}
 	}
 
 	public void setContent(String html) {

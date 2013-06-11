@@ -16,6 +16,7 @@ public class EndpointPlayer<D> extends RunnablePlayer<D> {
 	@Override
 	public void run() {
 		wasPlayed();
+		consort.finished();
 		if (completionCallback != null) {
 			completionCallback.onSuccess(null);
 		}

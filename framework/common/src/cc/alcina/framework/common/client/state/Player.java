@@ -25,6 +25,8 @@ public abstract class Player<D> {
 
 	protected Consort<D> consort;
 
+	private boolean asynchronous;
+
 	private List<D> requires = new ArrayList<D>();
 
 	private List<D> provides = new ArrayList<D>();
@@ -53,6 +55,11 @@ public abstract class Player<D> {
 		return PRIORITY_NORMAL;
 	}
 
+	/**
+	 * Important - unenforced is the idea that, for a non-parallel machine, only
+	 * one state will be provided per player - still working on this, but see
+	 * Consort.satisfiesSomeSoughtDependenciesOrIsNotASatisfier
+	 */
 	public Collection<D> getProvides() {
 		return provides;
 	}
@@ -79,7 +86,9 @@ public abstract class Player<D> {
 
 	public void play() {
 		runnable.run();
-		wasPlayed();
+		if (!isAsynchronous()) {
+			wasPlayed();
+		}
 	}
 
 	public void setConsort(Consort<D> consort) {
@@ -98,6 +107,7 @@ public abstract class Player<D> {
 			Player<D> implements Runnable, AsyncCallback<C> {
 		public RunnableAsyncCallbackPlayer() {
 			super(null);
+			setAsynchronous(true);
 			runnable = this;
 		}
 
@@ -110,6 +120,7 @@ public abstract class Player<D> {
 		public void onSuccess(C result) {
 			wasPlayed();
 		}
+
 	}
 
 	public abstract static class RunnablePlayer<D> extends Player<D> implements
@@ -118,5 +129,13 @@ public abstract class Player<D> {
 			super(null);
 			runnable = this;
 		}
+	}
+
+	public boolean isAsynchronous() {
+		return this.asynchronous;
+	}
+
+	public void setAsynchronous(boolean asynchronous) {
+		this.asynchronous = asynchronous;
 	}
 }

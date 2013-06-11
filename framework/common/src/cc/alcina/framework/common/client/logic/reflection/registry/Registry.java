@@ -237,6 +237,11 @@ public class Registry {
 		get().register(object.getClass(), clazz, void.class,
 				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
 	}
+	public static void putSingleton1( Class<?> clazz,Object object) {
+		get().singletons.put(clazz, void.class, object);
+		get().register(object.getClass(), clazz, void.class,
+				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
+	}
 
 	public void registerSingleton(Object object, Class<?> clazz) {
 		singletons.put(clazz, void.class, object);

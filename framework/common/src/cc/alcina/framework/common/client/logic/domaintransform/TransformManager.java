@@ -62,6 +62,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
@@ -927,7 +928,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public void registerDomainObjectsInHolderAsync(final DomainModelHolder h,
-			final ScheduledCommand postRegisterCallback) {
+			final AsyncCallback<Void> postRegisterCallback) {
 		if (this.getDomainObjects() != null) {
 			getDomainObjects().removeListeners();
 		}
@@ -937,7 +938,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					@Override
 					public void execute() {
 						ClassRef.add(h.getClassRefs());
-						postRegisterCallback.execute();
+						postRegisterCallback.onSuccess(null);
 					}
 				});
 	}

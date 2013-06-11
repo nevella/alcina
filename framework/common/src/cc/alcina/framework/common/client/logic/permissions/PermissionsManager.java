@@ -73,6 +73,8 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	private static String administratorGroupName = "Administrators";
 
 	private static String developerGroupName = "Developers";
+	
+	private static String anonymousUserName = "anonymous";
 
 	private PropertyChangeListener userListener;
 
@@ -682,5 +684,13 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	}
 	public static boolean isOnline() {
 		return !isOffline();
+	}
+
+	public static String getAnonymousUserName() {
+		return anonymousUserName;
+	}
+
+	public static void setAnonymousUserName(String anonymousUserName) {
+		PermissionsManager.anonymousUserName = anonymousUserName;
 	}
 }

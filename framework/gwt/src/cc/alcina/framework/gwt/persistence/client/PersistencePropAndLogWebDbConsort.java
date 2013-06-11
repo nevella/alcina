@@ -79,6 +79,7 @@ public class PersistencePropAndLogWebDbConsort extends
 				LogStore.get().setRemoteLogPersister(remoteLogPersister);
 				remoteLogPersister.push();
 			}
+			wasPlayed();
 		}
 	}
 

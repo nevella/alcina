@@ -126,7 +126,7 @@ public abstract class ClientHandshakeHelper extends StateListenable implements
 				@Override
 				public void execute() {
 					ClientMetricLogging.get().start("register-domain");
-					TransformManager.get().registerDomainObjectsInHolderAsync(objects,postRegisterCleanupCommand);
+//					TransformManager.get().registerDomainObjectsInHolderAsync(objects,postRegisterCleanupCommand);
 					
 				}
 			};

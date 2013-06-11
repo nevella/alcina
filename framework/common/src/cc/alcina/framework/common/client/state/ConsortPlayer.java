@@ -11,9 +11,10 @@ public interface ConsortPlayer {
 			TopicListener listener = new TopicListener() {
 				@Override
 				public void topicPublished(String key, Object message) {
-					consort.wasPlayed(player);
+					player.wasPlayed();
 				}
 			};
+			player.setAsynchronous(true);
 			subConsort.listenerDelta(Consort.FINISHED, listener, true);
 			subConsort.start();
 		}
