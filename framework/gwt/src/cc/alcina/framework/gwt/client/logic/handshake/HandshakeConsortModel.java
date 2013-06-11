@@ -16,8 +16,9 @@ import com.google.gwt.core.client.GWT;
 
 @RegistryLocation(registryPoint = HandshakeConsortModel.class, implementationType = ImplementationType.SINGLETON)
 public class HandshakeConsortModel {
-	private LoginResponse helloResponse;
+	private LoginResponse loginResponse;
 
+	private ClientInstance clientInstance;
 
 	public LoadObjectsHolder loadObjectsHolder;
 
@@ -59,18 +60,28 @@ public class HandshakeConsortModel {
 			return LoginState.NOT_LOGGED_IN;
 		}
 		return PermissionsManager.getAnonymousUserName().equals(
-				clientInstance.getUser().getUserName()) ? LoginState.NOT_LOGGED_IN
+				PermissionsManager.get().getUser().getUserName()) ? LoginState.NOT_LOGGED_IN
 				: LoginState.LOGGED_IN;
 	}
 
-	public LoginResponse getHelloResponse() {
-		return helloResponse;
+	public LoginResponse getLoginResponse() {
+		return loginResponse;
 	}
 
-	public void setHelloResponse(LoginResponse helloResponse) {
-		this.helloResponse = helloResponse;
-		if(helloResponse!=null){
-			Registry.putSingleton1(ClientInstance.class, helloResponse.getClientInstance());
+	public void setLoginResponse(LoginResponse loginResponse) {
+		this.loginResponse = loginResponse;
+		if (loginResponse != null) {
+			setClientInstance(loginResponse.getClientInstance());
+			
 		}
+	}
+
+	public ClientInstance getClientInstance() {
+		return this.clientInstance;
+	}
+
+	public void setClientInstance(ClientInstance clientInstance) {
+		Registry.putSingleton(ClientInstance.class, clientInstance);
+		this.clientInstance = clientInstance;
 	}
 }

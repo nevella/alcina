@@ -14,8 +14,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 import cc.alcina.framework.gwt.persistence.client.SerializedDomainLoader;
 
@@ -87,7 +89,8 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 			tm.setReplayingRemoteEvent(true);
 			CommitToStorageTransformListener tl = ClientLayerLocator.get()
 					.getCommitToStorageTransformListener();
-			ClientLayerLocator.get().setClientInstance(clientInstance);
+			Registry.impl(HandshakeConsortModel.class).setClientInstance(
+					clientInstance);
 			for (DomainTransformRequest rq : tl
 					.getPriorRequestsWithoutResponse()) {
 				rq.setClientInstance(clientInstance);
@@ -95,7 +98,7 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 					dte.getObjectClassRef();
 				}
 			}
-			afterEventReplay(); 
+			afterEventReplay();
 			tm.setReplayingRemoteEvent(false);
 		}
 
@@ -117,7 +120,6 @@ public abstract class JvmSerializedDomainLoader extends SerializedDomainLoader {
 						persist.setTag(wr.getTag());
 						LocalTransformPersistence.get()
 								.getPersistedTransforms().put(requestId, wr);
-						
 						addRemoteNoLocalYesDtrToStorageQueue(persist);
 					}
 				}

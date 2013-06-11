@@ -155,7 +155,10 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 
 	private ClientInstance getClientInstance() {
-		return ClientLayerLocator.get().getClientInstance();
+		ClientInstance clientInstance = ClientLayerLocator.get().getClientInstance().clone();
+		clientInstance.setUser(null);
+		clientInstance.setAuth(null);
+		return clientInstance;
 	}
 
 	public int getLocalRequestId() {

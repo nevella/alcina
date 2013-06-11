@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.logic;
 
+import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -102,8 +103,13 @@ public abstract class ExtensibleEnum {
 
 	private static LookupMapToMap<ExtensibleEnum> valueLookup = new LookupMapToMap<ExtensibleEnum>(
 			2);
+	//class - tag - exenum instance - exenum instance
+	private static LookupMapToMap<ExtensibleEnum> tagLookup = new LookupMapToMap<ExtensibleEnum>(
+			3);
 
 	private String key;
+	
+	private String[] tags;
 
 	public static <E extends ExtensibleEnum> E valueOf(Class<E> enumClass,
 			String name) {
@@ -116,11 +122,7 @@ public abstract class ExtensibleEnum {
 
 	public ExtensibleEnum(String key) {
 		this.key = key;
-		Class<? extends ExtensibleEnum> registryPoint = getClass();
-		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
-			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
-					.getSuperclass();
-		}
+		Class<? extends ExtensibleEnum> registryPoint = getRegistryPoint();
 		ExtensibleEnum existing = valueLookup.get(registryPoint,
 				serializedForm());
 		if (existing != null) {
@@ -129,6 +131,26 @@ public abstract class ExtensibleEnum {
 		}
 		valueLookup.put(registryPoint, serializedForm(), this);
 		superLookup.add(registryPoint, this);
+	}
+
+	private Class<? extends ExtensibleEnum> getRegistryPoint() {
+		Class<? extends ExtensibleEnum> registryPoint = getClass();
+		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
+			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
+					.getSuperclass();
+		}
+		return registryPoint;
+	}
+	
+	public ExtensibleEnum(String key, String... tags) {
+		this(key);
+		this.tags=tags;
+		for(String tag:tags){
+			tagLookup.put(getRegistryPoint(),tag,this,this);
+		}
+	}
+	public static Collection<ExtensibleEnum> forClassAndTag(Class<? extends ExtensibleEnum> clazz,String tag){
+		return tagLookup.asMap(clazz,tag).keySet();
 	}
 
 	protected ExtensibleEnum() {
@@ -178,5 +200,9 @@ public abstract class ExtensibleEnum {
 		public ExtensibleEnum convert(String original) {
 			return ExtensibleEnum.valueOf(enumClass, original);
 		}
+	}
+
+	public String[] getTags() {
+		return this.tags;
 	}
 }

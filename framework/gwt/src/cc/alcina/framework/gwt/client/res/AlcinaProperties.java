@@ -29,7 +29,7 @@ public class AlcinaProperties {
 	public static AlcinaProperties get() {
 		if (theInstance == null) {
 			theInstance = new AlcinaProperties();
-			Registry.putSingleton1(AlcinaProperties.class,theInstance);
+			Registry.putSingleton(AlcinaProperties.class,theInstance);
 		}
 		return theInstance;
 	}

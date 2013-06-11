@@ -15,8 +15,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.core.client.GWT;
@@ -218,7 +220,7 @@ public abstract class GwtSerializedDomainLoader extends SerializedDomainLoader {
 			CommitToStorageTransformListener tl = ClientLayerLocator.get()
 					.getCommitToStorageTransformListener();
 			if (clientInstance != null) {
-				ClientLayerLocator.get().setClientInstance(clientInstance);
+				Registry.impl(HandshakeConsortModel.class).setClientInstance(clientInstance);
 			}
 			for (DomainTransformRequest rq : tl
 					.getPriorRequestsWithoutResponse()) {

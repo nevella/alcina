@@ -37,10 +37,10 @@ public class Registry {
 		return instance;
 	}
 
-	public void registerBootstrapServices(ClassLookup classLookup){
+	public void registerBootstrapServices(ClassLookup classLookup) {
 		this.classLookup = classLookup;
-		
 	}
+
 	public static <V> V impl(Class<V> registryPoint) {
 		return get().impl0(registryPoint, void.class, false);
 	}
@@ -232,12 +232,7 @@ public class Registry {
 				info.implementationType(), info.priority());
 	}
 
-	public static void putSingleton(Object object, Class<?> clazz) {
-		get().singletons.put(clazz, void.class, object);
-		get().register(object.getClass(), clazz, void.class,
-				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
-	}
-	public static void putSingleton1( Class<?> clazz,Object object) {
+	public static void putSingleton(Class<?> clazz, Object object) {
 		get().singletons.put(clazz, void.class, object);
 		get().register(object.getClass(), clazz, void.class,
 				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);

@@ -8,7 +8,7 @@ import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.DatabaseException;
 
 public class PersistencePropAndLogWebDbConsort extends
-		Consort<PersistencePropAndLogInitState> {
+		Consort<PersistencePropAndLogInitState,Object> {
 	String dbName;
 
 	private RemoteLogPersister remoteLogPersister;

@@ -1,9 +1,12 @@
 package cc.alcina.framework.common.client.state;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -24,7 +27,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * @author nick@alcina.cc
  * 
  */
-public class Consort<D> {
+public class Consort<D, S> {
 	private static final String PLAYERS_WITH_EQUAL_DEPS_ERR = "Players with equal"
 			+ " dependencies and priorities: \n%s\n%s";
 
@@ -42,6 +45,10 @@ public class Consort<D> {
 
 	LinkedList<Player<D>> players = new LinkedList<Player<D>>();
 
+	LinkedList<Player<D>> removed = new LinkedList<Player<D>>();
+
+	Map<S, ConsortSignalHandler<S>> signalHandlers = new LinkedHashMap<S, ConsortSignalHandler<S>>();
+
 	private boolean executingPlayer = false;
 
 	private boolean consumingQueue;
@@ -58,20 +65,31 @@ public class Consort<D> {
 
 	private Set<D> reachedStates = new LinkedHashSet<D>();
 
+	public void addEndpointPlayer() {
+		addEndpointPlayer(null);
+	}
+
+	public void addSignalHandler(ConsortSignalHandler<S> signal) {
+		if (signalHandlers.containsKey(signal.handlesSignal())) {
+			throw new RuntimeException("Duplicate signal handlers for "
+					+ signal.handlesSignal());
+		}
+		signalHandlers.put(signal.handlesSignal(), signal);
+	}
+
+	public void signal(S signal) {
+		signalHandlers.get(signal).signal(this);
+	}
+
 	public void addEndpointPlayer(AsyncCallback completionCallback) {
 		D lastRequired = CommonUtils.last(players).getProvides().iterator()
 				.next();
 		addPlayer(new EndpointPlayer(lastRequired, completionCallback));
 	}
 
-	public void addEndpointPlayer() {
-		addEndpointPlayer(null);
-	}
-
 	public void addPlayer(Player<D> player) {
 		player.setConsort(this);
 		players.addLast(player);
-		consumeQueue();
 	}
 
 	public void addPlayer(Player<D> player, D... extraRequires) {
@@ -87,6 +105,10 @@ public class Consort<D> {
 			}
 		};
 		CollectionFilters.filterInPlace(players, isCancellableFilter);
+		clearReachedStates();
+	}
+
+	public void clearReachedStates() {
 		reachedStates.clear();
 	}
 
@@ -98,7 +120,14 @@ public class Consort<D> {
 		return CollectionFilters.contains(players, new IsClassFilter(clazz));
 	}
 
+	public void addIfNotMember(Player player) {
+		if (!containsTask(player.getClass())) {
+			addPlayer(player);
+		}
+	}
+
 	public void finished() {
+		running = false;
 		topicPublisher.publishTopic(FINISHED, null);
 	}
 
@@ -121,6 +150,10 @@ public class Consort<D> {
 	public void onFailure(Throwable throwable) {
 		topicPublisher.publishTopic(ERROR, throwable);
 		throw new WrappedRuntimeException(throwable);
+	}
+
+	public void removeStates(Collection<D> states) {
+		reachedStates.removeAll(states);
 	}
 
 	public void setSimulate(boolean simulate) {
@@ -157,14 +190,17 @@ public class Consort<D> {
 	}
 
 	private void maybeRemovePlayersFromQueue(Player<D> player) {
-		if (player.isPerConsortSingleton()) {
-			CollectionFilters.filterInPlace(players, new InverseFilter(
-					new IsClassFilter(player.getClass())));
-		} else {
+		// to handle jadeClientState use cases - but think this can be done
+		// better via signals?
+		// if (player.isPerConsortSingleton()) {
+		// CollectionFilters.filterInPlace(players, new InverseFilter(
+		// new IsClassFilter(player.getClass())));
+		// } else {
+		// players.remove(player);
+		// }
+		if (player.isRemoveAfterPlay()) {
+			removed.add(player);
 			players.remove(player);
-		}
-		if (!player.isRemoveAfterPlay()) {
-			players.add(player);
 		}
 	}
 
@@ -263,7 +299,7 @@ public class Consort<D> {
 		if (player.getProvides().isEmpty()) {
 			return true;
 		}
-		//make sure this player hasn't already provided a state
+		// make sure this player hasn't already provided a state
 		return CommonUtils.intersection(player.getProvides(), reachedStates)
 				.isEmpty()
 				&& CommonUtils.intersection(player.getProvides(),
@@ -278,7 +314,7 @@ public class Consort<D> {
 		// this means that synchronous players will be dispatched sequentially
 		// within the while loop, but async tasks will be dispatched by
 		// (non-recursive) consumeQueue/wasPlayed calls
-		while (!executingPlayer) {
+		while (!executingPlayer && running) {
 			Player<D> player = nextPlayer();
 			if (player != null) {
 				maybeRemovePlayersFromQueue(player);
@@ -328,5 +364,12 @@ public class Consort<D> {
 
 	Set<D> getReachedStates() {
 		return this.reachedStates;
+	}
+
+	public void restart() {
+		clearReachedStates();
+		players.addAll(removed);
+		removed.clear();
+		start();
 	}
 }

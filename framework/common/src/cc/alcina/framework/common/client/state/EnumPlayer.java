@@ -46,6 +46,7 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 
 		public EnumRunnableAsyncCallbackPlayer(E from, E to) {
 			super(from, to);
+			setAsynchronous(true);
 			runnable = this;
 		}
 

@@ -16,7 +16,7 @@ import cc.alcina.framework.gwt.persistence.client.PersistOfflineTransformsConsor
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class PersistOfflineTransformsConsort extends Consort<State> {
+public class PersistOfflineTransformsConsort extends Consort<State,Object> {
 	public static enum State {
 		GET_TRANSFORMS, PERSIST_TRANSFORMS, PERSIST_TRANSFORMS_SUCCESS,
 		PERSIST_TRANSFORMS_FAILURE, FINISHED
@@ -140,5 +140,6 @@ public class PersistOfflineTransformsConsort extends Consort<State> {
 		addPlayer(new Player_PERSIST_TRANSFORMS_FAILURE());
 		addPlayer(new Player_PERSIST_TRANSFORMS_SUCCCESS());
 		addEndpointPlayer(completionCallback);
+		nudge();
 	}
 }

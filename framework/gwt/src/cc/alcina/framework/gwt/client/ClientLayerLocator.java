@@ -41,6 +41,7 @@ public class ClientLayerLocator {
 		}
 		return theInstance;
 	}
+
 	private boolean usesRootLayoutPanel;
 
 	private RemoteServiceProvider<? extends CommonRemoteServiceAsync> commonRemoteServiceAsyncProvider;
@@ -51,19 +52,15 @@ public class ClientLayerLocator {
 
 	private ClientBase clientBase;
 
-
 	private DomainModelHolder domainModelHolder;
 
 	private ClientHandshakeHelper clientHandshakeHelper;
 
 	private TimerWrapperProvider timerWrapperProvider;
-	
+
 	private ClientNotifications clientNotifications;
 
-	private ClientInstance clientInstance;
-
 	private ClientExceptionHandler exceptionHandler;
-	
 
 	private ClientLayerLocator() {
 		super();
@@ -94,7 +91,7 @@ public class ClientLayerLocator {
 	}
 
 	public ClientInstance getClientInstance() {
-		return clientInstance;
+		return Registry.impl(ClientInstance.class, void.class, true);
 	}
 
 	public CommitToStorageTransformListener getCommitToStorageTransformListener() {
@@ -123,43 +120,40 @@ public class ClientLayerLocator {
 
 	public void registerClientBase(ClientBase base) {
 		this.clientBase = base;
-		Registry.get().registerSingleton(base,ClientBase.class);
+		Registry.get().registerSingleton(base, ClientBase.class);
 	}
 
 	public void registerCommonRemoteServiceAsyncProvider(
 			RemoteServiceProvider<? extends CommonRemoteServiceAsync> commonRemoteServiceAsyncProvider) {
 		this.commonRemoteServiceAsyncProvider = commonRemoteServiceAsyncProvider;
-		Registry.get().registerSingleton(commonRemoteServiceAsyncProvider,RemoteServiceProvider.class);
+		Registry.get().registerSingleton(commonRemoteServiceAsyncProvider,
+				RemoteServiceProvider.class);
 	}
 
 	public void registerExceptionHandler(ClientExceptionHandler exceptionHandler) {
 		this.exceptionHandler = exceptionHandler;
-		Registry.get().registerSingleton(exceptionHandler,ClientExceptionHandler.class);
+		Registry.get().registerSingleton(exceptionHandler,
+				ClientExceptionHandler.class);
 		GWT.setUncaughtExceptionHandler(exceptionHandler);
 	}
 
 	public void registerNotifications(ClientNotifications clientNotifications) {
 		this.clientNotifications = clientNotifications;
-		Registry.get().registerSingleton(clientNotifications,ClientNotifications.class);
+		Registry.get().registerSingleton(clientNotifications,
+				ClientNotifications.class);
 	}
 
-	public void registerTimerWrapperProvider(TimerWrapperProvider timerWrapperProvider) {
+	public void registerTimerWrapperProvider(
+			TimerWrapperProvider timerWrapperProvider) {
 		this.timerWrapperProvider = timerWrapperProvider;
+		Registry.putSingleton(TimerWrapperProvider.class, timerWrapperProvider);
 	}
 
 	public void setClientHandshakeHelper(
 			ClientHandshakeHelper clientHandshakeHelper) {
 		this.clientHandshakeHelper = clientHandshakeHelper;
-		Registry.get().registerSingleton(clientHandshakeHelper,ClientHandshakeHelper.class);
-	}
-
-	public void setClientInstance(ClientInstance clientInstance) {
-		if (clientInstance.getUser() != null) {
-			PermissionsManager.get().setUser(clientInstance.getUser());
-		}
-		// not needed, and heavyweight (for transforms, etc)
-		clientInstance.setUser(null);
-		this.clientInstance = clientInstance;
+		Registry.get().registerSingleton(clientHandshakeHelper,
+				ClientHandshakeHelper.class);
 	}
 
 	public void setCommitToStorageTransformListener(
@@ -170,7 +164,6 @@ public class ClientLayerLocator {
 	public void setDomainModelHolder(DomainModelHolder domainModelHolder) {
 		this.domainModelHolder = domainModelHolder;
 	}
-
 
 	public TimerWrapperProvider timerWrapperProvider() {
 		return timerWrapperProvider;

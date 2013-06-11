@@ -23,7 +23,7 @@ public abstract class Player<D> {
 
 	protected Runnable runnable;
 
-	protected Consort<D> consort;
+	protected Consort<D, ?> consort;
 
 	private boolean asynchronous;
 
@@ -43,7 +43,7 @@ public abstract class Player<D> {
 		requires.addAll(Arrays.asList(requiresStates));
 	}
 
-	public Consort<D> getConsort() {
+	public Consort<D, ?> getConsort() {
 		return this.consort;
 	}
 
@@ -91,7 +91,7 @@ public abstract class Player<D> {
 		}
 	}
 
-	public void setConsort(Consort<D> consort) {
+	public void setConsort(Consort<D, ?> consort) {
 		this.consort = consort;
 	}
 
@@ -120,7 +120,6 @@ public abstract class Player<D> {
 		public void onSuccess(C result) {
 			wasPlayed();
 		}
-
 	}
 
 	public abstract static class RunnablePlayer<D> extends Player<D> implements

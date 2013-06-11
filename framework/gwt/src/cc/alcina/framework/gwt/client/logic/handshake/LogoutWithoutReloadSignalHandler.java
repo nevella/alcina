@@ -1,0 +1,22 @@
+package cc.alcina.framework.gwt.client.logic.handshake;
+
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
+import cc.alcina.framework.common.client.state.Consort;
+import cc.alcina.framework.common.client.state.ConsortSignalHandler;
+
+public class LogoutWithoutReloadSignalHandler implements
+		ConsortSignalHandler<HandshakeSignal> {
+	@Override
+	public void signal(Consort consort) {
+		consort.removeStates(ExtensibleEnum.forClassAndTag(
+				HandshakeState.class,
+				HandshakeState.TAG_POST_OBJECT_LOAD));
+		consort.addIfNotMember(new StartAppPlayer());
+		consort.nudge();
+	}
+
+	@Override
+	public HandshakeSignal handlesSignal() {
+		return HandshakeSignal.LOGGED_OUT;
+	}
+}

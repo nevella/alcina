@@ -33,7 +33,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
  */
 @Introspectable
 public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
-		Serializable {
+		Serializable, Cloneable {
 	private long id;
 
 	private long localId;
@@ -55,6 +55,17 @@ public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
 	@Transient
 	public long getId() {
 		return id;
+	}
+
+	public abstract ClientInstance clone();
+
+	public ClientInstance copyPropertiesTo(ClientInstance other) {
+		other.id = id;
+		other.localId = localId;
+		other.helloDate = helloDate;
+		other.auth = auth;
+		other.userAgent = userAgent;
+		return other;
 	}
 
 	@Transient

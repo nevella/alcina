@@ -18,15 +18,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-
-
 @Table(name = "client_instance")
 @Entity
-
-@SequenceGenerator(allocationSize=1,name = "client_instance_id_seq", sequenceName = "client_instance_id_seq")
+@SequenceGenerator(allocationSize = 1, name = "client_instance_id_seq", sequenceName = "client_instance_id_seq")
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ClientInstance.class)
-public class ClientInstanceImpl extends ClientInstance implements
-		Serializable {
+public class ClientInstanceImpl extends ClientInstance implements Serializable {
 	private AlcinaTemplateUser user;
 
 	@ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY, targetEntity = AlcinaTemplateUser.class)
@@ -38,6 +34,7 @@ public class ClientInstanceImpl extends ClientInstance implements
 	public void setUser(IUser user) {
 		this.user = (AlcinaTemplateUser) user;
 	}
+
 	@Override
 	@Id
 	@Column(name = "id", unique = true, nullable = false)
@@ -45,8 +42,17 @@ public class ClientInstanceImpl extends ClientInstance implements
 	public long getId() {
 		return super.getId();
 	}
+
 	@Override
 	public void setId(long id) {
 		super.setId(id);
+	}
+
+	@Override
+	public ClientInstanceImpl clone() {
+		ClientInstanceImpl instance = new ClientInstanceImpl();
+		instance.user = user;
+		copyPropertiesTo(instance);
+		return instance;
 	}
 }

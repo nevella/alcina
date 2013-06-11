@@ -19,6 +19,8 @@ import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
  * 'registerUpdatingCallback' etc
  * 
  * and should be a state machine. in fact, izz a mess!
+ * 
+ * refactor-consort
  * @author nick@alcina.cc
  * 
  */
