@@ -2,18 +2,15 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
-import com.google.gwt.core.client.Scheduler.RepeatingCommand;
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
-import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class LoadObjectsHolder<DO extends DomainModelHolder> implements
 		Serializable, DomainModelDelta {

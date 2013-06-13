@@ -13,12 +13,12 @@ import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallb
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-import cc.alcina.framework.gwt.persistence.client.PersistOfflineTransformsConsort.State;
+import cc.alcina.framework.gwt.persistence.client.UploadOfflineTransformsConsort.State;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class PersistOfflineTransformsConsort extends Consort<State, Object> {
-	public static enum State {
+public class UploadOfflineTransformsConsort extends Consort<State, Object> {
+	static enum State {
 		GET_TRANSFORMS, PERSIST_TRANSFORMS, PERSIST_TRANSFORMS_SUCCESS,
 		PERSIST_TRANSFORMS_FAILURE, FINISHED
 	}
@@ -148,7 +148,7 @@ public class PersistOfflineTransformsConsort extends Consort<State, Object> {
 		}
 	}
 
-	public PersistOfflineTransformsConsort(AsyncCallback completionCallback) {
+	public UploadOfflineTransformsConsort(AsyncCallback completionCallback) {
 		this.completionCallback = completionCallback;
 		addPlayer(new Player_GET_TRANSFORMS());
 		addPlayer(new Player_PERSIST_TRANSFORMS());

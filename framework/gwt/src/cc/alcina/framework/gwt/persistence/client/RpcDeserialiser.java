@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
-import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.GwtRpcDeserialisationCallback;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;

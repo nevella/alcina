@@ -22,7 +22,6 @@ import javax.persistence.Transient;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 

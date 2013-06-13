@@ -15,7 +15,6 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.ClientUTCDateProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.logic.state.MachineSchedulerGwt;
 import cc.alcina.framework.gwt.client.provider.ClientURLComponentEncoder;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.res.AlcinaResources;
@@ -39,7 +38,8 @@ public class ClientConfiguration {
 
 	protected void prepareDebugFromHistory() {
 		AlcinaHistory.initialiseDebugIds();
-		if(AlcinaProperties.is(AlcinaProperties.class, AlcinaProperties.SIMULATE_OFFLINE)){
+		if (AlcinaProperties.is(AlcinaProperties.class,
+				AlcinaProperties.SIMULATE_OFFLINE)) {
 			AlcinaDebugIds.setFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE);
 		}
 	}
@@ -47,7 +47,6 @@ public class ClientConfiguration {
 	protected void initCss() {
 		StyleInjector.inject(AlcinaResources.INSTANCE.css().getText());
 	}
-
 
 	protected void afterConfiguration() {
 	}
@@ -87,7 +86,6 @@ public class ClientConfiguration {
 		CommonLocator.get().registerObjectLookup(TransformManager.get());
 		CommonLocator.get().registerURLComponentEncoder(
 				new ClientURLComponentEncoder());
-		CommonLocator.get().registerMachineScheduler(new MachineSchedulerGwt());
 	}
 
 	protected void registerExtraTransformListenersPreStorage() {

@@ -302,9 +302,9 @@ public class WebDatabaseTransformPersistence extends
 		};
 		List<Integer> ids = CollectionFilters.convert(persistedWrappers,
 				getIdConverter);
-		executeSql("update  TransformRequests  set "
+		executeSql(CommonUtils.formatJ("update  TransformRequests  set "
 				+ "transform_request_type='TO_REMOTE_COMPLETED'"
-				+ " where id in (?)", callback, CommonUtils.join(ids, ", "));
+				+ " where id in (%s)", CommonUtils.join(ids, ", ")), callback);
 	}
 
 	public static class StorageQuotaException extends Exception {
@@ -350,7 +350,8 @@ public class WebDatabaseTransformPersistence extends
 
 		@Override
 		public void onTransactionFailure(SQLError error) {
-			callbackFail(postTransactionCallback, error);
+			callbackFail(postTransactionCallback,
+					statementError != null ? statementError : error);
 		}
 	}
 

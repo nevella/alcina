@@ -11,7 +11,6 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;

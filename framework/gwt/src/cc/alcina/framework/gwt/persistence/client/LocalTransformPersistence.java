@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
@@ -138,7 +136,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			cb.onSuccess(null);
 			return;
 		}
-		new PersistOfflineTransformsConsort(cb).start();
+		new UploadOfflineTransformsConsort(cb).start();
 	}
 
 	public void init(DTESerializationPolicy dteSerializationPolicy,

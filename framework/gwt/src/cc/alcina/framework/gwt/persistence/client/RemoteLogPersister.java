@@ -1,22 +1,20 @@
 package cc.alcina.framework.gwt.persistence.client;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Collections;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
-import cc.alcina.framework.common.client.state.EnumMachine;
-import cc.alcina.framework.common.client.state.MachineEvent;
-import cc.alcina.framework.common.client.state.MachineEvent.MachineEventImpl;
-import cc.alcina.framework.common.client.state.MachineListener;
-import cc.alcina.framework.common.client.state.MachineModel;
-import cc.alcina.framework.common.client.state.MachineState;
-import cc.alcina.framework.common.client.state.MachineTransitionHandler;
+import cc.alcina.framework.common.client.state.Consort;
+import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.state.LoopingPlayer;
+import cc.alcina.framework.common.client.state.Player;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TimerWrapper;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.logic.state.AsyncCallbackTransitionHandler;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.Lzw;
@@ -34,14 +32,15 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
  */
 public class RemoteLogPersister {
 	private enum State {
-		CHECK_ONLINE, GET_LOG_RECORD_RANGE, ADD_RECORDS, PUSH, DELETE
+		CHECKED_ONLINE, GOT_LOG_RECORD_RANGE, ADDED_RECORDS, PUSHED, DELETED,
+		FINISHED
 	}
 
 	public static int PREFERRED_MAX_PUSH_SIZE = 30000;// bytes
 
 	public boolean maybeOffline;
 
-	class RemoteLogPersisterMachine extends EnumMachine<State, MachineModel> {
+	class RemoteLogPersisterConsort extends Consort<State, Object> {
 		IntPair logRecordRange = null;
 
 		int idCtr = 0;
@@ -50,68 +49,43 @@ public class RemoteLogPersister {
 
 		int lastAddedThisBuffer = 0;
 
-		private MachineEventImpl keepAdding;
-
 		private StringBuilder buffer = new StringBuilder();
 
-		public RemoteLogPersisterMachine() {
+		public RemoteLogPersisterConsort() {
 			super();
-			init(State.class);
 			buffer = new StringBuilder();
-			EnumMachineState<State> addingState = getStateFor(State.ADD_RECORDS);
-			keepAdding = new MachineEventImpl("keep-adding", addingState,
-					addingState);
-		}
-
-		@Override
-		protected MachineTransitionHandler getTransitionHandlerFor(
-				EnumMachineState<State> state, MachineEventImpl event) {
-			switch (state.getEnumValue()) {
-			case GET_LOG_RECORD_RANGE:
-				return new LogRecordRangeGetter(event);
-			case CHECK_ONLINE:
-				return new LogRecordCheckOnline(event);
-			case ADD_RECORDS:
-				return new LogRecordGetter(event);
-			case PUSH:
-				return new LogRecordRemotePusher(event);
-			case DELETE:
-				return new LogRecordRangeDeleter(event);
-			}
-			return null;
+			addPlayer(new LogRecordCheckOnline());
+			addPlayer(new LogRecordRangeGetter());
 		}
 
 		class LogRecordRangeGetter extends
-				AsyncCallbackTransitionHandler<IntPair, MachineModel> {
-			public LogRecordRangeGetter(MachineEvent successEvent) {
-				super(successEvent);
+				EnumRunnableAsyncCallbackPlayer<IntPair, State> {
+			public LogRecordRangeGetter() {
+				super(State.GOT_LOG_RECORD_RANGE);
 			}
 
 			@Override
-			public void onSuccess0(IntPair result) {
+			public void onSuccess(IntPair result) {
 				logRecordRange = result;
 				idCtr = logRecordRange.i1 - 1;
 				firstAddedThisBuffer = -1;
+				wasPlayed();
 			}
 
 			@Override
-			public void start() {
+			public void run() {
 				LogStore.get().getIdRange(this);
 			}
 		}
 
 		class LogRecordRangeDeleter extends
-				AsyncCallbackTransitionHandler<Void, MachineModel> {
-			public LogRecordRangeDeleter(MachineEvent successEvent) {
-				super(successEvent);
+				EnumRunnableAsyncCallbackPlayer<Void, State> {
+			public LogRecordRangeDeleter() {
+				super(State.DELETED);
 			}
 
 			@Override
-			public void onSuccess0(Void result) {
-			}
-
-			@Override
-			public void start() {
+			public void run() {
 				IntPair range = new IntPair(firstAddedThisBuffer,
 						lastAddedThisBuffer);
 				if (range.isZero()) {
@@ -123,20 +97,19 @@ public class RemoteLogPersister {
 		}
 
 		class LogRecordCheckOnline extends
-				AsyncCallbackTransitionHandler<Void, MachineModel> {
-			MachineEvent jumpToEnd = new MachineEventImpl("checkOnline-end",
-					getStateFor(State.CHECK_ONLINE), MachineState.END);
-
-			public LogRecordCheckOnline(MachineEvent successEvent) {
-				super(successEvent);
+				EnumRunnableAsyncCallbackPlayer<Void, State> {
+			public LogRecordCheckOnline() {
+				super(State.CHECKED_ONLINE);
+				addProvides(State.FINISHED);
 			}
 
 			boolean rqRun = false;
 
 			@Override
-			public void onSuccess0(Void result) {
+			public void onSuccess(Void result) {
 				maybeOffline = false;
 				maybeUnmute();
+				wasPlayed(State.CHECKED_ONLINE);
 			}
 
 			public void maybeUnmute() {
@@ -146,7 +119,7 @@ public class RemoteLogPersister {
 			}
 
 			@Override
-			public void start() {
+			public void run() {
 				rqRun = false;
 				if (!maybeOffline) {
 					onSuccess(null);
@@ -168,31 +141,30 @@ public class RemoteLogPersister {
 			@Override
 			public void onFailure(Throwable caught) {
 				maybeUnmute();
-				handleExpectableMaybeOffline(caught, jumpToEnd);
+				handleExpectableMaybeOffline(caught, this);
 			}
 		}
 
 		class LogRecordRemotePusher extends
-				AsyncCallbackTransitionHandler<Void, MachineModel> {
-			MachineEvent jumpToEnd = new MachineEventImpl("push-end",
-					getStateFor(State.PUSH), MachineState.END);
-
+				EnumRunnableAsyncCallbackPlayer<Void, State> {
 			private boolean rqRun;
 
-			public LogRecordRemotePusher(MachineEvent successEvent) {
-				super(successEvent);
+			public LogRecordRemotePusher() {
+				super(State.PUSHED);
+				addProvides(State.FINISHED);
 			}
 
 			@Override
-			public void onSuccess0(Void result) {
+			public void onSuccess(Void result) {
 				if (rqRun) {
 					deferredUnmute();
 					maybeOffline = false;
 				}
+				wasPlayed(State.PUSHED);
 			}
 
 			@Override
-			public void start() {
+			public void run() {
 				if (buffer.length() == 0) {
 					rqRun = false;
 					onSuccess(null);
@@ -209,7 +181,7 @@ public class RemoteLogPersister {
 			@Override
 			public void onFailure(Throwable caught) {
 				deferredUnmute();
-				handleExpectableMaybeOffline(caught, jumpToEnd);
+				handleExpectableMaybeOffline(caught, this);
 			}
 		}
 
@@ -222,11 +194,11 @@ public class RemoteLogPersister {
 			});
 		}
 
-		class LogRecordGetter
-				extends
-				AsyncCallbackTransitionHandler<Map<Integer, String>, MachineModel> {
-			public LogRecordGetter(MachineEvent successEvent) {
-				super(successEvent);
+		class LogRecordGetter extends
+				EnumRunnableAsyncCallbackPlayer<Map<Integer, String>, State>
+				implements LoopingPlayer {
+			public LogRecordGetter() {
+				super(State.GOT_LOG_RECORD_RANGE);
 			}
 
 			@Override
@@ -254,73 +226,72 @@ public class RemoteLogPersister {
 					buffer.append("\n");
 					if (buffer.length() < PREFERRED_MAX_PUSH_SIZE
 							&& idCtr < logRecordRange.i2) {
-						model.getMachine().newEvent(keepAdding);
+						consort.replay(this);
 						return;
 					}
 				}
-				model.getMachine().newEvent(successEvent);
+				wasPlayed(State.GOT_LOG_RECORD_RANGE);
 			}
 
 			@Override
-			public void onSuccess0(Map<Integer, String> result) {
-				// two possible emergent arrows, so no default
-			}
-
-			@Override
-			public void start() {
+			public void run() {
 				++idCtr;
 				LogStore.get().getRange(idCtr, idCtr, this);
 			}
+
+			@Override
+			public String describeLoop() {
+				return "keep adding until we have PREFERRED_MAX_PUSH_SIZE";
+			}
 		}
 
-		public void handleExpectableMaybeOffline(Throwable caught,
-				MachineEvent jumpToEnd) {
+		public void handleExpectableMaybeOffline(Throwable caught, Player player) {
 			if (ClientUtils.maybeOffline(caught)) {
-				maybeOffline=true;
-				machine.newEvent(jumpToEnd);
+				maybeOffline = true;
+				consort.wasPlayed(player,
+						Collections.singletonList(State.FINISHED));
 			} else {
 				throw new WrappedRuntimeException(caught);
 			}
 		}
 	}
 
-	private RemoteLogPersisterMachine machine = null;
+	private RemoteLogPersisterConsort consort = null;
 
 	int pushCount = 0;
+
+	private TopicListener consortFinishedListener = new TopicListener() {
+		@Override
+		public void topicPublished(String key, Object message) {
+			boolean pushAgain = consort.lastAddedThisBuffer < consort.logRecordRange.i2;
+			long waitTime = (System.currentTimeMillis() - consortStart) / 2;
+			consort.clear();
+			consort = null;
+			if ((pushCount > 0 || pushAgain) && !maybeOffline) {
+				TimerWrapper timer = ClientLayerLocator.get()
+						.timerWrapperProvider().getTimer(new Runnable() {
+							@Override
+							public void run() {
+								push();
+							}
+						});
+				timer.scheduleSingle(waitTime);
+			}
+		}
+	};
+
+	private long consortStart;
 
 	// get last uploaded, get range, push(http), delete, update lastuploaded,
 	public synchronized void push() {
 		pushCount++;
-		if (machine == null) {
+		if (consort == null) {
 			pushCount = 0;
-			machine = new RemoteLogPersisterMachine();
-			final long start = System.currentTimeMillis();
-			machine.addListener(MachineState.END, null,
-					new MachineListener<MachineModel>() {
-						@Override
-						public void beforeAction(MachineModel model) {
-						}
-
-						@Override
-						public void afterAction(MachineModel model) {
-							boolean pushAgain = machine.lastAddedThisBuffer < machine.logRecordRange.i2;
-							long waitTime = (System.currentTimeMillis() - start) / 2;
-							machine.clear();
-							machine = null;
-							if ((pushCount > 0 || pushAgain) && !maybeOffline) {
-								TimerWrapper timer = ClientLayerLocator.get()
-										.timerWrapperProvider()
-										.getTimer(new Runnable() {
-											@Override
-											public void run() {
-												push();
-											}
-										});
-								timer.scheduleSingle(waitTime);
-							}
-						}
-					});
-			machine.start();
+			consort = new RemoteLogPersisterConsort();
+			consortStart = System.currentTimeMillis();
+			consort.listenerDelta(Consort.FINISHED, consortFinishedListener,
+					true);
+			consort.start();
 		}
 	}
 }

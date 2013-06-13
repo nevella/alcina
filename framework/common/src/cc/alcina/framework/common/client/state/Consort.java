@@ -63,26 +63,22 @@ public class Consort<D, S> {
 
 	private Set<D> reachedStates = new LinkedHashSet<D>();
 
+	Player replayPlayer = null;
+
 	public void addEndpointPlayer() {
 		addEndpointPlayer(null);
-	}
-
-	public void addSignalHandler(ConsortSignalHandler<S> signal) {
-		if (signalHandlers.containsKey(signal.handlesSignal())) {
-			throw new RuntimeException("Duplicate signal handlers for "
-					+ signal.handlesSignal());
-		}
-		signalHandlers.put(signal.handlesSignal(), signal);
-	}
-
-	public void signal(S signal) {
-		signalHandlers.get(signal).signal(this);
 	}
 
 	public void addEndpointPlayer(AsyncCallback completionCallback) {
 		D lastRequired = CommonUtils.last(players).getProvides().iterator()
 				.next();
 		addPlayer(new EndpointPlayer(lastRequired, completionCallback));
+	}
+
+	public void addIfNotMember(Player player) {
+		if (!containsTask(player.getClass())) {
+			addPlayer(player);
+		}
 	}
 
 	public void addPlayer(Player<D> player) {
@@ -93,6 +89,22 @@ public class Consort<D, S> {
 	public void addPlayer(Player<D> player, D... extraRequires) {
 		player.addRequires(extraRequires);
 		addPlayer(player);
+	}
+
+	public void addSignalHandler(ConsortSignalHandler<S> signal) {
+		if (signalHandlers.containsKey(signal.handlesSignal())) {
+			throw new RuntimeException("Duplicate signal handlers for "
+					+ signal.handlesSignal());
+		}
+		signalHandlers.put(signal.handlesSignal(), signal);
+	}
+
+	public void cancel() {
+		running = false;
+		if (currentPlayer instanceof ConsortPlayer) {
+			((ConsortPlayer) currentPlayer).getStateConsort().cancel();
+		}
+		currentPlayer = null;
 	}
 
 	public void clear() {
@@ -118,23 +130,13 @@ public class Consort<D, S> {
 		return CollectionFilters.contains(players, new IsClassFilter(clazz));
 	}
 
-	public void addIfNotMember(Player player) {
-		if (!containsTask(player.getClass())) {
-			addPlayer(player);
-		}
-	}
-
-	public void cancel() {
-		running = false;
-		if (currentPlayer instanceof ConsortPlayer) {
-			((ConsortPlayer) currentPlayer).getStateConsort().cancel();
-		}
-		currentPlayer = null;
-	}
-
 	public void finished() {
 		running = false;
 		topicPublisher.publishTopic(FINISHED, null);
+	}
+
+	public boolean isRunning() {
+		return this.running;
 	}
 
 	public boolean isSimulate() {
@@ -162,12 +164,34 @@ public class Consort<D, S> {
 		reachedStates.removeAll(states);
 	}
 
+	public void replay(Player player) {
+		assert player instanceof LoopingPlayer;
+		replayPlayer = player;
+		currentPlayer = null;
+		if (consumingQueue) {
+		} else {
+			consumeQueue();
+		}
+	}
+
+	public void restart() {
+		clearReachedStates();
+		players.addAll(removed);
+		removed.clear();
+		replayPlayer = null;
+		start();
+	}
+
 	public void setSimulate(boolean simulate) {
 		this.simulate = simulate;
 	}
 
 	public void setTrace(boolean trace) {
 		this.trace = trace;
+	}
+
+	public void signal(S signal) {
+		signalHandlers.get(signal).signal(this);
 	}
 
 	public void start() {
@@ -373,25 +397,5 @@ public class Consort<D, S> {
 
 	Set<D> getReachedStates() {
 		return this.reachedStates;
-	}
-
-	public void restart() {
-		clearReachedStates();
-		players.addAll(removed);
-		removed.clear();
-		replayPlayer = null;
-		start();
-	}
-
-	Player replayPlayer = null;
-
-	public void replay(Player player) {
-		assert player instanceof LoopingPlayer;
-		replayPlayer = player;
-		currentPlayer = null;
-		if (consumingQueue) {
-		} else {
-			consumeQueue();
-		}
 	}
 }

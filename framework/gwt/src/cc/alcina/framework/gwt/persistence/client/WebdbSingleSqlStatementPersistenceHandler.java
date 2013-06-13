@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 import com.google.code.gwt.database.client.GenericRow;
 import com.google.code.gwt.database.client.SQLError;
 import com.google.code.gwt.database.client.SQLTransaction;
@@ -15,11 +17,13 @@ public abstract class WebdbSingleSqlStatementPersistenceHandler<T> implements
 
 	protected Object[] arguments;
 
+	protected SQLError statementError;
+
 	protected abstract T getResult();
 
 	public WebdbSingleSqlStatementPersistenceHandler(String sql,
 			AsyncCallback<T> postTransactionCallback) {
-		this(sql,postTransactionCallback,(Object[])null);
+		this(sql, postTransactionCallback, (Object[]) null);
 	}
 
 	public WebdbSingleSqlStatementPersistenceHandler(String sql,
@@ -34,15 +38,18 @@ public abstract class WebdbSingleSqlStatementPersistenceHandler<T> implements
 	}
 
 	public void onTransactionFailure(SQLError error) {
-		postTransactionCallback
-				.onFailure(new Exception(error.getMessage()));
+		postTransactionCallback.onFailure(new Exception(CommonUtils.formatJ(
+				"%s :: %s", (statementError == null ? "<no statement error>"
+						: statementError.getMessage()), error.getMessage())));
 	}
 
 	public void onTransactionSuccess() {
 		postTransactionCallback.onSuccess(getResult());
 	}
+
 	@Override
 	public boolean onFailure(SQLTransaction transaction, SQLError error) {
+		statementError = error;
 		return true;
 	}
 }

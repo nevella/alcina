@@ -14,7 +14,6 @@
 package cc.alcina.framework.gwt.client;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 

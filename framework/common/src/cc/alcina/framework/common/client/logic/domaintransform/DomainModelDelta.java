@@ -4,7 +4,6 @@ import java.util.Collection;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
-import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface DomainModelDelta {

@@ -92,7 +92,7 @@ public class HandshakeConsortModel {
 				: LoginState.LOGGED_IN;
 	}
 
-	public boolean haveAllNeededForOptimalObjectLoad() {
+	public boolean haveAllChunksNeededForOptimalObjectLoad() {
 		return PermissionsManager.isOffline() && modelDeltas.firstChunk != null;
 	}
 
