@@ -1,6 +1,9 @@
 package cc.alcina.framework.gwt.client.rpc;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 import com.google.gwt.http.client.Header;
@@ -12,6 +15,33 @@ import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.rpc.RpcRequestBuilder;
 
 public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
+	public static final String TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED = AlcinaTopics.class
+			.getName() + ".TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED";
+
+	public static void alcinaRpcRequestBuilderCreated(
+			AlcinaRpcRequestBuilder createdBuilder) {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED, createdBuilder);
+	}
+
+	public static void alcinaRpcRequestBuilderCreatedListenerDelta(
+			TopicListener<AlcinaRpcRequestBuilder> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_ALCINA_RPC_REQUEST_BUILDER_CREATED, listener, add);
+	}
+
+	public static class AlcinaRpcRequestBuilderCreationOneOffReplayableListener
+			implements TopicListener<AlcinaRpcRequestBuilder> {
+		public AlcinaRpcRequestBuilder builder;
+
+		@Override
+		public void topicPublished(String key, AlcinaRpcRequestBuilder builder) {
+			this.builder = builder;
+			builder.setRecordResult(true);
+			alcinaRpcRequestBuilderCreatedListenerDelta(this, false);
+		}
+	}
+
 	public static final String CLIENT_INSTANCE_ID_KEY = "X-ALCINA-CLIENT-INSTANCE-ID";
 
 	public static final String CLIENT_INSTANCE_AUTH_KEY = "X-ALCINA-CLIENT-INSTANCE-AUTH";
@@ -22,8 +52,13 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 
 	private String payload;
 
-	public void setResponsePayload(String payload) {
+	public AlcinaRpcRequestBuilder() {
+		alcinaRpcRequestBuilderCreated(this);
+	}
+
+	public AlcinaRpcRequestBuilder setResponsePayload(String payload) {
 		this.payload = payload;
+		return this;
 	}
 
 	@Override
@@ -144,5 +179,11 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 
 	public String getRpcResult() {
 		return response == null ? null : response.getText();
+	}
+
+	public static AlcinaRpcRequestBuilderCreationOneOffReplayableListener addOneoffReplayableCreationListener() {
+		AlcinaRpcRequestBuilderCreationOneOffReplayableListener listener = new AlcinaRpcRequestBuilderCreationOneOffReplayableListener();
+		alcinaRpcRequestBuilderCreatedListenerDelta(listener, true);
+		return listener;
 	}
 }

@@ -36,7 +36,8 @@ import com.google.gwt.core.client.GWT;
 @BeanInfo(displayNamePropertyName = "id")
 @XmlRootElement
 /**
- *
+ *TODO - this can either be a wrapper for a DomainTransformRequest, *or* a gwt-rpc payload
+ *a lot of refactoring should be done to make that meaningful
  * @author Nick Reddel
  */
 @ReflectionModule("Admin")

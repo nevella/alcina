@@ -102,6 +102,10 @@ public abstract class Player<D> {
 	protected void wasPlayed(D dep) {
 		consort.wasPlayed(this, Collections.singletonList(dep));
 	}
+	
+	public void onFailure(Throwable caught) {
+		consort.onFailure(caught);
+	}
 
 	public abstract static class RunnableAsyncCallbackPlayer<C, D> extends
 			Player<D> implements Runnable, AsyncCallback<C> {
@@ -111,10 +115,7 @@ public abstract class Player<D> {
 			runnable = this;
 		}
 
-		@Override
-		public void onFailure(Throwable caught) {
-			consort.onFailure(caught);
-		}
+		
 
 		@Override
 		public void onSuccess(C result) {

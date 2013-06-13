@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.state;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -12,7 +11,6 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.CollectionFilters.InverseFilter;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -49,7 +47,7 @@ public class Consort<D, S> {
 
 	Map<S, ConsortSignalHandler<S>> signalHandlers = new LinkedHashMap<S, ConsortSignalHandler<S>>();
 
-	private boolean executingPlayer = false;
+	private Player currentPlayer = null;
 
 	private boolean consumingQueue;
 
@@ -126,6 +124,14 @@ public class Consort<D, S> {
 		}
 	}
 
+	public void cancel() {
+		running = false;
+		if (currentPlayer instanceof ConsortPlayer) {
+			((ConsortPlayer) currentPlayer).getStateConsort().cancel();
+		}
+		currentPlayer = null;
+	}
+
 	public void finished() {
 		running = false;
 		topicPublisher.publishTopic(FINISHED, null);
@@ -176,7 +182,7 @@ public class Consort<D, S> {
 
 	public void wasPlayed(Player<D> player, Collection<D> resultantStates) {
 		playedCount++;
-		executingPlayer = false;
+		currentPlayer = null;
 		// TODO - warn if resultantstates >1 and a non-parallel consort?
 		if (reachedStates.addAll(resultantStates)) {
 			topicPublisher.publishTopic(STATES, null);
@@ -307,19 +313,22 @@ public class Consort<D, S> {
 	}
 
 	protected void consumeQueue() {
-		if (executingPlayer || consumingQueue || !running) {
+		if (currentPlayer != null || consumingQueue || !running) {
 			return;
 		}
 		consumingQueue = true;
 		// this means that synchronous players will be dispatched sequentially
 		// within the while loop, but async tasks will be dispatched by
 		// (non-recursive) consumeQueue/wasPlayed calls
-		while (!executingPlayer && running) {
-			Player<D> player = nextPlayer();
+		// also allow shortcut for looping tasks
+		while (currentPlayer == null && running) {
+			boolean replaying = replayPlayer != null;
+			Player<D> player = replaying ? replayPlayer : nextPlayer();
+			replayPlayer = null;
 			if (player != null) {
 				maybeRemovePlayersFromQueue(player);
-				executingPlayer = true;
-				executePlayer(player);
+				currentPlayer = player;
+				executePlayer(player, replaying);
 			} else {
 				break;
 			}
@@ -327,7 +336,7 @@ public class Consort<D, S> {
 		consumingQueue = false;
 	}
 
-	protected void executePlayer(Player<D> player) {
+	protected void executePlayer(Player<D> player, boolean replaying) {
 		if (isTrace()) {
 			System.out.println(CommonUtils.formatJ("%s%s -> %s",
 					CommonUtils.padStringLeft("", indent, '\t'),
@@ -370,6 +379,19 @@ public class Consort<D, S> {
 		clearReachedStates();
 		players.addAll(removed);
 		removed.clear();
+		replayPlayer = null;
 		start();
+	}
+
+	Player replayPlayer = null;
+
+	public void replay(Player player) {
+		assert player instanceof LoopingPlayer;
+		replayPlayer = player;
+		currentPlayer = null;
+		if (consumingQueue) {
+		} else {
+			consumeQueue();
+		}
 	}
 }

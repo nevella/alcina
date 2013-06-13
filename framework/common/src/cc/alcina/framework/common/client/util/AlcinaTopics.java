@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.util;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 
 public class AlcinaTopics {
 	public static final String LOG_CATEGORY_MESSAGE = "message";
@@ -36,6 +37,8 @@ public class AlcinaTopics {
 
 	public static final String TOPIC_DEV_WARNING = AlcinaTopics.class.getName()
 			+ ".TOPIC_DEV_WARNING";
+	
+	
 
 	public static final String LOG_CATEGORY_CHANGE = "change";
 	
@@ -107,4 +110,6 @@ public class AlcinaTopics {
 		GlobalTopicPublisher.get().listenerDelta(TOPIC_DEV_WARNING, listener,
 				add);
 	}
+	
+
 }

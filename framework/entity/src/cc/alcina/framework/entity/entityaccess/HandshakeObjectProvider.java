@@ -9,4 +9,6 @@ public interface HandshakeObjectProvider<CI extends ClientInstance, IID extends 
 	public void setCommonPersistence(CommonPersistenceBase commonPersistence);
 
 	CI createClientInstance(String userAgent);
+
+	public ClientInstance getClientInstance(long clientInstanceId);
 }

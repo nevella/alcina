@@ -6,17 +6,18 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.state.MachineTransitionHandler;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.ClientUTCDateProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.state.MachineSchedulerGwt;
 import cc.alcina.framework.gwt.client.provider.ClientURLComponentEncoder;
+import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.res.AlcinaResources;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderGwt;
@@ -24,19 +25,6 @@ import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderG
 import com.google.gwt.dom.client.StyleInjector;
 
 public class ClientConfiguration {
-	private class ClientConfigurationCompleteHandler implements
-			MachineTransitionHandler<ClientConfigurationModel> {
-		@Override
-		public void performTransition(ClientConfigurationModel model) {
-			machine.clear();
-			if (!model.isStartupCancelled()) {
-				afterConfiguration();
-			}
-		}
-	}
-
-	protected ClientConfigurationMachine machine;
-
 	public void initServices() {
 		initNotifications();
 		initCss();
@@ -45,21 +33,21 @@ public class ClientConfiguration {
 		initCommonClient();
 		initContentProvider();
 		initImageProvider();
-		initHandshakeHelper();
 		prepareDebugFromHistory();
 		extraConfiguration();
 	}
 
 	protected void prepareDebugFromHistory() {
 		AlcinaHistory.initialiseDebugIds();
+		if(AlcinaProperties.is(AlcinaProperties.class, AlcinaProperties.SIMULATE_OFFLINE)){
+			AlcinaDebugIds.setFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE);
+		}
 	}
 
 	protected void initCss() {
 		StyleInjector.inject(AlcinaResources.INSTANCE.css().getText());
 	}
 
-	protected void initHandshakeHelper() {
-	}
 
 	protected void afterConfiguration() {
 	}

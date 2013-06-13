@@ -148,8 +148,10 @@ public class StatusPanel extends Composite {
 	}
 
 	public void addNotifier(StatusPanelModalNotifier notifier) {
-		notifiers.add(notifier);
-		notifiersChanged();
+		if (!notifiers.contains(notifier)) {
+			notifiers.add(notifier);
+			notifiersChanged();
+		}
 	}
 
 	public void setProgress(double progress) {
@@ -187,10 +189,10 @@ public class StatusPanel extends Composite {
 	}
 
 	protected void previewNativeEvent(NativePreviewEvent event) {
-//		if (modal) {
-//			event.cancel();
-//			return;
-//		}
+		// if (modal) {
+		// event.cancel();
+		// return;
+		// }
 	}
 
 	public void setContent(String html) {

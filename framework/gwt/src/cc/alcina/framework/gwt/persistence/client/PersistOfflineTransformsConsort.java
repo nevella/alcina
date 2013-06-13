@@ -11,12 +11,13 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.PersistOfflineTransformsConsort.State;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class PersistOfflineTransformsConsort extends Consort<State,Object> {
+public class PersistOfflineTransformsConsort extends Consort<State, Object> {
 	public static enum State {
 		GET_TRANSFORMS, PERSIST_TRANSFORMS, PERSIST_TRANSFORMS_SUCCESS,
 		PERSIST_TRANSFORMS_FAILURE, FINISHED
@@ -30,7 +31,15 @@ public class PersistOfflineTransformsConsort extends Consort<State,Object> {
 
 	public Throwable remotePersistenceException;
 
-	class Player_GET_TRANSFORMS extends
+	private AsyncCallback completionCallback;
+
+	@Override
+	public void onFailure(Throwable throwable) {
+		completionCallback.onFailure(throwable);
+	}
+
+	class Player_GET_TRANSFORMS
+			extends
 			EnumRunnableAsyncCallbackPlayer<List<DTRSimpleSerialWrapper>, State> {
 		public Player_GET_TRANSFORMS() {
 			super(State.GET_TRANSFORMS);
@@ -77,13 +86,16 @@ public class PersistOfflineTransformsConsort extends Consort<State,Object> {
 			notifier = ClientLayerLocator.get().notifications()
 					.getModalNotifier(message);
 			notifier.setMasking(false);
-			notifier.modalOn();
 			LocalTransformPersistence.get().persistOfflineTransforms(
 					transformsToPersistOnServer, notifier, this);
 		}
 
 		public void onFailure(Throwable caught) {
 			cleanup();
+			if (ClientUtils.maybeOffline(caught)) {
+				consort.onFailure(caught);
+				return;
+			}
 			remotePersistenceException = caught;
 			consort.wasPlayed(this,
 					Collections.singletonList(State.PERSIST_TRANSFORMS_FAILURE));
@@ -96,6 +108,8 @@ public class PersistOfflineTransformsConsort extends Consort<State,Object> {
 		}
 
 		private void cleanup() {
+			LocalTransformPersistence.get()
+					.getCommitToStorageTransformListener().setPaused(false);
 			notifier.modalOff();
 		}
 	}
@@ -135,6 +149,7 @@ public class PersistOfflineTransformsConsort extends Consort<State,Object> {
 	}
 
 	public PersistOfflineTransformsConsort(AsyncCallback completionCallback) {
+		this.completionCallback = completionCallback;
 		addPlayer(new Player_GET_TRANSFORMS());
 		addPlayer(new Player_PERSIST_TRANSFORMS());
 		addPlayer(new Player_PERSIST_TRANSFORMS_FAILURE());

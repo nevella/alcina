@@ -915,6 +915,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return 100;
 	}
 
+	@Override
+	public ClientInstance getClientInstance(String clientInstanceId) {
+		return getHandshakeObjectProvider().getClientInstance(
+				Long.parseLong(clientInstanceId));
+	}
+
 	static class DefaultHandshakeObjectProvider implements
 			HandshakeObjectProvider {
 		private CommonPersistenceBase cp;
@@ -965,6 +971,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		@Override
 		public void setCommonPersistence(CommonPersistenceBase commonPersistence) {
 			this.cp = commonPersistence;
+		}
+
+		@Override
+		public ClientInstance getClientInstance(long clientInstanceId) {
+			cp.connectPermissionsManagerToLiveObjects(true);
+			ClientInstance instance = (ClientInstance) cp.getEntityManager()
+					.find(cp.getImplementation(ClientInstance.class),
+							clientInstanceId);
+			return new EntityUtils().detachedClone(instance, false);
 		}
 	}
 
@@ -1024,6 +1039,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		@Override
 		public void setCommonPersistence(CommonPersistenceBase commonPersistence) {
 			this.cp = commonPersistence;
+		}
+
+		@Override
+		public ClientInstance getClientInstance(long clientInstanceId) {
+			throw new UnsupportedOperationException();
 		}
 	}
 

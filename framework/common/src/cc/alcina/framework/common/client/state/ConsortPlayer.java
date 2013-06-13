@@ -8,23 +8,30 @@ public interface ConsortPlayer {
 	public Consort getStateConsort();
 
 	public static class SubconsortSupport {
-		Runnable remover = new Runnable() {
+		TopicListener listener = new TopicListener() {
 			@Override
-			public void run() {
-				player.wasPlayed();
-				subConsort.listenerDelta(Consort.FINISHED, listener, false);
+			public void topicPublished(final String key, final Object message) {
+				// TODO - we might be able to queue this in the parent consort,
+				// rather than having to timer it
+				Registry.impl(TimerWrapperProvider.class)
+						.getTimer(new Runnable() {
+							@Override
+							public void run() {
+								signalFinished(key, message);
+							}
+						}).scheduleSingle(1);
 			}
 		};
 
-		TopicListener listener = new TopicListener() {
-			@Override
-			public void topicPublished(String key, Object message) {
-				// TODO - we might be able to queue this in the parent consort,
-				// rather than having to timer it
-				Registry.impl(TimerWrapperProvider.class).getTimer(remover)
-						.scheduleSingle(1);
+		void signalFinished(String key, Object message) {
+			subConsort.listenerDelta(Consort.FINISHED, listener, false);
+			subConsort.listenerDelta(Consort.ERROR, listener, false);
+			if (key == Consort.ERROR) {
+				player.onFailure((Throwable) message);
+			} else {
+				player.wasPlayed();
 			}
-		};
+		}
 
 		private Player player;
 
@@ -35,6 +42,7 @@ public interface ConsortPlayer {
 			this.player = player;
 			player.setAsynchronous(true);
 			subConsort.listenerDelta(Consort.FINISHED, listener, true);
+			subConsort.listenerDelta(Consort.ERROR, listener, true);
 			subConsort.restart();
 		}
 	}

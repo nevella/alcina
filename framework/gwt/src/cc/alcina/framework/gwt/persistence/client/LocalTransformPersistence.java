@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientUIThreadWorker;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
@@ -49,6 +50,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * </p>
  * <ol>
  * <li>Initial object chunk (which may be out of order wrt db id)</li>
+ * <li><b>this is because there may have been a persist (sync) before persist of
+ * initial (async) - better to order the rq by request, then db id</b>
  * <li>Other (sync from remote, local transforms) - ordered by id</li>
  * </ol>
  * </blockquote>
@@ -162,92 +165,6 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		return this.useLzw;
 	}
 
-	public void openAvailableSessionTransformsForOfflineLoad(
-			final boolean finalPass, boolean checkSoleOpenTab,
-			final AsyncCallback<List<DTRSimpleSerialWrapper>> AsyncCallback) {
-		try {
-			final List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
-			if (checkSoleOpenTab && !ClientSession.get().isSoleOpenTab()) {
-				if (finalPass) {
-					ClientSession.get().cancelSession();
-					showOfflineLimitMessage();
-				}
-				AsyncCallback.onSuccess(transforms);
-				return;
-			}
-			final AsyncCallback<List<DTRSimpleSerialWrapper>> pcb2 = new AsyncCallback<List<DTRSimpleSerialWrapper>>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					AsyncCallback.onFailure(caught);
-				}
-
-				@Override
-				public void onSuccess(List<DTRSimpleSerialWrapper> result) {
-					transforms.addAll(result);
-					setClientInstanceIdForGet(null);
-					AsyncCallback.onSuccess(transforms);
-					return;
-				}
-			};
-			AsyncCallback<List<DTRSimpleSerialWrapper>> pcb1 = new AsyncCallback<List<DTRSimpleSerialWrapper>>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					AsyncCallback.onFailure(caught);
-				}
-
-				@Override
-				public void onSuccess(List<DTRSimpleSerialWrapper> loads) {
-					if (loads.size() == 0) {
-						// should never happen (or very rarely)
-						if (finalPass) {
-							showUnableToLoadOfflineMessage();
-						}
-						AsyncCallback.onSuccess(transforms);
-						return;
-					}
-					DTRSimpleSerialWrapper loadWrapper = loads.iterator()
-							.next();
-					long clientInstanceId = loadWrapper.getClientInstanceId();
-					domainObjectsPersistedBy = ((ClientHandshakeHelperWithLocalPersistence) ClientLayerLocator
-							.get().getClientHandshakeHelper())
-							.createClientInstance(clientInstanceId,
-									loadWrapper.getClientInstanceAuth());
-					for (DTRSimpleSerialWrapper wrapper : loads) {
-						if (wrapper.getClientInstanceId() != clientInstanceId) {
-							AsyncCallback
-									.onFailure(new WrappedRuntimeException(
-											"Multiple client object loads",
-											SuggestedAction.NOTIFY_WARNING));
-						}
-					}
-					setClientInstanceIdForGet(clientInstanceId);
-					transforms.add(loadWrapper);
-					getTransforms(new DomainTransformRequestType[] {
-							DomainTransformRequestType.TO_REMOTE_COMPLETED,
-							DomainTransformRequestType.TO_REMOTE,
-							DomainTransformRequestType.CLIENT_SYNC }, pcb2);
-				}
-			};
-			getTransforms(DomainTransformRequestType.CLIENT_OBJECT_LOAD, pcb1);
-		} catch (Exception e) {
-			AsyncCallback.onFailure(e);
-		}
-	}
-
-	public void openAvailableSessionTransformsForOfflineLoad(boolean finalPass,
-			AsyncCallback<List<DTRSimpleSerialWrapper>> AsyncCallback) {
-		openAvailableSessionTransformsForOfflineLoad(finalPass, true,
-				AsyncCallback);
-	}
-
-	public void openAvailableSessionTransformsForOfflineLoadNeverOnline(
-			AsyncCallback<List<DTRSimpleSerialWrapper>> AsyncCallback) {
-		getTransforms(new DomainTransformRequestType[] {
-				DomainTransformRequestType.TO_REMOTE_COMPLETED,
-				DomainTransformRequestType.TO_REMOTE,
-				DomainTransformRequestType.CLIENT_SYNC }, AsyncCallback);
-	}
-
 	public void persistableTransform(DomainTransformRequest dtr) {
 		if (dtr.getDomainTransformRequestType() == DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
 			dtr.setProtocolVersion(getSerializationPolicy()
@@ -267,20 +184,12 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 	}
 
-	public void persistInitialRpcPayload(MixedGwtTransformHelper mixedHelper,
+	public void persistInitialRpcPayload(String payload,
 			AsyncCallback<Void> AsyncCallback) {
-		// TODO - if transforms, delete all but first clientObjectLoad (and
-		// reparent) - if
-		// not, delete all
 		ClientInstance clientInstance = ClientLayerLocator.get()
 				.getClientInstance();
-		String rpcResult = mixedHelper.getBuilder().getRpcResult();
-		if (rpcResult == null) {
-			AsyncCallback.onSuccess(null);
-			return;
-		}
-		DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(0,
-				rpcResult, System.currentTimeMillis(), PermissionsManager.get()
+		DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(0, payload,
+				System.currentTimeMillis(), PermissionsManager.get()
 						.getUserId(), clientInstance.getId(), 0,
 				clientInstance.getAuth(),
 				DomainTransformRequestType.CLIENT_OBJECT_LOAD,
@@ -427,58 +336,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	protected abstract void persist(DTRSimpleSerialWrapper wrapper,
 			AsyncCallback callback);
 
-	protected void persistAndReparentClientLoadTransforms(
-			final MixedGwtTransformHelper mixedHelper,
-			final AsyncCallback<Void> AsyncCallback) {
-		final AsyncCallback afterReparentTransforms = new AsyncCallback<Void>() {
-			@Override
-			public void onFailure(Throwable caught) {
-				MixedGwtLoadException lex = null;
-				lex = (MixedGwtLoadException) ((caught instanceof MixedGwtLoadException) ? caught
-						: new MixedGwtLoadException(caught));
-				AsyncCallback.onFailure(caught);
-			}
-
-			@Override
-			public void onSuccess(Void result) {
-				persistInitialRpcPayload(mixedHelper, AsyncCallback);
-			}
-		};
-		AsyncCallback afterGetTransforms = new AsyncCallback<List<DTRSimpleSerialWrapper>>() {
-			@Override
-			public void onFailure(Throwable caught) {
-				MixedGwtLoadException lex = null;
-				lex = (MixedGwtLoadException) ((caught instanceof MixedGwtLoadException) ? caught
-						: new MixedGwtLoadException(caught));
-				AsyncCallback.onFailure(caught);
-			}
-
-			@Override
-			public void onSuccess(List<DTRSimpleSerialWrapper> loads) {
-				DTRSimpleSerialWrapper rpcWrapper;
-				try {
-					if (loads.size() == 0) {
-						throw new MixedGwtLoadException(
-								"Hmm...our load disappeared. Dang. ", false);
-					}
-					rpcWrapper = loads.get(0);
-					if (rpcWrapper.getUserId() != PermissionsManager.get()
-							.getUserId()) {
-						throw new MixedGwtLoadException(
-								"Hmm...our load was hijacked by another user. Dang. ",
-								false);
-					}
-				} catch (MixedGwtLoadException e) {
-					onFailure(e);
-					return;
-				}
-				reparentToClientInstance(rpcWrapper, ClientLayerLocator.get()
-						.getClientInstance(), afterReparentTransforms);
-			}
-		};
-		getTransforms(DomainTransformRequestType.CLIENT_OBJECT_LOAD,
-				afterGetTransforms);
-	}
+	
 
 	protected void persistOfflineTransforms(
 			List<DTRSimpleSerialWrapper> uncommitted, ModalNotifier notifier,
@@ -622,4 +480,8 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			sb.append(sb2.toString());
 		}
 	}
+
+	public abstract void getDomainModelDeltaIterator(
+			DomainTransformRequestType[] types,
+			AsyncCallback<Iterator<DomainModelDelta>> callback);
 }

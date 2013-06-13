@@ -4,8 +4,8 @@ import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 
 public class AllowObjectsLoadFailedPlayer extends RunnablePlayer {
 	public AllowObjectsLoadFailedPlayer() {
-		addRequires(HandshakeState.OBJECTS_LOAD_FAILED);
-		addProvides(HandshakeState.OBJECTS_REGISTERED);
+		addRequires(HandshakeState.OBJECT_DATA_LOAD_FAILED);
+		addProvides(HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED);
 	}
 
 	@Override

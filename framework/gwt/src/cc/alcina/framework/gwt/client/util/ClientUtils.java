@@ -77,8 +77,7 @@ public class ClientUtils {
 					.log("** Status code exception: " + sce.getStatusCode());
 			boolean internetExplorerErrOffline = BrowserMod
 					.isInternetExplorer() && sce.getStatusCode() > 600;
-			if ((!GWT.isScript() && sce.getStatusCode() == 500)
-					|| sce.getStatusCode() == 0 || internetExplorerErrOffline) {
+			if (sce.getStatusCode() == 0 || internetExplorerErrOffline) {
 				return true;
 			}
 			// DNS error in Africa
@@ -94,9 +93,10 @@ public class ClientUtils {
 			styleElement = Document.get().createStyleElement();
 			NodeList<Element> headList = Document.get().getElementsByTagName(
 					HEAD);
-			if(headList==null||headList.getLength()==0){
-				//something wrong with the client here -- bail
-				AlcinaTopics.notifyDevWarning(new Exception("headList - "+headList==null?"null":"length 0"));
+			if (headList == null || headList.getLength() == 0) {
+				// something wrong with the client here -- bail
+				AlcinaTopics.notifyDevWarning(new Exception("headList - "
+						+ headList == null ? "null" : "length 0"));
 				return null;
 			}
 			headList.getItem(0).appendChild(styleElement);
@@ -107,7 +107,7 @@ public class ClientUtils {
 					styleElement.setInnerText(css);
 				}
 			} catch (Exception e) {
-				//squelch
+				// squelch
 			}
 		}
 		return styleElement;
@@ -324,15 +324,16 @@ public class ClientUtils {
 		var v = e;
 		debugger;
 	}-*/;
-	
-	public static String getHashIfSelfrefUrl(Element anchor){
+
+	public static String getHashIfSelfrefUrl(Element anchor) {
 		String href = anchor.getAttribute("href");
-		String selfHref=Window.Location.getHref();
-		int idx=selfHref.indexOf("#");
-		selfHref=idx==-1?selfHref:selfHref.substring(0,idx);
-		if(href.startsWith(selfHref)){
-			href=href.substring(selfHref.length());
+		String selfHref = Window.Location.getHref();
+		int idx = selfHref.indexOf("#");
+		selfHref = idx == -1 ? selfHref : selfHref.substring(0, idx);
+		if (href.startsWith(selfHref)) {
+			href = href.substring(selfHref.length());
 		}
-		return  href.startsWith("#") && href.length() > 1 ? href.substring(1):null;
+		return href.startsWith("#") && href.length() > 1 ? href.substring(1)
+				: null;
 	}
 }

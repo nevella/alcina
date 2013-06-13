@@ -22,6 +22,7 @@ import javax.persistence.Transient;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
@@ -32,6 +33,12 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
  * @author Nick Reddel
  */
 @Introspectable
+/**
+ * Important note - the subclass IUser field should be @GwtTransient - 
+ * to prevent accidental access of possibly different IUser objects
+ * @author nick@alcina.cc
+ *
+ */
 public abstract class ClientInstance implements HasIUser, HasIdAndLocalId,
 		Serializable, Cloneable {
 	private long id;

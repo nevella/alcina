@@ -22,6 +22,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
@@ -75,16 +77,16 @@ public abstract class JdbcTransformPersistence extends
 		}
 	}
 
-	@Override
-	protected void getTransforms(final DomainTransformRequestType[] types,
-			final AsyncCallback<List<DTRSimpleSerialWrapper>> callback) {
-		Object[] params = { "id", Integer.class, "transform", String.class,
-				"timestamp", Long.class, "user_id", Long.class,
-				"clientInstance_id", Long.class, "request_id", Integer.class,
-				"clientInstance_auth", Integer.class, "transform_request_type",
-				DomainTransformRequestType.class, "transform_event_protocol",
-				String.class, "tag", String.class };
-		List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
+	Object[] transformParams = { "id", Integer.class, "transform",
+			String.class, "timestamp", Long.class, "user_id", Long.class,
+			"clientInstance_id", Long.class, "request_id", Integer.class,
+			"clientInstance_auth", Integer.class, "transform_request_type",
+			DomainTransformRequestType.class, "transform_event_protocol",
+			String.class, "tag", String.class };
+
+	protected ResultSet getTransformsResultSet(
+			final DomainTransformRequestType[] types, CleanupTuple tuple)
+			throws SQLException {
 		String sql = "select * from TransformRequests ";
 		for (int i = 0; i < types.length; i++) {
 			sql += i == 0 ? " where (" : " or ";
@@ -96,15 +98,90 @@ public abstract class JdbcTransformPersistence extends
 					getClientInstanceIdForGet());
 		}
 		sql += "  order by id asc";
+		return tuple.executeQuery(sql);
+	}
+
+	class CleanupTuple {
 		Connection conn = null;
+
 		Statement stmt = null;
+
+		PreparedStatement pstmt = null;
+
 		ResultSet rs = null;
+
+		public CleanupTuple() {
+			try {
+				conn = getConnection();
+				stmt = conn.createStatement();
+			} catch (Exception e) {
+				cleanup();
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		ResultSet executeQuery(String sql) throws SQLException {
+			try {
+				return stmt.executeQuery(sql);
+			} catch (SQLException e) {
+				cleanup();
+				throw e;
+			}
+		}
+
+		void execute(String sql) throws SQLException {
+			try {
+				stmt.execute(sql);
+			} catch (SQLException e) {
+				cleanup();
+				throw e;
+			}
+		}
+
+		void cleanup() {
+			try {
+				if (rs != null) {
+					rs.close();
+				}
+				if (stmt != null) {
+					stmt.close();
+				}
+				if (pstmt != null) {
+					pstmt.close();
+				}
+				if (conn != null) {
+					conn.close();
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException("Problem accessing local db",
+						e, SuggestedAction.NOTIFY_WARNING);
+			}
+		}
+
+		public PreparedStatement prepareStatement(String sql)
+				throws SQLException {
+			pstmt = conn.prepareStatement(sql);
+			return pstmt;
+		}
+
+		public void executePstmt() throws SQLException {
+			pstmt.execute();
+		}
+
+		public ResultSet getGeneratedKeys() throws SQLException {
+			return pstmt.getGeneratedKeys();
+		}
+	}
+
+	@Override
+	protected void getTransforms(final DomainTransformRequestType[] types,
+			final AsyncCallback<List<DTRSimpleSerialWrapper>> callback) {
+		CleanupTuple cleanupTuple = new CleanupTuple();
+		List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
 		try {
-			conn = getConnection();
-			stmt = conn.createStatement();
-			rs = stmt.executeQuery(sql);
+			ResultSet rs = getTransformsResultSet(types, cleanupTuple);
 			while (rs.next()) {
-				Map<String, Object> map = getFieldsAs(rs, params);
+				Map<String, Object> map = getFieldsAs(rs, transformParams);
 				DTRSimpleSerialWrapper wr = new DTRSimpleSerialWrapper(
 						(Integer) map.get("id"), (String) map.get("transform"),
 						(Long) map.get("timestamp"), (Long) map.get("user_id"),
@@ -120,7 +197,7 @@ public abstract class JdbcTransformPersistence extends
 		} catch (Exception e) {
 			callback.onFailure(e);
 		} finally {
-			cleanup(conn, stmt, rs);
+			cleanupTuple.cleanup();
 		}
 		callback.onSuccess(transforms);
 	}
@@ -175,34 +252,13 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	private void executeStatement(String sql) {
-		Connection conn = null;
-		Statement stmt = null;
+		CleanupTuple cleanupTuple = new CleanupTuple();
 		try {
-			conn = getConnection();
-			stmt = conn.createStatement();
-			stmt.execute(sql);
+			cleanupTuple.execute(sql);
 		} catch (Exception e) {
-			throw new WrappedRuntimeException("Problem accessing local db", e,
-					SuggestedAction.NOTIFY_WARNING);
+			throw new WrappedRuntimeException(e);
 		} finally {
-			cleanup(conn, stmt, null);
-		}
-	}
-
-	private void cleanup(Connection conn, Statement stmt, ResultSet rs) {
-		try {
-			if (rs != null) {
-				rs.close();
-			}
-			if (stmt != null) {
-				stmt.close();
-			}
-			if (conn != null) {
-				conn.close();
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException("Problem accessing local db", e,
-					SuggestedAction.NOTIFY_WARNING);
+			cleanupTuple.cleanup();
 		}
 	}
 
@@ -249,12 +305,9 @@ public abstract class JdbcTransformPersistence extends
 	@Override
 	protected void persist(final DTRSimpleSerialWrapper wrapper,
 			final AsyncCallback callback) {
-		Connection conn = null;
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
+		CleanupTuple tuple = new CleanupTuple();
 		try {
-			conn = getConnection();
-			pstmt = conn
+			PreparedStatement pstmt = tuple
 					.prepareStatement("INSERT INTO TransformRequests "
 							+ "(transform, timestamp,"
 							+ "user_id,clientInstance_id"
@@ -263,7 +316,7 @@ public abstract class JdbcTransformPersistence extends
 			if (wrapper.getProtocolVersion() == null) {
 				throw new Exception("wrapper must have protocol version");
 			}
-			Clob clob = conn.createClob();
+			Clob clob = tuple.conn.createClob();
 			clob.setString(1, wrapper.getText());
 			pstmt.setClob(1, clob);
 			pstmt.setLong(2, wrapper.getTimestamp());
@@ -275,8 +328,9 @@ public abstract class JdbcTransformPersistence extends
 					.toString());
 			pstmt.setString(8, wrapper.getProtocolVersion());
 			pstmt.setString(9, wrapper.getTag());
+			tuple.executePstmt();
 			pstmt.execute();
-			rs = pstmt.getGeneratedKeys();
+			ResultSet rs = tuple.getGeneratedKeys();
 			if (rs != null && rs.next()) {
 				int newid = rs.getInt(1);
 				wrapper.setId(newid);
@@ -291,7 +345,7 @@ public abstract class JdbcTransformPersistence extends
 		} catch (Exception e) {
 			callback.onFailure(e);
 		} finally {
-			cleanup(conn, pstmt, rs);
+			tuple.cleanup();
 		}
 	}
 
@@ -312,18 +366,14 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	@Override
-	public void reparentToClientInstance(
-			final DTRSimpleSerialWrapper wrapper,
-			final ClientInstance clientInstance,
-			final AsyncCallback callback) {
-		Connection conn = null;
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
+	public void reparentToClientInstance(final DTRSimpleSerialWrapper wrapper,
+			final ClientInstance clientInstance, final AsyncCallback callback) {
+		CleanupTuple tuple = new CleanupTuple();
 		try {
-			conn = getConnection();
-			pstmt = conn.prepareStatement("update  TransformRequests  set "
-					+ "clientInstance_id=?,clientInstance_auth=? "
-					+ " where id = ?");
+			PreparedStatement pstmt = tuple
+					.prepareStatement("update  TransformRequests  set "
+							+ "clientInstance_id=?,clientInstance_auth=? "
+							+ " where id = ?");
 			pstmt.setLong(1, clientInstance.getId());
 			pstmt.setInt(2, clientInstance.getAuth());
 			pstmt.setInt(3, wrapper.getId());
@@ -331,20 +381,18 @@ public abstract class JdbcTransformPersistence extends
 		} catch (SQLException e) {
 			callback.onFailure(e);
 		} finally {
-			cleanup(conn, pstmt, rs);
+			tuple.cleanup();
 		}
 	}
 
 	public void reparentToClientInstance(long clientInstanceId,
 			ClientInstance clientInstance, AsyncCallback callback) {
-		Connection conn = null;
-		PreparedStatement pstmt = null;
-		ResultSet rs = null;
+		CleanupTuple tuple = new CleanupTuple();
 		try {
-			conn = getConnection();
-			pstmt = conn.prepareStatement("update TransformRequests set "
-					+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=? "
-					+ "where CLIENTINSTANCE_ID = ?");
+			PreparedStatement pstmt = tuple
+					.prepareStatement("update TransformRequests set "
+							+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=? "
+							+ "where CLIENTINSTANCE_ID = ?");
 			pstmt.setLong(1, clientInstance.getId());
 			pstmt.setInt(2, clientInstance.getAuth());
 			pstmt.setLong(3, clientInstanceId);
@@ -353,7 +401,13 @@ public abstract class JdbcTransformPersistence extends
 		} catch (SQLException e) {
 			callback.onFailure(e);
 		} finally {
-			cleanup(conn, pstmt, rs);
+			tuple.cleanup();
 		}
+	}
+
+	@Override
+	public void getDomainModelDeltaIterator(DomainTransformRequestType[] types,
+			AsyncCallback<Iterator<DomainModelDelta>> callback) {
+		// TODO - fw_java_3
 	}
 }

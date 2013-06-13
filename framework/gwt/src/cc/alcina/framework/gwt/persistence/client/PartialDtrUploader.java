@@ -58,6 +58,8 @@ public class PartialDtrUploader {
 	private AsyncCallback<PartialDtrUploadResponse> responseHandler = new AsyncCallback<PartialDtrUploadResponse>() {
 		@Override
 		public void onSuccess(PartialDtrUploadResponse response) {
+			//don't turn on until first response - may be offline
+			modalNotifier.modalOn();
 			if (response.committed) {
 				postPersistOfflineTransformsCallback.onSuccess(null);
 				return;
@@ -123,7 +125,6 @@ public class PartialDtrUploader {
 	}
 
 	protected void fatal(Throwable caught) {
-		caught.printStackTrace();
 		postPersistOfflineTransformsCallback.onFailure(caught);
 	}
 

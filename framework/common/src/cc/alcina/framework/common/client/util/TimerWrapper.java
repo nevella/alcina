@@ -9,5 +9,7 @@ public interface TimerWrapper {
 
 	public interface TimerWrapperProvider {
 		public TimerWrapper getTimer(Runnable runnable);
+		
+		public void scheduleDeferred(Runnable runnable);
 	}
 }

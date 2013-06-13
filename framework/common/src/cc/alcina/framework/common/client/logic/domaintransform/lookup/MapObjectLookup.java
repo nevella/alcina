@@ -164,7 +164,7 @@ public class MapObjectLookup implements ObjectStore {
 				bean.getLocalId());
 	}
 
-	public void registerAsync(List registerableDomainObjects,
+	public void registerAsync(Collection registerableDomainObjects,
 			ScheduledCommand postRegisterCommand) {
 		this.postRegisterCommand = postRegisterCommand;
 		mappedObjects = new PerClassLookup();

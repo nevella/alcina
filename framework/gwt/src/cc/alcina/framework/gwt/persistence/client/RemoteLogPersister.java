@@ -276,6 +276,7 @@ public class RemoteLogPersister {
 		public void handleExpectableMaybeOffline(Throwable caught,
 				MachineEvent jumpToEnd) {
 			if (ClientUtils.maybeOffline(caught)) {
+				maybeOffline=true;
 				machine.newEvent(jumpToEnd);
 			} else {
 				throw new WrappedRuntimeException(caught);

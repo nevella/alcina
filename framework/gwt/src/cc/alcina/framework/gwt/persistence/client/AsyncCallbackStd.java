@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
+import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.Window.Location;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class AsyncCallbackStd<T> implements
@@ -20,5 +22,12 @@ public abstract class AsyncCallbackStd<T> implements
 	@Override
 	public void onFailure(Throwable caught) {
 		throw new WrappedRuntimeException(caught);
+	}
+
+	public static class ReloadOnSuccessCallback extends AsyncCallbackStd {
+		@Override
+		public void onSuccess(Object result) {
+			Window.Location.reload();
+		}
 	}
 }

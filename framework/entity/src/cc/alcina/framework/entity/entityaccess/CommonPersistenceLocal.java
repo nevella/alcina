@@ -163,4 +163,6 @@ public interface CommonPersistenceLocal {
 	public abstract IGroup getGroupByName(String groupName, boolean clean);
 
 	public abstract IGroup getGroupByName(String groupName);
+
+	public ClientInstance getClientInstance(String clientInstanceId);
 }

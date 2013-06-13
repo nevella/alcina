@@ -13,8 +13,8 @@ public class LoadObjectsRequest implements Serializable {
 	private Long lastTransformId;
 
 	private String typeSignature;
-	
-	
+
+	private Long userId;
 
 	public Long getLastTransformId() {
 		return this.lastTransformId;
@@ -24,13 +24,19 @@ public class LoadObjectsRequest implements Serializable {
 		return this.typeSignature;
 	}
 
-	
-
 	public void setLastTransformId(Long lastTransformId) {
 		this.lastTransformId = lastTransformId;
 	}
 
 	public void setTypeSignature(String typeSignature) {
 		this.typeSignature = typeSignature;
+	}
+
+	public Long getUserId() {
+		return this.userId;
+	}
+
+	public void setUserId(Long userId) {
+		this.userId = userId;
 	}
 }

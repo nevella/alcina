@@ -16,7 +16,6 @@ package cc.alcina.framework.gwt.client;
 import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
@@ -25,6 +24,7 @@ import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 
 import com.google.gwt.core.client.GWT;
 
@@ -91,7 +91,7 @@ public class ClientLayerLocator {
 	}
 
 	public ClientInstance getClientInstance() {
-		return Registry.impl(ClientInstance.class, void.class, true);
+		return Registry.impl(HandshakeConsortModel.class).getClientInstance();
 	}
 
 	public CommitToStorageTransformListener getCommitToStorageTransformListener() {

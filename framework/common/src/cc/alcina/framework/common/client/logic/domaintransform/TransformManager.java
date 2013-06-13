@@ -280,7 +280,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 							event.getObjectLocalId());
 			hili.setLocalId(event.getObjectLocalId());
 			if (hili.getId() == 0) {// replay from server -
-				//huh? unless newInstance does something weird, should never reach here
+				// huh? unless newInstance does something weird, should never
+				// reach here
 				hili.setId(event.getObjectId());
 			}
 			event.setObjectId(hili.getId());
@@ -486,9 +487,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public HasIdAndLocalId getObject(DomainTransformEvent dte) {
-		HasIdAndLocalId obj = getObjectLookup()
-				.getObject(dte.getObjectClass(), dte.getObjectId(),
-						dte.getObjectLocalId());
+		HasIdAndLocalId obj = getObjectLookup().getObject(dte.getObjectClass(),
+				dte.getObjectId(), dte.getObjectLocalId());
 		if (obj == null && dte.getSource() != null) {
 			throw new RuntimeException(
 					"calling getobject() on a provisional/deregistered object transform "
@@ -499,14 +499,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected ObjectLookup getObjectLookup() {
-		return CommonLocator
-				.get()
-				.objectLookup();
+		return CommonLocator.get().objectLookup();
 	}
 
 	public <T extends HasIdAndLocalId> T getObject(T hili) {
-		return (T) getObjectLookup()
-				.getObject(hili.getClass(), hili.getId(), hili.getLocalId());
+		return (T) getObjectLookup().getObject(hili.getClass(), hili.getId(),
+				hili.getLocalId());
 	}
 
 	public Collection getProvisionalObjects() {
@@ -522,8 +520,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Class valueClass = evt.getValueClass();
 		if (evt.getNewValue() != null || valueClass == null) {
 			if (evt.getNewValue() instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = getObjectLookup()
-						.getObject((HasIdAndLocalId) evt.getNewValue());
+				HasIdAndLocalId hili = getObjectLookup().getObject(
+						(HasIdAndLocalId) evt.getNewValue());
 				if (hili != null) {
 					return hili;
 				} else {
@@ -562,9 +560,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return e;
 		}
 		if (evt.getValueId() != 0 || evt.getValueLocalId() != 0) {
-			HasIdAndLocalId object = getObjectLookup()
-					.getObject(valueClass, evt.getValueId(),
-							evt.getValueLocalId());
+			HasIdAndLocalId object = getObjectLookup().getObject(valueClass,
+					evt.getValueId(), evt.getValueLocalId());
 			if (object != null) {
 				return object;
 			}
@@ -911,6 +908,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
+	public void registerDomainObjectsAsync(Collection<HasIdAndLocalId> hilis,
+			final AsyncCallback<Void> postRegisterCallback) {
+		((MapObjectLookup) getDomainObjects()).registerAsync(hilis,
+				new ScheduledCommand() {
+					@Override
+					public void execute() {
+						postRegisterCallback.onSuccess(null);
+					}
+				});
+	}
+
 	/**
 	 * Useful for unit tests, hence here rather than clientTM
 	 */
@@ -933,8 +941,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			getDomainObjects().removeListeners();
 		}
 		createObjectLookup();
-		((MapObjectLookup)getDomainObjects()).registerAsync(h.registerableDomainObjects(),
-				new ScheduledCommand() {
+		((MapObjectLookup) getDomainObjects()).registerAsync(
+				h.registerableDomainObjects(), new ScheduledCommand() {
 					@Override
 					public void execute() {
 						ClassRef.add(h.getClassRefs());
@@ -1115,8 +1123,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			CollectionModificationSupport.queue(true);
 			for (Object o : objects) {
 				if (o instanceof HasIdAndLocalId
-						&& getObjectLookup()
-								.getObject((HasIdAndLocalId) o) == null) {
+						&& getObjectLookup().getObject((HasIdAndLocalId) o) == null) {
 					HasIdAndLocalId hili = (HasIdAndLocalId) o;
 					// if this is a new object, we want to register a blank
 					// object,

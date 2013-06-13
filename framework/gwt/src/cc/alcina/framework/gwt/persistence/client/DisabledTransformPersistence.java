@@ -1,9 +1,11 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import java.util.Iterator;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
@@ -51,5 +53,10 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 			AsyncCallback<Void> callback) {
 		super.init(dteSerializationPolicy, commitToServerTransformListener,
 				callback);
+	}
+
+	@Override
+	public void getDomainModelDeltaIterator(DomainTransformRequestType[] types,
+			AsyncCallback<Iterator<DomainModelDelta>> callback) {
 	}
 }

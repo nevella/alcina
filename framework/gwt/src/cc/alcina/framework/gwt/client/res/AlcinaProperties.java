@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class AlcinaProperties {
+	public static final String SIMULATE_OFFLINE="simulateOffline";
 	public static boolean is(Class clazz, String key) {
 		String value = get().getString(clazz, key);
 		return Boolean.valueOf(value);

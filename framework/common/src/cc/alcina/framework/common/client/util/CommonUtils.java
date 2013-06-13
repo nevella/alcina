@@ -389,6 +389,10 @@ public class CommonUtils {
 	public static boolean isNullOrEmpty(Collection c) {
 		return c == null || c.isEmpty();
 	}
+	
+	public static boolean isNotNullOrEmpty(Collection c) {
+		return c != null && !c.isEmpty();
+	}
 
 	public static boolean isNotNullOrEmpty(String string) {
 		return string != null && string.length() != 0;

@@ -23,6 +23,11 @@ public class TimerWrapperJvm extends Timer implements TimerWrapper {
 		public TimerWrapper getTimer(Runnable runnable) {
 			return new TimerWrapperJvm(runnable);
 		}
+
+		@Override
+		public void scheduleDeferred(Runnable runnable) {
+			getTimer(runnable).scheduleSingle(1);
+		}
 	}
 
 	@Override

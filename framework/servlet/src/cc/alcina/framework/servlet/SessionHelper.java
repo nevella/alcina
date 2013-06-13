@@ -47,8 +47,7 @@ public class SessionHelper {
 
 	public static void initUserState(HttpServletRequest request) {
 		initaliseRequest(request);
-		String clientInstanceId = request
-				.getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_ID_KEY);
+		String clientInstanceId = getClientInstanceId(request);
 		if (clientInstanceId != null) {
 			String clientInstanceAuth = request
 					.getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_AUTH_KEY);
@@ -107,5 +106,12 @@ public class SessionHelper {
 				setupSessionForUser(request, user);
 			}
 		}
+	}
+
+	public static String getClientInstanceId(
+			HttpServletRequest request) {
+		String clientInstanceId = request
+				.getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_ID_KEY);
+		return clientInstanceId;
 	}
 }

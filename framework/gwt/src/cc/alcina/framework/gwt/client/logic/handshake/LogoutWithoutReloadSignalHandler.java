@@ -10,7 +10,7 @@ public class LogoutWithoutReloadSignalHandler implements
 	public void signal(Consort consort) {
 		consort.removeStates(ExtensibleEnum.forClassAndTag(
 				HandshakeState.class,
-				HandshakeState.TAG_POST_OBJECT_LOAD));
+				HandshakeState.TAG_POST_OBJECT_DATA_LOAD));
 		consort.addIfNotMember(new StartAppPlayer());
 		consort.nudge();
 	}

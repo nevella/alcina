@@ -156,7 +156,7 @@ public class Registry {
 		}
 		if (cached == Void.class && errorOnNull) {
 			throw new NoImplementationException(CommonUtils.formatJ(
-					"Could not find lookup - %s:%s",
+					"singleton/factory not registered - %s:%s",
 					CommonUtils.classSimpleName(registryPoint),
 					CommonUtils.classSimpleName(targetObject)));
 		}

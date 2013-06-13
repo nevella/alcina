@@ -13,16 +13,22 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import com.google.gwt.user.client.rpc.GwtTransient;
+
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 
 @Table(name = "client_instance")
 @Entity
 @SequenceGenerator(allocationSize = 1, name = "client_instance_id_seq", sequenceName = "client_instance_id_seq")
-@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ClientInstance.class)
+@RegistryLocations({
+	@RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ClientInstance.class),
+	@RegistryLocation(registryPoint = ClientInstance.class) })
 public class ClientInstanceImpl extends ClientInstance implements Serializable {
+	@GwtTransient
 	private AlcinaTemplateUser user;
 
 	@ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE }, fetch = FetchType.LAZY, targetEntity = AlcinaTemplateUser.class)
