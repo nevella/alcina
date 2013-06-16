@@ -1,0 +1,39 @@
+package cc.alcina.framework.gwt.client.logic.handshake;
+
+import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
+
+public class UploadOfflineTransformsPlayer extends
+		RunnableAsyncCallbackPlayer<Void, HandshakeState> {
+	public static final HandshakeState OFFLINE_TRANSFORMS_UPLOADED = new HandshakeState(
+			"OFFLINE_TRANSFORMS_UPLOADED");
+
+	public UploadOfflineTransformsPlayer() {
+		addRequires(HandshakeState.ASYNC_SERVICES_INITIALISED);
+		addProvides(OFFLINE_TRANSFORMS_UPLOADED);
+	}
+
+	@Override
+	public void onFailure(Throwable caught) {
+		if (ClientUtils.maybeOffline(caught)) {
+			// we now know that we're offline.
+			wasPlayed();
+			return;
+		}
+		super.onFailure(caught);
+	}
+
+	@Override
+	public void run() {
+		LocalTransformPersistence.get().handleUncommittedTransformsOnLoad(this);
+		// FW3: Make a 'loading objects' message, login state fields in
+		// handshake model
+		// new Callback() {
+		// public void apply(Object target) {
+		// loadUserObjects("Loading survey definitions", null,
+		// LoginState.LOGGED_IN);
+		// }
+		// });
+	}
+}

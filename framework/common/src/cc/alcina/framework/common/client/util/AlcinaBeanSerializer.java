@@ -32,6 +32,7 @@ public class AlcinaBeanSerializer {
 	private static final String PROPERTIES = "props";
 
 	private static final String CLASS_NAME = "cn";
+	private static final String LITERAL = "lit";
 
 	public <T> T deserialize(String jsonString) throws Exception {
 		JSONObject obj = (JSONObject) JSONParser.parseStrict(jsonString);
@@ -54,6 +55,9 @@ public class AlcinaBeanSerializer {
 		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
 		Class clazz = CommonLocator.get().classLookup()
 				.getClassForName(cn.stringValue());
+		if(CommonUtils.isStandardJavaClass(clazz)||clazz.isEnum()){
+			return deserializeField(jsonObj.get(LITERAL),clazz);
+		}
 		Object obj = CommonLocator.get().classLookup().newInstance(clazz);
 		GwittirBridge gb = GwittirBridge.get();
 		for (String propertyName : props.keySet()) {
@@ -115,6 +119,9 @@ public class AlcinaBeanSerializer {
 		}
 		if (type == HashMap.class) {
 			m = new HashMap();
+		}
+		if (type == CountingMap.class) {
+			m = new CountingMap();
 		}
 		if (m != null) {
 			JSONArray array = jsonValue.isArray();
@@ -194,11 +201,15 @@ public class AlcinaBeanSerializer {
 		}
 		JSONObject jo = new JSONObject();
 		jo.put(CLASS_NAME, new JSONString(object.getClass().getName()));
-		GwittirBridge gb = GwittirBridge.get();
-		BeanDescriptor descriptor = gb.getDescriptor(object);
 		Class<? extends Object> clazz = object.getClass();
+		if(CommonUtils.isStandardJavaClass(clazz)){
+			jo.put(LITERAL, serializeField(object, clazz));
+			return jo;
+		}
+		GwittirBridge gb = GwittirBridge.get();
 		Object template = CommonLocator.get().classLookup()
 				.getTemplateInstance(clazz);
+		BeanDescriptor descriptor = gb.getDescriptor(object);
 		Property[] properties = descriptor.getProperties();
 		JSONObject props = new JSONObject();
 		jo.put(PROPERTIES, props);

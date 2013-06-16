@@ -13,7 +13,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class DisabledTransformPersistence extends LocalTransformPersistence {
 	@Override
-	public void clearPersistedClient(ClientInstance exceptFor,
+	public void clearPersistedClient(ClientInstance exceptFor,int exceptForId,
 			AsyncCallback callback) {
 	}
 

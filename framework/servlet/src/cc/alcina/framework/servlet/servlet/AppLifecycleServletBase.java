@@ -233,6 +233,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					Arrays.asList(new String[] {})).getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					ServletLayerRegistry.get());
+			ServletLayerRegistry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
 		} catch (Exception e) {
 			logger.warn("", e);
 		} finally {

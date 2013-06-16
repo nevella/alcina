@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
+import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.registry.RegistryScanner;
@@ -106,6 +107,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 					.muteClassloaderLogging(true);
 			new RegistryScanner().scan(ensureClassInfo(mainLogger),
 					new ArrayList<String>(), Registry.get());
+			Registry.get().registerBootstrapServices(
+					ObjectPersistenceHelper.get());
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {

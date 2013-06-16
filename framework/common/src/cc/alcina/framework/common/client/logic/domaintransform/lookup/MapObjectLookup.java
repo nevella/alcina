@@ -35,8 +35,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  * @param obj
  */
 public class MapObjectLookup implements ObjectStore {
-	private static final String REGISTERING_OBJECTS = "Registering objects";
-
 	private final PropertyChangeListener listener;
 
 	private PerClassLookup perClassLookups;
@@ -171,20 +169,15 @@ public class MapObjectLookup implements ObjectStore {
 		for (Object o : registerableDomainObjects) {
 			addObjectOrCollectionToEndOfQueue(o);
 		}
-		final ModalNotifier notifier = ClientLayerLocator.get().notifications()
-				.getModalNotifier(REGISTERING_OBJECTS);
-		notifier.modalOn();
 		Scheduler.get().scheduleIncremental(new RepeatingCommand() {
-			private int ctr;
-
+			// private int ctr;
 			@Override
 			public boolean execute() {
 				if (iterateRegistration()) {
-					System.out.println("Async register obj:" + ctr++);
+					// System.out.println("Async register obj:" + ctr++);
 					return true;
 				}
 				try {
-					notifier.modalOff();
 					ScheduledCommand postRegisterCommandCopy = MapObjectLookup.this.postRegisterCommand;
 					MapObjectLookup.this.postRegisterCommand = null;
 					postRegisterCommandCopy.execute();

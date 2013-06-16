@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.ide.Workspace;
 import cc.alcina.framework.gwt.client.ide.Workspace.WSVisualModel;
@@ -40,6 +41,7 @@ import cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants;
 import cc.alcina.template.cs.history.AlcinaTemplateHistoryTokens;
 import cc.alcina.template.cs.persistent.AlcinaTemplateGroup;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
+import cc.alcina.template.cs.remote.AlcinaTemplateRemoteServiceAsync;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.resources.client.ImageResource;
@@ -186,8 +188,8 @@ public class AdminTab extends BaseTab implements HasLayoutInfo,
 		LayoutEvents.get().fireLayoutEvent(
 				new LayoutEvent(LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 		crd.show();
-		AlcinaTemplateClient.theApp.getAppRemoteService()
-				.getAllGroups(callback);
+		Registry.impl(AlcinaTemplateRemoteServiceAsync.class).getAllGroups(
+				callback);
 	}
 
 	@Override

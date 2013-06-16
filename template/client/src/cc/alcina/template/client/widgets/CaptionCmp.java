@@ -60,7 +60,7 @@ public class CaptionCmp extends Composite {
 			hp.add(redrawBtn);
 			redrawBtn.addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent event) {
-					LayoutManager.get().redraw();
+					AlcinaTemplateLayoutManager.get().redraw();
 					LayoutEvents.get().fireLayoutEvent(
 							new LayoutEvent(
 									LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));

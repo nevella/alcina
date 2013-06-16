@@ -7,10 +7,12 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.UploadOfflineTransformsConsort.State;
@@ -27,7 +29,6 @@ public class UploadOfflineTransformsConsort extends Consort<State, Object> {
 
 	public List<DTRSimpleSerialWrapper> transformsToPersistOnServer;
 
-	public ModalNotifier notifier;
 
 	public Throwable remotePersistenceException;
 
@@ -83,9 +84,10 @@ public class UploadOfflineTransformsConsort extends Consort<State, Object> {
 			String message = TextProvider.get().getUiObjectText(
 					LocalTransformPersistence.class, "saving-unsaved-message",
 					"Saving unsaved work from previous session");
-			notifier = ClientLayerLocator.get().notifications()
-					.getModalNotifier(message);
-			notifier.setMasking(false);
+			
+			ModalNotifier notifier = Registry.impl(HandshakeConsortModel.class)
+					.ensureLoadObjectsNotifier(message);
+			notifier.modalOff();
 			LocalTransformPersistence.get().persistOfflineTransforms(
 					transformsToPersistOnServer, notifier, this);
 		}
@@ -110,7 +112,6 @@ public class UploadOfflineTransformsConsort extends Consort<State, Object> {
 		private void cleanup() {
 			LocalTransformPersistence.get()
 					.getCommitToStorageTransformListener().setPaused(false);
-			notifier.modalOff();
 		}
 	}
 

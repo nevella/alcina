@@ -21,6 +21,7 @@ import org.json.JSONObject;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.entity.SEUtilities;
 
 @SuppressWarnings("unchecked")
@@ -105,6 +106,9 @@ public class AlcinaBeanSerializerS {
 		}
 		if (type == HashMap.class) {
 			m = new HashMap();
+		}
+		if (type == CountingMap.class) {
+			m = new CountingMap();
 		}
 		if (m != null) {
 			JSONArray array = (JSONArray) o;

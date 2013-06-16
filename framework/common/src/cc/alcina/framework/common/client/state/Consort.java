@@ -12,8 +12,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
@@ -65,6 +67,8 @@ public class Consort<D, S> {
 
 	Player replayPlayer = null;
 
+	private Consort parent;
+
 	public void addEndpointPlayer() {
 		addEndpointPlayer(null);
 	}
@@ -76,19 +80,15 @@ public class Consort<D, S> {
 	}
 
 	public void addIfNotMember(Player player) {
-		if (!containsTask(player.getClass())) {
+		if (getTaskForClass(player.getClass()) == null) {
 			addPlayer(player);
 		}
 	}
 
-	public void addPlayer(Player<D> player) {
+	public <T extends Player<D>> T addPlayer(T player) {
 		player.setConsort(this);
 		players.addLast(player);
-	}
-
-	public void addPlayer(Player<D> player, D... extraRequires) {
-		player.addRequires(extraRequires);
-		addPlayer(player);
+		return player;
 	}
 
 	public void addSignalHandler(ConsortSignalHandler<S> signal) {
@@ -126,8 +126,8 @@ public class Consort<D, S> {
 		return reachedStates.contains(state);
 	}
 
-	public boolean containsTask(Class<?> clazz) {
-		return CollectionFilters.contains(players, new IsClassFilter(clazz));
+	public <P extends Player> P getTaskForClass(Class<P> clazz) {
+		return (P) CollectionFilters.first(players, new IsClassFilter(clazz));
 	}
 
 	public void finished() {
@@ -209,10 +209,22 @@ public class Consort<D, S> {
 		currentPlayer = null;
 		// TODO - warn if resultantstates >1 and a non-parallel consort?
 		if (reachedStates.addAll(resultantStates)) {
-			topicPublisher.publishTopic(STATES, null);
+			publishTopicWithBubble(STATES, null);
+			if (isTrace()) {
+				System.out.println(CommonUtils.formatJ("%s     [%s]",
+						CommonUtils.padStringLeft("", indent, '\t'),
+						CommonUtils.join(resultantStates, ", ")));
+			}
 		}
-		topicPublisher.publishTopic(AFTER_PLAY, player);
+		publishTopicWithBubble(AFTER_PLAY, player);
 		consumeQueue();
+	}
+
+	protected void publishTopicWithBubble(String key, Object message) {
+		topicPublisher.publishTopic(key, message);
+		if (parent != null) {
+			parent.publishTopicWithBubble(key, message);
+		}
 	}
 
 	private boolean isActive(Player<D> player) {
@@ -386,8 +398,8 @@ public class Consort<D, S> {
 			}
 			wasPlayed(player);
 		} else {
-			topicPublisher.publishTopic(BEFORE_PLAY, player);
-			player.play();
+			publishTopicWithBubble(BEFORE_PLAY, player);
+			player.play(replaying);
 		}
 	}
 
@@ -397,5 +409,23 @@ public class Consort<D, S> {
 
 	Set<D> getReachedStates() {
 		return this.reachedStates;
+	}
+
+	public Consort getParent() {
+		return this.parent;
+	}
+
+	public void setParent(Consort parent) {
+		this.parent = parent;
+	}
+
+	public void deferredRemove(final String key, final TopicListener listener) {
+		Registry.impl(TimerWrapperProvider.class).scheduleDeferred(
+				new Runnable() {
+					@Override
+					public void run() {
+						listenerDelta(key, listener, false);
+					}
+				});
 	}
 }

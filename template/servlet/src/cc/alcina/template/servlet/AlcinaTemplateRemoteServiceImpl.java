@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
+import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
@@ -29,7 +31,6 @@ import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 import cc.alcina.template.cs.remote.AlcinaTemplateRemoteService;
 import cc.alcina.template.entityaccess.AlcinaTemplateBeanProvider;
 
-
 public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		implements AlcinaTemplateRemoteService {
 	public AlcinaTemplateRemoteServiceImpl() {
@@ -38,7 +39,9 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 				.getLogger(AlcinaServerConfig.get().getMainLoggerName()));
 	}
 
-	public AlcinaTemplateObjects loadInitial() {
+	@Override
+	public LoadObjectsHolder<AlcinaTemplateObjects> loadInitial(
+			LoadObjectsRequest request) {
 		AlcinaTemplateObjects alcinaTemplateObjects = AlcinaTemplateServerManager
 				.get()
 				.loadInitial(
@@ -49,7 +52,9 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		HttpServletRequest req = getThreadLocalRequest();
 		alcinaTemplateObjects.setOnetimeMessage((String) req.getSession()
 				.getAttribute(SessionHelper.SESSION_ATTR_ONE_TIME_STRING));
-		return alcinaTemplateObjects;
+		LoadObjectsHolder<AlcinaTemplateObjects> results = new LoadObjectsHolder<AlcinaTemplateObjects>();
+		results.setDomainModelHolder(alcinaTemplateObjects);
+		return results;
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
@@ -117,7 +122,8 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 			}
 		}
 		lrb.setClientInstance(AlcinaTemplateBeanProvider.get()
-				.getCommonPersistenceBean().createClientInstance(getUserAgent()));
+				.getCommonPersistenceBean()
+				.createClientInstance(getUserAgent()));
 		return lrb;
 	}
 

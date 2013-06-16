@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
+import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;

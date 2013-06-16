@@ -6,15 +6,16 @@ import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
+import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsort;
 import cc.alcina.framework.gwt.client.widget.APanel;
 import cc.alcina.framework.gwt.client.widget.Link;
 import cc.alcina.framework.gwt.client.widget.dialog.LoginDisplayer;
-import cc.alcina.template.client.AlcinaTemplateClient;
 import cc.alcina.template.client.logic.AlcinaTemplateContentProvider;
-import cc.alcina.template.client.widgets.LayoutManager;
+import cc.alcina.template.client.widgets.AlcinaTemplateLayoutManager;
 import cc.alcina.template.cs.AlcinaTemplateHistoryItem;
+import cc.alcina.template.cs.remote.AlcinaTemplateRemoteServiceAsync;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -47,8 +48,8 @@ public class LoginHandler implements LoginStateVisibleWithWidget, ClickHandler,
 				info.setNoHistory(true);
 				// ResetPasswordHandler.username = userName;
 				ld.hideLoginDialog();
-				LayoutManager.get().getMainCmp().onHistoryChanged(
-						info.toTokenString());
+				AlcinaTemplateLayoutManager.get().getMainCmp()
+						.onHistoryChanged(info.toTokenString());
 			}
 		});
 		return panel;
@@ -87,11 +88,12 @@ public class LoginHandler implements LoginStateVisibleWithWidget, ClickHandler,
 								.getUserName()));
 					} else {
 						ld.hideLoginDialog();
-						ClientLayerLocator.get().getClientHandshakeHelper().handleLoggedIn(lrb);
+						Registry.impl(HandshakeConsort.class).handleLoggedIn(
+								lrb);
 					}
 				}
 			};
-			AlcinaTemplateClient.theApp.getAppRemoteService().login(lb,
+			Registry.impl(AlcinaTemplateRemoteServiceAsync.class).login(lb,
 					callback);
 		}
 		if (evt.getAction().getActionName() == LoginDisplayer.CANCEL_ACTION) {

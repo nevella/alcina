@@ -14,6 +14,7 @@ public interface PersistenceObjectStore {
 	public abstract void add(String key, String value, AsyncCallback<Integer> idCallback);
 
 	public abstract void put(String key, String value, AsyncCallback<Integer> idCallback);
+	public abstract void put(int id, String value, AsyncCallback<Void> idCallback);
 
 	public abstract void get( String key,  AsyncCallback<String> valueCallback);
 	public abstract void remove( String key,  AsyncCallback<Integer> valueCallback);

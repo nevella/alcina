@@ -21,6 +21,7 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.template.client.logic.AlcinaTemplateContentProvider;
 
 import com.google.gwt.dom.client.AnchorElement;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -35,24 +36,19 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 
-public class LayoutManager extends LayoutManagerBase {
-	private LayoutManager() {
-		super();
-	}
+public class AlcinaTemplateLayoutManager extends LayoutManagerBase {
+	private static AlcinaTemplateLayoutManager theInstance;
 
-	private static LayoutManager theInstance;
+	public static AlcinaTemplateLayoutManager get() {
+		if (theInstance == null) {
+			theInstance = new AlcinaTemplateLayoutManager();
+		}
+		return theInstance;
+	}
 
 	private CaptionCmp captionCmp;
 
 	private MainCmp mainCmp;
-
-	public CaptionCmp getCaptionCmp() {
-		return this.captionCmp;
-	}
-
-	public MainCmp getMainCmp() {
-		return this.mainCmp;
-	}
 
 	private boolean initialising = true;
 
@@ -62,19 +58,80 @@ public class LayoutManager extends LayoutManagerBase {
 
 	private StatusDisplayer statusDisplayer;
 
-	public boolean isInitialising() {
-		return this.initialising;
-	}
+	OkCancelDialogBox previewBox;
 
-	public static LayoutManager get() {
-		if (theInstance == null) {
-			theInstance = new LayoutManager();
-		}
-		return theInstance;
+	private AlcinaTemplateLayoutManager() {
+		super();
 	}
 
 	public void appShutdown() {
 		theInstance = null;
+	}
+
+	public CaptionCmp getCaptionCmp() {
+		return this.captionCmp;
+	}
+
+	public FooterCmp getFooterCmp() {
+		return this.footerCmp;
+	}
+
+	public MainCmp getMainCmp() {
+		return this.mainCmp;
+	}
+
+	public BaseTab getSelectedTab() {
+		MainTabPanel tp = getMainCmp().getTabPanel();
+		return (BaseTab) (tp.getTabBar().getSelectedTab() == -1 ? null : tp
+				.getWidget(tp.getTabBar().getSelectedTab()));
+	}
+
+	public boolean isInitialising() {
+		return this.initialising;
+	}
+
+	@Override
+	public boolean isLayoutInitialising() {
+		return initialising || !isDisplayInitialised();
+	}
+
+	public boolean isShowingTab(String tabHistoryCode) {
+		MainCmp mc = getMainCmp();
+		MainTabPanel tp = mc.getTabPanel();
+		if (tp.getTabBar().getSelectedTab() != -1) {
+			Widget widget = tp.getWidget(tp.getTabBar().getSelectedTab());
+			if (widget instanceof BaseTab) {
+				BaseTab baseTab = (BaseTab) widget;
+				return tabHistoryCode.equals(baseTab.getHistoryToken());
+			}
+		}
+		return false;
+	}
+
+	public void preview(final String result) {
+		Label label = new Label(
+				"Your document preview is prepared. Please press OK to view");
+		PermissibleActionListener l = new PermissibleActionListener() {
+			public void vetoableAction(PermissibleActionEvent evt) {
+				previewBox.hide();
+				if (evt.getAction()==OkAction.INSTANCE) {
+					Window.open(result, "BarNet AlcinaTemplate", null);
+				}
+			}
+		};
+		previewBox = new OkCancelDialogBox("Preview ready", label, l,
+				HasHorizontalAlignment.ALIGN_CENTER);
+		previewBox.center();
+		previewBox.show();
+	}
+
+	public void print(String result) {
+		HTML holder = new HTML(result);
+		topPanel.setVisible(false);
+		RootPanel.get().add(holder);
+		Window.print();
+		RootPanel.get().remove(holder);
+		topPanel.setVisible(true);
 	}
 
 	public void redraw() {
@@ -97,14 +154,58 @@ public class LayoutManager extends LayoutManagerBase {
 		initialising = false;
 	}
 
-	public FooterCmp getFooterCmp() {
-		return this.footerCmp;
+	@Override
+	public void redrawLayout() {
+		Element statusVariable = Document.get().getElementById("loading");
+		statusVariable.getStyle().setProperty("display", "none");
+		setDisplayInitialised(true);
+		Window.setMargin("0px");
+		redraw();
 	}
 
-	public BaseTab getSelectedTab() {
+	public void resize(int clientWidth, int clientHeight) {
+		int mainCmpExclHeight = getCaptionCmp().getOffsetHeight()
+				+ getFooterCmp().getOffsetHeight();
+		int clHeight = getMainCmp().getTabPanel().adjustClientSize(clientWidth,
+				clientHeight - mainCmpExclHeight);
 		MainTabPanel tp = getMainCmp().getTabPanel();
-		return (BaseTab) (tp.getTabBar().getSelectedTab() == -1 ? null : tp
-				.getWidget(tp.getTabBar().getSelectedTab()));
+		MainCmp mc = getMainCmp();
+		Widget w = tp.getTabBar().getSelectedTab() >= 0 ? tp.getWidget(tp
+				.getTabBar().getSelectedTab()) : tp.getNoTabContentHolder();
+		if (w instanceof HasLayoutInfo) {
+			WidgetUtils.resizeUsingInfo(clHeight, clientWidth, Arrays.asList(
+					new Widget[] { w }).iterator(), tp.getAdjustHeight(), 0);
+		}
+	}
+	public void showContentPopup(String contentKey) {
+		AlcinaTemplateContentProvider provider = (AlcinaTemplateContentProvider) ContentProvider
+				.getProvider();
+		Widget widget = new ScrollPanel(ContentProvider.getWidget(contentKey));
+		widget.setSize("500px", "400px");
+		String title = provider.getNode(contentKey).getTitle();
+		PermissibleActionListener listener = new PermissibleActionListener() {
+			public void vetoableAction(PermissibleActionEvent evt) {
+			}
+		};
+		OkCancelDialogBox box = new OkCancelDialogBox(title, widget, listener) {
+			@Override
+			protected void adjustDisplay() {
+				cancelButton.setVisible(false);
+				setWidth("500px");
+				setHeight("400px");
+			}
+		};
+		box.show();
+	}
+
+	@Override
+	protected boolean onWindowResized(int clientWidth, int clientHeight,
+			boolean fromBrowser) {
+		if (!super.onWindowResized(clientWidth, clientHeight, fromBrowser)) {
+			return false;
+		}
+		resize(clientWidth, clientHeight);
+		return true;
 	}
 
 	static class EventSinkPanel extends FlowPanel {
@@ -117,7 +218,7 @@ public class LayoutManager extends LayoutManagerBase {
 		public void onBrowserEvent(Event event) {
 			// disable # hyperlinks
 			// disable # hyperlinks
-			LayoutManager layoutManager = LayoutManager.get();
+			AlcinaTemplateLayoutManager layoutManager = AlcinaTemplateLayoutManager.get();
 			if (event.getTypeInt() == Event.ONCLICK) {
 				Element target = Element.as(event.getEventTarget());
 				if (target.getParentElement() != null
@@ -177,80 +278,5 @@ public class LayoutManager extends LayoutManagerBase {
 		}
 
 		
-	}
-
-	public void print(String result) {
-		HTML holder = new HTML(result);
-		topPanel.setVisible(false);
-		RootPanel.get().add(holder);
-		Window.print();
-		RootPanel.get().remove(holder);
-		topPanel.setVisible(true);
-	}
-
-	OkCancelDialogBox previewBox;
-
-	public void preview(final String result) {
-		Label label = new Label(
-				"Your document preview is prepared. Please press OK to view");
-		PermissibleActionListener l = new PermissibleActionListener() {
-			public void vetoableAction(PermissibleActionEvent evt) {
-				previewBox.hide();
-				if (evt.getAction()==OkAction.INSTANCE) {
-					Window.open(result, "BarNet AlcinaTemplate", null);
-				}
-			}
-		};
-		previewBox = new OkCancelDialogBox("Preview ready", label, l,
-				HasHorizontalAlignment.ALIGN_CENTER);
-		previewBox.center();
-		previewBox.show();
-	}
-
-	public void showContentPopup(String contentKey) {
-		AlcinaTemplateContentProvider provider = (AlcinaTemplateContentProvider) ContentProvider
-				.getProvider();
-		Widget widget = new ScrollPanel(ContentProvider.getWidget(contentKey));
-		widget.setSize("500px", "400px");
-		String title = provider.getNode(contentKey).getTitle();
-		PermissibleActionListener listener = new PermissibleActionListener() {
-			public void vetoableAction(PermissibleActionEvent evt) {
-			}
-		};
-		OkCancelDialogBox box = new OkCancelDialogBox(title, widget, listener) {
-			@Override
-			protected void adjustDisplay() {
-				cancelButton.setVisible(false);
-				setWidth("500px");
-				setHeight("400px");
-			}
-		};
-		box.show();
-	}
-	public boolean isShowingTab(String tabHistoryCode) {
-		MainCmp mc = getMainCmp();
-		MainTabPanel tp = mc.getTabPanel();
-		if (tp.getTabBar().getSelectedTab() != -1) {
-			Widget widget = tp.getWidget(tp.getTabBar().getSelectedTab());
-			if (widget instanceof BaseTab) {
-				BaseTab baseTab = (BaseTab) widget;
-				return tabHistoryCode.equals(baseTab.getHistoryToken());
-			}
-		}
-		return false;
-	}
-	public void resize(int clientWidth, int clientHeight) {
-		int mainCmpExclHeight = getCaptionCmp().getOffsetHeight()
-				+ getFooterCmp().getOffsetHeight();
-		int clHeight = getMainCmp().getTabPanel().adjustClientSize(clientWidth,
-				clientHeight - mainCmpExclHeight);
-		MainTabPanel tp = getMainCmp().getTabPanel();
-		MainCmp mc = getMainCmp();
-		Widget w = tp.getTabBar().getSelectedTab() >= 0 ? tp.getWidget(tp
-				.getTabBar().getSelectedTab()) : tp.getNoTabContentHolder();
-		if (w instanceof HasLayoutInfo) {
-			WidgetUtils.resizeUsingInfo(clHeight, clientWidth, Arrays.asList(
-					new Widget[] { w }).iterator(), tp.getAdjustHeight(), 0);
-		}
 	}
 }

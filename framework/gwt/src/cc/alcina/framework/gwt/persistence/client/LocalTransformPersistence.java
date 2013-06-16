@@ -23,8 +23,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.GwtRpcProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.Lzw;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
@@ -69,6 +72,30 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			+ "."
 			+ "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS";;
 
+	public static final String TOPIC_PERSISTING = LocalTransformPersistence.class
+			.getName() + "." + "TOPIC_PERSISTING";;
+
+	public static class TypeSizeTuple {
+		public String type;
+
+		public TypeSizeTuple(String type, int size) {
+			this.type = type;
+			this.size = size;
+		}
+
+		public int size;
+	}
+
+	public static void notifyPersisting(TypeSizeTuple size) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTING, size);
+	}
+
+	public static void notifyPersistingListenerDelta(
+			TopicListener<TypeSizeTuple> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTING, listener,
+				add);
+	}
+
 	public static LocalTransformPersistence get() {
 		return localTransformPersistence;
 	}
@@ -100,7 +127,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	public abstract void clearPersistedClient(ClientInstance exceptFor,
-			AsyncCallback callback);
+			int exceptForId, AsyncCallback callback);
 
 	public void dumpDatabase(final Callback<String> callback) {
 		AsyncCallback<List<DTRSimpleSerialWrapper>> transformCallback = new AsyncCallbackStd<List<DTRSimpleSerialWrapper>>() {
@@ -151,8 +178,8 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		return closing;
 	}
 
-	public boolean isLocalStorageInstalled() {
-		return this.localStorageInstalled;
+	public static boolean isLocalStorageInstalled() {
+		return get() != null && get().localStorageInstalled;
 	}
 
 	/**
@@ -333,8 +360,6 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	protected abstract void persist(DTRSimpleSerialWrapper wrapper,
 			AsyncCallback callback);
-
-	
 
 	protected void persistOfflineTransforms(
 			List<DTRSimpleSerialWrapper> uncommitted, ModalNotifier notifier,

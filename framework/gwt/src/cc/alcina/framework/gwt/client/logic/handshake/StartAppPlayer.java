@@ -9,6 +9,5 @@ public class StartAppPlayer extends RunnablePlayer {
 
 	@Override
 	public void run() {
-		wasPlayed();
 	}
 }

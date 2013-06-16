@@ -12,4 +12,7 @@ public class HandshakeSignal extends ExtensibleEnum {
 
 	public static final HandshakeSignal LOGGED_IN = new HandshakeSignal(
 			"LOGGED_IN");
+
+	public static final HandshakeSignal OBJECTS_INVALIDATED = new HandshakeSignal(
+			"OBJECTS_INVALIDATED");
 }

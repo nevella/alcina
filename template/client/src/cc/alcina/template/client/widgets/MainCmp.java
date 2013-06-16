@@ -113,7 +113,7 @@ public class MainCmp extends MainCmpBase {
 		tabPanel.getDeckPanel().setStyleName(
 				showingFullHeight ? "alcina-MainContent content-100pc-lhs"
 						: "alcina-MainContent");
-		FooterCmp cmp = LayoutManager.get().getFooterCmp();
+		FooterCmp cmp = AlcinaTemplateLayoutManager.get().getFooterCmp();
 		if (cmp != null) {
 			cmp.setVisible(!showingFullHeight);
 		}
@@ -153,7 +153,7 @@ public class MainCmp extends MainCmpBase {
 	private void showMinusOneTab() {
 		tabPanel.getTabBar().selectTab(-1);
 		afterTabSelect(-1);
-		DOM.scrollIntoView(LayoutManager.get().getCaptionCmp().getElement());
+		DOM.scrollIntoView(AlcinaTemplateLayoutManager.get().getCaptionCmp().getElement());
 	}
 
 	public void showNotabWidget(Widget w) {

@@ -32,8 +32,7 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
  */
 public class RemoteLogPersister {
 	private enum State {
-		CHECKED_ONLINE, GOT_LOG_RECORD_RANGE, ADDED_RECORDS, PUSHED, DELETED,
-		FINISHED
+		CHECKED_ONLINE, GOT_LOG_RECORD_RANGE, ADDED_RECORDS, PUSHED, DELETED
 	}
 
 	public static int PREFERRED_MAX_PUSH_SIZE = 30000;// bytes
@@ -56,6 +55,10 @@ public class RemoteLogPersister {
 			buffer = new StringBuilder();
 			addPlayer(new LogRecordCheckOnline());
 			addPlayer(new LogRecordRangeGetter());
+			addPlayer(new LogRecordAdder());
+			addPlayer(new LogRecordRemotePusher());
+			addPlayer(new LogRecordRangeDeleter());
+			addEndpointPlayer();
 		}
 
 		class LogRecordRangeGetter extends
@@ -100,7 +103,6 @@ public class RemoteLogPersister {
 				EnumRunnableAsyncCallbackPlayer<Void, State> {
 			public LogRecordCheckOnline() {
 				super(State.CHECKED_ONLINE);
-				addProvides(State.FINISHED);
 			}
 
 			boolean rqRun = false;
@@ -151,7 +153,6 @@ public class RemoteLogPersister {
 
 			public LogRecordRemotePusher() {
 				super(State.PUSHED);
-				addProvides(State.FINISHED);
 			}
 
 			@Override
@@ -194,11 +195,11 @@ public class RemoteLogPersister {
 			});
 		}
 
-		class LogRecordGetter extends
+		class LogRecordAdder extends
 				EnumRunnableAsyncCallbackPlayer<Map<Integer, String>, State>
 				implements LoopingPlayer {
-			public LogRecordGetter() {
-				super(State.GOT_LOG_RECORD_RANGE);
+			public LogRecordAdder() {
+				super(State.ADDED_RECORDS);
 			}
 
 			@Override
@@ -227,14 +228,25 @@ public class RemoteLogPersister {
 					if (buffer.length() < PREFERRED_MAX_PUSH_SIZE
 							&& idCtr < logRecordRange.i2) {
 						consort.replay(this);
-						return;
+					} else {
+						wasPlayed();
+					}
+				} else {
+					if (logRecordRange.contains(idCtr)) {
+						consort.replay(this);
+					} else {
+						wasPlayed();
 					}
 				}
-				wasPlayed(State.GOT_LOG_RECORD_RANGE);
 			}
 
 			@Override
 			public void run() {
+				loop();
+			}
+
+			@Override
+			public void loop() {
 				++idCtr;
 				LogStore.get().getRange(idCtr, idCtr, this);
 			}
@@ -248,8 +260,7 @@ public class RemoteLogPersister {
 		public void handleExpectableMaybeOffline(Throwable caught, Player player) {
 			if (ClientUtils.maybeOffline(caught)) {
 				maybeOffline = true;
-				consort.wasPlayed(player,
-						Collections.singletonList(State.FINISHED));
+				consort.finished();
 			} else {
 				throw new WrappedRuntimeException(caught);
 			}

@@ -63,14 +63,15 @@ public abstract class JdbcTransformPersistence extends
 
 	@Override
 	public void clearPersistedClient(final ClientInstance exceptFor,
-			final AsyncCallback callback) {
+			int exceptForId, final AsyncCallback callback) {
 		try {
-			executeStatement("DELETE from TransformRequests"
+			String sql = CommonUtils.formatJ("DELETE from TransformRequests"
 					+ " where (transform_request_type='CLIENT_OBJECT_LOAD'"
 					+ " OR transform_request_type='CLIENT_SYNC'"
 					+ " OR transform_request_type='TO_REMOTE_COMPLETED')"
-					+ " and clientInstance_id != "
-					+ (exceptFor == null ? -1 : exceptFor.getId()));
+					+ " and (clientInstance_id != %s and id != %s)",
+					exceptFor == null ? -1 : exceptFor.getId(), exceptForId);
+			executeStatement(sql);
 			callback.onSuccess(null);
 		} catch (Exception e) {
 			callback.onFailure(e);
@@ -337,7 +338,7 @@ public abstract class JdbcTransformPersistence extends
 			}
 			if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
 				clearPersistedClient(ClientLayerLocator.get()
-						.getClientInstance(), callback);
+						.getClientInstance(),0, callback);
 			} else {
 				callback.onSuccess(null);
 			}

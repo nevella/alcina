@@ -7,6 +7,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.gwt.client.util.DiscardInfoWrappingCallback;
 
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;
@@ -19,7 +20,7 @@ import com.google.code.gwt.database.client.TransactionCallback;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
-	 Database db;
+	Database db;
 
 	private String tableName;
 
@@ -168,9 +169,13 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 				if (add) {
 					add();
 				} else {
-					String sql = CommonUtils.formatJ(
-							"select id from %s where key_=? ", tableName);
-					tx.executeSql(sql, new String[] { key }, getIdCallback);
+					if (id != null) {
+						update();
+					} else {
+						String sql = CommonUtils.formatJ(
+								"select id from %s where key_=? ", tableName);
+						tx.executeSql(sql, new String[] { key }, getIdCallback);
+					}
 				}
 			}
 
@@ -194,25 +199,24 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		private boolean add;
 
 		public void put(String key, String value,
-				AsyncCallback<Integer> idCallback, boolean add) {
+				AsyncCallback<Integer> idCallback, boolean add, Integer id) {
 			this.key = key;
 			this.value = value;
 			this.idCallback = idCallback;
 			this.add = add;
+			this.id = id;
 			db.transaction(getCallback);
 		}
 	}
 
 	@Override
-	public void put(String key, String value,
-			AsyncCallback<Integer> idCallback) {
-		new PutHandler().put(key, value, idCallback, false);
+	public void put(String key, String value, AsyncCallback<Integer> idCallback) {
+		new PutHandler().put(key, value, idCallback, false, null);
 	}
 
 	@Override
-	public void add(String key, String value,
-			AsyncCallback<Integer> idCallback) {
-		new PutHandler().put(key, value, idCallback, true);
+	public void add(String key, String value, AsyncCallback<Integer> idCallback) {
+		new PutHandler().put(key, value, idCallback, true, null);
 	}
 
 	class RemoveRangeHandler {
@@ -556,6 +560,9 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 	}
 
 	@Override
+	/**
+	 * Note - inclusive int range - i.e. [1,1] will result in the removal of [1]
+	 */
 	public void removeIdRange(IntPair range,
 			AsyncCallback<Void> completedCallback) {
 		new RemoveRangeHandler().removeRange(range.i1, range.i2,
@@ -584,5 +591,10 @@ public class ObjectStoreWebDbImpl implements PersistenceObjectStore {
 		db.transaction(dropCallback);
 	}
 
-	
+	@Override
+	public void put(int id, String value, AsyncCallback<Void> idCallback) {
+		new PutHandler()
+				.put(null, value, new DiscardInfoWrappingCallback<Integer>(
+						idCallback), false, id);
+	}
 }

@@ -353,12 +353,18 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	// TODO - well, lock sync
 	public void persistOfflineTransforms(
 			List<DTRSimpleSerialWrapper> uncommitted) throws WebException {
-		persistOfflineTransforms(uncommitted, null);
+		persistOfflineTransforms(uncommitted, null, true);
 	}
 
 	public int persistOfflineTransforms(
 			List<DTRSimpleSerialWrapper> uncommitted, Logger logger)
 			throws WebException {
+		return persistOfflineTransforms(uncommitted, logger, null);
+	}
+
+	public int persistOfflineTransforms(
+			List<DTRSimpleSerialWrapper> uncommitted, Logger logger,
+			Boolean useWrapperUser) throws WebException {
 		CommonPersistenceLocal cp = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
 		try {
@@ -393,16 +399,26 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				clientInstance.setAuth(wr.getClientInstanceAuth());
 				clientInstance.setId(wr.getClientInstanceId());
 				rq.setClientInstance(clientInstance);
-				boolean pushUser = PermissionsManager.get().isAdmin()
-						&& LooseContext
-								.getContext()
-								.getBoolean(
-										CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
-						&& wr.getUserId() != PermissionsManager.get()
-								.getUserId();
+				if (useWrapperUser == null) {
+					useWrapperUser = PermissionsManager.get().isAdmin()
+							&& LooseContext
+									.getContext()
+									.getBoolean(
+											CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
+							&& wr.getUserId() != PermissionsManager.get()
+									.getUserId();
+				}
 				DomainTransformLayerWrapper transformLayerWrapper;
 				try {
-					if (pushUser) {
+					if (useWrapperUser) {
+						if (!PermissionsManager.get().isAdmin()) {
+							if (cp.validateClientInstance(
+									wr.getClientInstanceId(),
+									wr.getClientInstanceAuth()) == null) {
+								throw new RuntimeException(
+										"invalid wrapper authentication");
+							}
+						}
 						IUser user = ServletLayerLocator.get()
 								.commonPersistenceProvider()
 								.getCommonPersistence()
@@ -427,7 +443,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					transformLayerWrapper = transform(rq, true,
 							isPersistOfflineTransforms(), true);
 				} finally {
-					if (pushUser) {
+					if (useWrapperUser) {
 						PermissionsManager.get().popUser();
 					}
 				}

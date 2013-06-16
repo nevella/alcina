@@ -39,4 +39,8 @@ public class HandshakeState extends ExtensibleEnum {
 
 	public static final HandshakeState ASYNC_SERVICES_INITIALISED = new HandshakeState(
 			"ASYNC_SERVICES_INITIALISED");
+	
+	public static final HandshakeState SOLE_OPEN_TAB_CHECKED = new HandshakeState(
+			"SOLE_OPEN_TAB_CHECKED");
+
 }

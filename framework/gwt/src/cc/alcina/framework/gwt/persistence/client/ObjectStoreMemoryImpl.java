@@ -9,10 +9,12 @@ import cc.alcina.framework.common.client.collections.CollectionFilters.PrefixedF
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.gwt.client.util.DiscardInfoWrappingCallback;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObjectStore {
+public class ObjectStoreMemoryImpl implements PersistenceObjectStore,
+		SyncObjectStore {
 	private TreeMap<Integer, String> values = new TreeMap<Integer, String>();
 
 	private Multimap<String, List<Integer>> reverseKeys = new Multimap<String, List<Integer>>();
@@ -24,12 +26,11 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObject
 	@Override
 	public void getRange(int fromId, int toId,
 			AsyncCallback<Map<Integer, String>> valueCallback) {
-		valueCallback.onSuccess(values.subMap(fromId, toId+1));
+		valueCallback.onSuccess(values.subMap(fromId, toId + 1));
 	}
 
 	@Override
-	public void add(String key, String value,
-			AsyncCallback<Integer> idCallback) {
+	public void add(String key, String value, AsyncCallback<Integer> idCallback) {
 		int id = nextId();
 		_put(key, value, idCallback, id);
 	}
@@ -53,8 +54,7 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObject
 	}
 
 	@Override
-	public void put(String key, String value,
-			AsyncCallback<Integer> idCallback) {
+	public void put(String key, String value, AsyncCallback<Integer> idCallback) {
 		int id = getFirstId(key);
 		id = id == 0 ? nextId() : id;
 		_put(key, value, idCallback, id);
@@ -127,5 +127,11 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore, SyncObject
 	@Override
 	public String dumpValuesAsStringList() {
 		return CommonUtils.join(values.values(), "\n");
+	}
+
+	@Override
+	public void put(int id, String value, AsyncCallback<Void> idCallback) {
+		_put(keys.get(id), value, new DiscardInfoWrappingCallback<Integer>(
+				idCallback), id);
 	}
 }

@@ -9,7 +9,7 @@ import cc.alcina.framework.gwt.client.logic.CallManager;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class LogoutWithReloadSignal implements
+public class LogoutWithReloadSignalHandler implements
 		ConsortSignalHandler<HandshakeSignal>, AsyncCallback {
 	@Override
 	public void signal(Consort consort) {

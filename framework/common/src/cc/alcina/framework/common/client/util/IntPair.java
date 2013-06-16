@@ -103,6 +103,9 @@ public class IntPair implements Comparable<IntPair> {
 	public boolean contains(IntPair other) {
 		return other == null ? false : other.equals(intersection(other));
 	}
+	public boolean contains(int i) {
+		return i>=i1 && i<=i2;
+	}
 
 	public boolean containsExBoundaries(IntPair other) {
 		return contains(other) && i1 < other.i1 && i2 > other.i2;

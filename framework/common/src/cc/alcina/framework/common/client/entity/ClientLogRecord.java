@@ -9,8 +9,11 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
@@ -34,6 +37,31 @@ public class ClientLogRecord implements Serializable {
 	private String ipAddress;
 
 	public static final String VALUE_SEPARATOR = "\tvalue :: ";
+
+	public static class ClientLogRecordIsNonCriticalFilter implements
+			CollectionFilter<ClientLogRecord> {
+		@Override
+		public boolean allow(ClientLogRecord o) {
+			if (o.topic == null || o.message == null) {
+				return false;
+			}
+			return o.topic.equals(AlcinaTopics.LOG_CATEGORY_HISTORY)
+					|| o.topic.equals(AlcinaTopics.LOG_CATEGORY_CLICK)
+					|| o.topic.equals(AlcinaTopics.LOG_CATEGORY_STAT)
+					|| o.topic.equals(AlcinaTopics.LOG_CATEGORY_METRIC);
+		}
+	}
+
+	public static class ClientLogRecordKeepNonCriticalPrecedingContextFilter
+			implements CollectionFilter<ClientLogRecord> {
+		@Override
+		public boolean allow(ClientLogRecord o) {
+			if (o.topic == null || o.message == null) {
+				return false;
+			}
+			return o.topic.equals(AlcinaTopics.LOG_CATEGORY_EXCEPTION);
+		}
+	}
 
 	public ClientLogRecord() {
 	}
@@ -112,6 +140,17 @@ public class ClientLogRecord implements Serializable {
 		public void addLogRecord(ClientLogRecord logRecord) {
 			logRecords.add(logRecord);
 			buf += new AlcinaBeanSerializer().serialize(logRecord);
+			incrementSize(logRecord);
+		}
+
+		public void recalcSize() {
+			size = 0;
+			for (ClientLogRecord logRecord : logRecords) {
+				incrementSize(logRecord);
+			}
+		}
+
+		private void incrementSize(ClientLogRecord logRecord) {
 			size += 70 + logRecord.message.length();
 		}
 
@@ -121,6 +160,13 @@ public class ClientLogRecord implements Serializable {
 
 		public void setLogRecords(List<ClientLogRecord> logRecords) {
 			this.logRecords = logRecords;
+		}
+
+		@Override
+		public String toString() {
+			return CommonUtils.formatJ(
+					"ClientLogRecords: size - %s\t records - %s\n%s", size,
+					logRecords.size(), CommonUtils.join(logRecords, "\n"));
 		}
 	}
 
@@ -137,5 +183,12 @@ public class ClientLogRecord implements Serializable {
 		return idx == -1 ? new StringPair(str, null) : new StringPair(
 				str.substring(0, idx), str.substring(idx
 						+ VALUE_SEPARATOR.length()));
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("%s :: %s :: %s :: %s -- %s",
+				getLocalSeriesId(), getTime(), getClientInstanceId(),
+				getTopic(), CommonUtils.trimToWsChars(getMessage(), 40));
 	}
 }

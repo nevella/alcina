@@ -1,4 +1,4 @@
-package cc.alcina.framework.gwt.persistence.client;
+package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 

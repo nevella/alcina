@@ -2,9 +2,11 @@ package cc.alcina.template.client;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.RegistryPermissionsExtension;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientConfiguration;
-import cc.alcina.framework.gwt.client.ClientConfigurationMachine;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.StandardActionLogProvider;
 import cc.alcina.framework.gwt.client.ide.WorkspaceDeletionChecker;
@@ -17,7 +19,8 @@ import cc.alcina.template.client.logic.AlcinaTemplateContentProvider;
 import cc.alcina.template.cs.AlcinaTemplateHistory;
 
 import com.google.gwt.user.client.History;
-
+@RegistryLocation(registryPoint=AlcinaTemplateConfiguration.class,implementationType=ImplementationType.SINGLETON)
+@ClientInstantiable
 public class AlcinaTemplateConfiguration extends ClientConfiguration {
 	@Override
 	protected void initExceptionHandling() {
@@ -29,15 +32,6 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 	protected void initContentProvider() {
 		ContentProvider.registerProvider(new AlcinaTemplateContentProvider());
 	}
-
-	@Override
-	protected void createMachine() {
-		super.createMachine();
-		machine.registerTransitionHandler(ClientConfigurationMachine.localPersistenceInit, null,
-				new LocalPersistenceInitHandler(ClientConfigurationMachine.localPersistenceInitialised));
-	}
-
-	
 
 	@Override
 	protected void extraConfiguration() {
@@ -73,9 +67,7 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 		});
 	}
 
-	@Override
-	protected void initHandshakeHelper() {
-		ClientLayerLocator.get().setClientHandshakeHelper(
-				new AlcinaTemplateHandshakeHelper());
+	public String getTransformDbName() {
+		return "domain_transforms";
 	}
 }

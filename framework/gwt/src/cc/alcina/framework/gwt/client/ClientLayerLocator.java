@@ -18,11 +18,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
 import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
-import cc.alcina.framework.gwt.client.logic.ClientHandshakeHelper;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 
@@ -54,8 +54,6 @@ public class ClientLayerLocator {
 
 	private DomainModelHolder domainModelHolder;
 
-	private ClientHandshakeHelper clientHandshakeHelper;
-
 	private TimerWrapperProvider timerWrapperProvider;
 
 	private ClientNotifications clientNotifications;
@@ -79,15 +77,11 @@ public class ClientLayerLocator {
 	}
 
 	public CommonRemoteServiceAsync commonRemoteServiceAsyncInstance() {
-		return commonRemoteServiceAsyncProvider.getServiceInstance();
+		return getCommonRemoteServiceAsyncProvider().getServiceInstance();
 	}
 
 	public ClientExceptionHandler exceptionHandler() {
 		return exceptionHandler;
-	}
-
-	public ClientHandshakeHelper getClientHandshakeHelper() {
-		return clientHandshakeHelper;
 	}
 
 	public ClientInstance getClientInstance() {
@@ -99,7 +93,7 @@ public class ClientLayerLocator {
 	}
 
 	public RemoteServiceProvider<? extends CommonRemoteServiceAsync> getCommonRemoteServiceAsyncProvider() {
-		return this.commonRemoteServiceAsyncProvider;
+		return Registry.impl(CommonRemoteServiceAsyncProvider.class);
 	}
 
 	public DomainModelHolder getDomainModelHolder() {
@@ -107,6 +101,8 @@ public class ClientLayerLocator {
 	}
 
 	public GeneralProperties getGeneralProperties() {
+		// FW3 - this isn't a service, but is same for lifetime of client so *ok* -
+		// not great
 		return Registry.impl(GeneralProperties.class);
 	}
 
@@ -147,13 +143,6 @@ public class ClientLayerLocator {
 			TimerWrapperProvider timerWrapperProvider) {
 		this.timerWrapperProvider = timerWrapperProvider;
 		Registry.putSingleton(TimerWrapperProvider.class, timerWrapperProvider);
-	}
-
-	public void setClientHandshakeHelper(
-			ClientHandshakeHelper clientHandshakeHelper) {
-		this.clientHandshakeHelper = clientHandshakeHelper;
-		Registry.get().registerSingleton(clientHandshakeHelper,
-				ClientHandshakeHelper.class);
 	}
 
 	public void setCommitToStorageTransformListener(

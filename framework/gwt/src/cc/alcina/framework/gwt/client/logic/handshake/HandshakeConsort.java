@@ -38,7 +38,6 @@ import cc.alcina.framework.common.client.state.Consort;
 @RegistryLocation(registryPoint = HandshakeConsort.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class HandshakeConsort extends Consort<HandshakeState, HandshakeSignal> {
-	private HandshakeConfiguration handshakeConfiguration;
 	public HandshakeConsort() {
 	}
 	public boolean isAfterDomainModelLoaded() {
@@ -54,13 +53,6 @@ public class HandshakeConsort extends Consort<HandshakeState, HandshakeSignal> {
 		Registry.impl(HandshakeConsortModel.class).setLoginResponse(
 				loginResponse);
 		signal(HandshakeSignal.LOGGED_IN);
-	}
-	public HandshakeConfiguration getHandshakeConfiguration() {
-		return this.handshakeConfiguration;
-	}
-	public void setHandshakeConfiguration(
-			HandshakeConfiguration handshakeConfiguration) {
-		this.handshakeConfiguration = handshakeConfiguration;
 	}
 	
 }

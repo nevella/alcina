@@ -140,8 +140,7 @@ public class StatusPanel extends Composite {
 	}
 
 	public void removeNotifier(StatusPanelModalNotifier notifier) {
-		notifiers.remove(notifier);
-		if (keepNotifiersAsLog) {
+		if (notifiers.remove(notifier) && keepNotifiersAsLog) {
 			logNotifiers.add(notifier);
 		}
 		notifiersChanged();

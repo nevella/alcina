@@ -84,14 +84,14 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	@Override
-	public void clearPersistedClient(final ClientInstance exceptFor,
+	public void clearPersistedClient(ClientInstance exceptFor, int exceptForId,
 			final AsyncCallback callback) {
-		String sql = "DELETE from TransformRequests"
+		String sql = CommonUtils.formatJ("DELETE from TransformRequests"
 				+ " where (transform_request_type='CLIENT_OBJECT_LOAD'"
 				+ " OR transform_request_type='CLIENT_SYNC'"
 				+ " OR transform_request_type='TO_REMOTE_COMPLETED')"
-				+ " and clientInstance_id != "
-				+ (exceptFor == null ? -1 : exceptFor.getId());
+				+ " and (clientInstance_id != %s and id != %s)",
+				exceptFor == null ? -1 : exceptFor.getId(), exceptForId);
 		executeSql(sql, callback);
 	}
 
@@ -257,6 +257,9 @@ public class WebDatabaseTransformPersistence extends
 	@Override
 	protected void persist(final DTRSimpleSerialWrapper wrapper,
 			final AsyncCallback callback) {
+		notifyPersisting(new TypeSizeTuple(wrapper
+				.getDomainTransformRequestType().toString(), wrapper.getText()
+				.length()));
 		if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.TO_REMOTE) {
 			AlcinaTopics.logCategorisedMessage(new StringPair(
 					AlcinaTopics.LOG_CATEGORY_TRANSFORM, wrapper.getText()));

@@ -4,8 +4,10 @@ package cc.alcina.template.client.widgets.login;
 
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
+import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsort;
 import cc.alcina.framework.gwt.client.widget.Link;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -26,7 +28,7 @@ public class LogoutHandler implements ClickHandler,
 	}
 
 	public void onClick(ClickEvent clickEvent) {
-		ClientLayerLocator.get().getClientHandshakeHelper().logout();
+		Registry.impl(HandshakeConsort.class).logout();
 	}
 
 	public boolean visibleForLoginState(LoginState state) {

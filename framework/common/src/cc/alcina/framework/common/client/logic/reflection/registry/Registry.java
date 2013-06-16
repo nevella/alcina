@@ -285,33 +285,37 @@ public class Registry {
 			boolean allowNull) {
 		// optimisation
 		Object singleton = singletons.get(registryPoint, targetObjectClass);
-		if (singleton != null) {
-			if (singleton instanceof RegistryFactory) {
-				return (V) ((RegistryFactory) singleton).create(registryPoint,
-						targetObjectClass);
-			}
+		if (singleton != null && !(singleton instanceof RegistryFactory)) {
 			return (V) singleton;
 		}
 		ImplementationType type = implementationTypeMap.get(registryPoint,
 				targetObjectClass);
 		Object obj = null;
-		if (allowNull) {
-			obj = instantiateSingleOrNull(registryPoint, targetObjectClass);
-			if (obj == null) {
-				return null;
+		if (singleton == null) {
+			if (allowNull) {
+				obj = instantiateSingleOrNull(registryPoint, targetObjectClass);
+				if (obj == null) {
+					return null;
+				}
+			} else {
+				obj = instantiateSingle(registryPoint, targetObjectClass);
 			}
-		} else {
-			obj = instantiateSingle(registryPoint, targetObjectClass);
 		}
 		type = type == null ? ImplementationType.MULTIPLE : type;
 		switch (type) {
 		case FACTORY:
-		case SINGLETON:
-			singletons.put(registryPoint, targetObjectClass, obj);
-			if (type == ImplementationType.FACTORY) {
-				return impl0(registryPoint, targetObjectClass, allowNull);
+			if (singleton == null) {
+				singletons.put(registryPoint, targetObjectClass, obj);
+				singleton = obj;
 			}
-			break;
+			return (V) ((RegistryFactory) singleton).create(registryPoint,
+					targetObjectClass);
+		case SINGLETON:
+			if (singleton == null) {
+				singletons.put(registryPoint, targetObjectClass, obj);
+				singleton = obj;
+			}
+			return (V) singleton;
 		case INSTANCE:
 		case MULTIPLE:
 		}

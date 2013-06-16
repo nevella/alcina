@@ -90,7 +90,7 @@ public class LoadObjectsHolder<DO extends DomainModelHolder> implements
 	}
 
 	public String getTypeSignature() {
-		return getRequest().getTypeSignature();
+		return getRequest()==null?null:getRequest().getTypeSignature();
 	}
 
 }

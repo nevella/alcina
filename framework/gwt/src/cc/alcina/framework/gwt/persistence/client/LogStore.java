@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -8,11 +9,15 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringPair;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
@@ -50,6 +55,25 @@ public class LogStore {
 		return theInstance;
 	}
 
+	public static void notifyDeleted(Object nup) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_DELETED, null);
+	}
+
+	public static void notifyDeletedListenerDelta(TopicListener<Void> listener,
+			boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_DELETED, listener, add);
+	}
+
+	public static void notifyPersisted(IntPair idSize) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTED, idSize);
+	}
+
+	public static void notifyPersistedListenerDelta(
+			TopicListener<IntPair> listener, boolean add) {
+		GlobalTopicPublisher.get()
+				.listenerDelta(TOPIC_PERSISTED, listener, add);
+	}
+
 	private RemoteLogPersister remoteLogPersister;
 
 	private ClientLogRecords logs = new ClientLogRecords();
@@ -68,7 +92,9 @@ public class LogStore {
 			20000, new Runnable() {
 				@Override
 				public void run() {
-					pushLogsToRemote();
+					if (!isLocalPersistencePaused()) {
+						pushLogsToRemote();
+					}
 				}
 			});
 
@@ -109,9 +135,19 @@ public class LogStore {
 	public static final String STORAGE_COOKIE_KEY = LogStore.class.getName()
 			+ ".CookieStorage";
 
+	public static final String DEFAULT_TABLE_NAME = "LogStore";
+
 	private int lastCookieId;
 
 	protected PersistenceObjectStore objectStore;
+
+	private boolean localPersistencePaused;
+
+	public static final String TOPIC_PERSISTED = LogStore.class.getName() + "."
+			+ "TOPIC_PERSISTED";
+
+	public static final String TOPIC_DELETED = LogStore.class.getName() + "."
+			+ "TOPIC_DELETED";
 
 	protected LogStore() {
 		String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);
@@ -120,9 +156,57 @@ public class LogStore {
 		}
 	}
 
-	public void add(String key, String value,
-			AsyncCallback<Integer> idCallback) {
-		this.objectStore.add(key, value, idCallback);
+	public void add(String key, final String value,
+			final AsyncCallback<Integer> idCallback) {
+		this.objectStore.add(key, value, new AsyncCallback<Integer>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				idCallback.onFailure(caught);
+			}
+
+			@Override
+			public void onSuccess(Integer result) {
+				notifyPersisted(new IntPair(result, value.length()));
+				idCallback.onSuccess(result);
+			}
+		});
+	}
+
+	public String dumpLogsAsString() {
+		if (objectStore != null && objectStore instanceof SyncObjectStore) {
+			flushToLocalPersistence();
+			return ((SyncObjectStore) objectStore).dumpValuesAsStringList();
+		} else {
+			return "Incorrect object store type for dump";
+		}
+	}
+
+	public void flushToLocalPersistence() {
+		if (logs.size > 0 && this.objectStore != null
+				&& !isLocalPersistencePaused()) {
+			String serialized = new AlcinaBeanSerializer().serialize(logs);
+			if (isUsesLzw()) {
+				setMuted(true);
+				try {
+					// unfortunately, have to encode to base64 here - unless we
+					// want to be trixy with SQLLite
+					String maybeShorter = "lzwb:"
+							+ Base64Utils.toBase64(new Lzw().compress(
+									serialized).getBytes("UTF-8"));
+					if (maybeShorter.length() < serialized.length()) {
+						if (!GWT.isScript()) {
+							locallyPersistLogs(serialized);
+						}
+						serialized = maybeShorter;
+					}
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+				setMuted(false);
+			}
+			logs = new ClientLogRecords();
+			locallyPersistLogs(serialized);
+		}
 	}
 
 	public void getIdRange(AsyncCallback<IntPair> completedCallback) {
@@ -142,6 +226,14 @@ public class LogStore {
 		return stringPairListener;
 	}
 
+	public boolean isMuted() {
+		return this.muted;
+	}
+
+	public boolean isUsesLzw() {
+		return this.usesLzw;
+	}
+
 	public void locallyPersistLogs(String serialized) {
 		if (useCookieMsgBackup && lastCookieId == localSeriesIdCounter) {
 			Cookies.removeCookie(STORAGE_COOKIE_KEY);
@@ -155,14 +247,24 @@ public class LogStore {
 		if (CommonUtils.equalsWithNullEquality(message, lastMessage) || muted) {
 			return;
 		}
+		if (topic.equals(AlcinaTopics.LOG_CATEGORY_TRANSFORM)) {
+			String protocol = LocalTransformPersistence.get()
+					.getSerializationPolicy().getTransformPersistenceProtocol();
+			if (protocol.equals(PlaintextProtocolHandler.VERSION)) {
+				List<DomainTransformEvent> events = new PlaintextProtocolHandler()
+						.deserialize(message);
+				message = new PlaintextProtocolHandlerShort().serialize(events);
+			}
+		}
 		this.lastMessage = message;
 		this.lastTopic = topic;
+		
 		ClientInstance cli = ClientLayerLocator.get().getClientInstance();
 		String clientInstanceAuth = cli == null ? "(before cli)" : String
 				.valueOf(cli.getAuth());
 		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,
 				clientInstanceAuth, HiliHelper.getIdOrZero(cli), new Date(),
-				topic, message,null);
+				topic, message, null);
 		logs.addLogRecord(logRecord);
 		if (useCookieMsgBackup) {
 			String value = logs.buf.substring(Math.max(
@@ -190,63 +292,42 @@ public class LogStore {
 	}
 
 	public void removeIdRange(IntPair range,
-			AsyncCallback<Void> completedCallback) {
-		this.objectStore.removeIdRange(range, completedCallback);
+			final AsyncCallback<Void> completedCallback) {
+		this.objectStore.removeIdRange(range, new AsyncCallback<Void>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				completedCallback.onFailure(caught);
+			}
+
+			@Override
+			public void onSuccess(Void result) {
+				notifyDeleted(null);
+				completedCallback.onSuccess(result);
+			}
+		});
+	}
+
+	public void setMuted(boolean muted) {
+		this.muted = muted;
 	}
 
 	public void setRemoteLogPersister(RemoteLogPersister remoteLogPersister) {
 		this.remoteLogPersister = remoteLogPersister;
 	}
 
-	public void flushToLocalPersistence() {
-		if (logs.size > 0 && this.objectStore != null) {
-			String serialized = new AlcinaBeanSerializer().serialize(logs);
-			if (isUsesLzw()) {
-				setMuted(true);
-				try {
-					// unfortunately, have to encode to base64 here - unless we
-					// want to be trixy with SQLLite
-					String maybeShorter = "lzwb:"
-							+ Base64Utils.toBase64(new Lzw().compress(
-									serialized).getBytes("UTF-8"));
-					if (maybeShorter.length() < serialized.length()) {
-						if (!GWT.isScript()) {
-							locallyPersistLogs(serialized);
-						}
-						serialized = maybeShorter;
-					}
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-				setMuted(false);
-			}
-			logs = new ClientLogRecords();
-			locallyPersistLogs(serialized);
-		}
-	}
-
-	public String dumpLogsAsString() {
-		if (objectStore != null && objectStore instanceof SyncObjectStore) {
-			flushToLocalPersistence();
-			return ((SyncObjectStore) objectStore).dumpValuesAsStringList();
-		} else {
-			return "Incorrect object store type for dump";
-		}
-	}
-
-	public boolean isUsesLzw() {
-		return this.usesLzw;
-	}
-
 	public void setUsesLzw(boolean usesLzw) {
 		this.usesLzw = usesLzw;
 	}
 
-	public boolean isMuted() {
-		return this.muted;
+	int getLocalSeriesIdCounter() {
+		return this.localSeriesIdCounter;
 	}
 
-	public void setMuted(boolean muted) {
-		this.muted = muted;
+	public boolean isLocalPersistencePaused() {
+		return this.localPersistencePaused;
+	}
+
+	public void setLocalPersistencePaused(boolean localPersistencePaused) {
+		this.localPersistencePaused = localPersistencePaused;
 	}
 }

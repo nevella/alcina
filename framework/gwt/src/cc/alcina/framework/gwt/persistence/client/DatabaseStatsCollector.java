@@ -1,10 +1,7 @@
 package cc.alcina.framework.gwt.persistence.client;
 
-import java.util.Map.Entry;
-import java.util.Set;
-
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CountingMap;
 
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;
@@ -17,50 +14,24 @@ import com.google.code.gwt.database.client.TransactionCallback;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class DatabaseStatsCollector {
-	public static class DatabaseStatsInfo {
-		CountingMap<String> transformTexts = new CountingMap<String>();
-
-		CountingMap<String> transformCounts = new CountingMap<String>();
-
-		CountingMap<Integer> logSizes = new CountingMap<Integer>();
-
-		@Override
-		public String toString() {
-			String out = "\n\nDatabase stats:\n========\n\nTransforms: \n";
-			Set<Entry<String, Integer>> entrySet = transformTexts.entrySet();
-			String template = "\t%s : %s  -  %s chars\n";
-			for (Entry<String, Integer> entry : entrySet) {
-				out += CommonUtils.formatJ(template,
-						CommonUtils.padStringRight(entry.getKey(), 20, ' '),
-						transformCounts.get(entry.getKey()), entry.getValue());
-			}
-			out += CommonUtils.formatJ(template,
-					CommonUtils.padStringRight("total", 20, ' '),
-					transformCounts.sum(), transformTexts.sum());
-			out += "\nLogs: \n";
-			out += CommonUtils.formatJ(template,
-					CommonUtils.padStringRight("total", 20, ' '),
-					logSizes.size(), logSizes.sum());
-			return out;
-		}
-	}
-
 	private DatabaseStatsCollector.Phase phase = Phase.TRANSFORMS_DB_QUERY;
 
 	enum Phase {
 		TRANSFORMS_DB_QUERY, LOGS_DB, FINISHED
 	}
 
-	DatabaseStatsCollector.DatabaseStatsInfo info = new DatabaseStatsInfo();
+	DatabaseStatsInfo info = new DatabaseStatsInfo();
 
 	private AsyncCallback<DatabaseStatsInfo> infoCallback;
 
 	private String logTableName;
 
-	public void run(String logTableName,
-			AsyncCallback<DatabaseStatsInfo> infoCallback) {
-		this.logTableName = logTableName;
+	private long start;
+
+	public void run(AsyncCallback<DatabaseStatsInfo> infoCallback) {
+		this.logTableName = LogStore.DEFAULT_TABLE_NAME;
 		this.infoCallback = infoCallback;
+		start = System.currentTimeMillis();
 		iterate();
 	}
 
@@ -73,6 +44,7 @@ public class DatabaseStatsCollector {
 			statLogs();
 			break;
 		case FINISHED:
+			info.setCollectionTimeMs(System.currentTimeMillis() - start);
 			infoCallback.onSuccess(info);
 			break;
 		}
@@ -90,8 +62,12 @@ public class DatabaseStatsCollector {
 					GenericRow row = rs.getItem(i);
 					String key = row.getString("transform_request_type");
 					int size = row.getString("transform").length();
-					info.transformCounts.add(key);
-					info.transformTexts.add(key, size);
+					info.getTransformCounts().add(key);
+					info.getTransformTexts().add(key, size);
+					if (key.equals(DomainTransformRequestType.CLIENT_OBJECT_LOAD
+							.toString())) {
+						info.getClientObjectLoadSizes().add(size);
+					}
 				}
 				phase = Phase.LOGS_DB;
 				iterate();
@@ -106,8 +82,8 @@ public class DatabaseStatsCollector {
 		db.transaction(new TransactionCallback() {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
-				tx.executeSql("select * from TransformRequests ", null,
-						okCallback);
+				tx.executeSql("select * from TransformRequests order by id",
+						null, okCallback);
 			}
 
 			@Override
@@ -132,7 +108,7 @@ public class DatabaseStatsCollector {
 					GenericRow row = rs.getItem(i);
 					int key = row.getInt("id");
 					int size = row.getString("value_").length();
-					info.logSizes.add(key, size);
+					info.getLogSizes().add(key, size);
 				}
 				phase = Phase.FINISHED;
 				iterate();

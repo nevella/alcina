@@ -2,6 +2,7 @@ package cc.alcina.template.cs.remote;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.template.cs.persistent.AlcinaTemplateGroup;
@@ -9,7 +10,7 @@ import cc.alcina.template.cs.persistent.AlcinaTemplateGroup;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface AlcinaTemplateRemoteServiceAsync extends CommonRemoteServiceExtAsync {
-	public void loadInitial(AsyncCallback callback);
+	public void loadInitial(LoadObjectsRequest request,AsyncCallback callback);
 
 	public void search(SearchDefinition def, int pageNumber,
 			AsyncCallback callback);

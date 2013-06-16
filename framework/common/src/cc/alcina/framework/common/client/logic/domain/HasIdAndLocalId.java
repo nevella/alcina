@@ -38,6 +38,7 @@ public interface HasIdAndLocalId extends HasId {
 	public long getLocalId();
 
 	public void setLocalId(long localId);
+	
 	public static class HiliComparatorPreferLocals implements Comparator<HasIdAndLocalId> {
 		@Override
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
@@ -142,6 +143,7 @@ public interface HasIdAndLocalId extends HasId {
 		public static long getIdOrZero(HasId hi) {
 			return hi == null ? 0 : hi.getId();
 		}
+		
 
 		public static <T extends HasId> T getById(Collection<T> values, long id) {
 			for (T value : values) {

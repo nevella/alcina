@@ -42,6 +42,9 @@ public abstract class Player<D> {
 	public void addRequires(D... requiresStates) {
 		requires.addAll(Arrays.asList(requiresStates));
 	}
+	public void removeRequires(D... requiresStates) {
+		requires.removeAll(Arrays.asList(requiresStates));
+	}
 
 	public Consort<D, ?> getConsort() {
 		return this.consort;
@@ -84,9 +87,13 @@ public abstract class Player<D> {
 		return getProvides().isEmpty();
 	}
 
-	public void play() {
-		runnable.run();
-		if (!isAsynchronous()) {
+	public void play(boolean replaying) {
+		if (replaying) {
+			((LoopingPlayer)this).loop();
+		} else {
+			runnable.run();
+		}
+		if (!isAsynchronous() && getProvides().size() == 1) {
 			wasPlayed();
 		}
 	}
@@ -102,7 +109,7 @@ public abstract class Player<D> {
 	protected void wasPlayed(D dep) {
 		consort.wasPlayed(this, Collections.singletonList(dep));
 	}
-	
+
 	public void onFailure(Throwable caught) {
 		consort.onFailure(caught);
 	}
@@ -114,8 +121,6 @@ public abstract class Player<D> {
 			setAsynchronous(true);
 			runnable = this;
 		}
-
-		
 
 		@Override
 		public void onSuccess(C result) {

@@ -49,8 +49,14 @@ public class HandshakeConsortModel {
 			// clientinstance corresponding to that used to request the most
 			// recent chunk of persisted data
 			ClientInstance impl = Registry.impl(ClientInstance.class);
-			DTRSimpleSerialWrapper wrapper = ((DtrWrapperBackedDomainModelDelta) modelDeltas.firstChunk)
-					.getWrapper();
+			DTRSimpleSerialWrapper wrapper = null;
+			if (modelDeltas.secondChunk instanceof DtrWrapperBackedDomainModelDelta) {
+				wrapper = ((DtrWrapperBackedDomainModelDelta) modelDeltas.secondChunk)
+						.getWrapper();
+			} else {
+				wrapper = ((DtrWrapperBackedDomainModelDelta) modelDeltas.firstChunk)
+						.getWrapper();
+			}
 			impl.setAuth(wrapper.getClientInstanceAuth());
 			impl.setId(wrapper.getClientInstanceId());
 			setClientInstance(impl);
@@ -146,7 +152,16 @@ public class HandshakeConsortModel {
 							.hasNext());
 		}
 
+		private boolean checkValidTypeSignature(DomainModelDelta delta) {
+			String deltaSignature = delta.getTypeSignature();
+			return deltaSignature == null
+					|| deltaSignature.equals(GWT.getPermutationStrongName());
+		}
+
 		public void mergeDelta(DomainModelDelta delta, String payload) {
+			if (!checkValidTypeSignature(delta)) {
+				return;
+			}
 			payloads.put(delta, payload);
 			if (delta.getDomainModelHolder() != null) {
 				firstChunk = delta;
