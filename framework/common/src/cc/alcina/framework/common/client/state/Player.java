@@ -93,7 +93,7 @@ public abstract class Player<D> {
 		} else {
 			runnable.run();
 		}
-		if (!isAsynchronous() && getProvides().size() == 1) {
+		if (!isAsynchronous() && getProvides().size() <= 1) {
 			wasPlayed();
 		}
 	}
