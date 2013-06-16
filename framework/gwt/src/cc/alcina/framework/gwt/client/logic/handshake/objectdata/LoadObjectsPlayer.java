@@ -25,7 +25,8 @@ public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
 	public static class LoadObjectsConsort extends
 			Consort<LoadObjectDataState, Object> {
 		public LoadObjectsConsort() {
-			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(new LoadObjectsHelloPlayer());
+			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(Registry
+					.impl(LoadObjectsHelloPlayer.class));
 			LoadObjectsFromRemotePlayer fromRemotePlayer = addPlayer(Registry
 					.impl(LoadObjectsFromRemotePlayer.class));
 			addPlayer(new LoadChunksFromLocalStoragePlayer());

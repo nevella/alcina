@@ -560,7 +560,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public void remove(Object o) {
 		AppPersistenceBase.checkNotReadOnly();
-		getEntityManager().remove(o);
+		if (o instanceof HasIdAndLocalId) {
+			HasIdAndLocalId hili = (HasIdAndLocalId) getEntityManager().find(
+					o.getClass(), ((HasIdAndLocalId) o).getId());
+			getEntityManager().remove(hili);
+		} else {
+			throw new RuntimeException("Cannot remove detached non-hili " + o);
+		}
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {

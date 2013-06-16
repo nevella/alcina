@@ -151,12 +151,14 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		Scheduler.get().scheduleIncremental(replayer);
 	}
 
-	private void registerDomainModelHolder() {
+	protected void registerDomainModelHolder() {
 		DomainModelHolder domainObjects = currentDelta.getDomainModelHolder();
-		domainObjects.getGeneralProperties().setAutoSave(true);
 		domainObjects.registerSelfAsProvider();
-		Registry.putSingleton(GeneralProperties.class,
-				domainObjects.getGeneralProperties());
+		GeneralProperties generalProperties = domainObjects
+				.getGeneralProperties();
+		if (generalProperties != null) {
+			Registry.putSingleton(GeneralProperties.class, generalProperties);
+		}
 		PermissionsManager.get().setUser(domainObjects.getCurrentUser());
 		ClientLayerLocator.get().setDomainModelHolder(domainObjects);
 		PermissionsManager.get().setLoginState(
