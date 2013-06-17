@@ -23,7 +23,7 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 	}
 
 	public static class LoadObjectsNoOfflineConsort extends
-			Consort<LoadObjectDataState, Object> {
+			Consort<LoadObjectDataState> {
 		public LoadObjectsNoOfflineConsort() {
 			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(new LoadObjectsHelloPlayer());
 			LoadObjectsFromRemotePlayer fromRemotePlayer = addPlayer(Registry

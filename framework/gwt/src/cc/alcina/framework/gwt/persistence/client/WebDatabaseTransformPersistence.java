@@ -269,18 +269,6 @@ public class WebDatabaseTransformPersistence extends
 			callback.onFailure(new Exception(
 					"wrapper must have protocol version"));
 		}
-		// fw3 - before running (in persist postload), clear existing -- ipad
-		// space
-		// @Override
-		// public void onTransactionSuccess() {
-		// if (wrapper.getDomainTransformRequestType() ==
-		// DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
-		// clearPersistedClient(ClientLayerLocator.get()
-		// .getClientInstance(), callback);
-		// } else {
-		// callback.onSuccess(null);
-		// }
-		// }
 		db.transaction(new PersistTransformsHandler(callback, wrapper));
 	}
 

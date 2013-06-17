@@ -101,7 +101,7 @@ public class ClientLayerLocator {
 	}
 
 	public GeneralProperties getGeneralProperties() {
-		// FW3 - this isn't a service, but is same for lifetime of client so *ok* -
+		// FW4 - this isn't a service, but is same for lifetime of client so *ok* -
 		// not great
 		return Registry.impl(GeneralProperties.class);
 	}

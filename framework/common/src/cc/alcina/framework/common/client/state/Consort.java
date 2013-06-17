@@ -1,11 +1,9 @@
 package cc.alcina.framework.common.client.state;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -27,7 +25,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * @author nick@alcina.cc
  * 
  */
-public class Consort<D, S> {
+public class Consort<D> {
 	private static final String PLAYERS_WITH_EQUAL_DEPS_ERR = "Players with equal"
 			+ " dependencies and priorities: \n%s\n%s";
 
@@ -41,13 +39,13 @@ public class Consort<D, S> {
 
 	public static final transient String FINISHED = "FINISHED";
 
+	public static final transient String NO_ACTIVE_PLAYERS = "NO_ACTIVE_PLAYERS";
+
 	private TopicPublisher topicPublisher = new TopicPublisher();
 
 	LinkedList<Player<D>> players = new LinkedList<Player<D>>();
 
 	LinkedList<Player<D>> removed = new LinkedList<Player<D>>();
-
-	Map<S, ConsortSignalHandler<S>> signalHandlers = new LinkedHashMap<S, ConsortSignalHandler<S>>();
 
 	private Player currentPlayer = null;
 
@@ -91,14 +89,6 @@ public class Consort<D, S> {
 		return player;
 	}
 
-	public void addSignalHandler(ConsortSignalHandler<S> signal) {
-		if (signalHandlers.containsKey(signal.handlesSignal())) {
-			throw new RuntimeException("Duplicate signal handlers for "
-					+ signal.handlesSignal());
-		}
-		signalHandlers.put(signal.handlesSignal(), signal);
-	}
-
 	public void cancel() {
 		running = false;
 		if (currentPlayer instanceof ConsortPlayer) {
@@ -126,13 +116,32 @@ public class Consort<D, S> {
 		return reachedStates.contains(state);
 	}
 
-	public <P extends Player> P getTaskForClass(Class<P> clazz) {
-		return (P) CollectionFilters.first(players, new IsClassFilter(clazz));
+	public void deferredRemove(final String key, final TopicListener listener) {
+		Registry.impl(TimerWrapperProvider.class).scheduleDeferred(
+				new Runnable() {
+					@Override
+					public void run() {
+						listenerDelta(key, listener, false);
+					}
+				});
 	}
 
 	public void finished() {
 		running = false;
+		if (isTrace()) {
+			System.out.println(CommonUtils.formatJ("%s     [%s]",
+					CommonUtils.padStringLeft("", indent, '\t'),
+					"----CONSORT FINISHED"));
+		}
 		topicPublisher.publishTopic(FINISHED, null);
+	}
+
+	public Consort getParent() {
+		return this.parent;
+	}
+
+	public <P extends Player> P getTaskForClass(Class<P> clazz) {
+		return (P) CollectionFilters.first(players, new IsClassFilter(clazz));
 	}
 
 	public boolean isRunning() {
@@ -149,6 +158,10 @@ public class Consort<D, S> {
 
 	public void listenerDelta(String key, TopicListener listener, boolean add) {
 		topicPublisher.listenerDelta(key, listener, add);
+	}
+
+	public void statesListenerDelta(TopicListener listener, boolean add) {
+		topicPublisher.listenerDelta(STATES, listener, add);
 	}
 
 	public void nudge() {
@@ -182,6 +195,10 @@ public class Consort<D, S> {
 		start();
 	}
 
+	public void setParent(Consort parent) {
+		this.parent = parent;
+	}
+
 	public void setSimulate(boolean simulate) {
 		this.simulate = simulate;
 	}
@@ -190,8 +207,28 @@ public class Consort<D, S> {
 		this.trace = trace;
 	}
 
-	public void signal(S signal) {
-		signalHandlers.get(signal).signal(this);
+	public class TopicListenerOneTimeAsyncCallbackAdapter implements
+			TopicListener {
+		private AsyncCallback callback;
+
+		public TopicListenerOneTimeAsyncCallbackAdapter(AsyncCallback callback) {
+			this.callback = callback;
+		}
+
+		@Override
+		public void topicPublished(String key, Object message) {
+			try {
+				if (key == ERROR) {
+					callback.onFailure((Throwable) message);
+				} else {
+					callback.onSuccess(message);
+				}
+			} finally {
+				deferredRemove(FINISHED, this);
+				deferredRemove(ERROR, this);
+				deferredRemove(NO_ACTIVE_PLAYERS, this);
+			}
+		}
 	}
 
 	public void start() {
@@ -204,12 +241,25 @@ public class Consort<D, S> {
 		wasPlayed(player, player.getProvides());
 	}
 
+	public class StatesDelta {
+		public Set<D> oldValue;
+
+		public Set<D> newValue;
+
+		public StatesDelta(Set<D> oldValue, Set<D> newValue) {
+			this.oldValue = oldValue;
+			this.newValue = newValue;
+		}
+	}
+
 	public void wasPlayed(Player<D> player, Collection<D> resultantStates) {
 		playedCount++;
 		currentPlayer = null;
 		// TODO - warn if resultantstates >1 and a non-parallel consort?
+		LinkedHashSet<D> reachedCopy = new LinkedHashSet<D>(reachedStates);
 		if (reachedStates.addAll(resultantStates)) {
-			publishTopicWithBubble(STATES, null);
+			publishTopicWithBubble(STATES, new StatesDelta(reachedCopy,
+					reachedStates));
 			if (isTrace()) {
 				System.out.println(CommonUtils.formatJ("%s     [%s]",
 						CommonUtils.padStringLeft("", indent, '\t'),
@@ -218,13 +268,6 @@ public class Consort<D, S> {
 		}
 		publishTopicWithBubble(AFTER_PLAY, player);
 		consumeQueue();
-	}
-
-	protected void publishTopicWithBubble(String key, Object message) {
-		topicPublisher.publishTopic(key, message);
-		if (parent != null) {
-			parent.publishTopicWithBubble(key, message);
-		}
 	}
 
 	private boolean isActive(Player<D> player) {
@@ -370,6 +413,9 @@ public class Consort<D, S> {
 			}
 		}
 		consumingQueue = false;
+		if (currentPlayer == null) {
+			topicPublisher.publishTopic(NO_ACTIVE_PLAYERS, null);
+		}
 	}
 
 	protected void executePlayer(Player<D> player, boolean replaying) {
@@ -407,25 +453,14 @@ public class Consort<D, S> {
 		return player1.getPriority() - player2.getPriority();
 	}
 
+	protected void publishTopicWithBubble(String key, Object message) {
+		topicPublisher.publishTopic(key, message);
+		if (parent != null) {
+			parent.publishTopicWithBubble(key, message);
+		}
+	}
+
 	Set<D> getReachedStates() {
 		return this.reachedStates;
-	}
-
-	public Consort getParent() {
-		return this.parent;
-	}
-
-	public void setParent(Consort parent) {
-		this.parent = parent;
-	}
-
-	public void deferredRemove(final String key, final TopicListener listener) {
-		Registry.impl(TimerWrapperProvider.class).scheduleDeferred(
-				new Runnable() {
-					@Override
-					public void run() {
-						listenerDelta(key, listener, false);
-					}
-				});
 	}
 }

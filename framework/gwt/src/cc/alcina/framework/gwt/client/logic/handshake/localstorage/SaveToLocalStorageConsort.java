@@ -18,7 +18,7 @@ import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
  * @author nreddel@barnet.com.au
  * 
  */
-public class SaveToLocalStorageConsort extends Consort<State, Object> {
+public class SaveToLocalStorageConsort extends Consort<State> {
 	static enum State {
 		ACQUIRE_CROSS_TAB_PERSISTENCE_LOCK, CLEAR_UNNEEDED_PLAYBACK_DATA,
 		MAYBE_SAVE_CHUNK_1_OR_2, RELEASE_CROSS_TAB_PERSISTENCE_LOCK

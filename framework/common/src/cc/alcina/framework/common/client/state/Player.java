@@ -23,7 +23,7 @@ public abstract class Player<D> {
 
 	protected Runnable runnable;
 
-	protected Consort<D, ?> consort;
+	protected Consort<D> consort;
 
 	private boolean asynchronous;
 
@@ -46,7 +46,7 @@ public abstract class Player<D> {
 		requires.removeAll(Arrays.asList(requiresStates));
 	}
 
-	public Consort<D, ?> getConsort() {
+	public Consort<D> getConsort() {
 		return this.consort;
 	}
 
@@ -98,7 +98,7 @@ public abstract class Player<D> {
 		}
 	}
 
-	public void setConsort(Consort<D, ?> consort) {
+	public void setConsort(Consort<D> consort) {
 		this.consort = consort;
 	}
 

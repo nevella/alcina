@@ -36,7 +36,6 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	HandshakeConsortModel handshakeConsortModel = Registry
 			.impl(HandshakeConsortModel.class);
 
-	// FW3 - add post-load transform replays (top-level player)
 	@Override
 	public void onSuccess(Void result) {
 		consort.replay(this);
@@ -70,6 +69,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 
 	HandshakeModelDeltas deltasForIteration;
 
+	@SuppressWarnings("unused")
 	private int deltaOrdinal = 0;
 
 	@Override
@@ -97,10 +97,10 @@ public class UnwrapAndRegisterObjectsPlayer extends
 				return;
 			}
 		}
-		handshakeConsortModel.ensureLoadObjectsNotifier(
-				CommonUtils.formatJ("Register: %s - %s", deltaOrdinal,
-						CommonUtils.friendlyConstant(phase).toLowerCase()))
-				.modalOn();
+//		handshakeConsortModel.ensureLoadObjectsNotifier(
+//				CommonUtils.formatJ("Register: %s - %s", deltaOrdinal,
+//						CommonUtils.friendlyConstant(phase).toLowerCase()))
+//				.modalOn();
 		switch (phase) {
 		case UNWRAPPING:
 			currentDelta.unwrap(this);

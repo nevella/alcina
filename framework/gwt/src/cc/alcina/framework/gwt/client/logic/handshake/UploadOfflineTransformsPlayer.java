@@ -27,13 +27,5 @@ public class UploadOfflineTransformsPlayer extends
 	@Override
 	public void run() {
 		LocalTransformPersistence.get().handleUncommittedTransformsOnLoad(this);
-		// FW3: Make a 'loading objects' message, login state fields in
-		// handshake model
-		// new Callback() {
-		// public void apply(Object target) {
-		// loadUserObjects("Loading survey definitions", null,
-		// LoginState.LOGGED_IN);
-		// }
-		// });
 	}
 }

@@ -42,7 +42,7 @@ public class HandshakeConsortModel {
 		modelDeltas = new HandshakeModelDeltas();
 	}
 
-	// fw3 - central documentation
+	// fw4 - centralise documentation
 	public void ensureClientInstanceFromModelDeltas() {
 		if (getClientInstance() == null) {
 			// we rely on reparenting here -- the persisted wrapper has

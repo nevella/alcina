@@ -5,7 +5,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.state.Consort;
+import cc.alcina.framework.common.client.state.ConsortWithSignals;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * <h3>Per-session handshake persistence</h3>
@@ -37,9 +39,11 @@ import cc.alcina.framework.common.client.state.Consort;
  */
 @RegistryLocation(registryPoint = HandshakeConsort.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
-public class HandshakeConsort extends Consort<HandshakeState, HandshakeSignal> {
+public class HandshakeConsort extends
+		ConsortWithSignals<HandshakeState, HandshakeSignal> {
 	public HandshakeConsort() {
 	}
+
 	public boolean isAfterDomainModelLoaded() {
 		return containsState(HandshakeState.SETUP_AFTER_OBJECTS_LOADED);
 	}
@@ -50,9 +54,12 @@ public class HandshakeConsort extends Consort<HandshakeState, HandshakeSignal> {
 	}
 
 	public void handleLoggedIn(LoginResponse loginResponse) {
+		handleLoggedIn(loginResponse,null);
+	}
+	public void handleLoggedIn(LoginResponse loginResponse,
+			AsyncCallback handshakeFinishedCallback) {
 		Registry.impl(HandshakeConsortModel.class).setLoginResponse(
 				loginResponse);
-		signal(HandshakeSignal.LOGGED_IN);
+		signal(HandshakeSignal.LOGGED_IN, handshakeFinishedCallback);
 	}
-	
 }

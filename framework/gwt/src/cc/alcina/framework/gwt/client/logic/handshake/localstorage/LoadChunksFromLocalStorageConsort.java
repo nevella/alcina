@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.state.Consort;
 
 public class LoadChunksFromLocalStorageConsort extends
-		Consort<LoadChunksFromLocalStorageState, Object> {
+		Consort<LoadChunksFromLocalStorageState> {
 	public Iterator<DomainModelDelta> chunkDeltaIterator;
 
 	public LoadChunksFromLocalStorageConsort() {

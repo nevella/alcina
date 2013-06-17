@@ -19,7 +19,7 @@ import cc.alcina.framework.gwt.persistence.client.UploadOfflineTransformsConsort
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class UploadOfflineTransformsConsort extends Consort<State, Object> {
+public class UploadOfflineTransformsConsort extends Consort<State> {
 	static enum State {
 		GET_TRANSFORMS, PERSIST_TRANSFORMS, PERSIST_TRANSFORMS_SUCCESS,
 		PERSIST_TRANSFORMS_FAILURE, FINISHED

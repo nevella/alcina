@@ -39,7 +39,7 @@ public class RemoteLogPersister {
 
 	public boolean maybeOffline;
 
-	class RemoteLogPersisterConsort extends Consort<State, Object> {
+	class RemoteLogPersisterConsort extends Consort<State> {
 		IntPair logRecordRange = null;
 
 		int idCtr = 0;

@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.persistence.client.LogStoreCompactor.Phase;
 
-public class LogStoreCompactor extends Consort<Phase, Object> {
+public class LogStoreCompactor extends Consort<Phase> {
 	private int minNonCompactedLogRecordId = -1;
 
 	private TopicListener<IntPair> logPersistedListener = new TopicListener<IntPair>() {
@@ -178,7 +178,7 @@ public class LogStoreCompactor extends Consort<Phase, Object> {
 		}
 
 		@Override
-		public void setConsort(Consort<Phase, ?> consort) {
+		public void setConsort(Consort<Phase> consort) {
 			super.setConsort(consort);
 		}
 
