@@ -116,9 +116,6 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (useXpathMap) {
 			if (lastContainer != container) {
 				lastContainer = container;
-				walker = new ClientNodeIterator(container,
-						ClientNodeIterator.SHOW_ELEMENT
-								| ClientNodeIterator.SHOW_TEXT);
 				xpathMap = new LinkedHashMap<String, Node>();
 				ClientNotifications notifications = ClientLayerLocator.get()
 						.notifications();
@@ -363,6 +360,9 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public void generateMap(Element elt, String prefix,
 			Map<String, Node> xpathMap) {
+		walker = new ClientNodeIterator(elt,
+				ClientNodeIterator.SHOW_ELEMENT
+						| ClientNodeIterator.SHOW_TEXT);
 		generateMap0(elt, prefix, xpathMap);
 	}
 

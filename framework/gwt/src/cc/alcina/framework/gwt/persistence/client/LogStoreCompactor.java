@@ -55,7 +55,6 @@ public class LogStoreCompactor extends Consort<Phase> {
 		addPlayer(new Compactor_MERGE_AND_PERSIST_FROM());
 		addPlayer(new Compactor_MERGE_AND_PERSIST_TO());
 		addEndpointPlayer();
-		setTrace(true);
 		listenerDelta(FINISHED, consortEndListener, true);
 		listenerDelta(ERROR, consortEndListener, true);
 	}

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /*
@@ -35,13 +36,14 @@ public abstract class Player<D> {
 		this.runnable = runnable;
 	}
 
-	public void addProvides(D... providesStates) {
-		provides.addAll(Arrays.asList(providesStates));
+	public void addProvides(D state) {
+		provides.add(state);
 	}
 
-	public void addRequires(D... requiresStates) {
-		requires.addAll(Arrays.asList(requiresStates));
+	public void addRequires(D state) {
+		requires.add(state);
 	}
+
 	public void removeRequires(D... requiresStates) {
 		requires.removeAll(Arrays.asList(requiresStates));
 	}
@@ -75,6 +77,10 @@ public abstract class Player<D> {
 		return false;
 	}
 
+	public boolean canRunInParallelWith(Player<D> otherPlayer) {
+		return false;
+	}
+
 	public boolean isCancellable() {
 		return true;
 	}
@@ -87,9 +93,12 @@ public abstract class Player<D> {
 		return getProvides().isEmpty();
 	}
 
+	private long start;
+
 	public void play(boolean replaying) {
+		start = System.currentTimeMillis();
 		if (replaying) {
-			((LoopingPlayer)this).loop();
+			((LoopingPlayer) this).loop();
 		} else {
 			runnable.run();
 		}
@@ -128,6 +137,38 @@ public abstract class Player<D> {
 		}
 	}
 
+	public abstract static class RepeatingCommandPlayer<D> extends Player<D>
+			implements Runnable, RepeatingCommand {
+		protected RepeatingCommand delegate;
+
+		public RepeatingCommandPlayer() {
+			super(null);
+			setAsynchronous(true);
+			runnable = this;
+		}
+
+		@Override
+		public boolean execute() {
+			if (!consort.isRunning()) {
+				return false;
+			}
+			try {
+				boolean result = executeRepeatingCommand();
+				if (result == false) {
+					wasPlayed();
+				}
+				return result;
+			} catch (Throwable e) {
+				consort.onFailure(e);
+				return false;
+			}
+		}
+
+		protected boolean executeRepeatingCommand() {
+			return delegate.execute();
+		}
+	}
+
 	public abstract static class RunnablePlayer<D> extends Player<D> implements
 			Runnable {
 		public RunnablePlayer() {
@@ -142,5 +183,9 @@ public abstract class Player<D> {
 
 	public void setAsynchronous(boolean asynchronous) {
 		this.asynchronous = asynchronous;
+	}
+
+	public long getStart() {
+		return this.start;
 	}
 }

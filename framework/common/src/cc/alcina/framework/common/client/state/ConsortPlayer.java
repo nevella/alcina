@@ -16,21 +16,33 @@ public interface ConsortPlayer {
 				if (key == Consort.ERROR) {
 					player.onFailure((Throwable) message);
 				} else {
-					player.wasPlayed();
+					if (stateToFireAfterConsortEnd != null) {
+						player.wasPlayed(stateToFireAfterConsortEnd);
+					} else {
+						player.wasPlayed();
+					}
 				}
 			}
 		};
-
 
 		private Player player;
 
 		private Consort subConsort;
 
+		private Object stateToFireAfterConsortEnd;
+
 		public void run(Consort consort, Consort subConsort, Player player) {
+			run(consort, subConsort, player, null);
+		}
+
+		public void run(Consort consort, Consort subConsort, Player player,
+				Object stateToFireAfterConsortEnd) {
 			this.subConsort = subConsort;
 			this.player = player;
+			this.stateToFireAfterConsortEnd = stateToFireAfterConsortEnd;
 			player.setAsynchronous(true);
-			subConsort.setParent(consort);
+			subConsort.setParentConsort(consort);
+			consort.passLoggersAndFlagsToChild(subConsort);
 			subConsort.listenerDelta(Consort.FINISHED, listener, true);
 			subConsort.listenerDelta(Consort.ERROR, listener, true);
 			subConsort.restart();

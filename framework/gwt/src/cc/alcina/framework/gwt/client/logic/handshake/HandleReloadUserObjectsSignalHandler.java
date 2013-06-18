@@ -8,10 +8,13 @@ import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.ConsortSignalHandler;
 import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 public class HandleReloadUserObjectsSignalHandler implements
 		ConsortSignalHandler<HandshakeSignal> {
 	@Override
-	public void signal(Consort consort) {
+	public void signal(Consort consort, AsyncCallback signalHandledCallback) {
+		consort.addOneTimeFinishedCallback(signalHandledCallback);
 		List<ExtensibleEnum> statesToRemove = new ArrayList<ExtensibleEnum>(
 				ExtensibleEnum.forClassAndTag(HandshakeState.class,
 						HandshakeState.TAG_POST_OBJECT_DATA_LOAD));

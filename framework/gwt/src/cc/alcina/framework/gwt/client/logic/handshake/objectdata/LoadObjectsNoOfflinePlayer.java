@@ -15,10 +15,10 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 	private LoadObjectsNoOfflineConsort loadObjectsConsort;
 
 	public LoadObjectsNoOfflinePlayer() {
-		addRequires(HandshakeState.LOADER_UI_INITIALISED,
-				HandshakeState.SERVICES_INITIALISED);
-		addProvides(HandshakeState.OBJECT_DATA_LOADED,
-				HandshakeState.OBJECT_DATA_LOAD_FAILED);
+		addRequires(HandshakeState.LOADER_UI_INITIALISED);
+		addRequires(HandshakeState.SERVICES_INITIALISED);
+		addProvides(HandshakeState.OBJECT_DATA_LOADED);
+		addProvides(HandshakeState.OBJECT_DATA_LOAD_FAILED);
 		loadObjectsConsort = new LoadObjectsNoOfflineConsort();
 	}
 
@@ -29,9 +29,9 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 			LoadObjectsFromRemotePlayer fromRemotePlayer = addPlayer(Registry
 					.impl(LoadObjectsFromRemotePlayer.class));
 			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOADED, null));
+					LoadObjectDataState.OBJECT_DATA_LOADED, null,true));
 			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null));
+					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null,true));
 		}
 
 		@Override

@@ -12,7 +12,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public class LogoutWithReloadSignalHandler implements
 		ConsortSignalHandler<HandshakeSignal>, AsyncCallback {
 	@Override
-	public void signal(Consort consort) {
+	public void signal(Consort consort, AsyncCallback signalHandledCallback) {
+		consort.addOneTimeFinishedCallback(signalHandledCallback);
 		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 				.logout(this);
 		CallManager.get().register(this, "Logging out");

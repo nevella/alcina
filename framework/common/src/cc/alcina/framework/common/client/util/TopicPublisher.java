@@ -19,13 +19,21 @@ public class TopicPublisher {
 
 	public void addTopicListener(String key, TopicListener listener) {
 		TopicListenerAdapter adapter = new TopicListenerAdapter(listener);
-		support.addPropertyChangeListener(key, adapter);
+		if (key == null) {
+			support.addPropertyChangeListener(adapter);
+		} else {
+			support.addPropertyChangeListener(key, adapter);
+		}
 		lookup.put(listener, adapter);
 	}
 
 	public void removeTopicListener(String key, TopicListener listener) {
 		TopicListenerAdapter adapter = lookup.get(listener);
-		support.removePropertyChangeListener(key, adapter);
+		if (key == null) {
+			support.removePropertyChangeListener(adapter);
+		} else {
+			support.removePropertyChangeListener(key, adapter);
+		}
 	}
 
 	private static class TopicListenerAdapter<T> implements

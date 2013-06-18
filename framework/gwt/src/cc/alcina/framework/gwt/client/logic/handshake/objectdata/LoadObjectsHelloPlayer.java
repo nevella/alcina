@@ -17,11 +17,9 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 public class LoadObjectsHelloPlayer extends
 		RunnableAsyncCallbackPlayer<LoginResponse, LoadObjectDataState> {
 	public LoadObjectsHelloPlayer() {
-		addProvides(
-				LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE,
-				LoadObjectDataState.HELLO_OFFLINE_REQUIRES_PER_CLIENT_INSTANCE_TRANSFORMS,
-				LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
-		
+		addProvides(LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE);
+		addProvides(LoadObjectDataState.HELLO_OFFLINE_REQUIRES_PER_CLIENT_INSTANCE_TRANSFORMS);
+		addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 	}
 
 	HandshakeConsortModel handshakeConsortModel = Registry

@@ -12,6 +12,10 @@ public class SysoutHandler implements TaggedLoggerHandler {
 
 	@Override
 	public void log(String message) {
-		System.out.println(CommonUtils.formatJ("%s: %s", prefix, message));
+		if (prefix == null) {
+			System.out.println(message);
+		} else {
+			System.out.println(CommonUtils.formatJ("%s: %s", prefix, message));
+		}
 	}
 }

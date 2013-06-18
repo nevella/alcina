@@ -15,15 +15,14 @@ public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
 	private LoadObjectsConsort loadObjectsConsort;
 
 	public LoadObjectsPlayer() {
-		addRequires(HandshakeState.LOADER_UI_INITIALISED,
-				HandshakeState.SERVICES_INITIALISED);
-		addProvides(HandshakeState.OBJECT_DATA_LOADED,
-				HandshakeState.OBJECT_DATA_LOAD_FAILED);
+		addRequires(HandshakeState.LOADER_UI_INITIALISED);
+		addRequires(HandshakeState.SERVICES_INITIALISED);
+		addProvides(HandshakeState.OBJECT_DATA_LOADED);
+		addProvides(HandshakeState.OBJECT_DATA_LOAD_FAILED);
 		loadObjectsConsort = new LoadObjectsConsort();
 	}
 
-	public static class LoadObjectsConsort extends
-			Consort<LoadObjectDataState> {
+	public static class LoadObjectsConsort extends Consort<LoadObjectDataState> {
 		public LoadObjectsConsort() {
 			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(Registry
 					.impl(LoadObjectsHelloPlayer.class));
@@ -36,9 +35,9 @@ public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
 			addPlayer(Registry.impl(CheckSoleOfflineTabPlayer.class));
 			addPlayer(new CheckOfflineSufficentPlayer());
 			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOADED, null));
+					LoadObjectDataState.OBJECT_DATA_LOADED, null,true));
 			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null));
+					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null,true));
 		}
 
 		@Override

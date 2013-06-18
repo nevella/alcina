@@ -3,7 +3,8 @@ package cc.alcina.framework.common.client.state;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.state.Consort.TopicListenerOneTimeAsyncCallbackAdapter;
+import cc.alcina.framework.common.client.state.Consort.OneTimeFinishedAsyncCallbackAdapter;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
@@ -21,16 +22,12 @@ public class ConsortWithSignals<D, S> extends Consort<D> {
 	}
 
 	public void signal(S signal, AsyncCallback finishedCallback) {
+		infoLogger.log(CommonUtils.formatJ("%s%s%s -> %s", "[SG] ",
+				CommonUtils.padStringLeft("", depth(), "    "),
+				CommonUtils.simpleClassName(getClass()),
+				CommonUtils.simpleClassName(signal.getClass())));
 		signalTopicPublisher.publishTopic(signal.toString(), signal);
-		signalHandlers.get(signal).signal(this);
-		if (finishedCallback != null) {
-			TopicListenerOneTimeAsyncCallbackAdapter adapter = new TopicListenerOneTimeAsyncCallbackAdapter(
-					finishedCallback);
-			listenerDelta(FINISHED, adapter, true);
-			listenerDelta(ERROR, adapter, true);
-			listenerDelta(NO_ACTIVE_PLAYERS, adapter, true);
-			
-		}
+		signalHandlers.get(signal).signal(this, finishedCallback);
 	}
 
 	public void signal(S signal) {

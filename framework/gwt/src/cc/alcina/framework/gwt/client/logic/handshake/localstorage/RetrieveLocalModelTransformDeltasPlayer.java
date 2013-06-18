@@ -16,9 +16,8 @@ public class RetrieveLocalModelTransformDeltasPlayer
 		RunnableAsyncCallbackPlayer<Iterator<DomainModelDelta>, LoadObjectDataState> {
 	public RetrieveLocalModelTransformDeltasPlayer() {
 		addProvides(LoadObjectDataState.LOADED_TRANSFORMS_FROM_LOCAL_STORAGE);
-		addRequires(
-				LoadObjectDataState.HELLO_OFFLINE_REQUIRES_PER_CLIENT_INSTANCE_TRANSFORMS,
-				LoadObjectDataState.SOLE_OPEN_TAB_CHECKED);
+		addRequires(LoadObjectDataState.HELLO_OFFLINE_REQUIRES_PER_CLIENT_INSTANCE_TRANSFORMS);
+		addRequires(LoadObjectDataState.SOLE_OPEN_TAB_CHECKED);
 	}
 
 	protected DomainTransformRequestType[] getTypes() {

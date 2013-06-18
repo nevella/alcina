@@ -10,6 +10,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
+import cc.alcina.framework.common.client.log.TaggedLogger;
+import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -47,39 +49,68 @@ public class Consort<D> {
 
 	LinkedList<Player<D>> removed = new LinkedList<Player<D>>();
 
-	private Player currentPlayer = null;
+	protected LinkedList<Player<D>> playing = new LinkedList<Player<D>>();
 
 	private boolean consumingQueue;
 
 	private boolean running;
 
-	private boolean trace;
-
 	private boolean simulate;
 
 	private int playedCount = 0;
-
-	private int indent = 0;
 
 	private Set<D> reachedStates = new LinkedHashSet<D>();
 
 	Player replayPlayer = null;
 
-	private Consort parent;
+	private Consort parentConsort;
+
+	private boolean synchronous;
+
+	protected ParallelArbiter parallelArbiter;
+
+	protected TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
+			.getLogger(getClass(), TaggedLogger.METRIC);
+
+	protected TaggedLogger infoLogger = Registry.impl(TaggedLoggers.class)
+			.getLogger(getClass(), TaggedLogger.INFO);
 
 	public void addEndpointPlayer() {
-		addEndpointPlayer(null);
+		addEndpointPlayer(null, true);
 	}
 
-	public void addEndpointPlayer(AsyncCallback completionCallback) {
+	public void addEndpointPlayer(AsyncCallback completionCallback,
+			boolean finishes) {
 		D lastRequired = CommonUtils.last(players).getProvides().iterator()
 				.next();
-		addPlayer(new EndpointPlayer(lastRequired, completionCallback));
+		addPlayer(new EndpointPlayer(lastRequired, completionCallback, finishes));
 	}
 
 	public void addIfNotMember(Player player) {
-		if (getTaskForClass(player.getClass()) == null) {
-			addPlayer(player);
+		for (Player p : getTasksForClass(player.getClass())) {
+			if (p.getProvides().equals(player.getProvides())
+					&& p.getRequires().equals(player.getRequires())) {
+				return;
+			}
+		}
+		addPlayer(player);
+	}
+
+	public OneTimeFinishedAsyncCallbackAdapter addOneTimeFinishedCallback(
+			AsyncCallback finishedCallback) {
+		if (finishedCallback != null) {
+			return new OneTimeFinishedAsyncCallbackAdapter(finishedCallback);
+		} else {
+			return null;
+		}
+	}
+
+	public OneTimeFinishedAsyncCallbackAdapter addOneTimeStateCallback(D state,
+			AsyncCallback stateCallback) {
+		if (stateCallback != null) {
+			return new OneTimeFinishedAsyncCallbackAdapter(stateCallback, state);
+		} else {
+			return null;
 		}
 	}
 
@@ -89,12 +120,18 @@ public class Consort<D> {
 		return player;
 	}
 
+	public StateListenerWrapper addStateListener(TopicListener listener, D state) {
+		StateListenerWrapper wrapper = new StateListenerWrapper(listener, state);
+		topicPublisher.listenerDelta(STATES, wrapper, true);
+		return wrapper;
+	}
+
 	public void cancel() {
 		running = false;
-		if (currentPlayer instanceof ConsortPlayer) {
-			((ConsortPlayer) currentPlayer).getStateConsort().cancel();
+		if (playing instanceof ConsortPlayer) {
+			((ConsortPlayer) playing).getStateConsort().cancel();
 		}
-		currentPlayer = null;
+		playing.clear();
 	}
 
 	public void clear() {
@@ -128,20 +165,18 @@ public class Consort<D> {
 
 	public void finished() {
 		running = false;
-		if (isTrace()) {
-			System.out.println(CommonUtils.formatJ("%s     [%s]",
-					CommonUtils.padStringLeft("", indent, '\t'),
-					"----CONSORT FINISHED"));
-		}
+		infoLogger.log(CommonUtils.formatJ("%s     [%s]",
+				CommonUtils.padStringLeft("", depth(), '\t'),
+				"----CONSORT FINISHED"));
 		topicPublisher.publishTopic(FINISHED, null);
 	}
 
-	public Consort getParent() {
-		return this.parent;
+	public Consort getParentConsort() {
+		return this.parentConsort;
 	}
 
-	public <P extends Player> P getTaskForClass(Class<P> clazz) {
-		return (P) CollectionFilters.first(players, new IsClassFilter(clazz));
+	public <P extends Player> List<P> getTasksForClass(Class<P> clazz) {
+		return CollectionFilters.filter(players, new IsClassFilter(clazz));
 	}
 
 	public boolean isRunning() {
@@ -152,35 +187,36 @@ public class Consort<D> {
 		return this.simulate;
 	}
 
-	public boolean isTrace() {
-		return this.trace;
+	public boolean isSynchronous() {
+		return this.synchronous;
 	}
 
 	public void listenerDelta(String key, TopicListener listener, boolean add) {
 		topicPublisher.listenerDelta(key, listener, add);
 	}
 
-	public void statesListenerDelta(TopicListener listener, boolean add) {
-		topicPublisher.listenerDelta(STATES, listener, add);
-	}
-
 	public void nudge() {
+		running = true;
 		consumeQueue();
 	}
 
 	public void onFailure(Throwable throwable) {
+		running = false;
 		topicPublisher.publishTopic(ERROR, throwable);
 		throw new WrappedRuntimeException(throwable);
 	}
 
 	public void removeStates(Collection<D> states) {
+		infoLogger.log(CommonUtils.formatJ("%s rmv:[%s]",
+				CommonUtils.padStringLeft("", depth(), '\t'),
+				CommonUtils.join(states, ", ")));
 		reachedStates.removeAll(states);
 	}
 
 	public void replay(Player player) {
 		assert player instanceof LoopingPlayer;
 		replayPlayer = player;
-		currentPlayer = null;
+		playing.clear();
 		if (consumingQueue) {
 		} else {
 			consumeQueue();
@@ -195,40 +231,24 @@ public class Consort<D> {
 		start();
 	}
 
-	public void setParent(Consort parent) {
-		this.parent = parent;
+	public void runWhenFinished(AsyncCallback finishedCallback) {
+		if (!running) {
+			finishedCallback.onSuccess(null);
+		} else {
+			addOneTimeFinishedCallback(finishedCallback);
+		}
+	}
+
+	public void setParentConsort(Consort parent) {
+		this.parentConsort = parent;
 	}
 
 	public void setSimulate(boolean simulate) {
 		this.simulate = simulate;
 	}
 
-	public void setTrace(boolean trace) {
-		this.trace = trace;
-	}
-
-	public class TopicListenerOneTimeAsyncCallbackAdapter implements
-			TopicListener {
-		private AsyncCallback callback;
-
-		public TopicListenerOneTimeAsyncCallbackAdapter(AsyncCallback callback) {
-			this.callback = callback;
-		}
-
-		@Override
-		public void topicPublished(String key, Object message) {
-			try {
-				if (key == ERROR) {
-					callback.onFailure((Throwable) message);
-				} else {
-					callback.onSuccess(message);
-				}
-			} finally {
-				deferredRemove(FINISHED, this);
-				deferredRemove(ERROR, this);
-				deferredRemove(NO_ACTIVE_PLAYERS, this);
-			}
-		}
+	public void setSynchronous(boolean synchronous) {
+		this.synchronous = synchronous;
 	}
 
 	public void start() {
@@ -237,37 +257,48 @@ public class Consort<D> {
 		consumeQueue();
 	}
 
+	// note - listener must be actually TopicListener<StatesDelta> - but GWT
+	// doesn't like that for Consort subclasses
+	public void statesListenerDelta(TopicListener listener, boolean add) {
+		topicPublisher.listenerDelta(STATES, listener, add);
+	}
+
 	public void wasPlayed(Player<D> player) {
 		wasPlayed(player, player.getProvides());
 	}
 
-	public class StatesDelta {
-		public Set<D> oldValue;
-
-		public Set<D> newValue;
-
-		public StatesDelta(Set<D> oldValue, Set<D> newValue) {
-			this.oldValue = oldValue;
-			this.newValue = newValue;
-		}
-	}
-
 	public void wasPlayed(Player<D> player, Collection<D> resultantStates) {
+		if (!isRunning()) {
+			return;
+		}
 		playedCount++;
-		currentPlayer = null;
+		assert playing.contains(player);
+		playing.remove(player);
 		// TODO - warn if resultantstates >1 and a non-parallel consort?
 		LinkedHashSet<D> reachedCopy = new LinkedHashSet<D>(reachedStates);
 		if (reachedStates.addAll(resultantStates)) {
 			publishTopicWithBubble(STATES, new StatesDelta(reachedCopy,
 					reachedStates));
-			if (isTrace()) {
-				System.out.println(CommonUtils.formatJ("%s     [%s]",
-						CommonUtils.padStringLeft("", indent, '\t'),
-						CommonUtils.join(resultantStates, ", ")));
-			}
+			infoLogger.log(CommonUtils.formatJ("%s     [%s]",
+					CommonUtils.padStringLeft("", depth(), '\t'),
+					CommonUtils.join(resultantStates, ", ")));
 		}
+		metricLogger.log(CommonUtils.formatJ("%s     %s: %s ms",
+				CommonUtils.padStringLeft("", depth(), '\t'),
+				CommonUtils.simpleClassName(player.getClass()),
+				System.currentTimeMillis() - player.getStart()));
 		publishTopicWithBubble(AFTER_PLAY, player);
 		consumeQueue();
+	}
+
+	protected int depth() {
+		Consort cursor = this;
+		int depth = 0;
+		while (cursor.getParentConsort() != null) {
+			depth++;
+			cursor = cursor.getParentConsort();
+		}
+		return depth;
 	}
 
 	private boolean isActive(Player<D> player) {
@@ -308,9 +339,17 @@ public class Consort<D> {
 		while (true) {
 			Set<D> seenDependencies = new LinkedHashSet<D>();
 			for (Player<D> player : players) {
+				if (playing.contains(player)) {
+					continue;
+				}
 				if (isActive(player)) {
 					hasNonProviders |= player.getProvides().isEmpty();
 					if (satisfiesDeps(player, providerDependencies)) {
+						if (playing.size() > 0) {
+							if (!parallelArbiter.allow(player)) {
+								continue;
+							}
+						}
 						if (result == null) {
 							result = player;
 						} else {
@@ -348,14 +387,13 @@ public class Consort<D> {
 			providerDependencies.addAll(seenDependencies);
 			providerDependencies.removeAll(reachedStates);
 			if (providerDependencies.size() == lastCheckedCount) {
-				if (isTrace() && (playedCount == 0 || hasNonProviders)) {
-					if (players.size() > 0) {
+				if (playedCount == 0 || hasNonProviders) {
+					if (players.size() > 0 && playing.isEmpty()) {
 						Player missed = lastAdded != null ? lastAdded : players
 								.iterator().next();
-						System.out.println(CommonUtils.formatJ(
+						infoLogger.log(CommonUtils.formatJ(
 								"Unable to resolve dependencies: %s\n\t%s",
 								missed.getRequires(), missed));
-						int j = 3;
 					}
 				}
 				break;
@@ -392,7 +430,7 @@ public class Consort<D> {
 	}
 
 	protected void consumeQueue() {
-		if (currentPlayer != null || consumingQueue || !running) {
+		if (!canAddPlayers() || consumingQueue || !running) {
 			return;
 		}
 		consumingQueue = true;
@@ -400,38 +438,38 @@ public class Consort<D> {
 		// within the while loop, but async tasks will be dispatched by
 		// (non-recursive) consumeQueue/wasPlayed calls
 		// also allow shortcut for looping tasks
-		while (currentPlayer == null && running) {
+		while (canAddPlayers() && running) {
 			boolean replaying = replayPlayer != null;
 			Player<D> player = replaying ? replayPlayer : nextPlayer();
 			replayPlayer = null;
 			if (player != null) {
 				maybeRemovePlayersFromQueue(player);
-				currentPlayer = player;
+				if (!playing.contains(player)) {
+					playing.add(player);
+				}
 				executePlayer(player, replaying);
 			} else {
 				break;
 			}
 		}
 		consumingQueue = false;
-		if (currentPlayer == null) {
+		if (playing.isEmpty()) {
 			topicPublisher.publishTopic(NO_ACTIVE_PLAYERS, null);
 		}
 	}
 
 	protected void executePlayer(Player<D> player, boolean replaying) {
-		if (isTrace()) {
-			System.out.println(CommonUtils.formatJ("%s%s -> %s",
-					CommonUtils.padStringLeft("", indent, '\t'),
-					CommonUtils.simpleClassName(getClass()),
-					CommonUtils.simpleClassName(player.getClass())));
-			if (player instanceof ConsortPlayer) {
-				Consort stateConsort = ((ConsortPlayer) player)
-						.getStateConsort();
-				if (stateConsort != null) {
-					stateConsort.indent = indent + 1;
-					stateConsort.setTrace(true);
-					stateConsort.setSimulate(isSimulate());
-				}
+		infoLogger.log(CommonUtils.formatJ(
+				"%s%s%s -> %s",
+				(playing.size() == 1 ? "    " : CommonUtils.formatJ("[%s] ",
+						playing.size())), CommonUtils.padStringLeft("",
+						depth(), "    "), CommonUtils
+						.simpleClassName(getClass()), CommonUtils
+						.simpleClassName(player.getClass())));
+		if (player instanceof ConsortPlayer) {
+			Consort stateConsort = ((ConsortPlayer) player).getStateConsort();
+			if (stateConsort != null) {
+				passLoggersAndFlagsToChild(stateConsort);
 			}
 		}
 		if (isSimulate()) {
@@ -455,12 +493,112 @@ public class Consort<D> {
 
 	protected void publishTopicWithBubble(String key, Object message) {
 		topicPublisher.publishTopic(key, message);
-		if (parent != null) {
-			parent.publishTopicWithBubble(key, message);
+		if (parentConsort != null) {
+			parentConsort.publishTopicWithBubble(key, message);
 		}
+	}
+
+	boolean canAddPlayers() {
+		return playing.isEmpty() || parallelArbiter != null;
 	}
 
 	Set<D> getReachedStates() {
 		return this.reachedStates;
+	}
+
+	public class OneTimeFinishedAsyncCallbackAdapter implements TopicListener {
+		private AsyncCallback callback;
+
+		private D state;
+
+		public OneTimeFinishedAsyncCallbackAdapter(AsyncCallback callback) {
+			this.callback = callback;
+			listenerDelta(FINISHED, this, true);
+			listenerDelta(ERROR, this, true);
+			listenerDelta(NO_ACTIVE_PLAYERS, this, true);
+		}
+
+		public OneTimeFinishedAsyncCallbackAdapter(AsyncCallback callback,
+				D state) {
+			this(callback);
+			this.state = state;
+			listenerDelta(STATES, this, true);
+		}
+
+		@Override
+		public void topicPublished(String key, Object message) {
+			boolean remove = false;
+			try {
+				if (key == ERROR) {
+					remove = true;
+					callback.onFailure((Throwable) message);
+				} else {
+					if (key == FINISHED || key == NO_ACTIVE_PLAYERS) {
+						if (state == null) {
+							remove = true;
+							callback.onSuccess(message);
+						}
+					} else {
+						if (key == STATES) {
+							StatesDelta statesDelta = (StatesDelta) message;
+							if (statesDelta.wasStateAdded(state)) {
+								remove = true;
+								callback.onSuccess(message);
+							}
+						}
+					}
+				}
+			} finally {
+				if (remove) {
+					deferredRemove(FINISHED, this);
+					deferredRemove(ERROR, this);
+					deferredRemove(NO_ACTIVE_PLAYERS, this);
+					deferredRemove(STATES, this);
+				}
+			}
+		}
+	}
+
+	public class StatesDelta {
+		public Set<D> oldValue;
+
+		public Set<D> newValue;
+
+		public StatesDelta(Set<D> oldValue, Set<D> newValue) {
+			this.oldValue = oldValue;
+			this.newValue = newValue;
+		}
+
+		public boolean wasStateAdded(D value) {
+			return !oldValue.contains(value) && newValue.contains(value);
+		}
+
+		public boolean wasStateRemoved(D value) {
+			return oldValue.contains(value) && !newValue.contains(value);
+		}
+	}
+
+	class StateListenerWrapper implements TopicListener<StatesDelta> {
+		private TopicListener delegate;
+
+		private D state;
+
+		public StateListenerWrapper(TopicListener delegate, D state) {
+			this.delegate = delegate;
+			this.state = state;
+		}
+
+		@Override
+		public void topicPublished(String key, StatesDelta message) {
+			if (message.wasStateAdded(state)) {
+				delegate.topicPublished(STATES, state);
+			}
+		}
+	}
+
+	public void passLoggersAndFlagsToChild(Consort child) {
+		child.metricLogger = metricLogger;
+		child.infoLogger = infoLogger;
+		child.setSimulate(isSimulate());
 	}
 }

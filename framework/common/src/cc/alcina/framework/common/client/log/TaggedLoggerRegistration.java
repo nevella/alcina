@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.log.TaggedLogger.TaggedLoggerHandler;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class TaggedLoggerRegistration {
 	Class clazz;
@@ -27,12 +28,15 @@ public class TaggedLoggerRegistration {
 		if (clazz != null && clazz != this.clazz) {
 			return false;
 		}
+		if(this.tags.isEmpty()||tags.length==0){
+			return true;
+		}
 		for (Object tag : tags) {
-			if (!this.tags.contains(tag)) {
-				return false;
+			if (this.tags.contains(tag)) {
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	public void unsubscribe() {

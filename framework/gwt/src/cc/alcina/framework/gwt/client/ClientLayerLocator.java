@@ -44,8 +44,6 @@ public class ClientLayerLocator {
 
 	private boolean usesRootLayoutPanel;
 
-	private RemoteServiceProvider<? extends CommonRemoteServiceAsync> commonRemoteServiceAsyncProvider;
-
 	private ActionLogProvider actionLogProvider;
 
 	private CommitToStorageTransformListener commitToStorageTransformListener;
@@ -101,7 +99,8 @@ public class ClientLayerLocator {
 	}
 
 	public GeneralProperties getGeneralProperties() {
-		// FW4 - this isn't a service, but is same for lifetime of client so *ok* -
+		// FW4 - this isn't a service, but is same for lifetime of client so
+		// *ok* -
 		// not great
 		return Registry.impl(GeneralProperties.class);
 	}
@@ -117,13 +116,6 @@ public class ClientLayerLocator {
 	public void registerClientBase(ClientBase base) {
 		this.clientBase = base;
 		Registry.get().registerSingleton(base, ClientBase.class);
-	}
-
-	public void registerCommonRemoteServiceAsyncProvider(
-			RemoteServiceProvider<? extends CommonRemoteServiceAsync> commonRemoteServiceAsyncProvider) {
-		this.commonRemoteServiceAsyncProvider = commonRemoteServiceAsyncProvider;
-		Registry.get().registerSingleton(commonRemoteServiceAsyncProvider,
-				RemoteServiceProvider.class);
 	}
 
 	public void registerExceptionHandler(ClientExceptionHandler exceptionHandler) {

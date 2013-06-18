@@ -56,8 +56,8 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 		public void onSuccess(List<DTRSimpleSerialWrapper> result) {
 			transformsToPersistOnServer = result;
 			if (result.isEmpty()) {
-				consort.wasPlayed(this,
-						Collections.singletonList(State.FINISHED));
+				wasPlayed(
+						State.FINISHED);
 			} else {
 				super.onSuccess(result);
 			}
@@ -99,14 +99,12 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 				return;
 			}
 			remotePersistenceException = caught;
-			consort.wasPlayed(this,
-					Collections.singletonList(State.PERSIST_TRANSFORMS_FAILURE));
+			wasPlayed(State.PERSIST_TRANSFORMS_FAILURE);
 		}
 
 		public void onSuccess(Void result) {
 			cleanup();
-			consort.wasPlayed(this,
-					Collections.singletonList(State.PERSIST_TRANSFORMS_SUCCESS));
+			wasPlayed(State.PERSIST_TRANSFORMS_SUCCESS);
 		}
 
 		private void cleanup() {
@@ -155,7 +153,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 		addPlayer(new Player_PERSIST_TRANSFORMS());
 		addPlayer(new Player_PERSIST_TRANSFORMS_FAILURE());
 		addPlayer(new Player_PERSIST_TRANSFORMS_SUCCCESS());
-		addEndpointPlayer(completionCallback);
+		addEndpointPlayer(completionCallback,true);
 		nudge();
 	}
 }
