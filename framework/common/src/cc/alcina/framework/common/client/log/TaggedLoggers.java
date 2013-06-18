@@ -6,10 +6,12 @@ import java.util.List;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.log.TaggedLogger.TaggedLoggerHandler;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 @RegistryLocation(registryPoint = TaggedLoggers.class, implementationType = ImplementationType.SINGLETON)
+@ClientInstantiable
 public class TaggedLoggers {
 	private List<TaggedLoggerRegistration> registrations = new ArrayList<TaggedLoggerRegistration>();
 
