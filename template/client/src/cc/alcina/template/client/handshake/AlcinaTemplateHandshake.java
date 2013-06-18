@@ -66,14 +66,10 @@ public class AlcinaTemplateHandshake {
 		consort.addPlayer(Registry.impl(InitLoaderUiPlayer.class));
 		consort.addPlayer(new InitServicesAsyncAndSyncPlayer());
 		consort.addPlayer(new WaitForAppCachePlayer());
-		UploadOfflineTransformsPlayer uploadOfflineTransformsPlayer = consort
-				.addPlayer(new UploadOfflineTransformsPlayer());
-		uploadOfflineTransformsPlayer
-				.addRequires(WaitForAppCachePlayer.APP_CACHE_CHECKED);
-		LoadObjectsPlayer loadObjectsPlayer = consort
-				.addPlayer(new LoadObjectsPlayer());
-		loadObjectsPlayer
-				.addRequires(UploadOfflineTransformsPlayer.OFFLINE_TRANSFORMS_UPLOADED);
+		consort.addPlayer(new UploadOfflineTransformsPlayer()).addRequires(
+				WaitForAppCachePlayer.APP_CACHE_CHECKED);
+		consort.addPlayer(new LoadObjectsPlayer()).addRequires(
+				UploadOfflineTransformsPlayer.OFFLINE_TRANSFORMS_UPLOADED);
 		consort.addPlayer(new UnwrapAndRegisterObjectsPlayer());
 		consort.addPlayer(new AllowObjectsLoadFailedPlayer());
 		consort.addPlayer(Registry.impl(SetupAfterObjectsPlayer.class));
@@ -81,7 +77,6 @@ public class AlcinaTemplateHandshake {
 		consort.addPlayer(new StartAppPlayer());
 		consort.addSignalHandler(new LogoutWithReloadSignalHandler());
 		consort.addSignalHandler(new HandleLoggedInSignalHandler());
-		// consort.setTrace(true);
 		consort.listenerDelta(Consort.BEFORE_PLAY, notificationUpdateListener,
 				true);
 	}
