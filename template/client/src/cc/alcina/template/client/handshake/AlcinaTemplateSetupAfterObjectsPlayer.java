@@ -53,7 +53,6 @@ public  class AlcinaTemplateSetupAfterObjectsPlayer extends
 		DevCSSHelper.get().addCssListeners(
 				ClientLayerLocator.get().getGeneralProperties());
 		saveToLocalPersistenceAndStat();
-		wasPlayed();
 	}
 	protected void saveToLocalPersistenceAndStat() {
 		if (PermissionsManager.isOnline()) {

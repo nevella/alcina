@@ -11,6 +11,5 @@ public class InitServicesAsyncAndSyncPlayer extends RunnablePlayer {
 
 	@Override
 	public void run() {
-		wasPlayed();
 	}
 }
