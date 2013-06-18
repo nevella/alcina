@@ -247,7 +247,7 @@ public class IntrospectorGenerator extends Generator {
 			return packageName + "." + implementationName;
 		}
 		System.out
-		.format("Introspector - %s - %s introsepctable types\n",filter.getModuleName(),introspectables.size());
+		.format("Introspector - %s - %s introspectable types\n",filter.getModuleName(),introspectables.size());
 		SourceWriter writer = cfcf.createSourceWriter(context, printWriter);
 		this.writeIntrospectables(logger, introspectables, methods, writer);
 		this.writeResolver(introspectables, writer);
