@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
@@ -17,7 +18,7 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 public class LoadObjectsHelloPlayer extends
 		RunnableAsyncCallbackPlayer<LoginResponse, LoadObjectDataState> {
 	public LoadObjectsHelloPlayer() {
-		addProvides(LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE);
+		addProvides(helloOkState());
 		addProvides(LoadObjectDataState.HELLO_OFFLINE_REQUIRES_PER_CLIENT_INSTANCE_TRANSFORMS);
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 	}
@@ -41,7 +42,7 @@ public class LoadObjectsHelloPlayer extends
 	}
 
 	protected void hello() {
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().hello(this);
+		Registry.impl(CommonRemoteServiceAsync.class).hello(this);
 	}
 
 	void signal(boolean helloOk) {
@@ -50,11 +51,15 @@ public class LoadObjectsHelloPlayer extends
 			wasPlayed(LoadObjectDataState.HELLO_OFFLINE_REQUIRES_PER_CLIENT_INSTANCE_TRANSFORMS);
 		} else {
 			if (helloOk) {
-				wasPlayed(LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE);
+				wasPlayed(helloOkState());
 			} else {
 				wasPlayed(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 			}
 		}
+	}
+
+	protected LoadObjectDataState helloOkState() {
+		return LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE;
 	}
 
 	@Override

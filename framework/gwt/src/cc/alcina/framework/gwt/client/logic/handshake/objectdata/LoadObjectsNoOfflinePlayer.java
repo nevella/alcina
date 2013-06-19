@@ -25,13 +25,14 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 	public static class LoadObjectsNoOfflineConsort extends
 			Consort<LoadObjectDataState> {
 		public LoadObjectsNoOfflineConsort() {
-			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(new LoadObjectsHelloPlayer());
+			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(Registry
+					.impl(LoadObjectsHelloPlayer.class));
 			LoadObjectsFromRemotePlayer fromRemotePlayer = addPlayer(Registry
 					.impl(LoadObjectsFromRemotePlayer.class));
 			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOADED, null,true));
+					LoadObjectDataState.OBJECT_DATA_LOADED, null, true));
 			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null,true));
+					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null, true));
 		}
 
 		@Override
