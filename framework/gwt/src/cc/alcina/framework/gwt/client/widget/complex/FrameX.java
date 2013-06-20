@@ -47,7 +47,6 @@ import com.google.gwt.user.client.ui.Frame;
 	}
 
 	private native void _setDocumentHtml(String html)/*-{
-		debugger;
 		var elt = this.@cc.alcina.framework.gwt.client.widget.complex.FrameX::getElement()();
 		var oDoc = elt.contentWindow || elt.contentDocument;
 		if (oDoc.document) {
