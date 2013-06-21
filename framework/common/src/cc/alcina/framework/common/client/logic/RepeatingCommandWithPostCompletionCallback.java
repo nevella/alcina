@@ -12,21 +12,19 @@ public class RepeatingCommandWithPostCompletionCallback implements
 
 	private RepeatingCommand delegate;
 
+	private boolean cancelled;
+
 	public RepeatingCommandWithPostCompletionCallback(
 			AsyncCallback postCompletionCallback, RepeatingCommand delegate) {
 		this.postCompletionCallback = postCompletionCallback;
 		this.delegate = delegate;
 	}
 
-	public static class RepeatingCommandEndpoint implements RepeatingCommand {
-		@Override
-		public boolean execute() {
-			return false;
-		}
-	}
-
 	@Override
 	public boolean execute() {
+		if(cancelled){
+			return false;
+		}
 		boolean shouldContinue = false;
 		try {
 			shouldContinue = delegate.execute();
@@ -49,6 +47,20 @@ public class RepeatingCommandWithPostCompletionCallback implements
 					});
 		}
 		return shouldContinue;
+	}
+	public boolean isCancelled() {
+		return this.cancelled;
+	}
+
+	public void setCancelled(boolean cancelled) {
+		this.cancelled = cancelled;
+	}
+
+	public static class RepeatingCommandEndpoint implements RepeatingCommand {
+		@Override
+		public boolean execute() {
+			return false;
+		}
 	}
 
 	public static class RepeatingCommandEndpointWithPostCompletionCallback

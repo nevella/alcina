@@ -128,8 +128,16 @@ public class Consort<D> {
 
 	public void cancel() {
 		running = false;
-		if (playing instanceof ConsortPlayer) {
-			((ConsortPlayer) playing).getStateConsort().cancel();
+		
+		if(playing!=null){
+			for(Player player:playing){
+				if (player instanceof ConsortPlayer) {
+					((ConsortPlayer) player).getStateConsort().cancel();
+				}
+				if(player!=null){
+					player.cancel();
+				}
+			}
 		}
 		playing.clear();
 	}

@@ -81,6 +81,9 @@ public abstract class Player<D> {
 		return false;
 	}
 
+	public void cancel() {
+	}
+
 	public boolean isCancellable() {
 		return true;
 	}
@@ -95,6 +98,7 @@ public abstract class Player<D> {
 
 	private long start;
 
+	
 	public void play(boolean replaying) {
 		start = System.currentTimeMillis();
 		if (replaying) {

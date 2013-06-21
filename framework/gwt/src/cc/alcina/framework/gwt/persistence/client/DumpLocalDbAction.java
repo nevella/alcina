@@ -8,6 +8,7 @@ import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
@@ -31,7 +32,7 @@ public class DumpLocalDbAction implements LooseActionHandler {
 			@Override
 			public void onSuccess(Object result) {
 				modalNotifier.modalOff();
-				MessageManager.get().centerMessage("Local database dump uploaded - database cleared");
+				Window.alert("Local database dump uploaded - database cleared");
 			}
 		};
 		final AsyncCallback<Void> asyncCallback = new AsyncCallback<Void>() {

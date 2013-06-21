@@ -72,6 +72,8 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	@SuppressWarnings("unused")
 	private int deltaOrdinal = 0;
 
+	private RepeatingCommandWithPostCompletionCallback replayer;
+
 	@Override
 	public void run() {
 		deltasForIteration = handshakeConsortModel.modelDeltas.clone();
@@ -97,10 +99,10 @@ public class UnwrapAndRegisterObjectsPlayer extends
 				return;
 			}
 		}
-//		handshakeConsortModel.ensureLoadObjectsNotifier(
-//				CommonUtils.formatJ("Register: %s - %s", deltaOrdinal,
-//						CommonUtils.friendlyConstant(phase).toLowerCase()))
-//				.modalOn();
+		// handshakeConsortModel.ensureLoadObjectsNotifier(
+		// CommonUtils.formatJ("Register: %s - %s", deltaOrdinal,
+		// CommonUtils.friendlyConstant(phase).toLowerCase()))
+		// .modalOn();
 		switch (phase) {
 		case UNWRAPPING:
 			currentDelta.unwrap(this);
@@ -129,7 +131,15 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		consort.replay(this);
 	}
 
-	//FW3 -- gnraly - as a general rule, we have
+	@Override
+	public void cancel() {
+		if (replayer != null) {
+			replayer.setCancelled(true);
+		}
+		super.cancel();
+	}
+
+	// FW3 -- gnraly - as a general rule, we have
 	// "chunk - server deltas - per-client instance deltas" - so we only want to
 	// replay secondchunk deltas, if they exist
 	protected boolean ignoreUnlinked() {
@@ -146,8 +156,8 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	}
 
 	private void replayTransforms() {
-		RepeatingCommandWithPostCompletionCallback replayer = new RepeatingCommandWithPostCompletionCallback(
-				this, new DteReplayWorker(currentDelta.getReplayEvents()));
+		replayer = new RepeatingCommandWithPostCompletionCallback(this,
+				new DteReplayWorker(currentDelta.getReplayEvents()));
 		Scheduler.get().scheduleIncremental(replayer);
 	}
 
