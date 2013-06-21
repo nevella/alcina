@@ -46,6 +46,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.TestPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -177,6 +178,8 @@ public abstract class DevHelper {
 
 	public void initLightweightServices() {
 		initDataFolder();
+		ServletLayerRegistry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
+		Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
 		scanRegistry();
 		initClientReflector();
 		initDummyServices();
