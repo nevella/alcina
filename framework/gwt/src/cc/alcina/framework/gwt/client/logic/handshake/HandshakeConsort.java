@@ -1,11 +1,14 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
+import java.util.List;
+
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.ConsortWithSignals;
+import cc.alcina.framework.gwt.client.logic.handshake.objectdata.LoadObjectsPlayer;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -54,8 +57,9 @@ public class HandshakeConsort extends
 	}
 
 	public void handleLoggedIn(LoginResponse loginResponse) {
-		handleLoggedIn(loginResponse,null);
+		handleLoggedIn(loginResponse, null);
 	}
+
 	public void handleLoggedIn(LoginResponse loginResponse,
 			AsyncCallback handshakeFinishedCallback) {
 		Registry.impl(HandshakeConsortModel.class).setLoginResponse(

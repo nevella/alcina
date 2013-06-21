@@ -189,5 +189,11 @@ public class HandshakeConsortModel {
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
+
+		public void clear() {
+			firstChunk = null;
+			secondChunk = null;
+			transformDeltaIterator = null;
+		}
 	}
 }
