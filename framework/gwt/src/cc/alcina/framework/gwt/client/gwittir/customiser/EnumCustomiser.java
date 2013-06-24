@@ -15,10 +15,13 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -48,6 +51,8 @@ public class EnumCustomiser implements Customiser {
 	public static final String RENDERER_CLASS = "renderer-class";
 
 	public static final String HIDDEN_VALUES = "hidden-values";
+
+	public static final String FILTER_CLASS = "filterClass";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
@@ -91,6 +96,15 @@ public class EnumCustomiser implements Customiser {
 			hiddenValues.removeAll(((HasValue<Collection>) CommonLocator.get()
 					.classLookup().newInstance(parameter.classValue()))
 					.getValue());
+			provider.setHiddenValues(hiddenValues);
+		}
+		parameter = NamedParameter.Support.getParameter(info.parameters(),
+				FILTER_CLASS);
+		if (parameter != null) {
+			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
+			hiddenValues.removeAll(CollectionFilters.filter(hiddenValues,
+					(CollectionFilter) CommonLocator.get().classLookup()
+							.newInstance(parameter.classValue())));
 			provider.setHiddenValues(hiddenValues);
 		}
 		return editable ? provider : new BoundWidgetProvider() {

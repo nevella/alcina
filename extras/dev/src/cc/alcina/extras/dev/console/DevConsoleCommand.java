@@ -33,7 +33,9 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.KeyValueMapper.StringKeyValueMapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -675,6 +677,36 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			}
 			System.out.println(query);
 			console.setClipboardContents(query);
+			System.out.println("\n");
+			return "";
+		}
+	}
+
+	public static class CmdExpandShortTransform extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "xst" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "expand short transform text";
+		}
+
+		@Override
+		public String getUsage() {
+			return "xst (will prompt for text, or copy from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String xs = console
+					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
+			xs = xs.isEmpty() ? console.getClipboardContents() : xs;
+			List<DomainTransformEvent> list = new PlaintextProtocolHandlerShort().deserialize(xs);
+			String out=CommonUtils.join(list, "\n");
+			System.out.println(out);
+			console.setClipboardContents(out);
 			System.out.println("\n");
 			return "";
 		}

@@ -48,35 +48,41 @@ import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 
 public class DevConsoleCommandTransforms {
-	public static class LogsToDtrs{
+	public static class LogsToDtrs {
 		public LogsToDtrs() {
 		}
-		
-		public Multimap<Long, List<DomainTransformEvent>> logsToDtrs(String logFile){
-			Pattern lfPat=Pattern.compile("\\s*(\\d{4}.+?)\\s+\\| transform\\s+\\| (\\d+)\\s+\\|(.+)");
-			Multimap<Long, List<DomainTransformEvent>> result=new Multimap<Long, List<DomainTransformEvent>>();
+
+		public Multimap<Long, List<DomainTransformEvent>> logsToDtrs(
+				String logFile) {
+			Pattern lfPat = Pattern
+					.compile("\\s*(\\d{4}.+?)\\s+\\| transform\\s+\\| (\\d+)\\s+\\|(.+)");
+			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
 			String[] split = logFile.split("\n");
-			List<String> strs=new ArrayList<String>(Arrays.asList(split));
+			List<String> strs = new ArrayList<String>(Arrays.asList(split));
 			Collections.reverse(strs);
-			for(String line:strs){
+			for (String line : strs) {
 				Matcher m = lfPat.matcher(line);
-				if(m.matches()){
-					long clId=Long.parseLong(m.group(2));
-					String transforms=m.group(3);
-					transforms=transforms.replace("\\nlc7x--", "\n");
-					List<DomainTransformEvent> dtes = new PlaintextProtocolHandler().deserialize(transforms);
+				if (m.matches()) {
+					long clId = Long.parseLong(m.group(2));
+					String transforms = m.group(3);
+					transforms = transforms.replace("\\nlc7x--", "\n");
+					List<DomainTransformEvent> dtes = new PlaintextProtocolHandler()
+							.deserialize(transforms);
 					result.addCollection(clId, dtes);
 				}
 			}
-			for(List<DomainTransformEvent> dtes:result.values()){
-				Collections.sort(dtes,DomainTransformEvent.UTC_DATE_COMPARATOR);
-				DomainTransformEvent last=null;
-				for(Iterator<DomainTransformEvent> itr=dtes.iterator();itr.hasNext();){
+			for (List<DomainTransformEvent> dtes : result.values()) {
+				Collections
+						.sort(dtes, DomainTransformEvent.UTC_DATE_COMPARATOR);
+				DomainTransformEvent last = null;
+				for (Iterator<DomainTransformEvent> itr = dtes.iterator(); itr
+						.hasNext();) {
 					DomainTransformEvent current = itr.next();
-					if(last!=null&&last.toString().equals(current.toString())){
+					if (last != null
+							&& last.toString().equals(current.toString())) {
 						itr.remove();
 					}
-					last=current;
+					last = current;
 				}
 			}
 			return result;
@@ -84,16 +90,16 @@ public class DevConsoleCommandTransforms {
 
 		public Multimap<Long, List<DomainTransformEvent>> dtrExpsToCliDteMap(
 				String folderPath) throws Exception {
-			Multimap<Long, List<DomainTransformEvent>> result=new Multimap<Long, List<DomainTransformEvent>>();
+			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
 			List<DTRSimpleSerialWrapper> wrappers = new ArrayList<DTRSimpleSerialWrapper>();
-			List<File> files = new ArrayList<File>(Arrays.asList(new File(folderPath)
-					.listFiles(new FileFilter() {
-						@Override
-						public boolean accept(File pathname) {
-							return NUMERIC_FN_PATTERN.matcher(
-									pathname.getName()).matches();
-						}
-					})));
+			List<File> files = new ArrayList<File>(Arrays.asList(new File(
+					folderPath).listFiles(new FileFilter() {
+				@Override
+				public boolean accept(File pathname) {
+					return NUMERIC_FN_PATTERN.matcher(pathname.getName())
+							.matches();
+				}
+			})));
 			Collections.sort(files, new LongFnComparator());
 			int processedIndex = 0;
 			for (; processedIndex < files.size();) {
@@ -103,12 +109,15 @@ public class DevConsoleCommandTransforms {
 						.read(ser);
 				DomainTransformRequest rq = new DomainTransformRequest();
 				rq.fromString(wrapper.getText());
-				result.addCollection(wrapper.getClientInstanceId(), rq.getEvents());
+				result.addCollection(wrapper.getClientInstanceId(),
+						rq.getEvents());
 			}
 			return result;
 		}
+
 		private static final Pattern NUMERIC_FN_PATTERN = Pattern
 				.compile("(\\d+)\\.(?:txt\\.gz|txt)");
+
 		private static class LongFnComparator implements Comparator<File> {
 			@Override
 			public int compare(File o1, File o2) {
@@ -121,8 +130,8 @@ public class DevConsoleCommandTransforms {
 				return CommonUtils.compareLongs(l1, l2);
 			}
 		}
-
 	}
+
 	public static class CmdListClientInstances extends DevConsoleCommand {
 		@Override
 		public boolean canUseProductionConn() {
@@ -238,6 +247,24 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
+		public static class CmdListClientLogRecordsFilterDays extends
+				CmdListClientLogRecordsFilter {
+			@Override
+			public String getFilter(String value) {
+				return String.format("  age(clr.time)<'%s days' ", value);
+			}
+
+			@Override
+			public String getKey() {
+				return "days";
+			}
+
+			@Override
+			protected boolean hasDefault() {
+				return false;
+			}
+		}
+
 		public static class CmdListClientLogRecordsFilterMessage extends
 				CmdListClientLogRecordsFilter {
 			@Override
@@ -290,7 +317,7 @@ public class DevConsoleCommandTransforms {
 		@Override
 		public String run(String[] argv) throws Exception {
 			if (argv.length == 0) {
-				return "Usage: trl {-t: trim message}{-l: single-line message}{-m: message only} ({ci|top|mes|us} value)+ - top is topic {!}{s|m|c|t}";
+				return "Usage: trl {-t: trim message}{-l: single-line message}{-m: message only} ({ci|top|mes|us|days} value)+ - top is topic {!}{s|m|c|t}";
 			}
 			FilterArgvResult f = new FilterArgvResult(argv, "-t");
 			FilterArgvResult f2 = new FilterArgvResult(f.argv, "-l");
@@ -300,7 +327,8 @@ public class DevConsoleCommandTransforms {
 					+ " client_instance ci on clr.clientinstanceid = ci.id "
 					+ " inner join users u " + "on ci.user_id=u.id " + "where "
 					+ " %s order by clr.id desc";
-			String metaSelect = f3.contains ? "" : "clr.time, clr.topic, ci.id, ";
+			String metaSelect = f3.contains ? ""
+					: "clr.time, clr.topic, ci.id, ";
 			String messageSelect = f.contains ? "substr(replace(clr.message,'\\n','\\\\n'),0,80)"
 					: f2.contains ? "replace(clr.message,'\\n','\\\\nlc7x--')"
 							: "clr.message";
