@@ -11,12 +11,12 @@ import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlaye
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel.HandshakeModelDeltas;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd.ReloadOnSuccessCallback;
 import cc.alcina.framework.gwt.persistence.client.DteReplayWorker;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.Window;
 
@@ -158,6 +158,13 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	private void replayTransforms() {
 		replayer = new RepeatingCommandWithPostCompletionCallback(this,
 				new DteReplayWorker(currentDelta.getReplayEvents()));
+		Integer requestId = currentDelta.getDomainTransformRequestReplayId();
+		if(requestId!=null){
+			CommitToStorageTransformListener tl = ClientLayerLocator
+					.get().getCommitToStorageTransformListener();
+			tl.setLocalRequestId(Math.max(requestId + 1,
+					(int) tl.getLocalRequestId()));
+		}
 		Scheduler.get().scheduleIncremental(replayer);
 	}
 
