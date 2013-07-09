@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -34,6 +33,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -51,6 +52,8 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
+import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
+import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.util.GraphProjection;
 import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
@@ -69,11 +72,14 @@ public class AlcinaMemCache {
 
 		private Class clazz;
 
+		private String sqlFilter;
+
 		public ConnResults(Connection conn, Class clazz,
-				List<ColumnDescriptor> columnDescriptors) {
+				List<ColumnDescriptor> columnDescriptors, String sqlFilter) {
 			this.conn = conn;
 			this.clazz = clazz;
 			this.columnDescriptors = columnDescriptors;
+			this.sqlFilter = sqlFilter;
 		}
 
 		@Override
@@ -146,6 +152,9 @@ public class AlcinaMemCache {
 					Table table = (Table) clazz.getAnnotation(Table.class);
 					String sql = String.format(template,
 							CommonUtils.join(columnNames, ","), table.name());
+					if (CommonUtils.isNotNullOrEmpty(sqlFilter)) {
+						sql += String.format(" where %s", sqlFilter);
+					}
 					System.out.println(sql);
 					rs = stmt.executeQuery(sql);
 				}
@@ -154,8 +163,6 @@ public class AlcinaMemCache {
 			}
 		}
 	}
-
-	private HashSet<Class> classes;
 
 	private Map<PropertyDescriptor, JoinTable> joinTables;
 
@@ -170,6 +177,8 @@ public class AlcinaMemCache {
 	private LaterLookup laterLookup;
 
 	private SubgraphTransformManager transformManager;
+
+	private CacheDescriptor cacheDescriptor;
 
 	private AlcinaMemCache() {
 		super();
@@ -257,11 +266,12 @@ public class AlcinaMemCache {
 		}
 	}
 
-	public void warmup(EntityManager em, Connection conn, Class[] classes) {
+	public void warmup(EntityManager em, Connection conn,
+			CacheDescriptor cacheDescriptor) {
 		this.conn = conn;
-		this.classes = new HashSet<Class>(Arrays.asList(classes));
+		this.cacheDescriptor = cacheDescriptor;
 		try {
-			warmup0(em, classes);
+			warmup0(em);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -313,6 +323,7 @@ public class AlcinaMemCache {
 						}
 					}
 				}
+				items.clear();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -343,7 +354,7 @@ public class AlcinaMemCache {
 		}
 	}
 
-	private void warmup0(EntityManager em, Class[] classes) throws Exception {
+	private void warmup0(EntityManager em) throws Exception {
 		transformManager = new SubgraphTransformManager();
 		cache = transformManager.getDetachedEntityCache();
 		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
@@ -352,22 +363,48 @@ public class AlcinaMemCache {
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		laterLookup = new LaterLookup();
 		// get non-many-many obj
-		for (Class clazz : classes) {
+		for (CacheItemDescriptor descriptor : cacheDescriptor.perClass.values()) {
+			Class clazz = descriptor.clazz;
 			prepareTable(em, clazz);
 			MetricLogging.get().start(clazz.getSimpleName());
-			loadTable(em, clazz);
+			if (!descriptor.lazy) {
+				loadTable(em, clazz, "");
+			}
 			MetricLogging.get().end(clazz.getSimpleName());
 		}
 		for (Entry<PropertyDescriptor, JoinTable> entry : joinTables.entrySet()) {
 			loadJoinTable(entry);
 		}
+		resolveRefs();
+		MetricLogging.get().start("postLoad");
+		for (CacheTask task : cacheDescriptor.postLoadTasks) {
+			MetricLogging.get().start(task.getClass().getSimpleName());
+			task.run(this, em);
+			MetricLogging.get().end(task.getClass().getSimpleName());
+		}
+		MetricLogging.get().end("postLoad");
+		MetricLogging.get().start("lookups");
+		for (CacheItemDescriptor descriptor : cacheDescriptor.perClass.values()) {
+			for (CacheLookupInfo lookup : descriptor.lookups) {
+				mapLookup(lookup);
+			}
+		}
+		MetricLogging.get().end("lookups");
+	}
+
+	public void resolveRefs() {
 		MetricLogging.get().start("resolve");
 		laterLookup.resolve();
 		MetricLogging.get().end("resolve");
 	}
 
-	private void loadTable(EntityManager em, Class clazz) throws Exception {
-		Iterable<Object[]> results = getData(clazz);
+	private void mapLookup(CacheLookupInfo lookup) {
+		// TODO Auto-generated method stub
+	}
+
+	public void loadTable(EntityManager em, Class clazz, String sqlFilter)
+			throws Exception {
+		Iterable<Object[]> results = getData(clazz, sqlFilter);
 		List<PropertyDescriptor> pds = descriptors.get(clazz);
 		for (Object[] objects : results) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
@@ -389,8 +426,9 @@ public class AlcinaMemCache {
 		}
 	}
 
-	public Iterable<Object[]> getData(Class clazz) {
-		return new ConnResults(conn, clazz, columnDescriptors.get(clazz));
+	public Iterable<Object[]> getData(Class clazz, String sqlFilter) {
+		return new ConnResults(conn, clazz, columnDescriptors.get(clazz),
+				sqlFilter);
 	}
 
 	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry) {
@@ -486,7 +524,7 @@ public class AlcinaMemCache {
 			ManyToOne manyToOne = rm.getAnnotation(ManyToOne.class);
 			OneToOne oneToOne = rm.getAnnotation(OneToOne.class);
 			if (manyToOne != null || oneToOne != null) {
-				if (!classes.contains(pd.getPropertyType())) {
+				if (!cacheDescriptor.joinPropertyCached(pd.getPropertyType())) {
 					System.out.format("  not loading: %s.%s -- %s\n", clazz
 							.getSimpleName(), pd.getName(), pd
 							.getPropertyType().getSimpleName());
@@ -524,7 +562,7 @@ public class AlcinaMemCache {
 	class InSubgraphFilter implements CollectionFilter<DomainTransformEvent> {
 		@Override
 		public boolean allow(DomainTransformEvent o) {
-			if (!classes.contains(o.getObjectClass())) {
+			if (!cacheDescriptor.cachePostTransform(o.getObjectClass())) {
 				return false;
 			}
 			switch (o.getTransformType()) {
@@ -532,7 +570,7 @@ public class AlcinaMemCache {
 			case REMOVE_REF_FROM_COLLECTION:
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF:
-				return classes.contains(o.getValueClass());
+				return cacheDescriptor.cachePostTransform(o.getValueClass());
 			}
 			return true;
 		}
@@ -561,24 +599,36 @@ public class AlcinaMemCache {
 		return this.persistenceListener;
 	}
 
-	public synchronized HasIdAndLocalId getObject(
-			Class<? extends HasIdAndLocalId> clazz, long id) {
+	public synchronized <T extends HasIdAndLocalId> T getObject(Class<T> clazz,
+			long id) {
 		return getObjects(clazz, Collections.singletonList(id)).get(0);
 	}
 
-	public synchronized List<HasIdAndLocalId> getObjects(
-			Class<? extends HasIdAndLocalId> clazz, Collection<Long> ids) {
+	public synchronized Collection<Long> getIds(
+			Class<? extends HasIdAndLocalId> clazz) {
+		return new ArrayList<Long>(cache.keys(clazz));
+	}
+
+	public synchronized <T extends HasIdAndLocalId> List<T> getObjects(
+			Class<T> clazz, Collection<Long> ids) {
 		return getObjects(clazz, ids, null);
 	}
 
-	public synchronized List<HasIdAndLocalId> getObjects(
-			Class<? extends HasIdAndLocalId> clazz, Collection<Long> ids,
-			GraphProjectionFilter filter) {
-		List<HasIdAndLocalId> raw = new ArrayList<HasIdAndLocalId>(ids.size());
+	public synchronized <T extends HasIdAndLocalId> List<T> getObjects(
+			Class<T> clazz) {
+		return getObjects(clazz, getIds(clazz), null);
+	}
+
+	public synchronized <T extends HasIdAndLocalId> List<T> getObjects(
+			Class<T> clazz, Collection<Long> ids, GraphProjectionFilter filter) {
+		List<T> raw = new ArrayList<T>(ids.size());
 		for (Long id : ids) {
 			raw.add(cache.get(clazz, id));
 		}
 		try {
+			for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
+				task.run(this, clazz, raw);
+			}
 			filter = filter != null ? filter : new CollectionProjectionFilter();
 			return new GraphProjection(new PermissibleFieldFilter(), filter)
 					.project(raw, null);
@@ -602,5 +652,19 @@ public class AlcinaMemCache {
 			GlobalTopicPublisher.get().publishTopic(TOPIC_UPDATE_EXCEPTION, e);
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public boolean isCached(Class clazz) {
+		return cacheDescriptor.perClass.containsKey(clazz);
+	}
+
+	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
+			boolean createIfNonexistent) {
+		T first = CollectionFilters.first(cache.values(clazz), key, value);
+		if (first == null) {
+			first = (T) TransformManager.get().createDomainObject((Class)clazz);
+			CommonLocator.get().propertyAccessor().setPropertyValue(first, key, value);
+		}
+		return first;
 	}
 }

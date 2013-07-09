@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.entity.util.Multiset;
 
 import com.totsp.gwittir.client.beans.Converter;
 
