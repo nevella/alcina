@@ -62,6 +62,11 @@ public class DetachedEntityCache implements Serializable {
 				clazz).values());
 	}
 
+	public <T> Collection<T> rawValues(Class<T> clazz) {
+		ensureMaps(clazz);
+		return (Collection<T>) detached.get(clazz).values();
+	}
+
 	public Set<HasIdAndLocalId> allValues() {
 		Set<HasIdAndLocalId> result = new LinkedHashSet<HasIdAndLocalId>();
 		for (Class clazz : detached.keySet()) {

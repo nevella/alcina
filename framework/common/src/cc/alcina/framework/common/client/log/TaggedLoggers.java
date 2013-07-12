@@ -15,28 +15,52 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 public class TaggedLoggers {
 	private List<TaggedLoggerRegistration> registrations = new ArrayList<TaggedLoggerRegistration>();
 
-	public TaggedLoggerRegistration registerInterest(Class clazz, TaggedLoggerHandler handler,
-			Object... tags) {
-		TaggedLoggerRegistration registration = new TaggedLoggerRegistration(clazz, tags,
-						handler, this);
-		registrations.add(registration);
-		return registration;
+	private int registrationCounter = 0;
+
+	public TaggedLoggerRegistration registerInterest(Class clazz,
+			TaggedLoggerHandler handler, Object... tags) {
+		synchronized (this) {
+			TaggedLoggerRegistration registration = new TaggedLoggerRegistration(
+					clazz, tags, handler, this);
+			registrations.add(registration);
+			registrationCounter++;// some slight possibility of sync issues
+									// here,
+									// but will not hurt anything
+			return registration;
+		}
 	}
 
-	public void unsubscribe(
-			TaggedLoggerRegistration taggedLoggerRegistration) {
+	public void unsubscribe(TaggedLoggerRegistration taggedLoggerRegistration) {
 		registrations.remove(taggedLoggerRegistration);
 	}
 
 	public TaggedLogger getLogger(final Class clazz, final Object... tags) {
-		CollectionFilter<TaggedLoggerRegistration> subscribesToFilter = new CollectionFilter<TaggedLoggerRegistration>() {
-			@Override
-			public boolean allow(TaggedLoggerRegistration o) {
-				return o.subscribesTo(clazz, tags);
-			}
-		};
-		List<TaggedLoggerRegistration> interested = CollectionFilters
-				.filter(registrations, subscribesToFilter);
-		return new TaggedLogger(interested);
+		return new TaggedLogger(this, clazz, tags);
+	}
+	
+	public void log(String message,final Class clazz, final Object... tags) {
+		new TaggedLogger(this, clazz, tags).log(message);
+	}
+
+	public int getRegistrationCounter() {
+		return this.registrationCounter;
+	}
+
+	void updateRegistrations(final TaggedLogger taggedLogger) {
+		if (taggedLogger.registrationCounter == registrationCounter) {
+			return;
+		}
+		synchronized (this) {
+			taggedLogger.registrationCounter = registrationCounter;
+			taggedLogger.registrations.clear();
+			CollectionFilter<TaggedLoggerRegistration> subscribesToFilter = new CollectionFilter<TaggedLoggerRegistration>() {
+				@Override
+				public boolean allow(TaggedLoggerRegistration o) {
+					return o.subscribesTo(taggedLogger.clazz, taggedLogger.tags);
+				}
+			};
+			taggedLogger.registrations.addAll(CollectionFilters.filter(
+					registrations, subscribesToFilter));
+		}
 	}
 }

@@ -273,11 +273,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 					break;
 				}
 			}
-			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator
-					.get()
-					.classLookup()
-					.newInstance(event.getObjectClass(), event.getObjectId(),
-							event.getObjectLocalId());
+			HasIdAndLocalId hili = (HasIdAndLocalId) classLookup().newInstance(
+					event.getObjectClass(), event.getObjectId(),
+					event.getObjectLocalId());
 			hili.setLocalId(event.getObjectLocalId());
 			if (hili.getId() == 0) {// replay from server -
 				// huh? unless newInstance does something weird, should never
@@ -300,6 +298,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 					+ event.getTransformType();
 		}
 		currentEvent = null;
+	}
+
+	protected ClassLookup classLookup() {
+		return CommonLocator.get().classLookup();
 	}
 
 	protected void doubleCheckRemoval(Collection c, Object tgt) {
@@ -332,7 +334,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			// make sure the enum is reflect-instantiable (although not strictly
 			// necessary here, it's a common dev problem to miss this
 			// annotation, and here is the best place to catch it
-			Class clazz = CommonLocator.get().classLookup()
+			Class clazz = classLookup()
 					.getClassForName(evt.getValueClassName());
 			evt.setNewStringValue(((Enum) value).name());
 		} else if (value instanceof HasIdAndLocalId) {
@@ -344,8 +346,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
-		T newInstance = CommonLocator.get().classLookup()
-				.newInstance(objectClass, 0, localId);
+		T newInstance = classLookup().newInstance(objectClass, 0, localId);
 		newInstance.setLocalId(localId);
 		// a bit roundabout, but to ensure compatibility with the event system
 		// essentially registers a synthesised object, then replaces it in the
@@ -358,8 +359,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public <T extends HasIdAndLocalId> T createProvisionalObject(
 			Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
-		T newInstance = CommonLocator.get().classLookup()
-				.newInstance(objectClass, 0, localId);
+		T newInstance = classLookup().newInstance(objectClass, 0, localId);
 		newInstance.setLocalId(localId);
 		registerProvisionalObject(newInstance);
 		return newInstance;
@@ -643,7 +643,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public List<DomainTransformEvent> objectsToDtes(List objects, Class clazz,
 			boolean asObjectSpec) throws Exception {
-		ClassLookup classLookup = CommonLocator.get().classLookup();
+		ClassLookup classLookup = classLookup();
 		List<PropertyInfoLite> pds = classLookup.getWritableProperties(clazz);
 		Object templateInstance = classLookup.getTemplateInstance(clazz);
 		PropertyAccessor accessor = CommonLocator.get().propertyAccessor();

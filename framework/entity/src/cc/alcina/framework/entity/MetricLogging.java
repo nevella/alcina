@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
 import org.apache.log4j.PatternLayout;
 
+import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 
@@ -126,14 +127,19 @@ public class MetricLogging {
 
 	public void endMem(String key) {
 		System.gc();
-		end(key, "", false);
+		end(key, "", false, null);
 	}
 
 	public void end(String key, String extraInfo) {
-		end(key, extraInfo, true);
+		end(key, extraInfo, true, null);
 	}
 
-	private synchronized void end(String key, String extraInfo, boolean time) {
+	public void end(String key, TaggedLogger taggedLogger) {
+		end(key, "", true, taggedLogger);
+	}
+
+	private synchronized void end(String key, String extraInfo, boolean time,
+			TaggedLogger taggedLogger) {
 		key = keyWithParents(key, true);
 		if (!metricStart.containsKey(key) && !ticksSum.containsKey(key)) {
 			System.out.println("Warning - metric end without start - " + key);
@@ -147,17 +153,21 @@ public class MetricLogging {
 		String message = CommonUtils.formatJ("Metric: %s - %s %s%s", key,
 				delta, units, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
 						+ extraInfo);
-		if (useLog4j && metricLogger != null) {
-			if (!muted) {
-				metricLogger.debug(message);
-				perThreadLogger.info(message);
-				if (sysout.containsKey(key)) {
-					System.out.println(message);
-					sysout.remove(key);
-				}
-			}
+		if (taggedLogger != null) {
+			taggedLogger.log(message);
 		} else {
-			System.out.println(message);
+			if (useLog4j && metricLogger != null) {
+				if (!muted) {
+					metricLogger.debug(message);
+					perThreadLogger.info(message);
+					if (sysout.containsKey(key)) {
+						System.out.println(message);
+						sysout.remove(key);
+					}
+				}
+			} else {
+				System.out.println(message);
+			}
 		}
 		if (!averageCount.containsKey(key)) {
 			averageCount.put(key, 0L);

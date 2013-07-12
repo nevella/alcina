@@ -5,13 +5,19 @@ import java.util.List;
 
 public class CacheItemDescriptor {
 	public Class clazz;
-	public List<CacheLookupInfo> lookups=new ArrayList<CacheLookupInfo>();
+	public List<CacheLookupDescriptor> lookupDescriptors=new ArrayList<CacheLookupDescriptor>();
 	public boolean lazy=false;
 	public CacheItemDescriptor(Class clazz) {
 		this.clazz = clazz;
 	}
-	public CacheItemDescriptor addLookup(CacheLookupInfo lookup){
-		lookups.add(lookup);
+	public CacheItemDescriptor(Class clazz,String...propertyIndicies) {
+		this.clazz = clazz;
+		for (String propertyIndex : propertyIndicies) {
+			addLookup(new CacheLookupDescriptor(clazz, propertyIndex));
+		}
+	}
+	public CacheItemDescriptor addLookup(CacheLookupDescriptor lookup){
+		lookupDescriptors.add(lookup);
 		return this;
 	}
 }

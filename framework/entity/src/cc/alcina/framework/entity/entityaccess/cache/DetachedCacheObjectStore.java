@@ -28,7 +28,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 
 	@Override
 	public <T> Collection<T> getCollection(Class<T> clazz) {
-		return (Collection<T>) cache.getDetached().get(clazz);
+		return (Collection<T>) cache.getDetached().get(clazz).values();
 	}
 
 	@Override

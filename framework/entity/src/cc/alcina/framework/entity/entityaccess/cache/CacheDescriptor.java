@@ -10,13 +10,18 @@ import javax.persistence.EntityManager;
 public class CacheDescriptor {
 	Map<Class, CacheItemDescriptor> perClass = new LinkedHashMap<Class, CacheItemDescriptor>();
 
-	public static interface CacheTask{
-		public void run(AlcinaMemCache alcinaMemCache, EntityManager em) throws Exception;
+	public static interface CacheTask {
+		public void run(AlcinaMemCache alcinaMemCache, EntityManager em)
+				throws Exception;
 	}
-	public static interface PreProvideTask<T>{
-		public void run(AlcinaMemCache alcinaMemCache, Class clazz, List<T> objects) throws Exception;
+
+	public static interface PreProvideTask<T> {
+		public void run(AlcinaMemCache alcinaMemCache, Class clazz,
+				List<T> objects) throws Exception;
 	}
+
 	public List<CacheTask> postLoadTasks = new ArrayList<CacheTask>();
+
 	public List<PreProvideTask> preProvideTasks = new ArrayList<PreProvideTask>();
 
 	public CacheDescriptor() {
@@ -38,5 +43,10 @@ public class CacheDescriptor {
 
 	public boolean joinPropertyCached(Class clazz) {
 		return perClass.containsKey(clazz);
+	}
+
+	public void addItemDescriptor(Class clazz, String... indexProperties) {
+		CacheItemDescriptor itemDescriptor = new CacheItemDescriptor(clazz,indexProperties);
+		addItemDescriptor(itemDescriptor);
 	}
 }
