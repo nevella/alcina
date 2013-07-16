@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;

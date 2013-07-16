@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.gwt.persistence.client;
 
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;

@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequire
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.servlet.CookieHelper;
+import cc.alcina.framework.servlet.ServletLayerRegistry;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 
@@ -56,7 +57,7 @@ public abstract class CommonRpcServlet extends RpcServlet {
 	protected void onAfterRequestDeserialized(RPCRequest rpcRequest) {
 		CookieHelper.get().getIid(getThreadLocalRequest(),
 				getThreadLocalResponse());
-		SessionHelper.initUserState(getThreadLocalRequest());
+		ServletLayerRegistry.impl(SessionHelper.class).initUserState(getThreadLocalRequest());
 		String userName = CookieHelper.get().getRememberedUserName(
 				getThreadLocalRequest(), getThreadLocalResponse());
 		if (userName != null && !PermissionsManager.get().isLoggedIn()) {

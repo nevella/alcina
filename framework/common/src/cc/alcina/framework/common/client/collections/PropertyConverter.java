@@ -1,11 +1,6 @@
 package cc.alcina.framework.common.client.collections;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.totsp.gwittir.client.beans.Converter;
 

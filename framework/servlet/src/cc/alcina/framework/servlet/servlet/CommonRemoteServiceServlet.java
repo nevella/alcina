@@ -412,9 +412,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				try {
 					if (useWrapperUser) {
 						if (!PermissionsManager.get().isAdmin()) {
-							if (cp.validateClientInstance(
+							if (!cp.validateClientInstance(
 									wr.getClientInstanceId(),
-									wr.getClientInstanceAuth()) == null) {
+									wr.getClientInstanceAuth()) ) {
 								throw new RuntimeException(
 										"invalid wrapper authentication");
 							}
@@ -488,7 +488,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			CookieHelper.get().getIid(getThreadLocalRequest(),
 					getThreadLocalResponse());
-			SessionHelper.initUserState(getThreadLocalRequest());
+			ServletLayerRegistry.impl(SessionHelper.class).initUserState(getThreadLocalRequest());
 			String userName = CookieHelper.get().getRememberedUserName(
 					getThreadLocalRequest(), getThreadLocalResponse());
 			if (userName != null && !PermissionsManager.get().isLoggedIn()) {

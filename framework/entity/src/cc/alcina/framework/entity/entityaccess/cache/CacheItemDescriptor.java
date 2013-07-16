@@ -6,6 +6,7 @@ import java.util.List;
 public class CacheItemDescriptor {
 	public Class clazz;
 	public List<CacheLookupDescriptor> lookupDescriptors=new ArrayList<CacheLookupDescriptor>();
+	public List<CacheProjection> projections=new ArrayList<CacheProjection>();
 	public boolean lazy=false;
 	public CacheItemDescriptor(Class clazz) {
 		this.clazz = clazz;

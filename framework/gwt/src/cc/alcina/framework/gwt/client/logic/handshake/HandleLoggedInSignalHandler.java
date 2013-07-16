@@ -1,11 +1,10 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.ConsortSignalHandler;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class HandleLoggedInSignalHandler implements
 		ConsortSignalHandler<HandshakeSignal> {

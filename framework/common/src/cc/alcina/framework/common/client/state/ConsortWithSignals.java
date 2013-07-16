@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.state;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.state.Consort.OneTimeFinishedAsyncCallbackAdapter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;

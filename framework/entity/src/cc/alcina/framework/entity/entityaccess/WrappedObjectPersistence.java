@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.entityaccess;
 
-import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 
@@ -17,7 +16,6 @@ import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
 public class WrappedObjectPersistence {
 	public void unwrap(HasId wrapper, EntityManager entityManager, WrappedObjectProvider wrappedObjectProvider) throws Exception {

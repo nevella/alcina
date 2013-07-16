@@ -168,6 +168,7 @@ public class SchedulerImpl extends Scheduler {
     double start = Duration.currentTimeMillis();
 
     while (Duration.currentTimeMillis() - start < TIME_SLICE) {
+      boolean ran=false;
       for (int i = 0; i < length; i++) {
         assert tasks.length() == length : "Working array length changed "
             + tasks.length() + " != " + length;
@@ -175,13 +176,16 @@ public class SchedulerImpl extends Scheduler {
         if (t == null) {
           continue;
         }
-
+        ran=true;
         assert t.isRepeating() : "Found a non-repeating Task";
 
         if (!t.executeRepeating()) {
           tasks.set(i, null);
           canceledSomeTasks = true;
         }
+      }
+      if(!ran){
+    	  break;
       }
     }
 

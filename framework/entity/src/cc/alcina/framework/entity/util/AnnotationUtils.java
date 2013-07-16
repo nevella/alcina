@@ -27,8 +27,9 @@ import java.util.Set;
  * @author Nick Reddel
  */
 public class AnnotationUtils {
+	@ClearOnAppRestart
 	private static HashMap<Method, Set<Annotation>> superMethodAnnotationMap = new HashMap<Method, Set<Annotation>>();
-
+	
 	public static Set<Annotation> getSuperclassAnnotationsForMethod(Method m) {
 		if (superMethodAnnotationMap.containsKey(m)) {
 			return superMethodAnnotationMap.get(m);
@@ -91,4 +92,5 @@ public class AnnotationUtils {
 		}
 		return result;
 	}
+	
 }

@@ -36,7 +36,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 	protected ScrollPanel scroller;
 
-	boolean wasSelected;
+	protected boolean wasSelected;
 
 	protected String name;
 	protected String displayName;

@@ -134,9 +134,8 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 		if (b) {
 			CommonPersistenceLocal up = ServletLayerLocator.get()
 					.commonPersistenceProvider().getCommonPersistence();
-			Iid iid = up.getIidByKey(getIid(request, null));
-			return (iid.getRememberMeUser() != null) ? iid.getRememberMeUser()
-					.getUserName() : null;
+			
+			return up.getRememberMeUserName(getIid(request,null));
 		}
 		return null;
 	}

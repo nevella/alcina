@@ -19,6 +19,8 @@ import javax.servlet.http.HttpSession;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
@@ -27,6 +29,7 @@ import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
  * 
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = SessionHelper.class, implementationType = ImplementationType.SINGLETON)
 public class SessionHelper {
 	public static final String SESSION_ATTR_USERNAME = "SESSION_ATTR_USERNAME";
 
@@ -34,7 +37,7 @@ public class SessionHelper {
 
 	public static final String SESSION_ATTR_ONE_TIME_STRING = "SESSION_ATTR_ONE_TIME_STRING";
 
-	private static void initaliseRequest(HttpServletRequest request) {
+	private void initaliseRequest(HttpServletRequest request) {
 		if (request.getAttribute(REQUEST_ATTR_INITIALISED) == null) {
 			HttpSession session = request.getSession();
 			synchronized (session) {
@@ -45,16 +48,14 @@ public class SessionHelper {
 		}
 	}
 
-	public static void initUserState(HttpServletRequest request) {
+	public void initUserState(HttpServletRequest request) {
 		initaliseRequest(request);
 		String clientInstanceId = getClientInstanceId(request);
 		if (clientInstanceId != null) {
 			String clientInstanceAuth = request
 					.getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_AUTH_KEY);
-			CommonPersistenceLocal up = ServletLayerLocator.get()
-					.commonPersistenceProvider().getCommonPersistence();
 			try {
-				String userName = up.validateClientInstance(
+				String userName = getValidatedClientInstanceUserName(
 						Long.parseLong(clientInstanceId),
 						Integer.parseInt(clientInstanceAuth));
 				if (userName != null) {
@@ -63,23 +64,22 @@ public class SessionHelper {
 					request.setAttribute(SESSION_ATTR_USERNAME, userName);
 				}
 			} catch (NumberFormatException nfe) {
-				//squelch
+				// squelch
 			}
 		}
 		reinitialiseUserState(request);
 	}
 
-	public static void invalidateSession(HttpServletRequest rq) {
+	public void invalidateSession(HttpServletRequest rq) {
 		rq.getSession().invalidate();
 	}
 
-	public static void resetSession(HttpServletRequest request) {
+	public void resetSession(HttpServletRequest request) {
 		request.setAttribute(SESSION_ATTR_USERNAME, null);
 		request.getSession().setAttribute(SESSION_ATTR_USERNAME, null);
 	}
 
-	public static void setupSessionForUser(HttpServletRequest request,
-			IUser user) {
+	public void setupSessionForUser(HttpServletRequest request, IUser user) {
 		request.getSession().setAttribute(SESSION_ATTR_USERNAME,
 				user.getUserName());
 		request.setAttribute(SESSION_ATTR_USERNAME, user.getUserName());
@@ -87,31 +87,44 @@ public class SessionHelper {
 		PermissionsManager.get().setUser(user);
 	}
 
-	private static void resetPermissions() {
+	private void resetPermissions() {
 		ThreadedPermissionsManager.cast().reset();
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
 		CommonPersistenceLocal up = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
-		PermissionsManager.get().setUser(up.getAnonymousUser());
+				.commonPersistenceProvider().getCommonPersistenceExTransaction();
+		PermissionsManager.get().setUser(getUser(up.getAnonymousUserName()));
 	}
 
-	public static void reinitialiseUserState(HttpServletRequest request) {
+	protected IUser getUser(String userName) {
+		CommonPersistenceLocal up = ServletLayerLocator.get()
+				.commonPersistenceProvider().getCommonPersistence();
+		return up.getUserByName(userName, true);
+	}
+
+	public void reinitialiseUserState(HttpServletRequest request) {
 		resetPermissions();
 		String userName = (String) request.getAttribute(SESSION_ATTR_USERNAME);
 		if (userName != null) {
-			CommonPersistenceLocal up = ServletLayerLocator.get()
-					.commonPersistenceProvider().getCommonPersistence();
-			IUser user = up.getUserByName(userName, true);
+			IUser user = getUser(userName);
 			if (user != null) {
 				setupSessionForUser(request, user);
 			}
 		}
 	}
 
-	public static String getClientInstanceId(
-			HttpServletRequest request) {
+	public String getClientInstanceId(HttpServletRequest request) {
 		String clientInstanceId = request
 				.getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_ID_KEY);
 		return clientInstanceId;
+	}
+
+	public String getValidatedClientInstanceUserName(long clientInstanceId,
+			int clientInstanceAuth) {
+		CommonPersistenceLocal up = ServletLayerLocator.get()
+				.commonPersistenceProvider().getCommonPersistence();
+		if (up.validateClientInstance(clientInstanceId, clientInstanceAuth)) {
+			return up.getUserNameFor(clientInstanceId);
+		}
+		return null;
 	}
 }

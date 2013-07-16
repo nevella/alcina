@@ -5,7 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.log.TaggedLogger.TaggedLoggerHandler;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class TaggedLoggerRegistration {
 	Class clazz;

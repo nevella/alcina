@@ -128,7 +128,7 @@ public interface CommonPersistenceLocal {
 
 	public <A> A getNewImplementationInstance(Class<A> clazz);
 
-	public String validateClientInstance(long id, int auth);
+	public boolean validateClientInstance(long id, int auth);
 
 	public long getLastTransformId();
 
@@ -165,4 +165,10 @@ public interface CommonPersistenceLocal {
 	public abstract IGroup getGroupByName(String groupName);
 
 	public ClientInstance getClientInstance(String clientInstanceId);
+
+	public String getUserNameFor(long validatedClientInstanceId);
+
+	public abstract String getAnonymousUserName();
+
+	public String getRememberMeUserName(String iid);
 }

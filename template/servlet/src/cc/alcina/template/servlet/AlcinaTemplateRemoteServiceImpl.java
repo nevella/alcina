@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.servlet.CookieHelper;
+import cc.alcina.framework.servlet.ServletLayerRegistry;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
@@ -102,7 +103,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		AlcinaTemplateUser user = new Authenticator()
 				.processAuthenticatedLogin(lrb, userName);
 		if (lrb.isOk()) {
-			SessionHelper.setupSessionForUser(getThreadLocalRequest(), user);
+			ServletLayerRegistry.impl(SessionHelper.class).setupSessionForUser(getThreadLocalRequest(), user);
 			lrb.setFriendlyName(user.getFirstName() + " " + user.getLastName());
 		}
 	}
@@ -130,7 +131,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 	public void logout() {
 		CookieHelper.get().clearRemembermeCookie(getThreadLocalRequest(),
 				getThreadLocalResponse());
-		SessionHelper.resetSession(getThreadLocalRequest());
+		ServletLayerRegistry.impl(SessionHelper.class).resetSession(getThreadLocalRequest());
 	}
 
 	@Override

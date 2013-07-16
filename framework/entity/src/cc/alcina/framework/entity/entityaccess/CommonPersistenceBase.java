@@ -19,11 +19,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -41,13 +39,11 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.Iid;
-import cc.alcina.framework.common.client.entity.PersistentSingleton;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -55,7 +51,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -87,8 +82,6 @@ import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
  */
 public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid>
 		implements CommonPersistenceLocal {
-	private static Map<Long, Integer> clientInstanceAuthMap = new HashMap<Long, Integer>();
-
 	// note - this'll be the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
 
@@ -216,6 +209,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return getUserByName(getAnonymousUserName(), true);
 	}
 
+	@Override
 	public abstract String getAnonymousUserName();
 
 	@Override
@@ -687,11 +681,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return result;
 	}
 
-	public String validateClientInstance(long id, int auth) {
+	public boolean validateClientInstance(long id, int auth) {
+		if (Registry.impl(ClientInstanceAuthenticationCache.class).isCached(id,
+				auth)) {
+			return true;
+		}
 		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
 		CI ci = getItemById(clientInstanceImpl, id);
-		return ci != null && ci.getAuth() == auth ? ci.getUser().getUserName()
-				: null;
+		return ci != null && ci.getAuth() == auth;
 	}
 
 	/**
@@ -888,9 +885,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						.getUser(), clonedUser, null, false, Arrays
 						.asList(new String[] { "primaryGroup",
 								"secondaryGroups" }));
-				clientInstanceAuthMap.put(impl.getId(), impl.getAuth());
 				ClientInstance instance = new EntityUtils().detachedClone(impl,
 						false);
+				Registry.impl(ClientInstanceAuthenticationCache.class)
+						.cacheAuthentication(instance);
 				instance.setUser(new EntityUtils().detachedClone(clonedUser,
 						false));
 				return instance;
@@ -908,6 +906,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			} else {
 				iid.setRememberMeUser(null);
 			}
+			Registry.impl(ClientInstanceAuthenticationCache.class)
+					.cacheIid(iid);
 			cp.getEntityManager().merge(iid);
 		}
 
@@ -963,9 +963,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						.getUser(), clonedUser, null, false, Arrays
 						.asList(new String[] { "primaryGroup",
 								"secondaryGroups" }));
-				clientInstanceAuthMap.put(impl.getId(), impl.getAuth());
 				ClientInstance instance = new EntityUtils().detachedClone(impl,
 						false);
+				Registry.impl(ClientInstanceAuthenticationCache.class)
+						.cacheAuthentication(instance);
 				instance.setUser(new EntityUtils().detachedClone(clonedUser,
 						false));
 				return instance;
@@ -1018,5 +1019,36 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			getEntityManager().persist(clrp);
 			clrp.wrap(clr);
 		}
+	}
+
+	@Override
+	public String getUserNameFor(long validatedClientInstanceId) {
+		String userName = Registry
+				.impl(ClientInstanceAuthenticationCache.class).getUserNameFor(
+						validatedClientInstanceId);
+		if (userName == null) {
+			Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
+			CI ci = getItemById(clientInstanceImpl, validatedClientInstanceId);
+			if (ci != null) {
+				userName = ci.getUser().getUserName();
+			}
+		}
+		return userName;
+	}
+
+	@Override
+	public String getRememberMeUserName(String iidKey) {
+		String userName = Registry
+				.impl(ClientInstanceAuthenticationCache.class)
+				.iidUserNameByKey(iidKey);
+		if (userName == null) {
+			Iid iid = getIidByKey(iidKey);
+			if (iid != null) {
+				Registry.impl(ClientInstanceAuthenticationCache.class)
+						.cacheIid(iid);
+				userName = iid.getRememberMeUser().getUserName();
+			}
+		}
+		return userName;
 	}
 }

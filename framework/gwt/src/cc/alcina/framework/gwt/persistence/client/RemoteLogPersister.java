@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.persistence.client;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Collections;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;

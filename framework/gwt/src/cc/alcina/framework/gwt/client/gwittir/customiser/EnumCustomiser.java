@@ -15,7 +15,6 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 

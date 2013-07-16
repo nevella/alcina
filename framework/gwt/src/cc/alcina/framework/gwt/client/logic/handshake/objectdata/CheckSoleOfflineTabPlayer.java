@@ -1,19 +1,13 @@
 package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 
-import java.util.Iterator;
-
-import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.CheckSoleInstancePlayer.NotSoleInstanceException;
 import cc.alcina.framework.gwt.persistence.client.ClientSession;
-import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
 @RegistryLocation(registryPoint=CheckSoleOfflineTabPlayer.class,implementationType=ImplementationType.SINGLETON)
 @ClientInstantiable

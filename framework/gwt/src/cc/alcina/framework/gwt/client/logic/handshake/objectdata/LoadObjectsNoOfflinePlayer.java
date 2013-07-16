@@ -7,8 +7,6 @@ import cc.alcina.framework.common.client.state.EndpointPlayer;
 import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeState;
-import cc.alcina.framework.gwt.client.logic.handshake.localstorage.LoadChunksFromLocalStoragePlayer;
-import cc.alcina.framework.gwt.client.logic.handshake.localstorage.RetrieveLocalModelTransformDeltasPlayer;
 
 public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 		implements ConsortPlayer {

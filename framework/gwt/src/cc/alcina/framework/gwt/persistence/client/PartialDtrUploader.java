@@ -58,7 +58,7 @@ public class PartialDtrUploader {
 	private AsyncCallback<PartialDtrUploadResponse> responseHandler = new AsyncCallback<PartialDtrUploadResponse>() {
 		@Override
 		public void onSuccess(PartialDtrUploadResponse response) {
-			//don't turn on until first response - may be offline
+			// don't turn on until first response - may be offline
 			modalNotifier.modalOn();
 			if (response.committed) {
 				postPersistOfflineTransformsCallback.onSuccess(null);
@@ -134,25 +134,34 @@ public class PartialDtrUploader {
 		currentRequest = request;
 		int transformsInRequest = 0;
 		boolean foundStart = false;
+		// this used to allow partial wrapper uploads, but that's been disabled
+		// for the moment...
 		for (int i = 0; i < uncommitted.size(); i++) {
 			DTRSimpleSerialWrapper wrapper = uncommitted.get(i);
 			if (wrapper.getRequestId() < currentResponse.lastUploadedRequestId) {
 				continue;
 			}
-			int startIndex = wrapper.getRequestId() == currentResponse.lastUploadedRequestId ? currentResponse.lastUploadedRequestTransformUploadCount
-					: 0;
+			// int startIndex = wrapper.getRequestId() ==
+			// currentResponse.lastUploadedRequestId ?
+			// currentResponse.lastUploadedRequestTransformUploadCount
+			// : 0;
+			// List<DomainTransformEvent> transforms = deserTransforms
+			// .get(wrapper);
+			// if (startIndex == transforms.size()) {
+			// continue;
+			// // wrapper all uploaded, start from next
+			// }
+			// int length = Math.min(transforms.size() - startIndex,
+			// currentSliceSize - transformsInRequest);
+			// addToRequest(request, wrapper, new
+			// ArrayList<DomainTransformEvent>(
+			// transforms.subList(startIndex, startIndex + length)));
 			List<DomainTransformEvent> transforms = deserTransforms
 					.get(wrapper);
-			if (startIndex == transforms.size()) {
-				continue;
-				// wrapper all uploaded, start from next
-			}
-			int length = Math.min(transforms.size() - startIndex,
-					currentSliceSize - transformsInRequest);
 			addToRequest(request, wrapper, new ArrayList<DomainTransformEvent>(
-					transforms.subList(startIndex, startIndex + length)));
-			transformsInRequest += length;
-			if (transformsInRequest == currentSliceSize) {
+					transforms));
+			transformsInRequest += transforms.size();
+			if (transformsInRequest >= currentSliceSize) {
 				break;
 			}
 		}

@@ -15,6 +15,7 @@ package cc.alcina.framework.entity.util;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 
@@ -43,10 +45,35 @@ import cc.alcina.framework.entity.SEUtilities;
  *
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = ClearOnAppRestart.class)
 public class GraphProjection {
+	public static boolean isPrimitiveOrDataClass(Class c) {
+		return c.isPrimitive() || c == String.class || c == Boolean.class
+				|| c == Character.class || c.isEnum() || c == Class.class
+				|| Number.class.isAssignableFrom(c)
+				|| Date.class.isAssignableFrom(c) || isEnumSubclass(c);
+	}
+
+	private static boolean isEnumSubclass(Class c) {
+		return c.getSuperclass() != null && c.getSuperclass().isEnum();
+	}
+
 	private GraphProjectionFilter dataFilter;
 
 	private GraphProjectionFilter fieldFilter;
+
+	public static boolean replaceTimestampsWithDates = true;
+
+	private IdentityHashMap reached = new IdentityHashMap();
+
+	Map<Class, Field[]> projectableFields = new HashMap<Class, Field[]>();
+
+	Map<Class, Set<Field>> perObjectPermissionFields = new HashMap<Class, Set<Field>>();
+
+	Map<Field, PropertyPermissions> perFieldPermission = new HashMap<Field, PropertyPermissions>();
+
+	@ClearOnAppRestart
+	private static Map<Method, PropertyPermissions> propertyPermissionLookup = new LinkedHashMap<Method, PropertyPermissions>();
 
 	public GraphProjection() {
 	}
@@ -57,9 +84,16 @@ public class GraphProjection {
 		this.dataFilter = dataFilter;
 	}
 
-	public static boolean replaceTimestampsWithDates = true;
-
-	private IdentityHashMap reached = new IdentityHashMap();
+	/**
+	 * May want to pass the underlying field to filters, rather than accessor
+	 * for ++performance
+	 * 
+	 * @return the current portion of the source graph that has already been
+	 *         reached in the traversal
+	 */
+	public IdentityHashMap getReached() {
+		return reached;
+	}
 
 	public <T> T project(T source, GraphProjectionContext context)
 			throws Exception {
@@ -128,19 +162,6 @@ public class GraphProjection {
 		return projected;
 	}
 
-	public static boolean isPrimitiveOrDataClass(Class c) {
-		return c.isPrimitive()
-				|| c == String.class
-				|| c == Boolean.class
-				|| c == Character.class
-				|| c.isEnum()
-				|| c == Class.class
-				|| Number.class.isAssignableFrom(c)
-				|| Date.class.isAssignableFrom(c)
-				|| (c.getEnclosingClass() != null && c.getEnclosingClass()
-						.isEnum());
-	}
-
 	// TODO - shouldn't this be package-private?
 	public Collection projectCollection(Collection coll,
 			GraphProjectionContext context) throws Exception {
@@ -167,20 +188,9 @@ public class GraphProjection {
 		return c;
 	}
 
-	private boolean permitField(Field field, Object source) throws Exception {
-		PropertyPermissions pp = perFieldPermission.get(field);
-		if (pp != null) {
-			AnnotatedPermissible ap = new AnnotatedPermissible(pp.read());
-			return PermissionsManager.get().isPermissible(source, ap);
-		}
-		return false;
+	public void setReached(IdentityHashMap reached) {
+		this.reached = reached;
 	}
-
-	Map<Class, Field[]> projectableFields = new HashMap<Class, Field[]>();
-
-	Map<Class, Set<Field>> perObjectPermissionFields = new HashMap<Class, Set<Field>>();
-
-	Map<Field, PropertyPermissions> perFieldPermission = new HashMap<Field, PropertyPermissions>();
 
 	private Field[] getFieldsForClass(Object projected) throws Exception {
 		Class<? extends Object> clazz = projected.getClass();
@@ -210,30 +220,125 @@ public class GraphProjection {
 					(Field[]) allFields.toArray(new Field[allFields.size()]));
 			perObjectPermissionFields.put(clazz, dynamicPermissionFields);
 			for (Field field : dynamicPermissionFields) {
-				PropertyPermissions pp = field
-						.getDeclaringClass()
-						.getMethod(SEUtilities.getAccessorName(field),
-								new Class[0])
-						.getAnnotation(PropertyPermissions.class);
+				PropertyPermissions pp = getPropertyPermission(field
+						.getDeclaringClass().getMethod(
+								SEUtilities.getAccessorName(field),
+								new Class[0]));
 				perFieldPermission.put(field, pp);
 			}
 		}
 		return projectableFields.get(clazz);
 	}
 
-	public void setReached(IdentityHashMap reached) {
-		this.reached = reached;
+	private PropertyPermissions getPropertyPermission(Method method) {
+		if (!propertyPermissionLookup.containsKey(method)) {
+			propertyPermissionLookup.put(method,
+					method.getAnnotation(PropertyPermissions.class));
+		}
+		return propertyPermissionLookup.get(method);
 	}
 
-	/**
-	 * May want to pass the underlying field to filters, rather than accessor
-	 * for ++performance
-	 * 
-	 * @return the current portion of the source graph that has already been
-	 *         reached in the traversal
-	 */
-	public IdentityHashMap getReached() {
-		return reached;
+	private boolean permitField(Field field, Object source) throws Exception {
+		PropertyPermissions pp = perFieldPermission.get(field);
+		if (pp != null) {
+			AnnotatedPermissible ap = new AnnotatedPermissible(pp.read());
+			return PermissionsManager.get().isPermissible(source, ap);
+		}
+		return false;
+	}
+
+	public static class CollectionProjectionFilter implements
+			GraphProjectionFilter {
+		@SuppressWarnings("unchecked")
+		public <T> T filterData(T original, T projected,
+				GraphProjectionContext context, GraphProjection graphProjection)
+				throws Exception {
+			if (original.getClass().isArray()) {
+				int n = Array.getLength(original);
+				for (int i = 0; i < n; i++) {
+					Object source = Array.get(original, i);
+					Array.set(projected, i,
+							graphProjection.project(source, context));
+				}
+			}
+			if (original instanceof Collection) {
+				return (T) graphProjection.projectCollection(
+						(Collection) original, context);
+			}
+			if (original instanceof Map) {
+				return (T) projectMap((Map) original, context, graphProjection);
+			}
+			return projected;
+		}
+
+		public boolean permitField(Field field,
+				Set<Field> perObjectPermissionFields) {
+			return false;
+		}
+
+		private Object projectMap(Map map, GraphProjectionContext context,
+				GraphProjection graphProjection) throws Exception {
+			Map m = null;
+			if (map instanceof Multimap) {
+				m = new Multimap();
+			} else if (map instanceof LinkedHashMap) {
+				m = new LinkedHashMap();
+			} else {
+				m = new HashMap();
+			}
+			Iterator itr = map.keySet().iterator();
+			Object value, key;
+			for (; itr.hasNext();) {
+				key = itr.next();
+				value = map.get(key);
+				Object pKey = graphProjection.project(key, context);
+				if (key == null || pKey != null) {
+					m.put(pKey, graphProjection.project(value, context));
+				}
+			}
+			return m;
+		}
+	}
+
+	public static class GraphProjectionContext {
+		public GraphProjectionContext parent;
+
+		public Object ownerObject;
+
+		public String fieldName;
+
+		public Class clazz;
+
+		public Field field;
+
+		public GraphProjectionContext(Class clazz, Field field,
+				GraphProjectionContext parent, Object ownerObject) {
+			this.clazz = clazz;
+			this.field = field;
+			this.fieldName = field == null ? "" : field.getName();
+			this.parent = parent;
+			this.ownerObject = ownerObject;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof GraphProjectionContext) {
+				GraphProjectionContext o2 = (GraphProjectionContext) obj;
+				return o2.clazz == clazz && o2.fieldName.equals(fieldName);
+			}
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			return clazz.hashCode() ^ fieldName.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return (parent == null ? "" : parent.toString() + "::")
+					+ clazz.getSimpleName() + "." + fieldName;
+		}
 	}
 
 	public static interface GraphProjectionFilter {
@@ -249,14 +354,28 @@ public class GraphProjection {
 		boolean permitField(Field field, Set<Field> perObjectPermissionFields);
 	}
 
+	public interface InstantiateImplCallback<T> {
+		boolean instantiateLazyInitializer(T initializer,
+				GraphProjectionContext context);
+	}
+
+	public interface InstantiateImplCallbackWithShellObject<T> extends
+			InstantiateImplCallback<T> {
+		boolean instantiateLazyInitializer(T initializer,
+				GraphProjectionContext context);
+
+		Object instantiateShellObject(T initializer,
+				GraphProjectionContext context);
+	}
+
 	public static class PermissibleFieldFilter implements GraphProjectionFilter {
+		public static boolean disablePerObjectPermissions;
+
 		public <T> T filterData(T original, T projected,
 				GraphProjectionContext context, GraphProjection graphProjection)
 				throws Exception {
 			return null;
 		}
-
-		public static boolean disablePerObjectPermissions;
 
 		public boolean permitField(Field field,
 				Set<Field> perObjectPermissionFields) {
@@ -296,113 +415,5 @@ public class GraphProjection {
 				return false;
 			}
 		}
-	}
-
-	public static class CollectionProjectionFilter implements
-			GraphProjectionFilter {
-		@SuppressWarnings("unchecked")
-		public <T> T filterData(T original, T projected,
-				GraphProjectionContext context, GraphProjection graphProjection)
-				throws Exception {
-			if (original.getClass().isArray()) {
-				int n = Array.getLength(original);
-				for (int i = 0; i < n; i++) {
-					Object source = Array.get(original, i);
-					Array.set(projected, i,
-							graphProjection.project(source, context));
-				}
-			}
-			if (original instanceof Collection) {
-				return (T) graphProjection.projectCollection(
-						(Collection) original, context);
-			}
-			if (original instanceof Map) {
-				return (T) projectMap((Map) original, context, graphProjection);
-			}
-			return projected;
-		}
-
-		private Object projectMap(Map map, GraphProjectionContext context,
-				GraphProjection graphProjection) throws Exception {
-			Map m = null;
-			if (map instanceof Multimap) {
-				m = new Multimap();
-			} else if (map instanceof LinkedHashMap) {
-				m = new LinkedHashMap();
-			} else {
-				m = new HashMap();
-			}
-			Iterator itr = map.keySet().iterator();
-			Object value, key;
-			for (; itr.hasNext();) {
-				key = itr.next();
-				value = map.get(key);
-				Object pKey = graphProjection.project(key, context);
-				if (key == null || pKey != null) {
-					m.put(pKey, graphProjection.project(value, context));
-				}
-			}
-			return m;
-		}
-
-		public boolean permitField(Field field,
-				Set<Field> perObjectPermissionFields) {
-			return false;
-		}
-	}
-
-	public static class GraphProjectionContext {
-		public GraphProjectionContext parent;
-
-		public Object ownerObject;
-
-		public String fieldName;
-
-		public GraphProjectionContext(Class clazz, Field field,
-				GraphProjectionContext parent, Object ownerObject) {
-			this.clazz = clazz;
-			this.field = field;
-			this.fieldName = field == null ? "" : field.getName();
-			this.parent = parent;
-			this.ownerObject = ownerObject;
-		}
-
-		public Class clazz;
-
-		public Field field;
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof GraphProjectionContext) {
-				GraphProjectionContext o2 = (GraphProjectionContext) obj;
-				return o2.clazz == clazz && o2.fieldName.equals(fieldName);
-			}
-			return false;
-		}
-
-		@Override
-		public int hashCode() {
-			return clazz.hashCode() ^ fieldName.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return (parent == null ? "" : parent.toString() + "::")
-					+ clazz.getSimpleName() + "." + fieldName;
-		}
-	}
-
-	public interface InstantiateImplCallback<T> {
-		boolean instantiateLazyInitializer(T initializer,
-				GraphProjectionContext context);
-	}
-
-	public interface InstantiateImplCallbackWithShellObject<T> extends
-			InstantiateImplCallback<T> {
-		boolean instantiateLazyInitializer(T initializer,
-				GraphProjectionContext context);
-
-		Object instantiateShellObject(T initializer,
-				GraphProjectionContext context);
 	}
 }

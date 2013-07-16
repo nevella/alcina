@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;

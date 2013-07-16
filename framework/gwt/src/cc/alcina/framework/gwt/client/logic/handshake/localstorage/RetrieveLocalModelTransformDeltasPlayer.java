@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
-import cc.alcina.framework.gwt.client.logic.handshake.HandshakeState;
 import cc.alcina.framework.gwt.client.logic.handshake.objectdata.LoadObjectDataState;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
