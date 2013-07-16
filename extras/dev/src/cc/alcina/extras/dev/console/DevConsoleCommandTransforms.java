@@ -412,7 +412,7 @@ public class DevConsoleCommandTransforms {
 					+ "dte.propertyname as propertyname, "
 					+ " dte.newstringvalue as newstringvalue,dte.transformtype as transformtype, "
 					+ " dte.valueid,"
-					+ " dte.servercommitdate as servercommitdate, dte.objectlocalid "
+					+ " dte.servercommitdate as servercommitdate,dte.utcDate as utcdate, dte.objectlocalid "
 					+ "from client_instance ci "
 					+ "inner join users u on ci.user_id=u.id "
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
@@ -451,6 +451,7 @@ public class DevConsoleCommandTransforms {
 				Map<String, ColumnFormatter> formatters = new HashMap<String, SqlUtils.ColumnFormatter>();
 				formatters.put("dte_objref", new ClassRefNameFormatter());
 				formatters.put("servercommitdate", new DateTimeFormatter());
+				formatters.put("utcdate", new DateTimeFormatter());
 				formatters.put("transformtype", new EnumFormatter(
 						TransformType.class));
 				formatters
