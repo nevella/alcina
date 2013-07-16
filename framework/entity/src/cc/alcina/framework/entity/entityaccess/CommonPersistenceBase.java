@@ -1046,7 +1046,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			if (iid != null) {
 				Registry.impl(ClientInstanceAuthenticationCache.class)
 						.cacheIid(iid);
-				userName = iid.getRememberMeUser().getUserName();
+				userName = iid.getRememberMeUser() == null ? null : iid
+						.getRememberMeUser().getUserName();
 			}
 		}
 		return userName;

@@ -217,7 +217,8 @@ public class ContentViewFactory {
 		Field[] fields = GwittirBridge.get()
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
 						false, true);
-		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK;
+		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK
+				| BoundTableExt.SORT_MASK;
 		if (withObjectActions) {
 			mask |= BoundTableExt.ROW_HANDLE_MASK
 					| BoundTableExt.HANDLES_AS_CHECKBOXES;
@@ -226,6 +227,7 @@ public class ContentViewFactory {
 			mask |= BoundTableExt.MULTIROWSELECT_MASK;
 		}
 		CollectionDataProvider cp = new CollectionDataProvider(beans);
+		cp.setPageSize(99999);
 		NiceWidthBoundTable table = new NiceWidthBoundTable(mask, factory,
 				fields, cp);
 		table.addStyleName("results-table");

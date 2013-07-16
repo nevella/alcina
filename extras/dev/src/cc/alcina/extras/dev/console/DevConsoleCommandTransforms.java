@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRSimpleSerialSerializer;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -60,15 +61,30 @@ public class DevConsoleCommandTransforms {
 			String[] split = logFile.split("\n");
 			List<String> strs = new ArrayList<String>(Arrays.asList(split));
 			Collections.reverse(strs);
-			for (String line : strs) {
+			for (int i = 0; i < strs.size(); i++) {
+				String line = strs.get(i);
+				int idx = line.length() - 1;// ignore terminating "|"
+				if (idx < 1) {
+					continue;
+				}
+				for (; idx > 0 && line.charAt(idx - 1) == ' '; idx--)
+					;
+				line = line.substring(0, idx);
 				Matcher m = lfPat.matcher(line);
 				if (m.matches()) {
 					long clId = Long.parseLong(m.group(2));
 					String transforms = m.group(3);
 					transforms = transforms.replace("\\nlc7x--", "\n");
-					List<DomainTransformEvent> dtes = new PlaintextProtocolHandler()
-							.deserialize(transforms);
-					result.addCollection(clId, dtes);
+					int shortCheck = transforms.indexOf("str:");
+					if (shortCheck == 0 || shortCheck == 1) {
+						List<DomainTransformEvent> dtes = new PlaintextProtocolHandlerShort()
+								.deserialize(transforms);
+						result.addCollection(clId, dtes);
+					} else {
+						List<DomainTransformEvent> dtes = new PlaintextProtocolHandler()
+								.deserialize(transforms);
+						result.addCollection(clId, dtes);
+					}
 				}
 			}
 			for (List<DomainTransformEvent> dtes : result.values()) {
@@ -372,6 +388,9 @@ public class DevConsoleCommandTransforms {
 				printFullUsage();
 				return "";
 			}
+			FilterArgvResult f = new FilterArgvResult(argv, "-r");
+			boolean rqIdsOnly = f.contains;
+			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
 			CommonPersistenceLocal cpl = EntityLayerLocator.get()
@@ -399,6 +418,7 @@ public class DevConsoleCommandTransforms {
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
 					+ " where %s order by dte.id desc";
+			Set<Long> ids = null;
 			{
 				CollectionFilter<String> allowFilter = new CollectionFilter<String>() {
 					@Override
@@ -411,14 +431,17 @@ public class DevConsoleCommandTransforms {
 				sql1 = String.format(sql1, dtrName, filter);
 				Statement ps = conn.createStatement();
 				System.out.println(console.breakAndPad(1, 80, sql1, 0));
-				Set<Long> ids = SqlUtils.toIdList(ps, sql1, "id", false);
+				ids = SqlUtils.toIdList(ps, sql1, "id", false);
 				ps.close();
 				List<String> args = new ArrayList<String>(Arrays.asList(argv));
 				args.add("dtr");
 				args.add(CommonUtils.join(ids, ", "));
 				argv = (String[]) args.toArray(new String[args.size()]);
 			}
-			{
+			if (rqIdsOnly) {
+				System.out.format("Matched request ids: \n%s\n\n",
+						CommonUtils.join(ids, ", "));
+			} else {
 				String filter = DevConsoleFilter.getFilters(
 						CmdListTransformsFilter.class, argv);
 				sql2 = String.format(sql2, dtrName, dteName, filter);
@@ -465,7 +488,7 @@ public class DevConsoleCommandTransforms {
 
 		private void printFullUsage() {
 			System.out
-					.println("trt {[days|user|ci|class|dtr|pn|objid|valueid|nsv] value}+");
+					.println("trt <-r:=rq ids only> {[days|user|ci|class|dtr|pn|objid|valueid|nsv] value}+");
 		}
 
 		@RegistryLocation(registryPoint = CmdListTransformsFilter.class)

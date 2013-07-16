@@ -388,6 +388,10 @@ public class WorkspaceView extends Composite implements HasName,
 				actions.addAll(info.getActions(userObject));
 			}
 			if (item instanceof HasVisibleCollection) {
+				if(!item.getState()){
+					item.setState(true,false);
+					item.setState(false,false);
+				}
 				HasVisibleCollection hvc = (HasVisibleCollection) item;
 				domainClass = hvc.getCollectionMemberClass();
 				int size = hvc.getVisibleCollection().size();

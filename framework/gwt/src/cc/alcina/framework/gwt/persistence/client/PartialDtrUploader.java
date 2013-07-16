@@ -134,11 +134,15 @@ public class PartialDtrUploader {
 		currentRequest = request;
 		int transformsInRequest = 0;
 		boolean foundStart = false;
+		//we've used a dummy request - make sure we don't miss the first request
+		if (currentResponse.lastUploadedRequestTransformUploadCount == 0) {
+			currentResponse.lastUploadedRequestId = 0;
+		}
 		// this used to allow partial wrapper uploads, but that's been disabled
 		// for the moment...
 		for (int i = 0; i < uncommitted.size(); i++) {
 			DTRSimpleSerialWrapper wrapper = uncommitted.get(i);
-			if (wrapper.getRequestId() < currentResponse.lastUploadedRequestId) {
+			if (wrapper.getRequestId() <= currentResponse.lastUploadedRequestId) {
 				continue;
 			}
 			// int startIndex = wrapper.getRequestId() ==

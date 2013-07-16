@@ -39,7 +39,8 @@ public class ClientInstanceAuthenticationCache {
 	}
 
 	public void cacheIid(Iid iid) {
-		iidUserNameByKeyMap.put(iid.getInstanceId(), iid.getRememberMeUser()
-				.getUserName());
+		iidUserNameByKeyMap.put(iid.getInstanceId(),
+				iid.getRememberMeUser() == null ? null : iid
+						.getRememberMeUser().getUserName());
 	}
 }
