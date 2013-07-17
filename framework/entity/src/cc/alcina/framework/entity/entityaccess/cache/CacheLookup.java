@@ -53,6 +53,12 @@ public class CacheLookup<T> implements CacheListener {
 				.getPropertyValue(hili, descriptor.fieldName1);
 		add((T) v1, hili.getId());
 	}
+	@Override
+	public void remove(HasIdAndLocalId hili) {
+		Object v1 = CommonLocator.get().propertyAccessor()
+				.getPropertyValue(hili, descriptor.fieldName1);
+		remove((T) v1, hili.getId());
+	}
 
 	public int size(T t) {
 		return getAndEnsure(t).size();

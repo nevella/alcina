@@ -11,7 +11,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -38,6 +37,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -46,6 +46,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
@@ -54,15 +55,15 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
+import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
+import cc.alcina.framework.entity.entityaccess.WrappedObject;
+import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.PermissibleFieldFilter;
 
 public class AlcinaMemCache {
 	public static final String TOPIC_UPDATE_EXCEPTION = AlcinaMemCache.class
@@ -147,7 +148,8 @@ public class AlcinaMemCache {
 	}
 
 	public int getLookupSize(CacheLookupDescriptor descriptor, Object value) {
-		return indicies.get(descriptor).size(value);
+		return indicies.get(descriptor) == null ? 0 : indicies.get(descriptor)
+				.size(value);
 	}
 
 	public synchronized <T extends HasIdAndLocalId> T find(Class<T> clazz,
@@ -173,6 +175,7 @@ public class AlcinaMemCache {
 		try {
 			for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
 				task.run(this, clazz, raw);
+				resolveRefs();
 			}
 			if (query.isRaw()) {
 				return raw;
@@ -441,6 +444,7 @@ public class AlcinaMemCache {
 		for (CacheTask task : cacheDescriptor.postLoadTasks) {
 			MetricLogging.get().start(task.getClass().getSimpleName());
 			task.run(this, em);
+			resolveRefs();
 			MetricLogging.get().end(task.getClass().getSimpleName(),
 					metricLogger);
 		}
@@ -481,11 +485,43 @@ public class AlcinaMemCache {
 					dte.setValueLocalId(0);
 					dte.setNewValue(null);// force a lookup
 				}
+				if (dte.getTransformType() != TransformType.CREATE_OBJECT) {
+					HasIdAndLocalId obj = resolveObject(dte);
+					index(obj, false);
+				}
 				transformManager.consume(dte);
+				if (dte.getTransformType() != TransformType.DELETE_OBJECT) {
+					HasIdAndLocalId obj = resolveObject(dte);
+					index(obj, true);
+				}
 			}
 		} catch (Exception e) {
 			GlobalTopicPublisher.get().publishTopic(TOPIC_UPDATE_EXCEPTION, e);
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private HasIdAndLocalId resolveObject(DomainTransformEvent dte) {
+		return transformManager.getObject(dte);
+	}
+
+	private void index(HasIdAndLocalId obj, boolean add) {
+		CacheItemDescriptor cacheItemDescriptor = cacheDescriptor.perClass
+				.get(obj.getClass());
+		for (CacheLookupDescriptor lookupDescriptor : cacheItemDescriptor.lookupDescriptors) {
+			CacheLookup lookup = indicies.get(lookupDescriptor);
+			if (add) {
+				lookup.insert(obj);
+			} else {
+				lookup.remove(obj);
+			}
+		}
+		for (CacheProjection projection : cacheItemDescriptor.projections) {
+			if (add) {
+				projection.insert(obj);
+			} else {
+				projection.remove(obj);
+			}
 		}
 	}
 
