@@ -20,8 +20,10 @@ public class ClientInstanceAuthenticationCache {
 	public void cacheAuthentication(ClientInstance clientInstance) {
 		clientInstanceAuthMap.put(clientInstance.getId(),
 				clientInstance.getAuth());
-		clientInstanceUserNameMap.put(clientInstance.getId(), clientInstance
-				.getUser().getUserName());
+		if (clientInstance.getUser() != null) {
+			clientInstanceUserNameMap.put(clientInstance.getId(),
+					clientInstance.getUser().getUserName());
+		}
 	}
 
 	public boolean isCached(Long id, Integer auth) {
