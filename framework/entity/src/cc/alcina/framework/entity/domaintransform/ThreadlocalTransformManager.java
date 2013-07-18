@@ -15,6 +15,7 @@ package cc.alcina.framework.entity.domaintransform;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -60,6 +61,7 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -68,7 +70,9 @@ import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransfo
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -354,12 +358,13 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		if (id != 0 && getEntityManager() != null) {
 			if (WrapperPersistable.class.isAssignableFrom(c)) {
 				try {
-					Class okClass = c;
-					T wofu = (T) EntityLayerLocator
+					WrappedObject wrapper = EntityLayerLocator
 							.get()
 							.wrappedObjectProvider()
-							.getWrappedObjectForUser(okClass, id,
-									getEntityManager());
+							.getObjectWrapperForUser((Class) c, id,
+									entityManager);
+					maybeListenToObjectWrapper(wrapper);
+					T wofu = (T) wrapper.getObject();
 					return (T) wofu;
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
@@ -384,6 +389,17 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 		return null;
 	}
+
+	public void maybeListenToObjectWrapper(WrappedObject wrapper) {
+		EntityLayerTransformPropogation transformPropogation = Registry.impl(
+				EntityLayerTransformPropogation.class, void.class, true);
+		if (transformPropogation != null
+				&& transformPropogation.listenToWrappedObject(wrapper)) {
+			registerDomainObject((HasIdAndLocalId) wrapper);
+		}
+	}
+
+	private HasIdAndLocalId ignorePropertyChangesTo;
 
 	public Class getPropertyType(Class clazz, String propertyName) {
 		return ObjectPersistenceHelper.get().getPropertyType(clazz,
@@ -908,6 +924,22 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public static class ThreadlocalTransformManagerFactory {
 		public ThreadlocalTransformManager create() {
 			return new ThreadlocalTransformManager();
+		}
+	}
+
+	@Override
+	public synchronized void propertyChange(PropertyChangeEvent evt) {
+		if (evt.getSource() == ignorePropertyChangesTo) {
+			return;
+		}
+		super.propertyChange(evt);
+	}
+
+	public void setIgnorePropertyChangesTo(DomainTransformEvent event) {
+		this.ignorePropertyChangesTo = null;
+		if (event != null
+				&& event.getTransformType() != TransformType.CREATE_OBJECT) {
+			this.ignorePropertyChangesTo = getObject(event);
 		}
 	}
 }

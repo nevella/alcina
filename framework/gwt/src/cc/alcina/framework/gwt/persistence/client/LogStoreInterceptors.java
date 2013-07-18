@@ -154,7 +154,13 @@ public class LogStoreInterceptors {
 
 	protected void previewNativeEvent(NativePreviewEvent event) {
 		Event nativeEvent = Event.as(event.getNativeEvent());
-		String type = nativeEvent.getType();
+		String type = null;
+		try {
+			type = nativeEvent.getType();
+		} catch (Exception e1) {
+			//FF22 throwing some permissions exceptions, gawd knows why
+			return;
+		}
 		boolean click = BrowserEvents.CLICK.equals(type);
 		boolean blur = BrowserEvents.BLUR.equals(type)
 				|| BrowserEvents.FOCUSOUT.equals(type);

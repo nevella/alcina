@@ -21,6 +21,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -37,7 +38,9 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
@@ -69,6 +72,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExt;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -89,7 +93,9 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPe
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
+import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.CookieHelper;
@@ -342,8 +348,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public <G extends WrapperPersistable> Long persist(G gwpo)
 			throws WebException {
 		try {
-			return ServletLayerLocator.get().commonPersistenceProvider()
+			Long id = ServletLayerLocator.get().commonPersistenceProvider()
 					.getCommonPersistence().persist(gwpo);
+			handleWrapperTransforms();
+			return id;
 		} catch (Exception e) {
 			logger.warn(e);
 			throw new WebException(e.getMessage());
@@ -414,7 +422,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						if (!PermissionsManager.get().isAdmin()) {
 							if (!cp.validateClientInstance(
 									wr.getClientInstanceId(),
-									wr.getClientInstanceAuth()) ) {
+									wr.getClientInstanceAuth())) {
 								throw new RuntimeException(
 										"invalid wrapper authentication");
 							}
@@ -488,7 +496,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			CookieHelper.get().getIid(getThreadLocalRequest(),
 					getThreadLocalResponse());
-			ServletLayerRegistry.impl(SessionHelper.class).initUserState(getThreadLocalRequest());
+			ServletLayerRegistry.impl(SessionHelper.class).initUserState(
+					getThreadLocalRequest());
 			String userName = CookieHelper.get().getRememberedUserName(
 					getThreadLocalRequest(), getThreadLocalResponse());
 			if (userName != null && !PermissionsManager.get().isLoggedIn()) {
@@ -579,24 +588,31 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public DomainTransformLayerWrapper transformFromServletLayer(
 			boolean persistTransforms, String tag)
 			throws DomainTransformRequestException {
+		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
+				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		if (pendingTransforms.isEmpty()) {
+			return null;
+		}
+		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
+				pendingTransforms);
+		pendingTransforms.clear();
+		return transformFromServletLayer(items, persistTransforms, tag);
+	}
+
+	public DomainTransformLayerWrapper transformFromServletLayer(
+			Collection<DomainTransformEvent> transforms,
+			boolean persistTransforms, String tag)
+			throws DomainTransformRequestException {
 		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
 		request.setClientInstance(CommonRemoteServiceServletSupport.get()
 				.getServerAsClientInstance());
 		request.setTag(tag);
 		request.setRequestId(nextTransformRequestId());
-		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
-				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
-				pendingTransforms);
-		pendingTransforms.clear();
-		if (items.isEmpty()) {
-			return null;
-		}
-		for (DomainTransformEvent dte : items) {
+		for (DomainTransformEvent dte : transforms) {
 			dte.setCommitType(CommitType.TO_STORAGE);
 		}
-		request.setEvents(items);
+		request.getEvents().addAll(transforms);
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
@@ -732,6 +748,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
 					.transformPersistenceQueue().submit(persistenceToken);
 			MetricLogging.get().end("transform-commit");
+			handleWrapperTransforms();
 			wrapper.ignored = persistenceToken.ignored;
 			persistenceSupport
 					.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
@@ -745,6 +762,54 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			LooseContext.getContext().pop();
 		}
+	}
+
+	static class IsWrappedObjectDteFilter implements
+			CollectionFilter<DomainTransformEvent> {
+		Class clazz = ServletLayerLocator.get().commonPersistenceProvider()
+				.getCommonPersistenceExTransaction()
+				.getImplementation(WrappedObject.class);
+
+		@Override
+		public boolean allow(DomainTransformEvent o) {
+			return o.getObjectClass() == clazz;
+		}
+	}
+
+	protected void handleWrapperTransforms() {
+		EntityLayerTransformPropogation transformPropogation = Registry.impl(
+				EntityLayerTransformPropogation.class, void.class, true);
+		if (transformPropogation == null) {
+			return;
+		}
+		ThreadlocalTransformManager.cast().getTransforms();
+		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
+				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		if (pendingTransforms.isEmpty()) {
+			return;
+		}
+		final List<DomainTransformEvent> items = CollectionFilters.filter(
+				pendingTransforms, new IsWrappedObjectDteFilter());
+		pendingTransforms.removeAll(items);
+		if (!items.isEmpty() && !pendingTransforms.isEmpty()) {
+			throw new RuntimeException("Non-wrapped and wrapped object"
+					+ " transforms registered after transformPerist()");
+		}
+		if (items.isEmpty()) {
+			return;
+		}
+		new Thread() {
+			public void run() {
+				try {
+					int depth = LooseContext.depth();
+					transformFromServletLayer(items, true, null);
+					LooseContext.confirmDepth(depth);
+					ThreadlocalTransformManager.cast().resetTltm(null);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			};
+		}.start();
 	}
 
 	@Override
