@@ -796,7 +796,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			DomainTransformException transformException) {
 		try {
 			HasIdAndLocalId object = TransformManager.get().getObject(
-					transformException.getEvent());
+					transformException.getEvent(), true);
 			transformException.setSourceObjectName(CommonLocator.get()
 					.classLookup().displayNameForObject(object));
 		} catch (Exception e) {

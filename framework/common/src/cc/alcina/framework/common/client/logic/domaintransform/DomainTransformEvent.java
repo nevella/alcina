@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class DomainTransformEvent implements Serializable,
-		Comparable<DomainTransformEvent> {
+		Comparable<DomainTransformEvent>,Cloneable {
 	private String propertyName;
 
 	private transient Object newValue;

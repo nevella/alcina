@@ -59,4 +59,6 @@ public interface JPAImplementation {
 
 	public abstract InstantiateImplCallback getClassrefInstantiator();
 
+	boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2);
+
 }

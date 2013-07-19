@@ -242,7 +242,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		case ADD_REF_TO_COLLECTION: {
 			Set set = (Set) CommonLocator.get().propertyAccessor()
 					.getPropertyValue(obj, event.getPropertyName());
-			set.add(tgt);
+			if (!set.contains(tgt)) {
+				doubleCheckAddition(set, tgt);
+			}
 			objectModified(obj, event, false);
 			updateAssociation(event, obj, tgt, false, true);
 			collectionChanged(obj, tgt);
@@ -298,6 +300,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 					+ event.getTransformType();
 		}
 		currentEvent = null;
+	}
+
+	protected void doubleCheckAddition(Collection collection, Object tgt) {
+		collection.add(tgt);
 	}
 
 	protected ClassLookup classLookup() {
@@ -487,12 +493,20 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public HasIdAndLocalId getObject(DomainTransformEvent dte) {
+		return getObject(dte, false);
+	}
+
+	public HasIdAndLocalId getObject(DomainTransformEvent dte,
+			boolean afterException) {
 		HasIdAndLocalId obj = getObjectLookup().getObject(dte.getObjectClass(),
 				dte.getObjectId(), dte.getObjectLocalId());
-		if (obj == null && dte.getSource() != null) {
-			throw new RuntimeException(
-					"calling getobject() on a provisional/deregistered object transform "
-							+ "- will harm the transform. use getsource()");
+		if (obj == null && dte.getSource() != null && !afterException) {
+			// if create, natural behaviour is return null, ignoring source
+			if (dte.getTransformType() != TransformType.CREATE_OBJECT) {
+				throw new RuntimeException(
+						"calling getobject() on a provisional/deregistered object transform "
+								+ "- will harm the transform. use getsource()");
+			}
 		}
 		dte.setSource(obj);
 		return obj;
@@ -1033,26 +1047,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return dte;
 	}
 
-	private void removeAssociations(HasIdAndLocalId hili) {
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-				hili.getClass());
-		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
-				.values();
-		for (ClientPropertyReflector pr : prs) {
-			if (bi.getAnnotation(SyntheticGetter.class) != null) {
-				continue;
-			}
-			DomainTransformEvent dte = new DomainTransformEvent();
-			dte.setPropertyName(pr.getPropertyName());
-			if (!CommonUtils.isStandardJavaClass(pr.getPropertyType())) {
-				Object object = CommonLocator.get().propertyAccessor()
-						.getPropertyValue(hili, pr.getPropertyName());
-				if (object != null && !(object instanceof Collection)) {
-					updateAssociation(dte, hili, object, true, true);
-				}
-			}
-		}
-	}
+	protected abstract void removeAssociations(HasIdAndLocalId hili);
 
 	/**
 	 * For subclasses Transform manager (client) explicitly doesn't check -
@@ -1259,7 +1254,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 				}
 				c.remove(obj);
 			} else {
-				c.add(obj);
+				if (!c.contains(obj)) {
+					doubleCheckAddition(c, obj);
+				}
 			}
 			if (collectionPropertyChange && !assoc.silentUpdates()) {
 				CommonLocator.get().propertyAccessor()

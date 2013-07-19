@@ -30,11 +30,14 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.IdentifierProperty;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.util.EntityUtils;
@@ -195,5 +198,25 @@ public class JPAHibernateImpl implements JPAImplementation {
 		} else {
 			logger.setLevel(level);
 		}
+	}
+
+	@Override
+	public boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2) {
+		HiliLocator l1 = toHiliLocator(o1);
+		HiliLocator l2 = toHiliLocator(o2);
+		return CommonUtils.equalsWithNullEquality(l1, l2);
+	}
+
+	private HiliLocator toHiliLocator(Object o) {
+		if (o == null) {
+			return null;
+		}
+		if (o instanceof HibernateProxy) {
+			LazyInitializer lazy = ((HibernateProxy) o)
+					.getHibernateLazyInitializer();
+			return new HiliLocator(lazy.getPersistentClass(),
+					(Long) lazy.getIdentifier());
+		}
+		return new HiliLocator((HasIdAndLocalId) o);
 	}
 }

@@ -37,7 +37,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -55,12 +54,9 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
-import cc.alcina.framework.entity.entityaccess.WrappedObject;
-import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.util.GraphProjection;
@@ -231,10 +227,10 @@ public class AlcinaMemCache {
 		}
 	}
 
-	public void resolveRefs() {
+	public synchronized void resolveRefs() {
 		MetricLogging.get().start("resolve");
 		laterLookup.resolve();
-		MetricLogging.get().end("resolve");
+		MetricLogging.get().end("resolve", metricLogger);
 	}
 
 	public void warmup(EntityManager em, Connection conn,
@@ -468,8 +464,7 @@ public class AlcinaMemCache {
 		DomainTransformRequest request = evt.getTransformPersistenceToken()
 				.getRequest();
 		List<DomainTransformEvent> dtes = request.allTransforms();
-		List<DomainTransformEvent> filtered = CollectionFilters.filter(dtes,
-				new InSubgraphFilter());
+		List<DomainTransformEvent> filtered = filterInterestedTransforms(dtes);
 		try {
 			for (DomainTransformEvent dte : filtered) {
 				if (dte.getObjectId() == 0 && dte.getObjectLocalId() != 0) {
@@ -499,6 +494,13 @@ public class AlcinaMemCache {
 			GlobalTopicPublisher.get().publishTopic(TOPIC_UPDATE_EXCEPTION, e);
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public List<DomainTransformEvent> filterInterestedTransforms(
+			Collection<DomainTransformEvent> transforms) {
+		List<DomainTransformEvent> filtered = CollectionFilters.filter(
+				transforms, new InSubgraphFilter());
+		return filtered;
 	}
 
 	private HasIdAndLocalId resolveObject(DomainTransformEvent dte) {
@@ -817,4 +819,6 @@ public class AlcinaMemCache {
 			}
 		}
 	}
+
+	
 }

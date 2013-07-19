@@ -32,6 +32,11 @@ public class StringPair implements Serializable {
 		this.s2 = s2;
 	}
 
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("s1:%s\ns2:%s", s1, s2);
+	}
+
 	public static class StringPairFlattener implements
 			Converter<StringPair, String> {
 		private boolean second;

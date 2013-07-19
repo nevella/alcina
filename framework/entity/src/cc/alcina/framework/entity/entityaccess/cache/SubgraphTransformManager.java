@@ -10,14 +10,26 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport;
 import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 
 public class SubgraphTransformManager extends TransformManager {
 	private DetachedCacheObjectStore store;
 
+	SubgraphClassLookup classLookup = new SubgraphClassLookup();
+
 	public SubgraphTransformManager() {
 		super();
 		createObjectLookup();
+	}
+
+	public DetachedEntityCache getDetachedEntityCache() {
+		return store.cache;
+	}
+
+	@Override
+	protected ClassLookup classLookup() {
+		return classLookup;
 	}
 
 	@Override
@@ -26,42 +38,33 @@ public class SubgraphTransformManager extends TransformManager {
 		setDomainObjects(store);
 	}
 
-	public DetachedEntityCache getDetachedEntityCache() {
-		return store.cache;
-	}
-
 	@Override
 	protected ObjectLookup getObjectLookup() {
 		return store;
 	}
 
+	@Override
+	protected void removeAssociations(HasIdAndLocalId hili) {
+		new ServerTransformManagerSupport().removeAssociations(hili);
+	}
+
+	@Override
+	protected void updateAssociation(DomainTransformEvent evt,
+			HasIdAndLocalId obj, Object tgt, boolean remove,
+			boolean collectionPropertyChange) {
+		super.updateAssociation(evt, obj, tgt, remove, collectionPropertyChange);
+	}
+
 	class SubgraphClassLookup implements ClassLookup {
-		public Class getClassForName(String fqn) {
-			return ObjectPersistenceHelper.get().getClassForName(fqn);
-		}
-
-		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-			try {
-				HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz
-						.newInstance();
-				newInstance.setLocalId(localId);
-				return (T) newInstance;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		public <T> T newInstance(Class<T> clazz) {
-			try {
-				return clazz.newInstance();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
 		@Override
 		public String displayNameForObject(Object o) {
 			return ObjectPersistenceHelper.get().displayNameForObject(o);
+		}
+
+		@Override
+		public List<String> getAnnotatedPropertyNames(Class clazz) {
+			return ObjectPersistenceHelper.get().getAnnotatedPropertyNames(
+					clazz);
 		}
 
 		@Override
@@ -71,10 +74,8 @@ public class SubgraphTransformManager extends TransformManager {
 					targetClass, annotationClass);
 		}
 
-		@Override
-		public List<String> getAnnotatedPropertyNames(Class clazz) {
-			return ObjectPersistenceHelper.get().getAnnotatedPropertyNames(
-					clazz);
+		public Class getClassForName(String fqn) {
+			return ObjectPersistenceHelper.get().getClassForName(fqn);
 		}
 
 		@Override
@@ -92,19 +93,24 @@ public class SubgraphTransformManager extends TransformManager {
 		public List<PropertyInfoLite> getWritableProperties(Class clazz) {
 			return ObjectPersistenceHelper.get().getWritableProperties(clazz);
 		}
-	}
 
-	SubgraphClassLookup classLookup = new SubgraphClassLookup();
+		public <T> T newInstance(Class<T> clazz) {
+			try {
+				return clazz.newInstance();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 
-	@Override
-	protected ClassLookup classLookup() {
-		return classLookup;
-	}
-
-	@Override
-	protected void updateAssociation(DomainTransformEvent evt,
-			HasIdAndLocalId obj, Object tgt, boolean remove,
-			boolean collectionPropertyChange) {
-		return;
+		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
+			try {
+				HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz
+						.newInstance();
+				newInstance.setLocalId(localId);
+				return (T) newInstance;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 	}
 }

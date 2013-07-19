@@ -488,44 +488,13 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	@Override
 	public void performDeleteObject(HasIdAndLocalId hili) {
 		HasIdAndLocalId object = getObject(hili);
-		try {
-			PropertyDescriptor[] pds = Introspector
-					.getBeanInfo(hili.getClass()).getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (Set.class.isAssignableFrom(pd.getPropertyType())) {
-					Association info = pd.getReadMethod().getAnnotation(
-							Association.class);
-					Set set = (Set) pd.getReadMethod().invoke(hili,
-							CommonUtils.EMPTY_OBJECT_ARRAY);
-					if (info != null && set != null) {
-						for (Object o2 : set) {
-							String accessorName = "get"
-									+ CommonUtils.capitaliseFirst(info
-											.propertyName());
-							Object o3 = o2.getClass()
-									.getMethod(accessorName, new Class[0])
-									.invoke(o2, CommonUtils.EMPTY_OBJECT_ARRAY);
-							if (o3 instanceof Set) {
-								Set assocSet = (Set) o3;
-								assocSet.remove(hili);
-							}
-							// direct references (parent/one-one) are not
-							// removed, throw a referential integrity exception
-							// instead
-							// i.e. these *must* be handled explicity in code
-							// three years later, not sure why I opted for the
-							// above
-							// but I guess, if it's server layer, the programmer
-							// has more control
-							// and there may be a decent reason
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		removeAssociations(hili);
 		entityManager.remove(object);
+	}
+
+	@Override
+	protected void removeAssociations(HasIdAndLocalId hili) {
+		new ServerTransformManagerSupport().removeAssociations(hili);
 	}
 
 	public void reconstituteHiliMap() {
@@ -818,11 +787,25 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		tgt = jpaImplementation.getInstantiatedObject(tgt);
 		for (Iterator itr = collection.iterator(); itr.hasNext();) {
 			Object next = itr.next();
-			if (jpaImplementation.getInstantiatedObject(next) == tgt) {
+			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,tgt)) {
 				itr.remove();
 				break;
 			}
 		}
+	}
+
+	@Override
+	protected void doubleCheckAddition(Collection collection, Object tgt) {
+		JPAImplementation jpaImplementation = EntityLayerLocator.get()
+				.jpaImplementation();
+		tgt = jpaImplementation.getInstantiatedObject(tgt);
+		for (Iterator itr = collection.iterator(); itr.hasNext();) {
+			Object next = itr.next();
+			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,tgt)) {
+				return;
+			}
+		}
+		collection.add(tgt);
 	}
 
 	@Override
