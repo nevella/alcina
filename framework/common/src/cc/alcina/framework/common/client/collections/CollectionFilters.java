@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.tools.ant.Project;
+
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -153,7 +155,7 @@ public class CollectionFilters {
 
 	public static <V> Collection<V> filterOrReturn(Collection<V> collection,
 			CollectionFilter<V> filter) {
-		if(contains(collection, filter)){
+		if (contains(collection, filter)) {
 			return filter(collection, filter);
 		}
 		return collection;
@@ -168,10 +170,12 @@ public class CollectionFilters {
 		}
 		return null;
 	}
+
 	public static <V> V firstOfClass(Collection values, Class<? extends V> clazz) {
-		IsClassFilter filter=new IsClassFilter(clazz);
+		IsClassFilter filter = new IsClassFilter(clazz);
 		return (V) first(values, filter);
 	}
+
 	public static <V> V first(Collection<V> values, String key, Object value) {
 		PropertyFilter<V> filter = new PropertyFilter<V>(key, value);
 		return first(values, filter);
@@ -229,6 +233,7 @@ public class CollectionFilters {
 		}
 		return result;
 	}
+
 	public static <V> V singleNodeFilter(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
 		for (V v : collection) {
@@ -238,6 +243,7 @@ public class CollectionFilters {
 		}
 		return null;
 	}
+
 	public static <K, V, O> SortedMap<K, V> sortedMap(Collection<O> values,
 			KeyValueMapper<K, V, O> mapper) {
 		SortedMap<K, V> result = new TreeMap<K, V>();
@@ -270,7 +276,6 @@ public class CollectionFilters {
 			return !invert.allow(o);
 		}
 	}
-	
 
 	public static class PrefixedFilter implements CollectionFilter<String> {
 		private String lcPrefix;
@@ -286,5 +291,22 @@ public class CollectionFilters {
 		}
 	}
 
+	public static <V, T> V project(Collection<T> values,
+			CollectionProjector<T, V> projector) {
+		for (T t : values) {
+			projector.tryProject(t);
+		}
+		return projector.getBestValue();
+	}
 
+	public static <T> List<T> limit(Collection<T> values, int count) {
+		List<T> result = new ArrayList<T>();
+		for (T t : values) {
+			if (count-- == 0) {
+				break;
+			}
+			result.add(t);
+		}
+		return result;
+	}
 }

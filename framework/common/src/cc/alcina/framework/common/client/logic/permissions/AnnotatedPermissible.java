@@ -23,7 +23,11 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  */
 
  public class AnnotatedPermissible implements Permissible {
-	private final Permission permission;
+	 public boolean requiresPerObjectChecks(){
+		 return accessLevel() == AccessLevel.ADMIN_OR_OWNER
+					|| rule().isEmpty();
+	 }
+	public final Permission permission;
 
 	public AnnotatedPermissible(Permission permission) {
 		this.permission = permission;

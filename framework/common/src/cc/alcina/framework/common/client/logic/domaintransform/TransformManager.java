@@ -379,6 +379,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return deleteObject(hili, false);
 	}
 
+	protected abstract void doCascadeDeletes(HasIdAndLocalId hili);
+
 	/**
 	 * If calling from the servlet layer, the object will normally not be
 	 * 'found' - so this function variant should be called, with the second
@@ -389,6 +391,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (!generateEventIfObjectNotFound && getObject(hili) == null) {
 			return null;
 		}
+		registerDomainObject(hili);
+		doCascadeDeletes(hili);
+		removeAssociations(hili);
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setObjectId(hili.getId());
 		dte.setObjectLocalId(hili.getLocalId());

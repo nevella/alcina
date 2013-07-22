@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -19,7 +20,11 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.permissions.IGroup;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector.HasAnnotationCallback;
@@ -334,8 +339,22 @@ public abstract class ClientTransformManager extends TransformManager {
 			if (!CommonUtils.isStandardJavaClass(pr.getPropertyType())) {
 				Object object = CommonLocator.get().propertyAccessor()
 						.getPropertyValue(hili, pr.getPropertyName());
-				if (object != null && !(object instanceof Collection)) {
-					updateAssociation(dte, hili, object, true, true);
+				if (object instanceof HasIdAndLocalId) {
+					// do not null user/group properties, since they may be
+					// required for deletion permission checks, and should never
+					// be the collection owner of non-userland objects
+					HasIdAndLocalId target = (HasIdAndLocalId) object;
+					if(target instanceof IUser || target instanceof IGroup){
+						continue;
+					}
+					boolean wasRegistered = getObject(target) != null;
+					if (!wasRegistered) {
+						registerDomainObject(target);
+					}
+					pr.setPropertyValue(hili, null);
+					if (!wasRegistered) {
+						deregisterDomainObject(target);
+					}
 				}
 			}
 		}
@@ -434,6 +453,29 @@ public abstract class ClientTransformManager extends TransformManager {
 			ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
 					.cache(specs, innerCallback);
 		}
+	}
+
+	@Override
+	protected void doCascadeDeletes(final HasIdAndLocalId hili) {
+		final ClientBeanReflector beanReflector = ClientReflector.get()
+				.beanInfoForClass(hili.getClass());
+		PropertyAccessor propertyAccessor = CommonLocator.get()
+				.propertyAccessor();
+		beanReflector.iterateForPropertyWithAnnotation(Association.class,
+				new HasAnnotationCallback<Association>() {
+					public void apply(Association association,
+							ClientPropertyReflector propertyReflector) {
+						if (association.cascadeDeletes()) {
+							Object object = propertyReflector
+									.getPropertyValue(hili);
+							if (object instanceof Set) {
+								for (HasIdAndLocalId target : (Set<HasIdAndLocalId>) object) {
+									deleteObject(target);
+								}
+							}
+						}
+					}
+				});
 	}
 
 	public static class ClientTransformManagerCommon extends

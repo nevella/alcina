@@ -33,6 +33,12 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected void doCascadeDeletes(HasIdAndLocalId hili) {
+		// rely on the client for this...
+		// or the servletlayer aspect of tltm
+	}
+
+	@Override
 	protected void createObjectLookup() {
 		store = new DetachedCacheObjectStore();
 		setDomainObjects(store);

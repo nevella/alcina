@@ -1,16 +1,19 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.PropertyPathAccesor;
 import cc.alcina.framework.entity.util.Multiset;
 
 public class CacheLookup<T> implements CacheListener {
 	private Multiset<T, Set<Long>> store;
 
 	private CacheLookupDescriptor descriptor;
+
+	private PropertyPathAccesor propertyPathAccesor;
 
 	@Override
 	public Class getListenedClass() {
@@ -20,6 +23,8 @@ public class CacheLookup<T> implements CacheListener {
 	public CacheLookup(CacheLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
 		store = new Multiset<T, Set<Long>>();
+		this.propertyPathAccesor = new PropertyPathAccesor(
+				descriptor.propertyPath);
 	}
 
 	public Set<Long> get(T k1) {
@@ -49,18 +54,32 @@ public class CacheLookup<T> implements CacheListener {
 
 	@Override
 	public void insert(HasIdAndLocalId hili) {
-		Object v1 = CommonLocator.get().propertyAccessor()
-				.getPropertyValue(hili, descriptor.fieldName1);
+		Object v1 = propertyPathAccesor.getChainedProperty(hili);
 		add((T) v1, hili.getId());
 	}
+
 	@Override
 	public void remove(HasIdAndLocalId hili) {
-		Object v1 = CommonLocator.get().propertyAccessor()
-				.getPropertyValue(hili, descriptor.fieldName1);
+		Object v1 = propertyPathAccesor.getChainedProperty(hili);
 		remove((T) v1, hili.getId());
 	}
 
 	public int size(T t) {
 		return getAndEnsure(t).size();
+	}
+
+	public Set<Long> getMaybeCollectionKey(Object value) {
+		if (value instanceof Collection) {
+			Set<Long> result = new LinkedHashSet<Long>();
+			for (T t : (Collection<T>) value) {
+				Set<Long> ids = get(t);
+				if (ids != null) {
+					result.addAll(ids);
+				}
+			}
+			return result;
+		} else {
+			return get((T) value);
+		}
 	}
 }

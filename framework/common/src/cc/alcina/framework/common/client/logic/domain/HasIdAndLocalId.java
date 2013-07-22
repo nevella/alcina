@@ -17,6 +17,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -38,8 +40,9 @@ public interface HasIdAndLocalId extends HasId {
 	public long getLocalId();
 
 	public void setLocalId(long localId);
-	
-	public static class HiliComparatorPreferLocals implements Comparator<HasIdAndLocalId> {
+
+	public static class HiliComparatorPreferLocals implements
+			Comparator<HasIdAndLocalId> {
 		@Override
 		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 			int i = o1.getClass().getName().compareTo(o2.getClass().getName());
@@ -57,6 +60,7 @@ public interface HasIdAndLocalId extends HasId {
 			return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
 		}
 	}
+
 	public static class HiliComparator implements Comparator<HasIdAndLocalId> {
 		public static final HiliComparator INSTANCE = new HiliComparator();
 
@@ -104,14 +108,22 @@ public interface HasIdAndLocalId extends HasId {
 			if (o1 == null) {
 				return o2 == null;
 			}
+			if(o2==null){
+				return false;
+			}
+			if (o1.getClass() != o2.getClass()) {
+				return false;
+			}
 			if (o1.getId() == 0 && o1.getLocalId() == 0) {
 				return o1 == o2;
 			}
 			if (o2 instanceof HasIdAndLocalId) {
 				HasIdAndLocalId hili = (HasIdAndLocalId) o2;
-				return (hili.getId() == o1.getId()
-						&& hili.getLocalId() == o1.getLocalId() && hili
-						.getClass().equals(o1.getClass()));
+				if (o1.getId() != 0 && o1.getId() == hili.getId()) {
+					return true;
+				}
+				return (hili.getId() == o1.getId() && hili.getLocalId() == o1
+						.getLocalId());
 			}
 			return false;
 		}
@@ -143,7 +155,6 @@ public interface HasIdAndLocalId extends HasId {
 		public static long getIdOrZero(HasId hi) {
 			return hi == null ? 0 : hi.getId();
 		}
-		
 
 		public static <T extends HasId> T getById(Collection<T> values, long id) {
 			for (T value : values) {
@@ -152,6 +163,15 @@ public interface HasIdAndLocalId extends HasId {
 				}
 			}
 			return null;
+		}
+
+		public static <T extends HasIdAndLocalId> SortedSet<T> combineAndOrderById(
+				boolean reverse, Collection<T>... collections) {
+			TreeSet<T> join = new TreeSet<T>();
+			for (Collection<T> collection : collections) {
+				join.addAll(collection);
+			}
+			return reverse ? join.descendingSet() : join;
 		}
 	}
 }

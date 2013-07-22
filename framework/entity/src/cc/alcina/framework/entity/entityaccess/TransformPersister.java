@@ -9,6 +9,8 @@ import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -237,7 +239,7 @@ public class TransformPersister {
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS = 40 * 1000;
 
 	public DomainTransformLayerWrapper transformInPersistenceContext(
-			TransformPersistenceToken token,
+			final TransformPersistenceToken token,
 			CommonPersistenceBase commonPersistenceBase,
 			EntityManager entityManager) {
 		this.entityManager = entityManager;
@@ -246,7 +248,7 @@ public class TransformPersister {
 		commonPersistenceBase.connectPermissionsManagerToLiveObjects(true);
 		HiliLocatorMap locatorMap = token.getLocatorMap();
 		HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.clone();
-		DomainTransformRequest request = token.getRequest();
+		final DomainTransformRequest request = token.getRequest();
 		List<DomainTransformEventPersistent> dtreps = new ArrayList<DomainTransformEventPersistent>();
 		try {
 			ObjectPersistenceHelper.get();
@@ -415,43 +417,52 @@ public class TransformPersister {
 				MetricLogging.get().lowPriorityEnd(TRANSFORM_FIRE);
 				MetricLogging.get().lowPriorityStart(PERSIST_TRANSFORMS);
 				dtr.updateTransformCommitType(CommitType.ALL_COMMITTED, false);
-				if (token.isPersistTransforms()
-						&& token.getPass() == Pass.TRY_COMMIT) {
-					Class<? extends DomainTransformRequestPersistent> dtrqImpl = commonPersistenceBase
-							.getImplementation(DomainTransformRequestPersistent.class);
-					Class<? extends DomainTransformEventPersistent> dtrEvtImpl = commonPersistenceBase
-							.getImplementation(DomainTransformEventPersistent.class);
-					DomainTransformRequestPersistent dtrp = dtrqImpl
-							.newInstance();
-					getEntityManager().persist(dtrp);
-					dtr.setEvents(null);
-					dtrp.wrap(dtr);
-					dtrp.setEvents(new ArrayList<DomainTransformEvent>());
-					dtr.setEvents(items);
-					dtrp.setClientInstance(persistentClientInstance);
-					for (DomainTransformEvent event : eventsPersisted) {
-						if (request.getEventIdsToIgnore().contains(
-								event.getEventId())) {
-							continue;
+				if (token.getPass() == Pass.TRY_COMMIT) {
+					CollectionFilter<DomainTransformEvent> filterByPolicy = new CollectionFilter<DomainTransformEvent>() {
+						@Override
+						public boolean allow(DomainTransformEvent event) {
+							return token.getTransformLoggingPolicy()
+									.shouldPersist(event)
+									&& !request.getEventIdsToIgnore().contains(
+											event.getEventId());
 						}
-						DomainTransformEventPersistent dtep = dtrEvtImpl
+					};
+					eventsPersisted = CollectionFilters.filter(eventsPersisted,
+							filterByPolicy);
+					if (!eventsPersisted.isEmpty()) {
+						Class<? extends DomainTransformRequestPersistent> dtrqImpl = commonPersistenceBase
+								.getImplementation(DomainTransformRequestPersistent.class);
+						Class<? extends DomainTransformEventPersistent> dtrEvtImpl = commonPersistenceBase
+								.getImplementation(DomainTransformEventPersistent.class);
+						DomainTransformRequestPersistent dtrp = dtrqImpl
 								.newInstance();
-						getEntityManager().persist(dtep);
-						dtep.wrap(event);
-						if (dtep.getObjectId() == 0) {
-							dtep.setObjectId(tm.getObject(
-									dtep.getObjectClass(), 0,
-									dtep.getObjectLocalId()).getId());
+						getEntityManager().persist(dtrp);
+						dtr.setEvents(null);
+						dtrp.wrap(dtr);
+						dtrp.setEvents(new ArrayList<DomainTransformEvent>());
+						dtr.setEvents(items);
+						dtrp.setClientInstance(persistentClientInstance);
+						for (DomainTransformEvent event : eventsPersisted) {
+							DomainTransformEventPersistent dtep = dtrEvtImpl
+									.newInstance();
+							getEntityManager().persist(dtep);
+							dtep.wrap(event);
+							if (dtep.getObjectId() == 0) {
+								dtep.setObjectId(tm.getObject(
+										dtep.getObjectClass(), 0,
+										dtep.getObjectLocalId()).getId());
+							}
+							if (dtep.getValueId() == 0
+									&& dtep.getValueLocalId() != 0) {
+								dtep.setValueId(tm.getObject(
+										dtep.getValueClass(), 0,
+										dtep.getValueLocalId()).getId());
+							}
+							dtep.setServerCommitDate(new Date());
+							dtep.setDomainTransformRequestPersistent(dtrp);
+							dtrp.getEvents().add(dtep);
+							dtreps.add(dtep);
 						}
-						if (dtep.getValueId() == 0
-								&& dtep.getValueLocalId() != 0) {
-							dtep.setValueId(tm.getObject(dtep.getValueClass(),
-									0, dtep.getValueLocalId()).getId());
-						}
-						dtep.setServerCommitDate(new Date());
-						dtep.setDomainTransformRequestPersistent(dtrp);
-						dtrp.getEvents().add(dtep);
-						dtreps.add(dtep);
 					}
 				}// dtes
 				MetricLogging.get().lowPriorityEnd(PERSIST_TRANSFORMS);

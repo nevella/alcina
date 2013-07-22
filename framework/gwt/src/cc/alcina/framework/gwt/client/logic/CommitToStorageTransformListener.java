@@ -58,7 +58,6 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		DomainTransformListener {
 	public static final int DELAY_MS = 100;
 
-
 	private List<DomainTransformEvent> transformQueue;
 
 	private List<DomainTransformRequest> priorRequestsWithoutResponse = new ArrayList<DomainTransformRequest>();
@@ -155,7 +154,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 
 	private ClientInstance getClientInstance() {
-		ClientInstance clientInstance = ClientLayerLocator.get().getClientInstance().clone();
+		ClientInstance clientInstance = ClientLayerLocator.get()
+				.getClientInstance().clone();
 		clientInstance.setUser(null);
 		return clientInstance;
 	}
@@ -207,7 +207,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	public void putReloadRequired() {
 		currentState = RELOAD;
 	}
-	
+
 	protected synchronized void commit() {
 		if ((priorRequestsWithoutResponse.size() == 0 && transformQueue.size() == 0)
 				|| isPaused()) {
@@ -425,10 +425,14 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			if (newState.equals(COMMITTING)) {
 			} else if (newState.equals(COMMITTED) || newState.equals(OFFLINE)) {
 				removeStateChangeListener(OneoffListenerWrapper.this);
-				callback.onSuccess(null);
+				if (!reloadRequired) {
+					callback.onSuccess(null);
+				}
 			} else {
 				removeStateChangeListener(OneoffListenerWrapper.this);
-				callback.onFailure(new Exception("flush failed on server"));
+				if (!reloadRequired) {
+					callback.onFailure(new Exception("flush failed on server"));
+				}
 			}
 		}
 	}

@@ -59,6 +59,9 @@ public class RegistryScanner extends CachingScanner {
 	@Override
 	protected void process(Class c, String className, Date modDate,
 			Map<String, Date> outgoingIgnoreMap) {
+		if(c.getName().contains("CmdSpeedGetRepoState")){
+			int j=3;
+		}
 		if ((!Modifier.isPublic(c.getModifiers()))
 				|| (Modifier.isAbstract(c.getModifiers()) && !c.isInterface())) {
 			outgoingIgnoreMap.put(className, modDate);

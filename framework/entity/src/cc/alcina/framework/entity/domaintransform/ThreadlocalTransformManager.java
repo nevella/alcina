@@ -92,6 +92,13 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	};
 
+	protected void doCascadeDeletes(HasIdAndLocalId hili) {
+		if (getEntityManager() == null) {
+			new ServerTransformManagerSupport().removeParentAssociations(hili);
+		}
+		// client-only for the moment.
+	};
+
 	public static ThreadlocalTransformManager cast() {
 		return (ThreadlocalTransformManager) TransformManager.get();
 	}
@@ -577,6 +584,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	public void setEntityManager(EntityManager entityManager) {
+		// System.err.format("%s: %s\n", Thread.currentThread().getId(),
+		// entityManager);
+		// Thread.dumpStack();
 		this.entityManager = entityManager;
 	}
 
@@ -787,7 +797,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		tgt = jpaImplementation.getInstantiatedObject(tgt);
 		for (Iterator itr = collection.iterator(); itr.hasNext();) {
 			Object next = itr.next();
-			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,tgt)) {
+			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,
+					tgt)) {
 				itr.remove();
 				break;
 			}
@@ -801,7 +812,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		tgt = jpaImplementation.getInstantiatedObject(tgt);
 		for (Iterator itr = collection.iterator(); itr.hasNext();) {
 			Object next = itr.next();
-			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,tgt)) {
+			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,
+					tgt)) {
 				return;
 			}
 		}
@@ -840,18 +852,22 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	// No need for property changes here
+	// No need for property changes here - if in entitylayer
 	// TODO - isn't this a huge hit?
 	protected void updateAssociation(DomainTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt, boolean remove,
 			boolean collectionPropertyChange) {
-		ManyToMany manyToMany = CommonLocator
-				.get()
-				.propertyAccessor()
-				.getAnnotationForProperty(evt.getObjectClass(),
-						ManyToMany.class, evt.getPropertyName());
-		if (manyToMany != null && manyToMany.mappedBy().length() != 0) {
+		if (getEntityManager() == null) {
 			super.updateAssociation(evt, obj, tgt, remove, false);
+		} else {
+			ManyToMany manyToMany = CommonLocator
+					.get()
+					.propertyAccessor()
+					.getAnnotationForProperty(evt.getObjectClass(),
+							ManyToMany.class, evt.getPropertyName());
+			if (manyToMany != null && manyToMany.mappedBy().length() != 0) {
+				super.updateAssociation(evt, obj, tgt, remove, false);
+			}
 		}
 	}
 

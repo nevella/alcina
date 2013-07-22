@@ -11,14 +11,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
+import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
 public class TransformPersistenceToken {
 	private final DomainTransformRequest request;
 
 	private final HiliLocatorMap locatorMap;
-
-	private final boolean persistTransforms;
 
 	private int dontFlushTilNthTransform = 0;
 
@@ -41,14 +40,16 @@ public class TransformPersistenceToken {
 	private boolean forOfflineTransforms;
 
 	private Logger logger;
+	
+	private TransformLoggingPolicy transformLoggingPolicy;
 
 	public TransformPersistenceToken(DomainTransformRequest request,
-			HiliLocatorMap locatorMap, boolean persistTransforms,
+			HiliLocatorMap locatorMap, TransformLoggingPolicy transformLoggingPolicy,
 			boolean possiblyReconstitueLocalIdMap,
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms, Logger logger) {
 		this.request = request;
 		this.locatorMap = locatorMap;
-		this.persistTransforms = persistTransforms;
+		this.transformLoggingPolicy = transformLoggingPolicy;
 		this.possiblyReconstitueLocalIdMap = possiblyReconstitueLocalIdMap;
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
 		this.forOfflineTransforms = forOfflineTransforms;
@@ -94,10 +95,6 @@ public class TransformPersistenceToken {
 		return ignoreClientAuthMismatch;
 	}
 
-	public boolean isPersistTransforms() {
-		return this.persistTransforms;
-	}
-
 	public boolean isPossiblyReconstitueLocalIdMap() {
 		return this.possiblyReconstitueLocalIdMap;
 	}
@@ -138,5 +135,14 @@ public class TransformPersistenceToken {
 
 	public void setLogger(Logger logger) {
 		this.logger = logger;
+	}
+
+	public TransformLoggingPolicy getTransformLoggingPolicy() {
+		return this.transformLoggingPolicy;
+	}
+
+	public void setTransformLoggingPolicy(
+			TransformLoggingPolicy transformLoggingPolicy) {
+		this.transformLoggingPolicy = transformLoggingPolicy;
 	}
 }

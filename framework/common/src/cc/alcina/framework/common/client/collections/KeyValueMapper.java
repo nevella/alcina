@@ -23,22 +23,10 @@ public interface KeyValueMapper<K, V, O> {
 		};
 	}
 
-	public static class PropertyConverter<T> implements Converter<Object, T> {
-		private final String key;
+	
 
-		public PropertyConverter(String key) {
-			this.key = key;
-		}
-
-		@Override
-		public T convert(Object o) {
-			return (T) CommonLocator.get().propertyAccessor()
-					.getPropertyValue(o, key);
-		};
-	}
-
-	public static class StringPropertyConverter extends
-			PropertyConverter<String> {
+	public static class StringPropertyConverter<I> extends
+			PropertyConverter<I,String> {
 		public StringPropertyConverter(String key) {
 			super(key);
 		}

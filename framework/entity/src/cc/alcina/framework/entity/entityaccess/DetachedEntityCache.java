@@ -137,4 +137,11 @@ public class DetachedEntityCache implements Serializable {
 		ensureMaps(clazz);
 		return detached.get(clazz).size();
 	}
+
+	public void remove(HasIdAndLocalId hili) {
+		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+		ensureMaps(clazz);
+		long id = hili.getId();
+		detached.get(clazz).remove(id);
+	}
 }

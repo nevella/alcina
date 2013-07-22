@@ -312,8 +312,8 @@ public class CommonUtils {
 				+ (s.length() == 1 ? "" : s.substring(1));
 	}
 
-	public static Collection intersection(Collection c1, Collection c2) {
-		ArrayList result = new ArrayList();
+	public static Set intersection(Collection c1, Collection c2) {
+		LinkedHashSet result = new LinkedHashSet();
 		if (c1.size() > c2.size()) {
 			Collection tmp = c1;
 			c1 = c2;
@@ -333,8 +333,8 @@ public class CommonUtils {
 	public static <T> ThreeWaySetResult<T> threeWaySplit(Collection<T> c1,
 			Collection<T> c2) {
 		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
-		Collection intersection = intersection(c1, c2);
-		result.intersection = new LinkedHashSet<T>(intersection);
+		Set intersection = intersection(c1, c2);
+		result.intersection =intersection;
 		result.firstOnly = new LinkedHashSet<T>(c1);
 		result.secondOnly = new LinkedHashSet<T>(c2);
 		result.firstOnly.removeAll(intersection);

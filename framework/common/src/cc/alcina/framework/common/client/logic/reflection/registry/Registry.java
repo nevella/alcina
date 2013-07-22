@@ -66,22 +66,27 @@ public class Registry {
 		return get().singleton0(clazz);
 	}
 
-	protected HashMap<Class, Map<Class, List<Class>>> registry;
+	// registrypoint/targetClass/impl/impl
+	protected LookupMapToMap<Class> registry;
 
-	protected HashMap<Class, Map<Class, Integer>> targetPriority;
+	// registrypoint/targetClass/priority
+	protected LookupMapToMap<Integer> targetPriority;
 
+	// registrypoint/targetClass/exact-match-class
 	protected LookupMapToMap<Class> exactMap;
 
+	// registrypoint/targetClass/impl-type
 	protected LookupMapToMap<ImplementationType> implementationTypeMap;
 
+	// registrypoint/targetClass/singleton
 	protected LookupMapToMap<Object> singletons;
 
 	private static Registry instance = new Registry();
 
 	protected Registry() {
 		super();
-		registry = new HashMap<Class, Map<Class, List<Class>>>();
-		targetPriority = new HashMap<Class, Map<Class, Integer>>();
+		registry = new LookupMapToMap<Class>(3);
+		targetPriority = new LookupMapToMap<Integer>(2);
 		singletons = new LookupMapToMap<Object>(2);
 		exactMap = new LookupMapToMap<Class>(2);
 		implementationTypeMap = new LookupMapToMap<ImplementationType>(2);
@@ -117,7 +122,8 @@ public class Registry {
 			scChain.add(void.class);
 		}
 		List<Class> result = new ArrayList<Class>();
-		Map<Class, List<Class>> map = registry.get(registryPoint);
+		Map<Class, Map<Class, Class>> map = registry.asMapEnsure(false,
+				registryPoint);
 		if (map == null) {
 			if (!required) {
 				return new ArrayList<Class>(0);
@@ -128,7 +134,7 @@ public class Registry {
 		}
 		for (Class sc : scChain) {
 			if (map.containsKey(sc)) {
-				result.addAll(map.get(sc));
+				result.addAll(map.get(sc).keySet());
 				if (mostSpecificTarget && map.size() != 0) {
 					break;
 				}
@@ -187,19 +193,9 @@ public class Registry {
 	public void register(Class registeringClass, Class registryPoint,
 			Class targetClass, ImplementationType implementationType,
 			int infoPriority) {
-		Map<Class, List<Class>> pointMap = registry.get(registryPoint);
-		Map<Class, Integer> pointPriority = targetPriority.get(registryPoint);
-		if (pointMap == null) {
-			pointMap = new HashMap<Class, List<Class>>();
-			pointPriority = new HashMap<Class, Integer>();
-			registry.put(registryPoint, pointMap);
-			targetPriority.put(registryPoint, pointPriority);
-		}
-		List<Class> registered = pointMap.get(targetClass);
-		if (registered == null) {
-			registered = new ArrayList<Class>();
-			pointMap.put(targetClass, registered);
-		}
+
+		Map<Class, Class> registered = registry.asMapEnsure(true,
+				registryPoint, targetClass);
 		if (implementationType == ImplementationType.MULTIPLE
 				&& targetClass == void.class
 				&& infoPriority != RegistryLocation.DEFAULT_PRIORITY) {
@@ -210,17 +206,18 @@ public class Registry {
 		}
 		if (registered.size() == 1
 				&& (targetClass != void.class || implementationType != ImplementationType.MULTIPLE)) {
-			Integer currentPriority = pointPriority.get(targetClass);
+			Integer currentPriority = targetPriority.get(registryPoint,
+					targetClass);
 			if (currentPriority > infoPriority) {
 				return;
 			} else {
 				registered.clear();
 			}
 		}
-		registered.add(registeringClass);
+		registered.put(registeringClass, registeringClass);
 		implementationTypeMap.put(registryPoint, targetClass,
 				implementationType);
-		pointPriority.put(targetClass, infoPriority);
+		targetPriority.put(registryPoint, targetClass, infoPriority);
 	}
 
 	/*
@@ -246,11 +243,11 @@ public class Registry {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("Class registry:\n");
-		for (Class c : registry.keySet()) {
+		for (Class c : ((Map<Class, ?>) registry).keySet()) {
 			sb.append(simpleName(c));
 			sb.append(": ");
 			int x = 0;
-			Map<Class, List<Class>> map = registry.get(c);
+			Map<Class, Map<Class, Class>> map = registry.asMap(c);
 			for (Class c1 : map.keySet()) {
 				if (x++ != 0) {
 					sb.append(", ");
@@ -258,7 +255,7 @@ public class Registry {
 				sb.append(simpleName(c1));
 				sb.append("={");
 				int y = 0;
-				for (Class c2 : map.get(c1)) {
+				for (Class c2 : map.get(c1).keySet()) {
 					if (y++ != 0) {
 						sb.append(", ");
 					}
@@ -271,9 +268,9 @@ public class Registry {
 		return sb.toString();
 	}
 
-	public void unregister(Class registeringClass, Class registryPoint) {
-		Class tc = void.class;
-		registry.get(registryPoint).get(tc).remove(registeringClass);
+	public void unregister(Class registryPoint, Class targetClass,
+			Class registeringClass) {
+		registry.remove(registryPoint, targetClass, registeringClass);
 	}
 
 	private String simpleName(Class c) {

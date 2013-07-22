@@ -12,7 +12,10 @@ public class TestTransformManager extends ClientTransformManager {
 	@Override
 	protected void callRemotePersistence(WrapperPersistable persistableObject,
 			AsyncCallback<Long> savedCallback) {
-		// TODO Auto-generated method stub
-		
+	}
+
+	@Override
+	protected void doCascadeDeletes(HasIdAndLocalId hili) {
+		super.doCascadeDeletes(hili);
 	}
 }

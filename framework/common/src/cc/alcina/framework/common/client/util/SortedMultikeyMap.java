@@ -27,142 +27,108 @@ import java.util.TreeMap;
  * 
  */
 @SuppressWarnings("unchecked")
-public class SortedMultikeyMap<V> extends TreeMap {
+public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
 	private final int depth;
+
+	private MultikeyMapSupport multikeyMapSupport;
 
 	public SortedMultikeyMap(int depth) {
 		this.depth = depth;
+		this.multikeyMapSupport = new MultikeyMapSupport(this);
 	}
 
-	public void put(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (--mapDepth == 0) {
-				m.put(k, objects[i + 1]);
-				return;
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new SortedMultikeyMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
+	@Override
+	public void addValues(List<V> values) {
+		multikeyMapSupport.addValues(values);
 	}
 
-	public void putLookup(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length-1; i++) {
-			Object k = objects[i];
-			if (i == objects.length - 2) {
-				m.put(k, objects[i + 1]);
-				return;
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new SortedMultikeyMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
-	}
-
-	public boolean containsKey(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (--mapDepth == 0) {
-				return m.containsKey(k);
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new SortedMultikeyMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
-		return false;
-	}
-
-	public Map asMap(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (!m.containsKey(k)) {
-				m.put(k, new SortedMultikeyMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-			if (i == objects.length - 1) {
-				return m;
-			}
-		}
-		return null;
-	}
-
-	public <T> Collection<T> values(Object... objects) {
-		Map m = asMap(objects);
-		return m == null ? null : m.values();
-	}
-
-	public V get(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (--mapDepth == 0) {
-				return (V) m.get(k);
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new SortedMultikeyMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
-		return null;
-	}
-
+	@Override
 	public List<V> allValues() {
-		ArrayList<V> all = new ArrayList<V>();
-		addValues(all);
-		return all;
+		return multikeyMapSupport.allValues();
 	}
 
-	private void addValues(List<V> values) {
-		if (depth == 1) {
-			values.addAll(values());
-		} else {
-			for (Object k : keySet()) {
-				((SortedMultikeyMap<V>) get(k)).addValues(values);
-			}
-		}
+	@Override
+	public TreeMap asMap(Object... objects) {
+		return (TreeMap) multikeyMapSupport.asMap(true, objects);
 	}
 
-	public V remove(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (--mapDepth == 0) {
-				return (V) m.remove(k);
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new SortedMultikeyMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
-		return null;
+	public TreeMap asMapEnsure(boolean ensure, Object... objects) {
+		return (TreeMap) multikeyMapSupport.asMap(ensure, objects);
 	}
 
-	public SortedMultikeyMap<V> swapKeysZeroAndOne() {
-		SortedMultikeyMap<V> swapped = new SortedMultikeyMap<V>(depth);
-		for (Object k0 : keySet()) {
-			SortedMultikeyMap<V> v = (SortedMultikeyMap<V>) get(k0);
-			for (Object k1 : v.keySet()) {
-				swapped.putLookup(k1, k0, v.get(k1));
-			}
-		}
-		return swapped;
+	@Override
+	public MultikeyMap<V> createMap(int childDepth) {
+		return new SortedMultikeyMap(childDepth);
 	}
 
+	@Override
+	public V get(Object... objects) {
+		return (V) multikeyMapSupport.getEnsure(true, objects);
+	}
+
+	@Override
 	public int getDepth() {
 		return this.depth;
 	}
+
+	@Override
+	public V getEnsure(boolean ensure, Object... objects) {
+		return (V) multikeyMapSupport.getEnsure(ensure, objects);
+	}
+
+	@Override
+	public <T> Collection<T> items(Object... objects) {
+		return (Collection) (objects.length == depth ? values(objects)
+				: keys(objects));
+	}
+
+	@Override
+	public <T> Collection<T> keys(Object... objects) {
+		Map m = asMapEnsure(false, objects);
+		return m == null ? null : m.keySet();
+	}
+
+	@Override
+	public void put(Object... objects) {
+		multikeyMapSupport.put(objects);
+	}
+
+	@Override
+	public V remove(Object... objects) {
+		return (V) multikeyMapSupport.remove(objects);
+	}
+
+	@Override
+	public <T> Collection<T> reverseItems(Object... objects) {
+		return (Collection) (objects.length == depth ? reverseValues(objects)
+				: reverseKeys(objects));
+	}
+
+	@Override
+	public <T> Collection<T> reverseKeys(Object... objects) {
+		TreeMap m = asMapEnsure(false, objects);
+		return m == null ? null : m.descendingMap().keySet();
+	}
+
+	@Override
+	public <T> Collection<T> reverseValues(Object... objects) {
+		TreeMap m = asMapEnsure(false, objects);
+		return m == null ? null : m.descendingMap().values();
+	}
+
+	@Override
+	public MultikeyMap<V> swapKeysZeroAndOne() {
+		return multikeyMapSupport.swapKeysZeroAndOne();
+	}
+
+	@Override
+	public <T> Collection<T> values(Object... objects) {
+		Map m = asMapEnsure(false, objects);
+		return m == null ? null : m.values();
+	}
+
+	@Override
+	public boolean containsKey(Object... objects) {
+		return multikeyMapSupport.containsKey(objects);
+	}	
 }

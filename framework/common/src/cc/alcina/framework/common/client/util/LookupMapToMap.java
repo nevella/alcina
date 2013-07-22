@@ -13,11 +13,11 @@
  */
 package cc.alcina.framework.common.client.util;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
@@ -27,142 +27,108 @@ import java.util.Map;
  * 
  */
 @SuppressWarnings("unchecked")
-public class LookupMapToMap<V> extends LinkedHashMap {
+public class LookupMapToMap<V> extends LinkedHashMap implements MultikeyMap<V> {
 	private final int depth;
+
+	private MultikeyMapSupport multikeyMapSupport;
 
 	public LookupMapToMap(int depth) {
 		this.depth = depth;
+		this.multikeyMapSupport = new MultikeyMapSupport(this);
 	}
 
+	@Override
+	public void addValues(List<V> values) {
+		multikeyMapSupport.addValues(values);
+	}
+
+	@Override
+	public List<V> allValues() {
+		return multikeyMapSupport.allValues();
+	}
+
+	@Override
+	public MultikeyMap asMap(Object... objects) {
+		return multikeyMapSupport.asMap(true, objects);
+	}
+
+	public MultikeyMap asMapEnsure(boolean ensure, Object... objects) {
+		return multikeyMapSupport.asMap(ensure, objects);
+	}
+
+	@Override
+	public MultikeyMap<V> createMap(int childDepth) {
+		return new LookupMapToMap<V>(childDepth);
+	}
+
+	@Override
+	public V get(Object... objects) {
+		return (V) multikeyMapSupport.getEnsure(true, objects);
+	}
+
+	@Override
+	public int getDepth() {
+		return this.depth;
+	}
+
+	@Override
+	public V getEnsure(boolean ensure, Object... objects) {
+		return (V) multikeyMapSupport.getEnsure(ensure, objects);
+	}
+
+	@Override
+	public <T> Collection<T> items(Object... objects) {
+		return (Collection) (objects.length == depth ? values(objects)
+				: keys(objects));
+	}
+
+	@Override
+	public <T> Collection<T> keys(Object... objects) {
+		Map m = asMapEnsure(false, objects);
+		return m == null ? null : m.keySet();
+	}
+
+	@Override
 	public void put(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (--mapDepth == 0) {
-				m.put(k, objects[i + 1]);
-				return;
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new LookupMapToMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
+		multikeyMapSupport.put(objects);
 	}
 
-	public void putLookup(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length-1; i++) {
-			Object k = objects[i];
-			if (i == objects.length - 2) {
-				m.put(k, objects[i + 1]);
-				return;
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new LookupMapToMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
+	@Override
+	public V remove(Object... objects) {
+		return (V) multikeyMapSupport.remove(objects);
 	}
 
-	public boolean containsKey(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (--mapDepth == 0) {
-				return m.containsKey(k);
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new LookupMapToMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
-		return false;
+	@Override
+	public <T> Collection<T> reverseItems(Object... objects) {
+		return (Collection) (objects.length == depth ? reverseValues(objects)
+				: reverseKeys(objects));
 	}
 
-	public Map asMap(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (!m.containsKey(k)) {
-				m.put(k, new LookupMapToMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-			if (i == objects.length - 1) {
-				return m;
-			}
-		}
-		return null;
+	@Override
+	public MultikeyMap<V> swapKeysZeroAndOne() {
+		return multikeyMapSupport.swapKeysZeroAndOne();
 	}
 
+	@Override
+	public <T> Collection<T> reverseValues(Object... objects) {
+		throw new UnsupportedOperationException(
+				"Use a sorted multikey map, or reverse yourself");
+	}
+
+	@Override
+	public <T> Collection<T> reverseKeys(Object... objects) {
+		throw new UnsupportedOperationException(
+				"Use a sorted multikey map, or reverse yourself");
+	}
+
+	@Override
 	public <T> Collection<T> values(Object... objects) {
-		Map m = asMap(objects);
+		Map m = asMapEnsure(false, objects);
 		return m == null ? null : m.values();
 	}
 
-	public V get(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (--mapDepth == 0) {
-				return (V) m.get(k);
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new LookupMapToMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
-		return null;
-	}
-
-	public List<V> allValues() {
-		ArrayList<V> all = new ArrayList<V>();
-		addValues(all);
-		return all;
-	}
-
-	private void addValues(List<V> values) {
-		if (depth == 1) {
-			values.addAll(values());
-		} else {
-			for (Object k : keySet()) {
-				((LookupMapToMap<V>) get(k)).addValues(values);
-			}
-		}
-	}
-
-	public V remove(Object... objects) {
-		Map m = this;
-		int mapDepth = depth;
-		for (int i = 0; i < objects.length; i++) {
-			Object k = objects[i];
-			if (--mapDepth == 0) {
-				return (V) m.remove(k);
-			}
-			if (!m.containsKey(k)) {
-				m.put(k, new LookupMapToMap(depth - 1));
-			}
-			m = (Map) m.get(k);
-		}
-		return null;
-	}
-
-	public LookupMapToMap<V> swapKeysZeroAndOne() {
-		LookupMapToMap<V> swapped = new LookupMapToMap<V>(depth);
-		for (Object k0 : keySet()) {
-			LookupMapToMap<V> v = (LookupMapToMap<V>) get(k0);
-			for (Object k1 : v.keySet()) {
-				swapped.putLookup(k1, k0, v.get(k1));
-			}
-		}
-		return swapped;
-	}
-
-	public int getDepth() {
-		return this.depth;
+	@Override
+	public boolean containsKey(Object... objects) {
+		return multikeyMapSupport.containsKey(objects);
 	}
 }

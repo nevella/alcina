@@ -87,4 +87,10 @@ public class AlcinaMemCacheQuery {
 		this.raw = true;
 		return this;
 	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("MemCacheQuery:\n%s",
+				CommonUtils.join(filters, ",\n"));
+	}
 }

@@ -3,9 +3,12 @@ package cc.alcina.framework.servlet;
 import org.apache.log4j.Level;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -13,23 +16,29 @@ import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 
 public class ServletLayerUtils {
 	public static int pushTransformsAsRoot() {
-		return pushTransformsAsRoot(false);
+		return pushTransforms(true);
 	}
-
-	public static int pushTransformsAsRoot(boolean persistTransforms) {
-		return pushTransforms(persistTransforms, true);
+	public static int pushTransformsAsCurrentUser() {
+		return pushTransforms(false);
 	}
-	public static int pushTransforms(boolean persistTransforms, boolean asRoot) {
+	private static int pushTransforms(boolean asRoot) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (AppPersistenceBase.isTest()) {
 			TransformManager.get().clearTransforms();
 			return pendingTransformCount;
 		}
-		pushTransforms(persistTransforms, asRoot, true);
+		pushTransforms(null, asRoot, true);
 		return pendingTransformCount;
 	}
-	public static DomainTransformResponse pushTransforms(boolean persistTransforms, boolean asRoot, boolean returnResponse) {
+
+	public static DomainTransformResponse pushTransforms(String tag,
+			boolean asRoot, boolean returnResponse) {
+		int pendingTransformCount = TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
+		if(pendingTransformCount==0){
+			return new DomainTransformResponse();
+		}
 		if (AppPersistenceBase.isTest()) {
 			return null;
 		}
@@ -43,7 +52,7 @@ public class ServletLayerUtils {
 			try {
 				return ServletLayerLocator.get().commonRemoteServletProvider()
 						.getCommonRemoteServiceServlet()
-						.transformFromServletLayer(persistTransforms);
+						.transformFromServletLayer(tag).response;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -54,5 +63,28 @@ public class ServletLayerUtils {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			EntityLayerLocator.get().getMetricLogger().setLevel(level);
 		}
+	}
+
+	public static long pushTransformsAndGetFirstId(boolean asRoot) {
+		DomainTransformResponse transformResponse = pushTransforms(null,
+				asRoot, true);
+		return transformResponse.getEventsToUseForClientUpdate().get(0)
+				.getGeneratedServerId();
+	}
+
+	public static long pushTransformsAndReturnId(boolean asRoot,
+			HasIdAndLocalId returnIdFor) {
+		DomainTransformResponse transformResponse = pushTransforms(null,
+				asRoot, true);
+		for (DomainTransformEvent dte : transformResponse
+				.getEventsToUseForClientUpdate()) {
+			if (dte.getObjectLocalId() == returnIdFor.getLocalId()
+					&& dte.getObjectClass() == returnIdFor.getClass()
+					&& dte.getTransformType() == TransformType.CREATE_OBJECT) {
+				return dte.getGeneratedServerId();
+			}
+		}
+		throw new RuntimeException("Generated object not found - "
+				+ returnIdFor);
 	}
 }

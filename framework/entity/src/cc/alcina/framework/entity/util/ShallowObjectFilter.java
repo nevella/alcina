@@ -7,12 +7,11 @@ import java.util.Set;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 
-
 public class ShallowObjectFilter implements GraphProjectionFilter {
 	private Set<Class> allowOwningTypes;
 
 	public ShallowObjectFilter() {
-		allowOwningTypes=new LinkedHashSet<Class>();
+		allowOwningTypes = new LinkedHashSet<Class>();
 	}
 
 	public ShallowObjectFilter(Set<Class> allowOwningTypes) {
@@ -27,8 +26,13 @@ public class ShallowObjectFilter implements GraphProjectionFilter {
 	}
 
 	@Override
+	public Boolean permitClass(Class clazz) {
+		return true;
+	}
+
+	@Override
 	public boolean permitField(Field field, Set<Field> perObjectPermissionFields) {
-		if(allowOwningTypes.contains(field.getDeclaringClass())){
+		if (allowOwningTypes.contains(field.getDeclaringClass())) {
 			return true;
 		}
 		Class<?> type = field.getType();

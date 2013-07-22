@@ -415,14 +415,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public U getUserByName(String userName) {
 		List<U> l = getEntityManager()
 				.createQuery(
-						"select distinct u from "
+						String.format("select distinct u from "
 								+ getImplementationSimpleClassName(IUser.class)
 								+ " u " + "left join fetch u.primaryGroup "
 								+ "left join fetch u.secondaryGroups g "
 								+ "left join fetch g.memberOfGroups sg "
-								+ "where u.userName = ?")
+								+ "where u.%s = ?", getUserNamePropertyName()))
 				.setParameter(1, userName).getResultList();
 		return (l.size() == 0) ? null : l.get(0);
+	}
+
+	protected String getUserNamePropertyName() {
+		return "userName";
 	}
 
 	/**

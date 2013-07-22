@@ -48,12 +48,18 @@ public class DetachedCacheObjectStore implements ObjectStore {
 
 	@Override
 	public void deregisterObjects(Collection<HasIdAndLocalId> objects) {
-		// noop - doesn't listen
+		if (objects == null) {
+			return;
+		}
+		for (HasIdAndLocalId hili : objects) {
+			deregisterObject(hili);
+		}
 	}
 
 	@Override
 	public void deregisterObject(HasIdAndLocalId hili) {
-		// noop - doesn't listen
+		//just remove
+		cache.remove(hili);
 	}
 
 	@Override

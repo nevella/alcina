@@ -35,6 +35,8 @@ import java.util.Set;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -69,6 +71,10 @@ public class GraphProjection {
 	Map<Class, Field[]> projectableFields = new HashMap<Class, Field[]>();
 
 	Map<Class, Set<Field>> perObjectPermissionFields = new HashMap<Class, Set<Field>>();
+
+	Map<Class, Boolean> perObjectPermissionClasses = new HashMap<Class, Boolean>();
+
+	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>();
 
 	Map<Field, PropertyPermissions> perFieldPermission = new HashMap<Field, PropertyPermissions>();
 
@@ -120,6 +126,9 @@ public class GraphProjection {
 			return (T) reached.get(source);
 		}
 		Class<? extends Object> sourceClass = source.getClass();
+		if (!checkObjectPermissions(source)) {
+			return null;
+		}
 		T projected = sourceClass.isArray() ? (T) Array.newInstance(
 				sourceClass.getComponentType(), Array.getLength(source))
 				: (T) sourceClass.newInstance();
@@ -247,6 +256,30 @@ public class GraphProjection {
 		return false;
 	}
 
+	boolean checkObjectPermissions(Object source) {
+		Class<? extends Object> sourceClass = source.getClass();
+		if (!perObjectPermissionClasses.containsKey(sourceClass)) {
+			Boolean result = fieldFilter == null ? new Boolean(true)
+					: fieldFilter.permitClass(sourceClass);
+			perObjectPermissionClasses.put(sourceClass, result);
+			ObjectPermissions annotation = sourceClass
+					.getAnnotation(ObjectPermissions.class);
+			perClassReadPermission.put(sourceClass, annotation == null ? null
+					: annotation.read());
+		}
+		Boolean valid = perObjectPermissionClasses.get(sourceClass);
+		if (valid == null) {// per-objected
+			Permission permission = perClassReadPermission.get(sourceClass);
+			if (permission == null) {
+				return true;
+			} else {
+				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
+				return PermissionsManager.get().isPermissible(source, ap);
+			}
+		}
+		return valid;
+	}
+
 	public static class CollectionProjectionFilter implements
 			GraphProjectionFilter {
 		@SuppressWarnings("unchecked")
@@ -297,6 +330,11 @@ public class GraphProjection {
 				}
 			}
 			return m;
+		}
+
+		@Override
+		public Boolean permitClass(Class clazz) {
+			return false;
 		}
 	}
 
@@ -352,6 +390,8 @@ public class GraphProjection {
 				throws Exception;
 
 		boolean permitField(Field field, Set<Field> perObjectPermissionFields);
+
+		public abstract Boolean permitClass(Class clazz);
 	}
 
 	public interface InstantiateImplCallback<T> {
@@ -385,9 +425,23 @@ public class GraphProjection {
 						.getMethod(SEUtilities.getAccessorName(field),
 								new Class[0])
 						.getAnnotation(PropertyPermissions.class);
-				if (pp != null) {
+				Boolean permit = permit(field, pp == null ? null : pp.read());
+				if (permit == null) {
+					perObjectPermissionFields.add(field);
+					return true;
+				} else {
+					return permit;
+				}
+			} catch (Exception e) {
+				return false;
+			}
+		}
+
+		private <T> Boolean permit(T t, Permission permission) {
+			try {
+				if (permission != null) {
 					AnnotatedPermissible ap = new AnnotatedPermissible(
-							pp.read());
+							permission);
 					if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
 						if (ap.rule().isEmpty()
 								&& !PermissionsManager.get().isLoggedIn()) {
@@ -398,10 +452,8 @@ public class GraphProjection {
 							// only in app startup/warmup
 						}
 					}
-					if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER
-							|| !ap.rule().isEmpty()) {
-						perObjectPermissionFields.add(field);
-						return true;
+					if (ap.requiresPerObjectChecks()) {
+						return null;
 					}
 					if (!PermissionsManager.get().isPermissible(ap)) {
 						return false;
@@ -412,6 +464,17 @@ public class GraphProjection {
 				// really be tlpm) that checks obj read perms
 				// that'll catch find-object stuff as well
 			} catch (Exception e2) {
+				return false;
+			}
+		}
+
+		@Override
+		public Boolean permitClass(Class clazz) {
+			try {
+				ObjectPermissions op = (ObjectPermissions) clazz
+						.getAnnotation(ObjectPermissions.class);
+				return permit(clazz, op == null ? null : op.read());
+			} catch (Exception e) {
 				return false;
 			}
 		}

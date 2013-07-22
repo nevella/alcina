@@ -73,7 +73,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	private static String administratorGroupName = "Administrators";
 
 	private static String developerGroupName = "Developers";
-	
+
 	private static String anonymousUserName = "anonymous";
 
 	private PropertyChangeListener userListener;
@@ -334,9 +334,10 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public boolean isMemberOfGroup(String groupName) {
 		return getUserGroups().containsKey(groupName);
 	}
+
 	public boolean isMemberOfGroup(long groupId) {
-		for(IGroup group:getUserGroups().values()){
-			if(group.getId()==groupId){
+		for (IGroup group : getUserGroups().values()) {
+			if (group.getId() == groupId) {
 				return true;
 			}
 		}
@@ -426,7 +427,8 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		return override ? true
 				: hasOwner.getOwner() == null ? hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
 						.getLocalId() != 0 : false
-						: hasOwner.getOwner().equals(instantiatedUser);
+						: hasOwner.getOwner().equals(user)
+								|| hasOwner.getOwner().equals(instantiatedUser);
 	}
 
 	public boolean isPermissible(Object o, Permission p) {
@@ -680,8 +682,9 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	}
 
 	public static boolean isOffline() {
-		return get().getOnlineState()==OnlineState.OFFLINE;
+		return get().getOnlineState() == OnlineState.OFFLINE;
 	}
+
 	public static boolean isOnline() {
 		return !isOffline();
 	}

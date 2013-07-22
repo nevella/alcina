@@ -77,6 +77,8 @@ import cc.alcina.framework.common.client.remote.CommonRemoteServiceExt;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -90,6 +92,7 @@ import cc.alcina.framework.entity.domaintransform.TransformConflicts.TransformCo
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
+import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
@@ -101,6 +104,7 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
@@ -139,6 +143,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			.getName()
 			+ "."
 			+ "CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS";
+
+	public static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = CommonRemoteServiceServlet.class
+			.getName() + ".TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION";
 
 	private int actionCount = 0;
 
@@ -448,8 +455,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					for (DomainTransformEvent event : rq.getEvents()) {
 						event.setEventId(idCounter++);
 					}
-					transformLayerWrapper = transform(rq, true,
-							isPersistOfflineTransforms(), true);
+					transformLayerWrapper = transform(rq, true, true);
 				} finally {
 					if (useWrapperUser) {
 						PermissionsManager.get().popUser();
@@ -571,22 +577,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
-		return transform(request, false, true, false).response;
-	}
-
-	public DomainTransformResponse transformFromServletLayer(
-			boolean persistTransforms) throws DomainTransformRequestException {
-		DomainTransformLayerWrapper wrapper = transformFromServletLayer(
-				persistTransforms, null);
-		return wrapper == null ? null : wrapper.response;
+		return transform(request, false, false).response;
 	}
 
 	/*
 	 * TODO - this should probably be integrated more with {transform} - why is
 	 * the server layer so special? just another client
 	 */
-	public DomainTransformLayerWrapper transformFromServletLayer(
-			boolean persistTransforms, String tag)
+	public DomainTransformLayerWrapper transformFromServletLayer(String tag)
 			throws DomainTransformRequestException {
 		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
 				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
@@ -596,12 +594,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
 				pendingTransforms);
 		pendingTransforms.clear();
-		return transformFromServletLayer(items, persistTransforms, tag);
+		return transformFromServletLayer(items, tag);
 	}
 
 	public DomainTransformLayerWrapper transformFromServletLayer(
-			Collection<DomainTransformEvent> transforms,
-			boolean persistTransforms, String tag)
+			Collection<DomainTransformEvent> transforms, String tag)
 			throws DomainTransformRequestException {
 		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
@@ -616,8 +613,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, map, persistTransforms, false, false, false,
-					getLogger());
+					request, map,
+					ServletLayerRegistry.impl(TransformLoggingPolicy.class),
+					false, false, false, getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
@@ -720,14 +718,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	protected DomainTransformLayerWrapper transform(
 			DomainTransformRequest request, boolean ignoreClientAuthMismatch,
-			boolean persistTransforms, boolean forOfflineTransforms)
+			boolean forOfflineTransforms)
 			throws DomainTransformRequestException {
 		HiliLocatorMap locatorMap = CommonRemoteServiceServletSupport.get()
 				.getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, locatorMap, persistTransforms, true,
-					ignoreClientAuthMismatch, forOfflineTransforms, getLogger());
+					request, locatorMap,
+					ServletLayerRegistry.impl(TransformLoggingPolicy.class),
+					true, ignoreClientAuthMismatch, forOfflineTransforms,
+					getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		}
 	}
@@ -735,6 +735,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	protected DomainTransformLayerWrapper submitAndHandleTransforms(
 			TransformPersistenceToken persistenceToken)
 			throws DomainTransformRequestException {
+		boolean unexpectedException = true;
 		try {
 			AppPersistenceBase.checkNotReadOnly();
 			LooseContext.getContext().push();
@@ -753,6 +754,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			persistenceSupport
 					.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
 							persistenceToken, wrapper));
+			unexpectedException = false;
 			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
 				return wrapper;
 			} else {
@@ -760,8 +762,31 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				throw new DomainTransformRequestException(wrapper.response);
 			}
 		} finally {
+			if (unexpectedException) {
+				try {
+					unexpectedExceptionBeforePostTransform(persistenceToken);
+				} catch (Throwable t) {
+					// make sure we get out alive
+					t.printStackTrace();
+				}
+			}
 			LooseContext.getContext().pop();
 		}
+	}
+
+	public static void unexpectedExceptionBeforePostTransform(
+			TransformPersistenceToken persistenceToken) {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION,
+				persistenceToken);
+	}
+
+	public static void unexpectedExceptionBeforePostTransformListenerDelta(
+			TopicListener<TransformPersistenceToken> listener, boolean add) {
+		GlobalTopicPublisher.get()
+				.listenerDelta(
+						TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION,
+						listener, add);
 	}
 
 	static class IsWrappedObjectDteFilter implements
@@ -802,7 +827,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			public void run() {
 				try {
 					int depth = LooseContext.depth();
-					transformFromServletLayer(items, true, null);
+					transformFromServletLayer(items, null);
 					LooseContext.confirmDepth(depth);
 					ThreadlocalTransformManager.cast().resetTltm(null);
 				} catch (Exception e) {
