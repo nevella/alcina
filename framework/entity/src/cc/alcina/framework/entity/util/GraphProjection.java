@@ -308,7 +308,7 @@ public class GraphProjection {
 				Set<Field> perObjectPermissionFields) {
 			return false;
 		}
-
+		
 		private Object projectMap(Map map, GraphProjectionContext context,
 				GraphProjection graphProjection) throws Exception {
 			Map m = null;
@@ -334,7 +334,7 @@ public class GraphProjection {
 
 		@Override
 		public Boolean permitClass(Class clazz) {
-			return false;
+			throw new UnsupportedOperationException("Normally, use only as a data filter");
 		}
 	}
 
