@@ -11,22 +11,20 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public class AnnotatedPermissible implements Permissible {
+	public boolean requiresPerObjectChecks() {
+		return !rule().isEmpty();
+	}
 
- public class AnnotatedPermissible implements Permissible {
-	 public boolean requiresPerObjectChecks(){
-		 return accessLevel() == AccessLevel.ADMIN_OR_OWNER
-					|| rule().isEmpty();
-	 }
 	public final Permission permission;
 
 	public AnnotatedPermissible(Permission permission) {

@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -433,51 +434,44 @@ public class GraphProjection {
 				} else {
 					return permit;
 				}
+			}catch (NoSuchMethodException nsme) {
+				return false;	
 			} catch (Exception e) {
-				return false;
+				throw new WrappedRuntimeException(e);
 			}
 		}
 
 		private <T> Boolean permit(T t, Permission permission) {
-			try {
-				if (permission != null) {
-					AnnotatedPermissible ap = new AnnotatedPermissible(
-							permission);
-					if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
-						if (ap.rule().isEmpty()
-								&& !PermissionsManager.get().isLoggedIn()) {
-							return false;
-						}
-						if (disablePerObjectPermissions) {
-							return true;
-							// only in app startup/warmup
-						}
-					}
-					if (ap.requiresPerObjectChecks()) {
-						return null;
-					}
-					if (!PermissionsManager.get().isPermissible(ap)) {
+			if (permission != null) {
+				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
+				if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
+					if (ap.rule().isEmpty()
+							&& !PermissionsManager.get().isLoggedIn()) {
 						return false;
 					}
+					if (disablePerObjectPermissions) {
+						return true;
+						// only in app startup/warmup
+					}
 				}
-				return true;
-				// TODO: 3.2 - replace with a call to tltm (should
-				// really be tlpm) that checks obj read perms
-				// that'll catch find-object stuff as well
-			} catch (Exception e2) {
-				return false;
+				if (ap.requiresPerObjectChecks()) {
+					return null;
+				}
+				if (!PermissionsManager.get().isPermissible(ap)) {
+					return false;
+				}
 			}
+			return true;
+			// TODO: 3.2 - replace with a call to tltm (should
+			// really be tlpm) that checks obj read perms
+			// that'll catch find-object stuff as well
 		}
 
 		@Override
 		public Boolean permitClass(Class clazz) {
-			try {
-				ObjectPermissions op = (ObjectPermissions) clazz
-						.getAnnotation(ObjectPermissions.class);
-				return permit(clazz, op == null ? null : op.read());
-			} catch (Exception e) {
-				return false;
-			}
+			ObjectPermissions op = (ObjectPermissions) clazz
+					.getAnnotation(ObjectPermissions.class);
+			return permit(clazz, op == null ? null : op.read());
 		}
 	}
 }

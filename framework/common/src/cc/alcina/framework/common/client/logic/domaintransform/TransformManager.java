@@ -310,7 +310,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return CommonLocator.get().classLookup();
 	}
 
-	protected void doubleCheckRemoval(Collection c, Object tgt) {
+	protected void doubleCheckRemoval(Collection collection, Object tgt) {
+		collection.remove(tgt);
 	}
 
 	protected void checkVersion(HasIdAndLocalId obj, DomainTransformEvent event)
@@ -412,7 +413,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public void performDeleteObject(HasIdAndLocalId hili) {
+	protected void performDeleteObject(HasIdAndLocalId hili) {
 		if (getDomainObjects() != null) {
 			removeAssociations(hili);
 			getDomainObjects().deregisterObject(hili);
@@ -1257,7 +1258,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				if (!wasContained) {
 					doubleCheckRemoval(c, obj);
 				}
-				c.remove(obj);
 			} else {
 				if (!c.contains(obj)) {
 					doubleCheckAddition(c, obj);

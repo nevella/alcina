@@ -91,8 +91,9 @@ public class AlcinaMemCache {
 	private TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(AlcinaMemCache.class, TaggedLogger.METRIC);
 
-	List<String> ignoreNames = Arrays.asList(new String[] { "creationUser",
-			"creationDate", "lastModificationDate", "lastModificationUser" });
+	static List<String> ignoreNames = Arrays.asList(new String[] {
+			"creationUser", "creationDate", "lastModificationDate",
+			"lastModificationUser" });
 
 	private static AlcinaMemCache theInstance;
 
@@ -355,7 +356,8 @@ public class AlcinaMemCache {
 		}
 	}
 
-	private void prepareTable(Class clazz) throws Exception {
+	private void prepareTable(CacheItemDescriptor descriptor) throws Exception {
+		Class clazz = descriptor.clazz;
 		List<PropertyDescriptor> pds = new ArrayList<PropertyDescriptor>(
 				Arrays.asList(Introspector.getBeanInfo(clazz)
 						.getPropertyDescriptors()));
@@ -369,7 +371,7 @@ public class AlcinaMemCache {
 			if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
 				continue;
 			}
-			if (ignoreNames.contains(pd.getName())) {
+			if (descriptor.getIgnoreNames().contains(pd.getName())) {
 				continue;
 			}
 			Method rm = pd.getReadMethod();
@@ -432,7 +434,7 @@ public class AlcinaMemCache {
 		MetricLogging.get().start("tables");
 		for (CacheItemDescriptor descriptor : cacheDescriptor.perClass.values()) {
 			Class clazz = descriptor.clazz;
-			prepareTable(clazz);
+			prepareTable(descriptor);
 			MetricLogging.get().start(clazz.getSimpleName());
 			if (!descriptor.lazy) {
 				loadTable(clazz, "");
@@ -481,9 +483,11 @@ public class AlcinaMemCache {
 		}
 		List<T> raw = new ArrayList<T>(ids.size());
 		for (Long id : ids) {
-			raw.add(cache.get(clazz, id));
+			T value = cache.get(clazz, id);
+			if (value != null) {
+				raw.add(value);
+			}
 		}
-		raw.remove(null);
 		try {
 			for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
 				task.run(this, clazz, raw);
@@ -842,5 +846,9 @@ public class AlcinaMemCache {
 			}
 		}
 		return result;
+	}
+
+	public void setConn(Connection conn) {
+		this.conn = conn;
 	}
 }

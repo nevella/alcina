@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class CacheItemDescriptor {
@@ -26,5 +27,9 @@ public class CacheItemDescriptor {
 	public CacheItemDescriptor addLookup(CacheLookupDescriptor lookup) {
 		lookupDescriptors.add(lookup);
 		return this;
+	}
+
+	public Collection<String> getIgnoreNames() {
+		return AlcinaMemCache.ignoreNames;
 	}
 }
