@@ -11,8 +11,7 @@ public class CacheDescriptor {
 	Map<Class, CacheItemDescriptor> perClass = new LinkedHashMap<Class, CacheItemDescriptor>();
 
 	public static interface CacheTask {
-		public void run(AlcinaMemCache alcinaMemCache, EntityManager em)
-				throws Exception;
+		public void run(AlcinaMemCache alcinaMemCache) throws Exception;
 	}
 
 	public static interface PreProvideTask<T> {
@@ -46,7 +45,8 @@ public class CacheDescriptor {
 	}
 
 	public void addItemDescriptor(Class clazz, String... indexProperties) {
-		CacheItemDescriptor itemDescriptor = new CacheItemDescriptor(clazz,indexProperties);
+		CacheItemDescriptor itemDescriptor = new CacheItemDescriptor(clazz,
+				indexProperties);
 		addItemDescriptor(itemDescriptor);
 	}
 }

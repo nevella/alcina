@@ -177,7 +177,6 @@ public class DevConsoleCommandTransforms {
 					+ "where ci.id != -1 %s order by ci.id desc";
 			String arg0 = argv[0];
 			String arg1 = argv.length < 2 ? "0" : argv[1];
-			String arg2 = argv.length < 3 ? "7" : argv[2];
 			String filter = "";
 			filter += arg0.equals("0") ? "" : String.format(" and ci.id=%s ",
 					arg0);
@@ -185,6 +184,8 @@ public class DevConsoleCommandTransforms {
 				filter += arg1.matches("\\d+") ? String.format(" and u.id=%s ",
 						arg1) : String.format(" and u.username='%s' ", arg1);
 			}
+			String arg2 = argv.length < 3 ? filter.isEmpty() ? "7" : "0"
+					: argv[2];
 			filter += arg2.equals("0") ? "" : String.format(
 					"  and age(ci.hellodate)<'%s days'  ", arg2);
 			Connection conn = getConn();

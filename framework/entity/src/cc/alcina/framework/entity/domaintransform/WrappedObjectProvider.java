@@ -37,5 +37,6 @@ import cc.alcina.framework.entity.entityaccess.WrappedObject;
 
 	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(Class<T> c, long id, EntityManager em)
 			throws Exception;
+	
 	public List<Class> getJaxbSubclasses();
 }

@@ -758,29 +758,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	private <T extends HasId> void preloadWrappedObjects(Collection<T> wrappers) {
-		List<Long> wrapperIds = new ArrayList<Long>();
 		try {
-			for (HasId wrapper : wrappers) {
-				PropertyDescriptor[] pds = Introspector.getBeanInfo(
-						wrapper.getClass()).getPropertyDescriptors();
-				for (PropertyDescriptor pd : pds) {
-					if (pd.getReadMethod() != null) {
-						WrapperInfo info = pd.getReadMethod().getAnnotation(
-								WrapperInfo.class);
-						if (info != null) {
-							PropertyDescriptor idpd = SEUtilities
-									.descriptorByName(wrapper.getClass(),
-											info.idPropertyName());
-							Long wrapperId = (Long) idpd.getReadMethod()
-									.invoke(wrapper,
-											CommonUtils.EMPTY_OBJECT_ARRAY);
-							if (wrapperId != null) {
-								wrapperIds.add(wrapperId);
-							}
-						}
-					}
-				}
-			}
+			List<Long> wrapperIds = new WrappedObjectPersistence().getWrapperIds(wrappers);
+			
 			for (int i = 0; i < wrapperIds.size(); i += PRECACHE_RQ_SIZE) {
 				List<Long> subList = wrapperIds.subList(i,
 						Math.min(wrapperIds.size(), i + PRECACHE_RQ_SIZE));

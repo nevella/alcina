@@ -184,7 +184,7 @@ public class AlcinaMemCache {
 		return new AlcinaMemCacheQuery().ids(ids).list(clazz);
 	}
 
-	public synchronized void loadTable(EntityManager em, Class clazz, String sqlFilter)
+	public synchronized void loadTable(Class clazz, String sqlFilter)
 			throws Exception {
 		Iterable<Object[]> results = getData(clazz, sqlFilter);
 		List<PropertyDescriptor> pds = descriptors.get(clazz);
@@ -216,12 +216,11 @@ public class AlcinaMemCache {
 
 	private boolean initialised = false;
 
-	public void warmup(EntityManager em, Connection conn,
-			CacheDescriptor cacheDescriptor) {
+	public void warmup(Connection conn, CacheDescriptor cacheDescriptor) {
 		this.conn = conn;
 		this.cacheDescriptor = cacheDescriptor;
 		try {
-			warmup0(em);
+			warmup0();
 			initialised = true;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -309,7 +308,8 @@ public class AlcinaMemCache {
 		}
 	}
 
-	private synchronized void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry) {
+	private synchronized void loadJoinTable(
+			Entry<PropertyDescriptor, JoinTable> entry) {
 		JoinTable joinTable = entry.getValue();
 		if (joinTable == null) {
 			return;
@@ -355,7 +355,7 @@ public class AlcinaMemCache {
 		}
 	}
 
-	private void prepareTable(EntityManager em, Class clazz) throws Exception {
+	private void prepareTable(Class clazz) throws Exception {
 		List<PropertyDescriptor> pds = new ArrayList<PropertyDescriptor>(
 				Arrays.asList(Introspector.getBeanInfo(clazz)
 						.getPropertyDescriptors()));
@@ -420,7 +420,7 @@ public class AlcinaMemCache {
 		return transformManager.getObject(dte);
 	}
 
-	private void warmup0(EntityManager em) throws Exception {
+	private void warmup0() throws Exception {
 		transformManager = new SubgraphTransformManager();
 		cache = transformManager.getDetachedEntityCache();
 		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
@@ -432,10 +432,10 @@ public class AlcinaMemCache {
 		MetricLogging.get().start("tables");
 		for (CacheItemDescriptor descriptor : cacheDescriptor.perClass.values()) {
 			Class clazz = descriptor.clazz;
-			prepareTable(em, clazz);
+			prepareTable(clazz);
 			MetricLogging.get().start(clazz.getSimpleName());
 			if (!descriptor.lazy) {
-				loadTable(em, clazz, "");
+				loadTable(clazz, "");
 			}
 			MetricLogging.get().end(clazz.getSimpleName(), metricLogger);
 		}
@@ -449,7 +449,7 @@ public class AlcinaMemCache {
 		MetricLogging.get().start("postLoad");
 		for (CacheTask task : cacheDescriptor.postLoadTasks) {
 			MetricLogging.get().start(task.getClass().getSimpleName());
-			task.run(this, em);
+			task.run(this);
 			resolveRefs();
 			MetricLogging.get().end(task.getClass().getSimpleName(),
 					metricLogger);
@@ -830,5 +830,17 @@ public class AlcinaMemCache {
 
 	public boolean isInitialised() {
 		return initialised;
+	}
+
+	public Set<Long> filterByExisting(Class clazz, boolean returnIfNotInGraph,
+			List<Long> ids) {
+		Set<Long> result = new LinkedHashSet<Long>();
+		for (Long id : ids) {
+			boolean add = cache.get(clazz, id) == null ^ !returnIfNotInGraph;
+			if (add) {
+				result.add(id);
+			}
+		}
+		return result;
 	}
 }

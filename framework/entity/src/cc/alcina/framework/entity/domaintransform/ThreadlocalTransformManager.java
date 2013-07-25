@@ -48,6 +48,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -73,6 +74,7 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
+import cc.alcina.framework.entity.util.EntityUtils;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -514,22 +516,29 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			// cp.log(message, LogMessageType.INFO.toString());
 			String dteName = cp.getImplementation(
 					DomainTransformEventPersistent.class).getSimpleName();
+			String dtrName = cp.getImplementation(
+					DomainTransformRequestPersistent.class).getSimpleName();
 			MetricLogging.get().start(message);
-			List<? extends DomainTransformEvent> dtes = getEntityManager()
+			List<Long> dtrIds = getEntityManager()
 					.createQuery(
-							"from "
-									+ dteName
-									+ " dte "
-									+ " where dte.domainTransformRequestPersistent.clientInstance.id = ?"
-									+ " and dte.objectLocalId!=0 and dte.transformType = ?")
-					.setParameter(1, clientInstance.getId())
-					.setParameter(2, TransformType.CREATE_OBJECT)
+							String.format(
+									"select dtr.id from %s dtr where dtr.clientInstance.id = ?",
+									dtrName))
+					.setParameter(1, clientInstance.getId()).getResultList();
+			String eql = String
+					.format("select dte.objectId, dte.objectLocalId "
+							+ "from  %s dte  "
+							+ " where dte.domainTransformRequestPersistent.id in %s "
+							+ " and dte.objectLocalId!=0 and dte.transformType = ?",
+							dteName, EntityUtils.longsToIdClause(dtrIds));
+			List<Object[]> idTuples = getEntityManager().createQuery(eql)
+					.setParameter(1, TransformType.CREATE_OBJECT)
 					.getResultList();
 			// force non-empty
 			userSessionHiliMap.put((long) -1, null);
-			for (DomainTransformEvent dte : dtes) {
-				userSessionHiliMap.put(dte.getObjectLocalId(), new HiliLocator(
-						null, dte.getObjectId()));
+			for (Object[] obj : idTuples) {
+				userSessionHiliMap.put((Long) obj[1], new HiliLocator(null,
+						(Long) obj[0]));
 			}
 			MetricLogging.get().end(message);
 		}
@@ -905,7 +914,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		public int hashCode() {
 			if (hash == 0) {
 				hash = Long.valueOf(id).hashCode()
-						^ getClass().getName().hashCode();
+						^ (clazz==null?0:clazz.hashCode());
 				if (hash == 0) {
 					hash = -1;
 				}
@@ -915,8 +924,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 		@Override
 		public String toString() {
-			return CommonUtils.formatJ("%s - %s",
-					CommonUtils.simpleClassName(clazz), id);
+			return CommonUtils.formatJ("%s - %s", clazz == null ? "??"
+					: CommonUtils.simpleClassName(clazz), id);
 		}
 	}
 
