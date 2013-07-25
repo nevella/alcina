@@ -17,6 +17,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -75,12 +76,15 @@ public class GraphProjection {
 
 	Map<Class, Boolean> perObjectPermissionClasses = new HashMap<Class, Boolean>();
 
+	@ClearOnAppRestart
+	static Map<Field, Type> genericTypeLookup = new HashMap<Field, Type>();
+
 	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>();
 
 	Map<Field, PropertyPermissions> perFieldPermission = new HashMap<Field, PropertyPermissions>();
 
 	@ClearOnAppRestart
-	private static Map<Method, PropertyPermissions> propertyPermissionLookup = new LinkedHashMap<Method, PropertyPermissions>();
+	static Map<Method, PropertyPermissions> propertyPermissionLookup = new LinkedHashMap<Method, PropertyPermissions>();
 
 	public GraphProjection() {
 	}
@@ -240,12 +244,19 @@ public class GraphProjection {
 		return projectableFields.get(clazz);
 	}
 
-	private PropertyPermissions getPropertyPermission(Method method) {
+	static PropertyPermissions getPropertyPermission(Method method) {
 		if (!propertyPermissionLookup.containsKey(method)) {
 			propertyPermissionLookup.put(method,
 					method.getAnnotation(PropertyPermissions.class));
 		}
 		return propertyPermissionLookup.get(method);
+	}
+
+	static Type getGenericType(Field field) {
+		if (!genericTypeLookup.containsKey(field)) {
+			genericTypeLookup.put(field, field.getGenericType());
+		}
+		return genericTypeLookup.get(field);
 	}
 
 	private boolean permitField(Field field, Object source) throws Exception {
@@ -422,11 +433,10 @@ public class GraphProjection {
 		public boolean permitField(Field field,
 				Set<Field> perObjectPermissionFields) {
 			try {
-				PropertyPermissions pp = field
-						.getDeclaringClass()
-						.getMethod(SEUtilities.getAccessorName(field),
-								new Class[0])
-						.getAnnotation(PropertyPermissions.class);
+				PropertyPermissions pp = getPropertyPermission(field
+						.getDeclaringClass().getMethod(
+								SEUtilities.getAccessorName(field),
+								new Class[0]));
 				Boolean permit = permit(field, pp == null ? null : pp.read());
 				if (permit == null) {
 					perObjectPermissionFields.add(field);
@@ -434,8 +444,8 @@ public class GraphProjection {
 				} else {
 					return permit;
 				}
-			}catch (NoSuchMethodException nsme) {
-				return false;	
+			} catch (NoSuchMethodException nsme) {
+				return false;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

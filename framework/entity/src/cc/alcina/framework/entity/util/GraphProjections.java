@@ -49,7 +49,8 @@ public class GraphProjections {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-	public GraphProjectionFilter fieldFilter(){
+
+	public GraphProjectionFilter fieldFilter() {
 		return new PermissibleFieldFilterH();
 	}
 
@@ -60,7 +61,7 @@ public class GraphProjections {
 			Class<?> type = field.getType();
 			if (!GraphProjection.isPrimitiveOrDataClass(type)) {
 				if (Collection.class.isAssignableFrom(type)) {
-					Type pt = field.getGenericType();
+					Type pt = GraphProjection.getGenericType(field);
 					if (pt instanceof ParameterizedType) {
 						type = (Class) ((ParameterizedType) pt)
 								.getActualTypeArguments()[0];

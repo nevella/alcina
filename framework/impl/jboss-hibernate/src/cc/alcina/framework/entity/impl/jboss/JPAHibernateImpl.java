@@ -202,9 +202,12 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 	@Override
 	public boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2) {
-		HiliLocator l1 = toHiliLocator(o1);
-		HiliLocator l2 = toHiliLocator(o2);
-		return CommonUtils.equalsWithNullEquality(l1, l2);
+		if (o1 instanceof HasIdAndLocalId && o2 instanceof HasIdAndLocalId) {
+			HiliLocator l1 = toHiliLocator(o1);
+			HiliLocator l2 = toHiliLocator(o2);
+			return CommonUtils.equalsWithNullEquality(l1, l2);
+		}
+		return CommonUtils.equalsWithNullEquality(o1, o2);
 	}
 
 	private HiliLocator toHiliLocator(Object o) {
