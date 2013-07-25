@@ -12,13 +12,14 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceListener;
+
 /**
- * Note - if you add a per-user class, you'll need to manually invalidate 
- * caching prior to that transform id - or make sure per user class instances are created via the 
- * transform manager
+ * Note - if you add a per-user class, you'll need to manually invalidate
+ * caching prior to that transform id - or make sure per user class instances
+ * are created via the transform manager
  * 
  * @author nick@alcina.cc
- *
+ * 
  */
 public class TransformCache implements
 		DomainTransformRequestPersistenceListener {
@@ -60,7 +61,7 @@ public class TransformCache implements
 			perUserLookup.put(userId, new TransformIdLookup());
 		}
 		DomainTransformEvent nonPersistentEvent = event.toNonPersistentEvent();
-		//very important - local ids MUST be 'pure' (per-client)
+		// very important - local ids MUST be 'pure' (per-client)
 		nonPersistentEvent.setObjectLocalId(0);
 		nonPersistentEvent.setValueLocalId(0);
 		perUserLookup.get(userId).put(event.getId(), nonPersistentEvent);
