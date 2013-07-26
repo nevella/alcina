@@ -91,9 +91,7 @@ public class AlcinaMemCache {
 	private TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(AlcinaMemCache.class, TaggedLogger.METRIC);
 
-	static List<String> ignoreNames = Arrays.asList(new String[] {
-			"creationUser", "creationDate", "lastModificationDate",
-			"lastModificationUser" });
+	static List<String> ignoreNames = Arrays.asList(new String[0]);
 
 	private static AlcinaMemCache theInstance;
 

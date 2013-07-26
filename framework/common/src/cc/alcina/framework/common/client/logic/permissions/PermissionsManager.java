@@ -374,8 +374,10 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 			return null;
 		}
 	};
-
 	public boolean isPermissible(Object o, Permissible p) {
+		return isPermissible(o, p, false);
+	}
+	public boolean isPermissible(Object o, Permissible p, boolean doNotEvaluateNullObjectPermissions) {
 		if (allPermissible) {
 			return true;
 		}
@@ -410,7 +412,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 				permitted |= PermissionsManager.get().getUser().equals(o);
 			}
 		}
-		if (!permitted) {
+		if (!permitted&&!doNotEvaluateNullObjectPermissions) {
 			if (getPermissionsExtension() != null) {
 				Boolean b = getPermissionsExtension().isPermitted(o, p);
 				if (b != null) {
@@ -425,10 +427,12 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		boolean override = LooseContext
 				.getBoolean(CONTEXT_OVERRIDE_AS_OWNED_OBJECT);
 		return override ? true
-				: hasOwner.getOwner() == null ? hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
-						.getLocalId() != 0 : false
-						: hasOwner.getOwner().equals(user)
-								|| hasOwner.getOwner().equals(instantiatedUser);
+				: hasOwner == null ? false
+						: hasOwner.getOwner() == null ? hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
+								.getLocalId() != 0 : false
+								: hasOwner.getOwner().equals(user)
+										|| hasOwner.getOwner().equals(
+												instantiatedUser);
 	}
 
 	public boolean isPermissible(Object o, Permission p) {

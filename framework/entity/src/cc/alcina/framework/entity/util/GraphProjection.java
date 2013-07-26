@@ -36,6 +36,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
+import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -208,7 +209,8 @@ public class GraphProjection {
 
 	private Field[] getFieldsForClass(Object projected) throws Exception {
 		Class<? extends Object> clazz = projected.getClass();
-		if (!projectableFields.containsKey(clazz)) {
+		Field[] result = projectableFields.get(clazz);
+		if (result == null) {
 			List<Field> allFields = new ArrayList<Field>();
 			Set<Field> dynamicPermissionFields = new HashSet<Field>();
 			Class c = clazz;
@@ -230,8 +232,8 @@ public class GraphProjection {
 				}
 				c = c.getSuperclass();
 			}
-			projectableFields.put(clazz,
-					(Field[]) allFields.toArray(new Field[allFields.size()]));
+			result = (Field[]) allFields.toArray(new Field[allFields.size()]);
+			projectableFields.put(clazz, result);
 			perObjectPermissionFields.put(clazz, dynamicPermissionFields);
 			for (Field field : dynamicPermissionFields) {
 				PropertyPermissions pp = getPropertyPermission(field
@@ -241,7 +243,7 @@ public class GraphProjection {
 				perFieldPermission.put(field, pp);
 			}
 		}
-		return projectableFields.get(clazz);
+		return result;
 	}
 
 	static PropertyPermissions getPropertyPermission(Method method) {
@@ -437,7 +439,8 @@ public class GraphProjection {
 						.getDeclaringClass().getMethod(
 								SEUtilities.getAccessorName(field),
 								new Class[0]));
-				Boolean permit = permit(field, pp == null ? null : pp.read());
+				Boolean permit = permit(field.getType(),
+						pp == null ? null : pp.read());
 				if (permit == null) {
 					perObjectPermissionFields.add(field);
 					return true;
@@ -451,25 +454,32 @@ public class GraphProjection {
 			}
 		}
 
-		private <T> Boolean permit(T t, Permission permission) {
+		private Boolean permit(Class clazz, Permission permission) {
 			if (permission != null) {
 				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
-				if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
-					if (ap.rule().isEmpty()
-							&& !PermissionsManager.get().isLoggedIn()) {
-						return false;
-					}
-					if (disablePerObjectPermissions) {
-						return true;
-						// only in app startup/warmup
-					}
+				if (disablePerObjectPermissions) {
+					return true;
+					// only in app startup/warmup
 				}
-				if (ap.requiresPerObjectChecks()) {
-					return null;
+				if (PermissionsManager.get().isPermissible(null, ap, true)) {
+					return true;
 				}
-				if (!PermissionsManager.get().isPermissible(ap)) {
+				if (ap.accessLevel().ordinal() <= AccessLevel.GROUP.ordinal()) {
 					return false;
 				}
+				if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
+					if (ap.rule().length() > 0) {
+						return null;
+					}
+					if (!PermissionsManager.get().isLoggedIn()) {
+						return false;
+					}
+					if (!HasOwner.class.isAssignableFrom(clazz)) {
+						return false;
+					}
+					return null;
+				}
+				return ap.rule().isEmpty() ? false : null;
 			}
 			return true;
 			// TODO: 3.2 - replace with a call to tltm (should

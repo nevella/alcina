@@ -21,9 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * @author Nick Reddel
  */
 public class AnnotatedPermissible implements Permissible {
-	public boolean requiresPerObjectChecks() {
-		return !rule().isEmpty();
-	}
+	
 
 	public final Permission permission;
 
