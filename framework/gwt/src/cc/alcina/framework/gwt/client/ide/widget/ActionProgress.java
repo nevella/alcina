@@ -140,8 +140,8 @@ public class ActionProgress extends Composite implements
 		cancelLink.setVisible(false);
 		cancellingStatusMessage.setText(" - Cancelling...");
 		cancellingStatusMessage.setVisible(true);
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().pollJobStatus(
-				getId(), true, new AsyncCallback<JobInfo>() {
+		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+				.pollJobStatus(getId(), true, new AsyncCallback<JobInfo>() {
 					public void onFailure(Throwable e) {
 						cancellingStatusMessage.setText(" - Error cancelling");
 						throw new WrappedRuntimeException(e);
@@ -298,8 +298,8 @@ public class ActionProgress extends Composite implements
 			cancelLink.setVisible(true);
 		}
 		message.setText(msg);
-		progress.setWidth(Math.max(0, ((int) (bar.getOffsetWidth() - 2) * info
-				.getPercentComplete()))
+		progress.setWidth(Math.max(0,
+				((int) (bar.getOffsetWidth() - 2) * info.getPercentComplete()))
 				+ "px");
 	}
 

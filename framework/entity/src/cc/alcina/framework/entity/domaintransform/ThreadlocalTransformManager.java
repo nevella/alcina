@@ -52,6 +52,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
@@ -64,12 +65,13 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -85,6 +87,9 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  */
 public class ThreadlocalTransformManager extends TransformManager implements
 		PropertyAccessor, ObjectLookup, ClassLookup {
+	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
+			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
+
 	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
 		protected synchronized Object initialValue() {
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager
@@ -213,6 +218,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
+		if (objectClass.getName().endsWith(".Citable")) {
+			int j = 3;
+		}
 		long localId = nextLocalIdCounter();
 		T newInstance = newInstance(objectClass, 0, localId);
 		// logic should probably be made clearer here - if id==0, we're not in
@@ -584,6 +592,17 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
+	public static void resetThreadTransformManager() {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_RESET_THREAD_TRANSFORM_MANAGER, Thread.currentThread());
+	}
+
+	public static void resetThreadTransformManagerListenerDelta(
+			TopicListener<Thread> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_RESET_THREAD_TRANSFORM_MANAGER, listener, add);
+	}
+
 	public void setClientInstance(ClientInstance clientInstance) {
 		this.clientInstance = clientInstance;
 	}
@@ -610,7 +629,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 					SuggestedAction.NOTIFY_WARNING);
 		}
 		HasIdAndLocalId hili = (HasIdAndLocalId) bean;
-		if (hili.getId() != 0) {
+		if (hili.getId() != 0
+				|| (localIdToEntityMap.get(hili.getLocalId()) != null && getEntityManager() == null)) {
 			try {
 				PropertyDescriptor[] pds = Introspector.getBeanInfo(
 						bean.getClass()).getPropertyDescriptors();
@@ -914,7 +934,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		public int hashCode() {
 			if (hash == 0) {
 				hash = Long.valueOf(id).hashCode()
-						^ (clazz==null?0:clazz.hashCode());
+						^ (clazz == null ? 0 : clazz.hashCode());
 				if (hash == 0) {
 					hash = -1;
 				}

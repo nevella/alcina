@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -40,6 +42,8 @@ import cc.alcina.framework.entity.util.EntityUtils;
 import cc.alcina.framework.entity.util.Multiset;
 
 public class TransformPersister {
+	private static final String TOPIC_PERSISTING_TRANSFORMS = TransformPersister.class
+			.getName() + ".TOPIC_PERSISTING_TRANSFORMS";
 	private static final String PRECACHE_ENTITIES = "precache entities";
 
 	private static final String FLUSH_TRANSFORMS = "flush transforms";
@@ -528,5 +532,15 @@ public class TransformPersister {
 				DomainTransformLayerWrapper wrapper) {
 			this.wrapper = wrapper;
 		}
+	}
+	public static void persistingTransforms() {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_PERSISTING_TRANSFORMS, Thread.currentThread());
+	}
+
+	public static void persistingTransformsListenerDelta(
+			TopicListener<Thread> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_PERSISTING_TRANSFORMS, listener, add);
 	}
 }

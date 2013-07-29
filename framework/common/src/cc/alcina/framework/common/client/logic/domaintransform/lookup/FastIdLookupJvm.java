@@ -4,30 +4,39 @@ import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public class FastIdLookupScript implements FastIdLookup {
-	private JavascriptIntLookup idLookup = JavascriptIntLookup.create();
+import com.google.gwt.core.client.GWT;
 
-	private JavascriptIntLookup localIdLookup = JavascriptIntLookup.create();
+public class FastIdLookupJvm implements FastIdLookup {
+	private Map<Long, HasIdAndLocalId> idLookup = new LinkedHashMap<Long, HasIdAndLocalId>();
+
+	private Map<Long, HasIdAndLocalId> localIdLookup = new LinkedHashMap<Long, HasIdAndLocalId>();
 
 	private Class clazz;
 
-	private FastIdLookupScriptValues values;
+	private FastIdLookupDevValues values;
 
-	public FastIdLookupScript(Class clazz) {
+	public FastIdLookupJvm(Class clazz) {
 		this.clazz = clazz;
-		this.values = new FastIdLookupScriptValues();
+		this.values = new FastIdLookupDevValues();
 	}
 
-	class FastIdLookupScriptValues extends AbstractCollection<HasIdAndLocalId> {
+	class FastIdLookupDevValues extends AbstractCollection<HasIdAndLocalId> {
 		@Override
 		public Iterator<HasIdAndLocalId> iterator() {
-			return new MultiIterator<HasIdAndLocalId>(false,
-					localIdLookup.valuesIterator(), idLookup.valuesIterator());
+			return new MultiIterator<HasIdAndLocalId>(false, localIdLookup
+					.values().iterator(), idLookup.values().iterator());
+		}
+
+		@Override
+		public String toString() {
+			return "[" + CommonUtils.join(this, ", ") + "]";
 		}
 
 		@Override
@@ -58,17 +67,17 @@ public class FastIdLookupScript implements FastIdLookup {
 
 	@Override
 	public HasIdAndLocalId get(long id, boolean local) {
-		int idi = LongWrapperHash.fastIntValue(id);
+		checkId(id);
 		if (local) {
-			return localIdLookup.get(idi);
+			return localIdLookup.get(id);
 		} else {
-			return idLookup.get(idi);
+			return idLookup.get(id);
 		}
 	}
 
 	@Override
 	public void put(HasIdAndLocalId hili, boolean local) {
-		int idi = getApplicableId(hili, local);
+		long idi = getApplicableId(hili, local);
 		if (local) {
 			localIdLookup.put(idi, hili);
 		} else {
@@ -78,18 +87,24 @@ public class FastIdLookupScript implements FastIdLookup {
 
 	@Override
 	public void remove(long id, boolean local) {
-		int idi = LongWrapperHash.fastIntValue(id);
+		checkId(id);
 		if (local) {
-			localIdLookup.remove(idi);
+			localIdLookup.remove(id);
 		} else {
-			idLookup.remove(idi);
+			idLookup.remove(id);
 		}
 	}
 
-	int getApplicableId(HasIdAndLocalId hili, boolean local) {
+	long getApplicableId(HasIdAndLocalId hili, boolean local) {
 		long id = local ? hili.getLocalId() : hili.getId();
-		int idi = LongWrapperHash.fastIntValue(id);
-		return idi;
+		checkId(id);
+		return id;
+	}
+
+	public void checkId(long id) {
+		if (GWT.isClient() && id > LongWrapperHash.MAX) {
+			throw new RuntimeException("losing higher bits from long");
+		}
 	}
 
 	@Override

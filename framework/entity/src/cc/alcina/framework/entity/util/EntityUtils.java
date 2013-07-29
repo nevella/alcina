@@ -24,7 +24,8 @@ import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
@@ -132,17 +133,19 @@ public class EntityUtils {
 		return detachedClone(source, callback, cache);
 	}
 
+	
 	public <T> T detachedClone(T source, InstantiateImplCallback callback,
 			DetachedEntityCache cache) {
 		GraphProjectionFilter filter = EntityLayerLocator.get()
 				.jpaImplementation().getResolvingFilter(callback, cache);
 		try {
-			return new GraphProjection(new PermissibleFieldFilter(), filter)
+			return new GraphProjection(Registry.impl(PermissibleFieldFilter.class), filter)
 					.project(source, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+	
 
 	public <T> T detachedCloneIgnorePermissions(T source,
 			InstantiateImplCallback callback) {

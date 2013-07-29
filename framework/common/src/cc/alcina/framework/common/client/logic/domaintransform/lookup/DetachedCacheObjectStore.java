@@ -1,17 +1,16 @@
-package cc.alcina.framework.entity.entityaccess.cache;
+package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.util.Collection;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
-import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 
 public class DetachedCacheObjectStore implements ObjectStore {
 	DetachedEntityCache cache;
 
-	public DetachedCacheObjectStore() {
-		cache = new DetachedEntityCache();
+	public DetachedCacheObjectStore(DetachedEntityCache cache) {
+		this.cache = cache;
 	}
 
 	@Override
@@ -28,7 +27,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 
 	@Override
 	public <T> Collection<T> getCollection(Class<T> clazz) {
-		return (Collection<T>) cache.getDetached().get(clazz).values();
+		return (Collection<T>) cache.values(clazz);
 	}
 
 	@Override
@@ -58,7 +57,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 
 	@Override
 	public void deregisterObject(HasIdAndLocalId hili) {
-		//just remove
+		// just remove
 		cache.remove(hili);
 	}
 
@@ -74,5 +73,10 @@ public class DetachedCacheObjectStore implements ObjectStore {
 
 	public DetachedEntityCache getCache() {
 		return this.cache;
+	}
+
+	@Override
+	public boolean contains(HasIdAndLocalId obj) {
+		return getObject(obj) != null;
 	}
 }

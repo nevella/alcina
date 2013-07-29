@@ -54,7 +54,7 @@ public class DomainTransformRequestPersistence {
 		public void removeDomainTransformRequestPersistenceListener(
 				DomainTransformRequestPersistenceListener listener);
 	}
-
+	//TODO - Jira - events must be fired in DomainTransformRequestPersistent.id order - fairly important
 	public static class DomainTransformRequestPersistenceSupport implements
 			DomainTransformRequestPersistenceSource {
 		private List<DomainTransformRequestPersistenceListener> listenerList = new ArrayList<DomainTransformRequestPersistenceListener>();;

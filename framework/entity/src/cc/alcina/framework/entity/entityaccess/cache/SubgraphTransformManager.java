@@ -7,14 +7,15 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCacheObjectStore;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport;
-import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 
 public class SubgraphTransformManager extends TransformManager {
-	private DetachedCacheObjectStore store;
+	protected DetachedCacheObjectStore store;
 
 	SubgraphClassLookup classLookup = new SubgraphClassLookup();
 
@@ -24,7 +25,7 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	public DetachedEntityCache getDetachedEntityCache() {
-		return store.cache;
+		return store.getCache();
 	}
 
 	@Override
@@ -40,7 +41,8 @@ public class SubgraphTransformManager extends TransformManager {
 
 	@Override
 	protected void createObjectLookup() {
-		store = new DetachedCacheObjectStore();
+		store = new DetachedCacheObjectStore(
+				new DetachedEntityCacheArrayBacked());
 		setDomainObjects(store);
 	}
 
@@ -61,7 +63,7 @@ public class SubgraphTransformManager extends TransformManager {
 		super.updateAssociation(evt, obj, tgt, remove, collectionPropertyChange);
 	}
 
-	class SubgraphClassLookup implements ClassLookup {
+	static class SubgraphClassLookup implements ClassLookup {
 		@Override
 		public String displayNameForObject(Object o) {
 			return ObjectPersistenceHelper.get().displayNameForObject(o);

@@ -38,7 +38,7 @@ public class AlcinaTemplateRemoteServiceAsyncProvider extends
 
 	@Override
 	public AlcinaTemplateRemoteServiceAsync create(
-			Class<AlcinaTemplateRemoteServiceAsync> registryPoint,
+			Class<? extends AlcinaTemplateRemoteServiceAsync> registryPoint,
 			Class targetObjectClass) {
 		return getServiceInstance();
 	}

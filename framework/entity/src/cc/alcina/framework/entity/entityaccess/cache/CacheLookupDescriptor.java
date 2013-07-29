@@ -1,16 +1,24 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.PropertyPathAccesor;
 
-public class CacheLookupDescriptor {
-	public Class clazz;
+public class CacheLookupDescriptor<T> {
+	public Class<T> clazz;
 
 	public String propertyPath;
+
+	public boolean idDescriptor;
+
+	protected CacheLookup lookup;
+
+	private boolean enabled = true;
 
 	public boolean handles(Class clazz2, String propertyPath) {
 		return clazz2 == clazz && propertyPath.equals(this.propertyPath);
 	}
+
+	private CollectionFilter<T> relevanceFilter;
 
 	public CacheLookupDescriptor(Class clazz, String propertyPath) {
 		this.clazz = clazz;
@@ -19,7 +27,51 @@ public class CacheLookupDescriptor {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Lookup descriptor - %s :: %s", clazz,
-				propertyPath);
+		return CommonUtils.formatJ("Lookup descriptor - %s :: %s :: (id) %s",
+				clazz, propertyPath, idDescriptor);
+	}
+
+	public CacheLookup getLookup() {
+		return lookup;
+	}
+
+	public void createLookup() {
+		this.lookup = new CacheLookup(this);
+	}
+
+	public static class IdCacheLookupDescriptor<T> extends
+			CacheLookupDescriptor<T> {
+		private IdLookup idLookup;
+
+		public IdCacheLookupDescriptor(Class clazz, String propertyPath) {
+			super(clazz, propertyPath);
+		}
+
+		@Override
+		public IdLookup getLookup() {
+			return idLookup;
+		}
+
+		@Override
+		public void createLookup() {
+			idLookup = new IdLookup(this);
+			lookup = idLookup;
+		}
+	}
+
+	public CollectionFilter<T> getRelevanceFilter() {
+		return this.relevanceFilter;
+	}
+
+	public void setRelevanceFilter(CollectionFilter<T> relevanceFilter) {
+		this.relevanceFilter = relevanceFilter;
+	}
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
 	}
 }

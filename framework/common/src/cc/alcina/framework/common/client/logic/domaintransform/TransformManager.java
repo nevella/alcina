@@ -43,7 +43,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupClient;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfoLite;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
@@ -213,8 +213,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				// note, should never occur TODO: notify server
 				return;
 			}
-			CommonLocator.get().propertyAccessor()
-					.setPropertyValue(obj, event.getPropertyName(), tgt);
+			propertyAccessor().setPropertyValue(obj, event.getPropertyName(),
+					tgt);
 			String pn = event.getPropertyName();
 			if (pn.equals(TransformManager.ID_FIELD_NAME)
 					|| pn.equals(TransformManager.LOCAL_ID_FIELD_NAME)) {
@@ -240,8 +240,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// add and removeref will not cause a property change, so no transform
 		// removal
 		case ADD_REF_TO_COLLECTION: {
-			Set set = (Set) CommonLocator.get().propertyAccessor()
-					.getPropertyValue(obj, event.getPropertyName());
+			Set set = (Set) propertyAccessor().getPropertyValue(obj,
+					event.getPropertyName());
 			if (!set.contains(tgt)) {
 				doubleCheckAddition(set, tgt);
 			}
@@ -251,8 +251,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 			break;
 		case REMOVE_REF_FROM_COLLECTION: {
-			Set set = (Set) CommonLocator.get().propertyAccessor()
-					.getPropertyValue(obj, event.getPropertyName());
+			Set set = (Set) propertyAccessor().getPropertyValue(obj,
+					event.getPropertyName());
 			boolean wasContained = set.remove(tgt);
 			if (!wasContained) {
 				doubleCheckRemoval(set, tgt);
@@ -300,6 +300,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 					+ event.getTransformType();
 		}
 		currentEvent = null;
+	}
+
+	protected PropertyAccessor propertyAccessor() {
+		return CommonLocator.get().propertyAccessor();
 	}
 
 	protected void doubleCheckAddition(Collection collection, Object tgt) {
@@ -486,6 +490,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return getDomainObjects().getCollection(clazz);
 	}
 
+	// TODO - Jira - get rid of objectstore vs objectlookup
 	public ObjectStore getDomainObjects() {
 		return this.domainObjects;
 	}
@@ -633,8 +638,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			String collectionPropertyName, Object delta,
 			CollectionModificationType modificationType) {
 		Collection deltaC = CommonUtils.wrapInCollection(delta);
-		Collection old = (Collection) CommonLocator.get().propertyAccessor()
-				.getPropertyValue(objectWithCollection, collectionPropertyName);
+		Collection old = (Collection) propertyAccessor().getPropertyValue(
+				objectWithCollection, collectionPropertyName);
 		Collection c = CommonUtils.shallowCollectionClone(old);
 		if (c == null) {
 			// handles the case when we're working within a transaction and try
@@ -646,11 +651,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} else {
 			c.removeAll(deltaC);
 		}
-		CommonLocator
-				.get()
-				.propertyAccessor()
-				.setPropertyValue(objectWithCollection, collectionPropertyName,
-						c);
+		propertyAccessor().setPropertyValue(objectWithCollection,
+				collectionPropertyName, c);
 	}
 
 	public synchronized long nextEventIdCounter() {
@@ -666,7 +668,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		ClassLookup classLookup = classLookup();
 		List<PropertyInfoLite> pds = classLookup.getWritableProperties(clazz);
 		Object templateInstance = classLookup.getTemplateInstance(clazz);
-		PropertyAccessor accessor = CommonLocator.get().propertyAccessor();
+		PropertyAccessor accessor = propertyAccessor();
 		Map<String, Object> defaultValues = new HashMap();
 		Set<Class> implementsHili = new HashSet<Class>();
 		for (Iterator<PropertyInfoLite> itr = pds.iterator(); itr.hasNext();) {
@@ -706,8 +708,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				String propertyName = pd.getPropertyName();
 				Class propertyType = pd.getPropertyType();
 				Object defaultValue = defaultValues.get(propertyName);
-				Object value = asObjectSpec ? arr[i++] : CommonLocator.get()
-						.propertyAccessor().getPropertyValue(o, propertyName);
+				Object value = asObjectSpec ? arr[i++] : propertyAccessor()
+						.getPropertyValue(o, propertyName);
 				if (value == null && defaultValue == null) {
 					continue;
 				}
@@ -930,7 +932,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public void registerDomainObjectsAsync(Collection<HasIdAndLocalId> hilis,
 			final AsyncCallback<Void> postRegisterCallback) {
-		((MapObjectLookup) getDomainObjects()).registerAsync(hilis,
+		((MapObjectLookupClient) getDomainObjects()).registerAsync(hilis,
 				new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -952,7 +954,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected void createObjectLookup() {
-		setDomainObjects(new MapObjectLookup(this));
+		setDomainObjects(new MapObjectLookupClient(this));
 	}
 
 	public void registerDomainObjectsInHolderAsync(final DomainModelHolder h,
@@ -961,7 +963,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			getDomainObjects().removeListeners();
 		}
 		createObjectLookup();
-		((MapObjectLookup) getDomainObjects()).registerAsync(
+		((MapObjectLookupClient) getDomainObjects()).registerAsync(
 				h.registerableDomainObjects(), new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -1223,17 +1225,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void updateAssociation(DomainTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt, boolean remove,
 			boolean collectionPropertyChange) {
-		Association assoc = obj == null ? null : CommonLocator
-				.get()
-				.propertyAccessor()
+		Association assoc = obj == null ? null : propertyAccessor()
 				.getAnnotationForProperty(obj.getClass(), Association.class,
 						evt.getPropertyName());
 		if (tgt == null || assoc == null || assoc.propertyName().length() == 0) {
 			return;
 		}
 		HasIdAndLocalId hTgt = (HasIdAndLocalId) tgt;
-		Object associatedObject = CommonLocator.get().propertyAccessor()
-				.getPropertyValue(tgt, assoc.propertyName());
+		Object associatedObject = propertyAccessor().getPropertyValue(tgt,
+				assoc.propertyName());
+		associatedObject = ensureEndpointInTransformGraph(associatedObject);
 		boolean assocObjIsCollection = associatedObject instanceof Collection;
 		TransformType tt = assocObjIsCollection ? (remove ? TransformType.REMOVE_REF_FROM_COLLECTION
 				: TransformType.ADD_REF_TO_COLLECTION)
@@ -1264,21 +1265,22 @@ public abstract class TransformManager implements PropertyChangeListener,
 				}
 			}
 			if (collectionPropertyChange && !assoc.silentUpdates()) {
-				CommonLocator.get().propertyAccessor()
-						.setPropertyValue(tgt, assoc.propertyName(), c);
+				propertyAccessor().setPropertyValue(tgt, assoc.propertyName(),
+						c);
 			}
 		} else {
-			CommonLocator
-					.get()
-					.propertyAccessor()
-					.setPropertyValue(tgt, assoc.propertyName(),
-							remove ? null : obj);
+			propertyAccessor().setPropertyValue(tgt, assoc.propertyName(),
+					remove ? null : obj);
 			// shouldn't fire for collection props, probly. also, collection
 			// mods are very unlikely to collide in a nasty way (since
 			// membership is really just a bitset, and colliding colln mods will
 			// often not actually hit each other)
 			objectModified(hTgt, evt, true);
 		}
+	}
+
+	protected Object ensureEndpointInTransformGraph(Object object) {
+		return object;
 	}
 
 	protected void maybeAddVersionNumbers(DomainTransformEvent evt,
@@ -1481,11 +1483,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return instance;
 		}
 		instance = createDomainObject(clazz);
-		CommonLocator.get().propertyAccessor()
-				.setPropertyValue(instance, key, value);
+		propertyAccessor().setPropertyValue(instance, key, value);
 		if (parent != null) {
-			CommonLocator.get().propertyAccessor()
-					.setPropertyValue(instance, parentPropertyName, parent);
+			propertyAccessor().setPropertyValue(instance, parentPropertyName,
+					parent);
 		}
 		return instance;
 	}

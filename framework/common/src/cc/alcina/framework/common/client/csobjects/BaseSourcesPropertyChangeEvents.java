@@ -30,7 +30,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  */
 public class BaseSourcesPropertyChangeEvents implements
 		SourcesPropertyChangeEvents {
-	private transient PropertyChangeSupport propertyChangeSupport;
+	private transient MutablePropertyChangeSupport propertyChangeSupport;
 
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
 		this.propertyChangeSupport().addPropertyChangeListener(listener);
@@ -86,7 +86,7 @@ public class BaseSourcesPropertyChangeEvents implements
 	 * 
 	 * I'd imagine any decent JS engine will optimise the null check fairly well
 	 */
-	protected PropertyChangeSupport propertyChangeSupport() {
+	protected MutablePropertyChangeSupport propertyChangeSupport() {
 		if (propertyChangeSupport == null) {
 			propertyChangeSupport = new MutablePropertyChangeSupport(this);
 		}

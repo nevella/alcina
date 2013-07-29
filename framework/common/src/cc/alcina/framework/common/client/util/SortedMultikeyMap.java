@@ -78,8 +78,11 @@ public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> items(Object... objects) {
-		return (Collection) (objects.length == depth ? values(objects)
-				: keys(objects));
+		if (objects.length >= depth) {
+			throw new IllegalArgumentException(
+					"items() must have fewer than <depth> keys");
+		}
+		return keys(objects);
 	}
 
 	@Override
@@ -100,8 +103,11 @@ public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> reverseItems(Object... objects) {
-		return (Collection) (objects.length == depth ? reverseValues(objects)
-				: reverseKeys(objects));
+		if (objects.length >= depth) {
+			throw new IllegalArgumentException(
+					"items() must have fewer than <depth> keys");
+		}
+		return reverseKeys(objects);
 	}
 
 	@Override
@@ -130,5 +136,5 @@ public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
 	@Override
 	public boolean containsKey(Object... objects) {
 		return multikeyMapSupport.containsKey(objects);
-	}	
+	}
 }

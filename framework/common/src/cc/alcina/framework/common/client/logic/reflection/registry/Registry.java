@@ -342,6 +342,6 @@ public class Registry {
 	}
 
 	public interface RegistryFactory<V> {
-		public V create(Class<V> registryPoint, Class targetObjectClass);
+		public V create(Class<? extends V> registryPoint, Class targetObjectClass);
 	}
 }

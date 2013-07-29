@@ -7,7 +7,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
-
+/**
+ *  
+ * @author nick@alcina.cc
+ *
+ */
 public class CommonRemoteServiceServletSupport {
 	public static CommonRemoteServiceServletSupport get() {
 		if (theInstance == null) {

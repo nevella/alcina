@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.entity.entityaccess;
+package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  * @author Nick Reddel
  */
 public class DetachedEntityCache implements Serializable {
-	private Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>();
+	protected Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>();
 
 	public DetachedEntityCache() {
 	}
@@ -96,7 +96,7 @@ public class DetachedEntityCache implements Serializable {
 		}
 	}
 
-	private void ensureMaps(Class clazz) {
+	protected void ensureMaps(Class clazz) {
 		if (!detached.containsKey(clazz)) {
 			detached.put(clazz, new TreeMap<Long, HasIdAndLocalId>());
 		}
@@ -143,5 +143,12 @@ public class DetachedEntityCache implements Serializable {
 		ensureMaps(clazz);
 		long id = hili.getId();
 		detached.get(clazz).remove(id);
+	}
+
+	public boolean contains(HasIdAndLocalId hili) {
+		Class<? extends HasIdAndLocalId> clazz = hili.getClass();
+		ensureMaps(clazz);
+		long id = hili.getId();
+		return detached.get(clazz).containsKey(id);
 	}
 }

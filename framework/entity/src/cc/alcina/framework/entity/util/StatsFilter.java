@@ -18,10 +18,10 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
-import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
 import cc.alcina.framework.entity.util.EntityUtils.MultiIdentityMap;
 import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;

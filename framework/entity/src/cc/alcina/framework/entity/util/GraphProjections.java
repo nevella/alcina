@@ -9,7 +9,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
@@ -56,27 +57,18 @@ public class GraphProjections {
 
 	class PermissibleFieldFilterH extends PermissibleFieldFilter {
 		@Override
-		public boolean permitField(Field field,
-				Set<Field> perObjectPermissionFields) {
-			Class<?> type = field.getType();
-			if (!GraphProjection.isPrimitiveOrDataClass(type)) {
-				if (Collection.class.isAssignableFrom(type)) {
-					Type pt = GraphProjection.getGenericType(field);
-					if (pt instanceof ParameterizedType) {
-						type = (Class) ((ParameterizedType) pt)
-								.getActualTypeArguments()[0];
-					}
-				}
-				if (permittedClasses.size() > 0
-						&& !permittedClasses.contains(type)) {
-					return false;
-				}
-				if (forbiddenClasses.size() > 0
-						&& forbiddenClasses.contains(type)) {
-					return false;
-				}
+		public Boolean permitClass(Class clazz) {
+			if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
+				return true;
 			}
-			return super.permitField(field, perObjectPermissionFields);
+			if (permittedClasses.size() > 0
+					&& !permittedClasses.contains(clazz)) {
+				return false;
+			}
+			if (forbiddenClasses.size() > 0 && forbiddenClasses.contains(clazz)) {
+				return false;
+			}
+			return true;
 		}
 	}
 }

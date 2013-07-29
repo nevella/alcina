@@ -22,7 +22,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.persistence.Column;
-import javax.persistence.EntityManager;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -46,17 +45,20 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceListener;
-import cc.alcina.framework.entity.entityaccess.DetachedEntityCache;
+import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.util.GraphProjection;
@@ -64,6 +66,13 @@ import cc.alcina.framework.entity.util.GraphProjection;
 public class AlcinaMemCache {
 	public static final String TOPIC_UPDATE_EXCEPTION = AlcinaMemCache.class
 			.getName() + ".TOPIC_UPDATE_EXCEPTION";
+
+	public static AlcinaMemCache get() {
+		if (theInstance == null) {
+			theInstance = new AlcinaMemCache();
+		}
+		return theInstance;
+	}
 
 	private Map<PropertyDescriptor, JoinTable> joinTables;
 
@@ -77,11 +86,9 @@ public class AlcinaMemCache {
 
 	private Map<PropertyDescriptor, Class> propertyDescriptorFetchTypes = new LinkedHashMap<PropertyDescriptor, Class>();
 
-	private Map<CacheLookupDescriptor, CacheLookup> indicies = new LinkedHashMap<CacheLookupDescriptor, CacheLookup>();
-
 	private LaterLookup laterLookup;
 
-	private SubgraphTransformManager transformManager;
+	SubgraphTransformManager transformManager;
 
 	private CacheDescriptor cacheDescriptor;
 
@@ -95,24 +102,65 @@ public class AlcinaMemCache {
 
 	private static AlcinaMemCache theInstance;
 
-	public static AlcinaMemCache get() {
-		if (theInstance == null) {
-			theInstance = new AlcinaMemCache();
+	private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
+	};
+
+	private TopicListener<Thread> resetListener = new TopicListener<Thread>() {
+		@Override
+		public void topicPublished(String key, Thread message) {
+			transactional.transactionFinished();
 		}
-		return theInstance;
-	}
+	};
+
+	private TopicListener<Thread> persistingListener = new TopicListener<Thread>() {
+		@Override
+		public void topicPublished(String key, Thread message) {
+			transactional.transactionCommitting();
+		}
+	};
 
 	DetachedEntityCache cache;
 
 	private MemCachePersistenceListener persistenceListener;
 
+	private boolean initialised = false;
+
+	public Transactional transactional = new Transactional();
+
 	private AlcinaMemCache() {
 		super();
+		ThreadlocalTransformManager.resetThreadTransformManagerListenerDelta(
+				resetListener, true);
+		TransformPersister.persistingTransformsListenerDelta(
+				persistingListener, true);
 		persistenceListener = new MemCachePersistenceListener();
+	}
+
+	public void addValues(CacheListener listener) {
+		for (Object o : cache.values(listener.getListenedClass())) {
+			listener.insert((HasIdAndLocalId) o);
+		}
 	}
 
 	public void appShutdown() {
 		theInstance = null;
+	}
+
+	public void enableAndAddValues(CacheListener listener) {
+		listener.setEnabled(true);
+		addValues(listener);
+	}
+
+	public Set<Long> filterByExisting(Class clazz, boolean returnIfNotInGraph,
+			List<Long> ids) {
+		Set<Long> result = new LinkedHashSet<Long>();
+		for (Long id : ids) {
+			boolean add = cache.get(clazz, id) == null ^ !returnIfNotInGraph;
+			if (add) {
+				result.add(id);
+			}
+		}
+		return result;
 	}
 
 	public List<DomainTransformEvent> filterInterestedTransforms(
@@ -154,9 +202,13 @@ public class AlcinaMemCache {
 		return new ArrayList<Long>(cache.keys(clazz));
 	}
 
+	public <CL extends CacheLookup> CL getLookupFor(
+			CacheLookupDescriptor descriptor) {
+		return (CL) descriptor.getLookup();
+	}
+
 	public int getLookupSize(CacheLookupDescriptor descriptor, Object value) {
-		return indicies.get(descriptor) == null ? 0 : indicies.get(descriptor)
-				.size(value);
+		return descriptor.getLookup().size(value);
 	}
 
 	public MemCachePersistenceListener getPersistenceListener() {
@@ -169,6 +221,10 @@ public class AlcinaMemCache {
 
 	public boolean isCached(Class clazz) {
 		return cacheDescriptor.perClass.containsKey(clazz);
+	}
+
+	public boolean isInitialised() {
+		return initialised;
 	}
 
 	public void linkFromServletLayer() {
@@ -213,7 +269,9 @@ public class AlcinaMemCache {
 		MetricLogging.get().end("resolve", metricLogger);
 	}
 
-	private boolean initialised = false;
+	public void setConn(Connection conn) {
+		this.conn = conn;
+	}
 
 	public void warmup(Connection conn, CacheDescriptor cacheDescriptor) {
 		this.conn = conn;
@@ -230,12 +288,6 @@ public class AlcinaMemCache {
 			Class propertyType) {
 		columnDescriptors.add(clazz, new ColumnDescriptor(pd, propertyType));
 		propertyDescriptorFetchTypes.put(pd, propertyType);
-	}
-
-	public void addValues(CacheListener listener) {
-		for (Object o : cache.values(listener.getListenedClass())) {
-			listener.insert((HasIdAndLocalId) o);
-		}
 	}
 
 	private Set<Long> getFiltered(final Class clazz, CacheFilter cacheFilter,
@@ -267,9 +319,10 @@ public class AlcinaMemCache {
 	}
 
 	private CacheLookup getLookupFor(Class clazz, String propertyName) {
-		for (CacheLookupDescriptor descriptor : indicies.keySet()) {
+		for (CacheLookupDescriptor descriptor : cacheDescriptor.perClass
+				.get(clazz).lookupDescriptors) {
 			if (descriptor.handles(clazz, propertyName)) {
-				return indicies.get(descriptor);
+				return descriptor.getLookup();
 			}
 		}
 		return null;
@@ -291,7 +344,7 @@ public class AlcinaMemCache {
 		CacheItemDescriptor cacheItemDescriptor = cacheDescriptor.perClass
 				.get(obj.getClass());
 		for (CacheLookupDescriptor lookupDescriptor : cacheItemDescriptor.lookupDescriptors) {
-			CacheLookup lookup = indicies.get(lookupDescriptor);
+			CacheLookup lookup = lookupDescriptor.getLookup();
 			if (add) {
 				lookup.insert(obj);
 			} else {
@@ -420,6 +473,11 @@ public class AlcinaMemCache {
 		return transformManager.getObject(dte);
 	}
 
+	public <V extends HasIdAndLocalId> boolean isRawValue(V v) {
+		V existing = (V) cache.get(v.getClass(), v.getId());
+		return existing == v;
+	}
+
 	private void warmup0() throws Exception {
 		transformManager = new SubgraphTransformManager();
 		cache = transformManager.getDetachedEntityCache();
@@ -458,15 +516,18 @@ public class AlcinaMemCache {
 		MetricLogging.get().start("lookups");
 		for (CacheItemDescriptor descriptor : cacheDescriptor.perClass.values()) {
 			for (CacheLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
-				CacheLookup cacheLookup = new CacheLookup(lookupDescriptor);
-				indicies.put(lookupDescriptor, cacheLookup);
-				addValues(cacheLookup);
+				lookupDescriptor.createLookup();
+				if (lookupDescriptor.isEnabled()) {
+					addValues(lookupDescriptor.getLookup());
+				}
 			}
 		}
 		// deliberately init projections after lookups
 		for (CacheItemDescriptor descriptor : cacheDescriptor.perClass.values()) {
 			for (CacheProjection projection : descriptor.projections) {
-				addValues(projection);
+				if (projection.isEnabled()) {
+					addValues(projection);
+				}
 			}
 		}
 		MetricLogging.get().end("lookups");
@@ -508,10 +569,16 @@ public class AlcinaMemCache {
 		List<DomainTransformEvent> dtes = request.allTransforms();
 		List<DomainTransformEvent> filtered = filterInterestedTransforms(dtes);
 		try {
+			Map<HasIdAndLocalId, DomainTransformEvent> first = new LinkedHashMap<HasIdAndLocalId, DomainTransformEvent>();
+			Map<HasIdAndLocalId, DomainTransformEvent> last = new LinkedHashMap<HasIdAndLocalId, DomainTransformEvent>();
 			for (DomainTransformEvent dte : filtered) {
+				HasIdAndLocalId object = TransformManager.get().getObject(dte);
+				if (!first.containsKey(object)) {
+					first.put(object, dte);
+				}
+				last.put(object, dte);
 				if (dte.getObjectId() == 0 && dte.getObjectLocalId() != 0) {
-					dte.setObjectId(TransformManager.get().getObject(dte)
-							.getId());
+					dte.setObjectId(object.getId());
 					dte.setObjectLocalId(0);
 				}
 				if (dte.getValueId() == 0 && dte.getValueLocalId() != 0) {
@@ -522,12 +589,22 @@ public class AlcinaMemCache {
 					dte.setValueLocalId(0);
 					dte.setNewValue(null);// force a lookup
 				}
-				if (dte.getTransformType() != TransformType.CREATE_OBJECT) {
+			}
+			Set<DomainTransformEvent> firstSet = new LinkedHashSet<DomainTransformEvent>(
+					first.values());
+			Set<DomainTransformEvent> lastSet = new LinkedHashSet<DomainTransformEvent>(
+					last.values());
+			for (DomainTransformEvent dte : filtered) {
+				// remove from indicies before first change - and only if
+				// preexisting object
+				if (dte.getTransformType() != TransformType.CREATE_OBJECT
+						&& firstSet.contains(dte)) {
 					HasIdAndLocalId obj = resolveObject(dte);
 					index(obj, false);
 				}
 				transformManager.consume(dte);
-				if (dte.getTransformType() != TransformType.DELETE_OBJECT) {
+				if (dte.getTransformType() != TransformType.DELETE_OBJECT
+						&& lastSet.contains(dte)) {
 					HasIdAndLocalId obj = resolveObject(dte);
 					index(obj, true);
 				}
@@ -535,6 +612,72 @@ public class AlcinaMemCache {
 		} catch (Exception e) {
 			GlobalTopicPublisher.get().publishTopic(TOPIC_UPDATE_EXCEPTION, e);
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public class Transactional {
+		public volatile int transactionCount;
+
+		public <T> T find(Class<T> clazz, long id) {
+			T t = cache.get(clazz, id);
+			if (transactionActiveInCurrentThread()) {
+				return (T) transactions.get().ensureTransactional(
+						(HasIdAndLocalId) t);
+			} else {
+				return t;
+			}
+		}
+
+		public void transactionCommitting() {
+			PerThreadTransaction transaction = transactions.get();
+			if (transaction != null) {
+				transaction.committing();
+			}
+		}
+
+		public void transactionFinished() {
+			PerThreadTransaction transaction = transactions.get();
+			if (transaction != null) {
+				transactions.get().end();
+				transactions.remove();
+				transactionCount--;
+			}
+		}
+
+		public <T> Map<Long, T> lookup(Class<T> clazz) {
+			return (Map<Long, T>) cache.getDetached().get(clazz);
+		}
+
+		public <V extends HasIdAndLocalId> V resolveTransactional(
+				CacheListener listener, V value, Object[] path) {
+			PerThreadTransaction perThreadTransaction = transactions.get();
+			if (perThreadTransaction == null) {
+				return value;
+			}
+			return perThreadTransaction.getListenerValue(listener, value, path);
+		}
+
+		public boolean transactionsActive() {
+			return transactionCount != 0;
+		}
+
+		public boolean transactionActiveInCurrentThread() {
+			return transactionsActive() && transactions.get() != null;
+		}
+
+		public PerThreadTransaction ensureTransaction() {
+			PerThreadTransaction transaction = transactions.get();
+			if (transaction == null) {
+				transaction = Registry.impl(PerThreadTransaction.class);
+				transactions.set(transaction);
+				transaction.start();
+				transactionCount++;
+			}
+			return transaction;
+		}
+
+		public <V extends HasIdAndLocalId> V ensureTransactional(V value) {
+			return transactions.get().ensureTransactional(value);
 		}
 	}
 
@@ -828,25 +971,5 @@ public class AlcinaMemCache {
 				break;
 			}
 		}
-	}
-
-	public boolean isInitialised() {
-		return initialised;
-	}
-
-	public Set<Long> filterByExisting(Class clazz, boolean returnIfNotInGraph,
-			List<Long> ids) {
-		Set<Long> result = new LinkedHashSet<Long>();
-		for (Long id : ids) {
-			boolean add = cache.get(clazz, id) == null ^ !returnIfNotInGraph;
-			if (add) {
-				result.add(id);
-			}
-		}
-		return result;
-	}
-
-	public void setConn(Connection conn) {
-		this.conn = conn;
 	}
 }

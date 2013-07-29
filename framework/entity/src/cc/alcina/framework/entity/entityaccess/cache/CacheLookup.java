@@ -4,35 +4,38 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccesor;
 import cc.alcina.framework.entity.util.Multiset;
 
-public class CacheLookup<T> implements CacheListener {
+public class CacheLookup<T, H extends HasIdAndLocalId> implements
+		CacheListener<H> {
 	private Multiset<T, Set<Long>> store;
 
-	private CacheLookupDescriptor descriptor;
+	protected CacheLookupDescriptor descriptor;
 
 	private PropertyPathAccesor propertyPathAccesor;
 
-	@Override
-	public Class getListenedClass() {
-		return descriptor.clazz;
-	}
+	private boolean enabled = true;
+
+	private CollectionFilter<H> relevanceFilter;
 
 	public CacheLookup(CacheLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
 		store = new Multiset<T, Set<Long>>();
 		this.propertyPathAccesor = new PropertyPathAccesor(
 				descriptor.propertyPath);
+		this.relevanceFilter = descriptor.getRelevanceFilter();
+	}
+
+	public void add(T k1, Long value) {
+		getAndEnsure(k1).add(value);
 	}
 
 	public Set<Long> get(T k1) {
 		return store.get(k1);
-	}
-
-	public Set<T> keys() {
-		return store.keySet();
 	}
 
 	public Set<Long> getAndEnsure(T k1) {
@@ -44,28 +47,9 @@ public class CacheLookup<T> implements CacheListener {
 		return result;
 	}
 
-	public void add(T k1, Long value) {
-		getAndEnsure(k1).add(value);
-	}
-
-	public void remove(T k1, Long value) {
-		getAndEnsure(k1).remove(value);
-	}
-
 	@Override
-	public void insert(HasIdAndLocalId hili) {
-		Object v1 = propertyPathAccesor.getChainedProperty(hili);
-		add((T) v1, hili.getId());
-	}
-
-	@Override
-	public void remove(HasIdAndLocalId hili) {
-		Object v1 = propertyPathAccesor.getChainedProperty(hili);
-		remove((T) v1, hili.getId());
-	}
-
-	public int size(T t) {
-		return getAndEnsure(t).size();
+	public Class getListenedClass() {
+		return descriptor.clazz;
 	}
 
 	public Set<Long> getMaybeCollectionKey(Object value) {
@@ -81,5 +65,57 @@ public class CacheLookup<T> implements CacheListener {
 		} else {
 			return get((T) value);
 		}
+	}
+
+	@Override
+	public void insert(H hili) {
+		if (relevanceFilter != null && !relevanceFilter.allow(hili)) {
+			return;
+		}
+		Object v1 = getChainedProperty(hili);
+		add((T) v1, hili.getId());
+	}
+
+	protected Object getChainedProperty(H hili) {
+		return propertyPathAccesor.getChainedProperty(hili);
+	}
+
+	public boolean isEnabled() {
+		return this.enabled;
+	}
+
+	public Set<T> keys() {
+		return store.keySet();
+	}
+
+	@Override
+	public void remove(H hili) {
+		Object v1 = getChainedProperty(hili);
+		remove((T) v1, hili.getId());
+	}
+
+	public void remove(T k1, Long value) {
+		getAndEnsure(k1).remove(value);
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public int size() {
+		return store.size();
+	}
+
+	public int size(T t) {
+		return getAndEnsure(t).size();
+	}
+
+	@Override
+	public boolean matches(H h, Object[] keys) {
+		if (keys.length != 1) {
+			throw new IllegalArgumentException("Keys length must equal one");
+		}
+		return CommonUtils.equalsWithNullEquality(getChainedProperty(h),
+				keys[0]);
 	}
 }

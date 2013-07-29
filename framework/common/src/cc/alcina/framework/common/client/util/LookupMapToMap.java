@@ -78,8 +78,11 @@ public class LookupMapToMap<V> extends LinkedHashMap implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> items(Object... objects) {
-		return (Collection) (objects.length == depth ? values(objects)
-				: keys(objects));
+		if (objects.length >= depth) {
+			throw new IllegalArgumentException(
+					"items() must have fewer than <depth> keys");
+		}
+		return  keys(objects);
 	}
 
 	@Override

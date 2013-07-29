@@ -11,9 +11,9 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
@@ -23,67 +23,96 @@ import com.google.gwt.core.client.GWT;
  * @author nick@alcina.cc
  * 
  */
-public class MutablePropertyChangeSupport extends PropertyChangeSupport {
+public class MutablePropertyChangeSupport {
 	private static boolean muteAll = false;
 
-	private boolean hasListeners = false;
+	private PropertyChangeSupport delegate;
+
+	private Object sourceBean;
 
 	public MutablePropertyChangeSupport(Object sourceBean) {
-		super(sourceBean);
+		this.sourceBean = sourceBean;
 	}
 
-	@Override
 	public synchronized void addPropertyChangeListener(
 			PropertyChangeListener listener) {
-		hasListeners = true;
-		super.addPropertyChangeListener(listener);
+		ensureDelegate();
+		delegate.addPropertyChangeListener(listener);
 	}
 
-	@Override
+	private void ensureDelegate() {
+		if (delegate == null) {
+			delegate = new PropertyChangeSupport(sourceBean);
+		}
+	}
+
 	public synchronized void addPropertyChangeListener(String propertyName,
 			PropertyChangeListener listener) {
-		hasListeners = true;
-		super.addPropertyChangeListener(propertyName, listener);
+		ensureDelegate();
+		delegate.addPropertyChangeListener(propertyName, listener);
 	}
 
-	/*
-	 * 
-	 * 
-	 * @see
-	 * java.beans.PropertyChangeSupport#firePropertyChange(java.lang.String,
-	 * java.lang.Object, java.lang.Object)
-	 */
-	@Override
 	public void firePropertyChange(String propertyName, Object oldValue,
 			Object newValue) {
-		if (isMuteAll()||!hasListeners || (oldValue == null && newValue == null)) {
+		if (isMuteAll() || delegate == null
+				|| (oldValue == null && newValue == null)) {
 			return;
 		}
-		super.firePropertyChange(propertyName, oldValue, newValue);
+		delegate.firePropertyChange(propertyName, oldValue, newValue);
 	}
 
 	/**
-	 * Sort of a hack - taking advantage of propertychangesupport null!=null
-	 *  - note that the old/newvalues of the propertychangeevent should
-	 * !not! be read. For listeners on collection properties
+	 * Sort of a hack - taking advantage of propertychangesupport null!=null -
+	 * note that the old/newvalues of the propertychangeevent should !not! be
+	 * read. For listeners on collection properties
 	 */
 	public void fireNullPropertyChange(String name) {
-		if (isMuteAll()||!hasListeners){
+		if (isMuteAll() || delegate == null) {
 			return;
 		}
-		super.firePropertyChange(name, null, null);
+		delegate.firePropertyChange(name, null, null);
 	}
+
 	public static void setMuteAll(boolean muteAll) {
 		setMuteAll(muteAll, false);
 	}
+
 	public static void setMuteAll(boolean muteAll, boolean initLifecycleThread) {
-		if (!GWT.isClient()&&!initLifecycleThread){
-			throw new RuntimeException("Mute all should only be set on a single-threaded VM");
+		if (!GWT.isClient() && !initLifecycleThread) {
+			throw new RuntimeException(
+					"Mute all should only be set on a single-threaded VM");
 		}
 		MutablePropertyChangeSupport.muteAll = muteAll;
 	}
 
 	public static boolean isMuteAll() {
 		return muteAll;
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		if(delegate == null){
+			return;
+		}
+		this.delegate.removePropertyChangeListener(listener);
+	}
+
+	public void removePropertyChangeListener(String propertyName,
+			PropertyChangeListener listener) {
+		if(delegate == null){
+			return;
+		}
+		this.delegate.removePropertyChangeListener(propertyName, listener);
+	}
+
+	public PropertyChangeListener[] getPropertyChangeListeners() {
+		ensureDelegate();
+		return this.delegate.getPropertyChangeListeners();
+	}
+
+	public void firePropertyChange(PropertyChangeEvent evt) {
+		if (isMuteAll() || delegate == null) {
+			return;
+		}
+		this.delegate.firePropertyChange(evt);
 	}
 }

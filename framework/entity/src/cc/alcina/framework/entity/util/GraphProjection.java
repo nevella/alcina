@@ -17,6 +17,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -364,6 +365,8 @@ public class GraphProjection {
 
 		public Field field;
 
+		static int debugDepth = 200;
+
 		public GraphProjectionContext(Class clazz, Field field,
 				GraphProjectionContext parent, Object ownerObject) {
 			this.clazz = clazz;
@@ -371,6 +374,13 @@ public class GraphProjection {
 			this.fieldName = field == null ? "" : field.getName();
 			this.parent = parent;
 			this.ownerObject = ownerObject;
+			if (depth(0) > debugDepth) {
+				int debug = 0;
+			}
+		}
+
+		private int depth(int self) {
+			return parent == null ? self : parent.depth(self + 1);
 		}
 
 		@Override
@@ -435,6 +445,24 @@ public class GraphProjection {
 		public boolean permitField(Field field,
 				Set<Field> perObjectPermissionFields) {
 			try {
+				Class<?> type = field.getType();
+				if (!GraphProjection.isPrimitiveOrDataClass(type)) {
+					if (Collection.class.isAssignableFrom(type)) {
+						Type pt = GraphProjection.getGenericType(field);
+						if (pt instanceof ParameterizedType) {
+							Type genericType = ((ParameterizedType) pt)
+									.getActualTypeArguments()[0];
+							if (genericType instanceof Class) {
+								type = (Class) genericType;
+								Boolean result = permitClass(type);
+								if (result != null
+										&& result.booleanValue() == false) {
+									return false;
+								}
+							}
+						}
+					}
+				}
 				PropertyPermissions pp = getPropertyPermission(field
 						.getDeclaringClass().getMethod(
 								SEUtilities.getAccessorName(field),

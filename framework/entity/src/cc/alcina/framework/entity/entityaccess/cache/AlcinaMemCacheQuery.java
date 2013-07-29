@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
@@ -18,9 +19,9 @@ public class AlcinaMemCacheQuery {
 
 	private List<CacheFilter> filters = new ArrayList<CacheFilter>();
 
-	private GraphProjectionFilter permissionsFilter = new PermissibleFieldFilter();
+	private GraphProjectionFilter permissionsFilter;
 
-	private GraphProjectionFilter dataFilter = new CollectionProjectionFilter();
+	private GraphProjectionFilter dataFilter;
 
 	private boolean raw;
 
@@ -32,6 +33,11 @@ public class AlcinaMemCacheQuery {
 	public AlcinaMemCacheQuery filter(CacheFilter filter) {
 		this.filters.add(filter);
 		return this;
+	}
+
+	public AlcinaMemCacheQuery() {
+		permissionsFilter = Registry.impl(PermissibleFieldFilter.class);
+		dataFilter = Registry.impl(CollectionProjectionFilter.class);
 	}
 
 	public AlcinaMemCacheQuery filter(String key, Object value) {

@@ -185,7 +185,7 @@ public abstract class DevHelper {
 		initClientReflector();
 		initDummyServices();
 		TestPersistenceHelper.get();
-		TransformManager.register(new TestTransformManager());
+		TransformManager.register(createTransformManager());
 		initCustomServicesFirstHalf();
 		AppPersistenceBase.setTest();
 		setupJobsToSysout();
@@ -200,6 +200,10 @@ public abstract class DevHelper {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	protected TransformManager createTransformManager() {
+		return new TestTransformManager();
 	}
 
 	protected void initClientReflector() {
