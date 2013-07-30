@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
@@ -178,6 +179,7 @@ public class GraphProjection {
 		return projected;
 	}
 
+
 	// TODO - shouldn't this be package-private?
 	public Collection projectCollection(Collection coll,
 			GraphProjectionContext context) throws Exception {
@@ -188,6 +190,8 @@ public class GraphProjection {
 			// um...persistentBag??
 		} else if (coll instanceof List) {
 			c = new ArrayList();
+		}else if (coll instanceof LiSet) {
+			c = new LiSet();
 		} else if (coll instanceof Set) {
 			c = new LinkedHashSet();
 		}

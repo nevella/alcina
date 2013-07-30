@@ -92,17 +92,17 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 		return -1;
 	}
 
-	private void ensureCapacity(int idx) {
-		if (idx >= elementData.length) {
+	private void ensureCapacity(int size) {
+		if (size >= elementData.length) {
 			Object oldData[] = elementData;
 			int newCapacity = (elementData.length * 4) / 2 + 1;
-			if (newCapacity < idx) {
-				newCapacity = idx * 3 / 2;
+			if (newCapacity < size) {
+				newCapacity = size * 3 / 2;
 			}
-			if (newCapacity > 5000000) {
-				int j = 3;
-			}
-			elementData = Arrays.copyOf(elementData, newCapacity);
+			Object[] copy=new Object[newCapacity];
+			System.arraycopy(elementData, 0, copy, 0,
+                    Math.min(elementData.length, newCapacity));
+			elementData = copy;
 		}
 	}
 

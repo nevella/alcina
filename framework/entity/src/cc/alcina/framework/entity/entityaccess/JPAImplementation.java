@@ -15,12 +15,14 @@ package cc.alcina.framework.entity.entityaccess;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
 
@@ -61,5 +63,7 @@ public interface JPAImplementation {
 	public abstract InstantiateImplCallback getClassrefInstantiator();
 
 	boolean areEquivalentIgnoreInstantiationState(Object o1, Object o2);
+
+	Set createPersistentSetProjection(GraphProjectionContext context);
 
 }

@@ -27,6 +27,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 
 @SuppressWarnings("unchecked")
 /**
@@ -544,6 +545,8 @@ public class CommonUtils {
 				c = (T) ((ArrayList) coll).clone();
 			} else if (coll instanceof LinkedHashSet) {
 				c = (T) ((LinkedHashSet) coll).clone();
+			} else if (coll instanceof LiSet) {
+				c = (T) ((LiSet) coll).clone();
 			} else if (coll instanceof HashSet) {
 				c = (T) ((HashSet) coll).clone();
 			}

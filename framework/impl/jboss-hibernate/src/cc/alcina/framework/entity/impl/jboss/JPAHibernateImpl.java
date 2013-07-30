@@ -18,6 +18,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -37,6 +39,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
@@ -221,5 +226,24 @@ public class JPAHibernateImpl implements JPAImplementation {
 					(Long) lazy.getIdentifier());
 		}
 		return new HiliLocator((HasIdAndLocalId) o);
+	}
+
+	@RegistryLocation(registryPoint = PersistenSetProjectionCreator.class, implementationType = ImplementationType.SINGLETON)
+	public static class PersistenSetProjectionCreator {
+		public Set createPersistentSetProjection(GraphProjectionContext context) {
+			return new HashSet();
+		}
+	}
+
+	private PersistenSetProjectionCreator persistenSetProjectionCreator;
+
+	@Override
+	public Set createPersistentSetProjection(GraphProjectionContext context) {
+		if (persistenSetProjectionCreator == null) {
+			persistenSetProjectionCreator = Registry
+					.impl(PersistenSetProjectionCreator.class);
+		}
+		return persistenSetProjectionCreator
+				.createPersistentSetProjection(context);
 	}
 }

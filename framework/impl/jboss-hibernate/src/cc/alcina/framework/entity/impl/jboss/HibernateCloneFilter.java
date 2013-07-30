@@ -21,6 +21,8 @@ import java.util.Set;
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.proxy.HibernateProxy;
 
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.GraphProjection;
 import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
@@ -33,12 +35,15 @@ import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 
  public class HibernateCloneFilter extends CollectionProjectionFilter {
 	private Set<GraphProjectionContext> instantiateProps = new HashSet<GraphProjectionContext>();
+	private JPAImplementation jpaImplementation;
 
 	public HibernateCloneFilter() {
+		this(null);
 	}
 
 	public HibernateCloneFilter(Set<GraphProjectionContext> instantiateProps) {
 		this.instantiateProps = instantiateProps;
+		this.jpaImplementation = EntityLayerLocator.get().jpaImplementation();
 	}
 
 	@Override
@@ -63,9 +68,9 @@ import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 	}
 
 	@SuppressWarnings("unchecked")
-	protected Object clonePersistentSet(PersistentSet ps,
+	protected Set clonePersistentSet(PersistentSet ps,
 			GraphProjectionContext context, GraphProjection graphCloner) throws Exception {
-		HashSet hs = new HashSet();
+		Set hs = jpaImplementation.createPersistentSetProjection(context);
 		if (ps.wasInitialized()) {
 			Iterator itr = ps.iterator();
 			Object value;
