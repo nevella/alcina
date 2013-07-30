@@ -42,6 +42,9 @@ public class WrappedObjectPersistence {
 				WrapperInfo info = pd.getReadMethod().getAnnotation(
 						WrapperInfo.class);
 				if (info != null) {
+					if(pd.getReadMethod().invoke(wrapper, new Object[0])!=null){
+						continue;
+					}
 					PropertyDescriptor idpd = SEUtilities.descriptorByName(
 							wrapper.getClass(), info.idPropertyName());
 					Long wrapperId = (Long) idpd.getReadMethod().invoke(
