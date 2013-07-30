@@ -14,12 +14,9 @@ public class FastIdLookupScript implements FastIdLookup {
 
 	private JavascriptIntLookup localIdLookup = JavascriptIntLookup.create();
 
-	private Class clazz;
-
 	private FastIdLookupScriptValues values;
 
-	public FastIdLookupScript(Class clazz) {
-		this.clazz = clazz;
+	public FastIdLookupScript() {
 		this.values = new FastIdLookupScriptValues();
 	}
 
@@ -34,11 +31,14 @@ public class FastIdLookupScript implements FastIdLookup {
 		public boolean contains(Object o) {
 			if (o instanceof HasIdAndLocalId) {
 				HasIdAndLocalId hili = (HasIdAndLocalId) o;
+				HasIdAndLocalId existing = null;
 				if (hili.getLocalId() == 0) {
-					return get(hili.getId(), false) != null;
+					existing = get(hili.getId(), false);
 				} else {
-					return get(hili.getLocalId(), true) != null;
+					existing = get(hili.getLocalId(), true);
 				}
+				return existing != null
+						&& hili.getClass() == existing.getClass();
 			}
 			return false;
 		}
@@ -47,12 +47,30 @@ public class FastIdLookupScript implements FastIdLookup {
 		public int size() {
 			return localIdLookup.size() + idLookup.size();
 		}
+
+		@Override
+		public boolean add(HasIdAndLocalId hili) {
+			boolean contains = contains(hili);
+			put(hili, hili.getId() == 0);
+			return !contains;
+		}
+
+		@Override
+		public boolean remove(Object o) {
+			if (o instanceof HasIdAndLocalId) {
+				HasIdAndLocalId hili = (HasIdAndLocalId) o;
+				boolean local = hili.getId() == 0;
+				boolean contains = contains(o);
+				FastIdLookupScript.this.remove(hili.getId(), false);
+				FastIdLookupScript.this.remove(hili.getLocalId(), true);
+			}
+			return false;
+		}
 	}
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Lkp - %s - [%s,%s]",
-				CommonUtils.classSimpleName(clazz), idLookup.size(),
+		return CommonUtils.formatJ("Lkp - [%s,%s]", idLookup.size(),
 				localIdLookup.size());
 	}
 

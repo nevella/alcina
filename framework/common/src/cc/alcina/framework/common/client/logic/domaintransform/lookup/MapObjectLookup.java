@@ -40,8 +40,8 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	public FastIdLookup createIdLookup(Class c) {
-		return GWT.isScript() ? new FastIdLookupScript(c)
-				: new FastIdLookupJvm(c);
+		return GWT.isScript() ? new FastIdLookupScript()
+				: new FastIdLookupJvm();
 	}
 
 	@Override

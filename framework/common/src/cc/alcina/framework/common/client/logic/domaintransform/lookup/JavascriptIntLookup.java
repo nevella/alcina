@@ -17,6 +17,8 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 
 		private int itrModCount;
 
+		private boolean nextCalled = false;
+
 		public ValuesIterator() {
 			array = values();
 			this.itrModCount = modCount();
@@ -32,15 +34,25 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 			if (idx == array.length()) {
 				throw new NoSuchElementException();
 			}
-			if(itrModCount!=modCount()){
+			if (itrModCount != modCount()) {
 				throw new ConcurrentModificationException();
 			}
+			nextCalled = true;
 			return array.get(idx++);
 		}
 
 		@Override
 		public void remove() {
-			throw new UnsupportedOperationException();
+			if (modCount() != itrModCount) {
+				throw new ConcurrentModificationException();
+			}
+			if (!nextCalled) {
+				throw new IllegalStateException();
+			}
+			JavascriptIntLookup.this.remove(idx);
+			array = values();
+			nextCalled = false;
+			this.itrModCount++;
 		}
 	}
 

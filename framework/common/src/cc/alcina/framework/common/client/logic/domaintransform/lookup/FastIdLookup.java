@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 public interface FastIdLookup {
 	public abstract HasIdAndLocalId get(long id, boolean local);
+	
 
 	public abstract void put(HasIdAndLocalId hili, boolean local);
 

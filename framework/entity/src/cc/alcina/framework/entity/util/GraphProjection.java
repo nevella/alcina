@@ -82,7 +82,8 @@ public class GraphProjection {
 	@ClearOnAppRestart
 	static Map<Field, Type> genericTypeLookup = new HashMap<Field, Type>();
 
-	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>();
+	@ClearOnAppRestart
+	static Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>();
 
 	Map<Field, PropertyPermissions> perFieldPermission = new HashMap<Field, PropertyPermissions>();
 
@@ -179,7 +180,6 @@ public class GraphProjection {
 		return projected;
 	}
 
-
 	// TODO - shouldn't this be package-private?
 	public Collection projectCollection(Collection coll,
 			GraphProjectionContext context) throws Exception {
@@ -190,7 +190,7 @@ public class GraphProjection {
 			// um...persistentBag??
 		} else if (coll instanceof List) {
 			c = new ArrayList();
-		}else if (coll instanceof LiSet) {
+		} else if (coll instanceof LiSet) {
 			c = new LiSet();
 		} else if (coll instanceof Set) {
 			c = new LinkedHashSet();
@@ -281,14 +281,10 @@ public class GraphProjection {
 			Boolean result = fieldFilter == null ? new Boolean(true)
 					: fieldFilter.permitClass(sourceClass);
 			perObjectPermissionClasses.put(sourceClass, result);
-			ObjectPermissions annotation = sourceClass
-					.getAnnotation(ObjectPermissions.class);
-			perClassReadPermission.put(sourceClass, annotation == null ? null
-					: annotation.read());
 		}
 		Boolean valid = perObjectPermissionClasses.get(sourceClass);
 		if (valid == null) {// per-objected
-			Permission permission = perClassReadPermission.get(sourceClass);
+			Permission permission = ensurePerClassReadPermission(sourceClass);
 			if (permission == null) {
 				return true;
 			} else {
@@ -297,6 +293,17 @@ public class GraphProjection {
 			}
 		}
 		return valid;
+	}
+
+	private Permission ensurePerClassReadPermission(
+			Class<? extends Object> sourceClass) {
+		if (!perClassReadPermission.containsKey(sourceClass)) {
+			ObjectPermissions annotation = sourceClass
+					.getAnnotation(ObjectPermissions.class);
+			perClassReadPermission.put(sourceClass, annotation == null ? null
+					: annotation.read());
+		}
+		return perClassReadPermission.get(sourceClass);
 	}
 
 	public static class CollectionProjectionFilter implements

@@ -151,4 +151,9 @@ public class DetachedEntityCache implements Serializable {
 		long id = hili.getId();
 		return detached.get(clazz).containsKey(id);
 	}
+
+	@Override
+	public String toString() {
+		return "Cache: " + detached;
+	}
 }

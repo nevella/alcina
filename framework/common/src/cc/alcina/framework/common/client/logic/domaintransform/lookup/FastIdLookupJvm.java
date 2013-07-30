@@ -18,12 +18,9 @@ public class FastIdLookupJvm implements FastIdLookup {
 
 	private Map<Long, HasIdAndLocalId> localIdLookup = new LinkedHashMap<Long, HasIdAndLocalId>();
 
-	private Class clazz;
-
 	private FastIdLookupDevValues values;
 
-	public FastIdLookupJvm(Class clazz) {
-		this.clazz = clazz;
+	public FastIdLookupJvm() {
 		this.values = new FastIdLookupDevValues();
 	}
 
@@ -60,8 +57,7 @@ public class FastIdLookupJvm implements FastIdLookup {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Lkp - %s - [%s,%s]",
-				CommonUtils.classSimpleName(clazz), idLookup.size(),
+		return CommonUtils.formatJ("Lkp  - [%s,%s]", idLookup.size(),
 				localIdLookup.size());
 	}
 

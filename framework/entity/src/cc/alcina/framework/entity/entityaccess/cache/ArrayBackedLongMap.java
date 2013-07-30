@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class ArrayBackedLongMap<V> implements Map<Long, V> {
 	private transient Object[] elementData;
@@ -82,12 +83,15 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			if (l == 0) {
 				return 0;
 			}
-			if (l < 20000000 && l > 0) {
+			if (l < 10000000 && l > 0) {
 				int idx = (int) l;
 				ensureCapacity(idx);
 				return idx;
 			}
 		}
+//		System.out.println(CommonUtils.formatJ(
+//				"Creating failover - (id %s) - %s", key, this));
+		elementData = null;
 		failover = new LinkedHashMap<Long, V>();
 		return -1;
 	}
@@ -99,9 +103,9 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			if (newCapacity < size) {
 				newCapacity = size * 3 / 2;
 			}
-			Object[] copy=new Object[newCapacity];
+			Object[] copy = new Object[newCapacity];
 			System.arraycopy(elementData, 0, copy, 0,
-                    Math.min(elementData.length, newCapacity));
+					Math.min(elementData.length, newCapacity));
 			elementData = copy;
 		}
 	}
@@ -370,5 +374,14 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 				return put(key, value);
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("Array-backed long map - [%s] - %s",
+				elementData == null ? "(failover)" + failover.size()
+						: elementData.length,
+				entrySet().iterator().hasNext() ? entrySet().iterator().next()
+						.getClass() : null);
 	}
 }
