@@ -269,7 +269,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		return "";
 	}
 
-	protected <T extends CriteriaGroup> T deepCopy(T cg) throws CloneNotSupportedException{
+	protected <T extends CriteriaGroup> T deepCopyFrom(T cg) throws CloneNotSupportedException{
 		combinator=cg.combinator ;
 		displayName=cg.displayName;
 		entityClass=cg.entityClass;
@@ -278,7 +278,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		for (SC sc : cgCriteria) {
 			criteria.add((SC) sc.clone());
 		}
-		return cg;
+		return (T) this;
 	}
 
 	public CriteriaGroup clone() throws CloneNotSupportedException {

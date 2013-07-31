@@ -50,6 +50,6 @@ public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 
 	@Override
 	public CriteriaGroup clone() throws CloneNotSupportedException {
-		return new EnumCriteriaGroup().deepCopy(this);
+		return new EnumCriteriaGroup().deepCopyFrom(this);
 	}
 }

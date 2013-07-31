@@ -85,7 +85,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	public <V extends SearchCriterion> V firstCriterion(Class<V> clazz) {
 		for (CriteriaGroup cg : getCriteriaGroups()) {
-			for (SearchCriterion c : (Set<SearchCriterion>)(Set)cg.getCriteria()) {
+			for (SearchCriterion c : (Set<SearchCriterion>) (Set) cg
+					.getCriteria()) {
 				if (c.getClass() == clazz) {
 					return (V) c;
 				}
@@ -93,9 +94,10 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 		return null;
 	}
+
 	public <V extends SearchCriterion> V firstCriterion(V sub) {
 		V first = (V) firstCriterion(sub.getClass());
-		return first!=null?first:sub;
+		return first != null ? first : sub;
 	}
 
 	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
@@ -105,21 +107,22 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 	}
 
-	public void deepCopy(SearchDefinition def)
+	public <S extends SearchDefinition> S deepCopyFrom(SearchDefinition def)
 			throws CloneNotSupportedException {
-		def.charWidth = charWidth;
-		def.clientSearchIndex = clientSearchIndex;
-		for (CriteriaGroup cg : criteriaGroups) {
-			def.criteriaGroups.add(cg.clone());
+		charWidth = def.charWidth;
+		clientSearchIndex = def.clientSearchIndex;
+		for (CriteriaGroup cg : def.criteriaGroups) {
+			criteriaGroups.add(cg.clone());
 		}
-		def.name = name;
-		for (OrderGroup og : orderGroups) {
-			def.orderGroups.add(og.clone());
+		name = def.name;
+		for (OrderGroup og : def.orderGroups) {
+			orderGroups.add(og.clone());
 		}
-		def.orderName = orderName;
-		def.publicationType = publicationType;
-		def.resultsPerPage = resultsPerPage;
-		def.resetLookups();
+		orderName = def.orderName;
+		publicationType = def.publicationType;
+		resultsPerPage = def.resultsPerPage;
+		resetLookups();
+		return (S) this;
 	}
 
 	@SuppressWarnings("unchecked")

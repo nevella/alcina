@@ -40,7 +40,7 @@ public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 
 	@Override
 	public CriteriaGroup clone() throws CloneNotSupportedException {
-		return new TxtCriteriaGroup().deepCopy(this);
+		return new TxtCriteriaGroup().deepCopyFrom(this);
 	}
 
 	/**
@@ -60,7 +60,7 @@ public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 
 		@Override
 		public CriteriaGroup clone() throws CloneNotSupportedException {
-			return new TxtCriteriaGroup2().deepCopy(this);
+			return new TxtCriteriaGroup2().deepCopyFrom(this);
 		}
 	}
 
@@ -75,7 +75,7 @@ public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 
 		@Override
 		public CriteriaGroup clone() throws CloneNotSupportedException {
-			return new TxtCriteriaGroup3().deepCopy(this);
+			return new TxtCriteriaGroup3().deepCopyFrom(this);
 		}
 	}
 }

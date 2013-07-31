@@ -42,6 +42,6 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 	}
 	@Override
 	public CriteriaGroup clone() throws CloneNotSupportedException {
-		return new LongCriteriaGroup().deepCopy(this);
+		return new LongCriteriaGroup().deepCopyFrom(this);
 	}
 }

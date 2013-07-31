@@ -18,6 +18,6 @@ public class PersistentObjectCriteriaGroup extends
 
 	@Override
 	public CriteriaGroup clone() throws CloneNotSupportedException {
-		return new PersistentObjectCriteriaGroup().deepCopy(this);
+		return new PersistentObjectCriteriaGroup().deepCopyFrom(this);
 	}
 }
