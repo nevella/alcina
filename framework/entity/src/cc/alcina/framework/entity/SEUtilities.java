@@ -61,10 +61,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
-import cc.alcina.framework.common.client.logic.reflection.JvmPropertyReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.entity.util.JvmPropertyReflector;
 
 /**
  * @author nick@alcina.cc

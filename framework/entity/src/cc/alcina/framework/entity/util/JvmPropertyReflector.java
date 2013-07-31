@@ -1,9 +1,10 @@
-package cc.alcina.framework.common.client.logic.reflection;
+package cc.alcina.framework.entity.util;
 
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 
 public class JvmPropertyReflector implements PropertyReflector {
 	private String propertyName;
