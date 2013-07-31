@@ -28,7 +28,7 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 							this, k1, set);
 		}
 	}
-
+	
 	public H getObject(T key) {
 		Set<Long> ids = get(key);
 		if (ids != null) {

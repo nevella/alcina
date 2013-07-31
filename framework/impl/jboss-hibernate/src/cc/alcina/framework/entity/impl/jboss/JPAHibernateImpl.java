@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,6 +47,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.util.EntityUtils;
+import cc.alcina.framework.entity.util.GraphProjection;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
 import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
@@ -243,7 +245,11 @@ public class JPAHibernateImpl implements JPAImplementation {
 			persistenSetProjectionCreator = Registry
 					.impl(PersistenSetProjectionCreator.class);
 		}
-		return persistenSetProjectionCreator
-				.createPersistentSetProjection(context);
+		if (GraphProjection.isGenericHiliType(context.field)) {
+			return persistenSetProjectionCreator
+					.createPersistentSetProjection(context);
+		} else {
+			return new HashSet();
+		}
 	}
 }

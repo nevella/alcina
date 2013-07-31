@@ -44,6 +44,7 @@ import cc.alcina.framework.entity.util.Multiset;
 public class TransformPersister {
 	private static final String TOPIC_PERSISTING_TRANSFORMS = TransformPersister.class
 			.getName() + ".TOPIC_PERSISTING_TRANSFORMS";
+
 	private static final String PRECACHE_ENTITIES = "precache entities";
 
 	private static final String FLUSH_TRANSFORMS = "flush transforms";
@@ -446,11 +447,19 @@ public class TransformPersister {
 						dtrp.setEvents(new ArrayList<DomainTransformEvent>());
 						dtr.setEvents(items);
 						dtrp.setClientInstance(persistentClientInstance);
+						boolean missingClassRefWarned = false;
 						for (DomainTransformEvent event : eventsPersisted) {
 							DomainTransformEventPersistent dtep = dtrEvtImpl
 									.newInstance();
 							getEntityManager().persist(dtep);
 							dtep.wrap(event);
+							if (dtep.getObjectClassRef() == null
+									&& !missingClassRefWarned) {
+								missingClassRefWarned = true;
+								System.out
+										.println("Warning - persisting transform without a classRef - "
+												+ dtep);
+							}
 							if (dtep.getObjectId() == 0) {
 								dtep.setObjectId(tm.getObject(
 										dtep.getObjectClass(), 0,
@@ -533,14 +542,15 @@ public class TransformPersister {
 			this.wrapper = wrapper;
 		}
 	}
+
 	public static void persistingTransforms() {
-		GlobalTopicPublisher.get().publishTopic(
-				TOPIC_PERSISTING_TRANSFORMS, Thread.currentThread());
+		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTING_TRANSFORMS,
+				Thread.currentThread());
 	}
 
 	public static void persistingTransformsListenerDelta(
 			TopicListener<Thread> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_PERSISTING_TRANSFORMS, listener, add);
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTING_TRANSFORMS,
+				listener, add);
 	}
 }

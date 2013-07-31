@@ -145,7 +145,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	@Override
 	protected Object clonePersistentSet(Set ps, GraphProjectionContext context,
 			GraphProjection graphCloner) throws Exception {
-		HashSet hs = new HashSet();
+		Set hs = jpaImplementation.createPersistentSetProjection(context);
 		graphCloner.getReached().put(ps, hs);
 		if (getWasInitialized(ps)) {
 			Iterator itr = ps.iterator();

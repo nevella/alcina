@@ -132,6 +132,10 @@ public class DetachedEntityCache implements Serializable {
 	public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
 		return this.detached;
 	}
+	public  Map<Long, HasIdAndLocalId> getMap(Class clazz) {
+		ensureMaps(clazz);
+		return this.detached.get(clazz);
+	}
 
 	public int size(Class clazz) {
 		ensureMaps(clazz);

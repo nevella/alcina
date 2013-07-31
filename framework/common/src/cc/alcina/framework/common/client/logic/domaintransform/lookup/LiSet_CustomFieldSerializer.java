@@ -15,12 +15,14 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.rpc.SerializationStreamWriter;
+import com.google.gwt.user.client.rpc.core.java.util.Collection_CustomFieldSerializerBase;
 
 /**
  * Custom field serializer for LiSet
@@ -30,20 +32,13 @@ public final class LiSet_CustomFieldSerializer extends
 		CustomFieldSerializer<LiSet> {
 	public static void deserialize(SerializationStreamReader streamReader,
 			LiSet instance) throws SerializationException {
-		int size = streamReader.readInt();
-		for (int i = 0; i < size; ++i) {
-			Object obj = streamReader.readObject();
-			instance.add(obj);
-		}
+		Collection_CustomFieldSerializerBase
+				.deserialize(streamReader, instance);
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,
 			LiSet instance) throws SerializationException {
-		int size = instance.size();
-		streamWriter.writeInt(size);
-		for (Object obj : instance) {
-			streamWriter.writeObject(obj);
-		}
+		Collection_CustomFieldSerializerBase.serialize(streamWriter, instance);
 	}
 
 	@Override

@@ -11,11 +11,20 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
+/**
+ * 
+ * @author nick@alcina.cc
+ * 
+ * @param <H>
+ */
 public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		Cloneable, Serializable {
 	static final transient long serialVersionUID = 1;
 
-	private HasIdAndLocalId[] elementData;
+	/**
+	 * Would prefer HasIdAndLocalId[] but GWT-RPC no-likey
+	 */
+	private Object[] elementData;
 
 	int size = 0;
 
@@ -95,6 +104,9 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 
 	@Override
 	public boolean remove(Object o) {
+		if(o==null){
+			return false;
+		}
 		if (degenerate != null) {
 			return degenerate.remove(o);
 		}
@@ -152,7 +164,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		int res = 0;
 		while (rangeMax > rangeMin) {
 			arrayPos = (rangeMax - rangeMin) / 2 + rangeMin;
-			HasIdAndLocalId f = elementData[arrayPos];
+			HasIdAndLocalId f = (HasIdAndLocalId) elementData[arrayPos];
 			res = compare(e, f);
 			if (res == 0) {
 				return arrayPos;
@@ -169,14 +181,14 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		// if res<0, e<f - but possibly e<d (elementData[arrayPos-1]) - limits
 		// of binary search.
 		if (rangeMax < size && rangeMax >= 0) {
-			HasIdAndLocalId f = elementData[rangeMax];
+			HasIdAndLocalId f = (HasIdAndLocalId) elementData[rangeMax];
 			if (e.equals(f)) {
 				return rangeMax;
 			}
 		}
 		if (res < 0) {
 			if (arrayPos > 0) {
-				HasIdAndLocalId d = elementData[arrayPos - 1];
+				HasIdAndLocalId d = (HasIdAndLocalId) elementData[arrayPos - 1];
 				res = compare(e, d);
 				if (res == -1) {
 					return arrayPos - 1;
@@ -185,7 +197,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 			return arrayPos;
 		} else {
 			if (arrayPos + 1 < size) {
-				HasIdAndLocalId g = elementData[arrayPos + 1];
+				HasIdAndLocalId g = (HasIdAndLocalId) elementData[arrayPos + 1];
 				res = compare(e, g);
 				if (res == 1) {
 					return arrayPos + 2;

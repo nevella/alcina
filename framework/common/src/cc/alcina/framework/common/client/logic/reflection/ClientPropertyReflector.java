@@ -25,13 +25,14 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
  * @author Nick Reddel
  */
 public class ClientPropertyReflector implements
-		Comparable<ClientPropertyReflector> {
+		Comparable<ClientPropertyReflector>, PropertyReflector {
 	private final Map<Class, Object> annotations;
 
 	private final String propertyName;
 
 	private Class propertyType;
 
+	@Override
 	public String getPropertyName() {
 		return this.propertyName;
 	}
@@ -50,6 +51,7 @@ public class ClientPropertyReflector implements
 		return (VisualiserInfo) annotations.get(VisualiserInfo.class);
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
 		return (A) annotations.get(annotationClass);
@@ -87,17 +89,21 @@ public class ClientPropertyReflector implements
 		this.propertyType = propertyType;
 	}
 
+	@Override
 	public Class getPropertyType() {
 		return propertyType;
 	}
 
+	@Override
 	public Object getPropertyValue(Object bean) {
 		return CommonLocator.get().propertyAccessor()
 				.getPropertyValue(bean, getPropertyName());
 	}
 
+	@Override
 	public void setPropertyValue(Object bean, Object newValue) {
 		CommonLocator.get().propertyAccessor()
 				.setPropertyValue(bean, getPropertyName(), newValue);
 	}
+	
 }

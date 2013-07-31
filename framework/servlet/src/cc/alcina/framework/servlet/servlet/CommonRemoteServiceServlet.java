@@ -135,6 +135,8 @@ import com.totsp.gwittir.client.beans.Converter;
 @SuppressWarnings("unchecked")
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		implements CommonRemoteServiceExt {
+	public static final String UA_NULL_SERVER = "null/server";
+
 	private Logger logger;
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
@@ -941,6 +943,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected String getUserAgent(HttpServletRequest rq) {
-		return rq == null ? "null/server" : rq.getHeader("User-Agent");
+		return rq == null ? UA_NULL_SERVER : rq.getHeader("User-Agent");
 	}
 }

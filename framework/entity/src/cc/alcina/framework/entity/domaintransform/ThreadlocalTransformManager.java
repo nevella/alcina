@@ -102,6 +102,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	protected void doCascadeDeletes(HasIdAndLocalId hili) {
 		if (getEntityManager() == null) {
 			new ServerTransformManagerSupport().removeParentAssociations(hili);
+			new ServerTransformManagerSupport().doCascadeDeletes(hili);
 		}
 		// client-only for the moment.
 	};
@@ -218,9 +219,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
-		if (objectClass.getName().endsWith(".Citable")) {
-			int j = 3;
-		}
 		long localId = nextLocalIdCounter();
 		T newInstance = newInstance(objectClass, 0, localId);
 		// logic should probably be made clearer here - if id==0, we're not in

@@ -64,6 +64,9 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 
 	@Override
 	public V get(Object key) {
+		if (key == null) {
+			return null;
+		}
 		int idx = intKey(key);
 		if (idx == 0) {
 			return null;
@@ -83,16 +86,22 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			if (l == 0) {
 				return 0;
 			}
+			if(l<0){
+				throw new RuntimeException("accessing array backed with negative index");
+			}
 			if (l < 10000000 && l > 0) {
 				int idx = (int) l;
 				ensureCapacity(idx);
 				return idx;
 			}
 		}
-//		System.out.println(CommonUtils.formatJ(
-//				"Creating failover - (id %s) - %s", key, this));
+		// System.out.println(CommonUtils.formatJ(
+		// "Creating failover - (id %s) - %s", key, this));
 		elementData = null;
-		failover = new LinkedHashMap<Long, V>();
+		
+		LinkedHashMap failover = new LinkedHashMap<Long, V>();
+		failover.putAll(this);
+		this.failover = failover;
 		return -1;
 	}
 
@@ -112,12 +121,15 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 
 	@Override
 	public V put(Long key, V value) {
+		if (key == null) {
+			throw new RuntimeException("Cannot put object with key:null");
+		}
 		int idx = intKey(key);
 		if (idx == -1) {
 			return failover.put(key, value);
 		}
 		if (idx == 0) {
-			throw new RuntimeException("Cannot put object with id:0");
+			throw new RuntimeException("Cannot put object with key:0");
 		}
 		V existing = (V) elementData[idx];
 		if (existing == null) {

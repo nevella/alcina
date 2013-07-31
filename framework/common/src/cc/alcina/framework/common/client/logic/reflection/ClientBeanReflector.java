@@ -135,9 +135,4 @@ public class ClientBeanReflector {
 			}
 		}
 	}
-
-	public static interface HasAnnotationCallback<A extends Annotation> {
-		public void apply(A annotation,
-				ClientPropertyReflector propertyReflector);
-	}
 }

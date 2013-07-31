@@ -4,11 +4,16 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.SEUtilities;
 
 public class ServerTransformManagerSupport {
 	public void removeAssociations(HasIdAndLocalId hili) {
@@ -65,7 +70,8 @@ public class ServerTransformManagerSupport {
 					.getBeanInfo(hili.getClass()).getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (HasIdAndLocalId.class
-						.isAssignableFrom(pd.getPropertyType())) {
+						.isAssignableFrom(pd.getPropertyType())
+						&& pd.getWriteMethod() != null) {
 					HasIdAndLocalId hiliTarget = (HasIdAndLocalId) pd
 							.getReadMethod().invoke(hili,
 									CommonUtils.EMPTY_OBJECT_ARRAY);
@@ -78,5 +84,26 @@ public class ServerTransformManagerSupport {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	protected void doCascadeDeletes(final HasIdAndLocalId hili) {
+		PropertyAccessor propertyAccessor = CommonLocator.get()
+				.propertyAccessor();
+		SEUtilities.iterateForPropertyWithAnnotation(hili, Association.class,
+				new HasAnnotationCallback<Association>() {
+					public void apply(Association association,
+							PropertyReflector propertyReflector) {
+						if (association.cascadeDeletes()) {
+							Object object = propertyReflector
+									.getPropertyValue(hili);
+							if (object instanceof Set) {
+								for (HasIdAndLocalId target : (Set<HasIdAndLocalId>) object) {
+									ThreadlocalTransformManager.get()
+											.deleteObject(target, true);
+								}
+							}
+						}
+					}
+				});
 	}
 }

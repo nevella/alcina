@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
@@ -59,6 +60,8 @@ import javax.swing.tree.TreePath;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
+import cc.alcina.framework.common.client.logic.reflection.JvmPropertyReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
@@ -120,14 +123,18 @@ public class SEUtilities {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
 	public static void dumpBytes(byte[] bs, int width) {
-		dumpBytes(bs, width,true);
+		dumpBytes(bs, width, true);
 	}
+
 	public static void dumpBytes(byte[] bs, int width, boolean indexAsHex) {
 		StringBuilder bd = new StringBuilder();
 		int len = bs.length;
 		for (int i = 0; i < len; i += width) {
-			bd.append(CommonUtils.padStringLeft((indexAsHex?Integer.toHexString(i):String.valueOf(i)), 8, '0'));
+			bd.append(CommonUtils.padStringLeft(
+					(indexAsHex ? Integer.toHexString(i) : String.valueOf(i)),
+					8, '0'));
 			bd.append(":  ");
 			for (int j = 0; j < width; j++) {
 				boolean in = j + i < len;
@@ -982,9 +989,27 @@ public class SEUtilities {
 	public static void appShutdown() {
 		pdLookup = null;
 	}
-	
 
 	public static String sanitiseFileName(String string) {
 		return string.replaceAll("[\\?/<>\\|\\*:\\\\\"\\{\\}]", "_");
+	}
+
+	public static <A extends Annotation> void iterateForPropertyWithAnnotation(
+			Object object, Class<A> annotationClass,
+			HasAnnotationCallback<A> hasAnnotationCallback) {
+		try {
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(
+					object.getClass()).getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				JvmPropertyReflector reflector = new JvmPropertyReflector(pd);
+				if (reflector.getAnnotation(annotationClass) != null) {
+					hasAnnotationCallback
+							.apply(reflector.getAnnotation(annotationClass),
+									reflector);
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

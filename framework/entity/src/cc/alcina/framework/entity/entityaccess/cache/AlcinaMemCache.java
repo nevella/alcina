@@ -572,11 +572,17 @@ public class AlcinaMemCache {
 			Map<HasIdAndLocalId, DomainTransformEvent> first = new LinkedHashMap<HasIdAndLocalId, DomainTransformEvent>();
 			Map<HasIdAndLocalId, DomainTransformEvent> last = new LinkedHashMap<HasIdAndLocalId, DomainTransformEvent>();
 			for (DomainTransformEvent dte : filtered) {
-				HasIdAndLocalId object = TransformManager.get().getObject(dte);
-				if (!first.containsKey(object)) {
-					first.put(object, dte);
+				HasIdAndLocalId object = (HasIdAndLocalId) (TransformManager
+						.get().containsObject(dte) ? TransformManager.get()
+						.getObject(dte) : dte.getSource());
+				if (object == null || object.getId() == 0) {
+					// created object deleted in same request - never index
+				} else {
+					if (!first.containsKey(object)) {
+						first.put(object, dte);
+					}
+					last.put(object, dte);
 				}
-				last.put(object, dte);
 				if (dte.getObjectId() == 0 && dte.getObjectLocalId() != 0) {
 					dte.setObjectId(object.getId());
 					dte.setObjectLocalId(0);
@@ -645,7 +651,7 @@ public class AlcinaMemCache {
 		}
 
 		public <T> Map<Long, T> lookup(Class<T> clazz) {
-			return (Map<Long, T>) cache.getDetached().get(clazz);
+			return (Map<Long, T>) cache.getMap(clazz);
 		}
 
 		public <V extends HasIdAndLocalId> V resolveTransactional(
@@ -677,6 +683,15 @@ public class AlcinaMemCache {
 		}
 
 		public <V extends HasIdAndLocalId> V ensureTransactional(V value) {
+			if (value == null) {
+				return null;
+			}
+			if (!transactionActiveInCurrentThread()) {
+				return value;
+			}
+			if (value.getId() == 0) {
+				return value;
+			}
 			return transactions.get().ensureTransactional(value);
 		}
 	}
@@ -971,5 +986,9 @@ public class AlcinaMemCache {
 				break;
 			}
 		}
+	}
+
+	public static <V extends HasIdAndLocalId> V ensureTransactional(V value) {
+		return get().transactional.ensureTransactional(value);
 	}
 }

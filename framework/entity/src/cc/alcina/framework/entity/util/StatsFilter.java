@@ -19,6 +19,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
@@ -67,11 +68,14 @@ public class StatsFilter extends CollectionProjectionFilter {
 		if (bypass(context.field)) {
 			return null;
 		}
-		visited.put(context.ownerObject, context.ownerObject);
+		if(filtered instanceof Collection){
+			int j=3;
+		}
+		visited.put(context.projectedOwner, context.projectedOwner);
 		visited.put(filtered, filtered);
-		ownerMap.add(context.ownerObject, filtered);
+		ownerMap.add(context.projectedOwner, filtered);
 		ownerMap.ensureKey(filtered);
-		owneeMap.add(filtered, context.ownerObject);
+		owneeMap.add(filtered, context.projectedOwner);
 		return filtered;
 	}
 
@@ -153,6 +157,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 					}
 					Collection coll = new ArrayList();
 					coll.add(o3);
+					Set addedCollections=new LinkedHashSet();
 					while (true) {
 						int size = coll.size();
 						LinkedHashSet add = new LinkedHashSet();
@@ -160,8 +165,10 @@ public class StatsFilter extends CollectionProjectionFilter {
 							Object o2 = i.next();
 							if (o2 instanceof Collection) {
 								add.addAll((Collection) o2);
+								addedCollections.add(o2);
 								i.remove();
 							} else if (o2 instanceof Map) {
+								addedCollections.add(o2);
 								add.addAll(((Map) o2).values());
 								add.addAll(((Map) o2).keySet());
 								i.remove();
@@ -173,6 +180,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 							coll.addAll(add);
 						}
 					}
+					coll.addAll(addedCollections);
 					for (Object o1 : coll) {
 						if (o1 == null) {
 							nullInstanceMap.add(field.getType());
@@ -184,6 +192,9 @@ public class StatsFilter extends CollectionProjectionFilter {
 								item.size += o1.toString().length();
 							} else {
 								if (calculateOwnerStatsFor.contains(clazz2)) {
+									if (owneeMap.get(o1)==null){//TODO - shouldn't but something odd re collection projection
+										continue;
+									}
 									if (owneeMap.get(o1).size() == 1) {
 										item.owned.add(o1);
 										owned.add(o1);

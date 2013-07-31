@@ -27,12 +27,13 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.provider.TextProvider;
@@ -98,7 +99,7 @@ public abstract class ClientTransformManager extends TransformManager {
 		beanReflector.iterateForPropertyWithAnnotation(WrapperInfo.class,
 				new HasAnnotationCallback<WrapperInfo>() {
 					public void apply(WrapperInfo annotation,
-							ClientPropertyReflector propertyReflector) {
+							PropertyReflector propertyReflector) {
 						WrapperPersistable obj = (WrapperPersistable) propertyReflector
 								.getPropertyValue(referrer);
 						CommonLocator
@@ -119,7 +120,7 @@ public abstract class ClientTransformManager extends TransformManager {
 				// the TM
 				HasAnnotationCallback<WrapperInfo> callback = new HasAnnotationCallback<WrapperInfo>() {
 					public void apply(WrapperInfo annotation,
-							ClientPropertyReflector propertyReflector) {
+							PropertyReflector propertyReflector) {
 						propertyReflector.setPropertyValue(promoted,
 								propertyReflector.getPropertyValue(referrer));
 					}
@@ -133,7 +134,7 @@ public abstract class ClientTransformManager extends TransformManager {
 		final HasIdAndLocalId finalTarget = target;
 		HasAnnotationCallback<WrapperInfo> callback = new HasAnnotationCallback<WrapperInfo>() {
 			public void apply(final WrapperInfo annotation,
-					final ClientPropertyReflector propertyReflector) {
+					final PropertyReflector propertyReflector) {
 				WrapperPersistable persistableObject = (WrapperPersistable) propertyReflector
 						.getPropertyValue(finalTarget);
 				AsyncCallback<Long> savedCallback = new AsyncCallback<Long>() {
@@ -344,7 +345,7 @@ public abstract class ClientTransformManager extends TransformManager {
 					// required for deletion permission checks, and should never
 					// be the collection owner of non-userland objects
 					HasIdAndLocalId target = (HasIdAndLocalId) object;
-					if(target instanceof IUser || target instanceof IGroup){
+					if (!checkRemoveAssociation(hili, target)) {
 						continue;
 					}
 					boolean wasRegistered = getObject(target) != null;
@@ -358,6 +359,11 @@ public abstract class ClientTransformManager extends TransformManager {
 				}
 			}
 		}
+	}
+
+	protected boolean checkRemoveAssociation(HasIdAndLocalId hili,
+			HasIdAndLocalId target) {
+		return !(target instanceof IUser || target instanceof IGroup);
 	}
 
 	public class ClientDomainSync {
@@ -464,7 +470,7 @@ public abstract class ClientTransformManager extends TransformManager {
 		beanReflector.iterateForPropertyWithAnnotation(Association.class,
 				new HasAnnotationCallback<Association>() {
 					public void apply(Association association,
-							ClientPropertyReflector propertyReflector) {
+							PropertyReflector propertyReflector) {
 						if (association.cascadeDeletes()) {
 							Object object = propertyReflector
 									.getPropertyValue(hili);

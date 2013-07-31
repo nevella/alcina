@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.domaintransform;
 
 import java.beans.Introspector;
@@ -33,8 +32,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
-
 
 /**
  * a fair bit of overlap with tltm - should clean up
@@ -45,6 +44,15 @@ import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 @SuppressWarnings("unchecked")
 public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		PropertyAccessor, CurrentUtcDateProvider {
+	private static ObjectPersistenceHelper theInstance;
+
+	public static ObjectPersistenceHelper get() {
+		if (theInstance == null) {
+			theInstance = new ObjectPersistenceHelper();
+		}
+		return theInstance;
+	}
+
 	// Initialises this. Note - not a thread-specific singleton,
 	// any thread (client) specific work delegated to tltm
 	private ObjectPersistenceHelper() {
@@ -55,69 +63,16 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		CommonLocator.get().registerPropertyAccessor(this);
 	}
 
-	private static ObjectPersistenceHelper theInstance;
-
-	public static ObjectPersistenceHelper get() {
-		if (theInstance == null) {
-			theInstance = new ObjectPersistenceHelper();
-		}
-		return theInstance;
-	}
-
 	public void appShutdown() {
 		ThreadlocalTransformManager.get().appShutdown();
 		theInstance = null;
 	}
 
-	public Class getClassForName(String fqn) {
-		try {
-			return Class.forName(fqn);
-		} catch (ClassNotFoundException e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
-			long id, long localId) {
-		// uses thread-local instance
-		return TransformManager.get().getObject(c, id, localId);
-	}
-
-	public void setPropertyValue(Object bean, String propertyName, Object value) {
-		(ThreadlocalTransformManager.cast())
-				.setPropertyValue(bean, propertyName, value);
-	}
-
-	public <T extends HasIdAndLocalId> T  getObject(T bean) {
-		return (T) TransformManager.get().getObject(
-				bean.getClass(), bean.getId(), bean.getLocalId());
-	}
-
-
-	public Object getPropertyValue(Object bean, String propertyName) {
-		return (ThreadlocalTransformManager.cast())
-				.getPropertyValue(bean, propertyName);
-	}
-
-	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
-			Class<A> annotationClass, String propertyName) {
-		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(targetClass)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals(propertyName)) {
-					return pd.getReadMethod().getAnnotation(annotationClass);
-				}
-			}
-			return null;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
-			Class<A> annotationClass) {
-		return (A) targetClass.getAnnotation(annotationClass);
+	@SuppressWarnings("deprecation")
+	// it works...yeah, calendar shmalendar
+	public Date currentUtcDate() {
+		Date d = new Date();
+		return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
 	}
 
 	public String displayNameForObject(Object o) {
@@ -129,8 +84,8 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		if (info != null) {
 			dnpn = info.displayNamePropertyName();
 		}
-		Object pv = CommonLocator.get().propertyAccessor().getPropertyValue(
-				o, dnpn);
+		Object pv = CommonLocator.get().propertyAccessor()
+				.getPropertyValue(o, dnpn);
 		return (pv == null) ? "---" : pv.toString();
 	}
 
@@ -153,31 +108,83 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
-	public Class getPropertyType(Class clazz, String propertyName) {
+	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
+			Class<A> annotationClass) {
+		return (A) targetClass.getAnnotation(annotationClass);
+	}
+
+	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
+			Class<A> annotationClass, String propertyName) {
 		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals(propertyName)) {
-					return pd.getPropertyType();
-				}
-			}
-			return null;
+			PropertyDescriptor pd = SEUtilities.descriptorByName(targetClass,
+					propertyName);
+			return pd == null ? null : pd.getReadMethod() == null ? null : pd
+					.getReadMethod().getAnnotation(annotationClass);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
-	public <T> T newInstance(Class<T> clazz, long objectId,long localId) {
-		return (ThreadlocalTransformManager.cast())
-				.newInstance(clazz, objectId,localId);
+	public Class getClassForName(String fqn) {
+		try {
+			return Class.forName(fqn);
+		} catch (ClassNotFoundException e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
-	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
-		if (Enum.class.isAssignableFrom(evt.getValueClass())) {
-			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
+	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
+			long id, long localId) {
+		// uses thread-local instance
+		return TransformManager.get().getObject(c, id, localId);
+	}
+
+	public <T extends HasIdAndLocalId> T getObject(T bean) {
+		return (T) TransformManager.get().getObject(bean.getClass(),
+				bean.getId(), bean.getLocalId());
+	}
+
+	public Class getPropertyType(Class clazz, String propertyName) {
+		try {
+			PropertyDescriptor descriptor = SEUtilities.descriptorByName(clazz, propertyName);
+			return descriptor==null?null:descriptor.getPropertyType();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
-		return null;
+	}
+
+	public Object getPropertyValue(Object bean, String propertyName) {
+		return (ThreadlocalTransformManager.cast()).getPropertyValue(bean,
+				propertyName);
+	}
+
+	public <T> T getTemplateInstance(Class<T> clazz) {
+		return newInstance(clazz);
+	}
+
+	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
+		try {
+			List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
+			java.beans.BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
+			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				Class<?> propertyType = pd.getPropertyType();
+				if (pd.getWriteMethod() == null) {
+					continue;
+				}
+				if (propertyType.isInterface() && propertyType != Set.class) {
+					// this seems to vary (unnecessary on 1.5, necessary on
+					// 1.6)-propertydescriptor change probly
+					propertyType = CommonLocator.get().implementationLookup()
+							.getImplementation(propertyType);
+				}
+				infos.add(new PropertyInfoLite(propertyType, pd.getName(),
+						null, clazz));
+			}
+			return infos;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public <T> T newInstance(Class<T> clazz) {
@@ -188,41 +195,20 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
-	public <T> T getTemplateInstance(Class<T> clazz) {
-		return newInstance(clazz);
+	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
+		return (ThreadlocalTransformManager.cast()).newInstance(clazz,
+				objectId, localId);
 	}
 
-	@SuppressWarnings("deprecation")
-	// it works...yeah, calendar shmalendar
-	public Date currentUtcDate() {
-		Date d = new Date();
-		return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
+	public void setPropertyValue(Object bean, String propertyName, Object value) {
+		(ThreadlocalTransformManager.cast()).setPropertyValue(bean,
+				propertyName, value);
 	}
 
-	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
-		try {
-			List<PropertyInfoLite> infos = new ArrayList<PropertyInfoLite>();
-			java.beans.BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				Class<?> propertyType = pd.getPropertyType();
-				if (pd.getWriteMethod()==null){
-					continue;
-				}
-				if (propertyType.isInterface()&&propertyType!=Set.class) {
-					// this seems to vary (unnecessary on 1.5, necessary on
-					// 1.6)-propertydescriptor change probly
-					propertyType = CommonLocator.get()
-							.implementationLookup().getImplementation(
-									propertyType);
-				}
-				infos.add(new PropertyInfoLite(propertyType, pd
-						.getName(),null,clazz));
-			}
-			return infos;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
+		if (Enum.class.isAssignableFrom(evt.getValueClass())) {
+			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
 		}
-		
+		return null;
 	}
 }

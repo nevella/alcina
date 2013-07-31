@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
@@ -65,6 +66,37 @@ public class GraphProjection {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
 
+	public static Type getGenericType(Field field) {
+		if (!genericTypeLookup.containsKey(field)) {
+			genericTypeLookup.put(field, field.getGenericType());
+		}
+		return genericTypeLookup.get(field);
+	}
+	public static boolean isGenericHiliType(Field field) {
+		if (!genericHiliTypeLookup.containsKey(field)) {
+			Type pt =getGenericType(field);
+			boolean isHili=false;
+			if (pt instanceof ParameterizedType) {
+				Type genericType = ((ParameterizedType) pt)
+						.getActualTypeArguments()[0];
+				if (genericType instanceof Class) {
+					Class type = (Class) genericType;
+					isHili=HasIdAndLocalId.class.isAssignableFrom(type);
+				}
+			}
+			genericHiliTypeLookup.put(field, isHili);
+		}
+		return genericHiliTypeLookup.get(field);
+	}
+
+	static PropertyPermissions getPropertyPermission(Method method) {
+		if (!propertyPermissionLookup.containsKey(method)) {
+			propertyPermissionLookup.put(method,
+					method.getAnnotation(PropertyPermissions.class));
+		}
+		return propertyPermissionLookup.get(method);
+	}
+
 	private GraphProjectionFilter dataFilter;
 
 	private GraphProjectionFilter fieldFilter;
@@ -80,7 +112,9 @@ public class GraphProjection {
 	Map<Class, Boolean> perObjectPermissionClasses = new HashMap<Class, Boolean>();
 
 	@ClearOnAppRestart
-	static Map<Field, Type> genericTypeLookup = new HashMap<Field, Type>();
+	 static Map<Field, Type> genericTypeLookup = new HashMap<Field, Type>();
+	@ClearOnAppRestart
+	 static Map<Field, Boolean> genericHiliTypeLookup = new HashMap<Field, Boolean>();
 
 	@ClearOnAppRestart
 	static Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>();
@@ -147,7 +181,8 @@ public class GraphProjection {
 		}
 		if (dataFilter != null) {
 			if (context == null) {
-				context = new GraphProjectionContext(c, null, null, projected);
+				context = new GraphProjectionContext(c, null, null, projected,
+						source);
 			}
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
@@ -173,7 +208,7 @@ public class GraphProjection {
 				}
 			}
 			GraphProjectionContext childContext = new GraphProjectionContext(c,
-					field, context, projected);
+					field, context, projected, source);
 			Object cv = project(value, childContext);
 			field.set(projected, cv);
 		}
@@ -210,6 +245,17 @@ public class GraphProjection {
 
 	public void setReached(IdentityHashMap reached) {
 		this.reached = reached;
+	}
+
+	private Permission ensurePerClassReadPermission(
+			Class<? extends Object> sourceClass) {
+		if (!perClassReadPermission.containsKey(sourceClass)) {
+			ObjectPermissions annotation = sourceClass
+					.getAnnotation(ObjectPermissions.class);
+			perClassReadPermission.put(sourceClass, annotation == null ? null
+					: annotation.read());
+		}
+		return perClassReadPermission.get(sourceClass);
 	}
 
 	private Field[] getFieldsForClass(Object projected) throws Exception {
@@ -251,21 +297,6 @@ public class GraphProjection {
 		return result;
 	}
 
-	static PropertyPermissions getPropertyPermission(Method method) {
-		if (!propertyPermissionLookup.containsKey(method)) {
-			propertyPermissionLookup.put(method,
-					method.getAnnotation(PropertyPermissions.class));
-		}
-		return propertyPermissionLookup.get(method);
-	}
-
-	static Type getGenericType(Field field) {
-		if (!genericTypeLookup.containsKey(field)) {
-			genericTypeLookup.put(field, field.getGenericType());
-		}
-		return genericTypeLookup.get(field);
-	}
-
 	private boolean permitField(Field field, Object source) throws Exception {
 		PropertyPermissions pp = perFieldPermission.get(field);
 		if (pp != null) {
@@ -295,17 +326,6 @@ public class GraphProjection {
 		return valid;
 	}
 
-	private Permission ensurePerClassReadPermission(
-			Class<? extends Object> sourceClass) {
-		if (!perClassReadPermission.containsKey(sourceClass)) {
-			ObjectPermissions annotation = sourceClass
-					.getAnnotation(ObjectPermissions.class);
-			perClassReadPermission.put(sourceClass, annotation == null ? null
-					: annotation.read());
-		}
-		return perClassReadPermission.get(sourceClass);
-	}
-
 	public static class CollectionProjectionFilter implements
 			GraphProjectionFilter {
 		@SuppressWarnings("unchecked")
@@ -328,6 +348,12 @@ public class GraphProjection {
 				return (T) projectMap((Map) original, context, graphProjection);
 			}
 			return projected;
+		}
+
+		@Override
+		public Boolean permitClass(Class clazz) {
+			throw new UnsupportedOperationException(
+					"Normally, use only as a data filter");
 		}
 
 		public boolean permitField(Field field,
@@ -357,18 +383,12 @@ public class GraphProjection {
 			}
 			return m;
 		}
-
-		@Override
-		public Boolean permitClass(Class clazz) {
-			throw new UnsupportedOperationException(
-					"Normally, use only as a data filter");
-		}
 	}
 
 	public static class GraphProjectionContext {
 		public GraphProjectionContext parent;
 
-		public Object ownerObject;
+		public Object projectedOwner;
 
 		public String fieldName;
 
@@ -378,20 +398,20 @@ public class GraphProjection {
 
 		static int debugDepth = 200;
 
+		public Object sourceOwner;
+
 		public GraphProjectionContext(Class clazz, Field field,
-				GraphProjectionContext parent, Object ownerObject) {
+				GraphProjectionContext parent, Object projectedOwner,
+				Object sourceOwner) {
 			this.clazz = clazz;
 			this.field = field;
+			this.sourceOwner = sourceOwner;
 			this.fieldName = field == null ? "" : field.getName();
 			this.parent = parent;
-			this.ownerObject = ownerObject;
+			this.projectedOwner = projectedOwner;
 			if (depth(0) > debugDepth) {
 				int debug = 0;
 			}
-		}
-
-		private int depth(int self) {
-			return parent == null ? self : parent.depth(self + 1);
 		}
 
 		@Override
@@ -413,9 +433,15 @@ public class GraphProjection {
 			return (parent == null ? "" : parent.toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
 		}
+
+		private int depth(int self) {
+			return parent == null ? self : parent.depth(self + 1);
+		}
 	}
 
 	public static interface GraphProjectionFilter {
+		public abstract Boolean permitClass(Class clazz);
+
 		/*
 		 * IMPORTANT - if filterdata changes the return value (i.e. doesn't
 		 * return a value === projected) it must immediately (on new object
@@ -426,8 +452,6 @@ public class GraphProjection {
 				throws Exception;
 
 		boolean permitField(Field field, Set<Field> perObjectPermissionFields);
-
-		public abstract Boolean permitClass(Class clazz);
 	}
 
 	public interface InstantiateImplCallback<T> {
@@ -451,6 +475,13 @@ public class GraphProjection {
 				GraphProjectionContext context, GraphProjection graphProjection)
 				throws Exception {
 			return null;
+		}
+
+		@Override
+		public Boolean permitClass(Class clazz) {
+			ObjectPermissions op = (ObjectPermissions) clazz
+					.getAnnotation(ObjectPermissions.class);
+			return permit(clazz, op == null ? null : op.read());
 		}
 
 		public boolean permitField(Field field,
@@ -478,8 +509,7 @@ public class GraphProjection {
 						.getDeclaringClass().getMethod(
 								SEUtilities.getAccessorName(field),
 								new Class[0]));
-				Boolean permit = permit(field.getType(),
-						pp == null ? null : pp.read());
+				Boolean permit = permit(type, pp == null ? null : pp.read());
 				if (permit == null) {
 					perObjectPermissionFields.add(field);
 					return true;
@@ -524,13 +554,6 @@ public class GraphProjection {
 			// TODO: 3.2 - replace with a call to tltm (should
 			// really be tlpm) that checks obj read perms
 			// that'll catch find-object stuff as well
-		}
-
-		@Override
-		public Boolean permitClass(Class clazz) {
-			ObjectPermissions op = (ObjectPermissions) clazz
-					.getAnnotation(ObjectPermissions.class);
-			return permit(clazz, op == null ? null : op.read());
 		}
 	}
 }

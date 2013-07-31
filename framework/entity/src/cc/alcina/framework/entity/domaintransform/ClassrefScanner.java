@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.domaintransform;
 
 import java.io.File;
@@ -31,6 +30,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -42,13 +42,12 @@ import cc.alcina.framework.entity.registry.CachingScanner;
  *
  * @author Nick Reddel
  */
-
- public class ClassrefScanner extends CachingScanner {
+public class ClassrefScanner extends CachingScanner {
 	private LinkedHashSet<Class> persistableClasses;
 
 	public void scan(Map<String, Date> classes) throws Exception {
-		String cachePath =getHomeDir().getPath()
-				+ File.separator + getClass().getSimpleName() + "-cache.ser";
+		String cachePath = getHomeDir().getPath() + File.separator
+				+ getClass().getSimpleName() + "-cache.ser";
 		persistableClasses = new LinkedHashSet<Class>();
 		persistableClasses.addAll(Arrays.asList(new Class[] { Long.class,
 				Double.class, Float.class, Integer.class, Short.class,
@@ -91,7 +90,7 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 	protected void process(Class c, String className, Date modDate,
 			Map<String, Date> outgoingIgnoreMap) {
 		if ((!Modifier.isPublic(c.getModifiers()))
-				|| (Modifier.isAbstract(c.getModifiers())&&!c.isEnum())) {
+				|| (Modifier.isAbstract(c.getModifiers()) && !c.isEnum())) {
 			outgoingIgnoreMap.put(className, modDate);
 			return;
 		}
@@ -101,10 +100,11 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 		 */
 		boolean bi = c.isAnnotationPresent(BeanInfo.class);
 		boolean in = c.isAnnotationPresent(ClientInstantiable.class);
-		if ((HasIdAndLocalId.class.isAssignableFrom(c) && (in || bi))
-				|| (c.isEnum() && in)) {
+		boolean dtp = c.isAnnotationPresent(DomainTransformPersistable.class);
+		if ((HasIdAndLocalId.class.isAssignableFrom(c) && (in || bi || dtp))
+				|| (c.isEnum() && (in || dtp))) {
 			persistableClasses.add(c);
-		}else{
+		} else {
 			outgoingIgnoreMap.put(className, modDate);
 		}
 	}
@@ -113,17 +113,19 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 	// double.class, float.class, int.class, short.class,
 	// boolean.class }));
 	public void fixEntities(Class entityClass, String strPropName,
-			String crPropName, EntityManager em, CommonPersistenceLocal persister) {
+			String crPropName, EntityManager em,
+			CommonPersistenceLocal persister) {
 		Set all = persister.getAll(entityClass);
 		for (Object o : all) {
-			String cName = (String) SEUtilities.getPropertyValue(o,
-					strPropName);
+			String cName = (String) SEUtilities
+					.getPropertyValue(o, strPropName);
 			if (cName == null) {
 				continue;
 			}
 			ClassRef ref = ClassRef.forName(cName);
 			if (ref == null) {
-				throw new WrappedRuntimeException("Classref not found:" + cName,
+				throw new WrappedRuntimeException(
+						"Classref not found:" + cName,
 						SuggestedAction.NOTIFY_WARNING);
 			}
 			SEUtilities.setPropertyValue(o, crPropName, ref);
