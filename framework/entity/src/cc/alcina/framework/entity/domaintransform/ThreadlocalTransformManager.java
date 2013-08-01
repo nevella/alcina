@@ -572,6 +572,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		modifiedObjects = new HashSet<HasIdAndLocalId>();
 		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
+		this.lastEvent=null;
 		for (SourcesPropertyChangeEvents spce : listeningTo) {
 			spce.removePropertyChangeListener(this);
 		}
@@ -953,11 +954,23 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
+	DomainTransformEvent lastEvent=null;
 	@Override
 	public synchronized void propertyChange(PropertyChangeEvent evt) {
 		if (evt.getSource() == ignorePropertyChangesTo) {
 			return;
 		}
+		if (isIgnorePropertyChanges()
+				|| UNSPECIFIC_PROPERTY_CHANGE.equals(evt.getPropertyName())) {
+			return;
+		}
+		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
+		convertToTargetObject(dte);
+		if(lastEvent!=null&&lastEvent.equivalentTo(dte)){
+			//hibernate manipulations can cause a bunch of theses
+			return;
+		}
+		lastEvent=dte;
 		super.propertyChange(evt);
 	}
 

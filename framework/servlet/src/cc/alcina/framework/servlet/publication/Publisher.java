@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.ServletLayerRegistry;
@@ -153,26 +154,33 @@ public class Publisher {
 	private long persist(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Long publicationUserId,
 			Publication original) {
-		Publication publication = publicationPersister.newPublicationInstance();
-		if (contentDefinition instanceof HasId) {
-			HasId hasId = (HasId) contentDefinition;
-			hasId.setId(0);
-			// force new
+		try {
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			Publication publication = publicationPersister
+					.newPublicationInstance();
+			if (contentDefinition instanceof HasId) {
+				HasId hasId = (HasId) contentDefinition;
+				hasId.setId(0);
+				// force new
+			}
+			if (deliveryModel instanceof HasId) {
+				HasId hasId = (HasId) deliveryModel;
+				hasId.setId(0);
+				// force new
+			}
+			publication.setContentDefinition(contentDefinition);
+			publication.setDeliveryModel(deliveryModel);
+			publication.setUser(PermissionsManager.get().getUser());
+			publication.setPublicationDate(new Date());
+			publication.setOriginalPublication(original);
+			publication.setUserPublicationId(publicationUserId);
+			publication.setPublicationType(contentDefinition
+					.getPublicationType());
+			return ServletLayerLocator.get().commonPersistenceProvider()
+					.getCommonPersistence().merge(publication);
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
 		}
-		if (deliveryModel instanceof HasId) {
-			HasId hasId = (HasId) deliveryModel;
-			hasId.setId(0);
-			// force new
-		}
-		publication.setContentDefinition(contentDefinition);
-		publication.setDeliveryModel(deliveryModel);
-		publication.setUser(PermissionsManager.get().getUser());
-		publication.setPublicationDate(new Date());
-		publication.setOriginalPublication(original);
-		publication.setUserPublicationId(publicationUserId);
-		publication.setPublicationType(contentDefinition.getPublicationType());
-		return ServletLayerLocator.get().commonPersistenceProvider()
-				.getCommonPersistence().merge(publication);
 	}
 
 	private static PublicationPersister publicationPersister;

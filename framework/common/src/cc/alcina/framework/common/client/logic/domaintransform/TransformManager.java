@@ -76,7 +76,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 // casting...alas
 public abstract class TransformManager implements PropertyChangeListener,
 		ObjectLookup, CollectionModificationSource {
-	private static final String UNSPECIFIC_PROPERTY_CHANGE = "---";
+	protected static final String UNSPECIFIC_PROPERTY_CHANGE = "---";
 
 	public static final String ID_FIELD_NAME = "id";
 

@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class DomainTransformEvent implements Serializable,
-		Comparable<DomainTransformEvent>,Cloneable {
+		Comparable<DomainTransformEvent>, Cloneable {
 	private String propertyName;
 
 	private transient Object newValue;
@@ -366,6 +366,22 @@ public class DomainTransformEvent implements Serializable,
 		return hili.getClass().equals(objectClass)
 				&& hili.getLocalId() == objectLocalId
 				&& hili.getId() == objectId;
+	}
+
+	public boolean equivalentTo(DomainTransformEvent o) {
+		return o != null
+				&& objectId == o.objectId
+				&& objectLocalId == o.objectLocalId
+				&& getObjectClass() == o.getObjectClass()
+				&& valueId == o.valueId
+				&& valueLocalId == o.valueLocalId
+				&& getValueClass() == o.getValueClass()
+				&& commitType == o.commitType
+				&& transformType == o.transformType
+				&&CommonUtils.equalsWithNullEquality(propertyName,
+						o.propertyName)
+				&& CommonUtils.equalsWithNullEquality(newStringValue,
+						o.newStringValue);
 	}
 
 	public boolean provideIsIdEvent(Class clazz) {
