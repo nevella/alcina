@@ -22,6 +22,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 @Introspectable
 @MappedSuperclass
 public class ClientLogRecord implements Serializable {
+	static final transient long serialVersionUID = -3L;
 	private int localSeriesId;
 
 	private String clientInstanceAuth;
@@ -130,7 +131,8 @@ public class ClientLogRecord implements Serializable {
 
 	@BeanInfo(displayNamePropertyName = "size")
 	@Introspectable
-	public static class ClientLogRecords {
+	public static class ClientLogRecords implements Serializable {
+		static final transient long serialVersionUID = -3L;
 		private List<ClientLogRecord> logRecords = new ArrayList<ClientLogRecord>();
 
 		public int size = 0;

@@ -932,10 +932,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		for (ClientLogRecords r : records) {
 			for (ClientLogRecord clr : r.getLogRecords()) {
 				clr.setIpAddress(remoteAddr);
+				sanitiseClrString(clr);
 			}
 		}
 		EntityLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().persistClientLogRecords(records);
+	}
+
+	private void sanitiseClrString(ClientLogRecord clr) {
+		clr.setMessage(CommonUtils.nullToEmpty(clr.getMessage()).replace('\0',
+				' '));
 	}
 
 	protected String getUserAgent() {

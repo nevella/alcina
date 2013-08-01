@@ -17,7 +17,7 @@ public class StandardProjectionFilterFactory implements
 	public GraphProjectionFilter create(
 			Class<? extends GraphProjectionFilter> registryPoint,
 			Class targetObjectClass) {
-		if (targetObjectClass == PermissibleFieldFilter.class) {
+		if (registryPoint == PermissibleFieldFilter.class) {
 			return new PermissibleFieldFilter();
 		} else {
 			return new CollectionProjectionFilter();
