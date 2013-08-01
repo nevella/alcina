@@ -47,7 +47,9 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 			throw new IllegalArgumentException();
 		}
 		if (size == DEGENERATE_THRESHOLD && degenerate == null) {
-			degenerate = new LinkedHashSet<H>();
+			LinkedHashSet degenerate = new LinkedHashSet<H>();
+			degenerate.addAll(this);
+			this.degenerate = degenerate;
 		}
 		if (degenerate != null) {
 			return degenerate.add(e);
@@ -104,7 +106,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 
 	@Override
 	public boolean remove(Object o) {
-		if(o==null){
+		if (o == null) {
 			return false;
 		}
 		if (degenerate != null) {
