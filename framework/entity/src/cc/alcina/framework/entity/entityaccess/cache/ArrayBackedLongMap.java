@@ -97,11 +97,11 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 		}
 		// System.out.println(CommonUtils.formatJ(
 		// "Creating failover - (id %s) - %s", key, this));
-		elementData = null;
 		
 		LinkedHashMap failover = new LinkedHashMap<Long, V>();
 		failover.putAll(this);
 		this.failover = failover;
+		elementData = null;
 		return -1;
 	}
 
