@@ -549,8 +549,9 @@ public class AlcinaMemCache {
 		}
 		try {
 			for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
-				task.run(this, clazz, raw);
-				resolveRefs();
+				if (task.run(this, clazz, raw)) {
+					resolveRefs();
+				}
 			}
 			if (query.isRaw()) {
 				return raw;

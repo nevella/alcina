@@ -15,7 +15,10 @@ public class CacheDescriptor {
 	}
 
 	public static interface PreProvideTask<T> {
-		public void run(AlcinaMemCache alcinaMemCache, Class clazz,
+		/**
+		 * @return true if cached data was modified
+		 */
+		public boolean run(AlcinaMemCache alcinaMemCache, Class clazz,
 				List<T> objects) throws Exception;
 	}
 
