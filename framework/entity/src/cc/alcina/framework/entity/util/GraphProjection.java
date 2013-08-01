@@ -435,7 +435,7 @@ public class GraphProjection {
 		}
 
 		private int depth(int self) {
-			return parent == null ? self : parent.depth(self + 1);
+			return parent == null || self==1000? self : parent.depth(self + 1);
 		}
 	}
 
