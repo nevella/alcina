@@ -514,7 +514,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		groupMap = null;
 		if (this.user != null
 				&& this.user instanceof SourcesPropertyChangeEvents) {
-			SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) user;
+			SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) this.user;
 			try {
 				spce.removePropertyChangeListener(userListener);
 			} catch (Exception e) {

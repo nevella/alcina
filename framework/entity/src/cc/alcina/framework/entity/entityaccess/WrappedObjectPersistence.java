@@ -42,7 +42,7 @@ public class WrappedObjectPersistence {
 				WrapperInfo info = pd.getReadMethod().getAnnotation(
 						WrapperInfo.class);
 				if (info != null) {
-					if(pd.getReadMethod().invoke(wrapper, new Object[0])!=null){
+					if (pd.getReadMethod().invoke(wrapper, new Object[0]) != null) {
 						continue;
 					}
 					PropertyDescriptor idpd = SEUtilities.descriptorByName(
@@ -89,6 +89,17 @@ public class WrappedObjectPersistence {
 
 	public void checkWrappedObjectAccess(HasId wrapper, WrappedObject wrapped,
 			Class clazz) throws PermissionsException {
+		try {
+			checkWrappedObjectAccess0(wrapper, wrapped, clazz);
+		} catch (NullPointerException npe) {
+			System.out.format(
+					"Problem checking wrapped object access: %s %s %s\n",
+					wrapper, wrapped, clazz);
+		}
+	}
+
+	private void checkWrappedObjectAccess0(HasId wrapper,
+			WrappedObject wrapped, Class clazz) throws PermissionsException {
 		if (!PersistentSingleton.class.isAssignableFrom(clazz)
 				&& wrapped != null
 				&& wrapped.getUser().getId() != PermissionsManager.get()
