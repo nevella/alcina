@@ -50,6 +50,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 			LinkedHashSet degenerate = new LinkedHashSet<H>();
 			degenerate.addAll(this);
 			this.degenerate = degenerate;
+			elementData=null;
 		}
 		if (degenerate != null) {
 			return degenerate.add(e);

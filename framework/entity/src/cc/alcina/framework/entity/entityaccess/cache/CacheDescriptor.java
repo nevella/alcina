@@ -5,9 +5,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 
-public class CacheDescriptor {
+public abstract class CacheDescriptor {
 	Map<Class, CacheItemDescriptor> perClass = new LinkedHashMap<Class, CacheItemDescriptor>();
 
 	public static interface CacheTask {
@@ -52,4 +52,6 @@ public class CacheDescriptor {
 				indexProperties);
 		addItemDescriptor(itemDescriptor);
 	}
+
+	public abstract Class<? extends IUser> getIUserClass() ;
 }

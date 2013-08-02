@@ -8,6 +8,7 @@ import java.lang.reflect.ParameterizedType;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,11 +42,13 @@ import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LookupMapToMap;
@@ -164,9 +167,9 @@ public class AlcinaMemCache {
 	}
 
 	public List<DomainTransformEvent> filterInterestedTransforms(
-			Collection<DomainTransformEvent> transforms) {
-		List<DomainTransformEvent> filtered = CollectionFilters.filter(
-				transforms, new InSubgraphFilter());
+			Collection<DomainTransformEvent> dtes) {
+		List<DomainTransformEvent> filtered = CollectionFilters.filter(dtes,
+				new InSubgraphFilter());
 		return filtered;
 	}
 
@@ -563,11 +566,11 @@ public class AlcinaMemCache {
 		}
 	}
 
-	synchronized void postProcess(DomainTransformRequestPersistenceEvent evt,
+	synchronized void postProcess(
+			DomainTransformRequestPersistenceEvent persistenceEvent,
 			TransformPersistenceToken persistenceToken) {
-		DomainTransformRequest request = evt.getTransformPersistenceToken()
-				.getRequest();
-		List<DomainTransformEvent> dtes = request.allTransforms();
+		List<DomainTransformEvent> dtes = (List) persistenceEvent
+				.getDomainTransformLayerWrapper().persistentEvents;
 		List<DomainTransformEvent> filtered = filterInterestedTransforms(dtes);
 		try {
 			Map<HasIdAndLocalId, DomainTransformEvent> first = new LinkedHashMap<HasIdAndLocalId, DomainTransformEvent>();
@@ -594,8 +597,8 @@ public class AlcinaMemCache {
 							.getObject(dte.getValueClass(), 0,
 									dte.getValueLocalId()).getId());
 					dte.setValueLocalId(0);
-					dte.setNewValue(null);// force a lookup
 				}
+				dte.setNewValue(null);// force a lookup
 			}
 			Set<DomainTransformEvent> firstSet = new LinkedHashSet<DomainTransformEvent>(
 					first.values());
@@ -609,10 +612,17 @@ public class AlcinaMemCache {
 					HasIdAndLocalId obj = resolveObject(dte);
 					index(obj, false);
 				}
+				Object persistentLayerSource = dte.getSource();
 				transformManager.consume(dte);
 				if (dte.getTransformType() != TransformType.DELETE_OBJECT
 						&& lastSet.contains(dte)) {
 					HasIdAndLocalId obj = resolveObject(dte);
+					if (obj instanceof HasVersionNumber) {
+						updateVersionNumber(obj, dte);
+					}
+					if (obj instanceof IVersionable) {
+						updateIVersionable(obj, persistentLayerSource);
+					}
 					index(obj, true);
 				}
 			}
@@ -620,6 +630,38 @@ public class AlcinaMemCache {
 			GlobalTopicPublisher.get().publishTopic(TOPIC_UPDATE_EXCEPTION, e);
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private void updateIVersionable(HasIdAndLocalId obj,
+			Object persistentLayerSource) {
+		IVersionable graph = (IVersionable) obj;
+		IVersionable persistent = (IVersionable) persistentLayerSource;
+		graph.setCreationDate(timestampToDate(persistent.getCreationDate()));
+		graph.setLastModificationDate(timestampToDate(persistent
+				.getCreationDate()));
+		Class<? extends IUser> iUserClass = cacheDescriptor.getIUserClass();
+		Long persistentCreationUserId = HiliHelper.getIdOrNull(persistent
+				.getCreationUser());
+		IUser creationUser = cache.get(iUserClass, persistentCreationUserId);
+		graph.setCreationUser(creationUser);
+		Long persistentLastModificationUserId = HiliHelper
+				.getIdOrNull(persistent.getLastModificationUser());
+		IUser lastModificationUser = cache.get(iUserClass,
+				persistentLastModificationUserId);
+		graph.setLastModificationUser(lastModificationUser);
+	}
+
+	private Date timestampToDate(Date date) {
+		if (date instanceof Timestamp) {
+			return new Date(((Timestamp) date).getTime());
+		}
+		return date;
+	}
+
+	private void updateVersionNumber(HasIdAndLocalId obj,
+			DomainTransformEvent dte) {
+		((HasVersionNumber) obj).setVersionNumber(((HasVersionNumber) dte
+				.getSource()).getVersionNumber());
 	}
 
 	public class Transactional {

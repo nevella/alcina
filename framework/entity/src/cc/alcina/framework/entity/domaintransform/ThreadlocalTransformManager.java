@@ -215,6 +215,14 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public void consume(DomainTransformEvent evt)
 			throws DomainTransformException {
 		super.consume(evt);
+		if (getEntityManager() != null
+				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
+			// for use in IVersionable/MemCache
+			if (evt.getSource() == null
+					|| !getEntityManager().contains(evt.getSource())) {
+				getObject(evt);
+			}
+		}
 	}
 
 	@Override
@@ -572,7 +580,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		modifiedObjects = new HashSet<HasIdAndLocalId>();
 		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
-		this.lastEvent=null;
+		this.lastEvent = null;
 		for (SourcesPropertyChangeEvents spce : listeningTo) {
 			spce.removePropertyChangeListener(this);
 		}
@@ -954,7 +962,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
-	DomainTransformEvent lastEvent=null;
+	DomainTransformEvent lastEvent = null;
+
 	@Override
 	public synchronized void propertyChange(PropertyChangeEvent evt) {
 		if (evt.getSource() == ignorePropertyChangesTo) {
@@ -966,11 +975,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
 		convertToTargetObject(dte);
-		if(lastEvent!=null&&lastEvent.equivalentTo(dte)){
-			//hibernate manipulations can cause a bunch of theses
+		if (lastEvent != null && lastEvent.equivalentTo(dte)) {
+			// hibernate manipulations can cause a bunch of theses
 			return;
 		}
-		lastEvent=dte;
+		lastEvent = dte;
 		super.propertyChange(evt);
 	}
 
