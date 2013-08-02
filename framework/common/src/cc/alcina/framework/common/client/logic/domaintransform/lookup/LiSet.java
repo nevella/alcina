@@ -50,7 +50,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 			LinkedHashSet degenerate = new LinkedHashSet<H>();
 			degenerate.addAll(this);
 			this.degenerate = degenerate;
-			elementData=null;
+			elementData = null;
 		}
 		if (degenerate != null) {
 			return degenerate.add(e);
@@ -84,6 +84,9 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 
 	@Override
 	public boolean contains(Object o) {
+		if (o == null) {
+			return false;
+		}
 		if (degenerate != null) {
 			return degenerate.contains(o);
 		}
