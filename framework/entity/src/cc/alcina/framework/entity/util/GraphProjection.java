@@ -72,16 +72,17 @@ public class GraphProjection {
 		}
 		return genericTypeLookup.get(field);
 	}
+
 	public static boolean isGenericHiliType(Field field) {
 		if (!genericHiliTypeLookup.containsKey(field)) {
-			Type pt =getGenericType(field);
-			boolean isHili=false;
+			Type pt = getGenericType(field);
+			boolean isHili = false;
 			if (pt instanceof ParameterizedType) {
 				Type genericType = ((ParameterizedType) pt)
 						.getActualTypeArguments()[0];
 				if (genericType instanceof Class) {
 					Class type = (Class) genericType;
-					isHili=HasIdAndLocalId.class.isAssignableFrom(type);
+					isHili = HasIdAndLocalId.class.isAssignableFrom(type);
 				}
 			}
 			genericHiliTypeLookup.put(field, isHili);
@@ -89,12 +90,20 @@ public class GraphProjection {
 		return genericHiliTypeLookup.get(field);
 	}
 
-	static PropertyPermissions getPropertyPermission(Method method) {
-		if (!propertyPermissionLookup.containsKey(method)) {
-			propertyPermissionLookup.put(method,
-					method.getAnnotation(PropertyPermissions.class));
+	static PropertyPermissions getPropertyPermission(Field field) {
+		if (!propertyPermissionLookup.containsKey(field)) {
+			try {
+				Method method = field.getDeclaringClass().getMethod(
+						SEUtilities.getAccessorName(field), new Class[0]);
+				propertyPermissionLookup.put(field,
+						method.getAnnotation(PropertyPermissions.class));
+			} catch (NoSuchMethodException nsme) {
+				propertyPermissionLookup.put(field, null);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
-		return propertyPermissionLookup.get(method);
+		return propertyPermissionLookup.get(field);
 	}
 
 	private GraphProjectionFilter dataFilter;
@@ -112,9 +121,10 @@ public class GraphProjection {
 	Map<Class, Boolean> perObjectPermissionClasses = new HashMap<Class, Boolean>();
 
 	@ClearOnAppRestart
-	 static Map<Field, Type> genericTypeLookup = new HashMap<Field, Type>();
+	static Map<Field, Type> genericTypeLookup = new HashMap<Field, Type>();
+
 	@ClearOnAppRestart
-	 static Map<Field, Boolean> genericHiliTypeLookup = new HashMap<Field, Boolean>();
+	static Map<Field, Boolean> genericHiliTypeLookup = new HashMap<Field, Boolean>();
 
 	@ClearOnAppRestart
 	static Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>();
@@ -122,7 +132,7 @@ public class GraphProjection {
 	Map<Field, PropertyPermissions> perFieldPermission = new HashMap<Field, PropertyPermissions>();
 
 	@ClearOnAppRestart
-	static Map<Method, PropertyPermissions> propertyPermissionLookup = new LinkedHashMap<Method, PropertyPermissions>();
+	static Map<Field, PropertyPermissions> propertyPermissionLookup = new LinkedHashMap<Field, PropertyPermissions>();
 
 	public GraphProjection() {
 	}
@@ -287,10 +297,7 @@ public class GraphProjection {
 			projectableFields.put(clazz, result);
 			perObjectPermissionFields.put(clazz, dynamicPermissionFields);
 			for (Field field : dynamicPermissionFields) {
-				PropertyPermissions pp = getPropertyPermission(field
-						.getDeclaringClass().getMethod(
-								SEUtilities.getAccessorName(field),
-								new Class[0]));
+				PropertyPermissions pp = getPropertyPermission(field);
 				perFieldPermission.put(field, pp);
 			}
 		}
@@ -435,7 +442,8 @@ public class GraphProjection {
 		}
 
 		private int depth(int self) {
-			return parent == null || self==1000? self : parent.depth(self + 1);
+			return parent == null || self == 1000 ? self : parent
+					.depth(self + 1);
 		}
 	}
 
@@ -505,10 +513,7 @@ public class GraphProjection {
 						}
 					}
 				}
-				PropertyPermissions pp = getPropertyPermission(field
-						.getDeclaringClass().getMethod(
-								SEUtilities.getAccessorName(field),
-								new Class[0]));
+				PropertyPermissions pp = getPropertyPermission(field);
 				Boolean permit = permit(type, pp == null ? null : pp.read());
 				if (permit == null) {
 					perObjectPermissionFields.add(field);
@@ -516,8 +521,6 @@ public class GraphProjection {
 				} else {
 					return permit;
 				}
-			} catch (NoSuchMethodException nsme) {
-				return false;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
