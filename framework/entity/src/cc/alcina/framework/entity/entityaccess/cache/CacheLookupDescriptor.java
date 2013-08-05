@@ -1,9 +1,12 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.util.Collection;
+
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public class CacheLookupDescriptor<T> {
+public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	public Class<T> clazz;
 
 	public String propertyPath;
@@ -24,7 +27,12 @@ public class CacheLookupDescriptor<T> {
 		this.clazz = clazz;
 		this.propertyPath = propertyPath;
 	}
-
+	public void populate(Collection<T> values){
+		createLookup();
+		for (T value : values) {
+			getLookup().insert(value);
+		}
+	}
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("Lookup descriptor - %s :: %s :: (id) %s",
@@ -39,7 +47,7 @@ public class CacheLookupDescriptor<T> {
 		this.lookup = new CacheLookup(this);
 	}
 
-	public static class IdCacheLookupDescriptor<T> extends
+	public static class IdCacheLookupDescriptor<T extends HasIdAndLocalId> extends
 			CacheLookupDescriptor<T> {
 		private IdLookup idLookup;
 

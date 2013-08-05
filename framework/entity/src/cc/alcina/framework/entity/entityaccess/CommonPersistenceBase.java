@@ -360,11 +360,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
 			Class<T> c, long id) throws Exception {
+		return getObjectWrapperForUser(null, c, id);
+	}
+
+	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
+			HasId wrapperOwner, Class<T> c, long id) throws Exception {
 		connectPermissionsManagerToLiveObjects();
 		WrappedObject<T> wrapper = EntityLayerLocator.get()
 				.wrappedObjectProvider()
 				.getObjectWrapperForUser(c, id, getEntityManager());
-		checkWrappedObjectAccess(null, wrapper, c);
+		checkWrappedObjectAccess(wrapperOwner, wrapper, c);
 		return wrapper;
 	}
 
@@ -541,7 +546,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 								pType = info.defaultImplementationType();
 							}
 							WrappedObject wrappedObject = (WrappedObject) getObjectWrapperForUser(
-									pType, wrapperId);
+									wrapper, pType, wrapperId);
 							result.getItems().add(
 									new UnwrapInfoItem(pd.getName(),
 											wrappedObject));
@@ -759,8 +764,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	private <T extends HasId> void preloadWrappedObjects(Collection<T> wrappers) {
 		try {
-			List<Long> wrapperIds = new WrappedObjectPersistence().getWrapperIds(wrappers);
-			
+			List<Long> wrapperIds = new WrappedObjectPersistence()
+					.getWrapperIds(wrappers);
 			for (int i = 0; i < wrapperIds.size(); i += PRECACHE_RQ_SIZE) {
 				List<Long> subList = wrapperIds.subList(i,
 						Math.min(wrapperIds.size(), i + PRECACHE_RQ_SIZE));

@@ -154,8 +154,6 @@ public class Publisher {
 	private long persist(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Long publicationUserId,
 			Publication original) {
-		try {
-			ThreadedPermissionsManager.cast().pushSystemUser();
 			Publication publication = publicationPersister
 					.newPublicationInstance();
 			if (contentDefinition instanceof HasId) {
@@ -178,9 +176,6 @@ public class Publisher {
 					.getPublicationType());
 			return ServletLayerLocator.get().commonPersistenceProvider()
 					.getCommonPersistence().merge(publication);
-		} finally {
-			ThreadedPermissionsManager.cast().popSystemUser();
-		}
 	}
 
 	private static PublicationPersister publicationPersister;
