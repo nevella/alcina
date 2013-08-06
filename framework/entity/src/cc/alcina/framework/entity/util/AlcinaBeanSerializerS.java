@@ -30,7 +30,7 @@ public class AlcinaBeanSerializerS {
 
 	private static final String CLASS_NAME = "cn";
 
-	private static final String VALUE = "value";
+	private static final String LITERAL = "lit";
 
 	private ClassLoader cl;
 
@@ -45,8 +45,8 @@ public class AlcinaBeanSerializerS {
 		}
 		String cn = (String) jsonObj.get(CLASS_NAME);
 		Class clazz = cl.loadClass(cn);
-		if (CommonUtils.isStandardJavaClass(clazz)) {
-			return deserializeField(jsonObj.get(VALUE), clazz);
+		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
+			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
 		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
 		Object obj = CommonLocator.get().classLookup().newInstance(clazz);
@@ -191,8 +191,8 @@ public class AlcinaBeanSerializerS {
 		JSONObject jo = new JSONObject();
 		jo.put(CLASS_NAME, object.getClass().getName());
 		Class<? extends Object> clazz = object.getClass();
-		if (CommonUtils.isStandardJavaClass(clazz)) {
-			jo.put(VALUE, serializeField(object, clazz));
+		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
+			jo.put(LITERAL, serializeField(object, clazz));
 			return jo;
 		}
 		PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)

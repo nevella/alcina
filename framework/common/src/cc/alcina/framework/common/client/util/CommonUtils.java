@@ -951,4 +951,10 @@ public class CommonUtils {
 		long t2 = d2 == null ? 0 : d2.getTime();
 		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
 	}
+	public static boolean isEnumSubclass(Class c) {
+		return c.getSuperclass() != null && c.getSuperclass().isEnum();
+	}
+	public static boolean isStandardJavaClassOrEnum(Class clazz){
+		return isStandardJavaClass(clazz)||clazz.isEnum()||isEnumSubclass(clazz);
+	}
 }
