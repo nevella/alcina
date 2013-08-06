@@ -17,6 +17,7 @@ public class PropertyMapper {
 
 	private boolean reverse;
 
+	private PropertyAccessor propertyAccessor;
 	public PropertyMapper(String[] fieldNameMappings, boolean reverse) {
 		this.reverse = reverse;
 		if (reverse) {
@@ -30,6 +31,8 @@ public class PropertyMapper {
 			fieldNameMappings = revMappings;
 		}
 		this.fieldNameMappings = fieldNameMappings;
+		propertyAccessor = CommonLocator.get()
+				.propertyAccessor();
 	}
 
 	public void map(Object o1, Object o2) {
@@ -38,8 +41,7 @@ public class PropertyMapper {
 			o2 = o1;
 			o1 = tmp;
 		}
-		PropertyAccessor propertyAccessor = CommonLocator.get()
-				.propertyAccessor();
+		
 		try {
 			for (int i = 0; i < fieldNameMappings.length; i += 2) {
 				String key1 = fieldNameMappings[i];
@@ -52,5 +54,13 @@ public class PropertyMapper {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public PropertyAccessor getPropertyAccessor() {
+		return this.propertyAccessor;
+	}
+
+	public void setPropertyAccessor(PropertyAccessor propertyAccessor) {
+		this.propertyAccessor = propertyAccessor;
 	}
 }

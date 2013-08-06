@@ -8,6 +8,9 @@ public class SyncConversionSpec {
 	private String name2;
 
 	private Converter converter;
+
+	private Converter reverseConverter;
+
 	public SyncConversionSpec() {
 	}
 
@@ -38,5 +41,13 @@ public class SyncConversionSpec {
 
 	public void setConverter(Converter converter) {
 		this.converter = converter;
+	}
+
+	public Converter getReverseConverter() {
+		return this.reverseConverter;
+	}
+
+	public void setReverseConverter(Converter reverseConverter) {
+		this.reverseConverter = reverseConverter;
 	}
 }

@@ -10,4 +10,7 @@ public interface SyncLandscape<T> {
 	public void applyData(T t, SyncObjectData objectData);
 
 	public T findApplicableObject(SyncObjectData data);
+
+	public String getPreferredKey(SyncObjectData sourceData,
+			SyncObjectData targetData);
 }

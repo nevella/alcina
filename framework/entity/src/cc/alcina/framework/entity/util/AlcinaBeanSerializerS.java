@@ -30,6 +30,8 @@ public class AlcinaBeanSerializerS {
 
 	private static final String CLASS_NAME = "cn";
 
+	private static final String VALUE = "value";
+
 	private ClassLoader cl;
 
 	private <T> T deserialize(String jsonString) throws Exception {
@@ -42,8 +44,11 @@ public class AlcinaBeanSerializerS {
 			return null;
 		}
 		String cn = (String) jsonObj.get(CLASS_NAME);
-		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
 		Class clazz = cl.loadClass(cn);
+		if (CommonUtils.isStandardJavaClass(clazz)) {
+			return deserializeField(jsonObj.get(VALUE), clazz);
+		}
+		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
 		Object obj = CommonLocator.get().classLookup().newInstance(clazz);
 		for (String propertyName : Arrays.asList(JSONObject.getNames(props))) {
 			Object jsonValue = props.get(propertyName);
@@ -186,6 +191,10 @@ public class AlcinaBeanSerializerS {
 		JSONObject jo = new JSONObject();
 		jo.put(CLASS_NAME, object.getClass().getName());
 		Class<? extends Object> clazz = object.getClass();
+		if (CommonUtils.isStandardJavaClass(clazz)) {
+			jo.put(VALUE, serializeField(object, clazz));
+			return jo;
+		}
 		PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
 				.getPropertyDescriptors();
 		JSONObject props = new JSONObject();

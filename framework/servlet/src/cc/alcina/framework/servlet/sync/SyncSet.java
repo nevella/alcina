@@ -36,12 +36,14 @@ public class SyncSet {
 			SyncObjectData targetData = targetObject == null ? null
 					: targetLandscape.toObjectData(targetObject);
 			matchedTargetData.add(targetData);
-			SyncMergeData merge = new SyncMergeData(sourceData, targetData);
+			SyncMergeData merge = new SyncMergeData(sourceData, targetData,
+					targetLandscape);
 			result.add(merge);
 		}
 		for (SyncObjectData targetData : target.getObjectData()) {
 			if (!matchedTargetData.contains(targetData)) {
-				SyncMergeData merge = new SyncMergeData(null, targetData);
+				SyncMergeData merge = new SyncMergeData(null, targetData,
+						targetLandscape);
 				result.add(merge);
 			}
 		}

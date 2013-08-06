@@ -24,7 +24,9 @@ public class SyncLandscapeHelper {
 				Object value = CommonLocator.get().propertyAccessor()
 						.getPropertyValue(source, pd.getName());
 				Converter converter = spec.getConverter();
-				if (value != null) {
+				if (value != null
+						&& !(value instanceof String && ((String) value)
+								.isEmpty())) {
 					if (converter != null) {
 						value = converter.convert(value);
 					}
