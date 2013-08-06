@@ -990,4 +990,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			this.ignorePropertyChangesTo = getObject(event);
 		}
 	}
+
+	@Override
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+	}
 }

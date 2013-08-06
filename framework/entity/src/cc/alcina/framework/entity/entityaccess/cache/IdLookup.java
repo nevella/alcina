@@ -11,6 +11,9 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 	}
 
 	private H getForResolvedId(long id) {
+		if(privateCache!=null){
+			return (H) privateCache.get(descriptor.clazz, id);
+		}
 		return (H) AlcinaMemCache.get().transactional
 				.find(descriptor.clazz, id);
 	}
@@ -24,7 +27,7 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 		if (set.size() > 1) {
 			// throw new IllegalArgumentException("");
 			System.out
-					.format("Warning - duplicate mapping of an id lookup - %s: %s : %s",
+					.format("Warning - duplicate mapping of an id lookup - %s: %s : %s\n",
 							this, k1, set);
 		}
 	}

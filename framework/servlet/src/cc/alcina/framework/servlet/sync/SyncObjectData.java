@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class SyncInfoObjectData implements Serializable {
+public class SyncObjectData implements Serializable {
 	private String objectKey;
 
 	private Map<String, Object> nonNullValues = new LinkedHashMap<String, Object>();

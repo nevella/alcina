@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
@@ -18,7 +19,8 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	private boolean enabled = true;
 
 	public boolean handles(Class clazz2, String propertyPath) {
-		return clazz2 == clazz && propertyPath.equals(this.propertyPath);
+		return clazz2 == clazz && propertyPath != null
+				&& propertyPath.equals(this.propertyPath);
 	}
 
 	private CollectionFilter<T> relevanceFilter;
@@ -27,12 +29,15 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 		this.clazz = clazz;
 		this.propertyPath = propertyPath;
 	}
-	public void populate(Collection<T> values){
+
+	public void populateWithPrivateCache(Collection<T> values) {
 		createLookup();
+		lookup.privateCache = new DetachedEntityCache();
 		for (T value : values) {
 			getLookup().insert(value);
 		}
 	}
+
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("Lookup descriptor - %s :: %s :: (id) %s",
@@ -47,8 +52,8 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 		this.lookup = new CacheLookup(this);
 	}
 
-	public static class IdCacheLookupDescriptor<T extends HasIdAndLocalId> extends
-			CacheLookupDescriptor<T> {
+	public static class IdCacheLookupDescriptor<T extends HasIdAndLocalId>
+			extends CacheLookupDescriptor<T> {
 		private IdLookup idLookup;
 
 		public IdCacheLookupDescriptor(Class clazz, String propertyPath) {

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.domaintransform;
 
 import java.beans.Introspector;
@@ -30,12 +29,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
-
 
 /**
  * j2se, but no ref to tltm
@@ -84,11 +83,10 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		SEUtilities.setPropertyValue(bean, propertyName, value);
 	}
 
-	public <T extends HasIdAndLocalId> T  getObject(T bean) {
-		return (T) TransformManager.get().getObject(
-				bean.getClass(), bean.getId(), bean.getLocalId());
+	public <T extends HasIdAndLocalId> T getObject(T bean) {
+		return (T) TransformManager.get().getObject(bean.getClass(),
+				bean.getId(), bean.getLocalId());
 	}
-
 
 	public Object getPropertyValue(Object bean, String propertyName) {
 		return SEUtilities.getPropertyValue(bean, propertyName);
@@ -124,8 +122,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		if (info != null) {
 			dnpn = info.displayNamePropertyName();
 		}
-		Object pv = CommonLocator.get().propertyAccessor().getPropertyValue(
-				o, dnpn);
+		Object pv = CommonLocator.get().propertyAccessor()
+				.getPropertyValue(o, dnpn);
 		return (pv == null) ? "---" : pv.toString();
 	}
 
@@ -171,7 +169,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-		
 	}
 
 	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
@@ -207,19 +204,24 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				Class<?> propertyType = pd.getPropertyType();
-				if (propertyType.isInterface()&&propertyType!=Set.class) {
+				if (propertyType.isInterface() && propertyType != Set.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
-					propertyType = CommonLocator.get()
-							.implementationLookup().getImplementation(
-									propertyType);
+					propertyType = CommonLocator.get().implementationLookup()
+							.getImplementation(propertyType);
 				}
-				infos.add(new PropertyInfoLite(propertyType, pd
-						.getName(),null,clazz));
+				infos.add(new PropertyInfoLite(propertyType, pd.getName(),
+						null, clazz));
 			}
 			return infos;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 }

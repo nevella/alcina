@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
@@ -146,8 +147,9 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	public Class getPropertyType(Class clazz, String propertyName) {
 		try {
-			PropertyDescriptor descriptor = SEUtilities.descriptorByName(clazz, propertyName);
-			return descriptor==null?null:descriptor.getPropertyType();
+			PropertyDescriptor descriptor = SEUtilities.descriptorByName(clazz,
+					propertyName);
+			return descriptor == null ? null : descriptor.getPropertyType();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -203,6 +205,13 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	public void setPropertyValue(Object bean, String propertyName, Object value) {
 		(ThreadlocalTransformManager.cast()).setPropertyValue(bean,
 				propertyName, value);
+	}
+
+	@Override
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		return (ThreadlocalTransformManager.cast()).cachedAccessor(clazz,
+				propertyName);
 	}
 
 	protected Enum getTargetEnumValue(DomainTransformEvent evt) {

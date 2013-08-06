@@ -92,8 +92,7 @@ import com.totsp.gwittir.client.validator.Validator;
  *
  * @author Nick Reddel
  */
-
-public class GwittirBridge implements PropertyAccessor,BeanDescriptorProvider {
+public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
 	{
 		validatorMap.put(Integer.class, IntegerValidator.INSTANCE);
@@ -108,16 +107,16 @@ public class GwittirBridge implements PropertyAccessor,BeanDescriptorProvider {
 	public BeanDescriptor getDescriptorForClass(Class c) {
 		return getDescriptorForClass(c, true);
 	}
-	@RegistryLocation(registryPoint=BeanDescriptorProvider.class,implementationType=ImplementationType.FACTORY)
-	@ClientInstantiable
-	public static class GwittirBridgeBdpFactory implements RegistryFactory{
 
+	@RegistryLocation(registryPoint = BeanDescriptorProvider.class, implementationType = ImplementationType.FACTORY)
+	@ClientInstantiable
+	public static class GwittirBridgeBdpFactory implements RegistryFactory {
 		@Override
 		public Object create(Class registryPoint, Class targetObjectClass) {
 			return GwittirBridge.get();
 		}
-		
 	}
+
 	public BeanDescriptor getDescriptorForClass(Class c,
 			boolean exceptionIfNotFound) {
 		try {
@@ -660,5 +659,11 @@ public class GwittirBridge implements PropertyAccessor,BeanDescriptorProvider {
 		}
 		parent.getChildren().add(binding);
 		return widget;
+	}
+
+	@Override
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		throw new UnsupportedOperationException();
 	}
 }

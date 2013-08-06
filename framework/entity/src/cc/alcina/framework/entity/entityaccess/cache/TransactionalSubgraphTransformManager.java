@@ -14,7 +14,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 
 public class TransactionalSubgraphTransformManager extends
@@ -165,5 +167,11 @@ public class TransactionalSubgraphTransformManager extends
 	@Override
 	public Class getPropertyType(Class objectClass, String propertyName) {
 		return threadTm.getPropertyType(objectClass, propertyName);
+	}
+
+	@Override
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 }

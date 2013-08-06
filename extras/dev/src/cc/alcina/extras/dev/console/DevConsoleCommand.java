@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -141,21 +142,27 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	}
 
 	public Connection getConn() throws Exception {
-		if (conn == null) {
-			if (console.props.connection_useProduction
-					&& !canUseProductionConn()) {
+		return getConn(false);
+	}
+
+	protected Connection getConn(boolean forceLocal) throws Exception {
+		if (conn == null || forceLocal) {
+			Connection newConnection = null;
+			boolean useProduction = console.props.connection_useProduction
+					&& !forceLocal;
+			if (useProduction && !canUseProductionConn()) {
 				throw new Exception(String.format("Cmd %s is local only",
 						getClass().getSimpleName()));
 			}
 			Class.forName("org.postgresql.Driver");
-			String connStr = console.props.connection_useProduction ? console.props.connection_production
+			String connStr = useProduction ? console.props.connection_production
 					: console.props.connection_local;
 			String[] parts = connStr.split(",");
 			try {
-				conn = DriverManager
-						.getConnection(parts[0], parts[1], parts[2]);
+				newConnection = DriverManager.getConnection(parts[0], parts[1],
+						parts[2]);
 			} catch (Exception e) {
-				if (console.props.connection_useProduction
+				if (useProduction
 						&& !console.props.connectionProductionTunnelCmd
 								.isEmpty()) {
 					ShellUtils
@@ -163,8 +170,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					for (int i = 1; i < 15; i++) {
 						try {
 							System.out.format("opening tunnel ... %s ...\n", i);
-							conn = DriverManager.getConnection(parts[0],
-									parts[1], parts[2]);
+							newConnection = DriverManager.getConnection(
+									parts[0], parts[1], parts[2]);
 							return conn;
 						} catch (Exception e1) {
 							try {
@@ -174,11 +181,16 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 							}
 						}
 					}
-					conn = DriverManager.getConnection(parts[0], parts[1],
-							parts[2]);
+					newConnection = DriverManager.getConnection(parts[0],
+							parts[1], parts[2]);
 				} else {
 					throw e;
 				}
+			}
+			if (forceLocal) {
+				return newConnection;
+			} else {
+				conn = newConnection;
 			}
 		}
 		return conn;
@@ -682,6 +694,77 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
+	public static class CmdReplicateWrappedObjects extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "rwo" };
+		}
+
+		@Override
+		public boolean canUseProductionConn() {
+			return true;
+		}
+
+		@Override
+		public String getDescription() {
+			return "replicate wrapped objects";
+		}
+
+		@Override
+		public String getUsage() {
+			return "rwo [ids] (will prompt for text, or copy from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String idStr = console
+					.getMultilineInput("Enter the ids, or blank for clipboard: ");
+			idStr = idStr.isEmpty() ? console.getClipboardContents() : idStr;
+			String sql = String.format("select "
+					+ "id,optlock,creationdate,lastmodificationdate,"
+					+ "classname,key,serializedxml,creation_user_id,"
+					+ "modification_user_id,user_id"
+					+ " from wrappedobject where id in (%s);\n", idStr);
+			String localDelete = String.format(
+					"delete  from wrappedobject where id in (%s);\n", idStr);
+			System.out.format("Local delete:\n========\n%s\n\n", localDelete);
+			Connection localConn = getConn(true);
+			if (!console.props.connection_useProduction) {
+				System.err.println("must use production conn");
+				return "";
+			}
+			Connection remoteConn = getConn();
+			remoteConn.setAutoCommit(false);
+			Statement rStmt = remoteConn.createStatement();
+			rStmt.setFetchSize(200);
+			ResultSet rRs = rStmt.executeQuery(sql);
+			PreparedStatement lStmt = localConn
+					.prepareStatement("insert into wrappedobject (id,optlock,creationdate,lastmodificationdate,"
+							+ "classname,key,serializedxml,creation_user_id,"
+							+ "modification_user_id,user_id) values(?,?,?,?,?,?,?,?,?,?)");
+			int modCt = 0;
+			while (rRs.next()) {
+				lStmt.setLong(1, rRs.getLong(1));
+				lStmt.setInt(2, rRs.getInt(2));
+				lStmt.setDate(3, rRs.getDate(3));
+				lStmt.setDate(4, rRs.getDate(4));
+				lStmt.setString(5, rRs.getString(5));
+				lStmt.setString(6, rRs.getString(6));
+				lStmt.setString(7, rRs.getString(7));
+				lStmt.setLong(8, rRs.getLong(8));
+				lStmt.setLong(9, rRs.getLong(9));
+				lStmt.setLong(10, rRs.getLong(10));
+				lStmt.executeUpdate();
+				modCt++;
+				if (modCt % 100 == 0) {
+					System.out.println(modCt);
+				}
+			}
+			System.out.println("\n");
+			return "";
+		}
+	}
+
 	public static class CmdExpandShortTransform extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
@@ -703,8 +786,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String xs = console
 					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			xs = xs.isEmpty() ? console.getClipboardContents() : xs;
-			List<DomainTransformEvent> list = new PlaintextProtocolHandlerShort().deserialize(xs);
-			String out=CommonUtils.join(list, "\n");
+			List<DomainTransformEvent> list = new PlaintextProtocolHandlerShort()
+					.deserialize(xs);
+			String out = CommonUtils.join(list, "\n");
 			System.out.println(out);
 			console.setClipboardContents(out);
 			System.out.println("\n");

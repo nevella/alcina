@@ -307,8 +307,9 @@ public class AlcinaMemCache {
 				: new PropertyPathFilter(cacheFilter.propertyPath,
 						cacheFilter.propertyValue);
 		if (existing == null) {
-			return HiliHelper.toIdSet(CollectionFilters.filter(
-					cache.rawValues(clazz), filter));
+			List filtered = CollectionFilters.filter(
+					cache.rawValues(clazz), filter);
+			return HiliHelper.toIdSet(filtered);
 		} else {
 			CollectionFilter withIdFilter = new CollectionFilter<Long>() {
 				@Override
