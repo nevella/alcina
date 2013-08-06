@@ -161,7 +161,7 @@ public class AlcinaBeanSerializerS {
 			JSONArray arr = new JSONArray();
 			int i = 0;
 			for (Object o : m.entrySet()) {
-				Entry e=(Entry) o;
+				Entry e = (Entry) o;
 				arr.put(i++, serializeObject(e.getKey()));
 				arr.put(i++, serializeObject(e.getValue()));
 			}
@@ -192,11 +192,12 @@ public class AlcinaBeanSerializerS {
 		jo.put(PROPERTIES, props);
 		Object template = clazz.newInstance();
 		for (PropertyDescriptor pd : pds) {
-			if (pd.getWriteMethod() == null) {
+			if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {
 				continue;
 			}
 			String name = pd.getName();
-			if (pd.getPropertyType().getAnnotation(AlcinaTransient.class) != null) {
+			if (pd.getPropertyType().getAnnotation(AlcinaTransient.class) != null
+					|| pd.getReadMethod().getAnnotation(AlcinaTransient.class) != null) {
 				continue;
 			}
 			Object value = pd.getReadMethod().invoke(object);

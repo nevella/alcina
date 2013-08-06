@@ -32,7 +32,7 @@ public class JobInfo implements Serializable, Cloneable {
 	private String progressMessage = "...pending";
 
 	private String jobName;
-	
+
 	private String jobResult;
 
 	private double percentComplete;
@@ -40,6 +40,13 @@ public class JobInfo implements Serializable, Cloneable {
 	private boolean complete;
 
 	private String errorMessage;
+
+	public JobInfo combineWithChild(JobInfo kid) {
+		JobInfo combo = gClone();
+		combo.setProgressMessage(CommonUtils.formatJ("%s >> %s: %s",
+				progressMessage, kid.getJobName(), kid.progressMessage));
+		return combo;
+	}
 
 	public Date getEndTime() {
 		return endTime;
@@ -49,8 +56,19 @@ public class JobInfo implements Serializable, Cloneable {
 		return this.errorMessage;
 	}
 
+	public double getJobDuration() {
+		if (startTime == null || endTime == null) {
+			return 0;
+		}
+		return (double) getEndTime().getTime() - getStartTime().getTime();
+	}
+
 	public String getJobName() {
 		return this.jobName;
+	}
+
+	public String getJobResult() {
+		return this.jobResult;
 	}
 
 	public double getPercentComplete() {
@@ -89,6 +107,10 @@ public class JobInfo implements Serializable, Cloneable {
 		this.jobName = jobName;
 	}
 
+	public void setJobResult(String jobResult) {
+		this.jobResult = jobResult;
+	}
+
 	public void setPercentComplete(double pctComplete) {
 		this.percentComplete = pctComplete;
 	}
@@ -117,20 +139,5 @@ public class JobInfo implements Serializable, Cloneable {
 		clone.startTime = startTime;
 		clone.threadId = threadId;
 		return clone;
-	}
-
-	public JobInfo combineWithChild(JobInfo kid) {
-		JobInfo combo = gClone();
-		combo.setProgressMessage(CommonUtils.formatJ("%s >> %s: %s",
-				progressMessage, kid.getJobName(), kid.progressMessage));
-		return combo;
-	}
-
-	public String getJobResult() {
-		return this.jobResult;
-	}
-
-	public void setJobResult(String jobResult) {
-		this.jobResult = jobResult;
 	}
 }
