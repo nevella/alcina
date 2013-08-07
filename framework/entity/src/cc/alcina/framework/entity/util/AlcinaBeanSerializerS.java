@@ -50,11 +50,15 @@ public class AlcinaBeanSerializerS {
 		}
 		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
 		Object obj = CommonLocator.get().classLookup().newInstance(clazz);
-		for (String propertyName : Arrays.asList(JSONObject.getNames(props))) {
-			Object jsonValue = props.get(propertyName);
-			Object value2 = deserializeField(jsonValue, SEUtilities
-					.descriptorByName(clazz, propertyName).getPropertyType());
-			SEUtilities.setPropertyValue(obj, propertyName, value2);
+		String[] names = JSONObject.getNames(props);
+		if (names != null) {
+			for (String propertyName : names) {
+				Object jsonValue = props.get(propertyName);
+				Object value2 = deserializeField(jsonValue, SEUtilities
+						.descriptorByName(clazz, propertyName)
+						.getPropertyType());
+				SEUtilities.setPropertyValue(obj, propertyName, value2);
+			}
 		}
 		return obj;
 	}
