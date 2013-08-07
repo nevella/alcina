@@ -14,19 +14,19 @@ public class SyncMergeData {
 	private SyncObjectData targetData;
 
 	public Type type = Type.MERGE;
-	
-	public String key=null;
+
+	public String key = null;
 
 	public Map<String, Object> values = new LinkedHashMap<String, Object>();
 
 	public SyncMergeData() {
 	}
 
-	public SyncMergeData(SyncObjectData sourceData, SyncObjectData targetData, SyncLandscape targetLandscape) {
+	public SyncMergeData(SyncObjectData sourceData, SyncObjectData targetData,
+			SyncLandscape targetLandscape) {
 		this.sourceData = sourceData;
 		this.targetData = targetData;
-		key=targetLandscape.getPreferredKey(sourceData,targetData);
-		
+		key = targetLandscape.getPreferredKey(sourceData, targetData);
 		if (targetData == null) {
 			type = Type.CREATE;
 		} else if (sourceData == null) {
