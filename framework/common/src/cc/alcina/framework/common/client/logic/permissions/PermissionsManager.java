@@ -374,10 +374,13 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 			return null;
 		}
 	};
+
 	public boolean isPermissible(Object o, Permissible p) {
 		return isPermissible(o, p, false);
 	}
-	public boolean isPermissible(Object o, Permissible p, boolean doNotEvaluateNullObjectPermissions) {
+
+	public boolean isPermissible(Object o, Permissible p,
+			boolean doNotEvaluateNullObjectPermissions) {
 		if (allPermissible) {
 			return true;
 		}
@@ -412,7 +415,7 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 				permitted |= PermissionsManager.get().getUser().equals(o);
 			}
 		}
-		if (!permitted&&!doNotEvaluateNullObjectPermissions) {
+		if (!permitted && !doNotEvaluateNullObjectPermissions) {
 			if (getPermissionsExtension() != null) {
 				Boolean b = getPermissionsExtension().isPermitted(o, p);
 				if (b != null) {
@@ -530,6 +533,10 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 				&& this.user instanceof SourcesPropertyChangeEvents) {
 			SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) user;
 			spce.addPropertyChangeListener(userListener);
+		}
+		if (user == null) {
+			// do not fire listeners
+			loginState = LoginState.NOT_LOGGED_IN;
 		}
 	}
 

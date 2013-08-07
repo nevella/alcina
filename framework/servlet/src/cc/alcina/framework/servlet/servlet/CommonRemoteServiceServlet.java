@@ -844,6 +844,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		ServletLayerLocator.get().remoteActionLoggerProvider()
 				.clearAllThreadLoggers();
 		LooseContext.confirmDepth(looseContextDepth);
+		PermissionsManager.get().setUser(null);
 		super.onAfterResponseSerialized(serializedResponse);
 	}
 
