@@ -17,6 +17,10 @@ public abstract class LooseContext {
 		return getContext().getBoolean(key);
 	}
 
+	public static boolean is(String key) {
+		return getBoolean(key);
+	}
+
 	public static LooseContextInstance getContext() {
 		return getInstance().getContext0();
 	}

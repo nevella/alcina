@@ -283,8 +283,8 @@ public class GraphProjection {
 						continue;
 					}
 					if (fieldFilter != null) {
-						if (!fieldFilter
-								.permitField(f, dynamicPermissionFields)) {
+						if (!fieldFilter.permitField(f,
+								dynamicPermissionFields, clazz)) {
 							continue;
 						}
 					}
@@ -364,7 +364,7 @@ public class GraphProjection {
 		}
 
 		public boolean permitField(Field field,
-				Set<Field> perObjectPermissionFields) {
+				Set<Field> perObjectPermissionFields, Class forClass) {
 			return false;
 		}
 
@@ -459,7 +459,8 @@ public class GraphProjection {
 				GraphProjectionContext context, GraphProjection graphProjection)
 				throws Exception;
 
-		boolean permitField(Field field, Set<Field> perObjectPermissionFields);
+		boolean permitField(Field field, Set<Field> perObjectPermissionFields,
+				Class clazz);
 	}
 
 	public interface InstantiateImplCallback<T> {
@@ -493,7 +494,7 @@ public class GraphProjection {
 		}
 
 		public boolean permitField(Field field,
-				Set<Field> perObjectPermissionFields) {
+				Set<Field> perObjectPermissionFields, Class forClass) {
 			try {
 				Class<?> type = field.getType();
 				if (!GraphProjection.isPrimitiveOrDataClass(type)) {

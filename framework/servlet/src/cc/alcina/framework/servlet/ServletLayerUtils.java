@@ -9,23 +9,31 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 
 public class ServletLayerUtils {
+	public static final transient String CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH = ServletLayerUtils.class
+			.getName() + ".CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH";
+
 	public static int pushTransformsAsRoot() {
 		return pushTransforms(true);
 	}
+
 	public static int pushTransformsAsCurrentUser() {
 		return pushTransforms(false);
 	}
+
 	private static int pushTransforms(boolean asRoot) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (AppPersistenceBase.isTest()) {
-			TransformManager.get().clearTransforms();
+			if (!LooseContext.is(CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH)) {
+				TransformManager.get().clearTransforms();
+			}
 			return pendingTransformCount;
 		}
 		pushTransforms(null, asRoot, true);
@@ -36,7 +44,7 @@ public class ServletLayerUtils {
 			boolean asRoot, boolean returnResponse) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
-		if(pendingTransformCount==0){
+		if (pendingTransformCount == 0) {
 			return new DomainTransformResponse();
 		}
 		if (AppPersistenceBase.isTest()) {

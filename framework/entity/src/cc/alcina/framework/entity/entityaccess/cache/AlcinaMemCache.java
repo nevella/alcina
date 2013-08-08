@@ -61,6 +61,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceListener;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
@@ -242,11 +243,18 @@ public class AlcinaMemCache {
 		return new AlcinaMemCacheQuery().ids(ids).list(clazz);
 	}
 
-	public synchronized void loadTable(Class clazz, String sqlFilter)
-			throws Exception {
+	public void loadTable(Class clazz, String sqlFilter) throws Exception {
+		loadTable(clazz, sqlFilter, false);
+	}
+
+	public synchronized void loadTable(Class clazz, String sqlFilter,
+			boolean resolveRefs) throws Exception {
 		Iterable<Object[]> results = getData(clazz, sqlFilter);
 		List<PropertyDescriptor> pds = descriptors.get(clazz);
 		for (Object[] objects : results) {
+			if (clazz.getName().contains("JadeWrap")
+					&& sqlFilter.contains("5905")) {
+			}
 			HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
 			for (int i = 0; i < objects.length; i++) {
 				PropertyDescriptor pd = pds.get(i);
@@ -263,6 +271,9 @@ public class AlcinaMemCache {
 				}
 			}
 			cache.put(hili);
+		}
+		if (resolveRefs) {
+			resolveRefs();
 		}
 	}
 
@@ -307,8 +318,8 @@ public class AlcinaMemCache {
 				: new PropertyPathFilter(cacheFilter.propertyPath,
 						cacheFilter.propertyValue);
 		if (existing == null) {
-			List filtered = CollectionFilters.filter(
-					cache.rawValues(clazz), filter);
+			List filtered = CollectionFilters.filter(cache.rawValues(clazz),
+					filter);
 			return HiliHelper.toIdSet(filtered);
 		} else {
 			CollectionFilter withIdFilter = new CollectionFilter<Long>() {
@@ -1034,5 +1045,13 @@ public class AlcinaMemCache {
 
 	public static <V extends HasIdAndLocalId> V ensureTransactional(V value) {
 		return get().transactional.ensureTransactional(value);
+	}
+
+	public void registerForTesting(HasIdAndLocalId hili) {
+		if (!AppPersistenceBase.isTest()) {
+			throw new RuntimeException("Only when testing...");
+		}
+		cache.put(hili);
+		index(hili, true);
 	}
 }

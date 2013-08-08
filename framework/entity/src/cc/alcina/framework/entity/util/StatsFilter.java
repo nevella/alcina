@@ -68,8 +68,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 		if (bypass(context.field)) {
 			return null;
 		}
-		if(filtered instanceof Collection){
-			int j=3;
+		if (filtered instanceof Collection) {
+			int j = 3;
 		}
 		visited.put(context.projectedOwner, context.projectedOwner);
 		visited.put(filtered, filtered);
@@ -108,7 +108,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 	}
 
 	@Override
-	public boolean permitField(Field field, Set<Field> perObjectPermissionFields) {
+	public boolean permitField(Field field,
+			Set<Field> perObjectPermissionFields, Class forClass) {
 		return true;
 	}
 
@@ -157,7 +158,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 					}
 					Collection coll = new ArrayList();
 					coll.add(o3);
-					Set addedCollections=new LinkedHashSet();
+					Set addedCollections = new LinkedHashSet();
 					while (true) {
 						int size = coll.size();
 						LinkedHashSet add = new LinkedHashSet();
@@ -192,7 +193,13 @@ public class StatsFilter extends CollectionProjectionFilter {
 								item.size += o1.toString().length();
 							} else {
 								if (calculateOwnerStatsFor.contains(clazz2)) {
-									if (owneeMap.get(o1)==null){//TODO - shouldn't but something odd re collection projection
+									if (owneeMap.get(o1) == null) {// TODO -
+																	// shouldn't
+																	// but
+																	// something
+																	// odd re
+																	// collection
+																	// projection
 										continue;
 									}
 									if (owneeMap.get(o1).size() == 1) {

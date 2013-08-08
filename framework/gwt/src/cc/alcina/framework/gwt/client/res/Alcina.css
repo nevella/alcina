@@ -865,9 +865,6 @@ table.alcina-SelectorFrame.minimal div.alcina-Selector {
 	max-width: 300px;
 }
 
-.selectx .text {
-	padding-right: 6px;
-}
 
 .selectx {
 	padding: 1px 2px;
@@ -879,11 +876,19 @@ table.alcina-SelectorFrame.minimal div.alcina-Selector {
 	white-space: nowrap;
 }
 
+table.alcina-SelectorFrame.minimal .selectx {
+	display: inline;
+}
+
 table.alcina-SelectorFrame.minimal .selectx .text {
-	padding-right: 6px;
+	margin-right: 8px;
 	display: inline-block;
 	max-width: 450px;
 	overflow-x: hidden;
+	line-height: 16px;
+	vertical-align: bottom;
+	margin-bottom: 2px;
+	margin-left:4px;
 }
 
 table.alcina-SelectorFrame.minimal .caption-hint {

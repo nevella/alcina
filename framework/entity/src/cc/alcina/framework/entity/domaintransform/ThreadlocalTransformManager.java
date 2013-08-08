@@ -218,10 +218,17 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		if (getEntityManager() != null
 				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
 			// for use in IVersionable/MemCache
-			if (evt.getSource() == null
-					|| !getEntityManager().contains(evt.getSource())) {
-				getObject(evt);
-			}
+			maybeEnsureSource(evt);
+		}
+	}
+
+	private void maybeEnsureSource(DomainTransformEvent evt) {
+		if (WrapperPersistable.class.isAssignableFrom(evt.getObjectClass())) {
+			return;
+		}
+		if (evt.getSource() == null
+				|| !getEntityManager().contains(evt.getSource())) {
+			getObject(evt);
 		}
 	}
 

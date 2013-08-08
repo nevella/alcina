@@ -31,8 +31,9 @@ public class ShallowObjectFilter implements GraphProjectionFilter {
 	}
 
 	@Override
-	public boolean permitField(Field field, Set<Field> perObjectPermissionFields) {
-		if (allowOwningTypes.contains(field.getDeclaringClass())) {
+	public boolean permitField(Field field,
+			Set<Field> perObjectPermissionFields, Class forClass) {
+		if (allowOwningTypes.contains(forClass)) {
 			return true;
 		}
 		Class<?> type = field.getType();
