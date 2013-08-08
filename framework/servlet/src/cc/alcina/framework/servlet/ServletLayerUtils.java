@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -51,9 +52,9 @@ public class ServletLayerUtils {
 			return null;
 		}
 		ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
-		Level level = EntityLayerLocator.get().getMetricLogger().getLevel();
 		try {
-			EntityLayerLocator.get().getMetricLogger().setLevel(Level.WARN);
+			MetricLogging.get().reset();
+			MetricLogging.get().mute();
 			if (asRoot) {
 				tpm.pushSystemUser();
 			}
@@ -69,7 +70,7 @@ public class ServletLayerUtils {
 				tpm.popSystemUser();
 			}
 			ThreadlocalTransformManager.cast().resetTltm(null);
-			EntityLayerLocator.get().getMetricLogger().setLevel(level);
+			MetricLogging.get().reset();
 		}
 	}
 
