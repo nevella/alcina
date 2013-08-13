@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -1053,5 +1054,19 @@ public class AlcinaMemCache {
 		}
 		cache.put(hili);
 		index(hili, true);
+	}
+
+	public static void ensureReferredPropertyIsTransactional(
+			HasIdAndLocalId hili, String propertyName) {
+		PropertyAccessor propertyAccessor = CommonLocator.get()
+				.propertyAccessor();
+		// target, even if new object, will still be equals() to old, so no
+		// property change will be fired, which is the desired behaviour
+		HasIdAndLocalId target = (HasIdAndLocalId) propertyAccessor
+				.getPropertyValue(hili, propertyName);
+		if (target != null) {
+			target = ensureTransactional(target);
+			propertyAccessor.setPropertyValue(hili, propertyName, target);
+		}
 	}
 }

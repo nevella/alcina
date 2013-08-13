@@ -191,7 +191,7 @@ public class MetricLogging {
 	}
 
 	public String getPerThreadLog() {
-		return wa==null?"":wa.getWriterAccess().toString();
+		return wa == null ? "" : wa.getWriterAccess().toString();
 	}
 
 	public void lowPriorityEnd(String key) {
@@ -286,5 +286,9 @@ public class MetricLogging {
 
 	public void appShutdown() {
 		sysoutClasses = null;
+	}
+
+	public void unMute() {
+		muted = false;
 	}
 }
