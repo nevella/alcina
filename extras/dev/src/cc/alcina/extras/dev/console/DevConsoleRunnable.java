@@ -2,6 +2,7 @@ package cc.alcina.extras.dev.console;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -43,6 +44,18 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 				.writeStreamToStream(
 						new ByteArrayInputStream(Base64Utils
 								.fromBase64(content)), new FileOutputStream(
+								outPath));
+		return outPath;
+	}
+	protected String writeTempFileFs(Class clazz, String extension,
+			File content) throws IOException {
+		File dir = console.devHelper.getDevFolder();
+		String outPath = String.format("%s/%s.%s", dir.getPath(),
+				clazz.getSimpleName(), extension);
+		;
+		ResourceUtilities
+				.writeStreamToStream(
+						new FileInputStream(content), new FileOutputStream(
 								outPath));
 		return outPath;
 	}
