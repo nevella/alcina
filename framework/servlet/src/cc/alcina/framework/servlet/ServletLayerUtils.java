@@ -46,6 +46,7 @@ public class ServletLayerUtils {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (pendingTransformCount == 0) {
+			ThreadlocalTransformManager.cast().resetTltm(null);
 			return new DomainTransformResponse();
 		}
 		if (AppPersistenceBase.isTest()) {
