@@ -7,6 +7,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccesor;
 import cc.alcina.framework.entity.util.Multiset;
@@ -18,7 +19,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	protected CacheLookupDescriptor descriptor;
 
 	private PropertyPathAccesor propertyPathAccesor;
-	
+
 	protected DetachedEntityCache privateCache;
 
 	private boolean enabled = true;
@@ -76,8 +77,15 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 			return;
 		}
 		Object v1 = getChainedProperty(hili);
-		add((T) v1, hili.getId());
-		if(privateCache!=null){
+		if (v1 instanceof Collection) {
+			Set deduped = new LinkedHashSet((Collection) v1);
+			for (Object v2 : deduped) {
+				add((T) v2, hili.getId());
+			}
+		} else {
+			add((T) v1, hili.getId());
+		}
+		if (privateCache != null) {
 			privateCache.put(hili);
 		}
 	}

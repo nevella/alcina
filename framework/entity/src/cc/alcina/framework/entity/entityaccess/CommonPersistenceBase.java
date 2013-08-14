@@ -857,14 +857,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		@Override
 		public ClientInstance createClientInstance(String userAgent) {
 			AppPersistenceBase.checkNotReadOnly();
-			cp.connectPermissionsManagerToLiveObjects(true);
 			Class<? extends ClientInstance> clientInstanceImpl = cp
 					.getImplementation(ClientInstance.class);
 			try {
 				ClientInstance impl = clientInstanceImpl.newInstance();
 				cp.getEntityManager().persist(impl);
 				impl.setHelloDate(new Date());
-				impl.setUser(PermissionsManager.get().getUser());
+				impl.setUser((IUser) cp.getEntityManager().find(
+						cp.getImplementation(IUser.class),
+						PermissionsManager.get().getUserId()));
 				impl.setAuth(Math.abs(new Random().nextInt()));
 				impl.setUserAgent(userAgent);
 				cp.getEntityManager().flush();
@@ -873,7 +874,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				ResourceUtilities.copyBeanProperties(PermissionsManager.get()
 						.getUser(), clonedUser, null, false, Arrays
 						.asList(new String[] { "primaryGroup",
-								"secondaryGroups" }));
+								"secondaryGroups", "creationUser",
+								"lastModificationUser" }));
 				ClientInstance instance = new EntityUtils().detachedClone(impl,
 						false);
 				Registry.impl(ClientInstanceAuthenticationCache.class)

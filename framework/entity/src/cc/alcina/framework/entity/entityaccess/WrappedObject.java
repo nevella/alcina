@@ -55,8 +55,7 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 
 	public static class WrappedObjectHelper {
 		public static String xmlSerialize(Object object) throws JAXBException {
-			List<Class> classes = EntityLayerLocator.get()
-					.wrappedObjectProvider().getJaxbSubclasses();
+			List<Class> classes = ensureJaxbSubclasses();
 			classes.add(0, object.getClass());
 			return xmlSerialize(object, classes);
 		}
@@ -64,16 +63,25 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 		@SuppressWarnings("unchecked")
 		public static <T> T xmlDeserialize(Class<T> clazz, String xmlStr)
 				throws JAXBException {
-			if(xmlStr==null){
+			if (xmlStr == null) {
 				return null;
 			}
-			List<Class> classes = EntityLayerLocator.get()
-					.wrappedObjectProvider().getJaxbSubclasses();
+			List<Class> classes = ensureJaxbSubclasses();
 			classes.add(0, clazz);
 			JAXBContext jc = JaxbUtils.getContext(classes);
 			Unmarshaller um = jc.createUnmarshaller();
 			StringReader sr = new StringReader(xmlStr);
 			return (T) um.unmarshal(sr);
+		}
+
+		static List<Class> jaxbSubclasses = null;
+
+		protected static List<Class> ensureJaxbSubclasses() {
+			if(jaxbSubclasses==null){
+				jaxbSubclasses=EntityLayerLocator.get().wrappedObjectProvider()
+				.getJaxbSubclasses();
+			}
+			return jaxbSubclasses;
 		}
 
 		public static String xmlSerialize(Object object,

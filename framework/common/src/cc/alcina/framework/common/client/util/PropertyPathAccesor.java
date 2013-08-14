@@ -35,6 +35,9 @@ public class PropertyPathAccesor {
 			if (obj instanceof Collection) {
 				List values = new ArrayList();
 				for (Object member : (Collection) obj) {
+					if(member==null){
+						continue;
+					}
 					ensureAccessors(member, idx);
 					Object value = accessors[idx].getPropertyValue(member);
 					if (value instanceof Collection) {

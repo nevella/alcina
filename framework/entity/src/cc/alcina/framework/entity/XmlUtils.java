@@ -58,6 +58,7 @@ public class XmlUtils {
 	private static Map<String, Transformer> transformerMap = new HashMap<String, Transformer>();
 
 	public static boolean noTransformCaching;
+
 	private static DocumentBuilder db;
 
 	public static String cleanXmlHeaders(String htmlContent) {
@@ -416,7 +417,8 @@ public class XmlUtils {
 			StreamResult sr, String cacheMarker,
 			TransformerFactoryConfigurator configurator) throws Exception {
 		Transformer trans = null;
-		if (cacheMarker == null || !transformerMap.containsKey(cacheMarker)||noTransformCaching) {
+		if (cacheMarker == null || !transformerMap.containsKey(cacheMarker)
+				|| noTransformCaching) {
 			TransformerFactory transFact = TransformerFactory.newInstance();
 			if (configurator != null) {
 				configurator.configure(transFact);
@@ -453,7 +455,13 @@ public class XmlUtils {
 		}
 	}
 
-	public static void stripFixedWidthInfo(Document doc, int maxWidth) {
+	public static final int A4_MAX_PIXEL_WIDTH = 700;
+
+	public static final int A4_MAX_PIXEL_HEIGHT = 950;
+	public static final int A4_MAX_PIXEL_HEIGHT_PRINT = 850;
+
+	public static void stripFixedWidthInfo(Document doc, int maxWidth,
+			int maxHeight) {
 		String[] tags = { "IMG", "img" };
 		for (String tag : tags) {
 			NodeList imgs = doc.getElementsByTagName(tag);
@@ -466,9 +474,13 @@ public class XmlUtils {
 					if (width > maxWidth) {
 						height = height * maxWidth / width;
 						width = maxWidth;
-						img.setAttribute("height", String.valueOf(height));
-						img.setAttribute("width", String.valueOf(width));
 					}
+					if (height > maxHeight) {
+						width = width * maxHeight / height;
+						height = maxHeight;
+					}
+					img.setAttribute("height", String.valueOf(height));
+					img.setAttribute("width", String.valueOf(width));
 				} catch (NumberFormatException nfe) {
 				}
 			}

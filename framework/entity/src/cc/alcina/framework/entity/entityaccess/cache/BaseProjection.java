@@ -42,11 +42,18 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 				this, (HasIdAndLocalId) nonTransactional, objects);
 	}
 
+	public void populateWithPrivateCache(Collection<T> values) {
+		for (T t : values) {
+			insert(t);
+		}
+	}
+
 	@Override
 	public void insert(T t) {
 		Object[] values = project(t);
 		if (values != null) {
-			if (values.length > 0 && values[0].getClass().isArray()) {
+			if (values.length > 0 
+					&& values[0].getClass().isArray()) {
 				for (Object tuple : values) {
 					lookup.put((Object[]) tuple);
 				}

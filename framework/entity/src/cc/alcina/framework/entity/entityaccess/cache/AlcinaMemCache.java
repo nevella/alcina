@@ -329,6 +329,7 @@ public class AlcinaMemCache {
 					return filter.allow(cache.get(clazz, id));
 				}
 			};
+			existing=new LinkedHashSet<Long>(existing);
 			CollectionFilters.filterInPlace(existing, withIdFilter);
 			return existing;
 		}

@@ -22,6 +22,7 @@ import cc.alcina.framework.servlet.ServletLayerRegistry;
 public class PublicationContext {
 	public static final String CONTEXT_PUBLICATION_CONTEXT = PublicationContext.class
 			.getName() + ".CONTEXT_PUBLICATION_CONTEXT";
+	
 
 	public ContentDefinition contentDefinition;
 
