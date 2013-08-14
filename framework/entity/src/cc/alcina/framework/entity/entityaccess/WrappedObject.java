@@ -15,6 +15,7 @@ package cc.alcina.framework.entity.entityaccess;
 
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import javax.xml.bind.Unmarshaller;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
@@ -55,8 +57,7 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 
 	public static class WrappedObjectHelper {
 		public static String xmlSerialize(Object object) throws JAXBException {
-			List<Class> classes = ensureJaxbSubclasses();
-			classes.add(0, object.getClass());
+			List<Class> classes = ensureJaxbSubclasses(object.getClass());
 			return xmlSerialize(object, classes);
 		}
 
@@ -66,8 +67,7 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 			if (xmlStr == null) {
 				return null;
 			}
-			List<Class> classes = ensureJaxbSubclasses();
-			classes.add(0, clazz);
+			List<Class> classes = ensureJaxbSubclasses(clazz);
 			JAXBContext jc = JaxbUtils.getContext(classes);
 			Unmarshaller um = jc.createUnmarshaller();
 			StringReader sr = new StringReader(xmlStr);
@@ -76,12 +76,18 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 
 		static List<Class> jaxbSubclasses = null;
 
-		protected static List<Class> ensureJaxbSubclasses() {
+		protected static List<Class> ensureJaxbSubclasses(Class addClass) {
 			if(jaxbSubclasses==null){
 				jaxbSubclasses=EntityLayerLocator.get().wrappedObjectProvider()
 				.getJaxbSubclasses();
 			}
-			return jaxbSubclasses;
+			if(addClass==null){
+				AlcinaTopics.notifyDevWarning(new Exception("xml ser/deser of null class"));
+				return new ArrayList<Class>(jaxbSubclasses);
+			}
+			ArrayList<Class> classes = new ArrayList<Class>(jaxbSubclasses);
+			classes.add(0,addClass);
+			return classes;
 		}
 
 		public static String xmlSerialize(Object object,
