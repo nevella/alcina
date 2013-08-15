@@ -1,10 +1,13 @@
 package cc.alcina.framework.entity.entityaccess;
 
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 
@@ -25,6 +28,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
+import cc.alcina.framework.entity.util.ClearOnAppRestart;
 
 public class WrappedObjectPersistence {
 	public static final String CONTEXT_THROW_MISSING_WRAPPED_OBJECT = WrappedObjectPersistence.class
@@ -33,58 +37,74 @@ public class WrappedObjectPersistence {
 	public static class MissingWrappedObjectException extends Exception {
 	}
 
+	@ClearOnAppRestart
+	static Map<Class, List<PropertyDescriptor>> wrapperDescriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
+
 	public void unwrap(HasId wrapper, EntityManager entityManager,
 			WrappedObjectProvider wrappedObjectProvider) throws Exception {
-		PropertyDescriptor[] pds = Introspector.getBeanInfo(wrapper.getClass())
-				.getPropertyDescriptors();
-		for (PropertyDescriptor pd : pds) {
-			if (pd.getReadMethod() != null) {
-				WrapperInfo info = pd.getReadMethod().getAnnotation(
-						WrapperInfo.class);
-				if (info != null) {
-					if (pd.getReadMethod().invoke(wrapper, new Object[0]) != null) {
-						continue;
+		for (PropertyDescriptor pd : ensureWrapperDescriptors(wrapper
+				.getClass())) {
+			WrapperInfo info = pd.getReadMethod().getAnnotation(
+					WrapperInfo.class);
+			if (pd.getReadMethod().invoke(wrapper, new Object[0]) != null) {
+				continue;
+			}
+			PropertyDescriptor idpd = SEUtilities.descriptorByName(
+					wrapper.getClass(), info.idPropertyName());
+			Long wrapperId = (Long) idpd.getReadMethod().invoke(wrapper,
+					CommonUtils.EMPTY_OBJECT_ARRAY);
+			if (wrapperId != null) {
+				Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
+						.getPropertyType();
+				if (info.defaultImplementationType() != Void.class) {
+					pType = info.defaultImplementationType();
+				}
+				WrappedObject wrappedObject = wrappedObjectProvider
+						.getObjectWrapperForUser(pType, wrapperId,
+								entityManager);
+				Object unwrapped = null;
+				if (wrappedObject == null) {
+					TaggedLogger logger = Registry
+							.impl(TaggedLoggers.class)
+							.getLogger(
+									null,
+									AlcinaLoggingTags.WRAPPED_OBJECT_REF_INTEGRITY);
+					logger.format(
+							"Warning - ref integrity (wrapped object) - missing %s.%s #%s",
+							wrapper.getClass(), pd.getName(), wrapper.getId());
+					if (LooseContext
+							.getBoolean(CONTEXT_THROW_MISSING_WRAPPED_OBJECT)) {
+						throw new MissingWrappedObjectException();
+					} else {
+						unwrapped = pType.newInstance();
 					}
-					PropertyDescriptor idpd = SEUtilities.descriptorByName(
-							wrapper.getClass(), info.idPropertyName());
-					Long wrapperId = (Long) idpd.getReadMethod().invoke(
-							wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
-					if (wrapperId != null) {
-						Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
-								.getPropertyType();
-						if (info.defaultImplementationType() != Void.class) {
-							pType = info.defaultImplementationType();
-						}
-						WrappedObject wrappedObject = wrappedObjectProvider
-								.getObjectWrapperForUser(pType, wrapperId,
-										entityManager);
-						Object unwrapped = null;
-						if (wrappedObject == null) {
-							TaggedLogger logger = Registry
-									.impl(TaggedLoggers.class)
-									.getLogger(
-											null,
-											AlcinaLoggingTags.WRAPPED_OBJECT_REF_INTEGRITY);
-							logger.format(
-									"Warning - ref integrity (wrapped object) - missing %s.%s #%s",
-									wrapper.getClass(), pd.getName(),
-									wrapper.getId());
-							if (LooseContext
-									.getBoolean(CONTEXT_THROW_MISSING_WRAPPED_OBJECT)) {
-								throw new MissingWrappedObjectException();
-							} else {
-								unwrapped = pType.newInstance();
-							}
-						} else {
-							checkWrappedObjectAccess(wrapper, wrappedObject,
-									pType);
-							unwrapped = wrappedObject.getObject();
-						}
-						pd.getWriteMethod().invoke(wrapper, unwrapped);
+				} else {
+					checkWrappedObjectAccess(wrapper, wrappedObject, pType);
+					unwrapped = wrappedObject.getObject();
+				}
+				pd.getWriteMethod().invoke(wrapper, unwrapped);
+			}
+		}
+	}
+
+	private List<PropertyDescriptor> ensureWrapperDescriptors(
+			Class<? extends HasId> clazz) throws Exception {
+		if (!wrapperDescriptors.containsKey(clazz)) {
+			List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
+					.getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				if (pd.getReadMethod() != null) {
+					WrapperInfo info = pd.getReadMethod().getAnnotation(
+							WrapperInfo.class);
+					if (info != null) {
+						descriptors.add(pd);
 					}
 				}
 			}
+			wrapperDescriptors.put(clazz, descriptors);
 		}
+		return wrapperDescriptors.get(clazz);
 	}
 
 	public void checkWrappedObjectAccess(HasId wrapper, WrappedObject wrapped,
