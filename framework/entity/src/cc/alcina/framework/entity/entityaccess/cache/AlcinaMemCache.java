@@ -253,9 +253,6 @@ public class AlcinaMemCache {
 		Iterable<Object[]> results = getData(clazz, sqlFilter);
 		List<PropertyDescriptor> pds = descriptors.get(clazz);
 		for (Object[] objects : results) {
-			if (clazz.getName().contains("JadeWrap")
-					&& sqlFilter.contains("5905")) {
-			}
 			HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
 			for (int i = 0; i < objects.length; i++) {
 				PropertyDescriptor pd = pds.get(i);
@@ -329,7 +326,7 @@ public class AlcinaMemCache {
 					return filter.allow(cache.get(clazz, id));
 				}
 			};
-			existing=new LinkedHashSet<Long>(existing);
+			existing = new LinkedHashSet<Long>(existing);
 			CollectionFilters.filterInPlace(existing, withIdFilter);
 			return existing;
 		}
@@ -819,7 +816,7 @@ public class AlcinaMemCache {
 				return v;
 			}
 			if (type == Date.class) {
-				java.sql.Date v = rs.getDate(idx);
+				Timestamp v = rs.getTimestamp(idx);
 				return v == null ? null : new Date(v.getTime());
 			}
 			if (Enum.class.isAssignableFrom(type)) {
