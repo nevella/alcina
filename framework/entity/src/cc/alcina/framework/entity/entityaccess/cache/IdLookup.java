@@ -10,14 +10,6 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 		super(descriptor);
 	}
 
-	private H getForResolvedId(long id) {
-		if(privateCache!=null){
-			return (H) privateCache.get(descriptor.clazz, id);
-		}
-		return (H) AlcinaMemCache.get().transactional
-				.find(descriptor.clazz, id);
-	}
-
 	public void add(T k1, Long value) {
 		if(k1==null){
 			return;

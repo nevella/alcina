@@ -51,6 +51,14 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		return result;
 	}
 
+	public Set<H> getPrivateObjects(T k1){
+		Set<H> result=new LinkedHashSet<H>();
+		Set<Long> ids = getAndEnsure(k1);
+		for (Long id : ids) {
+			result.add(getForResolvedId(id));
+		}
+		return result;
+	}
 	@Override
 	public Class getListenedClass() {
 		return descriptor.clazz;
@@ -131,5 +139,13 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		}
 		return CommonUtils.equalsWithNullEquality(getChainedProperty(h),
 				keys[0]);
+	}
+
+	protected H getForResolvedId(long id) {
+		if(privateCache!=null){
+			return (H) privateCache.get(descriptor.clazz, id);
+		}
+		return (H) AlcinaMemCache.get().transactional
+				.find(descriptor.clazz, id);
 	}
 }
