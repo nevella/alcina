@@ -53,8 +53,9 @@ public class ServletLayerUtils {
 			return null;
 		}
 		ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
+		boolean muted = MetricLogging.get().isMuted();
 		try {
-			MetricLogging.get().mute();
+			MetricLogging.get().setMuted(true);
 			if (asRoot) {
 				tpm.pushSystemUser();
 			}
@@ -70,7 +71,7 @@ public class ServletLayerUtils {
 				tpm.popSystemUser();
 			}
 			ThreadlocalTransformManager.cast().resetTltm(null);
-			MetricLogging.get().unMute();
+			MetricLogging.get().setMuted(muted);
 		}
 	}
 

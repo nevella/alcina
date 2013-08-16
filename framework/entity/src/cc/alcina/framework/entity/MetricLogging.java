@@ -206,12 +206,16 @@ public class MetricLogging {
 		}
 	}
 
-	public void mute() {
-		muted = true;
+	public void setMuted(boolean muted) {
+		this.muted = muted;
 	}
 
 	public synchronized void reset() {
-		muted = false;
+		if(isMuted()){
+			System.out.println("Unmuting muted metric thread");
+			Thread.dumpStack();
+		}
+		setMuted(false);
 		if (useLog4j) {
 			MDC.put(LOG_CONTEXT_THREAD_ID, getCurrentThreadId());
 			perThreadLogger = Logger.getLogger(getClass().getName() + "-"
@@ -288,7 +292,7 @@ public class MetricLogging {
 		sysoutClasses = null;
 	}
 
-	public void unMute() {
-		muted = false;
+	public boolean isMuted() {
+		return muted;
 	}
 }
