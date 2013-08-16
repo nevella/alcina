@@ -72,7 +72,7 @@
 	    <attribute name = "dir" default = "" />
 	    <element name = "args" optional = "true" />
 	    <sequential>
-	        <echo message = "git @{command}" />
+	        <echo message = "git @{command} @{dir}" />
 	        <exec executable = "git" dir = "@{dir}">
 	            <arg value = "@{command}" />
 	            <args/>
