@@ -337,7 +337,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						.getCommonPersistence().logActionItem(result);
 			}
 			return result;
-		} catch (Exception e) {
+		} catch (Throwable t) {
+			Exception e = (Exception) ((t instanceof Exception) ? t
+					: new WrappedRuntimeException(t));
 			JobRegistry.get().jobErrorInThread();
 			boolean log = true;
 			if (e instanceof WrappedRuntimeException) {
