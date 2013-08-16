@@ -47,7 +47,7 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.ReportUtils;
-import cc.alcina.framework.entity.util.ShellUtils;
+import cc.alcina.framework.entity.util.ShellWrapper;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)
 public abstract class DevConsoleCommand<C extends DevConsole> {
@@ -133,7 +133,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				if (useProduction
 						&& !console.props.connectionProductionTunnelCmd
 								.isEmpty()) {
-					ShellUtils
+					new ShellWrapper()
 							.runShell(console.props.connectionProductionTunnelCmd);
 					for (int i = 1; i < 15; i++) {
 						try {
@@ -586,7 +586,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				String from, String to) throws Exception {
 			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
 					"--progress", "--partial", arg1, remotePort, from, to };
-			ShellUtils.runProcessCatchOutputAndWait(cmdAndArgs);
+			new ShellWrapper().runProcessCatchOutputAndWait(cmdAndArgs);
 		}
 
 		@Override

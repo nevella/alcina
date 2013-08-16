@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.console.FilterArgvResult;
+import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -337,9 +337,9 @@ public class DevConsoleCommandTransforms {
 			if (argv.length == 0) {
 				return "Usage: trl {-t: trim message}{-l: single-line message}{-m: message only} ({ci|top|mes|us|days} value)+ - top is topic {!}{s|m|c|t}";
 			}
-			FilterArgvResult f = new FilterArgvResult(argv, "-t");
-			FilterArgvResult f2 = new FilterArgvResult(f.argv, "-l");
-			FilterArgvResult f3 = new FilterArgvResult(f2.argv, "-m");
+			FilterArgvFlag f = new FilterArgvFlag(argv, "-t");
+			FilterArgvFlag f2 = new FilterArgvFlag(f.argv, "-l");
+			FilterArgvFlag f3 = new FilterArgvFlag(f2.argv, "-m");
 			String sql = "select %s%s from "
 					+ "clientlogrecord clr inner join "
 					+ " client_instance ci on clr.clientinstanceid = ci.id "
@@ -390,7 +390,7 @@ public class DevConsoleCommandTransforms {
 				printFullUsage();
 				return "";
 			}
-			FilterArgvResult f = new FilterArgvResult(argv, "-r");
+			FilterArgvFlag f = new FilterArgvFlag(argv, "-r");
 			boolean rqIdsOnly = f.contains;
 			argv = f.argv;
 			Connection conn = getConn();

@@ -30,6 +30,10 @@ public class StringMap extends LinkedHashMap<String, String> {
 	}
 
 	public static StringMap fromPropertyString(String props) {
+		return fromPropertyString(props, false);
+	}
+
+	public static StringMap fromPropertyString(String props, boolean unQuote) {
 		StringMap map = new StringMap();
 		if (props == null) {
 			return map;
@@ -37,9 +41,12 @@ public class StringMap extends LinkedHashMap<String, String> {
 		for (String line : props.split("\n")) {
 			int idx = line.indexOf("=");
 			if (idx != -1) {
-				map.put(line.substring(0, idx),
-						line.substring(idx + 1).replace("\\n", "\n")
-								.replace("\\=", "=").replace("\\\\", "\\"));
+				String value = line.substring(idx + 1).replace("\\n", "\n")
+						.replace("\\=", "=").replace("\\\\", "\\");
+				if (unQuote && value.startsWith("\"") && value.endsWith("\"")) {
+					value = value.substring(1, value.length() - 2);
+				}
+				map.put(line.substring(0, idx), value);
 			}
 		}
 		return map;
