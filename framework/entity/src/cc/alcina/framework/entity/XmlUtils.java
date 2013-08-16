@@ -61,6 +61,12 @@ public class XmlUtils {
 
 	private static DocumentBuilder db;
 
+	public static final int A4_MAX_PIXEL_WIDTH = 700;
+
+	public static final int A4_MAX_PIXEL_HEIGHT = 950;
+
+	public static final int A4_MAX_PIXEL_HEIGHT_PRINT = 850;
+
 	public static String cleanXmlHeaders(String htmlContent) {
 		htmlContent = htmlContent.replaceAll("<\\?xml.+?\\?>", "");
 		String regex = "<!DOCTYPE .+?>";
@@ -76,44 +82,6 @@ public class XmlUtils {
 		for (int i = nl.getLength() - 1; i >= 0; i--) {
 			n.removeChild(nl.item(i));
 		}
-	}
-
-	public static String removeNamespaceInfo(String s) {
-		StringBuffer sb = new StringBuffer();
-		boolean inTag = false;
-		boolean inAttr = false;
-		int length = s.length();
-		char closeAttr = ' ';
-		for (int i = 0; i < length; i++) {
-			char c = s.charAt(i);
-			if (c == '<' && i < length) {
-				char next = s.charAt(i + 1);
-				if (next == '/' || ('A' <= next && 'Z' >= next)
-						|| ('a' <= next && 'z' >= next)) {
-					inTag = true;
-					inAttr = false;
-				}
-			}
-			if (c == '>') {
-				inTag = false;
-			}
-			if (inTag && (c == '\'' || c == '"')) {
-				if (!inAttr) {
-					closeAttr = c;
-					inAttr = true;
-				} else {
-					if (c == closeAttr) {
-						closeAttr = ' ';
-						inAttr = false;
-					}
-				}
-			}
-			if (inTag && !inAttr && c == ':') {
-				c = '-';
-			}
-			sb.append(c);
-		}
-		return sb.toString();
 	}
 
 	public static Document createDocument() throws Exception {
@@ -302,14 +270,6 @@ public class XmlUtils {
 		return rVal;
 	}
 
-	public static List<Node> nodeListToList(NodeList nl) {
-		List<Node> rVal = new ArrayList<Node>();
-		for (int i = 0; i < nl.getLength(); i++) {
-			rVal.add(nl.item(i));
-		}
-		return rVal;
-	}
-
 	public static List<Element> nodeListToElementList(NodeList nl,
 			String tagname) {
 		List<Element> rVal = new ArrayList<Element>();
@@ -322,6 +282,70 @@ public class XmlUtils {
 			}
 		}
 		return rVal;
+	}
+
+	public static List<Node> nodeListToList(NodeList nl) {
+		List<Node> rVal = new ArrayList<Node>();
+		for (int i = 0; i < nl.getLength(); i++) {
+			rVal.add(nl.item(i));
+		}
+		return rVal;
+	}
+
+	public static void rebaseImages(Document doc, String baseHref) {
+		if (baseHref.endsWith("/")) {
+			baseHref = baseHref.substring(0, baseHref.length() - 1);
+		}
+		String[] tags = { "IMG", "img" };
+		for (String tag : tags) {
+			NodeList imgs = doc.getElementsByTagName(tag);
+			int length = imgs.getLength();
+			for (int i = 0; i < length; i++) {
+				Element img = (Element) imgs.item(i);
+				String src = img.getAttribute("src");
+				if (src.startsWith("/")) {
+					img.setAttribute("src", baseHref + src);
+				}
+			}
+		}
+	}
+
+	public static String removeNamespaceInfo(String s) {
+		StringBuffer sb = new StringBuffer();
+		boolean inTag = false;
+		boolean inAttr = false;
+		int length = s.length();
+		char closeAttr = ' ';
+		for (int i = 0; i < length; i++) {
+			char c = s.charAt(i);
+			if (c == '<' && i < length) {
+				char next = s.charAt(i + 1);
+				if (next == '/' || ('A' <= next && 'Z' >= next)
+						|| ('a' <= next && 'z' >= next)) {
+					inTag = true;
+					inAttr = false;
+				}
+			}
+			if (c == '>') {
+				inTag = false;
+			}
+			if (inTag && (c == '\'' || c == '"')) {
+				if (!inAttr) {
+					closeAttr = c;
+					inAttr = true;
+				} else {
+					if (c == closeAttr) {
+						closeAttr = ' ';
+						inAttr = false;
+					}
+				}
+			}
+			if (inTag && !inAttr && c == ':') {
+				c = '-';
+			}
+			sb.append(c);
+		}
+		return sb.toString();
 	}
 
 	public static String removeXmlDeclaration(String xml) {
@@ -359,6 +383,33 @@ public class XmlUtils {
 	public synchronized static void streamXML(Node n, Writer w)
 			throws Exception {
 		_streamXML(n, w, null);
+	}
+
+	public static void stripFixedWidthInfo(Document doc, int maxWidth,
+			int maxHeight) {
+		String[] tags = { "IMG", "img" };
+		for (String tag : tags) {
+			NodeList imgs = doc.getElementsByTagName(tag);
+			int length = imgs.getLength();
+			for (int i = 0; i < length; i++) {
+				Element img = (Element) imgs.item(i);
+				try {
+					int width = Integer.parseInt(img.getAttribute("width"));
+					int height = Integer.parseInt(img.getAttribute("height"));
+					if (width > maxWidth) {
+						height = height * maxWidth / width;
+						width = maxWidth;
+					}
+					if (height > maxHeight) {
+						width = width * maxHeight / height;
+						height = maxHeight;
+					}
+					img.setAttribute("height", String.valueOf(height));
+					img.setAttribute("width", String.valueOf(width));
+				} catch (NumberFormatException nfe) {
+				}
+			}
+		}
 	}
 
 	// http://cse-mjmcl.cse.bris.ac.uk/blog/2007/02/14/1171465494443.html
@@ -408,11 +459,6 @@ public class XmlUtils {
 		transformDoc(new DOMSource(n), null, w == null ? new StreamResult(s)
 				: new StreamResult(w));
 	}
-
-	public static interface TransformerFactoryConfigurator {
-		public void configure(TransformerFactory transformerFactory);
-	}
-
 	private static void transformDoc(Source xmlSource, Source xsltSource,
 			StreamResult sr, String cacheMarker,
 			TransformerFactoryConfigurator configurator) throws Exception {
@@ -430,6 +476,10 @@ public class XmlUtils {
 			trans = transformerMap.get(cacheMarker);
 		}
 		trans.transform(xmlSource, sr);
+	}
+
+	public static interface TransformerFactoryConfigurator {
+		public void configure(TransformerFactory transformerFactory);
 	}
 
 	static class XmlErrHandler implements ErrorHandler {
@@ -452,56 +502,6 @@ public class XmlUtils {
 		 */
 		public void warning(SAXParseException exception) throws SAXException {
 			exception.printStackTrace();
-		}
-	}
-
-	public static final int A4_MAX_PIXEL_WIDTH = 700;
-
-	public static final int A4_MAX_PIXEL_HEIGHT = 950;
-	public static final int A4_MAX_PIXEL_HEIGHT_PRINT = 850;
-
-	public static void stripFixedWidthInfo(Document doc, int maxWidth,
-			int maxHeight) {
-		String[] tags = { "IMG", "img" };
-		for (String tag : tags) {
-			NodeList imgs = doc.getElementsByTagName(tag);
-			int length = imgs.getLength();
-			for (int i = 0; i < length; i++) {
-				Element img = (Element) imgs.item(i);
-				try {
-					int width = Integer.parseInt(img.getAttribute("width"));
-					int height = Integer.parseInt(img.getAttribute("height"));
-					if (width > maxWidth) {
-						height = height * maxWidth / width;
-						width = maxWidth;
-					}
-					if (height > maxHeight) {
-						width = width * maxHeight / height;
-						height = maxHeight;
-					}
-					img.setAttribute("height", String.valueOf(height));
-					img.setAttribute("width", String.valueOf(width));
-				} catch (NumberFormatException nfe) {
-				}
-			}
-		}
-	}
-
-	public static void rebaseImages(Document doc, String baseHref) {
-		if (baseHref.endsWith("/")) {
-			baseHref = baseHref.substring(0, baseHref.length() - 1);
-		}
-		String[] tags = { "IMG", "img" };
-		for (String tag : tags) {
-			NodeList imgs = doc.getElementsByTagName(tag);
-			int length = imgs.getLength();
-			for (int i = 0; i < length; i++) {
-				Element img = (Element) imgs.item(i);
-				String src = img.getAttribute("src");
-				if (src.startsWith("/")) {
-					img.setAttribute("src", baseHref + src);
-				}
-			}
 		}
 	}
 }
