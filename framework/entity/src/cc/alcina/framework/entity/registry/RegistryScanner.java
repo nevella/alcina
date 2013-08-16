@@ -25,6 +25,8 @@ import java.util.Set;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaConstants;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
 /*
@@ -50,8 +52,8 @@ public class RegistryScanner extends CachingScanner {
 
 	public void scan(Map<String, Date> classes, Collection<String> ignore,
 			Registry toRegistry) throws Exception {
-		String cachePath = getHomeDir().getPath() + File.separator
-				+ toRegistry.getClass().getSimpleName() + "-cache.ser";
+		String cachePath = CommonUtils.formatJ("%s/%s-cache.ser", getHomeDir()
+				.getPath(), toRegistry.getClass().getSimpleName());
 		this.toRegistry = toRegistry;
 		scan(classes, cachePath);
 	}
@@ -59,9 +61,6 @@ public class RegistryScanner extends CachingScanner {
 	@Override
 	protected void process(Class c, String className, Date modDate,
 			Map<String, Date> outgoingIgnoreMap) {
-		if(c.getName().contains("CmdSpeedGetRepoState")){
-			int j=3;
-		}
 		if ((!Modifier.isPublic(c.getModifiers()))
 				|| (Modifier.isAbstract(c.getModifiers()) && !c.isInterface())) {
 			outgoingIgnoreMap.put(className, modDate);

@@ -33,7 +33,7 @@ public class StreamBuffer extends Thread {
 					buf.append("\n");
 				}
 				buf.append(line);
-				System.out.println(type + ">" + line);
+				System.out.println((type.isEmpty() ? "" : (type + ">")) + line);
 			}
 			closed = true;
 			notifyAll();

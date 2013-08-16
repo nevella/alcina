@@ -129,7 +129,7 @@ public class Registry {
 				return new ArrayList<Class>(0);
 			}
 			throw new RuntimeException(CommonUtils.formatJ(
-					"Unable to locate class %s - %s", registryPoint,
+					"Unable to locate %s - %s", registryPoint,
 					targetObject));
 		}
 		for (Class sc : scChain) {
