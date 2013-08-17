@@ -49,7 +49,9 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	}
 
 	public void createLookup() {
-		this.lookup = new CacheLookup(this);
+		if (lookup == null) {
+			this.lookup = new CacheLookup(this);
+		}
 	}
 
 	public static class IdCacheLookupDescriptor<T extends HasIdAndLocalId>
@@ -67,8 +69,10 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 		@Override
 		public void createLookup() {
-			idLookup = new IdLookup(this);
-			lookup = idLookup;
+			if (lookup == null) {
+				idLookup = new IdLookup(this);
+				lookup = idLookup;
+			}
 		}
 	}
 

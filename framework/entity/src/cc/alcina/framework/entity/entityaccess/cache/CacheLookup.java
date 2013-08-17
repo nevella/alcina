@@ -7,10 +7,11 @@ import java.util.Set;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccesor;
 import cc.alcina.framework.entity.util.Multiset;
+
+import com.totsp.gwittir.client.beans.Converter;
 
 public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		CacheListener<H> {
@@ -25,6 +26,8 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	private boolean enabled = true;
 
 	private CollectionFilter<H> relevanceFilter;
+	
+	private Converter<T,T> normaliser;
 
 	public CacheLookup(CacheLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
@@ -39,14 +42,18 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	public Set<Long> get(T k1) {
-		return store.get(k1);
+		return store.get(normalise(k1));
+	}
+
+	private T normalise(T k1) {
+		return normaliser==null?k1:normaliser.convert(k1);
 	}
 
 	public Set<Long> getAndEnsure(T k1) {
 		Set<Long> result = get(k1);
 		if (result == null) {
 			result = new LinkedHashSet<Long>();
-			store.put(k1, result);
+			store.put(normalise(k1), result);
 		}
 		return result;
 	}
@@ -147,5 +154,13 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		}
 		return (H) AlcinaMemCache.get().transactional
 				.find(descriptor.clazz, id);
+	}
+
+	public Converter<T, T> getNormaliser() {
+		return this.normaliser;
+	}
+
+	public void setNormaliser(Converter<T, T> normaliser) {
+		this.normaliser = normaliser;
 	}
 }

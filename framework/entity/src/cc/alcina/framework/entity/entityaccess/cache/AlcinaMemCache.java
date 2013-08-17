@@ -484,6 +484,12 @@ public class AlcinaMemCache {
 	}
 
 	private HasIdAndLocalId resolveObject(DomainTransformEvent dte) {
+		if (dte.getSource() != null
+				&& dte.getSource().getClass() == dte.getObjectClass()
+				&& ((HasIdAndLocalId) dte.getSource()).getId() == dte
+						.getObjectId()) {
+			return (HasIdAndLocalId) dte.getSource();
+		}
 		return transformManager.getObject(dte);
 	}
 
@@ -587,9 +593,7 @@ public class AlcinaMemCache {
 			Map<HasIdAndLocalId, DomainTransformEvent> first = new LinkedHashMap<HasIdAndLocalId, DomainTransformEvent>();
 			Map<HasIdAndLocalId, DomainTransformEvent> last = new LinkedHashMap<HasIdAndLocalId, DomainTransformEvent>();
 			for (DomainTransformEvent dte : filtered) {
-				HasIdAndLocalId object = (HasIdAndLocalId) (TransformManager
-						.get().containsObject(dte) ? TransformManager.get()
-						.getObject(dte) : dte.getSource());
+				HasIdAndLocalId object = resolveObject(dte);
 				if (object == null || object.getId() == 0) {
 					// created object deleted in same request - never index
 				} else {
@@ -609,7 +613,7 @@ public class AlcinaMemCache {
 									dte.getValueLocalId()).getId());
 					dte.setValueLocalId(0);
 				}
-				dte.setNewValue(null);// force a lookup
+				dte.setNewValue(null);// force a lookup from the subgraph
 			}
 			Set<DomainTransformEvent> firstSet = new LinkedHashSet<DomainTransformEvent>(
 					first.values());

@@ -93,6 +93,15 @@ public class Registry {
 	}
 
 	public void appShutdown() {
+		for(Object o:singletons.allValues()){
+			if(o instanceof RegistrableService){
+				try {
+					((RegistrableService) o).appShutdown();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		instance = null;
 	}
 

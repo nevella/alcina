@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.servlet;
+package cc.alcina.framework.servlet.servlet.control;
 
 import java.io.IOException;
 
@@ -27,7 +27,6 @@ public class ControlServlet extends HttpServlet {
 			}
 			throw new ServletException(e);
 		}
-		
 	}
 
 	public void writeAndClose(String s, HttpServletResponse resp)
@@ -40,7 +39,8 @@ public class ControlServlet extends HttpServlet {
 	private void doGet0(HttpServletRequest req, HttpServletResponse resp)
 			throws Exception {
 		String apiKey = getApiKey();
-		authenticate(req, req.getParameter("apiKey"), apiKey);	}
+		authenticate(req, req.getParameter("apiKey"), apiKey);
+	}
 
 	private void authenticate(HttpServletRequest req, String reqApiKey,
 			String appApiKey) throws Exception {
