@@ -40,6 +40,8 @@ public class JobInfo implements Serializable, Cloneable {
 	private boolean complete;
 
 	private String errorMessage;
+	
+	private boolean completeInThread;
 
 	public JobInfo combineWithChild(JobInfo kid) {
 		JobInfo combo = gClone();
@@ -139,5 +141,13 @@ public class JobInfo implements Serializable, Cloneable {
 		clone.startTime = startTime;
 		clone.threadId = threadId;
 		return clone;
+	}
+
+	public boolean isCompleteInThread() {
+		return this.completeInThread;
+	}
+
+	public void setCompleteInThread(boolean completeInThread) {
+		this.completeInThread = completeInThread;
 	}
 }

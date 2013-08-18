@@ -7,7 +7,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.servlet.ServletLayerRegistry;
+import cc.alcina.framework.servlet.servlet.AppLifecycleManager;
 
 public class ControlServlet extends HttpServlet {
 	public class InformException extends Exception {
@@ -40,6 +44,57 @@ public class ControlServlet extends HttpServlet {
 			throws Exception {
 		String apiKey = getApiKey();
 		authenticate(req, req.getParameter("apiKey"), apiKey);
+		ControlServletRequest csr = parseRequest(req, resp);
+		handleRequest(csr, resp);
+	}
+
+	private ControlServletRequest parseRequest(HttpServletRequest req,
+			HttpServletResponse resp) throws Exception {
+		String jsonPayload = req.getParameter("json");
+		if (jsonPayload != null) {
+			ControlServletRequest csr = new AlcinaBeanSerializerS()
+					.deserialize(jsonPayload, getClass().getClassLoader());
+			csr.setJson(true);
+			return csr;
+		}
+		String cmd = CommonUtils.nullToEmpty(req.getParameter("cmd"));
+		ControlServletRequest csr = new ControlServletRequest();
+		if (cmd.equals("refresh-config")) {
+			csr.setCommand(ControlServletRequestCommand.REFRESH_CONFIG);
+			return csr;
+		} else if (cmd.equals("get-status")) {
+			csr.setCommand(ControlServletRequestCommand.GET_STATUS);
+			return csr;
+		}
+		writeAndClose(
+				"Usage:\n"
+						+ "control.do?apiKey=xxx&"
+						+ "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status]}",
+				resp);
+		return null;
+	}
+
+	private void handleRequest(ControlServletRequest csr,
+			HttpServletResponse resp) throws Exception {
+		if (csr.getCommand() == null) {
+			return;
+		}
+		switch (csr.getCommand()) {
+		case REFRESH_CONFIG:
+			ServletLayerRegistry.impl(AppLifecycleManager.class).refreshProperties();
+			writeAndClose("Properties refreshed", resp);
+			break;
+		case GET_STATUS:
+			ControlServletStatus status = ServletLayerRegistry.impl(
+					AppLifecycleManager.class).getStatus();
+			if (csr.isJson()) {
+				writeAndClose(new AlcinaBeanSerializerS().serialize(status),
+						resp);
+			} else {
+				writeAndClose(status.toString(), resp);
+			}
+			break;
+		}
 	}
 
 	private void authenticate(HttpServletRequest req, String reqApiKey,

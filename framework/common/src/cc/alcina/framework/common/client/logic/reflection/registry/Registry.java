@@ -33,8 +33,34 @@ public class Registry {
 
 	private ClassLookup classLookup;
 
+	private static RegistryProvider provider = new BasicRegistryProvider();
+
+	public static interface RegistryProvider {
+		Registry getRegistry();
+
+		void appShutdown();
+	}
+
+	public static class BasicRegistryProvider implements RegistryProvider {
+		@Override
+		public Registry getRegistry() {
+			return instance;
+		}
+
+		private static Registry instance = new Registry();
+
+		@Override
+		public void appShutdown() {
+			getRegistry().shutdownSingletons();
+			Registry.setProvider(null);
+		}
+	}
+
+	public static void appShutdown(){
+		provider.appShutdown();
+	}
 	public static Registry get() {
-		return instance;
+		return provider.getRegistry();
 	}
 
 	public void registerBootstrapServices(ClassLookup classLookup) {
@@ -43,6 +69,10 @@ public class Registry {
 
 	public static <V> V impl(Class<V> registryPoint) {
 		return get().impl0(registryPoint, void.class, false);
+	}
+
+	public static <V> V implOrNull(Class<V> registryPoint) {
+		return get().impl0(registryPoint, void.class, true);
 	}
 
 	public static <V> V impl(Class<V> registryPoint, Class targetObjectClass) {
@@ -60,6 +90,11 @@ public class Registry {
 
 	public static <V> List<V> impls(Class<V> registryPoint, Class targetClass) {
 		return get().impls0(registryPoint, targetClass);
+	}
+
+	public static <V> List<V> singletons(Class<V> registryPoint,
+			Class targetClass) {
+		return get().singletons0(registryPoint, targetClass);
 	}
 
 	public static <T> T singleton(Class<T> clazz) {
@@ -81,10 +116,7 @@ public class Registry {
 	// registrypoint/targetClass/singleton
 	protected LookupMapToMap<Object> singletons;
 
-	private static Registry instance = new Registry();
-
-	protected Registry() {
-		super();
+	public Registry() {
 		registry = new LookupMapToMap<Class>(3);
 		targetPriority = new LookupMapToMap<Integer>(2);
 		singletons = new LookupMapToMap<Object>(2);
@@ -92,9 +124,9 @@ public class Registry {
 		implementationTypeMap = new LookupMapToMap<ImplementationType>(2);
 	}
 
-	public void appShutdown() {
-		for(Object o:singletons.allValues()){
-			if(o instanceof RegistrableService){
+	public void shutdownSingletons() {
+		for (Object o : singletons.allValues()) {
+			if (o instanceof RegistrableService) {
 				try {
 					((RegistrableService) o).appShutdown();
 				} catch (Exception e) {
@@ -102,7 +134,6 @@ public class Registry {
 				}
 			}
 		}
-		instance = null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -138,8 +169,7 @@ public class Registry {
 				return new ArrayList<Class>(0);
 			}
 			throw new RuntimeException(CommonUtils.formatJ(
-					"Unable to locate %s - %s", registryPoint,
-					targetObject));
+					"Unable to locate %s - %s", registryPoint, targetObject));
 		}
 		for (Class sc : scChain) {
 			if (map.containsKey(sc)) {
@@ -202,7 +232,6 @@ public class Registry {
 	public void register(Class registeringClass, Class registryPoint,
 			Class targetClass, ImplementationType implementationType,
 			int infoPriority) {
-
 		Map<Class, Class> registered = registry.asMapEnsure(true,
 				registryPoint, targetClass);
 		if (implementationType == ImplementationType.MULTIPLE
@@ -338,6 +367,16 @@ public class Registry {
 		return result;
 	}
 
+	protected <V> List<V> singletons0(Class<V> registryPoint, Class targetClass) {
+		List<Class> impls = get().lookup(false, registryPoint, targetClass,
+				false);
+		List<V> result = new ArrayList<V>();
+		for (Class c : impls) {
+			result.add((V) singleton(c));
+		}
+		return result;
+	}
+
 	protected <T> T singleton0(Class<T> clazz) {
 		if (clazz == null) {
 			return null;
@@ -351,6 +390,29 @@ public class Registry {
 	}
 
 	public interface RegistryFactory<V> {
-		public V create(Class<? extends V> registryPoint, Class targetObjectClass);
+		public V create(Class<? extends V> registryPoint,
+				Class targetObjectClass);
+	}
+
+	public static class MultipleSingletonException extends RuntimeException {
+		public MultipleSingletonException(Class<?> clazz) {
+			super(CommonUtils.formatJ(
+					"Constructor of singleton %s invoked more than once",
+					clazz.getName()));
+		}
+	}
+
+	public static void checkSingleton(RegistrySingleton singleton) {
+		if (Registry.get().singletons.get(singleton.getClass(), void.class) != null) {
+			throw new MultipleSingletonException(singleton.getClass());
+		}
+	}
+
+	public static RegistryProvider getProvider() {
+		return provider;
+	}
+
+	public static void setProvider(RegistryProvider provider) {
+		Registry.provider = provider;
 	}
 }

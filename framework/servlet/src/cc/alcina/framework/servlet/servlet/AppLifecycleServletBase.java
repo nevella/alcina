@@ -37,6 +37,7 @@ import cc.alcina.framework.entity.entityaccess.DbAppender;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
+import cc.alcina.framework.entity.registry.ClassloaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.ServerURLComponentEncoder;
@@ -147,6 +148,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		MetricLogging.get().start(key);
 		initCommonServices();
 		initDataFolder();
+		Registry.setProvider(new ClassloaderAwareRegistryProvider());
 		initServletLayerRegistry();
 		initCommonImplServices();
 		initCustomServices();
@@ -157,8 +159,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected ServletConfig initServletConfig;
 
+	private Date startupTime;
+
 	public void init(ServletConfig servletConfig) throws ServletException {
 		MetricLogging.get().start("Web app startup");
+		startupTime = new Date();
 		try {
 			initServletConfig = servletConfig;
 			initNames();
@@ -233,7 +238,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					Arrays.asList(new String[] {})).getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					ServletLayerRegistry.get());
-			ServletLayerRegistry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
+			ServletLayerRegistry.get().registerBootstrapServices(
+					ObjectPersistenceHelper.get());
+			
 		} catch (Exception e) {
 			logger.warn("", e);
 		} finally {
@@ -254,7 +261,14 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		MetricLogging.get().appShutdown();
 		SEUtilities.appShutdown();
 		ObjectPersistenceHelper.get().appShutdown();
-		ServletLayerRegistry.get().appShutdown();
-		Registry.get().appShutdown();
+		Registry.appShutdown();
+	}
+
+	public Date getStartupTime() {
+		return this.startupTime;
+	}
+
+	public void setStartupTime(Date startupTime) {
+		this.startupTime = startupTime;
 	}
 }

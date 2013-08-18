@@ -292,6 +292,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				} finally {
 					ServletLayerLocator.get().remoteActionLoggerProvider()
 							.clearAllThreadLoggers();
+					JobRegistry.get().jobCompleteFromThread();
 					LooseContext.confirmDepth(tLooseContextDepth);
 				}
 			}
@@ -353,6 +354,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			ServletLayerLocator.get().remoteActionLoggerProvider()
 					.clearAllThreadLoggers();
+			JobRegistry.get().jobCompleteFromThread();
 		}
 	}
 

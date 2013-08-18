@@ -14,6 +14,7 @@
 package cc.alcina.framework.servlet.job;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -86,6 +87,9 @@ public class JobRegistry {
 	}
 
 	public JobInfo startJob(Class jobClass, String jobName, String message) {
+		if (refuseJobs) {
+			throw new RuntimeException("refusing jobs");
+		}
 		JobInfo info = new JobInfo();
 		info.setComplete(false);
 		info.setJobName(jobName == null ? jobClass.getSimpleName() : jobName);
@@ -142,6 +146,22 @@ public class JobRegistry {
 		}
 	}
 
+	boolean refuseJobs = false;
+
+	public int cancelAll() {
+		refuseJobs = true;
+		for (Long tid : infoMap.keySet()) {
+			if (!cancelledMap.containsKey(tid)) {
+				cancel(tid);
+			}
+		}
+		int running = 0;
+		for (JobInfo jobInfo : infoMap.values()) {
+			running += jobInfo.isCompleteInThread() ? 0 : 1;
+		}
+		return running;
+	}
+
 	public List<Long> getRunningJobs() {
 		Set<Entry<Long, JobInfo>> entries = infoMap.entrySet();
 		List<Long> runningJobids = new ArrayList<Long>();
@@ -188,5 +208,10 @@ public class JobRegistry {
 	public boolean isTopLevel(JobInfo jobInfo) {
 		long id = Thread.currentThread().getId();
 		return jobInfo == infoMap.get(id);
+	}
+
+	public void jobCompleteFromThread() {
+		JobInfo info = getTopLevelInfoForThread();
+		info.setCompleteInThread(true);
 	}
 }

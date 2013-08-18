@@ -327,7 +327,6 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	public void destroy() {
 		try {
-			Registry.get().appShutdown();
 			EntityLayerLocator.get().appShutdown();
 			JaxbUtils.appShutdown();
 		} catch (Exception e) {
