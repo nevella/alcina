@@ -58,7 +58,9 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceListener;
@@ -503,7 +505,8 @@ public class AlcinaMemCache {
 		cache = transformManager.getDetachedEntityCache();
 		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
 		descriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
-		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);// class, pName
+		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);// class,
+																		// pName
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		laterLookup = new LaterLookup();
 		// get non-many-many obj
@@ -590,55 +593,38 @@ public class AlcinaMemCache {
 				.getDomainTransformLayerWrapper().persistentEvents;
 		List<DomainTransformEvent> filtered = filterInterestedTransforms(dtes);
 		try {
-			Map<HasIdAndLocalId, DomainTransformEvent> first = new LinkedHashMap<HasIdAndLocalId, DomainTransformEvent>();
-			Map<HasIdAndLocalId, DomainTransformEvent> last = new LinkedHashMap<HasIdAndLocalId, DomainTransformEvent>();
+			Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
+					.multimap(filtered, new DteToLocatorMapper());
+			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
 			for (DomainTransformEvent dte : filtered) {
-				HasIdAndLocalId object = resolveObject(dte);
-				if (object == null || object.getId() == 0) {
-					// created object deleted in same request - never index
-				} else {
-					if (!first.containsKey(object)) {
-						first.put(object, dte);
-					}
-					last.put(object, dte);
-				}
-				if (dte.getObjectId() == 0 && dte.getObjectLocalId() != 0) {
-					dte.setObjectId(object.getId());
-					dte.setObjectLocalId(0);
-				}
-				if (dte.getValueId() == 0 && dte.getValueLocalId() != 0) {
-					dte.setValueId(TransformManager
-							.get()
-							.getObject(dte.getValueClass(), 0,
-									dte.getValueLocalId()).getId());
-					dte.setValueLocalId(0);
-				}
 				dte.setNewValue(null);// force a lookup from the subgraph
 			}
-			Set<DomainTransformEvent> firstSet = new LinkedHashSet<DomainTransformEvent>(
-					first.values());
-			Set<DomainTransformEvent> lastSet = new LinkedHashSet<DomainTransformEvent>(
-					last.values());
 			for (DomainTransformEvent dte : filtered) {
 				// remove from indicies before first change - and only if
 				// preexisting object
+				DomainTransformEvent first = CommonUtils
+						.first(perObjectTransforms.get(HiliLocator.fromDte(dte)));
+				DomainTransformEvent last = CommonUtils
+						.last(perObjectTransforms.get(HiliLocator.fromDte(dte)));
 				if (dte.getTransformType() != TransformType.CREATE_OBJECT
-						&& firstSet.contains(dte)) {
-					HasIdAndLocalId obj = resolveObject(dte);
+						&& first == dte) {
+					HasIdAndLocalId obj = transformManager.getObject(dte);
 					index(obj, false);
 				}
 				Object persistentLayerSource = dte.getSource();
 				transformManager.consume(dte);
 				if (dte.getTransformType() != TransformType.DELETE_OBJECT
-						&& lastSet.contains(dte)) {
-					HasIdAndLocalId obj = resolveObject(dte);
-					if (obj instanceof HasVersionNumber) {
-						updateVersionNumber(obj, dte);
+						&& last == dte) {
+					HasIdAndLocalId dbObj = resolveObject(dte);
+					HasIdAndLocalId memCacheObj = transformManager
+							.getObject(dte);
+					if (dbObj instanceof HasVersionNumber) {
+						updateVersionNumber(dbObj, dte);
 					}
-					if (obj instanceof IVersionable) {
-						updateIVersionable(obj, persistentLayerSource);
+					if (dbObj instanceof IVersionable) {
+						updateIVersionable(dbObj, persistentLayerSource);
 					}
-					index(obj, true);
+					index(memCacheObj, true);
 				}
 			}
 		} catch (Exception e) {

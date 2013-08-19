@@ -44,7 +44,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 				String value = line.substring(idx + 1).replace("\\n", "\n")
 						.replace("\\=", "=").replace("\\\\", "\\");
 				if (unQuote && value.startsWith("\"") && value.endsWith("\"")) {
-					value = value.substring(1, value.length() - 2);
+					value = value.substring(1, value.length() - 1);
 				}
 				map.put(line.substring(0, idx), value);
 			}

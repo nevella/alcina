@@ -118,4 +118,13 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		return result;
 	}
+	public Map invertAsMap(){
+		Map result=new LinkedHashMap();
+		for (Map.Entry<K, V> entry : entrySet()) {
+			for(Object o:entry.getValue()){
+				result.put(o,entry.getKey());
+			}
+		}
+		return result;
+	}
 }
