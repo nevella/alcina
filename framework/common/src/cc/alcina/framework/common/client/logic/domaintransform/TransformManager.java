@@ -53,10 +53,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoMana
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;

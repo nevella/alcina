@@ -15,9 +15,6 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamReader;

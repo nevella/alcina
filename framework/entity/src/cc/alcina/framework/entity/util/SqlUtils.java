@@ -12,7 +12,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 
@@ -87,7 +87,7 @@ public class SqlUtils {
 
 	public static void dumpResultSet(ResultSet rs,
 			Map<String, ColumnFormatter> formatters) throws SQLException {
-		LookupMapToMap<String> values = new LookupMapToMap<String>(2);
+		UnsortedMultikeyMap<String> values = new UnsortedMultikeyMap<String>(2);
 		int row = 0;
 		List<String> columnNames = new ArrayList<String>();
 		for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {

@@ -1,7 +1,5 @@
 package cc.alcina.framework.servlet;
 
-import org.apache.log4j.Level;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
@@ -13,7 +11,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 
 public class ServletLayerUtils {

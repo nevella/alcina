@@ -63,7 +63,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.util.JvmPropertyReflector;
 
 /**
@@ -344,7 +344,7 @@ public class SEUtilities {
 		return true;
 	}
 
-	private static LookupMapToMap<PropertyDescriptor> pdLookup = new LookupMapToMap<PropertyDescriptor>(
+	private static UnsortedMultikeyMap<PropertyDescriptor> pdLookup = new UnsortedMultikeyMap<PropertyDescriptor>(
 			2);
 
 	public static PropertyDescriptor descriptorByName(Class clazz,

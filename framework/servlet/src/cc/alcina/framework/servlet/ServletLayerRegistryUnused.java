@@ -23,19 +23,21 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * 
  * We duplicate all the static methods from Registry to get the correct get()
  * 
- * now i understand more...we can do something with thread.getcontextclassloader and probably drop this
+ * now i understand more...we can do something with thread.getcontextclassloader
+ * and probably drop this
  * 
  * @author nick@alcina.cc
  * 
  */
-public class ServletLayerRegistry extends Registry {
-	public ServletLayerRegistry() {
+@Deprecated
+public class ServletLayerRegistryUnused extends Registry {
+	public ServletLayerRegistryUnused() {
 		super();
 	}
 
-	private static ServletLayerRegistry theInstance = new ServletLayerRegistry();
+	private static ServletLayerRegistryUnused theInstance = new ServletLayerRegistryUnused();
 
-	public static ServletLayerRegistry get() {
+	public static ServletLayerRegistryUnused get() {
 		return theInstance;
 	}
 

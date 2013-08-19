@@ -15,7 +15,6 @@ import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerLocator;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.template.cs.constants.AlcinaTemplateImplLookup;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
@@ -77,7 +76,7 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 				.get());
 		PermissionsManager
 				.setPermissionsExtension(new RegistryPermissionsExtension(
-						ServletLayerRegistry.get()));
+						Registry.get()));
 	}
 
 	@Override

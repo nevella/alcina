@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.collections;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.util.PropertyPathAccesor;
 
 import com.totsp.gwittir.client.beans.Converter;

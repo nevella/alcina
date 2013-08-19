@@ -40,7 +40,6 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
@@ -103,8 +102,6 @@ import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.ServletLayerLocator;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
-import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
@@ -256,7 +253,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public Long performAction(final RemoteAction action,
 			final boolean persistentLog) {
 		checkAnnotatedPermissions(action);
-		final RemoteActionPerformer performer = (RemoteActionPerformer) ServletLayerRegistry
+		final RemoteActionPerformer performer = (RemoteActionPerformer) Registry
 				.get().instantiateSingle(RemoteActionPerformer.class,
 						action.getClass());
 		final PermissionsManager pm = PermissionsManager.get();
@@ -321,7 +318,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public ActionLogItem performActionAndWait(final RemoteAction action)
 			throws WebException {
 		checkAnnotatedPermissions(action);
-		RemoteActionPerformer performer = (RemoteActionPerformer) ServletLayerRegistry
+		RemoteActionPerformer performer = (RemoteActionPerformer) Registry
 				.get().instantiateSingle(RemoteActionPerformer.class,
 						action.getClass());
 		ActionLogItem result = null;
@@ -508,7 +505,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			CookieHelper.get().getIid(getThreadLocalRequest(),
 					getThreadLocalResponse());
-			ServletLayerRegistry.impl(SessionHelper.class).initUserState(
+			Registry.impl(SessionHelper.class).initUserState(
 					getThreadLocalRequest());
 			String userName = CookieHelper.get().getRememberedUserName(
 					getThreadLocalRequest(), getThreadLocalResponse());
@@ -620,7 +617,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, map,
-					ServletLayerRegistry.impl(TransformLoggingPolicy.class),
+					Registry.impl(TransformLoggingPolicy.class),
 					false, false, false, getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
@@ -633,11 +630,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {
-			Class clazz = ServletLayerRegistry.get().lookupSingle(
+			Class clazz = Registry.get().lookupSingle(
 					ServerValidator.class, validator.getClass());
 			ServerValidatorHandler handler = null;
 			if (ServerValidatorHandler.class.isAssignableFrom(clazz)) {
-				handler = (ServerValidatorHandler) ServletLayerRegistry.get()
+				handler = (ServerValidatorHandler) Registry.get()
 						.instantiateSingle(ServerValidator.class,
 								validator.getClass());
 			}
@@ -731,7 +728,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, locatorMap,
-					ServletLayerRegistry.impl(TransformLoggingPolicy.class),
+					Registry.impl(TransformLoggingPolicy.class),
 					true, ignoreClientAuthMismatch, forOfflineTransforms,
 					getLogger());
 			return submitAndHandleTransforms(persistenceToken);

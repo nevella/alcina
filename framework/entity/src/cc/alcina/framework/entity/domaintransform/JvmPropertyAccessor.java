@@ -5,10 +5,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class JvmPropertyAccessor implements PropertyAccessor {

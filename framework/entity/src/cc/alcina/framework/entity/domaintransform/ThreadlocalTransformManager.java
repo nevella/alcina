@@ -48,7 +48,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;

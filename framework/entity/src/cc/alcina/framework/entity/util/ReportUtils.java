@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class ReportUtils {
-	public static void dumpTable(LookupMapToMap<String> values,
+	public static void dumpTable(UnsortedMultikeyMap<String> values,
 			List<String> columnNames) {
 		Map<Integer, Integer> colWidthMap = new HashMap<Integer, Integer>();
 		int rows = values.keySet().size();

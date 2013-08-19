@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.sync;
 
-import java.util.List;
 
 public interface SyncLandscape<T> {
 	public SyncConversionSpec getConversionSpec(String propertyName);

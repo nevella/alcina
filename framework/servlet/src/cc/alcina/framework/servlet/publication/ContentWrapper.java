@@ -20,6 +20,7 @@ import org.w3c.dom.Document;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.PublicationContent;
@@ -27,7 +28,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.util.JaxbUtils;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 
 /**
@@ -124,7 +124,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 	}
 
 	protected void marshallToDoc() throws Exception {
-		Set<Class> jaxbClasses = new HashSet<Class>(ServletLayerRegistry.get()
+		Set<Class> jaxbClasses = new HashSet<Class>(Registry.get()
 				.lookup(JaxbContextRegistration.class));
 		JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
 		Marshaller m = jc.createMarshaller();

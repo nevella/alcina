@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
@@ -27,12 +26,12 @@ import java.util.TreeMap;
  * 
  */
 @SuppressWarnings("unchecked")
-public class LookupMapToMap<V> extends LinkedHashMap implements MultikeyMap<V> {
+public class UnsortedMultikeyMap<V> extends LinkedHashMap implements MultikeyMap<V> {
 	private final int depth;
 
 	private MultikeyMapSupport multikeyMapSupport;
 
-	public LookupMapToMap(int depth) {
+	public UnsortedMultikeyMap(int depth) {
 		this.depth = depth;
 		this.multikeyMapSupport = new MultikeyMapSupport(this);
 	}
@@ -58,7 +57,7 @@ public class LookupMapToMap<V> extends LinkedHashMap implements MultikeyMap<V> {
 
 	@Override
 	public MultikeyMap<V> createMap(int childDepth) {
-		return new LookupMapToMap<V>(childDepth);
+		return new UnsortedMultikeyMap<V>(childDepth);
 	}
 
 	@Override

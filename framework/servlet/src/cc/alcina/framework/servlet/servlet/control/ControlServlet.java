@@ -7,11 +7,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
-import cc.alcina.framework.servlet.servlet.AppLifecycleManager;
 
 public class ControlServlet extends HttpServlet {
 	public class InformException extends Exception {
@@ -81,12 +80,13 @@ public class ControlServlet extends HttpServlet {
 		}
 		switch (csr.getCommand()) {
 		case REFRESH_CONFIG:
-			ServletLayerRegistry.impl(AppLifecycleManager.class).refreshProperties();
+			Registry.impl(AppLifecycleManager.class).refreshProperties();
+			
 			writeAndClose("Properties refreshed", resp);
 			break;
 		case GET_STATUS:
-			ControlServletStatus status = ServletLayerRegistry.impl(
-					AppLifecycleManager.class).getStatus();
+			ControlServletState status = Registry.impl(
+					AppLifecycleManager.class).getState();
 			if (csr.isJson()) {
 				writeAndClose(new AlcinaBeanSerializerS().serialize(status),
 						resp);
@@ -108,7 +108,6 @@ public class ControlServlet extends HttpServlet {
 	}
 
 	protected String getApiKey() {
-		return ResourceUtilities.getBundledString(ControlServlet.class,
-				"apiKey");
+		return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
 	}
 }

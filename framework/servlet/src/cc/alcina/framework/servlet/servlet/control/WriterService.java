@@ -1,7 +1,6 @@
 package cc.alcina.framework.servlet.servlet.control;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 
 /**
@@ -17,8 +16,15 @@ import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableSe
  * </pre>
  */
 @RegistryLocation(registryPoint = WriterService.class)
-public interface WriterService extends RegistrableService {
-	void startup();
+public abstract class WriterService implements RegistrableService {
+	public abstract void startup();
 
-	void shutdown();
+	public abstract void shutdown();
+
+	@Override
+	public void appShutdown() {
+		// this should be called earlier than the general service shutdown - for
+		// the mo' at least
+		// shutdown();
+	}
 }

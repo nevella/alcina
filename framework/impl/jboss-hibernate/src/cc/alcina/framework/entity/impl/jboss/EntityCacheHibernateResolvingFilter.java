@@ -14,7 +14,6 @@
 package cc.alcina.framework.entity.impl.jboss;
 
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;

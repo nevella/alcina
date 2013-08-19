@@ -3,7 +3,6 @@ package cc.alcina.framework.entity.util;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;

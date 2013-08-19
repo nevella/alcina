@@ -1,16 +1,8 @@
 package cc.alcina.framework.common.client.collections;
 
-import java.beans.PropertyDescriptor;
-import java.util.Date;
-
-import org.json.JSONObject;
-
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.entity.SEUtilities;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 public class PropertyMapper {
 	private String[] fieldNameMappings;

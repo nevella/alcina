@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class ControlServletResponse {
 	private ControlServletRequest request;
 
-	private ControlServletStatus status;
+	private ControlServletState status;
 
 	private String message;
 
@@ -17,11 +17,11 @@ public class ControlServletResponse {
 		this.request = request;
 	}
 
-	public ControlServletStatus getStatus() {
+	public ControlServletState getStatus() {
 		return this.status;
 	}
 
-	public void setStatus(ControlServletStatus status) {
+	public void setStatus(ControlServletState status) {
 		this.status = status;
 	}
 

@@ -12,7 +12,6 @@ import cc.alcina.template.cs.remote.AlcinaTemplateRemoteService;
 import cc.alcina.template.cs.remote.AlcinaTemplateRemoteServiceAsync;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
 @RegistryLocations({

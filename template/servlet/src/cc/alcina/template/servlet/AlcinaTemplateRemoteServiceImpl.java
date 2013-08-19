@@ -17,11 +17,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.servlet.CookieHelper;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
@@ -103,7 +103,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		AlcinaTemplateUser user = new Authenticator()
 				.processAuthenticatedLogin(lrb, userName);
 		if (lrb.isOk()) {
-			ServletLayerRegistry.impl(SessionHelper.class).setupSessionForUser(getThreadLocalRequest(), user);
+			Registry.impl(SessionHelper.class).setupSessionForUser(getThreadLocalRequest(), user);
 			lrb.setFriendlyName(user.getFirstName() + " " + user.getLastName());
 		}
 	}
@@ -131,7 +131,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 	public void logout() {
 		CookieHelper.get().clearRemembermeCookie(getThreadLocalRequest(),
 				getThreadLocalResponse());
-		ServletLayerRegistry.impl(SessionHelper.class).resetSession(getThreadLocalRequest());
+		Registry.impl(SessionHelper.class).resetSession(getThreadLocalRequest());
 	}
 
 	@Override

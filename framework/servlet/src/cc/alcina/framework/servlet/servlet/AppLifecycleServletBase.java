@@ -37,14 +37,13 @@ import cc.alcina.framework.entity.entityaccess.DbAppender;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.registry.ClassloaderAwareRegistryProvider;
+import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.ServerURLComponentEncoder;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerLocator;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void createServletTransformClientInstance() {
@@ -148,8 +147,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		MetricLogging.get().start(key);
 		initCommonServices();
 		initDataFolder();
-		Registry.setProvider(new ClassloaderAwareRegistryProvider());
-		initServletLayerRegistry();
+		Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+		initRegistry();
 		initCommonImplServices();
 		initCustomServices();
 		MetricLogging.get().end(key);
@@ -213,7 +212,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	 * EntityCacheHibernateResolvingFilter(
 	 * JadePersistence.CACHE_GETTER_CALLBACK); PermissionsManager
 	 * .setPermissionsExtension(new RegistryPermissionsExtension(
-	 * ServletLayerRegistry.get())); }
+	 * Registry.get())); }
 	 */
 	protected void initCommonServices() {
 		PermissionsManager permissionsManager = PermissionsManager.get();
@@ -227,7 +226,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 	}
 
-	protected void initServletLayerRegistry() {
+	protected void initRegistry() {
 		Logger logger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
@@ -237,10 +236,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					false, logger, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					ServletLayerRegistry.get());
-			ServletLayerRegistry.get().registerBootstrapServices(
+					Registry.get(), "servlet-layer");
+			Registry.get().registerBootstrapServices(
 					ObjectPersistenceHelper.get());
-			
 		} catch (Exception e) {
 			logger.warn("", e);
 		} finally {
@@ -270,5 +268,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	public void setStartupTime(Date startupTime) {
 		this.startupTime = startupTime;
+	}
+
+	public void refreshProperties() {
+		loadCustomProperties();
 	}
 }

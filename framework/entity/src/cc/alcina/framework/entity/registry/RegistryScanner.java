@@ -13,19 +13,16 @@
  */
 package cc.alcina.framework.entity.registry;
 
-import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
@@ -41,19 +38,10 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
 public class RegistryScanner extends CachingScanner {
 	private Registry toRegistry;
 
-	public void scan(Collection<String> classNames, Collection<String> ignore,
-			Registry toRegistry) throws Exception {
-		Map<String, Date> classes = new HashMap<String, Date>();
-		for (String clazzName : classNames) {
-			classes.put(clazzName, null);
-		}
-		scan(classes, ignore, toRegistry);
-	}
-
 	public void scan(Map<String, Date> classes, Collection<String> ignore,
-			Registry toRegistry) throws Exception {
-		String cachePath = CommonUtils.formatJ("%s/%s-cache.ser", getHomeDir()
-				.getPath(), toRegistry.getClass().getSimpleName());
+			Registry toRegistry, String registryName) throws Exception {
+		String cachePath = CommonUtils.formatJ("%s/%s-registry-cache.ser",
+				getHomeDir().getPath(), registryName);
 		this.toRegistry = toRegistry;
 		scan(classes, cachePath);
 	}
@@ -61,33 +49,23 @@ public class RegistryScanner extends CachingScanner {
 	@Override
 	protected void process(Class c, String className, Date modDate,
 			Map<String, Date> outgoingIgnoreMap) {
-		if ((!Modifier.isPublic(c.getModifiers()))
-				|| (Modifier.isAbstract(c.getModifiers()) && !c.isInterface())) {
+		if (!Modifier.isPublic(c.getModifiers())
+				|| Modifier.isAbstract(c.getModifiers()) || c.isInterface()) {
 			outgoingIgnoreMap.put(className, modDate);
 			return;
 		}
 		c = maybeNormaliseClass(c);
-		{
-			RegistryLocations rls = (RegistryLocations) c
-					.getAnnotation(RegistryLocations.class);
-			RegistryLocation rl = (RegistryLocation) c
-					.getAnnotation(RegistryLocation.class);
-			if (rl == null && rls == null) {
-				outgoingIgnoreMap.put(className, modDate);
-				return;
-			}
+		Collection<Annotation> sca = AnnotationUtils
+				.getSuperclassAnnotations(c);
+		Collection locs = AnnotationUtils.filterAnnotations(sca,
+				RegistryLocation.class, RegistryLocations.class);
+		Set<RegistryLocation> uniques = Registry
+				.filterForRegistryPointUniqueness(locs);
+		if (uniques.isEmpty()) {
+			outgoingIgnoreMap.put(className, modDate);
+			return;
 		}
-		Set<Annotation> sca = AnnotationUtils.getSuperclassAnnotations(c);
-		Set<RegistryLocation> rls = AnnotationUtils.filterAnnotations(sca,
-				RegistryLocation.class);
-		Set<RegistryLocations> rlsSet = AnnotationUtils.filterAnnotations(sca,
-				RegistryLocations.class);
-		for (RegistryLocations rlcs : rlsSet) {
-			for (RegistryLocation rl : rlcs.value()) {
-				rls.add(rl);
-			}
-		}
-		for (RegistryLocation rl : rls) {
+		for (RegistryLocation rl : uniques) {
 			toRegistry.register(c, rl);
 		}
 	}

@@ -45,7 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 
 import com.google.gwt.core.client.GWT;
@@ -662,7 +662,7 @@ public class ClientReflectionGenerator extends Generator {
 		return result;
 	}
 
-	private LookupMapToMap<Set<Annotation>> superAnnotationMap = new LookupMapToMap<Set<Annotation>>(
+	private UnsortedMultikeyMap<Set<Annotation>> superAnnotationMap = new UnsortedMultikeyMap<Set<Annotation>>(
 			2);
 
 	private IntrospectorFilter filter;

@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier.ModalNotifierNull;
@@ -367,7 +367,7 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	public class ClientDomainSync {
-		private LookupMapToMap lkp;
+		private UnsortedMultikeyMap lkp;
 
 		private ModalNotifier notifier;
 
@@ -376,7 +376,7 @@ public abstract class ClientTransformManager extends TransformManager {
 		}
 
 		public void clearUserObjects() {
-			lkp = new LookupMapToMap(3);
+			lkp = new UnsortedMultikeyMap(3);
 		}
 
 		public void update(HasIdAndLocalId hili, String propertyName,

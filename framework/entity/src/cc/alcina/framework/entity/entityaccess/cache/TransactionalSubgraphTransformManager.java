@@ -10,11 +10,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;

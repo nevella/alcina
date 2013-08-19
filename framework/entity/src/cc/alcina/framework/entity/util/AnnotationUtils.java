@@ -15,9 +15,13 @@ package cc.alcina.framework.entity.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,7 +33,7 @@ import java.util.Set;
 public class AnnotationUtils {
 	@ClearOnAppRestart
 	private static HashMap<Method, Set<Annotation>> superMethodAnnotationMap = new HashMap<Method, Set<Annotation>>();
-	
+
 	public static Set<Annotation> getSuperclassAnnotationsForMethod(Method m) {
 		if (superMethodAnnotationMap.containsKey(m)) {
 			return superMethodAnnotationMap.get(m);
@@ -53,44 +57,37 @@ public class AnnotationUtils {
 		return values;
 	}
 
-	private static HashMap<Class, Set<Annotation>> superAnnotationMap = new HashMap<Class, Set<Annotation>>();
+	private static HashMap<Class, Collection<Annotation>> superAnnotationMap = new HashMap<Class, Collection<Annotation>>();
 
-	
-
-	
-
-	public static Set<Annotation> getSuperclassAnnotations(Class clazz) {
+	public static Collection<Annotation> getSuperclassAnnotations(Class clazz) {
+		Class forClass = clazz;
+		if (clazz.isInterface()) {
+			throw new RuntimeException(
+					"Should only check for classes, not interfaces");
+		}
 		if (superAnnotationMap.containsKey(clazz)) {
 			return superAnnotationMap.get(clazz);
 		}
-		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
+		List<Annotation> values = new ArrayList<Annotation>();
 		while (clazz != Object.class) {
-			try {
-				for (Annotation a : clazz.getAnnotations()) {
-					if (!uniqueMap.containsKey(a.annotationType())) {
-						uniqueMap.put(a.annotationType(),
-								a);
-					}
-				}
-			} catch (Exception e) {
-				break;
+			for (Annotation a : clazz.getAnnotations()) {
+				values.add(a);
 			}
 			clazz = clazz.getSuperclass();
 		}
-		HashSet values = new HashSet(uniqueMap.values());
-		superAnnotationMap.put(clazz, values);
+		superAnnotationMap.put(forClass, values);
 		return values;
 	}
 
-	public static <A extends Annotation> Set<A> filterAnnotations(
-			Set<Annotation> ann, Class<? extends A> filterClass) {
+	public static <A extends Annotation> Collection<A> filterAnnotations(
+			Collection<Annotation> ann, Class<? extends A>... filterClasses) {
 		Set<A> result = new LinkedHashSet<A>();
+		List<Class<? extends A>> filterList = Arrays.asList(filterClasses);
 		for (Annotation a : ann) {
-			if (a.annotationType() == filterClass) {
+			if (filterList.contains(a.annotationType())) {
 				result.add((A) a);
 			}
 		}
 		return result;
 	}
-	
 }

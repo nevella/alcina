@@ -29,7 +29,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;

@@ -25,8 +25,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.tools.ant.Project;
-
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;

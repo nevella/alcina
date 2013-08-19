@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class ControlServletModes {
+	
 	private WriterMode writerMode = WriterMode.READ_ONLY;
 
 	private WriterRelayMode writerRelayMode = WriterRelayMode.REJECT;
@@ -48,11 +49,18 @@ public class ControlServletModes {
 		ControlServletModes modes = new ControlServletModes();
 		modes.writerMode = CommonUtils.getEnumValueOrNull(WriterMode.class,
 				props.get("writerMode"), true, null);
-		modes.writerRelayMode = CommonUtils.getEnumValueOrNull(WriterRelayMode.class,
-				props.get("writerRelayMode"), true, null);
-		modes.writerServiceMode = CommonUtils.getEnumValueOrNull(WriterServiceMode.class,
-				props.get("writerServiceMode"), true, null);
+		modes.writerRelayMode = CommonUtils
+				.getEnumValueOrNull(WriterRelayMode.class,
+						props.get("writerRelayMode"), true, null);
+		modes.writerServiceMode = CommonUtils.getEnumValueOrNull(
+				WriterServiceMode.class, props.get("writerServiceMode"), true,
+				null);
 		return modes;
-		
+	}
+
+	public void shuttingDown() {
+		writerMode = WriterMode.READ_ONLY;
+		writerRelayMode = WriterRelayMode.REJECT;
+		writerServiceMode = WriterServiceMode.NOT_CONTROLLER;
 	}
 }

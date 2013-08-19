@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
@@ -16,10 +17,8 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.ServletLayerLocator;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.servlet.publication.FormatConverter.FormatConversionModel;
 import cc.alcina.framework.servlet.publication.PublicationPersistence.PublicationPersistenceLocator;
@@ -80,7 +79,7 @@ public class Publisher {
 	@SuppressWarnings("unchecked")
 	private PublicationResult publish0(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original) throws Exception {
-		ContentModelHandler cmh = (ContentModelHandler) ServletLayerRegistry
+		ContentModelHandler cmh = (ContentModelHandler) Registry
 				.get().instantiateSingle(ContentModelHandler.class,
 						contentDefinition.getClass());
 		cmh.prepareContent(contentDefinition, deliveryModel);
@@ -107,7 +106,7 @@ public class Publisher {
 		}
 		PublicationContent publicationContent = cmh.getPublicationContent();
 		ctx.publicationContent = publicationContent;
-		ContentRenderer crh = (ContentRenderer) ServletLayerRegistry.get()
+		ContentRenderer crh = (ContentRenderer) Registry.get()
 				.instantiateSingle(ContentRenderer.class,
 						publicationContent.getClass());
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
@@ -117,7 +116,7 @@ public class Publisher {
 			publicationPersister.persistContentRendererResults(
 					crh.getResults(), publicationId);
 		}
-		ContentWrapper cw = (ContentWrapper) ServletLayerRegistry.get()
+		ContentWrapper cw = (ContentWrapper) Registry.get()
 				.instantiateSingle(ContentWrapper.class,
 						publicationContent.getClass());
 		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
@@ -132,7 +131,7 @@ public class Publisher {
 			}
 			return result;
 		}
-		FormatConverter fc = (FormatConverter) ServletLayerRegistry.get()
+		FormatConverter fc = (FormatConverter) Registry.get()
 				.instantiateSingle(FormatConverter.class,
 						deliveryModel.provideTargetFormat().getClass());
 		FormatConversionModel fcm = new FormatConversionModel();
@@ -141,7 +140,7 @@ public class Publisher {
 		fcm.bytes = cw.wrappedBytes;
 		fcm.custom = cw.custom;
 		InputStream convertedContent = fc.convert(ctx, fcm);
-		ContentDelivery deliverer = (ContentDelivery) ServletLayerRegistry
+		ContentDelivery deliverer = (ContentDelivery) Registry
 				.get().instantiateSingle(ContentDeliveryType.class,
 						deliveryModel.provideContentDeliveryType().getClass());
 		String token = deliverer.deliver(ctx, convertedContent, deliveryModel,

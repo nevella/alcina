@@ -41,7 +41,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -1018,7 +1018,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						Arrays.asList((argv.length < 2 ? "" : argv[1])
 								.split(",")));
 				List<DevConsoleString> list = console.strings.list(tags);
-				LookupMapToMap<String> tableData = new LookupMapToMap<String>(2);
+				UnsortedMultikeyMap<String> tableData = new UnsortedMultikeyMap<String>(2);
 				int r = 0;
 				for (DevConsoleString s : list) {
 					tableData.put(r, 0, s.name);

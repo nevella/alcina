@@ -1,12 +1,10 @@
 package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.util.AbstractCollection;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;

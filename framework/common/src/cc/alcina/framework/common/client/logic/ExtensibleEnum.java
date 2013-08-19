@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 
 import com.totsp.gwittir.client.beans.Converter;
@@ -101,10 +101,10 @@ import com.totsp.gwittir.client.beans.Converter;
 public abstract class ExtensibleEnum {
 	private static Multimap<Class<? extends ExtensibleEnum>, List<ExtensibleEnum>> superLookup = new Multimap<Class<? extends ExtensibleEnum>, List<ExtensibleEnum>>();
 
-	private static LookupMapToMap<ExtensibleEnum> valueLookup = new LookupMapToMap<ExtensibleEnum>(
+	private static UnsortedMultikeyMap<ExtensibleEnum> valueLookup = new UnsortedMultikeyMap<ExtensibleEnum>(
 			2);
 	//class - tag - exenum instance - exenum instance
-	private static LookupMapToMap<ExtensibleEnum> tagLookup = new LookupMapToMap<ExtensibleEnum>(
+	private static UnsortedMultikeyMap<ExtensibleEnum> tagLookup = new UnsortedMultikeyMap<ExtensibleEnum>(
 			3);
 
 	private String key;

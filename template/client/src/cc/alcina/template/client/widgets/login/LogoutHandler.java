@@ -5,7 +5,6 @@ package cc.alcina.template.client.widgets.login;
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWithWidget;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsort;
 import cc.alcina.framework.gwt.client.widget.Link;

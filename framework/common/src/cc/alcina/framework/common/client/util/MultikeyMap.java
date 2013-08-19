@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.util;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 public interface MultikeyMap<V> extends Map {
 	public abstract List<V> allValues();

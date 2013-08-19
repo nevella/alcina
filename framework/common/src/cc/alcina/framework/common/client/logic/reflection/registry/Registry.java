@@ -14,15 +14,19 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
  * 
@@ -102,26 +106,26 @@ public class Registry {
 	}
 
 	// registrypoint/targetClass/impl/impl
-	protected LookupMapToMap<Class> registry;
+	protected UnsortedMultikeyMap<Class> registry;
 
 	// registrypoint/targetClass/priority
-	protected LookupMapToMap<Integer> targetPriority;
+	protected UnsortedMultikeyMap<Integer> targetPriority;
 
 	// registrypoint/targetClass/exact-match-class
-	protected LookupMapToMap<Class> exactMap;
+	protected UnsortedMultikeyMap<Class> exactMap;
 
 	// registrypoint/targetClass/impl-type
-	protected LookupMapToMap<ImplementationType> implementationTypeMap;
+	protected UnsortedMultikeyMap<ImplementationType> implementationTypeMap;
 
 	// registrypoint/targetClass/singleton
-	protected LookupMapToMap<Object> singletons;
+	protected UnsortedMultikeyMap<Object> singletons;
 
 	public Registry() {
-		registry = new LookupMapToMap<Class>(3);
-		targetPriority = new LookupMapToMap<Integer>(2);
-		singletons = new LookupMapToMap<Object>(2);
-		exactMap = new LookupMapToMap<Class>(2);
-		implementationTypeMap = new LookupMapToMap<ImplementationType>(2);
+		registry = new UnsortedMultikeyMap<Class>(3);
+		targetPriority = new UnsortedMultikeyMap<Integer>(2);
+		singletons = new UnsortedMultikeyMap<Object>(2);
+		exactMap = new UnsortedMultikeyMap<Class>(2);
+		implementationTypeMap = new UnsortedMultikeyMap<ImplementationType>(2);
 	}
 
 	public void shutdownSingletons() {
@@ -387,6 +391,25 @@ public class Registry {
 			registerSingleton(impl, clazz);
 		}
 		return impl;
+	}
+
+	public static Set<RegistryLocation> filterForRegistryPointUniqueness(
+			Collection annotations) {
+		UnsortedMultikeyMap<RegistryLocation> uniques = new UnsortedMultikeyMap<RegistryLocation>(2);
+		List<RegistryLocation> locs=new ArrayList<RegistryLocation>();
+		for(Object ann:annotations){
+			if(ann instanceof RegistryLocation){
+				locs.add((RegistryLocation) ann);
+			}else if (ann instanceof RegistryLocations){
+				locs.addAll(Arrays.asList(((RegistryLocations) ann).value()));
+			}
+		}
+		for (RegistryLocation loc : locs) {
+			if(!uniques.containsKey(loc.registryPoint(),loc.targetClass())){
+				uniques.put(loc.registryPoint(),loc.targetClass(),loc);
+			}
+		}
+		return new LinkedHashSet<RegistryLocation>(uniques.allValues());
 	}
 
 	public interface RegistryFactory<V> {

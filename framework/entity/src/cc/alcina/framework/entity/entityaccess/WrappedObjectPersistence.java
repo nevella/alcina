@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.entityaccess;
 
-import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;

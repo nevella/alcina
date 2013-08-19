@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner;
@@ -84,7 +84,7 @@ public class ClientReflectorJvm extends ClientReflector {
 					}
 					return c;
 				}
-			}.scan(classes, new ArrayList<String>(), Registry.get());
+			}.scan(classes, new ArrayList<String>(), Registry.get(),"client-reflector");
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -168,7 +168,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		return (A) annotationLookup.get(from, annotationClass.getName());
 	}
 
-	LookupMapToMap<Annotation> annotationLookup = new LookupMapToMap<Annotation>(
+	UnsortedMultikeyMap<Annotation> annotationLookup = new UnsortedMultikeyMap<Annotation>(
 			2);
 
 	public Class getClassForName(String fqn) {

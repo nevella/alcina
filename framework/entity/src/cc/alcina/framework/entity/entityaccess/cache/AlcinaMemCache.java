@@ -52,7 +52,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LookupMapToMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -83,7 +83,7 @@ public class AlcinaMemCache {
 
 	private Map<Class, List<PropertyDescriptor>> descriptors;
 
-	private LookupMapToMap<PropertyDescriptor> manyToOneRev;
+	private UnsortedMultikeyMap<PropertyDescriptor> manyToOneRev;
 
 	private Connection conn;
 
@@ -503,7 +503,7 @@ public class AlcinaMemCache {
 		cache = transformManager.getDetachedEntityCache();
 		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
 		descriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
-		manyToOneRev = new LookupMapToMap<PropertyDescriptor>(2);// class, pName
+		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);// class, pName
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		laterLookup = new LaterLookup();
 		// get non-many-many obj

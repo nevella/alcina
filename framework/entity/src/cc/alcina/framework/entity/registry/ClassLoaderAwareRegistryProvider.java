@@ -6,7 +6,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 
-public class ClassloaderAwareRegistryProvider implements RegistryProvider {
+public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	Map<ClassLoader, Registry> perClassLoader = new HashMap<ClassLoader, Registry>();
 
 	@Override

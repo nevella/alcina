@@ -918,7 +918,7 @@ public class CommonUtils {
 		return d;
 	}
 
-	private static LookupMapToMap<Enum> enumValueLookup = new LookupMapToMap<Enum>(
+	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(
 			2);
 
 	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,

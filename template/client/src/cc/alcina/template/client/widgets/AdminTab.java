@@ -35,7 +35,6 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
-import cc.alcina.template.client.AlcinaTemplateClient;
 import cc.alcina.template.cs.actions.search.DomainTransformRecordSearchAction;
 import cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants;
 import cc.alcina.template.cs.history.AlcinaTemplateHistoryTokens;

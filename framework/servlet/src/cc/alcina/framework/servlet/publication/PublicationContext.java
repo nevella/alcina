@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.PublicationContent;
@@ -17,7 +18,6 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
 
 public class PublicationContext {
 	public static final String CONTEXT_PUBLICATION_CONTEXT = PublicationContext.class
@@ -42,7 +42,7 @@ public class PublicationContext {
 		String xmlForm = "Unable to serialize publication request";
 		String modelString=xmlForm;
 		try {
-			Set<Class> jaxbClasses = new HashSet<Class>(ServletLayerRegistry
+			Set<Class> jaxbClasses = new HashSet<Class>(Registry
 					.get().lookup(JaxbContextRegistration.class));
 			xmlForm = String.format("Content definition:\n%s\n\n"
 					+ "Delivery model:\n%s", WrappedObjectHelper.xmlSerialize(

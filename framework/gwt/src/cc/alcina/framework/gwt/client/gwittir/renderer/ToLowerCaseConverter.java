@@ -2,9 +2,9 @@ package cc.alcina.framework.gwt.client.gwittir.renderer;
 
 import com.totsp.gwittir.client.beans.Converter;
 
-public class ToLowerCaseConverter implements Converter<String, String> {
+public class ToLowerCaseConverter implements Converter<Object, String> {
 	@Override
-	public String convert(String original) {
-		return original == null ? null : original.toLowerCase();
+	public String convert(Object original) {
+		return original == null ? null : original.toString().toLowerCase();
 	}
 }

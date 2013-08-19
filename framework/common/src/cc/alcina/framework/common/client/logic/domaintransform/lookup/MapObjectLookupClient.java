@@ -3,17 +3,12 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;

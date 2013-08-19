@@ -21,7 +21,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;

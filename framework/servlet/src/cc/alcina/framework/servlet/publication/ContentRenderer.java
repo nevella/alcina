@@ -18,13 +18,13 @@ import org.w3c.dom.Document;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XmlUtils.TransformerFactoryConfigurator;
 import cc.alcina.framework.entity.util.JaxbUtils;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
 
 /**
  * Base class for the content rendering stage of the publication pipeline.
@@ -55,7 +55,7 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 	protected RenderTransformWrapper wrapper;
 
 	protected void marshallToDoc() throws Exception {
-		Set<Class> jaxbClasses = new HashSet<Class>(ServletLayerRegistry.get()
+		Set<Class> jaxbClasses = new HashSet<Class>(Registry.get()
 				.lookup(JaxbContextRegistration.class));
 		// just in case - should be there from annotations
 		jaxbClasses.add(publicationContent.getClass());

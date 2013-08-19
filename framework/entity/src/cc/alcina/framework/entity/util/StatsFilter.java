@@ -19,7 +19,6 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;

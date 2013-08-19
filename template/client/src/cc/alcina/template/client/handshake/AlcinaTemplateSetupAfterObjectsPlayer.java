@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
-import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 import cc.alcina.framework.gwt.client.logic.DevCSSHelper;
 import cc.alcina.framework.gwt.client.logic.handshake.SetupAfterObjectsPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.localstorage.SaveToLocalStorageConsort;

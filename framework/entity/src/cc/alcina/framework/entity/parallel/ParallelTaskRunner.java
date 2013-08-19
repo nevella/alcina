@@ -14,8 +14,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 
-import com.totsp.gwittir.client.validator.ValidationException;
-
 public abstract class ParallelTaskRunner {
 	protected long threadId;
 

@@ -106,7 +106,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			EntityLayerLocator.get().jpaImplementation()
 					.muteClassloaderLogging(true);
 			new RegistryScanner().scan(ensureClassInfo(mainLogger),
-					new ArrayList<String>(), Registry.get());
+					new ArrayList<String>(), Registry.get(),"entity-layer");
 			Registry.get().registerBootstrapServices(
 					ObjectPersistenceHelper.get());
 		} catch (Exception e) {

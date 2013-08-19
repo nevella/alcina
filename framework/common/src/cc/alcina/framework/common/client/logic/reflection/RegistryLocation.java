@@ -31,23 +31,23 @@ import java.lang.annotation.Target;
  */
 public @interface RegistryLocation {
 	public static final int DEFAULT_PRIORITY = 10;
+
 	int MANUAL_PRIORITY = 50;
 
 	public enum ImplementationType {
 		// multiple implementation classes allowed
 		MULTIPLE,
 		// single implementation class allowed
-		INSTANCE, 
-		//registree is a factory, instantiate as a singleton
-		FACTORY, 
-		//registree is the impl, should be instantiated as a singleton
+		INSTANCE,
+		// registree is a factory, instantiate as a singleton
+		FACTORY,
+		// registree is the impl, should be instantiated as a singleton
 		SINGLETON
 	}
 
 	Class registryPoint();
 
 	Class targetClass() default void.class;
-
 
 	/**
 	 * Allows overriding of default registrees (higher values override)

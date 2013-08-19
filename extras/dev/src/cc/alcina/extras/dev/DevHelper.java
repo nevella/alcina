@@ -60,7 +60,6 @@ import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerLocator;
-import cc.alcina.framework.servlet.ServletLayerRegistry;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWTBridge;
@@ -179,7 +178,7 @@ public abstract class DevHelper {
 
 	public void initLightweightServices() {
 		initDataFolder();
-		ServletLayerRegistry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
+		Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
 		Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
 		scanRegistry();
 		initClientReflector();
@@ -237,9 +236,7 @@ public abstract class DevHelper {
 			Map<String, Date> classes = new ClasspathScanner("*", true, true)
 					.getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					ServletLayerRegistry.get());
-			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					Registry.get());
+					Registry.get(),"dev-helper");
 			long t2 = System.currentTimeMillis();
 			// System.out.println("Registry scan: " + (t2 - t1));
 		} catch (Exception e) {
