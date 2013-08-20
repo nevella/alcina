@@ -79,7 +79,7 @@ public class AlcinaMemCacheQuery {
 		return this.raw;
 	}
 
-	public synchronized <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
+	public  <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 		return AlcinaMemCache.get().list(clazz, this);
 	}
 

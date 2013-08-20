@@ -9,6 +9,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.permissions.IGroup;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
@@ -75,10 +77,10 @@ public class ServerTransformManagerSupport {
 					HasIdAndLocalId hiliTarget = (HasIdAndLocalId) pd
 							.getReadMethod().invoke(hili,
 									CommonUtils.EMPTY_OBJECT_ARRAY);
-					if (hiliTarget != null) {
+					if (hiliTarget != null&&!(hiliTarget instanceof IUser)&&!(hiliTarget instanceof IGroup)) {
 						TransformManager.get().registerDomainObject(hiliTarget);
+						pd.getWriteMethod().invoke(hili, new Object[] { null });
 					}
-					pd.getWriteMethod().invoke(hili, new Object[] { null });
 				}
 			}
 		} catch (Exception e) {

@@ -21,7 +21,7 @@ public abstract class CacheDescriptor {
 		/**
 		 * @return true if cached data was modified
 		 */
-		public ClassIdLock run(AlcinaMemCache alcinaMemCache, Class clazz,
+		public void run(AlcinaMemCache alcinaMemCache, Class clazz,
 				List<T> objects) throws Exception;
 	}
 

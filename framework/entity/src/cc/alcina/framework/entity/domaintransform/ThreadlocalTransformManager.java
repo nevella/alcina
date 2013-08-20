@@ -98,12 +98,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	};
 
-	protected void doCascadeDeletes(HasIdAndLocalId hili) {
-		if (getEntityManager() == null) {
-			new ServerTransformManagerSupport().removeParentAssociations(hili);
-			new ServerTransformManagerSupport().doCascadeDeletes(hili);
-		}
-		// client-only for the moment.
+	public static void addThreadLocalDomainTransformListener(
+			DomainTransformListener listener) {
+		threadLocalListeners.add(listener);
 	};
 
 	public static ThreadlocalTransformManager cast() {
@@ -115,6 +112,17 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	 */
 	public static ThreadlocalTransformManager get() {
 		return ThreadlocalTransformManager.cast();
+	}
+
+	public static void resetThreadTransformManager() {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_RESET_THREAD_TRANSFORM_MANAGER, Thread.currentThread());
+	}
+
+	public static void resetThreadTransformManagerListenerDelta(
+			TopicListener<Thread> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_RESET_THREAD_TRANSFORM_MANAGER, listener, add);
 	}
 
 	public static ThreadlocalTransformManager ttmInstance() {
@@ -129,11 +137,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	Set<HasIdAndLocalId> modifiedObjects = new HashSet<HasIdAndLocalId>();
 
 	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
-
-	public static void addThreadLocalDomainTransformListener(
-			DomainTransformListener listener) {
-		threadLocalListeners.add(listener);
-	}
 
 	List<DomainTransformEvent> modificationEvents = new ArrayList<DomainTransformEvent>();
 
@@ -150,6 +153,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	private Set<SourcesPropertyChangeEvents> listeningTo = new HashSet<SourcesPropertyChangeEvents>();
 
 	private DetachedEntityCache detachedEntityCache;
+
+	private Set<HasIdAndLocalId> deleted;
+
+	private HasIdAndLocalId ignorePropertyChangesTo;
+
+	DomainTransformEvent lastEvent = null;
 
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws Exception {
@@ -182,6 +191,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			result.add(itemResult);
 		}
 		return result;
+	}
+
+	@Override
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 
 	public boolean checkPropertyAccess(HasIdAndLocalId hili,
@@ -221,16 +236,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
-	private void maybeEnsureSource(DomainTransformEvent evt) {
-		if (WrapperPersistable.class.isAssignableFrom(evt.getObjectClass())) {
-			return;
-		}
-		if (evt.getSource() == null
-				|| !getEntityManager().contains(evt.getSource())) {
-			getObject(evt);
-		}
-	}
-
 	@Override
 	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
@@ -250,9 +255,16 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	// for the moment, just ignore double deletes.
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili,
 			boolean generateEventIfObjectNotFound) {
+		if (deleted.contains(hili)) {
+			RuntimeException ex = new  RuntimeException(String.format("Double deletion - %s %s",
+					new HiliLocator(hili), hili));
+			System.out.println(ex.getMessage());
+			ex.printStackTrace();
+			return null;
+		}
+		deleted.add(hili);
 		DomainTransformEvent event = super.deleteObject(hili,
 				generateEventIfObjectNotFound);
 		if (event != null) {
@@ -419,17 +431,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return null;
 	}
 
-	public void maybeListenToObjectWrapper(WrappedObject wrapper) {
-		EntityLayerTransformPropogation transformPropogation = Registry.impl(
-				EntityLayerTransformPropogation.class, void.class, true);
-		if (transformPropogation != null
-				&& transformPropogation.listenToWrappedObject(wrapper)) {
-			registerDomainObject((HasIdAndLocalId) wrapper);
-		}
-	}
-
-	private HasIdAndLocalId ignorePropertyChangesTo;
-
 	public Class getPropertyType(Class clazz, String propertyName) {
 		return ObjectPersistenceHelper.get().getPropertyType(clazz,
 				propertyName);
@@ -471,6 +472,15 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	 */
 	public boolean isUseObjectCreationId() {
 		return useObjectCreationId;
+	}
+
+	public void maybeListenToObjectWrapper(WrappedObject wrapper) {
+		EntityLayerTransformPropogation transformPropogation = Registry.impl(
+				EntityLayerTransformPropogation.class, void.class, true);
+		if (transformPropogation != null
+				&& transformPropogation.listenToWrappedObject(wrapper)) {
+			registerDomainObject((HasIdAndLocalId) wrapper);
+		}
 	}
 
 	public <T> T newInstance(Class<T> clazz) {
@@ -522,8 +532,22 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
-	protected void removeAssociations(HasIdAndLocalId hili) {
-		new ServerTransformManagerSupport().removeAssociations(hili);
+	public synchronized void propertyChange(PropertyChangeEvent evt) {
+		if (evt.getSource() == ignorePropertyChangesTo) {
+			return;
+		}
+		if (isIgnorePropertyChanges()
+				|| UNSPECIFIC_PROPERTY_CHANGE.equals(evt.getPropertyName())) {
+			return;
+		}
+		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
+		convertToTargetObject(dte);
+		if (lastEvent != null && lastEvent.equivalentTo(dte)) {
+			// hibernate manipulations can cause a bunch of theses
+			return;
+		}
+		lastEvent = dte;
+		super.propertyChange(evt);
 	}
 
 	public void reconstituteHiliMap() {
@@ -586,6 +610,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		modifiedObjects = new HashSet<HasIdAndLocalId>();
 		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
+		deleted = new LinkedHashSet<HasIdAndLocalId>();
 		this.lastEvent = null;
 		for (SourcesPropertyChangeEvents spce : listeningTo) {
 			spce.removePropertyChangeListener(this);
@@ -605,17 +630,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
-	public static void resetThreadTransformManager() {
-		GlobalTopicPublisher.get().publishTopic(
-				TOPIC_RESET_THREAD_TRANSFORM_MANAGER, Thread.currentThread());
-	}
-
-	public static void resetThreadTransformManagerListenerDelta(
-			TopicListener<Thread> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_RESET_THREAD_TRANSFORM_MANAGER, listener, add);
-	}
-
 	public void setClientInstance(ClientInstance clientInstance) {
 		this.clientInstance = clientInstance;
 	}
@@ -629,6 +643,14 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		// entityManager);
 		// Thread.dumpStack();
 		this.entityManager = entityManager;
+	}
+
+	public void setIgnorePropertyChangesTo(DomainTransformEvent event) {
+		this.ignorePropertyChangesTo = null;
+		if (event != null
+				&& event.getTransformType() != TransformType.CREATE_OBJECT) {
+			this.ignorePropertyChangesTo = getObject(event);
+		}
 	}
 
 	public void setListenToFoundObjects(boolean registerFoundObjects) {
@@ -748,6 +770,16 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		spce.addPropertyChangeListener(this);
 	}
 
+	private void maybeEnsureSource(DomainTransformEvent evt) {
+		if (WrapperPersistable.class.isAssignableFrom(evt.getObjectClass())) {
+			return;
+		}
+		if (evt.getSource() == null
+				|| !getEntityManager().contains(evt.getSource())) {
+			getObject(evt);
+		}
+	}
+
 	@Override
 	protected boolean checkPermissions(HasIdAndLocalId hili,
 			DomainTransformEvent evt, String propertyName, Object change) {
@@ -832,19 +864,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
-	@Override
-	protected void doubleCheckRemoval(Collection collection, Object tgt) {
-		JPAImplementation jpaImplementation = EntityLayerLocator.get()
-				.jpaImplementation();
-		tgt = jpaImplementation.getInstantiatedObject(tgt);
-		for (Iterator itr = collection.iterator(); itr.hasNext();) {
-			Object next = itr.next();
-			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,
-					tgt)) {
-				itr.remove();
-				break;
-			}
+	protected void doCascadeDeletes(HasIdAndLocalId hili) {
+		if (getEntityManager() == null) {
+			new ServerTransformManagerSupport().removeParentAssociations(hili);
+			new ServerTransformManagerSupport().doCascadeDeletes(hili);
 		}
+		// client-only for the moment.
 	}
 
 	@Override
@@ -860,6 +885,21 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			}
 		}
 		collection.add(tgt);
+	}
+
+	@Override
+	protected void doubleCheckRemoval(Collection collection, Object tgt) {
+		JPAImplementation jpaImplementation = EntityLayerLocator.get()
+				.jpaImplementation();
+		tgt = jpaImplementation.getInstantiatedObject(tgt);
+		for (Iterator itr = collection.iterator(); itr.hasNext();) {
+			Object next = itr.next();
+			if (jpaImplementation.areEquivalentIgnoreInstantiationState(next,
+					tgt)) {
+				itr.remove();
+				break;
+			}
+		}
 	}
 
 	@Override
@@ -891,6 +931,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		if (addToResults) {
 			modificationEvents.add(evt);
 		}
+	}
+
+	@Override
+	protected void removeAssociations(HasIdAndLocalId hili) {
+		new ServerTransformManagerSupport().removeAssociations(hili);
 	}
 
 	@Override
@@ -966,40 +1011,5 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		public ThreadlocalTransformManager create() {
 			return new ThreadlocalTransformManager();
 		}
-	}
-
-	DomainTransformEvent lastEvent = null;
-
-	@Override
-	public synchronized void propertyChange(PropertyChangeEvent evt) {
-		if (evt.getSource() == ignorePropertyChangesTo) {
-			return;
-		}
-		if (isIgnorePropertyChanges()
-				|| UNSPECIFIC_PROPERTY_CHANGE.equals(evt.getPropertyName())) {
-			return;
-		}
-		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
-		convertToTargetObject(dte);
-		if (lastEvent != null && lastEvent.equivalentTo(dte)) {
-			// hibernate manipulations can cause a bunch of theses
-			return;
-		}
-		lastEvent = dte;
-		super.propertyChange(evt);
-	}
-
-	public void setIgnorePropertyChangesTo(DomainTransformEvent event) {
-		this.ignorePropertyChangesTo = null;
-		if (event != null
-				&& event.getTransformType() != TransformType.CREATE_OBJECT) {
-			this.ignorePropertyChangesTo = getObject(event);
-		}
-	}
-
-	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
 	}
 }

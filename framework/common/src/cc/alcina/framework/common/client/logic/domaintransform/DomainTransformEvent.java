@@ -37,8 +37,6 @@ public class DomainTransformEvent implements Serializable,
 
 	private transient Object newValue;
 
-	private transient Object oldValue;
-
 	private transient Object source;
 
 	private transient Class objectClass;
@@ -153,11 +151,6 @@ public class DomainTransformEvent implements Serializable,
 
 	public Integer getObjectVersionNumber() {
 		return objectVersionNumber;
-	}
-
-	@Transient
-	public Object getOldValue() {
-		return this.oldValue;
 	}
 
 	public String getPropertyName() {
@@ -301,10 +294,6 @@ public class DomainTransformEvent implements Serializable,
 
 	public void setObjectVersionNumber(Integer objectVersionNumber) {
 		this.objectVersionNumber = objectVersionNumber;
-	}
-
-	public void setOldValue(Object oldValue) {
-		this.oldValue = oldValue;
 	}
 
 	public void setPropertyName(String propertyName) {

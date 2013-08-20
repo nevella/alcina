@@ -227,21 +227,30 @@ public abstract class TransformManager implements PropertyChangeListener,
 			throws DomainTransformException {
 		currentEvent = event;
 		HasIdAndLocalId obj = null;
-		if (event.getTransformType() != TransformType.CREATE_OBJECT) {
+		TransformType transformType = event.getTransformType();
+		if (transformType != TransformType.CREATE_OBJECT) {
 			obj = getObject(event);
 			if (obj == null) {
 				throw new DomainTransformException(event,
 						DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
 			}
 		}
-		Object tgt = (event.getTransformType() == TransformType.NULL_PROPERTY_REF) ? null
-				: getTargetObject(event, false);
-		if (!checkPermissions(obj, event, event.getPropertyName(), tgt)) {
+		Object existingTargetValue = event.getSource() == null
+				|| event.getPropertyName() == null ? null : propertyAccessor()
+				.getPropertyValue(event.getSource(), event.getPropertyName());
+		Object newTargetValue = transformType == null ? null : getTargetObject(
+				event, false);
+		if (!checkPermissions(obj, event, event.getPropertyName(),
+				existingTargetValue)) {
+			return;
+		}
+		if (!checkPermissions(obj, event, event.getPropertyName(),
+				newTargetValue)) {
 			return;
 		}
 		getUndoManager().prepareUndo(event);
 		checkVersion(obj, event);
-		switch (event.getTransformType()) {
+		switch (transformType) {
 		// these cases will fire a new transform event (temp obj > domain obj),
 		// so should not be processed further
 		case NULL_PROPERTY_REF:
@@ -254,7 +263,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				return;
 			}
 			propertyAccessor().setPropertyValue(obj, event.getPropertyName(),
-					tgt);
+					newTargetValue);
 			String pn = event.getPropertyName();
 			if (pn.equals(TransformManager.ID_FIELD_NAME)
 					|| pn.equals(TransformManager.LOCAL_ID_FIELD_NAME)) {
@@ -265,15 +274,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 				removeTransform(event);
 			}
 			objectModified(obj, event, false);
-			switch (event.getTransformType()) {
+			switch (transformType) {
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF:
-				if (event.getOldValue() != null
-						&& event.getOldValue() instanceof HasIdAndLocalId) {
-					updateAssociation(event, obj,
-							(HasIdAndLocalId) event.getOldValue(), true, true);
-				}
-				updateAssociation(event, obj, tgt, false, true);
+				updateAssociation(event, obj, existingTargetValue, true, true);
+				updateAssociation(event, obj, newTargetValue, false, true);
 				break;
 			}
 			break;
@@ -282,24 +287,24 @@ public abstract class TransformManager implements PropertyChangeListener,
 		case ADD_REF_TO_COLLECTION: {
 			Set set = (Set) propertyAccessor().getPropertyValue(obj,
 					event.getPropertyName());
-			if (!set.contains(tgt)) {
-				doubleCheckAddition(set, tgt);
+			if (!set.contains(newTargetValue)) {
+				doubleCheckAddition(set, newTargetValue);
 			}
 			objectModified(obj, event, false);
-			updateAssociation(event, obj, tgt, false, true);
-			collectionChanged(obj, tgt);
+			updateAssociation(event, obj, newTargetValue, false, true);
+			collectionChanged(obj, newTargetValue);
 		}
 			break;
 		case REMOVE_REF_FROM_COLLECTION: {
 			Set set = (Set) propertyAccessor().getPropertyValue(obj,
 					event.getPropertyName());
-			boolean wasContained = set.remove(tgt);
+			boolean wasContained = set.remove(newTargetValue);
 			if (!wasContained) {
-				doubleCheckRemoval(set, tgt);
+				doubleCheckRemoval(set, newTargetValue);
 			}
 		}
-			updateAssociation(event, obj, tgt, true, true);
-			collectionChanged(obj, tgt);
+			updateAssociation(event, obj, newTargetValue, true, true);
+			collectionChanged(obj, newTargetValue);
 			break;
 		case DELETE_OBJECT:
 			performDeleteObject((HasIdAndLocalId) obj);
@@ -336,8 +341,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 			break;
 		default:
-			assert false : "Transform type not implemented: "
-					+ event.getTransformType();
+			assert false : "Transform type not implemented: " + transformType;
 		}
 		currentEvent = null;
 	}
@@ -406,7 +410,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			PropertyChangeEvent evt) {
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setSource(evt.getSource());
-		dte.setOldValue(evt.getOldValue());
 		dte.setNewValue(evt.getNewValue());
 		dte.setPropertyName(evt.getPropertyName());
 		HasIdAndLocalId dObj = (HasIdAndLocalId) evt.getSource();

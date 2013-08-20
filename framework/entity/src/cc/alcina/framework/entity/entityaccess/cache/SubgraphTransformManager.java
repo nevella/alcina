@@ -121,4 +121,8 @@ public class SubgraphTransformManager extends TransformManager {
 			}
 		}
 	}
+
+	public DetachedCacheObjectStore getStore() {
+		return this.store;
+	}
 }

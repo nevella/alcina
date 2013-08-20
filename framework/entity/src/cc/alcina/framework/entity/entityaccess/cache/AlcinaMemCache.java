@@ -52,19 +52,19 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
@@ -172,10 +172,12 @@ public class AlcinaMemCache {
 	 */
 	volatile Object writeLockSubLock = null;
 
-	private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+	private ReentrantReadWriteLock mainLock = new ReentrantReadWriteLock(true);
 
 	private ReentrantReadWriteLock subgraphLock = new ReentrantReadWriteLock(
 			true);
+
+	private BackupLazyLoader backupLazyLoader;
 
 	private AlcinaMemCache() {
 		super();
@@ -299,17 +301,17 @@ public class AlcinaMemCache {
 
 	public void loadTable(Class clazz, String sqlFilter, ClassIdLock sublock)
 			throws Exception {
+		if (sublock != null) {
+			sublock(sublock, true);
+		}
 		try {
-			if (sublock == null) {
-				lock(true);
-				loadTable0(clazz, sqlFilter);
-			} else {
-				sublock(sublock, true);
-				loadTable0(clazz, sqlFilter);
+			loadTable0(clazz, sqlFilter);
+			if (sublock != null) {
+				resolveRefs();
 			}
 		} finally {
-			if (sublock == null) {
-				unlock(true);
+			if (sublock != null) {
+				sublock(sublock, false);
 			}
 		}
 	}
@@ -323,14 +325,9 @@ public class AlcinaMemCache {
 	}
 
 	public void resolveRefs() {
-		try {
-			lock(true);
-			MetricLogging.get().start("resolve");
-			laterLookup.resolve();
-			MetricLogging.get().end("resolve", metricLogger);
-		} finally {
-			unlock(true);
-		}
+		MetricLogging.get().start("resolve");
+		laterLookup.resolve();
+		MetricLogging.get().end("resolve", metricLogger);
 	}
 
 	public void setConn(Connection conn) {
@@ -349,6 +346,10 @@ public class AlcinaMemCache {
 	}
 
 	public void sublock(Object sublock, boolean lock) {
+		if (mainLock.writeLock().isHeldByCurrentThread()) {
+			maybeLogLock("no-sublock (writer thread)", lock);
+			return;
+		}
 		if (lock) {
 			subgraphLock.writeLock().lock();
 			writeLockSubLock = sublock;
@@ -527,7 +528,7 @@ public class AlcinaMemCache {
 	private void lock(boolean write) {
 		try {
 			if (write) {
-				int readHoldCount = lock.getReadHoldCount();
+				int readHoldCount = mainLock.getReadHoldCount();
 				if (readHoldCount > 0) {
 					if (subgraphLock.isWriteLockedByCurrentThread()) {
 						sublock(writeLockSubLock, true);
@@ -537,9 +538,9 @@ public class AlcinaMemCache {
 							"Trying to acquire write lock from read-locked thread");
 				}
 				subgraphLock.readLock().lock();
-				lock.writeLock().lock();
+				mainLock.writeLock().lock();
 			} else {
-				lock.readLock().lock();
+				mainLock.readLock().lock();
 			}
 		} catch (RuntimeException e) {
 			e.printStackTrace();
@@ -555,8 +556,8 @@ public class AlcinaMemCache {
 			Thread t = Thread.currentThread();
 			String log = CommonUtils.formatJ("\tid:%s\n\treadHoldCount:"
 					+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
-					t.getId(), lock.getReadHoldCount(),
-					lock.getWriteHoldCount(), subgraphLock);
+					t.getId(), mainLock.getReadHoldCount(),
+					mainLock.getWriteHoldCount(), subgraphLock);
 			StackTraceElement[] trace = t.getStackTrace();
 			for (int i = 2; i < trace.length && i < 8; i++) {
 				log += trace[i] + "\n";
@@ -628,16 +629,6 @@ public class AlcinaMemCache {
 		}
 	}
 
-	private HasIdAndLocalId resolveObject(DomainTransformEvent dte) {
-		if (dte.getSource() != null
-				&& dte.getSource().getClass() == dte.getObjectClass()
-				&& ((HasIdAndLocalId) dte.getSource()).getId() == dte
-						.getObjectId()) {
-			return (HasIdAndLocalId) dte.getSource();
-		}
-		return transformManager.getObject(dte);
-	}
-
 	private Date timestampToDate(Date date) {
 		if (date instanceof Timestamp) {
 			return new Date(((Timestamp) date).getTime());
@@ -648,10 +639,10 @@ public class AlcinaMemCache {
 	private void unlock(boolean write) {
 		try {
 			if (write) {
-				if (lock.writeLock().isHeldByCurrentThread()) {
+				if (mainLock.writeLock().isHeldByCurrentThread()) {
 					// if not held, we had an exception acquiring the
 					// lock...ignore
-					lock.writeLock().unlock();
+					mainLock.writeLock().unlock();
 					subgraphLock.readLock().unlock();
 				} else {
 					if (subgraphLock.isWriteLockedByCurrentThread()) {
@@ -660,7 +651,7 @@ public class AlcinaMemCache {
 					}
 				}
 			} else {
-				lock.readLock().unlock();
+				mainLock.readLock().unlock();
 			}
 		} catch (RuntimeException e) {
 			e.printStackTrace();
@@ -694,9 +685,30 @@ public class AlcinaMemCache {
 				.getSource()).getVersionNumber());
 	}
 
+	class BackupLazyLoader implements LazyObjectLoader {
+		@Override
+		public <T extends HasIdAndLocalId> void loadObject(
+				Class<? extends T> c, long id, long localId) {
+			try {
+				CacheItemDescriptor itemDescriptor = cacheDescriptor.perClass
+						.get(c);
+				if (itemDescriptor.lazy && id != 0) {
+					ClassIdLock lock = LockUtils.obtainClassIdLock(c, id);
+					System.out.format("Backup lazy load: %s - %s\n",
+							c.getSimpleName(), id);
+					loadTable(c, "id=" + id, lock);
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	private void warmup0() throws Exception {
 		transformManager = new SubgraphTransformManager();
+		backupLazyLoader = new BackupLazyLoader();
 		cache = transformManager.getDetachedEntityCache();
+		transformManager.getStore().setLazyObjectLoader(backupLazyLoader);
 		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
 		descriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
 		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);// class,
@@ -714,6 +726,7 @@ public class AlcinaMemCache {
 			}
 		}
 		// get non-many-many obj
+		lock(true);
 		MetricLogging.get().start("tables");
 		for (CacheItemDescriptor descriptor : cacheDescriptor.perClass.values()) {
 			Class clazz = descriptor.clazz;
@@ -731,11 +744,11 @@ public class AlcinaMemCache {
 		MetricLogging.get().start("xrefs");
 		resolveRefs();
 		MetricLogging.get().end("xrefs");
+		unlock(true);
 		MetricLogging.get().start("postLoad");
 		for (CacheTask task : cacheDescriptor.postLoadTasks) {
 			MetricLogging.get().start(task.getClass().getSimpleName());
 			task.run(this);
-			resolveRefs();
 			MetricLogging.get().end(task.getClass().getSimpleName(),
 					metricLogger);
 		}
@@ -778,11 +791,7 @@ public class AlcinaMemCache {
 			}
 			try {
 				for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
-					Object lock = task.run(this, clazz, raw);
-					if (lock != null) {
-						resolveRefs();
-						sublock(lock, false);
-					}
+					task.run(this, clazz, raw);
 				}
 				if (query.isRaw()) {
 					return raw;
@@ -806,6 +815,12 @@ public class AlcinaMemCache {
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(dtes);
 			Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
 					.multimap(filtered, new DteToLocatorMapper());
+			Map<HiliLocator, HasIdAndLocalId> locatorOriginalSourceMap = new LinkedHashMap<ThreadlocalTransformManager.HiliLocator, HasIdAndLocalId>();
+			for (DomainTransformEvent dte : filtered) {
+				HiliLocator locator = HiliLocator.fromDte(dte);
+				locatorOriginalSourceMap.put(locator,
+						(HasIdAndLocalId) dte.getSource());
+			}
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
 			for (DomainTransformEvent dte : filtered) {
 				dte.setNewValue(null);// force a lookup from the subgraph
@@ -826,7 +841,7 @@ public class AlcinaMemCache {
 				transformManager.consume(dte);
 				if (dte.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == dte) {
-					HasIdAndLocalId dbObj = resolveObject(dte);
+					HasIdAndLocalId dbObj = locatorOriginalSourceMap.get(dte);
 					HasIdAndLocalId memCacheObj = transformManager
 							.getObject(dte);
 					if (dbObj instanceof HasVersionNumber) {
@@ -1281,7 +1296,7 @@ public class AlcinaMemCache {
 			// that add em by default. fix them first
 			// TODO - memcache
 			if (key.equals("fire")
-					&& !lock.isWriteLockedByCurrentThread()
+					&& !mainLock.isWriteLockedByCurrentThread()
 					&& (subgraphLock == null || !subgraphLock
 							.isWriteLockedByCurrentThread())) {
 				throw new MemcacheException(
