@@ -11,6 +11,9 @@ public abstract class CacheDescriptor {
 	Map<Class, CacheItemDescriptor> perClass = new LinkedHashMap<Class, CacheItemDescriptor>();
 
 	public static interface CacheTask {
+		/**
+		 * @return the lock object, if any
+		 */
 		public void run(AlcinaMemCache alcinaMemCache) throws Exception;
 	}
 
@@ -18,7 +21,7 @@ public abstract class CacheDescriptor {
 		/**
 		 * @return true if cached data was modified
 		 */
-		public boolean run(AlcinaMemCache alcinaMemCache, Class clazz,
+		public ClassIdLock run(AlcinaMemCache alcinaMemCache, Class clazz,
 				List<T> objects) throws Exception;
 	}
 

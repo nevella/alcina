@@ -58,9 +58,4 @@ public class ControlServletModes {
 		return modes;
 	}
 
-	public void shuttingDown() {
-		writerMode = WriterMode.READ_ONLY;
-		writerRelayMode = WriterRelayMode.REJECT;
-		writerServiceMode = WriterServiceMode.NOT_CONTROLLER;
-	}
 }

@@ -21,7 +21,6 @@ public class AppLifecycleManager implements RegistrableService {
 
 	private ControlServletModes targetModes = new ControlServletModes();
 
-
 	private String clusterRoleConfigFilePath;
 
 	public AppLifecycleManager() {
@@ -32,7 +31,7 @@ public class AppLifecycleManager implements RegistrableService {
 	}
 
 	public void earlyShutdown() {
-		getState().getModes().shuttingDown();
+		targetModes = new ControlServletModes();
 		refreshWriterServices();
 	}
 

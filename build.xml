@@ -164,6 +164,7 @@
 				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
+		<!--
 		<mkdir dir="${extras.tasks.dist.dir}"/>
 		<jar destfile="${extras.tasks.dist.dir}/${ant.project.name}-cluster-tasks.jar">
 			<fileset dir="${extras.cluster.tasks.build.dir}">
@@ -174,6 +175,7 @@
 				<exclude name="**/*.class" />
 			</fileset>
 		</jar>
+		-->
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-jvmclient.jar">
 			<fileset dir="${framework.jvmclient.build.dir}">
 				<include name="**/*.*" />
