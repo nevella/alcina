@@ -211,6 +211,8 @@ public class JobRegistry {
 
 	public void jobCompleteFromThread() {
 		JobInfo info = getTopLevelInfoForThread();
-		info.setCompleteInThread(true);
+		if (info != null) {
+			info.setCompleteInThread(true);
+		}
 	}
 }
