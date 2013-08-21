@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
+import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
@@ -79,11 +79,11 @@ public abstract class CommonRpcServlet extends RpcServlet {
 			Method method;
 			method = this.getClass().getMethod(name,
 					rpcRequest.getMethod().getParameterTypes());
-			if (method.isAnnotationPresent(AuthenticationRequired.class)) {
-				AuthenticationRequired ar = method
-						.getAnnotation(AuthenticationRequired.class);
+			if (method.isAnnotationPresent(WebMethod.class)) {
+				WebMethod ar = method
+						.getAnnotation(WebMethod.class);
 				AnnotatedPermissible ap = new AnnotatedPermissible(
-						ar.permission());
+						ar.customPermission());
 				if (!PermissionsManager.get().isPermissible(ap)) {
 					getServletContext().log("Action not permitted: " + name,
 							new Exception());

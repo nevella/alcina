@@ -2,6 +2,8 @@ package cc.alcina.framework.servlet.servlet.control;
 
 import java.util.List;
 
+import com.google.gwt.user.server.rpc.RPCRequest;
+
 import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -11,17 +13,20 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
+import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.ControlServletHandlers.ModeEnum;
 
 @RegistryLocation(registryPoint = AppLifecycleManager.class, implementationType = ImplementationType.SINGLETON)
 public class AppLifecycleManager implements RegistrableService {
 	private AppLifecycleServletBase lifecycleServlet;
 
-	private ControlServletState state = new ControlServletState();
+	private ControlServletState state = ControlServletState.standaloneModes();
 
 	private ControlServletModes targetModes = new ControlServletModes();
 
 	private String clusterRoleConfigFilePath;
+
+	private boolean clusterMember;
 
 	public AppLifecycleManager() {
 	}
@@ -36,7 +41,7 @@ public class AppLifecycleManager implements RegistrableService {
 	}
 
 	public void ensureMemcacheUpdated() {
-		// TODO - jctlå
+		// TODO - jctl
 	}
 
 	public String getClusterRoleConfigFilePath() {
@@ -108,5 +113,25 @@ public class AppLifecycleManager implements RegistrableService {
 
 	public ControlServletModes getTargetModes() {
 		return this.targetModes;
+	}
+
+	public String proxy(RPCRequest rpcRequest,
+			CommonRemoteServiceServlet remoteServlet) {
+		return new AppWriterProxy().proxy(this, rpcRequest, remoteServlet);
+	}
+
+	public boolean canWriteOrRelay() {
+		return state.getModes().getWriterRelayMode() != WriterRelayMode.REJECT;
+	}
+
+	public void setClusterMember(boolean clusterMember) {
+		this.clusterMember = clusterMember;
+		if (clusterMember) {
+			setState(ControlServletState.memberModes());
+		}
+	}
+
+	public boolean isClusterMember() {
+		return this.clusterMember;
 	}
 }

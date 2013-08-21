@@ -17,7 +17,7 @@ package cc.alcina.framework.common.client.actions;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
+import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 
 
@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * @author nick@alcina.cc
  * 
  */
-@AuthenticationRequired(permission = @Permission(access = AccessLevel.ADMIN))
+@WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
 public class RemoteAction extends PermissibleAction implements Serializable {
 	public RemoteAction() {
 	}

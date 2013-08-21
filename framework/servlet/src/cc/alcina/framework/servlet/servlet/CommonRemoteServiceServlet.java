@@ -66,7 +66,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadR
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
+import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -152,6 +152,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
+	@WebMethod(readonlyPermitted=true)
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws WebException {
 		try {
@@ -169,7 +170,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		looseContextDepth = LooseContext.depth();
 		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
 	}
-
+	@WebMethod(readonlyPermitted=true)
 	public <T extends HasIdAndLocalId> T getItemById(String className, Long id)
 			throws WebException {
 		try {
@@ -181,10 +182,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	public Logger getLogger() {
+	protected Logger getLogger() {
 		return logger;
 	}
-
+	@WebMethod(readonlyPermitted=true)
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
@@ -192,17 +193,18 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.getCommonPersistence()
 				.listLogItemsForClass(action.getClass().getName(), count);
 	}
-
+	@WebMethod(readonlyPermitted=true)
 	public List<Long> listRunningJobs() {
 		return JobRegistry.get().getRunningJobs();
 	}
-
+	@WebMethod(readonlyPermitted=true)
 	public Long logClientError(String exceptionToString) {
 		return logClientError(exceptionToString,
 				LogMessageType.CLIENT_EXCEPTION.toString());
 	}
-
+	@WebMethod(readonlyPermitted=true)
 	public Long logClientError(String exceptionToString, String exceptionType) {
+		
 		return ServletLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().log(exceptionToString, exceptionType);
 	}
@@ -529,20 +531,21 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			try {
 				method = this.getClass().getMethod(name,
 						rpcRequest.getMethod().getParameterTypes());
-				if (method.isAnnotationPresent(AuthenticationRequired.class)) {
-					AuthenticationRequired ar = method
-							.getAnnotation(AuthenticationRequired.class);
-					AnnotatedPermissible ap = new AnnotatedPermissible(
-							ar.permission());
-					if (!PermissionsManager.get().isPermissible(ap)) {
-						getServletContext().log(
-								"Action not permitted: " + name,
-								new Exception());
-						return RPC.encodeResponseForFailure(null,
-								new WebException("Action not permitted: "
-										+ name));
+				if (method.isAnnotationPresent(WebMethod.class)) {
+					WebMethod webMethod = method.getAnnotation(WebMethod.class);
+					if (webMethod.checkAccessPermissions()) {
+						AnnotatedPermissible ap = new AnnotatedPermissible(
+								webMethod.customPermission());
+						if (!PermissionsManager.get().isPermissible(ap)) {
+							getServletContext().log(
+									"Action not permitted: " + name,
+									new Exception());
+							return RPC.encodeResponseForFailure(null,
+									new WebException("Action not permitted: "
+											+ name));
+						}
 					}
-					if (!ar.readonlyPermitted()) {
+					if (!webMethod.readonlyPermitted()) {
 						AppPersistenceBase.checkNotReadOnly();
 					}
 				}
@@ -551,9 +554,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			} catch (NoSuchMethodException ex) {
 				RPC.encodeResponseForFailure(null, ex);
 			}
-			return RPC.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
-					rpcRequest.getParameters(),
-					rpcRequest.getSerializationPolicy());
+			return invokeAndEncodeResponse(rpcRequest);
 		} catch (IncompatibleRemoteServiceException ex) {
 			getServletContext()
 					.log("An IncompatibleRemoteServiceException was thrown while processing this call.",
@@ -568,6 +569,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 		}
+	}
+
+	protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
+			throws SerializationException {
+		return RPC
+				.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
+						rpcRequest.getParameters(),
+						rpcRequest.getSerializationPolicy());
 	}
 
 	protected void onAfterAlcinaAuthentication(String methodName) {
@@ -616,8 +625,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, map,
-					Registry.impl(TransformLoggingPolicy.class),
+					request, map, Registry.impl(TransformLoggingPolicy.class),
 					false, false, false, getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
@@ -630,8 +638,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {
-			Class clazz = Registry.get().lookupSingle(
-					ServerValidator.class, validator.getClass());
+			Class clazz = Registry.get().lookupSingle(ServerValidator.class,
+					validator.getClass());
 			ServerValidatorHandler handler = null;
 			if (ServerValidatorHandler.class.isAssignableFrom(clazz)) {
 				handler = (ServerValidatorHandler) Registry.get()
@@ -665,11 +673,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected void checkAnnotatedPermissions(Object o) {
-		AuthenticationRequired ara = o.getClass().getAnnotation(
-				AuthenticationRequired.class);
+		WebMethod ara = o.getClass().getAnnotation(WebMethod.class);
 		if (ara != null) {
 			if (!PermissionsManager.get().isPermissible(
-					new AnnotatedPermissible(ara.permission()))) {
+					new AnnotatedPermissible(ara.customPermission()))) {
 				WrappedRuntimeException e = new WrappedRuntimeException(
 						"Permission denied for action " + o,
 						SuggestedAction.NOTIFY_WARNING);
@@ -728,9 +735,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, locatorMap,
-					Registry.impl(TransformLoggingPolicy.class),
-					true, ignoreClientAuthMismatch, forOfflineTransforms,
-					getLogger());
+					Registry.impl(TransformLoggingPolicy.class), true,
+					ignoreClientAuthMismatch, forOfflineTransforms, getLogger());
 			return submitAndHandleTransforms(persistenceToken);
 		}
 	}
@@ -861,6 +867,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
+	@WebMethod(readonlyPermitted=true)
 	public void dumpData(String data) {
 		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
 				"dumpPermitted")) {

@@ -34,7 +34,4 @@ public class AuthenticatedWebMethod extends PermissibleAction {
 		return "AuthenticatedWebMethod";
 	}
 
-	public  List<Vetoer> getDefaultVetoers() {
-		return Arrays.asList(new Vetoer[] { PermissionsManager.get() });
-	}
 }

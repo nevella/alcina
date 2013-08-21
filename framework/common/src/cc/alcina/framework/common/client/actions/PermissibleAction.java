@@ -122,9 +122,6 @@ public class PermissibleAction implements Permissible {
 			return this.delegate.getCssClassName();
 		}
 
-		public List<Vetoer> getDefaultVetoers() {
-			return this.delegate.getDefaultVetoers();
-		}
 
 		public AccessLevel accessLevel() {
 			return this.delegate.accessLevel();

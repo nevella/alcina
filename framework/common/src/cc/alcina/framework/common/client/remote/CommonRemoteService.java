@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
-import cc.alcina.framework.common.client.logic.permissions.AuthenticationRequired;
+import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
@@ -43,7 +43,7 @@ public interface CommonRemoteService extends RemoteService {
 
 	public LoginResponse hello();
 
-	@AuthenticationRequired()
+	@WebMethod()
 	public List<Long> listRunningJobs();
 
 	public Long logClientError(String exceptionToString);
@@ -65,10 +65,10 @@ public interface CommonRemoteService extends RemoteService {
 	public PartialDtrUploadResponse uploadOfflineTransforms(
 			PartialDtrUploadRequest request) throws WebException;
 
-	@AuthenticationRequired()
+	@WebMethod()
 	public JobInfo pollJobStatus(Long id, boolean cancel);
 
-	@AuthenticationRequired
+	@WebMethod
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformException, DomainTransformRequestException;
 
@@ -76,9 +76,9 @@ public interface CommonRemoteService extends RemoteService {
 			List<ServerValidator> validators) throws WebException;
 
 	// for dumping dbs
-	@AuthenticationRequired
+	@WebMethod
 	public void dumpData(String data);
 
-	@AuthenticationRequired
+	@WebMethod
 	public String loadData(String key);
 }

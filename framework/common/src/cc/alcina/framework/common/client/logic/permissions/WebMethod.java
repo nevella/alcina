@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.permissions;
 
 import java.lang.annotation.Retention;
@@ -25,8 +24,10 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  *
  * @author Nick Reddel
  */
+public @interface WebMethod {
+	boolean checkAccessPermissions() default true;
 
- public @interface AuthenticationRequired {
-	Permission permission() default @Permission(access=AccessLevel.LOGGED_IN);
-	boolean readonlyPermitted() default true;
+	Permission customPermission() default @Permission(access = AccessLevel.LOGGED_IN);
+
+	boolean readonlyPermitted() default false;
 }

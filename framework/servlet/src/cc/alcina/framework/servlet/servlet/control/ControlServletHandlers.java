@@ -5,6 +5,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToLowerCaseConverter;
 
 public class ControlServletHandlers {
@@ -46,11 +47,15 @@ public class ControlServletHandlers {
 		public void handleDeltas(T[] fromStates, T[] toState) {
 			for (T from : fromStates) {
 				for (T to : toState) {
-					if (from != to) {
+					if (from != to || checkNonDeltas()) {
 						handleDelta(from, to);
 					}
 				}
 			}
+		}
+
+		protected boolean checkNonDeltas() {
+			return false;
 		}
 
 		public void handleDelta(T fromState, T toState) {
@@ -85,6 +90,14 @@ public class ControlServletHandlers {
 
 		@Override
 		public void handleDelta0(WriterMode fromState, WriterMode toState) {
+			AppPersistenceBase
+					.setInstanceReadOnly(toState == WriterMode.READ_ONLY);
+		}
+
+		@Override
+		//check at init - probably fixme with some type of null->active check
+		protected boolean checkNonDeltas() {
+			return true;
 		}
 
 		@Override

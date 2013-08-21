@@ -43,8 +43,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	public static final String PERSISTENCE_TEST = AppPersistenceBase.class
 			.getName() + ".PERSISTENCE_TEST";
 
-	public static final String READ_ONLY = AppPersistenceBase.class.getName()
-			+ ".READ_ONLY";
+	public static final String INSTANCE_READ_ONLY = AppPersistenceBase.class.getName()
+			+ ".INSTANCE_READ_ONLY";
 
 	public static boolean isTest() {
 		return Boolean.getBoolean(PERSISTENCE_TEST);
@@ -54,17 +54,17 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		System.setProperty(PERSISTENCE_TEST, String.valueOf(true));
 	}
 
-	public static boolean isReadOnly() {
-		return Boolean.getBoolean(READ_ONLY);
+	public static boolean isInstanceReadOnly() {
+		return Boolean.getBoolean(INSTANCE_READ_ONLY);
 	}
 
-	public static void setReadOnly(boolean readonly) {
-		System.setProperty(READ_ONLY, String.valueOf(readonly));
+	public static void setInstanceReadOnly(boolean readonly) {
+		System.setProperty(INSTANCE_READ_ONLY, String.valueOf(readonly));
 	}
 
 	public static void checkNotReadOnly() throws ReadOnlyException {
-		if (isReadOnly()) {
-			throw new ReadOnlyException(System.getProperty(READ_ONLY));
+		if (isInstanceReadOnly()) {
+			throw new ReadOnlyException(System.getProperty(INSTANCE_READ_ONLY));
 		}
 	}
 

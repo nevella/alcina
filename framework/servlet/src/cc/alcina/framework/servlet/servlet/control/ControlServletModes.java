@@ -58,4 +58,16 @@ public class ControlServletModes {
 		return modes;
 	}
 
+	public static ControlServletModes standaloneModes() {
+		ControlServletModes modes = new ControlServletModes();
+		modes.setWriterMode(WriterMode.CLUSTER_WRITER);
+		modes.setWriterRelayMode(WriterRelayMode.WRITE);
+		modes.setWriterServiceMode(WriterServiceMode.CONTROLLER);
+		return modes;
+	}
+
+	public static ControlServletModes memberModes() {
+		return new ControlServletModes();
+	}
+
 }

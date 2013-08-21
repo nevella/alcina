@@ -64,4 +64,16 @@ public class ControlServletState {
 				CommonUtils.nullSafeToString(apiKey),
 				CommonUtils.nullSafeToString(modes));
 	}
+
+	public static ControlServletState standaloneModes() {
+		ControlServletState state = new ControlServletState();
+		state.setModes(ControlServletModes.standaloneModes());
+		return state;
+	}
+
+	public static ControlServletState memberModes() {
+		ControlServletState state = new ControlServletState();
+		state.setModes(ControlServletModes.memberModes());
+		return state;
+	}
 }
