@@ -841,7 +841,8 @@ public class AlcinaMemCache {
 				transformManager.consume(dte);
 				if (dte.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == dte) {
-					HasIdAndLocalId dbObj = locatorOriginalSourceMap.get(dte);
+					HasIdAndLocalId dbObj = locatorOriginalSourceMap
+							.get(HiliLocator.fromDte(dte));
 					HasIdAndLocalId memCacheObj = transformManager
 							.getObject(dte);
 					if (dbObj instanceof HasVersionNumber) {
