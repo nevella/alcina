@@ -114,12 +114,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return ThreadlocalTransformManager.cast();
 	}
 
-	public static void resetThreadTransformManager() {
-		GlobalTopicPublisher.get().publishTopic(
+	public static void threadTransformManagerWasReset() {
+ 		GlobalTopicPublisher.get().publishTopic(
 				TOPIC_RESET_THREAD_TRANSFORM_MANAGER, Thread.currentThread());
 	}
 
-	public static void resetThreadTransformManagerListenerDelta(
+	public static void threadTransformManagerWasResetListenerDelta(
 			TopicListener<Thread> listener, boolean add) {
 		GlobalTopicPublisher.get().listenerDelta(
 				TOPIC_RESET_THREAD_TRANSFORM_MANAGER, listener, add);
@@ -159,6 +159,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	private HasIdAndLocalId ignorePropertyChangesTo;
 
 	DomainTransformEvent lastEvent = null;
+	
+	private boolean initialised=false;
 
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws Exception {
@@ -627,6 +629,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		addDomainTransformListener(new ServerTransformListener());
 		for (DomainTransformListener listener : threadLocalListeners) {
 			addDomainTransformListener(listener);
+		}
+		if(initialised){
+		threadTransformManagerWasReset();
+		}else{
+			initialised=true;
 		}
 	}
 

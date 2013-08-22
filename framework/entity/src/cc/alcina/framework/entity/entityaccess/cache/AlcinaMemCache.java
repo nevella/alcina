@@ -194,7 +194,7 @@ public class AlcinaMemCache {
 
 	private AlcinaMemCache() {
 		super();
-		ThreadlocalTransformManager.resetThreadTransformManagerListenerDelta(
+		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
 				resetListener, true);
 		TransformPersister.persistingTransformsListenerDelta(
 				persistingListener, true);
@@ -953,7 +953,7 @@ public class AlcinaMemCache {
 		public void transactionFinished() {
 			PerThreadTransaction transaction = transactions.get();
 			if (transaction != null) {
-				transactions.get().end();
+				transaction.end();
 				transactions.remove();
 				transactionCount--;
 			}

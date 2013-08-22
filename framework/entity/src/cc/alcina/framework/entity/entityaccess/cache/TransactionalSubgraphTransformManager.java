@@ -33,7 +33,7 @@ public class TransactionalSubgraphTransformManager extends
 					.getObject(c, id, localId);
 			T newInstance = projectNonTransactional(nonTransactional);
 			registerDomainObject(newInstance);
-			TransformManager.get().registerDomainObject(newInstance);
+			threadTm.registerDomainObject(newInstance);
 			return newInstance;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -98,7 +98,7 @@ public class TransactionalSubgraphTransformManager extends
 		if (event.getTransformType() == TransformType.CREATE_OBJECT) {
 			// if an object is newly created (by the tltm), it won't be in the
 			// memcache graph - so use it, don't create a new one
-			registerDomainObject(TransformManager.get().getObject(event));
+			registerDomainObject(threadTm.getObject(event));
 			return;
 		}
 		if (event.getSource() != null) {

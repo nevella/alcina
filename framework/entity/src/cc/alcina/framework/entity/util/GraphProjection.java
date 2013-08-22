@@ -497,20 +497,23 @@ public class GraphProjection {
 				Set<Field> perObjectPermissionFields, Class forClass) {
 			try {
 				Class<?> type = field.getType();
+				Class<?> checkType = field.getType();
 				if (!GraphProjection.isPrimitiveOrDataClass(type)) {
 					if (Collection.class.isAssignableFrom(type)) {
+						checkType = null;
 						Type pt = GraphProjection.getGenericType(field);
 						if (pt instanceof ParameterizedType) {
 							Type genericType = ((ParameterizedType) pt)
 									.getActualTypeArguments()[0];
 							if (genericType instanceof Class) {
-								type = (Class) genericType;
-								Boolean result = permitClass(type);
-								if (result != null
-										&& result.booleanValue() == false) {
-									return false;
-								}
+								checkType = (Class) genericType;
 							}
+						}
+					}
+					if (checkType != null) {
+						Boolean result = permitClass(checkType);
+						if (result != null && result.booleanValue() == false) {
+							return false;
 						}
 					}
 				}
