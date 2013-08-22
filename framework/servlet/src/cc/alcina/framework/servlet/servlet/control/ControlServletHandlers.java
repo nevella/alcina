@@ -142,7 +142,7 @@ public class ControlServletHandlers {
 					service.startup();
 				}
 				System.out
-						.format("%s -> %s",
+						.format("%s -> %s\n",
 								service.getClass().getSimpleName(),
 								toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
 										: "startup");
