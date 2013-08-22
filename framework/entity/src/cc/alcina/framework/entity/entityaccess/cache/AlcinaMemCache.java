@@ -76,6 +76,17 @@ import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.util.GraphProjection;
 
+/**
+ * <h3>Locking notes:</h3>
+ * <p>
+ * main lock (post-process) - normal lock sublock - basically go from read
+ * (possibly write::main) to write (subgraph) - so we know we'll have a main
+ * lock
+ * </p>
+ * 
+ * @author nick@alcina.cc
+ * 
+ */
 public class AlcinaMemCache {
 	public static final String TOPIC_UPDATE_EXCEPTION = AlcinaMemCache.class
 			.getName() + ".TOPIC_UPDATE_EXCEPTION";
@@ -178,6 +189,8 @@ public class AlcinaMemCache {
 			true);
 
 	private BackupLazyLoader backupLazyLoader;
+
+	private boolean initialising;
 
 	private AlcinaMemCache() {
 		super();
@@ -305,8 +318,13 @@ public class AlcinaMemCache {
 			sublock(sublock, true);
 		}
 		try {
-			loadTable0(clazz, sqlFilter);
+			List<HasIdAndLocalId> loaded = loadTable0(clazz, sqlFilter, sublock);
 			if (sublock != null) {
+				if (!initialising) {
+					for (HasIdAndLocalId hili : loaded) {
+						index(hili, true);
+					}
+				}
 				resolveRefs();
 			}
 		} finally {
@@ -358,7 +376,7 @@ public class AlcinaMemCache {
 				subgraphLock.writeLock().unlock();
 				sublock = null;
 			} else {
-				//should not be possible
+				// should not be possible
 				throw new RuntimeException(String.format(
 						"releasing incorrect writer sublock: %s %s", sublock,
 						writeLockSubLock));
@@ -366,7 +384,6 @@ public class AlcinaMemCache {
 		}
 		maybeLogLock("sublock", lock);
 	}
-	
 
 	private void addColumnName(Class clazz, PropertyDescriptor pd,
 			Class propertyType) {
@@ -501,11 +518,16 @@ public class AlcinaMemCache {
 		}
 	}
 
-	private void loadTable0(Class clazz, String sqlFilter) throws Exception {
+	private List<HasIdAndLocalId> loadTable0(Class clazz, String sqlFilter,
+			ClassIdLock sublock) throws Exception {
 		Iterable<Object[]> results = getData(clazz, sqlFilter);
 		List<PropertyDescriptor> pds = descriptors.get(clazz);
+		List<HasIdAndLocalId> loaded = new ArrayList<HasIdAndLocalId>();
 		for (Object[] objects : results) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
+			if (sublock != null) {
+				loaded.add(hili);
+			}
 			ensureModificationChecker(hili);
 			for (int i = 0; i < objects.length; i++) {
 				PropertyDescriptor pd = pds.get(i);
@@ -523,6 +545,7 @@ public class AlcinaMemCache {
 			}
 			cache.put(hili);
 		}
+		return loaded;
 	}
 
 	private void lock(boolean write) {
@@ -694,6 +717,7 @@ public class AlcinaMemCache {
 	}
 
 	private void warmup0() throws Exception {
+		initialising = true;
 		transformManager = new SubgraphTransformManager();
 		backupLazyLoader = new BackupLazyLoader();
 		cache = transformManager.getDetachedEntityCache();
@@ -759,6 +783,7 @@ public class AlcinaMemCache {
 				}
 			}
 		}
+		initialising = false;
 		MetricLogging.get().end("lookups");
 	}
 
