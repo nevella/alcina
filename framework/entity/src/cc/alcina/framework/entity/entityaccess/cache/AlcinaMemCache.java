@@ -798,6 +798,7 @@ public class AlcinaMemCache {
 	void postProcess(DomainTransformRequestPersistenceEvent persistenceEvent,
 			TransformPersistenceToken persistenceToken) {
 		try {
+			MetricLogging.get().start("post-process");
 			lock(true);
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
@@ -849,6 +850,7 @@ public class AlcinaMemCache {
 			throw new MemcacheException(e);
 		} finally {
 			unlock(true);
+			MetricLogging.get().end("post-process");
 		}
 	}
 
