@@ -95,7 +95,7 @@ public class ControlServletHandlers {
 		}
 
 		@Override
-		//check at init - probably fixme with some type of null->active check
+		// check at init - probably fixme with some type of null->active check
 		protected boolean checkNonDeltas() {
 			return true;
 		}
@@ -141,6 +141,11 @@ public class ControlServletHandlers {
 				} else {
 					service.startup();
 				}
+				System.out
+						.format("%s -> %s",
+								service.getClass().getSimpleName(),
+								toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
+										: "startup");
 			}
 		}
 

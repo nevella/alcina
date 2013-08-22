@@ -71,6 +71,7 @@ public class AppLifecycleManager implements RegistrableService {
 
 	public void refreshProperties() {
 		lifecycleServlet.refreshProperties();
+		refreshWriterServices();
 	}
 
 	public void refreshWriterServices() {
