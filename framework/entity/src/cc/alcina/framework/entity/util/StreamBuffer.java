@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import cc.alcina.framework.common.client.util.Callback;
+
 public class StreamBuffer extends Thread {
 	InputStream is;
 
@@ -12,13 +14,15 @@ public class StreamBuffer extends Thread {
 
 	StringBuilder buf = new StringBuilder();
 
+	Callback<String> outputCallback;
+
 	public StreamBuffer(InputStream is, String type) {
-		this(is, type, true);
+		this(is, new TabbedSysoutCallback(type));
 	}
 
-	public StreamBuffer(InputStream is, String type, boolean sysout) {
+	public StreamBuffer(InputStream is, Callback<String> outputCallback) {
 		this.is = is;
-		this.type = type;
+		this.outputCallback = outputCallback;
 	}
 
 	boolean closed = false;
@@ -33,7 +37,7 @@ public class StreamBuffer extends Thread {
 					buf.append("\n");
 				}
 				buf.append(line);
-				System.out.println((type.isEmpty() ? "" : (type + ">")) + line);
+				outputCallback.apply(line);
 			}
 			closed = true;
 			notifyAll();

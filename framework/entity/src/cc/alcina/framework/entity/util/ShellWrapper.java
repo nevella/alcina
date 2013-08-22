@@ -7,11 +7,12 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class ShellWrapper {
-	public String ERROR_MARKER = "**";
+	public String ERROR_MARKER = "**>";
 
 	public String OUTPUT_MARKER = "";
 
@@ -22,7 +23,6 @@ public class ShellWrapper {
 	private Process proc;
 
 	protected boolean timedOut;
-	
 
 	public void runBashScript(String script) throws Exception {
 		File tmp = File.createTempFile("shell", ".sh");
@@ -32,19 +32,27 @@ public class ShellWrapper {
 
 	public ShellOutputTuple runProcessCatchOutputAndWait(String... cmdAndArgs)
 			throws Exception {
-		return runProcessCatchOutputAndWait(cmdAndArgs, true);
+		return runProcessCatchOutputAndWaitPrompt("", cmdAndArgs);
+	}
+
+	public ShellOutputTuple runProcessCatchOutputAndWaitPrompt(String prompt,
+			String... cmdAndArgs) throws Exception {
+		return runProcessCatchOutputAndWait(cmdAndArgs,
+				new TabbedSysoutCallback(prompt + OUTPUT_MARKER),
+				new TabbedSysoutCallback(prompt + ERROR_MARKER));
 	}
 
 	public ShellOutputTuple runProcessCatchOutputAndWait(String[] cmdAndArgs,
-			boolean sysout) throws Exception {
+			Callback<String> outputCallback, Callback<String> errorCallback)
+			throws Exception {
 		System.out.format("launching process: %s\n",
 				CommonUtils.join(cmdAndArgs, " "));
 		ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
 		proc = pb.start();
 		StreamBuffer errorGobbler = new StreamBuffer(proc.getErrorStream(),
-				ERROR_MARKER, sysout);
+				errorCallback);
 		StreamBuffer outputGobbler = new StreamBuffer(proc.getInputStream(),
-				OUTPUT_MARKER, sysout);
+				outputCallback);
 		errorGobbler.start();
 		outputGobbler.start();
 		if (timeoutMs != 0) {
@@ -53,7 +61,7 @@ public class ShellWrapper {
 				@Override
 				public void run() {
 					System.out.println("Killing process (timeout)");
-					timedOut=true;
+					timedOut = true;
 					proc.destroy();
 				}
 			};
@@ -66,7 +74,7 @@ public class ShellWrapper {
 			timer.cancel();
 		}
 		return new ShellOutputTuple(outputGobbler.getStreamResult(),
-				errorGobbler.getStreamResult(),timedOut);
+				errorGobbler.getStreamResult(), timedOut, proc.exitValue());
 	}
 
 	public ShellOutputTuple runShell(String argString) throws Exception {
@@ -79,20 +87,28 @@ public class ShellWrapper {
 		args.add(shellCmd);
 		args.addAll(Arrays.asList(argString.split(" ")));
 		String[] argv = (String[]) args.toArray(new String[args.size()]);
-		return runProcessCatchOutputAndWait(argv, true);
+		return runProcessCatchOutputAndWait(argv);
 	}
 
 	public static class ShellOutputTuple {
 		public String output;
 
 		public String error;
-		
+
 		public boolean timedOut;
 
-		public ShellOutputTuple(String output, String error, boolean timedOut) {
+		private int exitValue;
+
+		public ShellOutputTuple(String output, String error, boolean timedOut,
+				int exitValue) {
 			this.output = output;
 			this.error = error;
 			this.timedOut = timedOut;
+			this.exitValue = exitValue;
+		}
+
+		public boolean failed() {
+			return exitValue != 0;
 		}
 	}
 }
