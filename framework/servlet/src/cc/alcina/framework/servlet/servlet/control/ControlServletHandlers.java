@@ -137,9 +137,17 @@ public class ControlServletHandlers {
 					WriterService.class, Void.class);
 			for (WriterService service : services) {
 				if (toState == WriterServiceMode.NOT_CONTROLLER) {
-					service.shutdown();
+					try {
+						service.shutdown();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				} else {
-					service.startup();
+					try {
+						service.startup();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 				System.out
 						.format("%s -> %s\n",
