@@ -49,7 +49,7 @@ public class DtrSimpleAdminPersistenceHandler implements
 			ex.printStackTrace();
 			item.setShortDescription("Failed");
 			logger.warn(ex);
-			JobRegistry.get().jobError(jobInfo, ex.toString());
+			JobRegistry.get().jobError(jobInfo, ex);
 		}
 		long t2 = System.currentTimeMillis();
 		long avgTime = (docsImported != 0) ? (t2 - t1) / docsImported : 0;

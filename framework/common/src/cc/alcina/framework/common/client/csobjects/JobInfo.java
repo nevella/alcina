@@ -40,8 +40,10 @@ public class JobInfo implements Serializable, Cloneable {
 	private boolean complete;
 
 	private String errorMessage;
-	
+
 	private boolean completeInThread;
+
+	private transient Exception jobException;
 
 	public JobInfo combineWithChild(JobInfo kid) {
 		JobInfo combo = gClone();
@@ -149,5 +151,13 @@ public class JobInfo implements Serializable, Cloneable {
 
 	public void setCompleteInThread(boolean completeInThread) {
 		this.completeInThread = completeInThread;
+	}
+
+	public Exception getJobException() {
+		return this.jobException;
+	}
+
+	public void setJobException(Exception jobException) {
+		this.jobException = jobException;
 	}
 }

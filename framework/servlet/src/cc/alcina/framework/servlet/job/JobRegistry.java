@@ -23,6 +23,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import cc.alcina.framework.common.client.actions.ActionLogItem;
+import cc.alcina.framework.common.client.actions.RemoteAction;
+import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
+import cc.alcina.framework.common.client.csobjects.HasJobInfo;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -123,13 +127,18 @@ public class JobRegistry {
 		jobComplete(info, "Job complete");
 	}
 
-	public void jobError(JobInfo info, String errorMessage) {
+	public void jobError(JobInfo info, Exception ex) {
 		if (info == null) {
 			return;
 		}
 		jobComplete(info);
-		info.setErrorMessage("Job failed: " + errorMessage);
+		info.setErrorMessage("Job failed: " + ex.toString());
 		JobRegistry.get().updateInfo(info);
+		info.setJobException(ex);
+	}
+
+	public void jobError(JobInfo info, String message) {
+		jobError(info, new RuntimeException(message));
 	}
 
 	public boolean isCancelled() {
@@ -214,5 +223,18 @@ public class JobRegistry {
 		if (info != null) {
 			info.setCompleteInThread(true);
 		}
+	}
+
+	public ActionLogItem performChildJob(RemoteActionPerformer performer,
+			RemoteAction action, boolean throwChildExceptions) throws Exception {
+		ActionLogItem log = performer.performAction(action);
+		if (performer instanceof HasJobInfo) {
+			Exception ex = ((HasJobInfo) performer).getJobInfo()
+					.getJobException();
+			if (ex != null && throwChildExceptions) {
+				throw ex;
+			}
+		}
+		return log;
 	}
 }

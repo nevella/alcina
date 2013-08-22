@@ -345,28 +345,31 @@ public class AlcinaMemCache {
 		}
 	}
 
+	/**
+	 * Given sublock-guarded code should be able to be run concurrently (as long
+	 * as the sublock objects are different), will rework this
+	 */
 	public void sublock(Object sublock, boolean lock) {
 		if (mainLock.writeLock().isHeldByCurrentThread()) {
-			maybeLogLock("no-sublock (writer thread)", lock);
-			return;
+			throw new RuntimeException("sublock while holding main lock");
 		}
 		if (lock) {
 			subgraphLock.writeLock().lock();
 			writeLockSubLock = sublock;
 		} else {
-			if (sublock != null) {
-				if (sublock == writeLockSubLock) {
-					subgraphLock.writeLock().unlock();
-					sublock = null;
-				} else {
-					throw new RuntimeException(String.format(
-							"releasing incorrect writer sublock: %s %s",
-							sublock, writeLockSubLock));
-				}
+			if (sublock == writeLockSubLock) {
+				subgraphLock.writeLock().unlock();
+				sublock = null;
+			} else {
+				//should not be possible
+				throw new RuntimeException(String.format(
+						"releasing incorrect writer sublock: %s %s", sublock,
+						writeLockSubLock));
 			}
 		}
 		maybeLogLock("sublock", lock);
 	}
+	
 
 	private void addColumnName(Class clazz, PropertyDescriptor pd,
 			Class propertyType) {
@@ -530,14 +533,9 @@ public class AlcinaMemCache {
 			if (write) {
 				int readHoldCount = mainLock.getReadHoldCount();
 				if (readHoldCount > 0) {
-					if (subgraphLock.isWriteLockedByCurrentThread()) {
-						sublock(writeLockSubLock, true);
-						return;
-					}
 					throw new RuntimeException(
 							"Trying to acquire write lock from read-locked thread");
 				}
-				subgraphLock.readLock().lock();
 				mainLock.writeLock().lock();
 			} else {
 				mainLock.readLock().lock();
@@ -643,12 +641,6 @@ public class AlcinaMemCache {
 					// if not held, we had an exception acquiring the
 					// lock...ignore
 					mainLock.writeLock().unlock();
-					subgraphLock.readLock().unlock();
-				} else {
-					if (subgraphLock.isWriteLockedByCurrentThread()) {
-						sublock(writeLockSubLock, false);
-						return;
-					}
 				}
 			} else {
 				mainLock.readLock().unlock();
