@@ -350,9 +350,6 @@ public class AlcinaMemCache {
 	 * as the sublock objects are different), will rework this
 	 */
 	public void sublock(Object sublock, boolean lock) {
-		if (mainLock.writeLock().isHeldByCurrentThread()) {
-			throw new RuntimeException("sublock while holding main lock");
-		}
 		if (lock) {
 			subgraphLock.writeLock().lock();
 			writeLockSubLock = sublock;
