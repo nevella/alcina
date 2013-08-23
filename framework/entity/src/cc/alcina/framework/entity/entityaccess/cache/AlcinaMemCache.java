@@ -48,6 +48,7 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -895,6 +896,12 @@ public class AlcinaMemCache {
 		public PerThreadTransaction ensureTransaction() {
 			PerThreadTransaction transaction = transactions.get();
 			if (transaction == null) {
+				int pendingTransformCount = TransformManager.get()
+						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
+				if(pendingTransformCount!=0){
+					throw new RuntimeException("Starting a memcache transaction with existing transforms." +
+							" In certain cases that might work -- but better practice to not do so");
+				}
 				transaction = Registry.impl(PerThreadTransaction.class);
 				transactions.set(transaction);
 				transaction.start();

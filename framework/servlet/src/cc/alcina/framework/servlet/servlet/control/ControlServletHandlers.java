@@ -2,7 +2,8 @@ package cc.alcina.framework.servlet.servlet.control;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.log.TaggedLogger;
+import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
@@ -135,12 +136,14 @@ public class ControlServletHandlers {
 				WriterServiceMode toState) {
 			List<WriterService> services = Registry.singletons(
 					WriterService.class, Void.class);
+			TaggedLogger logger = Registry.impl(TaggedLoggers.class).getLogger(
+					ControlServlet.class);
 			for (WriterService service : services) {
-				System.out
-				.format("%s -> %s\n",
-						service.getClass().getSimpleName(),
-						toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
-								: "startup");
+				logger.log(String
+						.format("%s -> %s\n",
+								service.getClass().getSimpleName(),
+								toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
+										: "startup"));
 				if (toState == WriterServiceMode.NOT_CONTROLLER) {
 					try {
 						service.shutdown();
@@ -154,11 +157,11 @@ public class ControlServletHandlers {
 						e.printStackTrace();
 					}
 				}
-				System.out
+				logger.log(String
 						.format("%s -> %s [Complete]\n",
 								service.getClass().getSimpleName(),
 								toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
-										: "startup");
+										: "startup"));
 			}
 		}
 
