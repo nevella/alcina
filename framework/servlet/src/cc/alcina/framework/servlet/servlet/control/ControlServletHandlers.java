@@ -136,6 +136,11 @@ public class ControlServletHandlers {
 			List<WriterService> services = Registry.singletons(
 					WriterService.class, Void.class);
 			for (WriterService service : services) {
+				System.out
+				.format("%s -> %s\n",
+						service.getClass().getSimpleName(),
+						toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
+								: "startup");
 				if (toState == WriterServiceMode.NOT_CONTROLLER) {
 					try {
 						service.shutdown();
@@ -150,7 +155,7 @@ public class ControlServletHandlers {
 					}
 				}
 				System.out
-						.format("%s -> %s\n",
+						.format("%s -> %s [Complete]\n",
 								service.getClass().getSimpleName(),
 								toState == WriterServiceMode.NOT_CONTROLLER ? "shutdown"
 										: "startup");
