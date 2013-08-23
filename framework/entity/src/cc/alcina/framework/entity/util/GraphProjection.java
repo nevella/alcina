@@ -496,6 +496,9 @@ public class GraphProjection {
 		public boolean permitField(Field field,
 				Set<Field> perObjectPermissionFields, Class forClass) {
 			try {
+				if(field.getName().contains("secondaryGroups")){
+					int j=3;
+				}
 				Class<?> type = field.getType();
 				Class<?> checkType = field.getType();
 				if (!GraphProjection.isPrimitiveOrDataClass(type)) {
@@ -518,7 +521,7 @@ public class GraphProjection {
 					}
 				}
 				PropertyPermissions pp = getPropertyPermission(field);
-				Boolean permit = permit(type, pp == null ? null : pp.read());
+				Boolean permit = permit(forClass, pp == null ? null : pp.read());
 				if (permit == null) {
 					perObjectPermissionFields.add(field);
 					return true;
