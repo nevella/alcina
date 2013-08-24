@@ -5,22 +5,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class CountingMap<K> extends LinkedHashMap<K, Integer> {
-	public void add(K key) {
-		if (!containsKey(key)) {
-			put(key, 1);
-		} else {
-			put(key, get(key) + 1);
-		}
+	public int add(K key) {
+		return add(key, 1);
 	}
-	public void add(K key,int i) {
-		if (!containsKey(key)) {
-			put(key, i);
-		} else {
-			put(key, get(key) + i);
+
+	public int add(K key, int i) {
+		int nextValue = i;
+		if (containsKey(key)) {
+			nextValue = get(key) + i;
 		}
+		put(key, nextValue);
+		return nextValue;
 	}
+
 	public int countFor(K key) {
 		if (!containsKey(key)) {
 			return 0;
@@ -44,13 +42,15 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		}
 		return max;
 	}
-	public int sum(){
-		int result=0;
-		for(Integer v:values()){
-			result+=v;
+
+	public int sum() {
+		int result = 0;
+		for (Integer v : values()) {
+			result += v;
 		}
 		return result;
 	}
+
 	public SortedMultimap<Integer, List<K>> reverseMap(boolean descending) {
 		SortedMultimap<Integer, List<K>> result = descending ? new SortedMultimap<Integer, List<K>>(
 				Collections.reverseOrder())
@@ -60,7 +60,8 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		}
 		return result;
 	}
-	public LinkedHashMap<K,Integer> toLinkedHashMap(boolean descending){
+
+	public LinkedHashMap<K, Integer> toLinkedHashMap(boolean descending) {
 		SortedMultimap<Integer, List<K>> m = reverseMap(descending);
 		List<K> allItems = m.allItems();
 		LinkedHashMap<K, Integer> result = new LinkedHashMap<K, Integer>();
@@ -69,15 +70,17 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		}
 		return result;
 	}
-	public void addMultimap(Multimap<K,List> mm){
-		for (Map.Entry<K, List> entry :  mm.entrySet()) {
-			add(entry.getKey(),entry.getValue().size());
+
+	public void addMultimap(Multimap<K, List> mm) {
+		for (Map.Entry<K, List> entry : mm.entrySet()) {
+			add(entry.getKey(), entry.getValue().size());
 		}
 	}
+
 	public CountingMap() {
 	}
-	public CountingMap(Multimap<K,List> mm) {
+
+	public CountingMap(Multimap<K, List> mm) {
 		addMultimap(mm);
 	}
-	
 }

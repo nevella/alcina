@@ -1,7 +1,12 @@
 package cc.alcina.framework.gwt.client.util;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import java.util.ArrayList;
+import java.util.List;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.IntPair;
+
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
@@ -13,6 +18,11 @@ import com.google.gwt.user.client.ui.RootPanel;
 public class TextUtils {
 	public static String normaliseAndTrim(String text) {
 		return TextUtilsImpl.normalise(text).trim();
+	}
+	
+	public static List<IntPair> match(String text,String regex) {
+		return TextUtilsImpl.match(text,regex);
+		
 	}
 
 	public static boolean isWhitespaceOrEmpty(String text) {

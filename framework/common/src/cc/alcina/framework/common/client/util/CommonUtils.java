@@ -425,7 +425,7 @@ public class CommonUtils {
 		StringBuilder sb = new StringBuilder();
 		for (Object obj : objects) {
 			String app = obj == null ? "null" : obj.toString();
-			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)) {
+			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)&&separator!=null) {
 				sb.append(separator);
 			}
 			sb.append(app);
