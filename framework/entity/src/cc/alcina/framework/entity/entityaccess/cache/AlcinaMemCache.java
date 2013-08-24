@@ -195,8 +195,9 @@ public class AlcinaMemCache {
 
 	private AlcinaMemCache() {
 		super();
-		ThreadlocalTransformManager.threadTransformManagerWasResetListenerDelta(
-				resetListener, true);
+		ThreadlocalTransformManager
+				.threadTransformManagerWasResetListenerDelta(resetListener,
+						true);
 		TransformPersister.persistingTransformsListenerDelta(
 				persistingListener, true);
 		persistenceListener = new MemCachePersistenceListener();
@@ -896,11 +897,18 @@ public class AlcinaMemCache {
 		public PerThreadTransaction ensureTransaction() {
 			PerThreadTransaction transaction = transactions.get();
 			if (transaction == null) {
-				int pendingTransformCount = TransformManager.get()
-						.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
-				if(pendingTransformCount!=0){
-					throw new RuntimeException("Starting a memcache transaction with existing transforms." +
-							" In certain cases that might work -- but better practice to not do so");
+				LinkedHashSet<DomainTransformEvent> localTransforms = TransformManager
+						.get().getTransformsByCommitType(
+								CommitType.TO_LOCAL_BEAN);
+				int pendingTransformCount = localTransforms.size();
+				if (pendingTransformCount != 0) {
+					for (DomainTransformEvent dte : localTransforms) {
+						if(cacheDescriptor.perClass.keySet().contains(dte.getObjectClass())){
+						throw new RuntimeException(
+								String.format("Starting a memcache transaction with an existing transform of a graphed object - %s."
+										+ " In certain cases that might work -- but better practice to not do so",dte));
+						}
+					}
 				}
 				transaction = Registry.impl(PerThreadTransaction.class);
 				transactions.set(transaction);
