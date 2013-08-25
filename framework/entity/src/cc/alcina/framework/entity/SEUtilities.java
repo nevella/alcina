@@ -393,7 +393,7 @@ public class SEUtilities {
 
 	public static String encUtf8(String s) {
 		try {
-			return URLEncoder.encode(s, "UTF-8");
+			return s == null ? null : URLEncoder.encode(s, "UTF-8");
 		} catch (Exception e) {
 			// ahhh - doesn't happen much
 			throw new WrappedRuntimeException(e);
@@ -402,7 +402,7 @@ public class SEUtilities {
 
 	public static String decUtf8(String s) {
 		try {
-			return URLDecoder.decode(s, "UTF-8");
+			return s == null ? null : URLDecoder.decode(s, "UTF-8");
 		} catch (Exception e) {
 			// ahhh - doesn't happen much
 			throw new WrappedRuntimeException(e);
