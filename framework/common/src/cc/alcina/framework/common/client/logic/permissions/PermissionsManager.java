@@ -429,13 +429,19 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public boolean permitDueToOwnership(HasOwner hasOwner) {
 		boolean override = LooseContext
 				.getBoolean(CONTEXT_OVERRIDE_AS_OWNED_OBJECT);
-		return override ? true
-				: hasOwner == null ? false
-						: hasOwner.getOwner() == null ? hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
-								.getLocalId() != 0 : false
-								: hasOwner.getOwner().equals(user)
-										|| hasOwner.getOwner().equals(
-												instantiatedUser);
+		if (override) {
+			return true;
+		}
+		if (hasOwner == null) {
+			return false;
+		}
+		IUser owner = hasOwner.getOwner();
+		if (owner == null) {
+			return hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
+					.getLocalId() != 0 : false;
+		} else {
+			return owner.equals(user) || owner.equals(instantiatedUser);
+		}
 	}
 
 	public boolean isPermissible(Object o, Permission p) {
