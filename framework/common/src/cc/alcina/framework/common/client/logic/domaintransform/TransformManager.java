@@ -262,6 +262,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				// note, should never occur TODO: notify server
 				return;
 			}
+			
 			propertyAccessor().setPropertyValue(obj, event.getPropertyName(),
 					newTargetValue);
 			String pn = event.getPropertyName();
@@ -277,8 +278,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 			switch (transformType) {
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF:
-				updateAssociation(event, obj, existingTargetValue, true, true);
-				updateAssociation(event, obj, newTargetValue, false, true);
+				if (!CommonUtils.equalsWithNullEquality(existingTargetValue,
+						newTargetValue)) {
+					updateAssociation(event, obj, existingTargetValue, true,
+							true);
+					updateAssociation(event, obj, newTargetValue, false, true);
+				}
 				break;
 			}
 			break;

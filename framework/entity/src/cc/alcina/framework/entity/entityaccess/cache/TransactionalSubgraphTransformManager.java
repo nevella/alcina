@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectL
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 
@@ -137,14 +138,10 @@ public class TransactionalSubgraphTransformManager extends
 	@Override
 	public void setPropertyValue(Object bean, String propertyName, Object value) {
 		try {
-			PropertyDescriptor[] pds = Introspector
-					.getBeanInfo(bean.getClass()).getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals(propertyName)) {
-					pd.getWriteMethod().invoke(bean, value);
-					return;
-				}
+			if(Thread.currentThread().getStackTrace().length>80){
+				int j=3;
 			}
+			SEUtilities.setPropertyValue(bean, propertyName, value);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

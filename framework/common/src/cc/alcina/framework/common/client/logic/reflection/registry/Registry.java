@@ -60,9 +60,10 @@ public class Registry {
 		}
 	}
 
-	public static void appShutdown(){
+	public static void appShutdown() {
 		provider.appShutdown();
 	}
+
 	public static Registry get() {
 		return provider.getRegistry();
 	}
@@ -395,18 +396,19 @@ public class Registry {
 
 	public static Set<RegistryLocation> filterForRegistryPointUniqueness(
 			Collection annotations) {
-		UnsortedMultikeyMap<RegistryLocation> uniques = new UnsortedMultikeyMap<RegistryLocation>(2);
-		List<RegistryLocation> locs=new ArrayList<RegistryLocation>();
-		for(Object ann:annotations){
-			if(ann instanceof RegistryLocation){
+		UnsortedMultikeyMap<RegistryLocation> uniques = new UnsortedMultikeyMap<RegistryLocation>(
+				1);
+		List<RegistryLocation> locs = new ArrayList<RegistryLocation>();
+		for (Object ann : annotations) {
+			if (ann instanceof RegistryLocation) {
 				locs.add((RegistryLocation) ann);
-			}else if (ann instanceof RegistryLocations){
+			} else if (ann instanceof RegistryLocations) {
 				locs.addAll(Arrays.asList(((RegistryLocations) ann).value()));
 			}
 		}
 		for (RegistryLocation loc : locs) {
-			if(!uniques.containsKey(loc.registryPoint(),loc.targetClass())){
-				uniques.put(loc.registryPoint(),loc.targetClass(),loc);
+			if (!uniques.containsKey(loc.registryPoint())) {
+				uniques.put(loc.registryPoint(), loc);
 			}
 		}
 		return new LinkedHashSet<RegistryLocation>(uniques.allValues());
