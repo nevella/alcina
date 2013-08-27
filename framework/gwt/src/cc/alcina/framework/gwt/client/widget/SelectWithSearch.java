@@ -708,8 +708,12 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return 0;
 	}
 
-	// TODO:hcdim
 	protected void checkShowPopup() {
+		checkShowPopup(true);
+	}
+
+	// TODO:hcdim
+	protected void checkShowPopup(boolean filterTextBox) {
 		if ((this.relativePopupPanel == null || this.relativePopupPanel
 				.getParent() == null)
 				&& !closingOnClick
@@ -725,7 +729,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			if (popdownStyleName != null) {
 				panelForPopup.addStyleName(popdownStyleName);
 			}
-			if (!filter.isQueueing()) {
+			if (filterTextBox && !filter.isQueueing()) {
 				filter(filter.getTextBox().getText());
 			}
 			this.relativePopupPanel = RelativePopupPositioning
