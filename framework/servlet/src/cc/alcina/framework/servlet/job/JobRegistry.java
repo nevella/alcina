@@ -156,16 +156,18 @@ public class JobRegistry {
 
 	boolean refuseJobs = false;
 
-	public int cancelAll() {
+	public List<JobInfo> cancelAll() {
 		refuseJobs = true;
 		for (Long tid : infoMap.keySet()) {
 			if (!cancelledMap.containsKey(tid)) {
 				cancel(tid);
 			}
 		}
-		int running = 0;
+		List<JobInfo> running = new ArrayList();
 		for (JobInfo jobInfo : infoMap.values()) {
-			running += jobInfo.isCompleteInThread() ? 0 : 1;
+			if (!jobInfo.isCompleteInThread()) {
+				running.add(jobInfo);
+			}
 		}
 		return running;
 	}

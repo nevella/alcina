@@ -160,4 +160,10 @@ public class JobInfo implements Serializable, Cloneable {
 	public void setJobException(Exception jobException) {
 		this.jobException = jobException;
 	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("JobInfo: %s %s", getJobName(),
+				getJobResult());
+	}
 }
