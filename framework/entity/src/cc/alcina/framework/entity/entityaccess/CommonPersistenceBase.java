@@ -387,18 +387,29 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, String specificIds) {
-		String idFilter = specificIds == null ? String.format(
-				"dtrp.id>=%s and dtrp.id<=%s", fromId, toId) : String.format(
-				"dtrp.id in (%s)", specificIds);
-		String eql = String.format("select distinct dtrp " + "from %s dtrp "
-				+ "inner join fetch dtrp.events "
-				+ "inner join fetch dtrp.clientInstance " + " where %s "
-				+ "order by dtrp.id",
-				getImplementation(DomainTransformRequestPersistent.class)
-						.getSimpleName(), idFilter);
+			long fromId, long toId, String specificIds, boolean mostRecentOnly) {
+		Query query = null;
+		if (mostRecentOnly) {
+			String eql = String.format("select distinct dtrp "
+					+ "from %s dtrp " + "order by dtrp.id desc",
+					getImplementation(DomainTransformRequestPersistent.class)
+							.getSimpleName());
+			query = getEntityManager().createQuery(eql);
+			query.setMaxResults(1);
+		} else {
+			String idFilter = specificIds == null ? String.format(
+					"dtrp.id>=%s and dtrp.id<=%s", fromId, toId) : String
+					.format("dtrp.id in (%s)", specificIds);
+			String eql = String.format("select distinct dtrp "
+					+ "from %s dtrp " + "inner join fetch dtrp.events "
+					+ "inner join fetch dtrp.clientInstance " + " where %s "
+					+ "order by dtrp.id",
+					getImplementation(DomainTransformRequestPersistent.class)
+							.getSimpleName(), idFilter);
+			query = getEntityManager().createQuery(eql);
+		}
 		List<DomainTransformRequestPersistent> dtrps = new ArrayList<DomainTransformRequestPersistent>(
-				getEntityManager().createQuery(eql).getResultList());
+				query.getResultList());
 		return new EntityUtils().detachedClone(dtrps, EntityLayerLocator.get()
 				.jpaImplementation().getClassrefInstantiator());
 	}

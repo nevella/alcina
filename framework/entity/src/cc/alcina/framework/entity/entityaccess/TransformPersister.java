@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -36,6 +37,7 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.util.EntityUtils;
@@ -255,6 +257,7 @@ public class TransformPersister {
 		HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.clone();
 		final DomainTransformRequest request = token.getRequest();
 		List<DomainTransformEventPersistent> dtreps = new ArrayList<DomainTransformEventPersistent>();
+		List<DomainTransformRequestPersistent> dtrps = new ArrayList<DomainTransformRequestPersistent>();
 		try {
 			ObjectPersistenceHelper.get();
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
@@ -442,11 +445,13 @@ public class TransformPersister {
 						DomainTransformRequestPersistent dtrp = dtrqImpl
 								.newInstance();
 						getEntityManager().persist(dtrp);
+						Registry.impl(DomainTransformPersistenceEvents.class).registerPersisting(dtrp);
 						dtr.setEvents(null);
 						dtrp.wrap(dtr);
 						dtrp.setEvents(new ArrayList<DomainTransformEvent>());
 						dtr.setEvents(items);
 						dtrp.setClientInstance(persistentClientInstance);
+						dtrps.add(dtrp);
 						boolean missingClassRefWarned = false;
 						for (DomainTransformEvent event : eventsPersisted) {
 							DomainTransformEventPersistent dtep = dtrEvtImpl
@@ -498,6 +503,7 @@ public class TransformPersister {
 				DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 				wrapper.locatorMap = locatorMap;
 				wrapper.response = dtr;
+				wrapper.persistentRequests=dtrps;
 				wrapper.persistentEvents = dtreps;
 				return wrapper;
 			case RETRY_WITH_IGNORES:

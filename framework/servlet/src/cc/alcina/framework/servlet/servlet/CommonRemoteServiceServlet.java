@@ -89,8 +89,8 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformConflicts;
 import cc.alcina.framework.entity.domaintransform.TransformConflicts.TransformConflictsFromOfflineSupport;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
@@ -152,7 +152,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
-	@WebMethod(readonlyPermitted=true)
+	@WebMethod(readonlyPermitted = true)
 	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
 			throws WebException {
 		try {
@@ -170,7 +170,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		looseContextDepth = LooseContext.depth();
 		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
 	}
-	@WebMethod(readonlyPermitted=true)
+
+	@WebMethod(readonlyPermitted = true)
 	public <T extends HasIdAndLocalId> T getItemById(String className, Long id)
 			throws WebException {
 		try {
@@ -185,7 +186,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	protected Logger getLogger() {
 		return logger;
 	}
-	@WebMethod(readonlyPermitted=true)
+
+	@WebMethod(readonlyPermitted = true)
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
@@ -193,24 +195,28 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				.getCommonPersistence()
 				.listLogItemsForClass(action.getClass().getName(), count);
 	}
-	@WebMethod(readonlyPermitted=true)
+
+	@WebMethod(readonlyPermitted = true)
 	public List<Long> listRunningJobs() {
 		return JobRegistry.get().getRunningJobs();
 	}
-	@WebMethod(readonlyPermitted=true)
+
+	@WebMethod(readonlyPermitted = true)
 	public Long logClientError(String exceptionToString) {
 		return logClientError(exceptionToString,
 				LogMessageType.CLIENT_EXCEPTION.toString());
 	}
-	@WebMethod(readonlyPermitted=true)
+
+	@WebMethod(readonlyPermitted = true)
 	public Long logClientError(String exceptionToString, String exceptionType) {
-		
 		return ServletLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().log(exceptionToString, exceptionType);
 	}
+
 	public void logRpcException(Exception ex) {
 		logRpcException(ex, LogMessageType.RPC_EXCEPTION.toString());
 	}
+
 	public void logRpcException(Exception ex, String exceptionType) {
 		RPCRequest rpcRequest = getThreadLocalRequest() == null ? null
 				: (RPCRequest) getThreadLocalRequest().getAttribute(
@@ -750,11 +756,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			AppPersistenceBase.checkNotReadOnly();
 			LooseContext.getContext().push();
-			DomainTransformRequestPersistenceSupport persistenceSupport = CommonRemoteServiceServletSupport
-					.get().getRequestPersistenceSupport();
-			persistenceSupport
-					.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
-							persistenceToken, null));
+			Registry.impl(DomainTransformPersistenceEvents.class)
+					.fireDomainTransformPersistenceEvent(
+							new DomainTransformPersistenceEvent(
+									persistenceToken, null));
 			MetricLogging.get().start("transform-commit",
 					CommonRemoteServiceServlet.class);
 			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
@@ -762,9 +767,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			MetricLogging.get().end("transform-commit");
 			handleWrapperTransforms();
 			wrapper.ignored = persistenceToken.ignored;
-			persistenceSupport
-					.fireDomainTransformRequestPersistenceEvent(new DomainTransformRequestPersistenceEvent(
-							persistenceToken, wrapper));
+			Registry.impl(DomainTransformPersistenceEvents.class)
+					.fireDomainTransformPersistenceEvent(
+							new DomainTransformPersistenceEvent(
+									persistenceToken, wrapper));
 			unexpectedException = false;
 			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
 				return wrapper;
@@ -869,7 +875,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted=true)
+	@WebMethod(readonlyPermitted = true)
 	public void dumpData(String data) {
 		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
 				"dumpPermitted")) {

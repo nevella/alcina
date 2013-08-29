@@ -307,4 +307,25 @@ public class CollectionFilters {
 		}
 		return result;
 	}
+
+	public static <T extends Comparable<T>> T max(Collection<T> collection) {
+		T max=null;
+		for(T t:collection){
+			if(max==null||max.compareTo(t)<0){
+				max=t;
+			}
+		}
+		return max;
+		
+	}
+	public static <T extends Comparable<T>> T min(Collection<T> collection) {
+		T min=null;
+		for(T t:collection){
+			if(min==null||min.compareTo(t)>0){
+				min=t;
+			}
+		}
+		return min;
+		
+	}
 }

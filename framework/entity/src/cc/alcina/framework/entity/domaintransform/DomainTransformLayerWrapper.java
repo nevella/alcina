@@ -46,6 +46,8 @@ public class DomainTransformLayerWrapper {
 
 	private Set<Class<?>> transformedClasses = null;
 
+	public List<DomainTransformRequestPersistent> persistentRequests;
+
 	public boolean containsTransformClasses(Class<?>... classes) {
 		return !CommonUtils.intersection(getTransformedClasses(),
 				Arrays.asList(classes)).isEmpty();

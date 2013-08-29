@@ -10,8 +10,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceListener;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 
 /**
  * Note - if you add a per-user class, you'll need to manually invalidate
@@ -22,7 +22,7 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPe
  * 
  */
 public class TransformCache implements
-		DomainTransformRequestPersistenceListener {
+		DomainTransformPersistenceListener {
 	public TransformIdLookup sharedLookup = new TransformIdLookup();
 
 	public Map<Long, TransformIdLookup> perUserLookup = new HashMap<Long, TransformIdLookup>();
@@ -68,7 +68,7 @@ public class TransformCache implements
 	}
 
 	public void onDomainTransformRequestPersistence(
-			DomainTransformRequestPersistenceEvent evt) {
+			DomainTransformPersistenceEvent evt) {
 		DomainTransformLayerWrapper layerWrapper = evt
 				.getDomainTransformLayerWrapper();
 		if (layerWrapper != null

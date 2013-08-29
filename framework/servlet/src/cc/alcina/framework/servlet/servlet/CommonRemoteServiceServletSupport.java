@@ -6,11 +6,12 @@ import java.util.Map;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceSupport;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
+
 /**
- *  
+ * 
  * @author nick@alcina.cc
- *
+ * 
  */
 public class CommonRemoteServiceServletSupport {
 	public static CommonRemoteServiceServletSupport get() {
@@ -30,8 +31,6 @@ public class CommonRemoteServiceServletSupport {
 
 	private Map<Long, HiliLocatorMap> clientInstanceLocatorMap = new HashMap<Long, HiliLocatorMap>();
 
-	private DomainTransformRequestPersistenceSupport requestPersistenceSupport = new DomainTransformRequestPersistenceSupport();
-
 	private int transformRequestCounter = 1;
 
 	private static CommonRemoteServiceServletSupport theInstance;
@@ -46,10 +45,6 @@ public class CommonRemoteServiceServletSupport {
 
 	synchronized int nextTransformRequestId() {
 		return transformRequestCounter++;
-	}
-
-	public DomainTransformRequestPersistenceSupport getRequestPersistenceSupport() {
-		return this.requestPersistenceSupport;
 	}
 
 	public ClientInstance getServerAsClientInstance() {

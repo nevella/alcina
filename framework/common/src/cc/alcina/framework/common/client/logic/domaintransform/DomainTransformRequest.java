@@ -24,7 +24,9 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 @MappedSuperclass
 /**
@@ -70,7 +72,6 @@ public class DomainTransformRequest implements Serializable {
 					.hasNext();) {
 				DomainTransformEvent dte = itr.next();
 				Object source = dte.provideSourceOrMarker();
-				
 				if (object.equals(source)) {
 					itr.remove();
 				}
@@ -186,5 +187,10 @@ public class DomainTransformRequest implements Serializable {
 	public enum DomainTransformRequestType {
 		TO_REMOTE, CLIENT_OBJECT_LOAD, CLIENT_SYNC, TO_REMOTE_COMPLETED,
 		CLIENT_STARTUP_FROM_OFFLINE
+	}
+
+	public String shortId() {
+		return CommonUtils.formatJ("Dtr: cli-id: %s - rq-id: %s",
+				HiliHelper.getIdOrNull(clientInstance), requestId);
 	}
 }

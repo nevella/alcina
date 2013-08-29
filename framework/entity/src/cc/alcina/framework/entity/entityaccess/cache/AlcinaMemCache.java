@@ -69,8 +69,8 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceEvent;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformRequestPersistence.DomainTransformRequestPersistenceListener;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
@@ -822,7 +822,7 @@ public class AlcinaMemCache {
 		}
 	}
 
-	void postProcess(DomainTransformRequestPersistenceEvent persistenceEvent,
+	void postProcess(DomainTransformPersistenceEvent persistenceEvent,
 			TransformPersistenceToken persistenceToken) {
 		try {
 			MetricLogging.get().start("post-process");
@@ -1253,10 +1253,10 @@ public class AlcinaMemCache {
 	}
 
 	class MemCachePersistenceListener implements
-			DomainTransformRequestPersistenceListener {
+			DomainTransformPersistenceListener {
 		@Override
 		public void onDomainTransformRequestPersistence(
-				DomainTransformRequestPersistenceEvent evt) {
+				DomainTransformPersistenceEvent evt) {
 			TransformPersistenceToken persistenceToken = evt
 					.getTransformPersistenceToken();
 			switch (evt.getPersistenceEventType()) {

@@ -143,7 +143,7 @@ public interface CommonPersistenceLocal {
 			InstantiateImplCallback instantiateImplCallback);
 
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, String specificIds);
+			long fromId, long toId, String specificIds, boolean mostRecentOnly);
 
 	public <US extends IUser> US getCleanedUserById(long userId);
 
