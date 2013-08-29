@@ -3,10 +3,10 @@ package cc.alcina.framework.common.client.log;
 import cc.alcina.framework.common.client.log.TaggedLogger.TaggedLoggerHandler;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public class SysoutHandler implements TaggedLoggerHandler {
+public class SystemOutHandler implements TaggedLoggerHandler {
 	private String prefix;
 
-	public SysoutHandler(String prefix) {
+	public SystemOutHandler(String prefix) {
 		this.prefix = prefix;
 	}
 

@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.impl.jboss;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -173,4 +175,6 @@ public abstract class HibernateEJBSearcherBase {
 			SearchCriterionHandler criterionHandler) {
 		handlerMap.put(clazz, criterionHandler);
 	}
+
+	
 }

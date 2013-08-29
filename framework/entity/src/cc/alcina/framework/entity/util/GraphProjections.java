@@ -80,7 +80,7 @@ public class GraphProjections {
 			if (forbiddenClasses.size() > 0 && forbiddenClasses.contains(clazz)) {
 				return false;
 			}
-			return true;
+			return super.permitClass(clazz);
 		}
 	}
 }

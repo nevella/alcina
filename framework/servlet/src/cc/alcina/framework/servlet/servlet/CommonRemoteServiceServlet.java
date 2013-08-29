@@ -208,8 +208,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return ServletLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().log(exceptionToString, exceptionType);
 	}
-
 	public void logRpcException(Exception ex) {
+		logRpcException(ex, LogMessageType.RPC_EXCEPTION.toString());
+	}
+	public void logRpcException(Exception ex, String exceptionType) {
 		RPCRequest rpcRequest = getThreadLocalRequest() == null ? null
 				: (RPCRequest) getThreadLocalRequest().getAttribute(
 						THRD_LOCAL_RPC_RQ);
@@ -245,7 +247,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		msg += "Stacktrace:\t " + sw.toString();
 		CommonPersistenceLocal cpl = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
-		cpl.log(msg, LogMessageType.RPC_EXCEPTION.toString());
+		cpl.log(msg, exceptionType);
 	}
 
 	public Long performAction(final RemoteAction action) {
