@@ -74,6 +74,9 @@ public class Consort<D> {
 
 	protected TaggedLogger infoLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(getClass(), TaggedLogger.INFO);
+	
+	protected TaggedLogger debugLogger = Registry.impl(TaggedLoggers.class)
+			.getLogger(getClass(), TaggedLogger.DEBUG);
 
 	public void addEndpointPlayer() {
 		addEndpointPlayer(null, true);
@@ -287,7 +290,7 @@ public class Consort<D> {
 		if (reachedStates.addAll(resultantStates)) {
 			publishTopicWithBubble(STATES, new StatesDelta(reachedCopy,
 					reachedStates));
-			infoLogger.log(CommonUtils.formatJ("%s     [%s]",
+			debugLogger.log(CommonUtils.formatJ("%s     [%s]",
 					CommonUtils.padStringLeft("", depth(), '\t'),
 					CommonUtils.join(resultantStates, ", ")));
 		}

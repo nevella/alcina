@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.servlet.control;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -20,13 +22,25 @@ public class ClusterStateProviderFile implements ClusterStateProvider {
 	public ClusterState getClusterState(String clusterId) throws Exception {
 		StringMap props = StringMap.fromPropertyString(
 				ResourceUtilities.readFileToString(configFilePath), true);
-		ClusterState state =new ClusterState();
-		//TODO
+		ClusterState state = new ClusterState();
+		state.setClusterId(clusterId);
+		state.setCurrentWriterHost(props.get(clusterId + "_currentWriterHost"));
+		state.setPreferredWriterHost(props.get(clusterId
+				+ "_preferredWriterHost"));
+		String hostString = props.get(clusterId + "_allHosts");
+		List<String> hosts = new ArrayList<String>(Arrays.asList(hostString
+				.split(",\\s*")));
+		state.setAllHosts(hosts);
 		return state;
 	}
 
 	@Override
 	public void persistClusterState(ClusterState state) {
-		// TODO Auto-generated method stub
+		StringMap props =new StringMap();
+		String clusterId = state.getClusterId();
+		props.put(clusterId+"_clusterId", clusterId);
+		props.put(clusterId+"_currentWriterHost", state.getCurrentWriterHost());
+		props.put(clusterId+"_preferredWriterHost", state.getPreferredWriterHost());
+		props.put(clusterId+"_clusterId", clusterId);
 	}
 }
