@@ -10,22 +10,23 @@ import java.util.Set;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.PermissibleFieldFilter;
+import cc.alcina.framework.entity.projection.CollectionProjectionFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
+import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
 public class AlcinaMemCacheQuery {
 	private Collection<Long> ids = new LinkedHashSet<Long>();
 
 	private List<CacheFilter> filters = new ArrayList<CacheFilter>();
 
-	private GraphProjectionFilter permissionsFilter;
+	private GraphProjectionFieldFilter fieldFilter;
 
-	private GraphProjectionFilter dataFilter;
+	private GraphProjectionDataFilter dataFilter;
 
 	private boolean raw;
 
-	public AlcinaMemCacheQuery dataFilter(GraphProjectionFilter dataFilter) {
+	public AlcinaMemCacheQuery dataFilter(GraphProjectionDataFilter dataFilter) {
 		this.dataFilter = dataFilter;
 		return this;
 	}
@@ -36,7 +37,7 @@ public class AlcinaMemCacheQuery {
 	}
 
 	public AlcinaMemCacheQuery() {
-		permissionsFilter = Registry.impl(PermissibleFieldFilter.class);
+		fieldFilter = Registry.impl(PermissibleFieldFilter.class);
 		dataFilter = Registry.impl(CollectionProjectionFilter.class);
 	}
 
@@ -48,7 +49,7 @@ public class AlcinaMemCacheQuery {
 		return CommonUtils.first(list(clazz));
 	}
 
-	public GraphProjectionFilter getDataFilter() {
+	public GraphProjectionDataFilter getDataFilter() {
 		return this.dataFilter;
 	}
 
@@ -61,8 +62,8 @@ public class AlcinaMemCacheQuery {
 				: new LinkedHashSet<Long>(this.ids);
 	}
 
-	public GraphProjectionFilter getPermissionsFilter() {
-		return this.permissionsFilter;
+	public GraphProjectionFieldFilter getFieldFilter() {
+		return this.fieldFilter;
 	}
 
 	public AlcinaMemCacheQuery id(long id) {
@@ -83,9 +84,9 @@ public class AlcinaMemCacheQuery {
 		return AlcinaMemCache.get().list(clazz, this);
 	}
 
-	public AlcinaMemCacheQuery permissionsFilter(
-			GraphProjectionFilter permissionsFilter) {
-		this.permissionsFilter = permissionsFilter;
+	public AlcinaMemCacheQuery fieldFilter(
+			GraphProjectionFieldFilter fieldFilter) {
+		this.fieldFilter = fieldFilter;
 		return this;
 	}
 

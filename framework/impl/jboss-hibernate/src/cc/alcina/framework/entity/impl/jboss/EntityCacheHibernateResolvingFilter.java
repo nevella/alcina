@@ -23,10 +23,10 @@ import org.hibernate.proxy.LazyInitializer;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
-import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
-import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallbackWithShellObject;
+import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
+import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallbackWithShellObject;
 
 @SuppressWarnings("unchecked")
 /**

@@ -18,15 +18,15 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
+import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 
 /**
  * 
  * @author Nick Reddel
  */
 public class ThreadedPermissionsManager extends PermissionsManager {
-	public static GraphProjectionFilter INSTANTIATE_IMPL_FILTER;
+	public static GraphProjectionDataFilter INSTANTIATE_IMPL_FILTER;
 
 	@Override
 	public PermissionsManager getT() {

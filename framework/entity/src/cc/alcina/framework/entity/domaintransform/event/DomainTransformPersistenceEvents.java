@@ -57,7 +57,7 @@ public class DomainTransformPersistenceEvents {
 		while (!queue.shouldFire(event)) {
 			try {
 				synchronized (queue) {
-					wait();
+					queue.wait();
 				}
 			} catch (InterruptedException e) {
 			}

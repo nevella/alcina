@@ -75,7 +75,7 @@ import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
-import cc.alcina.framework.entity.util.GraphProjection;
+import cc.alcina.framework.entity.projection.GraphProjection;
 
 /**
  * <h3>Locking notes:</h3>
@@ -358,6 +358,7 @@ public class AlcinaMemCache {
 		this.conn = conn;
 		this.cacheDescriptor = cacheDescriptor;
 		try {
+			conn.setAutoCommit(false);
 			warmup0();
 			initialised = true;
 		} catch (Exception e) {
@@ -812,7 +813,7 @@ public class AlcinaMemCache {
 				if (query.isRaw()) {
 					return raw;
 				}
-				return new GraphProjection(query.getPermissionsFilter(),
+				return new GraphProjection(query.getFieldFilter(),
 						query.getDataFilter()).project(raw, null);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -849,6 +850,17 @@ public class AlcinaMemCache {
 						.first(perObjectTransforms.get(HiliLocator.fromDte(dte)));
 				DomainTransformEvent last = CommonUtils
 						.last(perObjectTransforms.get(HiliLocator.fromDte(dte)));
+				if (last.getTransformType() == TransformType.DELETE_OBJECT
+						&& first.getTransformType() != TransformType.CREATE_OBJECT) {
+					// this a check against deletion during cache warmup.
+					// shouldn't happen anyway (trans. isolation)
+					// TODO - check if necessary
+					HasIdAndLocalId memCacheObj = transformManager
+							.getObject(dte);
+					if (memCacheObj == null) {
+						continue;
+					}
+				}
 				if (dte.getTransformType() != TransformType.CREATE_OBJECT
 						&& first == dte) {
 					HasIdAndLocalId obj = transformManager.getObject(dte);
@@ -903,10 +915,13 @@ public class AlcinaMemCache {
 				int pendingTransformCount = localTransforms.size();
 				if (pendingTransformCount != 0) {
 					for (DomainTransformEvent dte : localTransforms) {
-						if(cacheDescriptor.perClass.keySet().contains(dte.getObjectClass())){
-						throw new RuntimeException(
-								String.format("Starting a memcache transaction with an existing transform of a graphed object - %s."
-										+ " In certain cases that might work -- but better practice to not do so",dte));
+						if (cacheDescriptor.perClass.keySet().contains(
+								dte.getObjectClass())) {
+							throw new RuntimeException(
+									String.format(
+											"Starting a memcache transaction with an existing transform of a graphed object - %s."
+													+ " In certain cases that might work -- but better practice to not do so",
+											dte));
 						}
 					}
 				}

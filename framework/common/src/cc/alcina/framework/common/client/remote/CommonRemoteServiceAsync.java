@@ -17,8 +17,8 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
@@ -33,8 +33,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * @author Nick Reddel
  */
 public interface CommonRemoteServiceAsync {
-	public void cache(List<ObjectCacheItemSpec> specs,
-			AsyncCallback<List<ObjectCacheItemResult>> callback);
+	public void getObjectDelta(List<ObjectDeltaSpec> specs,
+			AsyncCallback<List<ObjectDeltaResult>> callback);
 
 
 	public void hello(AsyncCallback callback);

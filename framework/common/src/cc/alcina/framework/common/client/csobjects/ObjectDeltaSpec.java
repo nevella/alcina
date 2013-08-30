@@ -25,15 +25,15 @@ import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
  * @author Nick Reddel
  */
 
- public class ObjectCacheItemSpec implements Serializable {
+ public class ObjectDeltaSpec implements Serializable {
 	private ObjectRef objectRef;
 
 	private String propertyName;
 
-	public ObjectCacheItemSpec() {
+	public ObjectDeltaSpec() {
 	}
 
-	public ObjectCacheItemSpec(HasIdAndLocalId hili, String propertyName) {
+	public ObjectDeltaSpec(HasIdAndLocalId hili, String propertyName) {
 		setObjectRef(new ObjectRef(hili));
 		setPropertyName(propertyName);
 	}

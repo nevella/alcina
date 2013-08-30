@@ -25,20 +25,20 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
  * @author nick@alcina.cc
  * 
  */
-public class ObjectCacheItemResult implements Serializable {
-	private ObjectCacheItemSpec itemSpec;
+public class ObjectDeltaResult implements Serializable {
+	private ObjectDeltaSpec deltaSpec;
 
 	private List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
 
-	public ObjectCacheItemResult() {
+	public ObjectDeltaResult() {
 	}
 
-	public ObjectCacheItemSpec getItemSpec() {
-		return this.itemSpec;
+	public ObjectDeltaSpec getDeltaSpec() {
+		return this.deltaSpec;
 	}
 
-	public void setItemSpec(ObjectCacheItemSpec itemSpec) {
-		this.itemSpec = itemSpec;
+	public void setDeltaSpec(ObjectDeltaSpec deltaSpec) {
+		this.deltaSpec = deltaSpec;
 	}
 
 	public void setTransforms(List<DomainTransformEvent> transforms) {

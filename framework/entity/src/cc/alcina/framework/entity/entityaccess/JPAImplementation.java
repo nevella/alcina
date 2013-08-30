@@ -22,9 +22,9 @@ import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
  * 
@@ -35,7 +35,7 @@ public interface JPAImplementation {
 
 	public <T> T getInstantiatedObject(T object);
 
-	public GraphProjectionFilter getResolvingFilter(InstantiateImplCallback callback,
+	public GraphProjectionDataFilter getResolvingFilter(InstantiateImplCallback callback,
 			DetachedEntityCache cache);
 
 	/**

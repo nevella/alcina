@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 
 public abstract class DevRemoterServlet extends HttpServlet {

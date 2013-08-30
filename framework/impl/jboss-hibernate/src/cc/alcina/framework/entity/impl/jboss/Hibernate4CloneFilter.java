@@ -22,9 +22,9 @@ import org.hibernate.proxy.HibernateProxy;
 
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
+import cc.alcina.framework.entity.projection.CollectionProjectionFilter;
+import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 
 /**
  * 

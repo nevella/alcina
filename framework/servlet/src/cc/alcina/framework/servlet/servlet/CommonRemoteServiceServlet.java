@@ -43,8 +43,8 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
@@ -153,11 +153,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
 	@WebMethod(readonlyPermitted = true)
-	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
+	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws WebException {
 		try {
 			return ServletLayerLocator.get().commonPersistenceProvider()
-					.getCommonPersistence().cache(specs);
+					.getCommonPersistence().getObjectDelta(specs);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WebException(e);

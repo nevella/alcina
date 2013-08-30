@@ -23,12 +23,15 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+import org.apache.log4j.Logger;
+
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.csobjects.HasJobInfo;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 
@@ -238,5 +241,12 @@ public class JobRegistry {
 			}
 		}
 		return log;
+	}
+
+	public void checkCancelled(Logger logger) {
+		if (isCancelled()) {
+			logger.info("Action cancelled by user");
+			throw new CancelledException("Action cancelled by user");
+		}		
 	}
 }

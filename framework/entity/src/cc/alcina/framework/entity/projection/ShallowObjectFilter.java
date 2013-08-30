@@ -1,13 +1,12 @@
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.entity.projection;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
-public class ShallowObjectFilter implements GraphProjectionFilter {
+public class ShallowObjectFilter implements GraphProjectionFieldFilter {
 	private Set<Class> allowOwningTypes;
 
 	public ShallowObjectFilter() {
@@ -18,12 +17,6 @@ public class ShallowObjectFilter implements GraphProjectionFilter {
 		this.allowOwningTypes = allowOwningTypes;
 	}
 
-	@Override
-	public <T> T filterData(T original, T projected,
-			GraphProjectionContext context, GraphProjection graphProjection)
-			throws Exception {
-		return null;
-	}
 
 	@Override
 	public Boolean permitClass(Class clazz) {
@@ -38,5 +31,10 @@ public class ShallowObjectFilter implements GraphProjectionFilter {
 		}
 		Class<?> type = field.getType();
 		return GraphProjection.isPrimitiveOrDataClass(type);
+	}
+
+	@Override
+	public boolean permitTransient(Field field) {
+		return false;
 	}
 }

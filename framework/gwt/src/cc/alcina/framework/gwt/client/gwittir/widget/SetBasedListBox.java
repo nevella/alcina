@@ -56,6 +56,12 @@ import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 import cc.alcina.framework.gwt.client.widget.dialog.Prompter;
 
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.FocusEvent;
+import com.google.gwt.event.dom.client.FocusHandler;
+import com.google.gwt.event.dom.client.MouseDownEvent;
+import com.google.gwt.event.dom.client.MouseDownHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -110,34 +116,53 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.listAddItemHandler = listAddItemHandler;
 		init0();
 	}
+	public HandlerRegistration addFocusHandler(FocusHandler handler) {
+	    return addDomHandler(handler, FocusEvent.getType());
+	  }
+	
+	public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
+	    return addDomHandler(handler, MouseDownEvent.getType());
+	  }
+	public void addChangeListener(final ChangeListener listener) {
+		this.changeListeners.add(listener);
+	}
 
-	private void init0() {
-		this.base = new com.google.gwt.user.client.ui.ListBox();
-		this.setRenderer(ToStringRenderer.INSTANCE);
-		this.setComparator(SimpleComparator.INSTANCE);
-		this.base.addClickListener(new ClickListener() {
-			public void onClick(Widget sender) {
-				update();
-			}
-		});
-		this.base.addChangeListener(new ChangeListener() {
-			public void onChange(Widget sender) {
-				update();
-			}
-			// foo!
-		});
-		Widget delegate = base;
-		if (listAddItemHandler != null) {
-			FlowPanel fp = new FlowPanel();
-			fp.setStyleName("nowrap");
-			delegate=fp;
-			fp.add(base);
-			InlineButtonHandler addItemAction = new AddItemHandler();
-			addButton = new ToolbarButton(addItemAction, true);
-			fp.add(UsefulWidgetFactory.createSpacer(2));
-			fp.add(addButton);
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
+	}
+
+	public void addClickListener(final ClickListener listener) {
+		this.base.addClickListener(listener);
+	}
+
+	public void addFocusListener(final FocusListener listener) {
+		this.base.addFocusListener(listener);
+	}
+
+	public void addItem(final Object o) {
+		options.add(o);
+		this.base.addItem((String) this.getRenderer().render(o));
+	}
+
+	public void addKeyboardListener(KeyboardListener listener) {
+		this.base.addKeyboardListener(listener);
+	}
+
+	public void addStyleName(final String style) {
+		this.base.addStyleName(style);
+	}
+
+	public boolean equals(final Object obj) {
+		if (obj == null || !(obj instanceof SetBasedListBox)) {
+			return false;
 		}
-		super.initWidget(delegate);
+		final SetBasedListBox other = (SetBasedListBox) obj;
+		if ((this.options != other.options)
+				&& ((this.options == null) || !this.options
+						.equals(other.options))) {
+			return false;
+		}
+		return true;
 	}
 
 	public int getAbsoluteLeft() {
@@ -152,65 +177,16 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return retValue;
 	}
 
-	public void setAccessKey(char key) {
-		this.base.setAccessKey(key);
-	}
-
-	public void setEnabled(boolean enabled) {
-		this.base.setEnabled(enabled);
-	}
-
-	public boolean isEnabled() {
-		boolean retValue;
-		retValue = this.base.isEnabled();
-		return retValue;
-	}
-
-	public void setFocus(boolean focused) {
-		this.base.setFocus(focused);
-	}
-
-	public void setHeight(String height) {
-		this.base.setHeight(height);
-	}
-
 	public int getItemCount() {
 		int retValue;
 		retValue = this.base.getItemCount();
 		return retValue;
 	}
 
-	public boolean isItemSelected(int index) {
-		boolean retValue;
-		retValue = this.base.isItemSelected(index);
-		return retValue;
-	}
-
-	public void setItemText(int index, String text) {
-		this.base.setItemText(index, text);
-	}
-
 	public String getItemText(int index) {
 		String retValue;
 		retValue = this.base.getItemText(index);
 		return retValue;
-	}
-
-	public void setMultipleSelect(boolean multiple) {
-		this.base.setMultipleSelect(multiple);
-		if (this.selected.size() > 1) {
-			Object o = this.selected.get(0);
-			this.selected = new ArrayList();
-			this.selected.add(o);
-		}
-	}
-
-	public boolean isMultipleSelect() {
-		return this.base.isMultipleSelect();
-	}
-
-	public void setName(String name) {
-		this.base.setName(name);
 	}
 
 	public String getName() {
@@ -229,6 +205,168 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		int retValue;
 		retValue = this.base.getOffsetWidth();
 		return retValue;
+	}
+
+	public Collection getOptions() {
+		return options;
+	}
+
+	public int getSelectedIndex() {
+		int retValue;
+		retValue = this.base.getSelectedIndex();
+		return retValue;
+	}
+
+	public String getStyleName() {
+		String retValue;
+		retValue = this.base.getStyleName();
+		return retValue;
+	}
+
+	public int getTabIndex() {
+		int retValue;
+		retValue = this.base.getTabIndex();
+		return retValue;
+	}
+
+	public String getTitle() {
+		String retValue;
+		retValue = this.base.getTitle();
+		return retValue;
+	}
+
+	public Object getValue() {
+		final Object returnValue;
+		if (this.base.isMultipleSelect()) {
+			SetBasedListBox.LOGGER.log(Level.SPAM,
+					"IsMultipleSelect. Returning collection", null);
+			returnValue = this.selected;
+		} else if (this.selected.size() == 0) {
+			returnValue = null;
+		} else {
+			SetBasedListBox.LOGGER.log(Level.SPAM,
+					"NotMultipleSelect. Returning first item", null);
+			returnValue = this.selected.get(0);
+		}
+		return returnValue;
+	}
+
+	public int getVisibleItemCount() {
+		int retValue;
+		retValue = this.base.getVisibleItemCount();
+		return retValue;
+	}
+
+	public int hashCode() {
+		return this.base.hashCode();
+	}
+
+	public boolean isEnabled() {
+		boolean retValue;
+		retValue = this.base.isEnabled();
+		return retValue;
+	}
+
+	public boolean isItemSelected(int index) {
+		boolean retValue;
+		retValue = this.base.isItemSelected(index);
+		return retValue;
+	}
+
+	public boolean isMultipleSelect() {
+		return this.base.isMultipleSelect();
+	}
+
+	public boolean isSortOptionsByToString() {
+		return sortOptionsByToString;
+	}
+
+	public Object provideOtherValue() {
+		Iterator itr = getOptions().iterator();
+		Object value = getValue();
+		Object other = null;
+		while (other == value && itr.hasNext()) {
+			other = itr.next();
+		}
+		return other;
+	}
+
+	public void removeChangeListener(final ChangeListener listener) {
+		this.changeListeners.remove(listener);
+	}
+
+	public void removeClickListener(final ClickListener listener) {
+		this.base.removeClickListener(listener);
+	}
+
+	public void removeFocusListener(final FocusListener listener) {
+		this.base.removeFocusListener(listener);
+	}
+
+	public void removeItem(final int index) {
+		this.base.removeItem(index);
+	}
+
+	public void removeItem(final Object o) {
+		int i = 0;
+		for (Iterator it = this.options.iterator(); it.hasNext(); i++) {
+			Object option = it.next();
+			if (safeCompare(option, o) == 0) {
+				this.options.remove(option);
+				this.base.removeItem(i);
+				this.update();
+			}
+		}
+	}
+
+	public void removeKeyboardListener(final KeyboardListener listener) {
+		this.base.removeKeyboardListener(listener);
+	}
+
+	public void removeStyleName(final String style) {
+		this.base.removeStyleName(style);
+	}
+
+	public int safeCompare(Object value, Object item) {
+		try {
+			return this.getComparator().compare(value, item);
+		} catch (ClassCastException e) {
+			return value.getClass().getName()
+					.compareTo(item.getClass().getName());
+		}
+	}
+
+	public void setAccessKey(char key) {
+		this.base.setAccessKey(key);
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.base.setEnabled(enabled);
+	}
+
+	public void setFocus(boolean focused) {
+		this.base.setFocus(focused);
+	}
+
+	public void setHeight(String height) {
+		this.base.setHeight(height);
+	}
+
+	public void setItemText(int index, String text) {
+		this.base.setItemText(index, text);
+	}
+
+	public void setMultipleSelect(boolean multiple) {
+		this.base.setMultipleSelect(multiple);
+		if (this.selected.size() > 1) {
+			Object o = this.selected.get(0);
+			this.selected = new ArrayList();
+			this.selected.add(o);
+		}
+	}
+
+	public void setName(String name) {
+		this.base.setName(name);
 	}
 
 	public void setOptions(Collection options) {
@@ -268,15 +406,6 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		fireChangeListeners();
 	}
 
-	private void fireAdaptedChange(String propertyName, List old, List selected) {
-		changes.firePropertyChange(VALUE_PROPERTY_NAME, new HashSet(old),
-				new HashSet(selected));
-	}
-
-	public Collection getOptions() {
-		return options;
-	}
-
 	public void setPixelSize(int width, int height) {
 		this.base.setPixelSize(width, height);
 	}
@@ -286,44 +415,24 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.setOptions(this.options);
 	}
 
-	public int getSelectedIndex() {
-		int retValue;
-		retValue = this.base.getSelectedIndex();
-		return retValue;
-	}
-
 	public void setSize(String width, String height) {
 		this.base.setSize(width, height);
+	}
+
+	public void setSortOptionsByToString(boolean sortOptions) {
+		this.sortOptionsByToString = sortOptions;
 	}
 
 	public void setStyleName(String style) {
 		this.base.setStyleName(style);
 	}
 
-	public String getStyleName() {
-		String retValue;
-		retValue = this.base.getStyleName();
-		return retValue;
-	}
-
 	public void setTabIndex(int index) {
 		this.base.setTabIndex(index);
 	}
 
-	public int getTabIndex() {
-		int retValue;
-		retValue = this.base.getTabIndex();
-		return retValue;
-	}
-
 	public void setTitle(String title) {
 		this.base.setTitle(title);
-	}
-
-	public String getTitle() {
-		String retValue;
-		retValue = this.base.getTitle();
-		return retValue;
 	}
 
 	public void setValue(Object value) {
@@ -366,141 +475,17 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		fireChangeListeners();
 	}
 
-	public Object provideOtherValue() {
-		Iterator itr = getOptions().iterator();
-		Object value = getValue();
-		Object other = null;
-		while (other == value && itr.hasNext()) {
-			other = itr.next();
-		}
-		return other;
-	}
-
-	public int safeCompare(Object value, Object item) {
-		try {
-			return this.getComparator().compare(value, item);
-		} catch (ClassCastException e) {
-			return value.getClass().getName()
-					.compareTo(item.getClass().getName());
-		}
-	}
-
-	public Object getValue() {
-		final Object returnValue;
-		if (this.base.isMultipleSelect()) {
-			SetBasedListBox.LOGGER.log(Level.SPAM,
-					"IsMultipleSelect. Returning collection", null);
-			returnValue = this.selected;
-		} else if (this.selected.size() == 0) {
-			returnValue = null;
-		} else {
-			SetBasedListBox.LOGGER.log(Level.SPAM,
-					"NotMultipleSelect. Returning first item", null);
-			returnValue = this.selected.get(0);
-		}
-		return returnValue;
-	}
-
 	public void setVisibleItemCount(final int visibleItems) {
 		this.base.setVisibleItemCount(visibleItems);
-	}
-
-	public int getVisibleItemCount() {
-		int retValue;
-		retValue = this.base.getVisibleItemCount();
-		return retValue;
 	}
 
 	public void setWidth(final String width) {
 		this.base.setWidth(width);
 	}
 
-	public void addChangeListener(final ChangeListener listener) {
-		this.changeListeners.add(listener);
-	}
-
-	public void addClickListener(final ClickListener listener) {
-		this.base.addClickListener(listener);
-	}
-
-	public void addFocusListener(final FocusListener listener) {
-		this.base.addFocusListener(listener);
-	}
-
-	public void addItem(final Object o) {
-		options.add(o);
-		this.base.addItem((String) this.getRenderer().render(o));
-	}
-
-	public void addKeyboardListener(KeyboardListener listener) {
-		this.base.addKeyboardListener(listener);
-	}
-
-	public void addStyleName(final String style) {
-		this.base.addStyleName(style);
-	}
-
-	public boolean equals(final Object obj) {
-		if (obj == null || !(obj instanceof SetBasedListBox)) {
-			return false;
-		}
-		final SetBasedListBox other = (SetBasedListBox) obj;
-		if ((this.options != other.options)
-				&& ((this.options == null) || !this.options
-						.equals(other.options))) {
-			return false;
-		}
-		return true;
-	}
-
-	public int hashCode() {
-		return this.base.hashCode();
-	}
-
-	public void removeChangeListener(final ChangeListener listener) {
-		this.changeListeners.remove(listener);
-	}
-
-	public void removeClickListener(final ClickListener listener) {
-		this.base.removeClickListener(listener);
-	}
-
-	public void removeFocusListener(final FocusListener listener) {
-		this.base.removeFocusListener(listener);
-	}
-
-	public void removeItem(final Object o) {
-		int i = 0;
-		for (Iterator it = this.options.iterator(); it.hasNext(); i++) {
-			Object option = it.next();
-			if (safeCompare(option, o) == 0) {
-				this.options.remove(option);
-				this.base.removeItem(i);
-				this.update();
-			}
-		}
-	}
-
-	public void removeItem(final int index) {
-		this.base.removeItem(index);
-	}
-
-	public void removeKeyboardListener(final KeyboardListener listener) {
-		this.base.removeKeyboardListener(listener);
-	}
-
-	public void removeStyleName(final String style) {
-		this.base.removeStyleName(style);
-	}
-
-	protected boolean contains(final Collection c, final Object o) {
-		for (Iterator it = c.iterator(); it.hasNext();) {
-			Object next = it.next();
-			if (safeCompare(o, next) == 0) {
-				return true;
-			}
-		}
-		return false;
+	private void fireAdaptedChange(String propertyName, List old, List selected) {
+		changes.firePropertyChange(VALUE_PROPERTY_NAME, new HashSet(old),
+				new HashSet(selected));
 	}
 
 	private void fireChangeListeners() {
@@ -511,6 +496,35 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		if (this.getAction() != null) {
 			this.getAction().execute(this);
 		}
+	}
+
+	private void init0() {
+		this.base = new com.google.gwt.user.client.ui.ListBox();
+		this.setRenderer(ToStringRenderer.INSTANCE);
+		this.setComparator(SimpleComparator.INSTANCE);
+		this.base.addClickListener(new ClickListener() {
+			public void onClick(Widget sender) {
+				update();
+			}
+		});
+		this.base.addChangeListener(new ChangeListener() {
+			public void onChange(Widget sender) {
+				update();
+			}
+			// foo!
+		});
+		Widget delegate = base;
+		if (listAddItemHandler != null) {
+			FlowPanel fp = new FlowPanel();
+			fp.setStyleName("nowrap");
+			delegate = fp;
+			fp.add(base);
+			InlineButtonHandler addItemAction = new AddItemHandler();
+			addButton = new ToolbarButton(addItemAction, true);
+			fp.add(UsefulWidgetFactory.createSpacer(2));
+			fp.add(addButton);
+		}
+		super.initWidget(delegate);
 	}
 
 	private void update() {
@@ -539,12 +553,94 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		fireChangeListeners();
 	}
 
-	public void setSortOptionsByToString(boolean sortOptions) {
-		this.sortOptionsByToString = sortOptions;
+	protected boolean contains(final Collection c, final Object o) {
+		for (Iterator it = c.iterator(); it.hasNext();) {
+			Object next = it.next();
+			if (safeCompare(o, next) == 0) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	public boolean isSortOptionsByToString() {
-		return sortOptionsByToString;
+	public static class DomainListBox extends SetBasedListBox {
+		private Class domainClass;
+
+		private CollectionFilter filter;
+
+		private boolean hasNullOption;
+
+		public DomainListBox(Class domainClass, CollectionFilter filter,
+				boolean hasNullOption, ListAddItemHandler addHandler) {
+			super(addHandler);
+			this.domainClass = domainClass;
+			this.filter = filter;
+			this.hasNullOption = hasNullOption;
+			if (!(filter instanceof RequiresContextBindable)) {
+				refreshOptions();
+			}
+		}
+
+		public CollectionFilter getFilter() {
+			return this.filter;
+		}
+
+		public boolean isHasNullOption() {
+			return this.hasNullOption;
+		}
+
+		public void refreshOptions() {
+			Collection<HasId> collection = TransformManager.get()
+					.getCollection(domainClass);
+			ArrayList options = new ArrayList();
+			if (filter == null) {
+				options.addAll(collection);
+			} else {
+				if (filter instanceof RequiresContextBindable) {
+					((RequiresContextBindable) filter)
+							.setBindable((SourcesPropertyChangeEvents) getModel());
+				}
+				Iterator itr = collection.iterator();
+				while (itr.hasNext()) {
+					Object obj = itr.next();
+					if (filter.allow(obj)) {
+						options.add(obj);
+					}
+				}
+			}
+			if (!isSortOptionsByToString()) {
+				if (getComparator() != null) {
+					Collections.sort(options, getComparator());
+				} else {
+					if (!options.isEmpty()
+							&& options.get(0) instanceof Comparable) {
+						Collections.sort(options);
+					}
+				}
+			}
+			if (hasNullOption) {
+				options.add(0, null);
+			}
+			setOptions(options);
+		}
+
+		public void setFilter(CollectionFilter filter) {
+			this.filter = filter;
+			refreshOptions();
+		}
+
+		public void setHasNullOption(boolean hasNullOption) {
+			this.hasNullOption = hasNullOption;
+			refreshOptions();
+		}
+
+		@Override
+		public void setModel(Object model) {
+			super.setModel(model);
+			if (model != null) {
+				refreshOptions();
+			}
+		}
 	}
 
 	private class AddItemHandler extends InlineButtonHandler {
@@ -591,86 +687,6 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			} else {
 				actionCallback.apply(null);
 			}
-		}
-	}
-
-	public static class DomainListBox extends SetBasedListBox {
-		private Class domainClass;
-
-		private CollectionFilter filter;
-
-		private boolean hasNullOption;
-
-		public DomainListBox(Class domainClass, CollectionFilter filter,
-				boolean hasNullOption, ListAddItemHandler addHandler) {
-			super(addHandler);
-			this.domainClass = domainClass;
-			this.filter = filter;
-			this.hasNullOption = hasNullOption;
-			if (!(filter instanceof RequiresContextBindable)) {
-				refreshOptions();
-			}
-		}
-
-		@Override
-		public void setModel(Object model) {
-			super.setModel(model);
-			if (model != null) {
-				refreshOptions();
-			}
-		}
-
-		public void refreshOptions() {
-			Collection<HasId> collection = TransformManager.get()
-					.getCollection(domainClass);
-			ArrayList options = new ArrayList();
-			if (filter == null) {
-				options.addAll(collection);
-			} else {
-				if (filter instanceof RequiresContextBindable) {
-					((RequiresContextBindable) filter)
-							.setBindable((SourcesPropertyChangeEvents) getModel());
-				}
-				Iterator itr = collection.iterator();
-				while (itr.hasNext()) {
-					Object obj = itr.next();
-					if (filter.allow(obj)) {
-						options.add(obj);
-					}
-				}
-			}
-			if (!isSortOptionsByToString()) {
-				if (getComparator() != null) {
-					Collections.sort(options, getComparator());
-				} else {
-					if (!options.isEmpty()
-							&& options.get(0) instanceof Comparable) {
-						Collections.sort(options);
-					}
-				}
-			}
-			if (hasNullOption) {
-				options.add(0, null);
-			}
-			setOptions(options);
-		}
-
-		public boolean isHasNullOption() {
-			return this.hasNullOption;
-		}
-
-		public void setHasNullOption(boolean hasNullOption) {
-			this.hasNullOption = hasNullOption;
-			refreshOptions();
-		}
-
-		public CollectionFilter getFilter() {
-			return this.filter;
-		}
-
-		public void setFilter(CollectionFilter filter) {
-			this.filter = filter;
-			refreshOptions();
 		}
 	}
 }

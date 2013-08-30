@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.entity.projection;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -22,9 +22,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
-import cc.alcina.framework.entity.util.EntityUtils.MultiIdentityMap;
-import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
+import cc.alcina.framework.entity.projection.EntityUtils.MultiIdentityMap;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
@@ -104,12 +103,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	@Override
-	public boolean permitField(Field field,
-			Set<Field> perObjectPermissionFields, Class forClass) {
-		return true;
 	}
 
 	private Field[] getFieldsForClass(Object projected) {

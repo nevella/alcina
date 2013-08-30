@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -40,7 +41,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.util.Multiset;
 
 public class TransformPersister {
@@ -55,8 +56,7 @@ public class TransformPersister {
 
 	private static final String TRANSFORM_FIRE = "transform - fire";
 
-	// note - this'll be the stack depth of the eql ast processor
-	private static final int PRECACHE_RQ_SIZE = 250;
+	
 
 	private EntityManager entityManager;
 
@@ -166,76 +166,7 @@ public class TransformPersister {
 		return result;
 	}
 
-	/**
-	 * Note - parameter <em>fixWithPrecreate</em> will only be used in db
-	 * replays for dbs which are somehow missing transform events
-	 */
-	private void preCacheEntities(List<DomainTransformEvent> items,
-			boolean fixWithPrecreate) {
-		Multiset<Class, Set<Long>> lkp = new Multiset<Class, Set<Long>>();
-		Multiset<Class, Set<Long>> creates = new Multiset<Class, Set<Long>>();
-		long maxEventId = 0;
-		Date precreDate = new Date();
-		for (DomainTransformEvent dte : items) {
-			if (dte.getObjectId() != 0) {
-				lkp.add(dte.getObjectClass(), dte.getObjectId());
-				if (dte.getTransformType() == TransformType.CREATE_OBJECT) {
-					creates.add(dte.getObjectClass(), dte.getObjectId());
-				}
-			}
-			if (dte.getValueId() != 0) {
-				lkp.add(dte.getValueClass(), dte.getValueId());
-			}
-			maxEventId = Math.max(dte.getEventId(), maxEventId);
-			if (CommonUtils.compareWithNullMinusOne(precreDate,
-					dte.getUtcDate()) > 0) {
-				precreDate = dte.getUtcDate();
-			}
-		}
-		for (Entry<Class, Set<Long>> entry : lkp.entrySet()) {
-			Class storageClass = null;
-			Class clazz = entry.getKey();
-			if (clazz == null) {
-				continue; // early, incorrect data - can be removed
-			}
-			if (clazz.getAnnotation(Entity.class) != null) {
-				storageClass = clazz;
-			}
-			if (WrapperPersistable.class.isAssignableFrom(clazz)) {
-				storageClass = commonPersistenceBase
-						.getImplementation(WrappedObject.class);
-			}
-			if (storageClass != null) {
-				List<Long> ids = new ArrayList<Long>(entry.getValue());
-				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
-					List<Long> idsSlice = ids.subList(i,
-							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));
-					List<HasIdAndLocalId> resultList = getEntityManager()
-							.createQuery(
-									String.format("from %s where id in %s",
-											storageClass.getSimpleName(),
-											EntityUtils
-													.longsToIdClause(idsSlice)))
-							.getResultList();
-					if (fixWithPrecreate) {
-						for (HasIdAndLocalId hili : resultList) {
-							entry.getValue().remove(hili.getId());
-						}
-					}
-				}
-				if (fixWithPrecreate && storageClass == clazz) {
-					entry.getValue().removeAll(creates.getAndEnsure(clazz));
-					for (Long lv : entry.getValue()) {
-						System.out.println(String.format(
-								"tp: create object: %10s %s", lv,
-								clazz.getSimpleName()));
-						ThreadlocalTransformManager.get().newInstance(clazz,
-								lv, 0);
-					}
-				}
-			}
-		}
-	}
+	
 
 	long determineExceptionDetailPassStartTime = 0;
 
@@ -318,7 +249,7 @@ public class TransformPersister {
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
 				if (token.getPass() == Pass.TRY_COMMIT) {
 					MetricLogging.get().lowPriorityStart(PRECACHE_ENTITIES);
-					preCacheEntities(items, token.getTransformExceptionPolicy()
+					commonPersistenceBase.cacheEntities(items, token.getTransformExceptionPolicy()
 							.precreateMissingEntities());
 					MetricLogging.get().lowPriorityEnd(PRECACHE_ENTITIES);
 				}

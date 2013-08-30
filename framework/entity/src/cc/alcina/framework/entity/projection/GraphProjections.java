@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.entity.projection;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -9,10 +9,9 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.GraphProjection.CollectionProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
-import cc.alcina.framework.entity.util.GraphProjection.PermissibleFieldFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 public class GraphProjections {
 	public static GraphProjections allow(Class... classes) {
@@ -31,17 +30,17 @@ public class GraphProjections {
 
 	Set<Class> forbiddenClasses = new LinkedHashSet<Class>();
 
-	private GraphProjectionFilter dataFilter = Registry
+	private GraphProjectionDataFilter dataFilter = Registry
 			.impl(CollectionProjectionFilter.class);
 
-	GraphProjectionFilter fieldFilter = new PermissibleFieldFilterH();
+	GraphProjectionFieldFilter fieldFilter = new PermissibleFieldFilterH();
 
-	public GraphProjections dataFilter(GraphProjectionFilter dataFilter) {
+	public GraphProjections dataFilter(GraphProjectionDataFilter dataFilter) {
 		this.dataFilter = dataFilter;
 		return this;
 	}
 
-	public GraphProjections fieldFilter(GraphProjectionFilter fieldFilter) {
+	public GraphProjections fieldFilter(GraphProjectionFieldFilter fieldFilter) {
 		this.fieldFilter = fieldFilter;
 		return this;
 	}

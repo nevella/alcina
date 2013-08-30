@@ -18,8 +18,8 @@ import java.util.List;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
@@ -38,7 +38,7 @@ import com.google.gwt.user.client.rpc.RemoteService;
  * @author Nick Reddel
  */
 public interface CommonRemoteService extends RemoteService {
-	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
+	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws WebException;
 
 	public LoginResponse hello();

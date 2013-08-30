@@ -103,4 +103,7 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 	public boolean allow(Long o) {
 		return o != null && o >= l1 && o < l2;
 	}
+	public boolean containsIncludingBoundaries(Long o) {
+		return o != null && o >= l1 && o <= l2;
+	}
 }

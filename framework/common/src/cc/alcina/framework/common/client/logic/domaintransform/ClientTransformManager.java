@@ -12,8 +12,8 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -405,13 +405,13 @@ public abstract class ClientTransformManager extends TransformManager {
 				notifier = new ModalNotifierNull();
 			}
 			final long t1 = System.currentTimeMillis();
-			AsyncCallback<List<ObjectCacheItemResult>> innerCallback = new AsyncCallback<List<ObjectCacheItemResult>>() {
+			AsyncCallback<List<ObjectDeltaResult>> innerCallback = new AsyncCallback<List<ObjectDeltaResult>>() {
 				public void onFailure(Throwable caught) {
 					cleanup();
 					throw new WrappedRuntimeException(caught);
 				}
 
-				public void onSuccess(List<ObjectCacheItemResult> result) {
+				public void onSuccess(List<ObjectDeltaResult> result) {
 					long t2 = System.currentTimeMillis();
 					ClientLayerLocator.get().notifications()
 							.log("Cache load/deser.: " + (t2 - t1));
@@ -425,7 +425,7 @@ public abstract class ClientTransformManager extends TransformManager {
 								.getClientInstance());
 						dtr.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 					}
-					for (ObjectCacheItemResult item : result) {
+					for (ObjectDeltaResult item : result) {
 						replayRemoteEvents(item.getTransforms(), fireTransforms);
 						if (pl != null) {
 							dtr.getEvents().addAll(item.getTransforms());
@@ -453,11 +453,11 @@ public abstract class ClientTransformManager extends TransformManager {
 					notifier.modalOff();
 				}
 			};
-			List<ObjectCacheItemSpec> specs = new ArrayList<ObjectCacheItemSpec>();
-			specs.add(new ObjectCacheItemSpec(hili, propertyName));
+			List<ObjectDeltaSpec> specs = new ArrayList<ObjectDeltaSpec>();
+			specs.add(new ObjectDeltaSpec(hili, propertyName));
 			notifier.modalOn();
 			ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-					.cache(specs, innerCallback);
+					.getObjectDelta(specs, innerCallback);
 		}
 	}
 

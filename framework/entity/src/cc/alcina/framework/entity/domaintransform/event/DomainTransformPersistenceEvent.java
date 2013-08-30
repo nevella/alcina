@@ -1,13 +1,14 @@
 package cc.alcina.framework.entity.domaintransform.event;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-import cc.alcina.framework.entity.util.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityUtils;
 
 public class DomainTransformPersistenceEvent {
 	private final TransformPersistenceToken transformPersistenceToken;
@@ -25,9 +26,13 @@ public class DomainTransformPersistenceEvent {
 				.currentThread().getId());
 	}
 
-	public List<Long> getPersistedRequestIds(){
-		return EntityUtils.hasIdsToIdList(domainTransformLayerWrapper.persistentRequests);
+	@SuppressWarnings("unchecked")
+	public List<Long> getPersistedRequestIds() {
+		return domainTransformLayerWrapper == null ? Collections.EMPTY_LIST
+				: EntityUtils
+						.hasIdsToIdList(domainTransformLayerWrapper.persistentRequests);
 	}
+
 	public DomainTransformPersistenceEvent(
 			TransformPersistenceToken transformPersistenceToken,
 			DomainTransformLayerWrapper domainTransformLayerWrapper,
@@ -54,5 +59,9 @@ public class DomainTransformPersistenceEvent {
 
 	public long getSourceThreadId() {
 		return this.sourceThreadId;
+	}
+
+	public long getMaxPersistedRequestId() {
+		return CommonUtils.lv(CollectionFilters.max(getPersistedRequestIds()));
 	}
 }

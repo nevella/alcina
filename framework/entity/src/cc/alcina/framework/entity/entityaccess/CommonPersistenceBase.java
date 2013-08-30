@@ -15,6 +15,7 @@ package cc.alcina.framework.entity.entityaccess;
 
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,17 +23,19 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
+import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
@@ -47,8 +50,12 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
@@ -70,10 +77,12 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.EntityUtils;
-import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.util.Multiset;
 
 @SuppressWarnings("unchecked")
 /**
@@ -115,21 +124,21 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 	}
 
-	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
+	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception {
 		connectPermissionsManagerToLiveObjects();
 		ObjectPersistenceHelper.get();
 		long t1 = System.currentTimeMillis();
 		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 		tm.setEntityManager(getEntityManager());
-		List<ObjectCacheItemResult> cache = tm.cache(specs);
-		cache = new EntityUtils().detachedClone(cache);
+		List<ObjectDeltaResult> delta = tm.getObjectDelta(specs);
+		delta = new EntityUtils().detachedClone(delta);
 		EntityLayerLocator
 				.get()
 				.getMetricLogger()
-				.debug("cache get - total (ms):"
+				.debug("object delta get - total (ms):"
 						+ (System.currentTimeMillis() - t1));
-		return cache;
+		return delta;
 	}
 
 	public void connectPermissionsManagerToLiveObjects() {
@@ -387,7 +396,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, String specificIds, boolean mostRecentOnly) {
+			long fromId, long toId, String specificIds, boolean mostRecentOnly,
+			boolean populateTransformSourceObjects) {
 		Query query = null;
 		if (mostRecentOnly) {
 			String eql = String.format("select distinct dtrp "
@@ -401,7 +411,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					"dtrp.id>=%s and dtrp.id<=%s", fromId, toId) : String
 					.format("dtrp.id in (%s)", specificIds);
 			String eql = String.format("select distinct dtrp "
-					+ "from %s dtrp " + "inner join fetch dtrp.events "
+					+ "from %s dtrp " + "left join fetch dtrp.events "
 					+ "inner join fetch dtrp.clientInstance " + " where %s "
 					+ "order by dtrp.id",
 					getImplementation(DomainTransformRequestPersistent.class)
@@ -410,8 +420,45 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 		List<DomainTransformRequestPersistent> dtrps = new ArrayList<DomainTransformRequestPersistent>(
 				query.getResultList());
-		return new EntityUtils().detachedClone(dtrps, EntityLayerLocator.get()
-				.jpaImplementation().getClassrefInstantiator());
+		if (populateTransformSourceObjects) {
+			List<DomainTransformEvent> events = (List) DomainTransformRequest
+					.allEvents(dtrps);
+			DetachedEntityCache cache = cacheEntities(events, false);
+			for (DomainTransformEvent event : events) {
+				event.setSource(cache.get(event.getObjectClass(),
+						event.getObjectId()));
+			}
+		}
+		DetachedEntityCache cache = new DetachedEntityCache();
+		GraphProjectionDataFilter filter = EntityLayerLocator
+				.get()
+				.jpaImplementation()
+				.getResolvingFilter(
+						EntityLayerLocator.get().jpaImplementation()
+								.getClassrefInstantiator(), cache);
+		GraphProjectionFieldFilter allowSourceFilter = new GraphProjectionFieldFilter() {
+			@Override
+			public boolean permitField(Field field,
+					Set<Field> perObjectPermissionFields, Class clazz) {
+				return true;
+			}
+
+			@Override
+			public Boolean permitClass(Class clazz) {
+				return true;
+			}
+
+			@Override
+			public boolean permitTransient(Field field) {
+				return field.getDeclaringClass() == DomainTransformEvent.class
+						&& field.getName().equals("source");
+			}
+		};
+		try {
+			return new GraphProjection(null, filter).project(dtrps, null);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public U getSystemUser() {
@@ -533,8 +580,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id, GraphProjectionFilter fieldFilter,
-			GraphProjectionFilter dataFilter) {
+			Long id, GraphProjectionFieldFilter fieldFilter,
+			GraphProjectionDataFilter dataFilter) {
 		HasId wrapper = getItemById(clazz, id);
 		UnwrapInfoContainer result = new UnwrapInfoContainer();
 		result.setHasId(wrapper);
@@ -1053,5 +1100,78 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 		}
 		return userName;
+	}
+
+	/**
+	 * Note - parameter <em>fixWithPrecreate</em> will only be used in db
+	 * replays for dbs which are somehow missing transform events
+	 */
+	DetachedEntityCache cacheEntities(List<DomainTransformEvent> items,
+			boolean fixWithPrecreate) {
+		Multiset<Class, Set<Long>> lkp = new Multiset<Class, Set<Long>>();
+		Multiset<Class, Set<Long>> creates = new Multiset<Class, Set<Long>>();
+		DetachedEntityCache cache = new DetachedEntityCache();
+		long maxEventId = 0;
+		Date precreDate = new Date();
+		for (DomainTransformEvent dte : items) {
+			if (dte.getObjectId() != 0) {
+				lkp.add(dte.getObjectClass(), dte.getObjectId());
+				if (dte.getTransformType() == TransformType.CREATE_OBJECT) {
+					creates.add(dte.getObjectClass(), dte.getObjectId());
+				}
+			}
+			if (dte.getValueId() != 0) {
+				lkp.add(dte.getValueClass(), dte.getValueId());
+			}
+			maxEventId = Math.max(dte.getEventId(), maxEventId);
+			if (CommonUtils.compareWithNullMinusOne(precreDate,
+					dte.getUtcDate()) > 0) {
+				precreDate = dte.getUtcDate();
+			}
+		}
+		for (Entry<Class, Set<Long>> entry : lkp.entrySet()) {
+			Class storageClass = null;
+			Class clazz = entry.getKey();
+			if (clazz == null) {
+				continue; // early, incorrect data - can be removed
+			}
+			if (clazz.getAnnotation(Entity.class) != null) {
+				storageClass = clazz;
+			}
+			if (WrapperPersistable.class.isAssignableFrom(clazz)) {
+				storageClass = getImplementation(WrappedObject.class);
+			}
+			if (storageClass != null) {
+				List<Long> ids = new ArrayList<Long>(entry.getValue());
+				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
+					List<Long> idsSlice = ids.subList(i,
+							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));
+					List<HasIdAndLocalId> resultList = getEntityManager()
+							.createQuery(
+									String.format("from %s where id in %s",
+											storageClass.getSimpleName(),
+											EntityUtils
+													.longsToIdClause(idsSlice)))
+							.getResultList();
+					for (HasIdAndLocalId hili : resultList) {
+						cache.put(hili);
+						if (fixWithPrecreate) {
+							entry.getValue().remove(hili.getId());
+						}
+					}
+				}
+				if (fixWithPrecreate && storageClass == clazz) {
+					entry.getValue().removeAll(creates.getAndEnsure(clazz));
+					for (Long lv : entry.getValue()) {
+						System.out.println(String.format(
+								"tp: create object: %10s %s", lv,
+								clazz.getSimpleName()));
+						ThreadlocalTransformManager.get().newInstance(clazz,
+								lv, 0);
+					}
+				}
+			}
+		}
+		return cache;
 	}
 }

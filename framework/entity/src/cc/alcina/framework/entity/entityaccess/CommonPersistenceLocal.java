@@ -18,8 +18,8 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.Iid;
@@ -35,15 +35,16 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
  * 
  * @author Nick Reddel
  */
 public interface CommonPersistenceLocal {
-	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
+	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception;
 
 	public abstract ClientInstance createClientInstance(String userAgent);
@@ -111,8 +112,8 @@ public interface CommonPersistenceLocal {
 	public abstract void connectPermissionsManagerToLiveObjects();
 
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id, GraphProjectionFilter fieldFilter,
-			GraphProjectionFilter dataFilter);
+			Long id, GraphProjectionFieldFilter fieldFilter,
+			GraphProjectionDataFilter dataFilter);
 
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
@@ -143,7 +144,8 @@ public interface CommonPersistenceLocal {
 			InstantiateImplCallback instantiateImplCallback);
 
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, String specificIds, boolean mostRecentOnly);
+			long fromId, long toId, String specificIds, boolean mostRecentOnly,
+			boolean populateTransformSourceObjects);
 
 	public <US extends IUser> US getCleanedUserById(long userId);
 

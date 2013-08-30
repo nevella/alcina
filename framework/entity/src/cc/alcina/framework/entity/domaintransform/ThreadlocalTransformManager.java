@@ -38,8 +38,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemResult;
-import cc.alcina.framework.common.client.csobjects.ObjectCacheItemSpec;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
+import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
@@ -75,7 +75,7 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
-import cc.alcina.framework.entity.util.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityUtils;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -162,10 +162,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	
 	private boolean initialised=false;
 
-	public List<ObjectCacheItemResult> cache(List<ObjectCacheItemSpec> specs)
+	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception {
-		List<ObjectCacheItemResult> result = new ArrayList<ObjectCacheItemResult>();
-		for (ObjectCacheItemSpec itemSpec : specs) {
+		List<ObjectDeltaResult> result = new ArrayList<ObjectDeltaResult>();
+		for (ObjectDeltaSpec itemSpec : specs) {
 			ObjectRef ref = itemSpec.getObjectRef();
 			String propertyName = itemSpec.getPropertyName();
 			Association assoc = CommonLocator
@@ -173,8 +173,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 					.propertyAccessor()
 					.getAnnotationForProperty(ref.getClassRef().getRefClass(),
 							Association.class, propertyName);
-			ObjectCacheItemResult itemResult = new ObjectCacheItemResult();
-			itemResult.setItemSpec(itemSpec);
+			ObjectDeltaResult itemResult = new ObjectDeltaResult();
+			itemResult.setDeltaSpec(itemSpec);
 			String eql = buildEqlForSpec(itemSpec, assoc.implementationClass());
 			long t1 = System.currentTimeMillis();
 			List results = getEntityManager().createQuery(eql).getResultList();
@@ -696,7 +696,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		this.useObjectCreationId = useObjectCreationId;
 	}
 
-	private String buildEqlForSpec(ObjectCacheItemSpec itemSpec,
+	private String buildEqlForSpec(ObjectDeltaSpec itemSpec,
 			Class assocClass) throws Exception {
 		ObjectRef ref = itemSpec.getObjectRef();
 		Class refClass = ref.getClassRef().getRefClass();

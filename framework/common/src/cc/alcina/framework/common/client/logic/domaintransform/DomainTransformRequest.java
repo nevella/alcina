@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -192,5 +193,14 @@ public class DomainTransformRequest implements Serializable {
 	public String shortId() {
 		return CommonUtils.formatJ("Dtr: cli-id: %s - rq-id: %s",
 				HiliHelper.getIdOrNull(clientInstance), requestId);
+	}
+
+	public static List<DomainTransformEvent> allEvents(
+			Collection<? extends DomainTransformRequest> requests) {
+		List<DomainTransformEvent> result = new ArrayList<DomainTransformEvent>();
+		for (DomainTransformRequest request : requests) {
+			result.addAll(request.getEvents());
+		}
+		return result;
 	}
 }

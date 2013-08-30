@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.entity.projection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,9 +27,8 @@ import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
-import cc.alcina.framework.entity.util.GraphProjection.PermissibleFieldFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
  * 
@@ -136,10 +135,10 @@ public class EntityUtils {
 	
 	public <T> T detachedClone(T source, InstantiateImplCallback callback,
 			DetachedEntityCache cache) {
-		GraphProjectionFilter filter = EntityLayerLocator.get()
+		GraphProjectionDataFilter dataFilter = EntityLayerLocator.get()
 				.jpaImplementation().getResolvingFilter(callback, cache);
 		try {
-			return new GraphProjection(Registry.impl(PermissibleFieldFilter.class), filter)
+			return new GraphProjection(Registry.impl(PermissibleFieldFilter.class), dataFilter)
 					.project(source, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -150,10 +149,10 @@ public class EntityUtils {
 	public <T> T detachedCloneIgnorePermissions(T source,
 			InstantiateImplCallback callback) {
 		DetachedEntityCache cache = new DetachedEntityCache();
-		GraphProjectionFilter filter = EntityLayerLocator.get()
+		GraphProjectionDataFilter dataFilter = EntityLayerLocator.get()
 				.jpaImplementation().getResolvingFilter(callback, cache);
 		try {
-			return new GraphProjection(null, filter).project(source, null);
+			return new GraphProjection(null, dataFilter).project(source, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.entity.projection;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -37,16 +37,14 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.ClearOnAppRestart;
 
 @SuppressWarnings("unchecked")
 /**
@@ -106,9 +104,9 @@ public class GraphProjection {
 		return propertyPermissionLookup.get(field);
 	}
 
-	private GraphProjectionFilter dataFilter;
+	private GraphProjectionDataFilter dataFilter;
 
-	private GraphProjectionFilter fieldFilter;
+	private GraphProjectionFieldFilter fieldFilter;
 
 	public static boolean replaceTimestampsWithDates = true;
 
@@ -137,8 +135,8 @@ public class GraphProjection {
 	public GraphProjection() {
 	}
 
-	public GraphProjection(GraphProjectionFilter fieldFilter,
-			GraphProjectionFilter dataFilter) {
+	public GraphProjection(GraphProjectionFieldFilter fieldFilter,
+			GraphProjectionDataFilter dataFilter) {
 		this.fieldFilter = fieldFilter;
 		this.dataFilter = dataFilter;
 	}
@@ -277,19 +275,26 @@ public class GraphProjection {
 			Class c = clazz;
 			while (c != Object.class) {
 				Field[] fields = c.getDeclaredFields();
-				for (Field f : fields) {
-					if (Modifier.isTransient(f.getModifiers())
-							|| Modifier.isStatic(f.getModifiers())) {
+				for (Field field : fields) {
+					if (Modifier.isStatic(field.getModifiers())) {
 						continue;
 					}
 					if (fieldFilter != null) {
-						if (!fieldFilter.permitField(f,
+						if (Modifier.isTransient(field.getModifiers())
+								&& !fieldFilter.permitTransient(field)) {
+							continue;
+						}
+						if (!fieldFilter.permitField(field,
 								dynamicPermissionFields, clazz)) {
 							continue;
 						}
+					} else {
+						if (Modifier.isTransient(field.getModifiers())) {
+							continue;
+						}
 					}
-					f.setAccessible(true);
-					allFields.add(f);
+					field.setAccessible(true);
+					allFields.add(field);
 				}
 				c = c.getSuperclass();
 			}
@@ -331,65 +336,6 @@ public class GraphProjection {
 			}
 		}
 		return valid;
-	}
-
-	public static class CollectionProjectionFilter implements
-			GraphProjectionFilter {
-		@SuppressWarnings("unchecked")
-		public <T> T filterData(T original, T projected,
-				GraphProjectionContext context, GraphProjection graphProjection)
-				throws Exception {
-			if (original.getClass().isArray()) {
-				int n = Array.getLength(original);
-				for (int i = 0; i < n; i++) {
-					Object source = Array.get(original, i);
-					Array.set(projected, i,
-							graphProjection.project(source, context));
-				}
-			}
-			if (original instanceof Collection) {
-				return (T) graphProjection.projectCollection(
-						(Collection) original, context);
-			}
-			if (original instanceof Map) {
-				return (T) projectMap((Map) original, context, graphProjection);
-			}
-			return projected;
-		}
-
-		@Override
-		public Boolean permitClass(Class clazz) {
-			throw new UnsupportedOperationException(
-					"Normally, use only as a data filter");
-		}
-
-		public boolean permitField(Field field,
-				Set<Field> perObjectPermissionFields, Class forClass) {
-			return false;
-		}
-
-		private Object projectMap(Map map, GraphProjectionContext context,
-				GraphProjection graphProjection) throws Exception {
-			Map m = null;
-			if (map instanceof Multimap) {
-				m = new Multimap();
-			} else if (map instanceof LinkedHashMap) {
-				m = new LinkedHashMap();
-			} else {
-				m = new HashMap();
-			}
-			Iterator itr = map.keySet().iterator();
-			Object value, key;
-			for (; itr.hasNext();) {
-				key = itr.next();
-				value = map.get(key);
-				Object pKey = graphProjection.project(key, context);
-				if (key == null || pKey != null) {
-					m.put(pKey, graphProjection.project(value, context));
-				}
-			}
-			return m;
-		}
 	}
 
 	public static class GraphProjectionContext {
@@ -447,9 +393,16 @@ public class GraphProjection {
 		}
 	}
 
-	public static interface GraphProjectionFilter {
+	public static interface GraphProjectionFieldFilter {
 		public abstract Boolean permitClass(Class clazz);
 
+		boolean permitField(Field field, Set<Field> perObjectPermissionFields,
+				Class clazz);
+
+		boolean permitTransient(Field field);
+	}
+
+	public static interface GraphProjectionDataFilter {
 		/*
 		 * IMPORTANT - if filterdata changes the return value (i.e. doesn't
 		 * return a value === projected) it must immediately (on new object
@@ -458,9 +411,6 @@ public class GraphProjection {
 		<T> T filterData(T original, T projected,
 				GraphProjectionContext context, GraphProjection graphProjection)
 				throws Exception;
-
-		boolean permitField(Field field, Set<Field> perObjectPermissionFields,
-				Class clazz);
 	}
 
 	public interface InstantiateImplCallback<T> {
@@ -475,95 +425,5 @@ public class GraphProjection {
 
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
-	}
-
-	public static class PermissibleFieldFilter implements GraphProjectionFilter {
-		public static boolean disablePerObjectPermissions;
-
-		public <T> T filterData(T original, T projected,
-				GraphProjectionContext context, GraphProjection graphProjection)
-				throws Exception {
-			return null;
-		}
-
-		@Override
-		public Boolean permitClass(Class clazz) {
-			ObjectPermissions op = (ObjectPermissions) clazz
-					.getAnnotation(ObjectPermissions.class);
-			return permit(clazz, op == null ? null : op.read());
-		}
-
-		public boolean permitField(Field field,
-				Set<Field> perObjectPermissionFields, Class forClass) {
-			try {
-				if(field.getName().contains("secondaryGroups")){
-					int j=3;
-				}
-				Class<?> type = field.getType();
-				Class<?> checkType = field.getType();
-				if (!GraphProjection.isPrimitiveOrDataClass(type)) {
-					if (Collection.class.isAssignableFrom(type)) {
-						checkType = null;
-						Type pt = GraphProjection.getGenericType(field);
-						if (pt instanceof ParameterizedType) {
-							Type genericType = ((ParameterizedType) pt)
-									.getActualTypeArguments()[0];
-							if (genericType instanceof Class) {
-								checkType = (Class) genericType;
-							}
-						}
-					}
-					if (checkType != null) {
-						Boolean result = permitClass(checkType);
-						if (result != null && result.booleanValue() == false) {
-							return false;
-						}
-					}
-				}
-				PropertyPermissions pp = getPropertyPermission(field);
-				Boolean permit = permit(forClass, pp == null ? null : pp.read());
-				if (permit == null) {
-					perObjectPermissionFields.add(field);
-					return true;
-				} else {
-					return permit;
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		private Boolean permit(Class clazz, Permission permission) {
-			if (permission != null) {
-				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
-				if (disablePerObjectPermissions) {
-					return true;
-					// only in app startup/warmup
-				}
-				if (PermissionsManager.get().isPermissible(null, ap, true)) {
-					return true;
-				}
-				if (ap.accessLevel().ordinal() <= AccessLevel.GROUP.ordinal()) {
-					return false;
-				}
-				if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
-					if (ap.rule().length() > 0) {
-						return null;
-					}
-					if (!PermissionsManager.get().isLoggedIn()) {
-						return false;
-					}
-					if (!HasOwner.class.isAssignableFrom(clazz)) {
-						return false;
-					}
-					return null;
-				}
-				return ap.rule().isEmpty() ? false : null;
-			}
-			return true;
-			// TODO: 3.2 - replace with a call to tltm (should
-			// really be tlpm) that checks obj read perms
-			// that'll catch find-object stuff as well
-		}
 	}
 }

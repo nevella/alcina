@@ -45,7 +45,7 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.entity.util.EntityUtils;
+import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 

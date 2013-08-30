@@ -45,11 +45,11 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.util.EntityUtils;
-import cc.alcina.framework.entity.util.GraphProjection;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionContext;
-import cc.alcina.framework.entity.util.GraphProjection.GraphProjectionFilter;
-import cc.alcina.framework.entity.util.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.entity.projection.EntityUtils;
+import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
+import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
  * 
@@ -81,7 +81,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return object;
 	}
 
-	public GraphProjectionFilter getResolvingFilter(
+	public GraphProjectionDataFilter getResolvingFilter(
 			InstantiateImplCallback callback, DetachedEntityCache cache) {
 		EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(
 				callback);
