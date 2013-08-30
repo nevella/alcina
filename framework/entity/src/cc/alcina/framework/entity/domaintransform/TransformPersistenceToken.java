@@ -40,13 +40,17 @@ public class TransformPersistenceToken {
 	private boolean forOfflineTransforms;
 
 	private Logger logger;
-	
+
 	private TransformLoggingPolicy transformLoggingPolicy;
 
+	private boolean blockUntilAllListenersNotified;
+
 	public TransformPersistenceToken(DomainTransformRequest request,
-			HiliLocatorMap locatorMap, TransformLoggingPolicy transformLoggingPolicy,
+			HiliLocatorMap locatorMap,
+			TransformLoggingPolicy transformLoggingPolicy,
 			boolean possiblyReconstitueLocalIdMap,
-			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms, Logger logger) {
+			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
+			Logger logger, boolean blockUntilAllListenersNotified2) {
 		this.request = request;
 		this.locatorMap = locatorMap;
 		this.transformLoggingPolicy = transformLoggingPolicy;
@@ -54,6 +58,7 @@ public class TransformPersistenceToken {
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
 		this.forOfflineTransforms = forOfflineTransforms;
 		this.logger = logger;
+		this.blockUntilAllListenersNotified = blockUntilAllListenersNotified2;
 		this.transformExceptionPolicy = EntityLayerLocator.get()
 				.persistenceLayerTransformExceptionPolicyFactory()
 				.getPolicy(this, forOfflineTransforms);
@@ -75,6 +80,10 @@ public class TransformPersistenceToken {
 		return this.locatorMap;
 	}
 
+	public Logger getLogger() {
+		return this.logger;
+	}
+
 	public Pass getPass() {
 		return pass;
 	}
@@ -91,12 +100,29 @@ public class TransformPersistenceToken {
 		return this.transformExceptions;
 	}
 
+	public TransformLoggingPolicy getTransformLoggingPolicy() {
+		return this.transformLoggingPolicy;
+	}
+
+	public boolean isBlockUntilAllListenersNotified() {
+		return this.blockUntilAllListenersNotified;
+	}
+
+	public boolean isForOfflineTransforms() {
+		return this.forOfflineTransforms;
+	}
+
 	public boolean isIgnoreClientAuthMismatch() {
 		return ignoreClientAuthMismatch;
 	}
 
 	public boolean isPossiblyReconstitueLocalIdMap() {
 		return this.possiblyReconstitueLocalIdMap;
+	}
+
+	public void setBlockUntilAllListenersNotified(
+			boolean blockUntilAllListenersNotified) {
+		this.blockUntilAllListenersNotified = blockUntilAllListenersNotified;
 	}
 
 	public void setClientUpdateEvents(
@@ -108,6 +134,14 @@ public class TransformPersistenceToken {
 		this.dontFlushTilNthTransform = dontFlushTilNthTransform;
 	}
 
+	public void setForOfflineTransforms(boolean forClientTransforms) {
+		this.forOfflineTransforms = forClientTransforms;
+	}
+
+	public void setLogger(Logger logger) {
+		this.logger = logger;
+	}
+
 	public void setPass(Pass pass) {
 		this.pass = pass;
 	}
@@ -117,32 +151,12 @@ public class TransformPersistenceToken {
 		this.transformExceptionPolicy = transformExceptionPolicy;
 	}
 
-	public enum Pass {
-		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
-	}
-
-	public boolean isForOfflineTransforms() {
-		return this.forOfflineTransforms;
-	}
-
-	public void setForOfflineTransforms(boolean forClientTransforms) {
-		this.forOfflineTransforms = forClientTransforms;
-	}
-
-	public Logger getLogger() {
-		return this.logger;
-	}
-
-	public void setLogger(Logger logger) {
-		this.logger = logger;
-	}
-
-	public TransformLoggingPolicy getTransformLoggingPolicy() {
-		return this.transformLoggingPolicy;
-	}
-
 	public void setTransformLoggingPolicy(
 			TransformLoggingPolicy transformLoggingPolicy) {
 		this.transformLoggingPolicy = transformLoggingPolicy;
+	}
+
+	public enum Pass {
+		TRY_COMMIT, DETERMINE_EXCEPTION_DETAIL, RETRY_WITH_IGNORES, FAIL
 	}
 }

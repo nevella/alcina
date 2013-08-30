@@ -57,7 +57,10 @@ public class DomainTransformPersistenceQueue extends WriterService {
 
 	public void eventFired(DomainTransformPersistenceEvent event) {
 		persistedRequestIdToEvent.remove(event.getSourceThreadId());
-		notify();
+		maxDbPersistedRequestIdPublished = Math.max(
+				maxDbPersistedRequestIdPublished,
+				CollectionFilters.max(event.getPersistedRequestIds()));
+		notifyAll();
 	}
 
 	public void forceDbCheck() {
@@ -70,12 +73,13 @@ public class DomainTransformPersistenceQueue extends WriterService {
 				.getPersistentTransformRequests(0, 0, null, true);
 		if (!persisted.isEmpty()) {
 			maxDbPersistedRequestIdPublished = persisted.get(0).getId();
+			logger.format("dtrq - max persisted transform id published: %s",
+					maxDbPersistedRequestIdPublished);
 		}
 	}
 
 	public void registerPersisting(DomainTransformRequestPersistent dtrp) {
 		persistingRequestIds.add(dtrp.getId());
-		
 	}
 
 	public boolean shouldFire(DomainTransformPersistenceEvent event) {
@@ -118,13 +122,14 @@ public class DomainTransformPersistenceQueue extends WriterService {
 
 	@Override
 	public void startup() {
+		forceDbCheck();
 		startGapCheckTimer();
 	}
 
 	public void submit(DomainTransformPersistenceEvent event) {
 		persistedRequestIdToEvent.put(event.getSourceThreadId(), event);
 		persistingRequestIds.removeAll(event.getPersistedRequestIds());
-		notify();
+		notifyAll();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -159,7 +164,7 @@ public class DomainTransformPersistenceQueue extends WriterService {
 				TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 						CommonUtils.last(requests), null,
 						Registry.impl(TransformLoggingPolicy.class), false,
-						false, false, null);
+						false, false, null, true);
 				DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 				List<DomainTransformEventPersistent> events = new ArrayList<DomainTransformEventPersistent>();
 				for (DomainTransformRequestPersistent request : requests) {
@@ -170,12 +175,15 @@ public class DomainTransformPersistenceQueue extends WriterService {
 				Registry.impl(DomainTransformPersistenceEvents.class)
 						.fireDomainTransformPersistenceEvent(
 								new DomainTransformPersistenceEvent(
-										persistenceToken, wrapper, -1L));
+										persistenceToken, wrapper,
+										exMachineSourceIdCounter--));
 			}
 		} finally {
 			checkingPersistedTransforms = false;
 		}
 	}
+
+	volatile long exMachineSourceIdCounter = -1;
 
 	private synchronized LongPair getFirstGap() {
 		Set<Long> publishedOrPublishingIds = new LinkedHashSet<Long>();
@@ -203,6 +211,8 @@ public class DomainTransformPersistenceQueue extends WriterService {
 					.getPersistentTransformRequests(0, 0, null, true);
 			if (!persisted.isEmpty()) {
 				maxDbPersistedRequestId = persisted.get(0).getId();
+				logger.format("dtrq - max persisted transform id: %s",
+						maxDbPersistedRequestId);
 			}
 		}
 		return getFirstGap();

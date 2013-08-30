@@ -468,7 +468,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					for (DomainTransformEvent event : rq.getEvents()) {
 						event.setEventId(idCounter++);
 					}
-					transformLayerWrapper = transform(rq, true, true);
+					transformLayerWrapper = transform(rq, true, true, true);
 				} finally {
 					if (useWrapperUser) {
 						PermissionsManager.get().popUser();
@@ -597,7 +597,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
-		return transform(request, false, false).response;
+		return transform(request, false, false, true).response;
 	}
 
 	/*
@@ -634,7 +634,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, map, Registry.impl(TransformLoggingPolicy.class),
-					false, false, false, getLogger());
+					false, false, false, getLogger(), true);
 			return submitAndHandleTransforms(persistenceToken);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
@@ -736,7 +736,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	 */
 	protected DomainTransformLayerWrapper transform(
 			DomainTransformRequest request, boolean ignoreClientAuthMismatch,
-			boolean forOfflineTransforms)
+			boolean forOfflineTransforms, boolean blockUntilAllListenersNotified)
 			throws DomainTransformRequestException {
 		HiliLocatorMap locatorMap = CommonRemoteServiceServletSupport.get()
 				.getLocatorMapForClient(request);
@@ -744,7 +744,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 					request, locatorMap,
 					Registry.impl(TransformLoggingPolicy.class), true,
-					ignoreClientAuthMismatch, forOfflineTransforms, getLogger());
+					ignoreClientAuthMismatch, forOfflineTransforms,
+					getLogger(), blockUntilAllListenersNotified);
 			return submitAndHandleTransforms(persistenceToken);
 		}
 	}

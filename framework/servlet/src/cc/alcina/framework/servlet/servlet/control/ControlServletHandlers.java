@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToLowerCaseConverter;
 
@@ -91,6 +92,9 @@ public class ControlServletHandlers {
 
 		@Override
 		public void handleDelta0(WriterMode fromState, WriterMode toState) {
+			if(toState==WriterMode.CLUSTER_WRITER){
+				Registry.impl(DomainTransformPersistenceEvents.class).startSequentialEventChecks();
+			}
 			AppPersistenceBase
 					.setInstanceReadOnly(toState == WriterMode.READ_ONLY);
 		}
