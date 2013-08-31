@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.servlet.control;
+package cc.alcina.framework.entity.control;
 
 import java.util.List;
 

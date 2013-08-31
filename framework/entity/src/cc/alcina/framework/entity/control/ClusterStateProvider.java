@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.servlet.control;
+package cc.alcina.framework.entity.control;
 
 public interface ClusterStateProvider {
 	ClusterState getClusterState(String clusterId) throws Exception;

@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.servlet.control;
+package cc.alcina.framework.entity.control;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,13 +9,13 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class ClusterStateProviderFile implements ClusterStateProvider {
-	public static final String CONTEXT_CONFIG_FILE_PATH = ClusterStateProviderFile.class
-			.getName() + ".CONTEXT_CONFIG_FILE_PATH";
+	public static final String SYS_PROP_CONFIG_FILE_PATH = ClusterStateProviderFile.class
+			.getName() + ".SYS_PROP_CONFIG_FILE_PATH";
 
 	private String configFilePath;
 
 	public ClusterStateProviderFile() {
-		configFilePath = LooseContext.getString(CONTEXT_CONFIG_FILE_PATH);
+		configFilePath = System.getProperty(SYS_PROP_CONFIG_FILE_PATH);
 	}
 
 	@Override

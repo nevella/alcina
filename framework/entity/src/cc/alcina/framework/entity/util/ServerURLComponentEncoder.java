@@ -14,6 +14,7 @@
 
 package cc.alcina.framework.entity.util;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.URLComponentEncoder;
 import cc.alcina.framework.entity.SEUtilities;
 
@@ -21,7 +22,7 @@ import cc.alcina.framework.entity.SEUtilities;
  *
  * @author Nick Reddel
  */
-
+@RegistryLocation(registryPoint=URLComponentEncoder.class)
  public class ServerURLComponentEncoder implements URLComponentEncoder {
 	public String encode(String text) {
 		return SEUtilities.encUtf8(text);
