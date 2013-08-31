@@ -67,8 +67,7 @@ public class ResourceUtilities {
 		customProperties.clear();
 	}
 
-	private static Map<String, String> customProperties = Collections
-			.synchronizedMap(new LinkedHashMap<String, String>());
+	private static Map<String, String> customProperties = new LinkedHashMap<String, String>();
 
 	public static void registerCustomProperties(InputStream ios) {
 		try {
@@ -413,5 +412,9 @@ public class ResourceUtilities {
 		InputStream is = null;
 		is = url.openConnection().getInputStream();
 		return readStreamToByteArray(is);
+	}
+
+	public static Map<String, String> getCustomProperties() {
+		return customProperties;
 	}
 }
