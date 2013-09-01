@@ -93,7 +93,7 @@ public class Publisher {
 		boolean forPublication = !deliveryModel.isNoPersistence()
 				&& deliveryModel.provideContentDeliveryType().isRepublishable();
 		if (!SEUtilities.localTestMode()) {
-			if (forPublication && publicationPersister != null) {
+			if (forPublication && publicationContentPersister != null) {
 				publicationUserId = PublicationPersistenceLocator
 						.get()
 						.publicationPersistence()
@@ -112,8 +112,8 @@ public class Publisher {
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
 				publicationId, publicationUserId);
 		if (!SEUtilities.localTestMode() && crh.getResults().persist
-				&& publicationPersister != null && publicationId != 0) {
-			publicationPersister.persistContentRendererResults(
+				&& publicationContentPersister != null && publicationId != 0) {
+			publicationContentPersister.persistContentRendererResults(
 					crh.getResults(), publicationId);
 		}
 		ContentWrapper cw = (ContentWrapper) Registry.get()
@@ -153,7 +153,7 @@ public class Publisher {
 	private long persist(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Long publicationUserId,
 			Publication original) {
-			Publication publication = publicationPersister
+			Publication publication = publicationContentPersister
 					.newPublicationInstance();
 			if (contentDefinition instanceof HasId) {
 				HasId hasId = (HasId) contentDefinition;
@@ -177,13 +177,13 @@ public class Publisher {
 					.getCommonPersistence().merge(publication);
 	}
 
-	private static PublicationPersister publicationPersister;
+	private static PublicationContentPersister publicationContentPersister;
 
-	public static void registerPublicationPersister(PublicationPersister pp) {
-		publicationPersister = pp;
+	public static void registerPublicationPersister(PublicationContentPersister pp) {
+		publicationContentPersister = pp;
 	}
 
-	public interface PublicationPersister {
+	public interface PublicationContentPersister {
 		public Publication newPublicationInstance();
 
 		public void persistContentRendererResults(
