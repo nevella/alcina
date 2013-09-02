@@ -46,6 +46,14 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	Set<Long> persistingRequestIds = new LinkedHashSet<Long>();
 
+	public static int WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS = 30 * 1000;
+
+	Set<Long> timedOutRequestIds = new LinkedHashSet<Long>();
+
+	private long lastRangeCheckFirstCheckTime = 0;
+
+	private LongPair lastRangeCheck = null;
+
 	private Timer timer;
 
 	private TimerTask gapCheckTask;
@@ -116,16 +124,16 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return true;
 		}
-		LongPair firstGap = getFirstGapLessThan(CollectionFilters
-				.min(persistedRequestIds),false);
+		LongPair firstGap = getFirstGapLessThan(
+				CollectionFilters.min(persistedRequestIds), false);
 		if (firstGap != null) {// &&false) {//temp fix for prod. serv.
 			logger.format("found gap (waiting) - rqid %s - gap %s", event
 					.getTransformPersistenceToken().getRequest().shortId(),
 					firstGap);
-			LongPair withPublishingGap = getFirstGapLessThan(CollectionFilters
-					.min(persistedRequestIds),true);
-			if(withPublishingGap==null){
-				
+			LongPair withPublishingGap = getFirstGapLessThan(
+					CollectionFilters.min(persistedRequestIds), true);
+			if (withPublishingGap == null) {
+				logger.log("waiting on another in-jvm db transaction");
 			}
 			return false;// let the queue sort this out
 		}
@@ -195,6 +203,22 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	private void checkPersistedTransforms(LongPair checkRequestRange) {
 		try {
 			checkingPersistedTransforms = true;
+			// check timeout
+			if (lastRangeCheck != null
+					&& checkRequestRange.equals(lastRangeCheck)) {
+				if (System.currentTimeMillis() - lastRangeCheckFirstCheckTime > WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS) {
+					logger.format(
+							"Timed out waiting for  persisted transforms (probably a crash/exception)- gap %s",
+							checkRequestRange);
+					for (long l = lastRangeCheck.l1; l <= lastRangeCheck.l2; l++) {
+						timedOutRequestIds.add(l);
+					}
+					return;
+				}
+			} else {
+				lastRangeCheck = checkRequestRange;
+				lastRangeCheckFirstCheckTime = System.currentTimeMillis();
+			}
 			logger.format("Checking persisted transforms - gap %s",
 					checkRequestRange);
 			List<DomainTransformRequestPersistent> requests = getCommonPersistence()
@@ -251,24 +275,26 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	private synchronized LongPair getFirstGapLessThan(Long lx,
 			boolean includePublishingInHandledByThisVm) {
-		Set<Long> publishedOrPublishingIds = new LinkedHashSet<Long>();
+		Set<Long> handledIds = new LinkedHashSet<Long>();
 		if (includePublishingInHandledByThisVm) {
-			publishedOrPublishingIds.addAll(persistingRequestIds);
+			handledIds.addAll(persistingRequestIds);
 		}
+		
 		String ids = ResourceUtilities.getBundledString(
 				DomainTransformPersistenceQueue.class, "ignoreForQueueingIds");
-		publishedOrPublishingIds.addAll(TransformManager.idListToLongs(ids));
+		handledIds.addAll(TransformManager.idListToLongs(ids));
+		handledIds.addAll(timedOutRequestIds);
 		for (DomainTransformPersistenceEvent persistenceEvent : persistedRequestIdToEvent
 				.values()) {
-			publishedOrPublishingIds.addAll(persistenceEvent
+			handledIds.addAll(persistenceEvent
 					.getPersistedRequestIds());
 		}
 		long max = CommonUtils.lv(CollectionFilters
-				.max(publishedOrPublishingIds));
+				.max(handledIds));
 		max = maxDbPersistedRequestId;
 		LongPair pair = getFirstContiguousRange(new LongPair(
 				maxDbPersistedRequestIdPublished + 1, max),
-				publishedOrPublishingIds, Collections.EMPTY_LIST);
+				handledIds, Collections.EMPTY_LIST);
 		return pair.isZero() || pair.l1 >= lx ? null : pair;
 	}
 
