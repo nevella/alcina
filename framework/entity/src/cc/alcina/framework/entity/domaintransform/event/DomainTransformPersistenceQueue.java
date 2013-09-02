@@ -153,22 +153,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 					ThreadedPermissionsManager.cast().pushSystemUser();
 					PermissibleFieldFilter.disablePerObjectPermissions = true;
 					if (shouldCheckPersistedTransforms() != null) {
-						// have it on a separate thread so it can "fire back"
-						// into the checking thread
-						new Thread() {
-							public void run() {
-								try {
-									ThreadedPermissionsManager.cast()
-											.pushSystemUser();
-									PermissibleFieldFilter.disablePerObjectPermissions = true;
-									maybeCheckPersistedTransforms();
-								} finally {
-									PermissibleFieldFilter.disablePerObjectPermissions = false;
-									ThreadedPermissionsManager.cast()
-											.popSystemUser();
-								}
-							};
-						}.start();
+						maybeCheckPersistedTransforms();
 					}
 				} finally {
 					PermissibleFieldFilter.disablePerObjectPermissions = false;
@@ -249,11 +234,11 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				logger.format(
 						"enqueueing persisted transforms - dtrp %s => subrange %s",
 						checkRequestRange, contiguousRange);
-				TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
+				final TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 						CommonUtils.last(requests), null,
 						Registry.impl(TransformLoggingPolicy.class), false,
 						false, false, null, true);
-				DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
+				final DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 				List<DomainTransformEventPersistent> events = (List) DomainTransformRequest
 						.allEvents(requests);
 				wrapper.persistentEvents = events;
@@ -264,11 +249,27 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				dtr.setResult(DomainTransformResponseResult.OK);
 				dtr.setRequest(persistenceToken.getRequest());
 				wrapper.response = dtr;
-				Registry.impl(DomainTransformPersistenceEvents.class)
-						.fireDomainTransformPersistenceEvent(
-								new DomainTransformPersistenceEvent(
-										persistenceToken, wrapper,
-										exMachineSourceIdCounter--));
+				// have it on a separate thread so it can "fire back"
+				// into the checking thread
+				new Thread() {
+					public void run() {
+						try {
+							ThreadedPermissionsManager.cast()
+									.pushSystemUser();
+							PermissibleFieldFilter.disablePerObjectPermissions = true;
+							Registry.impl(DomainTransformPersistenceEvents.class)
+							.fireDomainTransformPersistenceEvent(
+									new DomainTransformPersistenceEvent(
+											persistenceToken, wrapper,
+											exMachineSourceIdCounter--));
+						} finally {
+							PermissibleFieldFilter.disablePerObjectPermissions = false;
+							ThreadedPermissionsManager.cast()
+									.popSystemUser();
+						}
+					};
+				}.start();
+				
 			}
 		} finally {
 			checkingPersistedTransforms = false;
@@ -281,22 +282,19 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (includePublishingInHandledByThisVm) {
 			handledIds.addAll(persistingRequestIds);
 		}
-		
 		String ids = ResourceUtilities.getBundledString(
 				DomainTransformPersistenceQueue.class, "ignoreForQueueingIds");
 		handledIds.addAll(TransformManager.idListToLongs(ids));
 		handledIds.addAll(timedOutRequestIds);
 		for (DomainTransformPersistenceEvent persistenceEvent : persistedRequestIdToEvent
 				.values()) {
-			handledIds.addAll(persistenceEvent
-					.getPersistedRequestIds());
+			handledIds.addAll(persistenceEvent.getPersistedRequestIds());
 		}
-		long max = CommonUtils.lv(CollectionFilters
-				.max(handledIds));
+		long max = CommonUtils.lv(CollectionFilters.max(handledIds));
 		max = maxDbPersistedRequestId;
 		LongPair pair = getFirstContiguousRange(new LongPair(
-				maxDbPersistedRequestIdPublished + 1, max),
-				handledIds, Collections.EMPTY_LIST);
+				maxDbPersistedRequestIdPublished + 1, max), handledIds,
+				Collections.EMPTY_LIST);
 		return pair.isZero() || pair.l1 >= lx ? null : pair;
 	}
 
