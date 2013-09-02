@@ -75,6 +75,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	@Override
 	public void appShutdown() {
 		if (timer != null) {
+			logger.log("Ending gap check timer");
 			timer.cancel();
 			timer = null;
 		}
@@ -181,6 +182,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		 * transforms
 		 */
 		timer.schedule(gapCheckTask, 0, 500);
+		logger.log("Starting gap check timer");
 	}
 
 	public void startup() {
