@@ -25,8 +25,6 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * @author Nick Reddel
  */
 public @interface WebMethod {
-	boolean checkAccessPermissions() default true;
-
 	Permission customPermission() default @Permission(access = AccessLevel.LOGGED_IN);
 
 	boolean readonlyPermitted() default false;

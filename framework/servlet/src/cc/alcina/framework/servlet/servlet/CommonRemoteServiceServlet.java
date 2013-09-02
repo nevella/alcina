@@ -62,15 +62,18 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExt;
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -201,13 +204,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return JobRegistry.get().getRunningJobs();
 	}
 
-	@WebMethod(readonlyPermitted = true)
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString) {
 		return logClientError(exceptionToString,
 				LogMessageType.CLIENT_EXCEPTION.toString());
 	}
 
-	@WebMethod(readonlyPermitted = true)
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString, String exceptionType) {
 		return ServletLayerLocator.get().commonPersistenceProvider()
 				.getCommonPersistence().log(exceptionToString, exceptionType);
@@ -541,17 +544,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						rpcRequest.getMethod().getParameterTypes());
 				if (method.isAnnotationPresent(WebMethod.class)) {
 					WebMethod webMethod = method.getAnnotation(WebMethod.class);
-					if (webMethod.checkAccessPermissions()) {
-						AnnotatedPermissible ap = new AnnotatedPermissible(
-								webMethod.customPermission());
-						if (!PermissionsManager.get().isPermissible(ap)) {
-							getServletContext().log(
-									"Action not permitted: " + name,
-									new Exception());
-							return RPC.encodeResponseForFailure(null,
-									new WebException("Action not permitted: "
-											+ name));
-						}
+					AnnotatedPermissible ap = new AnnotatedPermissible(
+							webMethod.customPermission());
+					if (!PermissionsManager.get().isPermissible(ap)) {
+						WebException wex = new WebException("Action not permitted: "
+								+ name);
+						logRpcException(wex,
+								LogMessageType.PERMISSIONS_EXCEPTION.toString());
+						return RPC.encodeResponseForFailure(null,
+								wex);
 					}
 					if (!webMethod.readonlyPermitted()) {
 						AppPersistenceBase.checkNotReadOnly();
@@ -574,6 +575,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (OutOfMemoryError e) {
 			handleOom(payload, e);
 			throw e;
+		}catch (RuntimeException rex) {
+			logRpcException(rex);
+			throw rex;
 		} finally {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 		}
