@@ -94,7 +94,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	// note - this'll be the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
 
-	private static Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass = DefaultHandshakeObjectProvider.class;
+	private static Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass = CheckReadOnlyHandshakeObjectProvider.class;
 
 	public CommonPersistenceBase() {
 		ObjectPersistenceHelper.get();
@@ -908,7 +908,41 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				Long.parseLong(clientInstanceId));
 	}
 
-	static class DefaultHandshakeObjectProvider implements
+	static class CheckReadOnlyHandshakeObjectProvider implements
+			HandshakeObjectProvider {
+		ReadonlyHandshakeObjectProvider readOnlyProvider = new ReadonlyHandshakeObjectProvider();
+
+		WriterHandshakeObjectProvider writerHandshakeObjectProvider = new WriterHandshakeObjectProvider();
+
+		HandshakeObjectProvider delegate() {
+			return AppPersistenceBase.isInstanceReadOnly() ? readOnlyProvider
+					: writerHandshakeObjectProvider;
+		}
+
+		@Override
+		public void updateIid(String iidKey, String userName, boolean rememberMe) {
+			delegate().updateIid(iidKey, userName, rememberMe);
+		}
+
+		@Override
+		public void setCommonPersistence(CommonPersistenceBase commonPersistence) {
+			readOnlyProvider.setCommonPersistence(commonPersistence);
+			writerHandshakeObjectProvider
+					.setCommonPersistence(commonPersistence);
+		}
+
+		@Override
+		public ClientInstance createClientInstance(String userAgent) {
+			return delegate().createClientInstance(userAgent);
+		}
+
+		@Override
+		public ClientInstance getClientInstance(long clientInstanceId) {
+			return delegate().getClientInstance(clientInstanceId);
+		}
+	}
+
+	static class WriterHandshakeObjectProvider implements
 			HandshakeObjectProvider {
 		private CommonPersistenceBase cp;
 

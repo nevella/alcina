@@ -759,8 +759,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws DomainTransformRequestException {
 		boolean unexpectedException = true;
 		try {
-			AppPersistenceBase.checkNotReadOnly();
 			LooseContext.getContext().push();
+			AppPersistenceBase.checkNotReadOnly();
 			Registry.impl(DomainTransformPersistenceEvents.class)
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(

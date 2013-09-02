@@ -69,8 +69,9 @@ public class AppLifecycleManager implements RegistrableService {
 		state.setApiKey(map.get("apiKey"));
 	}
 
-	public void refreshProperties() {
+	public void refreshProperties() throws Exception {
 		lifecycleServlet.refreshProperties();
+		refreshClusterRoleFromConfigFile();
 		refreshWriterServices();
 	}
 
@@ -134,5 +135,11 @@ public class AppLifecycleManager implements RegistrableService {
 
 	public boolean isClusterMember() {
 		return this.clusterMember;
+	}
+
+	public void initWriterServices() {
+		for (ModeEnum e : ModeEnum.values()) {
+			e.getDeltaHandler(this).init();
+		}
 	}
 }

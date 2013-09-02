@@ -81,7 +81,6 @@ public class ControlServlet extends HttpServlet {
 		switch (csr.getCommand()) {
 		case REFRESH_CONFIG:
 			Registry.impl(AppLifecycleManager.class).refreshProperties();
-			
 			writeAndClose("Properties refreshed", resp);
 			break;
 		case GET_STATUS:

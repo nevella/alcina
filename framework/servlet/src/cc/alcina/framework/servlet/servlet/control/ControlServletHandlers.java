@@ -49,15 +49,11 @@ public class ControlServletHandlers {
 		public void handleDeltas(T[] fromStates, T[] toState) {
 			for (T from : fromStates) {
 				for (T to : toState) {
-					if (from != to || checkNonDeltas()) {
+					if (from != to) {
 						handleDelta(from, to);
 					}
 				}
 			}
-		}
-
-		protected boolean checkNonDeltas() {
-			return false;
 		}
 
 		public void handleDelta(T fromState, T toState) {
@@ -81,6 +77,9 @@ public class ControlServletHandlers {
 		}
 
 		protected abstract void handleDelta0(T fromState, T toState);
+
+		public void init() {
+		}
 	}
 
 	public static class ModeDeltaHandlerWriterMode extends
@@ -90,19 +89,21 @@ public class ControlServletHandlers {
 			super(appLifecycleManager);
 		}
 
-		@Override
-		public void handleDelta0(WriterMode fromState, WriterMode toState) {
-			if(toState==WriterMode.CLUSTER_WRITER){
-				Registry.impl(DomainTransformPersistenceEvents.class).startSequentialEventChecks();
-			}
-			AppPersistenceBase
-					.setInstanceReadOnly(toState == WriterMode.READ_ONLY);
+		public void init() {
+			// at the moment, this won't hurt even if db access is readonly
+			Registry.impl(DomainTransformPersistenceEvents.class)
+					.startSequentialEventChecks();
+			updateReadonly(WriterMode.READ_ONLY);
 		}
 
 		@Override
-		// check at init - probably fixme with some type of null->active check
-		protected boolean checkNonDeltas() {
-			return true;
+		public void handleDelta0(WriterMode fromState, WriterMode toState) {
+			updateReadonly(toState);
+		}
+
+		private void updateReadonly(WriterMode toState) {
+			AppPersistenceBase
+					.setInstanceReadOnly(toState == WriterMode.READ_ONLY);
 		}
 
 		@Override
