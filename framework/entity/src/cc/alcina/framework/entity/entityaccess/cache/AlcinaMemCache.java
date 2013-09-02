@@ -184,10 +184,10 @@ public class AlcinaMemCache {
 	 */
 	volatile Object writeLockSubLock = null;
 
-	private ReentrantReadWriteLock mainLock = new ReentrantReadWriteLock(true);
+	private ReentrantReadWriteLock mainLock = new ReentrantReadWriteLock(false);
 
 	private ReentrantReadWriteLock subgraphLock = new ReentrantReadWriteLock(
-			true);
+			false);
 
 	private BackupLazyLoader backupLazyLoader;
 

@@ -117,11 +117,16 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			return true;
 		}
 		LongPair firstGap = getFirstGapLessThan(CollectionFilters
-				.min(persistedRequestIds));
-		if (firstGap != null){//&&false) {//temp fix for prod. serv.
+				.min(persistedRequestIds),false);
+		if (firstGap != null) {// &&false) {//temp fix for prod. serv.
 			logger.format("found gap (waiting) - rqid %s - gap %s", event
 					.getTransformPersistenceToken().getRequest().shortId(),
 					firstGap);
+			LongPair withPublishingGap = getFirstGapLessThan(CollectionFilters
+					.min(persistedRequestIds),true);
+			if(withPublishingGap==null){
+				
+			}
 			return false;// let the queue sort this out
 		}
 		logger.format("firing - %s - range %s", event
@@ -244,9 +249,12 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 	}
 
-	private synchronized LongPair getFirstGapLessThan(Long lx) {
+	private synchronized LongPair getFirstGapLessThan(Long lx,
+			boolean includePublishingInHandledByThisVm) {
 		Set<Long> publishedOrPublishingIds = new LinkedHashSet<Long>();
-		publishedOrPublishingIds.addAll(persistingRequestIds);
+		if (includePublishingInHandledByThisVm) {
+			publishedOrPublishingIds.addAll(persistingRequestIds);
+		}
 		String ids = ResourceUtilities.getBundledString(
 				DomainTransformPersistenceQueue.class, "ignoreForQueueingIds");
 		publishedOrPublishingIds.addAll(TransformManager.idListToLongs(ids));
@@ -278,7 +286,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			}
 			forceDbCheck = false;
 		}
-		return getFirstGapLessThan(maxDbPersistedRequestId);
+		return getFirstGapLessThan(maxDbPersistedRequestId, true);
 	}
 
 	protected CommonPersistenceLocal getCommonPersistence() {
