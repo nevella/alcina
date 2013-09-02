@@ -200,6 +200,9 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 					for (long l = lastRangeCheck.l1; l <= lastRangeCheck.l2; l++) {
 						timedOutRequestIds.add(l);
 					}
+					synchronized (this) {
+						notifyAll();
+					}
 					return;
 				}
 			} else {
