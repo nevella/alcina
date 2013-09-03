@@ -768,9 +768,7 @@ public class AlcinaMemCache {
 					.getDeclaredField("propertyChangeSupport");
 			modificationCheckerField.setAccessible(true);
 			modificationChecker = new ModificationCheckerSupport(null);
-			if (ResourceUtilities.getBoolean(AlcinaMemCache.class, "dumpLocks")) {
-				dumpLocks = true;
-			}
+			
 		}
 		// get non-many-many obj
 		lock(true);
@@ -818,6 +816,9 @@ public class AlcinaMemCache {
 			}
 		}
 		initialising = false;
+		if (ResourceUtilities.getBoolean(AlcinaMemCache.class, "dumpLocks")) {
+			dumpLocks = true;
+		}
 		MetricLogging.get().end("lookups");
 	}
 
