@@ -607,7 +607,7 @@ public class AlcinaMemCache {
 					t.getId(), mainLock.getReadHoldCount(),
 					mainLock.getWriteHoldCount(), subgraphLock);
 			StackTraceElement[] trace = t.getStackTrace();
-			for (int i = 2; i < trace.length && i < 8; i++) {
+			for (int i = 2; i < trace.length && i < 10; i++) {
 				log += trace[i] + "\n";
 			}
 			log += "\n\n";
