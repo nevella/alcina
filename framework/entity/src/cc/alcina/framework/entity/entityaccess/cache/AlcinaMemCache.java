@@ -1205,35 +1205,49 @@ public class AlcinaMemCache {
 		void resolve() {
 			try {
 				for (LaterItem item : items) {
-					PropertyDescriptor pd = item.pd;
-					Method rm = pd.getReadMethod();
-					long id = item.id;
-					if (joinTables.containsKey(pd)) {
-						Set set = (Set) pd.getReadMethod().invoke(item.source,
-								new Object[0]);
-						if (set == null) {
-							set = new LinkedHashSet();
-							pd.getWriteMethod().invoke(item.source,
-									new Object[] { set });
-						}
-						set.add(item.target);
-					} else {
-						Object target = cache.get(
-								propertyDescriptorFetchTypes.get(pd), id);
-						assert target != null;
-						pd.getWriteMethod().invoke(item.source, target);
-						PropertyDescriptor targetPd = manyToOneRev.get(
-								item.source.getClass(), pd.getName());
-						if (targetPd != null) {
-							Set set = (Set) targetPd.getReadMethod().invoke(
-									target, new Object[0]);
+					try {
+						PropertyDescriptor pd = item.pd;
+						Method rm = pd.getReadMethod();
+						long id = item.id;
+						if (joinTables.containsKey(pd)) {
+							Set set = (Set) pd.getReadMethod().invoke(
+									item.source, new Object[0]);
 							if (set == null) {
 								set = new LinkedHashSet();
-								targetPd.getWriteMethod().invoke(target,
+								pd.getWriteMethod().invoke(item.source,
 										new Object[] { set });
 							}
-							set.add(item.source);
+							set.add(item.target);
+						} else {
+							Object target = cache.get(
+									propertyDescriptorFetchTypes.get(pd), id);
+							if (target == null) {
+								System.out
+										.format("later-lookup -- missing target: %s, %s for  %s.%s #%s",
+												propertyDescriptorFetchTypes
+														.get(pd), id,
+												item.source.getClass(), pd
+														.getName(), item.source
+														.getId());
+							}
+							pd.getWriteMethod().invoke(item.source, target);
+							PropertyDescriptor targetPd = manyToOneRev.get(
+									item.source.getClass(), pd.getName());
+							if (targetPd != null) {
+								Set set = (Set) targetPd.getReadMethod()
+										.invoke(target, new Object[0]);
+								if (set == null) {
+									set = new LinkedHashSet();
+									targetPd.getWriteMethod().invoke(target,
+											new Object[] { set });
+								}
+								set.add(item.source);
+							}
 						}
+					} catch (Exception e) {
+						// possibly a delta during warmup::
+						System.out.println(item);
+						e.printStackTrace();
 					}
 				}
 				items.clear();
@@ -1263,6 +1277,12 @@ public class AlcinaMemCache {
 				this.id = id;
 				this.pd = pd;
 				this.source = source;
+			}
+
+			@Override
+			public String toString() {
+				// TODO Auto-generated method stub
+				return super.toString();
 			}
 		}
 	}
