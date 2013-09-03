@@ -47,7 +47,10 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				if (shouldCheckPersistedTransforms() != null) {
 					maybeCheckPersistedTransforms();
 				}
-			} finally {
+			}catch (Throwable t){
+				t.printStackTrace();
+			}
+			finally {
 				PermissibleFieldFilter.disablePerObjectPermissions = false;
 				ThreadedPermissionsManager.cast().popSystemUser();
 			}

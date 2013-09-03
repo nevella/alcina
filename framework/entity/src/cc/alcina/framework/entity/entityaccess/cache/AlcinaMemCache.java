@@ -563,6 +563,7 @@ public class AlcinaMemCache {
 	
 	private void lock(boolean write) {
 		if(lockingDisabled){
+			System.out.println("Locking disabled");
 			return;
 		}
 		try {
