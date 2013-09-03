@@ -42,17 +42,11 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		@Override
 		public void run() {
 			try {
-				ThreadedPermissionsManager.cast().pushSystemUser();
-				PermissibleFieldFilter.disablePerObjectPermissions = true;
 				if (shouldCheckPersistedTransforms() != null) {
 					maybeCheckPersistedTransforms();
 				}
-			}catch (Throwable t){
+			} catch (Throwable t) {
 				t.printStackTrace();
-			}
-			finally {
-				PermissibleFieldFilter.disablePerObjectPermissions = false;
-				ThreadedPermissionsManager.cast().popSystemUser();
 			}
 		}
 	}
@@ -351,7 +345,14 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	protected synchronized void maybeCheckPersistedTransforms() {
 		LongPair checkRequestRange = shouldCheckPersistedTransforms();
 		if (checkRequestRange != null) {
-			checkPersistedTransforms(checkRequestRange);
+			try {
+				ThreadedPermissionsManager.cast().pushSystemUser();
+				PermissibleFieldFilter.disablePerObjectPermissions = true;
+				checkPersistedTransforms(checkRequestRange);
+			} finally {
+				PermissibleFieldFilter.disablePerObjectPermissions = false;
+				ThreadedPermissionsManager.cast().popSystemUser();
+			}
 		}
 	}
 }
