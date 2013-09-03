@@ -13,10 +13,16 @@
  */
 package cc.alcina.framework.entity.logic.permissions;
 
+import java.util.Set;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.entityaccess.UserlandProvider;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
@@ -44,9 +50,8 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 	}
 
 	public IUser pushSystemUser() {
-		CommonPersistenceLocal up = EntityLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
-		IUser systemUser = up.getSystemUser(true);
+		IUser systemUser = Registry.impl(UserlandProvider.class).getSystemUser(
+				true);
 		pushUser(systemUser, LoginState.LOGGED_IN, true);
 		return systemUser;
 	}
@@ -94,5 +99,13 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		} else {
 			pushSystemUser();
 		}
+	}
+
+	@Override
+	// TODO - jade - for people with large memberships, this could be cached
+	// (memcache) - hardly worthwhile tho
+	protected void recursivePopulateGroupMemberships(Set<IGroup> members,
+			Set<IGroup> processed) {
+		super.recursivePopulateGroupMemberships(members, processed);
 	}
 }

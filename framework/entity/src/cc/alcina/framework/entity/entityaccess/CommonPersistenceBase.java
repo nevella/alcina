@@ -61,7 +61,9 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -1207,5 +1209,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 		}
 		return cache;
+	}
+
+	@RegistryLocation(registryPoint = UserlandProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static class DefaultUserlandProvider implements UserlandProvider {
+		@Override
+		public IUser getSystemUser(boolean clean) {
+			return EntityLayerLocator.get().commonPersistenceProvider()
+					.getCommonPersistence().getSystemUser(clean);
+		}
 	}
 }

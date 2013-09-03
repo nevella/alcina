@@ -19,6 +19,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -59,6 +60,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -177,6 +179,10 @@ public class AlcinaMemCache {
 
 	private boolean dumpLocks;
 
+	private boolean collectLockAcquisitionPoints;
+
+	private LinkedList<String> recentLockAcquisitions = new LinkedList<String>();
+
 	/**
 	 * Certain post-list triggers can writeLock() without causing readlock
 	 * issues (because they deal with areas of the subgraph that the app
@@ -202,7 +208,8 @@ public class AlcinaMemCache {
 		TransformPersister.persistingTransformsListenerDelta(
 				persistingListener, true);
 		persistenceListener = new MemCachePersistenceListener();
-		maxLockQueueLength=ResourceUtilities.getInteger(AlcinaMemCache.class, "maxLockQueueLength", 20);
+		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
+				"maxLockQueueLength", 20);
 	}
 
 	public void addValues(CacheListener listener) {
@@ -373,7 +380,7 @@ public class AlcinaMemCache {
 	 * as the sublock objects are different), will rework this
 	 */
 	public void sublock(Object sublock, boolean lock) {
-		if(lockingDisabled){
+		if (lockingDisabled) {
 			return;
 		}
 		if (lock) {
@@ -479,8 +486,7 @@ public class AlcinaMemCache {
 		}
 	}
 
-	private  void loadJoinTable(
-			Entry<PropertyDescriptor, JoinTable> entry) {
+	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry) {
 		JoinTable joinTable = entry.getValue();
 		if (joinTable == null) {
 			return;
@@ -557,19 +563,27 @@ public class AlcinaMemCache {
 	}
 
 	private boolean lockingDisabled;
-	private Set<Thread> waitingOnWriteLock=Collections.synchronizedSet(new LinkedHashSet<Thread>());
+
+	private Set<Thread> waitingOnWriteLock = Collections
+			.synchronizedSet(new LinkedHashSet<Thread>());
 
 	private int maxLockQueueLength;
-	
+
 	private void lock(boolean write) {
-		if(lockingDisabled){
+		if (lockingDisabled) {
 			System.out.println("Locking disabled");
 			return;
 		}
 		try {
-			if(mainLock.getQueueLength()>maxLockQueueLength){
-				lockingDisabled=true;
-				for(Thread t:waitingOnWriteLock){
+			if (mainLock.getQueueLength() > maxLockQueueLength) {
+				System.out
+						.println("Disabling locking due to deadlock:\n***************\n");
+				System.out.println(CommonUtils.join(recentLockAcquisitions,
+						"\n"));
+				AlcinaTopics.notifyDevWarning(new MemcacheException(
+						"Disabling locking to long queue/deadlock"));
+				lockingDisabled = true;
+				for (Thread t : waitingOnWriteLock) {
 					t.interrupt();
 				}
 				waitingOnWriteLock.clear();
@@ -598,9 +612,10 @@ public class AlcinaMemCache {
 	}
 
 	private void maybeLogLock(String action, boolean write) {
-		if (dumpLocks) {
-			System.out.format("Memcache lock - %s - %s\n", write ? "write"
-					: "read", action);
+		if (dumpLocks || collectLockAcquisitionPoints) {
+			String message = String.format("Memcache lock - %s - %s\n",
+					write ? "write" : "read", action);
+			
 			Thread t = Thread.currentThread();
 			String log = CommonUtils.formatJ("\tid:%s\n\treadHoldCount:"
 					+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
@@ -611,7 +626,18 @@ public class AlcinaMemCache {
 				log += trace[i] + "\n";
 			}
 			log += "\n\n";
-			System.out.println(log);
+			message += log;
+			if (dumpLocks) {
+				System.out.println(message);
+			}
+			if (collectLockAcquisitionPoints) {
+				synchronized (recentLockAcquisitions) {
+					recentLockAcquisitions.add(message);
+					if (recentLockAcquisitions.size() > 100) {
+						recentLockAcquisitions.removeFirst();
+					}
+				}
+			}
 		}
 	}
 
@@ -685,7 +711,7 @@ public class AlcinaMemCache {
 	}
 
 	private void unlock(boolean write) {
-		if(lockingDisabled){
+		if (lockingDisabled) {
 			return;
 		}
 		try {
@@ -768,7 +794,6 @@ public class AlcinaMemCache {
 					.getDeclaredField("propertyChangeSupport");
 			modificationCheckerField.setAccessible(true);
 			modificationChecker = new ModificationCheckerSupport(null);
-			
 		}
 		// get non-many-many obj
 		lock(true);
@@ -818,6 +843,10 @@ public class AlcinaMemCache {
 		initialising = false;
 		if (ResourceUtilities.getBoolean(AlcinaMemCache.class, "dumpLocks")) {
 			dumpLocks = true;
+		}
+		if (ResourceUtilities.getBoolean(AlcinaMemCache.class,
+				"collectLockAcquisitionPoints")) {
+			collectLockAcquisitionPoints = true;
 		}
 		MetricLogging.get().end("lookups");
 	}
