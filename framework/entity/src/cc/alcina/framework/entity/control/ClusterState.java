@@ -11,35 +11,85 @@ public class ClusterState {
 
 	private String preferredWriterHost;
 
-	public String getCurrentWriterHost() {
-		return this.currentWriterHost;
-	}
+	private String httpProxyBalancerUrl;
 
-	public void setCurrentWriterHost(String currentWriterHost) {
-		this.currentWriterHost = currentWriterHost;
-	}
+	private String httpsProxyBalancerUrl;
+
+	private String proxyToHttpPort;
+
+	private String proxyToHttpsPort;
+
+	private String testUrl;
 
 	public List<String> getAllHosts() {
 		return this.allHosts;
-	}
-
-	public void setAllHosts(List<String> allHosts) {
-		this.allHosts = allHosts;
-	}
-
-	public String getPreferredWriterHost() {
-		return this.preferredWriterHost;
-	}
-
-	public void setPreferredWriterHost(String preferredWriterHost) {
-		this.preferredWriterHost = preferredWriterHost;
 	}
 
 	public String getClusterId() {
 		return this.clusterId;
 	}
 
+	public String getCurrentWriterHost() {
+		return this.currentWriterHost;
+	}
+
+	public String getHttpProxyBalancerUrl() {
+		return this.httpProxyBalancerUrl;
+	}
+
+	public String getHttpsProxyBalancerUrl() {
+		return this.httpsProxyBalancerUrl;
+	}
+
+	public String getPreferredWriterHost() {
+		return this.preferredWriterHost;
+	}
+
+	public String getProxyToHttpPort() {
+		return this.proxyToHttpPort;
+	}
+
+	public String getProxyToHttpsPort() {
+		return this.proxyToHttpsPort;
+	}
+
+	public String getTestUrl() {
+		return this.testUrl;
+	}
+
+	public void setAllHosts(List<String> allHosts) {
+		this.allHosts = allHosts;
+	}
+
 	public void setClusterId(String clusterId) {
 		this.clusterId = clusterId;
+	}
+
+	public void setCurrentWriterHost(String currentWriterHost) {
+		this.currentWriterHost = currentWriterHost;
+	}
+
+	public void setHttpProxyBalancerUrl(String httpProxyBalancerUrl) {
+		this.httpProxyBalancerUrl = httpProxyBalancerUrl;
+	}
+
+	public void setHttpsProxyBalancerUrl(String httpsProxyBalancerUrl) {
+		this.httpsProxyBalancerUrl = httpsProxyBalancerUrl;
+	}
+
+	public void setPreferredWriterHost(String preferredWriterHost) {
+		this.preferredWriterHost = preferredWriterHost;
+	}
+
+	public void setProxyToHttpPort(String proxyToHttpPort) {
+		this.proxyToHttpPort = proxyToHttpPort;
+	}
+
+	public void setProxyToHttpsPort(String proxyToHttpsPort) {
+		this.proxyToHttpsPort = proxyToHttpsPort;
+	}
+
+	public void setTestUrl(String testUrl) {
+		this.testUrl = testUrl;
 	}
 }
