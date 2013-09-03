@@ -38,6 +38,22 @@ import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
 @RegistryLocation(registryPoint = DomainTransformPersistenceQueue.class, implementationType = ImplementationType.SINGLETON)
 public class DomainTransformPersistenceQueue implements RegistrableService {
+	class GapCheckTask extends TimerTask {
+		@Override
+		public void run() {
+			try {
+				ThreadedPermissionsManager.cast().pushSystemUser();
+				PermissibleFieldFilter.disablePerObjectPermissions = true;
+				if (shouldCheckPersistedTransforms() != null) {
+					maybeCheckPersistedTransforms();
+				}
+			} finally {
+				PermissibleFieldFilter.disablePerObjectPermissions = false;
+				ThreadedPermissionsManager.cast().popSystemUser();
+			}
+		}
+	}
+
 	private long maxDbPersistedRequestIdPublished = 0;
 
 	private long maxDbPersistedRequestId = 0;
@@ -69,7 +85,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	public DomainTransformPersistenceQueue() {
 		Registry.checkSingleton(this);
-		this.timer = new Timer();
+		this.timer = new Timer("Timer-DomainTransformPersistenceQueue-runner");
 	}
 
 	@Override
@@ -146,21 +162,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	public void startGapCheckTimer() {
-		this.gapCheckTask = new TimerTask() {
-			@Override
-			public void run() {
-				try {
-					ThreadedPermissionsManager.cast().pushSystemUser();
-					PermissibleFieldFilter.disablePerObjectPermissions = true;
-					if (shouldCheckPersistedTransforms() != null) {
-						maybeCheckPersistedTransforms();
-					}
-				} finally {
-					PermissibleFieldFilter.disablePerObjectPermissions = false;
-					ThreadedPermissionsManager.cast().popSystemUser();
-				}
-			}
-		};
+		this.gapCheckTask = new GapCheckTask();
 		/*
 		 * this should only need to run when db changes have been made by
 		 * another application. those will appear as gaps in this vm's persisted
@@ -176,7 +178,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	public synchronized void submit(DomainTransformPersistenceEvent event) {
-		if (event.getDomainTransformLayerWrapper() == null) {
+		if (event.getPersistenceEventType() != DomainTransformPersistenceEventType.COMMIT_OK) {
 			return;
 		}
 		persistedRequestIdToEvent.put(event.getSourceThreadId(), event);
@@ -257,22 +259,20 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				new Thread() {
 					public void run() {
 						try {
-							ThreadedPermissionsManager.cast()
-									.pushSystemUser();
+							ThreadedPermissionsManager.cast().pushSystemUser();
 							PermissibleFieldFilter.disablePerObjectPermissions = true;
-							Registry.impl(DomainTransformPersistenceEvents.class)
-							.fireDomainTransformPersistenceEvent(
-									new DomainTransformPersistenceEvent(
-											persistenceToken, wrapper,
-											exMachineSourceIdCounter--));
+							Registry.impl(
+									DomainTransformPersistenceEvents.class)
+									.fireDomainTransformPersistenceEvent(
+											new DomainTransformPersistenceEvent(
+													persistenceToken, wrapper,
+													exMachineSourceIdCounter--));
 						} finally {
 							PermissibleFieldFilter.disablePerObjectPermissions = false;
-							ThreadedPermissionsManager.cast()
-									.popSystemUser();
+							ThreadedPermissionsManager.cast().popSystemUser();
 						}
 					};
 				}.start();
-				
 			}
 		} finally {
 			checkingPersistedTransforms = false;

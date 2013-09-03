@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -201,6 +202,7 @@ public class AlcinaMemCache {
 		TransformPersister.persistingTransformsListenerDelta(
 				persistingListener, true);
 		persistenceListener = new MemCachePersistenceListener();
+		maxLockQueueLength=ResourceUtilities.getInteger(AlcinaMemCache.class, "maxLockQueueLength", 20);
 	}
 
 	public void addValues(CacheListener listener) {
@@ -371,6 +373,9 @@ public class AlcinaMemCache {
 	 * as the sublock objects are different), will rework this
 	 */
 	public void sublock(Object sublock, boolean lock) {
+		if(lockingDisabled){
+			return;
+		}
 		if (lock) {
 			subgraphLock.writeLock().lock();
 			writeLockSubLock = sublock;
@@ -474,7 +479,7 @@ public class AlcinaMemCache {
 		}
 	}
 
-	private synchronized void loadJoinTable(
+	private  void loadJoinTable(
 			Entry<PropertyDescriptor, JoinTable> entry) {
 		JoinTable joinTable = entry.getValue();
 		if (joinTable == null) {
@@ -551,15 +556,36 @@ public class AlcinaMemCache {
 		return loaded;
 	}
 
+	private boolean lockingDisabled;
+	private Set<Thread> waitingOnWriteLock=Collections.synchronizedSet(new LinkedHashSet<Thread>());
+
+	private int maxLockQueueLength;
+	
 	private void lock(boolean write) {
+		if(lockingDisabled){
+			return;
+		}
 		try {
+			if(mainLock.getQueueLength()>maxLockQueueLength){
+				lockingDisabled=true;
+				for(Thread t:waitingOnWriteLock){
+					t.interrupt();
+				}
+				waitingOnWriteLock.clear();
+				return;
+			}
 			if (write) {
 				int readHoldCount = mainLock.getReadHoldCount();
 				if (readHoldCount > 0) {
 					throw new RuntimeException(
 							"Trying to acquire write lock from read-locked thread");
 				}
-				mainLock.writeLock().lock();
+				try {
+					waitingOnWriteLock.add(Thread.currentThread());
+					mainLock.writeLock().lockInterruptibly();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			} else {
 				mainLock.readLock().lock();
 			}
@@ -658,12 +684,16 @@ public class AlcinaMemCache {
 	}
 
 	private void unlock(boolean write) {
+		if(lockingDisabled){
+			return;
+		}
 		try {
 			if (write) {
 				if (mainLock.writeLock().isHeldByCurrentThread()) {
 					// if not held, we had an exception acquiring the
 					// lock...ignore
 					mainLock.writeLock().unlock();
+					waitingOnWriteLock.remove(Thread.currentThread());
 				}
 			} else {
 				mainLock.readLock().unlock();
