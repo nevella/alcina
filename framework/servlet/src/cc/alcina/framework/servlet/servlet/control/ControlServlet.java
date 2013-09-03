@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.servlet.control;
 
 import java.io.IOException;
+import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -9,7 +10,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
 public class ControlServlet extends HttpServlet {
@@ -81,7 +81,9 @@ public class ControlServlet extends HttpServlet {
 		switch (csr.getCommand()) {
 		case REFRESH_CONFIG:
 			Registry.impl(AppLifecycleManager.class).refreshProperties();
-			writeAndClose("Properties refreshed", resp);
+			writeAndClose(
+					String.format("Properties refreshed - %s", new Date()),
+					resp);
 			break;
 		case GET_STATUS:
 			ControlServletState status = Registry.impl(
@@ -90,6 +92,10 @@ public class ControlServlet extends HttpServlet {
 				writeAndClose(new AlcinaBeanSerializerS().serialize(status),
 						resp);
 			} else {
+				String msg = status.toString();
+				msg += "\n";
+				msg += Registry.impl(AppLifecycleManager.class)
+						.getLifecycleServlet().dumpCustomProperties();
 				writeAndClose(status.toString(), resp);
 			}
 			break;

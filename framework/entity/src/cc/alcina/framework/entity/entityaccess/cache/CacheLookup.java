@@ -26,8 +26,8 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	private boolean enabled = true;
 
 	private CollectionFilter<H> relevanceFilter;
-	
-	private Converter<T,T> normaliser;
+
+	private Converter<T, T> normaliser;
 
 	public CacheLookup(CacheLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
@@ -46,7 +46,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	private T normalise(T k1) {
-		return normaliser==null?k1:normaliser.convert(k1);
+		return normaliser == null ? k1 : normaliser.convert(k1);
 	}
 
 	public Set<Long> getAndEnsure(T k1) {
@@ -58,14 +58,15 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		return result;
 	}
 
-	public Set<H> getPrivateObjects(T k1){
-		Set<H> result=new LinkedHashSet<H>();
+	public Set<H> getPrivateObjects(T k1) {
+		Set<H> result = new LinkedHashSet<H>();
 		Set<Long> ids = getAndEnsure(k1);
 		for (Long id : ids) {
 			result.add(getForResolvedId(id));
 		}
 		return result;
 	}
+
 	@Override
 	public Class getListenedClass() {
 		return descriptor.clazz;
@@ -149,7 +150,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	protected H getForResolvedId(long id) {
-		if(privateCache!=null){
+		if (privateCache != null) {
 			return (H) privateCache.get(descriptor.clazz, id);
 		}
 		return (H) AlcinaMemCache.get().transactional
@@ -162,5 +163,11 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	public void setNormaliser(Converter<T, T> normaliser) {
 		this.normaliser = normaliser;
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("Lookup: %s [%s]", getListenedClass()
+				.getSimpleName(), descriptor.propertyPath);
 	}
 }

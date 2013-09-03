@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletConfig;
@@ -27,6 +28,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.entity.MetricLogging;
@@ -272,5 +274,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	public void refreshProperties() {
 		loadCustomProperties();
+	}
+
+	public String dumpCustomProperties() {
+		Map<String, String> map = new TreeMap<String, String>();
+		map.putAll(ResourceUtilities.getCustomProperties());
+		return CommonUtils.join(map.entrySet(), "\n");
 	}
 }
