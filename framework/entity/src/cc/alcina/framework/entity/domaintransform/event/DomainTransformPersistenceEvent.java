@@ -28,7 +28,8 @@ public class DomainTransformPersistenceEvent {
 
 	@SuppressWarnings("unchecked")
 	public List<Long> getPersistedRequestIds() {
-		return domainTransformLayerWrapper == null ? Collections.EMPTY_LIST
+		return domainTransformLayerWrapper == null
+				|| domainTransformLayerWrapper.persistentRequests == null ? Collections.EMPTY_LIST
 				: EntityUtils
 						.hasIdsToIdList(domainTransformLayerWrapper.persistentRequests);
 	}
