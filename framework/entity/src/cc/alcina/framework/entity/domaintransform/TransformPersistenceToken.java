@@ -50,7 +50,7 @@ public class TransformPersistenceToken {
 			TransformLoggingPolicy transformLoggingPolicy,
 			boolean possiblyReconstitueLocalIdMap,
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
-			Logger logger, boolean blockUntilAllListenersNotified2) {
+			Logger logger, boolean blockUntilAllListenersNotified) {
 		this.request = request;
 		this.locatorMap = locatorMap;
 		this.transformLoggingPolicy = transformLoggingPolicy;
@@ -58,7 +58,7 @@ public class TransformPersistenceToken {
 		this.ignoreClientAuthMismatch = ignoreClientAuthMismatch;
 		this.forOfflineTransforms = forOfflineTransforms;
 		this.logger = logger;
-		this.blockUntilAllListenersNotified = blockUntilAllListenersNotified2;
+		this.blockUntilAllListenersNotified = blockUntilAllListenersNotified;
 		this.transformExceptionPolicy = EntityLayerLocator.get()
 				.persistenceLayerTransformExceptionPolicyFactory()
 				.getPolicy(this, forOfflineTransforms);

@@ -56,8 +56,6 @@ public class TransformPersister {
 
 	private static final String TRANSFORM_FIRE = "transform - fire";
 
-	
-
 	private EntityManager entityManager;
 
 	private CommonPersistenceLocal commonPersistenceBase;
@@ -153,20 +151,18 @@ public class TransformPersister {
 		}
 	}
 
-	private Integer getLastTransformId(long clientInstanceId, int firstRequestId) {
+	private Integer getHighestPersistedRequestIdForClientInstance(
+			long clientInstanceId) {
 		String eql = String
 				.format("select max(dtrq.requestId) as maxId "
 						+ "from %s dtrq where dtrq.clientInstance.id=%s ",
 						commonPersistenceBase.getImplementation(
 								DomainTransformRequestPersistent.class)
-								.getSimpleName(), clientInstanceId,
-						firstRequestId);
+								.getSimpleName(), clientInstanceId);
 		Integer result = (Integer) getEntityManager().createQuery(eql)
 				.getSingleResult();
 		return result;
 	}
-
-	
 
 	long determineExceptionDetailPassStartTime = 0;
 
@@ -220,28 +216,35 @@ public class TransformPersister {
 					&& locatorMap.isEmpty()) {
 				tm.reconstituteHiliMap();
 			}
-			Integer lastTransformId = getLastTransformId(request
-					.getClientInstance().getId(), request.getRequestId());
 			List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
 			dtrs.addAll(request.getPriorRequestsWithoutResponse());
 			dtrs.add(request);
-			for (int i = dtrs.size() - 1; i >= 0; i--) {
-				DomainTransformRequest dtr = dtrs.get(i);
-				if (lastTransformId != null
-						&& dtr.getRequestId() <= lastTransformId) {
-					dtrs.remove(i);
+			Integer highestPersistedRequestId = null;
+			if (token.isPossiblyReconstitueLocalIdMap()) {
+				highestPersistedRequestId = getHighestPersistedRequestIdForClientInstance(request
+						.getClientInstance().getId());
+				for (int i = dtrs.size() - 1; i >= 0; i--) {
+					DomainTransformRequest dtr = dtrs.get(i);
+					if (highestPersistedRequestId != null
+							&& dtr.getRequestId() <= highestPersistedRequestId) {
+						dtrs.remove(i);
+					}
 				}
 			}
 			if (token.getPass() == Pass.TRY_COMMIT) {
 				EntityLayerLocator
 						.get()
 						.getMetricLogger()
-						.info(String.format("domain transform - %s - clid:"
-								+ "%s - rqid:%s - lasttransid:%s",
-								persistentClientInstance.getUser()
-										.getUserName(), request
-										.getClientInstance().getId(), request
-										.getRequestId(), lastTransformId));
+						.info(String
+								.format("domain transform - %s - clid:"
+										+ "%s - rqid:%s - highestPersistedRequestId:%s",
+										persistentClientInstance.getUser()
+												.getUserName(),
+										request.getClientInstance().getId(),
+										request.getRequestId(),
+										(highestPersistedRequestId == null ? "(servlet layer)"
+												: "highestPersistedRequestId:"
+														+ highestPersistedRequestId)));
 			}
 			int transformCount = 0;
 			loop_dtrs: for (DomainTransformRequest dtr : dtrs) {
@@ -249,7 +252,8 @@ public class TransformPersister {
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
 				if (token.getPass() == Pass.TRY_COMMIT) {
 					MetricLogging.get().lowPriorityStart(PRECACHE_ENTITIES);
-					commonPersistenceBase.cacheEntities(items, token.getTransformExceptionPolicy()
+					commonPersistenceBase.cacheEntities(items, token
+							.getTransformExceptionPolicy()
 							.precreateMissingEntities());
 					MetricLogging.get().lowPriorityEnd(PRECACHE_ENTITIES);
 				}
@@ -376,7 +380,8 @@ public class TransformPersister {
 						DomainTransformRequestPersistent dtrp = dtrqImpl
 								.newInstance();
 						getEntityManager().persist(dtrp);
-						Registry.impl(DomainTransformPersistenceEvents.class).registerPersisting(dtrp);
+						Registry.impl(DomainTransformPersistenceEvents.class)
+								.registerPersisting(dtrp);
 						dtr.setEvents(null);
 						dtrp.wrap(dtr);
 						dtrp.setEvents(new ArrayList<DomainTransformEvent>());
@@ -434,7 +439,7 @@ public class TransformPersister {
 				DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 				wrapper.locatorMap = locatorMap;
 				wrapper.response = dtr;
-				wrapper.persistentRequests=dtrps;
+				wrapper.persistentRequests = dtrps;
 				wrapper.persistentEvents = dtreps;
 				return wrapper;
 			case RETRY_WITH_IGNORES:
