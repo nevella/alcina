@@ -3,51 +3,71 @@ package cc.alcina.framework.servlet.sync;
 import com.totsp.gwittir.client.beans.Converter;
 
 public class SyncConversionSpec {
-	private String name1;
+	private String left;
 
-	private String name2;
+	private String right;
 
-	private Converter converter;
+	private Converter leftToRight;
 
-	private Converter reverseConverter;
+	private Converter rightToLeft;
+	
+	private Boolean leftOverrides;
+	
+	private Boolean rightOverrides;
 
 	public SyncConversionSpec() {
 	}
 
-	public SyncConversionSpec(String name1, String name2) {
-		this.name1 = name1;
-		this.name2 = name2;
+	public SyncConversionSpec(String left, String right) {
+		this.left = left;
+		this.right = right;
 	}
 
-	public String getName1() {
-		return this.name1;
+	public String getLeft() {
+		return this.left;
 	}
 
-	public void setName1(String name1) {
-		this.name1 = name1;
+	public void setLeft(String left) {
+		this.left = left;
 	}
 
-	public String getName2() {
-		return this.name2;
+	public String getRight() {
+		return this.right;
 	}
 
-	public void setName2(String name2) {
-		this.name2 = name2;
+	public void setRight(String right) {
+		this.right = right;
 	}
 
-	public Converter getConverter() {
-		return this.converter;
+	public Converter getLeftToRight() {
+		return this.leftToRight;
 	}
 
-	public void setConverter(Converter converter) {
-		this.converter = converter;
+	public void setLeftToRight(Converter converter) {
+		this.leftToRight = converter;
 	}
 
-	public Converter getReverseConverter() {
-		return this.reverseConverter;
+	public Converter getRightToLeft() {
+		return this.rightToLeft;
 	}
 
-	public void setReverseConverter(Converter reverseConverter) {
-		this.reverseConverter = reverseConverter;
+	public void setRightToLeft(Converter reverseConverter) {
+		this.rightToLeft = reverseConverter;
+	}
+
+	public Boolean getLeftOverrides() {
+		return this.leftOverrides;
+	}
+
+	public void setLeftOverrides(Boolean leftOverrides) {
+		this.leftOverrides = leftOverrides;
+	}
+
+	public Boolean getRightOverrides() {
+		return this.rightOverrides;
+	}
+
+	public void setRightOverrides(Boolean rightOverrides) {
+		this.rightOverrides = rightOverrides;
 	}
 }

@@ -12,4 +12,6 @@ public interface SyncLandscape<T> {
 
 	public String getPreferredKey(SyncObjectData sourceData,
 			SyncObjectData targetData);
+
+	public boolean isOverrideLeftToRight(String key);
 }

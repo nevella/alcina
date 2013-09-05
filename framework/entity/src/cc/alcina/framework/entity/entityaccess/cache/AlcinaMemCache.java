@@ -569,7 +569,7 @@ public class AlcinaMemCache {
 
 	private int maxLockQueueLength;
 
-	private void lock(boolean write) {
+	public void lock(boolean write) {
 		if (lockingDisabled) {
 			System.out.println("Locking disabled");
 			return;
@@ -710,7 +710,7 @@ public class AlcinaMemCache {
 		return date;
 	}
 
-	private void unlock(boolean write) {
+	public void unlock(boolean write) {
 		if (lockingDisabled) {
 			return;
 		}

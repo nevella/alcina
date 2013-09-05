@@ -34,7 +34,7 @@ public class SyncMergeData {
 			for (String key : sourceData.getNonNullValues().keySet()) {
 				if (targetData == null
 						|| !targetData.getNonNullValues().keySet()
-								.contains(key)) {
+								.contains(key)||targetLandscape.isOverrideLeftToRight(key)) {
 					values.put(key, sourceData.getNonNullValues().get(key));
 				}
 			}
