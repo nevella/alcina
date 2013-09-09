@@ -11,30 +11,29 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.domaintransform.spi;
 
 import java.lang.annotation.Annotation;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface PropertyAccessor {
+public interface PropertyAccessor {
 	public void setPropertyValue(Object bean, String propertyName, Object value);
 
 	public Object getPropertyValue(Object bean, String propertyName);
-	
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,String propertyName);
+
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName);
 
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName);
 
 	public Class getPropertyType(Class objectClass, String propertyName);
-	
-	public interface IndividualPropertyAccessor{
+
+
+	public interface IndividualPropertyAccessor {
 		public Object getPropertyValue(Object value);
 	}
-	
 }

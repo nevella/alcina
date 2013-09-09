@@ -201,7 +201,12 @@ public class AlcinaBeanSerializer {
 			return null;
 		}
 		JSONObject jo = new JSONObject();
-		jo.put(CLASS_NAME, new JSONString(object.getClass().getName()));
+		Class<? extends Object> type = object.getClass();
+		if (!type.isEnum() && type.getSuperclass() != null
+				&& type.getSuperclass().isEnum()) {
+			type = type.getSuperclass();
+		}
+		jo.put(CLASS_NAME, new JSONString(type.getName()));
 		Class<? extends Object> clazz = object.getClass();
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
 			jo.put(LITERAL, serializeField(object, clazz));

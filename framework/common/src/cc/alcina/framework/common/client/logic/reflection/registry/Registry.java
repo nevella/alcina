@@ -157,15 +157,7 @@ public class Registry {
 	public List<Class> lookup(boolean mostSpecificTarget, Class registryPoint,
 			Class targetObject, boolean required) {
 		// superclasschain
-		List<Class> scChain = new ArrayList<Class>();
-		Class c = targetObject;
-		while (c != null) {
-			scChain.add(c);
-			c = c.getSuperclass();
-		}
-		if (!scChain.contains(void.class)) {
-			scChain.add(void.class);
-		}
+		List<Class> scChain = getSuperclassChain(targetObject);
 		List<Class> result = new ArrayList<Class>();
 		Map<Class, Map<Class, Class>> map = registry.asMapEnsure(false,
 				registryPoint);
@@ -185,6 +177,19 @@ public class Registry {
 			}
 		}
 		return CommonUtils.dedupe(result);
+	}
+
+	protected List<Class> getSuperclassChain(Class targetObject) {
+		List<Class> scChain = new ArrayList<Class>();
+		Class c = targetObject;
+		while (c != null) {
+			scChain.add(c);
+			c = c.getSuperclass();
+		}
+		if (!scChain.contains(void.class)) {
+			scChain.add(void.class);
+		}
+		return scChain;
 	}
 
 	public List<Class> lookup(Class registryPoint) {
@@ -328,7 +333,7 @@ public class Registry {
 		if (singleton != null && !(singleton instanceof RegistryFactory)) {
 			return (V) singleton;
 		}
-		ImplementationType type = implementationTypeMap.get(registryPoint,
+		ImplementationType type = resolveImplementationType(registryPoint,
 				targetObjectClass);
 		Object obj = null;
 		if (singleton == null) {
@@ -360,6 +365,28 @@ public class Registry {
 		case MULTIPLE:
 		}
 		return (V) obj;
+	}
+
+	protected <V> ImplementationType resolveImplementationType(
+			Class<V> registryPoint, Class targetObjectClass) {
+		ImplementationType type = implementationTypeMap.get(registryPoint,
+				targetObjectClass);
+		if (type != null) {
+			return type;
+		}
+		List<Class> scChain = getSuperclassChain(targetObjectClass);
+		for (Class sc : scChain) {
+			type = implementationTypeMap.get(registryPoint, sc);
+			if (type != null) {
+				implementationTypeMap.put(registryPoint, targetObjectClass,
+						type);
+				return type;
+			}
+		}
+		throw new RuntimeException(CommonUtils.formatJ(
+				"Registry: no resolved implementation type for %s :: %s",
+				CommonUtils.simpleClassName(registryPoint),
+				CommonUtils.simpleClassName(targetObjectClass)));
 	}
 
 	protected <V> List<V> impls0(Class<V> registryPoint, Class targetClass) {

@@ -44,6 +44,20 @@ public class CollectionFilters {
 		}
 	};
 
+	public static final CollectionFilter NO_FILTER = new CollectionFilter() {
+		@Override
+		public boolean allow(Object o) {
+			return false;
+		}
+	};
+
+	public static final Converter TO_NULL_CONVERTER = new Converter() {
+		@Override
+		public Object convert(Object original) {
+			return null;
+		}
+	};
+
 	public static <V> void apply(Collection<? extends V> collection,
 			Callback<V> callback) {
 		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr
@@ -309,23 +323,22 @@ public class CollectionFilters {
 	}
 
 	public static <T extends Comparable<T>> T max(Collection<T> collection) {
-		T max=null;
-		for(T t:collection){
-			if(max==null||max.compareTo(t)<0){
-				max=t;
+		T max = null;
+		for (T t : collection) {
+			if (max == null || max.compareTo(t) < 0) {
+				max = t;
 			}
 		}
 		return max;
-		
 	}
+
 	public static <T extends Comparable<T>> T min(Collection<T> collection) {
-		T min=null;
-		for(T t:collection){
-			if(min==null||min.compareTo(t)>0){
-				min=t;
+		T min = null;
+		for (T t : collection) {
+			if (min == null || min.compareTo(t) > 0) {
+				min = t;
 			}
 		}
 		return min;
-		
 	}
 }

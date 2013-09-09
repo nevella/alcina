@@ -180,7 +180,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			return newT;
 		}
 		AppPersistenceBase.checkNotReadOnly();
-		PropertyDescriptor descriptor = SEUtilities.descriptorByName(
+		PropertyDescriptor descriptor = SEUtilities.getPropertyDescriptorByName(
 				t.getClass(), key);
 		descriptor.getWriteMethod().invoke(t, value);
 		return getEntityManager().merge(t);
@@ -322,7 +322,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				AppPersistenceBase.checkNotReadOnly();
 				T inst = clazz.newInstance();
 				getEntityManager().persist(inst);
-				PropertyDescriptor descriptor = SEUtilities.descriptorByName(
+				PropertyDescriptor descriptor = SEUtilities.getPropertyDescriptorByName(
 						inst.getClass(), key);
 				descriptor.getWriteMethod().invoke(inst, value);
 				return inst;
@@ -595,7 +595,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					WrapperInfo info = pd.getReadMethod().getAnnotation(
 							WrapperInfo.class);
 					if (info != null) {
-						PropertyDescriptor idpd = SEUtilities.descriptorByName(
+						PropertyDescriptor idpd = SEUtilities.getPropertyDescriptorByName(
 								wrapper.getClass(), info.idPropertyName());
 						Long wrapperId = (Long) idpd.getReadMethod().invoke(
 								wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
@@ -661,7 +661,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		AppPersistenceBase.checkNotReadOnly();
 		Object inst = getEntityManager().find(clazz, id);
 		PropertyDescriptor descriptor = SEUtilities
-				.descriptorByName(clazz, key);
+				.getPropertyDescriptorByName(clazz, key);
 		descriptor.getWriteMethod().invoke(inst, value);
 		getEntityManager().merge(inst);
 	}
@@ -803,14 +803,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 							WrapperPersistable gwpo = (WrapperPersistable) obj;
 							if (info.toStringPropertyName().length() != 0) {
 								PropertyDescriptor tspd = SEUtilities
-										.descriptorByName(hi.getClass(),
+										.getPropertyDescriptorByName(hi.getClass(),
 												info.toStringPropertyName());
 								tspd.getWriteMethod().invoke(hi,
 										gwpo.toString());
 							}
 							Long persistId = persist(gwpo);
 							PropertyDescriptor idpd = SEUtilities
-									.descriptorByName(hi.getClass(),
+									.getPropertyDescriptorByName(hi.getClass(),
 											info.idPropertyName());
 							idpd.getWriteMethod().invoke(hi, persistId);
 						}

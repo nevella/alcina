@@ -73,7 +73,7 @@ import cc.alcina.framework.entity.SEUtilities;
 		public HasId unwrap(ClassLoader classLoader) {
 			for (UnwrapInfoItem item : getItems()) {
 				try {
-					PropertyDescriptor pd = SEUtilities.descriptorByName(
+					PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(
 							hasId.getClass(), item.getPropertyName());
 					pd.getWriteMethod().invoke(hasId,
 							item.getWrappedObject().getObject(classLoader));

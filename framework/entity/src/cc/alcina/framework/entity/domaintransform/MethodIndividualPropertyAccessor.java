@@ -14,7 +14,7 @@ public class MethodIndividualPropertyAccessor implements
 
 	public MethodIndividualPropertyAccessor(Class clazz, String propertyName) {
 		try {
-			this.readMethod = SEUtilities.descriptorByName(clazz,
+			this.readMethod = SEUtilities.getPropertyDescriptorByName(clazz,
 					propertyName).getReadMethod();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

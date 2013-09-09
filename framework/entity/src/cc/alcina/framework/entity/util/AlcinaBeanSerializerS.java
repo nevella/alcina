@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,12 +16,14 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 
 @SuppressWarnings("unchecked")
@@ -44,7 +47,8 @@ public class AlcinaBeanSerializerS {
 		}
 		String cn = (String) jsonObj.get(CLASS_NAME);
 		Class clazz = cl.loadClass(cn);
-		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
+		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
+				|| clazz == Class.class) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
 		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
@@ -54,7 +58,7 @@ public class AlcinaBeanSerializerS {
 			for (String propertyName : names) {
 				Object jsonValue = props.get(propertyName);
 				Object value2 = deserializeField(jsonValue, SEUtilities
-						.descriptorByName(clazz, propertyName)
+						.getPropertyDescriptorByName(clazz, propertyName)
 						.getPropertyType());
 				SEUtilities.setPropertyValue(obj, propertyName, value2);
 			}
@@ -87,6 +91,9 @@ public class AlcinaBeanSerializerS {
 		if (type == Boolean.class || type == boolean.class) {
 			return ((Boolean) o).booleanValue();
 		}
+		if (type == Class.class) {
+			return Class.forName(o.toString());
+		}
 		Collection c = null;
 		if (type == Set.class || type == LinkedHashSet.class) {
 			c = new LinkedHashSet();
@@ -98,17 +105,13 @@ public class AlcinaBeanSerializerS {
 			c = new ArrayList();
 		}
 		if (c != null) {
-			if (o instanceof JSONArray) {
-				JSONArray array = (JSONArray) o;
-				int size = array.length();
-				for (int i = 0; i < size; i++) {
-					Object jv = array.get(i);
-					c.add(deserializeObject((JSONObject) jv));
-				}
-			}
+			deserializeCollection(o, c);
 			return c;
 		}
 		Map m = null;
+		if (type == Multimap.class) {
+			return deserializeMultimap(o, new Multimap());
+		}
 		if (type == Map.class || type == LinkedHashMap.class) {
 			m = new LinkedHashMap();
 		}
@@ -119,19 +122,60 @@ public class AlcinaBeanSerializerS {
 			m = new CountingMap();
 		}
 		if (m != null) {
-			JSONArray array = (JSONArray) o;
-			int size = array.length();
-			for (int i = 0; i < size; i += 2) {
-				JSONObject jv = (JSONObject) array.get(i);
-				JSONObject jv2 = (JSONObject) array.get(i + 1);
-				m.put(deserializeObject(jv), deserializeObject(jv2));
-			}
-			return m;
+			return deserializeMap(o, m);
 		}
 		return deserializeObject((JSONObject) o);
 	}
 
+	protected Object deserializeMap(Object o, Map m) throws JSONException,
+			Exception {
+		JSONArray array = (JSONArray) o;
+		int size = array.length();
+		for (int i = 0; i < size; i += 2) {
+			JSONObject jv = (JSONObject) array.get(i);
+			JSONObject jv2 = (JSONObject) array.get(i + 1);
+			m.put(deserializeObject(jv), deserializeObject(jv2));
+		}
+		return m;
+	}
+
+	protected Object deserializeMultimap(Object o, Multimap m)
+			throws JSONException, Exception {
+		JSONArray array = (JSONArray) o;
+		int size = array.length();
+		for (int i = 0; i < size; i += 2) {
+			JSONObject jv = (JSONObject) array.get(i);
+			Object o2 = array.get(i + 1);
+			Collection c = new ArrayList();
+			deserializeCollection(o2, c);
+			m.put(deserializeObject(jv), c);
+		}
+		return m;
+	}
+
+	protected void deserializeCollection(Object o, Collection c)
+			throws JSONException, Exception {
+		if (o instanceof JSONArray) {
+			JSONArray array = (JSONArray) o;
+			int size = array.length();
+			for (int i = 0; i < size; i++) {
+				Object jv = array.get(i);
+				c.add(deserializeObject((JSONObject) jv));
+			}
+		}
+	}
+
+	IdentityHashMap serialized = new IdentityHashMap();
+
 	public String serialize(Object bean) throws Exception {
+		if (bean != null
+				&& !CommonUtils.isStandardJavaClassOrEnum(bean.getClass())) {
+			if (serialized.containsKey(bean)) {
+				throw new RuntimeException("serialization cycle");
+			} else {
+				serialized.put(bean, bean);
+			}
+		}
 		return serializeObject(bean).toString();
 	}
 
@@ -150,8 +194,12 @@ public class AlcinaBeanSerializerS {
 		if (type == Object.class) {
 			type = value.getClass();
 		}
-		if (type == Long.class || type == long.class || type == String.class
-				|| type.isEnum()) {
+		if (type == Long.class
+				|| type == long.class
+				|| type == String.class
+				|| type.isEnum()
+				|| (type.getSuperclass() != null && type.getSuperclass()
+						.isEnum())) {
 			return value.toString();
 		}
 		if (type == Double.class || type == double.class
@@ -161,30 +209,58 @@ public class AlcinaBeanSerializerS {
 		if (type == Boolean.class || type == boolean.class) {
 			return ((Boolean) value);
 		}
+		if (type == Class.class) {
+			return ((Class) value).getName();
+		}
 		if (type == Date.class) {
 			return (String.valueOf(((Date) value).getTime()));
 		}
+		if (value instanceof Multimap) {
+			Multimap m = (Multimap) value;
+			return serializeMultimap(m);
+		}
 		if (value instanceof Map) {
 			Map m = (Map) value;
-			JSONArray arr = new JSONArray();
-			int i = 0;
-			for (Object o : m.entrySet()) {
-				Entry e = (Entry) o;
-				arr.put(i++, serializeObject(e.getKey()));
-				arr.put(i++, serializeObject(e.getValue()));
-			}
-			return arr;
+			return serializeMap(m);
 		}
 		if (value instanceof Collection) {
 			Collection c = (Collection) value;
-			JSONArray arr = new JSONArray();
-			int i = 0;
-			for (Object o : c) {
-				arr.put(i++, serializeObject(o));
-			}
-			return arr;
+			return serializeCollection(c);
 		}
 		return serializeObject(value);
+	}
+
+	protected Object serializeCollection(Collection c) throws JSONException,
+			Exception {
+		JSONArray arr = new JSONArray();
+		int i = 0;
+		for (Object o : c) {
+			arr.put(i++, serializeObject(o));
+		}
+		return arr;
+	}
+
+	protected Object serializeMap(Map m) throws JSONException, Exception {
+		JSONArray arr = new JSONArray();
+		int i = 0;
+		for (Object o : m.entrySet()) {
+			Entry e = (Entry) o;
+			arr.put(i++, serializeObject(e.getKey()));
+			arr.put(i++, serializeObject(e.getValue()));
+		}
+		return arr;
+	}
+
+	protected Object serializeMultimap(Multimap m) throws JSONException,
+			Exception {
+		JSONArray arr = new JSONArray();
+		int i = 0;
+		for (Object o : m.entrySet()) {
+			Entry e = (Entry) o;
+			arr.put(i++, serializeObject(e.getKey()));
+			arr.put(i++, serializeCollection((Collection) e.getValue()));
+		}
+		return arr;
 	}
 
 	private JSONObject serializeObject(Object object) throws Exception {
@@ -192,9 +268,15 @@ public class AlcinaBeanSerializerS {
 			return null;
 		}
 		JSONObject jo = new JSONObject();
-		jo.put(CLASS_NAME, object.getClass().getName());
-		Class<? extends Object> clazz = object.getClass();
-		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
+		Class<? extends Object> type = object.getClass();
+		if (!type.isEnum() && type.getSuperclass() != null
+				&& type.getSuperclass().isEnum()) {
+			type = type.getSuperclass();
+		}
+		jo.put(CLASS_NAME, type.getName());
+		Class<? extends Object> clazz = type;
+		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
+				|| clazz == Class.class) {
 			jo.put(LITERAL, serializeField(object, clazz));
 			return jo;
 		}

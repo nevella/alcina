@@ -1,96 +1,154 @@
 package cc.alcina.framework.common.client.collections;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.BaseBindable.HasContext;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 
 import com.totsp.gwittir.client.beans.Converter;
 
 public class PropertyMapper {
-	private String[] fieldNameMappings;
+	private PropertyAccessor leftAccessor;
 
-	private boolean reverse;
+	private PropertyAccessor rightAccessor;
 
-	private PropertyAccessor propertyAccessor;
+	private List<PropertyMapping> mappings = new ArrayList<PropertyMapping>();
 
-	private Map<String, Converter> leftConverters;
+	public static class NoSuchVariantPropertyException extends RuntimeException {
+		public NoSuchVariantPropertyException(String propertyName) {
+			super(propertyName);
+		}
+	}
 
-	private Map<String, Converter> rightConverters;
+	public static class PropertyMapping {
+		private String leftName;
 
-	public PropertyMapper(String[] fieldNameMappings, boolean reverse) {
-		this.reverse = reverse;
-		if (reverse) {
-			String[] revMappings = new String[fieldNameMappings.length];
-			for (int i = 0; i < fieldNameMappings.length; i += 2) {
-				String key1 = fieldNameMappings[i];
-				String key2 = fieldNameMappings[i + 1];
-				revMappings[i] = key2;
-				revMappings[i + 1] = key1;
+		private String rightName;
+
+		private Converter leftToRightConverter;
+
+		private Converter rightToLeftConverter;
+
+		private CollectionFilter applyToLeftFilter;
+
+		private CollectionFilter applyToRightFilter;
+
+		private boolean required;
+
+		PropertyMapper mapper = null;
+
+		public PropertyMapping() {
+		}
+
+		public PropertyMapping(String both) {
+			this.rightName = both;
+			this.leftName = both;
+		}
+
+		public PropertyMapping(String left, String right) {
+			this.leftName = left;
+			this.rightName = right;
+		}
+
+		void map(Object left, Object right) {
+			if (applyToRightFilter != null && !applyToRightFilter.allow(left)) {
+				return;
 			}
-			fieldNameMappings = revMappings;
-		}
-		this.fieldNameMappings = fieldNameMappings;
-		propertyAccessor = CommonLocator.get().propertyAccessor();
-	}
-
-	public void map(Object o1, Object o2) {
-		map(o1, o2, null);
-	}
-
-	public void map(Object o1, Object o2, String propertyName) {
-		if (reverse) {
-			Object tmp = o2;
-			o2 = o1;
-			o1 = tmp;
-		}
-		try {
-			for (int i = 0; i < fieldNameMappings.length; i += 2) {
-				String key1 = fieldNameMappings[i];
-				if (propertyName != null && !propertyName.equals(key1)) {
-					continue;
+			try {
+				Object value = mapper.leftAccessor.getPropertyValue(left,
+						leftName);
+				if (leftToRightConverter != null) {
+					value = leftToRightConverter.convert(value);
 				}
-				String key2 = fieldNameMappings[i + 1];
-				Object value = propertyName != null ? o1 : propertyAccessor
-						.getPropertyValue(o1, key1);
-				if (value != null) {
-					Map<String, Converter> converters = reverse ? rightConverters
-							: leftConverters;
-					if (converters != null) {
-						Converter converter = converters.get(key1);
-						if (converter != null) {
-							value = converter.convert(value);
-						}
-					}
-					propertyAccessor.setPropertyValue(o2, key2, value);
+				mapper.rightAccessor.setPropertyValue(right, rightName, value);
+			} catch (NoSuchVariantPropertyException e) {
+				if (required) {
+					throw e;
 				}
 			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+		}
+
+		public void required() {
+			required = true;
+		}
+
+		public PropertyMapping leftToRightConverter(Converter leftConverter) {
+			this.leftToRightConverter = leftConverter;
+			return this;
+		}
+
+		public PropertyMapping rightToLeftConverter(Converter rightConverter) {
+			this.rightToLeftConverter = rightConverter;
+			return this;
+		}
+
+		public PropertyMapping applyToLeftFilter(CollectionFilter leftFilter) {
+			this.applyToLeftFilter = leftFilter;
+			return this;
+		}
+
+		public PropertyMapping applyToRightFilter(CollectionFilter rightFilter) {
+			this.applyToRightFilter = rightFilter;
+			return this;
+		}
+
+		public PropertyMapping reverseMapping(PropertyMapper newMapper) {
+			PropertyMapping mapping = new PropertyMapping();
+			mapping.leftName = rightName;
+			mapping.rightName = leftName;
+			mapping.leftToRightConverter = rightToLeftConverter;
+			mapping.rightToLeftConverter = leftToRightConverter;
+			mapping.applyToLeftFilter = applyToRightFilter;
+			mapping.applyToRightFilter = applyToLeftFilter;
+			mapping.mapper = newMapper;
+			return mapping;
 		}
 	}
 
-	public void addLeftConverter(String leftPropertyName, Converter c) {
-		if (leftConverters == null) {
-			leftConverters = new LinkedHashMap<String, Converter>();
+	public PropertyMapper reverseMapper() {
+		PropertyMapper mapper = new PropertyMapper();
+		mapper.leftAccessor = rightAccessor;
+		mapper.rightAccessor = leftAccessor;
+		for (PropertyMapping mapping : mappings) {
+			mapper.mappings.add(mapping.reverseMapping(mapper));
 		}
-		leftConverters.put(leftPropertyName, c);
+		return mapper;
 	}
 
-	public void addRightConverter(String rightPropertyName, Converter c) {
-		if (rightConverters == null) {
-			rightConverters = new LinkedHashMap<String, Converter>();
+	public PropertyMapper() {
+	}
+
+	public PropertyMapper leftAccessor(PropertyAccessor accessor) {
+		leftAccessor = accessor;
+		return this;
+	}
+
+	public PropertyMapper rightAccessor(PropertyAccessor accessor) {
+		rightAccessor = accessor;
+		return this;
+	}
+
+	public void map(Object left, Object right) {
+		map(left, right, null);
+	}
+
+	public void map(Object left, Object right, String leftKey) {
+		for (PropertyMapping mapping : mappings) {
+			if (leftKey == null || leftKey.equals(mapping.leftName)) {
+				mapping.map(left, right);
+			}
 		}
-		rightConverters.put(rightPropertyName, c);
 	}
 
-	public PropertyAccessor getPropertyAccessor() {
-		return this.propertyAccessor;
+	public PropertyMapping define(String both) {
+		return define(both, both);
 	}
 
-	public void setPropertyAccessor(PropertyAccessor propertyAccessor) {
-		this.propertyAccessor = propertyAccessor;
+	public PropertyMapping define(String left, String right) {
+		PropertyMapping mapping = new PropertyMapping(left, right);
+		mapping.mapper = this;
+		mappings.add(mapping);
+		return mapping;
 	}
 }

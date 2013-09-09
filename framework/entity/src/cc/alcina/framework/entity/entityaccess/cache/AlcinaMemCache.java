@@ -646,7 +646,7 @@ public class AlcinaMemCache {
 		List<PropertyDescriptor> pds = new ArrayList<PropertyDescriptor>(
 				Arrays.asList(Introspector.getBeanInfo(clazz)
 						.getPropertyDescriptors()));
-		PropertyDescriptor id = SEUtilities.descriptorByName(clazz, "id");
+		PropertyDescriptor id = SEUtilities.getPropertyDescriptorByName(clazz, "id");
 		pds.remove(id);
 		pds.add(0, id);
 		PropertyDescriptor result = null;

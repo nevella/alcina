@@ -48,7 +48,7 @@ public class WrappedObjectPersistence {
 			if (pd.getReadMethod().invoke(wrapper, new Object[0]) != null) {
 				continue;
 			}
-			PropertyDescriptor idpd = SEUtilities.descriptorByName(
+			PropertyDescriptor idpd = SEUtilities.getPropertyDescriptorByName(
 					wrapper.getClass(), info.idPropertyName());
 			Long wrapperId = (Long) idpd.getReadMethod().invoke(wrapper,
 					CommonUtils.EMPTY_OBJECT_ARRAY);
@@ -170,7 +170,7 @@ public class WrappedObjectPersistence {
 								WrapperInfo.class);
 						if (info != null) {
 							PropertyDescriptor idpd = SEUtilities
-									.descriptorByName(wrapper.getClass(),
+									.getPropertyDescriptorByName(wrapper.getClass(),
 											info.idPropertyName());
 							Long wrapperId = (Long) idpd.getReadMethod()
 									.invoke(wrapper,

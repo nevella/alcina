@@ -16,8 +16,10 @@ package cc.alcina.framework.common.client.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @SuppressWarnings("unchecked")
 /**
@@ -109,22 +111,34 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 			v.remove(value);
 		}
 	}
-	public Multimap invert(){
-		Multimap result=new Multimap();
+
+	public Multimap invert() {
+		Multimap result = new Multimap();
 		for (Map.Entry<K, V> entry : entrySet()) {
-			for(Object o:entry.getValue()){
-				result.add(o,entry.getKey());
+			for (Object o : entry.getValue()) {
+				result.add(o, entry.getKey());
 			}
 		}
 		return result;
 	}
-	public Map invertAsMap(){
-		Map result=new LinkedHashMap();
+
+	public Map invertAsMap() {
+		Map result = new LinkedHashMap();
 		for (Map.Entry<K, V> entry : entrySet()) {
-			for(Object o:entry.getValue()){
-				result.put(o,entry.getKey());
+			for (Object o : entry.getValue()) {
+				result.put(o, entry.getKey());
 			}
 		}
 		return result;
+	}
+
+	public Collection getForKeys(List keys) {
+		Set dedupe = new LinkedHashSet();
+		for (Object key : keys) {
+			if (containsKey(key)) {
+				dedupe.addAll(get(key));
+			}
+		}
+		return dedupe;
 	}
 }

@@ -1,0 +1,280 @@
+package cc.alcina.framework.servlet.sync;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.entity.domaintransform.JvmPropertyAccessor;
+import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
+
+/**
+ * Target is 'right' - so if left doesn't exist, will be a delete - if right
+ * doesn't, a create
+ * 
+ * @author nick@alcina.cc
+ * 
+ */
+public class SyncMerger<T> {
+	private StringKeyProvider<T> keyProvider;
+
+	private Class<T> mergedClass;
+
+	public SyncMerger(Class<T> mergedClass, StringKeyProvider<T> keyProvider) {
+		this.mergedClass = mergedClass;
+		this.keyProvider = keyProvider;
+		propertyAccessor = new JvmPropertyAccessor();
+	}
+
+	private PropertyAccessor propertyAccessor;
+
+	private List<SyncMapping> syncMappings = new ArrayList<SyncMapping>();
+
+	public static interface MergeFilter {
+		public boolean allowLeftToRight(Object left, Object right,
+				Object leftProp, Object rightProp);
+
+		public boolean allowRightToLeft(Object left, Object right,
+				Object leftProp, Object rightProp);
+	}
+
+	public static MergeFilter RIGHT_IS_DEFINITIVE = new MergeFilter() {
+		@Override
+		public boolean allowRightToLeft(Object left, Object right,
+				Object leftProp, Object rightProp) {
+			return true;
+		}
+
+		@Override
+		public boolean allowLeftToRight(Object left, Object right,
+				Object leftProp, Object rightProp) {
+			return false;
+		}
+	};
+
+	public static MergeFilter LEFT_IS_DEFINITIVE = new MergeFilter() {
+		@Override
+		public boolean allowRightToLeft(Object left, Object right,
+				Object leftProp, Object rightProp) {
+			return false;
+		}
+
+		@Override
+		public boolean allowLeftToRight(Object left, Object right,
+				Object leftProp, Object rightProp) {
+			return true;
+		}
+	};
+
+	protected MergeFilter defaultFilter = NO_OVERWRITE_FILTER;
+
+	public static final MergeFilter NO_OVERWRITE_FILTER = new MergeFilter() {
+		@Override
+		public boolean allowRightToLeft(Object left, Object right,
+				Object leftProp, Object rightProp) {
+			return leftProp == null;
+		}
+
+		@Override
+		public boolean allowLeftToRight(Object left, Object right,
+				Object leftProp, Object rightProp) {
+			return rightProp == null;
+		}
+	};
+
+	public class SyncMapping {
+		private String propertyName;
+
+		public SyncMapping(String propertyName) {
+			this.propertyName = propertyName;
+		}
+
+		private MergeFilter mergeFilter;
+
+		public void merge(Object left, Object right) {
+			MergeFilter filter = mergeFilter != null ? mergeFilter
+					: defaultFilter;
+			Object leftProp = propertyAccessor.getPropertyValue(left,
+					propertyName);
+			Object rightProp = propertyAccessor.getPropertyValue(right,
+					propertyName);
+			if (filter.allowLeftToRight(left, right, leftProp, rightProp)) {
+				propertyAccessor
+						.setPropertyValue(right, propertyName, leftProp);
+				rightProp = propertyAccessor.getPropertyValue(right,
+						propertyName);
+			}
+			if (filter.allowRightToLeft(left, right, leftProp, rightProp)) {
+				propertyAccessor
+						.setPropertyValue(left, propertyName, rightProp);
+			}
+		}
+
+		public SyncMapping mergeFilter(MergeFilter mergeFilter) {
+			this.mergeFilter = mergeFilter;
+			return this;
+		}
+	}
+
+	public SyncMapping define(String propertyName) {
+		SyncMapping mapping = new SyncMapping(propertyName);
+		syncMappings.add(mapping);
+		return mapping;
+	}
+
+	protected SyncPair.SyncPairAction getSyncType(KeyedObject left,
+			KeyedObject right) {
+		if (left == null) {
+			return SyncPairAction.DELETE_RIGHT;
+		} else if (right == null) {
+			return SyncPairAction.CREATE_LEFT;
+		} else
+			return SyncPairAction.MERGE;
+	}
+
+	boolean mergePair(SyncPair pair) {
+		SyncPairAction syncType = getSyncType(pair.getLeft(), pair.getRight());
+		if (syncType == null) {
+			return false;
+		}
+		pair.setAction(syncType);
+		switch (syncType) {
+		case DELETE_LEFT:
+		case DELETE_RIGHT:
+			return true;
+		case CREATE_LEFT:
+		case CREATE_RIGHT:
+			KeyedObject newKo = new KeyedObject<T>();
+			try {
+				newKo.setObject(mergedClass.newInstance());
+				newKo.setKeyProvider(keyProvider);
+				if (syncType == SyncPairAction.CREATE_LEFT) {
+					pair.setLeft(newKo);
+				} else {
+					pair.setRight(newKo);
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			break;
+		}
+		for (SyncMapping mapping : syncMappings) {
+			mapping.merge(pair.getLeft().getObject(), pair.getRight()
+					.getObject());
+		}
+		return true;
+	}
+
+	class FirstAndAllLookup {
+		public FirstAndAllLookup(Collection<T> leftItems) {
+			for (T t : leftItems) {
+				firstKeyLookup.add(keyProvider.firstKey(t), t);
+				for (String key : keyProvider.allKeys(t)) {
+					allKeyLookup.add(key, t);
+				}
+			}
+		}
+
+		Multimap<String, List<T>> firstKeyLookup = new Multimap<String, List<T>>();
+
+		Multimap<String, List<T>> allKeyLookup = new Multimap<String, List<T>>();
+
+		public boolean isMultipleFirst(String key) {
+			return firstKeyLookup.getAndEnsure(key).size() > 1;
+		}
+
+		public boolean isMultipleAll(List<String> allKeys) {
+			return allKeyLookup.getForKeys(allKeys).size() > 1;
+		}
+	}
+
+	public void merge(Collection<T> leftItems, Collection<T> rightItems,
+			SyncDeltaModel deltaModel) {
+		FirstAndAllLookup leftLookup = new FirstAndAllLookup(leftItems);
+		FirstAndAllLookup rightLookup = new FirstAndAllLookup(rightItems);
+		// simplistic - only allow first key matching -
+		Set<T> unmatchedRight = new LinkedHashSet<T>(rightItems);
+		Map<T, String> ambiguousLeft = new LinkedHashMap<T, String>();
+		Map<T, String> ambiguousRight = new LinkedHashMap<T, String>();
+		// keys must match uniquely -- if not, fix manually
+		for (T left : leftItems) {
+			List<String> ambiguous = new ArrayList();
+			T right = null;
+			String key = keyProvider.firstKey(left);
+			List<String> allKeys = keyProvider.allKeys(left);
+			if (leftLookup.isMultipleAll(allKeys)) {
+				ambiguous.add("multiple jade matches for " + allKeys);
+			}
+			if (rightLookup.isMultipleAll(allKeys)) {
+				ambiguous.add("multiple civi matches for " + allKeys);
+			}
+			if (ambiguous.isEmpty()) {
+				// check, say, left has distinct firstkey to right - note,
+				// right.firstKey is enough check...think about it
+				Collection<T> rightForKeys = rightLookup.allKeyLookup
+						.getForKeys(allKeys);
+				for (T test : rightForKeys) {
+					String firstKey = keyProvider.firstKey(test);
+					if (!allKeys.contains(firstKey)) {
+						ambiguous.add(String.format(
+								"higher precedence civi matches for %s: %s ",
+								allKeys, firstKey));
+					}
+				}
+			}
+			// very pessimistic
+			if (ambiguous.size() > 0) {
+				String message = String.format("\t\t%s\n",
+						CommonUtils.join(ambiguous, "\t\t\n"));
+				for (T t : (Collection<T>) leftLookup.allKeyLookup
+						.getForKeys(allKeys)) {
+					ambiguousLeft.put(t, message);
+				}
+				for (T t : (Collection<T>) rightLookup.allKeyLookup
+						.getForKeys(allKeys)) {
+					ambiguousRight.put(t, message);
+				}
+			} else {
+				Collection<T> rightCorresponding = rightLookup.allKeyLookup
+						.getForKeys(allKeys);
+				right = CommonUtils.first(rightCorresponding);
+				SyncPair pair = null;
+				if (right == null) {
+					pair = new SyncPair(left, right, keyProvider,
+							SyncPairAction.CREATE_RIGHT);
+				} else {
+					pair = new SyncPair(left, right, keyProvider,
+							SyncPairAction.MERGE);
+				}
+				mergePair(pair);
+				deltaModel.getDeltas().add(mergedClass, pair);
+				unmatchedRight.remove(right);
+			}
+		}
+		unmatchedRight.removeAll(ambiguousRight.keySet());
+		for (T right : unmatchedRight) {
+			SyncPair pair = new SyncPair(null, right, keyProvider,
+					SyncPairAction.CREATE_LEFT);
+			mergePair(pair);
+			deltaModel.getDeltas().add(mergedClass, pair);
+		}
+		System.out
+				.format("Merge [%s]: ambiguous left:\n\t%s\nambiguous right:\n\t%s\n\n",
+						mergedClass.getSimpleName(), CommonUtils
+								.joinWithNewlineTab(CommonUtils
+										.flattenMap(ambiguousLeft)),
+						CommonUtils.joinWithNewlineTab(CommonUtils
+								.flattenMap(ambiguousRight)));
+	}
+
+	public Class<T> getMergedClass() {
+		return this.mergedClass;
+	}
+}

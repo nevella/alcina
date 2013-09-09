@@ -204,7 +204,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public boolean checkPropertyAccess(HasIdAndLocalId hili,
 			String propertyName, boolean read) throws IntrospectionException {
 		if (hili.getId() != 0) {
-			PropertyDescriptor descriptor = SEUtilities.descriptorByName(
+			PropertyDescriptor descriptor = SEUtilities.getPropertyDescriptorByName(
 					hili.getClass(), propertyName);
 			if (descriptor == null) {
 				throw new IntrospectionException(String.format(
@@ -212,7 +212,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 								.getName(), propertyName));
 			}
 			PropertyPermissions pp = SEUtilities
-					.descriptorByName(hili.getClass(), propertyName)
+					.getPropertyDescriptorByName(hili.getClass(), propertyName)
 					.getReadMethod().getAnnotation(PropertyPermissions.class);
 			ObjectPermissions op = hili.getClass().getAnnotation(
 					ObjectPermissions.class);
@@ -440,7 +440,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	public Object getPropertyValue(Object bean, String propertyName) {
 		try {
-			return SEUtilities.descriptorByName(bean.getClass(), propertyName)
+			return SEUtilities.getPropertyDescriptorByName(bean.getClass(), propertyName)
 					.getReadMethod().invoke(bean);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

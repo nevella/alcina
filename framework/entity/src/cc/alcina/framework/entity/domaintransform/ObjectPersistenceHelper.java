@@ -116,7 +116,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		try {
-			PropertyDescriptor pd = SEUtilities.descriptorByName(targetClass,
+			PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(targetClass,
 					propertyName);
 			return pd == null ? null : pd.getReadMethod() == null ? null : pd
 					.getReadMethod().getAnnotation(annotationClass);
@@ -146,7 +146,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	public Class getPropertyType(Class clazz, String propertyName) {
 		try {
-			PropertyDescriptor descriptor = SEUtilities.descriptorByName(clazz,
+			PropertyDescriptor descriptor = SEUtilities.getPropertyDescriptorByName(clazz,
 					propertyName);
 			return descriptor == null ? null : descriptor.getPropertyType();
 		} catch (Exception e) {

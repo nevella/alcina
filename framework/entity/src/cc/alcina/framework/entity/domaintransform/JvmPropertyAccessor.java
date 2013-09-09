@@ -26,14 +26,9 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(targetClass)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals(propertyName)) {
-					return pd.getReadMethod().getAnnotation(annotationClass);
-				}
-			}
-			return null;
+			return SEUtilities
+					.getPropertyDescriptorByName(targetClass, propertyName)
+					.getReadMethod().getAnnotation(annotationClass);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -41,14 +36,8 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 
 	public Class getPropertyType(Class clazz, String propertyName) {
 		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals(propertyName)) {
-					return pd.getPropertyType();
-				}
-			}
-			return null;
+			return SEUtilities.getPropertyDescriptorByName(clazz, propertyName)
+					.getPropertyType();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -335,7 +336,7 @@ public class CommonUtils {
 			Collection<T> c2) {
 		ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
 		Set intersection = intersection(c1, c2);
-		result.intersection =intersection;
+		result.intersection = intersection;
 		result.firstOnly = new LinkedHashSet<T>(c1);
 		result.secondOnly = new LinkedHashSet<T>(c2);
 		result.firstOnly.removeAll(intersection);
@@ -390,7 +391,7 @@ public class CommonUtils {
 	public static boolean isNullOrEmpty(Collection c) {
 		return c == null || c.isEmpty();
 	}
-	
+
 	public static boolean isNotNullOrEmpty(Collection c) {
 		return c != null && !c.isEmpty();
 	}
@@ -425,7 +426,8 @@ public class CommonUtils {
 		StringBuilder sb = new StringBuilder();
 		for (Object obj : objects) {
 			String app = obj == null ? "null" : obj.toString();
-			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)&&separator!=null) {
+			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)
+					&& separator != null) {
 				sb.append(separator);
 			}
 			sb.append(app);
@@ -951,10 +953,30 @@ public class CommonUtils {
 		long t2 = d2 == null ? 0 : d2.getTime();
 		return t1 < t2 ? -1 : t1 == t2 ? 0 : 1;
 	}
+
 	public static boolean isEnumSubclass(Class c) {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
-	public static boolean isStandardJavaClassOrEnum(Class clazz){
-		return isStandardJavaClass(clazz)||clazz.isEnum()||isEnumSubclass(clazz);
+
+	public static boolean isStandardJavaClassOrEnum(Class clazz) {
+		return isStandardJavaClass(clazz) || clazz.isEnum()
+				|| isEnumSubclass(clazz);
+	}
+
+	public static String joinWithNewlines(Collection c) {
+		return join(c, "\n");
+	}
+
+	public static String joinWithNewlineTab(Collection c) {
+		return join(c, "\n\t");
+	}
+
+	public static List flattenMap(Map m) {
+		List result = new ArrayList();
+		for (Entry e : (Collection<Map.Entry>) m.entrySet()) {
+			result.add(e.getKey());
+			result.add(e.getValue());
+		}
+		return result;
 	}
 }

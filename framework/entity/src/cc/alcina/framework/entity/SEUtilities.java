@@ -110,7 +110,7 @@ public class SEUtilities {
 	public static <T> T getOrCreate(Collection<T> existing,
 			String propertyName, String propertyValue, Class itemClass)
 			throws Exception {
-		PropertyDescriptor descriptor = descriptorByName(itemClass,
+		PropertyDescriptor descriptor = getPropertyDescriptorByName(itemClass,
 				propertyName);
 		for (Iterator<T> itr = existing.iterator(); itr.hasNext();) {
 			T item = itr.next();
@@ -355,7 +355,7 @@ public class SEUtilities {
 	private static UnsortedMultikeyMap<PropertyDescriptor> pdLookup = new UnsortedMultikeyMap<PropertyDescriptor>(
 			2);
 
-	public static PropertyDescriptor descriptorByName(Class clazz,
+	public static PropertyDescriptor getPropertyDescriptorByName(Class clazz,
 			String propertyName) throws IntrospectionException {
 		if (pdLookup.containsKey(clazz, propertyName)) {
 			PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
@@ -597,7 +597,7 @@ public class SEUtilities {
 
 	public static Object getPropertyValue(Object bean, String propertyName) {
 		try {
-			return descriptorByName(bean.getClass(), propertyName)
+			return getPropertyDescriptorByName(bean.getClass(), propertyName)
 					.getReadMethod().invoke(bean);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -730,7 +730,7 @@ public class SEUtilities {
 	public static void setPropertyValue(Object bean, String propertyName,
 			Object value) {
 		try {
-			descriptorByName(bean.getClass(), propertyName).getWriteMethod()
+			getPropertyDescriptorByName(bean.getClass(), propertyName).getWriteMethod()
 					.invoke(bean, value);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
