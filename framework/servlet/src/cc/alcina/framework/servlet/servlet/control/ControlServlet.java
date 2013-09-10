@@ -52,7 +52,7 @@ public class ControlServlet extends HttpServlet {
 		String jsonPayload = req.getParameter("json");
 		if (jsonPayload != null) {
 			ControlServletRequest csr = new AlcinaBeanSerializerS()
-					.deserialize(jsonPayload, getClass().getClassLoader());
+					.deserialize(jsonPayload);
 			csr.setJson(true);
 			return csr;
 		}

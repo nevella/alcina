@@ -6,12 +6,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.CRC32;
 
+import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 
 public abstract class FlatDeltaPersister<D extends SyncDeltaModel, E extends SyncEndpointModel> {
 	public static interface DeltaItemPersister<C> {
-		boolean performSyncAction(SyncAction syncAction, C object)
-				throws Exception;
+		FlatDeltaPersisterResultType performSyncAction(SyncAction syncAction,
+				C object) throws Exception;
 	}
 
 	protected Map<Class, DeltaItemPersister> persisters = new LinkedHashMap<Class, DeltaItemPersister>();
@@ -38,23 +39,10 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel, E extends Syn
 					continue;
 				}
 				KeyedObject obj = applyLeft ? pair.getLeft() : pair.getRight();
-				boolean change = persister.performSyncAction(syncAction,
-						obj == null ? null : obj.getObject());
-				if (change) {
-					switch (syncAction) {
-					case CREATE:
-						result.createCount++;
-						break;
-					case DELETE:
-						result.deletionCount++;
-						break;
-					case UPDATE:
-						result.mergeCount++;
-						break;
-					}
-				} else {
-					result.noModificationCount++;
-				}
+				FlatDeltaPersisterResultType resultType = persister
+						.performSyncAction(syncAction,
+								obj == null ? null : obj.getObject());
+				result.update(resultType);
 			}
 		}
 		return result;

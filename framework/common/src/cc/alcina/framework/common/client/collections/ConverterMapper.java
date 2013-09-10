@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.collections;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 import com.totsp.gwittir.client.beans.Converter;
@@ -25,7 +26,7 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 	@Override
 	public B convert(A a) {
 		try {
-			B b = rightClass.newInstance();
+			B b = CommonLocator.get().classLookup().newInstance(rightClass);
 			apply(a, b);
 			return b;
 		} catch (Exception e) {

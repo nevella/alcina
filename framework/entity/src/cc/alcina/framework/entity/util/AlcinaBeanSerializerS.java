@@ -36,8 +36,9 @@ public class AlcinaBeanSerializerS {
 
 	private ClassLoader cl;
 
-	private <T> T deserialize(String jsonString) throws Exception {
+	public <T> T deserialize(String jsonString) throws Exception {
 		JSONObject obj = new JSONObject(jsonString);
+		cl = Thread.currentThread().getContextClassLoader();
 		return (T) deserializeObject(obj);
 	}
 
@@ -92,7 +93,7 @@ public class AlcinaBeanSerializerS {
 			return ((Boolean) o).booleanValue();
 		}
 		if (type == Class.class) {
-			return Class.forName(o.toString());
+			return cl.loadClass(o.toString());
 		}
 		Collection c = null;
 		if (type == Set.class || type == LinkedHashSet.class) {
@@ -301,10 +302,5 @@ public class AlcinaBeanSerializerS {
 			}
 		}
 		return jo;
-	}
-
-	public <T> T deserialize(String json, ClassLoader cl) throws Exception {
-		this.cl = cl;
-		return deserialize(json);
 	}
 }

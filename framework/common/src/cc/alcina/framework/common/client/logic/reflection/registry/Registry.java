@@ -283,10 +283,6 @@ public class Registry {
 				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
 	}
 
-	public void registerSingleton(Object object, Class<?> clazz) {
-		singletons.put(clazz, void.class, object);
-	}
-
 	@Override
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
@@ -334,7 +330,7 @@ public class Registry {
 			return (V) singleton;
 		}
 		ImplementationType type = resolveImplementationType(registryPoint,
-				targetObjectClass);
+				targetObjectClass, allowNull);
 		Object obj = null;
 		if (singleton == null) {
 			if (allowNull) {
@@ -368,7 +364,7 @@ public class Registry {
 	}
 
 	protected <V> ImplementationType resolveImplementationType(
-			Class<V> registryPoint, Class targetObjectClass) {
+			Class<V> registryPoint, Class targetObjectClass, boolean allowNull) {
 		ImplementationType type = implementationTypeMap.get(registryPoint,
 				targetObjectClass);
 		if (type != null) {
@@ -382,6 +378,9 @@ public class Registry {
 						type);
 				return type;
 			}
+		}
+		if (allowNull) {
+			return null;
 		}
 		throw new RuntimeException(CommonUtils.formatJ(
 				"Registry: no resolved implementation type for %s :: %s",
@@ -416,7 +415,7 @@ public class Registry {
 		T impl = (T) singletons.get(clazz, void.class);
 		if (impl == null) {
 			impl = classLookup.newInstance(clazz);
-			registerSingleton(impl, clazz);
+			putSingleton(clazz, impl);
 		}
 		return impl;
 	}

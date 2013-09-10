@@ -302,6 +302,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				} finally {
 					ServletLayerLocator.get().remoteActionLoggerProvider()
 							.clearAllThreadLoggers();
+					ThreadlocalTransformManager.get().resetTltm(null);
 					JobRegistry.get().jobCompleteFromThread();
 					LooseContext.confirmDepth(tLooseContextDepth);
 				}
@@ -547,12 +548,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					AnnotatedPermissible ap = new AnnotatedPermissible(
 							webMethod.customPermission());
 					if (!PermissionsManager.get().isPermissible(ap)) {
-						WebException wex = new WebException("Action not permitted: "
-								+ name);
+						WebException wex = new WebException(
+								"Action not permitted: " + name);
 						logRpcException(wex,
 								LogMessageType.PERMISSIONS_EXCEPTION.toString());
-						return RPC.encodeResponseForFailure(null,
-								wex);
+						return RPC.encodeResponseForFailure(null, wex);
 					}
 					if (!webMethod.readonlyPermitted()) {
 						AppPersistenceBase.checkNotReadOnly();
@@ -575,7 +575,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (OutOfMemoryError e) {
 			handleOom(payload, e);
 			throw e;
-		}catch (RuntimeException rex) {
+		} catch (RuntimeException rex) {
 			logRpcException(rex);
 			throw rex;
 		} finally {
@@ -928,8 +928,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			@Override
 			public ClientLogRecords convert(String original) {
 				try {
-					return new AlcinaBeanSerializerS().deserialize(original,
-							Thread.currentThread().getContextClassLoader());
+					return new AlcinaBeanSerializerS().deserialize(original);
 				} catch (Exception e) {
 					System.out.format(
 							"problem deserializing clientlogrecord:\n%s\n",

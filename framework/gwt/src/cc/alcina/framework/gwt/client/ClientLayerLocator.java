@@ -115,20 +115,18 @@ public class ClientLayerLocator {
 
 	public void registerClientBase(ClientBase base) {
 		this.clientBase = base;
-		Registry.get().registerSingleton(base, ClientBase.class);
+		Registry.putSingleton(ClientBase.class, base);
 	}
 
 	public void registerExceptionHandler(ClientExceptionHandler exceptionHandler) {
 		this.exceptionHandler = exceptionHandler;
-		Registry.get().registerSingleton(exceptionHandler,
-				ClientExceptionHandler.class);
+		Registry.putSingleton(ClientExceptionHandler.class, exceptionHandler);
 		GWT.setUncaughtExceptionHandler(exceptionHandler);
 	}
 
 	public void registerNotifications(ClientNotifications clientNotifications) {
 		this.clientNotifications = clientNotifications;
-		Registry.get().registerSingleton(clientNotifications,
-				ClientNotifications.class);
+		Registry.putSingleton(ClientNotifications.class, clientNotifications);
 	}
 
 	public void registerTimerWrapperProvider(
