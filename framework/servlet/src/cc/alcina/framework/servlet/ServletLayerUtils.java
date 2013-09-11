@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
@@ -72,11 +73,12 @@ public class ServletLayerUtils {
 		}
 	}
 
-	public static long pushTransformsAndGetFirstId(boolean asRoot) {
+	public static long pushTransformsAndGetFirstCreationId(boolean asRoot) {
 		DomainTransformResponse transformResponse = pushTransforms(null,
 				asRoot, true);
-		return transformResponse.getEventsToUseForClientUpdate().get(0)
-				.getGeneratedServerId();
+		DomainTransformEvent first = CommonUtils.first(transformResponse
+				.getEventsToUseForClientUpdate());
+		return first == null ? 0 : first.getGeneratedServerId();
 	}
 
 	public static long pushTransformsAndReturnId(boolean asRoot,

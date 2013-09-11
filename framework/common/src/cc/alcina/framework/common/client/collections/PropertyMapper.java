@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.collections;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.csobjects.BaseBindable.HasContext;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 
 import com.totsp.gwittir.client.beans.Converter;
@@ -103,6 +102,12 @@ public class PropertyMapper {
 			mapping.applyToRightFilter = applyToLeftFilter;
 			mapping.mapper = newMapper;
 			return mapping;
+		}
+
+		public PropertyMapping bidiConverter(BidiConverter bidiConverter) {
+			this.leftToRightConverter = bidiConverter.leftToRightConverter();
+			this.rightToLeftConverter = bidiConverter.rightToLeftConverter();
+			return this;
 		}
 	}
 
