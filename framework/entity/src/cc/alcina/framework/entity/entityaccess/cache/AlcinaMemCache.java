@@ -9,6 +9,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -143,7 +144,6 @@ public class AlcinaMemCache {
 
 	private TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(AlcinaMemCache.class, TaggedLogger.METRIC);
-	
 
 	static List<String> ignoreNames = Arrays.asList(new String[0]);
 
@@ -268,9 +268,12 @@ public class AlcinaMemCache {
 		return first;
 	}
 
-	public Iterable<Object[]> getData(Class clazz, String sqlFilter) {
-		return new ConnResults(conn, clazz, columnDescriptors.get(clazz),
-				sqlFilter);
+	public Iterable<Object[]> getData(Class clazz, String sqlFilter)
+			throws SQLException {
+		ConnResults result = new ConnResults(conn, clazz,
+				columnDescriptors.get(clazz), sqlFilter);
+		releaseConnectionLocks();
+		return result;
 	}
 
 	public Collection<Long> getIds(Class<? extends HasIdAndLocalId> clazz) {
@@ -530,6 +533,8 @@ public class AlcinaMemCache {
 			MetricLogging.get().end(joinTableName, metricLogger);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		} finally {
+			releaseConnectionLocks();
 		}
 	}
 
@@ -849,7 +854,18 @@ public class AlcinaMemCache {
 				"collectLockAcquisitionPoints")) {
 			collectLockAcquisitionPoints = true;
 		}
+		releaseConnectionLocks();
 		MetricLogging.get().end("lookups");
+	}
+
+	protected void releaseConnectionLocks() {
+		try {
+			if (initialised) {
+				conn.commit();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	<T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
