@@ -66,8 +66,6 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -961,13 +959,11 @@ public class SEUtilities {
 			}
 		}
 		if (removeFolders) {
-			CollectionFilters.filterInPlace(results,
-					new CollectionFilter<File>() {
-						@Override
-						public boolean allow(File o) {
-							return !o.isDirectory();
-						}
-					});
+			for (Iterator<File> itr = results.iterator(); itr.hasNext();) {
+				if (itr.next().isDirectory()) {
+					itr.remove();
+				}
+			}
 		}
 		return results;
 	}
