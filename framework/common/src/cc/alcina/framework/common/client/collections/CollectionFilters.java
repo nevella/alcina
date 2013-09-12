@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -323,9 +324,15 @@ public class CollectionFilters {
 	}
 
 	public static <T extends Comparable<T>> T max(Collection<T> collection) {
+		return max(collection, null);
+	}
+
+	public static <T> T max(Collection<T> collection, Comparator<T> comparator) {
 		T max = null;
 		for (T t : collection) {
-			if (max == null || max.compareTo(t) < 0) {
+			if (max == null
+					|| (comparator != null ? comparator.compare(max, t)
+							: ((Comparable) max).compareTo((Comparable) t)) < 0) {
 				max = t;
 			}
 		}
@@ -333,9 +340,15 @@ public class CollectionFilters {
 	}
 
 	public static <T extends Comparable<T>> T min(Collection<T> collection) {
+		return min(collection, null);
+	}
+
+	public static <T> T min(Collection<T> collection, Comparator<T> comparator) {
 		T min = null;
 		for (T t : collection) {
-			if (min == null || min.compareTo(t) > 0) {
+			if (min == null
+					|| (comparator != null ? comparator.compare(min, t)
+							: ((Comparable) min).compareTo((Comparable) t)) > 0) {
 				min = t;
 			}
 		}

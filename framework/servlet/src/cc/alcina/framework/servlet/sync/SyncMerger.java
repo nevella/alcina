@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -21,6 +23,8 @@ import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
  * 
  * @author nick@alcina.cc
  * 
+ *         In general, when adding a merge field, make sure that the object's
+ *         equivalentTo checks the new field
  */
 public class SyncMerger<T> {
 	private StringKeyProvider<T> keyProvider;
@@ -129,18 +133,17 @@ public class SyncMerger<T> {
 		return mapping;
 	}
 
-	protected SyncPair.SyncPairAction getSyncType(KeyedObject left,
-			KeyedObject right) {
-		if (left == null) {
+	protected SyncPairAction getSyncType(SyncPair<T> pair) {
+		if (pair.getLeft() == null) {
 			return SyncPairAction.DELETE_RIGHT;
-		} else if (right == null) {
-			return SyncPairAction.CREATE_LEFT;
+		} else if (pair.getRight() == null) {
+			return SyncPairAction.CREATE_RIGHT;
 		} else
 			return SyncPairAction.MERGE;
 	}
 
 	boolean mergePair(SyncPair pair) {
-		SyncPairAction syncType = getSyncType(pair.getLeft(), pair.getRight());
+		SyncPairAction syncType = getSyncType(pair);
 		if (syncType == null) {
 			return false;
 		}
@@ -265,6 +268,8 @@ public class SyncMerger<T> {
 			mergePair(pair);
 			deltaModel.getDeltas().add(mergedClass, pair);
 		}
+		CollectionFilters.filterInPlace(ambiguousLeft.keySet(), getIgnoreAmbiguityForReportingFilter());
+		CollectionFilters.filterInPlace(ambiguousRight.keySet(), getIgnoreAmbiguityForReportingFilter());
 		System.out
 				.format("Merge [%s]: ambiguous left:\n\t%s\nambiguous right:\n\t%s\n\n",
 						mergedClass.getSimpleName(), CommonUtils
@@ -272,6 +277,10 @@ public class SyncMerger<T> {
 										.flattenMap(ambiguousLeft)),
 						CommonUtils.joinWithNewlineTab(CommonUtils
 								.flattenMap(ambiguousRight)));
+	}
+
+	protected CollectionFilter<T> getIgnoreAmbiguityForReportingFilter() {
+		return CollectionFilters.PASSTHROUGH_FILTER;
 	}
 
 	public Class<T> getMergedClass() {

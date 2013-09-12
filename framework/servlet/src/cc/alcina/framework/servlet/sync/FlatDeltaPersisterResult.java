@@ -39,6 +39,11 @@ public class FlatDeltaPersisterResult {
 		}
 	}
 
+	@Override
+	public String toString() {
+		return numbers();
+	}
+
 	public String numbers() {
 		return String.format("created: %s - merged: %s - deleted:"
 				+ " %s - unmodified: %s - unmatched: %s", createCount,

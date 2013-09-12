@@ -9,6 +9,8 @@ public class TaggedLogger {
 	public static final transient String METRIC = "metric";
 
 	public static final transient String DEBUG = "debug";
+	
+	public static final transient String WARN = "warn";
 
 	public static final transient String INFO = "info";
 	

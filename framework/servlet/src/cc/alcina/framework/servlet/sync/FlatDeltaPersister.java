@@ -23,18 +23,21 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel, E extends Syn
 		this.applyLeft = applyLeft;
 	}
 
+	protected abstract Class[] perClassDeltaOrder();
+
 	public FlatDeltaPersisterResult apply(D delta) throws Exception {
 		FlatDeltaPersisterResult result = new FlatDeltaPersisterResult();
-		for (Entry<Class, List<SyncPair>> e : delta.getDeltas().entrySet()) {
-			DeltaItemPersister persister = persisters.get(e.getKey());
-			for (SyncPair pair : e.getValue()) {
+		for (Class clazz : perClassDeltaOrder()) {
+			FlatDeltaPersisterResult perClassResult = new FlatDeltaPersisterResult();
+			DeltaItemPersister persister = persisters.get(clazz);
+			for (SyncPair pair : delta.getDeltas().getAndEnsure(clazz)) {
 				SyncAction syncAction = pair.getAction().getDirectedAction(
 						applyLeft);
 				if (syncAction == null) {
 					result.noModificationCount++;
 					continue;
 				}
-				if (!shouldApply(e.getKey(), syncAction)) {
+				if (!shouldApply(clazz, pair,syncAction)) {
 					result.noModificationCount++;
 					continue;
 				}
@@ -42,12 +45,28 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel, E extends Syn
 				FlatDeltaPersisterResultType resultType = persister
 						.performSyncAction(syncAction,
 								obj == null ? null : obj.getObject());
+				logAction(resultType, obj);
 				result.update(resultType);
+				perClassResult.update(resultType);
 			}
+			System.out.format("Flat delta persister/apply: %s - %s\n",
+					clazz.getSimpleName(), perClassResult);
 		}
 		return result;
 	}
 
+	protected void logAction(FlatDeltaPersisterResultType resultType,
+			Object object) {
+		switch (resultType) {
+		case CREATED:
+			System.out.println("create -> " + object);
+			break;
+		case MERGED:
+			System.out.println("updated -> " + object);
+			break;
+		}
+	}
+
 	protected abstract boolean shouldApply(Class interchangeClass,
-			SyncAction syncAction);
+			SyncPair pair, SyncAction syncAction);
 }

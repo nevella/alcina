@@ -143,6 +143,19 @@ public class CommonUtils {
 		return o1.equals(o2);
 	}
 
+	public static boolean equalsWithNullEmptyEquality(Object o1, Object o2) {
+		if (o1 instanceof String && o1.toString().isEmpty()) {
+			o1 = null;
+		}
+		if (o2 instanceof String && o2.toString().isEmpty()) {
+			o2 = null;
+		}
+		if (o1 == null) {
+			return o2 == null;
+		}
+		return o1.equals(o2);
+	}
+
 	public static String formatNumbered(String source, Object... args) {
 		String[] strs = source.split("%");
 		String s;

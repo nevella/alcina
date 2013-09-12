@@ -33,7 +33,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
@@ -42,6 +41,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -357,21 +357,15 @@ public class SEUtilities {
 
 	public static PropertyDescriptor getPropertyDescriptorByName(Class clazz,
 			String propertyName) throws IntrospectionException {
-		if (pdLookup.containsKey(clazz, propertyName)) {
-			PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
-			return cached;
-		}
-		PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-				.getPropertyDescriptors();
-		PropertyDescriptor result = null;
-		for (PropertyDescriptor pd : pds) {
-			if (pd.getName().equals(propertyName)) {
-				result = pd;
-				break;
+		if (!pdLookup.containsKey(clazz)) {
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
+					.getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				pdLookup.put(clazz, pd.getName(), pd);
 			}
 		}
-		pdLookup.put(clazz, propertyName, result);
-		return result;
+		PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
+		return cached;
 	}
 
 	public static String dumpProperties(Properties p) {
@@ -730,8 +724,8 @@ public class SEUtilities {
 	public static void setPropertyValue(Object bean, String propertyName,
 			Object value) {
 		try {
-			getPropertyDescriptorByName(bean.getClass(), propertyName).getWriteMethod()
-					.invoke(bean, value);
+			getPropertyDescriptorByName(bean.getClass(), propertyName)
+					.getWriteMethod().invoke(bean, value);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -1047,5 +1041,24 @@ public class SEUtilities {
 		};
 		// Install the all-trusting host verifier
 		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+	}
+
+	public static Map<String, Object> getPropertiesAsMap(Object obj,
+			List<String> ignore) {
+		try {
+			getPropertyDescriptorByName(obj.getClass(), null);
+			Map<String, PropertyDescriptor> pds = (Map<String, PropertyDescriptor>) pdLookup
+					.get(obj.getClass());
+			Map<String, Object> props = new LinkedHashMap<String, Object>();
+			for (PropertyDescriptor pd : pds.values()) {
+				if (!ignore.contains(pd.getName())) {
+					props.put(pd.getName(), pd.getReadMethod() == null ? null
+							: pd.getReadMethod().invoke(obj));
+				}
+			}
+			return props;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

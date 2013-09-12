@@ -143,6 +143,7 @@ public class AlcinaMemCache {
 
 	private TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(AlcinaMemCache.class, TaggedLogger.METRIC);
+	
 
 	static List<String> ignoreNames = Arrays.asList(new String[0]);
 
@@ -615,7 +616,6 @@ public class AlcinaMemCache {
 		if (dumpLocks || collectLockAcquisitionPoints) {
 			String message = String.format("Memcache lock - %s - %s\n",
 					write ? "write" : "read", action);
-			
 			Thread t = Thread.currentThread();
 			String log = CommonUtils.formatJ("\tid:%s\n\treadHoldCount:"
 					+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
@@ -646,7 +646,8 @@ public class AlcinaMemCache {
 		List<PropertyDescriptor> pds = new ArrayList<PropertyDescriptor>(
 				Arrays.asList(Introspector.getBeanInfo(clazz)
 						.getPropertyDescriptors()));
-		PropertyDescriptor id = SEUtilities.getPropertyDescriptorByName(clazz, "id");
+		PropertyDescriptor id = SEUtilities.getPropertyDescriptorByName(clazz,
+				"id");
 		pds.remove(id);
 		pds.add(0, id);
 		PropertyDescriptor result = null;
@@ -1024,7 +1025,8 @@ public class AlcinaMemCache {
 		public <V extends HasIdAndLocalId> V resolveTransactional(
 				CacheListener listener, V value, Object[] path) {
 			PerThreadTransaction perThreadTransaction = transactions.get();
-			if (perThreadTransaction == null) {
+			if (perThreadTransaction == null
+					|| (value != null && !isCached(value.getClass()))) {
 				return value;
 			}
 			return perThreadTransaction.getListenerValue(listener, value, path);

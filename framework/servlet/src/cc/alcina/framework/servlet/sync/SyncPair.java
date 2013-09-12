@@ -59,11 +59,11 @@ public class SyncPair<T> {
 	@Override
 	public String toString() {
 		return String.format(
-				"SyncPair - %-8s: key - %s\n\tsource: %s\n\ttarget: %s\n",
+				"SyncPair - %-8s: key - %s\n\tleft: %s\n\tright: %s\n",
 				action, getKey(), left, right);
 	}
 
-	private String getKey() {
+	public String getKey() {
 		return left != null ? left.getKey() : right.getKey();
 	}
 
