@@ -40,7 +40,7 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 	public H getObject(T key) {
 		H value = null;
 		Set<Long> ids = get(key);
-		if (ids != null) {
+		if (CommonUtils.isNotNullOrEmpty(ids)) {
 			Long id = CommonUtils.first(ids);
 			value = getForResolvedId(id);
 		}
