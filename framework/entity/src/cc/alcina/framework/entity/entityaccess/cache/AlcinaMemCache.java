@@ -263,7 +263,7 @@ public class AlcinaMemCache {
 	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
 			String key, Object value, boolean createIfNonexistent) {
 		T first = new AlcinaMemCacheQuery().filter(key, value).find(clazz);
-		if (first == null) {
+		if (first == null && createIfNonexistent) {
 			first = (T) TransformManager.get()
 					.createDomainObject((Class) clazz);
 			CommonLocator.get().propertyAccessor()
@@ -323,6 +323,11 @@ public class AlcinaMemCache {
 
 	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 		return new AlcinaMemCacheQuery().ids(getIds(clazz)).raw().list(clazz);
+	}
+
+	public <T extends HasIdAndLocalId> Set<T> set(Class<T> clazz) {
+		return new LinkedHashSet<T>(new AlcinaMemCacheQuery()
+				.ids(getIds(clazz)).raw().list(clazz));
 	}
 
 	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
@@ -578,6 +583,8 @@ public class AlcinaMemCache {
 			.synchronizedSet(new LinkedHashSet<Thread>());
 
 	private int maxLockQueueLength;
+
+	public static final String WRAPPED_OBJECT_REF_INTEGRITY = "WRAPPED_OBJECT_REF_INTEGRITY";
 
 	public void lock(boolean write) {
 		if (lockingDisabled) {
