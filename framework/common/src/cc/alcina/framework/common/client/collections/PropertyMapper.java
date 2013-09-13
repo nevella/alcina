@@ -109,6 +109,14 @@ public class PropertyMapper {
 			this.rightToLeftConverter = bidiConverter.rightToLeftConverter();
 			return this;
 		}
+
+		public String getLeftName() {
+			return this.leftName;
+		}
+
+		public String getRightName() {
+			return this.rightName;
+		}
 	}
 
 	public PropertyMapper reverseMapper() {
@@ -155,5 +163,9 @@ public class PropertyMapper {
 		mapping.mapper = this;
 		mappings.add(mapping);
 		return mapping;
+	}
+
+	public List<PropertyMapping> getMappings() {
+		return this.mappings;
 	}
 }

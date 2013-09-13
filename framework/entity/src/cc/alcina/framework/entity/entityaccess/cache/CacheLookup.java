@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.PropertyPathAccesor;
+import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.entity.util.Multiset;
 
 import com.totsp.gwittir.client.beans.Converter;
@@ -19,7 +19,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	protected CacheLookupDescriptor descriptor;
 
-	private PropertyPathAccesor propertyPathAccesor;
+	private PropertyPathAccessor propertyPathAccesor;
 
 	protected DetachedEntityCache privateCache;
 
@@ -32,7 +32,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	public CacheLookup(CacheLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
 		store = new Multiset<T, Set<Long>>();
-		this.propertyPathAccesor = new PropertyPathAccesor(
+		this.propertyPathAccesor = new PropertyPathAccessor(
 				descriptor.propertyPath);
 		this.relevanceFilter = descriptor.getRelevanceFilter();
 	}

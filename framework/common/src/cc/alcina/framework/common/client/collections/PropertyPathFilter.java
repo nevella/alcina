@@ -3,12 +3,12 @@ package cc.alcina.framework.common.client.collections;
 import java.util.Collection;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.PropertyPathAccesor;
+import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
 public class PropertyPathFilter<T> implements CollectionFilter<T> {
 	public static final transient Object NOT_NULL = new Object();
 
-	private PropertyPathAccesor accessor;
+	private PropertyPathAccessor accessor;
 
 	private Object targetValue;
 
@@ -18,7 +18,7 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 	}
 
 	public PropertyPathFilter(String key, Object value) {
-		accessor = new PropertyPathAccesor(key);
+		accessor = new PropertyPathAccessor(key);
 		this.targetValue = value;
 		targetIsCollection = targetValue instanceof Collection;
 	}

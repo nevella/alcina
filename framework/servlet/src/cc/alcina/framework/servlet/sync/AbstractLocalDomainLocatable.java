@@ -18,6 +18,16 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 				.ensureLocalEquivalent(this);
 	}
 
+	public T localEquivalentOrSelf() {
+		try {
+			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
+			T local = findLocalEquivalent();
+			return (T) (local != null ? local : this);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
 	public T createOrReturnLocal() {
 		T local = findLocalEquivalent();
 		if (local != null) {

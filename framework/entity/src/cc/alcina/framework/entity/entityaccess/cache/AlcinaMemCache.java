@@ -210,7 +210,7 @@ public class AlcinaMemCache {
 				persistingListener, true);
 		persistenceListener = new MemCachePersistenceListener();
 		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
-				"maxLockQueueLength", 20);
+				"maxLockQueueLength", 40);
 	}
 
 	public void addValues(CacheListener listener) {
@@ -272,7 +272,6 @@ public class AlcinaMemCache {
 			throws SQLException {
 		ConnResults result = new ConnResults(conn, clazz,
 				columnDescriptors.get(clazz), sqlFilter);
-		releaseConnectionLocks();
 		return result;
 	}
 
@@ -346,6 +345,7 @@ public class AlcinaMemCache {
 			if (sublock != null) {
 				sublock(sublock, false);
 			}
+			releaseConnectionLocks();
 		}
 	}
 
@@ -862,6 +862,7 @@ public class AlcinaMemCache {
 		try {
 			if (initialised) {
 				conn.commit();
+				conn.setAutoCommit(true);
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -1441,7 +1442,8 @@ public class AlcinaMemCache {
 			// .removeParentAssociations(HasIdAndLocalId)
 			// that add em by default. fix them first
 			// TODO - memcache
-			if (key.equals("fire")
+			if (!lockingDisabled
+					&& key.equals("fire")
 					&& !mainLock.isWriteLockedByCurrentThread()
 					&& (subgraphLock == null || !subgraphLock
 							.isWriteLockedByCurrentThread())) {

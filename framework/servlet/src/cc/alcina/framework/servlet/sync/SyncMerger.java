@@ -268,8 +268,10 @@ public class SyncMerger<T> {
 			mergePair(pair);
 			deltaModel.getDeltas().add(mergedClass, pair);
 		}
-		CollectionFilters.filterInPlace(ambiguousLeft.keySet(), getIgnoreAmbiguityForReportingFilter());
-		CollectionFilters.filterInPlace(ambiguousRight.keySet(), getIgnoreAmbiguityForReportingFilter());
+		CollectionFilters.filterInPlace(ambiguousLeft.keySet(),
+				getIgnoreAmbiguityForReportingFilter());
+		CollectionFilters.filterInPlace(ambiguousRight.keySet(),
+				getIgnoreAmbiguityForReportingFilter());
 		System.out
 				.format("Merge [%s]: ambiguous left:\n\t%s\nambiguous right:\n\t%s\n\n",
 						mergedClass.getSimpleName(), CommonUtils
@@ -285,5 +287,13 @@ public class SyncMerger<T> {
 
 	public Class<T> getMergedClass() {
 		return this.mergedClass;
+	}
+
+	protected SyncMapping defineRight(String propertyName) {
+		return this.define(propertyName).mergeFilter(RIGHT_IS_DEFINITIVE);
+	}
+
+	protected SyncMapping defineLeft(String propertyName) {
+		return this.define(propertyName).mergeFilter(LEFT_IS_DEFINITIVE);
 	}
 }

@@ -7,14 +7,14 @@ import java.util.List;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 
-public class PropertyPathAccesor {
+public class PropertyPathAccessor {
 	private String propertyPath;
 
 	private String[] paths;
 
 	private IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[0];
 
-	public PropertyPathAccesor(String propertyPath) {
+	public PropertyPathAccessor(String propertyPath) {
 		this.propertyPath = propertyPath;
 		paths = propertyPath.split("\\.");
 	}

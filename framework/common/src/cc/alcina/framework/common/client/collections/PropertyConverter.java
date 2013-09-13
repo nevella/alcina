@@ -1,14 +1,14 @@
 package cc.alcina.framework.common.client.collections;
 
-import cc.alcina.framework.common.client.util.PropertyPathAccesor;
+import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
 import com.totsp.gwittir.client.beans.Converter;
 
 public class PropertyConverter<I, O> implements Converter<I, O> {
-	private PropertyPathAccesor accessor;
+	private PropertyPathAccessor accessor;
 
 	public PropertyConverter(String path) {
-		this.accessor = new PropertyPathAccesor(path);
+		this.accessor = new PropertyPathAccessor(path);
 	}
 
 	@Override

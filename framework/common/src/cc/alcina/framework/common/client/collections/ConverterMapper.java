@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.collections;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.PropertyMapper.PropertyMapping;
 
 import com.totsp.gwittir.client.beans.Converter;
 
@@ -49,5 +50,14 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	protected PropertyMapping define(String leftPropertyName,
+			String rightPropertyName) {
+		return mapper.define(leftPropertyName, rightPropertyName);
+	}
+
+	protected PropertyMapping define(String both) {
+		return define(both, both);
 	}
 }
