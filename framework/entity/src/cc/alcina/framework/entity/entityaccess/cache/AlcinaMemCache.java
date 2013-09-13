@@ -145,6 +145,10 @@ public class AlcinaMemCache {
 	private TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(AlcinaMemCache.class, TaggedLogger.METRIC);
 
+	private TaggedLogger warnLogger = Registry.impl(TaggedLoggers.class)
+			.getLogger(AlcinaMemCache.class, TaggedLogger.WARN,
+					TaggedLogger.INFO, TaggedLogger.DEBUG);
+
 	static List<String> ignoreNames = Arrays.asList(new String[0]);
 
 	private static AlcinaMemCache theInstance;
@@ -947,7 +951,12 @@ public class AlcinaMemCache {
 				if (dte.getTransformType() != TransformType.CREATE_OBJECT
 						&& first == dte) {
 					HasIdAndLocalId obj = transformManager.getObject(dte);
-					index(obj, false);
+					if (obj != null) {
+						index(obj, false);
+					} else {
+						warnLogger.format(
+								"Null memcacheObject for index - %s\n", dte);
+					}
 				}
 				Object persistentLayerSource = dte.getSource();
 				transformManager.consume(dte);
@@ -964,7 +973,12 @@ public class AlcinaMemCache {
 						updateIVersionable(dbObj, persistentLayerSource);
 					}
 					ensureModificationChecker(memCacheObj);
-					index(memCacheObj, true);
+					if (memCacheObj != null) {
+						index(memCacheObj, true);
+					} else {
+						warnLogger.format(
+								"Null memcacheObject for index - %s\n", dte);
+					}
 				}
 			}
 		} catch (Exception e) {
