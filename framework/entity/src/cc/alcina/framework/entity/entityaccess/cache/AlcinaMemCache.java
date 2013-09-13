@@ -861,8 +861,10 @@ public class AlcinaMemCache {
 	protected void releaseConnectionLocks() {
 		try {
 			if (initialised) {
-				conn.commit();
-				conn.setAutoCommit(true);
+				if (!conn.getAutoCommit()) {
+					conn.commit();
+					conn.setAutoCommit(true);
+				}
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
