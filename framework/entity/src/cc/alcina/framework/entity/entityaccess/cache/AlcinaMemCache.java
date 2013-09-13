@@ -618,7 +618,9 @@ public class AlcinaMemCache {
 	}
 
 	private void maybeLogLock(String action, boolean write) {
-		if (dumpLocks || collectLockAcquisitionPoints) {
+		if (dumpLocks
+				|| (collectLockAcquisitionPoints && (write || mainLock
+						.getQueueLength() > maxLockQueueLength / 3))) {
 			String message = String.format("Memcache lock - %s - %s\n",
 					write ? "write" : "read", action);
 			Thread t = Thread.currentThread();
