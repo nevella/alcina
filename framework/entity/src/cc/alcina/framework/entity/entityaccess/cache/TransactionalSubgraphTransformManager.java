@@ -103,7 +103,7 @@ public class TransactionalSubgraphTransformManager extends
 			return;
 		}
 		if (event.getSource() != null) {
-			HasIdAndLocalId source = (HasIdAndLocalId) event.getSource();
+			HasIdAndLocalId source = event.getSource();
 			if (source != null && AlcinaMemCache.get().isRawValue(source)) {
 				throw new RuntimeException(
 						"Source of transform"
@@ -138,8 +138,8 @@ public class TransactionalSubgraphTransformManager extends
 	@Override
 	public void setPropertyValue(Object bean, String propertyName, Object value) {
 		try {
-			if(Thread.currentThread().getStackTrace().length>80){
-				int j=3;
+			if (Thread.currentThread().getStackTrace().length > 80) {
+				int j = 3;
 			}
 			SEUtilities.setPropertyValue(bean, propertyName, value);
 		} catch (Exception e) {

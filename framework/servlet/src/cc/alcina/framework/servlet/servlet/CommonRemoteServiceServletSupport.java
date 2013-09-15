@@ -5,7 +5,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.entity.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 
 /**

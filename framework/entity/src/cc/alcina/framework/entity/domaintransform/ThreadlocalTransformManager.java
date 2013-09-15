@@ -48,6 +48,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.ObjectRef;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -962,55 +964,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			if (manyToMany != null && manyToMany.mappedBy().length() != 0) {
 				super.updateAssociation(evt, obj, tgt, remove, false);
 			}
-		}
-	}
-
-	public static class HiliLocator {
-		public static HiliLocator fromDte(DomainTransformEvent dte) {
-			return new HiliLocator(dte.getObjectClass(), dte.getObjectId());
-		}
-
-		public Class<? extends HasIdAndLocalId> clazz;
-
-		public long id;
-
-		private int hash;
-
-		public HiliLocator(Class<? extends HasIdAndLocalId> clazz, long id) {
-			this.clazz = clazz;
-			this.id = id;
-		}
-
-		public HiliLocator(HasIdAndLocalId obj) {
-			this.clazz = obj.getClass();
-			this.id = obj.getId();
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof HiliLocator) {
-				HiliLocator o = (HiliLocator) obj;
-				return id == o.id && clazz == o.clazz;
-			}
-			return super.equals(obj);
-		}
-
-		@Override
-		public int hashCode() {
-			if (hash == 0) {
-				hash = Long.valueOf(id).hashCode()
-						^ (clazz == null ? 0 : clazz.hashCode());
-				if (hash == 0) {
-					hash = -1;
-				}
-			}
-			return hash;
-		}
-
-		@Override
-		public String toString() {
-			return CommonUtils.formatJ("%s - %s", clazz == null ? "??"
-					: CommonUtils.simpleClassName(clazz), id);
 		}
 	}
 

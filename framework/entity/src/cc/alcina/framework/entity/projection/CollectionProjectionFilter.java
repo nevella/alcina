@@ -1,15 +1,10 @@
 package cc.alcina.framework.entity.projection;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 
@@ -38,14 +33,7 @@ public class CollectionProjectionFilter implements GraphProjectionDataFilter {
 
 	private Object projectMap(Map map, GraphProjectionContext context,
 			GraphProjection graphProjection) throws Exception {
-		Map m = null;
-		if (map instanceof Multimap) {
-			m = new Multimap();
-		} else if (map instanceof LinkedHashMap) {
-			m = new LinkedHashMap();
-		} else {
-			m = new HashMap();
-		}
+		Map m = map.getClass().newInstance();
 		Iterator itr = map.keySet().iterator();
 		Object value, key;
 		for (; itr.hasNext();) {

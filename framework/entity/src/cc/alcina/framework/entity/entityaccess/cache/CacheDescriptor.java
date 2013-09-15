@@ -1,11 +1,13 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 
 public abstract class CacheDescriptor {
 	Map<Class, CacheItemDescriptor> perClass = new LinkedHashMap<Class, CacheItemDescriptor>();
@@ -22,7 +24,7 @@ public abstract class CacheDescriptor {
 		 * @return true if cached data was modified
 		 */
 		public void run(AlcinaMemCache alcinaMemCache, Class clazz,
-				List<T> objects) throws Exception;
+				Collection<T> objects) throws Exception;
 	}
 
 	public List<CacheTask> postLoadTasks = new ArrayList<CacheTask>();
@@ -56,5 +58,9 @@ public abstract class CacheDescriptor {
 		addItemDescriptor(itemDescriptor);
 	}
 
-	public abstract Class<? extends IUser> getIUserClass() ;
+	public abstract Class<? extends IUser> getIUserClass();
+
+	public void loadLazyPreApplyPersist(
+			DomainTransformPersistenceEvent persistenceEvent) throws Exception {
+	}
 }

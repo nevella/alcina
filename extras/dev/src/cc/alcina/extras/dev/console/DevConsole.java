@@ -74,8 +74,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	static {
 		err = new BiPrintStream(new ByteArrayOutputStream());
 		err.s1 = System.err;
+		err.s2 = System.err;
 		out = new BiPrintStream(new ByteArrayOutputStream());
 		out.s1 = System.out;
+		out.s2 = System.out;
+		// double streams until we redirect to console - could of course be a
+		// nullwriter
 		System.setErr(err);
 		System.setOut(out);
 	}
@@ -188,7 +192,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			return;
 		}
 		if (!props.lastCommand.isEmpty()) {
-			runningLastCommand=true;
+			runningLastCommand = true;
 			performCommand(props.lastCommand);
 		} else {
 			consoleLeft.ok("Enter 'h' for help\n\n");
@@ -322,7 +326,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			throw new WrappedRuntimeException(e);
 		}
 	}
-	
+
 	protected void performCommandInThread(List<String> args,
 			DevConsoleCommand c, boolean topLevel) {
 		try {
@@ -335,7 +339,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			consoleRight.setText("");
 			long l1 = System.currentTimeMillis();
 			c.configure();
-			if(c.clsBeforeRun()){
+			if (c.clsBeforeRun()) {
 				clear();
 			}
 			String msg = c
@@ -360,7 +364,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				e.printStackTrace();
 			}
 		} finally {
-			runningLastCommand=false;
+			runningLastCommand = false;
 			LooseContext.pop();
 			runningJobs.remove(c);
 		}
@@ -785,8 +789,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			return null;
 		}
 	}
-	public String getSingleLineInput(String prompt,String defaultValue) {
-		final JTextField textArea = new JTextField( 40);
+
+	public String getSingleLineInput(String prompt, String defaultValue) {
+		final JTextField textArea = new JTextField(40);
 		textArea.addAncestorListener(new AncestorListener() {
 			@Override
 			public void ancestorRemoved(AncestorEvent event) {

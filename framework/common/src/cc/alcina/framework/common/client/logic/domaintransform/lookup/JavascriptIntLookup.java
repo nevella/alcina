@@ -5,40 +5,42 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArrayInteger;
 
 public final class JavascriptIntLookup extends JavaScriptObject {
 	protected JavascriptIntLookup() {
 	}
 
 	private class ValuesIterator implements Iterator {
-		JavascriptJavaObjectArray array;
+		JsArrayInteger keysSnapshot;
 
-		int idx = 0;
+		int idx = -1;
 
 		private int itrModCount;
 
 		private boolean nextCalled = false;
 
 		public ValuesIterator() {
-			array = values();
+			keysSnapshot = keys();
 			this.itrModCount = modCount();
 		}
 
 		@Override
 		public boolean hasNext() {
-			return idx < array.length();
+			return idx + 1 < keysSnapshot.length();
 		}
 
 		@Override
 		public Object next() {
-			if (idx == array.length()) {
+			if (idx + 1 == keysSnapshot.length()) {
 				throw new NoSuchElementException();
 			}
 			if (itrModCount != modCount()) {
 				throw new ConcurrentModificationException();
 			}
 			nextCalled = true;
-			return array.get(idx++);
+			int key = keysSnapshot.get(++idx);
+			return JavascriptIntLookup.this.get(key);
 		}
 
 		@Override
@@ -49,10 +51,15 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 			if (!nextCalled) {
 				throw new IllegalStateException();
 			}
-			JavascriptIntLookup.this.remove(idx);
-			array = values();
-			nextCalled = false;
-			this.itrModCount++;
+			if (JavascriptIntLookup.this.remove(keysSnapshot.get(idx))) {
+				keysSnapshot = keys();
+				this.itrModCount++;
+				idx--;
+				nextCalled = false;
+			} else {
+				throw new RuntimeException(
+						"removing non-existent iterator value");
+			}
 		}
 	}
 
@@ -81,13 +88,15 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 		this.valueLookup[key] = value;
 	}-*/;
 
-	public native void remove(int key)/*-{
+	public native boolean remove(int key)/*-{
+		debugger;
 		if (this.valueLookup[key] === undefined) {
-
+			return false;
 		} else {
 			delete this.valueLookup[key];
-			this.modCount--;
+			this.modCount++;
 			this.length--;
+			return true;
 		}
 		;
 	}-*/;
@@ -101,11 +110,11 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 		return this.modCount;
 	}-*/;
 
-	public native JavascriptJavaObjectArray values()/*-{
+	public native JsArrayInteger keys()/*-{
 		var v = [];
 		for ( var k in this.valueLookup) {
 			if (this.valueLookup.hasOwnProperty(k)) {
-				v.push(this.valueLookup[k]);
+				v.push(parseInt(k));
 			}
 		}
 		return v;

@@ -11,11 +11,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.entity.domaintransform;
+package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.HashMap;
 
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
+
 /**
  * The key is the (client's) localid of the Hili
  * @author nick@alcina.cc

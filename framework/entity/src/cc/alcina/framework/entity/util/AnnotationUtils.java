@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.util.Multimap;
+
 @SuppressWarnings("unchecked")
 /**
  *
@@ -57,9 +59,10 @@ public class AnnotationUtils {
 		return values;
 	}
 
-	private static HashMap<Class, Collection<Annotation>> superAnnotationMap = new HashMap<Class, Collection<Annotation>>();
+	private static HashMap<Class, Multimap<Class, List<Annotation>>> superAnnotationMap = new HashMap<Class, Multimap<Class, List<Annotation>>>();
 
-	public static Collection<Annotation> getSuperclassAnnotations(Class clazz) {
+	public static Multimap<Class, List<Annotation>> getSuperclassAnnotations(
+			Class clazz) {
 		Class forClass = clazz;
 		if (clazz.isInterface()) {
 			throw new RuntimeException(
@@ -68,15 +71,21 @@ public class AnnotationUtils {
 		if (superAnnotationMap.containsKey(clazz)) {
 			return superAnnotationMap.get(clazz);
 		}
-		List<Annotation> values = new ArrayList<Annotation>();
+		Multimap<Class, List<Annotation>> values = new Multimap<Class, List<Annotation>>();
 		while (clazz != Object.class) {
-			for (Annotation a : clazz.getAnnotations()) {
-				values.add(a);
-			}
+			values.addCollection(clazz, Arrays.asList(clazz.getAnnotations()));
 			clazz = clazz.getSuperclass();
 		}
 		superAnnotationMap.put(forClass, values);
 		return values;
+	}
+
+	public static <A extends Annotation> void filterAnnotations(
+			Multimap<Class, List<Annotation>> ann,
+			Class<? extends A>... filterClasses) {
+		for (List<Annotation> anns : ann.values()) {
+			anns.retainAll(filterAnnotations(anns, filterClasses));
+		}
 	}
 
 	public static <A extends Annotation> Collection<A> filterAnnotations(

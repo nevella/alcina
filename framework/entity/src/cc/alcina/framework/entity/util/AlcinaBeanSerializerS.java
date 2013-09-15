@@ -169,14 +169,6 @@ public class AlcinaBeanSerializerS {
 	IdentityHashMap serialized = new IdentityHashMap();
 
 	public String serialize(Object bean) throws Exception {
-		if (bean != null
-				&& !CommonUtils.isStandardJavaClassOrEnum(bean.getClass())) {
-			if (serialized.containsKey(bean)) {
-				throw new RuntimeException("serialization cycle");
-			} else {
-				serialized.put(bean, bean);
-			}
-		}
 		return serializeObject(bean).toString();
 	}
 
@@ -267,6 +259,14 @@ public class AlcinaBeanSerializerS {
 	private JSONObject serializeObject(Object object) throws Exception {
 		if (object == null) {
 			return null;
+		}
+		if (object != null
+				&& !CommonUtils.isStandardJavaClassOrEnum(object.getClass())) {
+			if (serialized.containsKey(object)) {
+				throw new RuntimeException("serialization cycle");
+			} else {
+				serialized.put(object, object);
+			}
 		}
 		JSONObject jo = new JSONObject();
 		Class<? extends Object> type = object.getClass();

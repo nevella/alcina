@@ -52,8 +52,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	public void insert(T t) {
 		Object[] values = project(t);
 		if (values != null) {
-			if (values.length > 0 
-					&& values[0].getClass().isArray()) {
+			if (values.length > 0 && values[0].getClass().isArray()) {
 				for (Object tuple : values) {
 					lookup.put((Object[]) tuple);
 				}
@@ -65,6 +64,10 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 
 	public boolean isEnabled() {
 		return this.enabled;
+	}
+
+	public MultikeyMap<T> asMap(Object... objects) {
+		return (MultikeyMap<T>) lookup.asMap(objects);
 	}
 
 	public <V> Collection<V> items(Object... objects) {

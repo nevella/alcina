@@ -98,6 +98,10 @@ public class ResourceUtilities {
 		registerCustomProperties(ios);
 	}
 
+	public static boolean is(Class clazz, String propertyName) {
+		return getBoolean(clazz, propertyName);
+	}
+
 	public static boolean getBoolean(Class clazz, String propertyName) {
 		String s = getBundledString(clazz, propertyName);
 		return Boolean.valueOf(s);

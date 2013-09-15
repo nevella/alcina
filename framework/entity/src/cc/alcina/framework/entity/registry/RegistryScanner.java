@@ -17,6 +17,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
 /*
@@ -46,6 +48,10 @@ public class RegistryScanner extends CachingScanner {
 		scan(classes, cachePath);
 	}
 
+	protected Class maybeNormaliseClass(Class c) {
+		return c;
+	}
+
 	@Override
 	protected void process(Class c, String className, Date modDate,
 			Map<String, Date> outgoingIgnoreMap) {
@@ -55,12 +61,13 @@ public class RegistryScanner extends CachingScanner {
 			return;
 		}
 		c = maybeNormaliseClass(c);
-		Collection<Annotation> sca = AnnotationUtils
+		Multimap<Class,List<Annotation>> sca=
+		 AnnotationUtils
 				.getSuperclassAnnotations(c);
-		Collection locs = AnnotationUtils.filterAnnotations(sca,
+		 AnnotationUtils.filterAnnotations(sca,
 				RegistryLocation.class, RegistryLocations.class);
 		Set<RegistryLocation> uniques = Registry
-				.filterForRegistryPointUniqueness(locs);
+				.filterForRegistryPointUniqueness(sca);
 		if (uniques.isEmpty()) {
 			outgoingIgnoreMap.put(className, modDate);
 			return;
@@ -68,9 +75,5 @@ public class RegistryScanner extends CachingScanner {
 		for (RegistryLocation rl : uniques) {
 			toRegistry.register(c, rl);
 		}
-	}
-
-	protected Class maybeNormaliseClass(Class c) {
-		return c;
 	}
 }

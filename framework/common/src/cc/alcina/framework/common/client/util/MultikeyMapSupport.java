@@ -4,20 +4,22 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
-// basically a mixin
+// basically a mixin. Now that multikeymap doesn't extend map, not necessary...but works ok
 public class MultikeyMapSupport<V> implements Serializable {
-	private MultikeyMap<V> map;
+	private MultikeyMap<V> multi;
 
-	public MultikeyMapSupport(MultikeyMap<V> map) {
-		this.map = map;
+	public MultikeyMapSupport(MultikeyMap<V> multi) {
+		this.multi = multi;
 	}
 
 	public MultikeyMap<V> swapKeysZeroAndOne() {
-		MultikeyMap<V> swapped = map.createMap(map.getDepth());
-		for (Object k0 : map.keySet()) {
-			MultikeyMap<V> v = (MultikeyMap<V>) map.get(k0);
-			for (Object k1 : v.keySet()) {
+		MultikeyMap<V> swapped = multi.createMap(multi.getDepth());
+		for (Object k0 : multi.writeableDelegate().keySet()) {
+			MultikeyMap<V> v = (MultikeyMap<V>) multi.get(k0);
+			for (Object k1 : v.writeableDelegate().keySet()) {
 				swapped.put(k1, k0, v.get(k1));
 			}
 		}
@@ -25,11 +27,11 @@ public class MultikeyMapSupport<V> implements Serializable {
 	}
 
 	void addValues(List<V> values) {
-		if (map.getDepth() == 1) {
-			values.addAll(map.values());
+		if (multi.getDepth() == 1) {
+			values.addAll(multi.writeableDelegate().values());
 		} else {
-			for (Object k : map.keySet()) {
-				((MultikeyMap<V>) map.get(k)).addValues(values);
+			for (Object k : multi.writeableDelegate().keySet()) {
+				((MultikeyMap<V>) multi.asMap(k)).addValues(values);
 			}
 		}
 	}
@@ -46,28 +48,28 @@ public class MultikeyMapSupport<V> implements Serializable {
 	}
 
 	V getEnsure(boolean ensure, Object... objects) {
-		assert objects.length == map.getDepth();
+		assert objects.length == multi.getDepth();
 		return (V) getWithKeys(ensure, 0, objects);
 	}
 
 	Object getWithKeys(boolean ensure, int ignoreCount, Object... objects) {
-		Map m = map;
+		MultikeyMap m = multi;
 		int last = objects.length - 1 - ignoreCount;
 		for (int i = 0; i <= last; i++) {
 			Object k = objects[i];
-			Object o = m.get(k);
+			Object o = m.writeableDelegate().get(k);
 			if (o != null) {
 				if (i == last) {
 					return o;
 				} else {
-					m = (Map) o;
+					m = (MultikeyMap) o;
 				}
 			} else {
-				if (ensure && i != map.getDepth() - 1) {
+				if (ensure && i != multi.getDepth() - 1) {
 					// only use ensure if we're ensuring a map, not a key
-					o = map.createMap(map.getDepth() - i - 1);
-					m.put(k, o);
-					m = (Map) o;
+					o = multi.createMap(multi.getDepth() - i - 1);
+					m.writeableDelegate().put(k, o);
+					m = (MultikeyMap) o;
 				} else {
 					return null;
 				}
@@ -77,21 +79,27 @@ public class MultikeyMapSupport<V> implements Serializable {
 	}
 
 	void put(Object... objects) {
-		Map m = (Map) getWithKeys(true, 2, objects);
+		Map m = getMapForObjects(true, 2, objects);
 		m.put(objects[objects.length - 2], objects[objects.length - 1]);
 	}
 
+	private Map getMapForObjects(boolean ensure, int length, Object... objects) {
+		Object withKeys = getWithKeys(ensure, length, objects);
+		MultikeyMap mkm = (MultikeyMap) withKeys;
+		return mkm != null ? mkm.writeableDelegate() : null;
+	}
+
 	public V remove(Object... objects) {
-		int trim = objects.length == map.getDepth() + 1 ? 1 : 0;
-		assert objects.length == map.getDepth() + trim;
+		int trim = objects.length == multi.getDepth() + 1 ? 1 : 0;
+		assert objects.length == multi.getDepth() + trim;
 		// ignore last value (k/k/k/v) if it's there
-		Map m = (Map) getWithKeys(false, 1 + trim, objects);
+		Map m = getMapForObjects(false, 1 + trim, objects);
 		if (m == null) {
 			return null;
 		}
 		V result = (V) m.remove(objects[objects.length - 1 - trim]);
 		for (int keyIndex = objects.length - 2 - trim; keyIndex >= 0; keyIndex--) {
-			Map parent = (Map) getWithKeys(false, objects.length - keyIndex,
+			Map parent = getMapForObjects(false, objects.length - keyIndex,
 					objects);
 			if (m.isEmpty()) {
 				Object keyWithEmptyMap = objects[keyIndex];
@@ -105,7 +113,21 @@ public class MultikeyMapSupport<V> implements Serializable {
 	}
 
 	public boolean containsKey(Object... objects) {
-		Map m = (Map) getWithKeys(false, 1, objects);
+		Map m = getMapForObjects(false, 1, objects);
 		return m != null && m.containsKey(objects[objects.length - 1]);
+	}
+
+	public void putMulti(MultikeyMap<V> other) {
+		if (multi.getDepth() != other.getDepth()) {
+			throw new RuntimeException("Incompatible depth");
+		}
+		if (multi.getDepth() == 1) {
+			multi.writeableDelegate().putAll(other.writeableDelegate());
+		} else {
+			for (Object key : other.writeableDelegate().keySet()) {
+				((MultikeyMap<V>) multi.asMap( key))
+						.putMulti((MultikeyMap<V>) other.asMap(key));
+			}
+		}
 	}
 }

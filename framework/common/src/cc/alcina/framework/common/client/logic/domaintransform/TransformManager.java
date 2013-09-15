@@ -235,9 +235,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 						DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
 			}
 		}
-		Object existingTargetValue = event.getSource() == null
-				|| event.getPropertyName() == null ? null : propertyAccessor()
-				.getPropertyValue(event.getSource(), event.getPropertyName());
+		Object existingTargetValue = null;
+		if (event.getFromPropertyChangeEvent() != null) {
+			existingTargetValue = event.getFromPropertyChangeEvent()
+					.getOldValue();
+		} else if (event.getSource() == null || event.getPropertyName() == null) {
+		} else {
+			existingTargetValue = propertyAccessor().getPropertyValue(
+					event.getSource(), event.getPropertyName());
+		}
 		Object newTargetValue = transformType == null ? null : getTargetObject(
 				event, false);
 		if (!checkPermissions(obj, event, event.getPropertyName(),
@@ -262,7 +268,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				// note, should never occur TODO: notify server
 				return;
 			}
-			
 			propertyAccessor().setPropertyValue(obj, event.getPropertyName(),
 					newTargetValue);
 			String pn = event.getPropertyName();
@@ -414,7 +419,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public DomainTransformEvent createTransformFromPropertyChange(
 			PropertyChangeEvent evt) {
 		DomainTransformEvent dte = new DomainTransformEvent();
-		dte.setSource(evt.getSource());
+		dte.setSource((HasIdAndLocalId) evt.getSource());
 		dte.setNewValue(evt.getNewValue());
 		dte.setPropertyName(evt.getPropertyName());
 		HasIdAndLocalId dObj = (HasIdAndLocalId) evt.getSource();
@@ -473,7 +478,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Set<DomainTransformEvent> toRemove = new LinkedHashSet<DomainTransformEvent>();
 		LinkedHashSet<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent dte : trs) {
-			Object source = dte.getSource() != null ? dte.getSource()
+			HasIdAndLocalId source = dte.getSource() != null ? dte.getSource()
 					: getObject(dte);
 			if (hili.equals(source)) {
 				toRemove.add(dte);
@@ -917,6 +922,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
 		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
+		dte.setFromPropertyChangeEvent(evt);
 		convertToTargetObject(dte);
 		if (dte.getNewValue() == null) {
 			dte.setTransformType(TransformType.NULL_PROPERTY_REF);

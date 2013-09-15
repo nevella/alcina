@@ -427,7 +427,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.allEvents(dtrps);
 			DetachedEntityCache cache = cacheEntities(events, false);
 			for (DomainTransformEvent event : events) {
-				event.setSource(cache.get(event.getObjectClass(),
+				event.setSource((HasIdAndLocalId) cache.get(event.getObjectClass(),
 						event.getObjectId()));
 			}
 		}

@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -84,8 +85,8 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 
 	@UnsafeNativeLong
 	private native int fastHash(long id, long localId, int classHashCode)/*-{
-		return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h ^ classHashCode;
-	}-*/;
+																			return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h ^ classHashCode;
+																			}-*/;
 
 	/**
 	 * used - and why? Because an object we map will _always_ have either a
@@ -126,6 +127,9 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	 * the last line is to deal with a weird gwt/ff/webkit bug
 	 */
 	public String toString() {
+		if (CommonLocator.get().classLookup() == null) {
+			return new HiliLocator(this).toString();
+		}
 		if (!GwittirUtils.isIntrospectable(getClass())) {
 			return super.toString();
 		}

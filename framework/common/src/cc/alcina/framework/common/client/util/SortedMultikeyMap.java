@@ -16,7 +16,10 @@ package cc.alcina.framework.common.client.util;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+
+import cc.alcina.framework.common.client.collections.ImmutableMap;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
@@ -26,13 +29,22 @@ import java.util.TreeMap;
  * 
  */
 @SuppressWarnings("unchecked")
-public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
-	private final int depth;
+public class SortedMultikeyMap<V> implements MultikeyMap<V> {
+	private int depth;
 
-	private MultikeyMapSupport multikeyMapSupport;
+	private transient MultikeyMapSupport multikeyMapSupport;
+
+	private TreeMap delegate;
+
+	private transient ImmutableMap readonlyDelegate;
+
+	public SortedMultikeyMap() {
+		this(2);
+	}
 
 	public SortedMultikeyMap(int depth) {
 		this.depth = depth;
+		this.delegate = new TreeMap();
 		this.multikeyMapSupport = new MultikeyMapSupport(this);
 	}
 
@@ -47,17 +59,35 @@ public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
 	}
 
 	@Override
-	public TreeMap asMap(Object... objects) {
-		return (TreeMap) multikeyMapSupport.asMap(true, objects);
+	public SortedMultikeyMap asMap(Object... objects) {
+		return (SortedMultikeyMap) multikeyMapSupport.asMap(true, objects);
 	}
 
-	public TreeMap asMapEnsure(boolean ensure, Object... objects) {
-		return (TreeMap) multikeyMapSupport.asMap(ensure, objects);
+	public SortedMultikeyMap asMapEnsure(boolean ensure, Object... objects) {
+		return (SortedMultikeyMap) multikeyMapSupport.asMap(ensure, objects);
+	}
+
+	@Override
+	public void clear() {
+		delegate.clear();
+	}
+
+	@Override
+	public boolean containsKey(Object... objects) {
+		return multikeyMapSupport.containsKey(objects);
 	}
 
 	@Override
 	public MultikeyMap<V> createMap(int childDepth) {
 		return new SortedMultikeyMap(childDepth);
+	}
+
+	@Override
+	public Map delegate() {
+		if (readonlyDelegate == null) {
+			readonlyDelegate = new ImmutableMap(delegate);
+		}
+		return readonlyDelegate;
 	}
 
 	@Override
@@ -75,6 +105,10 @@ public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
 		return (V) multikeyMapSupport.getEnsure(ensure, objects);
 	}
 
+	public boolean isEmpty() {
+		return this.delegate.isEmpty();
+	}
+
 	@Override
 	public <T> Collection<T> items(Object... objects) {
 		if (objects.length >= depth) {
@@ -86,13 +120,22 @@ public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> keys(Object... objects) {
-		Map m = asMapEnsure(false, objects);
+		Map m = asMapEnsure(false, objects).delegate;
 		return m == null ? null : m.keySet();
+	}
+
+	public Set keySet() {
+		return this.delegate.keySet();
 	}
 
 	@Override
 	public void put(Object... objects) {
 		multikeyMapSupport.put(objects);
+	}
+
+	@Override
+	public void putMulti(MultikeyMap<V> multi) {
+		multikeyMapSupport.putMulti(multi);
 	}
 
 	@Override
@@ -111,14 +154,26 @@ public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> reverseKeys(Object... objects) {
-		TreeMap m = asMapEnsure(false, objects);
+		TreeMap m = asMapEnsure(false, objects).delegate;
 		return m == null ? null : m.descendingMap().keySet();
 	}
 
 	@Override
 	public <T> Collection<T> reverseValues(Object... objects) {
-		TreeMap m = asMapEnsure(false, objects);
+		TreeMap m = asMapEnsure(false, objects).delegate;
 		return m == null ? null : m.descendingMap().values();
+	}
+
+	@Override
+	public void setDepth(int depth) {
+		if (!delegate.keySet().isEmpty()) {
+			throw new RuntimeException("cannot change depth once items added");
+		}
+		this.depth = depth;
+	}
+
+	public int size() {
+		return this.delegate.size();
 	}
 
 	@Override
@@ -128,12 +183,12 @@ public class SortedMultikeyMap<V> extends TreeMap implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> values(Object... objects) {
-		Map m = asMapEnsure(false, objects);
+		Map m = asMapEnsure(false, objects).delegate;
 		return m == null ? null : m.values();
 	}
 
 	@Override
-	public boolean containsKey(Object... objects) {
-		return multikeyMapSupport.containsKey(objects);
+	public Map writeableDelegate() {
+		return delegate;
 	}
 }

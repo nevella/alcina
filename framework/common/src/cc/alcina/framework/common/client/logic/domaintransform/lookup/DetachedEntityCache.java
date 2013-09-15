@@ -14,9 +14,11 @@
 package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -36,6 +38,7 @@ public class DetachedEntityCache implements Serializable {
 
 	private static transient DetachedEntityCache commonInstance;
 
+	//TODO - get rid of this, not thread safe (obviously)
 	public static DetachedEntityCache get() {
 		if (commonInstance == null) {
 			commonInstance = new DetachedEntityCache();
@@ -132,7 +135,8 @@ public class DetachedEntityCache implements Serializable {
 	public Map<Class, Map<Long, HasIdAndLocalId>> getDetached() {
 		return this.detached;
 	}
-	public  Map<Long, HasIdAndLocalId> getMap(Class clazz) {
+
+	public Map<Long, HasIdAndLocalId> getMap(Class clazz) {
 		ensureMaps(clazz);
 		return this.detached.get(clazz);
 	}
@@ -159,5 +163,18 @@ public class DetachedEntityCache implements Serializable {
 	@Override
 	public String toString() {
 		return "Cache: " + detached;
+	}
+
+	public List<Long> notContained(Collection<Long> ids, Class clazz) {
+		List<Long> result = new ArrayList<Long>();
+		ensureMaps(clazz);
+		Set<Long> existing = detached.get(clazz).keySet();
+		// can be reasonably confident size(existing)>size(ids)
+		for (Long id : ids) {
+			if (!existing.contains(id)) {
+				result.add(id);
+			}
+		}
+		return result;
 	}
 }

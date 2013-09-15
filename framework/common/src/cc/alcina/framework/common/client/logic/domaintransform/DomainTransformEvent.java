@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import java.beans.PropertyChangeEvent;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Date;
@@ -37,7 +38,9 @@ public class DomainTransformEvent implements Serializable,
 
 	private transient Object newValue;
 
-	private transient Object source;
+	private transient HasIdAndLocalId source;
+
+	private transient PropertyChangeEvent fromPropertyChangeEvent;
 
 	private transient Class objectClass;
 
@@ -158,7 +161,7 @@ public class DomainTransformEvent implements Serializable,
 	}
 
 	@Transient
-	public Object getSource() {
+	public HasIdAndLocalId getSource() {
 		return this.source;
 	}
 
@@ -216,8 +219,8 @@ public class DomainTransformEvent implements Serializable,
 		return valueVersionNumber;
 	}
 
-	public Object provideSourceOrMarker() {
-		Object source = getSource();
+	public HasIdAndLocalId provideSourceOrMarker() {
+		HasIdAndLocalId source = getSource();
 		if (source == null && getObjectLocalId() != 0) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator.get()
 					.classLookup().newInstance(getObjectClass());
@@ -300,7 +303,7 @@ public class DomainTransformEvent implements Serializable,
 		this.propertyName = propertyName;
 	}
 
-	public void setSource(Object source) {
+	public void setSource(HasIdAndLocalId source) {
 		this.source = source;
 	}
 
@@ -367,7 +370,7 @@ public class DomainTransformEvent implements Serializable,
 				&& getValueClass() == o.getValueClass()
 				&& commitType == o.commitType
 				&& transformType == o.transformType
-				&&CommonUtils.equalsWithNullEquality(propertyName,
+				&& CommonUtils.equalsWithNullEquality(propertyName,
 						o.propertyName)
 				&& CommonUtils.equalsWithNullEquality(newStringValue,
 						o.newStringValue);
@@ -383,4 +386,14 @@ public class DomainTransformEvent implements Serializable,
 			return CommonUtils.compareDates(o1.getUtcDate(), o2.getUtcDate());
 		}
 	};
+
+	@Transient
+	public PropertyChangeEvent getFromPropertyChangeEvent() {
+		return this.fromPropertyChangeEvent;
+	}
+
+	public void setFromPropertyChangeEvent(
+			PropertyChangeEvent fromPropertyChangeEvent) {
+		this.fromPropertyChangeEvent = fromPropertyChangeEvent;
+	}
 }

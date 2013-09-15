@@ -21,7 +21,7 @@ public class FastIdLookupScript implements FastIdLookup {
 	class FastIdLookupScriptValues extends AbstractCollection<HasIdAndLocalId> {
 		@Override
 		public Iterator<HasIdAndLocalId> iterator() {
-			return new MultiIterator<HasIdAndLocalId>(false,
+			return new MultiIterator<HasIdAndLocalId>(true,
 					localIdLookup.valuesIterator(), idLookup.valuesIterator());
 		}
 

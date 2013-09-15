@@ -2,7 +2,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import cc.alcina.framework.common.client.collections.KeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 
 public class DteToLocatorMapper implements
 		KeyValueMapper<HiliLocator, DomainTransformEvent, DomainTransformEvent> {

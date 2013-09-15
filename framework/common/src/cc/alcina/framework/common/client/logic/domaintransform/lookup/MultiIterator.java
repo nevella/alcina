@@ -5,34 +5,34 @@ import java.util.NoSuchElementException;
 
 public class MultiIterator<E> implements Iterator<E> {
 	private Iterator<E>[] iterators;
-	
-	private int idx=0;
+
+	private int idx = 0;
 
 	private boolean allowRemove;
 
-	public MultiIterator(boolean allowRemove,Iterator<E>... iterators) {
+	public MultiIterator(boolean allowRemove, Iterator<E>... iterators) {
 		this.allowRemove = allowRemove;
 		this.iterators = iterators;
 	}
+
 	@Override
 	public boolean hasNext() {
-		return ensureCurrentIterator()!=null;
+		return ensureCurrentIterator() != null;
 	}
 
 	private Iterator<E> ensureCurrentIterator() {
-		while(idx<iterators.length){
-			if(iterators[idx].hasNext()){
+		while (idx < iterators.length) {
+			if (iterators[idx].hasNext()) {
 				return iterators[idx];
 			}
 			idx++;
 		}
 		return null;
-		
 	}
 	@Override
 	public E next() {
 		Iterator<E> itr = ensureCurrentIterator();
-		if(itr==null){
+		if (itr == null) {
 			throw new NoSuchElementException();
 		}
 		return itr.next();
@@ -40,12 +40,13 @@ public class MultiIterator<E> implements Iterator<E> {
 
 	@Override
 	public void remove() {
-		if(allowRemove){
-			Iterator<E> itr = ensureCurrentIterator();
-			if(itr==null){
+		if (allowRemove) {
+			Iterator<E> itr = iterators[idx];
+			if (itr == null) {
 				throw new NoSuchElementException();
 			}
-			 itr.remove();
+			itr.remove();
+			return;
 		}
 		throw new IllegalArgumentException("Remove not permitted");
 	}

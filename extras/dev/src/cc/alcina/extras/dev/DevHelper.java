@@ -179,7 +179,6 @@ public abstract class DevHelper {
 	public void initLightweightServices() {
 		initDataFolder();
 		Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
-		Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
 		scanRegistry();
 		initClientReflector();
 		initDummyServices();

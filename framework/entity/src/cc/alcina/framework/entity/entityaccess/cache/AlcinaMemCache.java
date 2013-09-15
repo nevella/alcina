@@ -7,6 +7,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,6 +54,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
@@ -71,8 +73,6 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager.HiliLocator;
-import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
@@ -80,6 +80,7 @@ import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.SqlUtils;
 
 /**
  * <h3>Locking notes:</h3>
@@ -325,7 +326,7 @@ public class AlcinaMemCache {
 		return new AlcinaMemCacheQuery().ids(getIds(clazz)).raw().list(clazz);
 	}
 
-	public <T extends HasIdAndLocalId> Set<T> set(Class<T> clazz) {
+	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
 		return new LinkedHashSet<T>(new AlcinaMemCacheQuery()
 				.ids(getIds(clazz)).raw().list(clazz));
 	}
@@ -343,12 +344,12 @@ public class AlcinaMemCache {
 		try {
 			List<HasIdAndLocalId> loaded = loadTable0(clazz, sqlFilter, sublock);
 			if (sublock != null) {
+				resolveRefs();
 				if (!initialising) {
 					for (HasIdAndLocalId hili : loaded) {
 						index(hili, true);
 					}
 				}
-				resolveRefs();
 			}
 		} finally {
 			if (sublock != null) {
@@ -507,20 +508,30 @@ public class AlcinaMemCache {
 		PropertyDescriptor pd = entry.getKey();
 		// get reverse
 		PropertyDescriptor rev = null;
+		Class<?> declaringClass = pd.getReadMethod().getDeclaringClass();
 		for (Entry<PropertyDescriptor, JoinTable> entry2 : joinTables
 				.entrySet()) {
 			ManyToMany m = entry2.getKey().getReadMethod()
 					.getAnnotation(ManyToMany.class);
-			if (entry2.getValue() == null
-					&& m.targetEntity() == pd.getReadMethod()
-							.getDeclaringClass()
+			if (entry2.getValue() == null && m.targetEntity() == declaringClass
 					&& pd.getName().equals(m.mappedBy())) {
 				rev = entry2.getKey();
 				break;
 			}
 		}
 		if (rev == null) {
-			throw new RuntimeException("No reverse key for " + pd);
+			Type genericReturnType = pd.getReadMethod().getGenericReturnType();
+			if (genericReturnType instanceof ParameterizedType) {
+				Type genericType = ((ParameterizedType) genericReturnType)
+						.getActualTypeArguments()[0];
+				if (genericType == declaringClass) {
+					// self-reference, probably
+					rev = pd;
+				}
+			}
+			if (rev == null) {
+				throw new RuntimeException("No reverse key for " + pd);
+			}
 		}
 		try {
 			String joinTableName = joinTable.name();
@@ -531,10 +542,19 @@ public class AlcinaMemCache {
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
 			while (rs.next()) {
-				HasIdAndLocalId src = (HasIdAndLocalId) cache.get(pd
-						.getReadMethod().getDeclaringClass(), rs.getLong(1));
+				HasIdAndLocalId src = (HasIdAndLocalId) cache.get(
+						declaringClass, rs.getLong(1));
 				HasIdAndLocalId tgt = (HasIdAndLocalId) cache.get(rev
 						.getReadMethod().getDeclaringClass(), rs.getLong(2));
+				// if (src == null || tgt == null) {
+				// int j = 3;
+				// {
+				// src = (HasIdAndLocalId) cache.get(pd.getReadMethod()
+				// .getDeclaringClass(), rs.getLong(1));
+				// tgt = (HasIdAndLocalId) cache.get(rev.getReadMethod()
+				// .getDeclaringClass(), rs.getLong(2));
+				// }
+				// }
 				assert src != null && tgt != null;
 				laterLookup.add(tgt, pd, src);
 				laterLookup.add(src, rev, tgt);
@@ -700,6 +720,12 @@ public class AlcinaMemCache {
 			ManyToMany manyToMany = rm.getAnnotation(ManyToMany.class);
 			JoinTable joinTable = rm.getAnnotation(JoinTable.class);
 			if (manyToMany != null || joinTable != null) {
+				if (manyToMany.mappedBy().isEmpty() && joinTable == null) {
+					System.out
+							.format("**warn - manytomany association with no join table: %s.%s\n",
+									rm.getDeclaringClass().getSimpleName(),
+									pd.getName());
+				}
 				joinTables.put(pd, joinTable);
 				continue;
 			}
@@ -884,6 +910,10 @@ public class AlcinaMemCache {
 		}
 	}
 
+	public List<Long> notInStore(Collection<Long> ids, Class clazz) {
+		return cache.notContained(ids, clazz);
+	}
+
 	<T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
 			AlcinaMemCacheQuery query) {
 		try {
@@ -917,8 +947,7 @@ public class AlcinaMemCache {
 		}
 	}
 
-	void postProcess(DomainTransformPersistenceEvent persistenceEvent,
-			TransformPersistenceToken persistenceToken) {
+	void postProcess(DomainTransformPersistenceEvent persistenceEvent) {
 		try {
 			MetricLogging.get().start("post-process");
 			lock(true);
@@ -927,12 +956,12 @@ public class AlcinaMemCache {
 			List<DomainTransformEvent> filtered = filterInterestedTransforms(dtes);
 			Multimap<HiliLocator, List<DomainTransformEvent>> perObjectTransforms = CollectionFilters
 					.multimap(filtered, new DteToLocatorMapper());
-			Map<HiliLocator, HasIdAndLocalId> locatorOriginalSourceMap = new LinkedHashMap<ThreadlocalTransformManager.HiliLocator, HasIdAndLocalId>();
+			Map<HiliLocator, HasIdAndLocalId> locatorOriginalSourceMap = new LinkedHashMap<HiliLocator, HasIdAndLocalId>();
 			for (DomainTransformEvent dte : filtered) {
 				HiliLocator locator = HiliLocator.fromDte(dte);
-				locatorOriginalSourceMap.put(locator,
-						(HasIdAndLocalId) dte.getSource());
+				locatorOriginalSourceMap.put(locator, dte.getSource());
 			}
+			cacheDescriptor.loadLazyPreApplyPersist(persistenceEvent);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
 			for (DomainTransformEvent dte : filtered) {
 				dte.setNewValue(null);// force a lookup from the subgraph
@@ -965,7 +994,7 @@ public class AlcinaMemCache {
 								"Null memcacheObject for index - %s\n", dte);
 					}
 				}
-				Object persistentLayerSource = dte.getSource();
+				HasIdAndLocalId persistentLayerSource = dte.getSource();
 				transformManager.consume(dte);
 				if (dte.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == dte) {
@@ -1397,15 +1426,13 @@ public class AlcinaMemCache {
 		@Override
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent evt) {
-			TransformPersistenceToken persistenceToken = evt
-					.getTransformPersistenceToken();
 			switch (evt.getPersistenceEventType()) {
 			case PRE_COMMIT:
 				break;
 			case COMMIT_ERROR:
 				break;
 			case COMMIT_OK:
-				postProcess(evt, persistenceToken);
+				postProcess(evt);
 				break;
 			}
 		}
@@ -1477,5 +1504,18 @@ public class AlcinaMemCache {
 								+ key);
 			}
 		}
+	}
+
+	public <H extends HasIdAndLocalId> List<H> rawForSql(Class<H> clazz,
+			String fieldName, String sqlFormatString, Object... objects)
+			throws SQLException {
+		String sql = String.format(sqlFormatString, objects);
+		Statement stmt = conn.createStatement();
+		List<H> result = new ArrayList<H>();
+		Set<Long> ids = SqlUtils.toIdList(stmt, sql, fieldName);
+		for (Long id : ids) {
+			result.add(cache.get(clazz, id));
+		}
+		return result;
 	}
 }

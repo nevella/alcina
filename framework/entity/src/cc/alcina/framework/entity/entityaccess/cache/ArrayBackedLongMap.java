@@ -79,8 +79,9 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			if (l == 0) {
 				return 0;
 			}
-			if(l<0){
-				throw new RuntimeException("accessing array backed with negative index");
+			if (l < 0) {
+				throw new RuntimeException(
+						"accessing array backed with negative index");
 			}
 			if (l < 10000000 && l > 0) {
 				int idx = (int) l;
@@ -90,7 +91,6 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 		}
 		// System.out.println(CommonUtils.formatJ(
 		// "Creating failover - (id %s) - %s", key, this));
-		
 		LinkedHashMap failover = new LinkedHashMap<Long, V>();
 		failover.putAll(this);
 		this.failover = failover;
@@ -378,15 +378,20 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			public V setValue(V value) {
 				return put(key, value);
 			}
+
+			@Override
+			public String toString() {
+				return getKey() + "=" + getValue();
+			}
 		}
 	}
 
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("Array-backed long map - [%s] - %s",
-				elementData == null ? "(failover)" + failover.size()
-						: elementData.length,
-				entrySet().iterator().hasNext() ? entrySet().iterator().next()
-						.getClass() : null);
+				elementData == null ? "(failover)" + failover.size() : size
+						+ "," + elementData.length, entrySet().iterator()
+						.hasNext() ? entrySet().iterator().next().getClass()
+						: null);
 	}
 }
