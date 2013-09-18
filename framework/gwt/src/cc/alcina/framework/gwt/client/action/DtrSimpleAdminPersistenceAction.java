@@ -4,16 +4,16 @@ import java.io.Serializable;
 
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 import com.google.gwt.core.client.GWT;
 
 public class DtrSimpleAdminPersistenceAction extends
-		RemoteActionWithParameters<DTRSimpleSerialWrapper> implements
+		RemoteActionWithParameters<DeltaApplicationRecord> implements
 		Serializable {
 	public DtrSimpleAdminPersistenceAction() {
-		DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper();
+		DeltaApplicationRecord wrapper = new DeltaApplicationRecord();
 		if (GWT.isClient()) {
 			ClientInstance clientInstance = ClientLayerLocator.get()
 					.getClientInstance();

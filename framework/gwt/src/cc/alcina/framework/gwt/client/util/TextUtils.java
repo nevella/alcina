@@ -1,12 +1,10 @@
 package cc.alcina.framework.gwt.client.util;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;

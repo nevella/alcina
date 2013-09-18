@@ -236,10 +236,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 		}
 		Object existingTargetValue = null;
-		if (event.getFromPropertyChangeEvent() != null) {
-			existingTargetValue = event.getFromPropertyChangeEvent()
-					.getOldValue();
-		} else if (event.getSource() == null || event.getPropertyName() == null) {
+		if (event.getSource() == null || event.getPropertyName() == null) {
 		} else {
 			existingTargetValue = propertyAccessor().getPropertyValue(
 					event.getSource(), event.getPropertyName());
@@ -283,8 +280,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			switch (transformType) {
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF:
-				if (!CommonUtils.equalsWithNullEquality(existingTargetValue,
-						newTargetValue)) {
+				if (updateAssociationsWithoutNoChangeCheck()
+						|| !CommonUtils.equalsWithNullEquality(
+								existingTargetValue, newTargetValue)) {
 					updateAssociation(event, obj, existingTargetValue, true,
 							true);
 					updateAssociation(event, obj, newTargetValue, false, true);
@@ -354,6 +352,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			assert false : "Transform type not implemented: " + transformType;
 		}
 		currentEvent = null;
+	}
+
+	protected boolean updateAssociationsWithoutNoChangeCheck() {
+		return true;
 	}
 
 	public boolean containsObject(DomainTransformEvent dte) {
@@ -769,8 +771,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return ++localIdCounter;
 	}
 
-	public List<DomainTransformEvent> objectsToDtes(List objects, Class clazz,
-			boolean asObjectSpec) throws Exception {
+	public List<DomainTransformEvent> objectsToDtes(Collection objects,
+			Class clazz, boolean asObjectSpec) throws Exception {
 		ClassLookup classLookup = classLookup();
 		List<PropertyInfoLite> pds = classLookup.getWritableProperties(clazz);
 		Object templateInstance = classLookup.getTemplateInstance(clazz);
@@ -788,6 +790,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 						templateInstance, propertyName);
 				defaultValues.put(propertyName, defaultValue);
 				try {
+					if (info.getPropertyType() == Set.class
+							|| info.getPropertyType() == List.class
+							|| CommonUtils.isStandardJavaClassOrEnum(info
+									.getPropertyType())) {
+						continue;
+					}
 					Object template = classLookup.getTemplateInstance(info
 							.getPropertyType());
 					if (template instanceof HasIdAndLocalId) {
@@ -922,7 +930,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
 		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
-		dte.setFromPropertyChangeEvent(evt);
 		convertToTargetObject(dte);
 		if (dte.getNewValue() == null) {
 			dte.setTransformType(TransformType.NULL_PROPERTY_REF);

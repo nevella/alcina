@@ -11,12 +11,12 @@ import java.util.regex.Pattern;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
-import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRSimpleSerialSerializer;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.servlet.ServletLayerLocator;
@@ -36,7 +36,7 @@ public class PartialDtrUploadHandler {
 					.commonPersistenceProvider().getCommonPersistence();
 			Class<? extends ClientInstance> clientInstanceClass = cp
 					.getImplementation(ClientInstance.class);
-			DTRSimpleSerialWrapper firstWrapper = request.wrappers.get(0);
+			DeltaApplicationRecord firstWrapper = request.wrappers.get(0);
 			ClientInstance clientInstance = clientInstanceClass.newInstance();
 			clientInstance.setAuth(firstWrapper.getClientInstanceAuth());
 			final long clientInstanceId = firstWrapper.getClientInstanceId();
@@ -59,15 +59,15 @@ public class PartialDtrUploadHandler {
 				}
 			});
 			TreeMap<Integer, File> rqs = new TreeMap<Integer, File>();
-			TreeMap<Integer, DTRSimpleSerialWrapper> fullWrappers = new TreeMap<Integer, DTRSimpleSerialWrapper>();
-			DTRSimpleSerialSerializer dtrSerializer = new DTRSimpleSerialSerializer();
+			TreeMap<Integer, DeltaApplicationRecord> fullWrappers = new TreeMap<Integer, DeltaApplicationRecord>();
+			DeltaApplicationRecordSerializerImpl dtrSerializer = new DeltaApplicationRecordSerializerImpl();
 			for (File file : list) {
 				Matcher m = fnP.matcher(file.getName());
 				m.matches();
 				int id = Integer.parseInt(m.group(2));
 				rqs.put(id, file);
 				String ser = ResourceUtilities.readFileToString(rqs.get(id));
-				DTRSimpleSerialWrapper wrapper = dtrSerializer.read(ser);
+				DeltaApplicationRecord wrapper = dtrSerializer.read(ser);
 				DomainTransformRequest rq = new DomainTransformRequest();
 				rq.fromString(wrapper.getText());
 				fullWrappers.put(id, wrapper);
@@ -75,7 +75,7 @@ public class PartialDtrUploadHandler {
 						.size();
 			}
 			for (int i = 0; i < request.wrappers.size(); i++) {
-				DTRSimpleSerialWrapper wrapper = request.wrappers.get(i);
+				DeltaApplicationRecord wrapper = request.wrappers.get(i);
 				List<DomainTransformEvent> transforms = request.transformLists
 						.get(i);
 				int id = wrapper.getRequestId();
@@ -101,7 +101,7 @@ public class PartialDtrUploadHandler {
 			String ser = ResourceUtilities.readFileToString(rqs.lastEntry()
 					.getValue());
 			DomainTransformRequest rq = new DomainTransformRequest();
-			DTRSimpleSerialWrapper wrapper = dtrSerializer.read(ser);
+			DeltaApplicationRecord wrapper = dtrSerializer.read(ser);
 			rq.fromString(wrapper.getText());
 			response.lastUploadedRequestId = wrapper.getRequestId();
 			response.lastUploadedRequestTransformUploadCount = rq.getEvents()
@@ -109,7 +109,7 @@ public class PartialDtrUploadHandler {
 			if (request.commitOnReceipt) {
 				try {
 					commonRemoteServiceServlet
-							.persistOfflineTransforms(new ArrayList<DTRSimpleSerialWrapper>(
+							.persistOfflineTransforms(new ArrayList<DeltaApplicationRecord>(
 									fullWrappers.values()));
 				} catch (Exception e) {
 					CommonPersistenceLocal cpl = ServletLayerLocator.get()

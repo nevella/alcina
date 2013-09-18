@@ -21,6 +21,7 @@ import org.json.JSONObject;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -61,7 +62,10 @@ public class AlcinaBeanSerializerS {
 				Object value2 = deserializeField(jsonValue, SEUtilities
 						.getPropertyDescriptorByName(clazz, propertyName)
 						.getPropertyType());
-				SEUtilities.setPropertyValue(obj, propertyName, value2);
+				try {
+					SEUtilities.setPropertyValue(obj, propertyName, value2);
+				} catch (NoSuchPropertyException e) {
+				}
 			}
 		}
 		return obj;

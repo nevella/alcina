@@ -226,6 +226,14 @@ public class LogStore {
 		return stringPairListener;
 	}
 
+	public String getTableName() {
+		return objectStore.getTableName();
+	}
+
+	public boolean isLocalPersistencePaused() {
+		return this.localPersistencePaused;
+	}
+
 	public boolean isMuted() {
 		return this.muted;
 	}
@@ -258,7 +266,6 @@ public class LogStore {
 		}
 		this.lastMessage = message;
 		this.lastTopic = topic;
-		
 		ClientInstance cli = ClientLayerLocator.get().getClientInstance();
 		String clientInstanceAuth = cli == null ? "(before cli)" : String
 				.valueOf(cli.getAuth());
@@ -307,6 +314,10 @@ public class LogStore {
 		});
 	}
 
+	public void setLocalPersistencePaused(boolean localPersistencePaused) {
+		this.localPersistencePaused = localPersistencePaused;
+	}
+
 	public void setMuted(boolean muted) {
 		this.muted = muted;
 	}
@@ -321,13 +332,5 @@ public class LogStore {
 
 	int getLocalSeriesIdCounter() {
 		return this.localSeriesIdCounter;
-	}
-
-	public boolean isLocalPersistencePaused() {
-		return this.localPersistencePaused;
-	}
-
-	public void setLocalPersistencePaused(boolean localPersistencePaused) {
-		this.localPersistencePaused = localPersistencePaused;
 	}
 }

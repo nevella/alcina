@@ -45,8 +45,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.ext.Generator;

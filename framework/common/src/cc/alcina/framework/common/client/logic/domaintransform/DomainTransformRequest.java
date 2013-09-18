@@ -45,8 +45,6 @@ public class DomainTransformRequest implements Serializable {
 
 	private ClientInstance clientInstance;
 
-	private DomainTransformRequestType domainTransformRequestType;
-
 	private String protocolVersion;
 
 	private String tag;
@@ -90,10 +88,6 @@ public class DomainTransformRequest implements Serializable {
 		return clientInstance;
 	}
 
-	public DomainTransformRequestType getDomainTransformRequestType() {
-		return domainTransformRequestType;
-	}
-
 	@Transient
 	public Set<Long> getEventIdsToIgnore() {
 		return eventIdsToIgnore;
@@ -132,11 +126,6 @@ public class DomainTransformRequest implements Serializable {
 
 	public void setClientInstance(ClientInstance clientInstance) {
 		this.clientInstance = clientInstance;
-	}
-
-	public void setDomainTransformRequestType(
-			DomainTransformRequestType domainTransformRequestType) {
-		this.domainTransformRequestType = domainTransformRequestType;
 	}
 
 	public void setEventIdsToIgnore(Set<Long> eventIdsToIgnore) {
@@ -183,11 +172,6 @@ public class DomainTransformRequest implements Serializable {
 		for (DomainTransformEvent dte : deep ? allTransforms() : getEvents()) {
 			dte.setCommitType(commitType);
 		}
-	}
-
-	public enum DomainTransformRequestType {
-		TO_REMOTE, CLIENT_OBJECT_LOAD, CLIENT_SYNC, TO_REMOTE_COMPLETED,
-		CLIENT_STARTUP_FROM_OFFLINE
 	}
 
 	public String shortId() {

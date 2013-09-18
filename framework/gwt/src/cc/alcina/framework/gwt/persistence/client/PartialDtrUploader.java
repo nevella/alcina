@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
@@ -22,13 +22,13 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.StatusCodeException;
 
 public class PartialDtrUploader {
-	private List<DTRSimpleSerialWrapper> uncommitted;
+	private List<DeltaApplicationRecord> uncommitted;
 
 	private ModalNotifier modalNotifier;
 
 	private AsyncCallback<Void> postPersistOfflineTransformsCallback;
 
-	private Map<DTRSimpleSerialWrapper, List<DomainTransformEvent>> deserTransforms = new LinkedHashMap<DTRSimpleSerialWrapper, List<DomainTransformEvent>>();
+	private Map<DeltaApplicationRecord, List<DomainTransformEvent>> deserTransforms = new LinkedHashMap<DeltaApplicationRecord, List<DomainTransformEvent>>();
 
 	protected static int MIN_SLICE_SIZE = 500;
 
@@ -103,13 +103,13 @@ public class PartialDtrUploader {
 	private long submitTime;
 
 	public void persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted,
+			List<DeltaApplicationRecord> uncommitted,
 			ModalNotifier modalNotifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
 		this.uncommitted = uncommitted;
 		this.modalNotifier = modalNotifier;
 		this.postPersistOfflineTransformsCallback = postPersistOfflineTransformsCallback;
-		for (DTRSimpleSerialWrapper wrapper : uncommitted) {
+		for (DeltaApplicationRecord wrapper : uncommitted) {
 			DomainTransformRequest rq = new DomainTransformRequest();
 			rq.setProtocolVersion(wrapper.getProtocolVersion());
 			rq.fromString(wrapper.getText());
@@ -141,7 +141,7 @@ public class PartialDtrUploader {
 		// this used to allow partial wrapper uploads, but that's been disabled
 		// for the moment...
 		for (int i = 0; i < uncommitted.size(); i++) {
-			DTRSimpleSerialWrapper wrapper = uncommitted.get(i);
+			DeltaApplicationRecord wrapper = uncommitted.get(i);
 			if (wrapper.getRequestId() <= currentResponse.lastUploadedRequestId) {
 				continue;
 			}
@@ -208,10 +208,10 @@ public class PartialDtrUploader {
 	}
 
 	void addToRequest(PartialDtrUploadRequest request,
-			DTRSimpleSerialWrapper wrapper,
+			DeltaApplicationRecord wrapper,
 			List<DomainTransformEvent> transforms) {
 		request.transformLists.add(transforms);
-		DTRSimpleSerialWrapper clone = wrapper.clone();
+		DeltaApplicationRecord clone = wrapper.clone();
 		clone.setText("");
 		request.wrappers.add(clone);
 	}

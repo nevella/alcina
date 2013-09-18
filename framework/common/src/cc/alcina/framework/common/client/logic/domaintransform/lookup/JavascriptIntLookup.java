@@ -89,7 +89,6 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 	}-*/;
 
 	public native boolean remove(int key)/*-{
-		debugger;
 		if (this.valueLookup[key] === undefined) {
 			return false;
 		} else {

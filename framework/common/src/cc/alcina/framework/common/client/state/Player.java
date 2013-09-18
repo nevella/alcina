@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -191,5 +193,9 @@ public abstract class Player<D> {
 
 	public long getStart() {
 		return this.start;
+	}
+
+	public String shortName() {
+		return CommonUtils.simpleClassName(getClass());
 	}
 }

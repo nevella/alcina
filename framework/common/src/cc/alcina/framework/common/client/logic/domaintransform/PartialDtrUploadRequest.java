@@ -6,7 +6,7 @@ import java.util.List;
 
 public class PartialDtrUploadRequest implements Serializable {
 	public boolean pleaseProvideCurrentStatus;
-	public List<DTRSimpleSerialWrapper> wrappers=new ArrayList<DTRSimpleSerialWrapper>();
+	public List<DeltaApplicationRecord> wrappers=new ArrayList<DeltaApplicationRecord>();
 	public List<List<DomainTransformEvent>> transformLists=new ArrayList<List<DomainTransformEvent>>();
 	public boolean commitOnReceipt;
 	public boolean hasTransforms() {

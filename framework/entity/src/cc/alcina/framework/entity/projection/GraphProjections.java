@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.projection;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -14,7 +15,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFiel
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 public class GraphProjections {
-	public static GraphProjections allow(Class... classes) {
+	public  static GraphProjections allow(Class... classes) {
 		GraphProjections instance = new GraphProjections();
 		instance.permittedClasses.addAll(Arrays.asList(classes));
 		return instance;
@@ -63,6 +64,40 @@ public class GraphProjections {
 					.project(t, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+
+	public GraphProjections strict() {
+		fieldFilter = new StrictAllowForbid();
+		return this;
+	}
+
+	public class StrictAllowForbid implements GraphProjectionFieldFilter {
+		@Override
+		public Boolean permitClass(Class clazz) {
+			if (!HasIdAndLocalId.class.isAssignableFrom(clazz)) {
+				return true;
+			}
+			if (permittedClasses.size() > 0
+					&& !permittedClasses.contains(clazz)) {
+				return false;
+			}
+			if (forbiddenClasses.size() > 0 && forbiddenClasses.contains(clazz)) {
+				return false;
+			}
+			return true;
+		}
+
+		@Override
+		public boolean permitField(Field field,
+				Set<Field> perObjectPermissionFields, Class clazz) {
+			return true;
+		}
+
+		@Override
+		public boolean permitTransient(Field field) {
+			return false;
 		}
 	}
 

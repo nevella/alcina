@@ -14,6 +14,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 import com.google.gwt.json.client.JSONArray;
@@ -62,10 +63,13 @@ public class AlcinaBeanSerializer {
 		Object obj = CommonLocator.get().classLookup().newInstance(clazz);
 		GwittirBridge gb = GwittirBridge.get();
 		for (String propertyName : props.keySet()) {
-			Class type = gb.getPropertyType(clazz, propertyName);
-			JSONValue jsonValue = props.get(propertyName);
-			Object value = deserializeField(jsonValue, type);
-			gb.setPropertyValue(obj, propertyName, value);
+			try {
+				Class type = gb.getPropertyType(clazz, propertyName);
+				JSONValue jsonValue = props.get(propertyName);
+				Object value = deserializeField(jsonValue, type);
+				gb.setPropertyValue(obj, propertyName, value);
+			} catch (NoSuchPropertyException e) {
+			}
 		}
 		return obj;
 	}

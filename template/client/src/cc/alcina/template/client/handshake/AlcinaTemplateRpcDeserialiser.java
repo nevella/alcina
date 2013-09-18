@@ -1,6 +1,6 @@
 package cc.alcina.template.client.handshake;
 
-import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
+import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -21,7 +21,7 @@ public class AlcinaTemplateRpcDeserialiser extends RpcDeserialiser {
 	@Override
 	protected void callServiceInstance(ServiceDefTarget service,
 			Class resultClass, AsyncCallback callback) {
-		if (resultClass == LoadObjectsHolder.class) {
+		if (resultClass == LoadObjectsResponse.class) {
 			((AlcinaTemplateRemoteServiceAsync) service).loadInitial(
 					new LoadObjectsRequest(), callback);
 			return;

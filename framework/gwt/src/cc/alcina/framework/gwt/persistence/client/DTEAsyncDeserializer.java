@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
@@ -15,9 +15,9 @@ public class DTEAsyncDeserializer implements RepeatingCommand {
 
 	private DTRProtocolHandler protocolHandler;
 
-	private DTRSimpleSerialWrapper wrapper;
+	private DeltaApplicationRecord wrapper;
 
-	public DTEAsyncDeserializer(DTRSimpleSerialWrapper wrapper) {
+	public DTEAsyncDeserializer(DeltaApplicationRecord wrapper) {
 		this.wrapper = wrapper;
 		protocolHandler = new DTRProtocolSerializer().getHandler(wrapper
 				.getProtocolVersion());

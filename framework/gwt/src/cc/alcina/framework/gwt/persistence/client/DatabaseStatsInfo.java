@@ -1,12 +1,8 @@
 package cc.alcina.framework.gwt.persistence.client;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
@@ -18,33 +14,37 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 public class DatabaseStatsInfo implements Serializable {
 	private CountingMap<String> transformTexts = new CountingMap<String>();
 
-	private List<Integer> clientObjectLoadSizes = new ArrayList<Integer>();
-
 	private CountingMap<String> transformCounts = new CountingMap<String>();
 
 	private CountingMap<Integer> logSizes = new CountingMap<Integer>();
+
+	private CountingMap<String> deltaCounts = new CountingMap<String>();
+
+	private CountingMap<String> deltaSizes = new CountingMap<String>();
 
 	private long collectionTimeMs = 0;
 
 	@Override
 	public String toString() {
 		String out = "\n\nDatabase stats:\n========\n\nTransforms: \n";
-		Set<Entry<String, Integer>> entrySet = transformTexts.entrySet();
 		String template = "\t%s : %s  -  %s chars\n";
-		for (Entry<String, Integer> entry : entrySet) {
+		for (Entry<String, Integer> entry : transformTexts.entrySet()) {
 			out += CommonUtils.formatJ(template,
 					CommonUtils.padStringRight(entry.getKey(), 20, ' '),
 					transformCounts.get(entry.getKey()), entry.getValue());
-			if (entry.getKey().equals(
-					DomainTransformRequestType.CLIENT_OBJECT_LOAD.toString())) {
-				out += CommonUtils.formatJ("%s : [%s]\n",
-						CommonUtils.padStringRight(" ", 30, '\u00A0'),
-						CommonUtils.join(clientObjectLoadSizes, ", "));
-			}
 		}
 		out += CommonUtils.formatJ(template,
 				CommonUtils.padStringRight("total", 20, ' '),
 				transformCounts.sum(), transformTexts.sum());
+		out+=("\n\nObject deltas:\n=========\n");
+		for (Entry<String, Integer> entry : deltaSizes.entrySet()) {
+			out += CommonUtils.formatJ(template,
+					CommonUtils.padStringRight(entry.getKey(), 20, ' '),
+					deltaCounts.get(entry.getKey()), entry.getValue());
+		}
+		out += CommonUtils.formatJ(template,
+				CommonUtils.padStringRight("total", 20, ' '),
+				deltaCounts.sum(), deltaSizes.sum());
 		out += "\nLogs: \n";
 		out += CommonUtils.formatJ(template,
 				CommonUtils.padStringRight("total", 20, ' '), logSizes.size(),
@@ -66,7 +66,8 @@ public class DatabaseStatsInfo implements Serializable {
 
 	private int estimatedBytes() {
 		return transformCounts.sum() * 100 + transformTexts.sum() * 2
-				+ logSizes.size() * 100 + logSizes.sum() * 2;
+				+ logSizes.size() * 100 + logSizes.sum() * 2
+				+ deltaCounts.size() * 300 + deltaSizes.sum() * 2;
 	}
 
 	public CountingMap<String> getTransformTexts() {
@@ -94,7 +95,7 @@ public class DatabaseStatsInfo implements Serializable {
 	}
 
 	public int size() {
-		return logSizes.sum() + transformTexts.sum();
+		return logSizes.sum() + transformTexts.sum() + deltaSizes.sum();
 	}
 
 	public boolean greaterSizeThan(DatabaseStatsInfo max) {
@@ -109,11 +110,20 @@ public class DatabaseStatsInfo implements Serializable {
 		this.collectionTimeMs = collectionTimeMs;
 	}
 
-	public List<Integer> getClientObjectLoadSizes() {
-		return this.clientObjectLoadSizes;
+	public CountingMap<String> getDeltaCounts() {
+		return this.deltaCounts;
 	}
 
-	public void setClientObjectLoadSizes(List<Integer> clientObjectLoadSizes) {
-		this.clientObjectLoadSizes = clientObjectLoadSizes;
+	public void setDeltaCounts(CountingMap<String> deltaCounts) {
+		this.deltaCounts = deltaCounts;
 	}
+
+	public CountingMap<String> getDeltaSizes() {
+		return this.deltaSizes;
+	}
+
+	public void setDeltaSizes(CountingMap<String> deltaSizes) {
+		this.deltaSizes = deltaSizes;
+	}
+
 }

@@ -54,26 +54,25 @@ import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
-import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
+import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExt;
@@ -221,9 +220,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	public void logRpcException(Exception ex, String exceptionType) {
-		RPCRequest rpcRequest = getThreadLocalRequest() == null ? null
-				: (RPCRequest) getThreadLocalRequest().getAttribute(
-						THRD_LOCAL_RPC_RQ);
+		RPCRequest rpcRequest = getThreadRpcRequest();
 		StringWriter sw = new StringWriter();
 		PrintWriter pw = new PrintWriter(sw);
 		ex.printStackTrace(pw);
@@ -257,6 +254,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		CommonPersistenceLocal cpl = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
 		cpl.log(msg, exceptionType);
+	}
+
+	protected RPCRequest getThreadRpcRequest() {
+		return getThreadLocalRequest() == null ? null
+				: (RPCRequest) getThreadLocalRequest().getAttribute(
+						THRD_LOCAL_RPC_RQ);
 	}
 
 	public Long performAction(final RemoteAction action) {
@@ -384,18 +387,18 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	// TODO - well, lock sync
 	public void persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted) throws WebException {
+			List<DeltaApplicationRecord> uncommitted) throws WebException {
 		persistOfflineTransforms(uncommitted, null, true);
 	}
 
 	public int persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted, Logger logger)
+			List<DeltaApplicationRecord> uncommitted, Logger logger)
 			throws WebException {
 		return persistOfflineTransforms(uncommitted, logger, null);
 	}
 
 	public int persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted, Logger logger,
+			List<DeltaApplicationRecord> uncommitted, Logger logger,
 			Boolean useWrapperUser) throws WebException {
 		CommonPersistenceLocal cp = ServletLayerLocator.get()
 				.commonPersistenceProvider().getCommonPersistence();
@@ -409,7 +412,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			LooseContext.getContext().pushWithKey(
 					TransformConflicts.CONTEXT_OFFLINE_SUPPORT,
 					new TransformConflictsFromOfflineSupport());
-			for (DTRSimpleSerialWrapper wr : uncommitted) {
+			for (DeltaApplicationRecord wr : uncommitted) {
 				long clientInstanceId = wr.getClientInstanceId();
 				int requestId = (int) wr.getRequestId();
 				DomainTransformRequest alreadyWritten = cp
@@ -425,7 +428,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					continue;
 				}
 				DomainTransformRequest rq = new DomainTransformRequest();
-				rq.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_STARTUP_FROM_OFFLINE);
 				ClientInstance clientInstance = clientInstanceClass
 						.newInstance();
 				clientInstance.setAuth(wr.getClientInstanceAuth());

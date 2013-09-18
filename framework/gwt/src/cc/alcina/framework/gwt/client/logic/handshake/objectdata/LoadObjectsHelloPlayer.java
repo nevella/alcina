@@ -18,7 +18,7 @@ public class LoadObjectsHelloPlayer extends
 		RunnableAsyncCallbackPlayer<LoginResponse, LoadObjectDataState> {
 	public LoadObjectsHelloPlayer() {
 		addProvides(helloOkState());
-		addProvides(LoadObjectDataState.HELLO_OFFLINE_REQUIRES_PER_CLIENT_INSTANCE_TRANSFORMS);
+		addProvides(LoadObjectDataState.HELLO_OFFLINE);
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 	}
 
@@ -44,10 +44,12 @@ public class LoadObjectsHelloPlayer extends
 		Registry.impl(CommonRemoteServiceAsync.class).hello(this);
 	}
 
+	/*
+	 * call logic is a bit fraught here - it works, but ain't pretty
+	 */
 	void signal(boolean helloOk) {
-		if (handshakeConsortModel.haveAllChunksNeededForOptimalObjectLoad()) {
-			handshakeConsortModel.ensureClientInstanceFromModelDeltas();
-			wasPlayed(LoadObjectDataState.HELLO_OFFLINE_REQUIRES_PER_CLIENT_INSTANCE_TRANSFORMS);
+		if (PermissionsManager.isOffline()) {
+			wasPlayed(LoadObjectDataState.HELLO_OFFLINE);
 		} else {
 			if (helloOk) {
 				wasPlayed(helloOkState());

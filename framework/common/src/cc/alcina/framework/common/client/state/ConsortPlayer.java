@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.state;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 public interface ConsortPlayer {
@@ -14,10 +16,12 @@ public interface ConsortPlayer {
 				if (key == Consort.ERROR) {
 					player.onFailure((Throwable) message);
 				} else {
-					if (stateToFireAfterConsortEnd != null) {
-						player.wasPlayed(stateToFireAfterConsortEnd);
-					} else {
-						player.wasPlayed();
+					if (fireEndState) {
+						if (stateToFireAfterConsortEnd != null) {
+							player.wasPlayed(stateToFireAfterConsortEnd);
+						} else {
+							player.wasPlayed();
+						}
 					}
 				}
 			}
@@ -28,6 +32,8 @@ public interface ConsortPlayer {
 		private Consort subConsort;
 
 		private Object stateToFireAfterConsortEnd;
+
+		private boolean fireEndState = true;
 
 		public void run(Consort consort, Consort subConsort, Player player) {
 			run(consort, subConsort, player, null);
@@ -44,6 +50,17 @@ public interface ConsortPlayer {
 			subConsort.listenerDelta(Consort.FINISHED, listener, true);
 			subConsort.listenerDelta(Consort.ERROR, listener, true);
 			subConsort.restart();
+		}
+
+		public void maybeAttach(AsyncCallback callback,
+				Consort maybeChildConsort, boolean fireEndStateIfChild) {
+			if (callback instanceof Player) {
+				Player player = (Player) callback;
+				fireEndState = fireEndStateIfChild;
+				run(player.getConsort(), maybeChildConsort, player);
+			} else {
+				maybeChildConsort.start();
+			}
 		}
 	}
 }

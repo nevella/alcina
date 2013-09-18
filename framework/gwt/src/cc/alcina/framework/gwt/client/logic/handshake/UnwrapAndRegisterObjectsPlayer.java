@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
+import cc.alcina.framework.common.client.logic.domaintransform.HasRequestReplayId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -12,7 +13,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel.HandshakeModelDeltas;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd.ReloadOnSuccessCallback;
 import cc.alcina.framework.gwt.persistence.client.DteReplayWorker;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
@@ -32,9 +32,6 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		addRequires(HandshakeState.OBJECT_DATA_LOADED);
 		addProvides(HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED);
 	}
-
-	HandshakeConsortModel handshakeConsortModel = Registry
-			.impl(HandshakeConsortModel.class);
 
 	@Override
 	public void onSuccess(Void result) {
@@ -67,8 +64,6 @@ public class UnwrapAndRegisterObjectsPlayer extends
 
 	private Phase phase;
 
-	HandshakeModelDeltas deltasForIteration;
-
 	@SuppressWarnings("unused")
 	private int deltaOrdinal = 0;
 
@@ -76,8 +71,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 
 	@Override
 	public void run() {
-		deltasForIteration = handshakeConsortModel.modelDeltas.clone();
-		// make a copy, so we can restart iteration
+		HandshakeConsortModel.get().prepareInitialPlaySequence();
 		loop();
 	}
 
@@ -89,12 +83,15 @@ public class UnwrapAndRegisterObjectsPlayer extends
 			phase = Phase.values()[phase.ordinal() + 1];
 		}
 		if (currentDelta == null) {
-			if (deltasForIteration.hasNext()) {
-				currentDelta = deltasForIteration.next();
+			currentDelta = HandshakeConsortModel.get().getDeltasToApply()
+					.current();
+			HandshakeConsortModel.get().getDeltasToApply().moveNext();
+			if (currentDelta != null) {
 				deltaOrdinal++;
 				phase = Phase.UNWRAPPING;
 			} else {
-				handshakeConsortModel.ensureLoadObjectsNotifier("").modalOff();
+				HandshakeConsortModel.get().ensureLoadObjectsNotifier("")
+						.modalOff();
 				wasPlayed();
 				return;
 			}
@@ -114,15 +111,13 @@ public class UnwrapAndRegisterObjectsPlayer extends
 			}
 			break;
 		case REGISTERING_UNLINKED:
-			if (CommonUtils.isNotNullOrEmpty(currentDelta.getUnlinkedObjects())
-					&& !ignoreUnlinked()) {
+			if (CommonUtils.isNotNullOrEmpty(currentDelta.getUnlinkedObjects())) {
 				registerUnlinked();
 				return;
 			}
 			break;
 		case REPLAYING_TRANSFORMS:
-			if (CommonUtils.isNotNullOrEmpty(currentDelta.getReplayEvents())
-					&& !ignoreUnlinked()) {
+			if (CommonUtils.isNotNullOrEmpty(currentDelta.getReplayEvents())) {
 				replayTransforms();
 				return;
 			}
@@ -139,17 +134,6 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		super.cancel();
 	}
 
-	// FW3 -- gnraly - as a general rule, we have
-	// "chunk - server deltas - per-client instance deltas" - so we only want to
-	// replay secondchunk deltas, if they exist
-	protected boolean ignoreUnlinked() {
-		if (currentDelta == handshakeConsortModel.modelDeltas.firstChunk
-				&& handshakeConsortModel.modelDeltas.secondChunk != null) {
-			return true;
-		}
-		return false;
-	}
-
 	private void registerUnlinked() {
 		TransformManager.get().registerDomainObjectsAsync(
 				currentDelta.getUnlinkedObjects(), this);
@@ -158,10 +142,11 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	private void replayTransforms() {
 		replayer = new RepeatingCommandWithPostCompletionCallback(this,
 				new DteReplayWorker(currentDelta.getReplayEvents()));
-		Integer requestId = currentDelta.getDomainTransformRequestReplayId();
-		if(requestId!=null){
-			CommitToStorageTransformListener tl = ClientLayerLocator
-					.get().getCommitToStorageTransformListener();
+		Integer requestId = (currentDelta instanceof HasRequestReplayId) ? ((HasRequestReplayId) currentDelta)
+				.getDomainTransformRequestReplayId() : null;
+		if (requestId != null) {
+			CommitToStorageTransformListener tl = ClientLayerLocator.get()
+					.getCommitToStorageTransformListener();
 			tl.setLocalRequestId(Math.max(requestId + 1,
 					(int) tl.getLocalRequestId()));
 		}
@@ -179,7 +164,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		PermissionsManager.get().setUser(domainObjects.getCurrentUser());
 		ClientLayerLocator.get().setDomainModelHolder(domainObjects);
 		PermissionsManager.get().setLoginState(
-				handshakeConsortModel.getLoginState());
+				HandshakeConsortModel.get().getLoginState());
 		ClientLayerLocator
 				.get()
 				.notifications()

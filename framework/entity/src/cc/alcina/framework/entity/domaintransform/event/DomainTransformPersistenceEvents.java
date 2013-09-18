@@ -5,9 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistrySingleton;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 
 //TODO - Jira - events must be fired in DomainTransformRequestPersistent.id order - fairly important

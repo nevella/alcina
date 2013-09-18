@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -408,7 +407,7 @@ public abstract class ClientTransformManager extends TransformManager {
 			AsyncCallback<List<ObjectDeltaResult>> innerCallback = new AsyncCallback<List<ObjectDeltaResult>>() {
 				public void onFailure(Throwable caught) {
 					cleanup();
-					throw new WrappedRuntimeException(caught);
+					callback.onFailure(caught);
 				}
 
 				public void onSuccess(List<ObjectDeltaResult> result) {
@@ -423,7 +422,6 @@ public abstract class ClientTransformManager extends TransformManager {
 						dtr = new DomainTransformRequest();
 						dtr.setClientInstance(ClientLayerLocator.get()
 								.getClientInstance());
-						dtr.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 					}
 					for (ObjectDeltaResult item : result) {
 						replayRemoteEvents(item.getTransforms(), fireTransforms);
@@ -434,7 +432,8 @@ public abstract class ClientTransformManager extends TransformManager {
 					if (pl != null) {
 						// ignore failure, since we at least have a (currently)
 						// functioning client, even if persistence is mczapped
-						pl.persistableTransform(dtr);
+						pl.persistableTransform(dtr,
+								DeltaApplicationRecordType.REMOTE_DELTA_APPLIED);
 					}
 					MutablePropertyChangeSupport.setMuteAll(false);
 					Object[] spec2 = new Object[4];
@@ -496,7 +495,8 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	public interface PersistableTransformListener {
-		public void persistableTransform(DomainTransformRequest dtr);
+		public void persistableTransform(DomainTransformRequest dtr,
+				DeltaApplicationRecordType type);
 	}
 
 	class ClientDteWorker extends ClientUIThreadWorker {
@@ -524,8 +524,8 @@ public abstract class ClientTransformManager extends TransformManager {
 			dtr.getEvents().addAll(creates);
 			dtr.getEvents().addAll(mods);
 			dtr.setClientInstance(clientInstance);
-			dtr.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_OBJECT_LOAD);
-			getPersistableTransformListener().persistableTransform(dtr);
+			getPersistableTransformListener().persistableTransform(dtr,
+					DeltaApplicationRecordType.REMOTE_DELTA_APPLIED);
 		}
 
 		@Override

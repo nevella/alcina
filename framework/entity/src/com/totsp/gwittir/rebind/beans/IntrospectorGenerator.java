@@ -35,6 +35,7 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 
 import com.google.gwt.core.ext.Generator;
@@ -61,8 +62,6 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 @SuppressWarnings({ "deprecation", "unused" })
 public class IntrospectorGenerator extends Generator {
 	private String implementationName;
-
-	
 
 	private String packageName = com.totsp.gwittir.client.beans.Introspector.class
 			.getCanonicalName().substring(
@@ -196,8 +195,9 @@ public class IntrospectorGenerator extends Generator {
 			this.objectType = context.getTypeOracle().getType(
 					"java.lang.Object");
 			JClassType intrType = context.getTypeOracle().getType(typeName);
-			if(intrType.isInterface()!=null){
-				intrType=context.getTypeOracle().getType(TreeIntrospector.class.getName());
+			if (intrType.isInterface() != null) {
+				intrType = context.getTypeOracle().getType(
+						TreeIntrospector.class.getName());
 			}
 			ReflectionModule module = intrType
 					.getAnnotation(ReflectionModule.class);
@@ -206,22 +206,22 @@ public class IntrospectorGenerator extends Generator {
 					"MethodsList", module.value());
 			this.implementationName = String.format("Introspector_Impl_%s",
 					module.value());
-			superClassName=intrType.getQualifiedSourceName();
+			superClassName = intrType.getQualifiedSourceName();
 		} catch (NotFoundException ex) {
 			logger.log(TreeLogger.ERROR, typeName, ex);
 			return null;
 		}
 		PrintWriter printWriter = context.tryCreate(logger, packageName,
 				implementationName);
-		
 		List<BeanResolver> introspectables = this.getIntrospectableTypes(
 				logger, context.getTypeOracle());
 		MethodWrapper[] methods = this.findMethods(logger, introspectables);
-		methodWrapperLookup=new LinkedHashMap<MethodWrapper, Integer>();
+		methodWrapperLookup = new LinkedHashMap<MethodWrapper, Integer>();
 		ClassSourceFileComposerFactory mcf = new ClassSourceFileComposerFactory(
 				this.packageName, this.methodsImplementationName);
 		mcf.addImport(com.totsp.gwittir.client.beans.Method.class
 				.getCanonicalName());
+		mcf.addImport(NoSuchPropertyException.class.getCanonicalName());
 		PrintWriter methodsPrintWriter = context.tryCreate(logger,
 				this.packageName, this.methodsImplementationName);
 		if (methodsPrintWriter != null) {
@@ -235,19 +235,19 @@ public class IntrospectorGenerator extends Generator {
 				this.packageName, this.implementationName);
 		cfcf.setSuperclass(superClassName);
 		cfcf.addImport("java.util.HashMap");
+		cfcf.addImport(NoSuchPropertyException.class.getCanonicalName());
 		cfcf.addImport(com.totsp.gwittir.client.beans.Method.class
 				.getCanonicalName());
 		cfcf.addImport(com.totsp.gwittir.client.beans.Property.class
 				.getCanonicalName());
 		cfcf.addImport(com.totsp.gwittir.client.beans.BeanDescriptor.class
 				.getCanonicalName());
-		
 		if (printWriter == null) {
 			// .println( "Introspector Generate skipped.");
 			return packageName + "." + implementationName;
 		}
-		System.out
-		.format("Introspector - %s - %s introspectable types\n",filter.getModuleName(),introspectables.size());
+		System.out.format("Introspector - %s - %s introspectable types\n",
+				filter.getModuleName(), introspectables.size());
 		SourceWriter writer = cfcf.createSourceWriter(context, printWriter);
 		this.writeIntrospectables(logger, introspectables, methods, writer);
 		this.writeResolver(introspectables, writer);
@@ -256,7 +256,8 @@ public class IntrospectorGenerator extends Generator {
 		writer.indent();
 		for (BeanResolver resolver : introspectables) {
 			writer.println("if( object.getClass() ==  "
-					+ resolver.getType().getQualifiedSourceName() + ".class ) {");
+					+ resolver.getType().getQualifiedSourceName()
+					+ ".class ) {");
 			writer.indent();
 			String name = resolver.getType().getQualifiedSourceName()
 					.replaceAll("\\.", "_");
@@ -328,7 +329,6 @@ public class IntrospectorGenerator extends Generator {
 					"Unable to find Introspectable types.", e);
 		}
 		filter.filterIntrospectorResults(results);
-		
 		return results;
 	}
 
@@ -505,7 +505,7 @@ public class IntrospectorGenerator extends Generator {
 		writer.println("p = (Property) this.lookup.get(name);");
 		writer.outdent();
 		writer.println("}");
-		writer.println("if( p == null ) throw new RuntimeException(\"Couldn't find property \"+name+\" for "
+		writer.println("if( p == null ) throw new NoSuchPropertyException(\"Couldn't find property \"+name+\" for "
 				+ info.getType().getQualifiedSourceName() + "\");");
 		writer.println("else return p;");
 		writer.outdent();

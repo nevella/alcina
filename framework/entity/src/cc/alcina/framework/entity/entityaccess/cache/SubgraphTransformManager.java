@@ -34,6 +34,11 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected boolean updateAssociationsWithoutNoChangeCheck() {
+		return true;
+	}
+
+	@Override
 	protected void doCascadeDeletes(HasIdAndLocalId hili) {
 		// rely on the client for this...
 		// or the servletlayer aspect of tltm

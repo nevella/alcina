@@ -16,7 +16,7 @@ public class CheckSoleOfflineTabPlayer
 		RunnableAsyncCallbackPlayer<Boolean, LoadObjectDataState> {
 	public CheckSoleOfflineTabPlayer() {
 		addProvides(LoadObjectDataState.SOLE_OPEN_TAB_CHECKED);
-		addRequires(LoadObjectDataState.HELLO_OFFLINE_REQUIRES_PER_CLIENT_INSTANCE_TRANSFORMS);
+		addRequires(LoadObjectDataState.HELLO_OFFLINE);
 	}
 
 

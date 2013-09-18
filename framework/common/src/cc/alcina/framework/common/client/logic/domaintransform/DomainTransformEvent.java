@@ -40,8 +40,6 @@ public class DomainTransformEvent implements Serializable,
 
 	private transient HasIdAndLocalId source;
 
-	private transient PropertyChangeEvent fromPropertyChangeEvent;
-
 	private transient Class objectClass;
 
 	private String objectClassName;
@@ -386,14 +384,4 @@ public class DomainTransformEvent implements Serializable,
 			return CommonUtils.compareDates(o1.getUtcDate(), o2.getUtcDate());
 		}
 	};
-
-	@Transient
-	public PropertyChangeEvent getFromPropertyChangeEvent() {
-		return this.fromPropertyChangeEvent;
-	}
-
-	public void setFromPropertyChangeEvent(
-			PropertyChangeEvent fromPropertyChangeEvent) {
-		this.fromPropertyChangeEvent = fromPropertyChangeEvent;
-	}
 }

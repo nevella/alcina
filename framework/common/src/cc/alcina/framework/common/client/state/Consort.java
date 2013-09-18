@@ -296,7 +296,8 @@ public class Consort<D> {
 		}
 		metricLogger.log(CommonUtils.formatJ("%s     %s: %s ms",
 				CommonUtils.padStringLeft("", depth(), '\t'),
-				CommonUtils.simpleClassName(player.getClass()),
+				player.shortName()
+				,
 				System.currentTimeMillis() - player.getStart()));
 		publishTopicWithBubble(AFTER_PLAY, player);
 		consumeQueue();

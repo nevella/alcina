@@ -65,6 +65,7 @@ public class DatabaseStatsObserver {
 					max = new AlcinaBeanSerializer().deserialize(result);
 				}
 			} catch (Exception e) {
+				
 				throw new WrappedRuntimeException(e);
 			}
 		}

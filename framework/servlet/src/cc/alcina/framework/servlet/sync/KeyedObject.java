@@ -1,8 +1,6 @@
 package cc.alcina.framework.servlet.sync;
 
 import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class KeyedObject<T> implements Serializable {
 	public KeyedObject() {

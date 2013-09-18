@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -22,15 +23,19 @@ import java.util.Map;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.EnumSerializer;
 import cc.alcina.framework.common.client.util.StringPair;
+import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
-import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DtrWrapperToDomainModelDeltaConverter;
+import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
 
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;
@@ -62,7 +67,7 @@ public class WebDatabaseTransformPersistence extends
 			String.class, "timestamp", Long.class, "user_id", Long.class,
 			"clientInstance_id", Long.class, "request_id", Integer.class,
 			"clientInstance_auth", Integer.class, "transform_request_type",
-			DomainTransformRequestType.class, "transform_event_protocol",
+			DeltaApplicationRecordType.class, "transform_event_protocol",
 			String.class, "tag", String.class };
 
 	public WebDatabaseTransformPersistence() {
@@ -87,23 +92,21 @@ public class WebDatabaseTransformPersistence extends
 	public void clearPersistedClient(ClientInstance exceptFor, int exceptForId,
 			final AsyncCallback callback) {
 		String sql = CommonUtils.formatJ("DELETE from TransformRequests"
-				+ " where (transform_request_type='CLIENT_OBJECT_LOAD'"
-				+ " OR transform_request_type='CLIENT_SYNC'"
-				+ " OR transform_request_type='TO_REMOTE_COMPLETED')"
+				+ " where (transform_request_type "
+				+
+				// legacy
+				"in('CLIENT_OBJECT_LOAD','CLIENT_SYNC','TO_REMOTE_COMPLETED')"
+				+ " OR transform_request_type='%s'"
+				+ " OR transform_request_type='%s')"
 				+ " and (clientInstance_id != %s and id != %s)",
+				DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED,
+				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
 				exceptFor == null ? -1 : exceptFor.getId(), exceptForId);
 		executeSql(sql, callback);
 	}
 
 	public Database getDb() {
 		return this.db;
-	}
-
-	@Override
-	public void getDomainModelDeltaIterator(DomainTransformRequestType[] types,
-			AsyncCallback<Iterator<DomainModelDelta>> callback) {
-		String sql = getTransformWrapperSql(types);
-		db.transaction(new ListTransformsAsDeltasCallback(sql, callback));
 	}
 
 	@Override
@@ -161,7 +164,7 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	@Override
-	public void reparentToClientInstance(DTRSimpleSerialWrapper wrapper,
+	public void reparentToClientInstance(DeltaApplicationRecord wrapper,
 			ClientInstance clientInstance, AsyncCallback callback) {
 		String sql = "update  TransformRequests  set "
 				+ "clientInstance_id=?,clientInstance_auth=? "
@@ -208,7 +211,8 @@ public class WebDatabaseTransformPersistence extends
 				value = row.getString(paramName);
 			}
 			if (paramClass.isEnum()) {
-				value = Enum.valueOf(paramClass, row.getString(paramName));
+				value = Registry.impl(EnumSerializer.class).deserialize(
+						paramClass, row.getString(paramName));
 			}
 			result.put(paramName, value);
 		}
@@ -232,35 +236,54 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	@Override
-	protected void getTransforms(final DomainTransformRequestType[] types,
-			final AsyncCallback<List<DTRSimpleSerialWrapper>> callback) {
-		String sql = getTransformWrapperSql(types);
+	protected void getTransforms(final DeltaApplicationRecordType[] types,
+			final AsyncCallback<List<DeltaApplicationRecord>> callback) {
+		DeltaApplicationFilters filters = new DeltaApplicationFilters();
+		filters.types = types;
+		getTransforms(filters, callback);
+	}
+
+	protected void getTransforms(DeltaApplicationFilters filters,
+			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+		String sql = getTransformWrapperSql(filters);
 		db.transaction(new ListTransformWrappersCallback(sql, callback));
 	}
 
-	private String getTransformWrapperSql(
-			final DomainTransformRequestType[] types) {
-		String sql = "select * from TransformRequests ";
-		for (int i = 0; i < types.length; i++) {
-			sql += i == 0 ? " where (" : " or ";
-			sql += CommonUtils.formatJ("transform_request_type='%s'", types[i]);
+	private String getTransformWrapperSql(DeltaApplicationFilters filters) {
+		if (filters.clientInstanceId == null) {
+			filters.clientInstanceId = getClientInstanceIdForGet();
 		}
-		sql += ") ";
-		if (getClientInstanceIdForGet() != null) {
-			sql += CommonUtils.formatJ(" and clientInstance_id=%s ",
-					getClientInstanceIdForGet());
+		List<String> clauses = new ArrayList<String>();
+		if (filters.types.length > 0) {
+			String typeClause = "transform_request_type in "
+					+ stringListToClause(CollectionFilters.convert(
+							Arrays.asList(filters.types),
+							new ToStringConverter()));
+			clauses.add(typeClause);
 		}
-		sql += "  order by id asc";
+		if (filters.clientInstanceId != null) {
+			clauses.add(CommonUtils.formatJ("  clientInstance_id=%s ",
+					filters.clientInstanceId));
+		}
+		if (filters.protocolVersion != null) {
+			clauses.add(CommonUtils.formatJ("  transform_event_protocol='%s' ",
+					filters.protocolVersion));
+		}
+		if (clauses.isEmpty()) {
+			throw new RuntimeException("need some type of filter");
+		}
+		String sql = CommonUtils.formatJ("select * from TransformRequests"
+				+ " where %s  order by id asc",
+				CommonUtils.join(clauses, " and "));
 		return sql;
 	}
 
 	@Override
-	protected void persist(final DTRSimpleSerialWrapper wrapper,
+	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
 			final AsyncCallback callback) {
-		notifyPersisting(new TypeSizeTuple(wrapper
-				.getDomainTransformRequestType().toString(), wrapper.getText()
-				.length()));
-		if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.TO_REMOTE) {
+		notifyPersisting(new TypeSizeTuple(wrapper.getType().toString(),
+				wrapper.getText().length()));
+		if (wrapper.getType() == DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED) {
 			AlcinaTopics.logCategorisedMessage(new StringPair(
 					AlcinaTopics.LOG_CATEGORY_TRANSFORM, wrapper.getText()));
 		}
@@ -274,7 +297,7 @@ public class WebDatabaseTransformPersistence extends
 
 	@Override
 	protected void persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted,
+			List<DeltaApplicationRecord> uncommitted,
 			ModalNotifier modalNotifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
 		new PartialDtrUploader().persistOfflineTransforms(uncommitted,
@@ -283,19 +306,20 @@ public class WebDatabaseTransformPersistence extends
 
 	@Override
 	protected void transformPersisted(
-			final List<DTRSimpleSerialWrapper> persistedWrappers,
+			final List<DeltaApplicationRecord> persistedWrappers,
 			final AsyncCallback callback) {
-		Converter<DTRSimpleSerialWrapper, Integer> getIdConverter = new Converter<DTRSimpleSerialWrapper, Integer>() {
+		Converter<DeltaApplicationRecord, Integer> getIdConverter = new Converter<DeltaApplicationRecord, Integer>() {
 			@Override
-			public Integer convert(DTRSimpleSerialWrapper original) {
+			public Integer convert(DeltaApplicationRecord original) {
 				return original.getId();
 			}
 		};
 		List<Integer> ids = CollectionFilters.convert(persistedWrappers,
 				getIdConverter);
 		executeSql(CommonUtils.formatJ("update  TransformRequests  set "
-				+ "transform_request_type='TO_REMOTE_COMPLETED'"
-				+ " where id in (%s)", CommonUtils.join(ids, ", ")), callback);
+				+ "transform_request_type='%s'" + " where id in (%s)",
+				DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED,
+				CommonUtils.join(ids, ", ")), callback);
 	}
 
 	public static class StorageQuotaException extends Exception {
@@ -348,7 +372,7 @@ public class WebDatabaseTransformPersistence extends
 
 	abstract class ListTransformsCallback<T> extends
 			FailureDecoratedPersistenceHandler<T> {
-		final List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
+		final List<DeltaApplicationRecord> transforms = new ArrayList<DeltaApplicationRecord>();
 
 		public ListTransformsCallback(String sql,
 				AsyncCallback<T> postTransactionCallback) {
@@ -362,13 +386,13 @@ public class WebDatabaseTransformPersistence extends
 			for (int i = 0; i < rs.getLength(); i++) {
 				Map<String, Object> map = getFieldsAs(rs.getItem(i),
 						transformParams);
-				DTRSimpleSerialWrapper wr = new DTRSimpleSerialWrapper(
+				DeltaApplicationRecord wr = new DeltaApplicationRecord(
 						(Integer) map.get("id"), (String) map.get("transform"),
 						(Long) map.get("timestamp"), (Long) map.get("user_id"),
 						(Long) map.get("clientInstance_id"),
 						(Integer) map.get("request_id"),
 						(Integer) map.get("clientInstance_auth"),
-						(DomainTransformRequestType) map
+						(DeltaApplicationRecordType) map
 								.get("transform_request_type"),
 						(String) map.get("transform_event_protocol"),
 						(String) map.get("tag"));
@@ -379,28 +403,28 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	class ListTransformWrappersCallback extends
-			ListTransformsCallback<List<DTRSimpleSerialWrapper>> {
+			ListTransformsCallback<List<DeltaApplicationRecord>> {
 		public ListTransformWrappersCallback(
 				String sql,
-				AsyncCallback<List<DTRSimpleSerialWrapper>> postTransactionCallback) {
+				AsyncCallback<List<DeltaApplicationRecord>> postTransactionCallback) {
 			super(sql, postTransactionCallback);
 		}
 
 		@Override
-		protected List<DTRSimpleSerialWrapper> getResult() {
+		protected List<DeltaApplicationRecord> getResult() {
 			return transforms;
 		}
 	}
 
 	class PersistTransformsHandler extends
 			FailureDecoratedPersistenceHandler<Void> {
-		private DTRSimpleSerialWrapper wrapper;
+		private DeltaApplicationRecord wrapper;
 
 		private int persistSpacePass;
 
 		public PersistTransformsHandler(
 				AsyncCallback<Void> postTransactionCallback,
-				DTRSimpleSerialWrapper wrapper) {
+				DeltaApplicationRecord wrapper) {
 			super(null, postTransactionCallback);
 			this.wrapper = wrapper;
 		}
@@ -433,8 +457,8 @@ public class WebDatabaseTransformPersistence extends
 					Long.toString(wrapper.getClientInstanceId()),
 					Long.toString(wrapper.getRequestId()),
 					Long.toString(wrapper.getClientInstanceAuth()),
-					wrapper.getDomainTransformRequestType().toString(),
-					wrapper.getProtocolVersion(), wrapper.getTag() };
+					wrapper.getType().toString(), wrapper.getProtocolVersion(),
+					wrapper.getTag() };
 			tx.executeSql(sql, arguments, this);
 		}
 
@@ -457,10 +481,27 @@ public class WebDatabaseTransformPersistence extends
 		@Override
 		protected Iterator<DomainModelDelta> getResult() {
 			if (iterator == null) {
-				iterator = CollectionFilters.convert(transforms,
-						new DtrWrapperToDomainModelDeltaConverter()).iterator();
+				iterator = CollectionFilters
+						.convert(
+								transforms,
+								new DeltaApplicationRecordToDomainModelDeltaConverter())
+						.iterator();
 			}
 			return iterator;
 		}
+	}
+
+	@Override
+	public void getDomainModelDeltaIterator(DeltaApplicationFilters filters,
+			AsyncCallback<Iterator<DomainModelDelta>> callback) {
+		String sql = getTransformWrapperSql(filters);
+		db.transaction(new ListTransformsAsDeltasCallback(sql, callback));
+	}
+
+	@Override
+	public void getClientInstanceIdOfDomainObjectDelta(AsyncCallback callback) {
+		DeltaApplicationFilters filters = new DeltaApplicationFilters();
+		filters.protocolVersion = DomainTrancheProtocolHandler.VERSION;
+		getTransforms(filters, callback);
 	}
 }

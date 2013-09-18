@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @RegistryLocation(registryPoint = DTRProtocolHandler.class)
 @ClientInstantiable
+@Deprecated
 public class GwtRpcProtocolHandler implements DTRProtocolHandler {
 
 	public static final String VERSION = "Gwt Rpc 1.0";

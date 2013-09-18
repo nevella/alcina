@@ -12,18 +12,25 @@ public class MethodIndividualPropertyAccessor implements
 
 	private Method readMethod;
 
+	private Class methodDeclaringClass;
+
+	private String propertyName;
+
 	public MethodIndividualPropertyAccessor(Class clazz, String propertyName) {
-		try {
-			this.readMethod = SEUtilities.getPropertyDescriptorByName(clazz,
-					propertyName).getReadMethod();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		methodDeclaringClass = null;//be lazy
+		this.propertyName = propertyName;
 	}
+
 
 	@Override
 	public Object getPropertyValue(Object value) {
 		try {
+			Class<? extends Object> clazz = value.getClass();
+			if (clazz != methodDeclaringClass) {
+				this.readMethod = SEUtilities.getPropertyDescriptorByName(clazz,
+						propertyName).getReadMethod();
+				methodDeclaringClass=clazz;
+			}
 			return readMethod.invoke(value, emptyValue);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

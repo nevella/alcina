@@ -109,6 +109,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return (ThreadlocalTransformManager) TransformManager.get();
 	}
 
+	@Override
+	protected boolean updateAssociationsWithoutNoChangeCheck() {
+		return getEntityManager() == null;
+	}
+
 	/**
 	 * Convenience "override" of TransformManager.get()
 	 */
@@ -117,7 +122,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	public static void threadTransformManagerWasReset() {
- 		GlobalTopicPublisher.get().publishTopic(
+		GlobalTopicPublisher.get().publishTopic(
 				TOPIC_RESET_THREAD_TRANSFORM_MANAGER, Thread.currentThread());
 	}
 
@@ -161,8 +166,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	private HasIdAndLocalId ignorePropertyChangesTo;
 
 	DomainTransformEvent lastEvent = null;
-	
-	private boolean initialised=false;
+
+	private boolean initialised = false;
 
 	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception {
@@ -206,8 +211,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public boolean checkPropertyAccess(HasIdAndLocalId hili,
 			String propertyName, boolean read) throws IntrospectionException {
 		if (hili.getId() != 0) {
-			PropertyDescriptor descriptor = SEUtilities.getPropertyDescriptorByName(
-					hili.getClass(), propertyName);
+			PropertyDescriptor descriptor = SEUtilities
+					.getPropertyDescriptorByName(hili.getClass(), propertyName);
 			if (descriptor == null) {
 				throw new IntrospectionException(String.format(
 						"Property not found - %s::%s", hili.getClass()
@@ -262,8 +267,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili,
 			boolean generateEventIfObjectNotFound) {
 		if (deleted.contains(hili)) {
-			RuntimeException ex = new  RuntimeException(String.format("Double deletion - %s %s",
-					new HiliLocator(hili), hili));
+			RuntimeException ex = new RuntimeException(String.format(
+					"Double deletion - %s %s", new HiliLocator(hili), hili));
 			System.out.println(ex.getMessage());
 			ex.printStackTrace();
 			return null;
@@ -442,7 +447,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	public Object getPropertyValue(Object bean, String propertyName) {
 		try {
-			return SEUtilities.getPropertyDescriptorByName(bean.getClass(), propertyName)
+			return SEUtilities
+					.getPropertyDescriptorByName(bean.getClass(), propertyName)
 					.getReadMethod().invoke(bean);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -632,10 +638,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		for (DomainTransformListener listener : threadLocalListeners) {
 			addDomainTransformListener(listener);
 		}
-		if(initialised){
-		threadTransformManagerWasReset();
-		}else{
-			initialised=true;
+		if (initialised) {
+			threadTransformManagerWasReset();
+		} else {
+			initialised = true;
 		}
 	}
 
@@ -698,8 +704,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		this.useObjectCreationId = useObjectCreationId;
 	}
 
-	private String buildEqlForSpec(ObjectDeltaSpec itemSpec,
-			Class assocClass) throws Exception {
+	private String buildEqlForSpec(ObjectDeltaSpec itemSpec, Class assocClass)
+			throws Exception {
 		ObjectRef ref = itemSpec.getObjectRef();
 		Class refClass = ref.getClassRef().getRefClass();
 		List<String> projections = new ArrayList<String>();

@@ -24,13 +24,14 @@ import javax.persistence.Table;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.collections.PropertyConverter;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRSimpleSerialSerializer;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -108,7 +109,7 @@ public class DevConsoleCommandTransforms {
 		public Multimap<Long, List<DomainTransformEvent>> dtrExpsToCliDteMap(
 				String folderPath) throws Exception {
 			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
-			List<DTRSimpleSerialWrapper> wrappers = new ArrayList<DTRSimpleSerialWrapper>();
+			List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
 			List<File> files = new ArrayList<File>(Arrays.asList(new File(
 					folderPath).listFiles(new FileFilter() {
 				@Override
@@ -122,7 +123,7 @@ public class DevConsoleCommandTransforms {
 			for (; processedIndex < files.size();) {
 				File f = files.get(processedIndex++);
 				String ser = ResourceUtilities.readFileToStringGz(f);
-				DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialSerializer()
+				DeltaApplicationRecord wrapper = new DeltaApplicationRecordSerializerImpl()
 						.read(ser);
 				DomainTransformRequest rq = new DomainTransformRequest();
 				rq.fromString(wrapper.getText());
@@ -384,6 +385,8 @@ public class DevConsoleCommandTransforms {
 			return "trt {params or none for usage}";
 		}
 
+		boolean foundDteId;
+
 		@Override
 		public String run(String[] argv) throws Exception {
 			if (argv.length == 0) {
@@ -392,6 +395,9 @@ public class DevConsoleCommandTransforms {
 			}
 			FilterArgvFlag f = new FilterArgvFlag(argv, "-r");
 			boolean rqIdsOnly = f.contains;
+			argv = f.argv;
+			f = new FilterArgvFlag(argv, "-t");
+			boolean outputTransforms = f.contains;
 			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
@@ -421,15 +427,18 @@ public class DevConsoleCommandTransforms {
 					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
 					+ " where %s order by dte.id desc";
 			Set<Long> ids = null;
-			{
-				CollectionFilter<String> allowFilter = new CollectionFilter<String>() {
-					@Override
-					public boolean allow(String o) {
-						return !o.contains("dte.");
+			CollectionFilter<String> dteIdFilter = new CollectionFilter<String>() {
+				@Override
+				public boolean allow(String o) {
+					if (o.contains("dte.")) {
+						foundDteId = true;
 					}
-				};
-				String filter = DevConsoleFilter.getFilters(
-						CmdListTransformsFilter.class, argv, allowFilter);
+					return o.contains("dte.");
+				}
+			};
+			String filter = DevConsoleFilter.getFilters(
+					CmdListTransformsFilter.class, argv, dteIdFilter);
+			if (!foundDteId) {
 				sql1 = String.format(sql1, dtrName, filter);
 				Statement ps = conn.createStatement();
 				System.out.println(console.breakAndPad(1, 80, sql1, 0));
@@ -444,21 +453,42 @@ public class DevConsoleCommandTransforms {
 				System.out.format("Matched request ids: \n%s\n\n",
 						CommonUtils.join(ids, ", "));
 			} else {
-				String filter = DevConsoleFilter.getFilters(
+				filter = DevConsoleFilter.getFilters(
 						CmdListTransformsFilter.class, argv);
 				sql2 = String.format(sql2, dtrName, dteName, filter);
 				PreparedStatement ps = conn.prepareStatement(sql2);
 				System.out.println(console.breakAndPad(1, 80, sql2, 0));
 				ResultSet rs = ps.executeQuery();
-				Map<String, ColumnFormatter> formatters = new HashMap<String, SqlUtils.ColumnFormatter>();
-				formatters.put("dte_objref", new ClassRefNameFormatter());
-				formatters.put("servercommitdate", new DateTimeFormatter());
-				formatters.put("utcdate", new DateTimeFormatter());
-				formatters.put("transformtype", new EnumFormatter(
-						TransformType.class));
-				formatters
-						.put("newstringvalue", new TrimmedStringFormatter(30));
-				SqlUtils.dumpResultSet(rs, formatters);
+				if (outputTransforms) {
+					List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
+					while (rs.next()) {
+						DomainTransformEvent dte = new DomainTransformEvent();
+						dtes.add(dte);
+						dte.setNewStringValue(rs.getString("newStringValue"));
+						dte.setObjectClassRef(ClassRef.forId(rs
+								.getLong("dte_objref")));
+						dte.setPropertyName(rs.getString("propertyname"));
+						dte.setUtcDate(rs.getTimestamp("utcdate"));
+						dte.setObjectId(rs.getLong("object_id"));
+						dte.setObjectLocalId(rs.getLong("objectlocalid"));
+						dte.setValueId(rs.getLong("valueid"));
+						int i = rs.getInt("transformtype");
+						TransformType tt = rs.wasNull() ? null
+								: TransformType.class.getEnumConstants()[i];
+						dte.setTransformType(tt);
+					}
+					System.out.println(dtes);
+				} else {
+					Map<String, ColumnFormatter> formatters = new HashMap<String, SqlUtils.ColumnFormatter>();
+					formatters.put("dte_objref", new ClassRefNameFormatter());
+					formatters.put("servercommitdate", new DateTimeFormatter());
+					formatters.put("utcdate", new DateTimeFormatter());
+					formatters.put("transformtype", new EnumFormatter(
+							TransformType.class));
+					formatters.put("newstringvalue",
+							new TrimmedStringFormatter(30));
+					SqlUtils.dumpResultSet(rs, formatters);
+				}
 				rs.close();
 				ps.close();
 			}
@@ -491,7 +521,9 @@ public class DevConsoleCommandTransforms {
 
 		private void printFullUsage() {
 			System.out
-					.println("trt <-r:=rq ids only> {[days|user|ci|class|dtr|pn|objid|valueid|nsv] value}+");
+					.format("trt <-r:=rq ids only> <-t: as transforms> {[%s] value}+\n",
+							DevConsoleFilter
+									.describeFilters(CmdListTransformsFilter.class));
 		}
 
 		@RegistryLocation(registryPoint = CmdListTransformsFilter.class)
@@ -573,6 +605,24 @@ public class DevConsoleCommandTransforms {
 
 			protected boolean hasDefault() {
 				return true;
+			}
+		}
+
+		public static class CmdListTransformsFilterMinDays extends
+				CmdListTransformsFilter {
+			@Override
+			public String getFilter(String value) {
+				return String.format("age(ci.hellodate)>'%s days'",
+						value == null ? "3" : value);
+			}
+
+			@Override
+			public String getKey() {
+				return "mindays";
+			}
+
+			protected boolean hasDefault() {
+				return false;
 			}
 		}
 
@@ -718,6 +768,14 @@ public class DevConsoleCommandTransforms {
 		public static String getFilters(
 				Class<? extends DevConsoleFilter> registryPoint, String[] argv) {
 			return getFilters(registryPoint, argv, null);
+		}
+
+		public static String describeFilters(
+				Class<? extends DevConsoleFilter> registryPoint) {
+			return CommonUtils.join(CollectionFilters.convert(
+					Registry.impls(registryPoint),
+					new PropertyConverter<DevConsoleFilter, String>("key")),
+					"|");
 		}
 
 		public static String getFilters(

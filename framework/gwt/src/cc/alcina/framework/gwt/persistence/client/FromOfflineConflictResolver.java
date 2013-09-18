@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -48,14 +48,14 @@ public class FromOfflineConflictResolver {
 
 	private GlassDialogBox dialog;
 
-	private List<DTRSimpleSerialWrapper> uncommitted;
+	private List<DeltaApplicationRecord> uncommitted;
 
 	private LocalTransformPersistence localTransformPersistence;
 
 
 	private AsyncCallback<Void> completionCallback;
 
-	public void resolve(List<DTRSimpleSerialWrapper> uncommitted,
+	public void resolve(List<DeltaApplicationRecord> uncommitted,
 			Throwable caught,
 			LocalTransformPersistence localTransformPersistence, AsyncCallback<Void> completionCallback) {
 		this.uncommitted = uncommitted;

@@ -1,32 +1,37 @@
 package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientUIThreadWorker;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
-import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRSimpleSerialSerializer;
-import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.GwtRpcProtocolHandler;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.util.AsyncCallbackNull;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.Lzw;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
@@ -111,7 +116,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	private CommitToStorageTransformListener commitToStorageTransformListener;
 
-	private Map<Integer, DTRSimpleSerialWrapper> persistedTransforms = new HashMap<Integer, DTRSimpleSerialWrapper>();
+	private Map<Integer, DeltaApplicationRecord> persistedTransforms = new HashMap<Integer, DeltaApplicationRecord>();
 
 	private boolean closing = false;
 
@@ -130,25 +135,26 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			int exceptForId, AsyncCallback callback);
 
 	public void dumpDatabase(final Callback<String> callback) {
-		AsyncCallback<List<DTRSimpleSerialWrapper>> transformCallback = new AsyncCallbackStd<List<DTRSimpleSerialWrapper>>() {
+		AsyncCallback<List<DeltaApplicationRecord>> transformCallback = new AsyncCallbackStd<List<DeltaApplicationRecord>>() {
 			@Override
-			public void onSuccess(List<DTRSimpleSerialWrapper> result) {
+			public void onSuccess(List<DeltaApplicationRecord> result) {
 				StringBuilder sb = new StringBuilder();
-				for (DTRSimpleSerialWrapper wrapper : result) {
-					sb.append(new DTRSimpleSerialSerializer().write(wrapper));
+				for (DeltaApplicationRecord wrapper : result) {
+					sb.append(new DeltaApplicationRecordSerializerImpl()
+							.write(wrapper));
 					sb.append("\n");
 				}
 				callback.apply(sb.toString());
 			}
 		};
-		getTransforms(DomainTransformRequestType.values(), transformCallback);
+		getTransforms(new DeltaApplicationRecordType[0], transformCallback);
 	}
 
 	public CommitToStorageTransformListener getCommitToStorageTransformListener() {
 		return commitToStorageTransformListener;
 	}
 
-	public Map<Integer, DTRSimpleSerialWrapper> getPersistedTransforms() {
+	public Map<Integer, DeltaApplicationRecord> getPersistedTransforms() {
 		return this.persistedTransforms;
 	}
 
@@ -190,40 +196,36 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		return this.useLzw;
 	}
 
-	public void persistableTransform(DomainTransformRequest dtr) {
-		if (dtr.getDomainTransformRequestType() == DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
-			dtr.setProtocolVersion(getSerializationPolicy()
-					.getInitialObjectPersistenceProtocol());
-		} else {
-			dtr.setProtocolVersion(getSerializationPolicy()
-					.getTransformPersistenceProtocol());
-		}
+	public void persistableTransform(DomainTransformRequest dtr,
+			DeltaApplicationRecordType type) {
+		dtr.setProtocolVersion(getSerializationPolicy()
+				.getTransformPersistenceProtocol());
 		if (!dtr.getEvents().isEmpty()) {
 			if (!closing) {
-				new DTRAsyncSerializer(dtr).start();
+				new DTRAsyncSerializer(dtr, type).start();
 			} else {
-				DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(
-						dtr, false);
-				persist(wrapper, AsyncCallbackStd.VOID_CALLBACK);
+				DeltaApplicationRecord wrapper = new DeltaApplicationRecord(
+						dtr, type, false);
+				persist(wrapper, new AsyncCallbackNull());
 			}
 		}
 	}
 
-	public void persistInitialRpcPayload(String payload,
+	public void recordDeltaApplication(DomainModelDeltaSignature signature,
 			AsyncCallback<Void> AsyncCallback) {
 		ClientInstance clientInstance = ClientLayerLocator.get()
 				.getClientInstance();
-		DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(0, payload,
-				System.currentTimeMillis(), PermissionsManager.get()
-						.getUserId(), clientInstance.getId(), 0,
-				clientInstance.getAuth(),
-				DomainTransformRequestType.CLIENT_OBJECT_LOAD,
-				GwtRpcProtocolHandler.VERSION, "");
+		DeltaApplicationRecord wrapper = new DeltaApplicationRecord(0,
+				signature.toString(), System.currentTimeMillis(),
+				PermissionsManager.get().getUserId(), clientInstance.getId(),
+				0, clientInstance.getAuth(),
+				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
+				DomainTrancheProtocolHandler.VERSION, "");
 		persist(wrapper, AsyncCallback);
 	}
 
 	public abstract void reparentToClientInstance(
-			DTRSimpleSerialWrapper wrapper, ClientInstance clientInstance,
+			DeltaApplicationRecord wrapper, ClientInstance clientInstance,
 			AsyncCallback callback);
 
 	public void restoreDatabase(String data, Callback callback) {
@@ -262,8 +264,10 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 					&& !rq.getEvents().isEmpty()) {
 				rq.setProtocolVersion(getSerializationPolicy()
 						.getTransformPersistenceProtocol());
-				final DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(
-						rq);
+				final DeltaApplicationRecord wrapper = new DeltaApplicationRecord(
+						rq,
+						DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
+						false);
 				getPersistedTransforms().put(requestId, wrapper);
 				persist(wrapper, new AsyncCallbackStd<Void>() {
 					@Override
@@ -285,9 +289,9 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			for (DomainTransformRequest rq : rqs) {
 				removeIds.remove(rq.getRequestId());
 			}
-			List<DTRSimpleSerialWrapper> persistedWrappers = new ArrayList<DTRSimpleSerialWrapper>();
+			List<DeltaApplicationRecord> persistedWrappers = new ArrayList<DeltaApplicationRecord>();
 			for (Integer i : removeIds) {
-				DTRSimpleSerialWrapper wrapper = getPersistedTransforms()
+				DeltaApplicationRecord wrapper = getPersistedTransforms()
 						.get(i);
 				persistedWrappers.add(wrapper);
 			}
@@ -305,23 +309,24 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 					DomainTransformRequest rq = new DomainTransformRequest();
 					rq.setClientInstance(ClientLayerLocator.get()
 							.getClientInstance());
-					rq.setDomainTransformRequestType(DomainTransformRequestType.CLIENT_SYNC);
 					rq.setRequestId(0);
 					rq.setEvents(new ArrayList<DomainTransformEvent>(
 							getCommitToStorageTransformListener()
 									.getSynthesisedEvents()));
 					rq.setProtocolVersion(getSerializationPolicy()
 							.getTransformPersistenceProtocol());
-					DTRSimpleSerialWrapper wrapper = new DTRSimpleSerialWrapper(
-							rq);
-					persist(wrapper, AsyncCallbackStd.VOID_CALLBACK);
+					DeltaApplicationRecord wrapper = new DeltaApplicationRecord(
+							rq,
+							DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
+							false);
+					persist(wrapper, new AsyncCallbackNull());
 				}
 			};
 			transformPersisted(persistedWrappers,
 					afterTransformsMarkedAsPersistedCallback);
 			return;
 		} else if (newState == CommitToStorageTransformListener.RELOAD) {
-			clearAllPersisted(AsyncCallbackStd.VOID_CALLBACK);
+			clearAllPersisted(new AsyncCallbackNull());
 		}
 	}
 
@@ -331,17 +336,17 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		return clientInstanceIdForGet;
 	}
 
-	protected void getTransforms(DomainTransformRequestType type,
-			AsyncCallback<List<DTRSimpleSerialWrapper>> callback) {
-		getTransforms(new DomainTransformRequestType[] { type }, callback);
+	protected void getTransforms(DeltaApplicationRecordType type,
+			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+		getTransforms(new DeltaApplicationRecordType[] { type }, callback);
 	}
 
-	protected abstract void getTransforms(DomainTransformRequestType[] types,
-			AsyncCallback<List<DTRSimpleSerialWrapper>> callback);
+	protected abstract void getTransforms(DeltaApplicationRecordType[] types,
+			AsyncCallback<List<DeltaApplicationRecord>> callback);
 
 	private static final String LZW_PROTOCOL_ADDITION = "/lzw";
 
-	protected void maybeCompressWrapper(DTRSimpleSerialWrapper wrapper) {
+	protected void maybeCompressWrapper(DeltaApplicationRecord wrapper) {
 		if (isUseLzw()
 				&& wrapper.getProtocolVersion() != null
 				&& !wrapper.getProtocolVersion()
@@ -352,17 +357,72 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 	}
 
-	protected void maybeDecompressWrapper(DTRSimpleSerialWrapper wrapper) {
+	protected void maybeDecompressWrapper(DeltaApplicationRecord wrapper) {
 		if (wrapper.getProtocolVersion().endsWith(LZW_PROTOCOL_ADDITION)) {
 			wrapper.setText(new Lzw().decompress(wrapper.getText()));
 		}
 	}
 
-	protected abstract void persist(DTRSimpleSerialWrapper wrapper,
-			AsyncCallback callback);
+	private LinkedHashMap<DeltaApplicationRecord, AsyncCallback> recordQueue = new LinkedHashMap<DeltaApplicationRecord, AsyncCallback>();
+
+	class ProcessRecordQueueCallback implements AsyncCallback {
+		private AsyncCallback successCallback;
+
+		private AsyncCallback failureCallback;
+
+		ProcessRecordQueueCallback(AsyncCallback successCallback,
+				AsyncCallback failureCallback) {
+			this.successCallback = successCallback;
+			this.failureCallback = failureCallback;
+		}
+
+		@Override
+		public void onFailure(Throwable caught) {
+			failureCallback.onFailure(caught);
+		}
+
+		@Override
+		public void onSuccess(Object result) {
+			if (successCallback != null) {
+				successCallback.onSuccess(result);
+			}
+			persistQueue();
+		}
+	}
+
+	public void persist(List<DeltaApplicationRecord> wrappers,
+			AsyncCallback callback) {
+		for (int i = 0; i < wrappers.size(); i++) {
+			recordQueue.put(wrappers.get(i), new ProcessRecordQueueCallback(
+					i == wrappers.size() - 1 ? callback : null, callback));
+		}
+		persistQueue();
+	}
+
+	protected void persist(DeltaApplicationRecord wrapper,
+			AsyncCallback callback) {
+		recordQueue.put(wrapper, new ProcessRecordQueueCallback(callback,
+				callback));
+		persistQueue();
+	}
+
+	private void persistQueue() {
+		if (!recordQueue.isEmpty()) {
+			Entry<DeltaApplicationRecord, AsyncCallback> first = recordQueue
+					.entrySet().iterator().next();
+			// copy in case removal zaps the refs
+			DeltaApplicationRecord record = first.getKey();
+			AsyncCallback callback = first.getValue();
+			recordQueue.remove(record);
+			persistFromFrontOfQueue(record, callback);
+		}
+	}
+
+	protected abstract void persistFromFrontOfQueue(
+			DeltaApplicationRecord wrapper, AsyncCallback callback);
 
 	protected void persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted, ModalNotifier notifier,
+			List<DeltaApplicationRecord> uncommitted, ModalNotifier notifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
 		ClientLayerLocator
 				.get()
@@ -399,7 +459,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	protected abstract void transformPersisted(
-			List<DTRSimpleSerialWrapper> persistedWrappers,
+			List<DeltaApplicationRecord> persistedWrappers,
 			AsyncCallback callback);
 
 	ClientInstance getDomainObjectsPersistedBy() {
@@ -422,7 +482,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			}
 		};
 
-		Iterator<DTRSimpleSerialWrapper> loadIterator;
+		Iterator<DeltaApplicationRecord> loadIterator;
 
 		public Loader(LocalTransformPersistence localTransformPersistence,
 				String data, Callback callback) {
@@ -432,7 +492,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 
 		public void start() {
-			List<DTRSimpleSerialWrapper> wrappers = new DTRSimpleSerialSerializer()
+			List<DeltaApplicationRecord> wrappers = new DeltaApplicationRecordSerializerImpl()
 					.readMultiple(data);
 			loadIterator = wrappers.iterator();
 			iterate();
@@ -457,7 +517,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	protected class DTRAsyncSerializer extends ClientUIThreadWorker {
-		DTRSimpleSerialWrapper wrapper;
+		DeltaApplicationRecord wrapper;
 
 		StringBuffer sb = new StringBuffer();
 
@@ -465,9 +525,10 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 		DTRProtocolHandler handler;
 
-		public DTRAsyncSerializer(DomainTransformRequest dtr) {
+		public DTRAsyncSerializer(DomainTransformRequest dtr,
+				DeltaApplicationRecordType type) {
 			super(1000, 200);
-			wrapper = new DTRSimpleSerialWrapper(dtr, true);
+			wrapper = new DeltaApplicationRecord(dtr, type, true);
 			items = dtr.getEvents();
 			handler = new DTRProtocolSerializer()
 					.getHandler(getSerializationPolicy()
@@ -504,7 +565,30 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 	}
 
+	public static class DeltaApplicationFilters {
+		public DeltaApplicationRecordType[] types = new DeltaApplicationRecordType[0];
+
+		public Long clientInstanceId;
+
+		public String protocolVersion;
+	}
+
 	public abstract void getDomainModelDeltaIterator(
-			DomainTransformRequestType[] types,
+			DeltaApplicationFilters filters,
 			AsyncCallback<Iterator<DomainModelDelta>> callback);
+
+	public static String stringListToClause(Collection<String> strs) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(" (");
+		for (String str : strs) {
+			sb.append(sb.length() == 2 ? "'" : ", '");
+			sb.append(str.replace("'", "''"));
+			sb.append("'");
+		}
+		sb.append(") ");
+		return sb.toString();
+	}
+
+	public abstract void getClientInstanceIdOfDomainObjectDelta(
+			AsyncCallback callback);
 }

@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.state.Consort;
@@ -26,8 +26,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 	String dbPrefix;
 
-	public List<DTRSimpleSerialWrapper> transformsToPersistOnServer;
-
+	public List<DeltaApplicationRecord> transformsToPersistOnServer;
 
 	public Throwable remotePersistenceException;
 
@@ -40,7 +39,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 	class Player_GET_TRANSFORMS
 			extends
-			EnumRunnableAsyncCallbackPlayer<List<DTRSimpleSerialWrapper>, State> {
+			EnumRunnableAsyncCallbackPlayer<List<DeltaApplicationRecord>, State> {
 		public Player_GET_TRANSFORMS() {
 			super(State.GET_TRANSFORMS);
 		}
@@ -48,15 +47,14 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 		@Override
 		public void run() {
 			LocalTransformPersistence.get().getTransforms(
-					DomainTransformRequestType.TO_REMOTE, this);
+					DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED, this);
 		}
 
 		@Override
-		public void onSuccess(List<DTRSimpleSerialWrapper> result) {
+		public void onSuccess(List<DeltaApplicationRecord> result) {
 			transformsToPersistOnServer = result;
 			if (result.isEmpty()) {
-				wasPlayed(
-						State.FINISHED);
+				wasPlayed(State.FINISHED);
 			} else {
 				super.onSuccess(result);
 			}
@@ -83,7 +81,6 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 			String message = TextProvider.get().getUiObjectText(
 					LocalTransformPersistence.class, "saving-unsaved-message",
 					"Saving unsaved work from previous session");
-			
 			ModalNotifier notifier = Registry.impl(HandshakeConsortModel.class)
 					.ensureLoadObjectsNotifier(message);
 			notifier.modalOff();
@@ -152,7 +149,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 		addPlayer(new Player_PERSIST_TRANSFORMS());
 		addPlayer(new Player_PERSIST_TRANSFORMS_FAILURE());
 		addPlayer(new Player_PERSIST_TRANSFORMS_SUCCCESS());
-		addEndpointPlayer(completionCallback,true);
+		addEndpointPlayer(completionCallback, true);
 		nudge();
 	}
 }

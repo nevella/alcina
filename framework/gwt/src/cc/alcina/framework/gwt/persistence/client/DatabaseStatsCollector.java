@@ -1,7 +1,8 @@
 package cc.alcina.framework.gwt.persistence.client;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;
@@ -17,19 +18,16 @@ public class DatabaseStatsCollector {
 	private DatabaseStatsCollector.Phase phase = Phase.TRANSFORMS_DB_QUERY;
 
 	enum Phase {
-		TRANSFORMS_DB_QUERY, LOGS_DB, FINISHED
+		TRANSFORMS_DB_QUERY, LOGS_DB, DELTAS_DB, FINISHED
 	}
 
 	DatabaseStatsInfo info = new DatabaseStatsInfo();
 
 	private AsyncCallback<DatabaseStatsInfo> infoCallback;
 
-	private String logTableName;
-
 	private long start;
 
 	public void run(AsyncCallback<DatabaseStatsInfo> infoCallback) {
-		this.logTableName = LogStore.DEFAULT_TABLE_NAME;
 		this.infoCallback = infoCallback;
 		start = System.currentTimeMillis();
 		iterate();
@@ -41,7 +39,14 @@ public class DatabaseStatsCollector {
 			statTransforms();
 			break;
 		case LOGS_DB:
-			statLogs();
+			ObjectStoreWebDbImpl logWebDbStore = (ObjectStoreWebDbImpl) LogStore
+					.get().objectStore;
+			statStore(logWebDbStore, info, true, Phase.DELTAS_DB);
+			break;
+		case DELTAS_DB:
+			ObjectStoreWebDbImpl deltaWebDbStore = (ObjectStoreWebDbImpl) DeltaStore
+					.get().objectStore;
+			statStore(deltaWebDbStore, info, false, Phase.FINISHED);
 			break;
 		case FINISHED:
 			info.setCollectionTimeMs(System.currentTimeMillis() - start);
@@ -64,10 +69,6 @@ public class DatabaseStatsCollector {
 					int size = row.getString("transform").length();
 					info.getTransformCounts().add(key);
 					info.getTransformTexts().add(key, size);
-					if (key.equals(DomainTransformRequestType.CLIENT_OBJECT_LOAD
-							.toString())) {
-						info.getClientObjectLoadSizes().add(size);
-					}
 				}
 				phase = Phase.LOGS_DB;
 				iterate();
@@ -97,8 +98,9 @@ public class DatabaseStatsCollector {
 		});
 	}
 
-	private void statLogs() {
-		Database db = ((ObjectStoreWebDbImpl) LogStore.get().objectStore).db;
+	private void statStore(final ObjectStoreWebDbImpl dbStore,
+			final DatabaseStatsInfo info, final boolean logs,
+			final Phase nextPhase) {
 		final StatementCallback<GenericRow> okCallback = new StatementCallback<GenericRow>() {
 			@Override
 			public void onSuccess(SQLTransaction transaction,
@@ -106,11 +108,22 @@ public class DatabaseStatsCollector {
 				SQLResultSetRowList<GenericRow> rs = resultSet.getRows();
 				for (int i = 0; i < rs.getLength(); i++) {
 					GenericRow row = rs.getItem(i);
-					int key = row.getInt("id");
+					int id = row.getInt("id");
+					String key = row.getString("key_");
 					int size = row.getString("value_").length();
-					info.getLogSizes().add(key, size);
+					if (logs) {
+						info.getLogSizes().add(id, size);
+					} else {
+						DomainModelDeltaSignature sig = DeltaStore
+								.parseSignature(key);
+						String nvk = sig.nonVersionedSignature();
+						if (key.startsWith(DeltaStore.META)) {
+							info.getDeltaCounts().add(nvk);
+						}
+						info.getDeltaSizes().add(nvk, size);
+					}
 				}
-				phase = Phase.FINISHED;
+				phase = nextPhase;
 				iterate();
 			}
 
@@ -120,12 +133,12 @@ public class DatabaseStatsCollector {
 				return true;
 			}
 		};
-		db.transaction(new TransactionCallback() {
+		dbStore.db.transaction(new TransactionCallback() {
 			@Override
 			public void onTransactionStart(SQLTransaction tx) {
 				tx.executeSql(
-						CommonUtils.formatJ("select * from %s ", logTableName),
-						null, okCallback);
+						CommonUtils.formatJ("select * from %s ",
+								dbStore.getTableName()), null, okCallback);
 			}
 
 			@Override

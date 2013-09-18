@@ -9,6 +9,7 @@ import java.beans.PropertyDescriptor;
 import java.util.HashMap;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
@@ -106,11 +107,10 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 					return p;
 				}
 			}
-			throw new RuntimeException("Unknown property: " + name
+			throw new NoSuchPropertyException("Unknown property: " + name
 					+ " on class " + className);
 		}
 	}
-
 	public static class MethodWrapper implements Method {
 		private final java.lang.reflect.Method inner;
 

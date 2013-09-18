@@ -110,7 +110,7 @@ public class GraphProjection {
 
 	public static boolean replaceTimestampsWithDates = true;
 
-	private IdentityHashMap reached = new IdentityHashMap();
+	protected IdentityHashMap reached = new IdentityHashMap();
 
 	Map<Class, Field[]> projectableFields = new HashMap<Class, Field[]>();
 
@@ -401,7 +401,9 @@ public class GraphProjection {
 
 		boolean permitTransient(Field field);
 	}
-
+	public static interface GraphProjectionDualFilter extends GraphProjectionFieldFilter,GraphProjectionDataFilter{
+		
+	}
 	public static interface GraphProjectionDataFilter {
 		/*
 		 * IMPORTANT - if filterdata changes the return value (i.e. doesn't

@@ -101,8 +101,12 @@ public class DetachedEntityCache implements Serializable {
 
 	protected void ensureMaps(Class clazz) {
 		if (!detached.containsKey(clazz)) {
-			detached.put(clazz, new TreeMap<Long, HasIdAndLocalId>());
+			detached.put(clazz, createMap());
 		}
+	}
+
+	protected Map<Long, HasIdAndLocalId> createMap() {
+		return new TreeMap<Long, HasIdAndLocalId>();
 	}
 
 	public boolean isEmpty(Class clazz) {
@@ -112,7 +116,7 @@ public class DetachedEntityCache implements Serializable {
 
 	public void invalidate(Class clazz) {
 		ensureMaps(clazz);
-		detached.put(clazz, new TreeMap<Long, HasIdAndLocalId>());
+		detached.put(clazz, createMap());
 	}
 
 	public void clear() {

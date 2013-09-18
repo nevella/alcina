@@ -1,9 +1,5 @@
 package cc.alcina.framework.servlet.servlet.control;
 
-import java.util.List;
-
-import com.google.gwt.user.server.rpc.RPCRequest;
-
 import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -15,6 +11,8 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.framework.servlet.servlet.control.ControlServletHandlers.ModeEnum;
+
+import com.google.gwt.user.server.rpc.RPCRequest;
 
 @RegistryLocation(registryPoint = AppLifecycleManager.class, implementationType = ImplementationType.SINGLETON)
 public class AppLifecycleManager implements RegistrableService {

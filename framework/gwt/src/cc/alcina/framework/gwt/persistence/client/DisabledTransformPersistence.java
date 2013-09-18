@@ -4,9 +4,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -22,23 +22,23 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 	}
 
 	@Override
-	protected void getTransforms(DomainTransformRequestType[] types,
-			AsyncCallback<List<DTRSimpleSerialWrapper>> callback) {
+	protected void getTransforms(DeltaApplicationRecordType[] types,
+			AsyncCallback<List<DeltaApplicationRecord>> callback) {
 	}
 
 	@Override
-	protected void persist(DTRSimpleSerialWrapper wrapper,
+	protected void persistFromFrontOfQueue(DeltaApplicationRecord wrapper,
 			AsyncCallback callback) {
 	}
 
 	@Override
-	public void reparentToClientInstance(DTRSimpleSerialWrapper wrapper,
+	public void reparentToClientInstance(DeltaApplicationRecord wrapper,
 			ClientInstance clientInstance, AsyncCallback callback) {
 	}
 
 	@Override
 	protected void transformPersisted(
-			List<DTRSimpleSerialWrapper> persistedWrappers,
+			List<DeltaApplicationRecord> persistedWrappers,
 			AsyncCallback callback) {
 	}
 
@@ -55,8 +55,15 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 				callback);
 	}
 
+
 	@Override
-	public void getDomainModelDeltaIterator(DomainTransformRequestType[] types,
+	public void getDomainModelDeltaIterator(DeltaApplicationFilters filters,
 			AsyncCallback<Iterator<DomainModelDelta>> callback) {
+		
+	}
+
+	@Override
+	public void getClientInstanceIdOfDomainObjectDelta(AsyncCallback callback) {
+		
 	}
 }

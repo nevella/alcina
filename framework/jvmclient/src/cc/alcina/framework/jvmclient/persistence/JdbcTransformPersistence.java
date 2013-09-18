@@ -30,14 +30,15 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
+import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.DeltaApplicationFilters;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -82,11 +83,11 @@ public abstract class JdbcTransformPersistence extends
 			String.class, "timestamp", Long.class, "user_id", Long.class,
 			"clientInstance_id", Long.class, "request_id", Integer.class,
 			"clientInstance_auth", Integer.class, "transform_request_type",
-			DomainTransformRequestType.class, "transform_event_protocol",
+			DeltaApplicationRecordType.class, "transform_event_protocol",
 			String.class, "tag", String.class };
 
 	protected ResultSet getTransformsResultSet(
-			final DomainTransformRequestType[] types, CleanupTuple tuple)
+			final DeltaApplicationRecordType[] types, CleanupTuple tuple)
 			throws SQLException {
 		String sql = "select * from TransformRequests ";
 		for (int i = 0; i < types.length; i++) {
@@ -175,21 +176,21 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	@Override
-	protected void getTransforms(final DomainTransformRequestType[] types,
-			final AsyncCallback<List<DTRSimpleSerialWrapper>> callback) {
+	protected void getTransforms(final DeltaApplicationRecordType[] types,
+			final AsyncCallback<List<DeltaApplicationRecord>> callback) {
 		CleanupTuple cleanupTuple = new CleanupTuple();
-		List<DTRSimpleSerialWrapper> transforms = new ArrayList<DTRSimpleSerialWrapper>();
+		List<DeltaApplicationRecord> transforms = new ArrayList<DeltaApplicationRecord>();
 		try {
 			ResultSet rs = getTransformsResultSet(types, cleanupTuple);
 			while (rs.next()) {
 				Map<String, Object> map = getFieldsAs(rs, transformParams);
-				DTRSimpleSerialWrapper wr = new DTRSimpleSerialWrapper(
+				DeltaApplicationRecord wr = new DeltaApplicationRecord(
 						(Integer) map.get("id"), (String) map.get("transform"),
 						(Long) map.get("timestamp"), (Long) map.get("user_id"),
 						(Long) map.get("clientInstance_id"),
 						(Integer) map.get("request_id"),
 						(Integer) map.get("clientInstance_auth"),
-						(DomainTransformRequestType) map
+						(DeltaApplicationRecordType) map
 								.get("transform_request_type"),
 						(String) map.get("transform_event_protocol"),
 						(String) map.get("tag"));
@@ -304,7 +305,7 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	@Override
-	protected void persist(final DTRSimpleSerialWrapper wrapper,
+	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
 			final AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
@@ -325,8 +326,7 @@ public abstract class JdbcTransformPersistence extends
 			pstmt.setLong(4, wrapper.getClientInstanceId());
 			pstmt.setLong(5, wrapper.getRequestId());
 			pstmt.setLong(6, wrapper.getClientInstanceAuth());
-			pstmt.setString(7, wrapper.getDomainTransformRequestType()
-					.toString());
+			pstmt.setString(7, wrapper.getType().toString());
 			pstmt.setString(8, wrapper.getProtocolVersion());
 			pstmt.setString(9, wrapper.getTag());
 			tuple.executePstmt();
@@ -336,12 +336,17 @@ public abstract class JdbcTransformPersistence extends
 				int newid = rs.getInt(1);
 				wrapper.setId(newid);
 			}
-			if (wrapper.getDomainTransformRequestType() == DomainTransformRequestType.CLIENT_OBJECT_LOAD) {
-				clearPersistedClient(ClientLayerLocator.get()
-						.getClientInstance(),0, callback);
-			} else {
-				callback.onSuccess(null);
+			if ("".isEmpty()) {
+				throw new UnsupportedOperationException(
+						"clear persisted client should be called by the handshake consort anyway");
 			}
+			// if (wrapper.getDeltaApplicationRecordType() ==
+			// DeltaApplicationRecordType.CLIENT_OBJECT_LOAD) {
+			// clearPersistedClient(ClientLayerLocator.get()
+			// .getClientInstance(),0, callback);
+			// } else {
+			// callback.onSuccess(null);
+			// }
 			return;
 		} catch (Exception e) {
 			callback.onFailure(e);
@@ -352,10 +357,10 @@ public abstract class JdbcTransformPersistence extends
 
 	@Override
 	protected void transformPersisted(
-			final List<DTRSimpleSerialWrapper> persistedWrappers,
+			final List<DeltaApplicationRecord> persistedWrappers,
 			final AsyncCallback callback) {
 		try {
-			for (DTRSimpleSerialWrapper wrapper : persistedWrappers) {
+			for (DeltaApplicationRecord wrapper : persistedWrappers) {
 				executeStatement("update  TransformRequests  set "
 						+ "transform_request_type='TO_REMOTE_COMPLETED'"
 						+ " where id = " + wrapper.getId());
@@ -367,7 +372,7 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	@Override
-	public void reparentToClientInstance(final DTRSimpleSerialWrapper wrapper,
+	public void reparentToClientInstance(final DeltaApplicationRecord wrapper,
 			final ClientInstance clientInstance, final AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
@@ -407,8 +412,12 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	@Override
-	public void getDomainModelDeltaIterator(DomainTransformRequestType[] types,
+	public void getDomainModelDeltaIterator(DeltaApplicationFilters filters,
 			AsyncCallback<Iterator<DomainModelDelta>> callback) {
 		// TODO - fw_java_3
+	}
+
+	@Override
+	public void getClientInstanceIdOfDomainObjectDelta(AsyncCallback callback) {
 	}
 }

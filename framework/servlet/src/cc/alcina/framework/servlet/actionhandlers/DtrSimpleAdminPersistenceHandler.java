@@ -7,8 +7,8 @@ import org.apache.log4j.Logger;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.action.DtrSimpleAdminPersistenceAction;
@@ -20,7 +20,7 @@ public class DtrSimpleAdminPersistenceHandler implements
 		RemoteActionPerformer<DtrSimpleAdminPersistenceAction> {
 	private JobInfo jobInfo;
 
-	public ActionLogItem commit(DTRSimpleSerialWrapper wrapper) {
+	public ActionLogItem commit(DeltaApplicationRecord wrapper) {
 		Logger logger = ServletLayerLocator.get().remoteActionLoggerProvider()
 				.getLogger(this.getClass());
 		ActionLogItem item = null;
@@ -33,13 +33,13 @@ public class DtrSimpleAdminPersistenceHandler implements
 					.getCommonPersistence()
 					.getImplementation(ActionLogItem.class).newInstance();
 			String t = wrapper.getText();
-			wrapper.setDomainTransformRequestType(DomainTransformRequestType.TO_REMOTE);
+			wrapper.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
 			ServletLayerLocator
 					.get()
 					.commonRemoteServletProvider()
 					.getCommonRemoteServiceServlet()
 					.persistOfflineTransforms(
-							Arrays.asList(new DTRSimpleSerialWrapper[] { wrapper }),
+							Arrays.asList(new DeltaApplicationRecord[] { wrapper }),
 							logger);
 			String msg = "OK ";
 			logger.info(msg);

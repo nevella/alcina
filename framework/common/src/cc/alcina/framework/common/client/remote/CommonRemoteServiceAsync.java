@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
@@ -64,7 +64,7 @@ public interface CommonRemoteServiceAsync {
 	void logClientRecords(String serializedLogRecords,
 			AsyncCallback<Void> callback);
 
-	void persistOfflineTransforms(List<DTRSimpleSerialWrapper> uncommitted,
+	void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted,
 			AsyncCallback<Void> callback);
 
 	void ping(AsyncCallback<Void> callback);

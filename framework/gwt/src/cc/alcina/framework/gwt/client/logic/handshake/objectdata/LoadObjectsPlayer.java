@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.state.EndpointPlayer;
 import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeState;
-import cc.alcina.framework.gwt.client.logic.handshake.localstorage.LoadChunksFromLocalStoragePlayer;
+import cc.alcina.framework.gwt.client.logic.handshake.localstorage.MergeObjectDeltasPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.localstorage.RetrieveLocalModelTransformDeltasPlayer;
 
 public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
@@ -28,16 +28,15 @@ public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
 					.impl(LoadObjectsHelloPlayer.class));
 			LoadObjectsFromRemotePlayer fromRemotePlayer = addPlayer(Registry
 					.impl(LoadObjectsFromRemotePlayer.class));
-			addPlayer(new LoadChunksFromLocalStoragePlayer());
-			loadObjectsHelloPlayer
-					.addRequires(LoadObjectDataState.LOADED_CHUNKS_FROM_LOCAL_STORAGE);
 			addPlayer(new RetrieveLocalModelTransformDeltasPlayer());
 			addPlayer(Registry.impl(CheckSoleOfflineTabPlayer.class));
 			addPlayer(new CheckOfflineSufficentPlayer());
+			addPlayer(new MergeObjectDeltasPlayer());
 			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOADED, null,true));
+					LoadObjectDataState.DELTA_STORE_MERGED_IF_NECESSARY, null,
+					true));
 			addPlayer(new EndpointPlayer(
-					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null,true));
+					LoadObjectDataState.OBJECT_DATA_LOAD_FAILED, null, true));
 		}
 
 		@Override

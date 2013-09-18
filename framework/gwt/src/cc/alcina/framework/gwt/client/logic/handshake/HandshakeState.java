@@ -3,13 +3,7 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 
 public class HandshakeState extends ExtensibleEnum {
-	public HandshakeState(String key) {
-		super(key);
-	}
-
-	public HandshakeState(String key, String... tags) {
-		super(key, tags);
-	}
+	
 
 	public static final String TAG_POST_OBJECT_DATA_LOAD = "TAG_POST_OBJECT_DATA_LOAD";
 
@@ -39,8 +33,15 @@ public class HandshakeState extends ExtensibleEnum {
 
 	public static final HandshakeState ASYNC_SERVICES_INITIALISED = new HandshakeState(
 			"ASYNC_SERVICES_INITIALISED");
-	
+
 	public static final HandshakeState SOLE_OPEN_TAB_CHECKED = new HandshakeState(
 			"SOLE_OPEN_TAB_CHECKED");
 
+	public HandshakeState(String key) {
+		super(key);
+	}
+
+	public HandshakeState(String key, String... tags) {
+		super(key, tags);
+	}
 }

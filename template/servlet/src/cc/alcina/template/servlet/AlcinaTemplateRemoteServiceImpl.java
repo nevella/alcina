@@ -7,7 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.LoadObjectsHolder;
+import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
@@ -41,7 +41,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 	}
 
 	@Override
-	public LoadObjectsHolder<AlcinaTemplateObjects> loadInitial(
+	public LoadObjectsResponse loadInitial(
 			LoadObjectsRequest request) {
 		AlcinaTemplateObjects alcinaTemplateObjects = AlcinaTemplateServerManager
 				.get()
@@ -53,8 +53,9 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		HttpServletRequest req = getThreadLocalRequest();
 		alcinaTemplateObjects.setOnetimeMessage((String) req.getSession()
 				.getAttribute(SessionHelper.SESSION_ATTR_ONE_TIME_STRING));
-		LoadObjectsHolder<AlcinaTemplateObjects> results = new LoadObjectsHolder<AlcinaTemplateObjects>();
-		results.setDomainModelHolder(alcinaTemplateObjects);
+		LoadObjectsResponse results = new LoadObjectsResponse();
+//		results.setDomainModelHolder(alcinaTemplateObjects);
+		//TODO - fw4 - fixme
 		return results;
 	}
 

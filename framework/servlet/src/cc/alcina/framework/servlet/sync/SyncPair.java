@@ -1,11 +1,5 @@
 package cc.alcina.framework.servlet.sync;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.StringMap;
 
 public class SyncPair<T> {
 	private KeyedObject<T> left;

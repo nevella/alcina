@@ -1,14 +1,23 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 
+import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.collections.IteratorWithCurrent;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
+import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -17,20 +26,36 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
+import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta;
+import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
 
 import com.google.gwt.core.client.GWT;
+import com.totsp.gwittir.client.beans.Converter;
 
 @RegistryLocation(registryPoint = HandshakeConsortModel.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class HandshakeConsortModel {
+	public class TransportToDeltaConverter implements
+			Converter<DomainModelDeltaTransport, DeltaApplicationRecord> {
+		@Override
+		public DeltaApplicationRecord convert(
+				DomainModelDeltaTransport transport) {
+			return new DeltaApplicationRecord(0, transport.getSignature(),
+					new Date().getTime(), PermissionsManager.get().getUserId(),
+					clientInstance.getId(), 0, clientInstance.getAuth(),
+					DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
+					DomainTrancheProtocolHandler.VERSION, null);
+		}
+	}
+
 	private LoginResponse loginResponse;
 
 	private ClientInstance clientInstance;
 
-	public HandshakeModelDeltas modelDeltas = new HandshakeModelDeltas();
-
 	public ModalNotifier loadObjectsNotifier;
+
+	private LoadObjectsResponse loadObjectsResponse;
 
 	public void clearLoadObjectsNotifier() {
 		if (loadObjectsNotifier != null) {
@@ -38,25 +63,28 @@ public class HandshakeConsortModel {
 		}
 	}
 
-	public void clearObjects() {
-		modelDeltas = new HandshakeModelDeltas();
+	public static HandshakeConsortModel get() {
+		return Registry.impl(HandshakeConsortModel.class);
 	}
+
+	public void clearObjects() {
+		deltasToApply = null;
+	}
+
+	private IteratorWithCurrent<DomainModelDelta> deltasToApply = null;
+
+	private List<String> existingSignatures = new ArrayList<String>();
+
+	private List<DeltaApplicationRecord> persistableApplicationRecords;
+
+	private long maxPersistedTransformIdWhenGenerated;
 
 	// fw4 - centralise documentation
 	public void ensureClientInstanceFromModelDeltas() {
 		if (getClientInstance() == null) {
-			// we rely on reparenting here -- the persisted wrapper has
-			// clientinstance corresponding to that used to request the most
-			// recent chunk of persisted data
 			ClientInstance impl = Registry.impl(ClientInstance.class);
-			DTRSimpleSerialWrapper wrapper = null;
-			if (modelDeltas.secondChunk instanceof DtrWrapperBackedDomainModelDelta) {
-				wrapper = ((DtrWrapperBackedDomainModelDelta) modelDeltas.secondChunk)
-						.getWrapper();
-			} else {
-				wrapper = ((DtrWrapperBackedDomainModelDelta) modelDeltas.firstChunk)
-						.getWrapper();
-			}
+			DeltaApplicationRecord wrapper = ((DtrWrapperBackedDomainModelDelta) deltasToApply
+					.current()).getWrapper();
 			impl.setAuth(wrapper.getClientInstanceAuth());
 			impl.setId(wrapper.getClientInstanceId());
 			setClientInstance(impl);
@@ -79,9 +107,11 @@ public class HandshakeConsortModel {
 
 	public LoadObjectsRequest getLoadObjectsRequest() {
 		LoadObjectsRequest request = new LoadObjectsRequest();
-		request.setLastTransformId(getLastTransformId());
-		request.setTypeSignature(GWT.getPermutationStrongName());
+		request.setClientPersistedDomainObjectsMetadata(getDomainObjectsMetadata());
+		request.setModuleTypeSignature(GWT.getPermutationStrongName());
 		request.setUserId(getLastUserId());
+		request.setClientDeltaSignatures(DeltaStore.get()
+				.getExistingDeltaSignatures());
 		return request;
 	}
 
@@ -99,7 +129,8 @@ public class HandshakeConsortModel {
 	}
 
 	public boolean haveAllChunksNeededForOptimalObjectLoad() {
-		return PermissionsManager.isOffline() && modelDeltas.firstChunk != null;
+		return PermissionsManager.isOffline()
+				&& deltasToApply.current() != null;
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
@@ -113,87 +144,83 @@ public class HandshakeConsortModel {
 		}
 	}
 
-	private Long getLastTransformId() {
-		return modelDeltas.firstChunk == null ? null : modelDeltas.firstChunk
-				.getLastTransformId();
+	private DomainModelDeltaMetadata getDomainObjectsMetadata() {
+		return DeltaStore.get().getDomainObjectsMetadata();
 	}
 
 	private Long getLastUserId() {
-		if (modelDeltas.firstChunk instanceof DtrWrapperBackedDomainModelDelta) {
-			return ((DtrWrapperBackedDomainModelDelta) modelDeltas.firstChunk)
-					.getWrapper().getUserId();
-		}
-		return null;
+		return DeltaStore.get().getUserId();
 	}
 
-	public static class HandshakeModelDeltas implements
-			Iterator<DomainModelDelta>, Cloneable {
-		public DomainModelDelta firstChunk;
+	public List<String> getExistingSignatures() {
+		return this.existingSignatures;
+	}
 
-		public DomainModelDelta secondChunk;
+	public void setExistingSignatures(List<String> existingSignatures) {
+		this.existingSignatures = existingSignatures;
+	}
 
-		public Iterator<DomainModelDelta> transformDeltaIterator;
+	public long getMaxPersistedTransformIdWhenGenerated() {
+		return this.maxPersistedTransformIdWhenGenerated;
+	}
 
-		public Map<DomainModelDelta, String> payloads = new LinkedHashMap<DomainModelDelta, String>();
+	public void setMaxPersistedTransformIdWhenGenerated(
+			long maxPersistedTransformIdWhenGenerated) {
+		this.maxPersistedTransformIdWhenGenerated = maxPersistedTransformIdWhenGenerated;
+	}
 
-		public HandshakeModelDeltas clone() {
-			HandshakeModelDeltas clone = new HandshakeModelDeltas();
-			clone.firstChunk = firstChunk;
-			clone.secondChunk = secondChunk;
-			clone.transformDeltaIterator = transformDeltaIterator;
-			return clone;
-		}
+	public LoadObjectsResponse getLoadObjectsResponse() {
+		return this.loadObjectsResponse;
+	}
 
-		@Override
-		public boolean hasNext() {
-			return firstChunk != null
-					|| secondChunk != null
-					|| (transformDeltaIterator != null && transformDeltaIterator
-							.hasNext());
-		}
+	public void setLoadObjectsResponse(LoadObjectsResponse loadObjectsResponse) {
+		this.loadObjectsResponse = loadObjectsResponse;
+	}
 
-		private boolean checkValidTypeSignature(DomainModelDelta delta) {
-			String deltaSignature = delta.getTypeSignature();
-			return deltaSignature == null
-					|| deltaSignature.equals(GWT.getPermutationStrongName());
-		}
+	public IteratorWithCurrent<DomainModelDelta> getDeltasToApply() {
+		return this.deltasToApply;
+	}
 
-		public void mergeDelta(DomainModelDelta delta, String payload) {
-			if (!checkValidTypeSignature(delta)) {
-				return;
-			}
-			payloads.put(delta, payload);
-			if (delta.getDomainModelHolder() != null) {
-				firstChunk = delta;
-				secondChunk = null;
+	public void setFromPersistenceDeltas(
+			Iterator<DomainModelDelta> fromPersistenceDeltas) {
+		deltasToApply = new IteratorWithCurrent<DomainModelDelta>(
+				fromPersistenceDeltas);
+	}
+
+	public List<DeltaApplicationRecord> getPersistableApplicationRecords() {
+		return this.persistableApplicationRecords;
+	}
+
+	public void setPersistableApplicationRecords(
+			List<DeltaApplicationRecord> persistableApplicationRecords) {
+		this.persistableApplicationRecords = persistableApplicationRecords;
+	}
+
+	public void prepareInitialPlaySequence() {
+		persistableApplicationRecords = new ArrayList<DeltaApplicationRecord>();
+		if (deltasToApply != null) {
+			// do nothing, iterator set up when local delta applications
+			// retrieved
+		} else {
+			DomainModelDelta firstDelta = loadObjectsResponse
+					.getLoadSequenceTransports().get(0).getDelta();
+			if (firstDelta != null) {
+				// non-persistence app
+				deltasToApply = new IteratorWithCurrent<DomainModelDelta>(
+						Collections.singletonList(firstDelta).iterator());
 			} else {
-				secondChunk = delta;
+				List<DeltaApplicationRecord> persistable = CollectionFilters
+						.convert(
+								loadObjectsResponse.getLoadSequenceTransports(),
+								new TransportToDeltaConverter());
+				List<DomainModelDelta> deltas = CollectionFilters
+						.convert(
+								persistable,
+								new DeltaApplicationRecordToDomainModelDeltaConverter());
+				deltasToApply = new IteratorWithCurrent<DomainModelDelta>(
+						deltas.iterator());
+				persistableApplicationRecords = persistable;
 			}
-		}
-
-		@Override
-		public DomainModelDelta next() {
-			if (firstChunk != null) {
-				DomainModelDelta tmp = firstChunk;
-				firstChunk = null;
-				return tmp;
-			} else if (secondChunk != null) {
-				DomainModelDelta tmp = secondChunk;
-				secondChunk = null;
-				return tmp;
-			}
-			return transformDeltaIterator.next();
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-		}
-
-		public void clear() {
-			firstChunk = null;
-			secondChunk = null;
-			transformDeltaIterator = null;
 		}
 	}
 }

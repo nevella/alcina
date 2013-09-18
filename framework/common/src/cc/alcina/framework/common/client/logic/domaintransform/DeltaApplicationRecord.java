@@ -19,7 +19,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest.DomainTransformRequestType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -41,7 +40,7 @@ import com.google.gwt.core.client.GWT;
  * @author Nick Reddel
  */
 @ReflectionModule("Admin")
-public class DTRSimpleSerialWrapper extends BaseBindable implements
+public class DeltaApplicationRecord extends BaseBindable implements
 		RemoteParameters {
 	private int id;
 
@@ -59,18 +58,15 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 
 	private String protocolVersion;
 
-	private DomainTransformRequestType domainTransformRequestType;
+	private DeltaApplicationRecordType type;
 
 	private String tag;
 
-	public DTRSimpleSerialWrapper() {
+	public DeltaApplicationRecord() {
 	}
 
-	public DTRSimpleSerialWrapper(DomainTransformRequest request) {
-		this(request, false);
-	}
 
-	public DTRSimpleSerialWrapper(DomainTransformRequest request, boolean async) {
+	public DeltaApplicationRecord(DomainTransformRequest request,DeltaApplicationRecordType type, boolean async) {
 		this.timestamp = new Date().getTime();
 		this.userId = PermissionsManager.get().getUserId();
 		if (!async) {
@@ -90,16 +86,15 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		this.requestId = request.getRequestId();
 		Integer auth = request.getClientInstance().getAuth();
 		this.clientInstanceAuth = auth == null ? 0 : auth;
-		this.domainTransformRequestType = request
-				.getDomainTransformRequestType();
+		this.type=type;
 		this.protocolVersion = request.getProtocolVersion();
 		this.setTag(request.getTag());
 	}
 
-	public DTRSimpleSerialWrapper(int id, String text, long timestamp,
+	public DeltaApplicationRecord(int id, String text, long timestamp,
 			long userId, long clientInstanceId, int requestId,
 			int clientInstanceAuth,
-			DomainTransformRequestType domainTransformRequestType,
+			DeltaApplicationRecordType type,
 			String protocolVersion, String tag) {
 		this.id = id;
 		this.text = text;
@@ -108,15 +103,15 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		this.clientInstanceId = clientInstanceId;
 		this.requestId = requestId;
 		this.clientInstanceAuth = clientInstanceAuth;
-		this.domainTransformRequestType = domainTransformRequestType;
+		this.type = type;
 		this.protocolVersion = protocolVersion;
 		this.setTag(tag);
 	}
 
-	public DTRSimpleSerialWrapper clone() {
-		return new DTRSimpleSerialWrapper(id, text, timestamp, userId,
+	public DeltaApplicationRecord clone() {
+		return new DeltaApplicationRecord(id, text, timestamp, userId,
 				clientInstanceId, requestId, clientInstanceAuth,
-				domainTransformRequestType, protocolVersion, tag);
+				type, protocolVersion, tag);
 	}
 
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance auth", orderingHint = 30))
@@ -127,10 +122,6 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance id", orderingHint = 20))
 	public long getClientInstanceId() {
 		return this.clientInstanceId;
-	}
-
-	public DomainTransformRequestType getDomainTransformRequestType() {
-		return domainTransformRequestType;
 	}
 
 	public int getId() {
@@ -179,15 +170,6 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		this.clientInstanceId = clientInstanceId;
 		propertyChangeSupport().firePropertyChange("clientInstanceId",
 				old_clientInstanceId, clientInstanceId);
-	}
-
-	public void setDomainTransformRequestType(
-			DomainTransformRequestType domainTransformRequestType) {
-		DomainTransformRequestType old_domainTransformRequestType = this.domainTransformRequestType;
-		this.domainTransformRequestType = domainTransformRequestType;
-		propertyChangeSupport().firePropertyChange(
-				"domainTransformRequestType", old_domainTransformRequestType,
-				domainTransformRequestType);
 	}
 
 	public void setId(int id) {
@@ -239,9 +221,18 @@ public class DTRSimpleSerialWrapper extends BaseBindable implements
 		return CommonUtils.formatJ(" clientInstanceAuth: %s\n"
 				+ "clientInstanceId: %s\n" + "id: %s\n" + "requestId: %s\n"
 				+ "timestamp: %s\n" + "userId: %s\n"
-				+ "DomainTransformRequestType: %s\n" + "tag:\n%s\n"
+				+ "DeltaApplicationRecordType: %s\n" + "tag:\n%s\n"
 				+ "text:\n%s\n", clientInstanceAuth, clientInstanceId, id,
-				requestId, timestamp, userId, domainTransformRequestType,
-				getTag(), text);
+				requestId, timestamp, userId, type, getTag(), text);
+	}
+
+	public DeltaApplicationRecordType getType() {
+		return this.type;
+	}
+
+	public void setType(DeltaApplicationRecordType type) {
+		DeltaApplicationRecordType old_type = this.type;
+		this.type = type;
+		propertyChangeSupport().firePropertyChange("type", old_type, type);
 	}
 }

@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 
+import java.util.Arrays;
+import java.util.List;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
@@ -13,8 +16,8 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 public class CheckOfflineSufficentPlayer extends
 		RunnablePlayer<LoadObjectDataState> {
 	public CheckOfflineSufficentPlayer() {
-		addRequires(LoadObjectDataState.LOADED_TRANSFORMS_FROM_LOCAL_STORAGE);
-		addRequires(LoadObjectDataState.LOADED_CHUNKS_FROM_LOCAL_STORAGE);
+		addRequires(LoadObjectDataState.LOADED_DELTA_APPLICATIONS_FROM_LOCAL_STORAGE);
+		addProvides(LoadObjectDataState.DELTA_STORE_MERGED_IF_NECESSARY);
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOADED);
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 	}
@@ -25,7 +28,11 @@ public class CheckOfflineSufficentPlayer extends
 	@Override
 	public void run() {
 		if (handshakeConsortModel.haveAllChunksNeededForOptimalObjectLoad()) {
-			wasPlayed(LoadObjectDataState.OBJECT_DATA_LOADED);
+			handshakeConsortModel.ensureClientInstanceFromModelDeltas();
+			List<LoadObjectDataState> states = Arrays.asList(
+					LoadObjectDataState.DELTA_STORE_MERGED_IF_NECESSARY,
+					LoadObjectDataState.OBJECT_DATA_LOADED);
+			consort.wasPlayed(this, states);
 		} else {
 			wasPlayed(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 		}

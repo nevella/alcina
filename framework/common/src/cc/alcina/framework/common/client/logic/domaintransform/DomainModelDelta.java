@@ -15,13 +15,9 @@ public interface DomainModelDelta {
 
 	public String getAppInstruction();
 
-	public DomainTransformRequest getUncomittedDomainTransformRequest();
-
-	public Integer getDomainTransformRequestReplayId();
-
 	void unwrap(AsyncCallback<Void> completionCallback);
 
-	public abstract String getTypeSignature();
+	public abstract DomainModelDeltaSignature getSignature();
 
-	public abstract Long getLastTransformId();
+	public abstract DomainModelDeltaMetadata getMetadata();
 }

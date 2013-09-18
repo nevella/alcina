@@ -39,7 +39,7 @@ public class AlcinaTemplateHandshake {
 					|| player instanceof RetrieveLocalModelTransformDeltasPlayer) {
 				ModalNotifier modalNotifier = Registry.impl(
 						HandshakeConsortModel.class).ensureLoadObjectsNotifier(
-						"Loading survey definitions");
+						"Loading data");
 				modalNotifier.modalOn();
 				modalNotifier.setMasking(false);
 			}

@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
-import cc.alcina.framework.common.client.logic.domaintransform.DTRSimpleSerialWrapper;
+import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
@@ -60,7 +60,7 @@ public interface CommonRemoteService extends RemoteService {
 	public void logout();
 
 	public void persistOfflineTransforms(
-			List<DTRSimpleSerialWrapper> uncommitted) throws WebException;
+			List<DeltaApplicationRecord> uncommitted) throws WebException;
 
 	public PartialDtrUploadResponse uploadOfflineTransforms(
 			PartialDtrUploadRequest request) throws WebException;

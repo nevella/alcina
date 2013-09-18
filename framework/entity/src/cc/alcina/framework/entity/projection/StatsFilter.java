@@ -13,12 +13,14 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
@@ -98,10 +100,54 @@ public class StatsFilter extends CollectionProjectionFilter {
 				Arrays.asList(calculatePathStatsFor));
 		DetachedEntityCache cache = new DetachedEntityCache();
 		try {
-			new GraphProjection(null, this).project(source, null);
+			new GraphProjectionNoLisetNulls(null, this).project(source, null);
 			dumpStats();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	static class GraphProjectionNoLisetNulls extends GraphProjection {
+		public GraphProjectionNoLisetNulls() {
+			super();
+		}
+
+		public GraphProjectionNoLisetNulls(
+				GraphProjectionFieldFilter fieldFilter,
+				GraphProjectionDataFilter dataFilter) {
+			super(fieldFilter, dataFilter);
+		}
+
+		// TODO - shouldn't this be package-private?
+		public Collection projectCollection(Collection coll,
+				GraphProjectionContext context) throws Exception {
+			Collection c = null;
+			if (coll instanceof ArrayList || coll instanceof LinkedList) {
+				c = coll.getClass().newInstance();
+				// no "persistentLists", at least
+				// um...persistentBag??
+			} else if (coll instanceof List) {
+				c = new ArrayList();
+			} else if (coll instanceof LiSet) {
+				c = new LiSet();
+			} else if (coll instanceof Set) {
+				c = new LinkedHashSet();
+			}
+			reached.put(coll, c);
+			Iterator itr = coll.iterator();
+			Object value;
+			for (; itr.hasNext();) {
+				value = itr.next();
+				Object projected = project(value, context);
+				if (projected == null && c instanceof LiSet) {
+					continue;// why does this happen? one of those never 'ave
+								// time bugs
+				}
+				if (value == null || projected != null) {
+					c.add(projected);
+				}
+			}
+			return c;
 		}
 	}
 
