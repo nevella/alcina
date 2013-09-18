@@ -13,11 +13,11 @@ public class LoadObjectsResponse implements Serializable {
 
 	private String appInstruction;
 
-	private List<String> preserveClientDeltaSignatures=new ArrayList<String>();
-	
-	private List<DomainModelDeltaTransport> deltaTransports=new ArrayList<DomainModelDeltaTransport>();
-	
-	private List<DomainModelDeltaTransport> loadSequenceTransports=new ArrayList<DomainModelDeltaTransport>();
+	private List<String> preserveClientDeltaSignatures = new ArrayList<String>();
+
+	private List<DomainModelDeltaTransport> deltaTransports = new ArrayList<DomainModelDeltaTransport>();
+
+	private List<DomainModelDeltaTransport> loadSequenceTransports = new ArrayList<DomainModelDeltaTransport>();
 
 	public String getAppInstruction() {
 		return this.appInstruction;
@@ -41,6 +41,9 @@ public class LoadObjectsResponse implements Serializable {
 		DomainModelDeltaTransport transport = new DomainModelDeltaTransport();
 		transport.setDelta(tranche);
 		deltaTransports.add(transport);
+		loadSequenceTransports.add(transport);
+		//for non-persistent systems, so no signature checks
+//		preserveClientDeltaSignatures.add(transport.getSignature());
 	}
 
 	public void setAppInstruction(String appInstruction) {
@@ -69,6 +72,4 @@ public class LoadObjectsResponse implements Serializable {
 			List<DomainModelDeltaTransport> loadSequenceTransports) {
 		this.loadSequenceTransports = loadSequenceTransports;
 	}
-
-	
 }

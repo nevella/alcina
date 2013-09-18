@@ -67,6 +67,12 @@ public class SortedMultikeyMap<V> implements MultikeyMap<V> {
 		return (SortedMultikeyMap) multikeyMapSupport.asMap(ensure, objects);
 	}
 
+	private TreeMap asMapEnsureDelegate(boolean ensure, Object... objects) {
+		SortedMultikeyMap mkm = (SortedMultikeyMap) multikeyMapSupport.asMap(
+				ensure, objects);
+		return mkm == null ? null : mkm.delegate;
+	}
+
 	@Override
 	public void clear() {
 		delegate.clear();
@@ -120,7 +126,7 @@ public class SortedMultikeyMap<V> implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> keys(Object... objects) {
-		Map m = asMapEnsure(false, objects).delegate;
+		Map m = asMapEnsureDelegate(false, objects);
 		return m == null ? null : m.keySet();
 	}
 
@@ -154,13 +160,13 @@ public class SortedMultikeyMap<V> implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> reverseKeys(Object... objects) {
-		TreeMap m = asMapEnsure(false, objects).delegate;
+		TreeMap m = asMapEnsureDelegate(false, objects);
 		return m == null ? null : m.descendingMap().keySet();
 	}
 
 	@Override
 	public <T> Collection<T> reverseValues(Object... objects) {
-		TreeMap m = asMapEnsure(false, objects).delegate;
+		TreeMap m = asMapEnsureDelegate(false, objects);
 		return m == null ? null : m.descendingMap().values();
 	}
 
@@ -183,7 +189,7 @@ public class SortedMultikeyMap<V> implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> values(Object... objects) {
-		Map m = asMapEnsure(false, objects).delegate;
+		Map m = asMapEnsureDelegate(false, objects);
 		return m == null ? null : m.values();
 	}
 

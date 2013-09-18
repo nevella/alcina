@@ -18,6 +18,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.collections.ImmutableMap;
 
@@ -119,9 +120,15 @@ public class UnsortedMultikeyMap<V> implements MultikeyMap<V> {
 		return keys(objects);
 	}
 
+	private Map asMapEnsureDelegate(boolean ensure, Object... objects) {
+		UnsortedMultikeyMap mkm = (UnsortedMultikeyMap) multikeyMapSupport
+				.asMap(ensure, objects);
+		return mkm == null ? null : mkm.delegate;
+	}
+
 	@Override
 	public <T> Collection<T> keys(Object... objects) {
-		Map m = asMapEnsure(false, objects).delegate;
+		Map m = asMapEnsureDelegate(false, objects);
 		return m == null ? null : m.keySet();
 	}
 
@@ -181,7 +188,7 @@ public class UnsortedMultikeyMap<V> implements MultikeyMap<V> {
 
 	@Override
 	public <T> Collection<T> values(Object... objects) {
-		Map m = asMapEnsure(false, objects).delegate;
+		Map m = asMapEnsureDelegate(false, objects);
 		return m == null ? null : m.values();
 	}
 
