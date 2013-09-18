@@ -86,6 +86,9 @@ public class DeltaStore {
 	}
 
 	public DomainModelDeltaMetadata getDomainObjectsMetadata() {
+		if (cache == null) {
+			return null;
+		}
 		CollectionFilter<DomainModelDeltaMetadata> hasDomainObjectsFilter = new CollectionFilter<DomainModelDeltaMetadata>() {
 			@Override
 			public boolean allow(DomainModelDeltaMetadata o) {
@@ -97,7 +100,7 @@ public class DeltaStore {
 	}
 
 	public List<String> getExistingDeltaSignatures() {
-		return cache.versionedSignatures;
+		return cache == null ? null : cache.versionedSignatures;
 	}
 
 	public String getKey(DomainModelDeltaSignature sig, boolean content) {
@@ -113,6 +116,9 @@ public class DeltaStore {
 	}
 
 	public Long getUserId() {
+		if (cache == null) {
+			return null;
+		}
 		DomainModelDeltaSignature sig = CommonUtils.first(cache.metadataCache
 				.keySet());
 		return sig == null ? null : (Long) sig.getUserId();
