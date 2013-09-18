@@ -177,6 +177,9 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 		if (historyToken.startsWith("#")) {
 			historyToken = historyToken.substring(1);
 		}
+		if (historyToken.startsWith("!")) {
+			historyToken = historyToken.substring(1);
+		}
 		I item = createHistoryInfo();
 		Map<String, String> params = item.parseParameters(historyToken);
 		if (params.size() == 0) {
