@@ -55,13 +55,12 @@ public class HandshakeConsort extends
 	}
 
 	public void handleLoggedIn(LoginResponse loginResponse) {
-		HandshakeConsortModel.get().clearObjects();
 		handleLoggedIn(loginResponse, null);
 	}
 
 	public void handleLoggedIn(LoginResponse loginResponse,
 			AsyncCallback handshakeFinishedCallback) {
-		
+		HandshakeConsortModel.get().clearObjects();
 		Registry.impl(HandshakeConsortModel.class).setLoginResponse(
 				loginResponse);
 		signal(HandshakeSignal.LOGGED_IN, handshakeFinishedCallback);
