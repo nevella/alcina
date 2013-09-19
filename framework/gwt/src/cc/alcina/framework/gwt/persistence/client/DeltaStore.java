@@ -278,4 +278,8 @@ public class DeltaStore {
 	enum MergeResponsePhase {
 		ENSURE_CACHE, REMOVE_UNUSED, PERSIST_TRANCHES, RELOAD_CACHE
 	}
+
+	public void clear(AsyncCallback callback) {
+		removeUnusedTranches(new ArrayList<String>(), callback);
+	}
 }

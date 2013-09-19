@@ -34,6 +34,8 @@ import cc.alcina.framework.common.client.util.EnumSerializer;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.util.AsyncCallbackNull;
+import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
 
@@ -91,7 +93,7 @@ public class WebDatabaseTransformPersistence extends
 	@Override
 	public void clearPersistedClient(ClientInstance exceptFor, int exceptForId,
 			final AsyncCallback callback) {
-		String sql = CommonUtils.formatJ("DELETE from TransformRequests"
+		final String sql = CommonUtils.formatJ("DELETE from TransformRequests"
 				+ " where (transform_request_type "
 				+
 				// legacy
@@ -102,7 +104,14 @@ public class WebDatabaseTransformPersistence extends
 				DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED,
 				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
 				exceptFor == null ? -1 : exceptFor.getId(), exceptForId);
-		executeSql(sql, callback);
+		AsyncCallbackStd deleteDeltaAppsCallback=new AsyncCallbackStd(){
+
+			@Override
+			public void onSuccess(Object result) {
+				executeSql(sql, callback);				
+			}};
+		DeltaStore.get().clear(deleteDeltaAppsCallback);
+		
 	}
 
 	public Database getDb() {

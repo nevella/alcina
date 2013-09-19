@@ -24,6 +24,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.DeepCloneable;
@@ -54,6 +55,11 @@ public class CloneHelper {
 			c = (T) new LinkedHashSet();
 		} else if (coll instanceof HashSet) {
 			c = (T) new HashSet();
+		} else if (coll instanceof LiSet) {
+			c = (T) new LiSet();
+		} else {
+			throw new RuntimeException("Can't clone - "
+					+ coll.getClass().getName());
 		}
 		for (Object o2 : coll) {
 			c.add(deepObjectClone(o2));

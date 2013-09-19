@@ -76,11 +76,36 @@ public class DomainTransformEvent implements Serializable,
 
 	private Date utcDate;
 
+	private transient Object oldValue;
+
+	public static transient final Comparator<DomainTransformEvent> UTC_DATE_COMPARATOR = new Comparator<DomainTransformEvent>() {
+		@Override
+		public int compare(DomainTransformEvent o1, DomainTransformEvent o2) {
+			return CommonUtils.compareDates(o1.getUtcDate(), o2.getUtcDate());
+		}
+	};
+
 	public DomainTransformEvent() {
 	}
 
 	public int compareTo(DomainTransformEvent o) {
 		return CommonUtils.compareLongs(getEventId(), o.getEventId());
+	}
+
+	public boolean equivalentTo(DomainTransformEvent o) {
+		return o != null
+				&& objectId == o.objectId
+				&& objectLocalId == o.objectLocalId
+				&& getObjectClass() == o.getObjectClass()
+				&& valueId == o.valueId
+				&& valueLocalId == o.valueLocalId
+				&& getValueClass() == o.getValueClass()
+				&& commitType == o.commitType
+				&& transformType == o.transformType
+				&& CommonUtils.equalsWithNullEquality(propertyName,
+						o.propertyName)
+				&& CommonUtils.equalsWithNullEquality(newStringValue,
+						o.newStringValue);
 	}
 
 	public CommitType getCommitType() {
@@ -154,6 +179,11 @@ public class DomainTransformEvent implements Serializable,
 		return objectVersionNumber;
 	}
 
+	@Transient
+	public Object getOldValue() {
+		return this.oldValue;
+	}
+
 	public String getPropertyName() {
 		return this.propertyName;
 	}
@@ -215,6 +245,22 @@ public class DomainTransformEvent implements Serializable,
 
 	public Integer getValueVersionNumber() {
 		return valueVersionNumber;
+	}
+
+	public boolean provideIsIdEvent(Class clazz) {
+		return objectClass == clazz && "id".equals(propertyName);
+	}
+
+	/*
+	 * this version handles equality for deleted objects
+	 */
+	public boolean provideSourceEquals(HasIdAndLocalId hili) {
+		if (hili == null) {
+			return false;
+		}
+		return hili.getClass().equals(objectClass)
+				&& hili.getLocalId() == objectLocalId
+				&& hili.getId() == objectId;
 	}
 
 	public HasIdAndLocalId provideSourceOrMarker() {
@@ -297,6 +343,10 @@ public class DomainTransformEvent implements Serializable,
 		this.objectVersionNumber = objectVersionNumber;
 	}
 
+	public void setOldValue(Object oldValue) {
+		this.oldValue = oldValue;
+	}
+
 	public void setPropertyName(String propertyName) {
 		this.propertyName = propertyName;
 	}
@@ -345,43 +395,4 @@ public class DomainTransformEvent implements Serializable,
 	public String toString() {
 		return new DTRProtocolSerializer().serialize(this);
 	}
-
-	/*
-	 * this version handles equality for deleted objects
-	 */
-	public boolean provideSourceEquals(HasIdAndLocalId hili) {
-		if (hili == null) {
-			return false;
-		}
-		return hili.getClass().equals(objectClass)
-				&& hili.getLocalId() == objectLocalId
-				&& hili.getId() == objectId;
-	}
-
-	public boolean equivalentTo(DomainTransformEvent o) {
-		return o != null
-				&& objectId == o.objectId
-				&& objectLocalId == o.objectLocalId
-				&& getObjectClass() == o.getObjectClass()
-				&& valueId == o.valueId
-				&& valueLocalId == o.valueLocalId
-				&& getValueClass() == o.getValueClass()
-				&& commitType == o.commitType
-				&& transformType == o.transformType
-				&& CommonUtils.equalsWithNullEquality(propertyName,
-						o.propertyName)
-				&& CommonUtils.equalsWithNullEquality(newStringValue,
-						o.newStringValue);
-	}
-
-	public boolean provideIsIdEvent(Class clazz) {
-		return objectClass == clazz && "id".equals(propertyName);
-	}
-
-	public static transient final Comparator<DomainTransformEvent> UTC_DATE_COMPARATOR = new Comparator<DomainTransformEvent>() {
-		@Override
-		public int compare(DomainTransformEvent o1, DomainTransformEvent o2) {
-			return CommonUtils.compareDates(o1.getUtcDate(), o2.getUtcDate());
-		}
-	};
 }

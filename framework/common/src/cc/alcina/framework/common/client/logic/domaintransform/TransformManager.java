@@ -236,7 +236,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 		}
 		Object existingTargetValue = null;
-		if (event.getSource() == null || event.getPropertyName() == null) {
+		if (event.getOldValue() != null) {
+			existingTargetValue = event.getOldValue();
+		} else if (event.getSource() == null || event.getPropertyName() == null) {
 		} else {
 			existingTargetValue = propertyAccessor().getPropertyValue(
 					event.getSource(), event.getPropertyName());
@@ -283,6 +285,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 				if (updateAssociationsWithoutNoChangeCheck()
 						|| !CommonUtils.equalsWithNullEquality(
 								existingTargetValue, newTargetValue)) {
+					if (existingTargetValue instanceof Collection) {
+						throw new RuntimeException(
+								"Should not null a collection property:\n "
+										+ event.toString());
+					}
 					updateAssociation(event, obj, existingTargetValue, true,
 							true);
 					updateAssociation(event, obj, newTargetValue, false, true);
@@ -933,6 +940,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
 		DomainTransformEvent dte = createTransformFromPropertyChange(evt);
+		dte.setOldValue(evt.getOldValue());
 		convertToTargetObject(dte);
 		if (dte.getNewValue() == null) {
 			dte.setTransformType(TransformType.NULL_PROPERTY_REF);
