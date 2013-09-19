@@ -49,6 +49,7 @@ public class HandshakeConsort extends
 	}
 
 	public void logout() {
+		HandshakeConsortModel.get().clearObjects();
 		Registry.impl(HandshakeConsortModel.class).setLoginResponse(null);
 		signal(HandshakeSignal.LOGGED_OUT);
 	}
@@ -59,6 +60,7 @@ public class HandshakeConsort extends
 
 	public void handleLoggedIn(LoginResponse loginResponse,
 			AsyncCallback handshakeFinishedCallback) {
+		
 		Registry.impl(HandshakeConsortModel.class).setLoginResponse(
 				loginResponse);
 		signal(HandshakeSignal.LOGGED_IN, handshakeFinishedCallback);

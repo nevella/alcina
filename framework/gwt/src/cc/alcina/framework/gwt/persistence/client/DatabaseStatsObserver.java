@@ -18,13 +18,16 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 @RegistryLocation(registryPoint = DatabaseStatsObserver.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class DatabaseStatsObserver {
-	public static final String SERIALIZED_MAX_KEY = CommonUtils
+	public static final transient String SERIALIZED_MAX_KEY = CommonUtils
 			.simpleClassName(DatabaseStatsObserver.class)
 			+ ".SERIALIZED_MAX_KEY";
+
+	private static final int PERSISTENCE_VERSION = 2;
 
 	public DatabaseStatsObserver() {
 	}
 
+	
 	DatabaseStatsInfo max;
 
 	DatabaseStatsInfo current = new DatabaseStatsInfo();
@@ -100,8 +103,9 @@ public class DatabaseStatsObserver {
 	}
 
 	protected void checkMax() {
-		if (current.greaterSizeThan(max)) {
+		if (current.greaterSizeThan(max)||max.getVersion()<PERSISTENCE_VERSION) {
 			max = current;
+			max.setVersion(PERSISTENCE_VERSION);
 			persistMax();
 		}
 	}

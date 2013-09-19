@@ -23,6 +23,8 @@ public class DatabaseStatsInfo implements Serializable {
 	private CountingMap<String> deltaSizes = new CountingMap<String>();
 
 	private long collectionTimeMs = 0;
+	
+	private int version=0;
 
 	@Override
 	public String toString() {
@@ -124,6 +126,14 @@ public class DatabaseStatsInfo implements Serializable {
 
 	public void setDeltaSizes(CountingMap<String> deltaSizes) {
 		this.deltaSizes = deltaSizes;
+	}
+
+	public int getVersion() {
+		return this.version;
+	}
+
+	public void setVersion(int version) {
+		this.version = version;
 	}
 
 }

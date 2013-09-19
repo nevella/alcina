@@ -812,6 +812,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			HasIdAndLocalId hili = asObjectSpec ? null : (HasIdAndLocalId) o;
 			DomainTransformEvent dte = new DomainTransformEvent();
 			dte.setSource(null);
+			dte.setUtcDate(new Date(0L));
 			Long id = asObjectSpec ? (Long) arr[0] : hili.getId();
 			dte.setObjectId(id);
 			dte.setObjectClass(clazz);
@@ -838,6 +839,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						for (; itr.hasNext();) {
 							Object o2 = itr.next();
 							dte = new DomainTransformEvent();
+							dte.setUtcDate(new Date(0L));
 							dte.setObjectId(id);
 							dte.setObjectClass(clazz);
 							dte.setPropertyName(propertyName);
@@ -859,6 +861,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					}
 				} else {
 					dte = new DomainTransformEvent();
+					dte.setUtcDate(new Date(0L));
 					dte.setObjectId(id);
 					dte.setObjectClass(clazz);
 					if (value instanceof Timestamp) {
