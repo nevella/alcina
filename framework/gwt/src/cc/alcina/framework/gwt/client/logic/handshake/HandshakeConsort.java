@@ -55,6 +55,7 @@ public class HandshakeConsort extends
 	}
 
 	public void handleLoggedIn(LoginResponse loginResponse) {
+		HandshakeConsortModel.get().clearObjects();
 		handleLoggedIn(loginResponse, null);
 	}
 
