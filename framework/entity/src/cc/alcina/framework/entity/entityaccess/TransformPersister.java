@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
@@ -158,6 +159,9 @@ public class TransformPersister {
 
 	private int determinedExceptionCount;
 
+	public static final String CONTEXT_REPLAYING_FOR_LOGS = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_REPLAYING_FOR_LOGS";
+
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS = 20 * 1000;
 
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS = 40 * 1000;
@@ -237,6 +241,8 @@ public class TransformPersister {
 														+ highestPersistedRequestId)));
 			}
 			int transformCount = 0;
+			boolean replaying = LooseContext
+					.getBoolean(CONTEXT_REPLAYING_FOR_LOGS);
 			loop_dtrs: for (DomainTransformRequest dtr : dtrs) {
 				List<DomainTransformEvent> items = dtr.getEvents();
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
@@ -257,9 +263,11 @@ public class TransformPersister {
 					if (token.getPass() == Pass.TRY_COMMIT) {
 						try {
 							if (event.getCommitType() == CommitType.TO_STORAGE) {
-								tm.setIgnorePropertyChangesTo(event);
-								tm.fireDomainTransform(event);
-								tm.setIgnorePropertyChangesTo(null);
+								if (!replaying) {
+									tm.setIgnorePropertyChangesTo(event);
+									tm.fireDomainTransform(event);
+									tm.setIgnorePropertyChangesTo(null);
+								}
 								eventsPersisted.add(event);
 								transformCount++;
 							}
