@@ -38,6 +38,8 @@ import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -356,6 +358,13 @@ public class SEUtilities {
 
 	public static PropertyDescriptor getPropertyDescriptorByName(Class clazz,
 			String propertyName) throws IntrospectionException {
+		ensureDescriptorLookup(clazz);
+		PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
+		return cached;
+	}
+
+	protected static void ensureDescriptorLookup(Class clazz)
+			throws IntrospectionException {
 		if (!pdLookup.containsKey(clazz)) {
 			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
 					.getPropertyDescriptors();
@@ -363,8 +372,21 @@ public class SEUtilities {
 				pdLookup.put(clazz, pd.getName(), pd);
 			}
 		}
-		PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
-		return cached;
+	}
+
+	public static List<PropertyDescriptor> getSortedPropertyDescriptors(
+			Class clazz) throws IntrospectionException {
+		ensureDescriptorLookup(clazz);
+		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
+				pdLookup.asMap(clazz).allValues());
+		Comparator<PropertyDescriptor> pdNameComparator = new Comparator<PropertyDescriptor>() {
+			@Override
+			public int compare(PropertyDescriptor o1, PropertyDescriptor o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		};
+		Collections.sort(result, pdNameComparator);
+		return result;
 	}
 
 	public static String dumpProperties(Properties p) {
@@ -723,12 +745,12 @@ public class SEUtilities {
 	public static void setPropertyValue(Object bean, String propertyName,
 			Object value) {
 		try {
-			PropertyDescriptor descriptor = getPropertyDescriptorByName(bean.getClass(), propertyName);
-			if(descriptor==null){
+			PropertyDescriptor descriptor = getPropertyDescriptorByName(
+					bean.getClass(), propertyName);
+			if (descriptor == null) {
 				throw new NoSuchPropertyException(propertyName);
 			}
-			descriptor
-					.getWriteMethod().invoke(bean, value);
+			descriptor.getWriteMethod().invoke(bean, value);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -1061,5 +1083,27 @@ public class SEUtilities {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public static boolean equivalentDeclaredFields(Object o1, Object o2) {
+		if (o1 == null || o2 == null || o1.getClass() != o2.getClass()) {
+			return false;
+		}
+		try {
+			Class clazz = o1.getClass();
+			while (clazz != Object.class) {
+				for (Field f : clazz.getDeclaredFields()) {
+					f.setAccessible(true);
+					if (!CommonUtils.equalsWithNullEmptyEquality(f.get(o1),
+							f.get(o2))) {
+						return false;
+					}
+				}
+				clazz = clazz.getSuperclass();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		return true;
 	}
 }

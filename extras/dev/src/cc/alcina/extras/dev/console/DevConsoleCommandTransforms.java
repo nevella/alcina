@@ -439,6 +439,8 @@ public class DevConsoleCommandTransforms {
 			String filter = DevConsoleFilter.getFilters(
 					CmdListTransformsFilter.class, argv, dteIdFilter);
 			if (!foundDteId) {
+				filter = DevConsoleFilter.getFilters(
+						CmdListTransformsFilter.class, argv);
 				sql1 = String.format(sql1, dtrName, filter);
 				Statement ps = conn.createStatement();
 				System.out.println(console.breakAndPad(1, 80, sql1, 0));

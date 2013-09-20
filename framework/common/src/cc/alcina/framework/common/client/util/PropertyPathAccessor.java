@@ -35,7 +35,7 @@ public class PropertyPathAccessor {
 			if (obj instanceof Collection) {
 				List values = new ArrayList();
 				for (Object member : (Collection) obj) {
-					if(member==null){
+					if (member == null) {
 						continue;
 					}
 					ensureAccessors(member, idx);
@@ -71,5 +71,29 @@ public class PropertyPathAccessor {
 	@Override
 	public String toString() {
 		return "PropertyPathAccesor: " + propertyPath;
+	}
+
+	public void setChainedProperty(Object obj, Object value) {
+		if (paths.length == 1) {
+			ensureAccessors(obj, 0);
+			accessors[0].setPropertyValue(obj, value);
+		}
+		int idx = 0;
+		for (; idx < paths.length - 1;) {
+			if (obj == null) {
+				throw new RuntimeException("property path set hit a null");
+			}
+			if (obj instanceof Collection) {
+				throw new RuntimeException(
+						"set with property path does not support collection properties");
+			} else {
+				ensureAccessors(obj, idx);
+				obj = accessors[idx].getPropertyValue(obj);
+			}
+			idx++;
+		}
+		assert idx == paths.length - 1;
+		ensureAccessors(obj, idx);
+		accessors[idx].setPropertyValue(obj, value);
 	}
 }

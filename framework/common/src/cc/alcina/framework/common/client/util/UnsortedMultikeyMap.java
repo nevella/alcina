@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,10 +31,12 @@ import cc.alcina.framework.common.client.collections.ImmutableMap;
  * 
  */
 @SuppressWarnings("unchecked")
-public class UnsortedMultikeyMap<V> implements MultikeyMap<V> {
+public class UnsortedMultikeyMap<V> implements MultikeyMap<V>, Serializable {
+	private static final long serialVersionUID = 1L;
+
 	private int depth;
 
-	private transient MultikeyMapSupport multikeyMapSupport;
+	private MultikeyMapSupport multikeyMapSupport;
 
 	private LinkedHashMap delegate;
 

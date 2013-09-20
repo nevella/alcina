@@ -32,8 +32,9 @@ public interface PropertyAccessor {
 
 	public Class getPropertyType(Class objectClass, String propertyName);
 
-
 	public interface IndividualPropertyAccessor {
 		public Object getPropertyValue(Object value);
+
+		public void setPropertyValue(Object bean, Object value);
 	}
 }

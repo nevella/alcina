@@ -142,7 +142,7 @@ public class SyncMerger<T> {
 			return SyncPairAction.MERGE;
 	}
 
-	boolean mergePair(SyncPair pair) {
+	protected boolean mergePair(SyncPair<T> pair) {
 		SyncPairAction syncType = getSyncType(pair);
 		if (syncType == null) {
 			return false;

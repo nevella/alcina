@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.domaintransform;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -16,22 +18,39 @@ public class MethodIndividualPropertyAccessor implements
 
 	private String propertyName;
 
+	private Method writeMethod;
+
 	public MethodIndividualPropertyAccessor(Class clazz, String propertyName) {
-		methodDeclaringClass = null;//be lazy
+		methodDeclaringClass = null;// be lazy
 		this.propertyName = propertyName;
 	}
 
+	@Override
+	public Object getPropertyValue(Object bean) {
+		try {
+			ensureMethods(bean);
+			return readMethod.invoke(bean, emptyValue);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	protected void ensureMethods(Object value) throws IntrospectionException {
+		Class<? extends Object> clazz = value.getClass();
+		if (clazz != methodDeclaringClass) {
+			PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(
+					clazz, propertyName);
+			this.readMethod = pd.getReadMethod();
+			this.writeMethod = pd.getWriteMethod();
+			methodDeclaringClass = clazz;
+		}
+	}
 
 	@Override
-	public Object getPropertyValue(Object value) {
+	public void setPropertyValue(Object bean, Object value) {
 		try {
-			Class<? extends Object> clazz = value.getClass();
-			if (clazz != methodDeclaringClass) {
-				this.readMethod = SEUtilities.getPropertyDescriptorByName(clazz,
-						propertyName).getReadMethod();
-				methodDeclaringClass=clazz;
-			}
-			return readMethod.invoke(value, emptyValue);
+			ensureMethods(bean);
+			writeMethod.invoke(bean, value);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

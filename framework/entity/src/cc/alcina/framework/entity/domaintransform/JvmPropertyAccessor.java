@@ -11,8 +11,16 @@ import cc.alcina.framework.entity.SEUtilities;
 
 public class JvmPropertyAccessor implements PropertyAccessor {
 	public void setPropertyValue(Object bean, String propertyName, Object value) {
-		// doesn't currently support dotted set...just get
-		SEUtilities.setPropertyValue(bean, propertyName, value);
+		if (propertyName.contains(".")) {
+			PropertyPathAccessor pathAccessor = pathAccessors.get(propertyName);
+			if (pathAccessor == null) {
+				pathAccessor = new PropertyPathAccessor(propertyName);
+				pathAccessors.put(propertyName, pathAccessor);
+			}
+			pathAccessor.setChainedProperty(bean, value);
+		} else {
+			SEUtilities.setPropertyValue(bean, propertyName, value);
+		}
 	}
 
 	private Map<String, PropertyPathAccessor> pathAccessors = new LinkedHashMap<String, PropertyPathAccessor>();
@@ -25,8 +33,9 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 				pathAccessors.put(propertyName, pathAccessor);
 			}
 			return pathAccessor.getChainedProperty(bean);
+		} else {
+			return SEUtilities.getPropertyValue(bean, propertyName);
 		}
-		return SEUtilities.getPropertyValue(bean, propertyName);
 	}
 
 	@Override

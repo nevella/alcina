@@ -285,8 +285,7 @@ public class AlcinaBeanSerializerS {
 			jo.put(LITERAL, serializeField(object, clazz));
 			return jo;
 		}
-		PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-				.getPropertyDescriptors();
+		List<PropertyDescriptor> pds = SEUtilities.getSortedPropertyDescriptors(clazz);
 		JSONObject props = new JSONObject();
 		jo.put(PROPERTIES, props);
 		Object template = clazz.newInstance();

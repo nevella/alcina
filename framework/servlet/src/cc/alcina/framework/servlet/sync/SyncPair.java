@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.sync;
 
-
 public class SyncPair<T> {
 	private KeyedObject<T> left;
 
@@ -8,15 +7,11 @@ public class SyncPair<T> {
 
 	private SyncPairAction action = SyncPairAction.MERGE;
 
-	public Class getPairType() {
-		return left != null ? left.getType() : right.getType();
-	}
-
 	public SyncPair() {
 	}
 
-	public SyncPair(T leftObject, T rightObject,
-			StringKeyProvider keyProvider, SyncPairAction action) {
+	public SyncPair(T leftObject, T rightObject, StringKeyProvider keyProvider,
+			SyncPairAction action) {
 		if (leftObject != null) {
 			left = new KeyedObject(leftObject, keyProvider);
 		}
@@ -26,16 +21,36 @@ public class SyncPair<T> {
 		this.action = action;
 	}
 
+	public SyncPairAction getAction() {
+		return this.action;
+	}
+
+	public String getKey() {
+		return left != null ? left.getKey() : right.getKey();
+	}
+
 	public KeyedObject getLeft() {
 		return this.left;
+	}
+
+	public Class getPairType() {
+		return left != null ? left.getType() : right.getType();
 	}
 
 	public KeyedObject getRight() {
 		return this.right;
 	}
 
-	public SyncPairAction getAction() {
-		return this.action;
+	public T leftObject() {
+		return left == null ? null : left.getObject();
+	}
+
+	public T rightObject() {
+		return right == null ? null : right.getObject();
+	}
+
+	public void setAction(SyncPairAction action) {
+		this.action = action;
 	}
 
 	public void setLeft(KeyedObject left) {
@@ -46,19 +61,15 @@ public class SyncPair<T> {
 		this.right = right;
 	}
 
-	public void setAction(SyncPairAction action) {
-		this.action = action;
-	}
-
 	@Override
 	public String toString() {
 		return String.format(
-				"SyncPair - %-8s: key - %s\n\tleft: %s\n\tright: %s\n",
-				action, getKey(), left, right);
+				"SyncPair - %-8s: key - %s\n\tleft: %s\n\tright: %s\n", action,
+				getKey(), left, right);
 	}
 
-	public String getKey() {
-		return left != null ? left.getKey() : right.getKey();
+	public enum SyncAction {
+		CREATE, UPDATE, DELETE;
 	}
 
 	public enum SyncPairAction {
@@ -93,9 +104,5 @@ public class SyncPair<T> {
 			}
 		};
 		public abstract SyncAction getDirectedAction(boolean left);
-	}
-
-	public enum SyncAction {
-		CREATE, UPDATE, DELETE;
 	}
 }
