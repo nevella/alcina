@@ -170,8 +170,6 @@ public class AlcinaBeanSerializerS {
 		}
 	}
 
-	IdentityHashMap serialized = new IdentityHashMap();
-
 	public String serialize(Object bean) throws Exception {
 		return serializeObject(bean).toString();
 	}
@@ -266,11 +264,13 @@ public class AlcinaBeanSerializerS {
 		}
 		if (object != null
 				&& !CommonUtils.isStandardJavaClassOrEnum(object.getClass())) {
-			if (serialized.containsKey(object)) {
-				throw new RuntimeException("serialization cycle");
-			} else {
-				serialized.put(object, object);
-			}
+			// should implement as a refererer/referee map, otherwise those're
+			// invalid cycles
+			// if (serialized.containsKey(object)) {
+			// throwIfNonZeroFields = true;
+			// } else {
+			// serialized.put(object, object);
+			// }
 		}
 		JSONObject jo = new JSONObject();
 		Class<? extends Object> type = object.getClass();

@@ -54,7 +54,8 @@ public class DomainDeltaSequencer {
 		this.rpcRequest = threadRpcRequest;
 		this.asGwtStreams = asGwtStreams;
 		response.setRequest(request);
-		this.incomingSignatures = clientDeltaSignatures;
+		this.incomingSignatures = clientDeltaSignatures == null ? new ArrayList<String>()
+				: clientDeltaSignatures;
 		for (String sig : clientDeltaSignatures) {
 			lookup.addSignature(sig);
 		}
