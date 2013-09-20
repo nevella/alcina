@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilters;
+
 @SuppressWarnings("unchecked")
 /**
  *
@@ -140,5 +142,13 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 			}
 		}
 		return dedupe;
+	}
+
+	public <T extends Comparable> Map<K, T> maxMap() {
+		Map<K, T> result = new LinkedHashMap<K, T>();
+		for (java.util.Map.Entry<K, V> e : entrySet()) {
+			result.put(e.getKey(), (T) CollectionFilters.max(e.getValue()));
+		}
+		return result;
 	}
 }
