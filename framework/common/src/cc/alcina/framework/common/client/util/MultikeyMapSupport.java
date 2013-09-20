@@ -2,8 +2,10 @@ package cc.alcina.framework.common.client.util;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 
 // basically a mixin. Now that multikeymap doesn't extend map, not necessary...but works ok
 public class MultikeyMapSupport<V> implements Serializable {
@@ -78,7 +80,13 @@ public class MultikeyMapSupport<V> implements Serializable {
 
 	void put(Object... objects) {
 		Map m = getMapForObjects(true, 2, objects);
-		m.put(objects[objects.length - 2], objects[objects.length - 1]);
+		Object key = objects[objects.length - 2];
+		if (m instanceof SortedMap && key == null) {
+			System.err.println("Invalid keys for sorted multikey put - "
+					+ Arrays.asList(objects));
+			return;
+		}
+		m.put(key, objects[objects.length - 1]);
 	}
 
 	private Map getMapForObjects(boolean ensure, int length, Object... objects) {
@@ -123,7 +131,7 @@ public class MultikeyMapSupport<V> implements Serializable {
 			multi.writeableDelegate().putAll(other.writeableDelegate());
 		} else {
 			for (Object key : other.writeableDelegate().keySet()) {
-				((MultikeyMap<V>) multi.asMap( key))
+				((MultikeyMap<V>) multi.asMap(key))
 						.putMulti((MultikeyMap<V>) other.asMap(key));
 			}
 		}
