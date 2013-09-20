@@ -11,6 +11,9 @@ import java.util.SortedMap;
 public class MultikeyMapSupport<V> implements Serializable {
 	private MultikeyMap<V> multi;
 
+	public MultikeyMapSupport() {
+	}
+
 	public MultikeyMapSupport(MultikeyMap<V> multi) {
 		this.multi = multi;
 	}
@@ -84,7 +87,7 @@ public class MultikeyMapSupport<V> implements Serializable {
 		if (m instanceof SortedMap && key == null) {
 			System.err.println("Invalid keys for sorted multikey put - "
 					+ Arrays.asList(objects));
-			return; 
+			return;
 		}
 		m.put(key, objects[objects.length - 1]);
 	}

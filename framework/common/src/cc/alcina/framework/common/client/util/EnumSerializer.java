@@ -1,10 +1,12 @@
 package cc.alcina.framework.common.client.util;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 @RegistryLocation(registryPoint = EnumSerializer.class, implementationType = ImplementationType.SINGLETON)
+@ClientInstantiable
 public class EnumSerializer {
 	public <T extends Enum> T deserialize(Class<T> enumClass, String text) {
 		if (enumClass == DeltaApplicationRecordType.class&&text!=null) {
