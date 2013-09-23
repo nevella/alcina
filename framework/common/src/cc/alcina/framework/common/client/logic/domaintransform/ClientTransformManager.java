@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
@@ -563,5 +564,13 @@ public abstract class ClientTransformManager extends TransformManager {
 				throw new WrappedRuntimeException(e);
 			}
 		}
+	}
+
+	@Override
+	protected void maybeFireCollectionModificationEvent(
+			Class<? extends Object> collectionClass, boolean fromPropertyChange) {
+		fireCollectionModificationEvent(new CollectionModificationEvent(this,
+				collectionClass, getDomainObjects().getCollection(
+						collectionClass), fromPropertyChange));
 	}
 }

@@ -350,9 +350,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 			if (getDomainObjects() != null) {
 				getDomainObjects().mapObject(hili);
-				fireCollectionModificationEvent(new CollectionModificationEvent(
-						this, hili.getClass(), getDomainObjects()
-								.getCollection(hili.getClass())));
+				maybeFireCollectionModificationEvent(hili.getClass(), false);
 			}
 			break;
 		default:
@@ -1014,11 +1012,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Object hili = evt.getSource();
 		if (this.getDomainObjects() != null) {
 			if (!provisionalObjects.contains(hili)) {
-				fireCollectionModificationEvent(new CollectionModificationEvent(
-						this, hili.getClass(), getDomainObjects()
-								.getCollection(hili.getClass()), true));
+				maybeFireCollectionModificationEvent(hili.getClass(), true);
 			}
 		}
+	}
+
+	protected void maybeFireCollectionModificationEvent(
+			Class<? extends Object> collectionClass, boolean fromPropertyChange) {
 	}
 
 	public void registerDomainObject(HasIdAndLocalId hili) {
@@ -1283,9 +1283,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (getDomainObjects() != null) {
 			removeAssociations(hili);
 			getDomainObjects().deregisterObject(hili);
-			fireCollectionModificationEvent(new CollectionModificationEvent(
-					this, hili.getClass(), getDomainObjects().getCollection(
-							hili.getClass())));
+			maybeFireCollectionModificationEvent(hili.getClass(), false);
 		}
 	}
 
