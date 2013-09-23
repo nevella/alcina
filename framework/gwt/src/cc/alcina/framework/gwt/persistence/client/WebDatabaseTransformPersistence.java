@@ -104,14 +104,7 @@ public class WebDatabaseTransformPersistence extends
 				DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED,
 				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
 				exceptFor == null ? -1 : exceptFor.getId(), exceptForId);
-		AsyncCallbackStd deleteDeltaAppsCallback=new AsyncCallbackStd(){
-
-			@Override
-			public void onSuccess(Object result) {
-				executeSql(sql, callback);				
-			}};
-		DeltaStore.get().clear(deleteDeltaAppsCallback);
-		
+		executeSql(sql, callback);
 	}
 
 	public Database getDb() {
@@ -288,8 +281,8 @@ public class WebDatabaseTransformPersistence extends
 	}
 
 	@Override
-	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
-			final AsyncCallback callback) {
+	protected void persistFromFrontOfQueue(
+			final DeltaApplicationRecord wrapper, final AsyncCallback callback) {
 		notifyPersisting(new TypeSizeTuple(wrapper.getType().toString(),
 				wrapper.getText().length()));
 		if (wrapper.getType() == DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED) {

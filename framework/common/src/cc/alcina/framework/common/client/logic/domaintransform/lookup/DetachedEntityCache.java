@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 @SuppressWarnings("unchecked")
 /**
@@ -38,7 +39,7 @@ public class DetachedEntityCache implements Serializable {
 
 	private static transient DetachedEntityCache commonInstance;
 
-	//TODO - get rid of this, not thread safe (obviously)
+	// TODO - get rid of this, not thread safe (obviously)
 	public static DetachedEntityCache get() {
 		if (commonInstance == null) {
 			commonInstance = new DetachedEntityCache();
@@ -180,5 +181,13 @@ public class DetachedEntityCache implements Serializable {
 			}
 		}
 		return result;
+	}
+
+	public String sizes() {
+		List<String> lines = new ArrayList<String>();
+		for (Class clazz : detached.keySet()) {
+			lines.add(CommonUtils.simpleClassName(clazz) + ": " + size(clazz));
+		}
+		return CommonUtils.join(lines, "\n");
 	}
 }

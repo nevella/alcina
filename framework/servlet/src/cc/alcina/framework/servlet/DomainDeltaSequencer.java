@@ -56,7 +56,7 @@ public class DomainDeltaSequencer {
 		response.setRequest(request);
 		this.incomingSignatures = clientDeltaSignatures == null ? new ArrayList<String>()
 				: clientDeltaSignatures;
-		for (String sig : clientDeltaSignatures) {
+		for (String sig : this.incomingSignatures) {
 			lookup.addSignature(sig);
 		}
 	}
