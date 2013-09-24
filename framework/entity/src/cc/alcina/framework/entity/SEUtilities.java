@@ -1071,7 +1071,7 @@ public class SEUtilities {
 		try {
 			getPropertyDescriptorByName(obj.getClass(), null);
 			Map<String, PropertyDescriptor> pds = (Map<String, PropertyDescriptor>) pdLookup
-					.get(obj.getClass());
+					.asMap(obj.getClass()).delegate();
 			Map<String, Object> props = new LinkedHashMap<String, Object>();
 			for (PropertyDescriptor pd : pds.values()) {
 				if (!ignore.contains(pd.getName())) {
