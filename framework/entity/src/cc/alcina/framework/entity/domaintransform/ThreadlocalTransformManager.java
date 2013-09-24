@@ -65,6 +65,7 @@ import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -628,10 +629,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		listeningTo = new LinkedHashSet<SourcesPropertyChangeEvents>();
 		LinkedHashSet<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		if (!pendingTransforms.isEmpty()) {
+			
 			System.out
 					.println("**WARNING ** TLTM - cleared (but still pending) transforms:\n "
 							+ pendingTransforms);
 			Thread.dumpStack();
+			AlcinaTopics.notifyDevWarning(new UncomittedTransformsException());
 		}
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
@@ -643,6 +646,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		} else {
 			initialised = true;
 		}
+	}
+	public static class UncomittedTransformsException extends Exception{
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
