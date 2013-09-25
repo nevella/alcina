@@ -89,6 +89,12 @@ public class CollectionFilters {
 	public static <T, C> List<C> convertAndFilter(
 			Collection<? extends T> collection,
 			ConverterFilter<T, C> converterFilter) {
+		return convertAndFilter(collection, converterFilter, 0);
+	}
+
+	public static <T, C> List<C> convertAndFilter(
+			Collection<? extends T> collection,
+			ConverterFilter<T, C> converterFilter, int limit) {
 		List<C> result = new ArrayList<C>();
 		for (T t : collection) {
 			if (!converterFilter.allowPreConvert(t)) {
@@ -97,6 +103,9 @@ public class CollectionFilters {
 			C convert = converterFilter.convert(t);
 			if (converterFilter.allowPostConvert(convert)) {
 				result.add(convert);
+				if (--limit == 0) {
+					break;
+				}
 			}
 		}
 		return result;
@@ -172,7 +181,7 @@ public class CollectionFilters {
 			return filter(collection, filter);
 		}
 		return collection;
-	};
+	}
 
 	public static <V> V first(Collection<V> values, CollectionFilter<V> filter) {
 		for (Iterator<V> itr = values.iterator(); itr.hasNext();) {
@@ -182,16 +191,16 @@ public class CollectionFilters {
 			}
 		}
 		return null;
+	};
+
+	public static <V> V first(Collection<V> values, String key, Object value) {
+		PropertyFilter<V> filter = new PropertyFilter<V>(key, value);
+		return first(values, filter);
 	}
 
 	public static <V> V firstOfClass(Collection values, Class<? extends V> clazz) {
 		IsClassFilter filter = new IsClassFilter(clazz);
 		return (V) first(values, filter);
-	}
-
-	public static <V> V first(Collection<V> values, String key, Object value) {
-		PropertyFilter<V> filter = new PropertyFilter<V>(key, value);
-		return first(values, filter);
 	}
 
 	public static <V> int indexOf(Collection<? extends V> collection,
@@ -223,6 +232,17 @@ public class CollectionFilters {
 		return result;
 	}
 
+	public static <T> List<T> limit(Collection<T> values, int count) {
+		List<T> result = new ArrayList<T>();
+		for (T t : values) {
+			if (count-- == 0) {
+				break;
+			}
+			result.add(t);
+		}
+		return result;
+	}
+
 	public static <K, V, O> Map<K, V> map(Collection<O> values,
 			KeyValueMapper<K, V, O> mapper) {
 		Map<K, V> result = new LinkedHashMap<K, V>();
@@ -237,6 +257,38 @@ public class CollectionFilters {
 		return result;
 	}
 
+	public static <T extends Comparable<T>> T max(Collection<T> collection) {
+		return max(collection, null);
+	}
+
+	public static <T> T max(Collection<T> collection, Comparator<T> comparator) {
+		T max = null;
+		for (T t : collection) {
+			if (max == null
+					|| (comparator != null ? comparator.compare(max, t)
+							: ((Comparable) max).compareTo((Comparable) t)) < 0) {
+				max = t;
+			}
+		}
+		return max;
+	}
+
+	public static <T extends Comparable<T>> T min(Collection<T> collection) {
+		return min(collection, null);
+	}
+
+	public static <T> T min(Collection<T> collection, Comparator<T> comparator) {
+		T min = null;
+		for (T t : collection) {
+			if (min == null
+					|| (comparator != null ? comparator.compare(min, t)
+							: ((Comparable) min).compareTo((Comparable) t)) > 0) {
+				min = t;
+			}
+		}
+		return min;
+	}
+
 	public static <K, V, O> Multimap<K, List<V>> multimap(Collection<O> values,
 			KeyValueMapper<K, V, O> mapper) {
 		Multimap<K, List<V>> result = new Multimap<K, List<V>>();
@@ -245,6 +297,14 @@ public class CollectionFilters {
 			result.add(mapper.getKey(o), mapper.getValue(o));
 		}
 		return result;
+	}
+
+	public static <V, T> V project(Collection<T> values,
+			CollectionProjector<T, V> projector) {
+		for (T t : values) {
+			projector.tryProject(t);
+		}
+		return projector.getBestValue();
 	}
 
 	public static <V> V singleNodeFilter(Collection<? extends V> collection,
@@ -302,56 +362,5 @@ public class CollectionFilters {
 			return CommonUtils.nullToEmpty(o).toLowerCase()
 					.startsWith(lcPrefix);
 		}
-	}
-
-	public static <V, T> V project(Collection<T> values,
-			CollectionProjector<T, V> projector) {
-		for (T t : values) {
-			projector.tryProject(t);
-		}
-		return projector.getBestValue();
-	}
-
-	public static <T> List<T> limit(Collection<T> values, int count) {
-		List<T> result = new ArrayList<T>();
-		for (T t : values) {
-			if (count-- == 0) {
-				break;
-			}
-			result.add(t);
-		}
-		return result;
-	}
-
-	public static <T extends Comparable<T>> T max(Collection<T> collection) {
-		return max(collection, null);
-	}
-
-	public static <T> T max(Collection<T> collection, Comparator<T> comparator) {
-		T max = null;
-		for (T t : collection) {
-			if (max == null
-					|| (comparator != null ? comparator.compare(max, t)
-							: ((Comparable) max).compareTo((Comparable) t)) < 0) {
-				max = t;
-			}
-		}
-		return max;
-	}
-
-	public static <T extends Comparable<T>> T min(Collection<T> collection) {
-		return min(collection, null);
-	}
-
-	public static <T> T min(Collection<T> collection, Comparator<T> comparator) {
-		T min = null;
-		for (T t : collection) {
-			if (min == null
-					|| (comparator != null ? comparator.compare(min, t)
-							: ((Comparable) min).compareTo((Comparable) t)) > 0) {
-				min = t;
-			}
-		}
-		return min;
 	}
 }

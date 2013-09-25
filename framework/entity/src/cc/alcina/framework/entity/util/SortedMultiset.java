@@ -11,13 +11,10 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.util;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Here because GWT RPC doesn't like this to be client-viz
@@ -28,33 +25,9 @@ import java.util.Set;
  * @param <V>
  */
 @SuppressWarnings("unchecked")
-public class Multiset<K, V extends Set> extends LinkedHashMap<K, V> {
-	public boolean add(K key, Object item) {
-		if (!containsKey(key)) {
-			put(key, (V) createSet());
-		}
-		return get(key).add(item);
-	}
-
+public class SortedMultiset<K, V extends Set> extends Multiset<K, V> {
+	@Override
 	protected Set createSet() {
-		return new LinkedHashSet();
-	}
-
-	public void remove(K key, Object item) {
-		if (containsKey(key)) {
-			get(key).remove(item);
-		}
-	}
-	public V getAndEnsure(K key) {
-		if (!containsKey(key)) {
-			put(key, (V) createSet());
-		}
-		return get(key);
-	}
-	public void addCollection(K key, Collection collection) {
-		if (!containsKey(key)) {
-			put(key, (V) createSet());
-		}
-		get(key).addAll(collection);
+		return new TreeSet();
 	}
 }

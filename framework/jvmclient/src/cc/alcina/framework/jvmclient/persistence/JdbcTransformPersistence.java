@@ -64,7 +64,7 @@ public abstract class JdbcTransformPersistence extends
 
 	@Override
 	public void clearPersistedClient(final ClientInstance exceptFor,
-			int exceptForId, final AsyncCallback callback) {
+			int exceptForId, final AsyncCallback callback, boolean clearDeltaStore) {
 		try {
 			String sql = CommonUtils.formatJ("DELETE from TransformRequests"
 					+ " where (transform_request_type='CLIENT_OBJECT_LOAD'"

@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -10,12 +11,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.entity.util.Multiset;
+import cc.alcina.framework.entity.util.SortedMultiset;
 
 import com.totsp.gwittir.client.beans.Converter;
 
 public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		CacheListener<H> {
-	private Multiset<T, Set<Long>> store;
+	private SortedMultiset<T, Set<Long>> store;
 
 	protected CacheLookupDescriptor descriptor;
 
@@ -31,13 +33,18 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	public CacheLookup(CacheLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
-		store = new Multiset<T, Set<Long>>();
+		store = new SortedMultiset<T, Set<Long>>();
 		this.propertyPathAccesor = new PropertyPathAccessor(
 				descriptor.propertyPath);
 		this.relevanceFilter = descriptor.getRelevanceFilter();
 	}
 
 	public void add(T k1, Long value) {
+		if(value==null){
+			System.err.println("Invalid value (null) for cache lookup put - "
+					+ k1);
+			return;
+		}
 		getAndEnsure(k1).add(value);
 	}
 

@@ -21,10 +21,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		Cloneable, Serializable {
 	static final transient long serialVersionUID = 1;
 
-	/**
-	 * Would prefer HasIdAndLocalId[] but GWT-RPC no-likey
-	 */
-	private Object[] elementData;
+	private transient HasIdAndLocalId[] elementData;
 
 	int size = 0;
 
@@ -170,7 +167,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		int res = 0;
 		while (rangeMax > rangeMin) {
 			arrayPos = (rangeMax - rangeMin) / 2 + rangeMin;
-			HasIdAndLocalId f = (HasIdAndLocalId) elementData[arrayPos];
+			HasIdAndLocalId f = elementData[arrayPos];
 			res = compare(e, f);
 			if (res == 0) {
 				return arrayPos;
@@ -187,14 +184,14 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		// if res<0, e<f - but possibly e<d (elementData[arrayPos-1]) - limits
 		// of binary search.
 		if (rangeMax < size && rangeMax >= 0) {
-			HasIdAndLocalId f = (HasIdAndLocalId) elementData[rangeMax];
+			HasIdAndLocalId f = elementData[rangeMax];
 			if (e.equals(f)) {
 				return rangeMax;
 			}
 		}
 		if (res < 0) {
 			if (arrayPos > 0) {
-				HasIdAndLocalId d = (HasIdAndLocalId) elementData[arrayPos - 1];
+				HasIdAndLocalId d = elementData[arrayPos - 1];
 				res = compare(e, d);
 				if (res == -1) {
 					return arrayPos - 1;
@@ -203,7 +200,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 			return arrayPos;
 		} else {
 			if (arrayPos + 1 < size) {
-				HasIdAndLocalId g = (HasIdAndLocalId) elementData[arrayPos + 1];
+				HasIdAndLocalId g = elementData[arrayPos + 1];
 				res = compare(e, g);
 				if (res == 1) {
 					return arrayPos + 2;
@@ -249,5 +246,36 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 			itrModCount++;
 			nextCalled = false;
 		}
+	}
+
+	private void writeObject(java.io.ObjectOutputStream s)
+			throws java.io.IOException {
+		// Write out element count, and any hidden stuff
+		int expectedModCount = modCount;
+		s.defaultWriteObject();
+		// Write out array length
+		s.writeInt(elementData.length);
+		// Write out all elements in the proper order.
+		for (int i = 0; i < size; i++)
+			s.writeObject(elementData[i]);
+		if (modCount != expectedModCount) {
+			throw new ConcurrentModificationException();
+		}
+	}
+
+	/**
+	 * Reconstitute the <tt>ArrayList</tt> instance from a stream (that is,
+	 * deserialize it).
+	 */
+	private void readObject(java.io.ObjectInputStream s)
+			throws java.io.IOException, ClassNotFoundException {
+		// Read in size, and any hidden stuff
+		s.defaultReadObject();
+		// Read in array length and allocate array
+		int arrayLength = s.readInt();
+		HasIdAndLocalId[] a = elementData = new HasIdAndLocalId[arrayLength];
+		// Read in all elements in the proper order.
+		for (int i = 0; i < size; i++)
+			a[i] = (HasIdAndLocalId) s.readObject();
 	}
 }

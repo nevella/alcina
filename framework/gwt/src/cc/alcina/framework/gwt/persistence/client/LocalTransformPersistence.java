@@ -132,7 +132,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	public abstract void clearPersistedClient(ClientInstance exceptFor,
-			int exceptForId, AsyncCallback callback);
+			int exceptForId, AsyncCallback callback, boolean clearDeltaStore);
 
 	public void dumpDatabase(final Callback<String> callback) {
 		AsyncCallback<List<DeltaApplicationRecord>> transformCallback = new AsyncCallbackStd<List<DeltaApplicationRecord>>() {

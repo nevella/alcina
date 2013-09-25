@@ -68,9 +68,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 		if (bypass(context.field)) {
 			return null;
 		}
-		if (filtered instanceof Collection) {
-			int j = 3;
-		}
 		visited.put(context.projectedOwner, context.projectedOwner);
 		visited.put(filtered, filtered);
 		ownerMap.add(context.projectedOwner, filtered);
@@ -228,16 +225,21 @@ public class StatsFilter extends CollectionProjectionFilter {
 							Class<? extends Object> clazz2 = o1.getClass();
 							if (CommonUtils.stdAndPrimitives.contains(clazz2)) {
 								statsClassLookup.add(clazz2, null);
-								item.size += o1.toString().length();
+								int length = o1.toString().length();
+								if (length > 10000) {
+//									System.out.format(
+//											"large item string - %s - %s",
+//											item.o, length);
+									int j=3;
+								}
+								item.size += length;
 							} else {
 								if (calculateOwnerStatsFor.contains(clazz2)) {
-									if (owneeMap.get(o1) == null) {// TODO -
-																	// shouldn't
-																	// but
-																	// something
-																	// odd re
-																	// collection
-																	// projection
+									if (owneeMap.get(o1) == null) {
+										/*
+										 * TODO - shouldn't // but something //
+										 * odd re collection projection
+										 */
 										continue;
 									}
 									if (owneeMap.get(o1).size() == 1) {

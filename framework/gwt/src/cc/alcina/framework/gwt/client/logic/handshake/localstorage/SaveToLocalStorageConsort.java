@@ -42,7 +42,7 @@ public class SaveToLocalStorageConsort extends AllStatesConsort<State> {
 			break;
 		case CLEAR_UNNEEDED_PLAYBACK_DATA:
 			LocalTransformPersistence.get().clearPersistedClient(null, 0,
-					player);
+					player,false);
 			break;
 		case SAVE_CHUNKS:
 			LocalTransformPersistence.get().persist(
