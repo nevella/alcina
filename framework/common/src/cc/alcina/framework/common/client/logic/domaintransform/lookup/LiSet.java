@@ -254,10 +254,11 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		int expectedModCount = modCount;
 		s.defaultWriteObject();
 		// Write out array length
-		s.writeInt(elementData.length);
+		s.writeInt(elementData == null ? 0 : elementData.length);
 		// Write out all elements in the proper order.
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < size; i++) {
 			s.writeObject(elementData[i]);
+		}
 		if (modCount != expectedModCount) {
 			throw new ConcurrentModificationException();
 		}
@@ -273,9 +274,12 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		s.defaultReadObject();
 		// Read in array length and allocate array
 		int arrayLength = s.readInt();
-		HasIdAndLocalId[] a = elementData = new HasIdAndLocalId[arrayLength];
-		// Read in all elements in the proper order.
-		for (int i = 0; i < size; i++)
-			a[i] = (HasIdAndLocalId) s.readObject();
+		if (arrayLength != 0) {
+			HasIdAndLocalId[] a = elementData = new HasIdAndLocalId[arrayLength];
+			// Read in all elements in the proper order.
+			for (int i = 0; i < size; i++) {
+				a[i] = (HasIdAndLocalId) s.readObject();
+			}
+		}
 	}
 }

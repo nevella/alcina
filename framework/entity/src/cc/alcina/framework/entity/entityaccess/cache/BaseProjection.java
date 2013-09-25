@@ -52,12 +52,16 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	public void insert(T t) {
 		Object[] values = project(t);
 		if (values != null) {
-			if (values.length > 0 && values[0].getClass().isArray()) {
-				for (Object tuple : values) {
-					lookup.put((Object[]) tuple);
+			try {
+				if (values.length > 0 && values[0].getClass().isArray()) {
+					for (Object tuple : values) {
+						lookup.put((Object[]) tuple);
+					}
+				} else {
+					lookup.put(values);
 				}
-			} else {
-				lookup.put(values);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -111,12 +115,16 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	public void remove(T t) {
 		Object[] values = project(t);
 		if (values != null) {
-			if (values.length > 0 && values[0].getClass().isArray()) {
-				for (Object tuple : values) {
-					lookup.remove((Object[]) tuple);
+			try {
+				if (values.length > 0 && values[0].getClass().isArray()) {
+					for (Object tuple : values) {
+						lookup.remove((Object[]) tuple);
+					}
+				} else {
+					lookup.remove(values);
 				}
-			} else {
-				lookup.remove(values);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}

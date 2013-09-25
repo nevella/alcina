@@ -85,9 +85,9 @@ public class MultikeyMapSupport<V> implements Serializable {
 		Map m = getMapForObjects(true, 2, objects);
 		Object key = objects[objects.length - 2];
 		if (m instanceof SortedMap && key == null) {
-			System.err.println("Invalid keys for sorted multikey put - "
+			RuntimeException ex = new RuntimeException("Invalid keys for sorted multikey put - "
 					+ Arrays.asList(objects));
-			return;
+throw ex;
 		}
 		m.put(key, objects[objects.length - 1]);
 	}
