@@ -62,6 +62,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
+				System.out.println("Cause - "+t);
 			}
 		}
 	}
