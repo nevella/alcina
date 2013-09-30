@@ -53,7 +53,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		Object[] values = project(t);
 		if (values != null) {
 			try {
-				if (values.length > 0 && values[0].getClass().isArray()) {
+				if (values.length > 0 && values[0] != null
+						&& values[0].getClass().isArray()) {
 					for (Object tuple : values) {
 						lookup.put((Object[]) tuple);
 					}
@@ -62,7 +63,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.out.println("Cause - "+t);
+				System.out.println("Cause - " + t);
 			}
 		}
 	}
@@ -117,7 +118,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		Object[] values = project(t);
 		if (values != null) {
 			try {
-				if (values.length > 0 && values[0].getClass().isArray()) {
+				if (values.length > 0 && values[0] != null
+						&& values[0].getClass().isArray()) {
 					for (Object tuple : values) {
 						lookup.remove((Object[]) tuple);
 					}
