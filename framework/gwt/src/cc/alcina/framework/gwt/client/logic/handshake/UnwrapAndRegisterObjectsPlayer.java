@@ -43,6 +43,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		if (Window.confirm("Failure in unwrap/register -  press 'oi' to clear")) {
 			LocalTransformPersistence.get().clearPersistedClient(null, -1,
 					new ReloadOnSuccessCallback(),true);
+			return;
 		}
 		super.onFailure(caught);
 	}

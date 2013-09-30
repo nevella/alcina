@@ -42,6 +42,11 @@ public class UnsortedMultikeyMap<V> implements MultikeyMap<V>, Serializable {
 
 	private transient ImmutableMap readonlyDelegate;
 
+	@Override
+	public List<List> asTuples() {
+		return multikeyMapSupport.asTuples();
+	}
+
 	public UnsortedMultikeyMap() {
 		this(2);
 	}

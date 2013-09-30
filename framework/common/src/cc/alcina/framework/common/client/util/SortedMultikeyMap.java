@@ -200,4 +200,8 @@ public class SortedMultikeyMap<V> implements MultikeyMap<V>, Serializable {
 	public Map writeableDelegate() {
 		return delegate;
 	}
+
+	public List<List> asTuples() {
+		return multikeyMapSupport.asTuples();
+	}
 }

@@ -55,4 +55,6 @@ public interface MultikeyMap<V> {
 	public abstract Map writeableDelegate();
 
 	public abstract void clear();
+
+	public abstract List<List> asTuples();
 }

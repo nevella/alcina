@@ -40,7 +40,11 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		this.listener = listener;
 	}
 
-	
+	public static class AsyncRegistrationException extends RuntimeException {
+		public AsyncRegistrationException(Exception e1) {
+			super(e1);
+		}
+	}
 
 	public void registerAsync(Collection registerableDomainObjects,
 			ScheduledCommand postRegisterCommand) {
@@ -53,9 +57,12 @@ public class MapObjectLookupClient extends MapObjectLookup {
 			// private int ctr;
 			@Override
 			public boolean execute() {
-				if (iterateRegistration()) {
-					// System.out.println("Async register obj:" + ctr++);
-					return true;
+				try {
+					if (iterateRegistration()) {
+						return true;
+					}
+				} catch (Exception e1) {
+					throw new AsyncRegistrationException(e1);
 				}
 				try {
 					ScheduledCommand postRegisterCommandCopy = MapObjectLookupClient.this.postRegisterCommand;

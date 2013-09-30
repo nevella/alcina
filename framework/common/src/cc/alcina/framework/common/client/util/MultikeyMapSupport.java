@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 
 // basically a mixin. Now that multikeymap doesn't extend map, not necessary...but works ok
@@ -85,9 +86,10 @@ public class MultikeyMapSupport<V> implements Serializable {
 		Map m = getMapForObjects(true, 2, objects);
 		Object key = objects[objects.length - 2];
 		if (m instanceof SortedMap && key == null) {
-			RuntimeException ex = new RuntimeException("Invalid keys for sorted multikey put - "
-					+ Arrays.asList(objects));
-throw ex;
+			RuntimeException ex = new RuntimeException(
+					"Invalid keys for sorted multikey put - "
+							+ Arrays.asList(objects));
+			throw ex;
 		}
 		m.put(key, objects[objects.length - 1]);
 	}
@@ -138,5 +140,28 @@ throw ex;
 						.putMulti((MultikeyMap<V>) other.asMap(key));
 			}
 		}
+	}
+
+	public List<List> asTuples() {
+		List<List> result = new ArrayList<List>();
+		result.add(new ArrayList<Object>());// empty key, depth 0
+		for (int depth = 0; depth < multi.getDepth(); depth++) {
+			List<List> next = new ArrayList<List>();
+			for (List key : result) {
+				Object[] kArr = (Object[]) key.toArray(new Object[key.size()]);
+				for (Object k2 : multi.keys(kArr)) {
+					List nextK = new ArrayList(key);
+					nextK.add(k2);
+					if(depth == multi.getDepth()-1){
+						Object[] kArr2 = (Object[]) nextK.toArray(new Object[nextK.size()]);
+						nextK.add(multi.get(kArr2));
+					}
+					next.add(nextK);
+					
+				}
+			}
+			result = next;
+		}
+		return result;
 	}
 }

@@ -15,12 +15,16 @@ public class SystemoutCounter {
 	}
 
 	public void tick() {
+		tick("");
+	}
+
+	public void tick(String message) {
 		if (++tickCtr == ticks) {
 			tickCtr = 0;
 			System.out.print(".");
 			if (++dotCtr == dotsPerLine) {
 				dotCtr = 0;
-				System.out.println();
+				System.out.println("  " + message);
 			}
 		}
 	}

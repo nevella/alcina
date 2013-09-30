@@ -86,6 +86,11 @@ public class CollectionFilters {
 		return result;
 	}
 
+	public static <T, C> Set<C> distinct(Collection<? extends T> collection,
+			Converter<T, C> converter) {
+		return new LinkedHashSet<C>(convert(collection, converter));
+	}
+
 	public static <T, C> List<C> convertAndFilter(
 			Collection<? extends T> collection,
 			ConverterFilter<T, C> converterFilter) {
