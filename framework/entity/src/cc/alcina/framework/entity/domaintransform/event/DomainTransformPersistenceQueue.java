@@ -139,7 +139,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 		LongPair firstGap = getFirstGapLessThan(
 				CollectionFilters.min(persistedRequestIds), false);
-		if (firstGap != null) {// &&false) {//temp fix for prod. serv.
+		if (firstGap != null&&maxDbPersistedRequestIdPublished>0) {// &&false) {//temp fix for prod. serv.
 			logger.format("found gap (waiting) - rqid %s - gap %s", event
 					.getTransformPersistenceToken().getRequest().shortId(),
 					firstGap);

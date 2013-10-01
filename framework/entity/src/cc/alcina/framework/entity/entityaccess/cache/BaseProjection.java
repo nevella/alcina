@@ -6,8 +6,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.bcel.generic.NEW;
+
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
@@ -64,6 +67,9 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 			} catch (Exception e) {
 				e.printStackTrace();
 				System.out.println("Cause - " + t);
+				if (t instanceof HasIdAndLocalId) {
+					System.out.println(new HiliLocator(t));
+				}
 			}
 		}
 	}
