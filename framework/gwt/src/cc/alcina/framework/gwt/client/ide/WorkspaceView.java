@@ -148,7 +148,7 @@ public class WorkspaceView extends Composite implements HasName,
 
 		private DataTree dataTree;
 
-		private Toolbar toolbar;
+		protected Toolbar toolbar;
 
 		private FlowPanel fp;
 
@@ -306,7 +306,8 @@ public class WorkspaceView extends Composite implements HasName,
 			onTreeItemSelected(item);
 		}
 
-		private void onTreeItemSelected(TreeItem item) {
+		
+		protected void onTreeItemSelected(TreeItem item) {
 			if (!item.isVisible()) {
 				return;
 			}
