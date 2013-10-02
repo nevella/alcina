@@ -992,4 +992,13 @@ public class CommonUtils {
 		}
 		return result;
 	}
+	public static String padLinesLeft(String block, String prefix){
+		StringBuilder sb=new StringBuilder();
+		for(String line:block.split("\n")){
+			sb.append(prefix);
+			sb.append(line);
+			sb.append("\n");
+		}
+		return sb.toString();
+	}
 }

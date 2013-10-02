@@ -198,6 +198,10 @@ public class SyncMerger<T> {
 		public boolean isMultipleAll(List<String> allKeys) {
 			return allKeyLookup.getForKeys(allKeys).size() > 1;
 		}
+
+		public String allLocators(List<String> allKeys) {
+			return CommonUtils.join(allKeyLookup.getForKeys(allKeys), "\n");
+		}
 	}
 
 	public void merge(Collection<T> leftItems, Collection<T> rightItems,
@@ -215,10 +219,14 @@ public class SyncMerger<T> {
 			String key = keyProvider.firstKey(left);
 			List<String> allKeys = keyProvider.allKeys(left);
 			if (leftLookup.isMultipleAll(allKeys)) {
-				ambiguous.add("multiple left matches for " + allKeys);
+				ambiguous.add(String.format(
+						"multiple left matches for %s:\n%s", allKeys,
+						leftLookup.allLocators(allKeys)));
 			}
 			if (rightLookup.isMultipleAll(allKeys)) {
-				ambiguous.add("multiple right matches for " + allKeys);
+				ambiguous.add(String.format(
+						"multiple right matches for %s:\n%s", allKeys,
+						rightLookup.allLocators(allKeys)));
 			}
 			if (ambiguous.isEmpty()) {
 				// check, say, left has distinct firstkey to right - note,
@@ -227,17 +235,25 @@ public class SyncMerger<T> {
 						.getForKeys(allKeys);
 				for (T test : rightForKeys) {
 					String firstKey = keyProvider.firstKey(test);
-					if (!allKeys.contains(firstKey)) {
+					if (!allKeys.contains(firstKey)
+							&& leftLookup.allKeyLookup.containsKey(firstKey)) {
+						List<T> leftMatched = leftLookup.allKeyLookup
+								.get(firstKey);
 						ambiguous.add(String.format(
-								"higher precedence right matches for %s: %s ",
-								allKeys, firstKey));
+								"higher precedence right matches for %s:"
+										+ " %s \nRight object matched: %s"
+										+ "\nAlt left object matched: %s",
+								allKeys, firstKey, test,
+								CommonUtils.first(leftMatched)));
 					}
 				}
 			}
 			// very pessimistic
 			if (ambiguous.size() > 0) {
-				String message = String.format("\t\t%s\n",
-						CommonUtils.join(ambiguous, "\t\t\n"));
+				String message = String.format(
+						"%s\n",
+						CommonUtils.padLinesLeft(
+								CommonUtils.join(ambiguous, "\n"), "\t\t"));
 				for (T t : (Collection<T>) leftLookup.allKeyLookup
 						.getForKeys(allKeys)) {
 					ambiguousLeft.put(t, message);

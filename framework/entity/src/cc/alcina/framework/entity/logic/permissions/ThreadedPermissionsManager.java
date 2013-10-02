@@ -60,15 +60,6 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		return popUser();
 	}
 
-	@Override
-	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
-		TransformManager transformManager = TransformManager.get();
-		if (transformManager instanceof ThreadlocalTransformManager) {
-			((ThreadlocalTransformManager) transformManager).resetTltm(null);
-		}
-		super.pushUser(user, loginState, asRoot);
-	}
-
 	// This should never be necessary, if the code always surrounds user
 	// push/pop in try/finally...but...
 	public void reset() {
