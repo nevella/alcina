@@ -3,6 +3,8 @@ package cc.alcina.framework.servlet.sync;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 
 public abstract class MergeHandler<I extends SyncInterchangeModel, D extends SyncDeltaModel> {
 	protected I leftInterchangeModel;
@@ -17,11 +19,11 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 
 	public FlatDeltaPersisterResult persisterResult;
 
-	public void run() throws Exception {
+	public void run(Logger logger) throws Exception {
 		for (SyncMerger merger : syncMergers) {
 			merger.merge(leftInterchangeModel.getCollectionFor(merger
 					.getMergedClass()), rightInterchangeModel
-					.getCollectionFor(merger.getMergedClass()), deltaModel);
+					.getCollectionFor(merger.getMergedClass()), deltaModel,logger);
 		}
 		this.persisterResult = localDeltaPersister.apply(deltaModel);
 	}

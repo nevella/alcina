@@ -16,10 +16,12 @@ package cc.alcina.framework.entity.logic.permissions;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.UserlandProvider;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -56,6 +58,15 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 
 	public IUser popSystemUser() {
 		return popUser();
+	}
+
+	@Override
+	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
+		TransformManager transformManager = TransformManager.get();
+		if (transformManager instanceof ThreadlocalTransformManager) {
+			((ThreadlocalTransformManager) transformManager).resetTltm(null);
+		}
+		super.pushUser(user, loginState, asRoot);
 	}
 
 	// This should never be necessary, if the code always surrounds user

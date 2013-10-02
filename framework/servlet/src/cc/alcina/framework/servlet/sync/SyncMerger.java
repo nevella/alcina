@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -199,7 +201,7 @@ public class SyncMerger<T> {
 	}
 
 	public void merge(Collection<T> leftItems, Collection<T> rightItems,
-			SyncDeltaModel deltaModel) {
+			SyncDeltaModel deltaModel, Logger logger) {
 		FirstAndAllLookup leftLookup = new FirstAndAllLookup(leftItems);
 		FirstAndAllLookup rightLookup = new FirstAndAllLookup(rightItems);
 		// simplistic - only allow first key matching -
@@ -213,10 +215,10 @@ public class SyncMerger<T> {
 			String key = keyProvider.firstKey(left);
 			List<String> allKeys = keyProvider.allKeys(left);
 			if (leftLookup.isMultipleAll(allKeys)) {
-				ambiguous.add("multiple jade matches for " + allKeys);
+				ambiguous.add("multiple left matches for " + allKeys);
 			}
 			if (rightLookup.isMultipleAll(allKeys)) {
-				ambiguous.add("multiple civi matches for " + allKeys);
+				ambiguous.add("multiple right matches for " + allKeys);
 			}
 			if (ambiguous.isEmpty()) {
 				// check, say, left has distinct firstkey to right - note,
@@ -227,7 +229,7 @@ public class SyncMerger<T> {
 					String firstKey = keyProvider.firstKey(test);
 					if (!allKeys.contains(firstKey)) {
 						ambiguous.add(String.format(
-								"higher precedence civi matches for %s: %s ",
+								"higher precedence right matches for %s: %s ",
 								allKeys, firstKey));
 					}
 				}
@@ -272,13 +274,18 @@ public class SyncMerger<T> {
 				getIgnoreAmbiguityForReportingFilter());
 		CollectionFilters.filterInPlace(ambiguousRight.keySet(),
 				getIgnoreAmbiguityForReportingFilter());
-		System.out
+		logger.info(String.format(
+				"Merge [%s]: %sambiguous left:\t%-6s\tambiguous right:\t%-6s",
+				mergedClass.getSimpleName(), CommonUtils.padStringLeft("",
+						25 - mergedClass.getSimpleName().length(), " "),
+				ambiguousLeft.size(), ambiguousRight.size()));
+		logger.debug(String
 				.format("Merge [%s]: ambiguous left:\n\t%s\nambiguous right:\n\t%s\n\n",
 						mergedClass.getSimpleName(), CommonUtils
 								.joinWithNewlineTab(CommonUtils
 										.flattenMap(ambiguousLeft)),
 						CommonUtils.joinWithNewlineTab(CommonUtils
-								.flattenMap(ambiguousRight)));
+								.flattenMap(ambiguousRight))));
 	}
 
 	protected CollectionFilter<T> getIgnoreAmbiguityForReportingFilter() {

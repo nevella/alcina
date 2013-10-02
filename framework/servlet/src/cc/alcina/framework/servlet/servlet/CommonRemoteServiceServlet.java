@@ -334,6 +334,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public ActionLogItem performActionAndWait(final RemoteAction action)
 			throws WebException {
+		return performActionAndWait(action, false);
+	}
+
+	public ActionLogItem performActionAndWait(final RemoteAction action,
+			boolean subJob) throws WebException {
 		checkAnnotatedPermissions(action);
 		RemoteActionPerformer performer = (RemoteActionPerformer) Registry
 				.get().instantiateSingle(RemoteActionPerformer.class,
@@ -366,9 +371,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 			throw new WebException(e);
 		} finally {
-			ServletLayerLocator.get().remoteActionLoggerProvider()
-					.clearAllThreadLoggers();
-			JobRegistry.get().jobCompleteFromThread();
+			if (!subJob) {
+				ServletLayerLocator.get().remoteActionLoggerProvider()
+						.clearAllThreadLoggers();
+				JobRegistry.get().jobCompleteFromThread();
+			}
 		}
 	}
 
