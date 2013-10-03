@@ -57,7 +57,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	public List<Long> failed;
 
-	private Connection conn;
+	private Connection connLocal;
+
+	private Connection connRemote;
 
 	private boolean cancelled;
 
@@ -110,27 +112,36 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	}
 
 	public Connection getConn() throws Exception {
-		return getConn(false);
+		return getConn(false, false);
 	}
 
-	protected Connection getConn(boolean forceLocal) throws Exception {
-		if (conn == null || forceLocal) {
+	protected Connection getConn(boolean forceNewLocal) throws Exception {
+		return getConn(true, false);
+	}
+
+	protected Connection getConn(boolean forceNewLocal, boolean forceRemote)
+			throws Exception {
+		boolean remote = forceRemote
+				|| (console.props.connection_useProduction && !forceNewLocal);
+		if (forceNewLocal) {
+			connLocal = null;
+		}
+		Connection conn = remote ? connRemote : connLocal;
+		if (conn == null) {
 			Connection newConnection = null;
-			boolean useProduction = console.props.connection_useProduction
-					&& !forceLocal;
-			if (useProduction && !canUseProductionConn()) {
+			if (remote && !canUseProductionConn()) {
 				throw new Exception(String.format("Cmd %s is local only",
 						getClass().getSimpleName()));
 			}
 			Class.forName("org.postgresql.Driver");
-			String connStr = useProduction ? console.props.connection_production
+			String connStr = remote ? console.props.connection_production
 					: console.props.connection_local;
 			String[] parts = connStr.split(",");
 			try {
-				newConnection = DriverManager.getConnection(parts[0], parts[1],
-						parts[2]);
+				conn = DriverManager
+						.getConnection(parts[0], parts[1], parts[2]);
 			} catch (Exception e) {
-				if (useProduction
+				if (remote
 						&& !console.props.connectionProductionTunnelCmd
 								.isEmpty()) {
 					new ShellWrapper()
@@ -138,9 +149,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					for (int i = 1; i < 15; i++) {
 						try {
 							System.out.format("opening tunnel ... %s ...\n", i);
-							newConnection = DriverManager.getConnection(
-									parts[0], parts[1], parts[2]);
-							return conn;
+							conn = DriverManager.getConnection(parts[0],
+									parts[1], parts[2]);
+							break;
 						} catch (Exception e1) {
 							try {
 								Thread.sleep(1000);
@@ -149,16 +160,16 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 							}
 						}
 					}
-					newConnection = DriverManager.getConnection(parts[0],
-							parts[1], parts[2]);
+					conn = DriverManager.getConnection(parts[0], parts[1],
+							parts[2]);
 				} else {
 					throw e;
 				}
 			}
-			if (forceLocal) {
-				return newConnection;
+			if (remote) {
+				connRemote = conn;
 			} else {
-				conn = newConnection;
+				connLocal = conn;
 			}
 		}
 		return conn;
@@ -966,9 +977,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	}
 
 	public void cleanup() throws SQLException {
-		if (conn != null) {
-			conn.close();
-			conn = null;
+		if (connLocal != null) {
+			connLocal.close();
+			connLocal = null;
 		}
 	}
 
@@ -1018,7 +1029,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						Arrays.asList((argv.length < 2 ? "" : argv[1])
 								.split(",")));
 				List<DevConsoleString> list = console.strings.list(tags);
-				UnsortedMultikeyMap<String> tableData = new UnsortedMultikeyMap<String>(2);
+				UnsortedMultikeyMap<String> tableData = new UnsortedMultikeyMap<String>(
+						2);
 				int r = 0;
 				for (DevConsoleString s : list) {
 					tableData.put(r, 0, s.name);
