@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
  */
 public class LiSetScript<H extends HasIdAndLocalId> extends AbstractSet<H>
 		implements Cloneable {
-	private Collection<H> values = (Collection<H>) new FastIdLookupScript()
+	private transient Collection<H> values = (Collection<H>) new FastIdLookupScript()
 			.values();
 
 	@Override

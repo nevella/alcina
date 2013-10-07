@@ -23,11 +23,11 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 
 	private transient HasIdAndLocalId[] elementData;
 
-	int size = 0;
+	transient int size = 0;
 
 	transient int modCount = 0;
 
-	private Set<H> degenerate;
+	private transient Set<H> degenerate;
 
 	static final transient int DEGENERATE_THRESHOLD = 30;
 
