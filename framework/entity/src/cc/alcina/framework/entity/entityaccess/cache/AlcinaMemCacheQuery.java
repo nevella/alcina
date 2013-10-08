@@ -80,8 +80,12 @@ public class AlcinaMemCacheQuery {
 		return this.raw;
 	}
 
-	public  <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
+	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 		return AlcinaMemCache.get().list(clazz, this);
+	}
+
+	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
+		return new LinkedHashSet<T>(AlcinaMemCache.get().list(clazz, this));
 	}
 
 	public AlcinaMemCacheQuery fieldFilter(

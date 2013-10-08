@@ -451,10 +451,13 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			System.out.println(CommonUtils.padStringLeft("", 100, "-"));
 			Set<DevConsoleCommand> seen = new LinkedHashSet<DevConsoleCommand>();
 			String descPad = "\n" + CommonUtils.padStringLeft("", 73, " ");
+			String filter = argv.length > 0 ? argv[0] : null;
 			for (String k : keys) {
 				Map<String, DevConsoleCommand> commandsById = console.commandsById;
 				DevConsoleCommand cmd2 = commandsById.get(k);
-				if (seen.contains(cmd2)) {
+				if (seen.contains(cmd2)
+						|| (filter != null && !filter.equals(cmd2
+								.getCommandIds()[0]))) {
 					continue;
 				}
 				seen.add(cmd2);
