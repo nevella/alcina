@@ -26,8 +26,13 @@ public final class JavascriptIntLookup extends JavaScriptObject {
 		}
 
 		@Override
+		//try-catch due to broken optimisation in chrome 30
 		public boolean hasNext() {
-			return idx + 1 < keysSnapshot.length();
+			try {
+				return idx + 1 < keysSnapshot.length();
+			} catch (RuntimeException e) {
+				throw e;
+			}
 		}
 
 		@Override
