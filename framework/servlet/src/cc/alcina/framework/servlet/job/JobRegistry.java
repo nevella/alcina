@@ -34,12 +34,17 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 /**
  * 
  * @author Nick Reddel
  */
 public class JobRegistry {
+	public static final String TOPIC_JOB_FAILURE = JobRegistry.class.getName()
+			+ ".TOPIC_JOB_FAILURE";
+
 	private Map<Long, JobInfo> infoMap;
 
 	private Map<JobInfo, Class> jobClassMap;
@@ -138,6 +143,7 @@ public class JobRegistry {
 		info.setErrorMessage("Job failed: " + ex.toString());
 		JobRegistry.get().updateInfo(info);
 		info.setJobException(ex);
+		notifyJobFailure(info);
 	}
 
 	public void jobError(JobInfo info, String message) {
@@ -247,6 +253,16 @@ public class JobRegistry {
 		if (isCancelled()) {
 			logger.info("Action cancelled by user");
 			throw new CancelledException("Action cancelled by user");
-		}		
+		}
+	}
+
+	public static void notifyJobFailure(JobInfo info) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_FAILURE, info);
+	}
+
+	public static void notifyJobFailureListenerDelta(
+			TopicListener<JobInfo> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_JOB_FAILURE, listener,
+				add);
 	}
 }

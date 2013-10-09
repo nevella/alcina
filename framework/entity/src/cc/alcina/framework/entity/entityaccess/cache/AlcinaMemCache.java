@@ -1059,11 +1059,17 @@ public class AlcinaMemCache {
 				}
 				transaction = Registry.impl(PerThreadTransaction.class);
 				transactions.set(transaction);
+				synchronized (this) {
+					activeTransactionThreadIds.add(Thread.currentThread()
+							.getId());
+					transactionCount = activeTransactionThreadIds.size();
+				}
 				transaction.start();
-				transactionCount++;
 			}
 			return transaction;
 		}
+
+		Set<Long> activeTransactionThreadIds = new LinkedHashSet<Long>();
 
 		public <V extends HasIdAndLocalId> V ensureTransactional(V value) {
 			if (value == null) {
@@ -1118,7 +1124,11 @@ public class AlcinaMemCache {
 			if (transaction != null) {
 				transaction.end();
 				transactions.remove();
-				transactionCount--;
+				synchronized (this) {
+					activeTransactionThreadIds.remove(Thread.currentThread()
+							.getId());
+					transactionCount = activeTransactionThreadIds.size();
+				}
 			}
 		}
 
