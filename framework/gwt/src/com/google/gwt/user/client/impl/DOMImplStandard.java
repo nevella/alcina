@@ -17,6 +17,7 @@ package com.google.gwt.user.client.impl;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.dom.client.BrowserEvents;
+import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 
@@ -328,4 +329,8 @@ abstract class DOMImplStandard extends DOMImpl {
   private native void setCaptureImpl(Element elem) /*-{
     @com.google.gwt.user.client.impl.DOMImplStandard::captureElem = elem;
   }-*/;
+  
+  public int getScrollTop(Document doc) {
+	    return doc.getDocumentElement().getScrollTop();
+	  }
 }
