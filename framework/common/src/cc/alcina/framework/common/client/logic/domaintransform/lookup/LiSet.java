@@ -251,16 +251,12 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 	private void writeObject(java.io.ObjectOutputStream s)
 			throws java.io.IOException {
 		// Write out element count, and any hidden stuff
-		int expectedModCount = modCount;
 		s.defaultWriteObject();
 		// Write out array length
-		s.writeInt(elementData == null ? 0 : elementData.length);
+		s.writeInt(size());
 		// Write out all elements in the proper order.
-		for (int i = 0; i < size; i++) {
-			s.writeObject(elementData[i]);
-		}
-		if (modCount != expectedModCount) {
-			throw new ConcurrentModificationException();
+		for (Iterator<H> itr = iterator(); itr.hasNext();) {
+			s.writeObject(itr.next());
 		}
 	}
 
@@ -270,15 +266,12 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 	 */
 	private void readObject(java.io.ObjectInputStream s)
 			throws java.io.IOException, ClassNotFoundException {
-		// Read in size, and any hidden stuff
 		s.defaultReadObject();
-		// Read in array length and allocate array
 		int arrayLength = s.readInt();
 		if (arrayLength != 0) {
-			HasIdAndLocalId[] a = elementData = new HasIdAndLocalId[arrayLength];
-			// Read in all elements in the proper order.
+			// use add, to handle degenerate case
 			for (int i = 0; i < size; i++) {
-				a[i] = (HasIdAndLocalId) s.readObject();
+				add((H) s.readObject());
 			}
 		}
 	}

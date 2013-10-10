@@ -137,6 +137,28 @@ public class RemoteActionLoggerProvider {
 			return null;
 		}
 	}
+	public synchronized int getLoggerBufferLength(Class clazz) {
+		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
+		if (runningLoggers.containsKey(token)) {
+			Logger logger = runningLoggers.get(token);
+			StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
+					.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
+					.getWriterAccess();
+			return writerAccess.getBuffer().length();
+		}
+		return -1;
+	}
+	public synchronized String getLoggerBufferSubstring(Class clazz,int from, int to) {
+		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
+		if (runningLoggers.containsKey(token)) {
+			Logger logger = runningLoggers.get(token);
+			StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
+					.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
+					.getWriterAccess();
+			return writerAccess.getBuffer().substring(from,to);
+		}
+		return null;
+	}
 
 	static Layout l = new PatternLayout("%-5p [%c{1}] %m%n");
 
