@@ -225,4 +225,8 @@ public class BrowserMod {
 		var navigator = $wnd.navigator;
 		return navigator.userAgent.match(/iPad/i) ? true : false;
 	}-*/;
+
+	public static boolean requiresExplicitClickForAsyncDownload() {
+		return isInternetExplorer()||isFireFox();
+	}
 }
