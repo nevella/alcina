@@ -142,4 +142,7 @@ public class PermissibleAction implements Permissible {
 			return AccessLevel.EVERYONE;
 		}
 	}
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
 }

@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.gwittir.validator;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -32,7 +31,7 @@ public class LongValidator implements Validator {
 	}
 
 	public Object validate(Object value) throws ValidationException {
-		if (value == null || value instanceof Integer) {
+		if (value == null || value instanceof Long) {
 			return value;
 		}
 		Long l;
