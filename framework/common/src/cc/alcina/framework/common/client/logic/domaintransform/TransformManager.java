@@ -1407,8 +1407,23 @@ public abstract class TransformManager implements PropertyChangeListener,
 						c);
 			}
 		} else {
-			propertyAccessor().setPropertyValue(tgt, assoc.propertyName(),
-					remove ? null : obj);
+			/*
+			 * we can get in an ugly loop in the following case: x.parent=p1
+			 * x.setParent(p2) (cascade) p1.children.remove(x) (cascade)
+			 * x.setParent (null) (cascade) p2.children.remove(x) ... so only
+			 * null if the assoc prop is the old value
+			 */
+			if (remove) {
+				Object current = propertyAccessor().getPropertyValue(tgt,
+						assoc.propertyName());
+				if (current == obj) {
+					propertyAccessor().setPropertyValue(tgt,
+							assoc.propertyName(), null);
+				}
+			} else {
+				propertyAccessor().setPropertyValue(tgt, assoc.propertyName(),
+						obj);
+			}
 			// shouldn't fire for collection props, probly. also, collection
 			// mods are very unlikely to collide in a nasty way (since
 			// membership is really just a bitset, and colliding colln mods will
