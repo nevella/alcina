@@ -127,6 +127,16 @@ public class IntPair implements Comparable<IntPair> {
 		}
 		return result;
 	}
+	public static boolean containedInRanges(List<IntPair> ranges,
+			IntPair range) {
+		for (IntPair intPair : ranges) {
+			IntPair intersection = range.intersection(intPair);
+			if(intersection!=null&&!intersection.isPoint()){
+				return true;
+			}
+		}
+		return false;
+	}
 
 	public int trimToRange(int i) {
 		if (isPoint()) {
