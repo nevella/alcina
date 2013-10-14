@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_DOWNLOAD_ATTACHMENT;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
@@ -24,6 +25,7 @@ public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
 
 	protected String deliverViaServlet(InputStream stream, 
 			String mimeType, String suggestedFileName, String suffix) throws Exception {
+		suggestedFileName=CommonUtils.trimToWsChars(suggestedFileName, 200, "... ");
 		File file = File.createTempFile(suggestedFileName, "." + suffix);
 		file.deleteOnExit();
 		ResourceUtilities.writeStreamToStream(stream,
