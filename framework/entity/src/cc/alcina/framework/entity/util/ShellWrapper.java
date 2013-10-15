@@ -63,6 +63,7 @@ public class ShellWrapper {
 					System.out.println("Killing process (timeout)");
 					timedOut = true;
 					proc.destroy();
+					timer.cancel();
 				}
 			};
 			timer.schedule(killProcessTask, timeoutMs);
