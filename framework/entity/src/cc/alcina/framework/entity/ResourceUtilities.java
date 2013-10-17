@@ -237,15 +237,7 @@ public class ResourceUtilities {
 		return result;
 	}
 
-	public static <T> T copyBeanProperties(Object srcBean, T tgtBean) {
-		return copyBeanProperties(srcBean, tgtBean, null);
-	}
 
-	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
-			Class methodFilterAnnotation) {
-		return copyBeanProperties(srcBean, tgtBean, methodFilterAnnotation,
-				false);
-	}
 
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
 			Class methodFilterAnnotation, boolean cloneCollections) {

@@ -270,7 +270,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		int arrayLength = s.readInt();
 		if (arrayLength != 0) {
 			// use add, to handle degenerate case
-			for (int i = 0; i < size; i++) {
+			for (int i = 0; i < arrayLength; i++) {
 				add((H) s.readObject());
 			}
 		}

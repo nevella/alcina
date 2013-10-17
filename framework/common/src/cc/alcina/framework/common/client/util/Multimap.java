@@ -151,4 +151,11 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		return result;
 	}
+	public <T extends Comparable> Map<K, T> minMap() {
+		Map<K, T> result = new LinkedHashMap<K, T>();
+		for (java.util.Map.Entry<K, V> e : entrySet()) {
+			result.put(e.getKey(), (T) CollectionFilters.min(e.getValue()));
+		}
+		return result;
+	}
 }
