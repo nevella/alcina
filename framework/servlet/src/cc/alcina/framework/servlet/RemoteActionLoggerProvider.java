@@ -141,23 +141,30 @@ public class RemoteActionLoggerProvider {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
 		if (runningLoggers.containsKey(token)) {
 			Logger logger = runningLoggers.get(token);
-			StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
-					.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
-					.getWriterAccess();
-			return writerAccess.getBuffer().length();
+			return getLoggerBufferLength(logger);
 		}
 		return -1;
+	}
+	public static int getLoggerBufferLength(Logger logger) {
+		StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
+				.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
+				.getWriterAccess();
+		return writerAccess.getBuffer().length();
 	}
 	public synchronized String getLoggerBufferSubstring(Class clazz,int from, int to) {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
 		if (runningLoggers.containsKey(token)) {
 			Logger logger = runningLoggers.get(token);
-			StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
-					.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
-					.getWriterAccess();
-			return writerAccess.getBuffer().substring(from,to);
+			return getLoggerBufferSubstring(logger, from, to);
 		}
 		return null;
+	}
+
+	public static String getLoggerBufferSubstring(Logger logger, int from, int to) {
+		StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
+				.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
+				.getWriterAccess();
+		return writerAccess.getBuffer().substring(from,to);
 	}
 
 	static Layout l = new PatternLayout("%-5p [%c{1}] %m%n");

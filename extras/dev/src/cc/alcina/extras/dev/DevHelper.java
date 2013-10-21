@@ -11,6 +11,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -29,6 +30,7 @@ import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.apache.log4j.WriterAppender;
 
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -55,6 +57,7 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ServerURLComponentEncoder;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
+import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
@@ -383,8 +386,13 @@ public abstract class DevHelper {
 			a.setWriter(messagingWriter);
 			String stdAppndrName = "Standard_appender";
 			a.setName(stdAppndrName);
+			WriterAppender wa = new WriterAccessWriterAppender();
+			wa.setWriter(new StringWriter());
+			wa.setLayout(l);
+			wa.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
 			if (logger.getAppender(stdAppndrName) == null) {
 				logger.addAppender(a);
+				logger.addAppender(wa);
 			}
 			logger.setAdditivity(false);
 			Logger mlogger = MetricLogging.metricLogger;

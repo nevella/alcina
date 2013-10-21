@@ -103,6 +103,7 @@ import com.totsp.gwittir.client.validator.Validator;
  * @author Nick Reddel
  */
 public class ContentViewFactory {
+	public static final String CONTEXT_OVERRIDE_AUTOSAVE=ContentViewFactory.class.getName()+".CONTEXT_OVERRIDE_AUTOSAVE";
 	public static class RecheckVisibilityHandler implements Handler {
 		private final GridForm grid;
 
@@ -261,6 +262,10 @@ public class ContentViewFactory {
 			boolean doNotPrepare) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				bean.getClass());
+		Boolean overrideAutoSave= LooseContext.get(CONTEXT_OVERRIDE_AUTOSAVE);
+		if(overrideAutoSave!=null){
+			autoSave=overrideAutoSave.booleanValue();
+		}
 		boolean cloned = false;
 		Collection supportingObjects = new ArrayList();
 		if (!doNotClone

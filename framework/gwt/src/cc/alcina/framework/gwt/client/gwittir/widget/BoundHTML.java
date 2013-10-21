@@ -20,14 +20,19 @@
 
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import java.util.Comparator;
+
+import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
+
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.BoundWidget;
 
 /**
  *
  */
-public class BoundHTML extends AbstractBoundWidget<String> {
+public class BoundHTML extends AbstractBoundWidget<String> implements MultilineWidget{
     private com.google.gwt.user.client.ui.HTML base;
     
     /** Creates a new instance of Label */
@@ -204,5 +209,9 @@ public class BoundHTML extends AbstractBoundWidget<String> {
         base =  text == null ? new com.google.gwt.user.client.ui.HTML() : new com.google.gwt.user.client.ui.HTML(text);
         super.initWidget( base );
     }
+	@Override
+	public boolean isMultiline() {
+		return true;
+	}
     
 }

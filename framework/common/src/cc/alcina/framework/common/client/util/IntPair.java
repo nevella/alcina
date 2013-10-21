@@ -103,8 +103,9 @@ public class IntPair implements Comparable<IntPair> {
 	public boolean contains(IntPair other) {
 		return other == null ? false : other.equals(intersection(other));
 	}
+
 	public boolean contains(int i) {
-		return i>=i1 && i<=i2;
+		return i >= i1 && i <= i2;
 	}
 
 	public boolean containsExBoundaries(IntPair other) {
@@ -117,21 +118,21 @@ public class IntPair implements Comparable<IntPair> {
 	 */
 	public static List<IntPair> provideUncovered(List<IntPair> covered,
 			IntPair container) {
-		List<IntPair> result=new ArrayList<IntPair>();
-		for(int i=0;i<=covered.size();i++){
-			int from=i==0?container.i1:covered.get(i-1).i2;
-			int to=i==covered.size()?container.i2:covered.get(i).i1;
-			if(from!=to){
+		List<IntPair> result = new ArrayList<IntPair>();
+		for (int i = 0; i <= covered.size(); i++) {
+			int from = i == 0 ? container.i1 : covered.get(i - 1).i2;
+			int to = i == covered.size() ? container.i2 : covered.get(i).i1;
+			if (from != to) {
 				result.add(new IntPair(from, to));
 			}
 		}
 		return result;
 	}
-	public static boolean containedInRanges(List<IntPair> ranges,
-			IntPair range) {
+
+	public static boolean containedInRanges(List<IntPair> ranges, IntPair range) {
 		for (IntPair intPair : ranges) {
 			IntPair intersection = range.intersection(intPair);
-			if(intersection!=null&&!intersection.isPoint()){
+			if (intersection != null && !intersection.isPoint()) {
 				return true;
 			}
 		}
@@ -149,5 +150,9 @@ public class IntPair implements Comparable<IntPair> {
 			return i2 - 1;
 		}
 		return i;
+	}
+
+	public String substring(String str) {
+		return str.substring(Math.max(i1, 0), Math.min(i2, str.length()));
 	}
 }
