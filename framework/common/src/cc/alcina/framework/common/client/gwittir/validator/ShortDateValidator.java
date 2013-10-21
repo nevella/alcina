@@ -29,7 +29,7 @@ import com.totsp.gwittir.client.validator.Validator;
 public class ShortDateValidator implements Validator {
 	public static final ShortDateValidator INSTANCE = new ShortDateValidator();
 
-	private ShortDateValidator() {
+	public ShortDateValidator() {
 	}
 
 	public static final transient String ERR_FMT = "Dates must be "
