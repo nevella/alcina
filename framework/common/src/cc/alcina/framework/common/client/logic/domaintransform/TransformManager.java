@@ -282,17 +282,26 @@ public abstract class TransformManager implements PropertyChangeListener,
 			switch (transformType) {
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF:
+				boolean equivalentValues = CommonUtils.equalsWithNullEquality(
+						existingTargetValue, newTargetValue);
 				if (updateAssociationsWithoutNoChangeCheck()
-						|| !CommonUtils.equalsWithNullEquality(
-								existingTargetValue, newTargetValue)) {
+						|| !equivalentValues) {
 					if (existingTargetValue instanceof Collection) {
 						throw new RuntimeException(
 								"Should not null a collection property:\n "
 										+ event.toString());
 					}
+					/*
+					 * sort of gnarly here - when we're using transactional
+					 * memcache we may want to replace the collection member
+					 * (non-transactional) with a transactional clone - which
+					 * equals() - but we definitely don't want to get stuck in a
+					 * loop
+					 */
 					updateAssociation(event, obj, existingTargetValue, true,
-							true);
-					updateAssociation(event, obj, newTargetValue, false, true);
+							!equivalentValues);
+					updateAssociation(event, obj, newTargetValue, false,
+							!equivalentValues);
 				}
 				break;
 			}
