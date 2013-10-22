@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -9,8 +10,11 @@ import java.util.List;
 import org.apache.bcel.generic.NEW;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.log.TaggedLogger;
+import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
@@ -51,6 +55,10 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		}
 	}
 
+	public boolean isUnique() {
+		return false;
+	}
+
 	@Override
 	public void insert(T t) {
 		Object[] values = project(t);
@@ -62,6 +70,23 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 						lookup.put((Object[]) tuple);
 					}
 				} else {
+					if (isUnique()) {
+						Object[] keys = Arrays
+								.copyOf(values, values.length - 1);
+						if (!lookup.checkKeys(keys)) {
+							return;
+						}
+						T existing = lookup.get(keys);
+						if (existing != null) {
+							Registry.impl(TaggedLoggers.class)
+									.log(String.format(
+											"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
+											this, Arrays.asList(values),
+											existing), AlcinaMemCache.class,
+											TaggedLogger.WARN);
+							return;
+						}
+					}
 					lookup.put(values);
 				}
 			} catch (Exception e) {

@@ -204,4 +204,9 @@ public class UnsortedMultikeyMap<V> implements MultikeyMap<V>, Serializable {
 	public Map writeableDelegate() {
 		return delegate;
 	}
+
+	@Override
+	public boolean checkKeys(Object[] keys) {
+		return true;
+	}
 }

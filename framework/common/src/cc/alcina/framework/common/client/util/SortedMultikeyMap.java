@@ -204,4 +204,14 @@ public class SortedMultikeyMap<V> implements MultikeyMap<V>, Serializable {
 	public List<List> asTuples() {
 		return multikeyMapSupport.asTuples();
 	}
+
+	@Override
+	public boolean checkKeys(Object[] keys) {
+		for (Object object : keys) {
+			if(object==null){
+				return false;
+			}
+		}
+		return true;
+	}
 }
