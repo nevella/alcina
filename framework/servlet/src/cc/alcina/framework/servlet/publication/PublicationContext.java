@@ -81,4 +81,8 @@ public class PublicationContext {
 	public void setVisitor(PublicationVisitor visitor) {
 		this.visitor = visitor;
 	}
+
+	public PublicationVisitor getVisitorOrNoop() {
+		return this.visitor==null?new PublicationVisitor():this.visitor;
+	}
 }

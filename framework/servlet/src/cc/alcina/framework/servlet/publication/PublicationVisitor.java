@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.publication;
 
+import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.servlet.publication.ContentWrapper.WrapperModel;
 
 /**
@@ -15,5 +16,9 @@ public class PublicationVisitor {
 
 	public String adjustWrapperXslPath(String suggested) { 
 		return suggested;
+	}
+	
+	public void publicationFinished(PublicationResult result){
+		
 	}
 }

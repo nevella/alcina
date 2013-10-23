@@ -96,7 +96,7 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 	}
 
 	protected TransformerFactoryConfigurator getTransformerFactoryConfigurator() {
-		return null;
+		return new TransformerConfigurator();
 	}
 
 	@RegistryLocation(registryPoint = JaxbContextRegistration.class)

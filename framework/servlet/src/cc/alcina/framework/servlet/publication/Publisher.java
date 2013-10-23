@@ -79,8 +79,8 @@ public class Publisher {
 	@SuppressWarnings("unchecked")
 	private PublicationResult publish0(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Publication original) throws Exception {
-		ContentModelHandler cmh = (ContentModelHandler) Registry
-				.get().instantiateSingle(ContentModelHandler.class,
+		ContentModelHandler cmh = (ContentModelHandler) Registry.get()
+				.instantiateSingle(ContentModelHandler.class,
 						contentDefinition.getClass());
 		cmh.prepareContent(contentDefinition, deliveryModel);
 		if (!cmh.hasResults) {
@@ -116,9 +116,8 @@ public class Publisher {
 			publicationContentPersister.persistContentRendererResults(
 					crh.getResults(), publicationId);
 		}
-		ContentWrapper cw = (ContentWrapper) Registry.get()
-				.instantiateSingle(ContentWrapper.class,
-						publicationContent.getClass());
+		ContentWrapper cw = (ContentWrapper) Registry.get().instantiateSingle(
+				ContentWrapper.class, publicationContent.getClass());
 		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
 				crh.getResults(), publicationId, publicationUserId);
 		if (deliveryModel.provideContentDeliveryType().getClass() == null) {
@@ -140,46 +139,47 @@ public class Publisher {
 		fcm.bytes = cw.wrappedBytes;
 		fcm.custom = cw.custom;
 		InputStream convertedContent = fc.convert(ctx, fcm);
-		ContentDelivery deliverer = (ContentDelivery) Registry
-				.get().instantiateSingle(ContentDeliveryType.class,
+		ContentDelivery deliverer = (ContentDelivery) Registry.get()
+				.instantiateSingle(ContentDeliveryType.class,
 						deliveryModel.provideContentDeliveryType().getClass());
 		String token = deliverer.deliver(ctx, convertedContent, deliveryModel,
 				fc);
 		result.content = null;
 		result.contentToken = token;
+		ctx.getVisitorOrNoop().publicationFinished(result);
 		return result;
 	}
 
 	private long persist(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Long publicationUserId,
 			Publication original) {
-			Publication publication = publicationContentPersister
-					.newPublicationInstance();
-			if (contentDefinition instanceof HasId) {
-				HasId hasId = (HasId) contentDefinition;
-				hasId.setId(0);
-				// force new
-			}
-			if (deliveryModel instanceof HasId) {
-				HasId hasId = (HasId) deliveryModel;
-				hasId.setId(0);
-				// force new
-			}
-			publication.setContentDefinition(contentDefinition);
-			publication.setDeliveryModel(deliveryModel);
-			publication.setUser(PermissionsManager.get().getUser());
-			publication.setPublicationDate(new Date());
-			publication.setOriginalPublication(original);
-			publication.setUserPublicationId(publicationUserId);
-			publication.setPublicationType(contentDefinition
-					.getPublicationType());
-			return ServletLayerLocator.get().commonPersistenceProvider()
-					.getCommonPersistence().merge(publication);
+		Publication publication = publicationContentPersister
+				.newPublicationInstance();
+		if (contentDefinition instanceof HasId) {
+			HasId hasId = (HasId) contentDefinition;
+			hasId.setId(0);
+			// force new
+		}
+		if (deliveryModel instanceof HasId) {
+			HasId hasId = (HasId) deliveryModel;
+			hasId.setId(0);
+			// force new
+		}
+		publication.setContentDefinition(contentDefinition);
+		publication.setDeliveryModel(deliveryModel);
+		publication.setUser(PermissionsManager.get().getUser());
+		publication.setPublicationDate(new Date());
+		publication.setOriginalPublication(original);
+		publication.setUserPublicationId(publicationUserId);
+		publication.setPublicationType(contentDefinition.getPublicationType());
+		return ServletLayerLocator.get().commonPersistenceProvider()
+				.getCommonPersistence().merge(publication);
 	}
 
 	private static PublicationContentPersister publicationContentPersister;
 
-	public static void registerPublicationPersister(PublicationContentPersister pp) {
+	public static void registerPublicationPersister(
+			PublicationContentPersister pp) {
 		publicationContentPersister = pp;
 	}
 
