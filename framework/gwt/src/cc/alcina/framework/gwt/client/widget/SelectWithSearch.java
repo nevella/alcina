@@ -36,6 +36,7 @@ import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
@@ -56,6 +57,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
@@ -301,10 +303,26 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return holder;
 	}
 
+	public static native Element getFocussedDocumentElement()/*-{
+		if ($doc.activeElement) {
+			var tagName = $doc.activeElement.tagName.toLowerCase();
+			return tagName != "body" && tagName != "html" ? $doc.activeElement : null;
+		}
+		return true;
+	}-*/;
+
 	protected void handleFilterBlur() {
 		new Timer() {
 			@Override
 			public void run() {
+				// https://jira.barnet.com.au/browse/JAD-5053 - IE
+				// blur/scrollbar issue
+				if (BrowserMod.isInternetExplorer()) {
+					Element elt = getFocussedDocumentElement();
+					if (elt != null && elt.getClassName().contains("scroller")) {
+						return;
+					}
+				}
 				hidePopdown();
 			}
 		}.schedule(250);
