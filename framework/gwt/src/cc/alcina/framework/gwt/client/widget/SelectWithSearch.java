@@ -308,7 +308,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			var tagName = $doc.activeElement.tagName.toLowerCase();
 			return tagName != "body" && tagName != "html" ? $doc.activeElement : null;
 		}
-		return true;
+		return null;
 	}-*/;
 
 	protected void handleFilterBlur() {
