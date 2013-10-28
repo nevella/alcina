@@ -147,6 +147,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = CommonRemoteServiceServlet.class
 			.getName() + ".TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION";
+	
+	public static final String CONTEXT_IS_PERFORMING_SUBJOB = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_IS_PERFORMING_SUBJOB";
 
 	private int actionCount = 0;
 
@@ -339,6 +342,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public ActionLogItem performActionAndWait(final RemoteAction action,
 			boolean subJob) throws WebException {
+		
+		if(LooseContext.getBoolean(CONTEXT_IS_PERFORMING_SUBJOB)){
+			subJob=true;
+		}
 		checkAnnotatedPermissions(action);
 		RemoteActionPerformer performer = (RemoteActionPerformer) Registry
 				.get().instantiateSingle(RemoteActionPerformer.class,
