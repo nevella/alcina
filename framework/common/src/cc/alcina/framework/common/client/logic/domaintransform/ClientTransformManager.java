@@ -573,4 +573,9 @@ public abstract class ClientTransformManager extends TransformManager {
 				collectionClass, getDomainObjects().getCollection(
 						collectionClass), fromPropertyChange));
 	}
+
+	@Override
+	protected boolean alwaysFireObjectOwnerCollectionModifications() {
+		return true;
+	}
 }

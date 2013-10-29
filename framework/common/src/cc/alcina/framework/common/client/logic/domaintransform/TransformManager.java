@@ -296,12 +296,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 					 * memcache we may want to replace the collection member
 					 * (non-transactional) with a transactional clone - which
 					 * equals() - but we definitely don't want to get stuck in a
-					 * loop
+					 * loop. on the other hand, the client should always fire collection mods
 					 */
+					boolean fireCollectionMods=!equivalentValues||alwaysFireObjectOwnerCollectionModifications();
 					updateAssociation(event, obj, existingTargetValue, true,
-							!equivalentValues);
+							fireCollectionMods);
 					updateAssociation(event, obj, newTargetValue, false,
-							!equivalentValues);
+							fireCollectionMods);
 				}
 				break;
 			}
@@ -366,6 +367,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			assert false : "Transform type not implemented: " + transformType;
 		}
 		currentEvent = null;
+	}
+
+	protected boolean alwaysFireObjectOwnerCollectionModifications() {
+		return false;
 	}
 
 	protected boolean updateAssociationsWithoutNoChangeCheck() {
