@@ -237,8 +237,6 @@ public class ResourceUtilities {
 		return result;
 	}
 
-
-
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
 			Class methodFilterAnnotation, boolean cloneCollections) {
 		return copyBeanProperties(srcBean, tgtBean, methodFilterAnnotation,
@@ -336,7 +334,12 @@ public class ResourceUtilities {
 	}
 
 	public static void writeStringToFile(String s, File f) throws IOException {
-		OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(f),
+		writeStringToOutputStream(s, new FileOutputStream(f));
+	}
+
+	public static void writeStringToOutputStream(String s, OutputStream os)
+			throws IOException {
+		OutputStreamWriter fw = new OutputStreamWriter(os,
 				"UTF-8");
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);

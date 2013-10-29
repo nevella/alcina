@@ -59,6 +59,13 @@ public class CollectionFilters {
 		}
 	};
 
+	public static final CollectionFilter<String> IS_NOT_NULL_OR_EMPTY_FILTER = new CollectionFilter<String>() {
+		@Override
+		public boolean allow(String o) {
+			return CommonUtils.isNotNullOrEmpty(o);
+		}
+	};
+
 	public static <V> void apply(Collection<? extends V> collection,
 			Callback<V> callback) {
 		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr

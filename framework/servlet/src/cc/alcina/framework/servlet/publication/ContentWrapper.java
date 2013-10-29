@@ -89,7 +89,11 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	protected Map<String, String> replacementParameters = new HashMap<String, String>();
 
-	protected WrapperModel wrapper = new WrapperModel();
+	protected WrapperModel wrapper = createWrapperModel();
+
+	protected WrapperModel createWrapperModel() {
+		return new WrapperModel();
+	}
 
 	protected String xslPath;
 

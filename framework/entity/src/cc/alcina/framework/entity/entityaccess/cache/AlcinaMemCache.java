@@ -263,12 +263,27 @@ public class AlcinaMemCache {
 
 	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
 			String key, Object value, boolean createIfNonexistent) {
-		T first = new AlcinaMemCacheQuery().filter(key, value).find(clazz);
+		return findOrCreate(clazz, key, value, null, null, createIfNonexistent);
+	}
+
+	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
+			String key1, Object value1, String key2, Object value2,
+			boolean createIfNonexistent) {
+		AlcinaMemCacheQuery query = new AlcinaMemCacheQuery().filter(key1,
+				value1);
+		if (key2 != null) {
+			query.filter(key2, value2);
+		}
+		T first = query.find(clazz);
 		if (first == null && createIfNonexistent) {
 			first = (T) TransformManager.get()
 					.createDomainObject((Class) clazz);
 			CommonLocator.get().propertyAccessor()
-					.setPropertyValue(first, key, value);
+					.setPropertyValue(first, key1, value1);
+			if (key2 != null) {
+				CommonLocator.get().propertyAccessor()
+						.setPropertyValue(first, key2, value2);
+			}
 		}
 		return first;
 	}
