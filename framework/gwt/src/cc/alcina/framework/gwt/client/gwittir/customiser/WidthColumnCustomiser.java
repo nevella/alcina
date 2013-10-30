@@ -45,6 +45,9 @@ public class WidthColumnCustomiser implements Customiser {
 			HasMaxWidth {
 		private String columnWidth;
 
+		public StringLabelProvider() {
+		}
+
 		public StringLabelProvider(String columnWidth) {
 			this.columnWidth = columnWidth;
 		}
