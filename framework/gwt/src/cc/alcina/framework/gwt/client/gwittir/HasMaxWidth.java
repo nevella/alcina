@@ -29,4 +29,6 @@ package cc.alcina.framework.gwt.client.gwittir;
 	 * 0 implies ignore
 	 */
 	public int getMinPercentOfTable();
+	
+	public String getColumnWidthString();
 }

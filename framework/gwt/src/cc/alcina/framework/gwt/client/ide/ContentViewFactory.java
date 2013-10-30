@@ -620,6 +620,10 @@ public class ContentViewFactory {
 							getCellFormatter().setWidth(0, i, pxWidth + "px");
 						}
 					}
+					String strw = hmw.getColumnWidthString();
+					if(strw!=null){
+						getCellFormatter().setWidth(0, i, strw);
+					}
 				}
 				i++;
 				if (i >= table.getCellCount(0)) {

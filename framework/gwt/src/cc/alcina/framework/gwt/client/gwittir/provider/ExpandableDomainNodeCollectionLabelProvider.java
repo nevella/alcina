@@ -52,4 +52,9 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	public int getMinPercentOfTable() {
 		return 0;
 	}
+
+	@Override
+	public String getColumnWidthString() {
+		return null;
+	}
 }
