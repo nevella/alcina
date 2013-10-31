@@ -96,4 +96,8 @@ public class PropertyPathAccessor {
 		ensureAccessors(obj, idx);
 		accessors[idx].setPropertyValue(obj, value);
 	}
+
+	public String getPropertyPath() {
+		return this.propertyPath;
+	}
 }

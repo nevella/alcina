@@ -2,14 +2,17 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.lang.annotation.Annotation;
 
+import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
@@ -17,7 +20,9 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 
 public class TransactionalSubgraphTransformManager extends
 		SubgraphTransformManager implements PropertyAccessor {
-	ThreadlocalTransformManager threadTm = ThreadlocalTransformManager.cast();
+	TransformManager threadTm = TransformManager.get();
+
+	PropertyAccessor propertyAccessor = CommonLocator.get().propertyAccessor();
 
 	@Override
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
@@ -96,8 +101,18 @@ public class TransactionalSubgraphTransformManager extends
 		if (event.getTransformType() == TransformType.CREATE_OBJECT) {
 			// if an object is newly created (by the tltm), it won't be in the
 			// memcache graph - so use it, don't create a new one
-			registerDomainObject(threadTm.getObject(event));
-			return;
+			boolean inGraph = false;
+			try {
+				inGraph = getObject(event) != null;
+				if (!inGraph) {
+					registerDomainObject(threadTm.getObject(event));
+				}
+				return;
+			} catch (Exception e) {
+				// object not in graph, fall through to create
+				super.consume(event);
+				return;
+			}
 		}
 		if (event.getSource() != null) {
 			HasIdAndLocalId source = event.getSource();
@@ -146,19 +161,19 @@ public class TransactionalSubgraphTransformManager extends
 
 	@Override
 	public Object getPropertyValue(Object bean, String propertyName) {
-		return threadTm.getPropertyValue(bean, propertyName);
+		return propertyAccessor.getPropertyValue(bean, propertyName);
 	}
 
 	@Override
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
-		return threadTm.getAnnotationForProperty(targetClass, annotationClass,
-				propertyName);
+		return propertyAccessor.getAnnotationForProperty(targetClass,
+				annotationClass, propertyName);
 	}
 
 	@Override
 	public Class getPropertyType(Class objectClass, String propertyName) {
-		return threadTm.getPropertyType(objectClass, propertyName);
+		return propertyAccessor.getPropertyType(objectClass, propertyName);
 	}
 
 	@Override

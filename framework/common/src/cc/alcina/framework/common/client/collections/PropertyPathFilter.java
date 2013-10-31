@@ -44,4 +44,10 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 		}
 		return false;
 	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("Filter: %s=%s", accessor.getPropertyPath(),
+				targetValue);
+	}
 }

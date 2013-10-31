@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.entity.entityaccess.cache.CacheLookupDescriptor.IdCacheLookupDescriptor;
+
 public class CacheItemDescriptor {
 	public Class clazz;
 
@@ -21,6 +24,14 @@ public class CacheItemDescriptor {
 		this.clazz = clazz;
 		for (String propertyIndex : propertyIndicies) {
 			addLookup(new CacheLookupDescriptor(clazz, propertyIndex));
+		}
+	}
+
+	public CacheItemDescriptor(Class clazz, boolean idLookups,
+			String... propertyIndicies) {
+		this.clazz = clazz;
+		for (String propertyIndex : propertyIndicies) {
+			addLookup(new IdCacheLookupDescriptor(clazz, propertyIndex));
 		}
 	}
 

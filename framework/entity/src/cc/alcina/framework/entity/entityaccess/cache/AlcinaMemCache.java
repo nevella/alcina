@@ -263,16 +263,23 @@ public class AlcinaMemCache {
 
 	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
 			String key, Object value, boolean createIfNonexistent) {
-		return findOrCreate(clazz, key, value, null, null, createIfNonexistent);
+		return findOrCreate(clazz, key, value, null, null, createIfNonexistent,false);
 	}
 
 	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
 			String key1, Object value1, String key2, Object value2,
-			boolean createIfNonexistent) {
+			boolean createIfNonexistent, boolean raw) {
 		AlcinaMemCacheQuery query = new AlcinaMemCacheQuery().filter(key1,
 				value1);
+		if(raw){
+			query.raw();
+		}
 		if (key2 != null) {
 			query.filter(key2, value2);
+		}if(raw){
+			query.raw();
+		}if(raw){
+			query.raw();
 		}
 		T first = query.find(clazz);
 		if (first == null && createIfNonexistent) {
@@ -440,6 +447,16 @@ public class AlcinaMemCache {
 				&& hili instanceof BaseSourcesPropertyChangeEvents) {
 			modificationCheckerField.set(hili, modificationChecker);
 		}
+	}
+
+	private Set getFilteredTransactional(final Class clazz,
+			CacheFilter cacheFilter, Set existing) {
+		final CollectionFilter filter = cacheFilter.collectionFilter != null ? cacheFilter.collectionFilter
+				: new PropertyPathFilter(cacheFilter.propertyPath,
+						cacheFilter.propertyValue);
+		existing = existing != null ? existing : transactional.rawValues(clazz);
+		CollectionFilters.filterInPlace(existing, filter);
+		return existing;
 	}
 
 	private Set<Long> getFiltered(final Class clazz, CacheFilter cacheFilter,
@@ -932,17 +949,30 @@ public class AlcinaMemCache {
 			AlcinaMemCacheQuery query) {
 		try {
 			lock(false);
+			List<T> raw = null;
 			Set<Long> ids = query.getIds();
-			for (int i = 0; i < query.getFilters().size(); i++) {
-				ids = getFiltered(clazz, query.getFilters().get(i),
-						(i == 0 && ids.isEmpty()) ? null : ids);
-			}
-			List<T> raw = new ArrayList<T>(ids.size());
-			for (Long id : ids) {
-				T value = cache.get(clazz, id);
-				if (value != null) {
-					raw.add(value);
+			boolean transaction = transactional
+					.transactionActiveInCurrentThread();
+			if (!transaction || !ids.isEmpty()) {
+				for (int i = 0; i < query.getFilters().size(); i++) {
+					ids = getFiltered(clazz, query.getFilters().get(i),
+							(i == 0 && ids.isEmpty()) ? null : ids);
 				}
+				raw = new ArrayList<T>(ids.size());
+				for (Long id : ids) {
+					T value = cache.get(clazz, id);
+					if (value != null) {
+						raw.add(value);
+					}
+				}
+			} else {
+				Set<T> rawTransactional = null;
+				for (int i = 0; i < query.getFilters().size(); i++) {
+					rawTransactional = getFilteredTransactional(clazz, query
+							.getFilters().get(i), (i == 0) ? null
+							: rawTransactional);
+				}
+				raw = new ArrayList<T>(rawTransactional);
 			}
 			try {
 				for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
@@ -1082,6 +1112,15 @@ public class AlcinaMemCache {
 				transaction.start();
 			}
 			return transaction;
+		}
+
+		public Set rawValues(Class clazz) {
+			PerThreadTransaction perThreadTransaction = transactions.get();
+			if (perThreadTransaction == null) {
+				return new LinkedHashSet(cache.rawValues(clazz));
+			}
+			return new LinkedHashSet(perThreadTransaction.rawValues(clazz,
+					cache));
 		}
 
 		Set<Long> activeTransactionThreadIds = new LinkedHashSet<Long>();

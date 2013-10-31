@@ -1,14 +1,19 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.Collection;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
-public abstract class PerThreadTransaction {
+@RegistryLocation(registryPoint = PerThreadTransaction.class, implementationType = ImplementationType.INSTANCE)
+public class PerThreadTransaction {
 	TransactionalSubgraphTransformManager transactionTransformManager;
 
 	private DomainTransformListener transformListener = new DomainTransformListener() {
@@ -69,5 +74,15 @@ public abstract class PerThreadTransaction {
 
 	public void committing() {
 		TransformManager.get().removeDomainTransformListener(transformListener);
+	}
+
+	
+	public Collection<? extends Object> rawValues(Class clazz,
+			DetachedEntityCache cache) {
+		Set values = cache.values(clazz);
+		Collection<? extends HasIdAndLocalId> perClassTransactional = (Collection<? extends HasIdAndLocalId>) transactionTransformManager.modified
+				.getCollection(clazz);
+		values.addAll(perClassTransactional);
+		return values;
 	}
 }

@@ -85,8 +85,8 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 
 	@UnsafeNativeLong
 	private native int fastHash(long id, long localId, int classHashCode)/*-{
-																			return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h ^ classHashCode;
-																			}-*/;
+		return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h ^ classHashCode;
+	}-*/;
 
 	/**
 	 * used - and why? Because an object we map will _always_ have either a
