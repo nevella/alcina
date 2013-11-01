@@ -21,7 +21,9 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 
@@ -90,14 +92,12 @@ public class SessionHelper {
 	private void resetPermissions() {
 		ThreadedPermissionsManager.cast().reset();
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
-		CommonPersistenceLocal up = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistenceExTransaction();
+		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistenceExTransaction();
 		PermissionsManager.get().setUser(getUser(up.getAnonymousUserName()));
 	}
 
 	protected IUser getUser(String userName) {
-		CommonPersistenceLocal up = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		return up.getUserByName(userName, true);
 	}
 
@@ -120,8 +120,7 @@ public class SessionHelper {
 
 	public String getValidatedClientInstanceUserName(long clientInstanceId,
 			int clientInstanceAuth) {
-		CommonPersistenceLocal up = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		if (up.validateClientInstance(clientInstanceId, clientInstanceAuth)) {
 			return up.getUserNameFor(clientInstanceId);
 		}

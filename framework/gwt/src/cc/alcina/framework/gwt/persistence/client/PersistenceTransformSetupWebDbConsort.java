@@ -4,7 +4,6 @@ import cc.alcina.framework.common.client.state.AllStatesConsort;
 import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 import com.google.code.gwt.database.client.Database;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class PersistenceTransformSetupWebDbConsort extends
 		AllStatesConsort<PersistenceTransformSetupState> {

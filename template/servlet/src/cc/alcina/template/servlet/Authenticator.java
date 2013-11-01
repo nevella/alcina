@@ -4,19 +4,19 @@ import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.UnixCrypt;
-import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 class Authenticator {
 	protected AlcinaTemplateUser processAuthenticatedLogin(LoginResponse lrb,
 			String userName) throws AuthenticationException {
-		CommonPersistenceLocal up = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		AlcinaTemplateUser user = (AlcinaTemplateUser) up
 				.getUserByName(userName);
 		if (CommonUtils.bv(user.getDeleted())
@@ -28,8 +28,7 @@ class Authenticator {
 	}
 
 	public IUser createUser(String userName, String password) {
-		CommonPersistenceLocal up = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			AlcinaTemplateUser user = new AlcinaTemplateUser();
@@ -50,8 +49,7 @@ class Authenticator {
 		LoginResponse lrb = new LoginResponse();
 		lrb.setOk(false);
 		String userName = loginBean.getUserName();
-		CommonPersistenceLocal up = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		AlcinaTemplateUser user = (AlcinaTemplateUser) up
 				.getUserByName(userName);
 		if (user == null) {

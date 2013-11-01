@@ -16,14 +16,12 @@ package cc.alcina.framework.entity.logic.permissions;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.UserlandProvider;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 
@@ -76,7 +74,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 				setInstantiatedUser(new GraphProjection(null,
 						INSTANTIATE_IMPL_FILTER).project(user, null));
 			} catch (Exception e) {
-				if (EntityLayerLocator.get().jpaImplementation()
+				if (Registry.impl(JPAImplementation.class)
 						.isLazyInitialisationException(e)) {
 				} else {
 					throw new WrappedRuntimeException(e);

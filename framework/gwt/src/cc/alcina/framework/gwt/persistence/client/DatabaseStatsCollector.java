@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CountingMap;
 
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;

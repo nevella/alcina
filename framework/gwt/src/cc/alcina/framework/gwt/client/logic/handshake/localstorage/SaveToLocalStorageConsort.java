@@ -1,15 +1,10 @@
 package cc.alcina.framework.gwt.client.logic.handshake.localstorage;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.state.AllStatesConsort;
-import cc.alcina.framework.common.client.state.EnumPlayer;
-import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.localstorage.SaveToLocalStorageConsort.State;
 import cc.alcina.framework.gwt.persistence.client.ClientSession;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
-
-import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
  * Note the logic - at most one chunk will be persisted, and at most one

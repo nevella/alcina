@@ -20,8 +20,8 @@ import java.util.Set;
 
 import org.hibernate.proxy.HibernateProxy;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilter;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
@@ -35,7 +35,7 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 
 	protected JPAImplementation jpaImplementation;
 	public Hibernate4CloneFilter() {
-		this.jpaImplementation = EntityLayerLocator.get().jpaImplementation();
+		this.jpaImplementation = Registry.impl(JPAImplementation.class);
 	}
 	
 

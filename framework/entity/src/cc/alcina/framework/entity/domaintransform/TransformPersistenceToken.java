@@ -11,9 +11,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
+import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
 
 public class TransformPersistenceToken {
 	private final DomainTransformRequest request;
@@ -60,8 +61,7 @@ public class TransformPersistenceToken {
 		this.forOfflineTransforms = forOfflineTransforms;
 		this.logger = logger;
 		this.blockUntilAllListenersNotified = blockUntilAllListenersNotified;
-		this.transformExceptionPolicy = EntityLayerLocator.get()
-				.persistenceLayerTransformExceptionPolicyFactory()
+		this.transformExceptionPolicy = Registry.impl(PersistenceLayerTransformExceptionPolicyFactory.class)
 				.getPolicy(this, forOfflineTransforms);
 	}
 

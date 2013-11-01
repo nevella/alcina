@@ -10,9 +10,12 @@ import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.gwt.client.action.DtrSimpleAdminPersistenceAction;
-import cc.alcina.framework.servlet.ServletLayerLocator;
+import cc.alcina.framework.servlet.CommonRemoteServletProvider;
+import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.job.JobRegistry;
 
 @RegistryLocation(registryPoint = RemoteActionPerformer.class, targetClass = DtrSimpleAdminPersistenceAction.class)
@@ -21,7 +24,7 @@ public class DtrSimpleAdminPersistenceHandler implements
 	private JobInfo jobInfo;
 
 	public ActionLogItem commit(DeltaApplicationRecord wrapper) {
-		Logger logger = ServletLayerLocator.get().remoteActionLoggerProvider()
+		Logger logger = Registry.impl(RemoteActionLoggerProvider.class)
 				.getLogger(this.getClass());
 		ActionLogItem item = null;
 		long t1 = System.currentTimeMillis();
@@ -29,14 +32,12 @@ public class DtrSimpleAdminPersistenceHandler implements
 		jobInfo = JobRegistry.get().startJob(getClass(),
 				SEUtilities.friendlyClassName(getClass()), null);
 		try {
-			item = ServletLayerLocator.get().commonPersistenceProvider()
+			item = Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence()
 					.getImplementation(ActionLogItem.class).newInstance();
 			String t = wrapper.getText();
 			wrapper.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
-			ServletLayerLocator
-					.get()
-					.commonRemoteServletProvider()
+			Registry.impl(CommonRemoteServletProvider.class)
 					.getCommonRemoteServiceServlet()
 					.persistOfflineTransforms(
 							Arrays.asList(new DeltaApplicationRecord[] { wrapper }),
@@ -56,8 +57,7 @@ public class DtrSimpleAdminPersistenceHandler implements
 		logger.info(String.format(
 				"Run time: %.4f s. - avg. time per doc: %s ms.",
 				((float) (t2 - t1)) / 1000, avgTime));
-		item.setActionLog(ServletLayerLocator.get()
-				.remoteActionLoggerProvider().closeLogger(this.getClass()));
+		item.setActionLog(Registry.impl(RemoteActionLoggerProvider.class).closeLogger(this.getClass()));
 		return item;
 	}
 

@@ -12,11 +12,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupJvm;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.MethodIndividualPropertyAccessor;
-import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 
 public class TransactionalSubgraphTransformManager extends
 		SubgraphTransformManager implements PropertyAccessor {
@@ -143,6 +141,7 @@ public class TransactionalSubgraphTransformManager extends
 		if (object instanceof HasIdAndLocalId) {
 			HasIdAndLocalId endpoint = getObject((HasIdAndLocalId) object);
 			modified.mapObject(endpoint);
+			return endpoint;
 		}
 		return object;
 	}

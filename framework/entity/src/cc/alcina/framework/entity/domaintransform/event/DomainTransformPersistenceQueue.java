@@ -30,7 +30,7 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersiste
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
@@ -315,7 +315,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	protected CommonPersistenceLocal getCommonPersistence() {
-		return EntityLayerLocator.get().commonPersistenceProvider()
+		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence();
 	}
 

@@ -5,9 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
-
 public class DomainModelDeltaLookup {
 	public Map<String, DomainModelDeltaSignature> nonVersionedSignatures = new LinkedHashMap<String, DomainModelDeltaSignature>();
 

@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -53,7 +53,7 @@ public class GraphProjections {
 	}
 
 	public GraphProjections implCallback(InstantiateImplCallback callback) {
-		dataFilter = EntityLayerLocator.get().jpaImplementation()
+		dataFilter = Registry.impl(JPAImplementation.class)
 				.getResolvingFilter(callback, new DetachedEntityCache());
 		return this;
 	}

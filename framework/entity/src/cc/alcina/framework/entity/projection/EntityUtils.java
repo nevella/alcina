@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
@@ -135,8 +135,7 @@ public class EntityUtils {
 	
 	public <T> T detachedClone(T source, InstantiateImplCallback callback,
 			DetachedEntityCache cache) {
-		GraphProjectionDataFilter dataFilter = EntityLayerLocator.get()
-				.jpaImplementation().getResolvingFilter(callback, cache);
+		GraphProjectionDataFilter dataFilter = Registry.impl(JPAImplementation.class).getResolvingFilter(callback, cache);
 		try {
 			return new GraphProjection(Registry.impl(PermissibleFieldFilter.class), dataFilter)
 					.project(source, null);
@@ -149,8 +148,7 @@ public class EntityUtils {
 	public <T> T detachedCloneIgnorePermissions(T source,
 			InstantiateImplCallback callback) {
 		DetachedEntityCache cache = new DetachedEntityCache();
-		GraphProjectionDataFilter dataFilter = EntityLayerLocator.get()
-				.jpaImplementation().getResolvingFilter(callback, cache);
+		GraphProjectionDataFilter dataFilter = Registry.impl(JPAImplementation.class).getResolvingFilter(callback, cache);
 		try {
 			return new GraphProjection(null, dataFilter).project(source, null);
 		} catch (Exception e) {

@@ -61,7 +61,7 @@ public class TransformPersister {
 		while (wrapper == null
 				|| token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
 			try {
-				wrapper = EntityLayerLocator.get().commonPersistenceProvider()
+				wrapper = Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence()
 						.transformInPersistenceContext(this, token);
 			} catch (RuntimeException ex) {
@@ -89,7 +89,7 @@ public class TransformPersister {
 			}
 		}
 		if (wrapper.response.getResult() == DomainTransformResponseResult.FAILURE) {
-			EntityLayerLocator.get().commonPersistenceProvider()
+			Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().expandExceptionInfo(wrapper);
 		}
 		return wrapper;
@@ -274,7 +274,7 @@ public class TransformPersister {
 						} catch (Exception e) {
 							DomainTransformException transformException = DomainTransformException
 									.wrap(e, event);
-							EntityLayerLocator.get().jpaImplementation()
+							Registry.impl(JPAImplementation.class)
 									.interpretException(transformException);
 							TransformExceptionAction actionForException = token
 									.getTransformExceptionPolicy()
@@ -313,7 +313,7 @@ public class TransformPersister {
 							determinedExceptionCount++;
 							DomainTransformException transformException = DomainTransformException
 									.wrap(e, event);
-							EntityLayerLocator.get().jpaImplementation()
+							Registry.impl(JPAImplementation.class)
 									.interpretException(transformException);
 							token.getTransformExceptions().add(
 									transformException);

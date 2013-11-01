@@ -20,14 +20,11 @@
 
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import java.util.Comparator;
-
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.BoundWidget;
 
 /**
  *

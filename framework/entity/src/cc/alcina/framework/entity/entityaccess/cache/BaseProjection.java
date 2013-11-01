@@ -7,8 +7,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.bcel.generic.NEW;
-
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;

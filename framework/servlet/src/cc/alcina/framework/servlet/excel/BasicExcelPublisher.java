@@ -13,6 +13,7 @@ import org.w3c.dom.Document;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.publication.PublicationContent;
@@ -22,7 +23,7 @@ import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.servlet.ServletLayerLocator;
+import cc.alcina.framework.servlet.CommonRemoteServletProvider;
 import cc.alcina.framework.servlet.publication.ContentModelHandler;
 import cc.alcina.framework.servlet.publication.ContentRenderer;
 import cc.alcina.framework.servlet.publication.ContentRenderer.RenderTransformWrapper;
@@ -46,8 +47,7 @@ public class BasicExcelPublisher {
 			def.setResultsPerPage(PUB_MAX_RESULTS);
 			deliveryModel.setSuggestedFileName(SEUtilities.sanitiseFileName(def
 					.toString().replace(" ", "_")));
-			SearchResultsBase results = ServletLayerLocator.get()
-					.commonRemoteServletProvider()
+			SearchResultsBase results = Registry.impl(CommonRemoteServletProvider.class)
 					.getCommonRemoteServiceServlet().search(def, 0);
 			publicationContent.searchResults = results;
 			hasResults = true;

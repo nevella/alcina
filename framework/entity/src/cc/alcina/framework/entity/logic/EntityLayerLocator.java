@@ -18,11 +18,14 @@ import java.io.File;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.domaintransform.policy.BasicPersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.servlet.ServletLayerObjects;
 
 /**
  * Also available to the server layer - although some methods should not be
@@ -31,6 +34,7 @@ import cc.alcina.framework.entity.entityaccess.JPAImplementation;
  * @author nick@alcina.cc
  * 
  */
+@RegistryLocation(registryPoint = EntityLayerLocator.class, implementationType = ImplementationType.SINGLETON)
 public class EntityLayerLocator {
 	private EntityLayerLocator() {
 		super();

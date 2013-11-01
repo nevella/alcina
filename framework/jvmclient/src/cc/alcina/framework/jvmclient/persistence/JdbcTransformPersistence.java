@@ -34,11 +34,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationR
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
-import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.DeltaApplicationFilters;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 

@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import java.beans.PropertyChangeEvent;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Date;

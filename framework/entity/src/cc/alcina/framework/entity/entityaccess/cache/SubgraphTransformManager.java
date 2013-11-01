@@ -52,6 +52,14 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected Object ensureEndpointInTransformGraph(Object object) {
+		if (object instanceof HasIdAndLocalId) {
+			return getObject((HasIdAndLocalId) object);
+		}
+		return object;
+	}
+
+	@Override
 	protected ObjectLookup getObjectLookup() {
 		return store;
 	}

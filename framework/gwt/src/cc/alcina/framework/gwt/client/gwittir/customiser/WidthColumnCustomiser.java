@@ -16,10 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
-import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableStringLabelProvider;
-import cc.alcina.framework.gwt.client.gwittir.widget.ExpandableLabel;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;

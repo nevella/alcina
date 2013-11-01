@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet;
 
-import java.io.File;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +25,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.EncryptionUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDualFilter;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;

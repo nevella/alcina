@@ -17,9 +17,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.servlet.ServletLayerLocator;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.servlet.ServletLayerObjects;
 
 public class PartialDtrUploadHandler {
 	public PartialDtrUploadResponse uploadOfflineTransforms(
@@ -28,12 +30,11 @@ public class PartialDtrUploadHandler {
 			throws WebException {
 		try {
 			PartialDtrUploadResponse response = new PartialDtrUploadResponse();
-			File dataFolder = ServletLayerLocator.get().getDataFolder();
+			File dataFolder = Registry.impl(ServletLayerObjects.class).getDataFolder();
 			File dir = new File(dataFolder.getPath() + File.separator
 					+ "offlineTransforms-partial");
 			dir.mkdirs();
-			CommonPersistenceLocal cp = ServletLayerLocator.get()
-					.commonPersistenceProvider().getCommonPersistence();
+			CommonPersistenceLocal cp = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 			Class<? extends ClientInstance> clientInstanceClass = cp
 					.getImplementation(ClientInstance.class);
 			DeltaApplicationRecord firstWrapper = request.wrappers.get(0);
@@ -112,8 +113,7 @@ public class PartialDtrUploadHandler {
 							.persistOfflineTransforms(new ArrayList<DeltaApplicationRecord>(
 									fullWrappers.values()));
 				} catch (Exception e) {
-					CommonPersistenceLocal cpl = ServletLayerLocator.get()
-					.commonPersistenceProvider().getCommonPersistence();
+					CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 					String errMsg=String.format(
 							"Client instance id:%s - Partial dtr upload - %s",
 							clientInstanceId, response);
@@ -124,9 +124,8 @@ public class PartialDtrUploadHandler {
 				}
 				response.committed = true;
 			}
-			ServletLayerLocator
-					.get()
-					.metricLogger()
+			Registry.impl(ServletLayerObjects.class)
+					.getMetricLogger()
 					.info(String.format(
 							"Client instance id:%s - Partial dtr upload - %s",
 							clientInstanceId, response));

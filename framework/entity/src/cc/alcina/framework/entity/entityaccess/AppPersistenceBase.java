@@ -103,7 +103,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		Logger mainLogger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
-			EntityLayerLocator.get().jpaImplementation()
+			Registry.impl(JPAImplementation.class)
 					.muteClassloaderLogging(true);
 			new RegistryScanner().scan(ensureClassInfo(mainLogger),
 					new ArrayList<String>(), Registry.get(),"entity-layer");
@@ -112,7 +112,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {
-			EntityLayerLocator.get().jpaImplementation()
+			Registry.impl(JPAImplementation.class)
 					.muteClassloaderLogging(false);
 		}
 	}
@@ -132,13 +132,13 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		Logger mainLogger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
-			EntityLayerLocator.get().jpaImplementation()
+			Registry.impl(JPAImplementation.class)
 					.muteClassloaderLogging(true);
 			new ClassrefScanner().scan(ensureClassInfo(mainLogger));
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {
-			EntityLayerLocator.get().jpaImplementation()
+			Registry.impl(JPAImplementation.class)
 					.muteClassloaderLogging(false);
 		}
 	}
@@ -271,7 +271,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	public <A> Set<A> getAll(Class<A> clazz) {
 		Query query = getEntityManager().createQuery(
 				String.format("from %s ", clazz.getSimpleName()));
-		EntityLayerLocator.get().jpaImplementation().cache(query);
+		Registry.impl(JPAImplementation.class).cache(query);
 		List results = query.getResultList();
 		return new LinkedHashSet<A>(results);
 	}
@@ -282,7 +282,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 				String.format("from %s where user=? ", clazz.getSimpleName()))
 				.setParameter(1, PermissionsManager.get().getUser());
 		// seems to be throwing transactional cache errors
-		// EntityLayerLocator.get().jpaImplementation().cache(query);
+		// Registry.impl(JPAImplementation.class).cache(query);
 		List results = query.getResultList();
 		return new LinkedHashSet<A>(results);
 	}
@@ -294,7 +294,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 						clazz.getSimpleName())).setParameter(1,
 				PermissionsManager.get().getUser());
 		// seems to be throwing transactional cache errors
-		// EntityLayerLocator.get().jpaImplementation().cache(query);
+		// Registry.impl(JPAImplementation.class).cache(query);
 		List results = query.getResultList();
 		return new LinkedHashSet<A>(results);
 	}
@@ -303,7 +303,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		Query query = getEntityManager().createQuery(
 				String.format("select id from %s order by id",
 						clazz.getSimpleName()));
-		EntityLayerLocator.get().jpaImplementation().cache(query);
+		Registry.impl(JPAImplementation.class).cache(query);
 		return query.getResultList();
 	}
 

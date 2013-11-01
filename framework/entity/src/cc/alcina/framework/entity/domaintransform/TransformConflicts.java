@@ -18,13 +18,14 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
 /**
  * Can be plugged into TLTM to check for versioning conflicts
@@ -109,8 +110,7 @@ public class TransformConflicts {
 		}
 		// sigh
 		EntityManager em = ThreadlocalTransformManager.get().getEntityManager();
-		CommonPersistenceLocal cpb = EntityLayerLocator.get()
-				.commonPersistenceProvider()
+		CommonPersistenceLocal cpb = Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistenceExTransaction();
 		String eql = String
 				.format("select dtep from %s dtep inner join fetch dtep.domainTransformRequestPersistent dtrp"
@@ -183,8 +183,7 @@ public class TransformConflicts {
 			}
 			String message = builder.toString();
 			event.token.getLogger().warn(message);
-			CommonPersistenceLocal cpl = EntityLayerLocator.get()
-					.commonPersistenceProvider().getCommonPersistence();
+			CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 			cpl.log(message, LogMessageType.TRANSFORM_CONFLICT.toString());
 		}
 

@@ -19,9 +19,10 @@ import javax.servlet.http.HttpServletResponse;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 
@@ -66,8 +67,7 @@ public abstract class DevRemoterServlet extends HttpServlet {
 		byte[] bytes = Base64Utils.fromBase64(encodedParams);
 		DevRemoterParams params = (DevRemoterParams) new ObjectInputStream(
 				new ByteArrayInputStream(bytes)).readObject();
-		CommonPersistenceLocal up = EntityLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		IUser user = up.getUserByName(params.username, true);
 		try {
 			PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);

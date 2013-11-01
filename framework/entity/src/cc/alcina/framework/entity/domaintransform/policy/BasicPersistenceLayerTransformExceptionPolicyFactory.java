@@ -1,7 +1,9 @@
 package cc.alcina.framework.entity.domaintransform.policy;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
-
+@RegistryLocation(registryPoint = PersistenceLayerTransformExceptionPolicyFactory.class, implementationType = ImplementationType.SINGLETON)
 public class BasicPersistenceLayerTransformExceptionPolicyFactory implements
 		PersistenceLayerTransformExceptionPolicyFactory {
 	public PersistenceLayerTransformExceptionPolicy getPolicy(

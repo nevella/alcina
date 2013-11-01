@@ -17,8 +17,8 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
-import cc.alcina.framework.servlet.ServletLayerLocator;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.servlet.publication.FormatConverter.FormatConversionModel;
 import cc.alcina.framework.servlet.publication.PublicationPersistence.PublicationPersistenceLocator;
@@ -172,7 +172,7 @@ public class Publisher {
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);
 		publication.setPublicationType(contentDefinition.getPublicationType());
-		return ServletLayerLocator.get().commonPersistenceProvider()
+		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().merge(publication);
 	}
 

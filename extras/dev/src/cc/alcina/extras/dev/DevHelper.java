@@ -41,6 +41,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TestTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -63,7 +65,7 @@ import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
-import cc.alcina.framework.servlet.ServletLayerLocator;
+import cc.alcina.framework.servlet.ServletLayerObjects;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWTBridge;
@@ -134,6 +136,7 @@ public abstract class DevHelper {
 
 	protected abstract String getJbossConfigPrompt(String path);
 
+	@RegistryLocation(registryPoint = RemoteActionLoggerProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.MANUAL_PRIORITY)
 	class Ralp extends RemoteActionLoggerProvider {
 		@Override
 		public Logger getLogger(Class clazz) {
@@ -171,7 +174,7 @@ public abstract class DevHelper {
 
 	public void initDataFolder() {
 		EntityLayerLocator.get().setDataFolder(getDataFolder());
-		ServletLayerLocator.get().setDataFolder(getDataFolder());
+		Registry.impl(ServletLayerObjects.class).setDataFolder(getDataFolder());
 	}
 
 	public abstract File getDataFolder();
@@ -224,8 +227,6 @@ public abstract class DevHelper {
 	protected abstract void initCustomServicesFirstHalf();
 
 	public void initDummyServices() {
-		ServletLayerLocator.get()
-				.registerRemoteActionLoggerProvider(new Ralp());
 		CommonLocator.get().registerURLComponentEncoder(
 				new ServerURLComponentEncoder());
 		CommonLocator.get().registerCurrentUtcDateProvider(

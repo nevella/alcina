@@ -77,6 +77,7 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersiste
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
+import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.projection.EntityUtils;
@@ -114,7 +115,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl) {
 		AppPersistenceBase.checkNotReadOnly();
 		if (!tryImpl
-				|| !EntityLayerLocator.get().jpaImplementation()
+				|| !Registry.impl(JPAImplementation.class)
 						.bulkDelete(getEntityManager(), clazz, ids)) {
 			List<Object> resultList = getEntityManager().createQuery(
 					String.format("from %s where id in %s ",
@@ -377,8 +378,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public <T extends WrapperPersistable> WrappedObject<T> getObjectWrapperForUser(
 			HasId wrapperOwner, Class<T> c, long id) throws Exception {
 		connectPermissionsManagerToLiveObjects();
-		WrappedObject<T> wrapper = EntityLayerLocator.get()
-				.wrappedObjectProvider()
+		WrappedObject<T> wrapper = Registry.impl(WrappedObjectProvider.class)
 				.getObjectWrapperForUser(c, id, getEntityManager());
 		checkWrappedObjectAccess(wrapperOwner, wrapper, c);
 		return wrapper;
@@ -432,11 +432,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 		}
 		DetachedEntityCache cache = new DetachedEntityCache();
-		GraphProjectionDataFilter filter = EntityLayerLocator
-				.get()
-				.jpaImplementation()
+		GraphProjectionDataFilter filter = Registry.impl(JPAImplementation.class)
 				.getResolvingFilter(
-						EntityLayerLocator.get().jpaImplementation()
+						Registry.impl(JPAImplementation.class)
 								.getClassrefInstantiator(), cache);
 		GraphProjectionFieldFilter allowSourceFilter = new GraphProjectionFieldFilter() {
 			@Override
@@ -694,7 +692,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		try {
 			connectPermissionsManagerToLiveObjects();
 			new WrappedObjectPersistence().unwrap(wrapper, getEntityManager(),
-					EntityLayerLocator.get().wrappedObjectProvider());
+					Registry.impl(WrappedObjectProvider.class));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -888,7 +886,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			query.setMaxResults(maxTransforms);
 		}
 		return new EntityUtils().detachedClone(query.getResultList(),
-				EntityLayerLocator.get().jpaImplementation()
+				Registry.impl(JPAImplementation.class)
 						.getClassrefInstantiator());
 	}
 
@@ -1088,7 +1086,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	@Override
 	public <T extends WrapperPersistable> T getWrappedObjectForUser(
 			Class<? extends T> c, long id) throws Exception {
-		T wofu = (T) EntityLayerLocator.get().wrappedObjectProvider()
+		T wofu = (T) Registry.impl(WrappedObjectProvider.class)
 				.getWrappedObjectForUser(c, id, getEntityManager());
 		return (T) wofu;
 	}
@@ -1215,7 +1213,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public static class DefaultUserlandProvider implements UserlandProvider {
 		@Override
 		public IUser getSystemUser(boolean clean) {
-			return EntityLayerLocator.get().commonPersistenceProvider()
+			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getSystemUser(clean);
 		}
 	}

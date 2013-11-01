@@ -27,7 +27,6 @@ import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.ClientNotifications;
-import cc.alcina.framework.gwt.client.util.AsyncCallbackNull;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;

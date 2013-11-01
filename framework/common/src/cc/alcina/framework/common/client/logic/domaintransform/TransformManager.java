@@ -243,6 +243,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			existingTargetValue = propertyAccessor().getPropertyValue(
 					event.getSource(), event.getPropertyName());
 		}
+		existingTargetValue = ensureEndpointInTransformGraph(existingTargetValue);
 		Object newTargetValue = transformType == null ? null : getTargetObject(
 				event, false);
 		if (!checkPermissions(obj, event, event.getPropertyName(),
@@ -258,7 +259,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		switch (transformType) {
 		// these cases will fire a new transform event (temp obj > domain obj),
 		// so should not be processed further
-		case NULL_PROPERTY_REF:
+		case NULL_PROPERTY_REF: {
+			int tmpDebug = 0;
+		}
 		case CHANGE_PROPERTY_REF:
 		case CHANGE_PROPERTY_SIMPLE_VALUE:
 			if (isReplayingRemoteEvent() && obj == null) {
@@ -296,9 +299,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 					 * memcache we may want to replace the collection member
 					 * (non-transactional) with a transactional clone - which
 					 * equals() - but we definitely don't want to get stuck in a
-					 * loop. on the other hand, the client should always fire collection mods
+					 * loop. on the other hand, the client should always fire
+					 * collection mods
 					 */
-					boolean fireCollectionMods=!equivalentValues||alwaysFireObjectOwnerCollectionModifications();
+					boolean fireCollectionMods = !equivalentValues
+							|| alwaysFireObjectOwnerCollectionModifications();
 					updateAssociation(event, obj, existingTargetValue, true,
 							fireCollectionMods);
 					updateAssociation(event, obj, newTargetValue, false,
@@ -1387,6 +1392,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return;
 		}
 		HasIdAndLocalId hTgt = (HasIdAndLocalId) tgt;
+		hTgt = (HasIdAndLocalId) ensureEndpointInTransformGraph(hTgt);
 		Object associatedObject = propertyAccessor().getPropertyValue(tgt,
 				assoc.propertyName());
 		associatedObject = ensureEndpointInTransformGraph(associatedObject);

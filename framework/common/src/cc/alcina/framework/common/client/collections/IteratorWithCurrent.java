@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.collections;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 public class IteratorWithCurrent<T> {
 	private Iterator<T> itr;

@@ -55,7 +55,6 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
-import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
@@ -96,6 +95,7 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -103,7 +103,8 @@ import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.CookieHelper;
-import cc.alcina.framework.servlet.ServletLayerLocator;
+import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
+import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
@@ -161,7 +162,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws WebException {
 		try {
-			return ServletLayerLocator.get().commonPersistenceProvider()
+			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getObjectDelta(specs);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -181,7 +182,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws WebException {
 		try {
 			Class<T> clazz = (Class<T>) Class.forName(className);
-			return ServletLayerLocator.get().commonPersistenceProvider()
+			return Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().getItemById(clazz, id, true, false);
 		} catch (Exception e) {
 			throw new WebException(e.getMessage());
@@ -196,7 +197,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
-		return ServletLayerLocator.get().commonPersistenceProvider()
+		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence()
 				.listLogItemsForClass(action.getClass().getName(), count);
 	}
@@ -214,7 +215,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString, String exceptionType) {
-		return ServletLayerLocator.get().commonPersistenceProvider()
+		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().log(exceptionToString, exceptionType);
 	}
 
@@ -254,8 +255,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 		}
 		msg += "Stacktrace:\t " + sw.toString();
-		CommonPersistenceLocal cpl = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		cpl.log(msg, exceptionType);
 	}
 
@@ -292,7 +292,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					result.setActionClass(action.getClass());
 					result.setActionDate(new Date());
 					if (persistentLog) {
-						ServletLayerLocator.get().commonPersistenceProvider()
+						Registry.impl(CommonPersistenceProvider.class)
 								.getCommonPersistence().logActionItem(result);
 					}
 				} catch (Exception e) {
@@ -306,7 +306,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					JobRegistry.get().jobErrorInThread();
 					throw e;
 				} finally {
-					ServletLayerLocator.get().remoteActionLoggerProvider()
+					Registry.impl(RemoteActionLoggerProvider.class)
 							.clearAllThreadLoggers();
 					ThreadlocalTransformManager.get().resetTltm(null);
 					JobRegistry.get().jobCompleteFromThread();
@@ -360,7 +360,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			if (result != null) {
 				result.setActionClass(action.getClass());
 				result.setActionDate(new Date());
-				ServletLayerLocator.get().commonPersistenceProvider()
+				Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence().logActionItem(result);
 			}
 			return result;
@@ -379,7 +379,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw new WebException(e);
 		} finally {
 			if (!subJob) {
-				ServletLayerLocator.get().remoteActionLoggerProvider()
+				Registry.impl(RemoteActionLoggerProvider.class)
 						.clearAllThreadLoggers();
 				JobRegistry.get().jobCompleteFromThread();
 			}
@@ -389,7 +389,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public <G extends WrapperPersistable> Long persist(G gwpo)
 			throws WebException {
 		try {
-			Long id = ServletLayerLocator.get().commonPersistenceProvider()
+			Long id = Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence().persist(gwpo);
 			handleWrapperTransforms();
 			return id;
@@ -414,8 +414,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public int persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, Logger logger,
 			Boolean useWrapperUser) throws WebException {
-		CommonPersistenceLocal cp = ServletLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal cp = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		try {
 			Class<? extends ClientInstance> clientInstanceClass = cp
 					.getImplementation(ClientInstance.class);
@@ -467,8 +466,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 										"invalid wrapper authentication");
 							}
 						}
-						IUser user = ServletLayerLocator.get()
-								.commonPersistenceProvider()
+						IUser user = Registry.impl(CommonPersistenceProvider.class)
 								.getCommonPersistence()
 								.getCleanedUserById(wr.getUserId());
 						PermissionsManager.get().pushUser(user,
@@ -611,7 +609,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
-		return ServletLayerLocator.get().commonPersistenceProvider()
+		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().search(def, pageNumber);
 	}
 
@@ -678,8 +676,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				handler.handle(validator, null);
 				results.add(validator);
 			} else {
-				results.addAll(ServletLayerLocator.get()
-						.commonPersistenceProvider().getCommonPersistence()
+				results.addAll(Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
 						.validate(Collections.singletonList(validator)));
 			}
 		}
@@ -783,8 +780,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 									persistenceToken, null));
 			MetricLogging.get().start("transform-commit",
 					CommonRemoteServiceServlet.class);
-			DomainTransformLayerWrapper wrapper = ServletLayerLocator.get()
-					.transformPersistenceQueue().submit(persistenceToken);
+			DomainTransformLayerWrapper wrapper = Registry.impl(TransformPersistenceQueue.class).submit(persistenceToken);
 			MetricLogging.get().end("transform-commit");
 			handleWrapperTransforms();
 			wrapper.ignored = persistenceToken.ignored;
@@ -829,7 +825,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	static class IsWrappedObjectDteFilter implements
 			CollectionFilter<DomainTransformEvent> {
-		Class clazz = ServletLayerLocator.get().commonPersistenceProvider()
+		Class clazz = Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistenceExTransaction()
 				.getImplementation(WrappedObject.class);
 
@@ -877,7 +873,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	protected void onAfterResponseSerialized(String serializedResponse) {
-		ServletLayerLocator.get().remoteActionLoggerProvider()
+		Registry.impl(RemoteActionLoggerProvider.class)
 				.clearAllThreadLoggers();
 		LooseContext.confirmDepth(looseContextDepth);
 		PermissionsManager.get().setUser(null);
@@ -931,7 +927,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	private File getDataDumpsFolder() {
-		File dataFolder = ServletLayerLocator.get().getDataFolder();
+		File dataFolder = Registry.impl(ServletLayerObjects.class).getDataFolder();
 		File dir = new File(dataFolder.getPath() + File.separator
 				+ "client-dumps");
 		dir.mkdirs();
@@ -972,7 +968,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				sanitiseClrString(clr);
 			}
 		}
-		EntityLayerLocator.get().commonPersistenceProvider()
+		Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().persistClientLogRecords(records);
 	}
 

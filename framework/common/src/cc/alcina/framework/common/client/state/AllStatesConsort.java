@@ -1,7 +1,5 @@
 package cc.alcina.framework.common.client.state;
 
-import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {

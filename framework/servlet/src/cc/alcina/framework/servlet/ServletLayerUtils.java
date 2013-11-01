@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
@@ -58,7 +59,7 @@ public class ServletLayerUtils {
 				tpm.pushSystemUser();
 			}
 			try {
-				return ServletLayerLocator.get().commonRemoteServletProvider()
+				return Registry.impl(CommonRemoteServletProvider.class)
 						.getCommonRemoteServiceServlet()
 						.transformFromServletLayer(tag).response;
 			} catch (Exception e) {

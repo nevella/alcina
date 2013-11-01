@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.logic.handshake.localstorage;
 
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
-import cc.alcina.framework.gwt.client.logic.handshake.HandshakeState;
 import cc.alcina.framework.gwt.client.logic.handshake.objectdata.LoadObjectDataState;
 import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 

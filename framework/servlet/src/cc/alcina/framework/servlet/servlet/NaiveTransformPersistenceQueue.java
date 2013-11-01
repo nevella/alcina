@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.servlet;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
@@ -9,6 +11,7 @@ import cc.alcina.framework.entity.entityaccess.TransformPersister;
  * @author nick@alcina.cc
  *
  */
+@RegistryLocation(registryPoint=TransformPersistenceQueue.class,implementationType=ImplementationType.SINGLETON)
 public class NaiveTransformPersistenceQueue implements
 		TransformPersistenceQueue {
 

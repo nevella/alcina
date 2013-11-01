@@ -5,7 +5,6 @@ import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
-import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 @ClientInstantiable
 @Introspectable

@@ -31,10 +31,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.registry.CachingScanner;
 
 @SuppressWarnings("unchecked")
@@ -57,8 +58,7 @@ public class ClassrefScanner extends CachingScanner {
 	}
 
 	private void finish() throws Exception {
-		CommonPersistenceLocal cp = EntityLayerLocator.get()
-				.commonPersistenceProvider().getCommonPersistence();
+		CommonPersistenceLocal cp = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		Class<? extends ClassRef> crimpl = cp.getImplementation(ClassRef.class);
 		Set<? extends ClassRef> classrefs = cp.getAll(crimpl);
 		Set<? extends ClassRef> deleteClassrefs = new HashSet<ClassRef>();

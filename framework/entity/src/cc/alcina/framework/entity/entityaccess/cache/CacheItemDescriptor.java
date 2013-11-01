@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.entity.entityaccess.cache.CacheLookupDescriptor.IdCacheLookupDescriptor;
 
 public class CacheItemDescriptor {

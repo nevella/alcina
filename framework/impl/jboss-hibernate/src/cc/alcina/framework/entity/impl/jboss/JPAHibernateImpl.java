@@ -55,6 +55,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  * 
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = JPAImplementation.class, implementationType = ImplementationType.SINGLETON)
 public class JPAHibernateImpl implements JPAImplementation {
 	private boolean cacheDisabled;
 

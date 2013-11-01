@@ -1,7 +1,7 @@
 package cc.alcina.template.client.handshake;
 
-import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
+import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;

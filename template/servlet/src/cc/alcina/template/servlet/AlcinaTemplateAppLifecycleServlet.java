@@ -13,8 +13,7 @@ import cc.alcina.framework.entity.impl.jboss.JPAHibernateImpl;
 import cc.alcina.framework.entity.impl.jboss.JbossLogMuter;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
-import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
-import cc.alcina.framework.servlet.ServletLayerLocator;
+import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.template.cs.constants.AlcinaTemplateImplLookup;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
@@ -58,7 +57,7 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 
 	@Override
 	protected void initDataFolder() {
-		ServletLayerLocator.get().setDataFolder(
+		Registry.impl(ServletLayerObjects.class).setDataFolder(
 				AlcinaTemplateServerManager.get().getDataFolder());
 		EntityLayerLocator.get().setDataFolder(
 				AlcinaTemplateServerManager.get().getDataFolder());
@@ -68,10 +67,6 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 	protected void initCommonImplServices() {
 		CommonLocator.get().registerImplementationLookup(
 				new AlcinaTemplateImplLookup());
-		ServletLayerLocator.get().registerRemoteActionLoggerProvider(
-				new RemoteActionLoggerProvider());
-		ServletLayerLocator.get().registerCommonRemoteServletProvider(
-				new AlcinaTemplateServerProvider());
 		AlcinaTemplateObjects.registerProvider(AlcinaTemplateServerManager
 				.get());
 		PermissionsManager

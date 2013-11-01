@@ -35,7 +35,9 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.DbAppender;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -44,8 +46,7 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.ServerURLComponentEncoder;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
-import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
-import cc.alcina.framework.servlet.ServletLayerLocator;
+import cc.alcina.framework.servlet.ServletLayerObjects;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void createServletTransformClientInstance() {
@@ -54,8 +55,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
-			ClientInstance serverAsClientInstance = ServletLayerLocator.get()
-					.commonPersistenceProvider().getCommonPersistence()
+			ClientInstance serverAsClientInstance = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
 					.createClientInstance(null);
 			CommonRemoteServiceServletSupport.get().setServerAsClientInstance(
 					serverAsClientInstance);
@@ -126,7 +126,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			metricLogger.setAdditivity(false);
 			// MetricLogging.muteLowPriority=false;
 			MetricLogging.metricLogger = metricLogger;
-			ServletLayerLocator.get().registerMetricLogger(metricLogger);
+			Registry.impl(ServletLayerObjects.class).setMetricLogger(metricLogger);
 		}
 		String databaseEventLoggerName = AlcinaServerConfig.get()
 				.getDatabaseEventLoggerName();
@@ -198,16 +198,16 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	 */
 	/*
 	 * CommonLocator.get().registerImplementationLookup(new JadeImplLookup());
-	 * ServletLayerLocator.get().registerCommonPersistenceProvider(
+	 * Registry.impl(ServletLayerLocator.class).registerCommonPersistenceProvider(
 	 * JadeServerManager.get());
-	 * ServletLayerLocator.get().registerCommonRemoteServletProvider( new
+	 * Registry.impl(ServletLayerLocator.class).registerCommonRemoteServletProvider( new
 	 * JadeServerProvider());
 	 */
 	/*
 	 * can
 	 */
 	/*
-	 * ServletLayerLocator.get().registerDataFolder(
+	 * Registry.impl(ServletLayerLocator.class).registerDataFolder(
 	 * JadeServerManager.get().getBarnetDataFolder());
 	 * JadeObjects.registerProvider(JadeServerManager.get());
 	 * ThreadedPermissionsManager.INSTANTIATE_IMPL_FILTER = new
@@ -221,8 +221,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 		CommonLocator.get().registerURLComponentEncoder(
 				new ServerURLComponentEncoder());
-		ServletLayerLocator.get().registerRemoteActionLoggerProvider(
-				new RemoteActionLoggerProvider());
 		ObjectPersistenceHelper.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
@@ -232,7 +230,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Logger logger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
-			EntityLayerLocator.get().jpaImplementation()
+			Registry.impl(JPAImplementation.class)
 					.muteClassloaderLogging(true);
 			Map<String, Date> classes = new ServletClasspathScanner("*", true,
 					false, logger, Registry.MARKER_RESOURCE,
@@ -244,7 +242,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		} catch (Exception e) {
 			logger.warn("", e);
 		} finally {
-			EntityLayerLocator.get().jpaImplementation()
+			Registry.impl(JPAImplementation.class)
 					.muteClassloaderLogging(false);
 		}
 	}

@@ -74,6 +74,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -409,9 +410,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		if (id != 0 && getEntityManager() != null) {
 			if (WrapperPersistable.class.isAssignableFrom(c)) {
 				try {
-					WrappedObject wrapper = EntityLayerLocator
-							.get()
-							.wrappedObjectProvider()
+					WrappedObject wrapper = Registry.impl(WrappedObjectProvider.class)
 							.getObjectWrapperForUser((Class) c, id,
 									entityManager);
 					maybeListenToObjectWrapper(wrapper);
@@ -426,7 +425,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			// sorts of potential problems
 			// basically, transform events should (must) always have refs to
 			// "real" objects, not wrappers
-			t = EntityLayerLocator.get().jpaImplementation()
+			t = Registry.impl(JPAImplementation.class)
 					.getInstantiatedObject(t);
 			if (listenToFoundObjects
 					&& t instanceof SourcesPropertyChangeEvents) {
@@ -511,12 +510,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				if (entityManager != null) {
 					if (isUseObjectCreationId() && objectId != 0) {
 						newInstance.setId(objectId);
-						Object fromBefore = EntityLayerLocator
-								.get()
-								.jpaImplementation()
+						Object fromBefore = Registry.impl(JPAImplementation.class)
 								.beforeSpecificSetId(entityManager, newInstance);
 						entityManager.persist(newInstance);
-						EntityLayerLocator.get().jpaImplementation()
+						Registry.impl(JPAImplementation.class)
 								.afterSpecificSetId(fromBefore);
 					} else {
 						entityManager.persist(newInstance);
@@ -563,8 +560,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	public void reconstituteHiliMap() {
 		if (clientInstance != null) {
-			CommonPersistenceLocal cp = EntityLayerLocator.get()
-					.commonPersistenceProvider().getCommonPersistence();
+			CommonPersistenceLocal cp = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 			String message = "Reconstitute hili map - clientInstance: "
 					+ clientInstance.getId();
 			// System.out.println(message);
@@ -811,7 +807,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			if (hili == null) {
 				hili = (HasIdAndLocalId) evt.getObjectClass().newInstance();
 			} else {
-				hili = EntityLayerLocator.get().jpaImplementation()
+				hili = Registry.impl(JPAImplementation.class)
 						.getInstantiatedObject(hili);
 			}
 			Class<? extends HasIdAndLocalId> objectClass = hili.getClass();
@@ -894,8 +890,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	protected void doubleCheckAddition(Collection collection, Object tgt) {
-		JPAImplementation jpaImplementation = EntityLayerLocator.get()
-				.jpaImplementation();
+		JPAImplementation jpaImplementation = Registry.impl(JPAImplementation.class);
 		tgt = jpaImplementation.getInstantiatedObject(tgt);
 		for (Iterator itr = collection.iterator(); itr.hasNext();) {
 			Object next = itr.next();
@@ -909,8 +904,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	protected void doubleCheckRemoval(Collection collection, Object tgt) {
-		JPAImplementation jpaImplementation = EntityLayerLocator.get()
-				.jpaImplementation();
+		JPAImplementation jpaImplementation = Registry.impl(JPAImplementation.class);
 		tgt = jpaImplementation.getInstantiatedObject(tgt);
 		for (Iterator itr = collection.iterator(); itr.hasNext();) {
 			Object next = itr.next();

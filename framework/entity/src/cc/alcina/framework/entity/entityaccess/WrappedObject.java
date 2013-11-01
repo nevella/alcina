@@ -29,8 +29,9 @@ import javax.xml.bind.Unmarshaller;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.util.JaxbUtils;
 
 /**
@@ -78,7 +79,7 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 
 		protected static List<Class> ensureJaxbSubclasses(Class addClass) {
 			if(jaxbSubclasses==null){
-				jaxbSubclasses=EntityLayerLocator.get().wrappedObjectProvider()
+				jaxbSubclasses=Registry.impl(WrappedObjectProvider.class)
 				.getJaxbSubclasses();
 			}
 			if(addClass==null){

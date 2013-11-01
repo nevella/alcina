@@ -26,12 +26,15 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 
 /**
  * 
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = RemoteActionLoggerProvider.class, implementationType = ImplementationType.SINGLETON)
 public class RemoteActionLoggerProvider {
 	class ClassAndThreadToken {
 		private final Class clazz;
@@ -137,6 +140,7 @@ public class RemoteActionLoggerProvider {
 			return null;
 		}
 	}
+
 	public synchronized int getLoggerBufferLength(Class clazz) {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
 		if (runningLoggers.containsKey(token)) {
@@ -145,13 +149,16 @@ public class RemoteActionLoggerProvider {
 		}
 		return -1;
 	}
+
 	public static int getLoggerBufferLength(Logger logger) {
 		StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
 				.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
 				.getWriterAccess();
 		return writerAccess.getBuffer().length();
 	}
-	public synchronized String getLoggerBufferSubstring(Class clazz,int from, int to) {
+
+	public synchronized String getLoggerBufferSubstring(Class clazz, int from,
+			int to) {
 		ClassAndThreadToken token = new ClassAndThreadToken(clazz);
 		if (runningLoggers.containsKey(token)) {
 			Logger logger = runningLoggers.get(token);
@@ -160,11 +167,12 @@ public class RemoteActionLoggerProvider {
 		return null;
 	}
 
-	public static String getLoggerBufferSubstring(Logger logger, int from, int to) {
+	public static String getLoggerBufferSubstring(Logger logger, int from,
+			int to) {
 		StringWriter writerAccess = (StringWriter) ((WriterAccessWriterAppender) logger
 				.getAppender(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY))
 				.getWriterAccess();
-		return writerAccess.getBuffer().substring(from,to);
+		return writerAccess.getBuffer().substring(from, to);
 	}
 
 	static Layout l = new PatternLayout("%-5p [%c{1}] %m%n");

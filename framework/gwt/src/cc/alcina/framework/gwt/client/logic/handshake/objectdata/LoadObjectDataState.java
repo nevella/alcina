@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
-import cc.alcina.framework.gwt.client.logic.handshake.HandshakeState;
 
 public class LoadObjectDataState extends ExtensibleEnum {
 	public LoadObjectDataState(String key) {

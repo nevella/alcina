@@ -45,7 +45,7 @@ import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
@@ -401,8 +401,7 @@ public class DevConsoleCommandTransforms {
 			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
-			CommonPersistenceLocal cpl = EntityLayerLocator.get()
-					.commonPersistenceProvider()
+			CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
 			Class<? extends DomainTransformRequestPersistent> clazz = cpl
 					.getImplementation(DomainTransformRequestPersistent.class);

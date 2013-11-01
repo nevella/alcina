@@ -34,7 +34,6 @@ import cc.alcina.framework.common.client.util.EnumSerializer;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.util.AsyncCallbackNull;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;

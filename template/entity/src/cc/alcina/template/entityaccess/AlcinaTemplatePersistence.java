@@ -17,8 +17,10 @@ import org.hibernate.proxy.LazyInitializer;
 import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.logic.EntityLayerLocator;
@@ -35,19 +37,16 @@ import cc.alcina.template.cs.persistent.Bookmark;
 import cc.alcina.template.cs.persistent.ClientInstanceImpl;
 import cc.alcina.template.cs.persistent.IidImpl;
 
-
 @Stateless
 public class AlcinaTemplatePersistence
 		extends
 		AppPersistenceBase<ClientInstanceImpl, AlcinaTemplateUser, AlcinaTemplateGroup, IidImpl>
 		implements AlcinaTemplatePersistenceLocal {
 	public static final String RemoteJNDIName = AlcinaTemplatePersistence.class
-			.getSimpleName()
-			+ "/remote";
+			.getSimpleName() + "/remote";
 
 	public static final String LocalJNDIName = AlcinaTemplatePersistence.class
-			.getSimpleName()
-			;
+			.getSimpleName();
 
 	public AlcinaTemplateObjects loadInitial(boolean internal) throws Exception {
 		getCommonPersistence().connectPermissionsManagerToLiveObjects();
@@ -55,9 +54,9 @@ public class AlcinaTemplatePersistence
 				+ PermissionsManager.get().getUserName();
 		MetricLogging.get().start(key);
 		AlcinaTemplateObjects initialObjects = new AlcinaTemplateObjects();
-		GeneralProperties generalProperties = EntityLayerLocator.get()
-				.wrappedObjectProvider().getWrappedObjectForUser(
-						GeneralProperties.class, 0, em);
+		GeneralProperties generalProperties = Registry.impl(
+				WrappedObjectProvider.class).getWrappedObjectForUser(
+				GeneralProperties.class, 0, em);
 		initialObjects.setGeneralProperties(generalProperties);
 		List<AlcinaTemplateGroup> groups = getVisibleGroups();
 		initialObjects.getGroups().addAll(groups);
@@ -86,6 +85,7 @@ public class AlcinaTemplatePersistence
 	public AlcinaTemplatePersistence() {
 		this(null);
 	}
+
 	@Override
 	public List<AlcinaTemplateGroup> getVisibleGroups() {
 		return new ArrayList<AlcinaTemplateGroup>(super.getVisibleGroups());
@@ -105,7 +105,7 @@ public class AlcinaTemplatePersistence
 			PermissionsManager.get().setUser(u);
 			em.persist(u);
 		}
-		 n = SYSTEM_GROUP;
+		n = SYSTEM_GROUP;
 		if (getGroupByName(n) == null) {
 			PermissionsManager.get().setUser(null);
 			AlcinaTemplateGroup g = new AlcinaTemplateGroup();
@@ -118,21 +118,17 @@ public class AlcinaTemplatePersistence
 			PermissionsManager.get().setUser(u);
 			em.persist(u);
 		}
-		
 		n = AlcinaTemplateAccessConstants.ADMINISTRATORS_GROUP_NAME;
 		if (getGroupByName(n) == null) {
 			AlcinaTemplateGroup g = new AlcinaTemplateGroup();
 			g.setGroupName(n);
 			AlcinaTemplateUser u = new AlcinaTemplateUser();
-			u
-					.setUserName(AlcinaTemplateAccessConstants.INITIAL_ADMINISTRATOR_USER_NAME);
+			u.setUserName(AlcinaTemplateAccessConstants.INITIAL_ADMINISTRATOR_USER_NAME);
 			u.setPrimaryGroup(g);
 			u.setSalt(u.getUserName());
-			u
-					.setPassword(UnixCrypt
-							.crypt(
-									u.getSalt(),
-									AlcinaTemplateAccessConstants.INITIAL_ADMINISTRATOR_PASSWORD));
+			u.setPassword(UnixCrypt.crypt(
+					u.getSalt(),
+					AlcinaTemplateAccessConstants.INITIAL_ADMINISTRATOR_PASSWORD));
 			em.persist(u);
 			PermissionsManager.get().setUser(u);
 			em.persist(g);
@@ -141,8 +137,8 @@ public class AlcinaTemplatePersistence
 
 	@SuppressWarnings("unchecked")
 	AlcinaTemplateGroup getGroupByName(String name) {
-		List<AlcinaTemplateGroup> l = em.createQuery(
-				"from AlcinaTemplateGroup g where g.groupName = ?")
+		List<AlcinaTemplateGroup> l = em
+				.createQuery("from AlcinaTemplateGroup g where g.groupName = ?")
 				.setParameter(1, name).getResultList();
 		return (l.size() == 0) ? null : l.get(0);
 	}
@@ -169,8 +165,6 @@ public class AlcinaTemplatePersistence
 		}
 	};
 
-	
-
 	@Override
 	protected void initServiceImpl() {
 		EntityLayerLocator.get().registerWrappedObjectProvider(
@@ -180,6 +174,7 @@ public class AlcinaTemplatePersistence
 		CommonLocator.get().registerCurrentUtcDateProvider(
 				ObjectPersistenceHelper.get());
 	}
+
 	@Override
 	protected EntityManager getEntityManager() {
 		return em;
@@ -189,5 +184,4 @@ public class AlcinaTemplatePersistence
 	protected EntityManagerFactory getEntityManagerFactory() {
 		return factory;
 	}
-
 }

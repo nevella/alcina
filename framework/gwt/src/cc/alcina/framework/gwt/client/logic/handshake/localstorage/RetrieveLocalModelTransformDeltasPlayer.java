@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlaye
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.objectdata.LoadObjectDataState;
-import cc.alcina.framework.gwt.client.logic.handshake.objectdata.LoadObjectsPlayer;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.DeltaApplicationFilters;
 
