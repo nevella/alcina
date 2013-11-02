@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
 import cc.alcina.framework.common.client.util.Multimap;
 
 @SuppressWarnings("unchecked")

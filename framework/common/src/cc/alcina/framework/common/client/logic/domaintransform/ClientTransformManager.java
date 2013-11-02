@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -36,12 +36,14 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier.ModalNotifierNull;
 
@@ -102,12 +104,9 @@ public abstract class ClientTransformManager extends TransformManager {
 							PropertyReflector propertyReflector) {
 						WrapperPersistable obj = (WrapperPersistable) propertyReflector
 								.getPropertyValue(referrer);
-						CommonLocator
-								.get()
-								.propertyAccessor()
-								.setPropertyValue(referrer,
-										annotation.toStringPropertyName(),
-										obj.toString());
+						Reflections.propertyAccessor().setPropertyValue(
+								referrer, annotation.toStringPropertyName(),
+								obj.toString());
 					}
 				});
 		T target = referrer;
@@ -143,11 +142,9 @@ public abstract class ClientTransformManager extends TransformManager {
 					}
 
 					public void onSuccess(Long result) {
-						CommonLocator
-								.get()
-								.propertyAccessor()
-								.setPropertyValue(finalTarget,
-										annotation.idPropertyName(), result);
+						Reflections.propertyAccessor().setPropertyValue(
+								finalTarget, annotation.idPropertyName(),
+								result);
 					}
 				};
 				callRemotePersistence(persistableObject, savedCallback);
@@ -191,7 +188,7 @@ public abstract class ClientTransformManager extends TransformManager {
 				continue;
 			}
 			String propertyName = pr.getPropertyName();
-			Object currentValue = CommonLocator.get().propertyAccessor()
+			Object currentValue = Reflections.propertyAccessor()
 					.getPropertyValue(domainObject, propertyName);
 			boolean create = instructions != null
 					&& instructions.eagerCreation() && currentValue == null;
@@ -206,8 +203,8 @@ public abstract class ClientTransformManager extends TransformManager {
 						.createDomainObject(pr.getPropertyType())
 						: TransformManager.get().createProvisionalObject(
 								pr.getPropertyType());
-				CommonLocator.get().propertyAccessor()
-						.setPropertyValue(domainObject, propertyName, newObj);
+				Reflections.propertyAccessor().setPropertyValue(domainObject,
+						propertyName, newObj);
 				children.add(newObj);
 				children.addAll(prepareObject(newObj, autoSave, afterCreation,
 						forEditing));
@@ -232,11 +229,8 @@ public abstract class ClientTransformManager extends TransformManager {
 					} else {
 						HasIdAndLocalId clonedValue = (HasIdAndLocalId) new CloneHelper()
 								.shallowishBeanClone(currentValue);
-						CommonLocator
-								.get()
-								.propertyAccessor()
-								.setPropertyValue(domainObject, propertyName,
-										clonedValue);
+						Reflections.propertyAccessor().setPropertyValue(
+								domainObject, propertyName, clonedValue);
 						children.add(clonedValue);
 						children.addAll(prepareObject(clonedValue, autoSave,
 								afterCreation, forEditing));
@@ -338,7 +332,7 @@ public abstract class ClientTransformManager extends TransformManager {
 			DomainTransformEvent dte = new DomainTransformEvent();
 			dte.setPropertyName(pr.getPropertyName());
 			if (!CommonUtils.isStandardJavaClass(pr.getPropertyType())) {
-				Object object = CommonLocator.get().propertyAccessor()
+				Object object = Reflections.propertyAccessor()
 						.getPropertyValue(hili, pr.getPropertyName());
 				if (object instanceof HasIdAndLocalId) {
 					// do not null user/group properties, since they may be
@@ -390,8 +384,8 @@ public abstract class ClientTransformManager extends TransformManager {
 				callback.onSuccess(null);
 				return;
 			}
-			Collection value = (Collection) CommonLocator.get()
-					.propertyAccessor().getPropertyValue(hili, propertyName);
+			Collection value = (Collection) Reflections.propertyAccessor()
+					.getPropertyValue(hili, propertyName);
 			if (value != null && !value.isEmpty()) {
 				callback.onSuccess(null);
 				return;
@@ -399,7 +393,7 @@ public abstract class ClientTransformManager extends TransformManager {
 			String message = TextProvider.get().getUiObjectText(
 					ClientTransformManager.class, "domain-sync-update",
 					"Loading");
-			notifier = ClientLayerLocator.get().notifications()
+			notifier = Registry.impl(ClientNotifications.class)
 					.getModalNotifier(message);
 			if (notifier == null) {
 				notifier = new ModalNotifierNull();
@@ -413,16 +407,15 @@ public abstract class ClientTransformManager extends TransformManager {
 
 				public void onSuccess(List<ObjectDeltaResult> result) {
 					long t2 = System.currentTimeMillis();
-					ClientLayerLocator.get().notifications()
-							.log("Cache load/deser.: " + (t2 - t1));
+					Registry.impl(ClientNotifications.class).log(
+							"Cache load/deser.: " + (t2 - t1));
 					notifier.modalOff();
 					MutablePropertyChangeSupport.setMuteAll(true);
 					ClientTransformManager.PersistableTransformListener pl = getPersistableTransformListener();
 					DomainTransformRequest dtr = null;
 					if (pl != null) {
 						dtr = new DomainTransformRequest();
-						dtr.setClientInstance(ClientLayerLocator.get()
-								.getClientInstance());
+						dtr.setClientInstance(ClientBase.getClientInstance());
 					}
 					for (ObjectDeltaResult item : result) {
 						replayRemoteEvents(item.getTransforms(), fireTransforms);
@@ -441,10 +434,8 @@ public abstract class ClientTransformManager extends TransformManager {
 					System.arraycopy(spec, 0, spec2, 0, 3);
 					spec2[3] = true;
 					lkp.put(spec2);
-					ClientLayerLocator
-							.get()
-							.notifications()
-							.log("Cache dte replay: "
+					Registry.impl(ClientNotifications.class).log(
+							"Cache dte replay: "
 									+ (System.currentTimeMillis() - t2));
 					callback.onSuccess(result);
 				}
@@ -456,8 +447,8 @@ public abstract class ClientTransformManager extends TransformManager {
 			List<ObjectDeltaSpec> specs = new ArrayList<ObjectDeltaSpec>();
 			specs.add(new ObjectDeltaSpec(hili, propertyName));
 			notifier.modalOn();
-			ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-					.getObjectDelta(specs, innerCallback);
+			ClientBase.getCommonRemoteServiceAsyncInstance().getObjectDelta(
+					specs, innerCallback);
 		}
 	}
 
@@ -465,8 +456,7 @@ public abstract class ClientTransformManager extends TransformManager {
 	protected void doCascadeDeletes(final HasIdAndLocalId hili) {
 		final ClientBeanReflector beanReflector = ClientReflector.get()
 				.beanInfoForClass(hili.getClass());
-		PropertyAccessor propertyAccessor = CommonLocator.get()
-				.propertyAccessor();
+		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
 		beanReflector.iterateForPropertyWithAnnotation(Association.class,
 				new HasAnnotationCallback<Association>() {
 					public void apply(Association association,
@@ -489,8 +479,8 @@ public abstract class ClientTransformManager extends TransformManager {
 		protected void callRemotePersistence(
 				WrapperPersistable persistableObject,
 				AsyncCallback<Long> savedCallback) {
-			((CommonRemoteServiceExtAsync) ClientLayerLocator.get()
-					.commonRemoteServiceAsyncInstance()).persist(
+			((CommonRemoteServiceExtAsync) ClientBase
+					.getCommonRemoteServiceAsyncInstance()).persist(
 					persistableObject, savedCallback);
 		}
 	}

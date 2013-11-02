@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor.IndividualPropertyAccessor;
 
 public class PropertyPathAccessor {
@@ -64,7 +64,7 @@ public class PropertyPathAccessor {
 		IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[idx + 1];
 		System.arraycopy(this.accessors, 0, accessors, 0, this.accessors.length);
 		this.accessors = accessors;
-		this.accessors[idx] = CommonLocator.get().propertyAccessor()
+		this.accessors[idx] = Reflections.propertyAccessor()
 				.cachedAccessor(obj.getClass(), path);
 	}
 

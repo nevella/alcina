@@ -15,15 +15,18 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.EditActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.ViewActionHandler;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -40,7 +43,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 
 		protected boolean isAutoSave() {
-			return ClientLayerLocator.get().getGeneralProperties().isAutoSave();
+			return ClientBase.getGeneralProperties().isAutoSave();
 		}
 
 		protected void handleParentLinks(Workspace workspace, Object node,
@@ -182,8 +185,7 @@ public class WorkspaceDefaultActionHandlers {
 					for (HasIdAndLocalId cascade : this.workspaceDeletionChecker.cascadedDeletions) {
 						TransformManager.get().deleteObject(cascade);
 					}
-					ClientLayerLocator.get()
-							.getCommitToStorageTransformListener()
+					Registry.impl(CommitToStorageTransformListener.class)
 							.flushWithOneoffCallback(deleteObjectCallback);
 				} else {
 					deleteObjectCallback.onSuccess(null);
@@ -202,9 +204,7 @@ public class WorkspaceDefaultActionHandlers {
 				} else {
 				}
 			}
-			ClientLayerLocator
-					.get()
-					.notifications()
+			Registry.impl(ClientNotifications.class)
 					.confirm(
 							"Are you sure you want to delete the selected object",
 							new DoDeleteCallback(event, workspace, hili,

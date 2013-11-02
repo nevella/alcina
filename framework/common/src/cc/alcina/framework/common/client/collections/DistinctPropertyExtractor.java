@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilters.ConverterFilter;
 
 public class DistinctPropertyExtractor<T, V> implements ConverterFilter<T, V> {
@@ -19,7 +19,7 @@ public class DistinctPropertyExtractor<T, V> implements ConverterFilter<T, V> {
 
 	@Override
 	public V convert(T original) {
-		return (V) CommonLocator.get().propertyAccessor()
+		return (V) Reflections.propertyAccessor()
 				.getPropertyValue(original, propertyName);
 	}
 

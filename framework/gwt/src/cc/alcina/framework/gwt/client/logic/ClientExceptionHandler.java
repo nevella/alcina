@@ -7,8 +7,10 @@ import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 import com.google.gwt.core.client.GWT;
@@ -81,12 +83,12 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 		// TODO - 3.02
 		GWT.log("Uncaught exception escaped", e);
 		if (GWT.isScript()) {
-			ClientLayerLocator.get().notifications().showError(e);
+			Registry.impl(ClientNotifications.class).showError(e);
 		}
 	}
 
 	public String extraInfoForExceptionText() {
-		ClientInstance clientInstance = ClientLayerLocator.get().getClientInstance();
+		ClientInstance clientInstance = ClientBase.getClientInstance();
 		long clientInstanceId=HiliHelper.getIdOrZero(clientInstance);
 		String extraInfo = "\n\nUser agent: "
 				+ BrowserMod.getUserAgent()

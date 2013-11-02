@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.*;
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 
@@ -25,7 +25,7 @@ public class AlcinaHistoryItemTm extends AlcinaHistoryItem {
 		}
 		return TransformManager.get()
 				.getObject(
-						CommonLocator.get().classLookup()
+						Reflections.classLookup()
 								.getClassForName(getClassName()), getId(),
 						getLocalId());
 	}

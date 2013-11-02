@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
@@ -137,7 +137,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 		@Override
 		public void onSuccess(Void result) {
-			ClientLayerLocator.get().notifications()
+			Registry.impl(ClientNotifications.class)
 					.notifyOfCompletedSaveFromOffline();
 			super.onSuccess(result);
 		}

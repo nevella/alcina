@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -265,9 +265,7 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	}
 
 	public void mapCriteriaToPropertyNames() {
-		CriterionPropertyNameMappings crMappings = CommonLocator
-				.get()
-				.classLookup()
+		CriterionPropertyNameMappings crMappings = Reflections.classLookup()
 				.getAnnotationForClass(getClass(),
 						CriterionPropertyNameMappings.class);
 		if (crMappings != null) {

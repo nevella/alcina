@@ -32,17 +32,13 @@ public class LooseActionRegistry {
 		loadFromRegistry();
 	}
 
-	private static LooseActionRegistry theInstance;
-
 	public static LooseActionRegistry get() {
-		if (theInstance == null) {
-			theInstance = new LooseActionRegistry();
+		LooseActionRegistry singleton = Registry.checkSingleton(LooseActionRegistry.class);
+		if (singleton == null) {
+			singleton = new LooseActionRegistry();
+			Registry.registerSingleton(LooseActionRegistry.class, singleton);
 		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+		return singleton;
 	}
 
 	private Map<String, LooseActionHandler> actionHandlers;

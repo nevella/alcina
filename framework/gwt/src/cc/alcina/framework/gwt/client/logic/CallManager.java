@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -39,26 +40,23 @@ public class CallManager {
 
 	private ArrayList<AsyncCallback> running;
 
-	private static CallManager theInstance;
 
 	public static CallManager get() {
-		if (theInstance == null) {
-			theInstance = new CallManager();
+		CallManager singleton = Registry.checkSingleton(CallManager.class);
+		if(singleton==null){
+			singleton=new CallManager();
+			Registry.registerSingleton(CallManager.class, singleton);
 		}
-		return theInstance;
+		return singleton;
 	}
 
 	private CallManager() {
-		super();
 		cancelled = new ArrayList<AsyncCallback>();
 		displayTexts = new HashMap<AsyncCallback, String>();
 		topicListeners = new HashMap<AsyncCallback, TopicPublisher.TopicListener>();
 		running = new ArrayList<AsyncCallback>();
 	}
 
-	public void appShutdown() {
-		theInstance = null;
-	}
 
 	public void cancel(AsyncCallback runningSearch) {
 		cancelled.add(runningSearch);

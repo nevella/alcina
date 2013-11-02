@@ -2,8 +2,9 @@ package cc.alcina.template.client;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -31,7 +32,7 @@ public class AlcinaTemplateExceptionHandler extends ClientExceptionHandler {
 		}
 		if (GWT.isScript()) {
 			e = wrapException(e);
-			ClientLayerLocator.get().notifications().showError(e);
+			Registry.impl(ClientNotifications.class).showError(e);
 		}
 	}
 

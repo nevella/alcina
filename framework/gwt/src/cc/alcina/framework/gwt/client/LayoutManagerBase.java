@@ -22,7 +22,7 @@ public abstract class LayoutManagerBase implements LayoutEventListener,
 	public LayoutManagerBase() {
 		Window.addResizeHandler(this);
 		LayoutEvents.get().addLayoutEventListener(this);
-		Registry.putSingleton(LayoutManagerBase.class, this);
+		Registry.registerSingleton(LayoutManagerBase.class, this);
 	}
 
 	private boolean displayInitialised = false;

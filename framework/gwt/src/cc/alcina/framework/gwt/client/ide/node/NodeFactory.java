@@ -54,22 +54,15 @@ public class NodeFactory {
 		super();
 	}
 
-	private static NodeFactory theInstance;
-
 	public static NodeFactory get() {
-		if (theInstance == null) {
-			theInstance = new NodeFactory();
+		NodeFactory singleton = Registry.checkSingleton(NodeFactory.class);
+		if (singleton == null) {
+			singleton = new NodeFactory();
+			Registry.registerSingleton(NodeFactory.class, singleton);
 		}
-		return theInstance;
+		return singleton;
 	}
 
-	public void appShutdown() {
-		theInstance = null;
-	}
-
-	public void registerNodeFactory(NodeFactory nodeFactory) {
-		theInstance = nodeFactory;
-	}
 
 	private Set<SourcesPropertyChangeEvents> childlessBindables = new HashSet<SourcesPropertyChangeEvents>();
 

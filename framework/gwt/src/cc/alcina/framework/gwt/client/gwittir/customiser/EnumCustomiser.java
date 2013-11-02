@@ -18,7 +18,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
@@ -68,8 +68,7 @@ public class EnumCustomiser implements Customiser {
 		provider.setMultiple(multipleSelect);
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				RENDERER_CLASS);
-		final Renderer renderer = parameter != null ? (Renderer) CommonLocator
-				.get().classLookup().newInstance(parameter.classValue()) : null;
+		final Renderer renderer = parameter != null ? (Renderer) Reflections.classLookup().newInstance(parameter.classValue()) : null;
 		if (renderer != null) {
 			provider.setRenderer(renderer);
 		}
@@ -92,8 +91,7 @@ public class EnumCustomiser implements Customiser {
 				ENUM_PROVIDER_CLASS);
 		if (parameter != null) {
 			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
-			hiddenValues.removeAll(((HasValue<Collection>) CommonLocator.get()
-					.classLookup().newInstance(parameter.classValue()))
+			hiddenValues.removeAll(((HasValue<Collection>) Reflections.classLookup().newInstance(parameter.classValue()))
 					.getValue());
 			provider.setHiddenValues(hiddenValues);
 		}
@@ -102,7 +100,7 @@ public class EnumCustomiser implements Customiser {
 		if (parameter != null) {
 			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
 			hiddenValues.removeAll(CollectionFilters.filter(hiddenValues,
-					(CollectionFilter) CommonLocator.get().classLookup()
+					(CollectionFilter) Reflections.classLookup()
 							.newInstance(parameter.classValue())));
 			provider.setHiddenValues(hiddenValues);
 		}

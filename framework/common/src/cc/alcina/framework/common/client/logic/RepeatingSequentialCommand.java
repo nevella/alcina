@@ -3,8 +3,9 @@ package cc.alcina.framework.common.client.logic;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -64,9 +65,7 @@ public class RepeatingSequentialCommand implements RepeatingCommand {
 			if (DEBUG) {
 				long t2 = System.currentTimeMillis();
 				if (t2 - t1 > 100) {
-					ClientLayerLocator
-							.get()
-							.notifications()
+					Registry.impl(ClientNotifications.class)
 							.log(CommonUtils.formatJ("Long task: %s - %sms",
 									tasks.get(0).getClass().getName(), t2 - t1));
 				}

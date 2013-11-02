@@ -1,24 +1,22 @@
 package cc.alcina.framework.gwt.client;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
-import cc.alcina.framework.gwt.client.logic.ClientUTCDateProvider;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.provider.ClientURLComponentEncoder;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.res.AlcinaResources;
-import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderGwt;
 
 import com.google.gwt.dom.client.StyleInjector;
@@ -27,11 +25,10 @@ public class ClientConfiguration {
 	public void initServices() {
 		initNotifications();
 		initCss();
-		ClientLayerLocator.get().notifications().metricLogStart("moduleLoad");
+		Registry.impl(ClientNotifications.class).metricLogStart("moduleLoad");
 		initExceptionHandling();
 		initCommonClient();
 		initContentProvider();
-		initImageProvider();
 		prepareDebugFromHistory();
 		extraConfiguration();
 	}
@@ -67,25 +64,20 @@ public class ClientConfiguration {
 	protected void initCommonClient() {
 		TransformManager.register(createTransformManager());
 		LooseContext.register(new ClientLooseContextProvider());
-		CommonLocator.get().registerPropertyAccessor(GwittirBridge.get());
-		CommonLocator.get().registerCurrentUtcDateProvider(
-				new ClientUTCDateProvider());
-		DataImageProvider.register(StandardDataImageProvider.get());
 		TransformManager.get().setupClientListeners();
 		TransformManager.get().addDomainTransformListener(
 				PermissionsManager.get());
-		ClientLayerLocator.get().setCommitToStorageTransformListener(
+		Registry.registerSingleton(CommitToStorageTransformListener.class,
 				createStorageTransformListener());
-		ClientLayerLocator.get().registerTimerWrapperProvider(
+		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderGwt());
 		registerExtraTransformListenersPreStorage();
 		TransformManager.get().addDomainTransformListener(
-				ClientLayerLocator.get().getCommitToStorageTransformListener());
+				Registry.impl(CommitToStorageTransformListener.class));
 		registerExtraTransformListenersPostStorage();
-		CommonLocator.get().registerClassLookup(ClientReflector.get());
-		CommonLocator.get().registerObjectLookup(TransformManager.get());
-		CommonLocator.get().registerURLComponentEncoder(
-				new ClientURLComponentEncoder());
+		Reflections.registerPropertyAccessor(GwittirBridge.get());
+		Reflections.registerClassLookup(ClientReflector.get());
+		Reflections.registerObjectLookup(TransformManager.get());
 	}
 
 	protected void registerExtraTransformListenersPreStorage() {
@@ -99,12 +91,12 @@ public class ClientConfiguration {
 	}
 
 	protected void initExceptionHandling() {
-		ClientLayerLocator.get().registerExceptionHandler(
+		Registry.registerSingleton(ClientExceptionHandler.class,
 				new ClientExceptionHandler());
 	}
 
 	protected void initNotifications() {
-		ClientLayerLocator.get().registerNotifications(
+		Registry.registerSingleton(ClientNotifications.class,
 				new ClientNotificationsImpl());
 	}
 }

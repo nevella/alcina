@@ -17,7 +17,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -49,8 +49,7 @@ public class ObjectActionLinkCustomiser implements Customiser {
 		for (NamedParameter p : info.parameters()) {
 			if (p.name().equals(ACTION_CLASS)) {
 				Class c = p.classValue();
-				actions.add((PermissibleAction) CommonLocator.get()
-						.classLookup().newInstance(c));
+				actions.add((PermissibleAction) Reflections.classLookup().newInstance(c));
 			}
 		}
 		return new ObjectActionLinkProvider(actions);

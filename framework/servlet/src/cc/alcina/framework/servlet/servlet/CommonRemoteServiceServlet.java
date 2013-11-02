@@ -98,8 +98,8 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.CookieHelper;
@@ -640,7 +640,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws DomainTransformRequestException {
 		DomainTransformRequest request = new DomainTransformRequest();
 		HiliLocatorMap map = new HiliLocatorMap();
-		request.setClientInstance(CommonRemoteServiceServletSupport.get()
+		request.setClientInstance(Registry.impl(CommonRemoteServiceServletSupport.class)
 				.getServerAsClientInstance());
 		request.setTag(tag);
 		request.setRequestId(nextTransformRequestId());
@@ -705,7 +705,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				WrappedRuntimeException e = new WrappedRuntimeException(
 						"Permission denied for action " + o,
 						SuggestedAction.NOTIFY_WARNING);
-				EntityLayerLocator.get().log(
+				EntityLayerUtils.log(
 						LogMessageType.TRANSFORM_EXCEPTION,
 						"Domain transform permissions exception", e);
 				throw e;
@@ -738,7 +738,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected int nextTransformRequestId() {
-		return CommonRemoteServiceServletSupport.get().nextTransformRequestId();
+		return Registry.impl(CommonRemoteServiceServletSupport.class).nextTransformRequestId();
 	}
 
 	protected abstract void processValidLogin(LoginResponse lrb, String userName)
@@ -755,7 +755,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			DomainTransformRequest request, boolean ignoreClientAuthMismatch,
 			boolean forOfflineTransforms, boolean blockUntilAllListenersNotified)
 			throws DomainTransformRequestException {
-		HiliLocatorMap locatorMap = CommonRemoteServiceServletSupport.get()
+		HiliLocatorMap locatorMap = Registry.impl(CommonRemoteServiceServletSupport.class)
 				.getLocatorMapForClient(request);
 		synchronized (locatorMap) {
 			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
@@ -927,7 +927,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	private File getDataDumpsFolder() {
-		File dataFolder = Registry.impl(ServletLayerObjects.class).getDataFolder();
+		File dataFolder = ServletLayerObjects.get().getDataFolder();
 		File dir = new File(dataFolder.getPath() + File.separator
 				+ "client-dumps");
 		dir.mkdirs();

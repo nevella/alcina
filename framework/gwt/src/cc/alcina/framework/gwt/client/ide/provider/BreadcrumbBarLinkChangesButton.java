@@ -4,7 +4,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar.BreadcrumbBarButton;
 
@@ -33,9 +33,7 @@ public class BreadcrumbBarLinkChangesButton extends BreadcrumbBarButton
 				Object source = evt.getSource();
 				for (SourcesPropertyChangeEvents spce : coll) {
 					if (spce != source) {
-						CommonLocator
-								.get()
-								.propertyAccessor()
+						Reflections.propertyAccessor()
 								.setPropertyValue(spce, evt.getPropertyName(),
 										evt.getNewValue());
 					}

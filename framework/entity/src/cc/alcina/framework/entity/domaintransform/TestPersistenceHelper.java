@@ -21,16 +21,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ImplementationLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
@@ -46,22 +48,18 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		PropertyAccessor, CurrentUtcDateProvider {
 	private TestPersistenceHelper() {
 		super();
-		CommonLocator.get().registerClassLookup(this);
-		CommonLocator.get().registerObjectLookup(this);
-		CommonLocator.get().registerPropertyAccessor(this);
+		Reflections.registerClassLookup(this);
+		Reflections.registerObjectLookup(this);
+		Reflections.registerPropertyAccessor(this);
 	}
-
-	private static TestPersistenceHelper theInstance;
 
 	public static TestPersistenceHelper get() {
-		if (theInstance == null) {
-			theInstance = new TestPersistenceHelper();
+		TestPersistenceHelper singleton = Registry.checkSingleton(TestPersistenceHelper.class);
+		if (singleton == null) {
+			singleton = new TestPersistenceHelper();
+			Registry.registerSingleton(TestPersistenceHelper.class, singleton);
 		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+		return singleton;
 	}
 
 	public Class getClassForName(String fqn) {
@@ -121,8 +119,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		if (info != null) {
 			dnpn = info.displayNamePropertyName();
 		}
-		Object pv = CommonLocator.get().propertyAccessor()
-				.getPropertyValue(o, dnpn);
+		Object pv = Reflections.propertyAccessor().getPropertyValue(o, dnpn);
 		return (pv == null) ? "---" : pv.toString();
 	}
 
@@ -206,7 +203,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 				if (propertyType.isInterface() && propertyType != Set.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
-					propertyType = CommonLocator.get().implementationLookup()
+					propertyType = Registry.impl(ImplementationLookup.class)
 							.getImplementation(propertyType);
 				}
 				infos.add(new PropertyInfoLite(propertyType, pd.getName(),

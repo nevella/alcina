@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.gwittir.validator.BooleanEnsureNonNullCoverter;
@@ -450,7 +450,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		if (!validators.isEmpty()) {
 			CompositeValidator cv = new CompositeValidator();
 			for (ValidatorInfo vi : validators) {
-				Validator v = CommonLocator.get().classLookup()
+				Validator v = Reflections.classLookup()
 						.newInstance(vi.validator());
 				if (v instanceof ParameterisedValidator) {
 					ParameterisedValidator pv = (ParameterisedValidator) v;

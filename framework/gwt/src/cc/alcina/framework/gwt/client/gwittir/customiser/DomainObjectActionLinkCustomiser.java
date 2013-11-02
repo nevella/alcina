@@ -15,7 +15,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -94,7 +94,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 			link.setDisplayName(displayName);
 			link.setAsHtml(asHtml);
 			if (rendererClass != null) {
-				link.setRenderer(CommonLocator.get().classLookup()
+				link.setRenderer(Reflections.classLookup()
 						.newInstance(rendererClass));
 			}
 			return link;

@@ -21,16 +21,21 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ImplementationLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
@@ -43,36 +48,35 @@ import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
  */
 @SuppressWarnings("unchecked")
 public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
-		PropertyAccessor, CurrentUtcDateProvider {
-	private static ObjectPersistenceHelper theInstance;
-
-	public static ObjectPersistenceHelper get() {
-		if (theInstance == null) {
-			theInstance = new ObjectPersistenceHelper();
-		}
-		return theInstance;
-	}
-
+		PropertyAccessor, RegistrableService {
 	// Initialises this. Note - not a thread-specific singleton,
 	// any thread (client) specific work delegated to tltm
 	private ObjectPersistenceHelper() {
 		super();
 		TransformManager.register(ThreadlocalTransformManager.ttmInstance());
-		CommonLocator.get().registerClassLookup(this);
-		CommonLocator.get().registerObjectLookup(this);
-		CommonLocator.get().registerPropertyAccessor(this);
+		Reflections.registerClassLookup(this);
+		Reflections.registerObjectLookup(this);
+		Reflections.registerPropertyAccessor(this);
+	}
+
+	public static ObjectPersistenceHelper get() {
+		ObjectPersistenceHelper singleton = Registry.checkSingleton(ObjectPersistenceHelper.class);
+		if (singleton == null) {
+			singleton = new ObjectPersistenceHelper();
+			Registry.registerSingleton(ObjectPersistenceHelper.class, singleton);
+		}
+		return singleton;
 	}
 
 	public void appShutdown() {
 		ThreadlocalTransformManager.get().appShutdown();
-		theInstance = null;
 	}
 
-	@SuppressWarnings("deprecation")
-	// it works...yeah, calendar shmalendar
-	public Date currentUtcDate() {
-		Date d = new Date();
-		return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
+	@Override
+	public IndividualPropertyAccessor cachedAccessor(Class clazz,
+			String propertyName) {
+		return (ThreadlocalTransformManager.cast()).cachedAccessor(clazz,
+				propertyName);
 	}
 
 	public String displayNameForObject(Object o) {
@@ -84,8 +88,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		if (info != null) {
 			dnpn = info.displayNamePropertyName();
 		}
-		Object pv = CommonLocator.get().propertyAccessor()
-				.getPropertyValue(o, dnpn);
+		Object pv = Reflections.propertyAccessor().getPropertyValue(o, dnpn);
 		return (pv == null) ? "---" : pv.toString();
 	}
 
@@ -116,8 +119,8 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		try {
-			PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(targetClass,
-					propertyName);
+			PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(
+					targetClass, propertyName);
 			return pd == null ? null : pd.getReadMethod() == null ? null : pd
 					.getReadMethod().getAnnotation(annotationClass);
 		} catch (Exception e) {
@@ -146,8 +149,8 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	public Class getPropertyType(Class clazz, String propertyName) {
 		try {
-			PropertyDescriptor descriptor = SEUtilities.getPropertyDescriptorByName(clazz,
-					propertyName);
+			PropertyDescriptor descriptor = SEUtilities
+					.getPropertyDescriptorByName(clazz, propertyName);
 			return descriptor == null ? null : descriptor.getPropertyType();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -176,7 +179,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 				if (propertyType.isInterface() && propertyType != Set.class) {
 					// this seems to vary (unnecessary on 1.5, necessary on
 					// 1.6)-propertydescriptor change probly
-					propertyType = CommonLocator.get().implementationLookup()
+					propertyType = Registry.impl(ImplementationLookup.class)
 							.getImplementation(propertyType);
 				}
 				infos.add(new PropertyInfoLite(propertyType, pd.getName(),
@@ -206,17 +209,21 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 				propertyName, value);
 	}
 
-	@Override
-	public IndividualPropertyAccessor cachedAccessor(Class clazz,
-			String propertyName) {
-		return (ThreadlocalTransformManager.cast()).cachedAccessor(clazz,
-				propertyName);
-	}
-
 	protected Enum getTargetEnumValue(DomainTransformEvent evt) {
 		if (Enum.class.isAssignableFrom(evt.getValueClass())) {
 			return Enum.valueOf(evt.getValueClass(), evt.getNewStringValue());
 		}
 		return null;
+	}
+
+	@RegistryLocation(registryPoint = CurrentUtcDateProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static class JvmCurrentUtcDateProvider implements
+			CurrentUtcDateProvider {
+		@SuppressWarnings("deprecation")
+		// it works...yeah, calendar shmalendar
+		public Date currentUtcDate() {
+			Date d = new Date();
+			return new Date(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
+		}
 	}
 }

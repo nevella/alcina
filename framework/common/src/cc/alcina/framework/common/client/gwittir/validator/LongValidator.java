@@ -27,7 +27,7 @@ import com.totsp.gwittir.client.validator.Validator;
 public class LongValidator implements Validator {
 	public static final LongValidator INSTANCE = new LongValidator();
 
-	private LongValidator() {
+	public LongValidator() {
 	}
 
 	public Object validate(Object value) throws ValidationException {

@@ -14,7 +14,10 @@
 
 package cc.alcina.framework.gwt.client.provider;
 
-import cc.alcina.framework.common.client.util.URLComponentEncoder;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 
 import com.google.gwt.http.client.URL;
 
@@ -23,8 +26,9 @@ import com.google.gwt.http.client.URL;
  *
  * @author Nick Reddel
  */
-
- public class ClientURLComponentEncoder implements URLComponentEncoder {
+@RegistryLocation(registryPoint=UrlComponentEncoder.class,implementationType=ImplementationType.SINGLETON)
+@ClientInstantiable
+ public class ClientURLComponentEncoder implements UrlComponentEncoder {
 	public String decode(String componentText) {
 		return URL.decodeQueryString(componentText);
 	}

@@ -27,9 +27,9 @@ import cc.alcina.framework.gwt.client.ide.node.DomainCollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.DomainNode;
 import cc.alcina.framework.gwt.client.ide.node.NodeFactory;
 import cc.alcina.framework.gwt.client.ide.node.NodeFactory.NodeCreator;
-import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.stdlayout.TabDisplaysAsFullHeight;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
 import cc.alcina.framework.gwt.client.widget.HeadingPanel;
@@ -57,7 +57,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 public class BookmarksTab extends BaseTab implements HasLayoutInfo,
 		TabDisplaysAsFullHeight {
 	protected static StandardDataImages getImages() {
-		return DataImageProvider.get().getDataImages();
+		return StandardDataImageProvider.get().getDataImages();
 	}
 
 	protected Workspace workspace;

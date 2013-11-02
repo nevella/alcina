@@ -5,8 +5,9 @@ import java.util.Arrays;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.LayoutManagerBase;
 import cc.alcina.framework.gwt.client.ide.provider.ContentProvider;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
@@ -35,17 +36,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-
 public class AlcinaTemplateLayoutManager extends LayoutManagerBase {
-	private static AlcinaTemplateLayoutManager theInstance;
-
-	public static AlcinaTemplateLayoutManager get() {
-		if (theInstance == null) {
-			theInstance = new AlcinaTemplateLayoutManager();
-		}
-		return theInstance;
-	}
-
 	private CaptionCmp captionCmp;
 
 	private MainCmp mainCmp;
@@ -64,8 +55,14 @@ public class AlcinaTemplateLayoutManager extends LayoutManagerBase {
 		super();
 	}
 
-	public void appShutdown() {
-		theInstance = null;
+	public static AlcinaTemplateLayoutManager get() {
+		AlcinaTemplateLayoutManager singleton = Registry
+				.checkSingleton(AlcinaTemplateLayoutManager.class);
+		if (singleton == null) {
+			singleton = new AlcinaTemplateLayoutManager();
+			Registry.registerSingleton(AlcinaTemplateLayoutManager.class, singleton);
+		}
+		return singleton;
 	}
 
 	public CaptionCmp getCaptionCmp() {
@@ -114,7 +111,7 @@ public class AlcinaTemplateLayoutManager extends LayoutManagerBase {
 		PermissibleActionListener l = new PermissibleActionListener() {
 			public void vetoableAction(PermissibleActionEvent evt) {
 				previewBox.hide();
-				if (evt.getAction()==OkAction.INSTANCE) {
+				if (evt.getAction() == OkAction.INSTANCE) {
 					Window.open(result, "BarNet AlcinaTemplate", null);
 				}
 			}
@@ -173,10 +170,12 @@ public class AlcinaTemplateLayoutManager extends LayoutManagerBase {
 		Widget w = tp.getTabBar().getSelectedTab() >= 0 ? tp.getWidget(tp
 				.getTabBar().getSelectedTab()) : tp.getNoTabContentHolder();
 		if (w instanceof HasLayoutInfo) {
-			WidgetUtils.resizeUsingInfo(clHeight, clientWidth, Arrays.asList(
-					new Widget[] { w }).iterator(), tp.getAdjustHeight(), 0);
+			WidgetUtils.resizeUsingInfo(clHeight, clientWidth,
+					Arrays.asList(new Widget[] { w }).iterator(),
+					tp.getAdjustHeight(), 0);
 		}
 	}
+
 	public void showContentPopup(String contentKey) {
 		AlcinaTemplateContentProvider provider = (AlcinaTemplateContentProvider) ContentProvider
 				.getProvider();
@@ -218,7 +217,8 @@ public class AlcinaTemplateLayoutManager extends LayoutManagerBase {
 		public void onBrowserEvent(Event event) {
 			// disable # hyperlinks
 			// disable # hyperlinks
-			AlcinaTemplateLayoutManager layoutManager = AlcinaTemplateLayoutManager.get();
+			AlcinaTemplateLayoutManager layoutManager = AlcinaTemplateLayoutManager
+					.get();
 			if (event.getTypeInt() == Event.ONCLICK) {
 				Element target = Element.as(event.getEventTarget());
 				if (target.getParentElement() != null
@@ -255,7 +255,6 @@ public class AlcinaTemplateLayoutManager extends LayoutManagerBase {
 										.get().getLastHistoryToken();
 								if (currentTokenString != null) {
 									History.newItem(targetHash);
-									
 								}
 							}
 						}
@@ -266,17 +265,16 @@ public class AlcinaTemplateLayoutManager extends LayoutManagerBase {
 								Window.Location.assign(targetHref);
 							}
 						};
-						ClientLayerLocator.get().notifications().confirm(
-								"You are about to leave "
-										+ "the Alcina template site. Please confirm.",
-								callback);
+						Registry.impl(ClientNotifications.class)
+								.confirm(
+										"You are about to leave "
+												+ "the Alcina template site. Please confirm.",
+										callback);
 						DOM.eventPreventDefault(event);
 					}
 				}
 			}
 			super.onBrowserEvent(event);
 		}
-
-		
 	}
 }

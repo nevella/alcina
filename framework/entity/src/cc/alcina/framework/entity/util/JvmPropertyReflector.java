@@ -3,7 +3,7 @@ package cc.alcina.framework.entity.util;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 
 public class JvmPropertyReflector implements PropertyReflector {
@@ -22,13 +22,13 @@ public class JvmPropertyReflector implements PropertyReflector {
 
 	@Override
 	public Object getPropertyValue(Object bean) {
-		return CommonLocator.get().propertyAccessor()
+		return Reflections.propertyAccessor()
 				.getPropertyValue(bean, getPropertyName());
 	}
 
 	@Override
 	public void setPropertyValue(Object bean, Object newValue) {
-		CommonLocator.get().propertyAccessor()
+		Reflections.propertyAccessor()
 				.setPropertyValue(bean, getPropertyName(), newValue);
 	}
 
@@ -39,9 +39,7 @@ public class JvmPropertyReflector implements PropertyReflector {
 
 	@Override
 	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
-		return CommonLocator
-				.get()
-				.propertyAccessor()
+		return Reflections.propertyAccessor()
 				.getAnnotationForProperty(readMethodDeclaringClass,
 						annotationClass, getPropertyName());
 	}

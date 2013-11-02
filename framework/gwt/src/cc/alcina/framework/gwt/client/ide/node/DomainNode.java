@@ -27,8 +27,8 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
-import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
@@ -141,7 +141,7 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 		} else {
 			displayName = "[null]";
 		}
-		AbstractImagePrototype img = DataImageProvider.get().getByName(
+		AbstractImagePrototype img = StandardDataImageProvider.get().getByName(
 				info.getGwBeanInfo().displayInfo().iconName());
 		setHTML(imageItemHTML(img, displayName));
 	}

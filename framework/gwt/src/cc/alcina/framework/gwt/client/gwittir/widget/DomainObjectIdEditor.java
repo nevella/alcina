@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -79,7 +79,7 @@ public class DomainObjectIdEditor extends AbstractBoundWidget implements
 			} else {
 				try {
 					id = Long.parseLong(text);
-					HasIdAndLocalId hili = CommonLocator.get().classLookup()
+					HasIdAndLocalId hili = Reflections.classLookup()
 							.newInstance(domainObjectClass);
 					hili.setId(id);
 					if (hili != null && !hili.equals(currentValue)

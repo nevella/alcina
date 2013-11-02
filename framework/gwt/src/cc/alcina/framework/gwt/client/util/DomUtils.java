@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
 import com.google.gwt.core.client.GWT;
@@ -117,8 +117,7 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (lastContainer != container) {
 				lastContainer = container;
 				xpathMap = new LinkedHashMap<String, Node>();
-				ClientNotifications notifications = ClientLayerLocator.get()
-						.notifications();
+				ClientNotifications notifications = Registry.impl(ClientNotifications.class);
 				if (notifications != null) {
 					notifications.metricLogStart(DOM_XPATH_MAP);
 				}
@@ -729,8 +728,7 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (lastContainer != container) {
 				lastContainer = container;
 				xpathMap = new LinkedHashMap<String, Node>();
-				ClientNotifications notifications = ClientLayerLocator.get()
-						.notifications();
+				ClientNotifications notifications = Registry.impl(ClientNotifications.class);
 				if (notifications != null) {
 					notifications.metricLogStart(DOM_XPATH_MAP);
 				}
@@ -758,8 +756,7 @@ public class DomUtils implements NodeFromXpathProvider {
 			generateMapItr(itrStack.pop());
 		}
 		if (itrStack.isEmpty()) {
-			ClientNotifications notifications = ClientLayerLocator.get()
-					.notifications();
+			ClientNotifications notifications = Registry.impl(ClientNotifications.class);
 			if (notifications != null) {
 				notifications.metricLogEnd(DOM_XPATH_MAP);
 			}

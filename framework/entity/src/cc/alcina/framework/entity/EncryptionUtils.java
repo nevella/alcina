@@ -42,6 +42,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*The "large" functions assume a byte structure of [first 128] public-key RSA encrypted 3DES key, byte 129 onwards 3dse encrypted data
  * 
@@ -51,29 +52,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
  * @author Nick Reddel
  */
 public class EncryptionUtils {
-	private static EncryptionUtils theInstance;
-
-	public static void main(String[] args) {
-		// showProviders();
-		EncryptionUtils me = new EncryptionUtils();
-		String pps = "msg1";
-		char[] chrs = new char[500];
-		Arrays.fill(chrs, 'z');
-		String msg = new String(chrs);
-		me.setPassphrase(pps.getBytes());
-		me.generateKeys();
-		try {
-			me.keyPairFromBytes();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		byte[] src = msg.getBytes();
-		byte[] res = me.asymEncryptLarge(src);
-		byte[] res2 = me.asymDecryptLarge(res);
-		System.out.println(new String(res2));
-	}
-
 	public static void showProviders() {
 		try {
 			Provider[] providers = Security.getProviders();
@@ -92,13 +70,6 @@ public class EncryptionUtils {
 		}
 	}
 
-	public static EncryptionUtils singleton() {
-		if (theInstance == null) {
-			theInstance = new EncryptionUtils();
-		}
-		return theInstance;
-	}
-
 	private byte[] passphrase;
 
 	private byte[] publicKeyBytes;
@@ -109,12 +80,13 @@ public class EncryptionUtils {
 
 	private PublicKey publicKey;
 
-	private EncryptionUtils() {
-		super();
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+	public static EncryptionUtils get() {
+		EncryptionUtils singleton = Registry.checkSingleton(EncryptionUtils.class);
+		if (singleton == null) {
+			singleton = new EncryptionUtils();
+			Registry.registerSingleton(EncryptionUtils.class, singleton);
+		}
+		return singleton;
 	}
 
 	// will decrypt then gunzip
@@ -370,7 +342,7 @@ public class EncryptionUtils {
 		MessageDigest md;
 		md = MessageDigest.getInstance("MD5");
 		byte[] md5hash = new byte[32];
-		//iso-8859 not that good an idea, but keep it...
+		// iso-8859 not that good an idea, but keep it...
 		md.update(text.getBytes("iso-8859-1"), 0, text.length());
 		md5hash = md.digest();
 		return convertToHex(md5hash);

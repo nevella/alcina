@@ -18,11 +18,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.util.URLComponentEncoder;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 
 import com.google.gwt.user.client.History;
 
@@ -30,7 +30,7 @@ import com.google.gwt.user.client.History;
  * 
  * @author Nick Reddel
  */
-public class AlcinaHistory<I extends AlcinaHistoryItem> {
+public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	private static final String DOUBLE_AMP = "%26%26";
 
 	public static final String LOGIN_EVENT = "LOGIN_EVENT";
@@ -59,17 +59,8 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	public static final String PRE_HISTORY_KEY = "ph";
 
-	private static AlcinaHistory theInstance;
-
 	public static AlcinaHistory get() {
-		if (theInstance == null) {
-			theInstance = new AlcinaHistory();
-		}
-		return theInstance;
-	}
-
-	public static void register(AlcinaHistory subclass) {
-		theInstance = subclass;
+		return Registry.impl(AlcinaHistory.class);
 	}
 
 	private boolean noHistoryDisabled = false;
@@ -81,14 +72,6 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	protected String lastHistoryToken;
 
 	protected Map<String, String> tokenDisplayNames = new HashMap<String, String>();
-
-	protected AlcinaHistory() {
-		super();
-	}
-
-	public void appShutdown() {
-		theInstance = null;
-	}
 
 	public I createHistoryInfo() {
 		return (I) new AlcinaHistoryItem();
@@ -209,7 +192,7 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 	public static String toHash(Map<String, String> params) {
 		StringBuffer sb = new StringBuffer();
 		ArrayList<String> keys = new ArrayList<String>(params.keySet());
-		URLComponentEncoder encoder = CommonLocator.get().urlComponentEncoder();
+		UrlComponentEncoder encoder = Registry.impl(UrlComponentEncoder.class);
 		Collections.sort(keys);
 		for (String k : keys) {
 			if (params.get(k) == null) {
@@ -265,7 +248,7 @@ public class AlcinaHistory<I extends AlcinaHistoryItem> {
 					}
 				}
 				map.put(key,
-						CommonLocator.get().urlComponentEncoder()
+						Registry.impl(UrlComponentEncoder.class)
 								.decode(s.substring(idxStart, idx0))
 								.replace("&&", "&"));
 				forKey = true;

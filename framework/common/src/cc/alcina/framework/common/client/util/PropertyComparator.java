@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 
 
@@ -44,7 +44,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 			return 1;
 		}
 		try {
-			PropertyAccessor propertyAccessor = CommonLocator.get().propertyAccessor();
+			PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
 			Object pv1 = propertyAccessor.getPropertyValue(o1, propertyName);
 			Object pv2 = propertyAccessor.getPropertyValue(o2, propertyName);
 			

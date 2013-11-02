@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 
@@ -46,7 +46,7 @@ public class UniqueInCollectionValidator implements Validator {
 		}
 		for (Object o : c) {
 			if (o != sourceObject
-					&& value.equals(CommonLocator.get().propertyAccessor()
+					&& value.equals(Reflections.propertyAccessor()
 							.getPropertyValue(o, propertyName))) {
 				if (o instanceof HasIdAndLocalId
 						&& sourceObject instanceof HasIdAndLocalId) {

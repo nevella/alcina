@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
@@ -282,7 +282,7 @@ public class GwittirUtils {
 		if (GWT.isScript()) {
 			return ClientReflector.get().beanInfoForClass(clazz) != null;
 		}
-		ClassLookup cl = CommonLocator.get().classLookup();
+		ClassLookup cl = Reflections.classLookup();
 		while (clazz != null && clazz != Object.class) {
 			if (cl.getAnnotationForClass(clazz, Introspectable.class) != null
 					|| cl.getAnnotationForClass(clazz, BeanInfo.class) != null) {

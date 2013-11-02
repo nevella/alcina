@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -133,8 +133,7 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 
 		@Override
 		protected void search(int pageNumber, SearchCallback callback) {
-			((CommonRemoteServiceExtAsync) ClientLayerLocator.get()
-					.commonRemoteServiceAsyncInstance()).search(def,
+			((CommonRemoteServiceExtAsync) ClientBase.getCommonRemoteServiceAsyncInstance()).search(def,
 					pageNumber, callback);
 		}
 	}

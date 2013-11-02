@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
@@ -92,13 +93,13 @@ public class Registry {
 							|| loc.registryPoint() == JaxbContextRegistration.class) {
 						// inherited, ignore
 					} else {
-//						System.out
-//								.println(CommonUtils.formatJ(
-//										"Discarded - %s, %s", CommonUtils
-//												.simpleClassName(loc
-//														.registryPoint()),
-//										CommonUtils.simpleClassName(loc
-//												.targetClass())));
+						// System.out
+						// .println(CommonUtils.formatJ(
+						// "Discarded - %s, %s", CommonUtils
+						// .simpleClassName(loc
+						// .registryPoint()),
+						// CommonUtils.simpleClassName(loc
+						// .targetClass())));
 					}
 				}
 			}
@@ -140,7 +141,7 @@ public class Registry {
 		return get().impls0(registryPoint, targetClass);
 	}
 
-	public static void putSingleton(Class<?> clazz, Object object) {
+	public static void registerSingleton(Class<?> clazz, Object object) {
 		get().singletons.put(clazz, void.class, object);
 		get().register(object.getClass(), clazz, void.class,
 				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
@@ -150,8 +151,12 @@ public class Registry {
 		Registry.provider = provider;
 	}
 
-	public static <T> T singleton(Class<T> clazz) {
-		return get().singleton0(clazz);
+	public static <T> T ensureSingleton(Class<T> clazz) {
+		return get().singleton0(clazz, false);
+	}
+
+	public static <T> T checkSingleton(Class<T> clazz) {
+		return get().singleton0(clazz, true);
 	}
 
 	public static <V> List<V> singletons(Class<V> registryPoint,
@@ -442,14 +447,14 @@ public class Registry {
 				CommonUtils.simpleClassName(targetObjectClass)));
 	}
 
-	protected <T> T singleton0(Class<T> clazz) {
+	protected <T> T singleton0(Class<T> clazz, boolean returnNullIfNotRegistered) {
 		if (clazz == null) {
 			return null;
 		}
 		T impl = (T) singletons.get(clazz, void.class);
-		if (impl == null) {
+		if (impl == null && !returnNullIfNotRegistered) {
 			impl = classLookup.newInstance(clazz);
-			putSingleton(clazz, impl);
+			registerSingleton(clazz, impl);
 		}
 		return impl;
 	}
@@ -459,12 +464,13 @@ public class Registry {
 				false);
 		List<V> result = new ArrayList<V>();
 		for (Class c : impls) {
-			result.add((V) singleton(c));
+			result.add((V) ensureSingleton(c));
 		}
 		return result;
 	}
 
 	public static class BasicRegistryProvider implements RegistryProvider {
+		@ClearOnAppRestart
 		private static Registry instance = new Registry();
 
 		@Override
@@ -512,5 +518,9 @@ public class Registry {
 		void appShutdown();
 
 		Registry getRegistry();
+	}
+
+	public void shareSingletonMapTo(Registry otherRegistry) {
+		otherRegistry.singletons = singletons;
 	}
 }

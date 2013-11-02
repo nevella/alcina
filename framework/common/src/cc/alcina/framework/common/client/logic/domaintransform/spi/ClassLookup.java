@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.spi;
 import java.lang.annotation.Annotation;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -68,9 +68,7 @@ public interface ClassLookup {
 			this.beanType = beanType;
 			this.propertyType = CommonUtils.getWrapperType(propertyType);
 			this.propertyName = propertyName;
-			DomainPropertyInfo ann = CommonLocator
-					.get()
-					.propertyAccessor()
+			DomainPropertyInfo ann = Reflections.propertyAccessor()
 					.getAnnotationForProperty(beanType,
 							DomainPropertyInfo.class, propertyName);
 			serializeCollectionOnClient = ann != null

@@ -18,7 +18,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -63,7 +63,7 @@ import cc.alcina.framework.common.client.CommonLocator;
 		public static <T> T instantiateClass(NamedParameter[] parameters, String name){
 			NamedParameter p = Support.getParameter(parameters, name);
 			if (p!=null && p.classValue()!=null){
-				return (T) CommonLocator.get().classLookup()
+				return (T) Reflections.classLookup()
 				.newInstance(p.classValue(), 0,0);
 			}
 			return null;

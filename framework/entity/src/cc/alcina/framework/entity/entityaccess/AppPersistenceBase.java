@@ -34,17 +34,16 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.ClassrefScanner;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
-import cc.alcina.framework.entity.util.JaxbUtils;
 
 public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IUser, G extends IGroup, IID extends Iid> {
 	public static final String PERSISTENCE_TEST = AppPersistenceBase.class
 			.getName() + ".PERSISTENCE_TEST";
 
-	public static final String INSTANCE_READ_ONLY = AppPersistenceBase.class.getName()
-			+ ".INSTANCE_READ_ONLY";
+	public static final String INSTANCE_READ_ONLY = AppPersistenceBase.class
+			.getName() + ".INSTANCE_READ_ONLY";
 
 	public static boolean isTest() {
 		return Boolean.getBoolean(PERSISTENCE_TEST);
@@ -103,10 +102,9 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		Logger mainLogger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
-			Registry.impl(JPAImplementation.class)
-					.muteClassloaderLogging(true);
+			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
 			new RegistryScanner().scan(ensureClassInfo(mainLogger),
-					new ArrayList<String>(), Registry.get(),"entity-layer");
+					new ArrayList<String>(), Registry.get(), "entity-layer");
 			Registry.get().registerBootstrapServices(
 					ObjectPersistenceHelper.get());
 		} catch (Exception e) {
@@ -132,8 +130,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 		Logger mainLogger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
-			Registry.impl(JPAImplementation.class)
-					.muteClassloaderLogging(true);
+			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
 			new ClassrefScanner().scan(ensureClassInfo(mainLogger));
 		} catch (Exception e) {
 			mainLogger.warn("", e);
@@ -170,11 +167,12 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			metricLogger.setLevel(Level.DEBUG);
 			metricLogger.setAdditivity(false);
 			MetricLogging.metricLogger = metricLogger;
-			EntityLayerLocator.get().setMetricLogger(metricLogger);
+			EntityLayerObjects.get().setMetricLogger(
+					metricLogger);
 		}
 		String databaseEventLoggerName = AlcinaServerConfig.get()
 				.getDatabaseEventLoggerName();
-		if (EntityLayerLocator.get().getPersistentLogger() == null) {
+		if (EntityLayerObjects.get().getPersistentLogger() == null) {
 			Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
 			dbLogger.removeAllAppenders();
 			dbLogger.setLevel(Level.INFO);
@@ -182,7 +180,8 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 			a = new DbAppender(l);
 			a.setName(databaseEventLoggerName);
 			dbLogger.addAppender(a);
-			EntityLayerLocator.get().setPersistentLogger(dbLogger);
+			EntityLayerObjects.get().setPersistentLogger(
+					dbLogger);
 		}
 	}
 
@@ -325,12 +324,5 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 
 	protected abstract EntityManagerFactory getEntityManagerFactory();
 
-	public void destroy() {
-		try {
-			EntityLayerLocator.get().appShutdown();
-			JaxbUtils.appShutdown();
-		} catch (Exception e) {
-			// squelch, JBoss being frenzied
-		}
-	}
+	
 }

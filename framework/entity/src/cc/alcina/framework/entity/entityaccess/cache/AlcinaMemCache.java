@@ -39,7 +39,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -59,7 +59,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -99,27 +98,19 @@ public class AlcinaMemCache {
 
 	public static void ensureReferredPropertyIsTransactional(
 			HasIdAndLocalId hili, String propertyName) {
-		PropertyAccessor propertyAccessor = CommonLocator.get()
-				.propertyAccessor();
 		// target, even if new object, will still be equals() to old, so no
 		// property change will be fired, which is the desired behaviour
-		HasIdAndLocalId target = (HasIdAndLocalId) propertyAccessor
-				.getPropertyValue(hili, propertyName);
+		HasIdAndLocalId target = (HasIdAndLocalId) Reflections
+				.propertyAccessor().getPropertyValue(hili, propertyName);
 		if (target != null) {
 			target = ensureTransactional(target);
-			propertyAccessor.setPropertyValue(hili, propertyName, target);
+			Reflections.propertyAccessor().setPropertyValue(hili, propertyName,
+					target);
 		}
 	}
 
 	public static <V extends HasIdAndLocalId> V ensureTransactional(V value) {
 		return get().transactional.ensureTransactional(value);
-	}
-
-	public static AlcinaMemCache get() {
-		if (theInstance == null) {
-			theInstance = new AlcinaMemCache();
-		}
-		return theInstance;
 	}
 
 	private Map<PropertyDescriptor, JoinTable> joinTables;
@@ -150,9 +141,14 @@ public class AlcinaMemCache {
 			.getLogger(AlcinaMemCache.class, TaggedLogger.WARN,
 					TaggedLogger.INFO, TaggedLogger.DEBUG);
 
-	static List<String> ignoreNames = Arrays.asList(new String[0]);
-
-	private static AlcinaMemCache theInstance;
+	public static AlcinaMemCache get() {
+		AlcinaMemCache singleton = Registry.checkSingleton(AlcinaMemCache.class);
+		if (singleton == null) {
+			singleton = new AlcinaMemCache();
+			Registry.registerSingleton(AlcinaMemCache.class, singleton);
+		}
+		return singleton;
+	}
 
 	private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
 	};
@@ -206,8 +202,7 @@ public class AlcinaMemCache {
 
 	private boolean initialising;
 
-	private AlcinaMemCache() {
-		super();
+	public AlcinaMemCache() {
 		ThreadlocalTransformManager
 				.threadTransformManagerWasResetListenerDelta(resetListener,
 						true);
@@ -222,10 +217,6 @@ public class AlcinaMemCache {
 		for (Object o : cache.values(listener.getListenedClass())) {
 			listener.insert((HasIdAndLocalId) o);
 		}
-	}
-
-	public void appShutdown() {
-		theInstance = null;
 	}
 
 	public void enableAndAddValues(CacheListener listener) {
@@ -263,7 +254,8 @@ public class AlcinaMemCache {
 
 	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
 			String key, Object value, boolean createIfNonexistent) {
-		return findOrCreate(clazz, key, value, null, null, createIfNonexistent,false);
+		return findOrCreate(clazz, key, value, null, null, createIfNonexistent,
+				false);
 	}
 
 	public <T extends HasIdAndLocalId> T findOrCreate(Class<T> clazz,
@@ -271,25 +263,27 @@ public class AlcinaMemCache {
 			boolean createIfNonexistent, boolean raw) {
 		AlcinaMemCacheQuery query = new AlcinaMemCacheQuery().filter(key1,
 				value1);
-		if(raw){
+		if (raw) {
 			query.raw();
 		}
 		if (key2 != null) {
 			query.filter(key2, value2);
-		}if(raw){
+		}
+		if (raw) {
 			query.raw();
-		}if(raw){
+		}
+		if (raw) {
 			query.raw();
 		}
 		T first = query.find(clazz);
 		if (first == null && createIfNonexistent) {
 			first = (T) TransformManager.get()
 					.createDomainObject((Class) clazz);
-			CommonLocator.get().propertyAccessor()
+			Reflections.propertyAccessor()
 					.setPropertyValue(first, key1, value1);
 			if (key2 != null) {
-				CommonLocator.get().propertyAccessor()
-						.setPropertyValue(first, key2, value2);
+				Reflections.propertyAccessor().setPropertyValue(first, key2,
+						value2);
 			}
 		}
 		return first;
@@ -724,9 +718,6 @@ public class AlcinaMemCache {
 		descriptors.put(clazz, mapped);
 		for (PropertyDescriptor pd : pds) {
 			if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
-				continue;
-			}
-			if (descriptor.getIgnoreNames().contains(pd.getName())) {
 				continue;
 			}
 			Method rm = pd.getReadMethod();
@@ -1580,5 +1571,9 @@ public class AlcinaMemCache {
 			result.add(cache.get(clazz, id));
 		}
 		return result;
+	}
+
+	public void reset() {
+		Registry.registerSingleton(AlcinaMemCache.class, new AlcinaMemCache());
 	}
 }

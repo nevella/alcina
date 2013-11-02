@@ -1,7 +1,8 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.AllStatesConsort;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 import com.google.code.gwt.database.client.Database;
 
@@ -26,8 +27,7 @@ public class PersistenceTransformSetupWebDbConsort extends
 							dbName));
 			LocalTransformPersistence.get().init(
 					new DTESerializationPolicy(),
-					ClientLayerLocator.get()
-							.getCommitToStorageTransformListener(),
+					Registry.impl(CommitToStorageTransformListener.class),
 					 player);
 			break;
 		case DELTA_OBJECT_STORE_READY:

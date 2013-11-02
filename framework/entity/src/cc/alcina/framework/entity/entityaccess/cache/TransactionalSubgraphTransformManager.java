@@ -2,7 +2,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.lang.annotation.Annotation;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -20,7 +20,7 @@ public class TransactionalSubgraphTransformManager extends
 		SubgraphTransformManager implements PropertyAccessor {
 	TransformManager threadTm = TransformManager.get();
 
-	PropertyAccessor propertyAccessor = CommonLocator.get().propertyAccessor();
+	PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
 
 	@Override
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,

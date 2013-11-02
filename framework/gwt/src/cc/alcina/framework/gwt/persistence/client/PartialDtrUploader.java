@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadR
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -203,7 +203,7 @@ public class PartialDtrUploader {
 
 	private void submit0() {
 		submitTime = System.currentTimeMillis();
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+		ClientBase.getCommonRemoteServiceAsyncInstance()
 				.uploadOfflineTransforms(currentRequest, responseHandler);
 	}
 

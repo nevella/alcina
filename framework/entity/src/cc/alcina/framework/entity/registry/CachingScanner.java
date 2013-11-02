@@ -29,7 +29,7 @@ import java.util.Map;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryException;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 /**
  * 
@@ -65,7 +65,7 @@ public abstract class CachingScanner {
 	}
 
 	protected File getHomeDir() {
-		return EntityLayerLocator.get().getDataFolder();
+		return EntityLayerObjects.get().getDataFolder();
 	}
 
 	public void scan(Map<String, Date> classes, String cachePath)

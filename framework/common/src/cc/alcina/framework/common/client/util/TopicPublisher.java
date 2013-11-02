@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public class TopicPublisher {
 	private MutablePropertyChangeSupport support = new MutablePropertyChangeSupport(
@@ -74,17 +75,14 @@ public class TopicPublisher {
 			super();
 		}
 
-		private static GlobalTopicPublisher theInstance;
-
-		public static GlobalTopicPublisher get() {
-			if (theInstance == null) {
-				theInstance = new GlobalTopicPublisher();
+		public static TopicPublisher.GlobalTopicPublisher get() {
+			TopicPublisher.GlobalTopicPublisher singleton = Registry.checkSingleton(TopicPublisher.GlobalTopicPublisher.class);
+			if (singleton == null) {
+				singleton = new TopicPublisher.GlobalTopicPublisher();
+				Registry.registerSingleton(
+						TopicPublisher.GlobalTopicPublisher.class, singleton);
 			}
-			return theInstance;
-		}
-
-		public void appShutdown() {
-			theInstance = null;
+			return singleton;
 		}
 	}
 

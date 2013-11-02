@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -53,7 +53,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoMana
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
@@ -1220,7 +1222,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected ClassLookup classLookup() {
-		return CommonLocator.get().classLookup();
+		return Reflections.classLookup();
 	}
 
 	protected void collectionChanged(Object obj, Object tgt) {
@@ -1268,7 +1270,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected ObjectLookup getObjectLookup() {
-		return CommonLocator.get().objectLookup();
+		return Reflections.objectLookup();
 	}
 
 	protected boolean ignorePropertyForCaching(Class objectType,
@@ -1373,7 +1375,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected PropertyAccessor propertyAccessor() {
-		return CommonLocator.get().propertyAccessor();
+		return Reflections.propertyAccessor();
 	}
 
 	protected abstract void removeAssociations(HasIdAndLocalId hili);
@@ -1516,13 +1518,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 					if (objs.isEmpty()) {
 						continue;
 					}
-					ClassLookup classLookup = CommonLocator.get().classLookup();
+					ClassLookup classLookup = Reflections.classLookup();
 					List<PropertyInfoLite> pds = classLookup
 							.getWritableProperties(clazz);
 					Object templateInstance = classLookup
 							.getTemplateInstance(clazz);
-					PropertyAccessor accessor = CommonLocator.get()
-							.propertyAccessor();
+					PropertyAccessor accessor = Reflections.propertyAccessor();
 					for (Iterator<PropertyInfoLite> itr = pds.iterator(); itr
 							.hasNext();) {
 						PropertyInfoLite info = itr.next();
@@ -1583,14 +1584,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	static class RecordTransformListener implements DomainTransformListener {
+		private CurrentUtcDateProvider utcDateProvider = Registry
+				.impl(CurrentUtcDateProvider.class);
+
 		public void domainTransform(DomainTransformEvent evt) {
 			if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
 				TransformManager tm = TransformManager.get();
 				if (tm.getProvisionalObjects().contains(evt.getSource())) {
 					return;
 				}
-				evt.setUtcDate(CommonLocator.get().currentUtcDateProvider()
-						.currentUtcDate());
+				evt.setUtcDate(utcDateProvider.currentUtcDate());
 				evt.setEventId(tm.nextEventIdCounter());
 				tm.setTransformCommitType(evt, CommitType.TO_LOCAL_GRAPH);
 				return;

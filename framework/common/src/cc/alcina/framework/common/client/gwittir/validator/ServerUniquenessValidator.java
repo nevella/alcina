@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.common.client.gwittir.validator;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 
@@ -66,7 +66,7 @@ public class ServerUniquenessValidator extends ServerValidator {
 
 	public Class getObjectClass() {
 		if (objectClass == null && objectClassName != null) {
-			objectClass = CommonLocator.get().classLookup().getClassForName(
+			objectClass = Reflections.classLookup().getClassForName(
 					objectClassName);
 		}
 		return objectClass;

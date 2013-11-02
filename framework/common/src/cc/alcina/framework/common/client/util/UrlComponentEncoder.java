@@ -19,7 +19,7 @@ package cc.alcina.framework.common.client.util;
  * @author Nick Reddel
  */
 
- public interface URLComponentEncoder {
+ public interface UrlComponentEncoder {
 	public String encode(String text);
 	public String decode(String componentText);
 }

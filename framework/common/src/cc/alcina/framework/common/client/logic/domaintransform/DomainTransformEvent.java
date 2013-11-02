@@ -21,7 +21,7 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -146,7 +146,7 @@ public class DomainTransformEvent implements Serializable,
 				this.objectClass = this.objectClassRef.getRefClass();
 			}
 			if (this.objectClass == null && this.objectClassName != null) {
-				this.objectClass = CommonLocator.get().classLookup()
+				this.objectClass = Reflections.classLookup()
 						.getClassForName(this.objectClassName);
 			}
 		}
@@ -211,7 +211,7 @@ public class DomainTransformEvent implements Serializable,
 			}
 			if (this.valueClass == null && this.valueClassName != null
 					&& !this.valueClassName.equals("null")) {
-				this.valueClass = CommonLocator.get().classLookup()
+				this.valueClass = Reflections.classLookup()
 						.getClassForName(this.valueClassName);
 			}
 		}
@@ -265,8 +265,7 @@ public class DomainTransformEvent implements Serializable,
 	public HasIdAndLocalId provideSourceOrMarker() {
 		HasIdAndLocalId source = getSource();
 		if (source == null && getObjectLocalId() != 0) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) CommonLocator.get()
-					.classLookup().newInstance(getObjectClass());
+			HasIdAndLocalId hili = (HasIdAndLocalId) Reflections.classLookup().newInstance(getObjectClass());
 			source = hili;
 			hili.setId(getObjectId());
 			hili.setLocalId(getObjectLocalId());
@@ -286,7 +285,7 @@ public class DomainTransformEvent implements Serializable,
 					&& itrEvent.getObjectClass() == getObjectClass()
 					&& itrEvent.getObjectId() == getObjectId()
 					&& itrEvent.getObjectLocalId() == getObjectLocalId()) {
-				Class type = CommonLocator.get().propertyAccessor()
+				Class type = Reflections.propertyAccessor()
 						.getPropertyType(getObjectClass(), getPropertyName());
 				return !CommonUtils.isStandardJavaClass(type);
 			}

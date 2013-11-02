@@ -15,15 +15,16 @@
 package cc.alcina.framework.entity.util;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.util.URLComponentEncoder;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.entity.SEUtilities;
 
 /**
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint=URLComponentEncoder.class)
- public class ServerURLComponentEncoder implements URLComponentEncoder {
+@RegistryLocation(registryPoint=UrlComponentEncoder.class,implementationType=ImplementationType.SINGLETON)
+ public class ServerURLComponentEncoder implements UrlComponentEncoder {
 	public String encode(String text) {
 		return SEUtilities.encUtf8(text);
 	}

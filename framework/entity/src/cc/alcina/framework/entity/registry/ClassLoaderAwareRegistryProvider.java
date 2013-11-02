@@ -5,6 +5,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	Map<ClassLoader, Registry> perClassLoader = new HashMap<ClassLoader, Registry>();
@@ -16,7 +17,11 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		Registry registry = perClassLoader.get(contextClassLoader);
 		if (registry == null) {
 			if (perClassLoader.size() < 2) {
+				Registry existing = CommonUtils.first(perClassLoader.values());
 				registry = new Registry();
+				if (existing != null) {
+					existing.shareSingletonMapTo(registry);
+				}
 				perClassLoader.put(contextClassLoader, registry);
 				System.out.println("Created registry for classloader "
 						+ contextClassLoader);

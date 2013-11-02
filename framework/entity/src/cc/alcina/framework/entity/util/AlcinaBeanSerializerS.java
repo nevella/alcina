@@ -17,7 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -52,7 +52,7 @@ public class AlcinaBeanSerializerS {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
 		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
-		Object obj = CommonLocator.get().classLookup().newInstance(clazz);
+		Object obj = Reflections.classLookup().newInstance(clazz);
 		String[] names = JSONObject.getNames(props);
 		if (names != null) {
 			for (String propertyName : names) {

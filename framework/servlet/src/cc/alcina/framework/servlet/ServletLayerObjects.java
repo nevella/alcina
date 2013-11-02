@@ -17,15 +17,26 @@ import java.io.File;
 
 import org.apache.log4j.Logger;
 
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ServletLayerObjects.class, implementationType = ImplementationType.SINGLETON)
 public class ServletLayerObjects {
+	private ServletLayerObjects() {
+		super();
+	}
+
+	public static ServletLayerObjects get() {
+		ServletLayerObjects singleton = Registry.checkSingleton(ServletLayerObjects.class);
+		if (singleton == null) {
+			singleton = new ServletLayerObjects();
+			Registry.registerSingleton(ServletLayerObjects.class, singleton);
+		}
+		return singleton;
+	}
+
 	private File dataFolder;
 
 	public void setDataFolder(File dataFolder) {

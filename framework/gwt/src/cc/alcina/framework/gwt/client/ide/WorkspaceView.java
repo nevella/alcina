@@ -19,7 +19,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
@@ -421,9 +421,7 @@ public class WorkspaceView extends Composite implements HasName,
 				}
 			}
 			if (domainClass != null) {
-				ObjectPermissions op = CommonLocator
-						.get()
-						.classLookup()
+				ObjectPermissions op = Reflections.classLookup()
 						.getAnnotationForClass(domainClass,
 								ObjectPermissions.class);
 				op = op == null ? PermissionsManager.get()

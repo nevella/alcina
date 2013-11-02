@@ -6,11 +6,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
+
 /**
  * Convert html to unicode entities for XHTML processing
+ * 
  * @author nreddel@barnet.com.au
- *
+ * 
  */
 public class EntityCleaner {
 	private Map<String, String> htmlToNumericEntities = new LinkedHashMap<String, String>();
@@ -54,7 +57,8 @@ public class EntityCleaner {
 					htmlEntity = "amp";
 				}
 				buf.append("&");
-				buf.append(htmlEntity.equals("amp")?"amp":"#"+htmlToNumericEntities.get(htmlEntity));
+				buf.append(htmlEntity.equals("amp") ? "amp" : "#"
+						+ htmlToNumericEntities.get(htmlEntity));
 				buf.append(';');
 				i = j;
 			}
@@ -96,16 +100,12 @@ public class EntityCleaner {
 		}
 	}
 
-	private static EntityCleaner theInstance;
-
 	public static EntityCleaner get() {
-		if (theInstance == null) {
-			theInstance = new EntityCleaner();
+		EntityCleaner singleton = Registry.checkSingleton(EntityCleaner.class);
+		if (singleton == null) {
+			singleton = new EntityCleaner();
+			Registry.registerSingleton(EntityCleaner.class, singleton);
 		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+		return singleton;
 	}
 }

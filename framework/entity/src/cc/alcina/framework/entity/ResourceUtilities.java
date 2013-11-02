@@ -55,6 +55,7 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -65,7 +66,7 @@ public class ResourceUtilities {
 	public static void appShutdown() {
 		customProperties.clear();
 	}
-
+	@ClearOnAppRestart
 	private static Map<String, String> customProperties = new LinkedHashMap<String, String>();
 
 	public static void registerCustomProperties(InputStream ios) {

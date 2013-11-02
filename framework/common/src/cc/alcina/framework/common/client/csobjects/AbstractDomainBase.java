@@ -5,7 +5,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.persistence.Version;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
@@ -127,13 +127,13 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	 * the last line is to deal with a weird gwt/ff/webkit bug
 	 */
 	public String toString() {
-		if (CommonLocator.get().classLookup() == null) {
+		if (Reflections.classLookup() == null) {
 			return new HiliLocator(this).toString();
 		}
 		if (!GwittirUtils.isIntrospectable(getClass())) {
 			return super.toString();
 		}
-		String dn = CommonLocator.get().classLookup()
+		String dn = Reflections.classLookup()
 				.displayNameForObject(this);
 		dn = !CommonUtils.isNullOrEmpty(dn) ? dn : "[Object]";
 		return dn.substring(0, dn.length());

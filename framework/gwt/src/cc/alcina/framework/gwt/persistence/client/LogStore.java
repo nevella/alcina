@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -19,7 +20,7 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.Lzw;
@@ -46,13 +47,13 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * 
  */
 public class LogStore {
-	private static LogStore theInstance;
-
 	public static LogStore get() {
-		if (theInstance == null) {
-			theInstance = new LogStore();
+		LogStore singleton = Registry.checkSingleton(LogStore.class);
+		if (singleton == null) {
+			singleton = new LogStore();
+			Registry.registerSingleton(LogStore.class, singleton);
 		}
-		return theInstance;
+		return singleton;
 	}
 
 	public static void notifyDeleted(Object nup) {
@@ -266,7 +267,7 @@ public class LogStore {
 		}
 		this.lastMessage = message;
 		this.lastTopic = topic;
-		ClientInstance cli = ClientLayerLocator.get().getClientInstance();
+		ClientInstance cli = ClientBase.getClientInstance();
 		String clientInstanceAuth = cli == null ? "(before cli)" : String
 				.valueOf(cli.getAuth());
 		ClientLogRecord logRecord = new ClientLogRecord(++localSeriesIdCounter,

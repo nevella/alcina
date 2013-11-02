@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

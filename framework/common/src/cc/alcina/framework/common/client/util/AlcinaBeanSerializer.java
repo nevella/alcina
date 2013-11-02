@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -55,12 +55,12 @@ public class AlcinaBeanSerializer {
 		}
 		JSONString cn = (JSONString) jsonObj.get(CLASS_NAME);
 		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
-		Class clazz = CommonLocator.get().classLookup()
+		Class clazz = Reflections.classLookup()
 				.getClassForName(cn.stringValue());
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
-		Object obj = CommonLocator.get().classLookup().newInstance(clazz);
+		Object obj = Reflections.classLookup().newInstance(clazz);
 		GwittirBridge gb = GwittirBridge.get();
 		for (String propertyName : props.keySet()) {
 			try {
@@ -217,7 +217,7 @@ public class AlcinaBeanSerializer {
 			return jo;
 		}
 		GwittirBridge gb = GwittirBridge.get();
-		Object template = CommonLocator.get().classLookup()
+		Object template = Reflections.classLookup()
 				.getTemplateInstance(clazz);
 		BeanDescriptor descriptor = gb.getDescriptor(object);
 		Property[] properties = descriptor.getProperties();

@@ -13,9 +13,16 @@
  */
 package cc.alcina.framework.gwt.client;
 
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
+import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
+import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
+import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.event.logical.shared.CloseEvent;
@@ -30,8 +37,8 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 		CloseHandler<Window> {
 	public void onWindowClosing(ClosingEvent event) {
 		windowClosing = true;
-		CommitToStorageTransformListener storage = ClientLayerLocator.get()
-				.getCommitToStorageTransformListener();
+		CommitToStorageTransformListener storage = Registry
+				.impl(CommitToStorageTransformListener.class);
 		storage.setPaused(false);
 		String msg = TextProvider.get().getUiObjectText(ClientBase.class,
 				"commit-on-close-saving-final-changes-warning",
@@ -51,5 +58,25 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 
 	public boolean isWindowClosing() {
 		return this.windowClosing;
+	}
+
+	public boolean isUsesRootLayoutPanel() {
+		return false;
+	}
+
+	public static CommonRemoteServiceAsync getCommonRemoteServiceAsyncInstance() {
+		return Registry.impl(CommonRemoteServiceAsync.class);
+	}
+
+	public static RemoteServiceProvider<? extends CommonRemoteServiceAsync> getCommonRemoteServiceAsyncProvider() {
+		return Registry.impl(CommonRemoteServiceAsyncProvider.class);
+	}
+
+	public static ClientInstance getClientInstance() {
+		return Registry.impl(HandshakeConsortModel.class).getClientInstance();
+	}
+
+	public static GeneralProperties getGeneralProperties() {
+		return Registry.implOrNull(GeneralProperties.class);
 	}
 }

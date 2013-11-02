@@ -44,10 +44,11 @@ import cc.alcina.framework.common.client.actions.InlineButtonHandler;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ListAddItemHandler;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
@@ -654,7 +655,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			String validationMessage = listAddItemHandler
 					.validateCanAdd(getValue());
 			if (validationMessage != null) {
-				ClientLayerLocator.get().notifications()
+				Registry.impl(ClientNotifications.class)
 						.showMessage(validationMessage);
 				return;
 			}

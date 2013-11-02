@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.collections;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 
 import com.totsp.gwittir.client.beans.Converter;
 
@@ -41,7 +41,7 @@ public interface KeyValueMapper<K, V, O> {
 		}
 
 		public Object getKey(V o) {
-			return CommonLocator.get().propertyAccessor()
+			return Reflections.propertyAccessor()
 					.getPropertyValue(o, propertyName);
 		};
 

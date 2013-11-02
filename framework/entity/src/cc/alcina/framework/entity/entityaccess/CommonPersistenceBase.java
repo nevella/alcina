@@ -31,7 +31,7 @@ import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
@@ -79,7 +79,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.UnwrapInfoItem.UnwrapInfoContainer;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
@@ -136,8 +136,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		tm.setEntityManager(getEntityManager());
 		List<ObjectDeltaResult> delta = tm.getObjectDelta(specs);
 		delta = new EntityUtils().detachedClone(delta);
-		EntityLayerLocator
-				.get()
+		EntityLayerObjects.get()
 				.getMetricLogger()
 				.debug("object delta get - total (ms):"
 						+ (System.currentTimeMillis() - t1));
@@ -844,8 +843,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		try {
 			HasIdAndLocalId object = TransformManager.get().getObject(
 					transformException.getEvent(), true);
-			transformException.setSourceObjectName(CommonLocator.get()
-					.classLookup().displayNameForObject(object));
+			transformException.setSourceObjectName(Reflections.classLookup().displayNameForObject(object));
 		} catch (Exception e) {
 			System.out.println("Unable to add source object name - reason: "
 					+ e.getMessage());

@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.gwittir.validator;
 
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -55,7 +55,7 @@ public class UniqueInLocalDomainValidator implements ParameterisedValidator,
 				continue;
 			}
 			if (!(value.equals(hili))
-					&& value.equals(CommonLocator.get().propertyAccessor()
+					&& value.equals(Reflections.propertyAccessor()
 							.getPropertyValue(hili, propertyName))) {
 				throw new ValidationException("Value must be unique",
 						UniqueInLocalDomainValidator.class);

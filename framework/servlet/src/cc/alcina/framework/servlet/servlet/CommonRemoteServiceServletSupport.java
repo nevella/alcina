@@ -6,22 +6,16 @@ import java.util.Map;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 /**
  * 
  * @author nick@alcina.cc
  * 
  */
+@RegistryLocation(registryPoint = CommonRemoteServiceServletSupport.class, implementationType = ImplementationType.SINGLETON)
 public class CommonRemoteServiceServletSupport {
-	public static CommonRemoteServiceServletSupport get() {
-		if (theInstance == null) {
-			// always called in app lifecycle startup - no need to worry about
-			// simultaneous calls
-			theInstance = new CommonRemoteServiceServletSupport();
-		}
-		return theInstance;
-	}
-
 	/**
 	 * the instance used by the server layer when acting as a client to the ejb
 	 * layer. Note - this must be set on webapp startup
@@ -31,16 +25,6 @@ public class CommonRemoteServiceServletSupport {
 	private Map<Long, HiliLocatorMap> clientInstanceLocatorMap = new HashMap<Long, HiliLocatorMap>();
 
 	private int transformRequestCounter = 1;
-
-	private static CommonRemoteServiceServletSupport theInstance;
-
-	private CommonRemoteServiceServletSupport() {
-		super();
-	}
-
-	public void appShutdown() {
-		theInstance = null;
-	}
 
 	synchronized int nextTransformRequestId() {
 		return transformRequestCounter++;

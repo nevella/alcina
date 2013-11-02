@@ -4,12 +4,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.common.client.util.SimpleStringParser20;
 
 @RegistryLocation(registryPoint = DTRProtocolHandler.class)
@@ -31,7 +33,7 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		if (className == null || className.equals("null")) {
 			return null;
 		}
-		return CommonLocator.get().classLookup().getClassForName(className);
+		return Reflections.classLookup().getClassForName(className);
 	}
 	private static String unescape(String s) {
 		int idx = 0, x = 0;
@@ -53,6 +55,8 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 		return s.toString();
 	}
 	private SimpleStringParser20 asyncParser = null;
+
+	private CurrentUtcDateProvider utcDateProvider = Registry.impl(CurrentUtcDateProvider.class);
 
 	public void appendTo(DomainTransformEvent domainTransformEvent,
 			StringBuffer sb) {
@@ -181,7 +185,8 @@ public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 			dte.setUtcDate(new Date(utcTime));
 		} else {
 			dte.setTransformType(TransformType.valueOf(p.read("", "\n")));
-			dte.setUtcDate(CommonLocator.get().currentUtcDateProvider()
+			
+			dte.setUtcDate(utcDateProvider
 					.currentUtcDate());
 		}
 		i = p.read(STRING_VALUE, "\n");

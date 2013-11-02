@@ -1,30 +1,15 @@
 package cc.alcina.template.entityaccess;
 
-
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
+@RegistryLocation(registryPoint = CommonPersistenceProvider.class, implementationType = ImplementationType.SINGLETON)
 public class AlcinaTemplateEjbLocator implements CommonPersistenceProvider {
-	private AlcinaTemplateEjbLocator() {
-		super();
-	}
-
-	private static AlcinaTemplateEjbLocator theInstance;
-
-	public static AlcinaTemplateEjbLocator get() {
-		if (theInstance == null) {
-			theInstance = new AlcinaTemplateEjbLocator();
-		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
-	}
-	public CommonPersistenceLocal getCommonPersistence(){
-		return AlcinaTemplateBeanProvider.get()
-		.getCommonPersistenceBean();
+	public CommonPersistenceLocal getCommonPersistence() {
+		return AlcinaTemplateBeanProvider.get().getCommonPersistenceBean();
 	}
 
 	@Override

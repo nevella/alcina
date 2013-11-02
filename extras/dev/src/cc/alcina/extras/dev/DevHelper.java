@@ -32,7 +32,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
@@ -54,10 +53,9 @@ import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.TestPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner;
-import cc.alcina.framework.entity.util.ServerURLComponentEncoder;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -173,8 +171,8 @@ public abstract class DevHelper {
 	}
 
 	public void initDataFolder() {
-		EntityLayerLocator.get().setDataFolder(getDataFolder());
-		Registry.impl(ServletLayerObjects.class).setDataFolder(getDataFolder());
+		EntityLayerObjects.get().setDataFolder(getDataFolder());
+		ServletLayerObjects.get().setDataFolder(getDataFolder());
 	}
 
 	public abstract File getDataFolder();
@@ -197,7 +195,7 @@ public abstract class DevHelper {
 		setupJobsToSysout();
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		XmlUtils.noTransformCaching = true;
-		EntityLayerLocator.get().setPersistentLogger(getTestLogger());
+		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		try {
 			Method m = GWT.class
 					.getDeclaredMethod("setBridge", GWTBridge.class);
@@ -227,10 +225,6 @@ public abstract class DevHelper {
 	protected abstract void initCustomServicesFirstHalf();
 
 	public void initDummyServices() {
-		CommonLocator.get().registerURLComponentEncoder(
-				new ServerURLComponentEncoder());
-		CommonLocator.get().registerCurrentUtcDateProvider(
-				TestPersistenceHelper.get());
 		TransformManager.register(new ClientTransformManagerCommon());
 	}
 

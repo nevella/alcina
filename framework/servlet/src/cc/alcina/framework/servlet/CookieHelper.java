@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.servlet;
 
 import java.util.ArrayList;
@@ -27,18 +26,15 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 
-
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class CookieHelper {
+public class CookieHelper {
 	public static final String REMEMBER_ME = "rememberme";
 
 	public static final String ADDED_COOKIES_ATTR = CookieHelper.class
-			.getName()
-			+ "_addedcookies";
+			.getName() + "_addedcookies";
 
 	public static final String IID = "IID";
 
@@ -46,18 +42,15 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 		super();
 	}
 
-	private static CookieHelper theInstance;
-
 	public static CookieHelper get() {
-		if (theInstance == null) {
-			theInstance = new CookieHelper();
+		CookieHelper singleton = Registry.checkSingleton(CookieHelper.class);
+		if (singleton == null) {
+			singleton = new CookieHelper();
+			Registry.registerSingleton(CookieHelper.class, singleton);
 		}
-		return theInstance;
+		return singleton;
 	}
 
-	public void appShutdown() {
-		theInstance = null;
-	}
 	@SuppressWarnings("unchecked")
 	List<Cookie> getAddedCookies(HttpServletRequest req) {
 		List<Cookie> addedCookies = (List<Cookie>) req
@@ -81,10 +74,10 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 		}
 		return null;
 	}
-	public String getCookieValueByName(HttpServletRequest req,
-			String n) {
+
+	public String getCookieValueByName(HttpServletRequest req, String n) {
 		Cookie[] cookies = req.getCookies();
-		if (cookies==null){
+		if (cookies == null) {
 			return null;
 		}
 		for (Cookie cookie : cookies) {
@@ -94,15 +87,17 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 		}
 		return null;
 	}
+
 	public String getIid(HttpServletRequest request,
 			HttpServletResponse response) {
 		String iid = getCookieValueByName(request, response, IID);
 		if (iid == null) {
 			iid = SEUtilities.generateId();
 			Cookie cookie = new Cookie(IID, iid);
-			cookie.setMaxAge(86400*365*10);
+			cookie.setMaxAge(86400 * 365 * 10);
 			addToRqAndRsp(request, response, cookie);
-			CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+			CommonPersistenceLocal up = Registry.impl(
+					CommonPersistenceProvider.class).getCommonPersistence();
 			up.updateIid(iid, null, false);
 		}
 		return iid;
@@ -117,13 +112,14 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 	public void setRememberMeCookie(HttpServletRequest request,
 			HttpServletResponse response, boolean rememberMe) {
 		if (rememberMe) {
-			CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+			CommonPersistenceLocal up = Registry.impl(
+					CommonPersistenceProvider.class).getCommonPersistence();
 			up.updateIid(getIid(request, response), PermissionsManager.get()
 					.getUserName(), rememberMe);
 		}
 		Cookie cookie = new Cookie(REMEMBER_ME, String.valueOf(rememberMe));
-		cookie.setMaxAge(86400*365*10);
-		addToRqAndRsp(request,response,cookie);
+		cookie.setMaxAge(86400 * 365 * 10);
+		addToRqAndRsp(request, response, cookie);
 	}
 
 	public String getRememberedUserName(HttpServletRequest request,
@@ -131,16 +127,17 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 		String rem = getCookieValueByName(request, response, REMEMBER_ME);
 		boolean b = Boolean.valueOf(rem);
 		if (b) {
-			CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
-			
-			return up.getRememberMeUserName(getIid(request,null));
+			CommonPersistenceLocal up = Registry.impl(
+					CommonPersistenceProvider.class).getCommonPersistence();
+			return up.getRememberMeUserName(getIid(request, null));
 		}
 		return null;
 	}
 
 	public void clearRemembermeCookie(HttpServletRequest request,
 			HttpServletResponse response) {
-		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+		CommonPersistenceLocal up = Registry.impl(
+				CommonPersistenceProvider.class).getCommonPersistence();
 		up.updateIid(getIid(request, response), PermissionsManager.get()
 				.getUserName(), false);
 	}

@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.state.ConsortPlayer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.AsyncConfigConsort;
 import cc.alcina.framework.gwt.client.logic.handshake.AsyncConfigConsortState;
 import cc.alcina.framework.gwt.client.logic.handshake.InitAysncServicesPlayer;
@@ -43,7 +43,7 @@ public class AlcinaTemplateInitAysncServicesPlayer extends InitAysncServicesPlay
 
 					@Override
 					public void onSuccess(DatabaseStatsInfo value) {
-						ClientLayerLocator.get().notifications()
+						Registry.impl(ClientNotifications.class)
 								.log(value.toString());
 						StatusPanel
 								.showMessageOrAlert(CommonUtils

@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.util;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 
 public class AtEndOfEventSeriesTimer {
 	private long lastEventOccurred = 0;
@@ -27,8 +27,7 @@ public class AtEndOfEventSeriesTimer {
 	private final TimerWrapperProvider timerWrapperProvider;
 
 	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action) {
-		this(waitToPerformAction, action, ClientLayerLocator.get()
-				.timerWrapperProvider());
+		this(waitToPerformAction, action, Registry.impl(TimerWrapperProvider.class));
 	}
 
 	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action,

@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.csobjects.JobInfo;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.widget.Link;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -135,12 +135,11 @@ public class ActionProgress extends Composite implements
 		cf.setVisible(1, 1, false);
 		fp.addStyleName("minimal");
 	}
-
 	private void cancelJob() {
 		cancelLink.setVisible(false);
 		cancellingStatusMessage.setText(" - Cancelling...");
 		cancellingStatusMessage.setVisible(true);
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+		ClientBase.getCommonRemoteServiceAsyncInstance()
 				.pollJobStatus(getId(), true, new AsyncCallback<JobInfo>() {
 					public void onFailure(Throwable e) {
 						cancellingStatusMessage.setText(" - Error cancelling");
@@ -236,7 +235,7 @@ public class ActionProgress extends Composite implements
 					}
 				};
 				if (!checking) {
-					ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
+					ClientBase.getCommonRemoteServiceAsyncInstance()
 							.pollJobStatus(id, false, callback);
 					checking = true;
 				}

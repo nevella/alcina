@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.LoopingPlayer;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd.ReloadOnSuccessCallback;
@@ -42,7 +42,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	public void onFailure(Throwable caught) {
 		if (Window.confirm("Failure in unwrap/register -  press 'oi' to clear")) {
 			LocalTransformPersistence.get().clearPersistedClient(null, -1,
-					new ReloadOnSuccessCallback(),true);
+					new ReloadOnSuccessCallback(), true);
 			return;
 		}
 		super.onFailure(caught);
@@ -146,8 +146,8 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		Integer requestId = (currentDelta instanceof HasRequestReplayId) ? ((HasRequestReplayId) currentDelta)
 				.getDomainTransformRequestReplayId() : null;
 		if (requestId != null) {
-			CommitToStorageTransformListener tl = ClientLayerLocator.get()
-					.getCommitToStorageTransformListener();
+			CommitToStorageTransformListener tl = Registry
+					.impl(CommitToStorageTransformListener.class);
 			tl.setLocalRequestId(Math.max(requestId + 1,
 					(int) tl.getLocalRequestId()));
 		}
@@ -160,15 +160,13 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		GeneralProperties generalProperties = domainObjects
 				.getGeneralProperties();
 		if (generalProperties != null) {
-			Registry.putSingleton(GeneralProperties.class, generalProperties);
+			Registry.registerSingleton(GeneralProperties.class,
+					generalProperties);
 		}
 		PermissionsManager.get().setUser(domainObjects.getCurrentUser());
-		ClientLayerLocator.get().setDomainModelHolder(domainObjects);
 		PermissionsManager.get().setLoginState(
 				HandshakeConsortModel.get().getLoginState());
-		ClientLayerLocator
-				.get()
-				.notifications()
+		Registry.impl(ClientNotifications.class)
 				.log(CommonUtils.formatJ("User: %s", domainObjects
 						.getCurrentUser() == null ? null : domainObjects
 						.getCurrentUser().getUserName()));

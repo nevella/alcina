@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.util;
 
 import java.util.Collection;
@@ -23,22 +22,35 @@ import java.util.Set;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+
 /**
- *
+ * 
  * @author Nick Reddel
  */
+public class JaxbUtils {
+	private JAXBContext jc = null;
 
- public class JaxbUtils {
-	private static JAXBContext jc = null;
+	private JaxbUtils() {
+	}
 
-	private static Set<Class> jcClasses = new HashSet<Class>();
+	private Set<Class> jcClasses = new HashSet<Class>();
 
-	public static void appShutdown() {
-		jc = null;
-		jcClasses = new HashSet<Class>();
+	public static JaxbUtils get() {
+		JaxbUtils singleton = Registry.checkSingleton(JaxbUtils.class);
+		if (singleton == null) {
+			singleton = new JaxbUtils();
+			Registry.registerSingleton(JaxbUtils.class, singleton);
+		}
+		return singleton;
 	}
 
 	public static JAXBContext getContext(Collection<Class> classes)
+			throws JAXBException {
+		return get().getContext0(classes);
+	}
+
+	private JAXBContext getContext0(Collection<Class> classes)
 			throws JAXBException {
 		if (jc == null || !jcClasses.containsAll(classes)) {
 			Map<String, String> emptyProps = new HashMap<String, String>();

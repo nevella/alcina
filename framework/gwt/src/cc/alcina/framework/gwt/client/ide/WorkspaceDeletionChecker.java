@@ -18,15 +18,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
@@ -74,9 +74,7 @@ public class WorkspaceDeletionChecker {
 				Property[] properties = descriptor.getProperties();
 				for (Property p : properties) {
 					if (p.getType() == clazz) {
-						DomainPropertyInfo dpi = CommonLocator
-								.get()
-								.propertyAccessor()
+						DomainPropertyInfo dpi = Reflections.propertyAccessor()
 								.getAnnotationForProperty(c,
 										DomainPropertyInfo.class, p.getName());
 						if (dpi == null || !dpi.ignoreForDeletionChecking()) {
@@ -89,9 +87,7 @@ public class WorkspaceDeletionChecker {
 						Object pValue = p.getAccessorMethod().invoke(o,
 								CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (pValue != null && pValue.equals(singleObj)) {
-							DomainPropertyInfo dpi = CommonLocator
-									.get()
-									.propertyAccessor()
+							DomainPropertyInfo dpi = Reflections.propertyAccessor()
 									.getAnnotationForProperty(c,
 											DomainPropertyInfo.class,
 											p.getName());
@@ -119,7 +115,7 @@ public class WorkspaceDeletionChecker {
 		if (message.length() > 0) {
 			LooseContext.getContext().pushWithKey(
 					ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL, true);
-			ClientLayerLocator.get().notifications()
+			Registry.impl(ClientNotifications.class)
 					.showWarning(msgtitle, message.replace("\n", "<br>\n"));
 			LooseContext.getContext().pop();
 		}

@@ -4,7 +4,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -89,8 +89,7 @@ public class ServerTransformManagerSupport {
 	}
 
 	protected void doCascadeDeletes(final HasIdAndLocalId hili) {
-		PropertyAccessor propertyAccessor = CommonLocator.get()
-				.propertyAccessor();
+		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
 		SEUtilities.iterateForPropertyWithAnnotation(hili, Association.class,
 				new HasAnnotationCallback<Association>() {
 					public void apply(Association association,

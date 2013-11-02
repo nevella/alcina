@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
@@ -55,7 +55,7 @@ public class SelectorCustomiser implements Customiser {
 			NamedParameter parameter = NamedParameter.Support.getParameter(
 					info.parameters(), FILTER_CLASS);
 			if (parameter != null) {
-				filter = (CollectionFilter) CommonLocator.get().classLookup()
+				filter = (CollectionFilter) Reflections.classLookup()
 						.newInstance(parameter.classValue(),0, 0);
 			}
 			Renderer renderer = NamedParameter.Support.instantiateClass(

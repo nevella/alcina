@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
@@ -126,7 +126,7 @@ public abstract class ClientReflector implements ClassLookup {
 	@SuppressWarnings("unchecked")
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		if (!templateInstances.containsKey(clazz)) {
-			templateInstances.put(clazz, CommonLocator.get().classLookup()
+			templateInstances.put(clazz, Reflections.classLookup()
 					.newInstance(clazz, 0, 0));
 		}
 		return (T) templateInstances.get(clazz);

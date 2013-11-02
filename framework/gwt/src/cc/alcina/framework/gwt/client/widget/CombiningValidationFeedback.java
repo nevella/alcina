@@ -4,7 +4,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -93,7 +94,7 @@ public class CombiningValidationFeedback extends AbstractValidationFeedback {
 		}
 
 		protected void showFeedbackPanel(FlowPanel fp) {
-			ClientLayerLocator.get().notifications().showMessage(fp);
+			Registry.impl(ClientNotifications.class).showMessage(fp);
 		}
 
 		void addException(Object source, ValidationException exception) {

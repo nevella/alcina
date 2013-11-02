@@ -17,7 +17,8 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
 
@@ -202,7 +203,7 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		}
 
 		protected void notifyProblem() {
-			ClientLayerLocator.get().notifications()
+			Registry.impl(ClientNotifications.class)
 					.showWarning("Please correct the problems in the form");
 		}
 

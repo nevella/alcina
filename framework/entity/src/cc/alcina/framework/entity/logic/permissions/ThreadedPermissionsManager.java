@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.UserlandProvider;
@@ -30,6 +31,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionData
  * @author Nick Reddel
  */
 public class ThreadedPermissionsManager extends PermissionsManager {
+	@ClearOnAppRestart
 	public static GraphProjectionDataFilter INSTANTIATE_IMPL_FILTER;
 
 	@Override

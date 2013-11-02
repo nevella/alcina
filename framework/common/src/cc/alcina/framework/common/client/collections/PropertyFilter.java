@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class PropertyFilter<T> implements CollectionFilter<T> {
@@ -27,7 +27,7 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 	@Override
 	public boolean allow(T o) {
 		for (Entry<String, Object> entry : keyValues.entrySet()) {
-			Object propertyValue = CommonLocator.get().propertyAccessor()
+			Object propertyValue = Reflections.propertyAccessor()
 					.getPropertyValue(o, entry.getKey());
 			boolean match = false;
 			if (entry.getValue() == NOT_NULL && propertyValue != null) {

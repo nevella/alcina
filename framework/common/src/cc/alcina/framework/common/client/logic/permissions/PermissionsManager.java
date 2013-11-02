@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
@@ -169,11 +169,9 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public boolean checkEffectivePropertyPermission(Object bean,
 			String propertyName, boolean read) {
 		Class<? extends Object> clazz = bean.getClass();
-		ObjectPermissions op = CommonLocator.get().classLookup()
+		ObjectPermissions op = Reflections.classLookup()
 				.getAnnotationForClass(clazz, ObjectPermissions.class);
-		PropertyPermissions pp = CommonLocator
-				.get()
-				.propertyAccessor()
+		PropertyPermissions pp = Reflections.propertyAccessor()
 				.getAnnotationForProperty(clazz, PropertyPermissions.class,
 						propertyName);
 		return checkEffectivePropertyPermission(op, pp, bean, read);
@@ -198,9 +196,8 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	}
 
 	public boolean checkReadable(Class clazz, String propertyName, Object bean) {
-		ClassLookup classLookup = CommonLocator.get().classLookup();
-		PropertyAccessor propertyAccessor = CommonLocator.get()
-				.propertyAccessor();
+		ClassLookup classLookup = Reflections.classLookup();
+		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
 		ObjectPermissions op = classLookup.getAnnotationForClass(clazz,
 				ObjectPermissions.class);
 		PropertyPermissions pp = propertyAccessor.getAnnotationForProperty(
@@ -669,15 +666,13 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 				List<Class> lookup = registry.lookup(false,
 						PermissionsExtensionForClass.class, void.class, false);
 				for (Class clazz : lookup) {
-					PermissionsExtensionForClass ext = (PermissionsExtensionForClass) CommonLocator
-							.get().classLookup().newInstance(clazz);
+					PermissionsExtensionForClass ext = (PermissionsExtensionForClass) Reflections.classLookup().newInstance(clazz);
 					extensionMapForClass.put(ext.getGenericClass(), ext);
 				}
 				lookup = registry.lookup(false,
 						PermissionsExtensionForRule.class, void.class, false);
 				for (Class clazz : lookup) {
-					PermissionsExtensionForRule ext = (PermissionsExtensionForRule) CommonLocator
-							.get().classLookup().newInstance(clazz);
+					PermissionsExtensionForRule ext = (PermissionsExtensionForRule) Reflections.classLookup().newInstance(clazz);
 					extensionMapForRule.put(ext.getRuleName(), ext);
 				}
 			} catch (Exception e) {

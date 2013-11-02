@@ -26,8 +26,9 @@ import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 import com.google.gwt.core.client.GWT;
@@ -71,10 +72,10 @@ public class DeltaApplicationRecord extends BaseBindable implements
 		this.userId = PermissionsManager.get().getUserId();
 		if (!async) {
 			if (GWT.isClient()) {
-				ClientLayerLocator.get().notifications()
+				Registry.impl(ClientNotifications.class)
 						.metricLogStart("DTRSimpleSerialWrapper-tostr");
 				this.text = request.toString();
-				ClientLayerLocator.get().notifications()
+				Registry.impl(ClientNotifications.class)
 						.metricLogEnd("DTRSimpleSerialWrapper-tostr");
 			} else {
 				this.text = request.toString();

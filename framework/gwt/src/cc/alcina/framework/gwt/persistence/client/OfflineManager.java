@@ -1,10 +1,11 @@
 package cc.alcina.framework.gwt.persistence.client;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.appcache.client.AppCache;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 import com.google.gwt.user.client.Event;
@@ -37,17 +38,13 @@ public class OfflineManager {
 		super();
 	}
 
-	private static OfflineManager theInstance;
-
 	public static OfflineManager get() {
-		if (theInstance == null) {
-			theInstance = new OfflineManager();
+		OfflineManager singleton = Registry.checkSingleton(OfflineManager.class);
+		if (singleton == null) {
+			singleton = new OfflineManager();
+			Registry.registerSingleton(OfflineManager.class, singleton);
 		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+		return singleton;
 	}
 
 	private Callback<Void> updatingCallback;
@@ -88,7 +85,7 @@ public class OfflineManager {
 	}
 
 	public boolean checkCacheLoading(AsyncCallback completionCallback) {
-		ClientLayerLocator.get().notifications()
+		Registry.impl(ClientNotifications.class)
 				.log("OfflineUtils.checkCacheLoading");
 		AppCache appCache = AppCache.getApplicationCache();
 		AppCacheEventHandler handler = new AppCacheEventHandler(true,
@@ -108,7 +105,7 @@ public class OfflineManager {
 		if (updatingCallback != null) {
 			updatingCallback.apply(null);
 		}
-		cd = ClientLayerLocator.get().notifications().getModalNotifier("");
+		cd = Registry.impl(ClientNotifications.class).getModalNotifier("");
 		cd.setMasking(true);
 		cd.modalOn();
 		AppCache appCache = AppCache.getApplicationCache();
@@ -143,9 +140,7 @@ public class OfflineManager {
 
 		@Override
 		public void onBrowserEvent(Event event) {
-			ClientLayerLocator
-					.get()
-					.notifications()
+			Registry.impl(ClientNotifications.class)
 					.log(CommonUtils.formatJ(
 							"OfflineUtils.event - %s,%s,%s,%s", cancelled,
 							headless,

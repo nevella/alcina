@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 
 public class PublicationContext {
 	public static final String CONTEXT_PUBLICATION_CONTEXT = PublicationContext.class
@@ -60,7 +60,7 @@ public class PublicationContext {
 	protected void logPublicationException(Exception e) {
 		String message = getContextInfoForPublicationException();
 		logger.warn(message, e);
-		EntityLayerLocator.get().log(LogMessageType.PUBLICATION_EXCEPTION,
+		EntityLayerUtils.log(LogMessageType.PUBLICATION_EXCEPTION,
 				message, e);
 	}
 

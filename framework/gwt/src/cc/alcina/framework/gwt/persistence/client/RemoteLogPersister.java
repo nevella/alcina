@@ -4,7 +4,10 @@ import java.io.UnsupportedEncodingException;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
+import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.state.LoopingPlayer;
@@ -12,8 +15,8 @@ import cc.alcina.framework.common.client.state.Player;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TimerWrapper;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.Lzw;
@@ -130,8 +133,8 @@ public class RemoteLogPersister {
 					onSuccess(null);
 					return;
 				} else {
-					CommonRemoteServiceAsync async = ClientLayerLocator.get()
-							.getCommonRemoteServiceAsyncProvider()
+					CommonRemoteServiceAsync async = ((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
+							.impl(CommonRemoteServiceAsyncProvider.class))
 							.getServiceInstance();
 					rqRun = true;
 					AlcinaTopics.muteStatisticsLogging(true);
@@ -169,8 +172,8 @@ public class RemoteLogPersister {
 					rqRun = false;
 					onSuccess(null);
 				} else {
-					CommonRemoteServiceAsync async = ClientLayerLocator.get()
-							.getCommonRemoteServiceAsyncProvider()
+					CommonRemoteServiceAsync async = ((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
+							.impl(CommonRemoteServiceAsyncProvider.class))
 							.getServiceInstance();
 					rqRun = true;
 					AlcinaTopics.muteStatisticsLogging(true);
@@ -278,8 +281,7 @@ public class RemoteLogPersister {
 			consort.clear();
 			consort = null;
 			if ((pushCount > 0 || pushAgain) && !maybeOffline) {
-				TimerWrapper timer = ClientLayerLocator.get()
-						.timerWrapperProvider().getTimer(new Runnable() {
+				TimerWrapper timer = Registry.impl(TimerWrapperProvider.class).getTimer(new Runnable() {
 							@Override
 							public void run() {
 								push();

@@ -1,18 +1,20 @@
 package cc.alcina.framework.entity.logic;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+
 public class AlcinaServerConfig {
 	private String mainLoggerName;
 
 	private String applicationName;
-	
+
 	private String customPropertiesFilePath;
-	
+
 	private String metricLoggerName;
-	
+
 	private String databaseEventLoggerName;
 
 	public static final String MAIN_LOGGER_APPENDER = "MAIN_LOGGER_APPENDER";
-	
+
 	public void setMainLoggerName(String mainLoggerName) {
 		this.mainLoggerName = mainLoggerName;
 	}
@@ -28,17 +30,9 @@ public class AlcinaServerConfig {
 	public String getApplicationName() {
 		return applicationName;
 	}
-	private AlcinaServerConfig() {
-		super();
-	}
-
-	private static AlcinaServerConfig theInstance;
 
 	public static AlcinaServerConfig get() {
-		if (theInstance == null) {
-			theInstance = new AlcinaServerConfig();
-		}
-		return theInstance;
+		return Registry.impl(AlcinaServerConfig.class);
 	}
 
 	public void setCustomPropertiesFilePath(String customPropertiesFileName) {
@@ -64,6 +58,4 @@ public class AlcinaServerConfig {
 	public String getDatabaseEventLoggerName() {
 		return databaseEventLoggerName;
 	}
-
-	
 }

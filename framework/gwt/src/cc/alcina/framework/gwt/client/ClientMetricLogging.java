@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -76,7 +77,7 @@ public class ClientMetricLogging {
 				elapsed, CommonUtils.isNullOrEmpty(extraInfo) ? "" : " - "
 						+ extraInfo);
 		if (!isMuted()) {
-			ClientLayerLocator.get().notifications().log(message);
+			Registry.impl(ClientNotifications.class).log(message);
 		}
 		if (!averageCount.containsKey(key)) {
 			averageCount.put(key, 0L);

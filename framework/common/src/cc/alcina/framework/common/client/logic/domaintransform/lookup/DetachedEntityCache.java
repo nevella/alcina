@@ -37,20 +37,6 @@ public class DetachedEntityCache implements Serializable {
 	public DetachedEntityCache() {
 	}
 
-	private static transient DetachedEntityCache commonInstance;
-
-	// TODO - get rid of this, not thread safe (obviously)
-	public static DetachedEntityCache get() {
-		if (commonInstance == null) {
-			commonInstance = new DetachedEntityCache();
-		}
-		return commonInstance;
-	}
-
-	public void appShutdown() {
-		commonInstance = null;
-	}
-
 	public <T> T get(Class<T> clazz, Long id) {
 		ensureMaps(clazz);
 		if (id == null) {

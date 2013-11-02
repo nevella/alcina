@@ -8,12 +8,15 @@ import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.PersistentSingleton;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 @SuppressWarnings("unchecked")
+@RegistryLocation(registryPoint = WrappedObjectProvider.class, implementationType = ImplementationType.SINGLETON)
 public class AlcinaTemplateWrappedObjectProvider implements
 		WrappedObjectProvider {
 	public <T extends WrapperPersistable> WrappedObjectImpl<T> getObjectWrapperForUser(

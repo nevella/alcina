@@ -11,22 +11,20 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.stdlayout.image;
 
-
-import cc.alcina.framework.gwt.client.ide.provider.DataImageProvider;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class StandardDataImageProvider extends DataImageProvider {
-	private StandardDataImages dataImages;
+public class StandardDataImageProvider {
+	private StandardDataImages dataImages = GWT
+			.create(StandardDataImages.class);
 
 	public AbstractImagePrototype getByName(String s) {
 		s = (s == null) ? "" : s;
@@ -36,14 +34,19 @@ import com.google.gwt.user.client.ui.AbstractImagePrototype;
 		return AbstractImagePrototype.create(dataImages.file());
 	}
 
-	@Override
 	public StandardDataImages getDataImages() {
 		return dataImages;
 	}
 
+	private StandardDataImageProvider() {
+	}
+
 	public static StandardDataImageProvider get() {
-		StandardDataImageProvider dip = new StandardDataImageProvider();
-		dip.dataImages = GWT.create(StandardDataImages.class);
-		return dip;
+		StandardDataImageProvider singleton = Registry.checkSingleton(StandardDataImageProvider.class);
+		if (singleton == null) {
+			singleton = new StandardDataImageProvider();
+			Registry.registerSingleton(StandardDataImageProvider.class, singleton);
+		}
+		return singleton;
 	}
 }

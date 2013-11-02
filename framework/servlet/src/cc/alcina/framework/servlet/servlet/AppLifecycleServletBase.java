@@ -23,14 +23,12 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -39,26 +37,27 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.DbAppender;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
-import cc.alcina.framework.entity.util.ServerURLComponentEncoder;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void createServletTransformClientInstance() {
-		if (CommonRemoteServiceServletSupport.get().getServerAsClientInstance() != null) {
+		if (Registry.impl(CommonRemoteServiceServletSupport.class)
+				.getServerAsClientInstance() != null) {
 			return;
 		}
 		try {
 			ThreadedPermissionsManager.cast().pushSystemUser();
-			ClientInstance serverAsClientInstance = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
-					.createClientInstance(null);
-			CommonRemoteServiceServletSupport.get().setServerAsClientInstance(
-					serverAsClientInstance);
+			ClientInstance serverAsClientInstance = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence().createClientInstance(null);
+			Registry.impl(CommonRemoteServiceServletSupport.class)
+					.setServerAsClientInstance(serverAsClientInstance);
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
 		}
@@ -126,11 +125,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			metricLogger.setAdditivity(false);
 			// MetricLogging.muteLowPriority=false;
 			MetricLogging.metricLogger = metricLogger;
-			Registry.impl(ServletLayerObjects.class).setMetricLogger(metricLogger);
+			ServletLayerObjects.get().setMetricLogger(metricLogger);
 		}
 		String databaseEventLoggerName = AlcinaServerConfig.get()
 				.getDatabaseEventLoggerName();
-		if (EntityLayerLocator.get().getPersistentLogger() == null) {
+		if (EntityLayerObjects.get().getPersistentLogger() == null) {
 			Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
 			dbLogger.removeAllAppenders();
 			dbLogger.setLevel(Level.INFO);
@@ -138,7 +137,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			a = new DbAppender(l);
 			a.setName(databaseEventLoggerName);
 			dbLogger.addAppender(a);
-			EntityLayerLocator.get().setPersistentLogger(dbLogger);
+			EntityLayerObjects.get().setPersistentLogger(dbLogger);
 		}
 	}
 
@@ -149,7 +148,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		MetricLogging.get().start(key);
 		initCommonServices();
 		initDataFolder();
-		Registry.setProvider(new ClassLoaderAwareRegistryProvider());
 		initRegistry();
 		initCommonImplServices();
 		initCustomServices();
@@ -167,6 +165,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		startupTime = new Date();
 		try {
 			initServletConfig = servletConfig;
+			// push to registry
+			Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+			initBootstrapRegistry();
 			initNames();
 			initLoggers();
 			initJPA();
@@ -183,6 +184,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		MetricLogging.get().end("Web app startup");
 	}
 
+	protected void initBootstrapRegistry() {
+		Registry.registerSingleton(AlcinaServerConfig.class,
+				new AlcinaServerConfig());
+	}
+
 	protected abstract void initCustom();
 
 	protected abstract void initCustomServices();
@@ -193,34 +199,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	 */
 	protected abstract void initCommonImplServices();
 
-	/*
-	 * { must**
-	 */
-	/*
-	 * CommonLocator.get().registerImplementationLookup(new JadeImplLookup());
-	 * Registry.impl(ServletLayerLocator.class).registerCommonPersistenceProvider(
-	 * JadeServerManager.get());
-	 * Registry.impl(ServletLayerLocator.class).registerCommonRemoteServletProvider( new
-	 * JadeServerProvider());
-	 */
-	/*
-	 * can
-	 */
-	/*
-	 * Registry.impl(ServletLayerLocator.class).registerDataFolder(
-	 * JadeServerManager.get().getBarnetDataFolder());
-	 * JadeObjects.registerProvider(JadeServerManager.get());
-	 * ThreadedPermissionsManager.INSTANTIATE_IMPL_FILTER = new
-	 * EntityCacheHibernateResolvingFilter(
-	 * JadePersistence.CACHE_GETTER_CALLBACK); PermissionsManager
-	 * .setPermissionsExtension(new RegistryPermissionsExtension(
-	 * Registry.get())); }
-	 */
 	protected void initCommonServices() {
 		PermissionsManager permissionsManager = PermissionsManager.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-		CommonLocator.get().registerURLComponentEncoder(
-				new ServerURLComponentEncoder());
 		ObjectPersistenceHelper.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
@@ -230,8 +211,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Logger logger = Logger.getLogger(AlcinaServerConfig.get()
 				.getMainLoggerName());
 		try {
-			Registry.impl(JPAImplementation.class)
-					.muteClassloaderLogging(true);
+			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
 			Map<String, Date> classes = new ServletClasspathScanner("*", true,
 					false, logger, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
@@ -254,11 +234,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	@Override
 	public void destroy() {
 		super.destroy();
-		CommonRemoteServiceServletSupport.get().appShutdown();
-		GlobalTopicPublisher.get().appShutdown();
 		MetricLogging.get().appShutdown();
 		SEUtilities.appShutdown();
-		ObjectPersistenceHelper.get().appShutdown();
 		Registry.appShutdown();
 	}
 

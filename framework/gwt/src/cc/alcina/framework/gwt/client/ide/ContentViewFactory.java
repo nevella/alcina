@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -40,11 +40,13 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
@@ -115,8 +117,7 @@ public class ContentViewFactory {
 		public void onAttachOrDetach(AttachEvent event) {
 			if (event.isAttached()) {
 				try {
-					PropertyAccessor pa = CommonLocator.get()
-							.propertyAccessor();
+					PropertyAccessor pa = Reflections.propertyAccessor();
 					int r = 0;
 					for (Binding b : grid.getBinding().getChildren()) {
 						BindingInstance right = b.getRight();
@@ -270,8 +271,7 @@ public class ContentViewFactory {
 		Collection supportingObjects = new ArrayList();
 		if (!doNotClone
 				&& !autoSave
-				&& (!(bean instanceof HasIdAndLocalId) || CommonLocator.get()
-						.objectLookup().getObject((HasIdAndLocalId) bean) != null)) {
+				&& (!(bean instanceof HasIdAndLocalId) || Reflections.objectLookup().getObject((HasIdAndLocalId) bean) != null)) {
 			bean = new CloneHelper().shallowishBeanClone(bean);
 			cloned = true;
 		}
@@ -351,7 +351,7 @@ public class ContentViewFactory {
 		FlowPanel fp = null;
 		ExpandableListPanel elp = null;
 		for (Class<? extends PermissibleAction> c : bi.getActions(bean)) {
-			final PermissibleAction v = CommonLocator.get().classLookup()
+			final PermissibleAction v = Reflections.classLookup()
 					.getTemplateInstance(c);
 			if (v instanceof NonstandardObjectAction) {
 				if (fp == null) {
@@ -408,7 +408,7 @@ public class ContentViewFactory {
 					+ beanClass, SuggestedAction.NOTIFY_WARNING);
 		}
 		Object bean = beans.iterator().hasNext() ? beans.iterator().next()
-				: CommonLocator.get().classLookup()
+				: Reflections.classLookup()
 						.getTemplateInstance(beanClass);
 		PaneWrapperWithObjects cp = createPaneWrapper(actionListener);
 		if (!noCaption) {
@@ -846,7 +846,7 @@ public class ContentViewFactory {
 				beanValidator.validate(bean);
 				return true;
 			} catch (ValidationException e) {
-				ClientLayerLocator.get().notifications()
+				Registry.impl(ClientNotifications.class)
 						.showWarning(e.getMessage());
 				return false;
 			}
@@ -912,12 +912,10 @@ public class ContentViewFactory {
 				if (PermissionsManager.get().isMemberOfGroup(
 						PermissionsManager.getAdministratorGroupName())
 						&& sender != null) {
-					if (ClientLayerLocator.get().getGeneralProperties()
+					if (ClientBase.getGeneralProperties()
 							.isAllowAdminInvalidObjectWrite()
 							&& !alwaysDisallowOkIfInvalid) {
-						ClientLayerLocator
-								.get()
-								.notifications()
+						Registry.impl(ClientNotifications.class)
 								.confirm(
 										"Administrative option: save the changed items "
 												+ "on this form (even though some are invalid)?",
@@ -930,9 +928,7 @@ public class ContentViewFactory {
 					}
 				}
 				if (sender != null) {
-					ClientLayerLocator
-							.get()
-							.notifications()
+					Registry.impl(ClientNotifications.class)
 							.showWarning(
 									"Please correct the problems in the form");
 				} else {

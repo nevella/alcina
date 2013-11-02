@@ -16,6 +16,8 @@ package cc.alcina.framework.gwt.client.widget.layout;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
@@ -24,27 +26,26 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
  * @author Nick Reddel
  */
 public class LayoutEvents {
+	public static LayoutEvents get() {
+		LayoutEvents singleton = Registry.checkSingleton(LayoutEvents.class);
+		if (singleton == null) {
+			singleton = new LayoutEvents();
+			Registry.registerSingleton(LayoutEvents.class, singleton);
+		}
+		return singleton;
+	}
+
+	ArrayList<LayoutEventListener> listeners;
+
+	private List<LayoutEventType> firingEvents = new ArrayList<LayoutEventType>();
+
 	private LayoutEvents() {
 		super();
 		listeners = new ArrayList<LayoutEventListener>();
 	}
 
-	private static LayoutEvents theInstance;
-
-	public static LayoutEvents get() {
-		if (theInstance == null) {
-			theInstance = new LayoutEvents();
-		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
-	}
-
-	public void fireRequiresGlobalRelayout() {
-		fireLayoutEvent(new LayoutEvent(
-				LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
+	public void addLayoutEventListener(LayoutEventListener l) {
+		listeners.add(l);
 	}
 
 	public void fireDeferredGlobalRelayout() {
@@ -54,38 +55,6 @@ public class LayoutEvents {
 			}
 		});
 	}
-
-	public static class LayoutEvent {
-		private LayoutEventType eventType;
-
-		public LayoutEventType getEventType() {
-			return this.eventType;
-		}
-
-		public LayoutEvent(LayoutEventType eventType) {
-			this.eventType = eventType;
-		}
-	}
-
-	public static enum LayoutEventType {
-		REQUIRES_GLOBAL_RELAYOUT
-	}
-
-	public static interface LayoutEventListener {
-		public void onLayoutEvent(LayoutEvent event);
-	}
-
-	ArrayList<LayoutEventListener> listeners;
-
-	public void addLayoutEventListener(LayoutEventListener l) {
-		listeners.add(l);
-	}
-
-	public void removeLayoutEventListener(LayoutEventListener l) {
-		listeners.remove(l);
-	}
-
-	private List<LayoutEventType> firingEvents = new ArrayList<LayoutEventType>();
 
 	@SuppressWarnings("unchecked")
 	public void fireLayoutEvent(LayoutEvent event) {
@@ -102,5 +71,34 @@ public class LayoutEvents {
 		} finally {
 			firingEvents.remove(event.getEventType());
 		}
+	}
+
+	public void fireRequiresGlobalRelayout() {
+		fireLayoutEvent(new LayoutEvent(
+				LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
+	}
+
+	public void removeLayoutEventListener(LayoutEventListener l) {
+		listeners.remove(l);
+	}
+
+	public static class LayoutEvent {
+		private LayoutEventType eventType;
+
+		public LayoutEvent(LayoutEventType eventType) {
+			this.eventType = eventType;
+		}
+
+		public LayoutEventType getEventType() {
+			return this.eventType;
+		}
+	}
+
+	public static interface LayoutEventListener {
+		public void onLayoutEvent(LayoutEvent event);
+	}
+
+	public static enum LayoutEventType {
+		REQUIRES_GLOBAL_RELAYOUT
 	}
 }

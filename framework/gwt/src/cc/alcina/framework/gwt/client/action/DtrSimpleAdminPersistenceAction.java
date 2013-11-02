@@ -5,7 +5,9 @@ import java.io.Serializable;
 import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 import com.google.gwt.core.client.GWT;
 
@@ -15,12 +17,10 @@ public class DtrSimpleAdminPersistenceAction extends
 	public DtrSimpleAdminPersistenceAction() {
 		DeltaApplicationRecord wrapper = new DeltaApplicationRecord();
 		if (GWT.isClient()) {
-			ClientInstance clientInstance = ClientLayerLocator.get()
-					.getClientInstance();
+			ClientInstance clientInstance = ClientBase.getClientInstance();
 			wrapper.setClientInstanceAuth(clientInstance.getAuth());
 			wrapper.setClientInstanceId(clientInstance.getId());
-			wrapper.setRequestId(ClientLayerLocator.get()
-					.getCommitToStorageTransformListener().getLocalRequestId());
+			wrapper.setRequestId(Registry.impl(CommitToStorageTransformListener.class).getLocalRequestId());
 		}
 		setParameters(wrapper);
 	}

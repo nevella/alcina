@@ -24,7 +24,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -97,7 +97,7 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 	public Class getRefClass() {
 		if (this.refClass == null && this.refClassName != null) {
 			try {
-				this.refClass = CommonLocator.get().classLookup()
+				this.refClass = Reflections.classLookup()
 						.getClassForName(this.refClassName);
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

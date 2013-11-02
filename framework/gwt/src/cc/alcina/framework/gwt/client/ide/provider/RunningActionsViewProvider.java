@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ide.widget.ActionProgress;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
@@ -94,7 +94,7 @@ import com.google.gwt.user.client.ui.Widget;
 				refreshTimer.schedule(10000);
 			}
 		};
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance().listRunningJobs(callback);
+		ClientBase.getCommonRemoteServiceAsyncInstance().listRunningJobs(callback);
 	}
 
 	private Widget createCaption() {

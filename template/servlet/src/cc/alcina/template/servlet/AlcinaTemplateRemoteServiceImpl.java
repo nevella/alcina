@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
@@ -89,7 +89,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 			getLogger().warn("Login exception", e);
 		}
 		if (!lrb.isOk()) {
-			EntityLayerLocator.get().log(
+			EntityLayerUtils.log(
 					LogMessageType.INVALID_AUTHENTICATION,
 					String.format("Invalid login: %s (password obscured)",
 							loginBean.getUserName()));
@@ -145,7 +145,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 					String.format("Transform exception: %s %s",
 							PermissionsManager.get().getUserName(), request),
 					dte);
-			EntityLayerLocator.get().log(
+			EntityLayerUtils.log(
 					LogMessageType.TRANSFORM_EXCEPTION,
 					String.format("Transform exception: %s %s",
 							PermissionsManager.get().getUserName(), request),

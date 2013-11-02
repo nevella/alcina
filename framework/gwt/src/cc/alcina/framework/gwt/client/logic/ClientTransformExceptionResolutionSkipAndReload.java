@@ -27,8 +27,8 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ClassSimpleNameCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ExpandableLabelCustomiser;
@@ -68,8 +68,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 
 	public void resolve(DomainTransformRequestException dtre,
 			Callback<ClientTransformExceptionResolutionToken> callback) {
-		final CommitToStorageTransformListener storage = ClientLayerLocator
-				.get().getCommitToStorageTransformListener();
+		final CommitToStorageTransformListener storage = Registry.impl(CommitToStorageTransformListener.class);
 		if (dialog != null) {
 			dialog.hide();
 		}

@@ -6,15 +6,16 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -70,9 +71,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 					postRegisterCommandCopy.execute();
 					return false;
 				} catch (Exception e) {
-					ClientLayerLocator
-							.get()
-							.exceptionHandler()
+					Registry.impl(ClientExceptionHandler.class)
 							.handleException(
 									new WrappedRuntimeException(
 											"Exception in post-register command",
@@ -139,7 +138,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 				.get(clazz);
 		if (!childRegisterReflectors.isEmpty()) {
 			for (ClientPropertyReflector pr : childRegisterReflectors) {
-				Object value = CommonLocator.get().propertyAccessor()
+				Object value = Reflections.propertyAccessor()
 						.getPropertyValue(obj, pr.getPropertyName());
 				addObjectOrCollectionToEndOfQueue(value);
 			}

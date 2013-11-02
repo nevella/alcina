@@ -2,23 +2,20 @@ package cc.alcina.template.servlet;
 
 import java.io.File;
 
-import cc.alcina.framework.common.client.CommonLocator;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.RegistryPermissionsExtension;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.impl.jboss.JBoss7Support;
 import cc.alcina.framework.entity.impl.jboss.JPAHibernateImpl;
 import cc.alcina.framework.entity.impl.jboss.JbossLogMuter;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
-import cc.alcina.template.cs.constants.AlcinaTemplateImplLookup;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
 import cc.alcina.template.entityaccess.AlcinaTemplateBeanProvider;
-import cc.alcina.template.entityaccess.AlcinaTemplatePersistence;
 import cc.alcina.template.entityaccess.AlcinaTemplatePersistenceLocal;
 
 public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
@@ -32,14 +29,16 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 		try {
 			super.destroy();
 			ResourceUtilities.appShutdown();
-			DetachedEntityCache.get().appShutdown();
-			// we won't be able to access as an ejb bean at this stage - so destroy() must have no @em refs
-			AlcinaTemplatePersistenceLocal pb = new AlcinaTemplatePersistence();
-			pb.destroy();
 			Registry.appShutdown();
 		} catch (Exception e) {
 			System.out.println(e);
 		}
+	}
+
+	@Override
+	protected void initBootstrapRegistry() {
+		super.initBootstrapRegistry();
+		Registry.registerSingleton(JPAImplementation.class, new JPAHibernateImpl());
 	}
 
 	@Override
@@ -57,16 +56,14 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 
 	@Override
 	protected void initDataFolder() {
-		Registry.impl(ServletLayerObjects.class).setDataFolder(
+		ServletLayerObjects.get().setDataFolder(
 				AlcinaTemplateServerManager.get().getDataFolder());
-		EntityLayerLocator.get().setDataFolder(
+		EntityLayerObjects.get().setDataFolder(
 				AlcinaTemplateServerManager.get().getDataFolder());
 	}
 
 	@Override
 	protected void initCommonImplServices() {
-		CommonLocator.get().registerImplementationLookup(
-				new AlcinaTemplateImplLookup());
 		AlcinaTemplateObjects.registerProvider(AlcinaTemplateServerManager
 				.get());
 		PermissionsManager
@@ -89,12 +86,9 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 	@Override
 	protected void initJPA() {
 		JBoss7Support.install();
-		EntityLayerLocator.get().registerJPAImplementation(
-				new JPAHibernateImpl());
 	}
 
 	@Override
 	protected void initCustomServices() {
 	}
-	
 }

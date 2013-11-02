@@ -18,10 +18,10 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.BlockLink;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
@@ -191,7 +191,7 @@ public class FromOfflineConflictResolver {
 					uncommitted.toString());
 			ta.setText(text);
 			fp.add(ta);
-			ClientNotifications cn = ClientLayerLocator.get().notifications();
+			ClientNotifications cn = Registry.impl(ClientNotifications.class);
 			cn.setDialogAnimationEnabled(false);
 			cn.showMessage(fp);
 			cn.setDialogAnimationEnabled(true);
@@ -212,7 +212,7 @@ public class FromOfflineConflictResolver {
 						FromOfflineConflictResolver.class,
 						"discard-confirmation",
 						"Are you sure you want to discard your changes?"))) {
-					ClientLayerLocator.get().notifications()
+					Registry.impl(ClientNotifications.class)
 							.log("pre-clear-db");
 					localTransformPersistence
 							.clearAllPersisted(new AsyncCallback() {
@@ -226,7 +226,7 @@ public class FromOfflineConflictResolver {
 													"Changes discarded"));
 									dialog.hide();
 									completionCallback.onSuccess(null);
-									ClientLayerLocator.get().notifications()
+									Registry.impl(ClientNotifications.class)
 											.log("post-clear-db");
 								}
 

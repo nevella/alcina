@@ -5,11 +5,11 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.On
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl;
 import cc.alcina.framework.gwt.client.LayoutManagerBase;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 
 import com.google.gwt.user.client.History;
@@ -25,7 +25,7 @@ public class InitLayoutPlayer extends RunnablePlayer {
 		
 		
 		if (PermissionsManager.get().getOnlineState() == OnlineState.ONLINE) {
-			ClientLayerLocator.get().getCommitToStorageTransformListener()
+			Registry.impl(CommitToStorageTransformListener.class)
 					.flush();
 		}
 		Registry.impl(LayoutManagerBase.class).redrawLayout();
@@ -34,13 +34,12 @@ public class InitLayoutPlayer extends RunnablePlayer {
 			History.fireCurrentHistoryState();
 			AlcinaHistory.get().setNoHistoryDisabled(false);
 		}
-		ClientNotifications notifications = ClientLayerLocator.get()
-				.notifications();
+		ClientNotifications notifications = Registry.impl(ClientNotifications.class);
 		if (notifications instanceof ClientNotificationsImpl) {
 			ClientNotificationsImpl nImpl = (ClientNotificationsImpl) notifications;
 			nImpl.setLogToSysOut(true);
 		}
-		ClientLayerLocator.get().notifications().metricLogEnd("moduleLoad");
+		Registry.impl(ClientNotifications.class).metricLogEnd("moduleLoad");
 		if (notifications instanceof ClientNotificationsImpl) {
 			ClientNotificationsImpl nImpl = (ClientNotificationsImpl) notifications;
 			nImpl.setLogToSysOut(false);

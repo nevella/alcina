@@ -33,7 +33,7 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 public class TransformPersister {
 	private static final String TOPIC_PERSISTING_TRANSFORMS = TransformPersister.class
@@ -226,8 +226,7 @@ public class TransformPersister {
 				}
 			}
 			if (token.getPass() == Pass.TRY_COMMIT) {
-				EntityLayerLocator
-						.get()
+				EntityLayerObjects.get()
 						.getMetricLogger()
 						.info(String
 								.format("domain transform - %s - clid:"
@@ -283,8 +282,7 @@ public class TransformPersister {
 							if (!actionForException.ignoreable()) {
 								throw e;
 							} else {
-								EntityLayerLocator
-										.get()
+								EntityLayerObjects.get()
 										.getMetricLogger()
 										.info(String.format(
 												">>>Event ignored :%s\n",
@@ -461,8 +459,7 @@ public class TransformPersister {
 				token.setPass(Pass.DETERMINE_EXCEPTION_DETAIL);
 				determineExceptionDetailPassStartTime = System
 						.currentTimeMillis();
-				EntityLayerLocator
-						.get()
+				EntityLayerObjects.get()
 						.getMetricLogger()
 						.warn("TransformPersister: determining exception detail");
 			} else {

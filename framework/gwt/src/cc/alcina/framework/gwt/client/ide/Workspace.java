@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.DeleteActionHandler;
@@ -195,7 +195,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		if (colln != null && colln.size() == 1) {
 			singleObj = colln.iterator().next();
 		}
-		boolean autoSave = ClientLayerLocator.get().getGeneralProperties()
+		boolean autoSave = ClientBase.getGeneralProperties()
 				.isAutoSave();
 		if (singleObj instanceof PermissibleAction) {
 			Widget view = getViewForAction((PermissibleAction) singleObj);
@@ -264,9 +264,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 						.getPropertyReflector();
 				String propertyName = propertyReflector.getAnnotation(
 						Association.class).propertyName();
-				CommonLocator
-						.get()
-						.propertyAccessor()
+				Reflections.propertyAccessor()
 						.setPropertyValue(newObj, propertyName,
 								pcp.getDomainObject());
 			}
@@ -309,7 +307,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 			} else {
 				ClientPropertyReflector reflector = pcp.getPropertyReflector();
 				String propertyName = reflector.getPropertyName();
-				Object obj = CommonLocator.get().propertyAccessor()
+				Object obj = Reflections.propertyAccessor()
 						.getPropertyValue(pcp.getDomainObject(), propertyName);
 				if (obj instanceof Collection) {
 					siblings = (Collection) obj;

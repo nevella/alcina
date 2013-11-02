@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
@@ -96,8 +96,7 @@ public class ChildBeanCustomiser implements Customiser {
 			h.addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent event) {
 					Class clazz = ChildBeanWidget.this.objectClass;
-					boolean autoSave = ClientLayerLocator.get()
-							.getGeneralProperties().isAutoSave();
+					boolean autoSave = ClientBase.getGeneralProperties().isAutoSave();
 					HasIdAndLocalId obj = autoSave ? TransformManager.get()
 							.createDomainObject(clazz) : TransformManager.get()
 							.createProvisionalObject(clazz);

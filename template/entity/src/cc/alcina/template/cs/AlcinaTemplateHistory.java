@@ -1,10 +1,14 @@
 package cc.alcina.template.cs;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 
+@RegistryLocation(registryPoint = AlcinaHistory.class, implementationType = ImplementationType.SINGLETON)
 public class AlcinaTemplateHistory extends
 		AlcinaHistory<AlcinaTemplateHistoryItem> implements
 		ValueChangeHandler<String> {
@@ -26,20 +30,8 @@ public class AlcinaTemplateHistory extends
 		return new AlcinaTemplateHistoryItem();
 	}
 
-	private AlcinaTemplateHistory() {
-		super();
-	}
-
-	private static AlcinaTemplateHistory theInstance;
 
 	public static AlcinaTemplateHistory get() {
-		if (theInstance == null) {
-			theInstance = new AlcinaTemplateHistory();
-		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+		return (AlcinaTemplateHistory) Registry.impl(AlcinaHistory.class);
 	}
 }

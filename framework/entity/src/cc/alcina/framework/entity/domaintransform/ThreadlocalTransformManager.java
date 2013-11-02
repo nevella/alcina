@@ -32,7 +32,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.ManyToMany;
 import javax.persistence.Query;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -77,8 +77,9 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.WrappedObject;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropogation;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.projection.EntityUtils;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -177,9 +178,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		for (ObjectDeltaSpec itemSpec : specs) {
 			ObjectRef ref = itemSpec.getObjectRef();
 			String propertyName = itemSpec.getPropertyName();
-			Association assoc = CommonLocator
-					.get()
-					.propertyAccessor()
+			Association assoc = Reflections.propertyAccessor()
 					.getAnnotationForProperty(ref.getClassRef().getRefClass(),
 							Association.class, propertyName);
 			ObjectDeltaResult itemResult = new ObjectDeltaResult();
@@ -187,8 +186,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			String eql = buildEqlForSpec(itemSpec, assoc.implementationClass());
 			long t1 = System.currentTimeMillis();
 			List results = getEntityManager().createQuery(eql).getResultList();
-			EntityLayerLocator
-					.get()
+			EntityLayerObjects.get()
 					.getMetricLogger()
 					.debug("cache eql - total (ms):"
 							+ (System.currentTimeMillis() - t1));
@@ -710,7 +708,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		ObjectRef ref = itemSpec.getObjectRef();
 		Class refClass = ref.getClassRef().getRefClass();
 		List<String> projections = new ArrayList<String>();
-		ClassLookup classLookup = CommonLocator.get().classLookup();
+		ClassLookup classLookup = Reflections.classLookup();
 		String specProperty = null;
 		projections.add(CommonUtils.formatJ("t.%s as %s", "id", "id"));
 		List<PropertyInfoLite> pds = classLookup
@@ -818,9 +816,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			HasIdAndLocalId hiliChange = (HasIdAndLocalId) (change instanceof HasIdAndLocalId ? change
 					: null);
 			ObjectPermissions oph = null;
-			AssignmentPermission aph = CommonLocator
-					.get()
-					.propertyAccessor()
+			AssignmentPermission aph = Reflections.propertyAccessor()
 					.getAnnotationForProperty(objectClass,
 							AssignmentPermission.class, propertyName);
 			if (hiliChange != null) {
@@ -865,7 +861,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				evt.setSource(hili);
 				evt.setPropertyName(propertyName);
 			}
-			EntityLayerLocator.get().log(LogMessageType.TRANSFORM_EXCEPTION,
+			EntityLayerUtils.log(LogMessageType.TRANSFORM_EXCEPTION,
 					"Domain transform permissions exception", e);
 			throw new WrappedRuntimeException(e);
 		}
@@ -961,9 +957,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		if (getEntityManager() == null) {
 			super.updateAssociation(evt, obj, tgt, remove, false);
 		} else {
-			ManyToMany manyToMany = CommonLocator
-					.get()
-					.propertyAccessor()
+			ManyToMany manyToMany = Reflections.propertyAccessor()
 					.getAnnotationForProperty(evt.getObjectClass(),
 							ManyToMany.class, evt.getPropertyName());
 			if (manyToMany != null && manyToMany.mappedBy().length() != 0) {

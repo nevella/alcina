@@ -21,7 +21,6 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.servlet.publication.FormatConverter.FormatConversionModel;
-import cc.alcina.framework.servlet.publication.PublicationPersistence.PublicationPersistenceLocator;
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 
 /**
@@ -92,15 +91,15 @@ public class Publisher {
 		long publicationId = 0;
 		boolean forPublication = !deliveryModel.isNoPersistence()
 				&& deliveryModel.provideContentDeliveryType().isRepublishable();
+		PublicationContentPersister publicationContentPersister = Registry
+				.implOrNull(PublicationContentPersister.class);
 		if (!SEUtilities.localTestMode()) {
 			if (forPublication && publicationContentPersister != null) {
-				publicationUserId = PublicationPersistenceLocator
-						.get()
-						.publicationPersistence()
+				publicationUserId = Registry.impl(PublicationPersistence.class)
 						.getNextPublicationIdForUser(
 								PermissionsManager.get().getUser());
 				publicationId = persist(contentDefinition, deliveryModel,
-						publicationUserId, original);
+						publicationUserId, original,publicationContentPersister);
 				result.publicationId = publicationId;
 			}
 		}
@@ -152,7 +151,8 @@ public class Publisher {
 
 	private long persist(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Long publicationUserId,
-			Publication original) {
+			Publication original,
+			PublicationContentPersister publicationContentPersister) {
 		Publication publication = publicationContentPersister
 				.newPublicationInstance();
 		if (contentDefinition instanceof HasId) {
@@ -174,13 +174,6 @@ public class Publisher {
 		publication.setPublicationType(contentDefinition.getPublicationType());
 		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().merge(publication);
-	}
-
-	private static PublicationContentPersister publicationContentPersister;
-
-	public static void registerPublicationPersister(
-			PublicationContentPersister pp) {
-		publicationContentPersister = pp;
 	}
 
 	public interface PublicationContentPersister {

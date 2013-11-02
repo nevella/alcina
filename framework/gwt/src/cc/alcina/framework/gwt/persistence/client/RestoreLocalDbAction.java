@@ -1,8 +1,12 @@
 package cc.alcina.framework.gwt.persistence.client;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsyncProvider;
+import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
 import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ide.provider.LooseActionHandler;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
@@ -25,7 +29,7 @@ public class RestoreLocalDbAction implements LooseActionHandler {
 
 	@Override
 	public void performAction() {
-		this.modalNotifier = ClientLayerLocator.get().notifications()
+		this.modalNotifier = Registry.impl(ClientNotifications.class)
 				.getModalNotifier("Restoring local database dump");
 		String key = AlcinaHistory.get().getCurrentEvent()
 				.getStringParameter(ALCINA_RESTORE_LOCAL_DB_KEY);
@@ -49,7 +53,8 @@ public class RestoreLocalDbAction implements LooseActionHandler {
 				throw new WrappedRuntimeException(caught);
 			}
 		};
-		ClientLayerLocator.get().getCommonRemoteServiceAsyncProvider()
+		((RemoteServiceProvider<? extends CommonRemoteServiceAsync>) Registry
+				.impl(CommonRemoteServiceAsyncProvider.class))
 				.getServiceInstance().loadData(key, loadCallback);
 	}
 

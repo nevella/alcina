@@ -14,16 +14,13 @@ import javax.persistence.PersistenceUnit;
 
 import org.hibernate.proxy.LazyInitializer;
 
-import cc.alcina.framework.common.client.CommonLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
-import cc.alcina.framework.entity.logic.EntityLayerLocator;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -167,12 +164,6 @@ public class AlcinaTemplatePersistence
 
 	@Override
 	protected void initServiceImpl() {
-		EntityLayerLocator.get().registerWrappedObjectProvider(
-				new AlcinaTemplateWrappedObjectProvider());
-		EntityLayerLocator.get().registerCommonPersistenceProvider(
-				AlcinaTemplateEjbLocator.get());
-		CommonLocator.get().registerCurrentUtcDateProvider(
-				ObjectPersistenceHelper.get());
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
+import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
@@ -28,10 +29,12 @@ import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.SynchronousAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
@@ -102,27 +105,28 @@ public abstract class ActionViewProvider implements ViewProvider,
 
 	protected void getActionLogs(
 			AsyncCallback<List<ActionLogItem>> outerCallback, int logItemCount) {
-		ClientLayerLocator
-				.get()
-				.actionLogProvider()
-				.getLogsForAction(action, logItemCount, outerCallback,
-						true);
+		Registry.impl(ActionLogProvider.class).getLogsForAction(action,
+				logItemCount, outerCallback, true);
 	}
+
 	protected abstract void performAction(AsyncCallback<Long> asyncCallback,
-			AsyncCallback<ActionLogItem> syncCallback) ;
-	
-	public static class ActionViewProviderCommon extends ActionViewProvider{
+			AsyncCallback<ActionLogItem> syncCallback);
+
+	public static class ActionViewProviderCommon extends ActionViewProvider {
 		protected void performAction(AsyncCallback<Long> asyncCallback,
 				AsyncCallback<ActionLogItem> syncCallback) {
 			if (action instanceof SynchronousAction) {
-				((CommonRemoteServiceExtAsync)ClientLayerLocator.get().commonRemoteServiceAsyncInstance())
+				((CommonRemoteServiceExtAsync) ClientBase
+						.getCommonRemoteServiceAsyncInstance())
 						.performActionAndWait(action, syncCallback);
 			} else {
-				((CommonRemoteServiceExtAsync)ClientLayerLocator.get().commonRemoteServiceAsyncInstance())
-						.performAction(action, asyncCallback);
+				((CommonRemoteServiceExtAsync) ClientBase
+						.getCommonRemoteServiceAsyncInstance()).performAction(
+						action, asyncCallback);
 			}
 		}
 	}
+
 	public class ActionLogPanel extends VerticalPanel implements ClickHandler {
 		private static final String RUNNING = "...running";
 
@@ -256,15 +260,13 @@ public abstract class ActionViewProvider implements ViewProvider,
 			GwittirUtils.refreshEmptyTextBoxes(beanView.getBoundWidget()
 					.getBinding());
 			if (!beanView.getBoundWidget().getBinding().validate()) {
-				ClientLayerLocator.get().notifications()
-						.showWarning("Please correct the problems in the form");
+				Registry.impl(ClientNotifications.class).showWarning(
+						"Please correct the problems in the form");
 				return;
 			}
 			running(true);
 			performAction(asyncCallback, syncCallback);
 		}
-
-		
 
 		public String toString() {
 			return this.hasChildHandlersSupport.toString();
@@ -313,7 +315,7 @@ public abstract class ActionViewProvider implements ViewProvider,
 			running(false);
 			button.setEnabled(true);
 			if (handler == null) {
-				getActionLogs(outerCallback,logItemCount);
+				getActionLogs(outerCallback, logItemCount);
 			}
 			maxButton.getToggleButton().setDown(true);
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {

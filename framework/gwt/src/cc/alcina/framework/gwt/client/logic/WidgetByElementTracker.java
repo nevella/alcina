@@ -3,6 +3,8 @@ package cc.alcina.framework.gwt.client.logic;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
@@ -14,18 +16,13 @@ public class WidgetByElementTracker implements Handler {
 		super();
 	}
 
-
-	private static WidgetByElementTracker theInstance;
-
 	public static WidgetByElementTracker get() {
-		if (theInstance == null) {
-			theInstance = new WidgetByElementTracker();
+		WidgetByElementTracker singleton = Registry.checkSingleton(WidgetByElementTracker.class);
+		if (singleton == null) {
+			singleton = new WidgetByElementTracker();
+			Registry.registerSingleton(WidgetByElementTracker.class, singleton);
 		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+		return singleton;
 	}
 
 	Map<Element, Widget> perElementWidgets = new LinkedHashMap<Element, Widget>();

@@ -4,7 +4,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 
 import com.google.gwt.http.client.Header;
 import com.google.gwt.http.client.Request;
@@ -158,14 +158,13 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	public void addAlcinaHeaders(RequestBuilder rb) {
 		// iOS 6
 		rb.setHeader("Cache-Control", "no-cache");
-		if (ClientLayerLocator.get().getClientInstance() != null
+		if (ClientBase.getClientInstance() != null
 				&& PermissionsManager.get().isLoggedIn()) {
 			rb.setHeader(
 					CLIENT_INSTANCE_ID_KEY,
-					String.valueOf(ClientLayerLocator.get().getClientInstance()
+					String.valueOf(ClientBase.getClientInstance()
 							.getId()));
-			rb.setHeader(CLIENT_INSTANCE_AUTH_KEY, ClientLayerLocator.get()
-					.getClientInstance().getAuth().toString());
+			rb.setHeader(CLIENT_INSTANCE_AUTH_KEY, ClientBase.getClientInstance().getAuth().toString());
 		}
 	}
 

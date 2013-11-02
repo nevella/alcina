@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
@@ -38,15 +39,6 @@ public class RenderContext extends LooseContextInstance {
 	private static final String IS_RENDERABLE_FILTER = RenderContext.class
 			.getName() + ".IS_RENDERABLE_FILTER";
 
-	private static RenderContext theInstance;
-
-	public static RenderContext get() {
-		if (theInstance == null) {
-			theInstance = new RenderContext();
-		}
-		return theInstance;
-	}
-
 	public static final String CONTEXT_IGNORE_AUTOFOCUS = ContentViewFactory.class
 			.getName() + ".CONTEXT_IGNORE_AUTOFOCUS";
 
@@ -54,8 +46,13 @@ public class RenderContext extends LooseContextInstance {
 		super();
 	}
 
-	public void appShutdown() {
-		theInstance = null;
+	public static RenderContext get() {
+		RenderContext singleton = Registry.checkSingleton(RenderContext.class);
+		if (singleton == null) {
+			singleton = new RenderContext();
+			Registry.registerSingleton(RenderContext.class, singleton);
+		}
+		return singleton;
 	}
 
 	public Callback<Widget> getOnAttachCallback() {
@@ -114,6 +111,7 @@ public class RenderContext extends LooseContextInstance {
 	 * work during setup), but branch()/merge() for object trees (heavier use of
 	 * alcina) (.get() *will* work during setup)
 	 * 
+	 *TODO - given it's single threaded, push/pop of snapshots probably makes even more sense...
 	 * </p>
 	 */
 	@Override
@@ -136,12 +134,12 @@ public class RenderContext extends LooseContextInstance {
 					"Branching from already branched RenderContext");
 		}
 		trunk = get();
-		theInstance = theInstance.snapshot();
+		Registry.registerSingleton(RenderContext.class, trunk.snapshot());
 		return get();
 	}
 
 	public static void merge() {
-		theInstance = trunk;
+		Registry.registerSingleton(RenderContext.class, trunk);
 		trunk = null;
 	}
 }

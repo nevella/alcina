@@ -19,9 +19,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.widget.HasComplexPanel;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
@@ -698,9 +699,7 @@ public class WidgetUtils {
 		} catch (JavaScriptException e) {
 			pp.hide();
 			if (e.getMessage().contains("NS_ERROR_XPC_NOT_ENOUGH_ARGS")) {
-				ClientLayerLocator
-						.get()
-						.notifications()
+				Registry.impl(ClientNotifications.class)
 						.showMessage(
 								new HTML(
 										"<div class='info'>Sorry, clipboard operations"

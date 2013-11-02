@@ -17,6 +17,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.user.client.Cookies;
@@ -46,14 +48,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  *         </ul>
  * 
  */
-public class ClientSession implements ClosingHandler {
+public class ClientSession implements ClosingHandler, RegistrableService {
 	public static final int KEEP_ALIVE_TIMER = 1000;
 
 	public static final long EXPIRES_TIME = 2500;
-
-	public static void registerImplementation(ClientSession impl) {
-		theInstance = impl;
-	}
 
 	static class CrossTabCookie {
 		private String cookieName;
@@ -165,13 +163,13 @@ public class ClientSession implements ClosingHandler {
 
 	private String persistingChunkCookieName;
 
-	private static ClientSession theInstance;
-
 	public static ClientSession get() {
-		if (theInstance == null) {
-			theInstance = new ClientSession();
+		ClientSession singleton = Registry.checkSingleton(ClientSession.class);
+		if (singleton == null) {
+			singleton = new ClientSession();
+			Registry.registerSingleton(ClientSession.class, singleton);
 		}
-		return theInstance;
+		return singleton;
 	}
 
 	private CrossTabCookie storageCookie;
@@ -204,7 +202,6 @@ public class ClientSession implements ClosingHandler {
 
 	public void appShutdown() {
 		deactivateCookies();
-		theInstance = null;
 	}
 
 	public void cancelSession() {

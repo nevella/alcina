@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 
 /**
@@ -44,17 +45,13 @@ public class MessageManager {
 		super();
 	}
 
-	private static MessageManager theInstance;
-
 	public static MessageManager get() {
-		if (theInstance == null) {
-			theInstance = new MessageManager();
+		MessageManager singleton = Registry.checkSingleton(MessageManager.class);
+		if (singleton == null) {
+			singleton = new MessageManager();
+			Registry.registerSingleton(MessageManager.class, singleton);
 		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+		return singleton;
 	}
 
 	public void icyMessage(String message) {

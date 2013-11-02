@@ -14,7 +14,7 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.logic.domaintransform.AlcinaPersistentEntityImpl;
@@ -93,7 +93,7 @@ public class ActionLogItemImpl extends DomainBaseVersionable implements ActionLo
 	@SuppressWarnings("unchecked")
 	public Class<? extends RemoteAction> getActionClass() {
 		if (this.actionClass == null && this.actionClassName != null) {
-			this.actionClass = CommonLocator.get().classLookup()
+			this.actionClass = Reflections.classLookup()
 					.getClassForName(this.actionClassName);
 		}
 		return this.actionClass;

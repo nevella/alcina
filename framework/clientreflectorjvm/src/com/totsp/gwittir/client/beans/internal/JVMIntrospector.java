@@ -50,7 +50,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	}
 
 	public JVMIntrospector() {
-		Registry.putSingleton( BeanDescriptorProvider.class,this);
+		Registry.registerSingleton( BeanDescriptorProvider.class,this);
 	}
 
 	private static class ReflectionBeanDescriptor implements BeanDescriptor {

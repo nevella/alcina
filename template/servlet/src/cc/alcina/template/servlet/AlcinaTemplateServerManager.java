@@ -4,13 +4,13 @@ import java.io.File;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolderProvider;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.template.cs.csobjects.AlcinaTemplateObjects;
 import cc.alcina.template.entityaccess.AlcinaTemplateBeanProvider;
-
-
+@RegistryLocation(registryPoint=AlcinaTemplateServerManager.class)
 public class AlcinaTemplateServerManager implements
-		DomainModelHolderProvider<AlcinaTemplateObjects>
-		 {
+		DomainModelHolderProvider<AlcinaTemplateObjects> {
 	private AlcinaTemplateObjects currentAlcinaTemplateObjects;
 
 	public AlcinaTemplateObjects getDomainModelHolder() {
@@ -19,7 +19,6 @@ public class AlcinaTemplateServerManager implements
 		}
 		return currentAlcinaTemplateObjects;
 	}
-
 
 	public AlcinaTemplateObjects loadInitial(boolean internal) {
 		try {
@@ -32,21 +31,8 @@ public class AlcinaTemplateServerManager implements
 		}
 	}
 
-	private AlcinaTemplateServerManager() {
-		super();
-	}
-
-	private static AlcinaTemplateServerManager theInstance;
-
 	public static AlcinaTemplateServerManager get() {
-		if (theInstance == null) {
-			theInstance = new AlcinaTemplateServerManager();
-		}
-		return theInstance;
-	}
-
-	public void appShutdown() {
-		theInstance = null;
+		return Registry.impl(AlcinaTemplateServerManager.class);
 	}
 
 	public File getDataFolder() {

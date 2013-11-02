@@ -5,7 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.LayoutManagerBase;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
@@ -212,7 +212,7 @@ public class StatusPanel extends Composite {
 		if (!inresize
 				&& Registry.impl(LayoutManagerBase.class)
 						.isDisplayInitialised()
-				&& ClientLayerLocator.get().isUsesRootLayoutPanel()) {
+				&& Registry.impl(ClientBase.class).isUsesRootLayoutPanel()) {
 			inresize = true;
 			RootLayoutPanel.get().onResize();
 			inresize = false;

@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.csobjects.HasJobInfo;
 import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -45,6 +46,25 @@ public class JobRegistry {
 	public static final String TOPIC_JOB_FAILURE = JobRegistry.class.getName()
 			+ ".TOPIC_JOB_FAILURE";
 
+	public static JobRegistry get() {
+		JobRegistry singleton = Registry.checkSingleton(JobRegistry.class);
+		if (singleton == null) {
+			singleton = new JobRegistry();
+			Registry.registerSingleton(JobRegistry.class, singleton);
+		}
+		return singleton;
+	}
+
+	public static void notifyJobFailure(JobInfo info) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_FAILURE, info);
+	}
+
+	public static void notifyJobFailureListenerDelta(
+			TopicListener<JobInfo> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_JOB_FAILURE, listener,
+				add);
+	}
+
 	private Map<Long, JobInfo> infoMap;
 
 	private Map<JobInfo, Class> jobClassMap;
@@ -52,6 +72,8 @@ public class JobRegistry {
 	private Multimap<Long, List<JobInfo>> infoChildMap;
 
 	private Map<Long, Boolean> cancelledMap;
+
+	boolean refuseJobs = false;
 
 	private JobRegistry() {
 		super();
@@ -61,21 +83,34 @@ public class JobRegistry {
 		jobClassMap = new WeakHashMap<JobInfo, Class>();
 	}
 
-	private static JobRegistry theInstance;
-
-	public synchronized static JobRegistry get() {
-		if (theInstance == null) {
-			theInstance = new JobRegistry();
+	public void cancel(Long id) {
+		cancelledMap.put(id, true);
+		JobInfo info = getTopLevelInfoForThread();
+		if (info != null && !info.isComplete()) {
+			jobError(info, "Job cancelled");
 		}
-		return theInstance;
 	}
 
-	public void updateInfo(JobInfo info) {
-		long id = Thread.currentThread().getId();
-		info.setThreadId(id);
-		if (info.isComplete()) {
-			infoChildMap.getAndEnsure(id).remove(info);// if it's a child - keep
-														// if top level
+	public List<JobInfo> cancelAll() {
+		refuseJobs = true;
+		for (Long tid : infoMap.keySet()) {
+			if (!cancelledMap.containsKey(tid)) {
+				cancel(tid);
+			}
+		}
+		List<JobInfo> running = new ArrayList();
+		for (JobInfo jobInfo : infoMap.values()) {
+			if (!jobInfo.isCompleteInThread()) {
+				running.add(jobInfo);
+			}
+		}
+		return running;
+	}
+
+	public void checkCancelled(Logger logger) {
+		if (isCancelled()) {
+			logger.info("Action cancelled by user");
+			throw new CancelledException("Action cancelled by user");
 		}
 	}
 
@@ -90,11 +125,103 @@ public class JobRegistry {
 		return jobInfo;
 	}
 
-	public void appShutdown() {
-		infoMap.clear();
-		cancelledMap.clear();
-		infoChildMap.clear();
-		theInstance = null;
+	public Set<Class> getRunningJobClasses() {
+		Set<Class> result = new LinkedHashSet<Class>();
+		List<Long> ids = getRunningJobs();
+		for (Long id : ids) {
+			result.add(jobClassMap.get(infoMap.get(id)));
+		}
+		return result;
+	}
+
+	public List<Long> getRunningJobs() {
+		Set<Entry<Long, JobInfo>> entries = infoMap.entrySet();
+		List<Long> runningJobids = new ArrayList<Long>();
+		for (Entry<Long, JobInfo> entry : entries) {
+			if (!entry.getValue().isComplete()) {
+				runningJobids.add(entry.getKey());
+			}
+		}
+		return runningJobids;
+	}
+
+	public boolean isCancelled() {
+		long id = Thread.currentThread().getId();
+		return CommonUtils.bv(cancelledMap.get(id)) || !infoMap.containsKey(id);
+	}
+
+	public boolean isTopLevel(JobInfo jobInfo) {
+		long id = Thread.currentThread().getId();
+		return jobInfo == infoMap.get(id);
+	}
+
+	public void jobComplete(JobInfo info) {
+		jobComplete(info, "Job complete");
+	}
+
+	public void jobComplete(JobInfo info, String message) {
+		if (info == null) {
+			return;
+		}
+		info.setComplete(true);
+		info.setPercentComplete(1);
+		info.setProgressMessage(message);
+		info.setEndTime(new Date());
+		AlcinaTopics.jobComplete(info);
+		updateInfo(info);
+	}
+
+	public void jobCompleteFromThread() {
+		JobInfo info = getTopLevelInfoForThread();
+		if (info != null) {
+			info.setCompleteInThread(true);
+		}
+	}
+
+	public void jobError(JobInfo info, Exception ex) {
+		if (info == null) {
+			return;
+		}
+		jobComplete(info);
+		info.setErrorMessage("Job failed: " + ex.toString());
+		JobRegistry.get().updateInfo(info);
+		info.setJobException(ex);
+		notifyJobFailure(info);
+	}
+
+	public void jobError(JobInfo info, String message) {
+		jobError(info, new RuntimeException(message));
+	}
+
+	public void jobErrorInThread() {
+		JobInfo info = getTopLevelInfoForThread();
+		if (info != null && !info.isComplete()) {
+			jobError(info, "Unknown error");
+		}
+	}
+
+	public void jobProgress(JobInfo info, String progressMessage,
+			double percentComplete) {
+		if (info == null) {
+			return;
+		}
+		info.setComplete(false);
+		info.setPercentComplete(percentComplete);
+		info.setProgressMessage(progressMessage);
+		updateInfo(info);
+	}
+
+	public ActionLogItem performChildJob(RemoteActionPerformer performer,
+			RemoteAction action, boolean throwChildExceptions) throws Exception {
+		ActionLogItem log = performer.performAction(action);
+		if (performer instanceof HasJobInfo) {
+			Exception ex = ((HasJobInfo) performer).getJobInfo()
+					.getJobException();
+			if (ex != null && throwChildExceptions) {
+				throw ex;
+			}
+		}
+		return log;
 	}
 
 	public JobInfo startJob(Class jobClass, String jobName, String message) {
@@ -120,149 +247,16 @@ public class JobRegistry {
 		return info;
 	}
 
-	public void jobProgress(JobInfo info, String progressMessage,
-			double percentComplete) {
-		if (info == null) {
-			return;
-		}
-		info.setComplete(false);
-		info.setPercentComplete(percentComplete);
-		info.setProgressMessage(progressMessage);
-		updateInfo(info);
-	}
-
-	public void jobComplete(JobInfo info) {
-		jobComplete(info, "Job complete");
-	}
-
-	public void jobError(JobInfo info, Exception ex) {
-		if (info == null) {
-			return;
-		}
-		jobComplete(info);
-		info.setErrorMessage("Job failed: " + ex.toString());
-		JobRegistry.get().updateInfo(info);
-		info.setJobException(ex);
-		notifyJobFailure(info);
-	}
-
-	public void jobError(JobInfo info, String message) {
-		jobError(info, new RuntimeException(message));
-	}
-
-	public boolean isCancelled() {
+	public void updateInfo(JobInfo info) {
 		long id = Thread.currentThread().getId();
-		return CommonUtils.bv(cancelledMap.get(id)) || !infoMap.containsKey(id);
-	}
-
-	public void cancel(Long id) {
-		cancelledMap.put(id, true);
-		JobInfo info = getTopLevelInfoForThread();
-		if (info != null && !info.isComplete()) {
-			jobError(info, "Job cancelled");
-		}
-	}
-
-	boolean refuseJobs = false;
-
-	public List<JobInfo> cancelAll() {
-		refuseJobs = true;
-		for (Long tid : infoMap.keySet()) {
-			if (!cancelledMap.containsKey(tid)) {
-				cancel(tid);
-			}
-		}
-		List<JobInfo> running = new ArrayList();
-		for (JobInfo jobInfo : infoMap.values()) {
-			if (!jobInfo.isCompleteInThread()) {
-				running.add(jobInfo);
-			}
-		}
-		return running;
-	}
-
-	public List<Long> getRunningJobs() {
-		Set<Entry<Long, JobInfo>> entries = infoMap.entrySet();
-		List<Long> runningJobids = new ArrayList<Long>();
-		for (Entry<Long, JobInfo> entry : entries) {
-			if (!entry.getValue().isComplete()) {
-				runningJobids.add(entry.getKey());
-			}
-		}
-		return runningJobids;
-	}
-
-	public Set<Class> getRunningJobClasses() {
-		Set<Class> result = new LinkedHashSet<Class>();
-		List<Long> ids = getRunningJobs();
-		for (Long id : ids) {
-			result.add(jobClassMap.get(infoMap.get(id)));
-		}
-		return result;
-	}
-
-	public void jobComplete(JobInfo info, String message) {
-		if (info == null) {
-			return;
-		}
-		info.setComplete(true);
-		info.setPercentComplete(1);
-		info.setProgressMessage(message);
-		info.setEndTime(new Date());
-		AlcinaTopics.jobComplete(info);
-		updateInfo(info);
-	}
-
-	public void jobErrorInThread() {
-		JobInfo info = getTopLevelInfoForThread();
-		if (info != null && !info.isComplete()) {
-			jobError(info, "Unknown error");
+		info.setThreadId(id);
+		if (info.isComplete()) {
+			infoChildMap.getAndEnsure(id).remove(info);// if it's a child - keep
+														// if top level
 		}
 	}
 
 	private JobInfo getTopLevelInfoForThread() {
 		return infoMap.get(Thread.currentThread().getId());
-	}
-
-	public boolean isTopLevel(JobInfo jobInfo) {
-		long id = Thread.currentThread().getId();
-		return jobInfo == infoMap.get(id);
-	}
-
-	public void jobCompleteFromThread() {
-		JobInfo info = getTopLevelInfoForThread();
-		if (info != null) {
-			info.setCompleteInThread(true);
-		}
-	}
-
-	public ActionLogItem performChildJob(RemoteActionPerformer performer,
-			RemoteAction action, boolean throwChildExceptions) throws Exception {
-		ActionLogItem log = performer.performAction(action);
-		if (performer instanceof HasJobInfo) {
-			Exception ex = ((HasJobInfo) performer).getJobInfo()
-					.getJobException();
-			if (ex != null && throwChildExceptions) {
-				throw ex;
-			}
-		}
-		return log;
-	}
-
-	public void checkCancelled(Logger logger) {
-		if (isCancelled()) {
-			logger.info("Action cancelled by user");
-			throw new CancelledException("Action cancelled by user");
-		}
-	}
-
-	public static void notifyJobFailure(JobInfo info) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_FAILURE, info);
-	}
-
-	public static void notifyJobFailureListenerDelta(
-			TopicListener<JobInfo> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_JOB_FAILURE, listener,
-				add);
 	}
 }

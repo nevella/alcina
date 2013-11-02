@@ -40,17 +40,9 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 
 	private InstantiateImplCallbackWithShellObject shellInstantiator;
 
-	// non thread-safe - but can be very useful where there are large graphs and
-	// you're doing a big read
-	public static boolean USE_SINGLETON_CACHE = false;
-
 	public DetachedEntityCache getCache() {
 		if (this.cache == null) {
-			if (USE_SINGLETON_CACHE) {
-				this.cache = DetachedEntityCache.get();
-			} else {
-				this.cache = new DetachedEntityCache();
-			}
+			this.cache = new DetachedEntityCache();
 		}
 		return this.cache;
 	}
@@ -120,10 +112,10 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				if (impl != null) {
 					return (T) impl;
 				} else {
-//					Serializable identifier = ((HibernateProxy) value)
-//							.getHibernateLazyInitializer().getIdentifier();
-//					System.out
-//							.format("discarded %s: %s\n", context, identifier);
+					// Serializable identifier = ((HibernateProxy) value)
+					// .getHibernateLazyInitializer().getIdentifier();
+					// System.out
+					// .format("discarded %s: %s\n", context, identifier);
 					return null;
 				}
 			} else {

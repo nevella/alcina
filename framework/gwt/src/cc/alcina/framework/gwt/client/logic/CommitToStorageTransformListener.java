@@ -42,7 +42,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimerWrapper;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolutionToken;
 import cc.alcina.framework.gwt.client.logic.ClientTransformExceptionResolver.ClientTransformExceptionResolverAction;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -120,8 +122,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			transformQueue.add(evt);
 			lastQueueAddMillis = System.currentTimeMillis();
 			if (queueingFinishedTimer == null) {
-				queueingFinishedTimer = ClientLayerLocator.get()
-						.timerWrapperProvider()
+				queueingFinishedTimer = Registry.impl(TimerWrapperProvider.class)
 						.getTimer(getCommitLoopRunnable());
 				queueingFinishedTimer.scheduleRepeating(DELAY_MS);
 			}
@@ -153,8 +154,7 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 
 	private ClientInstance getClientInstance() {
-		ClientInstance clientInstance = ClientLayerLocator.get()
-				.getClientInstance().clone();
+		ClientInstance clientInstance = ClientBase.getClientInstance().clone();
 		clientInstance.setUser(null);
 		return clientInstance;
 	}
@@ -346,8 +346,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 						}
 					}
 					if (response.getMessage() != null) {
-						ClientLayerLocator.get().notifications()
-								.showMessage(response.getMessage());
+						Registry.impl(ClientNotifications.class).showMessage(
+								response.getMessage());
 					}
 				} finally {
 					tm.setReplayingRemoteEvent(false);
@@ -374,8 +374,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		fireStateChanged(COMMITTING);
 		priorRequestsWithoutResponse.add(dtr);
 		if (PermissionsManager.get().getOnlineState() == OnlineState.OFFLINE) {
-			ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-					.ping(new AsyncCallback<Void>() {
+			ClientBase.getCommonRemoteServiceAsyncInstance().ping(
+					new AsyncCallback<Void>() {
 						@Override
 						public void onFailure(Throwable caught) {
 							// ignore - expected(ish) behaviour - if it's a
@@ -399,8 +399,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 	}
 
 	protected void commitRemote(AsyncCallback<DomainTransformResponse> callback) {
-		ClientLayerLocator.get().commonRemoteServiceAsyncInstance()
-				.transform(committingRequest, callback);
+		ClientBase.getCommonRemoteServiceAsyncInstance().transform(
+				committingRequest, callback);
 		committingRequest = null;
 	}
 

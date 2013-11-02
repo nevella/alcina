@@ -19,8 +19,9 @@ import java.util.Map;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.OkCancelPanel;
@@ -72,7 +73,7 @@ public class ClientUtils {
 				return true;
 			}
 			StatusCodeException sce = (StatusCodeException) t;
-			ClientLayerLocator.get().notifications()
+			Registry.impl(ClientNotifications.class)
 					.log("** Status code exception: " + sce.getStatusCode());
 			boolean internetExplorerErrOffline = BrowserMod
 					.isInternetExplorer() && sce.getStatusCode() > 600;
@@ -143,7 +144,7 @@ public class ClientUtils {
 	}
 
 	public static void notImplemented() {
-		ClientLayerLocator.get().notifications()
+		Registry.impl(ClientNotifications.class)
 				.showWarning("Not yet implemented");
 	}
 

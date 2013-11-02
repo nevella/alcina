@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -51,7 +51,7 @@ public class RenderedLabelCustomiser implements Customiser {
 		public RenderedLabelProvider(Class rendererClass, String widgetCssClass) {
 			this.widgetCssClass = widgetCssClass;
 			renderer = rendererClass == null ? ToStringRenderer.INSTANCE
-					: (Renderer) CommonLocator.get().classLookup()
+					: (Renderer) Reflections.classLookup()
 							.newInstance(rendererClass);
 		}
 

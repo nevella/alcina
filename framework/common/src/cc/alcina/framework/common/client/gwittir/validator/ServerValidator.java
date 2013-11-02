@@ -19,7 +19,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 import com.google.gwt.core.client.GWT;
@@ -144,9 +144,7 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 					psve.setSourceWidget(null);
 				}
 			};
-			ClientLayerLocator
-					.get()
-					.commonRemoteServiceAsyncInstance()
+			ClientBase.getCommonRemoteServiceAsyncInstance()
 					.validateOnServer(
 							Arrays.asList(new ServerValidator[] { this }),
 							callback);

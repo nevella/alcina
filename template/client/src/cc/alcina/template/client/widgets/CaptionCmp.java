@@ -3,8 +3,9 @@ package cc.alcina.template.client.widgets;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissibleAdapter.GroupPermissibleAdapter;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.InputButton;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
 import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
@@ -52,7 +53,7 @@ public class CaptionCmp extends Composite {
 			hp.add(showLogBtn);
 			showLogBtn.addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent event) {
-					ClientLayerLocator.get().notifications().showLog();
+					Registry.impl(ClientNotifications.class).showLog();
 				}
 			});
 			this.redrawBtn = new InputButton("redraw layout");

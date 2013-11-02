@@ -17,8 +17,9 @@ import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 
 /**
  * 
@@ -69,7 +70,7 @@ public class ClientPropertyReflector implements
 		}
 		DisplayInfo displayInfo = getGwPropertyInfo().displayInfo();
 		Class clazz = displayInfo.filterClass();
-		return (CollectionFilter) (clazz == null||clazz==Void.class ? null : CommonLocator.get().classLookup()
+		return (CollectionFilter) (clazz == null||clazz==Void.class ? null : Reflections.classLookup()
 				.newInstance(clazz));
 	}
 
@@ -96,13 +97,14 @@ public class ClientPropertyReflector implements
 
 	@Override
 	public Object getPropertyValue(Object bean) {
-		return CommonLocator.get().propertyAccessor()
+		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
+		return propertyAccessor
 				.getPropertyValue(bean, getPropertyName());
 	}
 
 	@Override
 	public void setPropertyValue(Object bean, Object newValue) {
-		CommonLocator.get().propertyAccessor()
+		Reflections.propertyAccessor()
 				.setPropertyValue(bean, getPropertyName(), newValue);
 	}
 	

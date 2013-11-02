@@ -1,11 +1,13 @@
 package cc.alcina.framework.gwt.client.widget;
 
-import cc.alcina.framework.gwt.client.ide.provider.ImageProvider;
+import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Image;
@@ -32,7 +34,9 @@ public class MaskedColour extends Composite {
 			cStyle.setWidth(colorPixelWidth, Unit.PX);
 			cStyle.setHeight(maskImage.getHeight(), Unit.PX);
 			cStyle.setProperty("lineHeight", maskImage.getHeight(), Unit.PX);
-			Image spacer = ImageProvider.get().getTransparent();
+			Image spacer = AbstractImagePrototype.create(
+					((StandardDataImages) GWT.create(StandardDataImages.class))
+							.transparent()).createImage();
 			Style spacerStyle = spacer.getElement().getStyle();
 			spacerStyle.setWidth(colorPixelWidth, Unit.PX);
 			spacerStyle.setHeight(maskImage.getHeight(), Unit.PX);
@@ -79,7 +83,6 @@ public class MaskedColour extends Composite {
 			style.setMarginRight(right, Unit.PX);
 			style.setMarginBottom(bottom, Unit.PX);
 			style.setMarginLeft(left, Unit.PX);
-			
 		}
 
 		public void pad(Widget widget) {

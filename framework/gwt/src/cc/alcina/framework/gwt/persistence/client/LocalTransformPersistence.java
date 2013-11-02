@@ -26,10 +26,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.gwt.client.ClientLayerLocator;
+import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackNull;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -213,8 +215,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	public void recordDeltaApplication(DomainModelDeltaSignature signature,
 			AsyncCallback<Void> AsyncCallback) {
-		ClientInstance clientInstance = ClientLayerLocator.get()
-				.getClientInstance();
+		ClientInstance clientInstance = ClientBase.getClientInstance();
 		DeltaApplicationRecord wrapper = new DeltaApplicationRecord(0,
 				signature.toString(), System.currentTimeMillis(),
 				PermissionsManager.get().getUserId(), clientInstance.getId(),
@@ -307,8 +308,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 						getPersistedTransforms().remove(i);
 					}
 					DomainTransformRequest rq = new DomainTransformRequest();
-					rq.setClientInstance(ClientLayerLocator.get()
-							.getClientInstance());
+					rq.setClientInstance(ClientBase.getClientInstance());
 					rq.setRequestId(0);
 					rq.setEvents(new ArrayList<DomainTransformEvent>(
 							getCommitToStorageTransformListener()
@@ -424,9 +424,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	protected void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, ModalNotifier notifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
-		ClientLayerLocator
-				.get()
-				.commonRemoteServiceAsyncInstance()
+		ClientBase.getCommonRemoteServiceAsyncInstance()
 				.persistOfflineTransforms(uncommitted,
 						postPersistOfflineTransformsCallback);
 	}
@@ -440,9 +438,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	protected void showOfflineLimitMessage() {
-		ClientLayerLocator
-				.get()
-				.notifications()
+		Registry.impl(ClientNotifications.class)
 				.showError(
 						"Unable to open offline session",
 						new Exception("Only one tab may be open "
@@ -450,9 +446,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	}
 
 	protected void showUnableToLoadOfflineMessage() {
-		ClientLayerLocator
-				.get()
-				.notifications()
+		Registry.impl(ClientNotifications.class)
 				.showMessage(
 						"<b>Unable to open offline session</b><br><br>"
 								+ "No data saved");
@@ -541,13 +535,13 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		}
 
 		protected void onComplete() {
-			ClientLayerLocator.get().notifications().metricLogStart("persist");
+			Registry.impl(ClientNotifications.class).metricLogStart("persist");
 			sb = handler.finishSerialization(sb);
 			wrapper.setText(sb.toString());
 			persist(wrapper, new AsyncCallbackStd() {
 				@Override
 				public void onSuccess(Object result) {
-					ClientLayerLocator.get().notifications()
+					Registry.impl(ClientNotifications.class)
 							.metricLogEnd("persist");
 				}
 			});

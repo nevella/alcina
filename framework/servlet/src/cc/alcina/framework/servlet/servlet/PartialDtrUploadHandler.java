@@ -30,7 +30,7 @@ public class PartialDtrUploadHandler {
 			throws WebException {
 		try {
 			PartialDtrUploadResponse response = new PartialDtrUploadResponse();
-			File dataFolder = Registry.impl(ServletLayerObjects.class).getDataFolder();
+			File dataFolder = ServletLayerObjects.get().getDataFolder();
 			File dir = new File(dataFolder.getPath() + File.separator
 					+ "offlineTransforms-partial");
 			dir.mkdirs();
@@ -124,7 +124,7 @@ public class PartialDtrUploadHandler {
 				}
 				response.committed = true;
 			}
-			Registry.impl(ServletLayerObjects.class)
+			ServletLayerObjects.get()
 					.getMetricLogger()
 					.info(String.format(
 							"Client instance id:%s - Partial dtr upload - %s",

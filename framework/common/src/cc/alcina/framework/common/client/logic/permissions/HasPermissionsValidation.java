@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.CommonLocator;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public interface HasPermissionsValidation {
@@ -22,7 +22,7 @@ public interface HasPermissionsValidation {
 				}
 			}
 			List<Class> permissibleChildClasses = new ArrayList<Class>();
-			PermissibleChildClasses pcc = CommonLocator.get().classLookup()
+			PermissibleChildClasses pcc = Reflections.classLookup()
 					.getAnnotationForClass(hpv.getClass(),
 							PermissibleChildClasses.class);
 			if (pcc != null) {
