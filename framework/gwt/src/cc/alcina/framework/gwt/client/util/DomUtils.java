@@ -117,7 +117,7 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (lastContainer != container) {
 				lastContainer = container;
 				xpathMap = new LinkedHashMap<String, Node>();
-				ClientNotifications notifications = Registry.impl(ClientNotifications.class);
+				ClientNotifications notifications = Registry.implOrNull(ClientNotifications.class);
 				if (notifications != null) {
 					notifications.metricLogStart(DOM_XPATH_MAP);
 				}
@@ -728,7 +728,7 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (lastContainer != container) {
 				lastContainer = container;
 				xpathMap = new LinkedHashMap<String, Node>();
-				ClientNotifications notifications = Registry.impl(ClientNotifications.class);
+				ClientNotifications notifications = Registry.implOrNull(ClientNotifications.class);
 				if (notifications != null) {
 					notifications.metricLogStart(DOM_XPATH_MAP);
 				}
@@ -756,7 +756,7 @@ public class DomUtils implements NodeFromXpathProvider {
 			generateMapItr(itrStack.pop());
 		}
 		if (itrStack.isEmpty()) {
-			ClientNotifications notifications = Registry.impl(ClientNotifications.class);
+			ClientNotifications notifications = Registry.implOrNull(ClientNotifications.class);
 			if (notifications != null) {
 				notifications.metricLogEnd(DOM_XPATH_MAP);
 			}
