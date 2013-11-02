@@ -317,6 +317,7 @@ public class Registry {
 				}
 			}
 		}
+		singletons.clear();
 	}
 
 	@Override
