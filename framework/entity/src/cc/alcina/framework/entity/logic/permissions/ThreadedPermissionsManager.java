@@ -19,10 +19,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.entityaccess.UserlandProvider;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 
@@ -49,17 +49,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		return new ThreadedPermissionsManager();
 	}
 
-	public IUser pushSystemUser() {
-		IUser systemUser = Registry.impl(UserlandProvider.class).getSystemUser(
-				true);
-		pushUser(systemUser, LoginState.LOGGED_IN, true);
-		return systemUser;
-	}
-
-	public IUser popSystemUser() {
-		return popUser();
-	}
-
+	
 	// This should never be necessary, if the code always surrounds user
 	// push/pop in try/finally...but...
 	public void reset() {

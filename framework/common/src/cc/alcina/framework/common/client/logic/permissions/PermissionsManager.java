@@ -169,8 +169,8 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public boolean checkEffectivePropertyPermission(Object bean,
 			String propertyName, boolean read) {
 		Class<? extends Object> clazz = bean.getClass();
-		ObjectPermissions op = Reflections.classLookup()
-				.getAnnotationForClass(clazz, ObjectPermissions.class);
+		ObjectPermissions op = Reflections.classLookup().getAnnotationForClass(
+				clazz, ObjectPermissions.class);
 		PropertyPermissions pp = Reflections.propertyAccessor()
 				.getAnnotationForProperty(clazz, PropertyPermissions.class,
 						propertyName);
@@ -666,13 +666,15 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 				List<Class> lookup = registry.lookup(false,
 						PermissionsExtensionForClass.class, void.class, false);
 				for (Class clazz : lookup) {
-					PermissionsExtensionForClass ext = (PermissionsExtensionForClass) Reflections.classLookup().newInstance(clazz);
+					PermissionsExtensionForClass ext = (PermissionsExtensionForClass) Reflections
+							.classLookup().newInstance(clazz);
 					extensionMapForClass.put(ext.getGenericClass(), ext);
 				}
 				lookup = registry.lookup(false,
 						PermissionsExtensionForRule.class, void.class, false);
 				for (Class clazz : lookup) {
-					PermissionsExtensionForRule ext = (PermissionsExtensionForRule) Reflections.classLookup().newInstance(clazz);
+					PermissionsExtensionForRule ext = (PermissionsExtensionForRule) Reflections
+							.classLookup().newInstance(clazz);
 					extensionMapForRule.put(ext.getRuleName(), ext);
 				}
 			} catch (Exception e) {
@@ -707,5 +709,16 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 
 	public static void setAnonymousUserName(String anonymousUserName) {
 		PermissionsManager.anonymousUserName = anonymousUserName;
+	}
+
+	public IUser pushSystemUser() {
+		IUser systemUser = Registry.impl(UserlandProvider.class).getSystemUser(
+				true);
+		pushUser(systemUser, LoginState.LOGGED_IN, true);
+		return systemUser;
+	}
+
+	public IUser popSystemUser() {
+		return popUser();
 	}
 }
