@@ -32,7 +32,13 @@ public class AlcinaProperties {
 	}
 
 	public static AlcinaProperties get() {
-		return Registry.impl(AlcinaProperties.class);
+		AlcinaProperties singleton = Registry
+				.checkSingleton(AlcinaProperties.class);
+		if (singleton == null) {
+			singleton = new AlcinaProperties();
+			Registry.registerSingleton(AlcinaProperties.class, singleton);
+		}
+		return singleton;
 	}
 
 	public static String get(Class clazz, String key) {
