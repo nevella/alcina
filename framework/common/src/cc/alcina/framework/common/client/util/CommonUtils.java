@@ -660,6 +660,19 @@ public class CommonUtils {
 		return s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase();
 	}
 
+	public static String deInfix(String s) {
+		if (isNullOrEmpty(s)) {
+			return s;
+		}
+		StringBuilder buf = new StringBuilder();
+		for (int i = 0; i < s.length(); i++) {
+			String c = s.substring(i, i + 1);
+			buf.append(c.toUpperCase().equals(c) ? " " : "");
+			buf.append(i == 0 ? c.toUpperCase() : c.toLowerCase());
+		}
+		return buf.toString();
+	}
+
 	public static Collection wrapInCollection(Object o) {
 		if (o == null) {
 			return null;
@@ -992,9 +1005,10 @@ public class CommonUtils {
 		}
 		return result;
 	}
-	public static String padLinesLeft(String block, String prefix){
-		StringBuilder sb=new StringBuilder();
-		for(String line:block.split("\n")){
+
+	public static String padLinesLeft(String block, String prefix) {
+		StringBuilder sb = new StringBuilder();
+		for (String line : block.split("\n")) {
 			sb.append(prefix);
 			sb.append(line);
 			sb.append("\n");

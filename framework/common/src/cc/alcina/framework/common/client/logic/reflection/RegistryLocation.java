@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  */
 public @interface RegistryLocation {
 	public static final int DEFAULT_PRIORITY = 10;
-
+	int PREFERRED_LIBRARY_PRIORITY = 20;
 	int MANUAL_PRIORITY = 50;
 
 	public enum ImplementationType {
