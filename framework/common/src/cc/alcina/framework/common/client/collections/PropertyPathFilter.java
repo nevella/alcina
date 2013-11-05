@@ -41,7 +41,7 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 		}
 		if (propertyValue instanceof Collection) {
 			for (Object item : (Collection) propertyValue) {
-				if (propertyFilter.allow(item)) {
+				if (propertyFilter.matchesValue(item)) {
 					return true;
 				}
 			}
