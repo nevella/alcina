@@ -6,21 +6,31 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
 public class PropertyPathFilter<T> implements CollectionFilter<T> {
-	public static final transient Object NOT_NULL = new Object();
-
 	private PropertyPathAccessor accessor;
 
 	private Object targetValue;
 
 	private boolean targetIsCollection;
 
+	private FilterOperator filterOperator;
+
+	private PropertyFilter propertyFilter;
+
 	public PropertyPathFilter() {
 	}
 
 	public PropertyPathFilter(String key, Object value) {
-		accessor = new PropertyPathAccessor(key);
-		this.targetValue = value;
+		this(key, value, FilterOperator.EQ);
+	}
+
+	public PropertyPathFilter(String propertyPath, Object propertyValue,
+			FilterOperator filterOperator) {
+		this.filterOperator = filterOperator;
+		accessor = new PropertyPathAccessor(propertyPath);
+		this.targetValue = propertyValue;
 		targetIsCollection = targetValue instanceof Collection;
+		this.propertyFilter = new PropertyFilter(propertyPath, propertyValue,
+				filterOperator);
 	}
 
 	@Override
@@ -29,17 +39,14 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 		if (targetIsCollection) {
 			return ((Collection) targetValue).contains(o);
 		}
-		if (targetValue == NOT_NULL && propertyValue != null) {
-			return true;
-		}
 		if (propertyValue instanceof Collection) {
 			for (Object item : (Collection) propertyValue) {
-				if (CommonUtils.equalsWithNullEquality(item, targetValue)) {
+				if (propertyFilter.allow(item)) {
 					return true;
 				}
 			}
 		}
-		if (CommonUtils.equalsWithNullEquality(propertyValue, targetValue)) {
+		if (propertyFilter.matchesValue(propertyValue)) {
 			return true;
 		}
 		return false;
@@ -47,7 +54,8 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("Filter: %s=%s", accessor.getPropertyPath(),
+		return CommonUtils.formatJ("Filter: %s%s%s",
+				accessor.getPropertyPath(), filterOperator.operationText(),
 				targetValue);
 	}
 }

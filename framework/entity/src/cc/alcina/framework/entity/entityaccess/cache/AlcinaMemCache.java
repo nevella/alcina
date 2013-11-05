@@ -465,7 +465,7 @@ public class AlcinaMemCache {
 		}
 		final CollectionFilter filter = cacheFilter.collectionFilter != null ? cacheFilter.collectionFilter
 				: new PropertyPathFilter(cacheFilter.propertyPath,
-						cacheFilter.propertyValue);
+						cacheFilter.propertyValue,cacheFilter.filterOperator);
 		if (existing == null) {
 			List filtered = CollectionFilters.filter(cache.rawValues(clazz),
 					filter);

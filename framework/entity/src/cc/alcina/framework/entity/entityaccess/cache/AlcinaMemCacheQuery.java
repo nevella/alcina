@@ -3,10 +3,12 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -43,6 +45,9 @@ public class AlcinaMemCacheQuery {
 
 	public AlcinaMemCacheQuery filter(String key, Object value) {
 		return filter(new CacheFilter(key, value));
+	}
+	public AlcinaMemCacheQuery filter(String key, Object value,FilterOperator operator) {
+		return filter(new CacheFilter(key, value,operator));
 	}
 
 	public <T extends HasIdAndLocalId> T find(Class<T> clazz) {
@@ -104,4 +109,5 @@ public class AlcinaMemCacheQuery {
 		return CommonUtils.formatJ("MemCacheQuery:\n%s",
 				CommonUtils.join(filters, ",\n"));
 	}
+
 }
