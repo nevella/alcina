@@ -972,60 +972,62 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		if (dte.getNewValue() instanceof Set) {
 			Set typeCheck = (Set) evt.getNewValue();
-			typeCheck = (Set) (typeCheck.isEmpty() ? evt.getOldValue()
-					: typeCheck);
+			typeCheck = (Set) (typeCheck.isEmpty() && evt.getOldValue() != null ? evt
+					.getOldValue() : typeCheck);
 			// Note, we explicitly clear nulls here - it would require an
 			// expansion of the protocols to implement them
-			if (typeCheck.iterator().next() instanceof HasIdAndLocalId) {
-				Set<HasIdAndLocalId> oldValues = (Set) evt.getOldValue();
-				Set<HasIdAndLocalId> newValues = (Set) evt.getNewValue();
-				oldValues.remove(null);
-				newValues.remove(null);
-				for (HasIdAndLocalId hili : newValues) {
-					if (!oldValues.contains(hili)) {
-						dte = createTransformFromPropertyChange(evt);
-						dte.setNewValue(null);
-						dte.setValueId(hili.getId());
-						dte.setValueLocalId(hili.getLocalId());
-						dte.setValueClass(hili.getClass());
-						dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
-						transforms.add(dte);
+			if (typeCheck.iterator().hasNext()) {
+				if (typeCheck.iterator().next() instanceof HasIdAndLocalId) {
+					Set<HasIdAndLocalId> oldValues = (Set) evt.getOldValue();
+					Set<HasIdAndLocalId> newValues = (Set) evt.getNewValue();
+					oldValues.remove(null);
+					newValues.remove(null);
+					for (HasIdAndLocalId hili : newValues) {
+						if (!oldValues.contains(hili)) {
+							dte = createTransformFromPropertyChange(evt);
+							dte.setNewValue(null);
+							dte.setValueId(hili.getId());
+							dte.setValueLocalId(hili.getLocalId());
+							dte.setValueClass(hili.getClass());
+							dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
+							transforms.add(dte);
+						}
 					}
-				}
-				for (HasIdAndLocalId hili : oldValues) {
-					if (!newValues.contains(hili)) {
-						dte = createTransformFromPropertyChange(evt);
-						dte.setNewValue(null);
-						dte.setValueId(hili.getId());
-						dte.setValueLocalId(hili.getLocalId());
-						dte.setValueClass(hili.getClass());
-						dte.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
-						transforms.add(dte);
+					for (HasIdAndLocalId hili : oldValues) {
+						if (!newValues.contains(hili)) {
+							dte = createTransformFromPropertyChange(evt);
+							dte.setNewValue(null);
+							dte.setValueId(hili.getId());
+							dte.setValueLocalId(hili.getLocalId());
+							dte.setValueClass(hili.getClass());
+							dte.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
+							transforms.add(dte);
+						}
 					}
-				}
-			} else if (typeCheck.iterator().next() instanceof Enum) {
-				Set<Enum> oldValues = (Set) evt.getOldValue();
-				Set<Enum> newValues = (Set) evt.getNewValue();
-				oldValues.remove(null);
-				newValues.remove(null);
-				for (Enum e : newValues) {
-					if (!oldValues.contains(e)) {
-						dte = createTransformFromPropertyChange(evt);
-						dte.setNewValue(null);
-						dte.setNewStringValue(e.name());
-						dte.setValueClass(e.getDeclaringClass());
-						dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
-						transforms.add(dte);
+				} else if (typeCheck.iterator().next() instanceof Enum) {
+					Set<Enum> oldValues = (Set) evt.getOldValue();
+					Set<Enum> newValues = (Set) evt.getNewValue();
+					oldValues.remove(null);
+					newValues.remove(null);
+					for (Enum e : newValues) {
+						if (!oldValues.contains(e)) {
+							dte = createTransformFromPropertyChange(evt);
+							dte.setNewValue(null);
+							dte.setNewStringValue(e.name());
+							dte.setValueClass(e.getDeclaringClass());
+							dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
+							transforms.add(dte);
+						}
 					}
-				}
-				for (Enum e : oldValues) {
-					if (!newValues.contains(e)) {
-						dte = createTransformFromPropertyChange(evt);
-						dte.setNewValue(null);
-						dte.setNewStringValue(e.name());
-						dte.setValueClass(e.getDeclaringClass());
-						dte.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
-						transforms.add(dte);
+					for (Enum e : oldValues) {
+						if (!newValues.contains(e)) {
+							dte = createTransformFromPropertyChange(evt);
+							dte.setNewValue(null);
+							dte.setNewStringValue(e.name());
+							dte.setValueClass(e.getDeclaringClass());
+							dte.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
+							transforms.add(dte);
+						}
 					}
 				}
 			}

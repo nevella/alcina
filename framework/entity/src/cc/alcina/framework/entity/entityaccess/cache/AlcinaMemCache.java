@@ -142,7 +142,8 @@ public class AlcinaMemCache {
 					TaggedLogger.INFO, TaggedLogger.DEBUG);
 
 	public static AlcinaMemCache get() {
-		AlcinaMemCache singleton = Registry.checkSingleton(AlcinaMemCache.class);
+		AlcinaMemCache singleton = Registry
+				.checkSingleton(AlcinaMemCache.class);
 		if (singleton == null) {
 			singleton = new AlcinaMemCache();
 			Registry.registerSingleton(AlcinaMemCache.class, singleton);
@@ -465,7 +466,7 @@ public class AlcinaMemCache {
 		}
 		final CollectionFilter filter = cacheFilter.collectionFilter != null ? cacheFilter.collectionFilter
 				: new PropertyPathFilter(cacheFilter.propertyPath,
-						cacheFilter.propertyValue,cacheFilter.filterOperator);
+						cacheFilter.propertyValue, cacheFilter.filterOperator);
 		if (existing == null) {
 			List filtered = CollectionFilters.filter(cache.rawValues(clazz),
 					filter);
@@ -1182,7 +1183,7 @@ public class AlcinaMemCache {
 		}
 	}
 
-	static class ColumnDescriptor {
+	class ColumnDescriptor {
 		private PropertyDescriptor pd;
 
 		private Class<?> type;
@@ -1253,7 +1254,13 @@ public class AlcinaMemCache {
 			}
 			if (Enum.class.isAssignableFrom(type)) {
 				int eIdx = rs.getInt(idx);
-				return rs.wasNull() ? null : type.getEnumConstants()[eIdx];
+				Object[] enumConstants = type.getEnumConstants();
+				if (eIdx >= enumConstants.length) {
+					warnLogger.format("Invalid enum index : %s:%s\n",
+							type.getSimpleName(), eIdx);
+					return null;
+				}
+				return rs.wasNull() ? null : enumConstants[eIdx];
 			}
 			throw new RuntimeException("Unhandled rs type: "
 					+ type.getSimpleName());
