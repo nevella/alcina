@@ -150,7 +150,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public boolean runningLastCommand;
 
 	public void clear() {
-		consoleLeft.setText("");
+		consoleLeft.invoke(new Runnable() {
+			@Override
+			public void run() {
+				consoleLeft.setText("");
+			}
+		});
 	}
 
 	public void setCommandLineText(String text) {
@@ -336,7 +341,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			if (!c.silent()) {
 				System.out.format("%s...\n", lastCommand);
 			}
-			consoleRight.setText("");
 			long l1 = System.currentTimeMillis();
 			c.configure();
 			if (c.clsBeforeRun()) {
@@ -764,7 +768,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public String getMultilineInput(String prompt) {
-		final JTextArea textArea = new JTextArea(10, 40);
+		return getMultilineInput(prompt, 10, 40);
+	}
+
+	public String getMultilineInput(String prompt, int rows, int cols) {
+		final JTextArea textArea = new JTextArea(rows, cols);
 		textArea.addAncestorListener(new AncestorListener() {
 			@Override
 			public void ancestorRemoved(AncestorEvent event) {

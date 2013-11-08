@@ -201,8 +201,9 @@ public class SortedMultikeyMap<V> implements MultikeyMap<V>, Serializable {
 		return delegate;
 	}
 
-	public List<List> asTuples() {
-		return multikeyMapSupport.asTuples();
+	@Override
+	public List<List> asTuples(int depth) {
+		return multikeyMapSupport.asTuples(depth);
 	}
 
 	@Override

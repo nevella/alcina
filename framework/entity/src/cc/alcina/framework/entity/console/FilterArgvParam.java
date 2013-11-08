@@ -33,4 +33,8 @@ public class FilterArgvParam {
 	public String valueOrDefault(String defaultValue) {
 		return value != null ? value : defaultValue;
 	}
+
+	public long getLong() {
+		return Long.parseLong(valueOrDefault("0"));
+	}
 }

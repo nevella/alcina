@@ -16,4 +16,11 @@ public class PropertyConverter<I, O> implements Converter<I, O> {
 		Object propertyValue = accessor.getChainedProperty(o);
 		return (O) propertyValue;
 	}
+	public static class LongIdPropertyConverter<I> extends PropertyConverter<I, Long>{
+
+		public LongIdPropertyConverter() {
+			super("id");
+		}
+		
+	}
 }

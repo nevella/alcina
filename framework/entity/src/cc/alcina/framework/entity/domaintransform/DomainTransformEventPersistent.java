@@ -13,12 +13,16 @@
  */
 package cc.alcina.framework.entity.domaintransform;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -87,8 +91,34 @@ public abstract class DomainTransformEventPersistent extends
 
 	public void copyFromNonPersistentEvent(DomainTransformEvent event) {
 		ResourceUtilities.copyBeanProperties(event, this, null, true);
-		if(event.getTransformType()==TransformType.CREATE_OBJECT){
+		if (event.getTransformType() == TransformType.CREATE_OBJECT) {
 			setGeneratedServerId(event.getObjectId());
 		}
+	}
+
+	public void fromResultSet(ResultSet rs) throws Exception {
+		setNewStringValue(rs.getString("newStringValue"));
+		setPropertyName(rs.getString("propertyname"));
+		setUtcDate(rs.getTimestamp("utcdate"));
+		setObjectId(rs.getLong("objectid"));
+		setObjectLocalId(rs.getLong("objectlocalid"));
+		setValueId(rs.getLong("valueid"));
+		setValueLocalId(rs.getLong("valuelocalid"));
+		setEventId(rs.getLong("eventid"));
+		setId(rs.getLong("id"));
+		setServerCommitDate(rs.getTimestamp("servercommitdate"));
+		setGeneratedServerId(rs.getLong("generatedserverid"));
+		setObjectClassRef(ClassRef.forId(rs.getLong("objectClassRef_id")));
+		setValueClassRef(ClassRef.forId(rs.getLong("valueclassref_id")));
+		setObjectVersionNumber(rs.getInt("objectversionnumber"));
+		setValueVersionNumber(rs.getInt("valueversionnumber"));
+		int i = rs.getInt("transformtype");
+		TransformType tt = rs.wasNull() ? null : TransformType.class
+				.getEnumConstants()[i];
+		setTransformType(tt);
+		i = rs.getInt("committype");
+		CommitType ct = rs.wasNull() ? null : CommitType.class
+				.getEnumConstants()[i];
+		setCommitType(ct);
 	}
 }

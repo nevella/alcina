@@ -142,10 +142,10 @@ public class MultikeyMapSupport<V> implements Serializable {
 	}
 	
 
-	public List<List> asTuples() {
+	public List<List> asTuples(int maxDepth) {
 		List<List> result = new ArrayList<List>();
 		result.add(new ArrayList<Object>());// empty key, depth 0
-		for (int depth = 0; depth < multi.getDepth(); depth++) {
+		for (int depth = 0; depth < maxDepth; depth++) {
 			List<List> next = new ArrayList<List>();
 			for (List key : result) {
 				Object[] kArr = (Object[]) key.toArray(new Object[key.size()]);

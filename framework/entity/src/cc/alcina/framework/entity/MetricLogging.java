@@ -166,7 +166,9 @@ public class MetricLogging {
 					}
 				}
 			} else {
-				System.out.println(message);
+				if (!muted) {
+					System.out.println(message);
+				}
 			}
 		}
 		if (!averageCount.containsKey(key)) {
@@ -211,7 +213,7 @@ public class MetricLogging {
 	}
 
 	public synchronized void reset() {
-		if(isMuted()){
+		if (isMuted()) {
 			System.out.println("Unmuting muted metric thread");
 			Thread.dumpStack();
 		}

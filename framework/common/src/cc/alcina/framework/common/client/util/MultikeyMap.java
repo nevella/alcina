@@ -56,7 +56,7 @@ public interface MultikeyMap<V> {
 
 	public abstract void clear();
 
-	public abstract List<List> asTuples();
+	public abstract List<List> asTuples(int depth);
 
 	public abstract boolean checkKeys(Object[] keys);
 }

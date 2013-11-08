@@ -364,6 +364,30 @@ public class DevConsoleCommandTransforms {
 		}
 	}
 
+	static boolean classRefsEnsured;
+
+	public static void ensureClassRefs(Connection conn) throws Exception {
+		if (classRefsEnsured) {
+			return;
+		}
+		System.out.println("getting classrefs...");
+		Statement ps = conn.createStatement();
+		ResultSet rs = ps.executeQuery("select * from classref");
+		while (rs.next()) {
+			long id = rs.getLong("id");
+			String cn = rs.getString("refclassname");
+			Class clazz = Registry.get().lookupSingle(
+					AlcinaPersistentEntityImpl.class, ClassRef.class);
+			ClassRef cr = (ClassRef) clazz.newInstance();
+			cr.setId(id);
+			cr.setRefClassName(cn);
+			cr.setRefClass(Class.forName(cn));
+			ClassRef.add(Collections.singleton(cr));
+		}
+		ps.close();
+		classRefsEnsured = true;
+	}
+
 	public static class CmdListTransforms extends DevConsoleCommand {
 		@Override
 		public boolean canUseProductionConn() {
@@ -401,7 +425,8 @@ public class DevConsoleCommandTransforms {
 			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
-			CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class)
+			CommonPersistenceLocal cpl = Registry.impl(
+					CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
 			Class<? extends DomainTransformRequestPersistent> clazz = cpl
 					.getImplementation(DomainTransformRequestPersistent.class);
@@ -494,30 +519,6 @@ public class DevConsoleCommandTransforms {
 				ps.close();
 			}
 			return "";
-		}
-
-		static boolean classRefsEnsured;
-
-		private void ensureClassRefs(Connection conn) throws Exception {
-			if (classRefsEnsured) {
-				return;
-			}
-			System.out.println("getting classrefs...");
-			Statement ps = conn.createStatement();
-			ResultSet rs = ps.executeQuery("select * from classref");
-			while (rs.next()) {
-				long id = rs.getLong("id");
-				String cn = rs.getString("refclassname");
-				Class clazz = Registry.get().lookupSingle(
-						AlcinaPersistentEntityImpl.class, ClassRef.class);
-				ClassRef cr = (ClassRef) clazz.newInstance();
-				cr.setId(id);
-				cr.setRefClassName(cn);
-				cr.setRefClass(Class.forName(cn));
-				ClassRef.add(Collections.singleton(cr));
-			}
-			ps.close();
-			classRefsEnsured = true;
 		}
 
 		private void printFullUsage() {
