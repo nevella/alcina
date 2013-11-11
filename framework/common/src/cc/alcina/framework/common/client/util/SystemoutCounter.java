@@ -9,9 +9,22 @@ public class SystemoutCounter {
 
 	private int dotCtr;
 
+	private boolean showPercentAtEndOfLine;
+
+	private int size;
+
+	int lines = 0;
+
 	public SystemoutCounter(int ticks, int dotsPerLine) {
+		this(ticks, dotsPerLine, 1, false);
+	}
+
+	public SystemoutCounter(int ticks, int dotsPerLine, int size,
+			boolean showPercentAtEndOfLine) {
 		this.ticks = ticks;
 		this.dotsPerLine = dotsPerLine;
+		this.size = size;
+		this.showPercentAtEndOfLine = showPercentAtEndOfLine;
 	}
 
 	public void tick() {
@@ -24,7 +37,12 @@ public class SystemoutCounter {
 			System.out.print(".");
 			if (++dotCtr == dotsPerLine) {
 				dotCtr = 0;
+				if (message.isEmpty() && showPercentAtEndOfLine) {
+					message = CommonUtils.formatJ(" - %s%", (dotsPerLine
+							* (lines + 1) * ticks * 100 / size));
+				}
 				System.out.println("  " + message);
+				lines++;
 			}
 		}
 	}

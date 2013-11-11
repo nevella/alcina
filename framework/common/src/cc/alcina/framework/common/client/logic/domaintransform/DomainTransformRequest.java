@@ -187,4 +187,24 @@ public class DomainTransformRequest implements Serializable {
 		}
 		return result;
 	}
+
+	public boolean checkForDuplicateEvents() {
+		boolean duplicate = false;
+		if (events.size() > 0 && events.size() % 2 == 0) {
+			int halfLength = events.size() / 2;
+			duplicate = true;
+			for (int i = 0; i < halfLength; i++) {
+				if (!events.get(i).toString()
+						.equals(events.get(i + halfLength).toString())) {
+					duplicate = false;
+					break;
+				}
+			}
+			if (duplicate) {
+				events = new ArrayList<DomainTransformEvent>(events.subList(0,
+						halfLength));
+			}
+		}
+		return duplicate;
+	}
 }

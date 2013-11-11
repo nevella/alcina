@@ -1054,6 +1054,7 @@ public class AlcinaMemCache {
 				}
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			GlobalTopicPublisher.get().publishTopic(TOPIC_UPDATE_EXCEPTION, e);
 			throw new MemcacheException(e);
 		} finally {
