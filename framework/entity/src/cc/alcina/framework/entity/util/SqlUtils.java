@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,29 +88,44 @@ public class SqlUtils {
 
 	public static void dumpResultSet(ResultSet rs,
 			Map<String, ColumnFormatter> formatters) throws SQLException {
-		UnsortedMultikeyMap<String> values = new UnsortedMultikeyMap<String>(2);
-		int row = 0;
-		List<String> columnNames = new ArrayList<String>();
-		for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
-			columnNames.add(rs.getMetaData().getColumnName(i));
+		List<String> columnNames = getColumnNames(rs);
+		UnsortedMultikeyMap<String> values = getValues(rs, formatters,
+				columnNames, null);
+		ReportUtils.dumpTable(values, columnNames);
+		if (values.keySet().isEmpty()) {
+			System.out.println("No rows returned");
 		}
+	}
+
+	public static UnsortedMultikeyMap<String> getValues(ResultSet rs,
+			Map<String, ColumnFormatter> formatters, List<String> columnNames,
+			String keyField) throws SQLException {
+		columnNames = columnNames == null ? getColumnNames(rs) : columnNames;
+		int row = 0;
+		UnsortedMultikeyMap<String> values = new UnsortedMultikeyMap<String>(2);
 		while (rs.next()) {
+			Object key = keyField == null ? row : rs.getString(keyField);
 			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
 				String columnName = columnNames.get(i - 1);
 				String value = null;
-				if (formatters.containsKey(columnName)) {
+				if (formatters != null && formatters.containsKey(columnName)) {
 					value = formatters.get(columnName).format(rs, i);
 				} else {
 					value = CommonUtils.nullToEmpty(rs.getString(i));
 				}
 				int j = i - 1;
-				values.put(row, j, value);
+				values.put(key, keyField == null ? j : columnName, value);
 			}
 			row++;
 		}
-		ReportUtils.dumpTable(values, columnNames);
-		if (row == 0) {
-			System.out.println("No rows returned");
+		return values;
+	}
+
+	static List<String> getColumnNames(ResultSet rs) throws SQLException {
+		List<String> columnNames = new ArrayList<String>();
+		for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
+			columnNames.add(rs.getMetaData().getColumnName(i));
 		}
+		return columnNames;
 	}
 }

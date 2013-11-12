@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet;
 
+import javax.servlet.http.HttpServletRequest;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
@@ -96,5 +98,11 @@ public class ServletLayerUtils {
 		}
 		throw new RuntimeException("Generated object not found - "
 				+ returnIdFor);
+	}
+	public static void logRequest(HttpServletRequest req){
+		System.out
+		.format("\nRequest: %s\n Querystring: %s\n Referer: %s\n",
+				req.getRequestURI(), req.getQueryString(),
+				req.getHeader("referer"));
 	}
 }
