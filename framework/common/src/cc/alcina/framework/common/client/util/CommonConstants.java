@@ -1,8 +1,10 @@
 package cc.alcina.framework.common.client.util;
 
 public class CommonConstants {
-	public static final String HTML_BLOCKS = ",ADDRESS,BLOCKQUOTE,DIV,DL,H1,H2,H3,H4,H5,"
-			+ "H6,IFRAME,ILAYER,LAYER,OL,TABLE,TR,UL,TD,P,HR,BR,LI,CENTER,PRE,";
+	public static final String HTML_BLOCKS = ",ARTICLE,ADDRESS,ASIDE,AUDIO,BLOCKQUOTE,"
+			+ " BR,CANVAS,CENTER,DD,DIV,DL,FIELDSET,FIGCAPTION,FIGURE,FOOTER,FORM,"
+			+ " H1,H2,H3,H4,H5,H6,HEADER,HGROUP,HR,IFRAME,ILAYER,LAYER,LI,NOSCRIPT,"
+			+ " OL,OUTPUT,P,PRE,SECTION,TABLE,TD,TFOOT,TR,UL,VIDEO,";
 
 	public static final String HTML_TOPS = ",HEAD,HTML,BODY,";
 
