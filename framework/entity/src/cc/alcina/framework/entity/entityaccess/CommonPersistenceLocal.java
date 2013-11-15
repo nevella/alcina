@@ -119,9 +119,9 @@ public interface CommonPersistenceLocal {
 
 	public <T extends HasId> T ensurePersistent(T obj);
 
-	public DomainTransformLayerWrapper transformInPersistenceContext(
+	public void transformInPersistenceContext(
 			TransformPersister persister,
-			TransformPersistenceToken persistenceToken);
+			TransformPersistenceToken persistenceToken, DomainTransformLayerWrapper wrapper);
 
 	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
 

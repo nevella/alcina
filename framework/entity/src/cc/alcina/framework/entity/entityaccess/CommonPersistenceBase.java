@@ -60,8 +60,8 @@ import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
@@ -116,8 +116,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl) {
 		AppPersistenceBase.checkNotReadOnly();
 		if (!tryImpl
-				|| !Registry.impl(JPAImplementation.class)
-						.bulkDelete(getEntityManager(), clazz, ids)) {
+				|| !Registry.impl(JPAImplementation.class).bulkDelete(
+						getEntityManager(), clazz, ids)) {
 			List<Object> resultList = getEntityManager().createQuery(
 					String.format("from %s where id in %s ",
 							clazz.getSimpleName(),
@@ -137,7 +137,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		tm.setEntityManager(getEntityManager());
 		List<ObjectDeltaResult> delta = tm.getObjectDelta(specs);
 		delta = new EntityUtils().detachedClone(delta);
-		EntityLayerObjects.get()
+		EntityLayerObjects
+				.get()
 				.getMetricLogger()
 				.debug("object delta get - total (ms):"
 						+ (System.currentTimeMillis() - t1));
@@ -181,8 +182,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			return newT;
 		}
 		AppPersistenceBase.checkNotReadOnly();
-		PropertyDescriptor descriptor = SEUtilities.getPropertyDescriptorByName(
-				t.getClass(), key);
+		PropertyDescriptor descriptor = SEUtilities
+				.getPropertyDescriptorByName(t.getClass(), key);
 		descriptor.getWriteMethod().invoke(t, value);
 		return getEntityManager().merge(t);
 	}
@@ -323,8 +324,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				AppPersistenceBase.checkNotReadOnly();
 				T inst = clazz.newInstance();
 				getEntityManager().persist(inst);
-				PropertyDescriptor descriptor = SEUtilities.getPropertyDescriptorByName(
-						inst.getClass(), key);
+				PropertyDescriptor descriptor = SEUtilities
+						.getPropertyDescriptorByName(inst.getClass(), key);
 				descriptor.getWriteMethod().invoke(inst, value);
 				return inst;
 			}
@@ -427,15 +428,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.allEvents(dtrps);
 			DetachedEntityCache cache = cacheEntities(events, false);
 			for (DomainTransformEvent event : events) {
-				event.setSource((HasIdAndLocalId) cache.get(event.getObjectClass(),
-						event.getObjectId()));
+				event.setSource((HasIdAndLocalId) cache.get(
+						event.getObjectClass(), event.getObjectId()));
 			}
 		}
 		DetachedEntityCache cache = new DetachedEntityCache();
-		GraphProjectionDataFilter filter = Registry.impl(JPAImplementation.class)
-				.getResolvingFilter(
-						Registry.impl(JPAImplementation.class)
-								.getClassrefInstantiator(), cache);
+		GraphProjectionDataFilter filter = Registry.impl(
+				JPAImplementation.class).getResolvingFilter(
+				Registry.impl(JPAImplementation.class)
+						.getClassrefInstantiator(), cache);
 		GraphProjectionFieldFilter allowSourceFilter = new GraphProjectionFieldFilter() {
 			@Override
 			public boolean permitField(Field field,
@@ -593,8 +594,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					WrapperInfo info = pd.getReadMethod().getAnnotation(
 							WrapperInfo.class);
 					if (info != null) {
-						PropertyDescriptor idpd = SEUtilities.getPropertyDescriptorByName(
-								wrapper.getClass(), info.idPropertyName());
+						PropertyDescriptor idpd = SEUtilities
+								.getPropertyDescriptorByName(
+										wrapper.getClass(),
+										info.idPropertyName());
 						Long wrapperId = (Long) idpd.getReadMethod().invoke(
 								wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (wrapperId != null) {
@@ -664,11 +667,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		getEntityManager().merge(inst);
 	}
 
-	public DomainTransformLayerWrapper transformInPersistenceContext(
-			TransformPersister persister, TransformPersistenceToken token) {
+	public void transformInPersistenceContext(
+			TransformPersister persister, TransformPersistenceToken token,
+			DomainTransformLayerWrapper wrapper) {
 		AppPersistenceBase.checkNotReadOnly();
-		return persister.transformInPersistenceContext(token, this,
-				getEntityManager());
+		 persister.transformInPersistenceContext(token, this,
+				getEntityManager(), wrapper);
 	}
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
@@ -801,7 +805,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 							WrapperPersistable gwpo = (WrapperPersistable) obj;
 							if (info.toStringPropertyName().length() != 0) {
 								PropertyDescriptor tspd = SEUtilities
-										.getPropertyDescriptorByName(hi.getClass(),
+										.getPropertyDescriptorByName(
+												hi.getClass(),
 												info.toStringPropertyName());
 								tspd.getWriteMethod().invoke(hi,
 										gwpo.toString());
@@ -844,7 +849,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		try {
 			HasIdAndLocalId object = TransformManager.get().getObject(
 					transformException.getEvent(), true);
-			transformException.setSourceObjectName(Reflections.classLookup().displayNameForObject(object));
+			transformException.setSourceObjectName(Reflections.classLookup()
+					.displayNameForObject(object));
 		} catch (Exception e) {
 			System.out.println("Unable to add source object name - reason: "
 					+ e.getMessage());
@@ -884,9 +890,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		if (sinceId == 0) {
 			query.setMaxResults(maxTransforms);
 		}
-		return new EntityUtils().detachedClone(query.getResultList(),
-				Registry.impl(JPAImplementation.class)
-						.getClassrefInstantiator());
+		return new EntityUtils().detachedClone(query.getResultList(), Registry
+				.impl(JPAImplementation.class).getClassrefInstantiator());
 	}
 
 	protected Collection<Class> getSharedTransformClasses() {

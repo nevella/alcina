@@ -57,13 +57,14 @@ public class TransformPersister {
 
 	public DomainTransformLayerWrapper transformExPersistenceContext(
 			TransformPersistenceToken token) {
-		DomainTransformLayerWrapper wrapper = null;
-		while (wrapper == null
-				|| token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
+		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
+		boolean perform = true;
+		while (perform) {
+			perform=false;
 			try {
-				wrapper = Registry.impl(CommonPersistenceProvider.class)
+				Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence()
-						.transformInPersistenceContext(this, token);
+						.transformInPersistenceContext(this, token, wrapper);
 			} catch (RuntimeException ex) {
 				DeliberatelyThrownWrapperException dtwe = null;
 				if (ex instanceof DeliberatelyThrownWrapperException) {
@@ -73,19 +74,16 @@ public class TransformPersister {
 				} else {
 					throw ex;
 				}
-				wrapper = dtwe.wrapper;
 			}
 			if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
 				token.getRequest().updateTransformCommitType(
 						CommitType.TO_STORAGE, true);
 				DomainTransformException firstException = token
 						.getTransformExceptions().get(0);
-				if (firstException.irresolvable()) {
-					break;
-				}
+				perform = !firstException.irresolvable();
 			} else if (token.getPass() == Pass.RETRY_WITH_IGNORES) {
 				token.setPass(Pass.TRY_COMMIT);
-				wrapper = null;
+				perform = true;
 			}
 		}
 		if (wrapper.response.getResult() == DomainTransformResponseResult.FAILURE) {
@@ -95,8 +93,8 @@ public class TransformPersister {
 		return wrapper;
 	}
 
-	private DomainTransformLayerWrapper wrapException(
-			TransformPersistenceToken token, Exception e) {
+	private void putExceptionInWrapper(TransformPersistenceToken token,
+			Exception e, DomainTransformLayerWrapper wrapper) {
 		if (e != null) {
 			DomainTransformException transformException;
 			if (e instanceof DomainTransformException) {
@@ -116,9 +114,7 @@ public class TransformPersister {
 		response.getTransformExceptions().clear();
 		response.getTransformExceptions()
 				.addAll(token.getTransformExceptions());
-		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 		wrapper.response = response;
-		return wrapper;
 	}
 
 	private void possiblyAddSilentSkips(TransformPersistenceToken token,
@@ -166,10 +162,10 @@ public class TransformPersister {
 
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS = 40 * 1000;
 
-	public DomainTransformLayerWrapper transformInPersistenceContext(
+	public void transformInPersistenceContext(
 			final TransformPersistenceToken token,
 			CommonPersistenceBase commonPersistenceBase,
-			EntityManager entityManager) {
+			EntityManager entityManager, DomainTransformLayerWrapper wrapper) {
 		this.entityManager = entityManager;
 		this.commonPersistenceBase = commonPersistenceBase;
 		IUser incomingUser = PermissionsManager.get().getUser();
@@ -177,8 +173,9 @@ public class TransformPersister {
 		HiliLocatorMap locatorMap = token.getLocatorMap();
 		HiliLocatorMap locatorMapClone = (HiliLocatorMap) locatorMap.clone();
 		final DomainTransformRequest request = token.getRequest();
-		List<DomainTransformEventPersistent> dtreps = new ArrayList<DomainTransformEventPersistent>();
-		List<DomainTransformRequestPersistent> dtrps = new ArrayList<DomainTransformRequestPersistent>();
+		List<DomainTransformEventPersistent> dtreps = wrapper.persistentEvents;
+		List<DomainTransformRequestPersistent> dtrps = wrapper.persistentRequests;
+		wrapper.locatorMap = locatorMap;
 		try {
 			ObjectPersistenceHelper.get();
 			ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
@@ -196,14 +193,16 @@ public class TransformPersister {
 				DomainTransformException ex = new DomainTransformException(
 						"Invalid client instance authentication");
 				ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
-				return wrapException(token, ex);
+				putExceptionInWrapper(token, ex, wrapper);
+				return;
 			}
 			if (persistentClientInstance.getUser().getId() != PermissionsManager
 					.get().getUserId() && !token.isIgnoreClientAuthMismatch()) {
 				DomainTransformException ex = new DomainTransformException(
 						"Browser login mismatch with transform request authentication");
 				ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
-				return wrapException(token, ex);
+				putExceptionInWrapper(token, ex, wrapper);
+				return;
 			}
 			tm.setClientInstance(persistentClientInstance);
 			if (locatorMap != null && token.isPossiblyReconstitueLocalIdMap()
@@ -226,7 +225,8 @@ public class TransformPersister {
 				}
 			}
 			if (token.getPass() == Pass.TRY_COMMIT) {
-				EntityLayerObjects.get()
+				EntityLayerObjects
+						.get()
 						.getMetricLogger()
 						.info(String
 								.format("domain transform - %s - clid:"
@@ -282,7 +282,8 @@ public class TransformPersister {
 							if (!actionForException.ignoreable()) {
 								throw e;
 							} else {
-								EntityLayerObjects.get()
+								EntityLayerObjects
+										.get()
 										.getMetricLogger()
 										.info(String.format(
 												">>>Event ignored :%s\n",
@@ -347,8 +348,9 @@ public class TransformPersister {
 								MetricLogging.get().lowPriorityEnd(
 										TRANSFORM_FIRE);
 								// ve must rollback
-								throw new DeliberatelyThrownWrapperException(
-										wrapException(token, transformException));
+								putExceptionInWrapper(token,
+										transformException, wrapper);
+								throw new DeliberatelyThrownWrapperException();
 							}
 						}
 					}// commit/determine exception
@@ -432,21 +434,17 @@ public class TransformPersister {
 						tm.getModificationEvents());
 				dtr.setRequestId(request.getRequestId());
 				dtr.setTransformsProcessed(transformCount);
-				DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
-				wrapper.locatorMap = locatorMap;
 				wrapper.response = dtr;
-				wrapper.persistentRequests = dtrps;
-				wrapper.persistentEvents = dtreps;
-				return wrapper;
+				return;
 			case RETRY_WITH_IGNORES:
-				return null;
+				return;
 			default:
 				locatorMap.clear();
 				locatorMap.putAll(locatorMapClone);
 				token.setPass(Pass.FAIL);
 				// ve must rollback
-				throw new DeliberatelyThrownWrapperException(wrapException(
-						token, null));
+				putExceptionInWrapper(token, null, wrapper);
+				throw new DeliberatelyThrownWrapperException();
 			}
 		} catch (Exception e) {
 			if (e instanceof DeliberatelyThrownWrapperException) {
@@ -459,25 +457,21 @@ public class TransformPersister {
 				token.setPass(Pass.DETERMINE_EXCEPTION_DETAIL);
 				determineExceptionDetailPassStartTime = System
 						.currentTimeMillis();
-				EntityLayerObjects.get()
+				EntityLayerObjects
+						.get()
 						.getMetricLogger()
 						.warn("TransformPersister: determining exception detail");
 			} else {
 				token.setPass(Pass.FAIL);
 			}
-			return wrapException(token, e);
+			putExceptionInWrapper(token, e, wrapper);
+			return;
 		} finally {
 			PermissionsManager.get().setUser(incomingUser);
 		}
 	}
 
 	private class DeliberatelyThrownWrapperException extends RuntimeException {
-		private final DomainTransformLayerWrapper wrapper;
-
-		public DeliberatelyThrownWrapperException(
-				DomainTransformLayerWrapper wrapper) {
-			this.wrapper = wrapper;
-		}
 	}
 
 	public static void persistingTransforms() {

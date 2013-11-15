@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.domaintransform;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -33,7 +34,7 @@ public class DomainTransformLayerWrapper {
 
 	public int ignored;
 
-	public List<DomainTransformEventPersistent> persistentEvents;
+	public List<DomainTransformEventPersistent> persistentEvents=new ArrayList<DomainTransformEventPersistent>();
 
 	public Set<Class<?>> getTransformedClasses() {
 		if (transformedClasses == null) {
@@ -44,10 +45,9 @@ public class DomainTransformLayerWrapper {
 		}
 		return this.transformedClasses;
 	}
-
 	private Set<Class<?>> transformedClasses = null;
 
-	public List<DomainTransformRequestPersistent> persistentRequests;
+	public List<DomainTransformRequestPersistent> persistentRequests=new ArrayList<DomainTransformRequestPersistent>();
 
 	public boolean containsTransformClasses(Class<?>... classes) {
 		return !CommonUtils.intersection(getTransformedClasses(),
