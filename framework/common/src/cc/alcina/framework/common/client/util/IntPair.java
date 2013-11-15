@@ -100,6 +100,11 @@ public class IntPair implements Comparable<IntPair> {
 		return result.i1 <= result.i2 ? result : null;
 	}
 
+	public IntPair intersectionOrZero(IntPair other) {
+		IntPair result = intersection(other);
+		return result == null ? new IntPair(0, 0) : result;
+	}
+
 	public boolean contains(IntPair other) {
 		return other == null ? false : other.equals(intersection(other));
 	}
@@ -154,5 +159,9 @@ public class IntPair implements Comparable<IntPair> {
 
 	public String substring(String str) {
 		return str.substring(Math.max(i1, 0), Math.min(i2, str.length()));
+	}
+
+	public int length() {
+		return i2-i1;
 	}
 }
