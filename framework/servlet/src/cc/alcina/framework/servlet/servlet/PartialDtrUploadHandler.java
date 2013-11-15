@@ -115,8 +115,8 @@ public class PartialDtrUploadHandler {
 				} catch (Exception e) {
 					CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
 					String errMsg=String.format(
-							"Client instance id:%s - Partial dtr upload - %s",
-							clientInstanceId, response);
+							"Client instance id:%s - Partial dtr upload - %s \nAll request ids: %s",
+							clientInstanceId, response,fullWrappers.keySet());
 					cpl.log(errMsg,
 							LogMessageType.OFFLINE_TRANSFORM_MERGE_EXCEPTION.toString());
 					

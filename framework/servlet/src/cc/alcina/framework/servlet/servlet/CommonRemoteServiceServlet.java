@@ -152,6 +152,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String CONTEXT_IS_PERFORMING_SUBJOB = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_IS_PERFORMING_SUBJOB";
 
+	public static final String CONTEXT_REUSE_IUSER_HOLDER = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
+
 	private int actionCount = 0;
 
 	private int looseContextDepth;
@@ -411,6 +414,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return persistOfflineTransforms(uncommitted, logger, null);
 	}
 
+	public static class ReuseIUserHolder {
+		public IUser iUser;
+	}
+
 	public int persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, Logger logger,
 			Boolean useWrapperUser) throws WebException {
@@ -426,6 +433,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			LooseContext.getContext().pushWithKey(
 					TransformConflicts.CONTEXT_OFFLINE_SUPPORT,
 					new TransformConflictsFromOfflineSupport());
+			ReuseIUserHolder reuseIUserHolder = LooseContext
+					.get(CONTEXT_REUSE_IUSER_HOLDER);
+			IUser wrapperUser = reuseIUserHolder == null ? null
+					: reuseIUserHolder.iUser;
 			for (DeltaApplicationRecord wr : uncommitted) {
 				long clientInstanceId = wr.getClientInstanceId();
 				int requestId = (int) wr.getRequestId();
@@ -467,11 +478,18 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 										"invalid wrapper authentication");
 							}
 						}
-						IUser user = Registry
-								.impl(CommonPersistenceProvider.class)
-								.getCommonPersistence()
-								.getCleanedUserById(wr.getUserId());
-						PermissionsManager.get().pushUser(user,
+						if (wrapperUser != null
+								&& wrapperUser.getId() == wr.getUserId()) {
+						} else {
+							wrapperUser = Registry
+									.impl(CommonPersistenceProvider.class)
+									.getCommonPersistence()
+									.getCleanedUserById(wr.getUserId());
+							if(reuseIUserHolder!=null){
+								reuseIUserHolder.iUser=wrapperUser;
+							}
+						}
+						PermissionsManager.get().pushUser(wrapperUser,
 								LoginState.LOGGED_IN);
 					} else {
 						rq.getClientInstance().setUser(
