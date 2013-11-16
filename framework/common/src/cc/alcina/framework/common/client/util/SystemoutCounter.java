@@ -37,8 +37,8 @@ public class SystemoutCounter {
 			System.out.print(".");
 			if (++dotCtr == dotsPerLine) {
 				dotCtr = 0;
-				if (message.isEmpty() && showPercentAtEndOfLine) {
-					message = CommonUtils.formatJ(" - %s%", (dotsPerLine
+				if ( showPercentAtEndOfLine) {
+					message += CommonUtils.formatJ(" - %s%", (dotsPerLine
 							* (lines + 1) * ticks * 100 / size));
 				}
 				System.out.println("  " + message);
