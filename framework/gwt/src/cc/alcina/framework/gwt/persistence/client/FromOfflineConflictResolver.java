@@ -52,20 +52,18 @@ public class FromOfflineConflictResolver {
 
 	private LocalTransformPersistence localTransformPersistence;
 
-
 	private AsyncCallback<Void> completionCallback;
 
 	public void resolve(List<DeltaApplicationRecord> uncommitted,
 			Throwable caught,
-			LocalTransformPersistence localTransformPersistence, AsyncCallback<Void> completionCallback) {
+			LocalTransformPersistence localTransformPersistence,
+			AsyncCallback<Void> completionCallback) {
 		this.uncommitted = uncommitted;
 		this.caught = caught;
 		this.localTransformPersistence = localTransformPersistence;
 		this.completionCallback = completionCallback;
 		dialog = new GlassDialogBox();
-		String title = TextProvider.get().getUiObjectText(
-				FromOfflineConflictResolver.class, "title",
-				"Problems saving offline work");
+		String title = getText(TextItem.TITLE);
 		dialog.setText(title);
 		dialog.add(new ResolutionOptions());
 		dialog.center();
@@ -73,66 +71,82 @@ public class FromOfflineConflictResolver {
 	}
 
 	public void notResolved() {
-		Window.alert(localisedMessages.get(TextItem.OFFLINE_NO_DISCARD_WARNING));
+		Window.alert(getText(TextItem.OFFLINE_NO_DISCARD_WARNING));
 		Window.Location.reload();
 	}
 
-	Map<TextItem, String> localisedMessages = new HashMap<FromOfflineConflictResolver.TextItem, String>();
-
-	public void initLocalisedTexts() {
-		localisedMessages
-				.put(TextItem.OFFLINE_UPLOAD_FAILED,
-						TextProvider
-								.get()
-								.getUiObjectText(
-										FromOfflineConflictResolver.class,
-										TextItem.OFFLINE_UPLOAD_FAILED
-												.toString(),
-										"<p>Upload of offline changes failed<p>\n "
-												+ "Please press 'exit' to retry upload of the offline work.\n"
-												+ "<hr>"));
-		localisedMessages
-				.put(TextItem.OFFLINE_UPLOAD_SUCCEEDED4,
-						TextProvider
-								.get()
-								.getUiObjectText(
-										FromOfflineConflictResolver.class,
-										TextItem.OFFLINE_UPLOAD_SUCCEEDED4
-												.toString(),
-										"<p>Merge of offline changes failed, but your changes were uploaded and can be merged "
-												+ "by an administrator.</p><p>Your changes will be available once merged.</p>\n "
-												+ "<p>Please copy the following text into an email and provide to an administrator:</p>"
-												+ "<blockquote><b>%s</b></blockquote>"
-												+ "Once you have done this, select 'discard changes'.<br>\n"
-												+ "<hr>"));
-		localisedMessages.put(
-				TextItem.OFFLINE_DISCARD_CHANGES,
-				TextProvider.get().getUiObjectText(
-						FromOfflineConflictResolver.class,
-						TextItem.OFFLINE_DISCARD_CHANGES.toString(),
-						"Discard changes"));
-		localisedMessages.put(
-				TextItem.OFFLINE_EXIT_NO_DISCARD,
-				TextProvider.get().getUiObjectText(
-						FromOfflineConflictResolver.class,
-						TextItem.OFFLINE_EXIT_NO_DISCARD.toString(),
-						"Exit without discarding changes"));
-		localisedMessages
-				.put(TextItem.OFFLINE_NO_DISCARD_WARNING,
-						TextProvider
-								.get()
-								.getUiObjectText(
-										FromOfflineConflictResolver.class,
-										TextItem.OFFLINE_NO_DISCARD_WARNING
-												.toString(),
-										"Exiting without saving changes.\n\n"
-												+ "You must successfully upload the changes, and press 'discard', to continue using the application."));
+	private String getText(TextItem key) {
+		return TextProvider.get().getUiObjectText(
+				FromOfflineConflictResolver.class, key.toString(),
+				key.getText());
 	}
 
 	enum TextItem {
-		OFFLINE_UPLOAD_FAILED, OFFLINE_UPLOAD_SUCCEEDED4,
-		OFFLINE_DISCARD_CHANGES, OFFLINE, OFFLINE_EXIT_NO_DISCARD,
-		OFFLINE_NO_DISCARD_WARNING
+		TITLE {
+			@Override
+			public String getText() {
+				return "Problems saving offline work";
+			}
+		},
+		OFFLINE_UPLOAD_FAILED {
+			@Override
+			public String getText() {
+				return "<p>Upload of offline changes failed<p>\n "
+						+ "Please press 'exit' to retry upload of the offline work.\n"
+						+ "<hr>";
+			}
+		},
+		OFFLINE_UPLOAD_SUCCEEDED4 {
+			@Override
+			public String getText() {
+				return "<p>Merge of offline changes failed, but your changes were uploaded and can be merged "
+						+ "by an administrator.</p><p>Your changes will be available once merged.</p>\n "
+						+ "<p>Please copy the following text into an"
+						+ " email and provide to an administrator:</p>"
+						+ "<blockquote><b>%s</b></blockquote>"
+						+ "Once you have done this, select 'discard changes'.<br>\n"
+						+ "<hr>";
+			}
+		},
+		OFFLINE_DISCARD_CHANGES {
+			@Override
+			public String getText() {
+				return "Discard changes";
+			}
+		},
+		OFFLINE {
+			@Override
+			public String getText() {
+				return "Offline";
+			}
+		},
+		OFFLINE_EXIT_NO_DISCARD {
+			@Override
+			public String getText() {
+				return "Exit without discarding changes";
+			}
+		},
+		OFFLINE_NO_DISCARD_WARNING {
+			@Override
+			public String getText() {
+				return "Exiting without saving changes.\n\n"
+						+ "You must successfully upload the changes,"
+						+ " and press 'discard', to continue using the application.";
+			}
+		},
+		OFFLINE_DISCARD_CONFIRMATION {
+			@Override
+			public String getText() {
+				return "Are you sure you want to discard your changes?";
+			}
+		},
+		OFFLINE_DISCARD_PERFORMED {
+			@Override
+			public String getText() {
+				return "Local cache cleared";
+			}
+		};
+		public abstract String getText();
 	}
 
 	private class ResolutionOptions extends Composite implements ClickHandler {
@@ -143,13 +157,10 @@ public class FromOfflineConflictResolver {
 		private BlockLink exitLink;
 
 		public ResolutionOptions() {
-			initLocalisedTexts();
 			this.fp = new FlowPanel();
 			discardLink = new BlockLink(
-					localisedMessages.get(TextItem.OFFLINE_DISCARD_CHANGES),
-					this);
-			exitLink = new BlockLink(
-					localisedMessages.get(TextItem.OFFLINE_EXIT_NO_DISCARD),
+					getText(TextItem.OFFLINE_DISCARD_CHANGES), this);
+			exitLink = new BlockLink(getText(TextItem.OFFLINE_EXIT_NO_DISCARD),
 					this);
 			discardLink.removeStyleName("gwt-Hyperlink");
 			exitLink.removeStyleName("gwt-Hyperlink");
@@ -157,10 +168,8 @@ public class FromOfflineConflictResolver {
 					.getContext()
 					.getBoolean(
 							LocalTransformPersistence.CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED);
-			String uploadFailedText = localisedMessages
-					.get(TextItem.OFFLINE_UPLOAD_FAILED);
-			String uploadSucceededText = localisedMessages
-					.get(TextItem.OFFLINE_UPLOAD_SUCCEEDED4);
+			String uploadFailedText = getText(TextItem.OFFLINE_UPLOAD_FAILED);
+			String uploadSucceededText = getText(TextItem.OFFLINE_UPLOAD_SUCCEEDED4);
 			if (uploadSucceeded) {
 				uploadSucceededText = CommonUtils
 						.formatJ(
@@ -178,8 +187,9 @@ public class FromOfflineConflictResolver {
 			fp.add(p);
 			if (uploadSucceeded) {
 				p.add(discardLink);
+			} else {
+				p.add(exitLink);
 			}
-			p.add(exitLink);
 			initWidget(fp);
 		}
 
@@ -208,35 +218,24 @@ public class FromOfflineConflictResolver {
 		public void onClick(ClickEvent event) {
 			Widget sender = (Widget) event.getSource();
 			if (sender == discardLink) {
-				if (Window.confirm(TextProvider.get().getUiObjectText(
-						FromOfflineConflictResolver.class,
-						"discard-confirmation",
-						"Are you sure you want to discard your changes?"))) {
-					Registry.impl(ClientNotifications.class)
-							.log("pre-clear-db");
-					localTransformPersistence
-							.clearAllPersisted(new AsyncCallback() {
-								@Override
-								public void onSuccess(Object result) {
-									Window.alert(TextProvider
-											.get()
-											.getUiObjectText(
-													FromOfflineConflictResolver.class,
-													"discard-complete",
-													"Changes discarded"));
-									dialog.hide();
-									completionCallback.onSuccess(null);
-									Registry.impl(ClientNotifications.class)
-											.log("post-clear-db");
-								}
+				Registry.impl(ClientNotifications.class).log("pre-clear-db");
+				localTransformPersistence
+						.clearAllPersisted(new AsyncCallback() {
+							@Override
+							public void onSuccess(Object result) {
+								Window.alert(getText(TextItem.OFFLINE_DISCARD_PERFORMED));
+								dialog.hide();
+								completionCallback.onSuccess(null);
+								Registry.impl(ClientNotifications.class).log(
+										"post-clear-db");
+							}
 
-								@Override
-								public void onFailure(Throwable caught) {
-									Window.alert(caught.getMessage());
-									Window.Location.reload();
-								}
-							});
-				}
+							@Override
+							public void onFailure(Throwable caught) {
+								Window.alert(caught.getMessage());
+								Window.Location.reload();
+							}
+						});
 			}
 			if (sender == exitLink) {
 				dialog.hide();
