@@ -73,7 +73,9 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 	}
 
 	public static ClientInstance getClientInstance() {
-		return Registry.impl(HandshakeConsortModel.class).getClientInstance();
+		HandshakeConsortModel consortModel = Registry
+				.implOrNull(HandshakeConsortModel.class);
+		return consortModel == null ? null : consortModel.getClientInstance();
 	}
 
 	public static GeneralProperties getGeneralProperties() {
