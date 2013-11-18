@@ -35,6 +35,7 @@ public class TopicPublisher {
 		} else {
 			support.removePropertyChangeListener(key, adapter);
 		}
+		lookup.remove(listener);
 	}
 
 	private static class TopicListenerAdapter<T> implements
