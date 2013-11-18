@@ -793,6 +793,15 @@ public class WidgetUtils {
 		}
 		return true;
 	}
+	public static boolean isVisibleAncestorChain(Element e) {
+		while (e != null) {
+			if (!UIObject.isVisible(e)){
+				return false;
+			}
+			e=e.getParentElement();
+		}
+		return true;
+	}
 
 	public static FlowPanel wrapInDiv(Widget widget) {
 		FlowPanel fp = new FlowPanel();
