@@ -141,6 +141,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
 
+	public static final String THRD_LOCAL_RPC_PAYLOAD = "THRD_LOCAL_RPC_PAYLOAD";
+
 	public static final String CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS = CommonRemoteServiceServlet.class
 			.getName()
 			+ "."
@@ -485,8 +487,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 									.impl(CommonPersistenceProvider.class)
 									.getCommonPersistence()
 									.getCleanedUserById(wr.getUserId());
-							if(reuseIUserHolder!=null){
-								reuseIUserHolder.iUser=wrapperUser;
+							if (reuseIUserHolder != null) {
+								reuseIUserHolder.iUser = wrapperUser;
 							}
 						}
 						PermissionsManager.get().pushUser(wrapperUser,
@@ -575,6 +577,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				throw new IncompatibleRemoteServiceException();
 			}
 			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
+			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD,
+					payload);
 			String name = rpcRequest.getMethod().getName();
 			onAfterAlcinaAuthentication(name);
 			Method method;
