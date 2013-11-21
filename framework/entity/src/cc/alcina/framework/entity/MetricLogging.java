@@ -57,8 +57,6 @@ public class MetricLogging {
 
 	private Map<String, Long> averageCount;
 
-	private Long parentThreadId;
-
 	private Long thisLoggerThreadId = null;
 
 	private Set<String> terminated;
@@ -68,8 +66,6 @@ public class MetricLogging {
 	private WriterAccessWriterAppender wa;
 
 	public static Set<Class> sysoutClasses = new LinkedHashSet<Class>();
-
-	private static Map<Long, WeakReference<MetricLogging>> threadIdLoggingMap = new HashMap<Long, WeakReference<MetricLogging>>();
 
 	public static final String LOG_CONTEXT_THREAD_ID = "threadId";
 
@@ -93,21 +89,7 @@ public class MetricLogging {
 	public static MetricLogging get() {
 		MetricLogging m = (MetricLogging) TL.get();
 		long tid = Thread.currentThread().getId();
-		threadIdLoggingMap.put(tid, new WeakReference(m));
-		if (m.parentThreadId != null) {
-			return threadIdLoggingMap.get(m.parentThreadId).get();
-		} else {
-			return m;
-		}
-	}
-
-	public static void resetChildThreadMetricLogger(long parentThreadId) {
-		MetricLogging m = (MetricLogging) TL.get();
-		m.reset();
-		m.parentThreadId = parentThreadId;
-		if (useLog4j) {
-			MDC.put(LOG_CONTEXT_THREAD_ID, parentThreadId);
-		}
+		return m;
 	}
 
 	private MetricLogging() {
@@ -229,7 +211,6 @@ public class MetricLogging {
 			wa.setLayout(new PatternLayout("%-5p [%c{1}] %m%n"));
 			wa.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
 			perThreadLogger.addAppender(wa);
-			parentThreadId = null;
 			thisLoggerThreadId = getCurrentThreadId();
 		}
 		metricStart = new LinkedHashMap<String, Long>();

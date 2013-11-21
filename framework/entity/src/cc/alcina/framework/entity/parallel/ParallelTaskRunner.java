@@ -40,7 +40,6 @@ public abstract class ParallelTaskRunner {
 	protected void threadStartup(PermissionsManager pm) {
 		if (runningAsync) {
 			pm.copyTo(PermissionsManager.get());
-			MetricLogging.resetChildThreadMetricLogger(threadId);
 		}
 	}
 
