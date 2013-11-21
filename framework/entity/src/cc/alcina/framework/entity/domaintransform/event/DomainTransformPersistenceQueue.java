@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableSe
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LongPair;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -38,9 +39,14 @@ import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 @RegistryLocation(registryPoint = DomainTransformPersistenceQueue.class, implementationType = ImplementationType.SINGLETON)
 public class DomainTransformPersistenceQueue implements RegistrableService {
 	class GapCheckTask extends TimerTask {
+		private static final long PERIODIC_DB_CHECK_MS = 5 * TimeConstants.ONE_MINUTE_MS;
+
 		@Override
 		public void run() {
 			try {
+				if ((System.currentTimeMillis() - lastDbCheck) > PERIODIC_DB_CHECK_MS) {
+					forceDbCheck();
+				}
 				if (shouldCheckPersistedTransforms() != null) {
 					maybeCheckPersistedTransforms();
 				}
@@ -63,6 +69,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	Set<Long> timedOutRequestIds = new LinkedHashSet<Long>();
 
 	private long lastRangeCheckFirstCheckTime = 0;
+
+	private long lastDbCheck = 0;
 
 	private LongPair lastRangeCheck = null;
 
@@ -139,7 +147,12 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 		LongPair firstGap = getFirstGapLessThan(
 				CollectionFilters.min(persistedRequestIds), false);
-		if (firstGap != null&&maxDbPersistedRequestIdPublished>0) {// &&false) {//temp fix for prod. serv.
+		if (firstGap != null && maxDbPersistedRequestIdPublished > 0) {// &&false)
+																		// {//temp
+																		// fix
+																		// for
+																		// prod.
+																		// serv.
 			logger.format("found gap (waiting) - rqid %s - gap %s", event
 					.getTransformPersistenceToken().getRequest().shortId(),
 					firstGap);
