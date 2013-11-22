@@ -45,10 +45,9 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		public void run() {
 			try {
 				if ((System.currentTimeMillis() - lastDbCheck) > PERIODIC_DB_CHECK_MS) {
-					lastDbCheck=System.currentTimeMillis();
+					lastDbCheck = System.currentTimeMillis();
 					forceDbCheck();
-				}
-				if (shouldCheckPersistedTransforms() != null) {
+				} else if (shouldCheckPersistedTransforms() != null) {
 					maybeCheckPersistedTransforms();
 				}
 			} catch (Throwable t) {
