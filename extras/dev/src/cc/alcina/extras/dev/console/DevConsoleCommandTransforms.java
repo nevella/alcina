@@ -423,6 +423,9 @@ public class DevConsoleCommandTransforms {
 			f = new FilterArgvFlag(argv, "-t");
 			boolean outputTransforms = f.contains;
 			argv = f.argv;
+			f = new FilterArgvFlag(argv, "-rr");
+			boolean forceGetRqIds = f.contains;
+			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
 			CommonPersistenceLocal cpl = Registry.impl(
@@ -462,9 +465,9 @@ public class DevConsoleCommandTransforms {
 			};
 			String filter = DevConsoleFilter.getFilters(
 					CmdListTransformsFilter.class, argv, dteIdFilter);
-			if (!foundDteId) {
+			if (!foundDteId||forceGetRqIds) {
 				filter = DevConsoleFilter.getFilters(
-						CmdListTransformsFilter.class, argv);
+						CmdListTransformsFilter.class, argv, CollectionFilters.inverse(dteIdFilter));
 				sql1 = String.format(sql1, dtrName, filter);
 				Statement ps = conn.createStatement();
 				System.out.println(console.breakAndPad(1, 80, sql1, 0));
@@ -592,12 +595,26 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
+		public static class CmdListTransformsFilterTransformType extends
+				CmdListTransformsFilter {
+			@Override
+			public String getFilter(final String arg1) {
+				return String.format("dte.transformtype = %s", TransformType
+						.valueOf(arg1).ordinal());
+			}
+
+			@Override
+			public String getKey() {
+				return "tt";
+			}
+		}
+
 		public static class CmdListTransformsFilterDays extends
 				CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
 				return String.format("age(ci.hellodate)<'%s days'",
-						value == null ? "3" : value);
+						value == null ? "30" : value);
 			}
 
 			@Override

@@ -41,8 +41,10 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Hidden;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.SubmitButton;
 import com.totsp.gwittir.client.beans.Binding;
 
 /**
@@ -73,8 +75,8 @@ public class ClientUtils {
 				return true;
 			}
 			StatusCodeException sce = (StatusCodeException) t;
-			Registry.impl(ClientNotifications.class)
-					.log("** Status code exception: " + sce.getStatusCode());
+			Registry.impl(ClientNotifications.class).log(
+					"** Status code exception: " + sce.getStatusCode());
 			boolean internetExplorerErrOffline = BrowserMod
 					.isInternetExplorer() && sce.getStatusCode() > 600;
 			if (sce.getStatusCode() == 0 || internetExplorerErrOffline) {
@@ -130,7 +132,7 @@ public class ClientUtils {
 	}
 
 	public static void submitForm(Map<String, String> params, String url) {
-		FormPanel p = new FormPanel((String) null);
+		FormPanel p = new FormPanel("_self");
 		p.setAction(url);
 		p.setMethod(FormPanel.METHOD_POST);
 		FlowPanel fp = new FlowPanel();
@@ -144,8 +146,8 @@ public class ClientUtils {
 	}
 
 	public static void notImplemented() {
-		Registry.impl(ClientNotifications.class)
-				.showWarning("Not yet implemented");
+		Registry.impl(ClientNotifications.class).showWarning(
+				"Not yet implemented");
 	}
 
 	public static UrlBuilder getBaseUrlBuilder() {

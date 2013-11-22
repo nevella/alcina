@@ -227,6 +227,6 @@ public class BrowserMod {
 	}-*/;
 
 	public static boolean requiresExplicitClickForAsyncDownload() {
-		return isInternetExplorer()||isFireFox();
+		return isInternetExplorer();//||isFireFox();
 	}
 }
