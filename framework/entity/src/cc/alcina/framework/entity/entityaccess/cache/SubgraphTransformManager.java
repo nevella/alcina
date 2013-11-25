@@ -138,4 +138,8 @@ public class SubgraphTransformManager extends TransformManager {
 	public DetachedCacheObjectStore getStore() {
 		return this.store;
 	}
+
+	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
+		return null;
+	}
 }

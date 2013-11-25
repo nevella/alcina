@@ -243,6 +243,10 @@ public class TransformPersister {
 			boolean replaying = LooseContext
 					.getBoolean(CONTEXT_REPLAYING_FOR_LOGS);
 			loop_dtrs: for (DomainTransformRequest dtr : dtrs) {
+				if (dtr.checkForDuplicateEvents()) {
+					System.out.println("*** duplicate create events in rqId: "
+							+ dtr.getRequestId());
+				}
 				List<DomainTransformEvent> items = dtr.getEvents();
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
 				if (token.getPass() == Pass.TRY_COMMIT) {

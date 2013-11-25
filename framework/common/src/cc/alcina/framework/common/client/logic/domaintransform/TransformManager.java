@@ -348,7 +348,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				// 2. recording an in-entity-manager create
 				// 3. doing a database-regeneration
 				// if (2), break at this point
-				if (getObject(event) != null) {
+				if (getObjectForCreate(event) != null) {
 					break;
 				}
 			}
@@ -374,6 +374,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			assert false : "Transform type not implemented: " + transformType;
 		}
 		currentEvent = null;
+	}
+
+	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
+		return getObject(event);
 	}
 
 	protected boolean alwaysFireObjectOwnerCollectionModifications() {

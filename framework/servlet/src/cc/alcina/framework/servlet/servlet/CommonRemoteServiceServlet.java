@@ -501,10 +501,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					// transforms. but...perhaps better not (keep as is)
 					rq.setRequestId(wr.getRequestId());
 					rq.fromString(wr.getText());
-					if (rq.checkForDuplicateEvents()) {
-						System.out.println("*** duplicate events in rqId: "
-								+ wr.getRequestId());
-					}
 					// necessary because event id is used by transformpersister
 					// for
 					// pass control etc

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -189,22 +190,18 @@ public class DomainTransformRequest implements Serializable {
 	}
 
 	public boolean checkForDuplicateEvents() {
-		boolean duplicate = false;
-		if (events.size() > 0 && events.size() % 2 == 0) {
-			int halfLength = events.size() / 2;
-			duplicate = true;
-			for (int i = 0; i < halfLength; i++) {
-				if (!events.get(i).toString()
-						.equals(events.get(i + halfLength).toString())) {
-					duplicate = false;
-					break;
+		Set<Long> createIds = new LinkedHashSet<Long>();
+		boolean duplicates=false;
+		for (Iterator<DomainTransformEvent> itr = events.iterator(); itr
+				.hasNext();) {
+			DomainTransformEvent event = itr.next();
+			if (event.getTransformType() == TransformType.CREATE_OBJECT) {
+				if (!createIds.add(event.getObjectLocalId())) {
+					itr.remove();
+					duplicates=true;
 				}
 			}
-			if (duplicate) {
-				events = new ArrayList<DomainTransformEvent>(events.subList(0,
-						halfLength));
-			}
 		}
-		return duplicate;
+		return duplicates;
 	}
 }
