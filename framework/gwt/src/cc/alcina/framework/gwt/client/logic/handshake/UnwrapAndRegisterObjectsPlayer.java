@@ -143,6 +143,9 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	private void replayTransforms() {
 		replayer = new RepeatingCommandWithPostCompletionCallback(this,
 				new DteReplayWorker(currentDelta.getReplayEvents()));
+		if (currentDelta.hasLocalOnlyTransforms()) {
+			HandshakeConsortModel.get().setLoadedWithLocalOnlyTransforms(true);
+		}
 		Integer requestId = (currentDelta instanceof HasRequestReplayId) ? ((HasRequestReplayId) currentDelta)
 				.getDomainTransformRequestReplayId() : null;
 		if (requestId != null) {

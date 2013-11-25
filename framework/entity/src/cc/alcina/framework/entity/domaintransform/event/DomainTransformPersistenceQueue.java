@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.domaintransform.event;
 
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -38,6 +39,8 @@ import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
 @RegistryLocation(registryPoint = DomainTransformPersistenceQueue.class, implementationType = ImplementationType.SINGLETON)
 public class DomainTransformPersistenceQueue implements RegistrableService {
+	boolean logDbEventCheck = true;
+
 	class GapCheckTask extends TimerTask {
 		private static final long PERIODIC_DB_CHECK_MS = 5 * TimeConstants.ONE_MINUTE_MS;
 
@@ -46,6 +49,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			try {
 				if ((System.currentTimeMillis() - lastDbCheck) > PERIODIC_DB_CHECK_MS) {
 					lastDbCheck = System.currentTimeMillis();
+					int mins = Calendar.getInstance().get(Calendar.MINUTE);
+					logDbEventCheck = mins <= 5;
 					forceDbCheck();
 				} else if (shouldCheckPersistedTransforms() != null) {
 					maybeCheckPersistedTransforms();
@@ -317,7 +322,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (forceDbCheck) {
 			List<DomainTransformRequestPersistent> persisted = getCommonPersistence()
 					.getPersistentTransformRequests(0, 0, null, true, false);
-			if (!persisted.isEmpty()) {
+			if (!persisted.isEmpty() && logDbEventCheck) {
 				maxDbPersistedRequestId = persisted.get(0).getId();
 				logger.format("max persisted transform id: %s",
 						maxDbPersistedRequestId);

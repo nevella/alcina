@@ -79,6 +79,8 @@ public class HandshakeConsortModel {
 
 	private long maxPersistedTransformIdWhenGenerated;
 
+	
+	private boolean loadedWithLocalOnlyTransforms;
 	// fw4 - centralise documentation
 	public void ensureClientInstanceFromModelDeltas() {
 		if (getClientInstance() == null) {
@@ -222,5 +224,14 @@ public class HandshakeConsortModel {
 				persistableApplicationRecords = persistable;
 			}
 		}
+	}
+
+	public boolean isLoadedWithLocalOnlyTransforms() {
+		return this.loadedWithLocalOnlyTransforms;
+	}
+
+	public void setLoadedWithLocalOnlyTransforms(
+			boolean loadedWithLocalOnlyTransforms) {
+		this.loadedWithLocalOnlyTransforms = loadedWithLocalOnlyTransforms;
 	}
 }

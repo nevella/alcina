@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Rect;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
@@ -15,6 +17,7 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.ComplexPanel;
+import com.google.gwt.user.client.ui.PopupPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -320,12 +323,54 @@ public class RelativePopupPositioning {
 				y += boundingWidget.getAbsoluteTop();
 				x -= positioningWidget.getAbsoluteLeft();
 				y -= positioningWidget.getAbsoluteTop();
-				//since we're relative, cancel the scroll
-//				x+=WidgetUtils.getScrollLeft(positioningWidget.getElement());
-//				y+=WidgetUtils.getScrollTop(positioningWidget.getElement());
+				// since we're relative, cancel the scroll
+				// x+=WidgetUtils.getScrollLeft(positioningWidget.getElement());
+				// y+=WidgetUtils.getScrollTop(positioningWidget.getElement());
 			}
 			rpp.setPopupPosition(x, y);
+			notifyPopupDisplayed(new PopupWrapper(rpp));
 		}
+	}
+
+	public static class PopupWrapper {
+		PopupPanel popupPanel;
+
+		RelativePopupPanel relativePopupPanel;
+
+		public PopupWrapper(RelativePopupPanel rpp) {
+			this.relativePopupPanel = rpp;
+		}
+
+		public PopupWrapper(PopupPanel popup) {
+			this.popupPanel = popup;
+		}
+
+		public boolean isShowing() {
+			return popupPanel != null ? popupPanel.isShowing()
+					: relativePopupPanel.isShowing();
+		}
+
+		public void hide() {
+			if (popupPanel != null) {
+				popupPanel.hide();
+			} else {
+				relativePopupPanel.hide();
+			}
+		}
+	}
+
+	public static final transient String TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED = RelativePopupPanel.class
+			.getName() + ".TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED";
+
+	public static void notifyPopupDisplayed(PopupWrapper rpp) {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, rpp);
+	}
+
+	public static void notifyPopupDisplayedListenerDelta(
+			TopicListener<PopupWrapper> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, listener, add);
 	}
 
 	public enum OtherPositioningStrategy {

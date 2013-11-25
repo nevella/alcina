@@ -134,4 +134,9 @@ public class DtrWrapperBackedDomainModelDelta implements DomainModelDelta,
 	public DomainModelDeltaMetadata getMetadata() {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public boolean hasLocalOnlyTransforms() {
+		return wrapper.getType()==DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED;
+	}
 }

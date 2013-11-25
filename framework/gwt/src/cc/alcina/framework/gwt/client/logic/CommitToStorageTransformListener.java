@@ -122,8 +122,9 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			transformQueue.add(evt);
 			lastQueueAddMillis = System.currentTimeMillis();
 			if (queueingFinishedTimer == null) {
-				queueingFinishedTimer = Registry.impl(TimerWrapperProvider.class)
-						.getTimer(getCommitLoopRunnable());
+				queueingFinishedTimer = Registry.impl(
+						TimerWrapperProvider.class).getTimer(
+						getCommitLoopRunnable());
 				queueingFinishedTimer.scheduleRepeating(DELAY_MS);
 			}
 			return;
@@ -386,12 +387,18 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 						@Override
 						public void onSuccess(Void result) {
-							commitRemote(commitRemoteCallback);
+							if (canTransitionToOnline()) {
+								commitRemote(commitRemoteCallback);
+							}
 						}
 					});
 		} else {
 			commitRemote(commitRemoteCallback);
 		}
+	}
+
+	protected boolean canTransitionToOnline() {
+		return true;
 	}
 
 	protected ClientTransformExceptionResolver getTransformExceptionResolver() {

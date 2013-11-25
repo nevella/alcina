@@ -82,4 +82,9 @@ public class DomainTranche implements DomainModelDelta, Serializable {
 		replayEvents.addAll(other.getReplayEvents());
 		signature = other.signature;
 	}
+
+	@Override
+	public boolean hasLocalOnlyTransforms() {
+		return false;
+	}
 }

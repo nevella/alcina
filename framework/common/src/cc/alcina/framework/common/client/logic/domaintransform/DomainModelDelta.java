@@ -20,4 +20,6 @@ public interface DomainModelDelta {
 	public abstract DomainModelDeltaSignature getSignature();
 
 	public abstract DomainModelDeltaMetadata getMetadata();
+
+	public boolean hasLocalOnlyTransforms();
 }

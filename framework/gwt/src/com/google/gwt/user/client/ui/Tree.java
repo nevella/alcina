@@ -240,6 +240,10 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget, HasWidgets
   private TreeItem root;
 
   private boolean useLeafImages;
+/*
+ * for testing
+ */
+  public static boolean handleClicksAsMousedown;
 
   /**
    * Constructs an empty tree.
@@ -658,6 +662,9 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget, HasWidgets
           // attached to TreeItems can receive keyboard events).
         } else if ((curSelection != null) && curSelection.getContentElem().isOrHasChild(e)) {
           setFocus(true);
+        }
+        if(handleClicksAsMousedown){
+        	elementClicked(DOM.eventGetTarget(event));
         }
         break;
       }

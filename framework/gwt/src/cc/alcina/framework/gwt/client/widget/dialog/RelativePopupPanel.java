@@ -588,7 +588,7 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	 * Hides the popup and detaches it from the page. This has no effect if it
 	 * is not currently showing.
 	 * 
-	 * @param autoClosed
+	 * @param autoClosved
 	 *            the value that will be passed to
 	 *            {@link CloseHandler#onClose(CloseEvent)} when the popup is
 	 *            closed
