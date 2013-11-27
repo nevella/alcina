@@ -21,12 +21,16 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.ChangeListener;
 import com.google.gwt.user.client.ui.ChangeListenerCollection;
@@ -92,6 +96,22 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 			});
 		} else {
 		}
+		this.base.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> event) {
+				changes.firePropertyChange("value", old, getValue());
+				old = (String) getValue();
+				changeListeners.fireChange(instance);
+			}
+		});
+		this.base.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				changes.firePropertyChange("value", old, getValue());
+				old = (String) getValue();
+				changeListeners.fireChange(instance);
+			}
+		});
 		this.base.addChangeListener(new ChangeListener() {
 			public void onChange(Widget sender) {
 				changes.firePropertyChange("value", old, getValue());
@@ -391,7 +411,16 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 	public String getHint() {
 		return this.hint;
 	}
-
+	 private void clearHint() {
+		base.setText(getValue());
+		base.removeStyleName("hint");
+		if (keydownHandlerRegistration != null) {
+			keydownHandlerRegistration.removeHandler();
+			focusHandlerRegistration.removeHandler();
+			keydownHandlerRegistration = null;
+			focusHandlerRegistration = null;
+		}
+	}
 	public void setHint(String hint) {
 		if (hint != null
 				&& (provideIsHinted() || CommonUtils.isNullOrEmpty(getValue()))) {
@@ -401,22 +430,19 @@ public class TextArea<B> extends AbstractBoundWidget<String> implements
 					.addKeyDownHandler(new KeyDownHandler() {
 						@Override
 						public void onKeyDown(KeyDownEvent event) {
-							base.setText(getValue());
-							base.removeStyleName("hint");
-							if (keydownHandlerRegistration != null) {
-								keydownHandlerRegistration.removeHandler();
-								focusHandlerRegistration.removeHandler();
-								keydownHandlerRegistration = null;
-								focusHandlerRegistration = null;
-							}
+							clearHint();
 						}
+
+						
 					});
+			
 			focusHandlerRegistration = base.addFocusHandler(new FocusHandler() {
 				@Override
 				public void onFocus(FocusEvent event) {
 					Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 						@Override
 						public void execute() {
+							clearHint();
 							base.setCursorPos(0);
 						}
 					});

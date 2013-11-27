@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
+import cc.alcina.framework.common.client.entity.ReplayInstruction;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
@@ -15,6 +16,8 @@ import cc.alcina.framework.gwt.client.util.TextUtils;
 import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -152,13 +155,15 @@ public class LogStoreInterceptors {
 
 	private String lastFocussedValueMessage;
 
+	private boolean numberedElements;
+
 	protected void previewNativeEvent(NativePreviewEvent event) {
 		Event nativeEvent = Event.as(event.getNativeEvent());
 		String type = null;
 		try {
 			type = nativeEvent.getType();
 		} catch (Exception e1) {
-			//FF22 throwing some permissions exceptions, gawd knows why
+			// FF22 throwing some permissions exceptions, gawd knows why
 			return;
 		}
 		boolean click = BrowserEvents.CLICK.equals(type);
@@ -194,12 +199,30 @@ public class LogStoreInterceptors {
 				while (e != null) {
 					List<String> parts = new ArrayList<String>();
 					parts.add(e.getTagName());
-					if (!e.getId().isEmpty()) {
-						parts.add("#" + e.getId());
-					}
-					String cn = getClassName(e);
-					if (!cn.isEmpty()) {
-						parts.add("." + cn);
+					if (numberedElements) {
+						int sameTagCount = 0;
+						NodeList<Node> kids = e.getParentNode().getChildNodes();
+						for (int idn = 0; idn < kids.getLength(); idn++) {
+							Node node = kids.getItem(idn);
+							if (node == e) {
+								parts.add(CommonUtils.formatJ("[%s]",
+										sameTagCount));
+								break;
+							}
+							if (node.getNodeType() == Node.ELEMENT_NODE
+									&& ((Element) node).getTagName().equals(
+											e.getTagName())) {
+								sameTagCount++;
+							}
+						}
+					} else {
+						if (!e.getId().isEmpty()) {
+							parts.add("#" + e.getId());
+						}
+						String cn = getClassName(e);
+						if (!cn.isEmpty()) {
+							parts.add("." + cn);
+						}
 					}
 					tags.add(CommonUtils.join(parts, ""));
 					if (e.getParentElement() == null
@@ -230,9 +253,9 @@ public class LogStoreInterceptors {
 				}
 				AlcinaTopics.logCategorisedMessage(new StringPair(
 						click ? AlcinaTopics.LOG_CATEGORY_CLICK
-								: AlcinaTopics.LOG_CATEGORY_CHANGE, CommonUtils
-								.formatJ("%s :: [%s]%s", path, text,
-										valueMessage)));
+								: AlcinaTopics.LOG_CATEGORY_CHANGE,
+						ReplayInstruction.createReplayBody(text, path,
+								valueMessage)));
 			}
 		}
 	}
@@ -263,5 +286,13 @@ public class LogStoreInterceptors {
 		if (nativePreviewHandlerRegistration != null) {
 			nativePreviewHandlerRegistration.removeHandler();
 		}
+	}
+
+	public boolean isNumberedElements() {
+		return this.numberedElements;
+	}
+
+	public void setNumberedElements(boolean numberedElements) {
+		this.numberedElements = numberedElements;
 	}
 }

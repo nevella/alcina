@@ -39,6 +39,11 @@ public class DevConsoleCommandsReplay {
 			System.out.println("\n");
 			return "ok";
 		}
+
+		@Override
+		public boolean clsBeforeRun() {
+			return true;
+		}
 	}
 
 	public static String extractReplayInstructions(String rpi) {
@@ -48,13 +53,13 @@ public class DevConsoleCommandsReplay {
 		while (m1.find()) {
 			ReplayInstructionType type = CommonUtils.getEnumValueOrNull(
 					ReplayInstructionType.class, m1.group(1));
-			if(m1.group().contains("DIV.test-overlay")){
+			if (m1.group().contains("DIV.test-overlay")) {
 				continue;
 			}
 			if (type != null) {
 				String g2 = m1.group(2);
-				if(g2.contains("\\tvalue :: ")){
-					g2=ReplayInstruction.unescape(g2);
+				if (g2.contains("\\tvalue :: ")) {
+					g2 = ReplayInstruction.unescape(g2);
 				}
 				StringPair locValuePair = ClientLogRecord
 						.parseLocationValue(g2);
