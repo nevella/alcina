@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 
 public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
@@ -67,7 +68,11 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 		while (idEvictionAge.size() > minEvictionSize && itr.hasNext()) {
 			Entry<Long, Long> entry = itr.next();
 			if ((System.currentTimeMillis() - entry.getValue()) > minEvictionAge) {
-				evict(alcinaMemCache,entry.getKey());
+				try {
+					evict(alcinaMemCache,entry.getKey());
+				} catch (Exception e) {
+					AlcinaTopics.notifyDevWarning(e);
+				}
 				itr.remove();
 			}
 		}
