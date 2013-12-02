@@ -47,11 +47,11 @@ public class LoadObjectsHelloPlayer extends
 	/*
 	 * call logic is a bit fraught here - it works, but ain't pretty
 	 */
-	void signal(boolean helloOk) {
+	void signal(boolean continueObjectLoad) {
 		if (PermissionsManager.isOffline()) {
 			wasPlayed(LoadObjectDataState.HELLO_OFFLINE);
 		} else {
-			if (helloOk) {
+			if (continueObjectLoad) {
 				wasPlayed(helloOkState());
 			} else {
 				wasPlayed(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
@@ -79,7 +79,11 @@ public class LoadObjectsHelloPlayer extends
 		handleLoginResponse(loginResponse);
 	}
 
-	private void handleLoginResponse(LoginResponse loginResponse) {
-		signal(loginResponse.isOk());
+	protected void handleLoginResponse(LoginResponse loginResponse) {
+		signal(loginResponse.isOk()||allowAnonymousObjectLoad());
+	}
+
+	protected boolean allowAnonymousObjectLoad() {
+		return true;
 	}
 }

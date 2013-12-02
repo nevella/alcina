@@ -69,7 +69,7 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author Nick Reddel
  */
-public abstract class ActionViewProvider implements ViewProvider,
+public abstract class ActionViewProviderBase implements ViewProvider,
 		PermissibleActionListener {
 	private PaneWrapper wrapper;
 
@@ -112,7 +112,7 @@ public abstract class ActionViewProvider implements ViewProvider,
 	protected abstract void performAction(AsyncCallback<Long> asyncCallback,
 			AsyncCallback<ActionLogItem> syncCallback);
 
-	public static class ActionViewProviderCommon extends ActionViewProvider {
+	public static class ActionViewProvider extends ActionViewProviderBase {
 		protected void performAction(AsyncCallback<Long> asyncCallback,
 				AsyncCallback<ActionLogItem> syncCallback) {
 			if (action instanceof SynchronousAction) {

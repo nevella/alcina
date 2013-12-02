@@ -54,8 +54,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		alcinaTemplateObjects.setOnetimeMessage((String) req.getSession()
 				.getAttribute(SessionHelper.SESSION_ATTR_ONE_TIME_STRING));
 		LoadObjectsResponse results = new LoadObjectsResponse();
-//		results.setDomainModelHolder(alcinaTemplateObjects);
-		//TODO - fw4 - fixme
+		results.putDomainModelHolder(alcinaTemplateObjects);
 		return results;
 	}
 

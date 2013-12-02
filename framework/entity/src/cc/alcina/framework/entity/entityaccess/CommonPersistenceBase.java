@@ -667,11 +667,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		getEntityManager().merge(inst);
 	}
 
-	public void transformInPersistenceContext(
-			TransformPersister persister, TransformPersistenceToken token,
-			DomainTransformLayerWrapper wrapper) {
+	public void transformInPersistenceContext(TransformPersister persister,
+			TransformPersistenceToken token, DomainTransformLayerWrapper wrapper) {
 		AppPersistenceBase.checkNotReadOnly();
-		 persister.transformInPersistenceContext(token, this,
+		persister.transformInPersistenceContext(token, this,
 				getEntityManager(), wrapper);
 	}
 
@@ -965,6 +964,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				impl.setAuth(Math.abs(new Random().nextInt()));
 				impl.setUserAgent(userAgent);
 				cp.getEntityManager().flush();
+				cp.getEntityManager().clear();
 				IUser clonedUser = (IUser) cp
 						.getNewImplementationInstance(IUser.class);
 				ResourceUtilities.copyBeanProperties(PermissionsManager.get()
@@ -972,12 +972,14 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						.asList(new String[] { "primaryGroup",
 								"secondaryGroups", "creationUser",
 								"lastModificationUser" }));
-				ClientInstance instance = new EntityUtils().detachedClone(impl,
-						false);
+				
+				impl.setUser(null);
+				ClientInstance instance = new EntityUtils()
+						.detachedCloneIgnorePermissions(impl, null);
 				Registry.impl(ClientInstanceAuthenticationCache.class)
 						.cacheAuthentication(instance);
-				instance.setUser(new EntityUtils().detachedClone(clonedUser,
-						false));
+				instance.setUser(new EntityUtils()
+						.detachedCloneIgnorePermissions(clonedUser, null));
 				return instance;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

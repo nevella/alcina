@@ -27,6 +27,5 @@ public class AlcinaTemplateInitLoaderUiPlayerDesktop extends InitLoaderUiPlayer 
 						"Starting up");
 		modalNotifier.modalOn();
 		modalNotifier.setMasking(false);
-		wasPlayed();
 	}
 }

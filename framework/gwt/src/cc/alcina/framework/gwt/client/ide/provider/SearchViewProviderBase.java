@@ -57,8 +57,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  *
  * @author Nick Reddel
  */
-public abstract class SearchViewProvider implements ViewProvider {
-	public static final String CONTEXT_NO_INITIAL_SEARCH = SearchViewProvider.class.getName()+".CONTEXT_NO_INITIAL_SEARCH";
+public abstract class SearchViewProviderBase implements ViewProvider {
+	public static final String CONTEXT_NO_INITIAL_SEARCH = SearchViewProviderBase.class.getName()+".CONTEXT_NO_INITIAL_SEARCH";
 
 	private LocalActionWithParameters<SingleTableSearchDefinition> action;
 
@@ -168,8 +168,8 @@ public abstract class SearchViewProvider implements ViewProvider {
 
 		private BoundTableExt table;
 
-		public SearchViewProvider getSearchViewProvider(){
-			return SearchViewProvider.this;
+		public SearchViewProviderBase getSearchViewProvider(){
+			return SearchViewProviderBase.this;
 		}
 		public SearchPanel() {
 			try {
@@ -323,7 +323,7 @@ public abstract class SearchViewProvider implements ViewProvider {
 	protected abstract SearchDataProvider createSearchDataProvider(
 			AsyncCallback completionCallback, SingleTableSearchDefinition def);
 
-	public static class SearchViewProviderCommon extends SearchViewProvider {
+	public static class SearchViewProvider extends SearchViewProviderBase {
 		protected SearchDataProvider createSearchDataProvider(
 				AsyncCallback completionCallback,
 				SingleTableSearchDefinition def) {
