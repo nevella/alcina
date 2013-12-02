@@ -18,6 +18,7 @@ import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 import cc.alcina.template.client.logic.AlcinaTemplateContentProvider;
 import cc.alcina.template.cs.AlcinaTemplateHistory;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.History;
 
 @RegistryLocation(registryPoint = AlcinaTemplateConfiguration.class, implementationType = ImplementationType.SINGLETON)
@@ -27,6 +28,7 @@ public class AlcinaTemplateConfiguration extends ClientConfiguration {
 	protected void initExceptionHandling() {
 		Registry.registerSingleton(ClientExceptionHandler.class,
 				new AlcinaTemplateExceptionHandler());
+		GWT.setUncaughtExceptionHandler(Registry.impl(ClientExceptionHandler.class));
 	}
 
 	@Override
