@@ -33,7 +33,6 @@ public class HandleReloadUserObjectsSignalHandler implements
 
 		@Override
 		public void run() {
-			int i = 3;
 		}
 	}
 

@@ -54,7 +54,7 @@ public class DomainObjectCloner extends CloneHelper {
 	public static final Set<String> IGNORE_FOR_DOMAIN_OBJECT_CLONING = new HashSet<String>(
 			Arrays.asList(new String[] { "id", "localId",
 					"lastModificationDate", "lastModificationUser",
-					"creationDate", "creationUser", "versionNumber" }));
+					"creationDate", "creationUser", "versionNumber","propertyChangeListeners" }));
 
 	protected boolean ignore(Class clazz, String propertyName, Object obj) {
 		if (IGNORE_FOR_DOMAIN_OBJECT_CLONING.contains(propertyName)) {
