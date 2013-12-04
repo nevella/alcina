@@ -67,16 +67,32 @@
 		<pathelement path="${framework.gwt.classpath.bin}" />
 		<pathelement path="${framework.gwt.classpath.lib}" />
 	</path>
-	<macrodef name = "git">
-	    <attribute name = "command" />
-	    <attribute name = "dir" default = "" />
-	    <element name = "args" optional = "true" />
-	    <sequential>
-	        <echo message = "git @{command} @{dir}" />
-	        <exec executable = "git" dir = "@{dir}" failonerror="true">
-	            <arg value = "@{command}" />
-	            <args/>
-	        </exec>
-	    </sequential>
+	<macrodef name="git">
+		<attribute name="command" />
+		<attribute name="dir" default="" />
+		<element name="args" optional="true" />
+		<sequential>
+			<echo message="git @{command} @{dir}" />
+			<exec executable="git" dir="@{dir}" failonerror="true">
+				<arg value="@{command}" />
+				<args />
+			</exec>
+		</sequential>
+	</macrodef>
+	<macrodef name="git-version">
+		<attribute name="dir" />
+		<attribute name="file" />
+		<element name="args" optional="true" />
+		<sequential>
+			<echo message="git log @{dir}" />
+			<exec executable="git" dir="@{dir}" failonerror="true">
+				<arg value="log" />
+				<arg value="--pretty=format:'%H'" />
+				<arg value="-n" />
+				<arg value="1" />
+				<arg value="&gt;" />
+				<arg value="@file" />
+			</exec>
+		</sequential>
 	</macrodef>
 </project>
