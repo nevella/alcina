@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.ConsortSignalHandler;
 
@@ -14,7 +15,7 @@ public class HandleLoggedInSignalHandler implements
 		consort.removeStates(ExtensibleEnum.forClassAndTag(
 				HandshakeState.class, HandshakeState.TAG_POST_OBJECT_DATA_LOAD));
 		// don't clear existing objects, leave that for application logic
-		consort.addIfNotMember(new StartAppPlayer());
+		consort.addIfNotMember(Registry.impl(StartAppPlayer.class));
 		consort.nudge();
 	}
 

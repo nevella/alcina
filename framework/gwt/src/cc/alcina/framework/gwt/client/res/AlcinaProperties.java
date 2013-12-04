@@ -12,6 +12,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 public class AlcinaProperties {
 	public static final String SIMULATE_OFFLINE = "simulateOffline";
 
+	public static final String NON_BROWSER = "NON_BROWSER";
+
 	public static boolean is(Class clazz, String key) {
 		String value = get().getString(clazz, key);
 		return Boolean.valueOf(value);
@@ -27,8 +29,9 @@ public class AlcinaProperties {
 
 	public AlcinaProperties() {
 		super();
-		properties = StringMap.fromPropertyString(AlcinaResources.INSTANCE
-				.appProperties().getText());
+		properties = AlcinaResources.INSTANCE == null ? new StringMap()
+				: StringMap.fromPropertyString(AlcinaResources.INSTANCE
+						.appProperties().getText());
 	}
 
 	public static AlcinaProperties get() {
@@ -43,5 +46,11 @@ public class AlcinaProperties {
 
 	public static String get(Class clazz, String key) {
 		return get().getString(clazz, key);
+	}
+
+	public static void put(Class<?> clazz, String key, String value) {
+		String cKey = clazz == null ? key : CommonUtils.simpleClassName(clazz)
+				+ "." + key;
+		get().properties.put(cKey, value);
 	}
 }

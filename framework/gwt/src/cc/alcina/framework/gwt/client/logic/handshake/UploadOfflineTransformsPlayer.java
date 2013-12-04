@@ -10,7 +10,7 @@ public class UploadOfflineTransformsPlayer extends
 			"OFFLINE_TRANSFORMS_UPLOADED");
 
 	public UploadOfflineTransformsPlayer() {
-		addRequires(HandshakeState.ASYNC_SERVICES_INITIALISED);
+		addRequires(HandshakeState.SERVICES_INITIALISED);
 		addProvides(OFFLINE_TRANSFORMS_UPLOADED);
 	}
 

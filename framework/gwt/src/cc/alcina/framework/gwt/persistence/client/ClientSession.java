@@ -178,6 +178,10 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 
 	private ClientSession() {
 		super();
+		init();
+	}
+
+	protected void init() {
 		Window.addWindowClosingHandler((ClosingHandler) this);
 		setAppId("alcina");
 	}
@@ -285,6 +289,11 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 
 		@Override
 		public void resetCookies() {
+		}
+
+		@Override
+		public void acquireCrossTabPersistenceLock(AsyncCallback<Void> callback) {
+			callback.onSuccess(null);
 		}
 	}
 

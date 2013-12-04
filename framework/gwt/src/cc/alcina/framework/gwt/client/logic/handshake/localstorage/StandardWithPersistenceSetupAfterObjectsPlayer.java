@@ -14,7 +14,7 @@ import cc.alcina.framework.gwt.client.logic.handshake.SetupAfterObjectsPlayer;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.persistence.client.DatabaseStatsObserver;
 
-public abstract class StandardWebDbSetupAfterObjectsPlayer extends
+public abstract class StandardWithPersistenceSetupAfterObjectsPlayer extends
 		SetupAfterObjectsPlayer {
 	private SaveToLocalStorageConsort saveConsort;
 	DatabaseStatsObserver statsObserver = Registry
@@ -38,7 +38,7 @@ public abstract class StandardWebDbSetupAfterObjectsPlayer extends
 			}
 		};
 
-	public StandardWebDbSetupAfterObjectsPlayer() {
+	public StandardWithPersistenceSetupAfterObjectsPlayer() {
 		super();
 	}
 

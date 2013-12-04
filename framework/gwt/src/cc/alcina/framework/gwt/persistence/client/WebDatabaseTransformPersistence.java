@@ -14,7 +14,6 @@
 package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -32,7 +31,6 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.EnumSerializer;
 import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
@@ -246,47 +244,10 @@ public class WebDatabaseTransformPersistence extends
 		return transformDatabaseName;
 	}
 
-	@Override
-	protected void getTransforms(final DeltaApplicationRecordType[] types,
-			final AsyncCallback<List<DeltaApplicationRecord>> callback) {
-		DeltaApplicationFilters filters = new DeltaApplicationFilters();
-		filters.types = types;
-		getTransforms(filters, callback);
-	}
-
 	protected void getTransforms(DeltaApplicationFilters filters,
 			AsyncCallback<List<DeltaApplicationRecord>> callback) {
 		String sql = getTransformWrapperSql(filters);
 		db.transaction(new ListTransformWrappersCallback(sql, callback));
-	}
-
-	private String getTransformWrapperSql(DeltaApplicationFilters filters) {
-		if (filters.clientInstanceId == null) {
-			filters.clientInstanceId = getClientInstanceIdForGet();
-		}
-		List<String> clauses = new ArrayList<String>();
-		if (filters.types.length > 0) {
-			String typeClause = "transform_request_type in "
-					+ stringListToClause(CollectionFilters.convert(
-							Arrays.asList(filters.types),
-							new ToStringConverter()));
-			clauses.add(typeClause);
-		}
-		if (filters.clientInstanceId != null) {
-			clauses.add(CommonUtils.formatJ("  clientInstance_id=%s ",
-					filters.clientInstanceId));
-		}
-		if (filters.protocolVersion != null) {
-			clauses.add(CommonUtils.formatJ("  transform_event_protocol='%s' ",
-					filters.protocolVersion));
-		}
-		if (clauses.isEmpty()) {
-			throw new RuntimeException("need some type of filter");
-		}
-		String sql = CommonUtils.formatJ("select * from TransformRequests"
-				+ " where %s  order by id asc",
-				CommonUtils.join(clauses, " and "));
-		return sql;
 	}
 
 	@Override

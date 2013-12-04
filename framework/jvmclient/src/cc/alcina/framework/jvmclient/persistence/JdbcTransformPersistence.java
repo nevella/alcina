@@ -21,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -28,15 +29,20 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
+import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
+import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.DeltaApplicationFilters;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -62,7 +68,8 @@ public abstract class JdbcTransformPersistence extends
 
 	@Override
 	public void clearPersistedClient(final ClientInstance exceptFor,
-			int exceptForId, final AsyncCallback callback, boolean clearDeltaStore) {
+			int exceptForId, final AsyncCallback callback,
+			boolean clearDeltaStore) {
 		try {
 			String sql = CommonUtils.formatJ("DELETE from TransformRequests"
 					+ " where (transform_request_type='CLIENT_OBJECT_LOAD'"
@@ -85,19 +92,9 @@ public abstract class JdbcTransformPersistence extends
 			String.class, "tag", String.class };
 
 	protected ResultSet getTransformsResultSet(
-			final DeltaApplicationRecordType[] types, CleanupTuple tuple)
+			final DeltaApplicationFilters filters, CleanupTuple tuple)
 			throws SQLException {
-		String sql = "select * from TransformRequests ";
-		for (int i = 0; i < types.length; i++) {
-			sql += i == 0 ? " where (" : " or ";
-			sql += CommonUtils.formatJ("transform_request_type='%s'", types[i]);
-		}
-		sql += ") ";
-		if (getClientInstanceIdForGet() != null) {
-			sql += CommonUtils.formatJ(" and clientInstance_id=%s ",
-					getClientInstanceIdForGet());
-		}
-		sql += "  order by id asc";
+		String sql = getTransformWrapperSql(filters);
 		return tuple.executeQuery(sql);
 	}
 
@@ -174,35 +171,6 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	@Override
-	protected void getTransforms(final DeltaApplicationRecordType[] types,
-			final AsyncCallback<List<DeltaApplicationRecord>> callback) {
-		CleanupTuple cleanupTuple = new CleanupTuple();
-		List<DeltaApplicationRecord> transforms = new ArrayList<DeltaApplicationRecord>();
-		try {
-			ResultSet rs = getTransformsResultSet(types, cleanupTuple);
-			while (rs.next()) {
-				Map<String, Object> map = getFieldsAs(rs, transformParams);
-				DeltaApplicationRecord wr = new DeltaApplicationRecord(
-						(Integer) map.get("id"), (String) map.get("transform"),
-						(Long) map.get("timestamp"), (Long) map.get("user_id"),
-						(Long) map.get("clientInstance_id"),
-						(Integer) map.get("request_id"),
-						(Integer) map.get("clientInstance_auth"),
-						(DeltaApplicationRecordType) map
-								.get("transform_request_type"),
-						(String) map.get("transform_event_protocol"),
-						(String) map.get("tag"));
-				transforms.add(wr);
-			}
-		} catch (Exception e) {
-			callback.onFailure(e);
-		} finally {
-			cleanupTuple.cleanup();
-		}
-		callback.onSuccess(transforms);
-	}
-
-	@Override
 	public void init(
 			final DTESerializationPolicy dteSerializationPolicy,
 			final CommitToStorageTransformListener commitToServerTransformListener,
@@ -247,8 +215,12 @@ public abstract class JdbcTransformPersistence extends
 				superCallback);
 	}
 
-	private Connection getConnection() throws SQLException {
-		return DriverManager.getConnection(connectionUrl);
+	public Connection getConnection() {
+		try {
+			return DriverManager.getConnection(connectionUrl);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	private void executeStatement(String sql) {
@@ -303,8 +275,8 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	@Override
-	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
-			final AsyncCallback callback) {
+	protected void persistFromFrontOfQueue(
+			final DeltaApplicationRecord wrapper, final AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
 			PreparedStatement pstmt = tuple
@@ -411,11 +383,59 @@ public abstract class JdbcTransformPersistence extends
 
 	@Override
 	public void getDomainModelDeltaIterator(DeltaApplicationFilters filters,
-			AsyncCallback<Iterator<DomainModelDelta>> callback) {
-		// TODO - fw_java_3
+			final AsyncCallback<Iterator<DomainModelDelta>> callback) {
+		String sql = getTransformWrapperSql(filters);
+		AsyncCallback<List<DeltaApplicationRecord>> converterCallback = new AsyncCallback<List<DeltaApplicationRecord>>() {
+			@Override
+			public void onFailure(Throwable caught) {
+				callback.onFailure(caught);
+			}
+
+			@Override
+			public void onSuccess(List<DeltaApplicationRecord> result) {
+				callback.onSuccess(CollectionFilters
+						.convert(
+								result,
+								new DeltaApplicationRecordToDomainModelDeltaConverter())
+						.iterator());
+			}
+		};
+		getTransforms(filters, converterCallback);
 	}
 
 	@Override
 	public void getClientInstanceIdOfDomainObjectDelta(AsyncCallback callback) {
+		DeltaApplicationFilters filters = new DeltaApplicationFilters();
+		filters.protocolVersion = DomainTrancheProtocolHandler.VERSION;
+		getTransforms(filters, callback);
+	}
+
+	@Override
+	protected void getTransforms(DeltaApplicationFilters filters,
+			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+		CleanupTuple cleanupTuple = new CleanupTuple();
+		List<DeltaApplicationRecord> transforms = new ArrayList<DeltaApplicationRecord>();
+		try {
+			ResultSet rs = getTransformsResultSet(filters, cleanupTuple);
+			while (rs.next()) {
+				Map<String, Object> map = getFieldsAs(rs, transformParams);
+				DeltaApplicationRecord wr = new DeltaApplicationRecord(
+						(Integer) map.get("id"), (String) map.get("transform"),
+						(Long) map.get("timestamp"), (Long) map.get("user_id"),
+						(Long) map.get("clientInstance_id"),
+						(Integer) map.get("request_id"),
+						(Integer) map.get("clientInstance_auth"),
+						(DeltaApplicationRecordType) map
+								.get("transform_request_type"),
+						(String) map.get("transform_event_protocol"),
+						(String) map.get("tag"));
+				transforms.add(wr);
+			}
+		} catch (Exception e) {
+			callback.onFailure(e);
+		} finally {
+			cleanupTuple.cleanup();
+		}
+		callback.onSuccess(transforms);
 	}
 }

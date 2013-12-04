@@ -91,7 +91,10 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.jvmclient.build.dir}" />
-		<javac includeantruntime="false" debug="on" srcdir="${framework.jvmclient.src.dir}" destdir="${framework.jvmclient.build.dir}">
+		<javac includeantruntime="false" debug="on" destdir="${framework.jvmclient.build.dir}">
+			<src path="${framework.jvmclient.src.dir}" />
+			<src path="${framework.jvmclient.src.dir.2}" />
+			<exclude name="cc/alcina/framework/common/translatable/**"/>
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<pathelement path="${framework.entity.build.dir}" />

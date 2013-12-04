@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.ConsortSignalHandler;
 import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
@@ -22,18 +23,8 @@ public class HandleReloadUserObjectsSignalHandler implements
 		// history tokens...(alcina rox)
 		// statesToRemove.remove(HandshakeState.MAIN_LAYOUT_INITIALISED);
 		consort.removeStates(statesToRemove);
-		consort.addIfNotMember(new ReloadObjectsPlayer());
+		consort.addIfNotMember(Registry.impl(StartAppPlayer.class));
 		consort.nudge();
-	}
-
-	static class ReloadObjectsPlayer extends RunnablePlayer<HandshakeState> {
-		public ReloadObjectsPlayer() {
-			addRequires(HandshakeState.MAIN_LAYOUT_INITIALISED);
-		}
-
-		@Override
-		public void run() {
-		}
 	}
 
 	@Override

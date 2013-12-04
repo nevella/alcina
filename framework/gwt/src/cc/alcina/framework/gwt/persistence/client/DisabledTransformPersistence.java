@@ -66,4 +66,10 @@ public class DisabledTransformPersistence extends LocalTransformPersistence {
 	public void getClientInstanceIdOfDomainObjectDelta(AsyncCallback callback) {
 		
 	}
+
+	@Override
+	protected void getTransforms(DeltaApplicationFilters filters,
+			AsyncCallback<List<DeltaApplicationRecord>> callback) {
+		
+	}
 }

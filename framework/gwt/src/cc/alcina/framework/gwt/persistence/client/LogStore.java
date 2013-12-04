@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientBase;
+import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.Lzw;
@@ -151,9 +152,12 @@ public class LogStore {
 			+ "TOPIC_DELETED";
 
 	protected LogStore() {
-		String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);
-		if (cookie != null) {
-			log("restart", cookie);
+		if (!AlcinaProperties.is(AlcinaProperties.class,
+				AlcinaProperties.NON_BROWSER)) {
+			String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);
+			if (cookie != null) {
+				log("restart", cookie);
+			}
 		}
 	}
 
