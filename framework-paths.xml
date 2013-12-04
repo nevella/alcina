@@ -85,13 +85,9 @@
 		<element name="args" optional="true" />
 		<sequential>
 			<echo message="git log @{dir}" />
-			<exec executable="git" dir="@{dir}" failonerror="true">
-				<arg value="log" />
-				<arg value="--pretty=format:'%H'" />
-				<arg value="-n" />
-				<arg value="1" />
-				<arg value="&gt;" />
-				<arg value="@file" />
+			<exec executable="bash" dir="@{dir}" failonerror="true">
+				<arg value="-c" />
+				<arg value="printf &quot;\n&quot; >> @{file};echo @{dir} >> @{file};git log --pretty=format:'%h' -n 1 >> @{file}" />
 			</exec>
 		</sequential>
 	</macrodef>
