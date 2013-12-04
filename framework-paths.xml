@@ -87,7 +87,7 @@
 			<echo message="git log @{dir}" />
 			<exec executable="bash" dir="@{dir}" failonerror="true">
 				<arg value="-c" />
-				<arg value="printf &quot;\n&quot; >> @{file};echo @{dir} >> @{file};git log --pretty=format:'%h' -n 1 >> @{file}" />
+				<arg value="printf &quot;\n&quot; >> @{file};echo @{dir} >> @{file};git log --pretty=format:'%H' -n 1 >> @{file}" />
 			</exec>
 		</sequential>
 	</macrodef>
