@@ -1,5 +1,7 @@
 package cc.alcina.framework.jvmclient.persistence;
 
+import java.io.StringReader;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -21,13 +23,6 @@ import cc.alcina.framework.gwt.client.util.DiscardInfoWrappingCallback;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 import cc.alcina.framework.gwt.persistence.client.PersistenceObjectStore;
 
-import com.google.code.gwt.database.client.GenericRow;
-import com.google.code.gwt.database.client.SQLError;
-import com.google.code.gwt.database.client.SQLResultSet;
-import com.google.code.gwt.database.client.SQLResultSetRowList;
-import com.google.code.gwt.database.client.SQLTransaction;
-import com.google.code.gwt.database.client.StatementCallback;
-import com.google.code.gwt.database.client.TransactionCallback;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
@@ -53,12 +48,12 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 
 	@Override
 	public void clear(final AsyncCallback<Void> callback) {
-		executeSql(CommonUtils.formatJ("Delete from %s;", tableName), callback);
+		executeSql(CommonUtils.formatJ("Delete from %s", tableName), callback);
 	}
 
 	@Override
 	public void drop(final AsyncCallback<Void> callback) {
-		executeSql(CommonUtils.formatJ("DROP TABLE %s;", tableName), callback);
+		executeSql(CommonUtils.formatJ("DROP TABLE %s", tableName), callback);
 	}
 
 	public void executeSql(final String sql, final AsyncCallback callback) {
@@ -264,15 +259,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 				PreparedStatement stmt = null;
 				while (kvsIterator.hasNext()) {
 					Entry<String, String> kv = kvsIterator.next();
-					if (add) {
-						String sql = CommonUtils.formatJ(
-								"insert into %s (key_,value_) values(?,?)",
-								tableName);
-						stmt = conn.prepareStatement(sql);
-						stmt.setString(1, kv.getKey());
-						stmt.setString(2, kv.getValue());
-						stmt.executeUpdate();
-					} else {
+					if (!add) {
 						if (id == null || kvs.size() != 1) {
 							String sql = CommonUtils.formatJ(
 									"select id from %s where key_=? ",
@@ -283,6 +270,8 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 							id = null;
 							if (rs.next()) {
 								id = rs.getInt(1);
+							} else {
+								add = true;
 							}
 						}
 						if (id != null) {
@@ -290,10 +279,22 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 									"update %s set  value_=? where id=?",
 									tableName);
 							stmt = conn.prepareStatement(sql);
-							stmt.setString(1, kv.getValue());
+							stmt.setCharacterStream(1, new StringReader(kv.getValue()));
 							stmt.setInt(2, id);
 							stmt.executeUpdate();
 						}
+					}
+					if (id == null) {
+						// add
+						String sql = CommonUtils.formatJ(
+								"insert into %s (key_,value_) values(?,?)",
+								tableName);
+						stmt = conn.prepareStatement(sql);
+						stmt.setString(1, kv.getKey());
+						Clob clob = conn.createClob();
+						clob.setString(1, kv.getValue());
+						stmt.setClob(2, clob);
+						stmt.executeUpdate();
 					}
 				}
 				if (stmt != null) {

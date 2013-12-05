@@ -290,6 +290,9 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 		@Override
 		public void resetCookies() {
 		}
+		@Override
+		public void releaseCrossTabPersistenceLock() {
+		}
 
 		@Override
 		public void acquireCrossTabPersistenceLock(AsyncCallback<Void> callback) {

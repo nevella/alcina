@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -189,7 +189,7 @@ public class LogStore {
 	public void flushToLocalPersistence() {
 		if (logs.size > 0 && this.objectStore != null
 				&& !isLocalPersistencePaused()) {
-			String serialized = new AlcinaBeanSerializer().serialize(logs);
+			String serialized = new AlcinaBeanSerializerC().serialize(logs);
 			if (isUsesLzw()) {
 				setMuted(true);
 				try {

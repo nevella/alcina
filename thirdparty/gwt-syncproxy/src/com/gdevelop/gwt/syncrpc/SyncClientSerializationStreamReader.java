@@ -28,7 +28,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedList;
@@ -525,13 +524,11 @@ public class SyncClientSerializationStreamReader extends
 		boolean inStr = false;
 		for (int i = 0; i < encoded.length(); i++) {
 			char ch = encoded.charAt(i);
-			char ch1 = i < encoded.length() - 1 ? encoded.charAt(i + 1) : 0;
+			char chl1 = i > 0 ? encoded.charAt(i - 1) : 0;
 			String cont = encoded.substring(i);
 			if (inStr) {
-				if (ch == '"') {
+				if (ch == '"' && chl1 != '\\') {
 					inStr = false;
-				} else if (ch == '\\' && ch1 == '"') {
-					i++;// we just need to get clear of \"
 				}
 			} else {
 				if (ch == '"') {

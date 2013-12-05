@@ -19,14 +19,20 @@ import org.json.JSONObject;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 
 @SuppressWarnings("unchecked")
-public class AlcinaBeanSerializerS {
+@RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+@ClientInstantiable
+public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 	private static final String PROPERTIES = "props";
 
 	private static final String CLASS_NAME = "cn";
@@ -35,6 +41,7 @@ public class AlcinaBeanSerializerS {
 
 	private ClassLoader cl;
 
+	@Override
 	public <T> T deserialize(String jsonString) throws Exception {
 		JSONObject obj = new JSONObject(jsonString);
 		cl = Thread.currentThread().getContextClassLoader();
@@ -168,6 +175,7 @@ public class AlcinaBeanSerializerS {
 		}
 	}
 
+	@Override
 	public String serialize(Object bean) throws Exception {
 		return serializeObject(bean).toString();
 	}
@@ -283,7 +291,8 @@ public class AlcinaBeanSerializerS {
 			jo.put(LITERAL, serializeField(object, clazz));
 			return jo;
 		}
-		List<PropertyDescriptor> pds = SEUtilities.getSortedPropertyDescriptors(clazz);
+		List<PropertyDescriptor> pds = SEUtilities
+				.getSortedPropertyDescriptors(clazz);
 		JSONObject props = new JSONObject();
 		jo.put(PROPERTIES, props);
 		Object template = clazz.newInstance();

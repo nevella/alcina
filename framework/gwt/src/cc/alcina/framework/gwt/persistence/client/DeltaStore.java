@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.state.AllStatesConsort;
 import cc.alcina.framework.common.client.state.ConsortPlayer.SubconsortSupport;
 import cc.alcina.framework.common.client.state.Player;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -218,10 +219,11 @@ public class DeltaStore {
 						DomainModelDeltaSignature signature = DomainModelDeltaSignature
 								.parseSignature(e.getKey().substring(
 										META.length()));
-						newCache.metadataCache
-								.put(signature,
-										(DomainModelDeltaMetadata) new AlcinaBeanSerializer()
-												.deserialize(e.getValue()));
+						newCache.metadataCache.put(
+								signature,
+								(DomainModelDeltaMetadata) Registry.impl(
+										AlcinaBeanSerializer.class)
+										.deserialize(e.getValue()));
 					}
 					cache = newCache;
 					wasPlayed(player);

@@ -11,7 +11,7 @@ import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
@@ -141,7 +141,7 @@ public class ClientLogRecord implements Serializable {
 
 		public void addLogRecord(ClientLogRecord logRecord) {
 			logRecords.add(logRecord);
-			buf += new AlcinaBeanSerializer().serialize(logRecord);
+			buf += new AlcinaBeanSerializerC().serialize(logRecord);
 			incrementSize(logRecord);
 		}
 

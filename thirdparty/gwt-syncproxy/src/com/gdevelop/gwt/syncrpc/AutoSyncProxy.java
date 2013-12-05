@@ -64,6 +64,9 @@ public class AutoSyncProxy {
 		}
 		return _instance;
 	}
+	public static void nullifyInstance() {
+		_instance = null;
+	}
 
 	public static Object getProxyInstance(Class serviceIntf, String moduleBaseURL, String remoteServiceRelativePath, boolean failingProxyOnRetrieveFail) {
 		return getProxyInstance(serviceIntf, moduleBaseURL, remoteServiceRelativePath, failingProxyOnRetrieveFail, null);

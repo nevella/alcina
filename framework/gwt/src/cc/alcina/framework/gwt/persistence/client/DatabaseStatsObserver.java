@@ -4,7 +4,9 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -65,7 +67,7 @@ public class DatabaseStatsObserver {
 		protected void onSuccess0(String result) {
 			try {
 				if (result != null) {
-					max = new AlcinaBeanSerializer().deserialize(result);
+					max = Registry.impl(AlcinaBeanSerializer.class).deserialize(result);
 				}
 			} catch (Exception e) {
 				
@@ -111,7 +113,7 @@ public class DatabaseStatsObserver {
 	}
 
 	protected void persistMax() {
-		String ser = new AlcinaBeanSerializer().serialize(max);
+		String ser = new AlcinaBeanSerializerC().serialize(max);
 		PropertyStore.get().put(SERIALIZED_MAX_KEY, ser, persistedCallback);
 	}
 
