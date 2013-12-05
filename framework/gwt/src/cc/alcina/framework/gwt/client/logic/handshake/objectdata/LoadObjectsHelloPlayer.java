@@ -47,7 +47,7 @@ public class LoadObjectsHelloPlayer extends
 	/*
 	 * call logic is a bit fraught here - it works, but ain't pretty
 	 */
-	void signal(boolean continueObjectLoad) {
+	protected void signal(boolean continueObjectLoad) {
 		if (PermissionsManager.isOffline()) {
 			wasPlayed(LoadObjectDataState.HELLO_OFFLINE);
 		} else {

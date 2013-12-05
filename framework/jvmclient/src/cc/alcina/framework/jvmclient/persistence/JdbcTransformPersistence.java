@@ -300,24 +300,12 @@ public abstract class JdbcTransformPersistence extends
 			pstmt.setString(8, wrapper.getProtocolVersion());
 			pstmt.setString(9, wrapper.getTag());
 			tuple.executePstmt();
-			pstmt.execute();
 			ResultSet rs = tuple.getGeneratedKeys();
 			if (rs != null && rs.next()) {
 				int newid = rs.getInt(1);
 				wrapper.setId(newid);
 			}
-			if ("".isEmpty()) {
-				throw new UnsupportedOperationException(
-						"clear persisted client should be called by the handshake consort anyway");
-			}
-			// if (wrapper.getDeltaApplicationRecordType() ==
-			// DeltaApplicationRecordType.CLIENT_OBJECT_LOAD) {
-			// clearPersistedClient(ClientLayerLocator.get()
-			// .getClientInstance(),0, callback);
-			// } else {
-			// callback.onSuccess(null);
-			// }
-			return;
+			callback.onSuccess(null);
 		} catch (Exception e) {
 			callback.onFailure(e);
 		} finally {

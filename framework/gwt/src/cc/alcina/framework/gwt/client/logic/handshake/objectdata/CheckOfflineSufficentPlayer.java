@@ -3,6 +3,9 @@ package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 import java.util.Arrays;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
@@ -13,6 +16,8 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
  * @author nreddel@barnet.com.au
  * 
  */
+@RegistryLocation(registryPoint = CheckOfflineSufficentPlayer.class, implementationType = ImplementationType.SINGLETON)
+@ClientInstantiable
 public class CheckOfflineSufficentPlayer extends
 		RunnablePlayer<LoadObjectDataState> {
 	public CheckOfflineSufficentPlayer() {
