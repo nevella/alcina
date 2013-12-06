@@ -30,8 +30,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
 
 @SuppressWarnings("unchecked")
-@RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-@ClientInstantiable
 public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 	private static final String PROPERTIES = "props";
 

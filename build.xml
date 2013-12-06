@@ -184,6 +184,7 @@
 		</jar>
 
 		<jar destfile="${framework.dist.dir}/${ant.project.name}-jvmclient.jar">
+			<metainf dir="${framework.jvmclient.dir}/META-INF" />
 			<fileset dir="${framework.jvmclient.build.dir}">
 				<include name="**/*.*" />
 			</fileset>
