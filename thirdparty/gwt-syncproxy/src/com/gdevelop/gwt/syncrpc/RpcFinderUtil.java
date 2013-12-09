@@ -17,8 +17,6 @@ package com.gdevelop.gwt.syncrpc;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -26,7 +24,9 @@ import java.net.URL;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,7 +41,11 @@ import com.google.gwt.user.server.rpc.SerializationPolicyLoader;
 public class RpcFinderUtil {
 	private static final String NOCACHEJS = ".nocache.js";
 	
-	private static String getResposeText(String myurl) throws IOException {
+	public static Map<String,String> getRequestCache=new LinkedHashMap<String, String>();
+	private static String getResponseText(String myurl) throws IOException {
+		if(getRequestCache.containsKey(myurl)){
+			return getRequestCache.get(myurl);
+		}
 		URL url = new URL(myurl);
 		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 		connection.setDoInput(true);
@@ -57,6 +61,7 @@ public class RpcFinderUtil {
 			baos.write(buffer, 0, len);
 		}
 		String responseText = baos.toString("UTF8");
+		getRequestCache.put(myurl, responseText);
 		return responseText;
 	}
 	
@@ -64,7 +69,7 @@ public class RpcFinderUtil {
 		String url = baseurlwithendingslash + policyFileName;
 		String response = "";
 		try {
-			response = getResposeText(url);
+			response = getResponseText(url);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -93,7 +98,7 @@ public class RpcFinderUtil {
 		String surl = baseurlwithendingslash + nocachejs;
 		String responseText = "";
 		try {
-			responseText = getResposeText(surl);
+			responseText = getResponseText(surl);
 		} catch (IOException e1) {
 			throw new RuntimeException(e1);
 		}
@@ -108,7 +113,7 @@ public class RpcFinderUtil {
 				+ ".cache.html";
 		String responseCache = "";
 		try {
-			responseCache = getResposeText(cacheurl);
+			responseCache = getResponseText(cacheurl);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -134,7 +139,7 @@ public class RpcFinderUtil {
 		String result = null;
 		String responseText = null;
 		try {
-			responseText = getResposeText(rpcUrl);
+			responseText = getResponseText(rpcUrl);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -163,7 +168,7 @@ public class RpcFinderUtil {
 		SerializationPolicy result = null;
 		String responseText = null;
 		try {
-			responseText = getResposeText(rpcUrl);
+			responseText = getResponseText(rpcUrl);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();

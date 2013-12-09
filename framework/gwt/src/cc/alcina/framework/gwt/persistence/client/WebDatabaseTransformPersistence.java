@@ -90,17 +90,7 @@ public class WebDatabaseTransformPersistence extends
 	@Override
 	public void clearPersistedClient(ClientInstance exceptFor, int exceptForId,
 			final AsyncCallback callback, boolean clearDeltaStore) {
-		final String sql = CommonUtils.formatJ("DELETE from TransformRequests"
-				+ " where (transform_request_type "
-				+
-				// legacy
-				"in('CLIENT_OBJECT_LOAD','CLIENT_SYNC','TO_REMOTE_COMPLETED')"
-				+ " OR transform_request_type='%s'"
-				+ " OR transform_request_type='%s')"
-				+ " and (clientInstance_id != %s and id != %s)",
-				DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED,
-				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
-				exceptFor == null ? -1 : exceptFor.getId(), exceptForId);
+		final String sql = clearPersistedClientSql(exceptFor, exceptForId);
 		AsyncCallbackStd deleteDeltaAppsCallback = new AsyncCallbackStd() {
 			@Override
 			public void onSuccess(Object result) {

@@ -71,12 +71,7 @@ public abstract class JdbcTransformPersistence extends
 			int exceptForId, final AsyncCallback callback,
 			boolean clearDeltaStore) {
 		try {
-			String sql = CommonUtils.formatJ("DELETE from TransformRequests"
-					+ " where (transform_request_type='CLIENT_OBJECT_LOAD'"
-					+ " OR transform_request_type='CLIENT_SYNC'"
-					+ " OR transform_request_type='TO_REMOTE_COMPLETED')"
-					+ " and (clientInstance_id != %s and id != %s)",
-					exceptFor == null ? -1 : exceptFor.getId(), exceptForId);
+			String sql = clearPersistedClientSql(exceptFor, exceptForId);
 			executeStatement(sql);
 			callback.onSuccess(null);
 		} catch (Exception e) {

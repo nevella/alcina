@@ -30,6 +30,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
@@ -70,6 +71,9 @@ public class ClientUtils {
 			}
 			t = t.getCause();
 		}
+		if (t.getMessage().contains("IOException while sending RPC request")) {
+			return true;
+		}
 		if (t instanceof StatusCodeException) {
 			if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)) {
 				return true;
@@ -77,9 +81,12 @@ public class ClientUtils {
 			StatusCodeException sce = (StatusCodeException) t;
 			Registry.impl(ClientNotifications.class).log(
 					"** Status code exception: " + sce.getStatusCode());
+			if (sce.getStatusCode() == 0) {
+				return true;
+			}
 			boolean internetExplorerErrOffline = BrowserMod
 					.isInternetExplorer() && sce.getStatusCode() > 600;
-			if (sce.getStatusCode() == 0 || internetExplorerErrOffline) {
+			if (internetExplorerErrOffline) {
 				return true;
 			}
 			// DNS error in Africa

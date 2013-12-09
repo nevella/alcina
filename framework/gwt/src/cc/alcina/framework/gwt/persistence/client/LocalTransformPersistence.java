@@ -627,4 +627,19 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				CommonUtils.join(clauses, " and "));
 		return sql;
 	}
+
+	protected String clearPersistedClientSql(ClientInstance exceptFor, int exceptForId) {
+		final String sql = CommonUtils.formatJ("DELETE from TransformRequests"
+				+ " where (transform_request_type "
+				+
+				// legacy
+				"in('CLIENT_OBJECT_LOAD','CLIENT_SYNC','TO_REMOTE_COMPLETED')"
+				+ " OR transform_request_type='%s'"
+				+ " OR transform_request_type='%s')"
+				+ " and (clientInstance_id != %s and id != %s)",
+				DeltaApplicationRecordType.LOCAL_TRANSFORMS_REMOTE_PERSISTED,
+				DeltaApplicationRecordType.REMOTE_DELTA_APPLIED,
+				exceptFor == null ? -1 : exceptFor.getId(), exceptForId);
+		return sql;
+	}
 }
