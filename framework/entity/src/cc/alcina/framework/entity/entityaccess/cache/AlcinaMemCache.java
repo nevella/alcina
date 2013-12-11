@@ -39,6 +39,8 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import com.google.gwt.event.shared.UmbrellaException;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -54,6 +56,8 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
@@ -984,6 +988,8 @@ public class AlcinaMemCache {
 	}
 
 	void postProcess(DomainTransformPersistenceEvent persistenceEvent) {
+		Set<Throwable> causes = new LinkedHashSet<Throwable>();
+		StringBuilder warnBuilder = new StringBuilder();
 		try {
 			MetricLogging.get().start("post-process");
 			lock(true);
@@ -1031,7 +1037,21 @@ public class AlcinaMemCache {
 					}
 				}
 				HasIdAndLocalId persistentLayerSource = dte.getSource();
-				transformManager.consume(dte);
+				try {
+					transformManager.consume(dte);
+				} catch (DomainTransformException dtex) {
+					if (dtex.getType() == DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND
+							&& dte.getTransformType() == TransformType.DELETE_OBJECT) {
+						warnBuilder.append(String.format("%s\n%s\n\n", dte,
+								dtex.getType(), dtex.getMessage()));
+					} else if (dtex.getType() == DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND
+							&& dte.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION) {
+						warnBuilder.append(String.format("%s\n%s\n\n", dte,
+								dtex.getType(), dtex.getMessage()));
+					} else {
+						causes.add(dtex);
+					}
+				}
 				if (dte.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == dte) {
 					HasIdAndLocalId dbObj = locatorOriginalSourceMap
@@ -1054,12 +1074,27 @@ public class AlcinaMemCache {
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-			GlobalTopicPublisher.get().publishTopic(TOPIC_UPDATE_EXCEPTION, e);
-			throw new MemcacheException(e);
+			causes.add(e);
+			
 		} finally {
 			unlock(true);
 			MetricLogging.get().end("post-process");
+			try {
+				if(warnBuilder.length()>0){
+					Exception warn=new Exception(warnBuilder.toString());
+					System.out.println(warn);
+					warn.printStackTrace();
+					AlcinaTopics.notifyDevWarning(warn);
+				}
+				if (!causes.isEmpty()) {
+					UmbrellaException umby = new UmbrellaException(causes);
+					causes.iterator().next().printStackTrace();
+					GlobalTopicPublisher.get().publishTopic(TOPIC_UPDATE_EXCEPTION, umby);
+					throw new MemcacheException(umby);
+				}
+			} catch (Throwable t) {
+				t.printStackTrace();
+			}
 		}
 	}
 
