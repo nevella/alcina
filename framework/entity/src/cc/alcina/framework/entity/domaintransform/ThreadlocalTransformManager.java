@@ -256,10 +256,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		// nah - in fact, always record creates (even if in-em), but don't
 		// process in consume() if obj exists
 		// if (newInstance.getId() == 0) {
+		registerDomainObject(newInstance);
 		fireCreateObjectEvent(newInstance.getClass(), newInstance.getId(),
 				newInstance.getLocalId());
 		// }
-		registerDomainObject(newInstance);
 		return newInstance;
 	}
 

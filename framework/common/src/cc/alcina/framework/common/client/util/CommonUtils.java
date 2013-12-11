@@ -1015,4 +1015,34 @@ public class CommonUtils {
 		}
 		return sb.toString();
 	}
+
+	public static int countOccurrences(String content, String occurrence) {
+		int result = 0;
+		int idx = 0;
+		while (true) {
+			idx = content.indexOf(occurrence, idx);
+			if (idx == -1) {
+				break;
+			}
+			result++;
+			idx += occurrence.length();
+		}
+		return result;
+	}
+
+	public static List<String> split(String content, String split) {
+		List<String> result = new ArrayList<String>();
+		int idx0 = 0;
+		int idx1 = 0;
+		while (true) {
+			idx1 = content.indexOf(split, idx0);
+			if (idx1 == -1) {
+				result.add(content.substring(idx0));
+				break;
+			}
+			result.add(content.substring(idx0, idx1));
+			idx0 = idx1 + split.length();
+		}
+		return result;
+	}
 }

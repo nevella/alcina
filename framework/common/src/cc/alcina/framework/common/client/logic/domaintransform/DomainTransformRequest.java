@@ -204,4 +204,18 @@ public class DomainTransformRequest implements Serializable {
 		}
 		return duplicates;
 	}
+
+	public static boolean checkSequential(
+			List<DomainTransformEvent> events) {
+		long lastLocalId=-1;
+		for(DomainTransformEvent dte:events){
+			if(dte.getTransformType()==TransformType.CREATE_OBJECT){
+				if(lastLocalId!=-1&&dte.getObjectLocalId()-lastLocalId!=1){
+					return false;
+				}
+				lastLocalId=dte.getObjectLocalId();
+			}
+		}
+		return true;
+	}
 }

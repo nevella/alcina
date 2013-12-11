@@ -106,8 +106,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 			currentDelta.unwrap(this);
 			return;
 		case REGISTERING_GRAPH:
-			if (currentDelta.getDomainModelHolder() != null) {
-				registerDomainModelHolder();
+			if (maybeRegisterDomainModelHolder()) {
 				return;
 			}
 			break;
@@ -125,6 +124,17 @@ public class UnwrapAndRegisterObjectsPlayer extends
 			break;
 		}
 		consort.replay(this);
+	}
+
+	protected boolean maybeRegisterDomainModelHolder() {
+		// we can expect the first delta to be have a domainmodelholder -
+		// apps which allow "always offline" should create a model holder if the
+		// first delta doesn't have a holder;
+		if (currentDelta.getDomainModelHolder() != null) {
+			registerDomainModelHolder(currentDelta.getDomainModelHolder());
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -157,23 +167,22 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		Scheduler.get().scheduleIncremental(replayer);
 	}
 
-	protected void registerDomainModelHolder() {
-		DomainModelHolder domainObjects = currentDelta.getDomainModelHolder();
-		domainObjects.registerSelfAsProvider();
-		GeneralProperties generalProperties = domainObjects
+	protected void registerDomainModelHolder(DomainModelHolder domainModelHolder) {
+		domainModelHolder.registerSelfAsProvider();
+		GeneralProperties generalProperties = domainModelHolder
 				.getGeneralProperties();
 		if (generalProperties != null) {
 			Registry.registerSingleton(GeneralProperties.class,
 					generalProperties);
 		}
-		PermissionsManager.get().setUser(domainObjects.getCurrentUser());
+		PermissionsManager.get().setUser(domainModelHolder.getCurrentUser());
 		PermissionsManager.get().setLoginState(
 				HandshakeConsortModel.get().getLoginState());
-		Registry.impl(ClientNotifications.class)
-				.log(CommonUtils.formatJ("User: %s", domainObjects
-						.getCurrentUser() == null ? null : domainObjects
+		Registry.impl(ClientNotifications.class).log(
+				CommonUtils.formatJ("User: %s", domainModelHolder
+						.getCurrentUser() == null ? null : domainModelHolder
 						.getCurrentUser().getUserName()));
 		TransformManager.get().registerDomainObjectsInHolderAsync(
-				domainObjects, this);
+				domainModelHolder, this);
 	}
 }

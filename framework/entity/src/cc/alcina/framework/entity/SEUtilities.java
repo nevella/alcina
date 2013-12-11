@@ -971,6 +971,12 @@ public class SEUtilities {
 
 	public static List<File> listFilesRecursive(String initialPath,
 			FileFilter filter, boolean removeFolders) {
+		return listFilesRecursive(initialPath, filter, removeFolders, null);
+	}
+
+	public static List<File> listFilesRecursive(String initialPath,
+			FileFilter filter, boolean removeFolders,
+			Pattern doNotCheckFolderPattern) {
 		Stack<File> folders = new Stack<File>();
 		List<File> results = new ArrayList<File>();
 		folders.add(new File(initialPath));
@@ -979,16 +985,25 @@ public class SEUtilities {
 			File[] files = filter == null ? folder.listFiles() : folder
 					.listFiles(filter);
 			for (File file : files) {
-				if (file.isDirectory()) {
-					folders.push(file);
+				if (doNotCheckFolderPattern == null
+						|| !doNotCheckFolderPattern.matcher(file.getName())
+								.matches()) {
+					if (file.isDirectory()) {
+						folders.push(file);
+					}
 				}
 				results.add(file);
 			}
 		}
 		if (removeFolders) {
 			for (Iterator<File> itr = results.iterator(); itr.hasNext();) {
-				if (itr.next().isDirectory()) {
-					itr.remove();
+				File file = itr.next();
+				if (doNotCheckFolderPattern == null
+						|| !doNotCheckFolderPattern.matcher(file.getName())
+								.matches()) {
+					if (file.isDirectory()) {
+						itr.remove();
+					}
 				}
 			}
 		}

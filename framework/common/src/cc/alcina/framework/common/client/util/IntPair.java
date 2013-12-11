@@ -84,7 +84,8 @@ public class IntPair implements Comparable<IntPair> {
 				return new IntPair(Integer.parseInt(split[0]),
 						Integer.parseInt(split[1]));
 			}
-			return null;
+			int point=Integer.parseInt(string);
+			return new IntPair(point,point);
 		} catch (NumberFormatException nfe) {
 			return null;
 		}

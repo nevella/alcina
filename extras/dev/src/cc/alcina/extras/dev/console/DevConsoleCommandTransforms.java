@@ -56,15 +56,17 @@ public class DevConsoleCommandTransforms {
 		}
 
 		public Multimap<Long, List<DomainTransformEvent>> logsToDtrs(
-				String logFile) {
+				String logFile, boolean removeDuplicates) {
 			Pattern lfPat = Pattern
 					.compile("\\s*(\\d{4}.+?)\\s+\\| transform\\s+\\| (\\d+)\\s+\\|(.+)");
 			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
-			String[] split = logFile.split("\n");
-			List<String> strs = new ArrayList<String>(Arrays.asList(split));
+			List<String> strs= CommonUtils.split(logFile,"\n");
 			Collections.reverse(strs);
 			for (int i = 0; i < strs.size(); i++) {
 				String line = strs.get(i);
+				if(line.contains("kXZ3")){
+					int j=3;
+				}
 				int idx = line.length() - 1;// ignore terminating "|"
 				if (idx < 1) {
 					continue;
@@ -97,7 +99,7 @@ public class DevConsoleCommandTransforms {
 						.hasNext();) {
 					DomainTransformEvent current = itr.next();
 					if (last != null
-							&& last.toString().equals(current.toString())) {
+							&& last.toString().equals(current.toString())&&removeDuplicates) {
 						itr.remove();
 					}
 					last = current;
@@ -108,8 +110,6 @@ public class DevConsoleCommandTransforms {
 
 		public Multimap<Long, List<DomainTransformEvent>> dtrExpsToCliDteMap(
 				String folderPath) throws Exception {
-			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
-			List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
 			List<File> files = new ArrayList<File>(Arrays.asList(new File(
 					folderPath).listFiles(new FileFilter() {
 				@Override
@@ -118,6 +118,13 @@ public class DevConsoleCommandTransforms {
 							.matches();
 				}
 			})));
+			return dtrExpsToCliDteMap(files);
+		}
+		public Multimap<Long, List<DomainTransformEvent>> dtrExpsToCliDteMap(
+				List<File> files) throws Exception {
+			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
+			List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
+			
 			Collections.sort(files, new LongFnComparator());
 			int processedIndex = 0;
 			for (; processedIndex < files.size();) {

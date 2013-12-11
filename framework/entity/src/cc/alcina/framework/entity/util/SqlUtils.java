@@ -32,6 +32,20 @@ public class SqlUtils {
 		return result;
 	}
 
+	public static Map<Long, String> toStringMap(Statement stmt, String sql,
+			String fn1, String fn2) throws SQLException {
+		MetricLogging.get().start("query");
+		System.out.println("Query: " + sql);
+		ResultSet rs = stmt.executeQuery(sql);
+		Map<Long, String> result = new TreeMap<Long, String>();
+		while (rs.next()) {
+			result.put(rs.getLong(fn1), rs.getString(fn2));
+		}
+		rs.close();
+		MetricLogging.get().end("query");
+		return result;
+	}
+
 	private static Map<Long, Long> toIdMap(ResultSet rs, String fn1, String fn2)
 			throws SQLException {
 		int log = CommonUtils.iv(LooseContext
@@ -100,9 +114,16 @@ public class SqlUtils {
 	public static UnsortedMultikeyMap<String> getValues(ResultSet rs,
 			Map<String, ColumnFormatter> formatters, List<String> columnNames,
 			String keyField) throws SQLException {
+		return getValues(rs, formatters, columnNames, keyField, false);
+	}
+
+	public static UnsortedMultikeyMap<String> getValues(ResultSet rs,
+			Map<String, ColumnFormatter> formatters, List<String> columnNames,
+			String keyField, boolean multiple) throws SQLException {
 		columnNames = columnNames == null ? getColumnNames(rs) : columnNames;
 		int row = 0;
-		UnsortedMultikeyMap<String> values = new UnsortedMultikeyMap<String>(2);
+		UnsortedMultikeyMap<String> values = new UnsortedMultikeyMap<String>(
+				multiple ? 3 : 2);
 		while (rs.next()) {
 			Object key = keyField == null ? row : rs.getString(keyField);
 			for (int i = 1; i <= rs.getMetaData().getColumnCount(); i++) {
@@ -114,7 +135,12 @@ public class SqlUtils {
 					value = CommonUtils.nullToEmpty(rs.getString(i));
 				}
 				int j = i - 1;
-				values.put(key, keyField == null ? j : columnName, value);
+				if (multiple) {
+					values.put(key, keyField == null ? j : columnName, value,
+							value);
+				} else {
+					values.put(key, keyField == null ? j : columnName, value);
+				}
 			}
 			row++;
 		}

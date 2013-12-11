@@ -834,7 +834,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public String breakAndPad(int tabCount, int width, String text,
-			int charCount) {
+			int padLeftCharCount) {
 		StringBuilder sb = new StringBuilder();
 		int idx0 = 0;
 		for (int idx1 = width; idx1 < text.length(); idx1 += width) {
@@ -849,7 +849,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			}
 		}
 		sb.append(text.substring(idx0));
-		return padLeft(sb.toString(), tabCount, charCount);
+		return padLeft(sb.toString(), tabCount, padLeftCharCount);
 	}
 
 	public void resetObjects() {
@@ -864,5 +864,34 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public JConsole getConsoleLeft() {
 		return this.consoleLeft;
+	}
+
+	ByteArrayOutputStream recordOut;
+
+	PrintStream oldS2;
+
+	public void startRecordingSysout(boolean mute) {
+		oldS2 = out.s2;
+		PrintStream s2 = out.s2;
+		recordOut = new ByteArrayOutputStream();
+		PrintStream outStream = new PrintStream(recordOut);
+		if (mute) {
+			out.s2 = outStream;
+			ByteArrayOutputStream nullOut = new ByteArrayOutputStream();
+			out.s1 = new PrintStream(nullOut);
+		} else {
+			BiPrintStream s2repl = new BiPrintStream(
+					new ByteArrayOutputStream());
+			s2repl.s1 = s2;
+			s2repl.s2 = outStream;
+			out.s2 = s2repl;
+		}
+	}
+
+	public String endRecordingSysout() {
+		out.s2.flush();
+		String result = new String(recordOut.toByteArray());
+		out.s2 = oldS2;
+		return result;
 	}
 }

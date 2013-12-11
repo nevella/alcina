@@ -36,7 +36,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationR
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.EnumSerializer;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
@@ -252,7 +254,8 @@ public abstract class JdbcTransformPersistence extends
 				value = rs.getString(paramName);
 			}
 			if (paramClass.isEnum()) {
-				value = Enum.valueOf(paramClass, rs.getString(paramName));
+				value = Registry.impl(EnumSerializer.class).deserialize(
+						paramClass, rs.getString(paramName));
 			}
 			result.put(paramName, value);
 		}

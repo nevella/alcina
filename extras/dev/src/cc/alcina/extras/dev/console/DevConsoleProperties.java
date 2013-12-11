@@ -76,6 +76,14 @@ public class DevConsoleProperties {
 	 */
 	public String fontName = "Courier New";
 
-	@SetPropInfo(key = "conn-production-tunnel-cmd", description = "e.g. (rundeck) run -j jade/db/production_tunnel"  )
+	@SetPropInfo(key = "conn-production-tunnel-cmd", description = "e.g. (rundeck) run -j jade/db/production_tunnel")
 	public String connectionProductionTunnelCmd = "";
+
+	@SetPropInfo(key = "list-uploaded-requests", description = "see class file comment")
+	/**
+	 * <pre>
+	 * /Users/ouiji/Documents/lib/java/rundeck/tools/bin/dispatch  -I cosa.int.barnet.com.au -f -- 'ls /root/.alcina/cosa-server/offlineTransforms-partial > /root/off-trans.txt; echo ok'
+	 * </pre>
+	 */
+	public String productionListUploadedRequests = "";
 }

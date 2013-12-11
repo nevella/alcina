@@ -32,6 +32,10 @@ public class TransactionalSubgraphTransformManager extends
 			}
 			T nonTransactional = AlcinaMemCache.get().transformManager
 					.getObject(c, id, localId);
+			if(nonTransactional==null){
+				//create object, can assume the threadTm has it
+				return null;
+			}
 			T newInstance = projectNonTransactional(nonTransactional);
 			registerDomainObject(newInstance);
 			threadTm.registerDomainObject(newInstance);

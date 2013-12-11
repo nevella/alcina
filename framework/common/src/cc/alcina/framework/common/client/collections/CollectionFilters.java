@@ -66,6 +66,13 @@ public class CollectionFilters {
 		}
 	};
 
+	public static class ToLongConverter implements Converter<String, Long> {
+		@Override
+		public Long convert(String o) {
+			return o == null ? null : Long.parseLong(o);
+		}
+	}
+
 	public static <V> void apply(Collection<? extends V> collection,
 			Callback<V> callback) {
 		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr

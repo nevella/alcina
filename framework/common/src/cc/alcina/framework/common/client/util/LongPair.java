@@ -79,7 +79,8 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 				return new LongPair(Long.parseLong(split[0]),
 						Long.parseLong(split[1]));
 			}
-			return null;
+			long point = Long.parseLong(string);
+			return new LongPair(point, point);
 		} catch (NumberFormatException nfe) {
 			return null;
 		}
@@ -95,6 +96,7 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 		return other == null ? false : other.equals(intersection(other));
 	}
 
+
 	public boolean containsExBoundaries(LongPair other) {
 		return contains(other) && l1 < other.l1 && l2 > other.l2;
 	}
@@ -103,6 +105,7 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 	public boolean allow(Long o) {
 		return o != null && o >= l1 && o < l2;
 	}
+
 	public boolean containsIncludingBoundaries(Long o) {
 		return o != null && o >= l1 && o <= l2;
 	}
