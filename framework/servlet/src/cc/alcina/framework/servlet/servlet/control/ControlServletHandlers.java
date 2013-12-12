@@ -90,9 +90,6 @@ public class ControlServletHandlers {
 		}
 
 		public void init() {
-			// at the moment, this won't hurt even if db access is readonly
-			Registry.impl(DomainTransformPersistenceEvents.class)
-					.startSequentialEventChecks();
 			updateReadonly(WriterMode.READ_ONLY);
 		}
 
