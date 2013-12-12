@@ -71,6 +71,7 @@ public class UnsortedMultikeyMap<V> implements MultikeyMap<V>, Serializable {
 		return (UnsortedMultikeyMap<V>) multikeyMapSupport.asMap(true, objects);
 	}
 
+	@Override
 	public UnsortedMultikeyMap<V> asMapEnsure(boolean ensure, Object... objects) {
 		return (UnsortedMultikeyMap<V>) multikeyMapSupport.asMap(ensure,
 				objects);

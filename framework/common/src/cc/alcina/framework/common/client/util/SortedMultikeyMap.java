@@ -66,6 +66,7 @@ public class SortedMultikeyMap<V> implements MultikeyMap<V>, Serializable {
 		return (SortedMultikeyMap) multikeyMapSupport.asMap(true, objects);
 	}
 
+	@Override
 	public SortedMultikeyMap asMapEnsure(boolean ensure, Object... objects) {
 		return (SortedMultikeyMap) multikeyMapSupport.asMap(ensure, objects);
 	}
@@ -209,7 +210,7 @@ public class SortedMultikeyMap<V> implements MultikeyMap<V>, Serializable {
 	@Override
 	public boolean checkKeys(Object[] keys) {
 		for (Object object : keys) {
-			if(object==null){
+			if (object == null) {
 				return false;
 			}
 		}
