@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 
 public class DteReplayWorker implements RepeatingCommand {
-	private Iterator<DomainTransformEvent> iterator;
+	protected Iterator<DomainTransformEvent> iterator;
 
 	public DteReplayWorker(Collection<DomainTransformEvent> items) {
 		this.iterator = items.iterator();

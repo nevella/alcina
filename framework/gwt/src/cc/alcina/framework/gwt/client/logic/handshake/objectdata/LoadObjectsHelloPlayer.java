@@ -22,7 +22,7 @@ public class LoadObjectsHelloPlayer extends
 		addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
 	}
 
-	HandshakeConsortModel handshakeConsortModel = Registry
+	protected HandshakeConsortModel handshakeConsortModel = Registry
 			.impl(HandshakeConsortModel.class);
 
 	@Override

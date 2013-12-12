@@ -56,7 +56,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 				CommonUtils.join(Phase.values(), ", "));
 	}
 
-	DomainModelDelta currentDelta = null;
+	protected DomainModelDelta currentDelta = null;
 
 	enum Phase {
 		UNWRAPPING, REGISTERING_GRAPH, REGISTERING_UNLINKED,
@@ -68,7 +68,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	@SuppressWarnings("unused")
 	private int deltaOrdinal = 0;
 
-	private RepeatingCommandWithPostCompletionCallback replayer;
+	protected RepeatingCommandWithPostCompletionCallback replayer;
 
 	@Override
 	public void run() {
@@ -150,7 +150,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 				currentDelta.getUnlinkedObjects(), this);
 	}
 
-	private void replayTransforms() {
+	protected void replayTransforms() {
 		replayer = new RepeatingCommandWithPostCompletionCallback(this,
 				new DteReplayWorker(currentDelta.getReplayEvents()));
 		if (currentDelta.hasLocalOnlyTransforms()) {
