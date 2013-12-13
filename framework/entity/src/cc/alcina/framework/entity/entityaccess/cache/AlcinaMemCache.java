@@ -402,6 +402,8 @@ public class AlcinaMemCache {
 		this.cacheDescriptor = cacheDescriptor;
 		try {
 			conn.setAutoCommit(false);
+			originalTransactionIsolation = conn.getTransactionIsolation();
+			conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
 			warmup0();
 			initialised = true;
 		} catch (Exception e) {
@@ -633,6 +635,8 @@ public class AlcinaMemCache {
 			.synchronizedSet(new LinkedHashSet<Thread>());
 
 	private int maxLockQueueLength;
+
+	private int originalTransactionIsolation;
 
 	public static final String WRAPPED_OBJECT_REF_INTEGRITY = "WRAPPED_OBJECT_REF_INTEGRITY";
 
@@ -929,6 +933,7 @@ public class AlcinaMemCache {
 			if (initialised) {
 				if (!conn.getAutoCommit()) {
 					conn.commit();
+					conn.setTransactionIsolation(originalTransactionIsolation);
 					conn.setAutoCommit(true);
 				}
 			}
