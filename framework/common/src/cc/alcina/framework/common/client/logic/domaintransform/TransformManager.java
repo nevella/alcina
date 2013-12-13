@@ -634,10 +634,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public HasIdAndLocalId getObject(DomainTransformEvent dte,
-			boolean afterException) {
+			boolean ignoreSource) {
 		HasIdAndLocalId obj = getObjectLookup().getObject(dte.getObjectClass(),
 				dte.getObjectId(), dte.getObjectLocalId());
-		if (obj == null && dte.getSource() != null && !afterException) {
+		if (obj == null && ignoreSource) {
+			return null;
+		}
+		if (obj == null && dte.getSource() != null && !ignoreSource) {
 			// if create, natural behaviour is return null, ignoring source
 			if (dte.getTransformType() != TransformType.CREATE_OBJECT) {
 				String message = CommonUtils

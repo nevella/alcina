@@ -1025,6 +1025,7 @@ public class AlcinaMemCache {
 					// this a check against deletion during cache warmup.
 					// shouldn't happen anyway (trans. isolation)
 					// TODO - check if necessary
+					// (note) also a check against trying to handle deletion of lazy objects
 					HasIdAndLocalId memCacheObj = transformManager
 							.getObject(dte);
 					if (memCacheObj == null) {
