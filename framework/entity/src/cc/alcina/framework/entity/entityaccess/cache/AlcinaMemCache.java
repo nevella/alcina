@@ -1075,13 +1075,12 @@ public class AlcinaMemCache {
 			}
 		} catch (Exception e) {
 			causes.add(e);
-			
 		} finally {
 			unlock(true);
 			MetricLogging.get().end("post-process");
 			try {
-				if(warnBuilder.length()>0){
-					Exception warn=new Exception(warnBuilder.toString());
+				if (warnBuilder.length() > 0) {
+					Exception warn = new Exception(warnBuilder.toString());
 					System.out.println(warn);
 					warn.printStackTrace();
 					AlcinaTopics.notifyDevWarning(warn);
@@ -1089,7 +1088,8 @@ public class AlcinaMemCache {
 				if (!causes.isEmpty()) {
 					UmbrellaException umby = new UmbrellaException(causes);
 					causes.iterator().next().printStackTrace();
-					GlobalTopicPublisher.get().publishTopic(TOPIC_UPDATE_EXCEPTION, umby);
+					GlobalTopicPublisher.get().publishTopic(
+							TOPIC_UPDATE_EXCEPTION, umby);
 					throw new MemcacheException(umby);
 				}
 			} catch (Throwable t) {
@@ -1464,7 +1464,7 @@ public class AlcinaMemCache {
 							pd.getWriteMethod().invoke(item.source, target);
 							PropertyDescriptor targetPd = manyToOneRev.get(
 									item.source.getClass(), pd.getName());
-							if (targetPd != null) {
+							if (targetPd != null && target != null) {
 								Set set = (Set) targetPd.getReadMethod()
 										.invoke(target, new Object[0]);
 								if (set == null) {
