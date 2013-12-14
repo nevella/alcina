@@ -158,4 +158,8 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		return result;
 	}
+	@Override
+	public String toString() {
+		return CommonUtils.join(entrySet(),"\n");
+	}
 }

@@ -24,10 +24,10 @@ import java.util.TreeMap;
  * @author Nick Reddel
  */
 public class SortedMultimap<K, V extends List> extends TreeMap<K, V> {
-	public SortedMultimap(){
+	public SortedMultimap() {
 		super();
 	}
-	
+
 	public SortedMultimap(Comparator<? super K> comparator) {
 		super(comparator);
 	}
@@ -39,12 +39,14 @@ public class SortedMultimap<K, V extends List> extends TreeMap<K, V> {
 		}
 		return (V) list;
 	}
+
 	public V getAndEnsure(K key) {
 		if (!containsKey(key)) {
 			put(key, (V) new ArrayList());
 		}
 		return get(key);
 	}
+
 	public void add(K key, Object item) {
 		if (!containsKey(key)) {
 			put(key, (V) new ArrayList());
@@ -57,9 +59,15 @@ public class SortedMultimap<K, V extends List> extends TreeMap<K, V> {
 			get(key).remove(item);
 		}
 	}
-	public void addAll(SortedMultimap<K, V> otherMultimap) {
+
+	public void addAll(Multimap<K, V> otherMultimap) {
 		for (K k : otherMultimap.keySet()) {
 			getAndEnsure(k).addAll(otherMultimap.get(k));
 		}
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.join(entrySet(), "\n");
 	}
 }
