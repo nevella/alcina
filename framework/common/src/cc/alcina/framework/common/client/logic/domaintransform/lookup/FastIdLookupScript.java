@@ -18,6 +18,13 @@ public class FastIdLookupScript implements FastIdLookup {
 		this.values = new FastIdLookupScriptValues();
 	}
 
+	@Override
+	public void putAll(Collection<HasIdAndLocalId> values, boolean local) {
+		for (HasIdAndLocalId value : values) {
+			put(value, local);
+		}
+	}
+
 	class FastIdLookupScriptValues extends AbstractCollection<HasIdAndLocalId> {
 		@Override
 		public Iterator<HasIdAndLocalId> iterator() {
