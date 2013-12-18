@@ -117,6 +117,16 @@ public class AlcinaMemCache {
 		return get().transactional.ensureTransactional(value);
 	}
 
+	public static AlcinaMemCache get() {
+		AlcinaMemCache singleton = Registry
+				.checkSingleton(AlcinaMemCache.class);
+		if (singleton == null) {
+			singleton = new AlcinaMemCache();
+			Registry.registerSingleton(AlcinaMemCache.class, singleton);
+		}
+		return singleton;
+	}
+
 	private Map<PropertyDescriptor, JoinTable> joinTables;
 
 	private Map<Class, List<PropertyDescriptor>> descriptors;
@@ -144,16 +154,6 @@ public class AlcinaMemCache {
 	private TaggedLogger warnLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(AlcinaMemCache.class, TaggedLogger.WARN,
 					TaggedLogger.INFO, TaggedLogger.DEBUG);
-
-	public static AlcinaMemCache get() {
-		AlcinaMemCache singleton = Registry
-				.checkSingleton(AlcinaMemCache.class);
-		if (singleton == null) {
-			singleton = new AlcinaMemCache();
-			Registry.registerSingleton(AlcinaMemCache.class, singleton);
-		}
-		return singleton;
-	}
 
 	private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
 	};
@@ -207,6 +207,17 @@ public class AlcinaMemCache {
 
 	private boolean initialising;
 
+	private boolean lockingDisabled;
+
+	private Set<Thread> waitingOnWriteLock = Collections
+			.synchronizedSet(new LinkedHashSet<Thread>());
+
+	private int maxLockQueueLength;
+
+	private int originalTransactionIsolation;
+
+	public static final String WRAPPED_OBJECT_REF_INTEGRITY = "WRAPPED_OBJECT_REF_INTEGRITY";
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager
 				.threadTransformManagerWasResetListenerDelta(resetListener,
@@ -217,11 +228,15 @@ public class AlcinaMemCache {
 		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
 				"maxLockQueueLength", 40);
 	}
-
+	
 	public void addValues(CacheListener listener) {
 		for (Object o : cache.values(listener.getListenedClass())) {
 			listener.insert((HasIdAndLocalId) o);
 		}
+	}
+
+	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
+		return new AlcinaMemCacheQuery().ids(getIds(clazz)).raw().asSet(clazz);
 	}
 
 	public void enableAndAddValues(CacheListener listener) {
@@ -294,6 +309,10 @@ public class AlcinaMemCache {
 		return first;
 	}
 
+	public <T extends HasIdAndLocalId> T findRaw(Class<T> clazz, long id) {
+		return new AlcinaMemCacheQuery().id(id).raw().find(clazz);
+	}
+
 	public Iterable<Object[]> getData(Class clazz, String sqlFilter)
 			throws SQLException {
 		ConnResults result = new ConnResults(conn, clazz,
@@ -347,10 +366,6 @@ public class AlcinaMemCache {
 		return new AlcinaMemCacheQuery().ids(getIds(clazz)).raw().list(clazz);
 	}
 
-	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
-		return new AlcinaMemCacheQuery().ids(getIds(clazz)).raw().asSet(clazz);
-	}
-
 	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
 			Collection<Long> ids) {
 		return new AlcinaMemCacheQuery().ids(ids).list(clazz);
@@ -379,12 +394,75 @@ public class AlcinaMemCache {
 		}
 	}
 
+	public void lock(boolean write) {
+		if (lockingDisabled) {
+			System.out.println("Locking disabled");
+			return;
+		}
+		try {
+			if (mainLock.getQueueLength() > maxLockQueueLength) {
+				System.out
+						.println("Disabling locking due to deadlock:\n***************\n");
+				System.out.println(CommonUtils.join(recentLockAcquisitions,
+						"\n"));
+				AlcinaTopics.notifyDevWarning(new MemcacheException(
+						"Disabling locking to long queue/deadlock"));
+				lockingDisabled = true;
+				for (Thread t : waitingOnWriteLock) {
+					t.interrupt();
+				}
+				waitingOnWriteLock.clear();
+				return;
+			}
+			if (write) {
+				int readHoldCount = mainLock.getReadHoldCount();
+				if (readHoldCount > 0) {
+					throw new RuntimeException(
+							"Trying to acquire write lock from read-locked thread");
+				}
+				try {
+					waitingOnWriteLock.add(Thread.currentThread());
+					mainLock.writeLock().lockInterruptibly();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			} else {
+				mainLock.readLock().lock();
+			}
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			throw e;
+		}
+		maybeLogLock("lock", write);
+	}
+
+	public List<Long> notInStore(Collection<Long> ids, Class clazz) {
+		return cache.notContained(ids, clazz);
+	}
+
+	public <H extends HasIdAndLocalId> List<H> rawForSql(Class<H> clazz,
+			String fieldName, String sqlFormatString, Object... objects)
+			throws SQLException {
+		String sql = String.format(sqlFormatString, objects);
+		Statement stmt = conn.createStatement();
+		List<H> result = new ArrayList<H>();
+		Set<Long> ids = SqlUtils.toIdList(stmt, sql, fieldName);
+		for (Long id : ids) {
+			result.add(cache.get(clazz, id));
+		}
+		return result;
+	}
+
 	public void registerForTesting(HasIdAndLocalId hili) {
 		if (!AppPersistenceBase.isTest()) {
 			throw new RuntimeException("Only when testing...");
 		}
 		cache.put(hili);
 		index(hili, true);
+	}
+
+	public void reset() {
+		Registry.registerSingleton(AlcinaMemCache.class, new AlcinaMemCache());
 	}
 
 	public void resolveRefs() {
@@ -395,20 +473,6 @@ public class AlcinaMemCache {
 
 	public void setConn(Connection conn) {
 		this.conn = conn;
-	}
-
-	public void warmup(Connection conn, CacheDescriptor cacheDescriptor) {
-		this.conn = conn;
-		this.cacheDescriptor = cacheDescriptor;
-		try {
-			conn.setAutoCommit(false);
-			originalTransactionIsolation = conn.getTransactionIsolation();
-			conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-			warmup0();
-			initialised = true;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	/**
@@ -436,6 +500,42 @@ public class AlcinaMemCache {
 		maybeLogLock("sublock", lock);
 	}
 
+	public void unlock(boolean write) {
+		if (lockingDisabled) {
+			return;
+		}
+		try {
+			if (write) {
+				if (mainLock.writeLock().isHeldByCurrentThread()) {
+					// if not held, we had an exception acquiring the
+					// lock...ignore
+					mainLock.writeLock().unlock();
+					waitingOnWriteLock.remove(Thread.currentThread());
+				}
+			} else {
+				mainLock.readLock().unlock();
+			}
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+			throw e;
+		}
+		maybeLogLock("unlock", write);
+	}
+
+	public void warmup(Connection conn, CacheDescriptor cacheDescriptor) {
+		this.conn = conn;
+		this.cacheDescriptor = cacheDescriptor;
+		try {
+			conn.setAutoCommit(false);
+			originalTransactionIsolation = conn.getTransactionIsolation();
+			conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+			warmup0();
+			initialised = true;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	private void addColumnName(Class clazz, PropertyDescriptor pd,
 			Class propertyType) {
 		columnDescriptors.add(clazz, new ColumnDescriptor(pd, propertyType));
@@ -448,16 +548,6 @@ public class AlcinaMemCache {
 				&& hili instanceof BaseSourcesPropertyChangeEvents) {
 			modificationCheckerField.set(hili, modificationChecker);
 		}
-	}
-
-	private Set getFilteredTransactional(final Class clazz,
-			CacheFilter cacheFilter, Set existing) {
-		final CollectionFilter filter = cacheFilter.collectionFilter != null ? cacheFilter.collectionFilter
-				: new PropertyPathFilter(cacheFilter.propertyPath,
-						cacheFilter.propertyValue);
-		existing = existing != null ? existing : transactional.rawValues(clazz);
-		CollectionFilters.filterInPlace(existing, filter);
-		return existing;
 	}
 
 	private Set<Long> getFiltered(final Class clazz, CacheFilter cacheFilter,
@@ -488,6 +578,16 @@ public class AlcinaMemCache {
 			CollectionFilters.filterInPlace(existing, withIdFilter);
 			return existing;
 		}
+	}
+
+	private Set getFilteredTransactional(final Class clazz,
+			CacheFilter cacheFilter, Set existing) {
+		final CollectionFilter filter = cacheFilter.collectionFilter != null ? cacheFilter.collectionFilter
+				: new PropertyPathFilter(cacheFilter.propertyPath,
+						cacheFilter.propertyValue);
+		existing = existing != null ? existing : transactional.rawValues(clazz);
+		CollectionFilters.filterInPlace(existing, filter);
+		return existing;
 	}
 
 	private CacheLookup getLookupFor(Class clazz, String propertyName) {
@@ -629,59 +729,6 @@ public class AlcinaMemCache {
 		return loaded;
 	}
 
-	private boolean lockingDisabled;
-
-	private Set<Thread> waitingOnWriteLock = Collections
-			.synchronizedSet(new LinkedHashSet<Thread>());
-
-	private int maxLockQueueLength;
-
-	private int originalTransactionIsolation;
-
-	public static final String WRAPPED_OBJECT_REF_INTEGRITY = "WRAPPED_OBJECT_REF_INTEGRITY";
-
-	public void lock(boolean write) {
-		if (lockingDisabled) {
-			System.out.println("Locking disabled");
-			return;
-		}
-		try {
-			if (mainLock.getQueueLength() > maxLockQueueLength) {
-				System.out
-						.println("Disabling locking due to deadlock:\n***************\n");
-				System.out.println(CommonUtils.join(recentLockAcquisitions,
-						"\n"));
-				AlcinaTopics.notifyDevWarning(new MemcacheException(
-						"Disabling locking to long queue/deadlock"));
-				lockingDisabled = true;
-				for (Thread t : waitingOnWriteLock) {
-					t.interrupt();
-				}
-				waitingOnWriteLock.clear();
-				return;
-			}
-			if (write) {
-				int readHoldCount = mainLock.getReadHoldCount();
-				if (readHoldCount > 0) {
-					throw new RuntimeException(
-							"Trying to acquire write lock from read-locked thread");
-				}
-				try {
-					waitingOnWriteLock.add(Thread.currentThread());
-					mainLock.writeLock().lockInterruptibly();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			} else {
-				mainLock.readLock().lock();
-			}
-		} catch (RuntimeException e) {
-			e.printStackTrace();
-			throw e;
-		}
-		maybeLogLock("lock", write);
-	}
-
 	private void maybeLogLock(String action, boolean write) {
 		if (dumpLocks
 				|| (collectLockAcquisitionPoints && (write || mainLock
@@ -786,28 +833,6 @@ public class AlcinaMemCache {
 		return date;
 	}
 
-	public void unlock(boolean write) {
-		if (lockingDisabled) {
-			return;
-		}
-		try {
-			if (write) {
-				if (mainLock.writeLock().isHeldByCurrentThread()) {
-					// if not held, we had an exception acquiring the
-					// lock...ignore
-					mainLock.writeLock().unlock();
-					waitingOnWriteLock.remove(Thread.currentThread());
-				}
-			} else {
-				mainLock.readLock().unlock();
-			}
-		} catch (RuntimeException e) {
-			e.printStackTrace();
-			throw e;
-		}
-		maybeLogLock("unlock", write);
-	}
-
 	private void updateIVersionable(HasIdAndLocalId obj,
 			Object persistentLayerSource) {
 		IVersionable graph = (IVersionable) obj;
@@ -831,25 +856,6 @@ public class AlcinaMemCache {
 			DomainTransformEvent dte) {
 		((HasVersionNumber) obj).setVersionNumber(((HasVersionNumber) dte
 				.getSource()).getVersionNumber());
-	}
-
-	class BackupLazyLoader implements LazyObjectLoader {
-		@Override
-		public <T extends HasIdAndLocalId> void loadObject(
-				Class<? extends T> c, long id, long localId) {
-			try {
-				CacheItemDescriptor itemDescriptor = cacheDescriptor.perClass
-						.get(c);
-				if (itemDescriptor.lazy && id != 0) {
-					ClassIdLock lock = LockUtils.obtainClassIdLock(c, id);
-					System.out.format("Backup lazy load: %s - %s\n",
-							c.getSimpleName(), id);
-					loadTable(c, "id=" + id, lock);
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
 	}
 
 	private void warmup0() throws Exception {
@@ -940,10 +946,6 @@ public class AlcinaMemCache {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	public List<Long> notInStore(Collection<Long> ids, Class clazz) {
-		return cache.notContained(ids, clazz);
 	}
 
 	<T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
@@ -1117,6 +1119,8 @@ public class AlcinaMemCache {
 	public class Transactional {
 		public volatile int transactionCount;
 
+		Set<Long> activeTransactionThreadIds = new LinkedHashSet<Long>();
+
 		public PerThreadTransaction ensureTransaction() {
 			PerThreadTransaction transaction = transactions.get();
 			if (transaction == null) {
@@ -1148,17 +1152,6 @@ public class AlcinaMemCache {
 			return transaction;
 		}
 
-		public Set rawValues(Class clazz) {
-			PerThreadTransaction perThreadTransaction = transactions.get();
-			if (perThreadTransaction == null) {
-				return new LinkedHashSet(cache.rawValues(clazz));
-			}
-			return new LinkedHashSet(perThreadTransaction.rawValues(clazz,
-					cache));
-		}
-
-		Set<Long> activeTransactionThreadIds = new LinkedHashSet<Long>();
-
 		public <V extends HasIdAndLocalId> V ensureTransactional(V value) {
 			if (value == null) {
 				return null;
@@ -1184,6 +1177,15 @@ public class AlcinaMemCache {
 
 		public <T> Map<Long, T> lookup(Class<T> clazz) {
 			return (Map<Long, T>) cache.getMap(clazz);
+		}
+
+		public Set rawValues(Class clazz) {
+			PerThreadTransaction perThreadTransaction = transactions.get();
+			if (perThreadTransaction == null) {
+				return new LinkedHashSet(cache.rawValues(clazz));
+			}
+			return new LinkedHashSet(perThreadTransaction.rawValues(clazz,
+					cache));
 		}
 
 		public <V extends HasIdAndLocalId> V resolveTransactional(
@@ -1222,6 +1224,25 @@ public class AlcinaMemCache {
 
 		public boolean transactionsActive() {
 			return transactionCount != 0;
+		}
+	}
+
+	class BackupLazyLoader implements LazyObjectLoader {
+		@Override
+		public <T extends HasIdAndLocalId> void loadObject(
+				Class<? extends T> c, long id, long localId) {
+			try {
+				CacheItemDescriptor itemDescriptor = cacheDescriptor.perClass
+						.get(c);
+				if (itemDescriptor.lazy && id != 0) {
+					ClassIdLock lock = LockUtils.obtainClassIdLock(c, id);
+					System.out.format("Backup lazy load: %s - %s\n",
+							c.getSimpleName(), id);
+					loadTable(c, "id=" + id, lock);
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 
@@ -1607,22 +1628,5 @@ public class AlcinaMemCache {
 								+ key);
 			}
 		}
-	}
-
-	public <H extends HasIdAndLocalId> List<H> rawForSql(Class<H> clazz,
-			String fieldName, String sqlFormatString, Object... objects)
-			throws SQLException {
-		String sql = String.format(sqlFormatString, objects);
-		Statement stmt = conn.createStatement();
-		List<H> result = new ArrayList<H>();
-		Set<Long> ids = SqlUtils.toIdList(stmt, sql, fieldName);
-		for (Long id : ids) {
-			result.add(cache.get(clazz, id));
-		}
-		return result;
-	}
-
-	public void reset() {
-		Registry.registerSingleton(AlcinaMemCache.class, new AlcinaMemCache());
 	}
 }
