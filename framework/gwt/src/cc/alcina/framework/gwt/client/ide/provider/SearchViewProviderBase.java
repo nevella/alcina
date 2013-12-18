@@ -35,6 +35,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
+import cc.alcina.framework.gwt.client.widget.BreadcrumbBar.BreadcrumbBarButton;
 import cc.alcina.framework.gwt.client.widget.InputButton;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -58,7 +59,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  * @author Nick Reddel
  */
 public abstract class SearchViewProviderBase implements ViewProvider {
-	public static final String CONTEXT_NO_INITIAL_SEARCH = SearchViewProviderBase.class.getName()+".CONTEXT_NO_INITIAL_SEARCH";
+	public static final String CONTEXT_NO_INITIAL_SEARCH = SearchViewProviderBase.class
+			.getName() + ".CONTEXT_NO_INITIAL_SEARCH";
 
 	private LocalActionWithParameters<SingleTableSearchDefinition> action;
 
@@ -85,6 +87,10 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 	private String searchButtonTitle;
 
 	protected Converter converter;
+
+	private boolean editableToggle = false;
+
+	private BreadcrumbBarEditableWidgetsButton editableToggleButton;
 
 	public SearchPanel getSearchPanel() {
 		return this.searchPanel;
@@ -147,9 +153,32 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			linkButton = new BreadcrumbBarLinkChangesButton();
 			maxButtonArr.add(0, linkButton);
 		}
+		if (isEditableToggle()) {
+			editableToggleButton = new BreadcrumbBarEditableWidgetsButton();
+			maxButtonArr.add(0, editableToggleButton);
+		}
 		BreadcrumbBar bar = new BreadcrumbBar(null, history, maxButtonArr);
 		bar.addStyleName("tlr-borders");
 		return bar;
+	}
+
+	class BreadcrumbBarEditableWidgetsButton extends BreadcrumbBarButton
+			implements ClickHandler {
+		public BreadcrumbBarEditableWidgetsButton() {
+			super();
+			addClickHandler(this);
+			updateText();
+		}
+
+		private void updateText() {
+			setText(editableWidgets ? "View" : "Edit");
+		}
+
+		@Override
+		public void onClick(ClickEvent event) {
+			editableWidgets = !editableWidgets;
+			searchPanel.search();
+		}
 	}
 
 	// for subclasses
@@ -168,9 +197,10 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 
 		private BoundTableExt table;
 
-		public SearchViewProviderBase getSearchViewProvider(){
+		public SearchViewProviderBase getSearchViewProvider() {
 			return SearchViewProviderBase.this;
 		}
+
 		public SearchPanel() {
 			try {
 				HTML description = new HTML("<i>" + action.getDescription()
@@ -198,7 +228,8 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 					beanView.setVisible(false);
 				}
 				add(resultsHolder);
-				if (isInitialSearch()&&!LooseContext.getBoolean(CONTEXT_NO_INITIAL_SEARCH)) {
+				if (isInitialSearch()
+						&& !LooseContext.getBoolean(CONTEXT_NO_INITIAL_SEARCH)) {
 					search();
 				}
 			} finally {
@@ -334,5 +365,13 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 
 	public LocalActionWithParameters<SingleTableSearchDefinition> getAction() {
 		return this.action;
+	}
+
+	public boolean isEditableToggle() {
+		return this.editableToggle;
+	}
+
+	public void setEditableToggle(boolean editableToggle) {
+		this.editableToggle = editableToggle;
 	}
 }

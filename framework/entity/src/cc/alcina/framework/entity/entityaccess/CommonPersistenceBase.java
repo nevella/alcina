@@ -98,6 +98,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	// note - this'll be the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
 
+	public static final transient String CONTEXT_CLIENT_IP_ADDRESS = CommonPersistenceBase.class
+			.getName() + ".CONTEXT_CLIENT_IP_ADDRESS";
+
 	private static Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass = CheckReadOnlyHandshakeObjectProvider.class;
 
 	public CommonPersistenceBase() {
@@ -972,7 +975,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						.asList(new String[] { "primaryGroup",
 								"secondaryGroups", "creationUser",
 								"lastModificationUser" }));
-				
 				impl.setUser(null);
 				ClientInstance instance = new EntityUtils()
 						.detachedCloneIgnorePermissions(impl, null);

@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 @RegistryLocation(registryPoint = DeltaStore.class, implementationType = ImplementationType.SINGLETON)
@@ -231,7 +232,7 @@ public class DeltaStore {
 					Registry.impl(ClientNotifications.class).log(
 							"Problem deserialising delta store - "
 									+ e.getMessage());
-					e.printStackTrace();
+					GWT.log("Problem deserialising delta store - ", e);
 					objectStore.clear(player);
 					cache = new DomainModelDeltaLookup();
 				}

@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.util.OnetimeWrappingAsyncCallback;
 import cc.alcina.framework.gwt.client.util.WrappingAsyncCallback;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.TypeSizeTuple;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 @RegistryLocation(registryPoint = DatabaseStatsObserver.class, implementationType = ImplementationType.SINGLETON)
@@ -29,7 +30,6 @@ public class DatabaseStatsObserver {
 	public DatabaseStatsObserver() {
 	}
 
-	
 	DatabaseStatsInfo max;
 
 	DatabaseStatsInfo current = new DatabaseStatsInfo();
@@ -67,11 +67,11 @@ public class DatabaseStatsObserver {
 		protected void onSuccess0(String result) {
 			try {
 				if (result != null) {
-					max = Registry.impl(AlcinaBeanSerializer.class).deserialize(result);
+					max = Registry.impl(AlcinaBeanSerializer.class)
+							.deserialize(result);
 				}
 			} catch (Exception e) {
-				
-				throw new WrappedRuntimeException(e);
+				GWT.log("Problem deserialising " + result, e);
 			}
 		}
 	};
@@ -105,7 +105,8 @@ public class DatabaseStatsObserver {
 	}
 
 	protected void checkMax() {
-		if (current.greaterSizeThan(max)||max.getVersion()<PERSISTENCE_VERSION) {
+		if (current.greaterSizeThan(max)
+				|| max.getVersion() < PERSISTENCE_VERSION) {
 			max = current;
 			max.setVersion(PERSISTENCE_VERSION);
 			persistMax();

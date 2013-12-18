@@ -62,12 +62,17 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		if (names != null) {
 			for (String propertyName : names) {
 				Object jsonValue = props.get(propertyName);
-				Object value2 = deserializeField(jsonValue, SEUtilities
-						.getPropertyDescriptorByName(clazz, propertyName)
-						.getPropertyType());
-				try {
-					SEUtilities.setPropertyValue(obj, propertyName, value2);
-				} catch (NoSuchPropertyException e) {
+				PropertyDescriptor pd = SEUtilities
+						.getPropertyDescriptorByName(clazz, propertyName);
+				if (pd == null) {
+					//ignore (we are graceful...)
+				} else {
+					Object value2 = deserializeField(jsonValue,
+							pd.getPropertyType());
+					try {
+						SEUtilities.setPropertyValue(obj, propertyName, value2);
+					} catch (NoSuchPropertyException e) {
+					}
 				}
 			}
 		}

@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory;
@@ -71,7 +72,8 @@ public class ClientUtils {
 			}
 			t = t.getCause();
 		}
-		if (t.getMessage().contains("IOException while sending RPC request")) {
+		if (CommonUtils.nullToEmpty(t.getMessage()).contains(
+				"IOException while sending RPC request")) {
 			return true;
 		}
 		if (t instanceof StatusCodeException) {
@@ -124,15 +126,15 @@ public class ClientUtils {
 
 	public static native boolean setCssTextViaCssTextProperty(Element styleTag,
 			String css) /*-{
-		var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+						var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
-		if ('cssText' in sheet) { // Internet Explorer
-			sheet.cssText = css;
-			return true;
-		}
+						if ('cssText' in sheet) { // Internet Explorer
+						sheet.cssText = css;
+						return true;
+						}
 
-		return false;//do innerText
-	}-*/;
+						return false;//do innerText
+						}-*/;
 
 	private static void addHidden(Panel p, String key, String value) {
 		p.add(new Hidden(key, value));
@@ -169,8 +171,8 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger() /*-{
-		debugger;
-	}-*/;
+													debugger;
+													}-*/;
 
 	public static void fireHistoryToken(String token) {
 		if (token == null) {
@@ -330,9 +332,9 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger(Element e) /*-{
-		var v = e;
-		debugger;
-	}-*/;
+															var v = e;
+															debugger;
+															}-*/;
 
 	public static String getHashIfSelfrefUrl(Element anchor) {
 		String href = anchor.getAttribute("href");

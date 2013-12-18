@@ -331,8 +331,8 @@ public class ClasspathScanner {
 				// file:/home
 				// substring(5) works for both
 				urlPath = urlPath.substring(5);
-				if (protocol.equals("jar")){
-					protocol="file";
+				if (protocol.equals("jar")) {
+					protocol = "file";
 				}
 			}
 			if (urlPath.indexOf('!') > 0) {

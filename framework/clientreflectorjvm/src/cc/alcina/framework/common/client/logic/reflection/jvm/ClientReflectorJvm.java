@@ -61,6 +61,16 @@ public class ClientReflectorJvm extends ClientReflector {
 						(CollectionFilter<String>) Class.forName(
 								filterClassName).newInstance());
 			}
+			CollectionFilter<String> defaultExcludes = new CollectionFilter<String>() {
+				@Override
+				public boolean allow(String o) {
+					if (o.contains("AlcinaBeanSerializerJvm")) {
+						return false;
+					}
+					return true;
+				}
+			};
+			CollectionFilters.filterInPlace(classes.keySet(), defaultExcludes);
 			new RegistryScanner() {
 				protected File getHomeDir() {
 					String testStr = "";
@@ -84,7 +94,8 @@ public class ClientReflectorJvm extends ClientReflector {
 					}
 					return c;
 				}
-			}.scan(classes, new ArrayList<String>(), Registry.get(),"client-reflector");
+			}.scan(classes, new ArrayList<String>(), Registry.get(),
+					"client-reflector");
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
