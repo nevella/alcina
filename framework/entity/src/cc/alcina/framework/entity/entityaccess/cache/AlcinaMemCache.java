@@ -52,8 +52,8 @@ import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -131,7 +131,10 @@ public class AlcinaMemCache {
 
 	private Map<Class, List<PropertyDescriptor>> descriptors;
 
+	// class,pName
 	private UnsortedMultikeyMap<PropertyDescriptor> manyToOneRev;
+
+	private UnsortedMultikeyMap<PropertyDescriptor> oneToOneRev;
 
 	private Connection conn;
 
@@ -228,7 +231,7 @@ public class AlcinaMemCache {
 		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
 				"maxLockQueueLength", 40);
 	}
-	
+
 	public void addValues(CacheListener listener) {
 		for (Object o : cache.values(listener.getListenedClass())) {
 			listener.insert((HasIdAndLocalId) o);
@@ -817,6 +820,11 @@ public class AlcinaMemCache {
 							.getPropertyType().getSimpleName());
 					continue;
 				}
+				if (oneToOne != null && !oneToOne.mappedBy().isEmpty()) {
+					oneToOneRev.put(pd.getPropertyType(), oneToOne.mappedBy(),
+							pd);
+					continue;
+				}
 				addColumnName(clazz, pd,
 						getTargetEntityType(pd.getReadMethod()));
 			} else {
@@ -866,8 +874,8 @@ public class AlcinaMemCache {
 		transformManager.getStore().setLazyObjectLoader(backupLazyLoader);
 		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
 		descriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
-		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);// class,
-																		// pName
+		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
+		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		laterLookup = new LaterLookup();
 		if (ResourceUtilities.getBoolean(AlcinaMemCache.class,
@@ -1027,7 +1035,8 @@ public class AlcinaMemCache {
 					// this a check against deletion during cache warmup.
 					// shouldn't happen anyway (trans. isolation)
 					// TODO - check if necessary
-					// (note) also a check against trying to handle deletion of lazy objects
+					// (note) also a check against trying to handle deletion of
+					// lazy objects
 					HasIdAndLocalId memCacheObj = transformManager
 							.getObject(dte);
 					if (memCacheObj == null) {
@@ -1500,6 +1509,12 @@ public class AlcinaMemCache {
 											new Object[] { set });
 								}
 								set.add(item.source);
+							}
+							targetPd = oneToOneRev.get(item.source.getClass(),
+									pd.getName());
+							if (targetPd != null && target != null) {
+								targetPd.getWriteMethod().invoke(target,
+										new Object[] { item.source });
 							}
 						}
 					} catch (Exception e) {

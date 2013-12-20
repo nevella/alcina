@@ -4,7 +4,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.csobjects.WebException;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId.HiliHelper;
+import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
