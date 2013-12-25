@@ -27,4 +27,6 @@ value="com.google.gwt.user.client.ui.TableListenerCollection"/>
 value="com.google.gwt.user.client.ui.TreeListenerCollection"/>
 <extend-configuration-property name="rpc.blacklist" 
 value="cc.alcina.framework.common.client.search.LocalSearchDefinition"/>
+<extend-configuration-property name="rpc.blacklist" 
+value="com.google.gwt.validation.client.impl.PathImpl"/>
 </module>

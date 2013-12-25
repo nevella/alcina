@@ -203,17 +203,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return argv.length <= argIndex ? defaultValue : argv[argIndex];
 	}
 
-	protected String getSitename(long id) throws Exception {
-		Statement stmt = getConn().createStatement();
-		ResultSet rs = stmt
-				.executeQuery("select o.siteName from article a inner join overview o"
-						+ " on a.overview_id=o.id where a.id=" + id);
-		rs.next();
-		String string = rs.getString(1);
-		stmt.close();
-		return string;
-	}
-
 	protected String runSubcommand(DevConsoleCommand sub, String[] argv)
 			throws Exception {
 		console.prepareCommand(sub);
