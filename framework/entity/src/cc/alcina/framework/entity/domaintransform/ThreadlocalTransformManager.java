@@ -971,4 +971,5 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			return new ThreadlocalTransformManager();
 		}
 	}
+
 }

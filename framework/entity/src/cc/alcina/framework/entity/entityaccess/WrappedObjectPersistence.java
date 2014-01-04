@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaLoggingTags;
@@ -28,7 +29,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
-
+@RegistryLocation(registryPoint=ClearOnAppRestart.class)
 public class WrappedObjectPersistence {
 	public static final String CONTEXT_THROW_MISSING_WRAPPED_OBJECT = WrappedObjectPersistence.class
 			.getName() + ".CONTEXT_THROW_MISSING_WRAPPED_OBJECT";

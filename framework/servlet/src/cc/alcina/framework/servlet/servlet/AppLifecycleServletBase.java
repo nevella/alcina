@@ -233,10 +233,14 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	@Override
 	public void destroy() {
-		super.destroy();
-		MetricLogging.get().appShutdown();
-		SEUtilities.appShutdown();
-		Registry.appShutdown();
+		try {
+			MetricLogging.get().appShutdown();
+			SEUtilities.appShutdown();
+			ResourceUtilities.appShutdown();
+			Registry.appShutdown();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Date getStartupTime() {

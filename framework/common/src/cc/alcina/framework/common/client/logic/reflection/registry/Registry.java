@@ -469,7 +469,7 @@ public class Registry {
 		}
 		return result;
 	}
-
+	@RegistryLocation(registryPoint=ClearOnAppRestart.class)
 	public static class BasicRegistryProvider implements RegistryProvider {
 		@ClearOnAppRestart
 		private static Registry instance = new Registry();

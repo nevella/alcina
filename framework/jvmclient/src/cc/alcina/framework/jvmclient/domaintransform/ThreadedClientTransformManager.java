@@ -1,6 +1,8 @@
 package cc.alcina.framework.jvmclient.domaintransform;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @SuppressWarnings("unchecked")
 public class ThreadedClientTransformManager extends ClientTransformManagerCommon {

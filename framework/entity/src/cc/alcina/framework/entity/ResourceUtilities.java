@@ -56,12 +56,14 @@ import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * @author nick@alcina.cc
  * 
  */
+@RegistryLocation(registryPoint=ClearOnAppRestart.class)
 public class ResourceUtilities {
 	public static void appShutdown() {
 		customProperties.clear();

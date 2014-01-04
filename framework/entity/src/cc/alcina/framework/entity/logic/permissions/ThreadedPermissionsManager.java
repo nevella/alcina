@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -30,6 +31,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionData
  * 
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint=ClearOnAppRestart.class)
 public class ThreadedPermissionsManager extends PermissionsManager {
 	@ClearOnAppRestart
 	public static GraphProjectionDataFilter INSTANTIATE_IMPL_FILTER;
@@ -97,5 +99,10 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 	protected void recursivePopulateGroupMemberships(Set<IGroup> members,
 			Set<IGroup> processed) {
 		super.recursivePopulateGroupMemberships(members, processed);
+	}
+
+
+	public static void clearThreadLocal() {
+		getTTL.remove();		
 	}
 }
