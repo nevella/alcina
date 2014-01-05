@@ -19,8 +19,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
@@ -31,9 +30,8 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionData
  * 
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint=ClearOnAppRestart.class)
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ThreadedPermissionsManager extends PermissionsManager {
-	@ClearOnAppRestart
 	public static GraphProjectionDataFilter INSTANTIATE_IMPL_FILTER;
 
 	@Override
@@ -51,7 +49,6 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		return new ThreadedPermissionsManager();
 	}
 
-	
 	// This should never be necessary, if the code always surrounds user
 	// push/pop in try/finally...but...
 	public void reset() {
@@ -101,8 +98,7 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		super.recursivePopulateGroupMemberships(members, processed);
 	}
 
-
 	public static void clearThreadLocal() {
-		getTTL.remove();		
+		getTTL.remove();
 	}
 }

@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.state.AllStatesConsort;
 import cc.alcina.framework.common.client.state.ConsortPlayer.SubconsortSupport;
 import cc.alcina.framework.common.client.state.Player;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.ClientNotifications;

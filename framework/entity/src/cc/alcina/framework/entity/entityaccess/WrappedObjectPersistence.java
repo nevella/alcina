@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -29,7 +29,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.WrappedObjectProvider;
-@RegistryLocation(registryPoint=ClearOnAppRestart.class)
+
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class WrappedObjectPersistence {
 	public static final String CONTEXT_THROW_MISSING_WRAPPED_OBJECT = WrappedObjectPersistence.class
 			.getName() + ".CONTEXT_THROW_MISSING_WRAPPED_OBJECT";
@@ -37,7 +38,6 @@ public class WrappedObjectPersistence {
 	public static class MissingWrappedObjectException extends Exception {
 	}
 
-	@ClearOnAppRestart
 	static Map<Class, List<PropertyDescriptor>> wrapperDescriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
 
 	public void unwrap(HasId wrapper, EntityManager entityManager,
@@ -171,7 +171,8 @@ public class WrappedObjectPersistence {
 								WrapperInfo.class);
 						if (info != null) {
 							PropertyDescriptor idpd = SEUtilities
-									.getPropertyDescriptorByName(wrapper.getClass(),
+									.getPropertyDescriptorByName(
+											wrapper.getClass(),
 											info.idPropertyName());
 							Long wrapperId = (Long) idpd.getReadMethod()
 									.invoke(wrapper,

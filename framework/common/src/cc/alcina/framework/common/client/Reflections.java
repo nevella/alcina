@@ -3,11 +3,11 @@ package cc.alcina.framework.common.client;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-@RegistryLocation(registryPoint=ClearOnAppRestart.class)
+
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class Reflections {
-	@ClearOnAppRestart
 	private static Reflections theInstance;
 
 	private static Reflections get() {

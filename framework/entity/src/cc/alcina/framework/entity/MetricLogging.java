@@ -14,7 +14,6 @@
 package cc.alcina.framework.entity;
 
 import java.io.StringWriter;
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -28,7 +27,7 @@ import org.apache.log4j.MDC;
 import org.apache.log4j.PatternLayout;
 
 import cc.alcina.framework.common.client.log.TaggedLogger;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
@@ -38,7 +37,7 @@ import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint=ClearOnAppRestart.class)
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class MetricLogging {
 	public static Logger metricLogger = Logger.getLogger(MetricLogging.class);
 
@@ -281,5 +280,4 @@ public class MetricLogging {
 	public boolean isMuted() {
 		return muted;
 	}
-
 }

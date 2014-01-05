@@ -4,7 +4,6 @@ import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.ConsortPlayer;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.AsyncConfigConsortState;
-import cc.alcina.framework.gwt.persistence.client.PersistenceTransformSetupWebDbConsort;
 
 public class InitJdbcPlayer extends
 		RunnableAsyncCallbackPlayer<Void, AsyncConfigConsortState> implements

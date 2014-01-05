@@ -6,11 +6,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
-import cc.alcina.framework.gwt.persistence.client.ObjectStoreWebDbImpl;
 import cc.alcina.framework.gwt.persistence.client.PersistenceTransformSetupState;
-import cc.alcina.framework.gwt.persistence.client.WebDatabaseTransformPersistence;
-
-import com.google.code.gwt.database.client.Database;
 
 public class PersistenceTransformSetupJdbcConsort extends
 		AllStatesConsort<PersistenceTransformSetupState> {

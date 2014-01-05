@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.gwt.client.ClientConfiguration;
 

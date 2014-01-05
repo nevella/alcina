@@ -1,9 +1,5 @@
 package cc.alcina.framework.common.client.collections;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map.Entry;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 

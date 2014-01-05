@@ -31,7 +31,6 @@ import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
@@ -43,10 +42,8 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Hidden;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.SubmitButton;
 import com.totsp.gwittir.client.beans.Binding;
 
 /**

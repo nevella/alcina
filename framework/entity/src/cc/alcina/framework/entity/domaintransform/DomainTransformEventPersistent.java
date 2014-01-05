@@ -14,7 +14,6 @@
 package cc.alcina.framework.entity.domaintransform;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Date;
 
 import javax.persistence.MappedSuperclass;

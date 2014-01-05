@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
@@ -469,9 +469,9 @@ public class Registry {
 		}
 		return result;
 	}
-	@RegistryLocation(registryPoint=ClearOnAppRestart.class)
+
+	@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 	public static class BasicRegistryProvider implements RegistryProvider {
-		@ClearOnAppRestart
 		private static Registry instance = new Registry();
 
 		@Override

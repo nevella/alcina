@@ -39,8 +39,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
-import com.google.gwt.event.shared.UmbrellaException;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -84,6 +82,8 @@ import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.SqlUtils;
+
+import com.google.gwt.event.shared.UmbrellaException;
 
 /**
  * <h3>Locking notes:</h3>

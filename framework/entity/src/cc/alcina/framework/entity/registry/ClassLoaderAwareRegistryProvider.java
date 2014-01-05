@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -45,7 +45,7 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 			registry.shutdownSingletons();
 		}
 		List<Class> clear = Registry.get().lookup(false,
-				ClearOnAppRestart.class, void.class, false);
+				ClearOnAppRestartLoc.class, void.class, false);
 		try {
 			for (Class clazz : clear) {
 				try {
