@@ -55,8 +55,14 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 				requireLoad = requireLazyLoad(objects);
 				lazyLoad(alcinaMemCache, requireLoad);
 				registerLoaded(alcinaMemCache, requireLoad);
+				loadDependents(alcinaMemCache, requireLoad);
 			}
 		}
+	}
+
+	protected void loadDependents(AlcinaMemCache alcinaMemCache,
+			List<T> requireLoad) throws Exception {
+		
 	}
 
 	private void registerLoaded(AlcinaMemCache alcinaMemCache, List<T> requireLoad) {
