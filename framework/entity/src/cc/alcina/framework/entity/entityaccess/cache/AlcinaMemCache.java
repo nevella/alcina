@@ -67,6 +67,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -211,6 +212,8 @@ public class AlcinaMemCache {
 	private boolean initialising;
 
 	private boolean lockingDisabled;
+
+	private long lastLockingDisabledMessage;
 
 	private Set<Thread> waitingOnWriteLock = Collections
 			.synchronizedSet(new LinkedHashSet<Thread>());
@@ -399,7 +402,11 @@ public class AlcinaMemCache {
 
 	public void lock(boolean write) {
 		if (lockingDisabled) {
-			System.out.println("Locking disabled");
+			if (System.currentTimeMillis() - lastLockingDisabledMessage > TimeConstants.ONE_MINUTE_MS) {
+				System.out.format("memcache - lock %s - locking disabled\n",
+						write);
+			}
+			lastLockingDisabledMessage = System.currentTimeMillis();
 			return;
 		}
 		try {
