@@ -851,8 +851,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		try {
 			HasIdAndLocalId object = TransformManager.get().getObject(
 					transformException.getEvent(), true);
-			transformException.setSourceObjectName(Reflections.classLookup()
-					.displayNameForObject(object));
+			if (object != null) {
+				transformException.setSourceObjectName(Reflections
+						.classLookup().displayNameForObject(object));
+			}
 		} catch (Exception e) {
 			System.out.println("Unable to add source object name - reason: "
 					+ e.getMessage());

@@ -289,8 +289,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			case CHANGE_PROPERTY_REF:
 				boolean equivalentValues = CommonUtils.equalsWithNullEquality(
 						existingTargetValue, newTargetValue);
-				if (updateAssociationsWithoutNoChangeCheck()
-						|| !equivalentValues) {
+				boolean equalValues = existingTargetValue == newTargetValue;
+				if (!equalValues
+						&& (updateAssociationsWithoutNoChangeCheck() || !equivalentValues)) {
 					if (existingTargetValue instanceof Collection) {
 						throw new RuntimeException(
 								"Should not null a collection property:\n "
@@ -1054,7 +1055,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			Class<? extends Object> collectionClass, boolean fromPropertyChange) {
 	}
 
-	public void registerDomainObject(HasIdAndLocalId hili) {
+	public <T extends HasIdAndLocalId> T registerDomainObject(T hili) {
 		if (getDomainObjects() != null) {
 			if (hili.getId() == 0) {
 				HasIdAndLocalId createdObject = getDomainObjects().getObject(
@@ -1063,6 +1064,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 			getDomainObjects().mapObject(hili);
 		}
+		return hili;
 	}
 
 	public void registerDomainObjects(Collection<HasIdAndLocalId> hilis) {

@@ -55,8 +55,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	public Logger logger;
 
-	public List<Long> failed;
-
 	private Connection connLocal;
 
 	private Connection connRemote;
@@ -173,24 +171,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			}
 		}
 		return conn;
-	}
-
-	protected List<String> getIds() throws IOException {
-		String idOrSet = console.props.idOrSet;
-		try {
-			long id = Long.parseLong(idOrSet);
-			return Collections.singletonList(idOrSet);
-		} catch (NumberFormatException e) {
-			String idList = ResourceUtilities.readFileToString(String.format(
-					"%s/%s.txt", console.setsFolder.getPath(),
-					console.props.idOrSet));
-			List<String> idlStr = new ArrayList<String>();
-			List<Long> idListL = TransformManager.idListToLongs(idList);
-			for (Long id : idListL) {
-				idlStr.add(id.toString());
-			}
-			return idlStr;
-		}
 	}
 
 	protected int getIntArg(String[] argv, int argIndex, int defaultValue) {
