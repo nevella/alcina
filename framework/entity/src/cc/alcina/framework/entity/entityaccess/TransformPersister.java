@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
@@ -60,7 +61,7 @@ public class TransformPersister {
 		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 		boolean perform = true;
 		while (perform) {
-			perform=false;
+			perform = false;
 			try {
 				Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence()
@@ -213,7 +214,12 @@ public class TransformPersister {
 			dtrs.addAll(request.getPriorRequestsWithoutResponse());
 			dtrs.add(request);
 			Integer highestPersistedRequestId = null;
-			if (token.isPossiblyReconstitueLocalIdMap()) {
+			//legacy - repair incorrect client behaviour
+			boolean persistRequestsBeforeHightestPersisted = ResourceUtilities
+					.getBoolean(getClass(),
+							"persistRequestsBeforeHightestPersisted");
+			if (!persistRequestsBeforeHightestPersisted
+					&& token.isPossiblyReconstitueLocalIdMap()) {
 				highestPersistedRequestId = getHighestPersistedRequestIdForClientInstance(request
 						.getClientInstance().getId());
 				for (int i = dtrs.size() - 1; i >= 0; i--) {
