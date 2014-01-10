@@ -326,6 +326,11 @@ public class CollectionFilters {
 		return projector.getBestValue();
 	}
 
+	public static <T> List<T> propertyList(Collection values,
+			String propertyPath) {
+		return convert(values, new PropertyConverter<Object, T>(propertyPath));
+	}
+
 	public static <V> V singleNodeFilter(Collection<? extends V> collection,
 			CollectionFilter<V> filter) {
 		for (V v : collection) {
