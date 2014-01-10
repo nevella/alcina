@@ -676,7 +676,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			idStr = idStr.isEmpty() ? console.getClipboardContents() : idStr;
 			String sql = String.format("select "
 					+ "id,optlock,creationdate,lastmodificationdate,"
-					+ "classname,key,serializedxml,creation_user_id,"
+					+ "classname,serializedxml,creation_user_id,"
 					+ "modification_user_id,user_id"
 					+ " from wrappedobject where id in (%s);\n", idStr);
 			String localDelete = String.format(
@@ -694,8 +694,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			ResultSet rRs = rStmt.executeQuery(sql);
 			PreparedStatement lStmt = localConn
 					.prepareStatement("insert into wrappedobject (id,optlock,creationdate,lastmodificationdate,"
-							+ "classname,key,serializedxml,creation_user_id,"
-							+ "modification_user_id,user_id) values(?,?,?,?,?,?,?,?,?,?)");
+							+ "classname,serializedxml,creation_user_id,"
+							+ "modification_user_id,user_id) values(?,?,?,?,?,?,?,?,?)");
 			int modCt = 0;
 			while (rRs.next()) {
 				lStmt.setLong(1, rRs.getLong(1));
@@ -704,10 +704,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				lStmt.setDate(4, rRs.getDate(4));
 				lStmt.setString(5, rRs.getString(5));
 				lStmt.setString(6, rRs.getString(6));
-				lStmt.setString(7, rRs.getString(7));
+				lStmt.setLong(7, rRs.getLong(7));
 				lStmt.setLong(8, rRs.getLong(8));
 				lStmt.setLong(9, rRs.getLong(9));
-				lStmt.setLong(10, rRs.getLong(10));
 				lStmt.executeUpdate();
 				modCt++;
 				if (modCt % 100 == 0) {
