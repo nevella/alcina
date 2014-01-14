@@ -71,7 +71,7 @@ public class ClientUtils {
 			}
 			t = t.getCause();
 		}
-		if (t.getMessage().contains("IOException while sending RPC request")) {
+		if (t.getMessage() != null && t.getMessage().contains("IOException while sending RPC request")) {
 			return true;
 		}
 		if (t instanceof StatusCodeException) {
