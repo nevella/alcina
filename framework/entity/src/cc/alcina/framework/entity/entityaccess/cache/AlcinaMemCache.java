@@ -1083,10 +1083,10 @@ public class AlcinaMemCache {
 					HasIdAndLocalId memCacheObj = transformManager
 							.getObject(dte);
 					if (dbObj instanceof HasVersionNumber) {
-						updateVersionNumber(dbObj, dte);
+						updateVersionNumber(memCacheObj, dte);
 					}
 					if (dbObj instanceof IVersionable) {
-						updateIVersionable(dbObj, persistentLayerSource);
+						updateIVersionable(memCacheObj, persistentLayerSource);
 					}
 					ensureModificationChecker(memCacheObj);
 					if (memCacheObj != null) {
