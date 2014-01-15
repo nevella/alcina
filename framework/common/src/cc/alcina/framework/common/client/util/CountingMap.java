@@ -83,4 +83,9 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 	public CountingMap(Multimap<K, List> mm) {
 		addMultimap(mm);
 	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.join(entrySet(), "\n");
+	}
 }

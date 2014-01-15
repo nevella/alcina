@@ -40,10 +40,11 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  * 
- * @author Nick Reddel
- * Note - this class is closely coupled to DockPanel - so ignoring deprecation warnings.
+ * @author Nick Reddel Note - this class is closely coupled to DockPanel - so
+ *         ignoring deprecation warnings.
  * 
- * It works...and a rewrite would be painful (and probably require a complete reimplementation)
+ *         It works...and a rewrite would be painful (and probably require a
+ *         complete reimplementation)
  */
 public class MainTabPanel extends TabPanel {
 	private HorizontalPanel bp;
@@ -76,8 +77,9 @@ public class MainTabPanel extends TabPanel {
 
 	private SimplePanel noTabContentHolder = new SimplePanel();
 
-	public void setNotabContent(Widget w) {
+	public SimplePanel setNotabContent(Widget w) {
 		noTabContentHolder.setWidget(w);
+		return noTabContentHolder;
 	}
 
 	public SimplePanel getNoTabContentHolder() {
@@ -180,10 +182,14 @@ public class MainTabPanel extends TabPanel {
 		return hp;
 	}
 
-	public int adjustClientSize(int availableWidth, int availableHeight) {
+	public int getTabBarHeight() {
 		VerticalPanel vp = (VerticalPanel) getWidget();
 		Widget w = vp.getWidget(0);
-		availableHeight -= w.getOffsetHeight();
+		return w.getOffsetHeight();
+	}
+
+	public int adjustClientSize(int availableWidth, int availableHeight) {
+		availableHeight -= getTabBarHeight();
 		if (getToolbarHolder().isVisible()) {
 			availableHeight -= getToolbarHolder().getOffsetHeight();
 		}
@@ -206,7 +212,7 @@ public class MainTabPanel extends TabPanel {
 		int oh = w2.getOffsetHeight();
 		if (w2.getOffsetHeight() < scrollHeight) {
 			w2.setHeight(scrollHeight + "px");
-		}else{
+		} else {
 			w2.setHeight("auto");
 		}
 		return scrollHeight;

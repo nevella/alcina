@@ -90,8 +90,9 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		return link;
 	}
 
-	public void noUnderline() {
-		setStyleName("link-no-underline");		
+	public Link noUnderline() {
+		setStyleName("link-no-underline");
+		return this;
 	}
 
 	public static Link createNoUnderline(String text, ClickHandler handler) {
