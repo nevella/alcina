@@ -302,14 +302,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return holder;
 	}
 
-	public static native Element getFocussedDocumentElement()/*-{
-		if ($doc.activeElement) {
-			var tagName = $doc.activeElement.tagName.toLowerCase();
-			return tagName != "body" && tagName != "html" ? $doc.activeElement : null;
-		}
-		return null;
-	}-*/;
-
 	protected void handleFilterBlur() {
 		new Timer() {
 			@Override
@@ -317,7 +309,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				// https://jira.barnet.com.au/browse/JAD-5053 - IE
 				// blur/scrollbar issue
 				if (BrowserMod.isInternetExplorer()) {
-					Element elt = getFocussedDocumentElement();
+					Element elt = WidgetUtils.getFocussedDocumentElement();
 					if (elt != null && elt.getClassName().contains("scroller")) {
 						return;
 					}

@@ -491,6 +491,24 @@ public class WidgetUtils {
 		return from.getParentElement();
 	}
 
+	public static native Element getFocussedDocumentElement()/*-{
+		if ($doc.activeElement) {
+			var tagName = $doc.activeElement.tagName.toLowerCase();
+			return tagName != "body" && tagName != "html" ? $doc.activeElement : null;
+		}
+		return null;
+	}-*/;
+
+	public static native void clearFocussedDocumentElement()/*-{
+		if ($doc.activeElement) {
+			var tagName = $doc.activeElement.tagName.toLowerCase();
+			if( tagName != "body" && tagName != "html"  ){
+				$doc.activeElement.blur();
+			}
+		}
+		return null;
+	}-*/;
+
 	// those values might be needed for non-webkit
 	@SuppressWarnings("unused")
 	private static class ElementLayout {
@@ -793,12 +811,13 @@ public class WidgetUtils {
 		}
 		return true;
 	}
+
 	public static boolean isVisibleAncestorChain(Element e) {
 		while (e != null) {
-			if (!UIObject.isVisible(e)){
+			if (!UIObject.isVisible(e)) {
 				return false;
 			}
-			e=e.getParentElement();
+			e = e.getParentElement();
 		}
 		return true;
 	}
