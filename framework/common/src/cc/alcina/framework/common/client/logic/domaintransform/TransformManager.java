@@ -643,7 +643,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		if (obj == null && dte.getSource() != null && !ignoreSource) {
 			// if create, natural behaviour is return null, ignoring source
-			if (dte.getTransformType() != TransformType.CREATE_OBJECT) {
+			if (dte.getTransformType() != TransformType.CREATE_OBJECT
+					&& dte.getTransformType() != TransformType.DELETE_OBJECT) {
 				String message = CommonUtils
 						.formatJ(
 								"calling getobject() on a provisional/deregistered object transform "

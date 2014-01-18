@@ -506,7 +506,6 @@ public class WidgetUtils {
 				$doc.activeElement.blur();
 			}
 		}
-		return null;
 	}-*/;
 
 	// those values might be needed for non-webkit
