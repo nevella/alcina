@@ -502,7 +502,7 @@ public class WidgetUtils {
 	public static native void clearFocussedDocumentElement()/*-{
 		if ($doc.activeElement) {
 			var tagName = $doc.activeElement.tagName.toLowerCase();
-			if( tagName != "body" && tagName != "html"  ){
+			if (tagName != "body" && tagName != "html") {
 				$doc.activeElement.blur();
 			}
 		}
@@ -917,4 +917,16 @@ public class WidgetUtils {
 		}
 		return h;
 	}-*/;
+
+	public static boolean clickHasAAncestor(ClickEvent clickEvent) {
+		Event event = Event.as(clickEvent.getNativeEvent());
+		// handle localisation spans
+		Element target = null;
+		if (!Element.is(event.getEventTarget())) {
+			return false;
+		}
+		target = Element.as(event.getEventTarget());
+		Element anchor = DomUtils.getAncestorWithTagName(target, "A");
+		return anchor != null;
+	}
 }
