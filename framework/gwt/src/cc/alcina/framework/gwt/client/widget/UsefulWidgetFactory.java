@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -21,11 +20,11 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class UsefulWidgetFactory {
+public class UsefulWidgetFactory {
+	public static final String BULLET_SEPARATOR_HTML = "\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0";
 
 	public static FlowPanel mediumTitleWidget(String title) {
 		FlowPanel fp = new FlowPanel();
@@ -35,6 +34,7 @@ import com.google.gwt.user.client.ui.Widget;
 		fp.add(l);
 		return fp;
 	}
+
 	public static FlowPanel lowTitleWidget(String title) {
 		FlowPanel fp = new FlowPanel();
 		fp.setStyleName("low-title");
@@ -47,12 +47,15 @@ import com.google.gwt.user.client.ui.Widget;
 	public static Widget boldInline(String text) {
 		return new InlineHTML("<b>" + text + "</b>");
 	}
+
 	public static Widget italicInline(String text) {
 		return new InlineHTML("<i>" + text + "</i>");
 	}
+
 	public static HTML createEmptyLabel() {
 		return new HTML("&nbsp;");
 	}
+
 	public static InlineHTML createSpacer(int spaces) {
 		String s = "";
 		for (; spaces > 0; spaces--) {
@@ -60,8 +63,8 @@ import com.google.gwt.user.client.ui.Widget;
 		}
 		return new InlineHTML(s);
 	}
+
 	public static Widget createBulletSeparator() {
-		return new InlineHTML(
-				"\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0");
+		return new InlineHTML(BULLET_SEPARATOR_HTML);
 	}
 }
