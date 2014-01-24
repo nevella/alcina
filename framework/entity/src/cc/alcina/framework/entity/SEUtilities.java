@@ -82,6 +82,16 @@ import cc.alcina.framework.entity.util.JvmPropertyReflector;
 public class SEUtilities {
 	public static int idCounter = 1;
 
+	private static Pattern yearRangePattern = Pattern
+			.compile("(\\d{4})(-(\\d{4}))?");
+
+	private static UnsortedMultikeyMap<PropertyDescriptor> pdLookup = new UnsortedMultikeyMap<PropertyDescriptor>(
+			2);
+
+	public static void appShutdown() {
+		pdLookup = null;
+	}
+
 	@SuppressWarnings("unchecked")
 	public static <C> C collectionItemOfClass(Collection coll, Class<C> clazz) {
 		for (Object object : coll) {
@@ -90,6 +100,42 @@ public class SEUtilities {
 			}
 		}
 		return null;
+	}
+
+	// assume slash-delineated
+	public static String combinePaths(String absPath, String relPath) {
+		if (relPath.contains("://")) {
+			return relPath;
+		}
+		if (relPath.startsWith("/")) {
+			if (absPath.contains("://")) {
+				int idx0 = absPath.indexOf("://") + 3;
+				int idx1 = absPath.indexOf("/", idx0);
+				return (idx1 == -1 ? absPath : absPath.substring(0, idx1))
+						+ relPath;
+			} else {
+				return relPath;
+			}
+		}
+		String parentSep = "../";
+		String voidSep = "./";
+		int x = 0;
+		x = absPath.lastIndexOf("/");
+		if (x != -1) {
+			absPath = absPath.substring(0, x);
+		}
+		while (relPath.startsWith(parentSep)) {
+			x = absPath.lastIndexOf("/");
+			absPath = absPath.substring(0, x);
+			relPath = relPath.substring(parentSep.length());
+		}
+		if (relPath.startsWith(voidSep)) {
+			relPath = relPath.substring(voidSep.length());
+		}
+		if (!absPath.endsWith("/")) {
+			absPath += "/";
+		}
+		return absPath + relPath;
 	}
 
 	public static String consoleReadline(String prompt) {
@@ -107,29 +153,103 @@ public class SEUtilities {
 		return constant.toString().replace('_', '-').toLowerCase();
 	}
 
-	@SuppressWarnings("unchecked")
-	public static <T> T getOrCreate(Collection<T> existing,
-			String propertyName, String propertyValue, Class itemClass)
-			throws Exception {
-		PropertyDescriptor descriptor = getPropertyDescriptorByName(itemClass,
-				propertyName);
-		for (Iterator<T> itr = existing.iterator(); itr.hasNext();) {
-			T item = itr.next();
-			if (propertyValue.equals(descriptor.getReadMethod().invoke(item,
-					CommonUtils.EMPTY_OBJECT_ARRAY))) {
-				return item;
+	public static int copyFile(File in, File out) throws IOException {
+		if (in.isDirectory()) {
+			return copyDirectory(in, out);
+		}
+		if (!out.exists()) {
+			out.getParentFile().mkdirs();
+			out.createNewFile();
+		} else {
+			if (out.lastModified() >= in.lastModified()) {
+				return 0;
 			}
 		}
-		Object item = itemClass.newInstance();
-		setPropertyValue(item, propertyName, propertyValue);
-		return (T) item;
+		FileInputStream ins = new FileInputStream(in);
+		FileOutputStream os = new FileOutputStream(out);
+		ResourceUtilities.writeStreamToStream(ins, os);
+		out.setLastModified(in.lastModified());
+		ins.close();
+		return 1;
 	}
 
-	public static void dumpStringBytes(String s) {
+	public static String decUtf8(String s) {
 		try {
-			dumpBytes(s.getBytes("UTF-16"), 8);
+			return s == null ? null : URLDecoder.decode(s, "UTF-8");
 		} catch (Exception e) {
+			// ahhh - doesn't happen much
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static boolean deleteDirectory(File folder) {
+		if (!folder.exists()) {
+			return false;
+		}
+		if (!folder.isDirectory()) {
+			return folder.delete();
+		}
+		Stack<File> pathStack = new Stack<File>();
+		Stack<File> dirStack = new Stack<File>();
+		pathStack.push(folder);
+		dirStack.push(folder);
+		while (pathStack.size() != 0) {
+			File dInf = pathStack.pop();
+			File[] files = dInf.listFiles();
+			for (File file : files) {
+				if (file.isDirectory()) {
+					pathStack.push(file);
+					dirStack.push(file);
+				} else {
+					boolean b = file.delete();
+					if (!b) {
+						return b;
+					}
+				}
+			}
+		}
+		while (dirStack.size() != 0) {
+			File dInf = dirStack.pop();
+			boolean b = dInf.delete();
+			if (!b) {
+				return b;
+			}
+		}
+		return true;
+	}
+
+	public static void disableSslValidation() throws Exception {
+		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+			public void checkClientTrusted(X509Certificate[] certs,
+					String authType) {
+			}
+
+			public void checkServerTrusted(X509Certificate[] certs,
+					String authType) {
+			}
+
+			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+				return null;
+			}
+		} };
+		// Install the all-trusting trust manager
+		SSLContext sc = SSLContext.getInstance("SSL");
+		sc.init(null, trustAllCerts, new java.security.SecureRandom());
+		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+		// Create all-trusting host name verifier
+		HostnameVerifier allHostsValid = new HostnameVerifier() {
+			public boolean verify(String hostname, SSLSession session) {
+				return true;
+			}
+		};
+		// Install the all-trusting host verifier
+		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
+	}
+
+	public static void dump(List list) {
+		System.out.println("List:");
+		for (Object object : list) {
+			System.out.println("\t- " + object);
 		}
 	}
 
@@ -182,213 +302,6 @@ public class SEUtilities {
 		System.out.println(bd.toString());
 	}
 
-	private static Pattern yearRangePattern = Pattern
-			.compile("(\\d{4})(-(\\d{4}))?");
-
-	public static String normalizeWhitespace(String input) {
-		return doWhitespace(input, false, ' ');
-	}
-
-	public static boolean isWhitespace(char c) {
-		switch (c) {
-		case '\u0009':
-		case '\n':
-		case '\u000B':
-		case '\f':
-		case '\r':
-		case '\u00A0':
-		case ' ':
-			return true;
-		}
-		return false;
-	}
-
-	private static String doWhitespace(String input, boolean returnNullIfNonWs,
-			char replace) {
-		StringBuilder sb = null;
-		int sct = 0;
-		int nsct = 0;
-		boolean escaped = false;
-		boolean strip = replace == '-';
-		int maxSpaceCount = strip ? 0 : 1;
-		for (int i = 0; i < input.length(); i++) {
-			char c = input.charAt(i);
-			switch (c) {
-			case '\u0009':
-			case '\n':
-			case '\u000B':
-			case '\f':
-			case '\r':
-			case '\u00A0':
-				nsct++;
-				break;
-			case ' ':
-				sct++;
-				break;
-			default:
-				nsct = 0;
-				sct = 0;
-				escaped = false;
-				if (sb != null) {
-					sb.append(c);
-				}
-				if (returnNullIfNonWs) {
-					return null;
-				}
-			}
-			if (!returnNullIfNonWs && sb == null
-					&& (nsct > 0 || sct > maxSpaceCount)) {
-				sb = new StringBuilder(input.length());
-				sb.append(input.substring(0, i - (sct + nsct - 1)));
-			}
-			if (sb != null && !escaped && (sct > 0 || nsct > 0)) {
-				if (replace != '-') {
-					sb.append(' ');
-				}
-				escaped = true;
-			}
-		}
-		return sb == null ? input : sb.toString();
-	}
-
-	public static String normalizeWhitespaceAndTrim(String input) {
-		return normalizeWhitespace(input).trim();
-	}
-
-	public static String stripWhitespace(String input) {
-		return doWhitespace(input, false, '-');
-	}
-
-	public static boolean isWhitespace(String input) {
-		return doWhitespace(input, true, '-') != null;
-	}
-
-	public static boolean isWhitespaceOrEmpty(String input) {
-		return input.length() == 0 || isWhitespace(input);
-	}
-
-	public static IntPair yearRange(String s) {
-		Matcher matcher = yearRangePattern.matcher(s);
-		IntPair result = new IntPair();
-		if (matcher.matches()) {
-			result.i1 = Integer.parseInt(matcher.group(1));
-			if (matcher.group(3) != null) {
-				result.i2 = Integer.parseInt(matcher.group(3));
-			} else {
-				result.i2 = result.i1;
-			}
-		}
-		return result;
-	}
-
-	// assume slash-delineated
-	public static String combinePaths(String absPath, String relPath) {
-		if (relPath.contains("://")) {
-			return relPath;
-		}
-		if (relPath.startsWith("/")) {
-			if (absPath.contains("://")) {
-				int idx0 = absPath.indexOf("://") + 3;
-				int idx1 = absPath.indexOf("/", idx0);
-				return (idx1 == -1 ? absPath : absPath.substring(0, idx1))
-						+ relPath;
-			} else {
-				return relPath;
-			}
-		}
-		String parentSep = "../";
-		String voidSep = "./";
-		int x = 0;
-		x = absPath.lastIndexOf("/");
-		if (x != -1) {
-			absPath = absPath.substring(0, x);
-		}
-		while (relPath.startsWith(parentSep)) {
-			x = absPath.lastIndexOf("/");
-			absPath = absPath.substring(0, x);
-			relPath = relPath.substring(parentSep.length());
-		}
-		if (relPath.startsWith(voidSep)) {
-			relPath = relPath.substring(voidSep.length());
-		}
-		if (!absPath.endsWith("/")) {
-			absPath += "/";
-		}
-		return absPath + relPath;
-	}
-
-	public static boolean deleteDirectory(File folder) {
-		if (!folder.exists()) {
-			return false;
-		}
-		if (!folder.isDirectory()) {
-			return folder.delete();
-		}
-		Stack<File> pathStack = new Stack<File>();
-		Stack<File> dirStack = new Stack<File>();
-		pathStack.push(folder);
-		dirStack.push(folder);
-		while (pathStack.size() != 0) {
-			File dInf = pathStack.pop();
-			File[] files = dInf.listFiles();
-			for (File file : files) {
-				if (file.isDirectory()) {
-					pathStack.push(file);
-					dirStack.push(file);
-				} else {
-					boolean b = file.delete();
-					if (!b) {
-						return b;
-					}
-				}
-			}
-		}
-		while (dirStack.size() != 0) {
-			File dInf = dirStack.pop();
-			boolean b = dInf.delete();
-			if (!b) {
-				return b;
-			}
-		}
-		return true;
-	}
-
-	private static UnsortedMultikeyMap<PropertyDescriptor> pdLookup = new UnsortedMultikeyMap<PropertyDescriptor>(
-			2);
-
-	public static PropertyDescriptor getPropertyDescriptorByName(Class clazz,
-			String propertyName) throws IntrospectionException {
-		ensureDescriptorLookup(clazz);
-		PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
-		return cached;
-	}
-
-	protected static void ensureDescriptorLookup(Class clazz)
-			throws IntrospectionException {
-		if (!pdLookup.containsKey(clazz)) {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				pdLookup.put(clazz, pd.getName(), pd);
-			}
-		}
-	}
-
-	public static List<PropertyDescriptor> getSortedPropertyDescriptors(
-			Class clazz) throws IntrospectionException {
-		ensureDescriptorLookup(clazz);
-		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
-				pdLookup.asMap(clazz).allValues());
-		Comparator<PropertyDescriptor> pdNameComparator = new Comparator<PropertyDescriptor>() {
-			@Override
-			public int compare(PropertyDescriptor o1, PropertyDescriptor o2) {
-				return o1.getName().compareTo(o2.getName());
-			}
-		};
-		Collections.sort(result, pdNameComparator);
-		return result;
-	}
-
 	public static String dumpProperties(Properties p) {
 		StringWriter sw = new StringWriter();
 		sw.write("--listing properties--\n");
@@ -397,6 +310,14 @@ public class SEUtilities {
 			sw.write(name + "=" + p.getProperty(name) + "\n");
 		}
 		return sw.toString();
+	}
+
+	public static void dumpStringBytes(String s) {
+		try {
+			dumpBytes(s.getBytes("UTF-16"), 8);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static String encodePath(String path) throws Exception {
@@ -423,15 +344,6 @@ public class SEUtilities {
 		}
 	}
 
-	public static String decUtf8(String s) {
-		try {
-			return s == null ? null : URLDecoder.decode(s, "UTF-8");
-		} catch (Exception e) {
-			// ahhh - doesn't happen much
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	public static Map<String, String> enumToMap(Enum e) {
 		Map<String, String> m = new HashMap<String, String>();
 		try {
@@ -446,6 +358,28 @@ public class SEUtilities {
 			e2.printStackTrace();
 		}
 		return m;
+	}
+
+	public static boolean equivalentDeclaredFields(Object o1, Object o2) {
+		if (o1 == null || o2 == null || o1.getClass() != o2.getClass()) {
+			return false;
+		}
+		try {
+			Class clazz = o1.getClass();
+			while (clazz != Object.class) {
+				for (Field f : clazz.getDeclaredFields()) {
+					f.setAccessible(true);
+					if (!CommonUtils.equalsWithNullEmptyEquality(f.get(o1),
+							f.get(o2))) {
+						return false;
+					}
+				}
+				clazz = clazz.getSuperclass();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		return true;
 	}
 
 	public static void expandAll(JTree tree, boolean expand) {
@@ -579,6 +513,15 @@ public class SEUtilities {
 				+ string.substring(string.length() - length + pre);
 	}
 
+	public static String getAccessorName(Field field) {
+		return (field.getType() == boolean.class ? "is" : "get")
+				+ CommonUtils.capitaliseFirst(field.getName());
+	}
+
+	public static File getChildFile(File folder, String path) {
+		return new File(String.format("%s/%s", folder.getPath(), path));
+	}
+
 	public static File getDesktopFolder() {
 		switch (getOsType()) {
 		case Windows:
@@ -593,10 +536,61 @@ public class SEUtilities {
 		}
 	}
 
+	public static String getFullExceptionMessage(Throwable t) {
+		StringWriter sw = new StringWriter();
+		sw.write(t.getMessage() + "\n");
+		t.printStackTrace(new PrintWriter(sw));
+		return sw.toString();
+	}
+
+	public static String getHomeDir() {
+		return (System.getenv("USERPROFILE") != null) ? System
+				.getenv("USERPROFILE") : System.getProperty("user.home");
+	}
+
+	public static int getLeadingWsCount(String input) {
+		int sct = 0;
+		itrChars: for (int i = 0; i < input.length(); i++) {
+			char c = input.charAt(i);
+			switch (c) {
+			case '\u0009':
+			case '\n':
+			case '\u000B':
+			case '\f':
+			case '\r':
+			case '\u00A0':
+			case ' ':
+				sct++;
+				break;
+			default:
+				break itrChars;
+			}
+		}
+		return sct;
+	}
+
 	public static String getNameFromPath(String path) {
 		path = path.replace('\\', '/');
 		return (path.contains("/")) ? path.substring(path.lastIndexOf("/") + 1)
 				: path;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T getOrCreate(Collection<T> existing,
+			String propertyName, String propertyValue, Class itemClass)
+			throws Exception {
+		PropertyDescriptor descriptor = getPropertyDescriptorByName(itemClass,
+				propertyName);
+		for (Iterator<T> itr = existing.iterator(); itr.hasNext();) {
+			T item = itr.next();
+			if (propertyValue.equals(descriptor.getReadMethod().invoke(item,
+					CommonUtils.EMPTY_OBJECT_ARRAY))) {
+				return item;
+			}
+		}
+		Object item = itemClass.newInstance();
+		setPropertyValue(item, propertyName, propertyValue);
+		return (T) item;
 	}
 
 	public static OsType getOsType() {
@@ -608,6 +602,32 @@ public class SEUtilities {
 		} else {
 			return OsType.Unix;
 		}
+	}
+
+	public static Map<String, Object> getPropertiesAsMap(Object obj,
+			List<String> ignore) {
+		try {
+			getPropertyDescriptorByName(obj.getClass(), null);
+			Map<String, PropertyDescriptor> pds = (Map<String, PropertyDescriptor>) pdLookup
+					.asMap(obj.getClass()).delegate();
+			Map<String, Object> props = new LinkedHashMap<String, Object>();
+			for (PropertyDescriptor pd : pds.values()) {
+				if (!ignore.contains(pd.getName())) {
+					props.put(pd.getName(), pd.getReadMethod() == null ? null
+							: pd.getReadMethod().invoke(obj));
+				}
+			}
+			return props;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static PropertyDescriptor getPropertyDescriptorByName(Class clazz,
+			String propertyName) throws IntrospectionException {
+		ensureDescriptorLookup(clazz);
+		PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
+		return cached;
 	}
 
 	public static Object getPropertyValue(Object bean, String propertyName) {
@@ -625,6 +645,21 @@ public class SEUtilities {
 			t = t.getCause();
 		}
 		return t;
+	}
+
+	public static List<PropertyDescriptor> getSortedPropertyDescriptors(
+			Class clazz) throws IntrospectionException {
+		ensureDescriptorLookup(clazz);
+		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
+				pdLookup.asMap(clazz).allValues());
+		Comparator<PropertyDescriptor> pdNameComparator = new Comparator<PropertyDescriptor>() {
+			@Override
+			public int compare(PropertyDescriptor o1, PropertyDescriptor o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		};
+		Collections.sort(result, pdNameComparator);
+		return result;
 	}
 
 	public static int getUniqueInt(List<Integer> ints) {
@@ -688,6 +723,47 @@ public class SEUtilities {
 		return string == null || string.length() == 0;
 	}
 
+	public static boolean isWhitespace(char c) {
+		switch (c) {
+		case '\u0009':
+		case '\n':
+		case '\u000B':
+		case '\f':
+		case '\r':
+		case '\u00A0':
+		case ' ':
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean isWhitespace(String input) {
+		return doWhitespace(input, true, '-') != null;
+	}
+
+	public static boolean isWhitespaceOrEmpty(String input) {
+		return input.length() == 0 || isWhitespace(input);
+	}
+
+	public static <A extends Annotation> void iterateForPropertyWithAnnotation(
+			Object object, Class<A> annotationClass,
+			HasAnnotationCallback<A> hasAnnotationCallback) {
+		try {
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(
+					object.getClass()).getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				JvmPropertyReflector reflector = new JvmPropertyReflector(pd);
+				if (reflector.getAnnotation(annotationClass) != null) {
+					hasAnnotationCallback
+							.apply(reflector.getAnnotation(annotationClass),
+									reflector);
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public static List<Object> iteratorToList(Iterator i) {
 		List<Object> result = new ArrayList<Object>();
 		for (; i.hasNext(); result.add(i.next()))
@@ -704,6 +780,52 @@ public class SEUtilities {
 			}
 		}
 		return b.toString();
+	}
+
+	public static List<File> listFilesRecursive(String initialPath,
+			FileFilter filter) {
+		return listFilesRecursive(initialPath, filter, false);
+	}
+
+	public static List<File> listFilesRecursive(String initialPath,
+			FileFilter filter, boolean removeFolders) {
+		return listFilesRecursive(initialPath, filter, removeFolders, null);
+	}
+
+	public static List<File> listFilesRecursive(String initialPath,
+			FileFilter filter, boolean removeFolders,
+			Pattern doNotCheckFolderPattern) {
+		Stack<File> folders = new Stack<File>();
+		List<File> results = new ArrayList<File>();
+		folders.add(new File(initialPath));
+		while (!folders.isEmpty()) {
+			File folder = folders.pop();
+			File[] files = filter == null ? folder.listFiles() : folder
+					.listFiles(filter);
+			for (File file : files) {
+				if (doNotCheckFolderPattern == null
+						|| !doNotCheckFolderPattern.matcher(file.getName())
+								.matches()) {
+					if (file.isDirectory()) {
+						folders.push(file);
+					}
+				}
+				results.add(file);
+			}
+		}
+		if (removeFolders) {
+			for (Iterator<File> itr = results.iterator(); itr.hasNext();) {
+				File file = itr.next();
+				if (doNotCheckFolderPattern == null
+						|| !doNotCheckFolderPattern.matcher(file.getName())
+								.matches()) {
+					if (file.isDirectory()) {
+						itr.remove();
+					}
+				}
+			}
+		}
+		return results;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -733,6 +855,14 @@ public class SEUtilities {
 		return m;
 	}
 
+	public static String normalizeWhitespace(String input) {
+		return doWhitespace(input, false, ' ');
+	}
+
+	public static String normalizeWhitespaceAndTrim(String input) {
+		return normalizeWhitespace(input).trim();
+	}
+
 	public static String padString(String input, int length, char padChar) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < length - input.length(); i++) {
@@ -740,6 +870,10 @@ public class SEUtilities {
 		}
 		sb.append(input);
 		return sb.toString();
+	}
+
+	public static String sanitiseFileName(String string) {
+		return string.replaceAll("[\\?/<>\\|\\*:\\\\\"\\{\\}]", "_");
 	}
 
 	public static void setPropertyValue(Object bean, String propertyName,
@@ -756,6 +890,54 @@ public class SEUtilities {
 		}
 	}
 
+	public static void stringDiff(String s1, String s2) {
+		for (int i = 0; i < s1.length(); i++) {
+			char c = s1.charAt(i);
+			char c2 = s2.charAt(i);
+			if (c == c2) {
+				System.out.print(c + "\t");
+			} else {
+				System.out.print(c + ": " + ((short) c) + " " + ((short) c2)
+						+ "\t");
+			}
+			if (i % 4 == 0) {
+				System.out.println();
+			}
+		}
+	}
+
+	public static String stripWhitespace(String input) {
+		return doWhitespace(input, false, '-');
+	}
+
+	public static void threadDump() {
+		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
+				.getAllStackTraces().entrySet();
+		for (Entry<Thread, StackTraceElement[]> entry : allStackTraces) {
+			System.out.println(entry.getKey());
+			StackTraceElement[] value = entry.getValue();
+			for (StackTraceElement stackTraceElement : value) {
+				System.out.println("\t" + stackTraceElement);
+			}
+		}
+	}
+
+	public static void throwFutureException(List<Future<Object>> futures)
+			throws Exception {
+		for (Future<Object> future : futures) {
+			try {
+				future.get();
+			} catch (ExecutionException ee) {
+				Throwable cause = ee.getCause();
+				if (cause instanceof Exception) {
+					Exception ne = (Exception) cause;
+					throw ne;
+				}
+				throw new Exception(cause);
+			}
+		}
+	}
+
 	public static String usToAuDate(String s) {
 		if (isNullOrEmpty(s)) {
 			return s;
@@ -769,47 +951,18 @@ public class SEUtilities {
 		return String.format("%s/%s/%s", m.group(2), m.group(1), m.group(3));
 	}
 
-	private static void expandAll(JTree tree, TreePath parent, boolean expand) {
-		// Traverse children
-		TreeNode node = (TreeNode) parent.getLastPathComponent();
-		if (node.getChildCount() >= 0) {
-			for (Enumeration e = node.children(); e.hasMoreElements();) {
-				TreeNode n = (TreeNode) e.nextElement();
-				TreePath path = parent.pathByAddingChild(n);
-				expandAll(tree, path, expand);
+	public static IntPair yearRange(String s) {
+		Matcher matcher = yearRangePattern.matcher(s);
+		IntPair result = new IntPair();
+		if (matcher.matches()) {
+			result.i1 = Integer.parseInt(matcher.group(1));
+			if (matcher.group(3) != null) {
+				result.i2 = Integer.parseInt(matcher.group(3));
+			} else {
+				result.i2 = result.i1;
 			}
 		}
-		// Expansion or collapse must be done bottom-up
-		if (expand) {
-			tree.expandPath(parent);
-		} else {
-			tree.collapsePath(parent);
-		}
-	}
-
-	public static String getAccessorName(Field field) {
-		return (field.getType() == boolean.class ? "is" : "get")
-				+ CommonUtils.capitaliseFirst(field.getName());
-	}
-
-	public static int copyFile(File in, File out) throws IOException {
-		if (in.isDirectory()) {
-			return copyDirectory(in, out);
-		}
-		if (!out.exists()) {
-			out.getParentFile().mkdirs();
-			out.createNewFile();
-		} else {
-			if (out.lastModified() >= in.lastModified()) {
-				return 0;
-			}
-		}
-		FileInputStream ins = new FileInputStream(in);
-		FileOutputStream os = new FileOutputStream(out);
-		ResourceUtilities.writeStreamToStream(ins, os);
-		out.setLastModified(in.lastModified());
-		ins.close();
-		return 1;
+		return result;
 	}
 
 	private static int copyDirectory(File in, File out) throws IOException {
@@ -831,9 +984,81 @@ public class SEUtilities {
 		return fc;
 	}
 
-	public static String getHomeDir() {
-		return (System.getenv("USERPROFILE") != null) ? System
-				.getenv("USERPROFILE") : System.getProperty("user.home");
+	private static String doWhitespace(String input, boolean returnNullIfNonWs,
+			char replace) {
+		StringBuilder sb = null;
+		int sct = 0;
+		int nsct = 0;
+		boolean escaped = false;
+		boolean strip = replace == '-';
+		int maxSpaceCount = strip ? 0 : 1;
+		for (int i = 0; i < input.length(); i++) {
+			char c = input.charAt(i);
+			switch (c) {
+			case '\u0009':
+			case '\n':
+			case '\u000B':
+			case '\f':
+			case '\r':
+			case '\u00A0':
+				nsct++;
+				break;
+			case ' ':
+				sct++;
+				break;
+			default:
+				nsct = 0;
+				sct = 0;
+				escaped = false;
+				if (sb != null) {
+					sb.append(c);
+				}
+				if (returnNullIfNonWs) {
+					return null;
+				}
+			}
+			if (!returnNullIfNonWs && sb == null
+					&& (nsct > 0 || sct > maxSpaceCount)) {
+				sb = new StringBuilder(input.length());
+				sb.append(input.substring(0, i - (sct + nsct - 1)));
+			}
+			if (sb != null && !escaped && (sct > 0 || nsct > 0)) {
+				if (replace != '-') {
+					sb.append(' ');
+				}
+				escaped = true;
+			}
+		}
+		return sb == null ? input : sb.toString();
+	}
+
+	private static void expandAll(JTree tree, TreePath parent, boolean expand) {
+		// Traverse children
+		TreeNode node = (TreeNode) parent.getLastPathComponent();
+		if (node.getChildCount() >= 0) {
+			for (Enumeration e = node.children(); e.hasMoreElements();) {
+				TreeNode n = (TreeNode) e.nextElement();
+				TreePath path = parent.pathByAddingChild(n);
+				expandAll(tree, path, expand);
+			}
+		}
+		// Expansion or collapse must be done bottom-up
+		if (expand) {
+			tree.expandPath(parent);
+		} else {
+			tree.collapsePath(parent);
+		}
+	}
+
+	protected static void ensureDescriptorLookup(Class clazz)
+			throws IntrospectionException {
+		if (!pdLookup.containsKey(clazz)) {
+			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
+					.getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				pdLookup.put(clazz, pd.getName(), pd);
+			}
+		}
 	}
 
 	public static class Bytes {
@@ -895,230 +1120,5 @@ public class SEUtilities {
 
 	public static enum OsType {
 		Windows, MacOS, Unix
-	}
-
-	public static void stringDiff(String s1, String s2) {
-		for (int i = 0; i < s1.length(); i++) {
-			char c = s1.charAt(i);
-			char c2 = s2.charAt(i);
-			if (c == c2) {
-				System.out.print(c + "\t");
-			} else {
-				System.out.print(c + ": " + ((short) c) + " " + ((short) c2)
-						+ "\t");
-			}
-			if (i % 4 == 0) {
-				System.out.println();
-			}
-		}
-	}
-
-	public static void dump(List list) {
-		System.out.println("List:");
-		for (Object object : list) {
-			System.out.println("\t- " + object);
-		}
-	}
-
-	public static void throwFutureException(List<Future<Object>> futures)
-			throws Exception {
-		for (Future<Object> future : futures) {
-			try {
-				future.get();
-			} catch (ExecutionException ee) {
-				Throwable cause = ee.getCause();
-				if (cause instanceof Exception) {
-					Exception ne = (Exception) cause;
-					throw ne;
-				}
-				throw new Exception(cause);
-			}
-		}
-	}
-
-	public static int getLeadingWsCount(String input) {
-		int sct = 0;
-		itrChars: for (int i = 0; i < input.length(); i++) {
-			char c = input.charAt(i);
-			switch (c) {
-			case '\u0009':
-			case '\n':
-			case '\u000B':
-			case '\f':
-			case '\r':
-			case '\u00A0':
-			case ' ':
-				sct++;
-				break;
-			default:
-				break itrChars;
-			}
-		}
-		return sct;
-	}
-
-	public static String getFullExceptionMessage(Throwable t) {
-		StringWriter sw = new StringWriter();
-		sw.write(t.getMessage() + "\n");
-		t.printStackTrace(new PrintWriter(sw));
-		return sw.toString();
-	}
-
-	public static List<File> listFilesRecursive(String initialPath,
-			FileFilter filter) {
-		return listFilesRecursive(initialPath, filter, false);
-	}
-
-	public static List<File> listFilesRecursive(String initialPath,
-			FileFilter filter, boolean removeFolders) {
-		return listFilesRecursive(initialPath, filter, removeFolders, null);
-	}
-
-	public static List<File> listFilesRecursive(String initialPath,
-			FileFilter filter, boolean removeFolders,
-			Pattern doNotCheckFolderPattern) {
-		Stack<File> folders = new Stack<File>();
-		List<File> results = new ArrayList<File>();
-		folders.add(new File(initialPath));
-		while (!folders.isEmpty()) {
-			File folder = folders.pop();
-			File[] files = filter == null ? folder.listFiles() : folder
-					.listFiles(filter);
-			for (File file : files) {
-				if (doNotCheckFolderPattern == null
-						|| !doNotCheckFolderPattern.matcher(file.getName())
-								.matches()) {
-					if (file.isDirectory()) {
-						folders.push(file);
-					}
-				}
-				results.add(file);
-			}
-		}
-		if (removeFolders) {
-			for (Iterator<File> itr = results.iterator(); itr.hasNext();) {
-				File file = itr.next();
-				if (doNotCheckFolderPattern == null
-						|| !doNotCheckFolderPattern.matcher(file.getName())
-								.matches()) {
-					if (file.isDirectory()) {
-						itr.remove();
-					}
-				}
-			}
-		}
-		return results;
-	}
-
-	public static void threadDump() {
-		Set<Entry<Thread, StackTraceElement[]>> allStackTraces = Thread
-				.getAllStackTraces().entrySet();
-		for (Entry<Thread, StackTraceElement[]> entry : allStackTraces) {
-			System.out.println(entry.getKey());
-			StackTraceElement[] value = entry.getValue();
-			for (StackTraceElement stackTraceElement : value) {
-				System.out.println("\t" + stackTraceElement);
-			}
-		}
-	}
-
-	public static File getChildFile(File folder, String path) {
-		return new File(String.format("%s/%s", folder.getPath(), path));
-	}
-
-	public static void appShutdown() {
-		pdLookup = null;
-	}
-
-	public static String sanitiseFileName(String string) {
-		return string.replaceAll("[\\?/<>\\|\\*:\\\\\"\\{\\}]", "_");
-	}
-
-	public static <A extends Annotation> void iterateForPropertyWithAnnotation(
-			Object object, Class<A> annotationClass,
-			HasAnnotationCallback<A> hasAnnotationCallback) {
-		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(
-					object.getClass()).getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				JvmPropertyReflector reflector = new JvmPropertyReflector(pd);
-				if (reflector.getAnnotation(annotationClass) != null) {
-					hasAnnotationCallback
-							.apply(reflector.getAnnotation(annotationClass),
-									reflector);
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static void disableSslValidation() throws Exception {
-		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-				return null;
-			}
-
-			public void checkClientTrusted(X509Certificate[] certs,
-					String authType) {
-			}
-
-			public void checkServerTrusted(X509Certificate[] certs,
-					String authType) {
-			}
-		} };
-		// Install the all-trusting trust manager
-		SSLContext sc = SSLContext.getInstance("SSL");
-		sc.init(null, trustAllCerts, new java.security.SecureRandom());
-		HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-		// Create all-trusting host name verifier
-		HostnameVerifier allHostsValid = new HostnameVerifier() {
-			public boolean verify(String hostname, SSLSession session) {
-				return true;
-			}
-		};
-		// Install the all-trusting host verifier
-		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-	}
-
-	public static Map<String, Object> getPropertiesAsMap(Object obj,
-			List<String> ignore) {
-		try {
-			getPropertyDescriptorByName(obj.getClass(), null);
-			Map<String, PropertyDescriptor> pds = (Map<String, PropertyDescriptor>) pdLookup
-					.asMap(obj.getClass()).delegate();
-			Map<String, Object> props = new LinkedHashMap<String, Object>();
-			for (PropertyDescriptor pd : pds.values()) {
-				if (!ignore.contains(pd.getName())) {
-					props.put(pd.getName(), pd.getReadMethod() == null ? null
-							: pd.getReadMethod().invoke(obj));
-				}
-			}
-			return props;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static boolean equivalentDeclaredFields(Object o1, Object o2) {
-		if (o1 == null || o2 == null || o1.getClass() != o2.getClass()) {
-			return false;
-		}
-		try {
-			Class clazz = o1.getClass();
-			while (clazz != Object.class) {
-				for (Field f : clazz.getDeclaredFields()) {
-					f.setAccessible(true);
-					if (!CommonUtils.equalsWithNullEmptyEquality(f.get(o1),
-							f.get(o2))) {
-						return false;
-					}
-				}
-				clazz = clazz.getSuperclass();
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		return true;
 	}
 }

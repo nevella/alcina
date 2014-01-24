@@ -393,6 +393,12 @@ public class CommonUtils {
 		return sub == null ? null : Long.parseLong(sub);
 	}
 
+	/**
+	 * For trimming a utf8 string for insertion into a 255-char varchar db
+	 * field. Oh, the pain
+	 */
+	public static final int SAFE_VARCHAR_MAX_CHARS = 230;
+
 	public static class ThreeWaySetResult<T> {
 		public Set<T> firstOnly;
 
