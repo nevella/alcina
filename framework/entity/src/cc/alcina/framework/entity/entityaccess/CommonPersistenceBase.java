@@ -1070,7 +1070,19 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		@Override
 		public void updateIid(String iidKey, String userName, boolean rememberMe) {
-			// ignore
+			if (!rememberMe) {
+				try {
+					Iid impl = (Iid) cp.getImplementation(Iid.class)
+							.newInstance();
+					impl.setInstanceId(iidKey);
+					Registry.impl(ClientInstanceAuthenticationCache.class)
+							.cacheIid(impl);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}else{
+				//ignore
+			}
 		}
 
 		@Override
@@ -1134,7 +1146,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		String userName = Registry
 				.impl(ClientInstanceAuthenticationCache.class)
 				.iidUserNameByKey(iidKey);
-		if (userName == null) {
+		if (userName == null&&!Registry
+				.impl(ClientInstanceAuthenticationCache.class)
+				.containsIIdKey(iidKey)) {
 			Iid iid = getIidByKey(iidKey);
 			if (iid != null) {
 				Registry.impl(ClientInstanceAuthenticationCache.class)

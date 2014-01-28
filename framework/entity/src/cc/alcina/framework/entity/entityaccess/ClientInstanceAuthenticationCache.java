@@ -45,4 +45,8 @@ public class ClientInstanceAuthenticationCache {
 				iid.getRememberMeUser() == null ? null : iid
 						.getRememberMeUser().getUserName());
 	}
+
+	public boolean containsIIdKey(String iidKey) {
+		return iidUserNameByKeyMap.containsKey(iidKey);
+	}
 }
