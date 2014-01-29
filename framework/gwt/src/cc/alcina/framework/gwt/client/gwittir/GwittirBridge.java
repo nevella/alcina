@@ -327,7 +327,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			boolean isEnum = domainType.isEnum();
 			boolean displayWrap = (displayInfo.displayMask() & DisplayInfo.DISPLAY_WRAP) > 0;
 			if (bwp == null && isEnum) {
-				bwp = fieldEditable ? new ListBoxEnumProvider(domainType)
+				bwp = fieldEditable ? new ListBoxEnumProvider(domainType, true)
 						: NOWRAP_LABEL_PROVIDER;
 			}
 			if (bwp != null && !fieldEditable) {

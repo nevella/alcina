@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 	@Override
 	public String render(Object o) {
 		if (o == null) {
-			return "-- any --";
+			return "(not set)";
 		}
 		return CommonUtils.friendlyConstant(o);
 	}

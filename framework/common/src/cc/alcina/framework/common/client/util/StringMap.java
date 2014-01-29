@@ -15,6 +15,14 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return map;
 	}
 
+	public static StringMap properties(String... kvs) {
+		StringMap map = new StringMap();
+		for (int i = 0; i < kvs.length; i += 2) {
+			map.put(kvs[i], kvs[i + 1]);
+		}
+		return map;
+	}
+
 	public String toPropertyString() {
 		StringBuilder sb = new StringBuilder();
 		for (Map.Entry<String, String> entry : entrySet()) {

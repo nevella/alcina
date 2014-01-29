@@ -237,10 +237,21 @@ public class GwittirUtils {
 	public static SetBasedListBox getForEnumAndRenderer(
 			Class<? extends Enum> clazz, Renderer renderer,
 			Collection<? extends Enum> ignore) {
+		return getForEnumAndRenderer(clazz, renderer, ignore, false);
+	}
+
+	public static SetBasedListBox getForEnumAndRenderer(
+			Class<? extends Enum> clazz, Renderer renderer,
+			Collection<? extends Enum> ignore, boolean withNull) {
 		SetBasedListBox listBox = new SetBasedListBox();
 		Enum[] enumValues = clazz.getEnumConstants();
 		List options = new ArrayList(Arrays.asList(enumValues));
-		options.removeAll(ignore);
+		if (withNull) {
+			options.add(0, null);
+		}
+		if (ignore != null) {
+			options.removeAll(ignore);
+		}
 		listBox.setRenderer(renderer);
 		listBox.setOptions(options);
 		return listBox;
