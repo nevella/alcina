@@ -6,9 +6,22 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 
+import com.google.gwt.core.client.JavaScriptObject;
+
 @ReflectionModule(ReflectionModule.INITIAL)
 public abstract class TreeIntrospector implements Introspector {
-	private HashMap<Class, BeanDescriptor> beanDescriptorLookup = new HashMap<Class, BeanDescriptor>();
+	protected HashMap<Class, BeanDescriptor> descriptorLookup = new HashMap<Class, BeanDescriptor>();
+
+	private JavaScriptObject methodLookup;
+
+	private List<TreeIntrospector> introspectors = new ArrayList<TreeIntrospector>();
+
+	public TreeIntrospector() {
+		introspectors.add(this);
+		initMethodLookup();
+		registerMethods();
+		registerBeanDescriptors();
+	}
 
 	@Override
 	public BeanDescriptor getDescriptor(Object object) {
@@ -26,8 +39,8 @@ public abstract class TreeIntrospector implements Introspector {
 		if (object == null) {
 			throw new NullPointerException("Attempt to introspect null object");
 		}
-		if (beanDescriptorLookup.containsKey(object.getClass())) {
-			return beanDescriptorLookup.get(object.getClass());
+		if (descriptorLookup.containsKey(object.getClass())) {
+			return descriptorLookup.get(object.getClass());
 		}
 		if (object instanceof SelfDescribed) {
 			return ((SelfDescribed) object).__descriptor();
@@ -35,32 +48,42 @@ public abstract class TreeIntrospector implements Introspector {
 		for (TreeIntrospector introspector : introspectors) {
 			BeanDescriptor descriptor = introspector.getDescriptor0(object);
 			if (descriptor != null) {
-				beanDescriptorLookup.put(object.getClass(), descriptor);
+				descriptorLookup.put(object.getClass(), descriptor);
 				return descriptor;
 			}
 		}
 		return null;
 	}
 
-	@Override
-	public Class resolveClass(Object instance) {
-		throw new UnsupportedOperationException("Not implemented - but " +
-				"if it were, better to add resolved class to beandescriptor type ");
-	}
-
-	public TreeIntrospector() {
-		introspectors.add(this);
-	}
-
-	private List<TreeIntrospector> introspectors = new ArrayList<TreeIntrospector>();
-
-	protected abstract BeanDescriptor getDescriptor0(Object object);
+	public native JavaScriptObject getNativeMethod(Class declaringClass,
+			String methodName) /*-{
+		return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup[declaringClass][methodName];
+	}-*/;
 
 	public void registerChild(TreeIntrospector child) {
 		introspectors.add(0, child);
 	}
 
+	public native JavaScriptObject registerMethodDeclaringType(
+			Class declaringClass) /*-{
+		return this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup[declaringClass] = [];
+	}-*/;
 
+	@Override
+	public Class resolveClass(Object instance) {
+		throw new UnsupportedOperationException(
+				"Not implemented - but "
+						+ "if it were, better to add resolved class to beandescriptor type ");
+	}
+
+	private native void initMethodLookup()/*-{
+		this.@com.totsp.gwittir.client.beans.TreeIntrospector::methodLookup = [];
+	}-*/;
+
+	protected abstract BeanDescriptor getDescriptor0(Object object);
+
+	protected abstract void registerBeanDescriptors();
+
+	protected abstract void registerMethods();
 	
-
 }

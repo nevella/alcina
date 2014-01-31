@@ -45,7 +45,10 @@ import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermi
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -55,15 +58,12 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  *<p>Permissions type ADMIN_OR_OWNER pretty much mandates that the object implement HasOwner</p>
  * @author Nick Reddel
  */
-public class PermissionsManager extends BaseBindable implements Vetoer,
-		DomainTransformListener {
+public class PermissionsManager implements Vetoer, DomainTransformListener {
 	private LoginState loginState = LoginState.NOT_LOGGED_IN;
 
 	private OnlineState onlineState = OnlineState.ONLINE;
 
 	public static final String PROP_LOGIN_STATE = "loginState";
-
-	public static final String PROP_ONLINE_STATE = "onlineState";
 
 	public static final String CONTEXT_OVERRIDE_AS_OWNED_OBJECT = PermissionsManager.class
 			.getName() + ".CONTEXT_OVERRIDE_AS_OWNED_OBJECT";
@@ -372,6 +372,9 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 		}
 	};
 
+	private static final String TOPIC_LOGIN_STATE = PermissionsManager.class
+			.getName() + ".TOPIC_LOGIN_STATE";
+
 	public boolean isPermissible(Object o, Permissible p) {
 		return isPermissible(o, p, false);
 	}
@@ -500,15 +503,33 @@ public class PermissionsManager extends BaseBindable implements Vetoer,
 	public void setLoginState(LoginState loginState) {
 		LoginState old_loginState = this.loginState;
 		this.loginState = loginState;
-		propertyChangeSupport().firePropertyChange("loginState",
-				old_loginState, loginState);
+		notifyLoginState(loginState);
 	}
 
 	public void setOnlineState(OnlineState onlineState) {
 		OnlineState old_onlineState = this.onlineState;
 		this.onlineState = onlineState;
-		propertyChangeSupport().firePropertyChange("onlineState",
-				old_onlineState, onlineState);
+		notifyOnlineState(onlineState);
+	}
+
+	public static void notifyLoginState(LoginState state) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_LOGIN_STATE, state);
+	}
+
+	public static void notifyLoginStateListenerDelta(
+			TopicListener<LoginState> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_LOGIN_STATE, listener,
+				add);
+	}
+
+	public static void notifyOnlineState(OnlineState state) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_LOGIN_STATE, state);
+	}
+
+	public static void notifyOnlineStateListenerDelta(
+			TopicListener<OnlineState> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_LOGIN_STATE, listener,
+				add);
 	}
 
 	public static void setPermissionsExtension(
