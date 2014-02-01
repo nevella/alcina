@@ -56,9 +56,14 @@ import com.totsp.gwittir.client.beans.TreeIntrospector;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 /**
+ * (Nick) Pretty much a complete rewrite of Robert's generator - because we
+ * don't care about GWT compiler optimisations (we do our own multi-pass
+ * compilation), we can use native JSNI methods for much better obfuscated size
+ * and improved performance
  * 
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
+ * 
  */
 @SuppressWarnings({ "deprecation" })
 public class IntrospectorGenerator extends Generator {
@@ -71,7 +76,6 @@ public class IntrospectorGenerator extends Generator {
 							.getCanonicalName().lastIndexOf("."));
 
 	private IntrospectorFilter filter;
-
 
 	/** Creates a new instance of IntrospectorGenerator */
 	public IntrospectorGenerator() {
