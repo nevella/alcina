@@ -375,6 +375,9 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	private static final String TOPIC_LOGIN_STATE = PermissionsManager.class
 			.getName() + ".TOPIC_LOGIN_STATE";
 
+	private static final String TOPIC_ONLINE_STATE = PermissionsManager.class
+			.getName() + ".TOPIC_ONLINE_STATE";
+
 	public boolean isPermissible(Object o, Permissible p) {
 		return isPermissible(o, p, false);
 	}
@@ -503,13 +506,17 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public void setLoginState(LoginState loginState) {
 		LoginState old_loginState = this.loginState;
 		this.loginState = loginState;
-		notifyLoginState(loginState);
+		if (loginState != old_loginState) {
+			notifyLoginState(loginState);
+		}
 	}
 
 	public void setOnlineState(OnlineState onlineState) {
 		OnlineState old_onlineState = this.onlineState;
 		this.onlineState = onlineState;
-		notifyOnlineState(onlineState);
+		if (onlineState != old_onlineState) {
+			notifyOnlineState(onlineState);
+		}
 	}
 
 	public static void notifyLoginState(LoginState state) {
@@ -523,12 +530,12 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	}
 
 	public static void notifyOnlineState(OnlineState state) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_LOGIN_STATE, state);
+		GlobalTopicPublisher.get().publishTopic(TOPIC_ONLINE_STATE, state);
 	}
 
 	public static void notifyOnlineStateListenerDelta(
 			TopicListener<OnlineState> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_LOGIN_STATE, listener,
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_ONLINE_STATE, listener,
 				add);
 	}
 
