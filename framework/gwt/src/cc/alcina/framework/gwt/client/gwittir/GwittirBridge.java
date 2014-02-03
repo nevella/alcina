@@ -14,7 +14,6 @@
 package cc.alcina.framework.gwt.client.gwittir;
 
 import java.lang.annotation.Annotation;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,7 +30,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.gwittir.validator.BooleanEnsureNonNullCoverter;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
-import cc.alcina.framework.common.client.gwittir.validator.DateToLongStringConverter;
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ParameterisedValidator;
 import cc.alcina.framework.common.client.gwittir.validator.RequiresSourceValidator;
@@ -394,11 +392,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	public static Converter getDefaultConverter(BoundWidgetProvider bwp,
 			Class propertyType) {
-		if (propertyType == Date.class || propertyType == Timestamp.class) {
-			if (bwp == DateBox.PROVIDER) {
-				return DateToLongStringConverter.INSTANCE;
-			}
-		}
 		if (propertyType == Boolean.class) {
 			return BooleanEnsureNonNullCoverter.INSTANCE;
 		}

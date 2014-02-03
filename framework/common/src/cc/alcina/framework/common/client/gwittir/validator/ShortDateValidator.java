@@ -23,7 +23,7 @@ import com.totsp.gwittir.client.validator.Validator;
 /**
  * 
  * @author nick@alcina.cc
- *
+ * 
  */
 @ClientInstantiable
 public class ShortDateValidator implements Validator {
@@ -39,9 +39,12 @@ public class ShortDateValidator implements Validator {
 
 	@SuppressWarnings("deprecation")
 	public Object validate(Object value) throws ValidationException {
-		if (value==null||value.toString().length()==0) {
+		if (value == null || value.toString().length() == 0) {
 			return null;
-//			throw new ValidationException(ERR_FMT);
+			// throw new ValidationException(ERR_FMT);
+		}
+		if (value instanceof Date) {
+			return value;
 		}
 		String sValue = value.toString();
 		String[] splits = sValue.split("/");
@@ -49,8 +52,9 @@ public class ShortDateValidator implements Validator {
 			throw new ValidationException(ERR_FMT);
 		}
 		try {
-			Date result = new Date(Integer.parseInt(splits[2]) - 1900, Integer
-					.parseInt(splits[1]) - 1, Integer.parseInt(splits[0]));
+			Date result = new Date(Integer.parseInt(splits[2]) - 1900,
+					Integer.parseInt(splits[1]) - 1,
+					Integer.parseInt(splits[0]));
 			return result;
 		} catch (Exception e) {
 			throw new ValidationException(ERR_INVALID);
