@@ -35,6 +35,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 import com.google.gwt.core.client.UnsafeNativeLong;
 import com.google.gwt.core.ext.Generator;
@@ -140,13 +141,13 @@ public class IntrospectorGenerator extends Generator {
 			for (BeanResolver resolver : introspectables) {
 				writer.println();
 				writer.println(String.format(
-						"protected void registerDescriptor_%s( ){ ",
+						"private void registerDescriptor_%s( ){ ",
 						descriptorIdx));
 				writer.indent();
 				String name = resolver.getType().getQualifiedSourceName()
 						.replaceAll("\\.", "_");
 				logger.log(TreeLogger.DEBUG, "Writing : " + name, null);
-				this.writeBeanDescriptor(logger, resolver, methods, writer);
+				this.writeBeanDescriptor(logger, resolver, writer);
 				writer.println(String.format(
 						"descriptorLookup.put( %s.class, descriptor);",
 						resolver.getType().getQualifiedSourceName()));
@@ -177,24 +178,25 @@ public class IntrospectorGenerator extends Generator {
 	}
 
 	private MethodWrapper[] findMethods(TreeLogger logger, List introspectables) {
-		HashSet methods = new HashSet();
+		// declaring class _NAME_ (GWT outputs multiple types for different generic variants), name
+		UnsortedMultikeyMap<MethodWrapper> found = new UnsortedMultikeyMap<MethodWrapper>(
+				2);
 		for (Iterator it = introspectables.iterator(); it.hasNext();) {
 			BeanResolver info = (BeanResolver) it.next();
 			logger.branch(TreeLogger.DEBUG, "Method Scanning: "
 					+ info.getType().getQualifiedSourceName(), null);
 			try {
-				if (info.getProperties().size() == 0) {
-					continue;
-				}
 				Collection<RProperty> pds = info.getProperties().values();
 				for (RProperty p : pds) {
-					if (p.getReadMethod() != null) {
-						p.getReadMethod().hashWithType = true;
-						methods.add(p.getReadMethod());
+					MethodWrapper method = p.getReadMethod();
+					if (method != null) {
+						found.put(method.getDeclaringType().getQualifiedSourceName(), method
+								.getBaseMethod().getName(), method);
 					}
-					if (p.getWriteMethod() != null) {
-						p.getWriteMethod().hashWithType = true;
-						methods.add(p.getWriteMethod());
+					method = p.getWriteMethod();
+					if (method != null) {
+						found.put(method.getDeclaringType().getQualifiedSourceName(), method
+								.getBaseMethod().getName(), method);
 					}
 				}
 			} catch (Exception e) {
@@ -202,12 +204,9 @@ public class IntrospectorGenerator extends Generator {
 						"Unable to introspect class. Is class a bean?", e);
 			}
 		}
-		MethodWrapper[] results = new MethodWrapper[methods.size()];
-		Iterator it = methods.iterator();
-		for (int i = 0; it.hasNext(); i++) {
-			results[i] = (MethodWrapper) it.next();
-		}
-		return results;
+		List<MethodWrapper> allValues = found.allValues();
+		return (MethodWrapper[]) allValues.toArray(new MethodWrapper[allValues
+				.size()]);
 	}
 
 	private Set<BeanResolver> getFileDeclaredTypes(TreeLogger logger,
@@ -278,7 +277,7 @@ public class IntrospectorGenerator extends Generator {
 	}
 
 	private void writeBeanDescriptor(TreeLogger logger, BeanResolver info,
-			MethodWrapper[] methods, SourceWriter writer) {
+			SourceWriter writer) {
 		writer.println("BeanDescriptorImpl descriptor = new BeanDescriptorImpl(); ");
 		Collection pds = info.getProperties().values();
 		int i = 0;
@@ -405,10 +404,11 @@ public class IntrospectorGenerator extends Generator {
 		writer.println();
 		writer.println("protected void  registerMethods( ){ ");
 		writer.indent();
-		Set<JType> declaredClasses = new LinkedHashSet<JType>();
+		Set<String> declaredClasses = new LinkedHashSet<String>();
 		for (int i = 0; i < methods.length; i++) {
 			MethodWrapper method = methods[i];
-			if (declaredClasses.add(method.getDeclaringType())) {
+			if (declaredClasses.add(method.getDeclaringType()
+					.getQualifiedSourceName())) {
 				writer.println(String.format(
 						"registerMethodDeclaringType(%s.class);", method
 								.getDeclaringType().getQualifiedSourceName()));

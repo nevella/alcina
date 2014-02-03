@@ -16,6 +16,9 @@ public class NativeMethodWrapper implements Method {
 		this.declaringClass = declaringClass;
 		this.name = name;
 		this.nativeMethod = introspector.getNativeMethod(declaringClass, name);
+		if(this.nativeMethod==null){
+			throw new RuntimeException("native method is null");
+		}
 	}
 
 	@Override
