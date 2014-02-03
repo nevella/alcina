@@ -74,6 +74,9 @@ public class ClientUtils {
 		if (t.getMessage() != null && t.getMessage().contains("IOException while sending RPC request")) {
 			return true;
 		}
+		if (t.getMessage() != null && t.getMessage().contains("IOException while receiving RPC response")) {
+			return true;
+		}
 		if (t instanceof StatusCodeException) {
 			if (AlcinaDebugIds.hasFlag(AlcinaDebugIds.DEBUG_SIMULATE_OFFLINE)) {
 				return true;
