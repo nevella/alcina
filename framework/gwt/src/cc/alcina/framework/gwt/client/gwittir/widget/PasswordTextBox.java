@@ -11,10 +11,11 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Comparator;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.ChangeListener;
@@ -37,10 +38,8 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
  *
  * @author Nick Reddel
  */
-
- public class PasswordTextBox<B> extends AbstractBoundWidget< String>
-		implements HasFocus, HasEnabled, SourcesKeyboardEvents,
-		SourcesClickEvents {
+public class PasswordTextBox<B> extends AbstractBoundWidget<String> implements
+		HasFocus, HasEnabled, SourcesKeyboardEvents, SourcesClickEvents {
 	private com.google.gwt.user.client.ui.PasswordTextBox base = new com.google.gwt.user.client.ui.PasswordTextBox();
 
 	private ChangeListenerCollection changeListeners = new ChangeListenerCollection();
@@ -285,7 +284,7 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 
 	public void setValue(String value) {
 		String old = this.getValue();
-		this.setText( "" + value);
+		this.setText(CommonUtils.nullToEmpty(value));
 		if (this.getValue() != old
 				&& (this.getValue() == null || (this.getValue() != null && !this
 						.getValue().equals(old)))) {
@@ -312,7 +311,6 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 	public void setModel(Object model) {
 		super.setModel(model);
 	}
-	
 
 	public void setAction(Action action) {
 		super.setAction(action);

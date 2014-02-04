@@ -11,35 +11,50 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class LoginBean implements Serializable{
+public class LoginBean implements Serializable {
 	private String userName;
+
 	private String password;
+
 	private boolean rememberMe;
+
+	public LoginBean() {
+	}
+
+	public LoginBean(String userName, String password, boolean rememberMe) {
+		this.userName = userName;
+		this.password = password;
+		this.rememberMe = rememberMe;
+	}
+
 	public String getUserName() {
 		return this.userName;
 	}
+
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
+
 	public String getPassword() {
 		return this.password;
 	}
+
 	public void setPassword(String password) {
 		this.password = password;
 	}
+
 	public boolean isRememberMe() {
 		return this.rememberMe;
 	}
+
 	public void setRememberMe(boolean rememberMe) {
 		this.rememberMe = rememberMe;
 	}
