@@ -17,30 +17,24 @@ public abstract class IntrospectorFilterBase implements IntrospectorFilter {
 
 	private String moduleName;
 
-	private Map<JClassType, Boolean> implBoundWidgetMap = new LinkedHashMap<JClassType, Boolean>();
+	private Map<JClassType, Boolean> uiObjectMap = new LinkedHashMap<JClassType, Boolean>();
 
-	protected boolean isImplBoundWidget(BeanResolver resolver) {
-		return isImplBoundWidgetJct(resolver.getType());
+	protected boolean isUiObject(BeanResolver resolver) {
+		return isUiObject(resolver.getType());
 	}
 
-	protected boolean isImplBoundWidgetJct(JClassType t) {
-		if (!implBoundWidgetMap.containsKey(t)) {
-			JClassType[] interfaces = t.getImplementedInterfaces();
+	protected boolean isUiObject(JClassType t) {
+		if (!uiObjectMap.containsKey(t)) {
 			boolean implBoundWidget = false;
-			for (JClassType jClassType : interfaces) {
-				if (jClassType.getQualifiedSourceName().contains("BoundWidget")) {
+			for (JClassType jClassType : t.getFlattenedSupertypeHierarchy()) {
+				if (jClassType.getQualifiedSourceName().contains("UIObject")) {
 					implBoundWidget = true;
+					break;
 				}
 			}
-			while (t != null) {
-				if (t.getQualifiedSourceName().contains("BoundWidget")) {
-					implBoundWidget = true;
-				}
-				t = t.getSuperclass();
-			}
-			implBoundWidgetMap.put(t, implBoundWidget);
+			uiObjectMap.put(t, implBoundWidget);
 		}
-		return implBoundWidgetMap.get(t);
+		return uiObjectMap.get(t);
 	}
 
 	protected CollectionFilter<Entry<String, RProperty>> valueOnlyFilter = new CollectionFilter<Map.Entry<String, RProperty>>() {

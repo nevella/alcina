@@ -192,6 +192,9 @@ public class WorkspaceView extends Composite implements HasName,
 					}
 				}
 			});
+			if(toolbar!=null){
+				toolbar.processAvailableActions(getAvailableActions(null));
+			}
 		}
 
 		public DataTreeView(String name, String debugId) {

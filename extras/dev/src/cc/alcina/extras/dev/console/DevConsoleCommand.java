@@ -55,8 +55,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	public Logger logger;
 
-	public List<Long> failed;
-
 	private Connection connLocal;
 
 	private Connection connRemote;
@@ -175,24 +173,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return conn;
 	}
 
-	protected List<String> getIds() throws IOException {
-		String idOrSet = console.props.idOrSet;
-		try {
-			long id = Long.parseLong(idOrSet);
-			return Collections.singletonList(idOrSet);
-		} catch (NumberFormatException e) {
-			String idList = ResourceUtilities.readFileToString(String.format(
-					"%s/%s.txt", console.setsFolder.getPath(),
-					console.props.idOrSet));
-			List<String> idlStr = new ArrayList<String>();
-			List<Long> idListL = TransformManager.idListToLongs(idList);
-			for (Long id : idListL) {
-				idlStr.add(id.toString());
-			}
-			return idlStr;
-		}
-	}
-
 	protected int getIntArg(String[] argv, int argIndex, int defaultValue) {
 		return argv.length <= argIndex ? defaultValue : Integer
 				.parseInt(argv[argIndex]);
@@ -201,17 +181,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	protected String getStringArg(String[] argv, int argIndex,
 			String defaultValue) {
 		return argv.length <= argIndex ? defaultValue : argv[argIndex];
-	}
-
-	protected String getSitename(long id) throws Exception {
-		Statement stmt = getConn().createStatement();
-		ResultSet rs = stmt
-				.executeQuery("select o.siteName from article a inner join overview o"
-						+ " on a.overview_id=o.id where a.id=" + id);
-		rs.next();
-		String string = rs.getString(1);
-		stmt.close();
-		return string;
 	}
 
 	protected String runSubcommand(DevConsoleCommand sub, String[] argv)
@@ -707,7 +676,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			idStr = idStr.isEmpty() ? console.getClipboardContents() : idStr;
 			String sql = String.format("select "
 					+ "id,optlock,creationdate,lastmodificationdate,"
-					+ "classname,key,serializedxml,creation_user_id,"
+					+ "classname,serializedxml,creation_user_id,"
 					+ "modification_user_id,user_id"
 					+ " from wrappedobject where id in (%s);\n", idStr);
 			String localDelete = String.format(
@@ -725,8 +694,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			ResultSet rRs = rStmt.executeQuery(sql);
 			PreparedStatement lStmt = localConn
 					.prepareStatement("insert into wrappedobject (id,optlock,creationdate,lastmodificationdate,"
-							+ "classname,key,serializedxml,creation_user_id,"
-							+ "modification_user_id,user_id) values(?,?,?,?,?,?,?,?,?,?)");
+							+ "classname,serializedxml,creation_user_id,"
+							+ "modification_user_id,user_id) values(?,?,?,?,?,?,?,?,?)");
 			int modCt = 0;
 			while (rRs.next()) {
 				lStmt.setLong(1, rRs.getLong(1));
@@ -735,10 +704,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				lStmt.setDate(4, rRs.getDate(4));
 				lStmt.setString(5, rRs.getString(5));
 				lStmt.setString(6, rRs.getString(6));
-				lStmt.setString(7, rRs.getString(7));
+				lStmt.setLong(7, rRs.getLong(7));
 				lStmt.setLong(8, rRs.getLong(8));
 				lStmt.setLong(9, rRs.getLong(9));
-				lStmt.setLong(10, rRs.getLong(10));
 				lStmt.executeUpdate();
 				modCt++;
 				if (modCt % 100 == 0) {

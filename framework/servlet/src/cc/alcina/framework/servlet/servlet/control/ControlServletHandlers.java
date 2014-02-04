@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToLowerCaseConverter;
 
@@ -90,9 +89,6 @@ public class ControlServletHandlers {
 		}
 
 		public void init() {
-			// at the moment, this won't hurt even if db access is readonly
-			Registry.impl(DomainTransformPersistenceEvents.class)
-					.startSequentialEventChecks();
 			updateReadonly(WriterMode.READ_ONLY);
 		}
 

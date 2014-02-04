@@ -30,7 +30,6 @@ import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
@@ -42,10 +41,8 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Hidden;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.SubmitButton;
 import com.totsp.gwittir.client.beans.Binding;
 
 /**
@@ -127,15 +124,15 @@ public class ClientUtils {
 
 	public static native boolean setCssTextViaCssTextProperty(Element styleTag,
 			String css) /*-{
-		var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+						var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
-		if ('cssText' in sheet) { // Internet Explorer
-			sheet.cssText = css;
-			return true;
-		}
+						if ('cssText' in sheet) { // Internet Explorer
+						sheet.cssText = css;
+						return true;
+						}
 
-		return false;//do innerText
-	}-*/;
+						return false;//do innerText
+						}-*/;
 
 	private static void addHidden(Panel p, String key, String value) {
 		p.add(new Hidden(key, value));
@@ -172,8 +169,8 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger() /*-{
-		debugger;
-	}-*/;
+													debugger;
+													}-*/;
 
 	public static void fireHistoryToken(String token) {
 		if (token == null) {
@@ -333,9 +330,9 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger(Element e) /*-{
-		var v = e;
-		debugger;
-	}-*/;
+															var v = e;
+															debugger;
+															}-*/;
 
 	public static String getHashIfSelfrefUrl(Element anchor) {
 		String href = anchor.getAttribute("href");

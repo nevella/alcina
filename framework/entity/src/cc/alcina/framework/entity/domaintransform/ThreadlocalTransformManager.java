@@ -595,10 +595,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	// NOTE - doesn't register children (unlike client)
-	public void registerDomainObject(HasIdAndLocalId hili) {
+	public <T extends HasIdAndLocalId> T registerDomainObject(T hili) {
 		if (hili instanceof SourcesPropertyChangeEvents) {
 			listenTo((SourcesPropertyChangeEvents) hili);
 		}
+		return hili;
 	}
 
 	public void resetTltm(HiliLocatorMap locatorMap) {
@@ -971,4 +972,5 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			return new ThreadlocalTransformManager();
 		}
 	}
+
 }

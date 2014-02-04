@@ -249,6 +249,11 @@ public class RelativePopupPositioning {
 					}
 					y += positioningParams.shiftY;
 					break;
+				case BELOW_CENTER:
+					x += positioningParams.shiftX;
+					x -= rw / 2;
+					y += positioningParams.shiftY;
+					break;
 				case RIGHT_OR_LEFT_WITH_PREFERRED_TOP:
 					x += 2;
 					int clientY = positioningParams.nativeEvent.getClientY();
@@ -374,7 +379,7 @@ public class RelativePopupPositioning {
 	}
 
 	public enum OtherPositioningStrategy {
-		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP
+		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP, BELOW_CENTER
 	}
 
 	public static class RelativePopupAxis {

@@ -22,18 +22,7 @@ public class AlcinaTemplateAppLifecycleServlet extends AppLifecycleServletBase {
 	public AlcinaTemplateAppLifecycleServlet() {
 	}
 
-	/*
-	 * @see javax.servlet.Servlet#destroy()
-	 */
-	public void destroy() {
-		try {
-			super.destroy();
-			ResourceUtilities.appShutdown();
-			Registry.appShutdown();
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-	}
+	
 
 	@Override
 	protected void initBootstrapRegistry() {

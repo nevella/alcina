@@ -491,6 +491,23 @@ public class WidgetUtils {
 		return from.getParentElement();
 	}
 
+	public static native Element getFocussedDocumentElement()/*-{
+		if ($doc.activeElement) {
+			var tagName = $doc.activeElement.tagName.toLowerCase();
+			return tagName != "body" && tagName != "html" ? $doc.activeElement : null;
+		}
+		return null;
+	}-*/;
+
+	public static native void clearFocussedDocumentElement()/*-{
+		if ($doc.activeElement) {
+			var tagName = $doc.activeElement.tagName.toLowerCase();
+			if (tagName != "body" && tagName != "html") {
+				$doc.activeElement.blur();
+			}
+		}
+	}-*/;
+
 	// those values might be needed for non-webkit
 	@SuppressWarnings("unused")
 	private static class ElementLayout {
@@ -793,12 +810,13 @@ public class WidgetUtils {
 		}
 		return true;
 	}
+
 	public static boolean isVisibleAncestorChain(Element e) {
 		while (e != null) {
-			if (!UIObject.isVisible(e)){
+			if (!UIObject.isVisible(e)) {
 				return false;
 			}
-			e=e.getParentElement();
+			e = e.getParentElement();
 		}
 		return true;
 	}
@@ -899,4 +917,16 @@ public class WidgetUtils {
 		}
 		return h;
 	}-*/;
+
+	public static boolean clickHasAAncestor(ClickEvent clickEvent) {
+		Event event = Event.as(clickEvent.getNativeEvent());
+		// handle localisation spans
+		Element target = null;
+		if (!Element.is(event.getEventTarget())) {
+			return false;
+		}
+		target = Element.as(event.getEventTarget());
+		Element anchor = DomUtils.getAncestorWithTagName(target, "A");
+		return anchor != null;
+	}
 }

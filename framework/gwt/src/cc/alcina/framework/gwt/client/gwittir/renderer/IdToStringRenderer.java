@@ -30,6 +30,9 @@ public class IdToStringRenderer extends FlexibleToStringRenderer<HasId> {
 			return "(Undefined)";
 		}
 		String dn = ClientReflector.get().displayNameForObject(hasId);
+		if (hasId.toString().equals(String.valueOf(hasId.getId()))) {
+			return hasId.toString();
+		}
 		return hasId.getId() + " : " + hasId.toString();
 	}
 }

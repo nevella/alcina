@@ -1,7 +1,5 @@
 package cc.alcina.framework.gwt.client.logic.handshake.localstorage;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Consort;
@@ -13,6 +11,8 @@ import cc.alcina.framework.gwt.client.logic.DevCSSHelper;
 import cc.alcina.framework.gwt.client.logic.handshake.SetupAfterObjectsPlayer;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.persistence.client.DatabaseStatsObserver;
+
+import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class StandardWithPersistenceSetupAfterObjectsPlayer extends
 		SetupAfterObjectsPlayer {

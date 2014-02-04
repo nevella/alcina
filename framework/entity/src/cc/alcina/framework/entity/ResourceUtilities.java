@@ -55,18 +55,20 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * @author nick@alcina.cc
  * 
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ResourceUtilities {
 	public static void appShutdown() {
 		customProperties.clear();
 	}
-	@ClearOnAppRestart
+
 	private static Map<String, String> customProperties = new LinkedHashMap<String, String>();
 
 	public static void registerCustomProperties(InputStream ios) {
@@ -340,8 +342,7 @@ public class ResourceUtilities {
 
 	public static void writeStringToOutputStream(String s, OutputStream os)
 			throws IOException {
-		OutputStreamWriter fw = new OutputStreamWriter(os,
-				"UTF-8");
+		OutputStreamWriter fw = new OutputStreamWriter(os, "UTF-8");
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.close();

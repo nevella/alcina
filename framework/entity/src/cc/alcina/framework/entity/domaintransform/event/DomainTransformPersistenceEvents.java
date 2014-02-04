@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 
-//TODO - Jira - events must be fired in DomainTransformRequestPersistent.id order - fairly important
 @RegistryLocation(registryPoint = DomainTransformPersistenceEvents.class, implementationType = ImplementationType.SINGLETON)
 public class DomainTransformPersistenceEvents {
 	private List<DomainTransformPersistenceListener> listenerList = new ArrayList<DomainTransformPersistenceListener>();
@@ -41,16 +40,28 @@ public class DomainTransformPersistenceEvents {
 		nonThreadListenerList.remove(listener);
 	}
 
+	boolean initialisedPreCache = false;
+
+	boolean startedQueue = false;
+
 	public void initialisePreCache() {
+		initialisedPreCache = true;
 		queue.getMaxPersistentRequestBaseline();
 	}
 
 	public void startSequentialEventChecks() {
+		startedQueue = true;
 		queue.startup();
 	}
 
 	public void fireDomainTransformPersistenceEvent(
 			DomainTransformPersistenceEvent event) {
+		if (!initialisedPreCache) {
+			initialisePreCache();
+		}
+		if (!startedQueue) {
+			startSequentialEventChecks();
+		}
 		queue.submit(event);
 		while (!queue.shouldFire(event)) {
 			try {
@@ -63,9 +74,9 @@ public class DomainTransformPersistenceEvents {
 		try {
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 					listenerList)) {
-				//ex-machine transforms
-				if(event.getSourceThreadId()!=Thread.currentThread().getId()){
-					if(!nonThreadListenerList.contains(listener)){
+				// ex-machine transforms
+				if (event.getSourceThreadId() != Thread.currentThread().getId()) {
+					if (!nonThreadListenerList.contains(listener)) {
 						continue;
 					}
 				}

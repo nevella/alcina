@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,16 +66,20 @@ public class LooseContextInstance {
 	}
 
 	private void maybeDebugStack(boolean push) {
-		if (debug) {
+		if (debugLines > 0) {
 			Thread t = Thread.currentThread();
-			System.err.println(CommonUtils.formatJ("%s-%s-%s-%s: %s\n%s\n%s\n",
+			List<String> lines = new ArrayList<String>();
+			StackTraceElement[] trace = t.getStackTrace();
+			for (int i = 3; i < 3 + debugLines && i < trace.length; i++) {
+				lines.add(trace[i].toString());
+			}
+			System.err.println(CommonUtils.formatJ("%s-%s-%s-%s: %s\n",
 					t.getId(), hashCode(), push, stack.size(),
-					t.getStackTrace()[3], t.getStackTrace()[4],
-					t.getStackTrace()[5]));
+					CommonUtils.join(lines, "\n")));
 		}
 	}
 
-	private boolean debug = false;
+	public static int debugLines = 0;
 
 	public void pop() {
 		maybeDebugStack(false);

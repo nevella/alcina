@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Multimap;
 
 @SuppressWarnings("unchecked")
@@ -32,8 +33,8 @@ import cc.alcina.framework.common.client.util.Multimap;
  *
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class AnnotationUtils {
-	@ClearOnAppRestart
 	private static HashMap<Method, Set<Annotation>> superMethodAnnotationMap = new HashMap<Method, Set<Annotation>>();
 
 	public static Set<Annotation> getSuperclassAnnotationsForMethod(Method m) {

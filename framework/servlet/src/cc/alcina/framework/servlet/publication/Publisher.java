@@ -94,12 +94,14 @@ public class Publisher {
 		PublicationContentPersister publicationContentPersister = Registry
 				.implOrNull(PublicationContentPersister.class);
 		if (!SEUtilities.localTestMode()) {
-			if (forPublication && publicationContentPersister != null) {
+			if (forPublication && publicationContentPersister != null
+					&& !AppPersistenceBase.isInstanceReadOnly()) {
 				publicationUserId = Registry.impl(PublicationPersistence.class)
 						.getNextPublicationIdForUser(
 								PermissionsManager.get().getUser());
 				publicationId = persist(contentDefinition, deliveryModel,
-						publicationUserId, original,publicationContentPersister);
+						publicationUserId, original,
+						publicationContentPersister);
 				result.publicationId = publicationId;
 			}
 		}

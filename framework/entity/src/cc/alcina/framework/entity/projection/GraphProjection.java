@@ -39,7 +39,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestart;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
@@ -51,7 +51,7 @@ import cc.alcina.framework.entity.SEUtilities;
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ClearOnAppRestart.class)
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class GraphProjection {
 	public static boolean isPrimitiveOrDataClass(Class c) {
 		return c.isPrimitive() || c == String.class || c == Boolean.class
@@ -118,18 +118,14 @@ public class GraphProjection {
 
 	Map<Class, Boolean> perObjectPermissionClasses = new HashMap<Class, Boolean>();
 
-	@ClearOnAppRestart
 	static Map<Field, Type> genericTypeLookup = new HashMap<Field, Type>();
 
-	@ClearOnAppRestart
 	static Map<Field, Boolean> genericHiliTypeLookup = new HashMap<Field, Boolean>();
 
-	@ClearOnAppRestart
 	static Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>();
 
 	Map<Field, PropertyPermissions> perFieldPermission = new HashMap<Field, PropertyPermissions>();
 
-	@ClearOnAppRestart
 	static Map<Field, PropertyPermissions> propertyPermissionLookup = new LinkedHashMap<Field, PropertyPermissions>();
 
 	public GraphProjection() {

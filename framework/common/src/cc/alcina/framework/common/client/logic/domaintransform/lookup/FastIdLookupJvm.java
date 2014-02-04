@@ -105,4 +105,11 @@ public class FastIdLookupJvm implements FastIdLookup {
 	public Collection<HasIdAndLocalId> values() {
 		return values;
 	}
+
+	@Override
+	public void putAll(Collection<HasIdAndLocalId> values, boolean local) {
+		for (HasIdAndLocalId value : values) {
+			put(value, local);
+		}
+	}
 }

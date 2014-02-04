@@ -94,6 +94,7 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.ServerValidatorHandler;
@@ -220,8 +221,19 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString, String exceptionType) {
-		return Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence().log(exceptionToString, exceptionType);
+		String remoteAddr = getThreadLocalRequest() == null ? null
+				: getThreadLocalRequest().getRemoteAddr();
+		try {
+			LooseContext
+					.pushWithKey(
+							CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
+							remoteAddr);
+			return Registry.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence()
+					.log(exceptionToString, exceptionType);
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	public void logRpcException(Exception ex) {
@@ -229,40 +241,51 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	public void logRpcException(Exception ex, String exceptionType) {
-		RPCRequest rpcRequest = getThreadRpcRequest();
-		StringWriter sw = new StringWriter();
-		PrintWriter pw = new PrintWriter(sw);
-		ex.printStackTrace(pw);
-		String msg = "RPC exception:\n";
-		if (rpcRequest != null) {
-			msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
-			msg += "Parameters: \n";
-			Object[] parameters = rpcRequest.getParameters();
-			int i = 0;
-			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			XMLEncoder enc = new XMLEncoder(os);
-			for (Object object : parameters) {
-				String xml = "";
-				if (object != null
-						&& CommonUtils.isStandardJavaClass(object.getClass())) {
-					try {
-						enc.writeObject(object);
-						enc.flush();
-						xml = new String(os.toByteArray());
-						os.reset();
-					} catch (Exception e) {
-						xml = "Unable to write object - "
-								+ object.getClass().getName();
+		String remoteAddr = getThreadLocalRequest() == null ? null
+				: getThreadLocalRequest().getRemoteAddr();
+		try {
+			LooseContext
+					.pushWithKey(
+							CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
+							remoteAddr);
+			RPCRequest rpcRequest = getThreadRpcRequest();
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			ex.printStackTrace(pw);
+			String msg = "RPC exception:\n";
+			if (rpcRequest != null) {
+				msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
+				msg += "Parameters: \n";
+				Object[] parameters = rpcRequest.getParameters();
+				int i = 0;
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				XMLEncoder enc = new XMLEncoder(os);
+				for (Object object : parameters) {
+					String xml = "";
+					if (object != null
+							&& CommonUtils.isStandardJavaClass(object
+									.getClass())) {
+						try {
+							enc.writeObject(object);
+							enc.flush();
+							xml = new String(os.toByteArray());
+							os.reset();
+						} catch (Exception e) {
+							xml = "Unable to write object - "
+									+ object.getClass().getName();
+						}
 					}
+					msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n",
+							i++, object, xml);
 				}
-				msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n", i++,
-						object, xml);
 			}
+			msg += "Stacktrace:\t " + sw.toString();
+			CommonPersistenceLocal cpl = Registry.impl(
+					CommonPersistenceProvider.class).getCommonPersistence();
+			cpl.log(msg, exceptionType);
+		} finally {
+			LooseContext.pop();
 		}
-		msg += "Stacktrace:\t " + sw.toString();
-		CommonPersistenceLocal cpl = Registry.impl(
-				CommonPersistenceProvider.class).getCommonPersistence();
-		cpl.log(msg, exceptionType);
 	}
 
 	protected RPCRequest getThreadRpcRequest() {

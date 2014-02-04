@@ -1,24 +1,22 @@
 package cc.alcina.framework.entity.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class ReportUtils {
-	public static void dumpTable(UnsortedMultikeyMap<String> values,
-			List<String> columnNames) {
+	public static void dumpTable(MultikeyMap values, List<String> columnNames) {
 		dumpTable(values, columnNames, false, false);
 	}
 
-	public static void dumpTable(UnsortedMultikeyMap<String> values,
-			List<String> columnNames, boolean stringKeyedColumns,
-			boolean invertAxes) {
+	public static void dumpTable(MultikeyMap values, List<String> columnNames,
+			boolean stringKeyedColumns, boolean invertAxes) {
 		if (invertAxes) {
 			int rowCount = values.keySet().size();
 			values = transformValues(values, columnNames, stringKeyedColumns);
@@ -74,10 +72,10 @@ public class ReportUtils {
 		}
 	}
 
-	private static UnsortedMultikeyMap<String> transformValues(
-			UnsortedMultikeyMap<String> values, List<String> columnNames,
+	private static UnsortedMultikeyMap transformValues(
+			MultikeyMap<String> values, List<String> columnNames,
 			boolean stringKeyedColumns) {
-		UnsortedMultikeyMap<String> result = new UnsortedMultikeyMap<String>();
+		UnsortedMultikeyMap result = new UnsortedMultikeyMap();
 		Map<String, Integer> colIndexLookup = new LinkedHashMap<String, Integer>();
 		for (String colName : columnNames) {
 			colIndexLookup.put(colName, colIndexLookup.size());
@@ -85,7 +83,7 @@ public class ReportUtils {
 		for (String colName : columnNames) {
 			Integer colIndex = colIndexLookup.get(colName);
 			Object colKey = stringKeyedColumns ? colName : colIndex;
-			int transColIdx=0;
+			int transColIdx = 0;
 			result.put(colIndex, transColIdx++, colName);
 			for (Object rowKey : values.keySet()) {
 				result.put(colIndex, transColIdx++, values.get(rowKey, colName));
@@ -94,11 +92,25 @@ public class ReportUtils {
 		return result;
 	}
 
-	private static String getValue(UnsortedMultikeyMap<String> values,
-			Object row, int col, List<String> columnNames,
-			boolean stringKeyedColumns) {
+	private static String getValue(MultikeyMap values, Object row, int col,
+			List<String> columnNames, boolean stringKeyedColumns) {
 		Object key2 = stringKeyedColumns ? columnNames.get(col) : col;
-		String value = CommonUtils.nullToEmpty(values.get(row, key2));
-		return value;
+		String value = CommonUtils.nullSafeToString(values.get(row, key2));
+		return value == null ? "(null)" : value;
+	}
+
+	public static void dumpFlattenedTable(MultikeyMap depth3plusMap,
+			List<String> columnNames) {
+		List<List> tuples = depth3plusMap.asTuples(Math.min(columnNames.size(),
+				depth3plusMap.getDepth()));
+		UnsortedMultikeyMap transform = new UnsortedMultikeyMap();
+		int row = 0;
+		for (List list : tuples) {
+			for (int i = 0; i < list.size(); i++) {
+				transform.put(row, columnNames.get(i), list.get(i));
+			}
+			row++;
+		}
+		dumpTable(transform, columnNames, true, false);
 	}
 }

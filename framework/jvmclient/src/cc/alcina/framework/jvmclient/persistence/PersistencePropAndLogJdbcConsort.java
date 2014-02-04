@@ -6,12 +6,9 @@ import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.persistence.client.LogStore;
-import cc.alcina.framework.gwt.persistence.client.ObjectStoreWebDbImpl;
 import cc.alcina.framework.gwt.persistence.client.PersistencePropAndLogInitState;
 import cc.alcina.framework.gwt.persistence.client.PropertyStore;
 import cc.alcina.framework.gwt.persistence.client.RemoteLogPersister;
-
-import com.google.code.gwt.database.client.Database;
 
 public class PersistencePropAndLogJdbcConsort extends
 		Consort<PersistencePropAndLogInitState> {

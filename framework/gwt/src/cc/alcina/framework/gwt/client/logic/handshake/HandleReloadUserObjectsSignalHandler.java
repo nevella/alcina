@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.ConsortSignalHandler;
-import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 

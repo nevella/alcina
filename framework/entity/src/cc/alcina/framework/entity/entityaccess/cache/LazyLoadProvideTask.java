@@ -50,13 +50,23 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 			if (!beforeLazyLoad(requireLoad)) {
 				return;
 			}
-			synchronized (this) {
+			synchronized (getLockObject()) {
 				// reget, just in case of interim eviction
 				requireLoad = requireLazyLoad(objects);
 				lazyLoad(alcinaMemCache, requireLoad);
 				registerLoaded(alcinaMemCache, requireLoad);
+				loadDependents(alcinaMemCache, requireLoad);
 			}
 		}
+	}
+
+	protected Object getLockObject() {
+		return this;
+	}
+
+	protected void loadDependents(AlcinaMemCache alcinaMemCache,
+			List<T> requireLoad) throws Exception {
+		
 	}
 
 	private void registerLoaded(AlcinaMemCache alcinaMemCache, List<T> requireLoad) {

@@ -13,8 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.stdlayout;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +21,7 @@ import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWith
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
@@ -40,10 +39,11 @@ import com.google.gwt.user.client.ui.Widget;
 
 /**
  * 
- * @author Nick Reddel
- * Note - this class is closely coupled to DockPanel - so ignoring deprecation warnings.
+ * @author Nick Reddel Note - this class is closely coupled to DockPanel - so
+ *         ignoring deprecation warnings.
  * 
- * It works...and a rewrite would be painful (and probably require a complete reimplementation)
+ *         It works...and a rewrite would be painful (and probably require a
+ *         complete reimplementation)
  */
 public class MainTabPanel extends TabPanel {
 	private HorizontalPanel bp;
@@ -76,8 +76,9 @@ public class MainTabPanel extends TabPanel {
 
 	private SimplePanel noTabContentHolder = new SimplePanel();
 
-	public void setNotabContent(Widget w) {
+	public SimplePanel setNotabContent(Widget w) {
 		noTabContentHolder.setWidget(w);
+		return noTabContentHolder;
 	}
 
 	public SimplePanel getNoTabContentHolder() {
@@ -115,8 +116,8 @@ public class MainTabPanel extends TabPanel {
 		});
 	}
 
-	private PropertyChangeListener visListener = new PropertyChangeListener() {
-		public void propertyChange(PropertyChangeEvent evt) {
+	private TopicListener<LoginState> visListener = new TopicListener<LoginState>() {
+		public void topicPublished(String key, LoginState message) {
 			refreshButtonPanelVis();
 		}
 	};
@@ -124,14 +125,12 @@ public class MainTabPanel extends TabPanel {
 	@Override
 	protected void onAttach() {
 		super.onAttach();
-		PermissionsManager.get().addPropertyChangeListener(
-				PermissionsManager.PROP_LOGIN_STATE, visListener);
+		PermissionsManager.notifyLoginStateListenerDelta(visListener, true);
 	};
 
 	@Override
 	protected void onDetach() {
-		PermissionsManager.get().removePropertyChangeListener(
-				PermissionsManager.PROP_LOGIN_STATE, visListener);
+		PermissionsManager.notifyLoginStateListenerDelta(visListener, false);
 		super.onDetach();
 	}
 
@@ -180,10 +179,14 @@ public class MainTabPanel extends TabPanel {
 		return hp;
 	}
 
-	public int adjustClientSize(int availableWidth, int availableHeight) {
+	public int getTabBarHeight() {
 		VerticalPanel vp = (VerticalPanel) getWidget();
 		Widget w = vp.getWidget(0);
-		availableHeight -= w.getOffsetHeight();
+		return w.getOffsetHeight();
+	}
+
+	public int adjustClientSize(int availableWidth, int availableHeight) {
+		availableHeight -= getTabBarHeight();
 		if (getToolbarHolder().isVisible()) {
 			availableHeight -= getToolbarHolder().getOffsetHeight();
 		}
@@ -206,7 +209,7 @@ public class MainTabPanel extends TabPanel {
 		int oh = w2.getOffsetHeight();
 		if (w2.getOffsetHeight() < scrollHeight) {
 			w2.setHeight(scrollHeight + "px");
-		}else{
+		} else {
 			w2.setHeight("auto");
 		}
 		return scrollHeight;

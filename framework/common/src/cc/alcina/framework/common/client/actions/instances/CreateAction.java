@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
  * @author Nick Reddel
  */
 
- public class CreateAction extends ToolbarAction {
+ public class CreateAction extends RequiresTargetAction {
 	@Override
 	public String getDisplayName() {
 		return TextProvider.get().getUiObjectText(getClass(),

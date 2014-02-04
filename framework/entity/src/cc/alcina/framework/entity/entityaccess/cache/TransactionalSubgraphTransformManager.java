@@ -32,8 +32,8 @@ public class TransactionalSubgraphTransformManager extends
 			}
 			T nonTransactional = AlcinaMemCache.get().transformManager
 					.getObject(c, id, localId);
-			if(nonTransactional==null){
-				//create object, can assume the threadTm has it
+			if (nonTransactional == null) {
+				// create object, can assume the threadTm has it
 				return null;
 			}
 			T newInstance = projectNonTransactional(nonTransactional);
@@ -142,7 +142,9 @@ public class TransactionalSubgraphTransformManager extends
 
 	@Override
 	protected Object ensureEndpointInTransformGraph(Object object) {
-		if (object instanceof HasIdAndLocalId) {
+		// if not persisted, just return the object
+		if (object instanceof HasIdAndLocalId
+				&& ((HasIdAndLocalId) object).getId() != 0) {
 			HasIdAndLocalId endpoint = getObject((HasIdAndLocalId) object);
 			modified.mapObject(endpoint);
 			return endpoint;

@@ -98,6 +98,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	// note - this'll be the stack depth of the eql ast processor
 	private static final int PRECACHE_RQ_SIZE = 500;
 
+	public static final transient String CONTEXT_CLIENT_IP_ADDRESS = CommonPersistenceBase.class
+			.getName() + ".CONTEXT_CLIENT_IP_ADDRESS";
+
 	private static Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass = CheckReadOnlyHandshakeObjectProvider.class;
 
 	public CommonPersistenceBase() {
@@ -848,8 +851,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		try {
 			HasIdAndLocalId object = TransformManager.get().getObject(
 					transformException.getEvent(), true);
-			transformException.setSourceObjectName(Reflections.classLookup()
-					.displayNameForObject(object));
+			if (object != null) {
+				transformException.setSourceObjectName(Reflections
+						.classLookup().displayNameForObject(object));
+			}
 		} catch (Exception e) {
 			System.out.println("Unable to add source object name - reason: "
 					+ e.getMessage());
@@ -972,7 +977,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						.asList(new String[] { "primaryGroup",
 								"secondaryGroups", "creationUser",
 								"lastModificationUser" }));
-				
 				impl.setUser(null);
 				ClientInstance instance = new EntityUtils()
 						.detachedCloneIgnorePermissions(impl, null);
@@ -1066,7 +1070,19 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 		@Override
 		public void updateIid(String iidKey, String userName, boolean rememberMe) {
-			// ignore
+			if (!rememberMe) {
+				try {
+					Iid impl = (Iid) cp.getImplementation(Iid.class)
+							.newInstance();
+					impl.setInstanceId(iidKey);
+					Registry.impl(ClientInstanceAuthenticationCache.class)
+							.cacheIid(impl);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}else{
+				//ignore
+			}
 		}
 
 		@Override
@@ -1130,7 +1146,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		String userName = Registry
 				.impl(ClientInstanceAuthenticationCache.class)
 				.iidUserNameByKey(iidKey);
-		if (userName == null) {
+		if (userName == null&&!Registry
+				.impl(ClientInstanceAuthenticationCache.class)
+				.containsIIdKey(iidKey)) {
 			Iid iid = getIidByKey(iidKey);
 			if (iid != null) {
 				Registry.impl(ClientInstanceAuthenticationCache.class)

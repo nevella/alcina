@@ -27,13 +27,20 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
- * This class is a bit hacked, to support Gwittir validation (if we just had it
- * as an ABW<Date>, validation errors would never get to the Gwittir validation
- * s/s). It requires an incoming DateToLongString converter, and an outgoing ShortDate validator 
+ * This class is a bit hacked, to support Gwittir validation. It requires an
+ * outgoing ShortDate validator
+ * 
+ * If the string date field is invalid (determined by gwt datebox validation),
+ * instances emit an (invalid) String (via property change listeners) to trigger
+ * Gwittir validation feedback, otherwise they emit a date. If there's no
+ * validator to catch the String, you'd probably get a classcast somewhere - the
+ * validator is automatically added by gwittir bridge but must be added manually
+ * if using in imperative code
+ * 
  * 
  * @author Nick Reddel
  */
-public class DateBox extends AbstractBoundWidget<String> implements
+public class DateBox extends AbstractBoundWidget<Date> implements
 		ValueChangeHandler {
 	public static final BoundWidgetProvider PROVIDER = new BoundWidgetProvider() {
 		public BoundWidget get() {
@@ -45,11 +52,13 @@ public class DateBox extends AbstractBoundWidget<String> implements
 
 	private DateTimeFormat unAmerican = DateTimeFormat.getFormat("dd/MM/yyyy");
 
-	private String oldText;
-
 	protected DateTimeFormat getDateTimeFormat() {
 		return unAmerican;
 	}
+
+	private String text;
+
+	private Date value;
 
 	public DateBox() {
 		Format dtFormat = new DefaultFormat(getDateTimeFormat());
@@ -63,41 +72,28 @@ public class DateBox extends AbstractBoundWidget<String> implements
 		initWidget(base);
 	}
 
-	public String getValue() {
-		return base.getTextBox().getValue();
-	}
-
-	public Date getValueAsDate() {
+	public Date getValue() {
 		return base.getValue();
 	}
 
-	public void setValue(Date value) {
-		String old = getValue();
-		base.setValue(value);
-		oldText = getValue();
-		changes.firePropertyChange("value", old, this.getValue());
-	}
-
 	private void fireChangesFromBase() {
-		changes.firePropertyChange("value", oldText, getValue());
-		oldText = getValue();
+		String oldText = this.text;
+		this.text = base.getTextBox().getText();
+		if (base.getStyleName().contains("dateBoxFormatError")) {
+			changes.firePropertyChange("value", oldText, this.text);
+			return;
+		}
+		setValue(base.getValue());
 	}
 
 	public void onValueChange(ValueChangeEvent event) {
 		fireChangesFromBase();
 	}
 
-	/**
-	 * Should always be setting a stringified long
-	 */
-	public void setValue(String value) {
-		if (value != null) {
-			try {
-				long l = Long.parseLong(value);
-				setValue(new Date(l));
-			} catch (Exception e) {
-				GWT.log("Setting illegal datebox string value - " + value);
-			}
-		}
+	public void setValue(Date value) {
+		Date oldDate = this.value;
+		this.value = value;
+		base.setValue(value, false);
+		changes.firePropertyChange("value", oldDate, this.value);
 	}
 }

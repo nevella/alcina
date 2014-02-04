@@ -36,12 +36,12 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 	public boolean permitField(Field field,
 			Set<Field> perObjectPermissionFields, Class forClass) {
 		try {
-			if (field.getName().contains("secondaryGroups")) {
-				int j = 3;
-			}
 			Class<?> type = field.getType();
 			Class<?> checkType = field.getType();
 			if (!GraphProjection.isPrimitiveOrDataClass(type)) {
+				if(shallow(forClass)){
+					return false;
+				}
 				if (Collection.class.isAssignableFrom(type)) {
 					checkType = null;
 					Type pt = GraphProjection.getGenericType(field);
@@ -59,6 +59,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 						return false;
 					}
 				}
+				
 			}
 			PropertyPermissions pp = GraphProjection
 					.getPropertyPermission(field);
@@ -72,6 +73,10 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	protected boolean shallow(Class<?> type) {
+		return false;
 	}
 
 	private Boolean permit(Class clazz, Permission permission) {

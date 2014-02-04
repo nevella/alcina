@@ -13,9 +13,7 @@
  */
 package cc.alcina.framework.gwt.persistence.client;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;

@@ -59,4 +59,6 @@ public interface MultikeyMap<V> {
 	public abstract List<List> asTuples(int depth);
 
 	public abstract boolean checkKeys(Object[] keys);
+
+	public abstract MultikeyMap<V> asMapEnsure(boolean ensure, Object... objects);
 }

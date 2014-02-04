@@ -10,19 +10,18 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public interface CommonRemoteServiceExtAsync extends CommonRemoteServiceAsync{
-
+public interface CommonRemoteServiceExtAsync extends CommonRemoteServiceAsync {
 	public void getLogsForAction(RemoteAction action, Integer count,
-	AsyncCallback<List<ActionLogItem>> callback);
+			AsyncCallback<List<ActionLogItem>> callback);
 
 	public void performAction(RemoteAction action, AsyncCallback<Long> callback);
 
 	public void performActionAndWait(RemoteAction action,
-	AsyncCallback<ActionLogItem> callback);
+			AsyncCallback<ActionLogItem> callback);
 
 	public void search(SearchDefinition def, int pageNumber,
-	AsyncCallback<SearchResultsBase> callback);
+			AsyncCallback<SearchResultsBase> callback);
 
 	<G extends WrapperPersistable> void persist(G gwpo,
-	AsyncCallback<Long> callback);
-	}
+			AsyncCallback<Long> callback);
+}
