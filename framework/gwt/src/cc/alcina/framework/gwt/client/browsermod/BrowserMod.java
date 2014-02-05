@@ -158,7 +158,7 @@ public class BrowserMod {
 	 * @return the reported user agent
 	 */
 	public static native String getUserAgent()/*-{
-		return @com.google.gwt.user.client.Window.Navigator::getUserAgent();
+		return @com.google.gwt.user.client.Window.Navigator::getUserAgent()();
 	}-*/;
 
 	/**
