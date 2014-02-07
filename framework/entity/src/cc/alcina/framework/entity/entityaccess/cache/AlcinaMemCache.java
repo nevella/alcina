@@ -1664,4 +1664,11 @@ public class AlcinaMemCache {
 			}
 		}
 	}
+
+	public static void checkActiveTransaction() {
+		if(!get().transactional.transactionActiveInCurrentThread()){
+			throw new RuntimeException("requires transaction in current thread");
+		}
+		
+	}
 }
