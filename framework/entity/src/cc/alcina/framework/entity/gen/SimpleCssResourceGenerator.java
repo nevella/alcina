@@ -53,6 +53,8 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 	 */
 	private static final int MAX_STRING_CHUNK = 16383;
 
+	private static final int MAX_DATA_URL_LENGTH = 2 ^ 15 - 2;
+
 	@Override
 	public String createAssignment(TreeLogger logger, ResourceContext context,
 			JMethod method) throws UnableToCompleteException {
@@ -151,8 +153,10 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			if (mimeType != null) {
 				String encoded = String.format("url(data:%s;base64,%s)",
 						mimeType, out.replace("\n", ""));
-				toWrite = m.replaceFirst(encoded);
-				m = urlPat.matcher(toWrite);
+				if (encoded.length() < MAX_DATA_URL_LENGTH) {
+					toWrite = m.replaceFirst(encoded);
+					m = urlPat.matcher(toWrite);
+				}
 			} else {
 				System.out.println("unable to resolve mime type - " + url);
 				// continue on
