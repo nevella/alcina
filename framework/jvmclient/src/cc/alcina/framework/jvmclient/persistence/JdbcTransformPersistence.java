@@ -344,35 +344,22 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	public void reparentToClientInstance(long clientInstanceId,
-			ClientInstance clientInstance, long userId, AsyncCallback callback) {
-		CleanupTuple tuple1 = new CleanupTuple();
-		CleanupTuple tuple2 = new CleanupTuple();
+			ClientInstance clientInstance, AsyncCallback callback) {
+		CleanupTuple tuple = new CleanupTuple();
 		try {
-			PreparedStatement pstmt = tuple1
+			PreparedStatement pstmt = tuple
 					.prepareStatement("update TransformRequests set "
-							+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=?,USER_ID=? "
+							+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=? "
 							+ "where CLIENTINSTANCE_ID = ?");
 			pstmt.setLong(1, clientInstance.getId());
 			pstmt.setInt(2, clientInstance.getAuth());
-			pstmt.setLong(3, userId);
-			pstmt.setLong(4, clientInstanceId);
+			pstmt.setLong(3, clientInstanceId);
 			int rowsModified = pstmt.executeUpdate();
-			
-			tuple2 = new CleanupTuple();
-			pstmt = tuple2
-					.prepareStatement("update TransformRequests set "
-							+ "TRANSFORM_REQUEST_TYPE=? "
-							+ "where TRANSFORM_REQUEST_TYPE = ?");
-			pstmt.setString(1, "LOCAL_TRANSFORMS_APPLIED");
-			pstmt.setString(2, "TO_REMOTE");
-			rowsModified = pstmt.executeUpdate();
-			
 			callback.onSuccess(null);
 		} catch (SQLException e) {
 			callback.onFailure(e);
 		} finally {
-			tuple1.cleanup();
-			tuple2.cleanup();
+			tuple.cleanup();
 		}
 	}
 
