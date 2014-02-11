@@ -471,7 +471,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String getDescription() {
-			return "Reload metadata parser xml, reload citables cache and jade-server.properties";
+			return "Reload metadata parser xml, reload citables cache and server.properties";
 		}
 
 		@Override
