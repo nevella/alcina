@@ -4,7 +4,10 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -37,9 +40,11 @@ public class IntrospectorFilterPassthrough implements
 	public boolean emitBeanResolver(BeanResolver resolver) {
 		return true;
 	}
-
+	
 	@Override
 	public void filterProperties(BeanResolver resolver) {
+		CollectionFilters.filterInPlace(resolver.getProperties().entrySet(),
+				new AlwaysIgnorePropertyFilter());
 	}
 
 	@Override

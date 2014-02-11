@@ -63,19 +63,10 @@ public abstract class IntrospectorFilterBase implements IntrospectorFilter {
 				});
 	}
 
-	CollectionFilter<Entry<String, RProperty>> alwaysIgnoreFilter = new CollectionFilter<Map.Entry<String, RProperty>>() {
-		@Override
-		public boolean allow(Entry<String, RProperty> o) {
-			return o.getValue().getReadMethod() != null
-					&& !o.getKey().equals("class")
-					&& !o.getKey().equals("propertyChangeListeners");
-		}
-	};
-
 	@Override
 	public void filterProperties(BeanResolver resolver) {
 		CollectionFilters.filterInPlace(resolver.getProperties().entrySet(),
-				alwaysIgnoreFilter);
+				new AlwaysIgnorePropertyFilter());
 	}
 
 	public String getModuleName() {
