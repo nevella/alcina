@@ -83,7 +83,8 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 			for (Class clazz : clear) {
 				while (clazz != null) {
 					for (Field f : clazz.getDeclaredFields()) {
-						if (ThreadLocal.class.isAssignableFrom(f.getType())) {
+						if (ThreadLocal.class.isAssignableFrom(f.getType())
+								&& Modifier.isStatic(f.getModifiers())) {
 							f.setAccessible(true);
 							ThreadLocal tl = (ThreadLocal) f.get(null);
 							if (tl != null) {

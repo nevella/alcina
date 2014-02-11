@@ -221,8 +221,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString, String exceptionType) {
-		String remoteAddr = getThreadLocalRequest() == null ? null
-				: getThreadLocalRequest().getRemoteAddr();
+		String remoteAddr = getRemoteAddress();
 		try {
 			LooseContext
 					.pushWithKey(
@@ -236,13 +235,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	protected String getRemoteAddress() {
+		return getThreadLocalRequest() == null ? null
+				: getThreadLocalRequest().getRemoteAddr();
+	}
+
 	public void logRpcException(Exception ex) {
 		logRpcException(ex, LogMessageType.RPC_EXCEPTION.toString());
 	}
 
 	public void logRpcException(Exception ex, String exceptionType) {
-		String remoteAddr = getThreadLocalRequest() == null ? null
-				: getThreadLocalRequest().getRemoteAddr();
+		String remoteAddr = getRemoteAddress();
 		try {
 			LooseContext
 					.pushWithKey(
@@ -1010,8 +1013,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				converter);
 		while (records.remove(null)) {
 		}
-		String remoteAddr = getThreadLocalRequest() == null ? null
-				: getThreadLocalRequest().getRemoteAddr();
+		String remoteAddr = getRemoteAddress();
 		for (ClientLogRecords r : records) {
 			for (ClientLogRecord clr : r.getLogRecords()) {
 				clr.setIpAddress(remoteAddr);

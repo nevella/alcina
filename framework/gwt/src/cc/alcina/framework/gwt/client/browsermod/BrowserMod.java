@@ -158,7 +158,7 @@ public class BrowserMod {
 	 * @return the reported user agent
 	 */
 	public static native String getUserAgent()/*-{
-		return $wnd.navigator.userAgent;
+		return @com.google.gwt.user.client.Window.Navigator::getUserAgent()();
 	}-*/;
 
 	/**
@@ -227,6 +227,6 @@ public class BrowserMod {
 	}-*/;
 
 	public static boolean requiresExplicitClickForAsyncDownload() {
-		return isInternetExplorer();//||isFireFox();
+		return isInternetExplorer();// ||isFireFox();
 	}
 }

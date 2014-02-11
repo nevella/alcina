@@ -75,7 +75,7 @@ public class MetricLogging {
 
 	private boolean muted = false;
 
-	public static final Layout METRIC_LAYOUT = new PatternLayout("[%d] ["
+	public static final Layout METRIC_LAYOUT = new PatternLayout("["
 			+ METRIC_MARKER + "%c{1}:%X{threadId}] %m%n");
 
 	private static ThreadLocal TL = new ThreadLocal() {
