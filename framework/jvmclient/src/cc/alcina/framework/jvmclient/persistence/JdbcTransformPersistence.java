@@ -50,7 +50,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  * @author Nick Reddel
  */
 public abstract class JdbcTransformPersistence extends
-		LocalTransformPersistence {
+LocalTransformPersistence {
 	private String connectionUrl;
 
 	public String getConnectionUrl() {
@@ -86,7 +86,7 @@ public abstract class JdbcTransformPersistence extends
 
 	protected ResultSet getTransformsResultSet(
 			final DeltaApplicationFilters filters, CleanupTuple tuple)
-			throws SQLException {
+					throws SQLException {
 		String sql = getTransformWrapperSql(filters);
 		return tuple.executeQuery(sql);
 	}
@@ -344,16 +344,35 @@ public abstract class JdbcTransformPersistence extends
 	}
 
 	public void reparentToClientInstance(long clientInstanceId,
-			ClientInstance clientInstance, AsyncCallback callback) {
+			ClientInstance clientInstance, long userId, AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
 			PreparedStatement pstmt = tuple
 					.prepareStatement("update TransformRequests set "
-							+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=? "
+							+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=?,USER_ID=? "
 							+ "where CLIENTINSTANCE_ID = ?");
 			pstmt.setLong(1, clientInstance.getId());
 			pstmt.setInt(2, clientInstance.getAuth());
-			pstmt.setLong(3, clientInstanceId);
+			pstmt.setLong(3, userId);
+			pstmt.setLong(4, clientInstanceId);
+			int rowsModified = pstmt.executeUpdate();
+			callback.onSuccess(null);
+		} catch (SQLException e) {
+			callback.onFailure(e);
+		} finally {
+			tuple.cleanup();
+		}
+	}
+
+	public void updateTransformTableRequestType(AsyncCallback callback) {
+		CleanupTuple tuple = new CleanupTuple();
+		try {
+			PreparedStatement pstmt = tuple
+					.prepareStatement("update TransformRequests set "
+							+ "TRANSFORM_REQUEST_TYPE=? "
+							+ "where TRANSFORM_REQUEST_TYPE = ?");
+			pstmt.setString(1, "LOCAL_TRANSFORMS_APPLIED");
+			pstmt.setString(2, "TO_REMOTE");
 			int rowsModified = pstmt.executeUpdate();
 			callback.onSuccess(null);
 		} catch (SQLException e) {
@@ -379,7 +398,7 @@ public abstract class JdbcTransformPersistence extends
 						.convert(
 								result,
 								new DeltaApplicationRecordToDomainModelDeltaConverter())
-						.iterator());
+								.iterator());
 			}
 		};
 		getTransforms(filters, converterCallback);
@@ -408,7 +427,7 @@ public abstract class JdbcTransformPersistence extends
 						(Integer) map.get("request_id"),
 						(Integer) map.get("clientInstance_auth"),
 						(DeltaApplicationRecordType) map
-								.get("transform_request_type"),
+						.get("transform_request_type"),
 						(String) map.get("transform_event_protocol"),
 						(String) map.get("tag"));
 				transforms.add(wr);
