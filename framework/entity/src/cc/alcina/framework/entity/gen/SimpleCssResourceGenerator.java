@@ -25,6 +25,8 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 
+import com.google.gwt.core.ext.BadPropertyValueException;
+import com.google.gwt.core.ext.ConfigurationProperty;
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
@@ -40,12 +42,15 @@ import com.google.gwt.resources.ext.ResourceGeneratorUtil;
 import com.google.gwt.resources.ext.SupportsGeneratorResultCaching;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.google.gwt.user.rebind.StringSourceWriter;
+import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
 
 /**
  * Provides implementations of SimpleCssResource.
  */
 public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 		implements SupportsGeneratorResultCaching {
+	public static final String IGNORE_DATA_URLS = "alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls";
+
 	/**
 	 * Java compiler has a limit of 2^16 bytes for encoding string constants in
 	 * a class file. Since the max size of a character is 4 bytes, we'll limit
@@ -53,11 +58,21 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 	 */
 	private static final int MAX_STRING_CHUNK = 16383;
 
-	private static final int MAX_DATA_URL_LENGTH = 2 ^ 15 - 2;
+	private static final int MAX_DATA_URL_LENGTH = 32766;
+
+	boolean logMissingUrlResources = true;
 
 	@Override
 	public String createAssignment(TreeLogger logger, ResourceContext context,
 			JMethod method) throws UnableToCompleteException {
+		try {
+			ConfigurationProperty cp = context.getGeneratorContext()
+					.getPropertyOracle()
+					.getConfigurationProperty(IGNORE_DATA_URLS);
+			logMissingUrlResources = !Boolean.valueOf(cp.getValues().get(0));
+		} catch (BadPropertyValueException e1) {
+			e1.printStackTrace();
+		}
 		URL[] resources = ResourceGeneratorUtil.findResources(logger, context,
 				method);
 		if (resources.length != 1) {
@@ -125,11 +140,14 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 				if (url.contains("://")) {
 					continue;
 				} else {
-					String[] pub = module.getAllPublicFiles();
-					System.out.println("missing url resource - " + url);
-					for (String path : pub) {
-						if (path.contains(url)) {
-							System.out.format("Maybe - %s : %s\n", url, path);
+					if (logMissingUrlResources) {
+						String[] pub = module.getAllPublicFiles();
+						System.out.println("missing url resource - " + url);
+						for (String path : pub) {
+							if (path.contains(url)) {
+								System.out.format("Maybe - %s : %s\n", url,
+										path);
+							}
 						}
 					}
 					continue;
@@ -153,6 +171,9 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			if (mimeType != null) {
 				String encoded = String.format("url(data:%s;base64,%s)",
 						mimeType, out.replace("\n", ""));
+				if (encoded.length() > 5000) {
+					// System.out.println("warn - large css sprite - " + url);
+				}
 				if (encoded.length() < MAX_DATA_URL_LENGTH) {
 					toWrite = m.replaceFirst(encoded);
 					m = urlPat.matcher(toWrite);

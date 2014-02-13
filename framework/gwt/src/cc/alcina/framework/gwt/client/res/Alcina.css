@@ -865,7 +865,6 @@ table.alcina-SelectorFrame.minimal div.alcina-Selector {
 	max-width: 300px;
 }
 
-
 .selectx {
 	padding: 1px 2px;
 	background: #DEE6EE;
@@ -888,7 +887,7 @@ table.alcina-SelectorFrame.minimal .selectx .text {
 	line-height: 16px;
 	vertical-align: bottom;
 	margin-bottom: 2px;
-	margin-left:4px;
+	margin-left: 4px;
 }
 
 table.alcina-SelectorFrame.minimal .caption-hint {
@@ -1264,6 +1263,11 @@ table.gwittir-BoundTable tr.odd {
 	background-color: #F0F0FE;
 }
 
+table.gwittir-BoundTable tr.even.selected,table.gwittir-BoundTable tr.odd.selected
+	{
+	font-weight: bold;
+}
+
 table.gwittir-BoundTable tr.header td.first {
 	background: none;
 }
@@ -1343,7 +1347,7 @@ table.gwittir-BoundTable.editable tr.odd td {
 	color: #000000;
 }
 
-.code-area textarea{
+.code-area textarea {
 	font-family: Courier New, Courier, monospace;
 	font-size: 1.1em;
 	color: #111;

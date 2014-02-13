@@ -14,6 +14,8 @@
 		<when-property-is name="user.agent" value="ie8" />
 	</replace-with>
 	<define-configuration-property name="alcina.introspectorFilter.classname" is-multi-valued="false"/>
+	<define-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" is-multi-valued="false"/>
+	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" value="false"/>
 	<define-configuration-property name="alcina.introspectorFilter.dataFile" is-multi-valued="false"/>
 	<source path="client" />
 </module>
