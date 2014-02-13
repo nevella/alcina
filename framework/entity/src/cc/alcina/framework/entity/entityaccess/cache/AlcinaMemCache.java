@@ -1671,4 +1671,8 @@ public class AlcinaMemCache {
 		}
 		
 	}
+	public void dumpLocks(){
+		System.out.println("MemCache-main: "+mainLock);
+		System.out.println("MemCache-subgraph: "+subgraphLock);
+	}
 }
