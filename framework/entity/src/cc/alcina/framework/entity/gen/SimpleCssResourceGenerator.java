@@ -53,7 +53,7 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 	 */
 	private static final int MAX_STRING_CHUNK = 16383;
 
-	private static final int MAX_DATA_URL_LENGTH = 2 ^ 15 - 2;
+	private static final int MAX_DATA_URL_LENGTH = 32766;
 
 	@Override
 	public String createAssignment(TreeLogger logger, ResourceContext context,
@@ -153,6 +153,9 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			if (mimeType != null) {
 				String encoded = String.format("url(data:%s;base64,%s)",
 						mimeType, out.replace("\n", ""));
+				if (encoded.length() > 5000) {
+//					System.out.println("warn - large css sprite - " + url);
+				}
 				if (encoded.length() < MAX_DATA_URL_LENGTH) {
 					toWrite = m.replaceFirst(encoded);
 					m = urlPat.matcher(toWrite);

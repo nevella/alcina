@@ -211,9 +211,8 @@ public class FastROBoundTable extends BoundTableExt {
 			Widget widget = (Widget) createCellWidget(col, o);
 			table.setWidget(row, col + startColumn, widget);
 			if (this.columns[col].getStyleName() != null) {
-				table.getCellFormatter()
-						.setStyleName(row, col + startColumn,
-								this.columns[col].getStyleName());
+				table.getCellFormatter().setStyleName(row, col + startColumn,
+						this.columns[col].getStyleName());
 			}
 		}
 		boolean odd = (this.calculateRowToObjectOffset(new Integer(row))
@@ -254,6 +253,39 @@ public class FastROBoundTable extends BoundTableExt {
 			GWT.log("Exception creating cell widget", e);
 		}
 		return widget;
+	}
+
+	private int lastSelectedIndex = -1;
+
+	private Object selectedObject = null;
+
+	@Override
+	protected void renderAll() {
+		super.renderAll();
+		setSelectedObject(selectedObject);
+	}
+
+	public void setSelectedObject(Object object) {
+		selectedObject = object;
+		Iterator itr = ((Collection) getValue()).iterator();
+		int rowIndex = 0;
+		while (itr.hasNext()) {
+			Object value = itr.next();
+			if (value == object) {
+				break;
+			}
+			rowIndex++;
+		}
+		int headerOffset= ((this.masks & BoundTableExt.HEADER_MASK) > 0) ? 1 : 0;
+		rowIndex+=headerOffset;
+		if (lastSelectedIndex != -1) {
+			table.getRowFormatter().removeStyleName(lastSelectedIndex,
+					"selected");
+		}
+		if (table.getRowCount() > rowIndex) {
+			table.getRowFormatter().addStyleName(rowIndex, "selected");
+			lastSelectedIndex = rowIndex;
+		}
 	}
 
 	@Override
@@ -343,7 +375,7 @@ public class FastROBoundTable extends BoundTableExt {
 								(Widget) editableWidget,
 								table,
 								new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
-								null, rpp, -4, -tdh +4);
+								null, rpp, -4, -tdh + 4);
 				relativePopupPanel
 						.addCloseHandler(new CloseHandler<RelativePopupPanel>() {
 							public void onClose(

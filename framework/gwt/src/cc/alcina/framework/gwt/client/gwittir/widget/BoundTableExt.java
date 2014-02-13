@@ -1434,7 +1434,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private String noContentMessage = "No matching results found";
 
-	private void renderAll() {
+	protected void renderAll() {
 		if (getIncrementalRenderContainer() == null) {
 			renderNonIncremental();
 		} else {
