@@ -37,6 +37,7 @@ import java.security.cert.X509Certificate;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -1120,5 +1121,12 @@ public class SEUtilities {
 
 	public static enum OsType {
 		Windows, MacOS, Unix
+	}
+
+	public static void toStartOfDay(Calendar calendar) {
+		calendar.set(Calendar.HOUR_OF_DAY, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.set(Calendar.MILLISECOND, 0);
 	}
 }
