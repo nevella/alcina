@@ -77,6 +77,8 @@ public class DomainTransformEvent implements Serializable,
 
 	private transient Object oldValue;
 
+	private transient boolean inImmediatePropertyChangeCommit;
+
 	public static transient final Comparator<DomainTransformEvent> UTC_DATE_COMPARATOR = new Comparator<DomainTransformEvent>() {
 		@Override
 		public int compare(DomainTransformEvent o1, DomainTransformEvent o2) {
@@ -146,8 +148,8 @@ public class DomainTransformEvent implements Serializable,
 				this.objectClass = this.objectClassRef.getRefClass();
 			}
 			if (this.objectClass == null && this.objectClassName != null) {
-				this.objectClass = Reflections.classLookup()
-						.getClassForName(this.objectClassName);
+				this.objectClass = Reflections.classLookup().getClassForName(
+						this.objectClassName);
 			}
 		}
 		return this.objectClass;
@@ -211,8 +213,8 @@ public class DomainTransformEvent implements Serializable,
 			}
 			if (this.valueClass == null && this.valueClassName != null
 					&& !this.valueClassName.equals("null")) {
-				this.valueClass = Reflections.classLookup()
-						.getClassForName(this.valueClassName);
+				this.valueClass = Reflections.classLookup().getClassForName(
+						this.valueClassName);
 			}
 		}
 		return this.valueClass;
@@ -246,6 +248,10 @@ public class DomainTransformEvent implements Serializable,
 		return valueVersionNumber;
 	}
 
+	public boolean isInImmediatePropertyChangeCommit() {
+		return this.inImmediatePropertyChangeCommit;
+	}
+
 	public boolean provideIsIdEvent(Class clazz) {
 		return objectClass == clazz && "id".equals(propertyName);
 	}
@@ -265,7 +271,8 @@ public class DomainTransformEvent implements Serializable,
 	public HasIdAndLocalId provideSourceOrMarker() {
 		HasIdAndLocalId source = getSource();
 		if (source == null && getObjectLocalId() != 0) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) Reflections.classLookup().newInstance(getObjectClass());
+			HasIdAndLocalId hili = (HasIdAndLocalId) Reflections.classLookup()
+					.newInstance(getObjectClass());
 			source = hili;
 			hili.setId(getObjectId());
 			hili.setLocalId(getObjectLocalId());
@@ -285,8 +292,8 @@ public class DomainTransformEvent implements Serializable,
 					&& itrEvent.getObjectClass() == getObjectClass()
 					&& itrEvent.getObjectId() == getObjectId()
 					&& itrEvent.getObjectLocalId() == getObjectLocalId()) {
-				Class type = Reflections.propertyAccessor()
-						.getPropertyType(getObjectClass(), getPropertyName());
+				Class type = Reflections.propertyAccessor().getPropertyType(
+						getObjectClass(), getPropertyName());
 				return !CommonUtils.isStandardJavaClass(type);
 			}
 		}
@@ -303,6 +310,11 @@ public class DomainTransformEvent implements Serializable,
 
 	public void setGeneratedServerId(long generatedServerId) {
 		this.generatedServerId = generatedServerId;
+	}
+
+	public void setInImmediatePropertyChangeCommit(
+			boolean inImmediatePropertyChangeCommit) {
+		this.inImmediatePropertyChangeCommit = inImmediatePropertyChangeCommit;
 	}
 
 	public void setNewStringValue(String newStringValue) {

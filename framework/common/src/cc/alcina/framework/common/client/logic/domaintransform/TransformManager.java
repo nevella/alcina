@@ -238,7 +238,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 		}
 		Object existingTargetValue = null;
-		if (event.getOldValue() != null) {
+		if (event.isInImmediatePropertyChangeCommit()) {
 			existingTargetValue = event.getOldValue();
 		} else if (event.getSource() == null || event.getPropertyName() == null) {
 		} else {
@@ -1043,7 +1043,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} else {
 			transforms.add(dte);
 		}
+		for (DomainTransformEvent event : transforms) {
+			event.setInImmediatePropertyChangeCommit(true);
+		}
 		addTransforms(transforms, true);
+		for (DomainTransformEvent event : transforms) {
+			event.setInImmediatePropertyChangeCommit(false);
+		}
 		Object hili = evt.getSource();
 		if (this.getDomainObjects() != null) {
 			if (!provisionalObjects.contains(hili)) {
