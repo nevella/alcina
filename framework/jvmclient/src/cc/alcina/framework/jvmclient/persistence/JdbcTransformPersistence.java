@@ -342,8 +342,28 @@ LocalTransformPersistence {
 			tuple.cleanup();
 		}
 	}
-
+	
 	public void reparentToClientInstance(long clientInstanceId,
+			ClientInstance clientInstance, AsyncCallback callback) {
+		CleanupTuple tuple = new CleanupTuple();
+		try {
+			PreparedStatement pstmt = tuple
+					.prepareStatement("update TransformRequests set "
+							+ "CLIENTINSTANCE_ID=?,CLIENTINSTANCE_AUTH=? "
+							+ "where CLIENTINSTANCE_ID = ?");
+			pstmt.setLong(1, clientInstance.getId());
+			pstmt.setInt(2, clientInstance.getAuth());
+			pstmt.setLong(3, clientInstanceId);
+			int rowsModified = pstmt.executeUpdate();
+			callback.onSuccess(null);
+		} catch (SQLException e) {
+			callback.onFailure(e);
+		} finally {
+			tuple.cleanup();
+		}
+	}
+
+	public void reparentToClientInstanceAndUserId(long clientInstanceId,
 			ClientInstance clientInstance, long userId, AsyncCallback callback) {
 		CleanupTuple tuple = new CleanupTuple();
 		try {
