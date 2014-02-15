@@ -248,6 +248,7 @@ public class DomainTransformEvent implements Serializable,
 		return valueVersionNumber;
 	}
 
+	@Transient
 	public boolean isInImmediatePropertyChangeCommit() {
 		return this.inImmediatePropertyChangeCommit;
 	}

@@ -1627,7 +1627,9 @@ public class AlcinaMemCache {
 		@Override
 		public void firePropertyChange(String propertyName, Object oldValue,
 				Object newValue) {
-			handle("fire");
+			if (!(CommonUtils.equalsWithNullEquality(oldValue, newValue))) {
+				handle("fire");
+			}
 		}
 
 		@Override
@@ -1666,13 +1668,13 @@ public class AlcinaMemCache {
 	}
 
 	public static void checkActiveTransaction() {
-		if(!get().transactional.transactionActiveInCurrentThread()){
+		if (!get().transactional.transactionActiveInCurrentThread()) {
 			throw new RuntimeException("requires transaction in current thread");
 		}
-		
 	}
-	public void dumpLocks(){
-		System.out.println("MemCache-main: "+mainLock);
-		System.out.println("MemCache-subgraph: "+subgraphLock);
+
+	public void dumpLocks() {
+		System.out.println("MemCache-main: " + mainLock);
+		System.out.println("MemCache-subgraph: " + subgraphLock);
 	}
 }
