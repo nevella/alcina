@@ -99,10 +99,11 @@ public class ServletLayerUtils {
 		throw new RuntimeException("Generated object not found - "
 				+ returnIdFor);
 	}
-	public static void logRequest(HttpServletRequest req){
-		System.out
-		.format("\nRequest: %s\n Querystring: %s\n Referer: %s\n",
+
+	public static void logRequest(HttpServletRequest req, String remoteAddr) {
+		System.out.format(
+				"\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
 				req.getRequestURI(), req.getQueryString(),
-				req.getHeader("referer"));
+				req.getHeader("referer"), remoteAddr);
 	}
 }

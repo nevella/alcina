@@ -193,7 +193,9 @@ public class Base64
      * @return four byte array in Base64 notation.
      * @since 1.5.1
      */
-    private static byte[] encode3to4( byte[] b4, byte[] threeBytes, int numSigBytes )
+    
+    @SuppressWarnings("unused")
+	private static byte[] encode3to4( byte[] b4, byte[] threeBytes, int numSigBytes )
     {
         encode3to4( threeBytes, 0, numSigBytes, b4, 0 );
         return b4;

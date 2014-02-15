@@ -322,10 +322,12 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (forceDbCheck) {
 			List<DomainTransformRequestPersistent> persisted = getCommonPersistence()
 					.getPersistentTransformRequests(0, 0, null, true, false);
-			if (!persisted.isEmpty() && logDbEventCheck) {
+			if (!persisted.isEmpty()) {
 				maxDbPersistedRequestId = persisted.get(0).getId();
-				logger.format("max persisted transform id: %s",
-						maxDbPersistedRequestId);
+				if (logDbEventCheck) {
+					logger.format("max persisted transform id: %s",
+							maxDbPersistedRequestId);
+				}
 			}
 			forceDbCheck = false;
 		}
