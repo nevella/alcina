@@ -92,6 +92,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	volatile long exMachineSourceIdCounter = -1;
 
+	protected boolean firingPersistedEvents;
+
 	public DomainTransformPersistenceQueue() {
 		Registry.checkSingleton(this);
 		this.timer = new Timer("Timer-DomainTransformPersistenceQueue-runner");
@@ -268,6 +270,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				dtr.setResult(DomainTransformResponseResult.OK);
 				dtr.setRequest(persistenceToken.getRequest());
 				wrapper.response = dtr;
+				
 				// have it on a separate thread so it can "fire back"
 				// into the checking thread
 				new Thread() {
@@ -275,6 +278,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 						try {
 							ThreadedPermissionsManager.cast().pushSystemUser();
 							PermissibleFieldFilter.disablePerObjectPermissions = true;
+							firingPersistedEvents=true;
 							Registry.impl(
 									DomainTransformPersistenceEvents.class)
 									.fireDomainTransformPersistenceEvent(
@@ -282,6 +286,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 													persistenceToken, wrapper,
 													exMachineSourceIdCounter--));
 						} finally {
+							firingPersistedEvents=false;
 							PermissibleFieldFilter.disablePerObjectPermissions = false;
 							ThreadedPermissionsManager.cast().popSystemUser();
 						}
@@ -317,6 +322,10 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	private synchronized LongPair shouldCheckPersistedTransforms() {
 		if (checkingPersistedTransforms) {
+			return null;
+		}
+		if(firingPersistedEvents){
+			System.out.println("firing persisted events...");
 			return null;
 		}
 		if (forceDbCheck) {
