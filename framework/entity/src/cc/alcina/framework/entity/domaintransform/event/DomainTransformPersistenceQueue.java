@@ -270,7 +270,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				dtr.setResult(DomainTransformResponseResult.OK);
 				dtr.setRequest(persistenceToken.getRequest());
 				wrapper.response = dtr;
-				
+				firingPersistedEvents = true;
 				// have it on a separate thread so it can "fire back"
 				// into the checking thread
 				new Thread() {
@@ -278,7 +278,6 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 						try {
 							ThreadedPermissionsManager.cast().pushSystemUser();
 							PermissibleFieldFilter.disablePerObjectPermissions = true;
-							firingPersistedEvents=true;
 							Registry.impl(
 									DomainTransformPersistenceEvents.class)
 									.fireDomainTransformPersistenceEvent(
@@ -286,7 +285,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 													persistenceToken, wrapper,
 													exMachineSourceIdCounter--));
 						} finally {
-							firingPersistedEvents=false;
+							firingPersistedEvents = false;
 							PermissibleFieldFilter.disablePerObjectPermissions = false;
 							ThreadedPermissionsManager.cast().popSystemUser();
 						}
@@ -324,7 +323,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (checkingPersistedTransforms) {
 			return null;
 		}
-		if(firingPersistedEvents){
+		if (firingPersistedEvents) {
 			System.out.println("firing persisted events...");
 			return null;
 		}
