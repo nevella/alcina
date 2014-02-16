@@ -186,7 +186,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			String eql = buildEqlForSpec(itemSpec, assoc.implementationClass());
 			long t1 = System.currentTimeMillis();
 			List results = getEntityManager().createQuery(eql).getResultList();
-			EntityLayerObjects.get()
+			EntityLayerObjects
+					.get()
 					.getMetricLogger()
 					.debug("cache eql - total (ms):"
 							+ (System.currentTimeMillis() - t1));
@@ -273,6 +274,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			ex.printStackTrace();
 			return null;
 		}
+		hili = ensureNonProxy(hili);
 		deleted.add(hili);
 		DomainTransformEvent event = super.deleteObject(hili,
 				generateEventIfObjectNotFound);
@@ -389,6 +391,23 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return this.modificationEvents;
 	}
 
+	@Override
+	public <T extends HasIdAndLocalId> T getObject(T hili) {
+		if (hili == null) {
+			return null;
+		}
+		hili = ensureNonProxy(hili);
+		return super.getObject(hili);
+	}
+
+	protected <T extends HasIdAndLocalId> T ensureNonProxy(T hili) {
+		if (hili.getId() != 0 && getEntityManager() != null) {
+			hili = Registry.impl(JPAImplementation.class)
+					.getInstantiatedObject(hili);
+		}
+		return hili;
+	}
+
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		if (!HasIdAndLocalId.class.isAssignableFrom(c)) {
@@ -408,7 +427,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		if (id != 0 && getEntityManager() != null) {
 			if (WrapperPersistable.class.isAssignableFrom(c)) {
 				try {
-					WrappedObject wrapper = Registry.impl(WrappedObjectProvider.class)
+					WrappedObject wrapper = Registry.impl(
+							WrappedObjectProvider.class)
 							.getObjectWrapperForUser((Class) c, id,
 									entityManager);
 					maybeListenToObjectWrapper(wrapper);
@@ -423,8 +443,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			// sorts of potential problems
 			// basically, transform events should (must) always have refs to
 			// "real" objects, not wrappers
-			t = Registry.impl(JPAImplementation.class)
-					.getInstantiatedObject(t);
+			t = ensureNonProxy(t);
 			if (listenToFoundObjects
 					&& t instanceof SourcesPropertyChangeEvents) {
 				((SourcesPropertyChangeEvents) t)
@@ -508,8 +527,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				if (entityManager != null) {
 					if (isUseObjectCreationId() && objectId != 0) {
 						newInstance.setId(objectId);
-						Object fromBefore = Registry.impl(JPAImplementation.class)
-								.beforeSpecificSetId(entityManager, newInstance);
+						Object fromBefore = Registry.impl(
+								JPAImplementation.class).beforeSpecificSetId(
+								entityManager, newInstance);
 						entityManager.persist(newInstance);
 						Registry.impl(JPAImplementation.class)
 								.afterSpecificSetId(fromBefore);
@@ -558,7 +578,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	public void reconstituteHiliMap() {
 		if (clientInstance != null) {
-			CommonPersistenceLocal cp = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+			CommonPersistenceLocal cp = Registry.impl(
+					CommonPersistenceProvider.class).getCommonPersistence();
 			String message = "Reconstitute hili map - clientInstance: "
 					+ clientInstance.getId();
 			// System.out.println(message);
@@ -624,7 +645,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		listeningTo = new LinkedHashSet<SourcesPropertyChangeEvents>();
 		LinkedHashSet<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		if (!pendingTransforms.isEmpty()) {
-			
 			System.out
 					.println("**WARNING ** TLTM - cleared (but still pending) transforms:\n "
 							+ pendingTransforms);
@@ -642,7 +662,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			initialised = true;
 		}
 	}
-	public static class UncomittedTransformsException extends Exception{
+
+	public static class UncomittedTransformsException extends Exception {
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
@@ -806,8 +827,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			if (hili == null) {
 				hili = (HasIdAndLocalId) evt.getObjectClass().newInstance();
 			} else {
-				hili = Registry.impl(JPAImplementation.class)
-						.getInstantiatedObject(hili);
+				hili = ensureNonProxy(hili);
 			}
 			Class<? extends HasIdAndLocalId> objectClass = hili.getClass();
 			ObjectPermissions op = objectClass
@@ -887,7 +907,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	protected void doubleCheckAddition(Collection collection, Object tgt) {
-		JPAImplementation jpaImplementation = Registry.impl(JPAImplementation.class);
+		JPAImplementation jpaImplementation = Registry
+				.impl(JPAImplementation.class);
 		tgt = jpaImplementation.getInstantiatedObject(tgt);
 		for (Iterator itr = collection.iterator(); itr.hasNext();) {
 			Object next = itr.next();
@@ -901,7 +922,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	protected void doubleCheckRemoval(Collection collection, Object tgt) {
-		JPAImplementation jpaImplementation = Registry.impl(JPAImplementation.class);
+		JPAImplementation jpaImplementation = Registry
+				.impl(JPAImplementation.class);
 		tgt = jpaImplementation.getInstantiatedObject(tgt);
 		for (Iterator itr = collection.iterator(); itr.hasNext();) {
 			Object next = itr.next();
@@ -972,5 +994,4 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			return new ThreadlocalTransformManager();
 		}
 	}
-
 }
