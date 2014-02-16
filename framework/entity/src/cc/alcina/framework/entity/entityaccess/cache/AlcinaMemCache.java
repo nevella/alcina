@@ -1677,4 +1677,8 @@ public class AlcinaMemCache {
 		System.out.println("MemCache-main: " + mainLock);
 		System.out.println("MemCache-subgraph: " + subgraphLock);
 	}
+
+	public static PerThreadTransaction ensureActiveTransaction() {
+		return get().transactional.ensureTransaction();
+	}
 }

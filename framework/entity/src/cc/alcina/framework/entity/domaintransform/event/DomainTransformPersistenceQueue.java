@@ -276,14 +276,20 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				new Thread() {
 					public void run() {
 						try {
+							setName("DomainTransformPersistenceQueue-fire");
 							ThreadedPermissionsManager.cast().pushSystemUser();
 							PermissibleFieldFilter.disablePerObjectPermissions = true;
-							Registry.impl(
-									DomainTransformPersistenceEvents.class)
-									.fireDomainTransformPersistenceEvent(
-											new DomainTransformPersistenceEvent(
-													persistenceToken, wrapper,
-													exMachineSourceIdCounter--));
+							DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
+									persistenceToken, wrapper,
+									exMachineSourceIdCounter--);
+							// check we're not missing a gap -- which would
+							// cause a deadlock
+							if (shouldFire(event)) {
+								Registry.impl(
+										DomainTransformPersistenceEvents.class)
+										.fireDomainTransformPersistenceEvent(
+												event);
+							}
 						} finally {
 							firingPersistedEvents = false;
 							PermissibleFieldFilter.disablePerObjectPermissions = false;
