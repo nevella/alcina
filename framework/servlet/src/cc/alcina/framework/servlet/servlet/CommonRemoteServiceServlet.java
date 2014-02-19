@@ -223,6 +223,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public Long logClientError(String exceptionToString, String exceptionType) {
 		String remoteAddr = getRemoteAddress();
 		try {
+			exceptionToString = CommonUtils.nullToEmpty(exceptionToString)
+					.replace('\0', ' ');
 			LooseContext
 					.pushWithKey(
 							CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
@@ -236,8 +238,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected String getRemoteAddress() {
-		return getThreadLocalRequest() == null ? null
-				: getThreadLocalRequest().getRemoteAddr();
+		return getThreadLocalRequest() == null ? null : getThreadLocalRequest()
+				.getRemoteAddr();
 	}
 
 	public void logRpcException(Exception ex) {
