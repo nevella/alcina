@@ -587,6 +587,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			Long id, GraphProjectionFieldFilter fieldFilter,
 			GraphProjectionDataFilter dataFilter) {
 		HasId wrapper = getItemById(clazz, id);
+		if (wrapper == null) {
+			return null;
+		}
 		UnwrapInfoContainer result = new UnwrapInfoContainer();
 		result.setHasId(wrapper);
 		try {
@@ -1080,8 +1083,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
-			}else{
-				//ignore
+			} else {
+				// ignore
 			}
 		}
 
@@ -1146,9 +1149,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		String userName = Registry
 				.impl(ClientInstanceAuthenticationCache.class)
 				.iidUserNameByKey(iidKey);
-		if (userName == null&&!Registry
-				.impl(ClientInstanceAuthenticationCache.class)
-				.containsIIdKey(iidKey)) {
+		if (userName == null
+				&& !Registry.impl(ClientInstanceAuthenticationCache.class)
+						.containsIIdKey(iidKey)) {
 			Iid iid = getIidByKey(iidKey);
 			if (iid != null) {
 				Registry.impl(ClientInstanceAuthenticationCache.class)
