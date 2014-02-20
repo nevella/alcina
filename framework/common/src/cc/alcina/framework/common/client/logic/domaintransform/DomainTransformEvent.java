@@ -96,10 +96,10 @@ public class DomainTransformEvent implements Serializable,
 	public boolean equivalentTo(DomainTransformEvent o) {
 		return o != null
 				&& objectId == o.objectId
-				&& objectLocalId == o.objectLocalId
+				&& (objectId != 0 || objectLocalId == o.objectLocalId)
 				&& getObjectClass() == o.getObjectClass()
 				&& valueId == o.valueId
-				&& valueLocalId == o.valueLocalId
+				&& (valueId != 0 || valueLocalId == o.valueLocalId)
 				&& getValueClass() == o.getValueClass()
 				&& commitType == o.commitType
 				&& transformType == o.transformType

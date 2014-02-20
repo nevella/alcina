@@ -803,6 +803,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	private void listenTo(SourcesPropertyChangeEvents spce) {
 		listeningTo.add(spce);
+		spce.removePropertyChangeListener(this);
 		spce.addPropertyChangeListener(this);
 	}
 
