@@ -401,7 +401,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	protected <T extends HasIdAndLocalId> T ensureNonProxy(T hili) {
-		if (hili.getId() != 0 && getEntityManager() != null) {
+		if (hili != null && hili.getId() != 0 && getEntityManager() != null) {
 			hili = Registry.impl(JPAImplementation.class)
 					.getInstantiatedObject(hili);
 		}
