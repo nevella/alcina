@@ -85,4 +85,10 @@ import com.google.gwt.user.client.ui.Widget;
 			return 0;
 		}
 	}
+	public static final LayoutInfo TO_100_PCT_HEIGHT=new LayoutInfo() {
+		@Override
+		public boolean to100percentOfAvailableHeight() {
+			return true;
+		}
+	};
 }

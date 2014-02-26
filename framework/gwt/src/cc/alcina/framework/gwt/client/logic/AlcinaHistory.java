@@ -171,7 +171,7 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		} else {
 			lastHistoryToken = historyToken;
 		}
-		if (item.getTabName() != null) {
+		if (CommonUtils.isNotNullOrEmpty(item.getTabName())) {
 			item.type = HistoryEventType.TABBED;
 		}
 		return item;

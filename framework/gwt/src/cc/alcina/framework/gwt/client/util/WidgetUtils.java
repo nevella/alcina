@@ -221,7 +221,7 @@ public class WidgetUtils {
 			int parentAdjustWidth) {
 		while (widgets.hasNext()) {
 			Widget widget = widgets.next();
-			if (!widget.isVisible()) {
+			if (widget == null || !widget.isVisible()) {
 				continue;
 			}
 			int availableHeight = containerHeight;
@@ -918,15 +918,15 @@ public class WidgetUtils {
 		return h;
 	}-*/;
 
-	public static boolean clickHasAAncestor(ClickEvent clickEvent) {
+	public static Element clickGetAnchorAncestor(ClickEvent clickEvent) {
 		Event event = Event.as(clickEvent.getNativeEvent());
 		// handle localisation spans
 		Element target = null;
 		if (!Element.is(event.getEventTarget())) {
-			return false;
+			return null;
 		}
 		target = Element.as(event.getEventTarget());
 		Element anchor = DomUtils.getAncestorWithTagName(target, "A");
-		return anchor != null;
+		return anchor;
 	}
 }

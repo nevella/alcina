@@ -143,7 +143,9 @@ public class WorkspaceView extends Composite implements HasName,
 	public static abstract class DataTreeView extends WorkspaceView implements
 			ExtraTreeEventListener, PermissibleActionListener, HasLayoutInfo,
 			SelectionHandler<TreeItem>, HasFirstFocusable {
-		public static final String CONTEXT_IGNORE_TREE_SELECTION=DataTreeView.class.getName()+".CONTEXT_IGNORE_TREE_SELECTION";
+		public static final String CONTEXT_IGNORE_TREE_SELECTION = DataTreeView.class
+				.getName() + ".CONTEXT_IGNORE_TREE_SELECTION";
+
 		private boolean showCollapseButton;
 
 		private DataTree dataTree;
@@ -157,7 +159,6 @@ public class WorkspaceView extends Composite implements HasName,
 		private boolean allowEditCollections = true;
 
 		private FilterWidget filter;
-		
 
 		public FilterWidget getFilter() {
 			return this.filter;
@@ -192,7 +193,7 @@ public class WorkspaceView extends Composite implements HasName,
 					}
 				}
 			});
-			if(toolbar!=null){
+			if (toolbar != null) {
 				toolbar.processAvailableActions(getAvailableActions(null));
 			}
 		}
@@ -302,14 +303,13 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		public void onSelection(SelectionEvent<TreeItem> event) {
-			if(LooseContext.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)){
+			if (LooseContext.getBoolean(CONTEXT_IGNORE_TREE_SELECTION)) {
 				return;
 			}
 			TreeItem item = event.getSelectedItem();
 			onTreeItemSelected(item);
 		}
 
-		
 		protected void onTreeItemSelected(TreeItem item) {
 			if (!item.isVisible()) {
 				return;
@@ -392,9 +392,9 @@ public class WorkspaceView extends Composite implements HasName,
 				actions.addAll(info.getActions(userObject));
 			}
 			if (item instanceof HasVisibleCollection) {
-				if(!item.getState()){
-					item.setState(true,false);
-					item.setState(false,false);
+				if (!item.getState()) {
+					item.setState(true, false);
+					item.setState(false, false);
 				}
 				HasVisibleCollection hvc = (HasVisibleCollection) item;
 				domainClass = hvc.getCollectionMemberClass();

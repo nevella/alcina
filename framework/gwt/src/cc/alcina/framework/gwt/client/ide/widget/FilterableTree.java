@@ -18,6 +18,8 @@ import java.util.Stack;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ide.node.TreeOrItem;
+import cc.alcina.framework.gwt.client.ide.node.TreeOrItemTree;
 import cc.alcina.framework.gwt.client.widget.TreeNodeWalker;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable;
 import cc.alcina.framework.gwt.client.widget.VisualFilterable.VisualFilterableWithFirst;
@@ -93,7 +95,7 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 				boolean open = target.getParentItem() == null;
 				if (shouldExpandCallback != null
 						&& !shouldExpandCallback.allow(target)) {
-					open=false;
+					open = false;
 				}
 				target.setState(open);
 			}
@@ -182,8 +184,8 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 				VisualFilterable vf = (VisualFilterable) child;
 				boolean match = vf.filter(filterText);
 				b |= match;
-				if(match&&CommonUtils.isNotNullOrEmpty(filterText)){
-					//allow for lazy rendering fuzziness
+				if (match && CommonUtils.isNotNullOrEmpty(filterText)) {
+					// allow for lazy rendering fuzziness
 					vf.filter(filterText);
 				}
 			}
@@ -286,7 +288,7 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 	}
 
 	private TreeItem findDeepestOpenChild(TreeItem item) {
-		if (!item.getState()) {
+		if (!item.getState() || item.getChildCount() == 0) {
 			return item;
 		}
 		return findDeepestOpenChild(item.getChild(item.getChildCount() - 1));
@@ -298,7 +300,7 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 			return null;
 		}
 		while (true) {
-			item = getNextNode(item, null, direction);
+			item = getNextNode(item, false, direction);
 			if (item == null) {
 				return null;
 			}
@@ -308,23 +310,28 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 		}
 	}
 
-	private TreeItem getNextNode(TreeItem item, TreeItem child, int direction) {
+	public TreeItem getNextNode(TreeItem item, boolean ignoreChildAxis,
+			int direction) {
 		if (item == null) {
 			return null;
 		}
+		TreeOrItem parent=TreeOrItemTree.create(item).getParent();
 		if (direction == 1) {
-			if (item.getState()) {
-				int childIndex = (child == null) ? -1 : item
-						.getChildIndex(child);
-				if (childIndex < item.getChildCount() - 1) {
-					return item.getChild(childIndex + 1);
-				}
+			if (!ignoreChildAxis && item.getState() && item.getChildCount() > 0) {
+				return item.getChild(0);
 			}
-			return getNextNode(item.getParentItem(), item, direction);
+			int childIndex = parent.getChildIndex(item);
+			if (childIndex < parent.getChildCount() - 1) {
+				return parent.getChild(childIndex + 1);
+			}
+			if(item.getParentItem()==null){
+				return null;
+			}
+			return getNextNode(item.getParentItem(), true, direction);
 		} else {
-			int childIndex = item.getParentItem().getChildIndex(item);
+			int childIndex = parent.getChildIndex(item);
 			if (childIndex > 0) {
-				return findDeepestOpenChild(item.getParentItem().getChild(
+				return findDeepestOpenChild(parent.getChild(
 						childIndex - 1));
 			}
 			return item.getParentItem();
