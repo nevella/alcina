@@ -31,7 +31,7 @@ public class GlassDisplayer {
 
 	private PopupPanel glass;
 
-	private ClickableFlowPanel fp;
+	private FlowPanelClickable fp;
 	
 	
 
@@ -44,7 +44,7 @@ public class GlassDisplayer {
 		}
 		if (glass == null) {
 			glass = new PopupPanel();
-			fp = new ClickableFlowPanel();
+			fp = new FlowPanelClickable();
 			fp.setStyleName("alcina-GlassPanel");
 			fp.setWidth(Window.getClientWidth() + "px");
 			fp.setHeight(Math.max(Document.get().getBody().getOffsetHeight(),
@@ -77,7 +77,7 @@ public class GlassDisplayer {
 		this.glass.setModal(modal);
 	}
 
-	public ClickableFlowPanel getFp() {
+	public FlowPanelClickable getFp() {
 		return this.fp;
 	}
 }

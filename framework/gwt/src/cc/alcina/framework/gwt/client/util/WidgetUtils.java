@@ -33,6 +33,7 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo.LayoutInfo;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BodyElement;
@@ -929,4 +930,5 @@ public class WidgetUtils {
 		Element anchor = DomUtils.getAncestorWithTagName(target, "A");
 		return anchor;
 	}
+
 }

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.gwt.client.widget.ClickableFlowPanel;
+import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
@@ -21,7 +21,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 public class BoundSelectorMinimal extends BoundSelector {
 	private ClickHandler maybeFocusResultsHandler;
 
-	private ClickableFlowPanel cfp;
+	private FlowPanelClickable cfp;
 
 	public BoundSelectorMinimal() {
 		super();
@@ -49,7 +49,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	public void redrawGrid() {
 		container.clear();
-		cfp = new ClickableFlowPanel();
+		cfp = new FlowPanelClickable();
 		this.grid = new Grid(2, 1);
 		grid.setCellPadding(0);
 		grid.setCellSpacing(0);
