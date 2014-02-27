@@ -61,9 +61,21 @@ public class ServletLayerUtils {
 				tpm.pushSystemUser();
 			}
 			try {
-				return Registry.impl(CommonRemoteServletProvider.class)
+				CascadingTransformSupport cascadingTransformSupport = CascadingTransformSupport
+						.get();
+				cascadingTransformSupport.beforeTransform();
+				DomainTransformResponse response = Registry
+						.impl(CommonRemoteServletProvider.class)
 						.getCommonRemoteServiceServlet()
 						.transformFromServletLayer(tag).response;
+				// see preamble to cascading transform support
+				while (cascadingTransformSupport.hasChildren()) {
+					synchronized (cascadingTransformSupport) {
+						cascadingTransformSupport.wait();
+					}
+				}
+				cascadingTransformSupport.afterTransform();
+				return response;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
