@@ -234,6 +234,7 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 					int idx2 = s.indexOf("%26", idx);
 					// double-enc of '&' - i.e. part of a value, not a separator
 					int idx3 = s.indexOf(DOUBLE_AMP, idx);
+					int idx4 = s.indexOf("&&", idx);
 					// do we have a terminator?
 					if (idx1 == -1 && idx2 == -1) {
 						idx0 = s.length();
@@ -241,10 +242,12 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 					} else {
 						idx0 = idx1 == -1 ? idx2 : idx2 == -1 ? idx1 : Math
 								.min(idx1, idx2);
-						if (idx0 < idx3 || idx3 == -1) {
+						if ((idx0 < idx3 || idx3 == -1)
+								&& (idx0 < idx4 || idx4 == -1)) {
 							break;// found terminator
 						}
-						idx = idx3 + DOUBLE_AMP.length();
+						idx = idx3 != -1 ? idx3 + DOUBLE_AMP.length() : idx4
+								+ "&&".length();
 					}
 				}
 				map.put(key,
