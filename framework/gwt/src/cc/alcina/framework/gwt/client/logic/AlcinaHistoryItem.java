@@ -21,10 +21,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.HistoryEventType;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SearchHistoryInfo;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
+import cc.alcina.framework.gwt.client.util.Base64Utils;
 
 public class AlcinaHistoryItem {
 	public boolean notAHistoryToken;
@@ -210,9 +212,10 @@ public class AlcinaHistoryItem {
 		return result;
 	}
 
-	public String toHref(){
-		return "#"+toTokenString();
+	public String toHref() {
+		return "#" + toTokenString();
 	}
+
 	public String toTokenString() {
 		return AlcinaHistory.toHash(params);
 	}
@@ -244,5 +247,14 @@ public class AlcinaHistoryItem {
 			}
 		}
 		setLocation(CommonUtils.join(parts, "*"));
+	}
+
+	public String toBase64TokenString() {
+		try {
+			return AlcinaHistory.BASE64_PREFIX
+					+ Base64Utils.toBase64(toTokenString().getBytes("UTF-8"));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

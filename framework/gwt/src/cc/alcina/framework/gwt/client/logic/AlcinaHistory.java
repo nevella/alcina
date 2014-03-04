@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
+import cc.alcina.framework.gwt.client.util.Base64Utils;
 
 import com.google.gwt.user.client.History;
 
@@ -31,6 +33,9 @@ import com.google.gwt.user.client.History;
  * @author Nick Reddel
  */
 public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
+	//for testing - FF dev mode does some weird double-unencoding
+	static final String BASE64_PREFIX = "__b64__";
+
 	private static final String DOUBLE_AMP = "%26%26";
 
 	public static final String LOGIN_EVENT = "LOGIN_EVENT";
@@ -210,6 +215,14 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public static StringMap fromHash(String s) {
+		if (s.startsWith(BASE64_PREFIX)) {
+			try {
+				s = new String(Base64Utils.fromBase64(s.substring(BASE64_PREFIX
+						.length())), "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
 		StringMap map = new StringMap();
 		String key = null;
 		String value = null;
@@ -234,7 +247,6 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 					int idx2 = s.indexOf("%26", idx);
 					// double-enc of '&' - i.e. part of a value, not a separator
 					int idx3 = s.indexOf(DOUBLE_AMP, idx);
-					int idx4 = s.indexOf("&&", idx);
 					// do we have a terminator?
 					if (idx1 == -1 && idx2 == -1) {
 						idx0 = s.length();
@@ -242,12 +254,10 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 					} else {
 						idx0 = idx1 == -1 ? idx2 : idx2 == -1 ? idx1 : Math
 								.min(idx1, idx2);
-						if ((idx0 < idx3 || idx3 == -1)
-								&& (idx0 < idx4 || idx4 == -1)) {
+						if (idx0 < idx3 || idx3 == -1) {
 							break;// found terminator
 						}
-						idx = idx3 != -1 ? idx3 + DOUBLE_AMP.length() : idx4
-								+ "&&".length();
+						idx = idx3 + DOUBLE_AMP.length();
 					}
 				}
 				map.put(key,
