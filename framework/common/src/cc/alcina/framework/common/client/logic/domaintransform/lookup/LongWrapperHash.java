@@ -48,7 +48,7 @@ public class LongWrapperHash {
 		debugger;
 		var message = "losing higher bits from long: " + value.h + "," + value.m + ","
 				+ value.l;
-		console.log(message);
+		($wnd['console']) && console.log(message);
 		throw message;
 	}-*/;
 
