@@ -349,6 +349,8 @@ public class GraphProjection {
 
 		public Object sourceOwner;
 
+		private int depth;
+
 		public GraphProjectionContext(Class clazz, Field field,
 				GraphProjectionContext parent, Object projectedOwner,
 				Object sourceOwner) {
@@ -358,7 +360,8 @@ public class GraphProjection {
 			this.fieldName = field == null ? "" : field.getName();
 			this.parent = parent;
 			this.projectedOwner = projectedOwner;
-			if (depth(0) > debugDepth) {
+			this.depth = parent == null ? 0 : parent.depth + 1;
+			if (depth() > debugDepth) {
 				int debug = 0;
 			}
 		}
@@ -383,9 +386,8 @@ public class GraphProjection {
 					+ clazz.getSimpleName() + "." + fieldName;
 		}
 
-		private int depth(int self) {
-			return parent == null || self == 1000 ? self : parent
-					.depth(self + 1);
+		public int depth() {
+			return depth;
 		}
 	}
 
@@ -397,9 +399,11 @@ public class GraphProjection {
 
 		boolean permitTransient(Field field);
 	}
-	public static interface GraphProjectionDualFilter extends GraphProjectionFieldFilter,GraphProjectionDataFilter{
-		
+
+	public static interface GraphProjectionDualFilter extends
+			GraphProjectionFieldFilter, GraphProjectionDataFilter {
 	}
+
 	public static interface GraphProjectionDataFilter {
 		/*
 		 * IMPORTANT - if filterdata changes the return value (i.e. doesn't
