@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
-import cc.alcina.framework.entity.util.SortedMultiset;
+import cc.alcina.framework.common.client.util.SortedMultiset;
 
 import com.totsp.gwittir.client.beans.Converter;
 

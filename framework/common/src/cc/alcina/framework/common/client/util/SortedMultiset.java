@@ -11,13 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.entity.util;
+package cc.alcina.framework.common.client.util;
 
 import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Here because GWT RPC doesn't like this to be client-viz
  * 
  * @author nick@alcina.cc
  * 
