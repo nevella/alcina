@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -177,6 +178,10 @@ public class StatsFilter extends CollectionProjectionFilter {
 			Set<Object> owned = new LinkedHashSet<Object>();
 			for (Object o : visited.keySet()) {
 				Class<? extends Object> clazz = o.getClass();
+				if (clazz.getSimpleName().equals("ArticleVersion")) {
+					long id = ((HasIdAndLocalId) o).getId();
+					System.out.println(id);
+				}
 				StatsItem item = new StatsItem(o);
 				statsClassLookup.add(clazz, item);
 				statsItemLookup.put(o, item);
@@ -227,10 +232,10 @@ public class StatsFilter extends CollectionProjectionFilter {
 								statsClassLookup.add(clazz2, null);
 								int length = o1.toString().length();
 								if (length > 10000) {
-//									System.out.format(
-//											"large item string - %s - %s",
-//											item.o, length);
-									int j=3;
+									// System.out.format(
+									// "large item string - %s - %s",
+									// item.o, length);
+									int j = 3;
 								}
 								item.size += length;
 							} else {
