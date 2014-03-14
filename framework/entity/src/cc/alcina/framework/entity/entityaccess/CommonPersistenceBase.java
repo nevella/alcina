@@ -580,6 +580,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
 				gwpo.getClass(), gwpo.getId());
 		wrapper.setObject(gwpo);
+		
 		return wrapper.getId();
 	}
 

@@ -5,8 +5,10 @@ import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -41,18 +43,24 @@ public class WrappedObjectPersistence {
 	static Map<Class, List<PropertyDescriptor>> wrapperDescriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
 
 	public void unwrap(HasId wrapper, EntityManager entityManager,
-			WrappedObjectProvider wrappedObjectProvider) throws Exception {
+			WrappedObjectProvider wrappedObjectProvider,
+			Set<Long> invalidatedWrapperIds) throws Exception {
 		for (PropertyDescriptor pd : ensureWrapperDescriptors(wrapper
 				.getClass())) {
 			WrapperInfo info = pd.getReadMethod().getAnnotation(
 					WrapperInfo.class);
-			if (pd.getReadMethod().invoke(wrapper, new Object[0]) != null) {
-				continue;
-			}
 			PropertyDescriptor idpd = SEUtilities.getPropertyDescriptorByName(
 					wrapper.getClass(), info.idPropertyName());
 			Long wrapperId = (Long) idpd.getReadMethod().invoke(wrapper,
 					CommonUtils.EMPTY_OBJECT_ARRAY);
+			boolean invalidated = invalidatedWrapperIds.contains(wrapperId);
+			if (invalidated) {
+				invalidatedWrapperIds.remove(wrapperId);
+			}
+			if (!invalidated
+					&& pd.getReadMethod().invoke(wrapper, new Object[0]) != null) {
+				continue;
+			}
 			if (wrapperId != null) {
 				Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
 						.getPropertyType();
@@ -188,5 +196,11 @@ public class WrappedObjectPersistence {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public void unwrap(HasId wrapper, EntityManager entityManager,
+			WrappedObjectProvider wrappedObjectProvider) throws Exception {
+		unwrap(wrapper, entityManager, wrappedObjectProvider,
+				new LinkedHashSet<Long>());
 	}
 }
