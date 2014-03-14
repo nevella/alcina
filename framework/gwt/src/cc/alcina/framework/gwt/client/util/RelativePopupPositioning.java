@@ -156,6 +156,13 @@ public class RelativePopupPositioning {
 		}
 	}
 
+	public static RelativePopupPanel showPopup(
+			RelativePopupPositioningParams params, RelativePopupPanel rpp) {
+		return showPopup(params.relativeToElement, params.widgetToShow,
+				params.boundingWidget, params, params.relativeContainer,rpp,
+				params.shiftX, params.shiftY);
+	}
+
 	private static RelativePopupPanel showPopup(
 			final Element relativeToElement0, final Widget widgetToShow,
 			final Widget boundingWidget,
@@ -379,7 +386,8 @@ public class RelativePopupPositioning {
 	}
 
 	public enum OtherPositioningStrategy {
-		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP, BELOW_CENTER
+		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP,
+		BELOW_CENTER
 	}
 
 	public static class RelativePopupAxis {
@@ -395,6 +403,14 @@ public class RelativePopupPositioning {
 	}
 
 	public static class RelativePopupPositioningParams {
+		public Widget relativeContainer;
+
+		public Widget boundingWidget;
+
+		public Widget widgetToShow;
+
+		public Element relativeToElement;
+
 		public NativeEvent nativeEvent;
 
 		public int preferredFromBottom;
@@ -412,9 +428,13 @@ public class RelativePopupPositioning {
 		public int preferredTop;
 
 		public int shiftX;
+		
+		public void show(RelativePopupPanel panel){
+			RelativePopupPositioning.showPopup(this, panel);
+		}
 	}
 
-	enum AxisCoordinate {
+	public enum AxisCoordinate {
 		H_LEFT {
 			@Override
 			public AxisType axisType() {

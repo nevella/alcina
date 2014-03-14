@@ -931,4 +931,14 @@ public class WidgetUtils {
 		return anchor;
 	}
 
+	public static native Element getElementForSelector(String selector) /*-{
+		if (!($doc.querySelector)) {
+			return null;
+		}
+		return $doc.querySelector(selector);
+	}-*/;
+
+	public static native void focus(Element elem) /*-{
+		elem.focus();
+	}-*/;
 }

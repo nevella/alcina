@@ -106,18 +106,17 @@ public class BrowserMod {
 						Constants.INTERNET_EXPLORER_9_USER_AGENT) != -1;
 	}
 
-	public static boolean isIE10() {
+	public static boolean isIE10Plus() {
 		return isInternetExplorer()
-				&& getUserAgent().indexOf(
-						Constants.INTERNET_EXPLORER_10_USER_AGENT) != -1;
+				&& getUserAgent().matches(".*MSIE[1-9][0-9].*");
 	}
 
 	public static boolean isIEpre9() {
-		return isInternetExplorer() && !isIE9() && !isIE10();
+		return isInternetExplorer() && !isIE9() && !isIE10Plus();
 	}
 
 	public static boolean isIEpre10() {
-		return isInternetExplorer() && !isIE10();
+		return isInternetExplorer() && !isIE10Plus();
 	}
 
 	public static boolean isFireFox() {
@@ -228,5 +227,9 @@ public class BrowserMod {
 
 	public static boolean requiresExplicitClickForAsyncDownload() {
 		return isInternetExplorer();// ||isFireFox();
+	}
+
+	public static boolean isIEpre8() {
+		return isInternetExplorer() && !isIE9() && !isIE10Plus() && !isIE8();
 	}
 }
