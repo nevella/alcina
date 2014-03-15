@@ -1681,4 +1681,29 @@ public class AlcinaMemCache {
 	public static PerThreadTransaction ensureActiveTransaction() {
 		return get().transactional.ensureTransaction();
 	}
+
+	public class RawValueReplacerReplacer<I extends HasIdAndLocalId> extends
+			MemCacheReader<I, I> {
+		@Override
+		protected I read0(I input) throws Exception {
+			if (input == null) {
+				return null;
+			}
+			Field[] fields = new GraphProjection().getFieldsForClass(input);
+			for (Field field : fields) {
+				if (HasIdAndLocalId.class.isAssignableFrom(field.getType())) {
+					HasIdAndLocalId value = (HasIdAndLocalId) field.get(input);
+					if (value != null) {
+						I raw = (I) cache.get(field.getType(), value.getId());
+						field.set(input, raw);
+					}
+				}
+			}
+			return input;
+		}
+	}
+
+	public void replaceWithRawValues(HasIdAndLocalId hili) {
+		new RawValueReplacerReplacer<HasIdAndLocalId>().read(hili);
+	}
 }

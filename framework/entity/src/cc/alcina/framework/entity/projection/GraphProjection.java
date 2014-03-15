@@ -262,7 +262,7 @@ public class GraphProjection {
 		return perClassReadPermission.get(sourceClass);
 	}
 
-	private Field[] getFieldsForClass(Object projected) throws Exception {
+	public Field[] getFieldsForClass(Object projected) throws Exception {
 		Class<? extends Object> clazz = projected.getClass();
 		Field[] result = projectableFields.get(clazz);
 		if (result == null) {
