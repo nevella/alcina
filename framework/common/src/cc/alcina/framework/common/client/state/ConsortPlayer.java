@@ -11,8 +11,7 @@ public interface ConsortPlayer {
 		TopicListener listener = new TopicListener() {
 			@Override
 			public void topicPublished(final String key, final Object message) {
-				subConsort.deferredRemove(Consort.FINISHED, listener);
-				subConsort.deferredRemove(Consort.ERROR, listener);
+				subConsort.exitListenerDelta(listener, false, false);
 				if (key == Consort.ERROR) {
 					player.onFailure((Throwable) message);
 				} else {
@@ -47,8 +46,7 @@ public interface ConsortPlayer {
 			player.setAsynchronous(true);
 			subConsort.setParentConsort(consort);
 			consort.passLoggersAndFlagsToChild(subConsort);
-			subConsort.listenerDelta(Consort.FINISHED, listener, true);
-			subConsort.listenerDelta(Consort.ERROR, listener, true);
+			subConsort.exitListenerDelta(listener, false, true);
 			subConsort.restart();
 		}
 

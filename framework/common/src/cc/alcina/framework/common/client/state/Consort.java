@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.state;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -41,6 +42,8 @@ public class Consort<D> {
 
 	public static final transient String FINISHED = "FINISHED";
 
+	public static final transient String CANCELLED = "CANCELLED";
+
 	public static final transient String NO_ACTIVE_PLAYERS = "NO_ACTIVE_PLAYERS";
 
 	private TopicPublisher topicPublisher = new TopicPublisher();
@@ -74,7 +77,7 @@ public class Consort<D> {
 
 	protected TaggedLogger infoLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(getClass(), TaggedLogger.INFO);
-	
+
 	protected TaggedLogger debugLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(getClass(), TaggedLogger.DEBUG);
 
@@ -131,13 +134,16 @@ public class Consort<D> {
 
 	public void cancel() {
 		running = false;
-		
-		if(playing!=null){
-			for(Player player:playing){
+		if (playing != null) {
+			for (Player player : playing) {
 				if (player instanceof ConsortPlayer) {
-					((ConsortPlayer) player).getStateConsort().cancel();
+					Consort stateConsort = ((ConsortPlayer) player)
+							.getStateConsort();
+					if (stateConsort != null) {
+						stateConsort.cancel();
+					}
 				}
-				if(player!=null){
+				if (player != null) {
 					player.cancel();
 				}
 			}
@@ -164,12 +170,15 @@ public class Consort<D> {
 		return reachedStates.contains(state);
 	}
 
-	public void deferredRemove(final String key, final TopicListener listener) {
+	public void deferredRemove(final List<String> keys,
+			final TopicListener listener) {
 		Registry.impl(TimerWrapperProvider.class).scheduleDeferred(
 				new Runnable() {
 					@Override
 					public void run() {
-						listenerDelta(key, listener, false);
+						for (String key : keys) {
+							listenerDelta(key, listener, false);
+						}
 					}
 				});
 	}
@@ -296,8 +305,7 @@ public class Consort<D> {
 		}
 		metricLogger.log(CommonUtils.formatJ("%s     %s: %s ms",
 				CommonUtils.padStringLeft("", depth(), '\t'),
-				player.shortName()
-				,
+				player.shortName(),
 				System.currentTimeMillis() - player.getStart()));
 		publishTopicWithBubble(AFTER_PLAY, player);
 		consumeQueue();
@@ -525,9 +533,7 @@ public class Consort<D> {
 
 		public OneTimeFinishedAsyncCallbackAdapter(AsyncCallback callback) {
 			this.callback = callback;
-			listenerDelta(FINISHED, this, true);
-			listenerDelta(ERROR, this, true);
-			listenerDelta(NO_ACTIVE_PLAYERS, this, true);
+			exitListenerDelta(this, true, true);
 		}
 
 		public OneTimeFinishedAsyncCallbackAdapter(AsyncCallback callback,
@@ -545,7 +551,8 @@ public class Consort<D> {
 					remove = true;
 					callback.onFailure((Throwable) message);
 				} else {
-					if (key == FINISHED || key == NO_ACTIVE_PLAYERS) {
+					if (key == FINISHED || key == NO_ACTIVE_PLAYERS
+							|| key == CANCELLED) {
 						if (state == null) {
 							remove = true;
 							callback.onSuccess(message);
@@ -562,10 +569,8 @@ public class Consort<D> {
 				}
 			} finally {
 				if (remove) {
-					deferredRemove(FINISHED, this);
-					deferredRemove(ERROR, this);
-					deferredRemove(NO_ACTIVE_PLAYERS, this);
-					deferredRemove(STATES, this);
+					exitListenerDelta(this, true, false);
+					deferredRemove(Arrays.asList(STATES), this);
 				}
 			}
 		}
@@ -612,5 +617,20 @@ public class Consort<D> {
 		child.metricLogger = metricLogger;
 		child.infoLogger = infoLogger;
 		child.setSimulate(isSimulate());
+	}
+
+	public void exitListenerDelta(TopicListener listener,
+			boolean includeNoActivePlayers, boolean add) {
+		if (add) {
+			listenerDelta(Consort.CANCELLED, listener, true);
+			listenerDelta(Consort.ERROR, listener, true);
+			listenerDelta(Consort.FINISHED, listener, true);
+			if (includeNoActivePlayers) {
+				listenerDelta(Consort.NO_ACTIVE_PLAYERS, listener, true);
+			}
+		} else {
+			deferredRemove(Arrays.asList(Consort.CANCELLED, Consort.ERROR,
+					Consort.FINISHED, Consort.NO_ACTIVE_PLAYERS), listener);
+		}
 	}
 }

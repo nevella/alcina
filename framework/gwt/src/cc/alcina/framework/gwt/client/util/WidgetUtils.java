@@ -931,14 +931,38 @@ public class WidgetUtils {
 		return anchor;
 	}
 
-	public static native Element getElementForSelector(String selector) /*-{
+	public static native Element getElementForSelector(Element elt,
+			String selector) /*-{
 		if (!($doc.querySelector)) {
 			return null;
 		}
-		return $doc.querySelector(selector);
+		var from = (elt) ? elt : $doc;
+		if (selector.indexOf("::") != -1) {
+			var splits = selector.split("::");
+			var nl = from.querySelectorAll(splits[0]);
+			for (var i = 0; i < nl.length; i++) {
+				var item = nl[i];
+				if (item.innerHTML.indexOf(splits[1]) != -1
+						|| item.innerHTML.match(new RegExp(splits[1]))) {
+					return item;
+				}
+			}
+			return null;
+		} else {
+			return from.querySelector(selector);
+		}
 	}-*/;
 
 	public static native void focus(Element elem) /*-{
 		elem.focus();
+	}-*/;
+
+	public static final native void click(Element elt) /*-{
+		elt.click();
+		try {
+			elt.focus();
+		} catch (e) {
+
+		}
 	}-*/;
 }

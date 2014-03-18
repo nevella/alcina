@@ -1,9 +1,17 @@
 package cc.alcina.framework.common.client.state;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 	protected Object lastCallbackResult;
+
+	protected int timeout;
+
+	private long startTime;
 
 	public AllStatesConsort(Class<E> enumClass,
 			AsyncCallback<Void> endpointCallback) {
@@ -14,6 +22,33 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 	}
 
 	public abstract void runPlayer(AllStatesPlayer allStatesPlayer, E next);
+
+	public void retry(final AllStatesPlayer allStatesPlayer, final E state,
+			int delay) {
+		Runnable replayer = new Runnable() {
+			@Override
+			public void run() {
+				if (System.currentTimeMillis() - startTime > timeout) {
+					timedOut(allStatesPlayer,state);
+					cancel();
+				} else {
+					runPlayer(allStatesPlayer, state);
+				}
+			}
+		};
+		Registry.impl(TimerWrapperProvider.class).getTimer(replayer)
+				.scheduleSingle(delay);
+	}
+
+	protected void timedOut(AllStatesPlayer allStatesPlayer, E state) {
+		
+	}
+
+	@Override
+	public void start() {
+		this.startTime = System.currentTimeMillis();
+		super.start();
+	}
 
 	public class AllStatesPlayer extends EnumPlayer<E> implements
 			ConsortPlayer, AsyncCallback, Runnable {

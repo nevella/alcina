@@ -159,8 +159,8 @@ public class RelativePopupPositioning {
 	public static RelativePopupPanel showPopup(
 			RelativePopupPositioningParams params, RelativePopupPanel rpp) {
 		return showPopup(params.relativeToElement, params.widgetToShow,
-				params.boundingWidget, params, params.relativeContainer,rpp,
-				params.shiftX, params.shiftY);
+				params.boundingWidget, params, params.relativeContainer, rpp,
+				0, 0);
 	}
 
 	private static RelativePopupPanel showPopup(
@@ -259,6 +259,7 @@ public class RelativePopupPositioning {
 				case BELOW_CENTER:
 					x += positioningParams.shiftX;
 					x -= rw / 2;
+					x += relW / 2;
 					y += positioningParams.shiftY;
 					break;
 				case RIGHT_OR_LEFT_WITH_PREFERRED_TOP:
@@ -428,8 +429,8 @@ public class RelativePopupPositioning {
 		public int preferredTop;
 
 		public int shiftX;
-		
-		public void show(RelativePopupPanel panel){
+
+		public void show(RelativePopupPanel panel) {
 			RelativePopupPositioning.showPopup(this, panel);
 		}
 	}

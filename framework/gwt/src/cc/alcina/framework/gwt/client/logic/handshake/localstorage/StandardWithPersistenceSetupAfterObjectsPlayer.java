@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.logic.handshake.localstorage;
 
+import java.util.Arrays;
+
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Consort;
@@ -17,26 +19,30 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public abstract class StandardWithPersistenceSetupAfterObjectsPlayer extends
 		SetupAfterObjectsPlayer {
 	private SaveToLocalStorageConsort saveConsort;
+
 	DatabaseStatsObserver statsObserver = Registry
-				.impl(DatabaseStatsObserver.class);
+			.impl(DatabaseStatsObserver.class);
+
 	protected AsyncCallback reportListener = new AsyncCallbackStd() {
-			@Override
-			public void onSuccess(Object result) {
-				AlcinaTopics
-						.logCategorisedMessage(new StringPair(
-								AlcinaTopics.LOG_CATEGORY_MESSAGE,
-								"After object serialization:\n"
-										+ statsObserver.getReport()));
-				statsObserver.installPersistenceListeners();
-			}
-		};
+		@Override
+		public void onSuccess(Object result) {
+			AlcinaTopics
+					.logCategorisedMessage(new StringPair(
+							AlcinaTopics.LOG_CATEGORY_MESSAGE,
+							"After object serialization:\n"
+									+ statsObserver.getReport()));
+			statsObserver.installPersistenceListeners();
+		}
+	};
+
 	private TopicListener finishedListener = new TopicListener() {
-			@Override
-			public void topicPublished(String key, Object message) {
-				statsObserver.recalcWithListener(reportListener);
-				saveConsort.deferredRemove(Consort.FINISHED, finishedListener);
-			}
-		};
+		@Override
+		public void topicPublished(String key, Object message) {
+			statsObserver.recalcWithListener(reportListener);
+			saveConsort.deferredRemove(Arrays.asList(Consort.FINISHED),
+					finishedListener);
+		}
+	};
 
 	public StandardWithPersistenceSetupAfterObjectsPlayer() {
 		super();
@@ -44,8 +50,7 @@ public abstract class StandardWithPersistenceSetupAfterObjectsPlayer extends
 
 	@Override
 	public void run() {
-		DevCSSHelper.get().addCssListeners(
-				ClientBase.getGeneralProperties());
+		DevCSSHelper.get().addCssListeners(ClientBase.getGeneralProperties());
 		saveToLocalPersistenceAndStat();
 	}
 
