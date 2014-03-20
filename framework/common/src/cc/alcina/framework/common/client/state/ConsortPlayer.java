@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.state;
 
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -16,10 +17,18 @@ public interface ConsortPlayer {
 					player.onFailure((Throwable) message);
 				} else {
 					if (fireEndState) {
-						if (stateToFireAfterConsortEnd != null) {
-							player.wasPlayed(stateToFireAfterConsortEnd);
-						} else {
-							player.wasPlayed();
+						try {
+							LooseContext
+									.pushWithKey(
+											Consort.IGNORE_PLAYED_STATES_IF_NOT_CONTAINED,
+											true);
+							if (stateToFireAfterConsortEnd != null) {
+								player.wasPlayed(stateToFireAfterConsortEnd);
+							} else {
+								player.wasPlayed();
+							}
+						} finally {
+							LooseContext.pop();
 						}
 					}
 				}

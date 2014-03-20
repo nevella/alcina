@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher;
@@ -45,6 +46,9 @@ public class Consort<D> {
 	public static final transient String CANCELLED = "CANCELLED";
 
 	public static final transient String NO_ACTIVE_PLAYERS = "NO_ACTIVE_PLAYERS";
+
+	protected static final String IGNORE_PLAYED_STATES_IF_NOT_CONTAINED = Consort.class
+			.getName() + ".IGNORE_PLAYED_STATES_IF_NOT_CONTAINED";
 
 	private TopicPublisher topicPublisher = new TopicPublisher();
 
@@ -290,6 +294,11 @@ public class Consort<D> {
 	public void wasPlayed(Player<D> player, Collection<D> resultantStates) {
 		if (!isRunning()) {
 			return;
+		}
+		if (!playing.contains(player)) {
+			if (LooseContext.is(IGNORE_PLAYED_STATES_IF_NOT_CONTAINED)) {
+				return;
+			}
 		}
 		playedCount++;
 		assert playing.contains(player);
