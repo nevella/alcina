@@ -225,10 +225,16 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 		insertDecoratorHtml("div.popupTopCenterInner", "popupTopCenterInner2");
 	}
 
+	public void arrowCenterDown() {
+		addStyleName("arrow-center-down");
+		insertDecoratorHtml("div.popupBottomCenterInner",
+				"popupBottomCenterInner1");
+		insertDecoratorHtml("div.popupBottomCenterInner",
+				"popupBottomCenterInner2");
+	}
+
 	public void arrowLeftUp() {
 		arrowCenterUp();
 		addStyleName("arrow-center-up arrow-left-up");
-		
-		
 	}
 }

@@ -48,6 +48,12 @@ public enum FilterOperator {
 		public String operationText() {
 			return "<=";
 		}
+	},
+	MATCHES {
+		@Override
+		public String operationText() {
+			return "[matches]";
+		}
 	};
 	public abstract String operationText();
 }

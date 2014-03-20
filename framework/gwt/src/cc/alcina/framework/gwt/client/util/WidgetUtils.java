@@ -377,6 +377,8 @@ public class WidgetUtils {
 	public static void scrollBodyTo(int y) {
 		BodyElement body = Document.get().getBody();
 		body.setPropertyInt("scrollTop", y);
+		Element documentElement = Document.get().getDocumentElement();
+		documentElement.setPropertyInt("scrollTop", y);
 	}
 
 	private static List<Widget> hiddenWidgets;
@@ -687,8 +689,10 @@ public class WidgetUtils {
 
 	public static void squelchCurrentEvent() {
 		Event currentEvent = Event.getCurrentEvent();
-		currentEvent.stopPropagation();
-		currentEvent.preventDefault();
+		if (currentEvent != null) {
+			currentEvent.stopPropagation();
+			currentEvent.preventDefault();
+		}
 	}
 
 	public static boolean isNewTabModifier() {
@@ -783,9 +787,7 @@ public class WidgetUtils {
 		y2 = y1 + Window.getClientHeight();
 		absoluteTop = e.getAbsoluteTop();
 		if (absoluteTop < y1 || absoluteTop > y2 || fromTop != 0) {
-			BodyElement body = Document.get().getBody();
-			body.setPropertyInt("scrollTop",
-					(Math.max(0, absoluteTop - fromTop)));
+			scrollBodyTo((Math.max(0, absoluteTop - fromTop)));
 		}
 	}
 
@@ -803,18 +805,15 @@ public class WidgetUtils {
 	}
 
 	public static boolean isVisibleAncestorChain(Widget w) {
-		while (w != null) {
-			if (!w.isVisible()) {
-				return false;
-			}
-			w = w.getParent();
-		}
-		return true;
+		return isVisibleAncestorChain(w.getElement());
 	}
 
 	public static boolean isVisibleAncestorChain(Element e) {
 		while (e != null) {
 			if (!UIObject.isVisible(e)) {
+				return false;
+			}
+			if ("hidden".equals(e.getStyle().getVisibility())) {
 				return false;
 			}
 			e = e.getParentElement();

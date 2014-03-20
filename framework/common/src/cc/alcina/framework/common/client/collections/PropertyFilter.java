@@ -85,6 +85,11 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 			match = !CommonUtils.equalsWithNullEquality(propertyValue,
 					tupleValue);
 			break;
+		case MATCHES:
+			if(propertyValue==null){
+				return false;
+			}
+			return propertyValue.toString().matches(tupleValue.toString());
 		}
 		return match;
 	}
