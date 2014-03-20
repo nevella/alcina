@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.util;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,9 @@ import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArray;
+import com.google.gwt.core.client.JsArrayString;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NodeList;
@@ -68,10 +72,14 @@ public class ClientUtils {
 			}
 			t = t.getCause();
 		}
-		if (t.getMessage() != null && t.getMessage().contains("IOException while sending RPC request")) {
+		if (t.getMessage() != null
+				&& t.getMessage().contains(
+						"IOException while sending RPC request")) {
 			return true;
 		}
-		if (t.getMessage() != null && t.getMessage().contains("IOException while receiving RPC response")) {
+		if (t.getMessage() != null
+				&& t.getMessage().contains(
+						"IOException while receiving RPC response")) {
 			return true;
 		}
 		if (t instanceof StatusCodeException) {
@@ -124,15 +132,15 @@ public class ClientUtils {
 
 	public static native boolean setCssTextViaCssTextProperty(Element styleTag,
 			String css) /*-{
-						var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+		var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
-						if ('cssText' in sheet) { // Internet Explorer
-						sheet.cssText = css;
-						return true;
-						}
+		if ('cssText' in sheet) { // Internet Explorer
+			sheet.cssText = css;
+			return true;
+		}
 
-						return false;//do innerText
-						}-*/;
+		return false;//do innerText
+	}-*/;
 
 	private static void addHidden(Panel p, String key, String value) {
 		p.add(new Hidden(key, value));
@@ -169,8 +177,8 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger() /*-{
-													debugger;
-													}-*/;
+		debugger;
+	}-*/;
 
 	public static void fireHistoryToken(String token) {
 		if (token == null) {
@@ -330,9 +338,9 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger(Element e) /*-{
-															var v = e;
-															debugger;
-															}-*/;
+		var v = e;
+		debugger;
+	}-*/;
 
 	public static String getHashIfSelfrefUrl(Element anchor) {
 		String href = anchor.getAttribute("href");
@@ -344,5 +352,23 @@ public class ClientUtils {
 		}
 		return href.startsWith("#") && href.length() > 1 ? href.substring(1)
 				: null;
+	}
+
+	public static List<String> jsStringArrayAsStringList(
+			JsArrayString arrayString) {
+		List<String> result = new ArrayList<String>();
+		for (int i = 0; i < arrayString.length(); i++) {
+			result.add(arrayString.get(i));
+		}
+		return result;
+	}
+
+	public static <T extends JavaScriptObject> List<T> jsStringArrayToTypedArray(
+			JsArray<T> typedArray) {
+		List<T> result = new ArrayList<T>();
+		for (int i = 0; i < typedArray.length(); i++) {
+			result.add(typedArray.get(i));
+		}
+		return result;
 	}
 }

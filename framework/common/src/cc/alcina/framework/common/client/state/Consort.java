@@ -450,6 +450,14 @@ public class Consort<D> {
 	}
 
 	protected void consumeQueue() {
+		try {
+			consumeQueue0();
+		} catch (Throwable e) {
+			onFailure(e);
+		}
+	}
+
+	private void consumeQueue0() {
 		if (!canAddPlayers() || consumingQueue || !running) {
 			return;
 		}
