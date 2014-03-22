@@ -936,20 +936,29 @@ public class WidgetUtils {
 			return null;
 		}
 		var from = (elt) ? elt : $doc;
-		if (selector.indexOf("::") != -1) {
-			var splits = selector.split("::");
-			var nl = from.querySelectorAll(splits[0]);
+		var splits = selector.split("::");
+		for (var idx = 0; idx < splits.length; idx += 2) {
+			var selectorPart = splits[idx];
+			var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
+			if (textRegex == null) {
+				return from.querySelector(selectorPart);
+			}
+			var nl = from.querySelectorAll(splits[idx]);
+			var found = false;
 			for (var i = 0; i < nl.length; i++) {
 				var item = nl[i];
-				if (item.innerHTML.indexOf(splits[1]) != -1
-						|| item.innerHTML.match(new RegExp(splits[1]))) {
-					return item;
+				if (item.innerHTML.indexOf(textRegex) != -1
+						|| item.innerHTML.match(new RegExp(textRegex))) {
+					from = item;
+					found = true;
+					break;
 				}
 			}
-			return null;
-		} else {
-			return from.querySelector(selector);
+			if (!found) {
+				return null;
+			}
 		}
+		return from;
 	}-*/;
 
 	public static native void focus(Element elem) /*-{

@@ -363,7 +363,7 @@ public class ClientUtils {
 		return result;
 	}
 
-	public static <T extends JavaScriptObject> List<T> jsStringArrayToTypedArray(
+	public static <T extends JavaScriptObject> List<T> jsArrayToTypedArray(
 			JsArray<T> typedArray) {
 		List<T> result = new ArrayList<T>();
 		for (int i = 0; i < typedArray.length(); i++) {

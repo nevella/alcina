@@ -259,6 +259,34 @@ public class RelativePopupPositioning {
 						y += relH;
 					}
 					break;
+				case BELOW_RIGHT:
+					x += positioningParams.shiftX;
+					x -= offsetWidth;
+					x += relW;
+					if (x < 0) {
+						x = 0;
+					}
+					if (x + rw > bw) {
+						x = bw - rw;
+					}
+					y += positioningParams.shiftY;
+					if (positioningParams.addRelativeWidgetHeight) {
+						y += relH;
+					}
+					break;
+				case ABOVE_RIGHT:
+					x += positioningParams.shiftX;
+					x -= offsetWidth;
+					x += relW;
+					if (x < 0) {
+						x = 0;
+					}
+					if (x + rw > bw) {
+						x = bw - rw;
+					}
+					y += positioningParams.shiftY;
+					y-=offsetHeight;
+					break;
 				case BELOW_CENTER:
 					x += positioningParams.shiftX;
 					x -= rw / 2;
@@ -401,7 +429,7 @@ public class RelativePopupPositioning {
 
 	public enum OtherPositioningStrategy {
 		BELOW_WITH_PREFERRED_LEFT, RIGHT_OR_LEFT_WITH_PREFERRED_TOP,
-		BELOW_CENTER, ABOVE_CENTER
+		BELOW_CENTER, ABOVE_CENTER, BELOW_RIGHT, ABOVE_RIGHT
 	}
 
 	public static class RelativePopupAxis {

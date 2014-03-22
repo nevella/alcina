@@ -237,4 +237,14 @@ public class DecoratedRelativePopupPanel extends RelativePopupPanel {
 		arrowCenterUp();
 		addStyleName("arrow-center-up arrow-left-up");
 	}
+
+	public void arrowRightUp() {
+		arrowCenterUp();
+		addStyleName("arrow-center-up arrow-right-up");
+	}
+
+	public void arrowRightDown() {
+		arrowCenterDown();
+		addStyleName("arrow-center-down arrow-right-down");		
+	}
 }
