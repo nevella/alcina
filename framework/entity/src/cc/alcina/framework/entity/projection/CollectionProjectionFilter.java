@@ -5,10 +5,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 
 public class CollectionProjectionFilter implements GraphProjectionDataFilter {
+	
+
 	@SuppressWarnings("unchecked")
 	public <T> T filterData(T original, T projected,
 			GraphProjectionContext context, GraphProjection graphProjection)
@@ -28,8 +32,11 @@ public class CollectionProjectionFilter implements GraphProjectionDataFilter {
 		if (original instanceof Map) {
 			return (T) projectMap((Map) original, context, graphProjection);
 		}
+		
 		return projected;
 	}
+
+	
 
 	private Object projectMap(Map map, GraphProjectionContext context,
 			GraphProjection graphProjection) throws Exception {

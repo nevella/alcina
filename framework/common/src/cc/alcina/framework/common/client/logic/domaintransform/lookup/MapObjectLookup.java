@@ -3,7 +3,9 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 import java.beans.PropertyChangeListener;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -79,6 +81,10 @@ public abstract class MapObjectLookup implements ObjectStore {
 		return (Collection<T>) ensureLookup(clazz).values();
 	}
 
+	public <T> Collection<T> values(Class<T> clazz) {
+		return (Collection<T>) ensureLookup(clazz).values();
+	}
+
 	@Override
 	public Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> getCollectionMap() {
 		return this.perClassLookups.getCollnMap();
@@ -139,7 +145,7 @@ public abstract class MapObjectLookup implements ObjectStore {
 
 		public void put(HasIdAndLocalId obj) {
 			FastIdLookup lookup = ensureLookup(obj.getClass());
-			lookup.put(obj,obj.getId()==0);
+			lookup.put(obj, obj.getId() == 0);
 		}
 
 		FastIdLookup ensureLookup(Class c) {
@@ -154,5 +160,14 @@ public abstract class MapObjectLookup implements ObjectStore {
 		FastIdLookup getLookup(Class c) {
 			return lookups.get(c);
 		}
+	}
+
+	public Set<HasIdAndLocalId> allValues() {
+		Set<HasIdAndLocalId> result = new LinkedHashSet<HasIdAndLocalId>();
+		for (Collection<HasIdAndLocalId> collection : getCollectionMap()
+				.values()) {
+			result.addAll(collection);
+		}
+		return result;
 	}
 }

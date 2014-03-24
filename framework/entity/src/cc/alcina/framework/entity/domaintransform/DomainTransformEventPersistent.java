@@ -27,6 +27,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.ResourceUtilities;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 @MappedSuperclass
 /**
  *
@@ -79,9 +81,13 @@ public abstract class DomainTransformEventPersistent extends
 	 * Important: if the non-persistent event is to be used, make sure the
 	 * object/value localIds are set to 0 or else all hell may break loose
 	 */
-	public DomainTransformEvent toNonPersistentEvent() {
+	public DomainTransformEvent toNonPersistentEvent(boolean clearLocalIds) {
 		DomainTransformEvent event = new DomainTransformEvent();
 		ResourceUtilities.copyBeanProperties(this, event, null, true);
+		if (clearLocalIds) {
+			event.setObjectLocalId(0);
+			event.setValueLocalId(0);
+		}
 		// this is purely decorative, so client reflection can show the server
 		// id of the transform (since raw DTE has no id field)
 		event.setEventId(getId());
@@ -119,5 +125,14 @@ public abstract class DomainTransformEventPersistent extends
 		CommitType ct = rs.wasNull() ? null : CommitType.class
 				.getEnumConstants()[i];
 		setCommitType(ct);
+	}
+
+	public static class DomainTransformFromPersistentConverter implements
+			Converter<DomainTransformEventPersistent, DomainTransformEvent> {
+		@Override
+		public DomainTransformEvent convert(
+				DomainTransformEventPersistent original) {
+			return original.toNonPersistentEvent(true);
+		}
 	}
 }

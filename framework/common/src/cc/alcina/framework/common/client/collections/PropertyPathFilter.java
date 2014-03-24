@@ -36,7 +36,7 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 	@Override
 	public boolean allow(T o) {
 		Object propertyValue = accessor.getChainedProperty(o);
-		if (targetIsCollection) {
+		if (targetIsCollection && filterOperator == FilterOperator.EQ) {
 			return ((Collection) targetValue).contains(o);
 		}
 		if (propertyValue instanceof Collection) {

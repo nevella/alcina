@@ -43,9 +43,7 @@ public class TransformCache implements
 	}
 
 	private void putSharedEvent(DomainTransformEventPersistent event) {
-		DomainTransformEvent nonPersistentEvent = event.toNonPersistentEvent();
-		nonPersistentEvent.setObjectLocalId(0);
-		nonPersistentEvent.setValueLocalId(0);
+		DomainTransformEvent nonPersistentEvent = event.toNonPersistentEvent(true);
 		sharedLookup.put(event.getId(), nonPersistentEvent);
 	}
 
@@ -60,10 +58,7 @@ public class TransformCache implements
 		if (!perUserLookup.containsKey(userId)) {
 			perUserLookup.put(userId, new TransformIdLookup());
 		}
-		DomainTransformEvent nonPersistentEvent = event.toNonPersistentEvent();
-		// very important - local ids MUST be 'pure' (per-client)
-		nonPersistentEvent.setObjectLocalId(0);
-		nonPersistentEvent.setValueLocalId(0);
+		DomainTransformEvent nonPersistentEvent = event.toNonPersistentEvent(true);
 		perUserLookup.get(userId).put(event.getId(), nonPersistentEvent);
 	}
 

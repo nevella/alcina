@@ -8,6 +8,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
@@ -15,7 +16,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFiel
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 public class GraphProjections {
-	public  static GraphProjections allow(Class... classes) {
+	public static GraphProjections allow(Class... classes) {
 		GraphProjections instance = new GraphProjections();
 		instance.permittedClasses.addAll(Arrays.asList(classes));
 		return instance;
@@ -53,8 +54,8 @@ public class GraphProjections {
 	}
 
 	public GraphProjections implCallback(InstantiateImplCallback callback) {
-		dataFilter = Registry.impl(JPAImplementation.class)
-				.getResolvingFilter(callback, new DetachedEntityCache());
+		dataFilter = Registry.impl(JPAImplementation.class).getResolvingFilter(
+				callback, new DetachedEntityCache());
 		return this;
 	}
 
@@ -66,7 +67,6 @@ public class GraphProjections {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-
 
 	public GraphProjections strict() {
 		fieldFilter = new StrictAllowForbid();
@@ -116,5 +116,20 @@ public class GraphProjections {
 			}
 			return super.permitClass(clazz);
 		}
+	}
+
+	public static MapObjectLookup reachableForClasses(Object target,
+			Class... classes) {
+		CollectionProjectionFilterWithCache dataFilter = (CollectionProjectionFilterWithCache) Registry
+				.impl(CollectionProjectionFilter.class);
+		allow(classes).dataFilter(dataFilter).project(target);
+		return dataFilter.getObjectLookup();
+	}
+
+	public static MapObjectLookup reachable(Object target) {
+		CollectionProjectionFilterWithCache dataFilter = (CollectionProjectionFilterWithCache) Registry
+				.impl(CollectionProjectionFilter.class);
+		defaultProjections().dataFilter(dataFilter).project(target);
+		return dataFilter.getObjectLookup();
 	}
 }

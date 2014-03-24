@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.collections;
 
+import java.util.Collection;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -35,7 +37,7 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 	}
 
 	public PropertyFilter add(String key, Object value, FilterOperator operator) {
-		tuple=new PropertyFilterTuple(key, value, operator);
+		tuple = new PropertyFilterTuple(key, value, operator);
 		return this;
 	}
 
@@ -86,10 +88,16 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 					tupleValue);
 			break;
 		case MATCHES:
-			if(propertyValue==null){
+			if (propertyValue == null) {
 				return false;
 			}
 			return propertyValue.toString().matches(tupleValue.toString());
+		case IN: {
+			if (propertyValue == null) {
+				return false;
+			}
+			return ((Collection) tupleValue).contains(propertyValue);
+		}
 		}
 		return match;
 	}

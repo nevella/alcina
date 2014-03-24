@@ -1161,7 +1161,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				CommitType.TO_LOCAL_BEAN).clone();
 		for (DomainTransformEvent dte : trs) {
 			if (c.contains(dte.provideSourceOrMarker())
-					|| c.contains(dte.getNewValue())) {
+					|| c.contains(dte.getNewValue())
+					|| c.contains(dte.provideTargetMarkerForRemoval())) {
 				removeTransform(dte);
 			}
 		}

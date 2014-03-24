@@ -281,6 +281,21 @@ public class DomainTransformEvent implements Serializable,
 		return source;
 	}
 
+	/*
+	 * only used for removing existing transforms, it's not the real object
+	 */
+	public HasIdAndLocalId provideTargetMarkerForRemoval() {
+		if (valueId != 0 || valueLocalId != 0) {
+			HasIdAndLocalId hili = (HasIdAndLocalId) Reflections.classLookup()
+					.newInstance(getValueClass());
+			hili.setId(valueId);
+			hili.setLocalId(valueLocalId);
+			return hili;
+		} else {
+			return null;
+		}
+	}
+
 	public boolean related(DomainTransformEvent itrEvent) {
 		if (transformType == TransformType.DELETE_OBJECT) {
 			if (itrEvent.getTransformType() == TransformType.REMOVE_REF_FROM_COLLECTION

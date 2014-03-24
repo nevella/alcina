@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -42,13 +43,13 @@ public class ServletLayerUtils {
 		return pendingTransformCount;
 	}
 
-	public static DomainTransformResponse pushTransforms(String tag,
+	public static DomainTransformLayerWrapper pushTransforms(String tag,
 			boolean asRoot, boolean returnResponse) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
 		if (pendingTransformCount == 0) {
 			ThreadlocalTransformManager.cast().resetTltm(null);
-			return new DomainTransformResponse();
+			return new DomainTransformLayerWrapper();
 		}
 		if (AppPersistenceBase.isTest()) {
 			return null;
@@ -64,10 +65,10 @@ public class ServletLayerUtils {
 				CascadingTransformSupport cascadingTransformSupport = CascadingTransformSupport
 						.get();
 				cascadingTransformSupport.beforeTransform();
-				DomainTransformResponse response = Registry
+				DomainTransformLayerWrapper wrapper = Registry
 						.impl(CommonRemoteServletProvider.class)
 						.getCommonRemoteServiceServlet()
-						.transformFromServletLayer(tag).response;
+						.transformFromServletLayer(tag);
 				// see preamble to cascading transform support
 				while (cascadingTransformSupport.hasChildren()) {
 					synchronized (cascadingTransformSupport) {
@@ -75,7 +76,7 @@ public class ServletLayerUtils {
 					}
 				}
 				cascadingTransformSupport.afterTransform();
-				return response;
+				return wrapper;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -90,7 +91,7 @@ public class ServletLayerUtils {
 
 	public static long pushTransformsAndGetFirstCreationId(boolean asRoot) {
 		DomainTransformResponse transformResponse = pushTransforms(null,
-				asRoot, true);
+				asRoot, true).response;
 		DomainTransformEvent first = CommonUtils.first(transformResponse
 				.getEventsToUseForClientUpdate());
 		return first == null ? 0 : first.getGeneratedServerId();
@@ -99,7 +100,7 @@ public class ServletLayerUtils {
 	public static long pushTransformsAndReturnId(boolean asRoot,
 			HasIdAndLocalId returnIdFor) {
 		DomainTransformResponse transformResponse = pushTransforms(null,
-				asRoot, true);
+				asRoot, true).response;
 		for (DomainTransformEvent dte : transformResponse
 				.getEventsToUseForClientUpdate()) {
 			if (dte.getObjectLocalId() == returnIdFor.getLocalId()
