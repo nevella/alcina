@@ -174,7 +174,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	DomainTransformEvent lastEvent = null;
 
 	private boolean initialised = false;
-
+//TODO - permissions check
 	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception {
 		List<ObjectDeltaResult> result = new ArrayList<ObjectDeltaResult>();
@@ -198,7 +198,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				itemResult.setTransforms(objectsToDtes(results,
 						assoc.implementationClass(), true));
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			result.add(itemResult);
