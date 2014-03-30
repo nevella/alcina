@@ -519,8 +519,8 @@ public class SEUtilities {
 				+ CommonUtils.capitaliseFirst(field.getName());
 	}
 
-	public static File getChildFile(File folder, String path) {
-		return new File(String.format("%s/%s", folder.getPath(), path));
+	public static File getChildFile(File folder, String childFileName) {
+		return new File(String.format("%s/%s", folder.getPath(), childFileName));
 	}
 
 	public static File getDesktopFolder() {

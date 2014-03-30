@@ -27,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Locale;
@@ -121,6 +122,14 @@ public class ImgUtilities {
 		img = resizeToMaxWidth(img, maxWidth);
 		writeJpeg(img, new FileOutputStream(tgt), 0.8f);
 	}
+	
+	public static void toJpegThumbnail(InputStream src, OutputStream tgt, int maxWidth)
+			throws Exception {
+		BufferedImage img = ImageIO.read(src);
+		img = resizeToMaxWidth(img, maxWidth);
+		writeJpeg(img, tgt, 0.8f);
+	}
+	
 	public static void toPngThumbnail(File src, File tgt, int maxWidth)
 			throws Exception {
 		BufferedImage img = ImageIO.read(src);
