@@ -319,8 +319,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				try {
 					// different thread-local
 					tLooseContextDepth = LooseContext.depth();
-					onAfterSpawnedThreadRun(this);
 					pm.copyTo(PermissionsManager.get());
+					onAfterSpawnedThreadRun(this);
 					ActionLogItem result = null;
 					result = performer.performAction(action);
 					result.setActionClass(action.getClass());
@@ -351,6 +351,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		thread.setPriority(Thread.MIN_PRIORITY);
 		thread.start();
 		onBeforeSpawnedThreadRun(thread);
+		//make sure we wait a bit before exiting, so the spawned thread can copy the pm
+		try {
+			Thread.sleep(50);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		return thread.getId();
 	}
 
