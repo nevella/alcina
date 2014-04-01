@@ -268,7 +268,11 @@ public class LogStoreInterceptors {
 				cn = cn.baseVal;
 			}
 			if ((typeof cn).toLowerCase() != "string") {
-				debugger;
+				if (cn && cn.toString().toLowerCase().indexOf("svg") != -1) {
+					cn = 'svg-string';
+				} else {
+					debugger;
+				}
 			}
 		} catch (e) {
 			return "";
