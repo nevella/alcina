@@ -85,6 +85,20 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 	private DomainTransformRequest committingRequest;
 
+	private boolean localStorageOnly;
+
+	/*
+	 * vaguely hacky, if we're connected but need to do some fancy footwork
+	 * before uploading offline transforms
+	 */
+	public boolean isLocalStorageOnly() {
+		return this.localStorageOnly;
+	}
+
+	public void setLocalStorageOnly(boolean localStorageOnly) {
+		this.localStorageOnly = localStorageOnly;
+	}
+
 	public static final String COMMITTING = "COMMITTING";
 
 	public static final String COMMITTED = "COMMITTED";
@@ -374,6 +388,10 @@ public class CommitToStorageTransformListener extends StateListenable implements
 		committingRequest = dtr;
 		fireStateChanged(COMMITTING);
 		priorRequestsWithoutResponse.add(dtr);
+		if (isLocalStorageOnly()) {
+			fireStateChanged(OFFLINE);
+			return;
+		}
 		if (PermissionsManager.get().getOnlineState() == OnlineState.OFFLINE) {
 			ClientBase.getCommonRemoteServiceAsyncInstance().ping(
 					new AsyncCallback<Void>() {

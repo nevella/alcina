@@ -326,7 +326,7 @@ public abstract class ClientTransformManager extends TransformManager {
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		for (ClientPropertyReflector pr : prs) {
-			if (bi.getAnnotation(SyntheticGetter.class) != null) {
+			if (pr.getAnnotation(SyntheticGetter.class) != null) {
 				continue;
 			}
 			DomainTransformEvent dte = new DomainTransformEvent();
