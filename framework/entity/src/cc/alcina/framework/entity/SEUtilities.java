@@ -843,11 +843,6 @@ public class SEUtilities {
 		return map;
 	}
 
-	public static boolean localTestMode() {
-		return Boolean
-				.valueOf(System.getProperty("alcina.local.test", "false"));
-	}
-
 	public static Map<String, File> makeSingleLevelFileMap(File[] files) {
 		Map<String, File> m = new HashMap<String, File>();
 		for (File file : files) {

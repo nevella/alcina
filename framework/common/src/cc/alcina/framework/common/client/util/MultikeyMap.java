@@ -5,10 +5,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 public interface MultikeyMap<V> {
+	public abstract <T> void addTupleObjects(List<T> tupleObjects,
+			Converter<T, List> converter);
+
+	public abstract void addTuples(List<List> tuples);
+
 	public abstract List<V> allValues();
 
 	public abstract MultikeyMap asMap(Object... objects);
+
+	public abstract MultikeyMap<V> asMapEnsure(boolean ensure,
+			Object... objects);
+
+	public abstract <T> List<T> asTupleObjects(int maxDepth,
+			Converter<List, T> converter);
+
+	public abstract List<List> asTuples(int depth);
+
+	public abstract boolean checkKeys(Object[] keys);
+
+	public abstract void clear();
 
 	public abstract boolean containsKey(Object... objects);
 
@@ -42,6 +61,8 @@ public interface MultikeyMap<V> {
 
 	public abstract <T> Collection<T> values(Object... objects);
 
+	public abstract Map writeableDelegate();
+
 	void addValues(List<V> values);
 
 	V getEnsure(boolean ensure, Object... objects);
@@ -51,14 +72,4 @@ public interface MultikeyMap<V> {
 	void putMulti(MultikeyMap<V> multi);
 
 	void setDepth(int depth);
-
-	public abstract Map writeableDelegate();
-
-	public abstract void clear();
-
-	public abstract List<List> asTuples(int depth);
-
-	public abstract boolean checkKeys(Object[] keys);
-
-	public abstract MultikeyMap<V> asMapEnsure(boolean ensure, Object... objects);
 }

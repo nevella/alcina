@@ -213,7 +213,7 @@ public class Registry {
 		// superclasschain
 		List<Class> scChain = getSuperclassChain(targetObject);
 		List<Class> result = new ArrayList<Class>();
-		UnsortedMultikeyMap<Class> pointLookup = registry.asMapEnsure(false,
+		MultikeyMap<Class> pointLookup = registry.asMapEnsure(false,
 				registryPoint);
 		if (pointLookup == null) {
 			if (!required) {

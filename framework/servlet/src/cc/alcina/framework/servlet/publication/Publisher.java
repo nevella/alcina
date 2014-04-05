@@ -93,17 +93,14 @@ public class Publisher {
 				&& deliveryModel.provideContentDeliveryType().isRepublishable();
 		PublicationContentPersister publicationContentPersister = Registry
 				.implOrNull(PublicationContentPersister.class);
-		if (!SEUtilities.localTestMode()) {
-			if (forPublication && publicationContentPersister != null
-					&& !AppPersistenceBase.isInstanceReadOnly()) {
-				publicationUserId = Registry.impl(PublicationPersistence.class)
-						.getNextPublicationIdForUser(
-								PermissionsManager.get().getUser());
-				publicationId = persist(contentDefinition, deliveryModel,
-						publicationUserId, original,
-						publicationContentPersister);
-				result.publicationId = publicationId;
-			}
+		if (forPublication && publicationContentPersister != null
+				&& !AppPersistenceBase.isInstanceReadOnly()) {
+			publicationUserId = Registry.impl(PublicationPersistence.class)
+					.getNextPublicationIdForUser(
+							PermissionsManager.get().getUser());
+			publicationId = persist(contentDefinition, deliveryModel,
+					publicationUserId, original, publicationContentPersister);
+			result.publicationId = publicationId;
 		}
 		PublicationContent publicationContent = cmh.getPublicationContent();
 		ctx.publicationContent = publicationContent;
@@ -112,8 +109,8 @@ public class Publisher {
 						publicationContent.getClass());
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
 				publicationId, publicationUserId);
-		if (!SEUtilities.localTestMode() && crh.getResults().persist
-				&& publicationContentPersister != null && publicationId != 0) {
+		if (crh.getResults().persist && publicationContentPersister != null
+				&& publicationId != 0) {
 			publicationContentPersister.persistContentRendererResults(
 					crh.getResults(), publicationId);
 		}

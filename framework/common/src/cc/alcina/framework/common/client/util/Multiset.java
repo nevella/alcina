@@ -101,5 +101,18 @@ public class Multiset<K, V extends Set> implements Serializable {
 	public Set<Entry<K, V>> entrySet() {
 		return this.map.entrySet();
 	}
-	
+
+	public void addAll(Multiset<K, V> other) {
+		for (Entry<K, V> entry : other.entrySet()) {
+			addCollection(entry.getKey(), entry.getValue());
+		}
+	}
+
+	public V allItems() {
+		Set set = createSet();
+		for (V v : values()) {
+			set.addAll(v);
+		}
+		return (V) set;
+	}
 }
