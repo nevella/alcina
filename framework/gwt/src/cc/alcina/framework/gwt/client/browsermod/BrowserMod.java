@@ -35,8 +35,8 @@ public class BrowserMod {
 	 * @return The window
 	 */
 	public static native JavaScriptObject getWindow() /*-{
-		return $wnd;
-	}-*/;
+														return $wnd;
+														}-*/;
 
 	/**
 	 * Scrolls the top left of the window to the position denoted by the given
@@ -48,8 +48,8 @@ public class BrowserMod {
 	 *            The vertical offset in pixels
 	 */
 	public static native void scrollTo(final int x, final int y)/*-{
-		$wnd.scroll(x, y);
-	}-*/;
+																$wnd.scroll(x, y);
+																}-*/;
 
 	/**
 	 * Returns the contextPath of this web application, this concept is
@@ -77,8 +77,8 @@ public class BrowserMod {
 	 * @return The width in pixels
 	 */
 	public native static int getAvailableScreenWidth()/*-{
-		return $wnd.screen.availWidth;
-	}-*/;
+														return $wnd.screen.availWidth;
+														}-*/;
 
 	/**
 	 * Returns the available screen area within the browser
@@ -86,8 +86,8 @@ public class BrowserMod {
 	 * @return The height in pixels.
 	 */
 	public native static int getAvailableScreenHeight()/*-{
-		return $wnd.screen.availHeight;
-	}-*/;
+														return $wnd.screen.availHeight;
+														}-*/;
 
 	public static boolean isInternetExplorer() {
 		return getUserAgent().indexOf(Constants.INTERNET_EXPLORER_USER_AGENT) != -1
@@ -102,13 +102,14 @@ public class BrowserMod {
 
 	public static boolean isIE9() {
 		return isInternetExplorer()
-				&& getUserAgent().indexOf(
-						Constants.INTERNET_EXPLORER_9_USER_AGENT) != -1;
+				&& (getUserAgent().indexOf(
+						Constants.INTERNET_EXPLORER_9_USER_AGENT) != -1 || getUserAgent()
+						.indexOf(Constants.INTERNET_EXPLORER_9_USER_AGENT_ALT) != -1);
 	}
 
 	public static boolean isIE10Plus() {
 		return isInternetExplorer()
-				&& getUserAgent().matches(".*MSIE[1-9][0-9].*");
+				&& getUserAgent().matches(".*MSIE ?[1-9][0-9].*");
 	}
 
 	public static boolean isIEpre9() {
@@ -157,8 +158,8 @@ public class BrowserMod {
 	 * @return the reported user agent
 	 */
 	public static native String getUserAgent()/*-{
-		return @com.google.gwt.user.client.Window.Navigator::getUserAgent()();
-	}-*/;
+												return @com.google.gwt.user.client.Window.Navigator::getUserAgent()();
+												}-*/;
 
 	/**
 	 * Returns the host operating system that the browser is running under.
@@ -193,37 +194,37 @@ public class BrowserMod {
 	 *         false
 	 */
 	native static public boolean isQuirksMode()/*-{
-		return "BackCompat" == $doc.compatMode;
-	}-*/;
+												return "BackCompat" == $doc.compatMode;
+												}-*/;
 
 	public static native boolean isMobile()/*-{
-		var navigator = $wnd.navigator;
-		//will be closer in the closure than window.navigator - not that it matters
-		var isMobile = {
-			Android : function() {
-				return navigator.userAgent.match(/Android/i) ? true : false;
-			},
-			BlackBerry : function() {
-				return navigator.userAgent.match(/BlackBerry/i) ? true : false;
-			},
-			iOS : function() {
-				return navigator.userAgent.match(/iPhone|iPad|iPod/i) ? true : false;
-			},
-			Windows : function() {
-				return navigator.userAgent.match(/IEMobile/i) ? true : false;
-			},
-			any : function() {
-				return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile
-						.Windows());
-			}
-		};
-		return isMobile.any();
-	}-*/;
+											var navigator = $wnd.navigator;
+											//will be closer in the closure than window.navigator - not that it matters
+											var isMobile = {
+											Android : function() {
+											return navigator.userAgent.match(/Android/i) ? true : false;
+											},
+											BlackBerry : function() {
+											return navigator.userAgent.match(/BlackBerry/i) ? true : false;
+											},
+											iOS : function() {
+											return navigator.userAgent.match(/iPhone|iPad|iPod/i) ? true : false;
+											},
+											Windows : function() {
+											return navigator.userAgent.match(/IEMobile/i) ? true : false;
+											},
+											any : function() {
+											return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile
+											.Windows());
+											}
+											};
+											return isMobile.any();
+											}-*/;
 
 	public static native boolean isIPad()/*-{
-		var navigator = $wnd.navigator;
-		return navigator.userAgent.match(/iPad/i) ? true : false;
-	}-*/;
+											var navigator = $wnd.navigator;
+											return navigator.userAgent.match(/iPad/i) ? true : false;
+											}-*/;
 
 	public static boolean requiresExplicitClickForAsyncDownload() {
 		return isInternetExplorer();// ||isFireFox();

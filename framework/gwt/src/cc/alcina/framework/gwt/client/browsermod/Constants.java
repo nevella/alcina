@@ -28,6 +28,8 @@ public class Constants {
 
 	final static String INTERNET_EXPLORER_9_USER_AGENT = "MSIE9";
 
+	final static String INTERNET_EXPLORER_9_USER_AGENT_ALT = "MSIE 9.";
+
 	final static String INTERNET_EXPLORER_10_USER_AGENT = "MSIE10";
 
 	final static String FIREFOX_USER_AGENT = "Firefox";
