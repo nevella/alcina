@@ -33,11 +33,11 @@ import com.totsp.gwittir.client.beans.Converter;
  */
 @SuppressWarnings("unchecked")
 public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
-	
 	@Override
 	public MultikeyMap<V> createMap(int childDepth) {
 		return new SortedMultikeyMap(childDepth);
 	}
+
 	@Override
 	public <T> Collection<T> reverseKeys(Object... objects) {
 		TreeMap m = (TreeMap) asMapEnsureDelegate(false, objects);
@@ -49,6 +49,7 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 		TreeMap m = (TreeMap) asMapEnsureDelegate(false, objects);
 		return m == null ? null : m.descendingMap().values();
 	}
+
 	public SortedMultikeyMap() {
 		this(2);
 	}
@@ -58,4 +59,13 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 		this.delegate = new TreeMap();
 	}
 
+	@Override
+	public boolean checkKeys(Object[] keys) {
+		for (Object object : keys) {
+			if (object == null) {
+				return false;
+			}
+		}
+		return true;
+	}
 }
