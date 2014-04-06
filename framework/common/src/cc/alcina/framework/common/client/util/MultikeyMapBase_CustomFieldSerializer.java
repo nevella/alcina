@@ -51,7 +51,7 @@ public final class MultikeyMapBase_CustomFieldSerializer {
 		for (List tuple : tuples) {
 			streamWriter.writeInt(tuple.size());
 			for (Object object : tuple) {
-				streamWriter.writeObject(tuple.size());
+				streamWriter.writeObject(object);
 			}
 		}
 	}
