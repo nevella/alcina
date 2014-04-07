@@ -20,6 +20,8 @@ public class DomainTranche implements DomainModelDelta, Serializable {
 	private DomainModelDeltaSignature signature;
 
 	private DomainModelDeltaMetadata metadata;
+	
+	private DomainModelObjects domainModelObjects;
 
 	public String getAppInstruction() {
 		return this.appInstruction;
@@ -86,5 +88,13 @@ public class DomainTranche implements DomainModelDelta, Serializable {
 	@Override
 	public boolean hasLocalOnlyTransforms() {
 		return false;
+	}
+
+	public DomainModelObjects getDomainModelObjects() {
+		return this.domainModelObjects;
+	}
+
+	public void setDomainModelObjects(DomainModelObjects domainModelObjects) {
+		this.domainModelObjects = domainModelObjects;
 	}
 }

@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObjectsRegistrar;
 import cc.alcina.framework.common.client.logic.domaintransform.HasRequestReplayId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -28,40 +29,7 @@ import com.google.gwt.user.client.Window;
 public class UnwrapAndRegisterObjectsPlayer extends
 		RunnableAsyncCallbackPlayer<Void, HandshakeState> implements
 		LoopingPlayer {
-	public UnwrapAndRegisterObjectsPlayer() {
-		addRequires(HandshakeState.OBJECT_DATA_LOADED);
-		addProvides(HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED);
-	}
-
-	@Override
-	public void onSuccess(Void result) {
-		consort.replay(this);
-	}
-
-	@Override
-	public void onFailure(Throwable caught) {
-		if (Window.confirm("Failure in unwrap/register -  press 'oi' to clear")) {
-			LocalTransformPersistence.get().clearPersistedClient(null, -1,
-					new ReloadOnSuccessCallback(), true);
-			return;
-		}
-		super.onFailure(caught);
-	}
-
-	@Override
-	public String describeLoop() {
-		return CommonUtils.formatJ(
-				"Chews through deltas in the handshakeConsortModel"
-						+ " - for each in sequence [%s] - see javadoc ",
-				CommonUtils.join(Phase.values(), ", "));
-	}
-
 	protected DomainModelDelta currentDelta = null;
-
-	enum Phase {
-		UNWRAPPING, REGISTERING_GRAPH, REGISTERING_UNLINKED,
-		REPLAYING_TRANSFORMS
-	}
 
 	private Phase phase;
 
@@ -70,10 +38,25 @@ public class UnwrapAndRegisterObjectsPlayer extends
 
 	protected RepeatingCommandWithPostCompletionCallback replayer;
 
+	public UnwrapAndRegisterObjectsPlayer() {
+		addRequires(HandshakeState.OBJECT_DATA_LOADED);
+		addProvides(HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED);
+	}
+
 	@Override
-	public void run() {
-		HandshakeConsortModel.get().prepareInitialPlaySequence();
-		loop();
+	public void cancel() {
+		if (replayer != null) {
+			replayer.setCancelled(true);
+		}
+		super.cancel();
+	}
+
+	@Override
+	public String describeLoop() {
+		return CommonUtils.formatJ(
+				"Chews through deltas in the handshakeConsortModel"
+						+ " - for each in sequence [%s] - see javadoc ",
+				CommonUtils.join(Phase.values(), ", "));
 	}
 
 	@Override
@@ -109,6 +92,9 @@ public class UnwrapAndRegisterObjectsPlayer extends
 			if (maybeRegisterDomainModelHolder()) {
 				return;
 			}
+			if (maybeRegisterDomainModelObjects()) {
+				return;
+			}
 			break;
 		case REGISTERING_UNLINKED:
 			if (CommonUtils.isNotNullOrEmpty(currentDelta.getUnlinkedObjects())) {
@@ -126,6 +112,41 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		consort.replay(this);
 	}
 
+	@Override
+	public void onFailure(Throwable caught) {
+		if (Window.confirm("Failure in unwrap/register -  press 'oi' to clear")) {
+			LocalTransformPersistence.get().clearPersistedClient(null, -1,
+					new ReloadOnSuccessCallback(), true);
+			return;
+		}
+		super.onFailure(caught);
+	}
+
+	@Override
+	public void onSuccess(Void result) {
+		consort.replay(this);
+	}
+
+	@Override
+	public void run() {
+		HandshakeConsortModel.get().prepareInitialPlaySequence();
+		loop();
+	}
+
+	private boolean maybeRegisterDomainModelObjects() {
+		if (currentDelta.getDomainModelObjects() != null) {
+			Registry.impl(DomainModelObjectsRegistrar.class).registerAsync(
+					currentDelta.getDomainModelObjects(), this);
+			return true;
+		}
+		return false;
+	}
+
+	private void registerUnlinked() {
+		TransformManager.get().registerDomainObjectsAsync(
+				currentDelta.getUnlinkedObjects(), this);
+	}
+
 	protected boolean maybeRegisterDomainModelHolder() {
 		// we can expect the first delta to be have a domainmodelholder -
 		// apps which allow "always offline" should create a model holder if the
@@ -135,36 +156,6 @@ public class UnwrapAndRegisterObjectsPlayer extends
 			return true;
 		}
 		return false;
-	}
-
-	@Override
-	public void cancel() {
-		if (replayer != null) {
-			replayer.setCancelled(true);
-		}
-		super.cancel();
-	}
-
-	private void registerUnlinked() {
-		TransformManager.get().registerDomainObjectsAsync(
-				currentDelta.getUnlinkedObjects(), this);
-	}
-
-	protected void replayTransforms() {
-		replayer = new RepeatingCommandWithPostCompletionCallback(this,
-				new DteReplayWorker(currentDelta.getReplayEvents()));
-		if (currentDelta.hasLocalOnlyTransforms()) {
-			HandshakeConsortModel.get().setLoadedWithLocalOnlyTransforms(true);
-		}
-		Integer requestId = (currentDelta instanceof HasRequestReplayId) ? ((HasRequestReplayId) currentDelta)
-				.getDomainTransformRequestReplayId() : null;
-		if (requestId != null) {
-			CommitToStorageTransformListener tl = Registry
-					.impl(CommitToStorageTransformListener.class);
-			tl.setLocalRequestId(Math.max(requestId + 1,
-					(int) tl.getLocalRequestId()));
-		}
-		Scheduler.get().scheduleIncremental(replayer);
 	}
 
 	protected void registerDomainModelHolder(DomainModelHolder domainModelHolder) {
@@ -184,5 +175,27 @@ public class UnwrapAndRegisterObjectsPlayer extends
 						.getCurrentUser().getUserName()));
 		TransformManager.get().registerDomainObjectsInHolderAsync(
 				domainModelHolder, this);
+	}
+
+	protected void replayTransforms() {
+		replayer = new RepeatingCommandWithPostCompletionCallback(this,
+				new DteReplayWorker(currentDelta.getReplayEvents()));
+		if (currentDelta.hasLocalOnlyTransforms()) {
+			HandshakeConsortModel.get().setLoadedWithLocalOnlyTransforms(true);
+		}
+		Integer requestId = (currentDelta instanceof HasRequestReplayId) ? ((HasRequestReplayId) currentDelta)
+				.getDomainTransformRequestReplayId() : null;
+		if (requestId != null) {
+			CommitToStorageTransformListener tl = Registry
+					.impl(CommitToStorageTransformListener.class);
+			tl.setLocalRequestId(Math.max(requestId + 1,
+					(int) tl.getLocalRequestId()));
+		}
+		Scheduler.get().scheduleIncremental(replayer);
+	}
+
+	enum Phase {
+		UNWRAPPING, REGISTERING_GRAPH, REGISTERING_UNLINKED,
+		REPLAYING_TRANSFORMS
 	}
 }
