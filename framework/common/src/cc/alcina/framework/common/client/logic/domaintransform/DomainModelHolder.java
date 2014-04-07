@@ -14,6 +14,7 @@
 
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 
@@ -25,7 +26,7 @@ import cc.alcina.framework.gwt.client.data.GeneralProperties;
  * @author Nick Reddel
  */
 
- public interface DomainModelHolder {
+ public interface DomainModelHolder extends Serializable{
 	public List registerableDomainObjects();
 	public Set<ClassRef> getClassRefs();
 	public IUser getCurrentUser();
