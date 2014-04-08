@@ -1682,7 +1682,7 @@ public class AlcinaMemCache {
 		return get().transactional.ensureTransaction();
 	}
 
-	public class RawValueReplacerReplacer<I> extends MemCacheReader<I, I> {
+	public class RawValueReplacer<I> extends MemCacheReader<I, I> {
 		@Override
 		protected I read0(I input) throws Exception {
 			if (input == null) {
@@ -1703,6 +1703,6 @@ public class AlcinaMemCache {
 	}
 
 	public <T> T replaceWithRawValues(T t) {
-		return (T) new RawValueReplacerReplacer().read(t);
+		return (T) new RawValueReplacer().read(t);
 	}
 }
