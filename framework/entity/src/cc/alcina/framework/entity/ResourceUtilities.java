@@ -211,16 +211,16 @@ public class ResourceUtilities {
 
 	public static void writeStreamToStream(InputStream is, OutputStream os)
 			throws IOException {
-		BufferedOutputStream fos = new BufferedOutputStream(os);
+		BufferedOutputStream bos = new BufferedOutputStream(os);
 		InputStream in = new BufferedInputStream(is);
 		int bufLength = 8192;
 		byte[] buffer = new byte[bufLength];
 		int result;
 		while ((result = in.read(buffer)) != -1) {
-			fos.write(buffer, 0, result);
+			bos.write(buffer, 0, result);
 		}
-		fos.flush();
-		fos.close();
+		bos.flush();
+		bos.close();
 		is.close();
 	}
 
