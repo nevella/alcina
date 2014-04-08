@@ -206,7 +206,6 @@ public class ResourceUtilities {
 			throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		writeStreamToStream(is, baos);
-		is.close();
 		return baos.toByteArray();
 	}
 
@@ -222,6 +221,7 @@ public class ResourceUtilities {
 		}
 		fos.flush();
 		fos.close();
+		is.close();
 	}
 
 	public static Object serialClone(Object bean) {
