@@ -1124,4 +1124,11 @@ public class SEUtilities {
 		calendar.set(Calendar.SECOND, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 	}
+
+	public static String getParentPath(String path) {
+		if(path.contains("/")){
+			return path.substring(0,path.lastIndexOf("/"));
+		}
+		return "";
+	}
 }
