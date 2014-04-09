@@ -5,6 +5,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
+import cc.alcina.framework.gwt.client.widget.HasClickAndDownHandlers;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
@@ -129,7 +130,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	protected void createResults() {
 		results = new SelectWithSearch() {
-			public HasClickHandlers createItem(Object item, boolean asHTML,
+			public HasClickAndDownHandlers createItem(Object item, boolean asHTML,
 					int charWidth, boolean itemsHaveLinefeeds,
 					Label ownerLabel, String sep) {
 				return new SelectWithSearchItemX(item, asHTML, charWidth,

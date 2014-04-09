@@ -51,6 +51,7 @@ import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.event.shared.HandlerRegistration;
@@ -231,31 +232,13 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		groupCaptions = new ArrayList<Label>();
 		popdownHider = new ClickHandler() {
 			public void onClick(ClickEvent event) {
-				if (event != null) {
-					try {
-						if (WidgetUtils.isNewTabModifier()) {
-							event.preventDefault();
-							ignoreNextBlur = System.currentTimeMillis();
-							// otherwise popup will be closed by blur
-							return;
-						}
-					} catch (Exception e) {
-						// probably a synth click
-					}
-				}
-				closingOnClick = true;
-				if (relativePopupPanel != null) {
-					relativePopupPanel.hide();
-					onPopdownShowing(relativePopupPanel, false);
-				}
-				lastClosingClickMillis = System.currentTimeMillis();
-				closingOnClick = false;
+				maybeClosePopdown(event);
 			}
 		};
 		filter.getTextBox().addBlurHandler(new BlurHandler() {
 			@Override
 			public void onBlur(BlurEvent event) {
-				if (System.currentTimeMillis() - ignoreNextBlur < 100) {
+				if ( System.currentTimeMillis() - ignoreNextBlur < 100) {
 					ignoreNextBlur = 0;
 				} else {
 					handleFilterBlur();
@@ -286,7 +269,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				public void onKeyUp(KeyUpEvent event) {
 					if (Event.getCurrentEvent().getKeyCode() == KeyCodes.KEY_ESCAPE) {
 						if (popdown) {
-							popdownHider.onClick(null);
+							maybeClosePopdown(null);
 						}
 					} else {
 						checkShowPopup();
@@ -322,6 +305,28 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	protected void onPopdownShowing(RelativePopupPanel popup, boolean show) {
 	}
 
+	protected void maybeClosePopdown(ClickEvent event) {
+		if (event != null) {
+			try {
+				if (WidgetUtils.isNewTabModifier() || event.isShiftKeyDown()) {
+					event.preventDefault();
+					ignoreNextBlur = System.currentTimeMillis();
+					// otherwise popup will be closed by blur
+					return;
+				}
+			} catch (Exception e) {
+				// probably a synth click
+			}
+		}
+		closingOnClick = true;
+		if (relativePopupPanel != null) {
+			relativePopupPanel.hide();
+			onPopdownShowing(relativePopupPanel, false);
+		}
+		lastClosingClickMillis = System.currentTimeMillis();
+		closingOnClick = false;
+	}
+
 	protected void setPanelForPopupUI(DecoratedRelativePopupPanel panelForPopup) {
 		panelForPopup.setStyleName("dropdown-popup");
 		panelForPopup.addStyleName("alcina-Selector");
@@ -336,7 +341,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public void hidePopdown() {
 		if (popdownHider != null) {
-			popdownHider.onClick(null);
+			maybeClosePopdown(null);
 		}
 	}
 
@@ -428,7 +433,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				}
 			}
 			if (hidePopdown && popdown) {
-				popdownHider.onClick(null);
+				maybeClosePopdown(null);
 			}
 		}
 
@@ -703,10 +708,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	protected void afterUpdateItems(boolean empty) {
 	}
 
-	protected HasClickHandlers createItem(T item, boolean asHTML,
+	protected HasClickAndDownHandlers createItem(T item, boolean asHTML,
 			int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
 			String sep) {
-		HasClickHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
+		HasClickAndDownHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
 				item, false, charWidth, itemsHaveLinefeeds, ownerLabel, sep)
 				: new SelectWithSearchItem(item, false, charWidth,
 						itemsHaveLinefeeds, ownerLabel, sep);
@@ -853,7 +858,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	public class SelectWithSearchItemX extends SpanPanel implements
-			VisualFilterable, HasItem<T>, HasClickHandlers {
+			VisualFilterable, HasItem<T>, HasClickAndDownHandlers{
 		private String filterableText;
 
 		private final T item;
@@ -898,6 +903,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		@Override
 		public HandlerRegistration addClickHandler(ClickHandler handler) {
 			return hl.addClickHandler(handler);
+		}
+
+		@Override
+		public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
+			return hl.addMouseDownHandler(handler);
 		}
 	}
 

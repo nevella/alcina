@@ -20,6 +20,8 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.dom.client.MouseDownEvent;
+import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
@@ -34,7 +36,7 @@ import com.totsp.gwittir.client.ui.HasEnabled;
  * @author Nick Reddel
  */
 public class Link<T> extends Widget implements HasHTML, HasEnabled,
-		HasClickHandlers, HasItem<T> {
+		HasClickAndDownHandlers, HasItem<T> {
 	protected Element anchorElem;
 
 	private T userObject;
@@ -216,5 +218,10 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 
 	public void setPreventDefault(boolean preventDefault) {
 		this.preventDefault = preventDefault;
+	}
+
+	@Override
+	public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
+		return addDomHandler(handler, MouseDownEvent.getType());
 	}
 }
