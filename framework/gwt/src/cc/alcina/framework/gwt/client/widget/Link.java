@@ -36,7 +36,7 @@ import com.totsp.gwittir.client.ui.HasEnabled;
  * @author Nick Reddel
  */
 public class Link<T> extends Widget implements HasHTML, HasEnabled,
-		HasClickAndDownHandlers, HasItem<T> {
+		HasClickHandlers, HasItem<T> {
 	protected Element anchorElem;
 
 	private T userObject;
@@ -220,8 +220,4 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		this.preventDefault = preventDefault;
 	}
 
-	@Override
-	public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
-		return addDomHandler(handler, MouseDownEvent.getType());
-	}
 }

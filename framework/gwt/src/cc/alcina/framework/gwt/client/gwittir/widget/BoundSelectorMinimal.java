@@ -2,10 +2,10 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
-import cc.alcina.framework.gwt.client.widget.HasClickAndDownHandlers;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
@@ -130,7 +130,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	protected void createResults() {
 		results = new SelectWithSearch() {
-			public HasClickAndDownHandlers createItem(Object item, boolean asHTML,
+			public HasClickHandlers createItem(Object item, boolean asHTML,
 					int charWidth, boolean itemsHaveLinefeeds,
 					Label ownerLabel, String sep) {
 				return new SelectWithSearchItemX(item, asHTML, charWidth,
@@ -142,5 +142,10 @@ public class BoundSelectorMinimal extends BoundSelector {
 	@Override
 	protected void customiseRightWidget() {
 		results.removeScroller();
+	}
+	@Override
+	protected void update(Set old) {
+		super.update(old);
+		search.maybeRepositionPopdown();
 	}
 }

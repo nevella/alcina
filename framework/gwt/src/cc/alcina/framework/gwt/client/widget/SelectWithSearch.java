@@ -51,6 +51,7 @@ import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
@@ -238,8 +239,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		filter.getTextBox().addBlurHandler(new BlurHandler() {
 			@Override
 			public void onBlur(BlurEvent event) {
-				if ( System.currentTimeMillis() - ignoreNextBlur < 100) {
+				System.out.println("onblur - ignore:" + ignoreNextBlur);
+				if (System.currentTimeMillis() - ignoreNextBlur < 100) {
 					ignoreNextBlur = 0;
+					filter.getTextBox().setFocus(true);
 				} else {
 					handleFilterBlur();
 				}
@@ -320,8 +323,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		}
 		closingOnClick = true;
 		if (relativePopupPanel != null) {
-			relativePopupPanel.hide();
 			onPopdownShowing(relativePopupPanel, false);
+			relativePopupPanel.removeFromParent();
+			relativePopupPanel=null;
 		}
 		lastClosingClickMillis = System.currentTimeMillis();
 		closingOnClick = false;
@@ -335,9 +339,31 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	protected void createItemHolder() {
-		itemHolder = new FlowPanel();
-		itemHolder.setStyleName("select-item-container");
+		FlowPanelClickable panel = new FlowPanelClickable();
+		panel.setStyleName("select-item-container");
+		if (popdown) {
+			panel.addMouseDownHandler(checkIgnoreHandler);
+			panel.addClickHandler(new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					int debug = 5;
+				}
+			});
+		}
+		itemHolder = panel;
 	}
+
+	private MouseDownHandler checkIgnoreHandler = new MouseDownHandler() {
+		@Override
+		public void onMouseDown(MouseDownEvent event) {
+			if (WidgetUtils.isNewTabModifier() || event.isShiftKeyDown()) {
+				ignoreNextBlur = System.currentTimeMillis();
+				System.out.println("mouse shift - ignore:" + ignoreNextBlur);
+				// otherwise popup will be closed by blur
+				return;
+			}
+		}
+	};
 
 	public void hidePopdown() {
 		if (popdownHider != null) {
@@ -708,10 +734,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	protected void afterUpdateItems(boolean empty) {
 	}
 
-	protected HasClickAndDownHandlers createItem(T item, boolean asHTML,
+	protected HasClickHandlers createItem(T item, boolean asHTML,
 			int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
 			String sep) {
-		HasClickAndDownHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
+		HasClickHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
 				item, false, charWidth, itemsHaveLinefeeds, ownerLabel, sep)
 				: new SelectWithSearchItem(item, false, charWidth,
 						itemsHaveLinefeeds, ownerLabel, sep);
@@ -858,7 +884,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	public class SelectWithSearchItemX extends SpanPanel implements
-			VisualFilterable, HasItem<T>, HasClickAndDownHandlers{
+			VisualFilterable, HasItem<T>, HasClickHandlers {
 		private String filterableText;
 
 		private final T item;
@@ -903,11 +929,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		@Override
 		public HandlerRegistration addClickHandler(ClickHandler handler) {
 			return hl.addClickHandler(handler);
-		}
-
-		@Override
-		public HandlerRegistration addMouseDownHandler(MouseDownHandler handler) {
-			return hl.addMouseDownHandler(handler);
 		}
 	}
 
@@ -1027,5 +1048,18 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public boolean isAutoselectFirst() {
 		return autoselectFirst;
+	}
+
+	public void maybeRepositionPopdown() {
+		if (relativePopupPanel != null
+				&& WidgetUtils.isVisibleAncestorChain(relativePopupPanel)) {
+			RelativePopupPositioning
+					.showPopup(
+							filter,
+							null,
+							RootPanel.get(),
+							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
+							RootPanel.get(), panelForPopup, shiftX(), shiftY());
+		}
 	}
 }
