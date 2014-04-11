@@ -15,13 +15,13 @@ package cc.alcina.framework.entity.domaintransform;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 
 /**
  * 
@@ -34,23 +34,33 @@ public class DomainTransformLayerWrapper {
 
 	public int ignored;
 
-	public List<DomainTransformEventPersistent> persistentEvents=new ArrayList<DomainTransformEventPersistent>();
+	public List<DomainTransformEventPersistent> persistentEvents = new ArrayList<DomainTransformEventPersistent>();
 
-	public Set<Class<?>> getTransformedClasses() {
-		if (transformedClasses == null) {
-			transformedClasses = new LinkedHashSet<Class<?>>();
-			for (DomainTransformEventPersistent dte : persistentEvents) {
-				transformedClasses.add(dte.getObjectClass());
-			}
-		}
-		return this.transformedClasses;
+	public Set<Class> getTransformedClasses() {
+		return getEventsByClass().keySet();
 	}
-	private Set<Class<?>> transformedClasses = null;
 
-	public List<DomainTransformRequestPersistent> persistentRequests=new ArrayList<DomainTransformRequestPersistent>();
+	private Multimap<Class, List<DomainTransformEventPersistent>> eventsByClass;
 
-	public boolean containsTransformClasses(Class<?>... classes) {
+	public List<DomainTransformRequestPersistent> persistentRequests = new ArrayList<DomainTransformRequestPersistent>();
+
+	public boolean containsTransformClasses(Class... classes) {
 		return !CommonUtils.intersection(getTransformedClasses(),
 				Arrays.asList(classes)).isEmpty();
 	}
+
+	public Multimap<Class, List<DomainTransformEventPersistent>> getEventsByClass() {
+		if (eventsByClass == null) {
+			eventsByClass = new Multimap<Class, List<DomainTransformEventPersistent>>();
+			for (DomainTransformEventPersistent dte : persistentEvents) {
+				eventsByClass.add(dte.getObjectClass(), dte);
+			}
+		}
+		return this.eventsByClass;
+	}
+
+	public List<DomainTransformEventPersistent> getTransformsFor(Class clazz) {
+		return getEventsByClass().getAndEnsure(clazz);
+	}
+
 }

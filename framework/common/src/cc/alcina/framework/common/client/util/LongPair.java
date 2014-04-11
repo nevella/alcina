@@ -5,6 +5,8 @@ package cc.alcina.framework.common.client.util;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 	public long l1;
 
@@ -62,6 +64,7 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 	public String toString() {
 		return "[" + l1 + "," + l2 + "]";
 	}
+	
 
 	public boolean isZero() {
 		return l1 == 0 && l2 == 0;
@@ -74,7 +77,7 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 
 	public static LongPair parseLongPair(String string) {
 		try {
-			String[] split = string.replaceAll("[\\[\\]]", "").split("-|,");
+			String[] split = string.replaceAll("[\\[\\] ]", "").split(",");
 			if (split.length == 2) {
 				return new LongPair(Long.parseLong(split[0]),
 						Long.parseLong(split[1]));
@@ -96,7 +99,6 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 		return other == null ? false : other.equals(intersection(other));
 	}
 
-
 	public boolean containsExBoundaries(LongPair other) {
 		return contains(other) && l1 < other.l1 && l2 > other.l2;
 	}
@@ -108,5 +110,13 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 
 	public boolean containsIncludingBoundaries(Long o) {
 		return o != null && o >= l1 && o <= l2;
+	}
+
+	public static class LongPairFromStringConverter implements
+			Converter<String, LongPair> {
+		@Override
+		public LongPair convert(String original) {
+			return parseLongPair(original);
+		}
 	}
 }

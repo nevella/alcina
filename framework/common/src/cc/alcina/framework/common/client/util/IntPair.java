@@ -79,7 +79,7 @@ public class IntPair implements Comparable<IntPair> {
 
 	public static IntPair parseIntPair(String string) {
 		try {
-			String[] split = string.replaceAll("[\\[\\]]", "").split("-|,");
+			String[] split = string.replaceAll("[\\[\\]]", "").split(",");
 			if (split.length == 2) {
 				return new IntPair(Integer.parseInt(split[0]),
 						Integer.parseInt(split[1]));

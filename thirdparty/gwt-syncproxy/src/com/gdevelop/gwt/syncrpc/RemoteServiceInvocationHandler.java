@@ -76,6 +76,12 @@ public class RemoteServiceInvocationHandler implements InvocationHandler {
 		PRIMITIVE_TYPES.add(boolean.class);
 	}
 
+	public static interface AsyncCallbackWrapper {
+		public AsyncCallback wrap(AsyncCallback original);
+	}
+
+	public static AsyncCallbackWrapper asyncCallbackWrapper;
+
 	private String moduleBaseURL;
 
 	private String remoteServiceRelativePath;
@@ -119,6 +125,9 @@ public class RemoteServiceInvocationHandler implements InvocationHandler {
 						serviceIntfName.length() - 5);
 				paramCount--;
 				callback = (AsyncCallback) args[paramCount];
+				if (asyncCallbackWrapper != null) {
+					callback = asyncCallbackWrapper.wrap(callback);
+				}
 				// Determine the return type
 				Class[] syncParamTypes = new Class[paramCount];
 				System.arraycopy(paramTypes, 0, syncParamTypes, 0, paramCount);
@@ -317,7 +326,8 @@ public class RemoteServiceInvocationHandler implements InvocationHandler {
 			RemoteServiceSyncProxy syncProxy = createSyncProxy();
 			payload = payload.substring(4);
 			ResponseReader readerFor = getReaderFor(returnType);
-			Object result = readerFor.read(syncProxy.createStreamReader(payload));
+			Object result = readerFor.read(syncProxy
+					.createStreamReader(payload));
 			if (callback != null) {
 				callback.onSuccess(result);
 			}

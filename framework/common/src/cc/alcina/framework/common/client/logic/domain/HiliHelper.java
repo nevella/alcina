@@ -64,6 +64,7 @@ public class HiliHelper {
 		return CollectionFilters.map((Collection<HasIdAndLocalId>) hilis,
 				new HiliToIdMapper());
 	}
+	
 
 	public static String asDomainPoint(HasId hi) {
 		if (hi instanceof HasIdAndLocalId) {
