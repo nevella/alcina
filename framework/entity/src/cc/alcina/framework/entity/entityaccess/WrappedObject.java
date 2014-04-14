@@ -26,6 +26,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -78,16 +79,17 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 		static List<Class> jaxbSubclasses = null;
 
 		protected static List<Class> ensureJaxbSubclasses(Class addClass) {
-			if(jaxbSubclasses==null){
-				jaxbSubclasses=Registry.impl(WrappedObjectProvider.class)
-				.getJaxbSubclasses();
+			if (jaxbSubclasses == null) {
+				jaxbSubclasses = Registry.impl(WrappedObjectProvider.class)
+						.getJaxbSubclasses();
 			}
-			if(addClass==null){
-				AlcinaTopics.notifyDevWarning(new Exception("xml ser/deser of null class"));
+			if (addClass == null) {
+				AlcinaTopics.notifyDevWarning(new Exception(
+						"xml ser/deser of null class"));
 				return new ArrayList<Class>(jaxbSubclasses);
 			}
 			ArrayList<Class> classes = new ArrayList<Class>(jaxbSubclasses);
-			classes.add(0,addClass);
+			classes.add(0, addClass);
 			return classes;
 		}
 
@@ -99,6 +101,15 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 			StringWriter s = new StringWriter();
 			m.marshal(object, s);
 			return s.toString();
+		}
+
+		public static <T> T clone(T object) {
+			try {
+				String s = xmlSerialize(object);
+				return (T) xmlDeserialize(object.getClass(), s);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 }

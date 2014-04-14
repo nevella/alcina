@@ -36,13 +36,11 @@ public class AlcinaTopics {
 
 	public static final String TOPIC_DEV_WARNING = AlcinaTopics.class.getName()
 			+ ".TOPIC_DEV_WARNING";
-	
-	
 
 	public static final String LOG_CATEGORY_CHANGE = "change";
-	
+
 	public static final String LOG_CATEGORY_COMMENT = "comment";
-	
+
 	public static final String LOG_CATEGORY_CONTAINER = "container";
 
 	// detach logging from presentation (normally ClientNotifications)
@@ -109,8 +107,4 @@ public class AlcinaTopics {
 		GlobalTopicPublisher.get().listenerDelta(TOPIC_DEV_WARNING, listener,
 				add);
 	}
-	
-	
-	
-
 }

@@ -6,7 +6,10 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
@@ -16,6 +19,9 @@ import com.google.gwt.user.server.rpc.RPCRequest;
 
 @RegistryLocation(registryPoint = AppLifecycleManager.class, implementationType = ImplementationType.SINGLETON)
 public class AppLifecycleManager implements RegistrableService {
+	public static final String TOPIC_APP_CONFIGURATION_RELOADED = AppLifecycleManager.class
+			.getName() + ".TOPIC_APP_CONFIGURATION_RELOADED";
+
 	private AppLifecycleServletBase lifecycleServlet;
 
 	private ControlServletState state = ControlServletState.standaloneModes();
@@ -71,6 +77,7 @@ public class AppLifecycleManager implements RegistrableService {
 		lifecycleServlet.refreshProperties();
 		refreshClusterRoleFromConfigFile();
 		refreshWriterServices();
+		notifyAppConfigurationReloaded(null);
 	}
 
 	public void refreshWriterServices() {
@@ -139,5 +146,16 @@ public class AppLifecycleManager implements RegistrableService {
 		for (ModeEnum e : ModeEnum.values()) {
 			e.getDeltaHandler(this).init();
 		}
+	}
+
+	public static void notifyAppConfigurationReloaded(Void v) {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_APP_CONFIGURATION_RELOADED, v);
+	}
+
+	public static void notifyAppConfigurationReloadedDelta(
+			TopicListener<Void> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_APP_CONFIGURATION_RELOADED, listener, add);
 	}
 }

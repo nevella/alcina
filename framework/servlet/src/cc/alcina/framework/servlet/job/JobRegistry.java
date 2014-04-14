@@ -64,6 +64,8 @@ public class JobRegistry {
 		GlobalTopicPublisher.get().listenerDelta(TOPIC_JOB_FAILURE, listener,
 				add);
 	}
+	
+	
 
 	private Map<Long, JobInfo> infoMap;
 
