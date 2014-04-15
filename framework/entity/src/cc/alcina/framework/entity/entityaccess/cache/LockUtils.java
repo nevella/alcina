@@ -4,12 +4,15 @@ import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class LockUtils {
-	public static final String ARTICLE_DELETION_LOCK="ARTICLE_DELETION_LOCK";
+	public static final String ARTICLE_DELETION_LOCK = "ARTICLE_DELETION_LOCK";
+
 	private static Map<ClassIdLock, WeakReference<ClassIdLock>> classIdLocks = new WeakHashMap<ClassIdLock, WeakReference<ClassIdLock>>();
 
-	public static synchronized ClassIdLock obtainClassIdLock(Class clazz, long id) {
+	public static synchronized ClassIdLock obtainClassIdLock(Class clazz,
+			long id) {
 		ClassIdLock key = new ClassIdLock(clazz, id);
 		if (!classIdLocks.containsKey(key)) {
 			classIdLocks.put(key, new WeakReference<ClassIdLock>(key));
@@ -17,14 +20,17 @@ public class LockUtils {
 		return classIdLocks.get(key).get();
 	}
 
-	static class ClassStringKeyLock {
+	public static class ClassStringKeyLock {
 		Class clazz;
 
 		String key;
+		
+		private ReentrantLock lock;
 
 		public ClassStringKeyLock(Class clazz, String key) {
 			this.clazz = clazz;
 			this.key = key;
+			this.lock=new ReentrantLock();
 		}
 
 		@Override
@@ -40,15 +46,24 @@ public class LockUtils {
 		public int hashCode() {
 			return clazz.hashCode() ^ key.hashCode();
 		}
+
+		public void lock() {
+			this.lock.lock();
+		}
+
+		public void unlock() {
+			this.lock.unlock();
+		}
 	}
 
 	private static Map<ClassStringKeyLock, ClassStringKeyLock> classStringKeyLocks = new HashMap<ClassStringKeyLock, ClassStringKeyLock>();
-	public static synchronized Object obtainStringKeyLock(
-			String key) {
+
+	public static synchronized ClassStringKeyLock obtainStringKeyLock(String key) {
 		return obtainClassStringKeyLock(LockUtils.class, key);
 	}
-	public static synchronized Object obtainClassStringKeyLock(Class clazz,
-			String key) {
+
+	public static synchronized ClassStringKeyLock obtainClassStringKeyLock(
+			Class clazz, String key) {
 		ClassStringKeyLock lock = new ClassStringKeyLock(clazz, key);
 		if (!classStringKeyLocks.containsKey(lock)) {
 			classStringKeyLocks.put(lock, lock);

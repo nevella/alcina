@@ -132,7 +132,7 @@ public class ResourceUtilities {
 		}
 	}
 
-	public static String getBundledString(Class clazz, String propertyName) {
+	public static synchronized String getBundledString(Class clazz, String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName : clazz
 				.getSimpleName() + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {

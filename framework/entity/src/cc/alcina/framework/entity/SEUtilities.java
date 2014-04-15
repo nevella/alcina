@@ -69,8 +69,10 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -1126,9 +1128,19 @@ public class SEUtilities {
 	}
 
 	public static String getParentPath(String path) {
-		if(path.contains("/")){
-			return path.substring(0,path.lastIndexOf("/"));
+		if (path.contains("/")) {
+			return path.substring(0, path.lastIndexOf("/"));
 		}
 		return "";
+	}
+
+	public static Class getRemoteActionClass(Class clazz) {
+		RegistryLocation registryLocation = (RegistryLocation) clazz
+				.getAnnotation(RegistryLocation.class);
+		if (registryLocation != null
+				&& registryLocation.registryPoint() == RemoteActionPerformer.class) {
+			return registryLocation.targetClass();
+		}
+		return null;
 	}
 }

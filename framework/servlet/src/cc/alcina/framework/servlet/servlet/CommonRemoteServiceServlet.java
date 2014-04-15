@@ -351,7 +351,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		thread.setPriority(Thread.MIN_PRIORITY);
 		thread.start();
 		onBeforeSpawnedThreadRun(thread);
-		//make sure we wait a bit before exiting, so the spawned thread can copy the pm
+		// make sure we wait a bit before exiting, so the spawned thread can
+		// copy the pm
 		try {
 			Thread.sleep(50);
 		} catch (InterruptedException e) {
