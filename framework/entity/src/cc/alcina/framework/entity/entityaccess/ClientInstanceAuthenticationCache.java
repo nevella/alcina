@@ -17,7 +17,7 @@ public class ClientInstanceAuthenticationCache {
 
 	private Map<String, String> iidUserNameByKeyMap = new HashMap<String, String>();
 
-	public void cacheAuthentication(ClientInstance clientInstance) {
+	public synchronized void cacheAuthentication(ClientInstance clientInstance) {
 		clientInstanceAuthMap.put(clientInstance.getId(),
 				clientInstance.getAuth());
 		if (clientInstance.getUser() != null) {
@@ -40,7 +40,7 @@ public class ClientInstanceAuthenticationCache {
 		return iidUserNameByKeyMap.get(iid);
 	}
 
-	public void cacheIid(Iid iid) {
+	public synchronized void cacheIid(Iid iid) {
 		iidUserNameByKeyMap.put(iid.getInstanceId(),
 				iid.getRememberMeUser() == null ? null : iid
 						.getRememberMeUser().getUserName());
