@@ -24,18 +24,11 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 	}
 
 	public void updateJob(String message) {
-		JobRegistry.get().updateJob(message);
-		updateJob(message, jobTracker.provideIsRoot() ? 1 : 0);
+		updateJob(message, 1);
 	}
+
 	public void updateJob(String message, int completedDelta) {
-		long itemsCompleted = jobTracker.getItemsCompleted();
-		long itemCount = jobTracker.getItemCount();
-		itemsCompleted += completedDelta;
-		jobTracker.setItemsCompleted(itemsCompleted);
-		double progress = ((double) itemsCompleted) / ((double) itemCount);
-		JobRegistry.get().jobProgress(
-				String.format("(%s/%s) -  %s", itemsCompleted, itemCount,
-						message), progress);
+		JobRegistry.get().updateJob(message, completedDelta);
 	}
 
 	protected void finishJob() {
@@ -54,10 +47,10 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 	}
 
 	protected void jobStarted() {
-		if(started){
+		if (started) {
 			throw new RuntimeException("Already started");
 		}
-		started=true;
+		started = true;
 		jobTracker = JobRegistry.get().startJob(getClass(),
 				SEUtilities.friendlyClassName(getClass()), null);
 		logger = JobRegistry.get().getContextLogger();

@@ -6,6 +6,7 @@ import java.util.Enumeration;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Category;
+import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.spi.HierarchyEventListener;
@@ -102,6 +103,8 @@ public class RemoteActionLogger extends Logger {
 		writerAppender
 				.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
 		addAppender(writerAppender);
+		ConsoleAppender consoleAppender = new ConsoleAppender(RemoteActionLoggerProvider.layout);
+		addAppender(consoleAppender);
 	}
 
 	private void injectBlankHierarchy() throws Exception {

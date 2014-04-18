@@ -21,6 +21,7 @@ import javax.persistence.Transient;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -55,7 +56,7 @@ public class ActionProgress extends Composite implements
 
 	private FlowPanel fp;
 
-	private JobTracker info = new JobTracker();
+	private JobTracker info = new JobTrackerImpl();
 
 	private Grid grid;
 

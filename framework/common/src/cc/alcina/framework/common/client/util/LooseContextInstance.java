@@ -157,8 +157,10 @@ public class LooseContextInstance {
 		StringMap sm = new StringMap();
 		Set<Entry<String, Object>> props = properties.entrySet();
 		for (Entry<String, Object> entry : props) {
-			sm.put(entry.getKey(),
-					CommonUtils.nullSafeToString(entry.getValue()));
+			if (CommonUtils.isStandardJavaClassOrEnum(entry.getValue().getClass())) {
+				sm.put(entry.getKey(),
+						CommonUtils.nullSafeToString(entry.getValue()));
+			}
 		}
 		return sm.toPropertyString();
 	}

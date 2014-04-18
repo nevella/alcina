@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -37,6 +38,7 @@ import org.apache.log4j.Logger;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
+import cc.alcina.framework.common.client.actions.ActionResult;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -105,7 +107,6 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.CookieHelper;
-import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
@@ -161,9 +162,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = CommonRemoteServiceServlet.class
 			.getName() + ".TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION";
-
-	public static final String CONTEXT_IS_PERFORMING_SUBJOB = CommonRemoteServiceServlet.class
-			.getName() + ".CONTEXT_IS_PERFORMING_SUBJOB";
 
 	public static final String CONTEXT_REUSE_IUSER_HOLDER = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
@@ -380,15 +378,24 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				+ (++actionCount)) {
 			private int tLooseContextDepth;
 
+			private TopicListener latchReleaser = new TopicListener() {
+				@Override
+				public void topicPublished(String key, Object message) {
+					latch.countDown();
+				}
+			};
+
 			@Override
 			public void run() {
 				try {
+					LooseContext.push();
 					LooseContext.set(JobRegistry.CONTEXT_NEXT_JOB_ID, jobId);
 					// different thread-local
 					tLooseContextDepth = LooseContext.depth();
 					pm.copyTo(PermissionsManager.get());
 					onAfterSpawnedThreadRun(this);
-					latch.countDown();
+					LooseContext.getContext().addTopicListener(
+							JobRegistry.TOPIC_JOB_STARTED, latchReleaser);
 					performActionAndWait(action);
 				} catch (Exception e) {
 					if (e instanceof RuntimeException) {
@@ -399,8 +406,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					handleOom("", e);
 					throw e;
 				} finally {
-					LooseContext.set(JobRegistry.CONTEXT_NEXT_JOB_ID, null);
 					LooseContext.confirmDepth(tLooseContextDepth);
+					LooseContext.pop();
 				}
 			}
 		};
@@ -410,7 +417,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		// make sure we wait a bit before exiting, so the spawned thread can
 		// copy the pm
 		try {
-			latch.await();
+			latch.await(1, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -419,6 +426,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public ActionLogItem performActionAndWait(final RemoteAction action)
 			throws WebException {
+		return new ActionLauncher().performActionAndWait(action).actionLogItem;
+	}
+
+	public <T> ActionResult<T> performActionAndWaitForObject(
+			final RemoteAction action) throws WebException {
 		return new ActionLauncher().performActionAndWait(action);
 	}
 
@@ -975,7 +987,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	public class ActionLauncher {
+	public class ActionLauncher<T> {
 		private JobTracker actionTracker;
 
 		TopicListener<JobTracker> startListener = new TopicListener<JobTracker>() {
@@ -985,7 +997,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 		};
 
-		ActionLogItem performActionAndWait(final RemoteAction action)
+		ActionResult<T> performActionAndWait(final RemoteAction action)
 				throws WebException {
 			checkAnnotatedPermissions(action);
 			RemoteActionPerformer performer = (RemoteActionPerformer) Registry
@@ -1026,22 +1038,24 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 		}
 
-		protected ActionLogItem maybeLog(final RemoteAction action,
+		protected ActionResult<T> maybeLog(final RemoteAction action,
 				boolean nonPersistent) {
 			if (actionTracker != null) {
 				actionTracker.setLog(JobRegistry.get().getContextLogBuffer());
-				ActionLogItem logItem = trackerToLogItem(action);
+				ActionLogItem logItem = trackerToResult(action);
 				if (!actionTracker.provideIsRoot() || nonPersistent) {
 				} else {
 					Registry.impl(CommonPersistenceProvider.class)
 							.getCommonPersistence().logActionItem(logItem);
 				}
-				return logItem;
+				ActionResult<T> result = new ActionResult<T>();
+				result.resultObject = (T) actionTracker.getJobResultObject();
+				return result;
 			}
 			return null;
 		}
 
-		protected ActionLogItem trackerToLogItem(final RemoteAction action) {
+		protected ActionLogItem trackerToResult(final RemoteAction action) {
 			ActionLogItem logItem = Registry
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction()

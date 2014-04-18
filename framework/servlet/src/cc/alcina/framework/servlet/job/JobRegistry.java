@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -238,14 +239,10 @@ public class JobRegistry {
 			jobId = contextId;
 			LooseContext.remove(CONTEXT_NEXT_JOB_ID);
 		}
-		JobTracker tracker = new JobTracker(jobId.toString());
-		tracker.setComplete(false);
-		tracker.setJobName(jobName == null ? jobClass.getSimpleName() : jobName);
-		tracker.setPercentComplete(0);
-		tracker.setProgressMessage(message != null ? message
-				: "Starting job...");
-		trackerMap.put(tracker.getId(), tracker);
+		JobTrackerImpl tracker = new JobTrackerImpl(jobId.toString());
+		tracker.startup(jobClass,jobName,message);
 		tracker.setStartTime(new Date());
+		trackerMap.put(tracker.getId(), tracker);
 		Logger custom = LooseContext.get(CONTEXT_USE_LOGGER);
 		tracker.setLogger(custom != null ? custom : Registry.impl(
 				RemoteActionLoggerProvider.class).createLogger(jobClass));
@@ -300,5 +297,13 @@ public class JobRegistry {
 		double progress = ((double) itemsCompleted) / ((double) itemCount);
 		jobProgress(String.format("(%s/%s) -  %s", itemsCompleted, itemCount,
 				message), progress);
+	}
+
+	public JobTracker getTracker(String jobId) {
+		return trackerMap.get(jobId);
+	}
+
+	public void putTracker(JobTracker jobTracker) {
+		trackerMap.put(jobTracker.getId(), jobTracker);
 	}
 }

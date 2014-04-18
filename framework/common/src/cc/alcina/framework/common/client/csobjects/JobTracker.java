@@ -1,267 +1,96 @@
-/* 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
 package cc.alcina.framework.common.client.csobjects;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
-import com.google.gwt.user.client.rpc.GwtTransient;
+public interface JobTracker {
+	public abstract long getItemCount();
 
-/**
- * 
- * @author Nick Reddel
- */
-public class JobTracker implements Serializable, Cloneable {
-	static final transient long serialVersionUID = -3L;
+	public abstract void setItemCount(long itemCount);
 
-	private Date startTime;
+	public abstract List<JobTracker> getChildren();
 
-	private Date endTime;
+	public abstract Date getEndTime();
 
-	private String progressMessage = "...pending";
+	public abstract String getId();
 
-	private String jobName;
+	public abstract double getJobDuration();
 
-	private String jobResult;
+	public abstract Exception getjobError();
 
-	private String id;
+	public abstract String getJobLauncher();
 
-	private String jobLauncher;
+	public abstract String getJobName();
 
-	private boolean complete;
+	public abstract String getJobResult();
 
-	private JobResultType jobResultType;
+	public abstract JobResultType getJobResultType();
 
-	private List<JobTracker> children = new ArrayList<JobTracker>();
+	public abstract JobTracker getParent();
 
-	private JobTracker parent;
+	public abstract String getProgressMessage();
 
-	private double percentComplete;
+	public abstract Date getStartTime();
 
-	private transient Exception jobException;
+	public abstract boolean isCancelled();
 
-	private boolean cancelled;
+	public abstract boolean isComplete();
 
-	private long itemCount;
+	public abstract boolean provideIsRoot();
 
-	public long getItemCount() {
-		return this.itemCount;
-	}
+	public abstract JobTracker root();
 
-	public void setItemCount(long itemCount) {
-		this.itemCount = itemCount;
-	}
+	public abstract void setCancelled(boolean cancelled);
 
-	private long itemsCompleted;
+	public abstract void setChildren(List<JobTracker> children);
 
-	@GwtTransient
-	private String log = "";
+	public abstract void setComplete(boolean complete);
 
-	private transient Object logger;
+	public abstract void setEndTime(Date endTime);
 
-	@GwtTransient
-	private LogLevel logLevel = LogLevel.DEBUG;
+	public abstract void setId(String id);
 
-	public JobTracker() {
-	}
+	public abstract void setjobError(Exception jobException);
 
-	public JobTracker(String id) {
-		this.id = id;
-	}
+	public abstract void setJobLauncher(String jobLauncher);
 
-	public List<JobTracker> getChildren() {
-		return this.children;
-	}
+	public abstract void setJobName(String jobName);
 
-	public Date getEndTime() {
-		return endTime;
-	}
+	public abstract void setJobResult(String jobResult);
 
-	public String getId() {
-		return this.id;
-	}
+	public abstract void setJobResultType(JobResultType jobResultType);
 
-	public double getJobDuration() {
-		if (startTime == null || endTime == null) {
-			return 0;
-		}
-		return (double) getEndTime().getTime() - getStartTime().getTime();
-	}
+	public abstract void setParent(JobTracker parent);
 
-	public Exception getjobError() {
-		return this.jobException;
-	}
+	public abstract void setProgressMessage(String progressMessage);
 
-	public String getJobLauncher() {
-		return this.jobLauncher;
-	}
+	public abstract void setStartTime(Date startTime);
 
-	public String getJobName() {
-		return this.jobName;
-	}
+	public abstract String getLog();
 
-	public String getJobResult() {
-		return this.jobResult;
-	}
+	public abstract void setLog(String log);
 
-	public JobResultType getJobResultType() {
-		return this.jobResultType;
-	}
-
-	public JobTracker getParent() {
-		return this.parent;
-	}
-
-	public String getProgressMessage() {
-		return this.progressMessage;
-	}
-
-	public Date getStartTime() {
-		return startTime;
-	}
-
-	public boolean isCancelled() {
-		return root().cancelled;
-	}
-
-	public boolean isComplete() {
-		return this.complete;
-	}
-
-	public boolean provideIsRoot() {
-		return parent == null;
-	}
-
-	public JobTracker root() {
-		if (parent == null) {
-			return this;
-		}
-		return parent.root();
-	}
-
-	public void setCancelled(boolean cancelled) {
-		root().cancelled = cancelled;
-	}
-
-	public void setChildren(List<JobTracker> children) {
-		this.children = children;
-	}
-
-	public void setComplete(boolean complete) {
-		this.complete = complete;
-	}
-
-	public void setEndTime(Date endTime) {
-		this.endTime = endTime;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public void setjobError(Exception jobException) {
-		this.jobException = jobException;
-	}
-
-	public void setJobLauncher(String jobLauncher) {
-		this.jobLauncher = jobLauncher;
-	}
-
-	public void setJobName(String jobName) {
-		this.jobName = jobName;
-	}
-
-	public void setJobResult(String jobResult) {
-		this.jobResult = jobResult;
-	}
-
-	public void setJobResultType(JobResultType jobResultType) {
-		this.jobResultType = jobResultType;
-	}
-
-	public void setParent(JobTracker parent) {
-		this.parent = parent;
-	}
-
-	public void setProgressMessage(String progressMessage) {
-		this.progressMessage = progressMessage;
-	}
-
-	public void setStartTime(Date startTime) {
-		this.startTime = startTime;
-	}
-
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ("JobTracker: %s %s %s", getJobName(),
-				getJobResult(), getId());
-	}
-
-	public String getLog() {
-		return this.log;
-	}
-
-	public void setLog(String log) {
-		this.log = log;
-	}
-
-	public Object getLogger() {
-		return this.logger;
-	}
-
-	public void setLogger(Object logger) {
-		this.logger = logger;
-	}
-
-	public LogLevel getLogLevel() {
-		return this.logLevel;
-	}
-
-	public void setLogLevel(LogLevel logLevel) {
-		this.logLevel = logLevel;
-	}
-
-	public long getItemsCompleted() {
-		return this.itemsCompleted;
-	}
-
-	public void setItemsCompleted(long itemsCompleted) {
-		this.itemsCompleted = itemsCompleted;
-		updatePercent();
-	}
-
-	protected void updatePercent() {
-		percentComplete = (getItemCount() == 0 ? 0.0
-				: (getItemsCompleted() * 100.0) / getItemCount());
-	}
-
-	public double getPercentComplete() {
-		return getJobResultType() != null ? 1.0 : percentComplete;
-	}
-
-	public void setPercentComplete(double percentComplete) {
-		this.percentComplete = percentComplete;
-	}
-
-	public void updateJob(int completedDelta) {
-		itemsCompleted += completedDelta;
-		updatePercent();
-		double progress = ((double) itemsCompleted) / ((double) itemCount);
-	}
+	public abstract Object getLogger();
+
+	public abstract void setLogger(Object logger);
+
+	public abstract LogLevel getLogLevel();
+
+	public abstract void setLogLevel(LogLevel logLevel);
+
+	public abstract long getItemsCompleted();
+
+	public abstract void setItemsCompleted(long itemsCompleted);
+
+	public abstract double getPercentComplete();
+
+	public abstract void setPercentComplete(double percentComplete);
+
+	public abstract void updateJob(int completedDelta);
+
+	public abstract void setJobResultObject(Object jobResultObject);
+
+	public abstract Object getJobResultObject();
 }

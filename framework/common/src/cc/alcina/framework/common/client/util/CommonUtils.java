@@ -1055,4 +1055,8 @@ public class CommonUtils {
 		}
 		return result;
 	}
+
+	public static Exception wrapThrowable(Throwable e) {
+		return (Exception) (e instanceof Exception ? e : new Exception(e));
+	}
 }
