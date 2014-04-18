@@ -16,6 +16,8 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -40,6 +42,7 @@ import com.google.gwt.user.client.ui.Widget;
  * 
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint=FromOfflineConflictResolver.class,implementationType=ImplementationType.INSTANCE)
 public class FromOfflineConflictResolver {
 	@SuppressWarnings("unused")
 	private Throwable caught;

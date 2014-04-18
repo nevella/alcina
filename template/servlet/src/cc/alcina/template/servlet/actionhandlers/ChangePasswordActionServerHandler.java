@@ -21,30 +21,34 @@ import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 public class ChangePasswordActionServerHandler extends
 		BaseRemoteActionPerformer<ChangePasswordServerAction> {
 	private void performAction(ChangePasswordModel bindable) {
-		jobStarted();
-		CommonPersistenceLocal up = Registry.impl(
-				CommonPersistenceProvider.class).getCommonPersistence();
-		AlcinaTemplateUser user = up.getItemById(AlcinaTemplateUser.class,
-				bindable.getUserId());
-		Permissible p = new Permissible() {
-			public String rule() {
-				return null;
-			}
+		try {
+			jobStarted();
+			CommonPersistenceLocal up = Registry.impl(
+					CommonPersistenceProvider.class).getCommonPersistence();
+			AlcinaTemplateUser user = up.getItemById(AlcinaTemplateUser.class,
+					bindable.getUserId());
+			Permissible p = new Permissible() {
+				public String rule() {
+					return null;
+				}
 
-			public AccessLevel accessLevel() {
-				return AccessLevel.ADMIN_OR_OWNER;
+				public AccessLevel accessLevel() {
+					return AccessLevel.ADMIN_OR_OWNER;
+				}
+			};
+			if (!PermissionsManager.get().isPermissible(user, p)) {
+				throw new RuntimeException("Insufficient permissions");
 			}
-		};
-		if (!PermissionsManager.get().isPermissible(user, p)) {
-			throw new RuntimeException("Insufficient permissions");
+			String password = bindable.getNewPassword();
+			if (CommonUtils.isNullOrEmpty(user.getSalt())) {
+				user.setSalt(user.getUserName());
+			}
+			user.setPassword(UnixCrypt.crypt(user.getSalt(), password));
+			user = (AlcinaTemplateUser) up.mergeUser(user);
+			jobOk("Password changed for user " + user.getUserName());
+		} catch (Exception e) {
+			jobError(e);
 		}
-		String password = bindable.getNewPassword();
-		if (CommonUtils.isNullOrEmpty(user.getSalt())) {
-			user.setSalt(user.getUserName());
-		}
-		user.setPassword(UnixCrypt.crypt(user.getSalt(), password));
-		user = (AlcinaTemplateUser) up.mergeUser(user);
-		jobOk("Password changed for user " + user.getUserName());
 	}
 
 	public void performAction(ChangePasswordServerAction action) {

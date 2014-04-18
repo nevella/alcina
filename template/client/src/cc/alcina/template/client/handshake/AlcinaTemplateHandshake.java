@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.state.Player;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.logic.handshake.AllowObjectsLoadFailedPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandleLoggedInSignalHandler;
+import cc.alcina.framework.gwt.client.logic.handshake.HandleObjectDeserializationIssuePlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsort;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.InitLayoutPlayer;
@@ -71,6 +72,7 @@ public class AlcinaTemplateHandshake {
 		consort.addPlayer(new LoadObjectsPlayer()).addRequires(
 				UploadOfflineTransformsPlayer.OFFLINE_TRANSFORMS_UPLOADED);
 		consort.addPlayer(new UnwrapAndRegisterObjectsPlayer());
+		consort.addPlayer(new HandleObjectDeserializationIssuePlayer());
 		consort.addPlayer(new AllowObjectsLoadFailedPlayer());
 		consort.addPlayer(Registry.impl(SetupAfterObjectsPlayer.class));
 		consort.addPlayer(new InitLayoutPlayer());

@@ -9,6 +9,12 @@ public class EndpointPlayer<D> extends RunnablePlayer<D> {
 
 	private boolean finishes;
 
+	protected EndpointPlayer(D requiresState) {
+		super();
+		addRequires(requiresState);
+		this.finishes = true;
+	}
+
 	public EndpointPlayer(D requiresState, AsyncCallback completionCallback,
 			boolean finishes) {
 		super();
@@ -19,9 +25,12 @@ public class EndpointPlayer<D> extends RunnablePlayer<D> {
 
 	@Override
 	public void run() {
+	}
+
+	@Override
+	protected void wasPlayed() {
+		consort.wasPlayed(this, getProvides(), !finishes);
 		if (finishes) {
-			wasPlayed();// make sure wasPlayed before finished, that's why the
-						// explicit call
 			consort.finished();
 		}
 		if (completionCallback != null) {

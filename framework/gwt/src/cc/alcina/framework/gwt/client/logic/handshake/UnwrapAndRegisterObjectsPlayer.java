@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
+import java.util.Collections;
+
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
@@ -14,12 +16,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.util.AsyncCallbackStd.ReloadOnSuccessCallback;
 import cc.alcina.framework.gwt.persistence.client.DteReplayWorker;
-import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.user.client.Window;
 
 /**
  * 
@@ -41,6 +40,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	public UnwrapAndRegisterObjectsPlayer() {
 		addRequires(HandshakeState.OBJECT_DATA_LOADED);
 		addProvides(HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED);
+		addProvides(HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION);
 	}
 
 	@Override
@@ -61,6 +61,14 @@ public class UnwrapAndRegisterObjectsPlayer extends
 
 	@Override
 	public void loop() {
+		try {
+			loop0();
+		} catch (Exception e) {
+			onFailure(e);
+		}
+	}
+
+	private void loop0() {
 		if (phase == null || phase == Phase.REPLAYING_TRANSFORMS) {
 			currentDelta = null;
 		} else {
@@ -76,7 +84,10 @@ public class UnwrapAndRegisterObjectsPlayer extends
 			} else {
 				HandshakeConsortModel.get().ensureLoadObjectsNotifier("")
 						.modalOff();
-				wasPlayed();
+				consort.wasPlayed(
+						this,
+						Collections
+								.singletonList(HandshakeState.OBJECTS_UNWRAPPED_AND_REGISTERED));
 				return;
 			}
 		}
@@ -114,12 +125,11 @@ public class UnwrapAndRegisterObjectsPlayer extends
 
 	@Override
 	public void onFailure(Throwable caught) {
-		if (Window.confirm("Failure in unwrap/register -  press 'oi' to clear")) {
-			LocalTransformPersistence.get().clearPersistedClient(null, -1,
-					new ReloadOnSuccessCallback(), true);
-			return;
-		}
-		super.onFailure(caught);
+		caught.printStackTrace();
+		consort.wasPlayed(
+				this,
+				Collections
+						.singletonList(HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION));
 	}
 
 	@Override

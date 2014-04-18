@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
+import java.util.Collections;
+
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -46,6 +48,13 @@ public class HandshakeConsort extends
 
 	public boolean isAfterDomainModelLoaded() {
 		return containsState(HandshakeState.SETUP_AFTER_OBJECTS_LOADED);
+	}
+
+	public void restartFromServices() {
+		HandshakeConsortModel.get().clearObjects();
+		Registry.impl(HandshakeConsortModel.class).setLoginResponse(null);
+		removeStates(Collections.singleton(UploadOfflineTransformsPlayer.OFFLINE_TRANSFORMS_UPLOADED));
+		signal(HandshakeSignal.OBJECTS_INVALIDATED);
 	}
 
 	public void logout() {

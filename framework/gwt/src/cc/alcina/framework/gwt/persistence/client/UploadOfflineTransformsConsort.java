@@ -117,7 +117,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 		@Override
 		public void run() {
-			new FromOfflineConflictResolver().resolve(
+			Registry.impl(FromOfflineConflictResolver.class).resolve(
 					transformsToPersistOnServer, remotePersistenceException,
 					LocalTransformPersistence.get(), this);
 		}
@@ -151,5 +151,9 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 		addPlayer(new Player_PERSIST_TRANSFORMS_SUCCCESS());
 		addEndpointPlayer(completionCallback, true);
 		nudge();
+	}
+
+	public boolean isPersistenceFailed() {
+		return containsState(State.PERSIST_TRANSFORMS_FAILURE);
 	}
 }

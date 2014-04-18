@@ -292,6 +292,13 @@ public class Consort<D> {
 	}
 
 	public void wasPlayed(Player<D> player, Collection<D> resultantStates) {
+		wasPlayed(player, resultantStates, true);
+	}
+
+	// TODO - cleanup - this works - unless we want some sort of threaded
+	// queue/consumer model - but it ain't so pretty
+	public void wasPlayed(Player<D> player, Collection<D> resultantStates,
+			boolean keepGoing) {
 		if (!isRunning()) {
 			return;
 		}
@@ -317,7 +324,9 @@ public class Consort<D> {
 				player.shortName(),
 				System.currentTimeMillis() - player.getStart()));
 		publishTopicWithBubble(AFTER_PLAY, player);
-		consumeQueue();
+		if (keepGoing) {
+			consumeQueue();
+		}
 	}
 
 	protected int depth() {
@@ -490,7 +499,7 @@ public class Consort<D> {
 			}
 		}
 		consumingQueue = false;
-		if (playing.isEmpty()) {
+		if (playing.isEmpty() && running) {
 			topicPublisher.publishTopic(NO_ACTIVE_PLAYERS, null);
 		}
 	}

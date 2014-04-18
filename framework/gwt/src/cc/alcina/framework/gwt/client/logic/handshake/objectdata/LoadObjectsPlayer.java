@@ -30,7 +30,7 @@ public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
 					.impl(LoadObjectsFromRemotePlayer.class));
 			addPlayer(new RetrieveLocalModelTransformDeltasPlayer());
 			addPlayer(Registry.impl(CheckSoleOfflineTabPlayer.class));
-			addPlayer(Registry.impl( CheckOfflineSufficentPlayer.class));
+			addPlayer(Registry.impl(CheckOfflineSufficentPlayer.class));
 			addPlayer(new MergeObjectDeltasPlayer());
 			addPlayer(new EndpointPlayer(
 					LoadObjectDataState.DELTA_STORE_MERGED_IF_NECESSARY, null,
