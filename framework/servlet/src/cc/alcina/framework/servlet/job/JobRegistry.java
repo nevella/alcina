@@ -15,28 +15,27 @@ package cc.alcina.framework.servlet.job;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 import org.apache.log4j.Logger;
 
-import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.actions.RemoteAction;
-import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
-import cc.alcina.framework.common.client.csobjects.HasJobInfo;
-import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.csobjects.JobResultType;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CancelledException;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.servlet.RemoteActionLogger;
+import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 
 /**
  * 
@@ -45,6 +44,21 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 public class JobRegistry {
 	public static final String TOPIC_JOB_FAILURE = JobRegistry.class.getName()
 			+ ".TOPIC_JOB_FAILURE";
+
+	public static final String TOPIC_JOB_STARTED = JobRegistry.class.getName()
+			+ ".TOPIC_JOB_STARTED";
+
+	public static final String CONTEXT_TRACKER = JobRegistry.class.getName()
+			+ ".CONTEXT_TRACKER";
+
+	public static final String CONTEXT_NEXT_JOB_ID = JobRegistry.class
+			.getName() + ".CONTEXT_NEXT_JOB_ID";
+
+	public static final String CONTEXT_NON_PERSISTENT = JobRegistry.class
+			.getName() + ".CONTEXT_NON_PERSISTENT";
+
+	public static final String CONTEXT_USE_LOGGER = JobRegistry.class.getName()
+			+ ".CONTEXT_USE_LOGGER";
 
 	public static JobRegistry get() {
 		JobRegistry singleton = Registry.checkSingleton(JobRegistry.class);
@@ -55,210 +69,236 @@ public class JobRegistry {
 		return singleton;
 	}
 
-	public static void notifyJobFailure(JobInfo info) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_FAILURE, info);
+	public static void notifyJobFailure(JobTracker tracker) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_FAILURE, tracker);
 	}
 
 	public static void notifyJobFailureListenerDelta(
-			TopicListener<JobInfo> listener, boolean add) {
+			TopicListener<JobTracker> listener, boolean add) {
 		GlobalTopicPublisher.get().listenerDelta(TOPIC_JOB_FAILURE, listener,
 				add);
 	}
-	
-	
 
-	private Map<Long, JobInfo> infoMap;
-
-	private Map<JobInfo, Class> jobClassMap;
-
-	private Multimap<Long, List<JobInfo>> infoChildMap;
-
-	private Map<Long, Boolean> cancelledMap;
+	private Map<String, JobTracker> trackerMap = new LinkedHashMap<String, JobTracker>();
 
 	boolean refuseJobs = false;
 
 	private JobRegistry() {
-		super();
-		infoMap = new HashMap<Long, JobInfo>();
-		infoChildMap = new Multimap<Long, List<JobInfo>>();
-		cancelledMap = new HashMap<Long, Boolean>();
-		jobClassMap = new WeakHashMap<JobInfo, Class>();
 	}
 
-	public void cancel(Long id) {
-		cancelledMap.put(id, true);
-		JobInfo info = getTopLevelInfoForThread();
-		if (info != null && !info.isComplete()) {
-			jobError(info, "Job cancelled");
+	public void cancel(String id) {
+		JobTracker tracker = trackerMap.get(id);
+		if (tracker != null && !tracker.isCancelled()) {
+			tracker.setCancelled(true);
+			jobError(tracker, new RuntimeException("Job cancelled"), false);
 		}
 	}
 
-	public List<JobInfo> cancelAll() {
+	public List<JobTracker> cancelAll() {
 		refuseJobs = true;
-		for (Long tid : infoMap.keySet()) {
-			if (!cancelledMap.containsKey(tid)) {
-				cancel(tid);
+		List<JobTracker> running = new ArrayList();
+		for (JobTracker root : getRootTrackers()) {
+			if (!root.isCancelled()) {
+				root.setCancelled(true);
 			}
-		}
-		List<JobInfo> running = new ArrayList();
-		for (JobInfo jobInfo : infoMap.values()) {
-			if (!jobInfo.isCompleteInThread()) {
-				running.add(jobInfo);
+			if (!root.isComplete()) {
+				running.add(root);
 			}
 		}
 		return running;
 	}
 
-	public void checkCancelled(Logger logger) {
-		if (isCancelled()) {
-			logger.info("Action cancelled by user");
-			throw new CancelledException("Action cancelled by user");
-		}
+	private List<JobTracker> getRootTrackers() {
+		CollectionFilter<JobTracker> filter = new CollectionFilter<JobTracker>() {
+			@Override
+			public boolean allow(JobTracker o) {
+				return o.provideIsRoot();
+			}
+		};
+		return CollectionFilters.filter(trackerMap.values(), filter);
 	}
 
-	public JobInfo getInfo(long id) {
-		JobInfo jobInfo = infoMap.get(id);
-		if (jobInfo != null) {
-			JobInfo kid = CommonUtils.last(infoChildMap.getAndEnsure(id));
-			if (kid != null) {
-				return jobInfo.combineWithChild(kid);
+	public void checkCancelled() {
+		JobTracker jobTracker = getContextTracker();
+		if (jobTracker == null) {
+			System.out.println("warn - checking null trracker");
+		} else {
+			if (jobTracker.isCancelled()) {
+				getContextLogger().info("Action cancelled by user");
+				throw new CancelledException("Action cancelled by user");
 			}
 		}
-		return jobInfo;
 	}
 
-	public Set<Class> getRunningJobClasses() {
-		Set<Class> result = new LinkedHashSet<Class>();
-		List<Long> ids = getRunningJobs();
-		for (Long id : ids) {
-			result.add(jobClassMap.get(infoMap.get(id)));
-		}
-		return result;
+	public JobTracker getInfo(String id) {
+		return trackerMap.get(id);
 	}
 
-	public List<Long> getRunningJobs() {
-		Set<Entry<Long, JobInfo>> entries = infoMap.entrySet();
-		List<Long> runningJobids = new ArrayList<Long>();
-		for (Entry<Long, JobInfo> entry : entries) {
+	public List<String> getRunningJobs() {
+		Set<Entry<String, JobTracker>> entries = trackerMap.entrySet();
+		List<String> runningJobIds = new ArrayList<String>();
+		for (Entry<String, JobTracker> entry : entries) {
 			if (!entry.getValue().isComplete()) {
-				runningJobids.add(entry.getKey());
+				runningJobIds.add(entry.getKey());
 			}
 		}
-		return runningJobids;
+		return runningJobIds;
 	}
 
-	public boolean isCancelled() {
-		long id = Thread.currentThread().getId();
-		return CommonUtils.bv(cancelledMap.get(id)) || !infoMap.containsKey(id);
+	public void jobOk(String message) {
+		jobComplete(JobResultType.OK, message);
 	}
 
-	public boolean isTopLevel(JobInfo jobInfo) {
-		long id = Thread.currentThread().getId();
-		return jobInfo == infoMap.get(id);
-	}
-
-	public void jobComplete(JobInfo info) {
-		jobComplete(info, "Job complete");
-	}
-
-	public void jobComplete(JobInfo info, String message) {
-		if (info == null) {
-			return;
+	private void jobComplete(JobResultType resultType, String message) {
+		final JobTracker tracker = getContextTracker();
+		tracker.setComplete(true);
+		tracker.setProgressMessage(message);
+		tracker.setEndTime(new Date());
+		AlcinaTopics.jobComplete(tracker);
+		logComplete(tracker, message);
+		if (tracker.provideIsRoot()) {
+			new Thread() {
+				public void run() {
+					try {
+						Thread.sleep(10000);
+						trackerMap.remove(tracker.getId());
+					} catch (InterruptedException e) {
+					}
+				};
+			}.start();
+		} else {
+			trackerMap.remove(tracker.getId());
 		}
-		info.setComplete(true);
-		info.setPercentComplete(1);
-		info.setProgressMessage(message);
-		info.setEndTime(new Date());
-		AlcinaTopics.jobComplete(info);
-		updateInfo(info);
+		popContextTracker(tracker);
 	}
 
-	public void jobCompleteFromThread() {
-		JobInfo info = getTopLevelInfoForThread();
-		if (info != null) {
-			info.setCompleteInThread(true);
-		}
-	}
-
-	public void jobError(JobInfo info, Exception ex) {
-		if (info == null) {
-			return;
-		}
-		jobComplete(info);
-		info.setErrorMessage("Job failed: " + ex.toString());
-		JobRegistry.get().updateInfo(info);
-		info.setJobException(ex);
-		notifyJobFailure(info);
-	}
-
-	public void jobError(JobInfo info, String message) {
-		jobError(info, new RuntimeException(message));
-	}
-
-	public void jobErrorInThread() {
-		JobInfo info = getTopLevelInfoForThread();
-		if (info != null && !info.isComplete()) {
-			jobError(info, "Unknown error");
+	private void logComplete(JobTracker tracker, String message) {
+		getContextLogger().info(message);
+		long itemCount = tracker.getItemCount();
+		if (itemCount != 0) {
+			double avgTime = tracker.getJobDuration() / itemCount;
+			getContextLogger().info(
+					String.format(
+							"Run time: %.4f s. - avg. time per item: %s ms.",
+							tracker.getJobDuration() / 1000, avgTime));
+		} else {
+			getContextLogger().info(
+					String.format("Run time: %.4f s.",
+							tracker.getJobDuration() / 1000));
 		}
 	}
 
-	public void jobProgress(JobInfo info, String progressMessage,
-			double percentComplete) {
-		if (info == null) {
-			return;
+	private void popContextTracker(JobTracker tracker) {
+		JobTracker current = getContextTracker();
+		if (current != tracker) {
+			System.out.format(
+					"warn -- popping wrong tracker %s, thread-current %s\n",
+					tracker, current);
+		} else {
+			LooseContext.set(CONTEXT_TRACKER, tracker.getParent());
 		}
-		info.setComplete(false);
-		info.setPercentComplete(percentComplete);
-		info.setProgressMessage(progressMessage);
-		updateInfo(info);
 	}
 
-	public ActionLogItem performChildJob(RemoteActionPerformer performer,
-			RemoteAction action, boolean throwChildExceptions) throws Exception {
-		ActionLogItem log = performer.performAction(action);
-		if (performer instanceof HasJobInfo) {
-			Exception ex = ((HasJobInfo) performer).getJobInfo()
-					.getJobException();
-			if (ex != null && throwChildExceptions) {
-				throw ex;
-			}
-		}
-		return log;
+	public void jobError(Exception ex) {
+		JobTracker tracker = getContextTracker();
+		jobError(tracker, ex, true);
 	}
 
-	public JobInfo startJob(Class jobClass, String jobName, String message) {
+	private void jobError(JobTracker tracker, Exception ex, boolean logException) {
+		if (logException) {
+			getContextLogger().warn("", ex);
+			ex.printStackTrace();
+		}
+		String jobResult = "Job failed: " + ex.toString();
+		tracker.setjobError(ex);
+		jobComplete(JobResultType.FAIL, jobResult);
+		notifyJobFailure(tracker);
+	}
+
+	public void jobError(String message) {
+		jobError(new RuntimeException(message));
+	}
+
+	public void jobProgress(String progressMessage, double percentComplete) {
+		JobTracker tracker = getContextTracker();
+		tracker.setComplete(false);
+		tracker.setPercentComplete(percentComplete);
+		tracker.setProgressMessage(progressMessage);
+	}
+
+	public JobTracker startJob(Class jobClass, String jobName, String message) {
 		if (refuseJobs) {
 			throw new RuntimeException("refusing jobs");
 		}
-		JobInfo info = new JobInfo();
-		info.setComplete(false);
-		info.setJobName(jobName == null ? jobClass.getSimpleName() : jobName);
-		jobClassMap.put(info, jobClass);
-		info.setPercentComplete(0);
-		info.setProgressMessage(message != null ? message : "Starting job...");
-		updateInfo(info);
-		info.setStartTime(new Date());
-		JobInfo tlInfo = getTopLevelInfoForThread();
-		if (tlInfo == null || tlInfo.isComplete()) {
-			cancelledMap.remove(info.getThreadId());
-			infoMap.put(info.getThreadId(), info);
-			infoChildMap.clear();
+		JobId jobId = null;
+		JobId contextId = LooseContext.get(CONTEXT_NEXT_JOB_ID);
+		if (contextId == null) {
+			jobId = new JobId(jobClass, ServletLayerUtils.getLocalHostName());
 		} else {
-			infoChildMap.add(info.getThreadId(), info);
+			jobId = contextId;
+			LooseContext.remove(CONTEXT_NEXT_JOB_ID);
 		}
-		return info;
+		JobTracker tracker = new JobTracker(jobId.toString());
+		tracker.setComplete(false);
+		tracker.setJobName(jobName == null ? jobClass.getSimpleName() : jobName);
+		tracker.setPercentComplete(0);
+		tracker.setProgressMessage(message != null ? message
+				: "Starting job...");
+		trackerMap.put(tracker.getId(), tracker);
+		tracker.setStartTime(new Date());
+		Logger custom = LooseContext.get(CONTEXT_USE_LOGGER);
+		tracker.setLogger(custom != null ? custom : Registry.impl(
+				RemoteActionLoggerProvider.class).createLogger(jobClass));
+		pushContextTracker(tracker);
+		LooseContext.getContext().publishTopic(TOPIC_JOB_STARTED, tracker);
+		return tracker;
 	}
 
-	public void updateInfo(JobInfo info) {
-		long id = Thread.currentThread().getId();
-		info.setThreadId(id);
-		if (info.isComplete()) {
-			infoChildMap.getAndEnsure(id).remove(info);// if it's a child - keep
-														// if top level
+	private void pushContextTracker(JobTracker tracker) {
+		JobTracker current = getContextTracker();
+		if (current != null) {
+			tracker.setParent(current);
+			current.getChildren().add(tracker);
 		}
+		LooseContext.set(CONTEXT_TRACKER, tracker);
 	}
 
-	private JobInfo getTopLevelInfoForThread() {
-		return infoMap.get(Thread.currentThread().getId());
+	public JobTracker getContextTracker() {
+		return LooseContext.get(CONTEXT_TRACKER);
+	}
+
+	public Logger getContextLogger() {
+		JobTracker tracker = getContextTracker();
+		return (Logger) tracker.getLogger();
+	}
+
+	public String getContextLogBuffer() {
+		Logger contextLogger = getContextLogger();
+		if (contextLogger instanceof RemoteActionLogger) {
+			return ((RemoteActionLogger) contextLogger).closeLogger();
+		}
+		return null;
+	}
+
+	public RemoteActionLogger getAccessLogger() {
+		Logger contextLogger = getContextLogger();
+		if (contextLogger instanceof RemoteActionLogger) {
+			return (RemoteActionLogger) contextLogger;
+		}
+		return null;
+	}
+
+	public void updateJob(String message) {
+		updateJob(message, getContextTracker().provideIsRoot() ? 1 : 0);
+	}
+
+	public void updateJob(String message, int completedDelta) {
+		JobTracker contextTracker = getContextTracker();
+		contextTracker.updateJob(completedDelta);
+		long itemsCompleted = contextTracker.getItemsCompleted();
+		long itemCount = contextTracker.getItemCount();
+		double progress = ((double) itemsCompleted) / ((double) itemCount);
+		jobProgress(String.format("(%s/%s) -  %s", itemsCompleted, itemCount,
+				message), progress);
 	}
 }

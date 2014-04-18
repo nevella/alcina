@@ -12,6 +12,10 @@ public abstract class LooseContext {
 	public static <T> T get(String key) {
 		return getContext().get(key);
 	}
+	
+	public static void remove(String key) {
+		getContext().remove(key);
+	}
 
 	public static boolean getBoolean(String key) {
 		return getContext().getBoolean(key);

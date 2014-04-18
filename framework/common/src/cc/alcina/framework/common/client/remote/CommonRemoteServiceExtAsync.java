@@ -14,7 +14,7 @@ public interface CommonRemoteServiceExtAsync extends CommonRemoteServiceAsync {
 	public void getLogsForAction(RemoteAction action, Integer count,
 			AsyncCallback<List<ActionLogItem>> callback);
 
-	public void performAction(RemoteAction action, AsyncCallback<Long> callback);
+	public void performAction(RemoteAction action, AsyncCallback<String> callback);
 
 	public void performActionAndWait(RemoteAction action,
 			AsyncCallback<ActionLogItem> callback);

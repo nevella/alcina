@@ -19,7 +19,8 @@ import java.beans.PropertyChangeListener;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.csobjects.JobResultType;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -52,58 +53,9 @@ public class ActionProgress extends Composite implements
 	protected transient MutablePropertyChangeSupport propertyChangeSupport = new MutablePropertyChangeSupport(
 			this);
 
-	public void addPropertyChangeListener(PropertyChangeListener listener) {
-		this.propertyChangeSupport.addPropertyChangeListener(listener);
-	}
-
-	public void addPropertyChangeListener(String propertyName,
-			PropertyChangeListener listener) {
-		this.propertyChangeSupport.addPropertyChangeListener(propertyName,
-				listener);
-	}
-
-	public void firePropertyChange(PropertyChangeEvent evt) {
-		this.propertyChangeSupport.firePropertyChange(evt);
-	}
-
-	public void firePropertyChange(String propertyName, boolean oldValue,
-			boolean newValue) {
-		this.propertyChangeSupport.firePropertyChange(propertyName, oldValue,
-				newValue);
-	}
-
-	public void firePropertyChange(String propertyName, int oldValue,
-			int newValue) {
-		this.propertyChangeSupport.firePropertyChange(propertyName, oldValue,
-				newValue);
-	}
-
-	public void firePropertyChange(String propertyName, Object oldValue,
-			Object newValue) {
-		this.propertyChangeSupport.firePropertyChange(propertyName, oldValue,
-				newValue);
-	}
-
-	@Transient
-	public PropertyChangeListener[] getPropertyChangeListeners() {
-		return this.propertyChangeSupport.getPropertyChangeListeners();
-	}
-
-	public void removePropertyChangeListener(PropertyChangeListener listener) {
-		this.propertyChangeSupport.removePropertyChangeListener(listener);
-	}
-
-	public void removePropertyChangeListener(String propertyName,
-			PropertyChangeListener listener) {
-		this.propertyChangeSupport.removePropertyChangeListener(propertyName,
-				listener);
-	}
-
-	private final Long id;
-
 	private FlowPanel fp;
 
-	private JobInfo info = new JobInfo();
+	private JobTracker info = new JobTracker();
 
 	private Grid grid;
 
@@ -125,50 +77,22 @@ public class ActionProgress extends Composite implements
 
 	private Timer timer;
 
-	private final AsyncCallback<JobInfo> completionCallback;
-
-	public void minimal() {
-		CellFormatter cf = grid.getCellFormatter();
-		cf.setVisible(0, 0, false);
-		cf.setVisible(0, 1, false);
-		cf.setVisible(1, 0, false);
-		cf.setVisible(1, 1, false);
-		fp.addStyleName("minimal");
-	}
-	private void cancelJob() {
-		cancelLink.setVisible(false);
-		cancellingStatusMessage.setText(" - Cancelling...");
-		cancellingStatusMessage.setVisible(true);
-		ClientBase.getCommonRemoteServiceAsyncInstance()
-				.pollJobStatus(getId(), true, new AsyncCallback<JobInfo>() {
-					public void onFailure(Throwable e) {
-						cancellingStatusMessage.setText(" - Error cancelling");
-						throw new WrappedRuntimeException(e);
-					}
-
-					public void onSuccess(JobInfo result) {
-						cancellingStatusMessage.setText(CANCELLED);
-					}
-				});
-		return;
-	}
-
-	public ActionProgress(final Long id) {
-		this(id, null);
-	}
+	private final AsyncCallback<JobTracker> completionCallback;
 
 	private int maxConnectionFailure = 2;
 
-	public int getMaxConnectionFailure() {
-		return this.maxConnectionFailure;
+	private String id;
+
+	private int row = 0;
+
+	private boolean stopped;
+
+	public ActionProgress(final String id) {
+		this(id, null);
 	}
 
-	public void setMaxConnectionFailure(int maxConnectionFailure) {
-		this.maxConnectionFailure = maxConnectionFailure;
-	}
-
-	public ActionProgress(final Long id,
-			AsyncCallback<JobInfo> completionCallback) {
+	public ActionProgress(final String id,
+			AsyncCallback<JobTracker> completionCallback) {
 		this.id = id;
 		this.completionCallback = completionCallback;
 		this.fp = new FlowPanel();
@@ -208,7 +132,7 @@ public class ActionProgress extends Composite implements
 
 			@Override
 			public void run() {
-				AsyncCallback<JobInfo> callback = new AsyncCallback<JobInfo>() {
+				AsyncCallback<JobTracker> callback = new AsyncCallback<JobTracker>() {
 					public void onFailure(Throwable caught) {
 						checking = false;
 						if (maxConnectionFailure-- <= 0) {
@@ -221,7 +145,7 @@ public class ActionProgress extends Composite implements
 						}
 					}
 
-					public void onSuccess(JobInfo info) {
+					public void onSuccess(JobTracker info) {
 						checking = false;
 						if (info.isComplete()) {
 							stopTimer();
@@ -243,25 +167,95 @@ public class ActionProgress extends Composite implements
 		};
 	}
 
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		startTimer();
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		this.propertyChangeSupport.addPropertyChangeListener(listener);
 	}
 
-	@Override
-	protected void onDetach() {
-		stopTimer();
-		super.onDetach();
+	public void addPropertyChangeListener(String propertyName,
+			PropertyChangeListener listener) {
+		this.propertyChangeSupport.addPropertyChangeListener(propertyName,
+				listener);
+	}
+
+	public void ensureRunning() {
+		if (timer != null && stopped) {
+			startTimer();
+		}
 	}
 
 	public void fireNullPropertyChange(String name) {
 		this.propertyChangeSupport.fireNullPropertyChange(name);
 	}
+	public void firePropertyChange(PropertyChangeEvent evt) {
+		this.propertyChangeSupport.firePropertyChange(evt);
+	}
 
-	private int row = 0;
+	public void firePropertyChange(String propertyName, boolean oldValue,
+			boolean newValue) {
+		this.propertyChangeSupport.firePropertyChange(propertyName, oldValue,
+				newValue);
+	}
 
-	private boolean stopped;
+	public void firePropertyChange(String propertyName, int oldValue,
+			int newValue) {
+		this.propertyChangeSupport.firePropertyChange(propertyName, oldValue,
+				newValue);
+	}
+
+	public void firePropertyChange(String propertyName, Object oldValue,
+			Object newValue) {
+		this.propertyChangeSupport.firePropertyChange(propertyName, oldValue,
+				newValue);
+	}
+
+	public String getId() {
+		return this.id;
+	}
+
+	public JobTracker getJobInfo() {
+		return info;
+	}
+
+	public int getMaxConnectionFailure() {
+		return this.maxConnectionFailure;
+	}
+
+	@Transient
+	public PropertyChangeListener[] getPropertyChangeListeners() {
+		return this.propertyChangeSupport.getPropertyChangeListeners();
+	}
+
+	public void minimal() {
+		CellFormatter cf = grid.getCellFormatter();
+		cf.setVisible(0, 0, false);
+		cf.setVisible(0, 1, false);
+		cf.setVisible(1, 0, false);
+		cf.setVisible(1, 1, false);
+		fp.addStyleName("minimal");
+	}
+
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		this.propertyChangeSupport.removePropertyChangeListener(listener);
+	}
+
+	public void removePropertyChangeListener(String propertyName,
+			PropertyChangeListener listener) {
+		this.propertyChangeSupport.removePropertyChangeListener(propertyName,
+				listener);
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public void setJobInfo(JobTracker jobTracker) {
+		this.info = jobTracker;
+		updateProgress();
+	}
+
+	public void setMaxConnectionFailure(int maxConnectionFailure) {
+		this.maxConnectionFailure = maxConnectionFailure;
+	}
 
 	private void addToGrid(String label, Widget widget) {
 		InlineLabel l = new InlineLabel(label + ": ");
@@ -273,6 +267,34 @@ public class ActionProgress extends Composite implements
 		grid.getCellFormatter().setVerticalAlignment(row, 1,
 				HasVerticalAlignment.ALIGN_TOP);
 		row++;
+	}
+
+	private void cancelJob() {
+		cancelLink.setVisible(false);
+		cancellingStatusMessage.setText(" - Cancelling...");
+		cancellingStatusMessage.setVisible(true);
+		ClientBase.getCommonRemoteServiceAsyncInstance()
+				.pollJobStatus(getId(), true, new AsyncCallback<JobTracker>() {
+					public void onFailure(Throwable e) {
+						cancellingStatusMessage.setText(" - Error cancelling");
+						throw new WrappedRuntimeException(e);
+					}
+
+					public void onSuccess(JobTracker result) {
+						cancellingStatusMessage.setText(CANCELLED);
+					}
+				});
+		return;
+	}
+
+	private void startTimer() {
+		stopped = false;
+		timer.scheduleRepeating(REFRESH_DELAY_MS);
+	}
+
+	private void stopTimer() {
+		stopped = true;
+		timer.cancel();
 	}
 
 	private void updateProgress() {
@@ -287,8 +309,8 @@ public class ActionProgress extends Composite implements
 		}
 		times.setHTML(time);
 		String msg = info.getProgressMessage();
-		if (info.getErrorMessage() != null) {
-			msg = info.getErrorMessage();
+		if (info.getJobResultType()==JobResultType.FAIL) {
+			msg = info.getJobResult();
 			message.setStyleName("error");
 		}
 		if (!info.isComplete()
@@ -302,32 +324,15 @@ public class ActionProgress extends Composite implements
 				+ "px");
 	}
 
-	public void setJobInfo(JobInfo jobInfo) {
-		this.info = jobInfo;
-		updateProgress();
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		startTimer();
 	}
 
-	public JobInfo getJobInfo() {
-		return info;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void ensureRunning() {
-		if (timer != null && stopped) {
-			startTimer();
-		}
-	}
-
-	private void stopTimer() {
-		stopped = true;
-		timer.cancel();
-	}
-
-	private void startTimer() {
-		stopped = false;
-		timer.scheduleRepeating(REFRESH_DELAY_MS);
+	@Override
+	protected void onDetach() {
+		stopTimer();
+		super.onDetach();
 	}
 }

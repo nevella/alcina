@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -40,7 +41,7 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
@@ -106,9 +107,11 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
+import cc.alcina.framework.servlet.job.JobId;
 import cc.alcina.framework.servlet.job.JobRegistry;
 
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
@@ -138,6 +141,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		implements CommonRemoteServiceExt {
 	public static final String UA_NULL_SERVER = "null/server";
 
+	public static void unexpectedExceptionBeforePostTransform(
+			TransformPersistenceToken persistenceToken) {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION,
+				persistenceToken);
+	}
+
 	private Logger logger;
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
@@ -164,23 +174,31 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
-	@WebMethod(readonlyPermitted = true)
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws WebException {
-		try {
-			return Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().getObjectDelta(specs);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new WebException(e);
-		}
+	public static void unexpectedExceptionBeforePostTransformListenerDelta(
+			TopicListener<TransformPersistenceToken> listener, boolean add) {
+		GlobalTopicPublisher.get()
+				.listenerDelta(
+						TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION,
+						listener, add);
 	}
 
 	@Override
-	protected void onBeforeRequestDeserialized(String serializedRequest) {
-		super.onBeforeRequestDeserialized(serializedRequest);
-		looseContextDepth = LooseContext.depth();
-		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
+	@WebMethod(readonlyPermitted = true)
+	public void dumpData(String data) {
+		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
+				"dumpPermitted")) {
+			throw new RuntimeException("Dump not permitted");
+		}
+		String key = String.valueOf(System.currentTimeMillis());
+		File dir = getDataDumpsFolder();
+		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
+		File file = new File(path);
+		try {
+			ResourceUtilities.writeStringToFile(data, file);
+			System.out.println("Client db dumped - key: " + key);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	@WebMethod(readonlyPermitted = true)
@@ -195,10 +213,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	protected Logger getLogger() {
-		return logger;
-	}
-
 	@WebMethod(readonlyPermitted = true)
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
@@ -209,8 +223,36 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@WebMethod(readonlyPermitted = true)
-	public List<Long> listRunningJobs() {
+	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
+			throws WebException {
+		try {
+			return Registry.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence().getObjectDelta(specs);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WebException(e);
+		}
+	}
+
+	@WebMethod(readonlyPermitted = true)
+	public List<String> listRunningJobs() {
 		return JobRegistry.get().getRunningJobs();
+	}
+
+	@Override
+	public String loadData(String key) {
+		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
+				"loadDumpPermitted")) {
+			throw new RuntimeException("Load dump not permitted");
+		}
+		File dir = getDataDumpsFolder();
+		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
+		File file = new File(path);
+		try {
+			return ResourceUtilities.readFileToString(file);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
@@ -237,9 +279,41 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	protected String getRemoteAddress() {
-		return getThreadLocalRequest() == null ? null : getThreadLocalRequest()
-				.getRemoteAddr();
+	@Override
+	public void logClientRecords(String serializedLogRecords) {
+		Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
+			@Override
+			public ClientLogRecords convert(String original) {
+				try {
+					return new AlcinaBeanSerializerS().deserialize(original);
+				} catch (Exception e) {
+					System.out.format(
+							"problem deserializing clientlogrecord:\n%s\n",
+							original);
+					e.printStackTrace();
+					if (ResourceUtilities.getBoolean(
+							CommonRemoteServiceServlet.class,
+							"throwLogClientRecordExceptions")) {
+						throw new WrappedRuntimeException(e);
+					}
+					return null;
+				}
+			}
+		};
+		List<String> lines = Arrays.asList(serializedLogRecords.split("\n"));
+		List<ClientLogRecords> records = CollectionFilters.convert(lines,
+				converter);
+		while (records.remove(null)) {
+		}
+		String remoteAddr = getRemoteAddress();
+		for (ClientLogRecords r : records) {
+			for (ClientLogRecord clr : r.getLogRecords()) {
+				clr.setIpAddress(remoteAddr);
+				sanitiseClrString(clr);
+			}
+		}
+		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
+				.persistClientLogRecords(records);
 	}
 
 	public void logRpcException(Exception ex) {
@@ -293,23 +367,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	protected RPCRequest getThreadRpcRequest() {
-		return getThreadLocalRequest() == null ? null
-				: (RPCRequest) getThreadLocalRequest().getAttribute(
-						THRD_LOCAL_RPC_RQ);
-	}
-
-	public Long performAction(final RemoteAction action) {
-		return performAction(action, true);
-	}
-
-	public Long performAction(final RemoteAction action,
-			final boolean persistentLog) {
+	public String performAction(final RemoteAction action) {
 		checkAnnotatedPermissions(action);
 		final RemoteActionPerformer performer = (RemoteActionPerformer) Registry
 				.get().instantiateSingle(RemoteActionPerformer.class,
 						action.getClass());
 		final PermissionsManager pm = PermissionsManager.get();
+		final JobId jobId = new JobId(performer.getClass(),
+				ServletLayerUtils.getLocalHostName());
+		final CountDownLatch latch = new CountDownLatch(1);
 		Thread thread = new Thread(performer.getClass().getSimpleName() + " - "
 				+ (++actionCount)) {
 			private int tLooseContextDepth;
@@ -317,33 +383,23 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			@Override
 			public void run() {
 				try {
+					LooseContext.set(JobRegistry.CONTEXT_NEXT_JOB_ID, jobId);
 					// different thread-local
 					tLooseContextDepth = LooseContext.depth();
 					pm.copyTo(PermissionsManager.get());
 					onAfterSpawnedThreadRun(this);
-					ActionLogItem result = null;
-					result = performer.performAction(action);
-					result.setActionClass(action.getClass());
-					result.setActionDate(new Date());
-					if (persistentLog) {
-						Registry.impl(CommonPersistenceProvider.class)
-								.getCommonPersistence().logActionItem(result);
-					}
+					latch.countDown();
+					performActionAndWait(action);
 				} catch (Exception e) {
-					JobRegistry.get().jobErrorInThread();
 					if (e instanceof RuntimeException) {
 						throw ((RuntimeException) e);
 					}
 					throw new RuntimeException(e);
 				} catch (OutOfMemoryError e) {
 					handleOom("", e);
-					JobRegistry.get().jobErrorInThread();
 					throw e;
 				} finally {
-					Registry.impl(RemoteActionLoggerProvider.class)
-							.clearAllThreadLoggers();
-					ThreadlocalTransformManager.get().resetTltm(null);
-					JobRegistry.get().jobCompleteFromThread();
+					LooseContext.set(JobRegistry.CONTEXT_NEXT_JOB_ID, null);
 					LooseContext.confirmDepth(tLooseContextDepth);
 				}
 			}
@@ -354,76 +410,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		// make sure we wait a bit before exiting, so the spawned thread can
 		// copy the pm
 		try {
-			Thread.sleep(50);
+			latch.await();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		return thread.getId();
-	}
-
-	protected void onBeforeSpawnedThreadRun(Thread thread) {
-	}
-
-	protected void onAfterSpawnedThreadRun(Thread thread) {
-	}
-
-	protected void handleOom(String payload, OutOfMemoryError e) {
-		if (DUMP_STACK_TRACE_ON_OOM) {
-			System.out.println("Payload:");
-			System.out.println(payload);
-			e.printStackTrace();
-			SEUtilities.threadDump();
-		}
+		return jobId.toString();
 	}
 
 	public ActionLogItem performActionAndWait(final RemoteAction action)
 			throws WebException {
-		return performActionAndWait(action, false);
-	}
-
-	public ActionLogItem performActionAndWait(final RemoteAction action,
-			boolean subJob) throws WebException {
-		if (LooseContext.getBoolean(CONTEXT_IS_PERFORMING_SUBJOB)) {
-			subJob = true;
-		}
-		checkAnnotatedPermissions(action);
-		RemoteActionPerformer performer = (RemoteActionPerformer) Registry
-				.get().instantiateSingle(RemoteActionPerformer.class,
-						action.getClass());
-		ActionLogItem result = null;
-		if (performer instanceof RequiresHttpRequest) {
-			RequiresHttpRequest req = (RequiresHttpRequest) performer;
-			req.setHttpServletRequest(getThreadLocalRequest());
-		}
-		try {
-			result = performer.performAction(action);
-			if (result != null) {
-				result.setActionClass(action.getClass());
-				result.setActionDate(new Date());
-				Registry.impl(CommonPersistenceProvider.class)
-						.getCommonPersistence().logActionItem(result);
-			}
-			return result;
-		} catch (Throwable t) {
-			Exception e = (Exception) ((t instanceof Exception) ? t
-					: new WrappedRuntimeException(t));
-			JobRegistry.get().jobErrorInThread();
-			boolean log = true;
-			if (e instanceof WrappedRuntimeException) {
-				WrappedRuntimeException ire = (WrappedRuntimeException) e;
-				log = ire.getSuggestedAction() != SuggestedAction.EXPECTED_EXCEPTION;
-			}
-			if (log) {
-				logRpcException(e);
-			}
-			throw new WebException(e);
-		} finally {
-			if (!subJob) {
-				Registry.impl(RemoteActionLoggerProvider.class)
-						.clearAllThreadLoggers();
-				JobRegistry.get().jobCompleteFromThread();
-			}
-		}
+		return new ActionLauncher().performActionAndWait(action);
 	}
 
 	public <G extends WrapperPersistable> Long persist(G gwpo)
@@ -449,10 +445,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			List<DeltaApplicationRecord> uncommitted, Logger logger)
 			throws WebException {
 		return persistOfflineTransforms(uncommitted, logger, null);
-	}
-
-	public static class ReuseIUserHolder {
-		public IUser iUser;
 	}
 
 	public int persistOfflineTransforms(
@@ -568,15 +560,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	protected boolean isPersistOfflineTransforms() {
-		return true;
+	@Override
+	public void ping() {
 	}
 
-	public JobInfo pollJobStatus(Long id, boolean cancel) {
+	public JobTracker pollJobStatus(String id, boolean cancel) {
 		if (cancel) {
 			JobRegistry.get().cancel(id);
 		}
-		JobInfo info = JobRegistry.get().getInfo(id);
+		JobTracker info = JobRegistry.get().getInfo(id);
 		if (info == null) {
 			throw new RuntimeException(
 					"Unknown job - probably server restarted");
@@ -656,17 +648,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
-			throws SerializationException {
-		return RPC
-				.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
-						rpcRequest.getParameters(),
-						rpcRequest.getSerializationPolicy());
-	}
-
-	protected void onAfterAlcinaAuthentication(String methodName) {
-	}
-
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
 		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().search(def, pageNumber);
@@ -675,23 +656,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformRequestException {
 		return transform(request, false, false, true).response;
-	}
-
-	/*
-	 * TODO - this should probably be integrated more with {transform} - why is
-	 * the server layer so special? just another client
-	 */
-	public DomainTransformLayerWrapper transformFromServletLayer(String tag)
-			throws DomainTransformRequestException {
-		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
-				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		if (pendingTransforms.isEmpty()) {
-			return null;
-		}
-		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
-				pendingTransforms);
-		pendingTransforms.clear();
-		return transformFromServletLayer(items, tag);
 	}
 
 	public DomainTransformLayerWrapper transformFromServletLayer(
@@ -719,6 +683,30 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	/*
+	 * TODO - this should probably be integrated more with {transform} - why is
+	 * the server layer so special? just another client
+	 */
+	public DomainTransformLayerWrapper transformFromServletLayer(String tag)
+			throws DomainTransformRequestException {
+		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
+				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		if (pendingTransforms.isEmpty()) {
+			return null;
+		}
+		ArrayList<DomainTransformEvent> items = new ArrayList<DomainTransformEvent>(
+				pendingTransforms);
+		pendingTransforms.clear();
+		return transformFromServletLayer(items, tag);
+	}
+
+	@Override
+	public PartialDtrUploadResponse uploadOfflineTransforms(
+			PartialDtrUploadRequest request) throws WebException {
+		return new PartialDtrUploadHandler().uploadOfflineTransforms(request,
+				this);
+	}
+
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException {
 		List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
@@ -744,6 +732,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return results;
 	}
 
+	private File getDataDumpsFolder() {
+		File dataFolder = ServletLayerObjects.get().getDataFolder();
+		File dir = new File(dataFolder.getPath() + File.separator
+				+ "client-dumps");
+		dir.mkdirs();
+		return dir;
+	}
+
 	private void logTransformException(DomainTransformResponse response) {
 		logger.info(String
 				.format("domain transform problem - clientInstance: %s - rqId: %s - user ",
@@ -756,6 +752,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logger.info("Per-event error: " + ex.getMessage());
 			logger.info("Event: " + ex.getEvent());
 		}
+	}
+
+	private void sanitiseClrString(ClientLogRecord clr) {
+		clr.setMessage(CommonUtils.nullToEmpty(clr.getMessage()).replace('\0',
+				' '));
 	}
 
 	protected void checkAnnotatedPermissions(Object o) {
@@ -797,9 +798,112 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	protected Logger getLogger() {
+		return logger;
+	}
+
+	protected String getRemoteAddress() {
+		return getThreadLocalRequest() == null ? null : getThreadLocalRequest()
+				.getRemoteAddr();
+	}
+
+	protected RPCRequest getThreadRpcRequest() {
+		return getThreadLocalRequest() == null ? null
+				: (RPCRequest) getThreadLocalRequest().getAttribute(
+						THRD_LOCAL_RPC_RQ);
+	}
+
+	protected String getUserAgent() {
+		return getUserAgent(getThreadLocalRequest());
+	}
+
+	protected String getUserAgent(HttpServletRequest rq) {
+		return rq == null ? UA_NULL_SERVER : rq.getHeader("User-Agent");
+	}
+
+	protected void handleOom(String payload, OutOfMemoryError e) {
+		if (DUMP_STACK_TRACE_ON_OOM) {
+			System.out.println("Payload:");
+			System.out.println(payload);
+			e.printStackTrace();
+			SEUtilities.threadDump();
+		}
+	}
+
+	protected void handleWrapperTransforms() {
+		EntityLayerTransformPropogation transformPropogation = Registry.impl(
+				EntityLayerTransformPropogation.class, void.class, true);
+		if (transformPropogation == null) {
+			return;
+		}
+		ThreadlocalTransformManager.cast().getTransforms();
+		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
+				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		if (pendingTransforms.isEmpty()) {
+			return;
+		}
+		final List<DomainTransformEvent> items = CollectionFilters.filter(
+				pendingTransforms, new IsWrappedObjectDteFilter());
+		pendingTransforms.removeAll(items);
+		if (!items.isEmpty() && !pendingTransforms.isEmpty()) {
+			throw new RuntimeException("Non-wrapped and wrapped object"
+					+ " transforms registered after transformPerist()");
+		}
+		if (items.isEmpty()) {
+			return;
+		}
+		new Thread() {
+			public void run() {
+				try {
+					int depth = LooseContext.depth();
+					transformFromServletLayer(items, null);
+					LooseContext.confirmDepth(depth);
+					ThreadlocalTransformManager.cast().resetTltm(null);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			};
+		}.start();
+	}
+
+	protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
+			throws SerializationException {
+		return RPC
+				.invokeAndEncodeResponse(this, rpcRequest.getMethod(),
+						rpcRequest.getParameters(),
+						rpcRequest.getSerializationPolicy());
+	}
+
+	protected boolean isPersistOfflineTransforms() {
+		return true;
+	}
+
 	protected int nextTransformRequestId() {
 		return Registry.impl(CommonRemoteServiceServletSupport.class)
 				.nextTransformRequestId();
+	}
+
+	protected void onAfterAlcinaAuthentication(String methodName) {
+	}
+
+	@Override
+	protected void onAfterResponseSerialized(String serializedResponse) {
+		LooseContext.confirmDepth(looseContextDepth);
+		PermissionsManager.get().setUser(null);
+		super.onAfterResponseSerialized(serializedResponse);
+	}
+
+	protected void onAfterSpawnedThreadRun(Thread thread) {
+	}
+
+	@Override
+	protected void onBeforeRequestDeserialized(String serializedRequest) {
+		super.onBeforeRequestDeserialized(serializedRequest);
+		looseContextDepth = LooseContext.depth();
+		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
+	}
+
+	protected void onBeforeSpawnedThreadRun(Thread thread) {
 	}
 
 	protected abstract void processValidLogin(LoginResponse lrb, String userName)
@@ -807,26 +911,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	protected void setLogger(Logger logger) {
 		this.logger = logger;
-	}
-
-	/**
-	 * synchronizing implies serialized transforms per clientInstance
-	 */
-	protected DomainTransformLayerWrapper transform(
-			DomainTransformRequest request, boolean ignoreClientAuthMismatch,
-			boolean forOfflineTransforms, boolean blockUntilAllListenersNotified)
-			throws DomainTransformRequestException {
-		HiliLocatorMap locatorMap = Registry.impl(
-				CommonRemoteServiceServletSupport.class)
-				.getLocatorMapForClient(request);
-		synchronized (locatorMap) {
-			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, locatorMap,
-					Registry.impl(TransformLoggingPolicy.class), true,
-					ignoreClientAuthMismatch, forOfflineTransforms,
-					getLogger(), blockUntilAllListenersNotified);
-			return submitAndHandleTransforms(persistenceToken);
-		}
 	}
 
 	protected DomainTransformLayerWrapper submitAndHandleTransforms(
@@ -871,19 +955,107 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	public static void unexpectedExceptionBeforePostTransform(
-			TransformPersistenceToken persistenceToken) {
-		GlobalTopicPublisher.get().publishTopic(
-				TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION,
-				persistenceToken);
+	/**
+	 * synchronizing implies serialized transforms per clientInstance
+	 */
+	protected DomainTransformLayerWrapper transform(
+			DomainTransformRequest request, boolean ignoreClientAuthMismatch,
+			boolean forOfflineTransforms, boolean blockUntilAllListenersNotified)
+			throws DomainTransformRequestException {
+		HiliLocatorMap locatorMap = Registry.impl(
+				CommonRemoteServiceServletSupport.class)
+				.getLocatorMapForClient(request);
+		synchronized (locatorMap) {
+			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
+					request, locatorMap,
+					Registry.impl(TransformLoggingPolicy.class), true,
+					ignoreClientAuthMismatch, forOfflineTransforms,
+					getLogger(), blockUntilAllListenersNotified);
+			return submitAndHandleTransforms(persistenceToken);
+		}
 	}
 
-	public static void unexpectedExceptionBeforePostTransformListenerDelta(
-			TopicListener<TransformPersistenceToken> listener, boolean add) {
-		GlobalTopicPublisher.get()
-				.listenerDelta(
-						TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION,
-						listener, add);
+	public class ActionLauncher {
+		private JobTracker actionTracker;
+
+		TopicListener<JobTracker> startListener = new TopicListener<JobTracker>() {
+			@Override
+			public void topicPublished(String key, JobTracker message) {
+				actionTracker = message;
+			}
+		};
+
+		ActionLogItem performActionAndWait(final RemoteAction action)
+				throws WebException {
+			checkAnnotatedPermissions(action);
+			RemoteActionPerformer performer = (RemoteActionPerformer) Registry
+					.get().instantiateSingle(RemoteActionPerformer.class,
+							action.getClass());
+			if (performer instanceof RequiresHttpRequest) {
+				RequiresHttpRequest req = (RequiresHttpRequest) performer;
+				req.setHttpServletRequest(getThreadLocalRequest());
+			}
+			boolean nonPersistent = LooseContext
+					.is(JobRegistry.CONTEXT_NON_PERSISTENT);
+			try {
+				ThreadlocalTransformManager.get().resetTltm(null);
+				LooseContext.push();
+				LooseContext.getContext().addTopicListener(
+						JobRegistry.CONTEXT_TRACKER, startListener);
+				performer.performAction(action);
+				return maybeLog(action, nonPersistent);
+			} catch (Throwable t) {
+				Exception e = (Exception) ((t instanceof Exception) ? t
+						: new WrappedRuntimeException(t));
+				if (actionTracker != null && !actionTracker.isComplete()) {
+					JobRegistry.get().jobError(e);
+					maybeLog(action, nonPersistent);
+				}
+				boolean log = true;
+				if (e instanceof WrappedRuntimeException) {
+					WrappedRuntimeException ire = (WrappedRuntimeException) e;
+					log = ire.getSuggestedAction() != SuggestedAction.EXPECTED_EXCEPTION;
+				}
+				if (log) {
+					logRpcException(e);
+				}
+				throw new WebException(e);
+			} finally {
+				LooseContext.pop();
+				ThreadlocalTransformManager.get().resetTltm(null);
+			}
+		}
+
+		protected ActionLogItem maybeLog(final RemoteAction action,
+				boolean nonPersistent) {
+			if (actionTracker != null) {
+				actionTracker.setLog(JobRegistry.get().getContextLogBuffer());
+				ActionLogItem logItem = trackerToLogItem(action);
+				if (!actionTracker.provideIsRoot() || nonPersistent) {
+				} else {
+					Registry.impl(CommonPersistenceProvider.class)
+							.getCommonPersistence().logActionItem(logItem);
+				}
+				return logItem;
+			}
+			return null;
+		}
+
+		protected ActionLogItem trackerToLogItem(final RemoteAction action) {
+			ActionLogItem logItem = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistenceExTransaction()
+					.getNewImplementationInstance(ActionLogItem.class);
+			logItem.setActionClass(action.getClass());
+			logItem.setActionDate(new Date());
+			logItem.setShortDescription(actionTracker.getJobResult());
+			logItem.setActionLog(actionTracker.getLog());
+			return logItem;
+		}
+	}
+
+	public static class ReuseIUserHolder {
+		public IUser iUser;
 	}
 
 	static class IsWrappedObjectDteFilter implements
@@ -896,153 +1068,5 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		public boolean allow(DomainTransformEvent o) {
 			return o.getObjectClass() == clazz;
 		}
-	}
-
-	protected void handleWrapperTransforms() {
-		EntityLayerTransformPropogation transformPropogation = Registry.impl(
-				EntityLayerTransformPropogation.class, void.class, true);
-		if (transformPropogation == null) {
-			return;
-		}
-		ThreadlocalTransformManager.cast().getTransforms();
-		LinkedHashSet<DomainTransformEvent> pendingTransforms = TransformManager
-				.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		if (pendingTransforms.isEmpty()) {
-			return;
-		}
-		final List<DomainTransformEvent> items = CollectionFilters.filter(
-				pendingTransforms, new IsWrappedObjectDteFilter());
-		pendingTransforms.removeAll(items);
-		if (!items.isEmpty() && !pendingTransforms.isEmpty()) {
-			throw new RuntimeException("Non-wrapped and wrapped object"
-					+ " transforms registered after transformPerist()");
-		}
-		if (items.isEmpty()) {
-			return;
-		}
-		new Thread() {
-			public void run() {
-				try {
-					int depth = LooseContext.depth();
-					transformFromServletLayer(items, null);
-					LooseContext.confirmDepth(depth);
-					ThreadlocalTransformManager.cast().resetTltm(null);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			};
-		}.start();
-	}
-
-	@Override
-	protected void onAfterResponseSerialized(String serializedResponse) {
-		Registry.impl(RemoteActionLoggerProvider.class).clearAllThreadLoggers();
-		LooseContext.confirmDepth(looseContextDepth);
-		PermissionsManager.get().setUser(null);
-		super.onAfterResponseSerialized(serializedResponse);
-	}
-
-	@Override
-	public PartialDtrUploadResponse uploadOfflineTransforms(
-			PartialDtrUploadRequest request) throws WebException {
-		return new PartialDtrUploadHandler().uploadOfflineTransforms(request,
-				this);
-	}
-
-	@Override
-	public void ping() {
-	}
-
-	@Override
-	@WebMethod(readonlyPermitted = true)
-	public void dumpData(String data) {
-		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
-				"dumpPermitted")) {
-			throw new RuntimeException("Dump not permitted");
-		}
-		String key = String.valueOf(System.currentTimeMillis());
-		File dir = getDataDumpsFolder();
-		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
-		File file = new File(path);
-		try {
-			ResourceUtilities.writeStringToFile(data, file);
-			System.out.println("Client db dumped - key: " + key);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@Override
-	public String loadData(String key) {
-		if (!ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class,
-				"loadDumpPermitted")) {
-			throw new RuntimeException("Load dump not permitted");
-		}
-		File dir = getDataDumpsFolder();
-		String path = CommonUtils.formatJ("%s/%s.dat", dir.getPath(), key);
-		File file = new File(path);
-		try {
-			return ResourceUtilities.readFileToString(file);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private File getDataDumpsFolder() {
-		File dataFolder = ServletLayerObjects.get().getDataFolder();
-		File dir = new File(dataFolder.getPath() + File.separator
-				+ "client-dumps");
-		dir.mkdirs();
-		return dir;
-	}
-
-	@Override
-	public void logClientRecords(String serializedLogRecords) {
-		Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
-			@Override
-			public ClientLogRecords convert(String original) {
-				try {
-					return new AlcinaBeanSerializerS().deserialize(original);
-				} catch (Exception e) {
-					System.out.format(
-							"problem deserializing clientlogrecord:\n%s\n",
-							original);
-					e.printStackTrace();
-					if (ResourceUtilities.getBoolean(
-							CommonRemoteServiceServlet.class,
-							"throwLogClientRecordExceptions")) {
-						throw new WrappedRuntimeException(e);
-					}
-					return null;
-				}
-			}
-		};
-		List<String> lines = Arrays.asList(serializedLogRecords.split("\n"));
-		List<ClientLogRecords> records = CollectionFilters.convert(lines,
-				converter);
-		while (records.remove(null)) {
-		}
-		String remoteAddr = getRemoteAddress();
-		for (ClientLogRecords r : records) {
-			for (ClientLogRecord clr : r.getLogRecords()) {
-				clr.setIpAddress(remoteAddr);
-				sanitiseClrString(clr);
-			}
-		}
-		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
-				.persistClientLogRecords(records);
-	}
-
-	private void sanitiseClrString(ClientLogRecord clr) {
-		clr.setMessage(CommonUtils.nullToEmpty(clr.getMessage()).replace('\0',
-				' '));
-	}
-
-	protected String getUserAgent() {
-		return getUserAgent(getThreadLocalRequest());
-	}
-
-	protected String getUserAgent(HttpServletRequest rq) {
-		return rq == null ? UA_NULL_SERVER : rq.getHeader("User-Agent");
 	}
 }

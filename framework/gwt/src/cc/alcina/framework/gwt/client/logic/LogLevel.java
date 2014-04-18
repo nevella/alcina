@@ -20,6 +20,6 @@ package cc.alcina.framework.gwt.client.logic;
  * @author Nick Reddel
  */
 
- public enum Log4jLevel {
+ public enum LogLevel {
 	OFF, FATAL, ERROR, WARN, INFO, DEBUG, ALL
 }

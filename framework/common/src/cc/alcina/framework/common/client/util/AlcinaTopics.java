@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
-import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
@@ -88,12 +88,12 @@ public class AlcinaTopics {
 				listener, add);
 	}
 
-	public static void jobComplete(JobInfo info) {
+	public static void jobComplete(JobTracker info) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_COMPLETE, info);
 	}
 
 	public static void jobCompletionListenerDelta(
-			TopicListener<JobInfo> listener, boolean add) {
+			TopicListener<JobTracker> listener, boolean add) {
 		GlobalTopicPublisher.get().listenerDelta(
 				TOPIC_LOCAL_PERSISTENCE_EXCEPTION, listener, add);
 	}

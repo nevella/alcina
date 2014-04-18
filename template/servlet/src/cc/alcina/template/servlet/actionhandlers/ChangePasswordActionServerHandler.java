@@ -11,17 +11,19 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.util.UnixCrypt;
+import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 import cc.alcina.template.cs.actions.ChangePasswordServerAction;
 import cc.alcina.template.cs.csobjects.ChangePasswordModel;
 import cc.alcina.template.cs.persistent.ActionLogItemImpl;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 @RegistryLocation(registryPoint = RemoteActionPerformer.class, targetClass = ChangePasswordServerAction.class)
-public class ChangePasswordActionServerHandler implements
-		RemoteActionPerformer<ChangePasswordServerAction> {
-	private ActionLogItem performAction(ChangePasswordModel bindable) {
-		ActionLogItemImpl item = new ActionLogItemImpl();
-		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+public class ChangePasswordActionServerHandler extends
+		BaseRemoteActionPerformer<ChangePasswordServerAction> {
+	private void performAction(ChangePasswordModel bindable) {
+		jobStarted();
+		CommonPersistenceLocal up = Registry.impl(
+				CommonPersistenceProvider.class).getCommonPersistence();
 		AlcinaTemplateUser user = up.getItemById(AlcinaTemplateUser.class,
 				bindable.getUserId());
 		Permissible p = new Permissible() {
@@ -42,12 +44,10 @@ public class ChangePasswordActionServerHandler implements
 		}
 		user.setPassword(UnixCrypt.crypt(user.getSalt(), password));
 		user = (AlcinaTemplateUser) up.mergeUser(user);
-		item.setShortDescription("Password changed for user "
-				+ user.getUserName());
-		return item;
+		jobOk("Password changed for user " + user.getUserName());
 	}
 
-	public ActionLogItem performAction(ChangePasswordServerAction action) {
-		return performAction(action.getParameters());
+	public void performAction(ChangePasswordServerAction action) {
+		performAction(action.getParameters());
 	}
 }

@@ -11,14 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.actions;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public interface RemoteActionPerformer<T extends RemoteAction> {
-	ActionLogItem performAction(T action);
+public interface RemoteActionPerformer<T extends RemoteAction> {
+	void performAction(T action);
 }

@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
-import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -16,25 +16,15 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.gwt.client.action.DtrSimpleAdminPersistenceAction;
 import cc.alcina.framework.servlet.CommonRemoteServletProvider;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
+import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 
 @RegistryLocation(registryPoint = RemoteActionPerformer.class, targetClass = DtrSimpleAdminPersistenceAction.class)
-public class DtrSimpleAdminPersistenceHandler implements
-		RemoteActionPerformer<DtrSimpleAdminPersistenceAction> {
-	private JobInfo jobInfo;
-
-	public ActionLogItem commit(DeltaApplicationRecord wrapper) {
-		Logger logger = Registry.impl(RemoteActionLoggerProvider.class)
-				.getLogger(this.getClass());
-		ActionLogItem item = null;
-		long t1 = System.currentTimeMillis();
-		int docsImported = 0;
-		jobInfo = JobRegistry.get().startJob(getClass(),
-				SEUtilities.friendlyClassName(getClass()), null);
+public class DtrSimpleAdminPersistenceHandler extends
+		BaseRemoteActionPerformer<DtrSimpleAdminPersistenceAction> {
+	public void commit(DeltaApplicationRecord wrapper) {
 		try {
-			item = Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence()
-					.getImplementation(ActionLogItem.class).newInstance();
+			jobStarted();
 			String t = wrapper.getText();
 			wrapper.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
 			Registry.impl(CommonRemoteServletProvider.class)
@@ -42,26 +32,13 @@ public class DtrSimpleAdminPersistenceHandler implements
 					.persistOfflineTransforms(
 							Arrays.asList(new DeltaApplicationRecord[] { wrapper }),
 							logger);
-			String msg = "OK ";
-			logger.info(msg);
-			item.setShortDescription(msg);
-			JobRegistry.get().jobComplete(jobInfo);
+			jobOk("OK");
 		} catch (Exception ex) {
-			ex.printStackTrace();
-			item.setShortDescription("Failed");
-			logger.warn(ex);
-			JobRegistry.get().jobError(jobInfo, ex);
+			jobError(ex);
 		}
-		long t2 = System.currentTimeMillis();
-		long avgTime = (docsImported != 0) ? (t2 - t1) / docsImported : 0;
-		logger.info(String.format(
-				"Run time: %.4f s. - avg. time per doc: %s ms.",
-				((float) (t2 - t1)) / 1000, avgTime));
-		item.setActionLog(Registry.impl(RemoteActionLoggerProvider.class).closeLogger(this.getClass()));
-		return item;
 	}
 
-	public ActionLogItem performAction(DtrSimpleAdminPersistenceAction action) {
-		return commit(action.getParameters());
+	public void performAction(DtrSimpleAdminPersistenceAction action) {
+		commit(action.getParameters());
 	}
 }

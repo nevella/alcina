@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet;
 
+import java.net.InetAddress;
+
 import javax.servlet.http.HttpServletRequest;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -118,5 +120,13 @@ public class ServletLayerUtils {
 				"\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
 				req.getRequestURI(), req.getQueryString(),
 				req.getHeader("referer"), remoteAddr);
+	}
+
+	public static String getLocalHostName() {
+		try {
+			return java.net.InetAddress.getLocalHost().getHostName();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

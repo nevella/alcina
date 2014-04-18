@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.ide.provider;
 
 import java.util.ArrayList;
@@ -33,16 +32,15 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class RunningActionsViewProvider implements ViewProvider {
+public class RunningActionsViewProvider implements ViewProvider {
 	private FlowPanel wrapper;
 
 	private FlowPanel actionViewPanel;
 
-	private Map<Long, ActionProgress> progressPanels = new HashMap<Long, ActionProgress>();
+	private Map<String, ActionProgress> progressPanels = new HashMap<String, ActionProgress>();
 
 	private Timer refreshTimer = new Timer() {
 		@Override
@@ -70,39 +68,40 @@ import com.google.gwt.user.client.ui.Widget;
 	}
 
 	protected void refreshActions() {
-		AsyncCallback<List<Long>> callback = new AsyncCallback<List<Long>>() {
+		AsyncCallback<List<String>> callback = new AsyncCallback<List<String>>() {
 			public void onFailure(Throwable caught) {
 				// ignore
 			}
 
-			public void onSuccess(List<Long> result) {
-				for (Long l : result) {
-					if (!progressPanels.containsKey(l)) {
-						ActionProgress actionProgress = new ActionProgress(l);
-						progressPanels.put(l, actionProgress);
+			public void onSuccess(List<String> actionIds) {
+				for (String id : actionIds) {
+					if (!progressPanels.containsKey(id)) {
+						ActionProgress actionProgress = new ActionProgress(id);
+						progressPanels.put(id, actionProgress);
 						actionViewPanel.add(actionProgress);
-					}else{
-						progressPanels.get(l).ensureRunning();
+					} else {
+						progressPanels.get(id).ensureRunning();
 					}
 				}
-				for (Long l : new ArrayList<Long>(progressPanels.keySet())) {
-					if (!result.contains(l)) {
-						actionViewPanel.remove(progressPanels.get(l));
-						progressPanels.remove(l);
+				for (String id : new ArrayList<String>(progressPanels.keySet())) {
+					if (!actionIds.contains(id)) {
+						actionViewPanel.remove(progressPanels.get(id));
+						progressPanels.remove(id);
 					}
 				}
 				refreshTimer.schedule(10000);
 			}
 		};
-		ClientBase.getCommonRemoteServiceAsyncInstance().listRunningJobs(callback);
+		ClientBase.getCommonRemoteServiceAsyncInstance().listRunningJobs(
+				callback);
 	}
 
 	private Widget createCaption() {
 		List<SimpleHistoryEventInfo> history = Arrays
 				.asList(new SimpleHistoryEventInfo[] { new SimpleHistoryEventInfo(
 						"Running actions") });
-		return new BreadcrumbBar(null, history, BreadcrumbBar
-				.maxButton(wrapper));
+		return new BreadcrumbBar(null, history,
+				BreadcrumbBar.maxButton(wrapper));
 	}
 
 	public static class ShowActionsViewProviderAction extends PermissibleAction {

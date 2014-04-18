@@ -147,13 +147,13 @@ public class ControlServletHandlers {
 										: "startup"));
 				if (toState == WriterServiceMode.NOT_CONTROLLER) {
 					try {
-						service.shutdown();
+						service.onApplicationShutdown();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				} else {
 					try {
-						service.startup();
+						service.onApplicationStartup();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}

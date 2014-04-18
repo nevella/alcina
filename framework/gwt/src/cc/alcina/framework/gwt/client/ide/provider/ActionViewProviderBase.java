@@ -109,11 +109,11 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 				logItemCount, outerCallback, true);
 	}
 
-	protected abstract void performAction(AsyncCallback<Long> asyncCallback,
+	protected abstract void performAction(AsyncCallback<String> asyncCallback,
 			AsyncCallback<ActionLogItem> syncCallback);
 
 	public static class ActionViewProvider extends ActionViewProviderBase {
-		protected void performAction(AsyncCallback<Long> asyncCallback,
+		protected void performAction(AsyncCallback<String> asyncCallback,
 				AsyncCallback<ActionLogItem> syncCallback) {
 			if (action instanceof SynchronousAction) {
 				((CommonRemoteServiceExtAsync) ClientBase
@@ -217,19 +217,19 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 		public void onClick(ClickEvent event) {
 			boolean running = runningLabel.isVisible();
 			runningLabel.setText(RUNNING);
-			AsyncCallback<Long> asyncCallback = new AsyncCallback<Long>() {
+			AsyncCallback<String> asyncCallback = new AsyncCallback<String>() {
 				public void onFailure(Throwable caught) {
 					redraw();
 					throw new WrappedRuntimeException(caught);
 				}
 
-				public void onSuccess(Long id) {
+				public void onSuccess(String id) {
 					if (actionProgress != null) {
 						actionProgress
 								.removePropertyChangeListener(progressPcl);
 						progressHolder.clear();
 					}
-					if (id > 0) {
+					if (id != null) {
 						actionProgress = new ActionProgress(id);
 						actionProgress.addPropertyChangeListener(progressPcl);
 						progressHolder.add(actionProgress);
@@ -240,7 +240,7 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 					}
 					progressHolder.setVisible(true);
 					redraw();
-					running(id > 0);
+					running(id != null);
 				}
 			};
 			AsyncCallback<ActionLogItem> syncCallback = new AsyncCallback<ActionLogItem>() {

@@ -2,51 +2,64 @@ package cc.alcina.framework.servlet.job;
 
 import org.apache.log4j.Logger;
 
-import cc.alcina.framework.common.client.csobjects.JobInfo;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.actions.RemoteAction;
+import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 
-
-public abstract class BaseRemoteActionPerformer {
-
+public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
+		implements RemoteActionPerformer<R> {
 	protected Logger logger;
+
+	protected JobTracker jobTracker;
+
+	boolean started;
+
+	public JobTracker getJobTracker() {
+		return jobTracker;
+	}
 
 	public Logger getLogger() {
 		return this.logger;
 	}
 
-	protected JobInfo jobInfo;
-	private long itemCount;
-	public long getItemCount() {
-		return this.itemCount;
-	}
-	public void setItemCount(long itemCount) {
-		this.itemCount = itemCount;
-	}
-
-	protected long itemsCompleted;
 	public void updateJob(String message) {
-		
-		updateJob(message,JobRegistry.get().isTopLevel(jobInfo)?1:0);
+		JobRegistry.get().updateJob(message);
+		updateJob(message, jobTracker.provideIsRoot() ? 1 : 0);
 	}
 	public void updateJob(String message, int completedDelta) {
-		itemsCompleted+=completedDelta;
-		double progress = ((double) itemsCompleted)
-				/ ((double) itemCount);
+		long itemsCompleted = jobTracker.getItemsCompleted();
+		long itemCount = jobTracker.getItemCount();
+		itemsCompleted += completedDelta;
+		jobTracker.setItemsCompleted(itemsCompleted);
+		double progress = ((double) itemsCompleted) / ((double) itemCount);
 		JobRegistry.get().jobProgress(
-				jobInfo,
 				String.format("(%s/%s) -  %s", itemsCompleted, itemCount,
 						message), progress);
 	}
-	protected void startJob(){
-		logger = Registry.impl(RemoteActionLoggerProvider.class)
-		.getLogger(this.getClass());
-		jobInfo = JobRegistry.get().startJob(getClass(),
-				SEUtilities.friendlyClassName(getClass()), null);
+
+	protected void finishJob() {
 	}
-	protected void finishJob(){
-		
-		
+
+	protected void jobError(Exception exception) {
+		JobRegistry.get().jobError(exception);
+	}
+
+	protected void jobError(String message) {
+		JobRegistry.get().jobError(message);
+	}
+
+	protected void jobOk(String message) {
+		JobRegistry.get().jobOk(message);
+	}
+
+	protected void jobStarted() {
+		if(started){
+			throw new RuntimeException("Already started");
+		}
+		started=true;
+		jobTracker = JobRegistry.get().startJob(getClass(),
+				SEUtilities.friendlyClassName(getClass()), null);
+		logger = JobRegistry.get().getContextLogger();
 	}
 }

@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.remote;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
@@ -36,10 +36,9 @@ public interface CommonRemoteServiceAsync {
 	public void getObjectDelta(List<ObjectDeltaSpec> specs,
 			AsyncCallback<List<ObjectDeltaResult>> callback);
 
-
 	public void hello(AsyncCallback callback);
 
-	public void listRunningJobs(AsyncCallback<List<Long>> callback);
+	public void listRunningJobs(AsyncCallback<List<String>> callback);
 
 	public void logClientError(String exceptionToString,
 			AsyncCallback<Long> callback);
@@ -69,9 +68,9 @@ public interface CommonRemoteServiceAsync {
 
 	void ping(AsyncCallback<Void> callback);
 
-	void pollJobStatus(Long id, boolean cancel, AsyncCallback<JobInfo> callback);
+	void pollJobStatus(String id, boolean cancel,
+			AsyncCallback<JobTracker> callback);
 
 	void uploadOfflineTransforms(PartialDtrUploadRequest request,
 			AsyncCallback<PartialDtrUploadResponse> callback);
-
 }

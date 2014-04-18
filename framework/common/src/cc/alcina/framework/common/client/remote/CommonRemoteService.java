@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.remote;
 
 import java.util.List;
 
-import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.ObjectDeltaResult;
@@ -44,7 +44,7 @@ public interface CommonRemoteService extends RemoteService {
 	public LoginResponse hello();
 
 	@WebMethod()
-	public List<Long> listRunningJobs();
+	public List<String> listRunningJobs();
 
 	public Long logClientError(String exceptionToString);
 
@@ -66,7 +66,7 @@ public interface CommonRemoteService extends RemoteService {
 			PartialDtrUploadRequest request) throws WebException;
 
 	@WebMethod()
-	public JobInfo pollJobStatus(Long id, boolean cancel);
+	public JobTracker pollJobStatus(String id, boolean cancel);
 
 	@WebMethod
 	public DomainTransformResponse transform(DomainTransformRequest request)

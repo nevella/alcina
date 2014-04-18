@@ -3,12 +3,12 @@ package cc.alcina.framework.servlet.actionhandlers;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 
 public abstract class AbstractTaskPerformer implements Runnable {
 	public Logger actionLogger;
 
-	public JobInfo jobInfo;
+	public JobTracker jobTracker;
 
 	public String value;
 

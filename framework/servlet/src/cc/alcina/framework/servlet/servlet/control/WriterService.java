@@ -17,9 +17,17 @@ import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableSe
  */
 @RegistryLocation(registryPoint = WriterService.class)
 public abstract class WriterService implements RegistrableService {
-	public abstract void startup();
+	public void onApplicationStartup() {
+		startService();
+	}
 
-	public abstract void shutdown();
+	public void onApplicationShutdown() {
+		stopService();
+	}
+
+	public abstract void startService();
+
+	public abstract void stopService();
 
 	@Override
 	public void appShutdown() {

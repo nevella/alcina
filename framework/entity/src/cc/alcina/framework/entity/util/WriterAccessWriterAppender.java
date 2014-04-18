@@ -11,33 +11,37 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.util;
 
+import java.io.StringWriter;
 import java.io.Writer;
 
 import org.apache.log4j.WriterAppender;
 
 /**
- *
+ * 
  * @author Nick Reddel
  */
-
- public class WriterAccessWriterAppender extends WriterAppender {
-	private Writer writerAccess;
+public class WriterAccessWriterAppender extends WriterAppender {
+	private StringWriter writerAccess;
 
 	public static final String STRING_WRITER_APPENDER_KEY = "stringWriterAppender";
 
-	public Writer getWriterAccess() {
+	public StringWriter getWriterAccess() {
 		return this.writerAccess;
 	}
-	public void resetWriter() throws Exception{
+
+	public void resetWriter() throws Exception {
 		Writer newWriter = writerAccess.getClass().newInstance();
 		setWriter(newWriter);
 	}
+
 	@Override
 	public synchronized void setWriter(Writer writer) {
-		this.writerAccess = writer;
+		if (!(writer instanceof StringWriter)) {
+			throw new RuntimeException("writer must be a StringWriter");
+		}
+		this.writerAccess = (StringWriter) writer;
 		super.setWriter(writer);
 	}
 }

@@ -33,7 +33,7 @@ import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.JobInfo;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -137,7 +137,7 @@ public abstract class DevHelper {
 	@RegistryLocation(registryPoint = RemoteActionLoggerProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.MANUAL_PRIORITY)
 	class Ralp extends RemoteActionLoggerProvider {
 		@Override
-		public Logger getLogger(Class clazz) {
+		public synchronized Logger createLogger(Class performerClass) {
 			return getTestLogger();
 		}
 	}
@@ -148,9 +148,9 @@ public abstract class DevHelper {
 
 	private Connection connProduction;
 
-	private TopicListener<JobInfo> jobCompletionLister = new TopicListener<JobInfo>() {
+	private TopicListener<JobTracker> jobCompletionLister = new TopicListener<JobTracker>() {
 		@Override
-		public void topicPublished(String key, JobInfo message) {
+		public void topicPublished(String key, JobTracker message) {
 			System.out.format("Job complete:\n%s\n", message);
 		}
 	};

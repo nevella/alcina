@@ -19,7 +19,7 @@ public interface CommonRemoteServiceExt extends CommonRemoteService{
 			Integer count);
 
 	@WebMethod()
-	public Long performAction(RemoteAction action);
+	public String performAction(RemoteAction action);
 
 	@WebMethod()
 	public ActionLogItem performActionAndWait(RemoteAction action)
