@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.entityaccess;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -9,16 +8,20 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.NullWrappingMap;
 
 @RegistryLocation(registryPoint = ClientInstanceAuthenticationCache.class, implementationType = ImplementationType.SINGLETON)
 public class ClientInstanceAuthenticationCache {
-	private Map<Long, Integer> clientInstanceAuthMap = new ConcurrentHashMap<Long, Integer>();
+	private Map<Long, Integer> clientInstanceAuthMap = new NullWrappingMap<Long, Integer>(
+			new ConcurrentHashMap());
 
-	private Map<Long, String> clientInstanceUserNameMap = new ConcurrentHashMap<Long, String>();
+	private Map<Long, String> clientInstanceUserNameMap = new NullWrappingMap<Long, String>(
+			new ConcurrentHashMap());
 
-	private Map<String, String> iidUserNameByKeyMap = new ConcurrentHashMap<String, String>();
+	private Map<String, String> iidUserNameByKeyMap = new NullWrappingMap<String, String>(
+			new ConcurrentHashMap());
 
-	public  void cacheAuthentication(ClientInstance clientInstance) {
+	public void cacheAuthentication(ClientInstance clientInstance) {
 		clientInstanceAuthMap.put(clientInstance.getId(),
 				clientInstance.getAuth());
 		if (clientInstance.getUser() != null) {
@@ -38,16 +41,25 @@ public class ClientInstanceAuthenticationCache {
 	}
 
 	public String iidUserNameByKey(String iid) {
+		if (iid == null) {
+			return null;
+		}
 		return iidUserNameByKeyMap.get(iid);
 	}
 
-	public  void cacheIid(Iid iid) {
+	public void cacheIid(Iid iid) {
+		if (iid.getInstanceId() == null) {
+			return;
+		}
 		iidUserNameByKeyMap.put(iid.getInstanceId(),
 				iid.getRememberMeUser() == null ? null : iid
 						.getRememberMeUser().getUserName());
 	}
 
 	public boolean containsIIdKey(String iidKey) {
+		if (iidKey == null) {
+			return false;
+		}
 		return iidUserNameByKeyMap.containsKey(iidKey);
 	}
 }
