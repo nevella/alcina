@@ -148,12 +148,11 @@ public class ActionProgress extends Composite implements
 
 					public void onSuccess(JobTracker info) {
 						checking = false;
-						if(info==null){
-							info=new JobTrackerImpl();
+						if (info == null) {
+							info = new JobTrackerImpl();
 							info.setJobName("Unknown job");
 							info.setComplete(true);
 							info.setProgressMessage("---");
-							
 						}
 						if (info.isComplete()) {
 							stopTimer();
@@ -194,6 +193,7 @@ public class ActionProgress extends Composite implements
 	public void fireNullPropertyChange(String name) {
 		this.propertyChangeSupport.fireNullPropertyChange(name);
 	}
+
 	public void firePropertyChange(PropertyChangeEvent evt) {
 		this.propertyChangeSupport.firePropertyChange(evt);
 	}
@@ -281,8 +281,8 @@ public class ActionProgress extends Composite implements
 		cancelLink.setVisible(false);
 		cancellingStatusMessage.setText(" - Cancelling...");
 		cancellingStatusMessage.setVisible(true);
-		ClientBase.getCommonRemoteServiceAsyncInstance()
-				.pollJobStatus(getId(), true, new AsyncCallback<JobTracker>() {
+		ClientBase.getCommonRemoteServiceAsyncInstance().pollJobStatus(getId(),
+				true, new AsyncCallback<JobTracker>() {
 					public void onFailure(Throwable e) {
 						cancellingStatusMessage.setText(" - Error cancelling");
 						throw new WrappedRuntimeException(e);
@@ -317,7 +317,7 @@ public class ActionProgress extends Composite implements
 		}
 		times.setHTML(time);
 		String msg = info.getProgressMessage();
-		if (info.getJobResultType()==JobResultType.FAIL) {
+		if (info.getJobResultType() == JobResultType.FAIL) {
 			msg = info.getJobResult();
 			message.setStyleName("error");
 		}
@@ -327,7 +327,9 @@ public class ActionProgress extends Composite implements
 			cancelLink.setVisible(true);
 		}
 		message.setText(msg);
-		System.out.println(info.getPercentComplete());
+		if (info.isComplete()) {
+			info.setPercentComplete(Math.max(1.0, info.getPercentComplete()));
+		}
 		progress.setWidth(Math.max(0,
 				((int) (bar.getOffsetWidth() - 2) * info.getPercentComplete()))
 				+ "px");
