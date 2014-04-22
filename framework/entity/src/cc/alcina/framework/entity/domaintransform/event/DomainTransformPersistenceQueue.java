@@ -400,7 +400,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		forceDbCheck();
 		long max = maxDbPersistedRequestId;
 		while (max > maxDbPersistedRequestIdPublished) {
-			synchronized (this) {
+			synchronized (dbWaitMonitor) {
 				try {
 					dbWaitMonitor.wait();
 				} catch (InterruptedException e) {
