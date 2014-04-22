@@ -37,6 +37,9 @@ public class ClientInstanceAuthenticationCache {
 	}
 
 	public String getUserNameFor(long validatedClientInstanceId) {
+		if (!clientInstanceUserNameMap.containsKey(validatedClientInstanceId)) {
+			return null;
+		}
 		return clientInstanceUserNameMap.get(validatedClientInstanceId);
 	}
 
