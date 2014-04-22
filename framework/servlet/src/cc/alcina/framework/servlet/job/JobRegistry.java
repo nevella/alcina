@@ -182,7 +182,7 @@ public class JobRegistry {
 
 	public Logger getContextLogger() {
 		JobTracker tracker = getContextTracker();
-		return (Logger) tracker.getLogger();
+		return tracker == null ? null : (Logger) tracker.getLogger();
 	}
 
 	public JobTracker getContextTracker() {
