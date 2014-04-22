@@ -32,6 +32,8 @@ public class ClientInstanceAuthenticationCache {
 
 	public boolean isCached(Long id, Integer auth) {
 		return auth != null
+				&& id != null
+				&& clientInstanceAuthMap.containsKey(id)
 				&& auth.intValue() == CommonUtils.iv(clientInstanceAuthMap
 						.get(id));
 	}
