@@ -264,7 +264,7 @@ public class Registry {
 				ImplementationType.MULTIPLE, 10);
 	}
 
-	public void register(Class registeringClass, Class registryPoint,
+	public synchronized void register(Class registeringClass, Class registryPoint,
 			Class targetClass, ImplementationType implementationType,
 			int infoPriority) {
 		MultikeyMap<Class> registered = registry.asMapEnsure(true,

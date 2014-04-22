@@ -41,9 +41,9 @@ import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 public class DomainTransformPersistenceQueue implements RegistrableService {
 	boolean logDbEventCheck = true;
 
-	class GapCheckTask extends TimerTask {
-		private static final long PERIODIC_DB_CHECK_MS = 5 * TimeConstants.ONE_MINUTE_MS;
+	private static final long PERIODIC_DB_CHECK_MS = 5 * TimeConstants.ONE_MINUTE_MS;
 
+	class GapCheckTask extends TimerTask {
 		@Override
 		public void run() {
 			try {
@@ -141,7 +141,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 	}
 
-	public void registerPersisting(DomainTransformRequestPersistent dtrp) {
+	public synchronized void registerPersisting(
+			DomainTransformRequestPersistent dtrp) {
 		persistingRequestIds.add(dtrp.getId());
 		maxDbPersistedRequestId = Math.max(maxDbPersistedRequestId,
 				dtrp.getId());
@@ -294,6 +295,9 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 							firingPersistedEvents = false;
 							PermissibleFieldFilter.disablePerObjectPermissions = false;
 							ThreadedPermissionsManager.cast().popSystemUser();
+							synchronized (dbWaitMonitor) {
+								dbWaitMonitor.notifyAll();
+							}
 						}
 					};
 				}.start();
@@ -336,6 +340,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (forceDbCheck) {
 			List<DomainTransformRequestPersistent> persisted = getCommonPersistence()
 					.getPersistentTransformRequests(0, 0, null, true, false);
+			// check only fails if a new db
 			if (!persisted.isEmpty()) {
 				maxDbPersistedRequestId = persisted.get(0).getId();
 				if (logDbEventCheck) {
@@ -385,6 +390,22 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			} finally {
 				PermissibleFieldFilter.disablePerObjectPermissions = false;
 				ThreadedPermissionsManager.cast().popSystemUser();
+			}
+		}
+	}
+
+	private Object dbWaitMonitor;
+
+	public void waitUntilCurrentRequestsProcessed() {
+		forceDbCheck();
+		long max = maxDbPersistedRequestId;
+		while (max > maxDbPersistedRequestIdPublished) {
+			synchronized (this) {
+				try {
+					dbWaitMonitor.wait();
+				} catch (InterruptedException e) {
+					break;
+				}
 			}
 		}
 	}

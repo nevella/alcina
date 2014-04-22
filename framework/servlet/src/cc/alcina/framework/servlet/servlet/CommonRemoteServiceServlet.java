@@ -370,58 +370,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		final RemoteActionPerformer performer = (RemoteActionPerformer) Registry
 				.get().instantiateSingle(RemoteActionPerformer.class,
 						action.getClass());
-		final PermissionsManager pm = PermissionsManager.get();
-		final JobId jobId = new JobId(performer.getClass(),
-				ServletLayerUtils.getLocalHostName());
-		final CountDownLatch latch = new CountDownLatch(1);
-		Thread thread = new Thread(performer.getClass().getSimpleName() + " - "
-				+ (++actionCount)) {
-			private int tLooseContextDepth;
-
-			private TopicListener latchReleaser = new TopicListener() {
-				@Override
-				public void topicPublished(String key, Object message) {
-					latch.countDown();
-				}
-			};
-
-			@Override
-			public void run() {
-				try {
-					LooseContext.push();
-					LooseContext.set(JobRegistry.CONTEXT_NEXT_JOB_ID, jobId);
-					// different thread-local
-					tLooseContextDepth = LooseContext.depth();
-					pm.copyTo(PermissionsManager.get());
-					onAfterSpawnedThreadRun(this);
-					LooseContext.getContext().addTopicListener(
-							JobRegistry.TOPIC_JOB_STARTED, latchReleaser);
-					performActionAndWait(action);
-				} catch (Exception e) {
-					if (e instanceof RuntimeException) {
-						throw ((RuntimeException) e);
-					}
-					throw new RuntimeException(e);
-				} catch (OutOfMemoryError e) {
-					handleOom("", e);
-					throw e;
-				} finally {
-					LooseContext.confirmDepth(tLooseContextDepth);
-					LooseContext.pop();
-				}
-			}
-		};
-		thread.setPriority(Thread.MIN_PRIORITY);
-		thread.start();
-		onBeforeSpawnedThreadRun(thread);
-		// make sure we wait a bit before exiting, so the spawned thread can
-		// copy the pm
-		try {
-			latch.await(1, TimeUnit.SECONDS);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		return jobId.toString();
+		// because we're spawning the thread, we use this pattern to allow for
+		// getting to the countDown() in the spawned thread before the await()
+		// in the launcher
+		ActionLauncherAsync async = new ActionLauncherAsync(performer
+				.getClass().getSimpleName() + " - " + (++actionCount), action);
+		JobTracker tracker = async.launchAndWaitForTracker();
+		return tracker.getId();
 	}
 
 	public ActionLogItem performActionAndWait(final RemoteAction action)
@@ -580,12 +535,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		if (cancel) {
 			JobRegistry.get().cancel(id);
 		}
-		JobTracker info = JobRegistry.get().getInfo(id);
-		if (info == null) {
-			throw new RuntimeException(
-					"Unknown job - probably server restarted");
+		JobTracker tracker = JobRegistry.get().getTracker(id);
+		if (tracker == null) {
+			return null;
 		}
-		return info;
+		return JobRegistry.exportableForm(tracker);
 	}
 
 	@Override
@@ -987,13 +941,84 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	class ActionLauncherAsync extends Thread {
+		private PermissionsManager pm;
+
+		private CountDownLatch latch;
+
+		private RemoteAction action;
+
+		private int tLooseContextDepth;
+
+		private TopicListener startListener;
+
+		volatile JobTracker tracker;
+
+		ActionLauncherAsync(String name, RemoteAction action) {
+			super(name);
+			this.pm = PermissionsManager.get();
+			this.latch = new CountDownLatch(2);
+			this.action = action;
+			this.startListener = new TopicListener<JobTracker>() {
+				@Override
+				public void topicPublished(String key, JobTracker tracker) {
+					ActionLauncherAsync.this.tracker = tracker;
+					latch.countDown();
+				}
+			};
+		}
+
+		public JobTracker launchAndWaitForTracker() {
+			start();
+			onBeforeSpawnedThreadRun(this);
+			latch.countDown();
+			try {
+				latch.await();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return tracker;
+		}
+
+		@Override
+		public void run() {
+			try {
+				LooseContext.push();
+				// different thread-local
+				tLooseContextDepth = LooseContext.depth();
+				this.pm.copyTo(PermissionsManager.get());
+				onAfterSpawnedThreadRun(this);
+				LooseContext.getContext().addTopicListener(
+						JobRegistry.TOPIC_JOB_STARTED, startListener);
+				performActionAndWait(this.action);
+			} catch (Exception e) {
+				if (e instanceof RuntimeException) {
+					throw ((RuntimeException) e);
+				}
+				throw new RuntimeException(e);
+			} catch (OutOfMemoryError e) {
+				handleOom("", e);
+				throw e;
+			} finally {
+				LooseContext.confirmDepth(tLooseContextDepth);
+				LooseContext.pop();
+			}
+		}
+	}
+
 	public class ActionLauncher<T> {
 		private JobTracker actionTracker;
 
 		TopicListener<JobTracker> startListener = new TopicListener<JobTracker>() {
+			boolean processed = false;
+
 			@Override
 			public void topicPublished(String key, JobTracker message) {
-				actionTracker = message;
+				if (processed) {
+				} else {
+					processed = true;
+					actionTracker = message;
+				}
 			}
 		};
 
@@ -1013,15 +1038,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				ThreadlocalTransformManager.get().resetTltm(null);
 				LooseContext.push();
 				LooseContext.getContext().addTopicListener(
-						JobRegistry.CONTEXT_TRACKER, startListener);
+						JobRegistry.TOPIC_JOB_STARTED, startListener);
 				performer.performAction(action);
-				return maybeLog(action, nonPersistent);
+				return trackerToResult(action, nonPersistent);
 			} catch (Throwable t) {
 				Exception e = (Exception) ((t instanceof Exception) ? t
 						: new WrappedRuntimeException(t));
 				if (actionTracker != null && !actionTracker.isComplete()) {
 					JobRegistry.get().jobError(e);
-					maybeLog(action, nonPersistent);
+					trackerToResult(action, nonPersistent);
 				}
 				boolean log = true;
 				if (e instanceof WrappedRuntimeException) {
@@ -1038,21 +1063,20 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 		}
 
-		protected ActionResult<T> maybeLog(final RemoteAction action,
+		protected ActionResult<T> trackerToResult(final RemoteAction action,
 				boolean nonPersistent) {
+			ActionResult<T> result = new ActionResult<T>();
 			if (actionTracker != null) {
-				actionTracker.setLog(JobRegistry.get().getContextLogBuffer());
 				ActionLogItem logItem = trackerToResult(action);
 				if (!actionTracker.provideIsRoot() || nonPersistent) {
 				} else {
 					Registry.impl(CommonPersistenceProvider.class)
 							.getCommonPersistence().logActionItem(logItem);
 				}
-				ActionResult<T> result = new ActionResult<T>();
+				result.actionLogItem = logItem;
 				result.resultObject = (T) actionTracker.getJobResultObject();
-				return result;
 			}
-			return null;
+			return result;
 		}
 
 		protected ActionLogItem trackerToResult(final RemoteAction action) {

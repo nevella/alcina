@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.entityaccess;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import cc.alcina.framework.common.client.entity.Iid;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -11,13 +12,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 @RegistryLocation(registryPoint = ClientInstanceAuthenticationCache.class, implementationType = ImplementationType.SINGLETON)
 public class ClientInstanceAuthenticationCache {
-	private Map<Long, Integer> clientInstanceAuthMap = new HashMap<Long, Integer>();
+	private Map<Long, Integer> clientInstanceAuthMap = new ConcurrentHashMap<Long, Integer>();
 
-	private Map<Long, String> clientInstanceUserNameMap = new HashMap<Long, String>();
+	private Map<Long, String> clientInstanceUserNameMap = new ConcurrentHashMap<Long, String>();
 
-	private Map<String, String> iidUserNameByKeyMap = new HashMap<String, String>();
+	private Map<String, String> iidUserNameByKeyMap = new ConcurrentHashMap<String, String>();
 
-	public synchronized void cacheAuthentication(ClientInstance clientInstance) {
+	public  void cacheAuthentication(ClientInstance clientInstance) {
 		clientInstanceAuthMap.put(clientInstance.getId(),
 				clientInstance.getAuth());
 		if (clientInstance.getUser() != null) {
@@ -40,7 +41,7 @@ public class ClientInstanceAuthenticationCache {
 		return iidUserNameByKeyMap.get(iid);
 	}
 
-	public synchronized void cacheIid(Iid iid) {
+	public  void cacheIid(Iid iid) {
 		iidUserNameByKeyMap.put(iid.getInstanceId(),
 				iid.getRememberMeUser() == null ? null : iid
 						.getRememberMeUser().getUserName());

@@ -15,14 +15,18 @@ package cc.alcina.framework.servlet.job;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedHashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
+import com.totsp.gwittir.client.beans.Converter;
+
+import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
@@ -34,6 +38,7 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.RemoteActionLogger;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerUtils;
@@ -61,6 +66,29 @@ public class JobRegistry {
 	public static final String CONTEXT_USE_LOGGER = JobRegistry.class.getName()
 			+ ".CONTEXT_USE_LOGGER";
 
+	public static JobTracker exportableForm(JobTracker in) {
+		Converter<JobTracker, JobTracker> converter = new Converter<JobTracker, JobTracker>() {
+			IdentityHashMap<JobTracker, JobTracker> seen = new IdentityHashMap<JobTracker, JobTracker>();
+
+			@Override
+			public JobTracker convert(JobTracker o) {
+				if (o == null) {
+					return null;
+				}
+				if (seen.containsKey(o)) {
+					return seen.get(o);
+				}
+				JobTracker result = o.exportableForm();
+				seen.put(o, result);
+				result.setParent(convert(result.getParent()));
+				result.setChildren(CollectionFilters.convert(
+						result.getChildren(), this));
+				return result;
+			}
+		};
+		return converter.convert(in);
+	}
+
 	public static JobRegistry get() {
 		JobRegistry singleton = Registry.checkSingleton(JobRegistry.class);
 		if (singleton == null) {
@@ -80,7 +108,7 @@ public class JobRegistry {
 				add);
 	}
 
-	private Map<String, JobTracker> trackerMap = new LinkedHashMap<String, JobTracker>();
+	private Map<String, JobTracker> trackerMap = new ConcurrentHashMap<String, JobTracker>();
 
 	boolean refuseJobs = false;
 
@@ -109,16 +137,6 @@ public class JobRegistry {
 		return running;
 	}
 
-	private List<JobTracker> getRootTrackers() {
-		CollectionFilter<JobTracker> filter = new CollectionFilter<JobTracker>() {
-			@Override
-			public boolean allow(JobTracker o) {
-				return o.provideIsRoot();
-			}
-		};
-		return CollectionFilters.filter(trackerMap.values(), filter);
-	}
-
 	public void checkCancelled() {
 		JobTracker jobTracker = getContextTracker();
 		if (jobTracker == null) {
@@ -131,8 +149,59 @@ public class JobRegistry {
 		}
 	}
 
-	public JobTracker getInfo(String id) {
-		return trackerMap.get(id);
+	public void flushContextLogger() {
+		flushTracker(getContextTracker());
+	}
+
+	private void flushTracker(JobTracker tracker) {
+		tracker.setLog(tracker.getLog() + getContextLogBuffer(tracker));
+	}
+
+	public RemoteActionLogger getAccessLogger() {
+		Logger contextLogger = getContextLogger();
+		if (contextLogger instanceof RemoteActionLogger) {
+			return (RemoteActionLogger) contextLogger;
+		}
+		return null;
+	}
+
+	public String getContextLogBuffer(JobTracker tracker) {
+		if (tracker == null) {
+			tracker = getContextTracker();
+		}
+		Logger contextLogger = (Logger) tracker.getLogger();
+		return flushLogger(contextLogger);
+	}
+
+	protected String flushLogger(Logger contextLogger) {
+		if (contextLogger instanceof RemoteActionLogger) {
+			return ((RemoteActionLogger) contextLogger).flushLogger();
+		}
+		return null;
+	}
+
+	public Logger getContextLogger() {
+		JobTracker tracker = getContextTracker();
+		return (Logger) tracker.getLogger();
+	}
+
+	public JobTracker getContextTracker() {
+		JobTracker tracker = LooseContext.get(CONTEXT_TRACKER);
+		if (tracker != null) {
+			JobTracker fromMap = trackerMap.get(tracker.getId());
+			if (fromMap != null) {
+				return fromMap;
+			}
+		}
+		return tracker;
+	}
+
+	public JobId getNextJobId(Class jobClass) {
+		String launcherName = ResourceUtilities.getBundledString(
+				JobRegistry.class, "launcherName");
+		launcherName = launcherName.isEmpty() ? ServletLayerUtils
+				.getLocalHostName() : launcherName;
+		return new JobId(jobClass, launcherName);
 	}
 
 	public List<String> getRunningJobs() {
@@ -146,17 +215,35 @@ public class JobRegistry {
 		return runningJobIds;
 	}
 
-	public void jobOk(String message) {
-		jobComplete(JobResultType.OK, message);
+	public JobTracker getTracker(String jobId) {
+		return trackerMap.get(jobId);
 	}
 
-	private void jobComplete(JobResultType resultType, String message) {
-		final JobTracker tracker = getContextTracker();
-		tracker.setComplete(true);
-		tracker.setProgressMessage(message);
-		tracker.setEndTime(new Date());
-		AlcinaTopics.jobComplete(tracker);
-		logComplete(tracker, message);
+	public void jobError(Exception ex) {
+		JobTracker tracker = getContextTracker();
+		jobError(tracker, ex, true);
+	}
+
+	public void jobError(String message) {
+		jobError(new RuntimeException(message));
+	}
+
+	public void jobOk(String message) {
+		jobComplete(getContextTracker(), JobResultType.OK, message);
+	}
+
+	public void jobProgress(String progressMessage, double percentComplete) {
+		JobTracker tracker = getContextTracker();
+		tracker.setComplete(false);
+		tracker.setPercentComplete(percentComplete);
+		tracker.setProgressMessage(progressMessage);
+	}
+
+	public void putTracker(JobTracker jobTracker) {
+		trackerMap.put(jobTracker.getId(), jobTracker);
+	}
+
+	public void removeTracker(final JobTracker tracker) {
 		if (tracker.provideIsRoot()) {
 			new Thread() {
 				public void run() {
@@ -170,61 +257,6 @@ public class JobRegistry {
 		} else {
 			trackerMap.remove(tracker.getId());
 		}
-		popContextTracker(tracker);
-	}
-
-	private void logComplete(JobTracker tracker, String message) {
-		getContextLogger().info(message);
-		long itemCount = tracker.getItemCount();
-		if (itemCount != 0) {
-			double avgTime = tracker.getJobDuration() / itemCount;
-			getContextLogger().info(
-					String.format(
-							"Run time: %.4f s. - avg. time per item: %s ms.",
-							tracker.getJobDuration() / 1000, avgTime));
-		} else {
-			getContextLogger().info(
-					String.format("Run time: %.4f s.",
-							tracker.getJobDuration() / 1000));
-		}
-	}
-
-	private void popContextTracker(JobTracker tracker) {
-		JobTracker current = getContextTracker();
-		if (current != tracker) {
-			System.out.format(
-					"warn -- popping wrong tracker %s, thread-current %s\n",
-					tracker, current);
-		} else {
-			LooseContext.set(CONTEXT_TRACKER, tracker.getParent());
-		}
-	}
-
-	public void jobError(Exception ex) {
-		JobTracker tracker = getContextTracker();
-		jobError(tracker, ex, true);
-	}
-
-	private void jobError(JobTracker tracker, Exception ex, boolean logException) {
-		if (logException) {
-			getContextLogger().warn("", ex);
-			ex.printStackTrace();
-		}
-		String jobResult = "Job failed: " + ex.toString();
-		tracker.setjobError(ex);
-		jobComplete(JobResultType.FAIL, jobResult);
-		notifyJobFailure(tracker);
-	}
-
-	public void jobError(String message) {
-		jobError(new RuntimeException(message));
-	}
-
-	public void jobProgress(String progressMessage, double percentComplete) {
-		JobTracker tracker = getContextTracker();
-		tracker.setComplete(false);
-		tracker.setPercentComplete(percentComplete);
-		tracker.setProgressMessage(progressMessage);
 	}
 
 	public JobTracker startJob(Class jobClass, String jobName, String message) {
@@ -234,55 +266,27 @@ public class JobRegistry {
 		JobId jobId = null;
 		JobId contextId = LooseContext.get(CONTEXT_NEXT_JOB_ID);
 		if (contextId == null) {
-			jobId = new JobId(jobClass, ServletLayerUtils.getLocalHostName());
+			jobId = getNextJobId(jobClass);
 		} else {
 			jobId = contextId;
 			LooseContext.remove(CONTEXT_NEXT_JOB_ID);
 		}
-		JobTrackerImpl tracker = new JobTrackerImpl(jobId.toString());
-		tracker.startup(jobClass,jobName,message);
-		tracker.setStartTime(new Date());
-		trackerMap.put(tracker.getId(), tracker);
-		Logger custom = LooseContext.get(CONTEXT_USE_LOGGER);
-		tracker.setLogger(custom != null ? custom : Registry.impl(
-				RemoteActionLoggerProvider.class).createLogger(jobClass));
+		JobTracker tracker = null;
+		if (trackerMap.containsKey(jobId.toString())) {
+			tracker = trackerMap.get(jobId.toString());
+		} else {
+			tracker = new JobTrackerImpl(jobId.toString());
+			((JobTrackerImpl) tracker).startup(jobClass, jobName, message);
+			putTracker(tracker);
+		}
+		if (tracker.getLogger() == null) {
+			Logger custom = LooseContext.get(CONTEXT_USE_LOGGER);
+			tracker.setLogger(custom != null ? custom : Registry.impl(
+					RemoteActionLoggerProvider.class).createLogger(jobClass));
+		}
 		pushContextTracker(tracker);
 		LooseContext.getContext().publishTopic(TOPIC_JOB_STARTED, tracker);
 		return tracker;
-	}
-
-	private void pushContextTracker(JobTracker tracker) {
-		JobTracker current = getContextTracker();
-		if (current != null) {
-			tracker.setParent(current);
-			current.getChildren().add(tracker);
-		}
-		LooseContext.set(CONTEXT_TRACKER, tracker);
-	}
-
-	public JobTracker getContextTracker() {
-		return LooseContext.get(CONTEXT_TRACKER);
-	}
-
-	public Logger getContextLogger() {
-		JobTracker tracker = getContextTracker();
-		return (Logger) tracker.getLogger();
-	}
-
-	public String getContextLogBuffer() {
-		Logger contextLogger = getContextLogger();
-		if (contextLogger instanceof RemoteActionLogger) {
-			return ((RemoteActionLogger) contextLogger).closeLogger();
-		}
-		return null;
-	}
-
-	public RemoteActionLogger getAccessLogger() {
-		Logger contextLogger = getContextLogger();
-		if (contextLogger instanceof RemoteActionLogger) {
-			return (RemoteActionLogger) contextLogger;
-		}
-		return null;
 	}
 
 	public void updateJob(String message) {
@@ -299,11 +303,85 @@ public class JobRegistry {
 				message), progress);
 	}
 
-	public JobTracker getTracker(String jobId) {
-		return trackerMap.get(jobId);
+	private List<JobTracker> getRootTrackers() {
+		CollectionFilter<JobTracker> filter = new CollectionFilter<JobTracker>() {
+			@Override
+			public boolean allow(JobTracker o) {
+				return o.provideIsRoot();
+			}
+		};
+		return CollectionFilters.filter(trackerMap.values(), filter);
 	}
 
-	public void putTracker(JobTracker jobTracker) {
-		trackerMap.put(jobTracker.getId(), jobTracker);
+	private void jobComplete(JobTracker tracker, JobResultType resultType,
+			String message) {
+		tracker.setComplete(true);
+		tracker.setProgressMessage(message);
+		tracker.setEndTime(new Date());
+		AlcinaTopics.jobComplete(tracker);
+		logComplete(tracker, message);
+		removeTracker(tracker);
+		if (tracker.getParent() != null) {
+			tracker.getParent().childComplete(tracker);
+		}
+		popContextTracker(tracker);
+	}
+
+	private void jobError(JobTracker tracker, Exception ex, boolean logException) {
+		if (logException) {
+			getContextLogger().warn("", ex);
+			ex.printStackTrace();
+		}
+		String jobResult = "Job failed: " + ex.toString();
+		tracker.setJobException(ex);
+		jobComplete(tracker, JobResultType.FAIL, jobResult);
+		notifyJobFailure(tracker);
+	}
+
+	private void logComplete(JobTracker tracker, String message) {
+		Logger logger = (Logger) tracker.getLogger();
+		logger.info(message);
+		tracker.setJobResult(message);
+		long itemCount = tracker.getItemCount();
+		if (itemCount != 0 && tracker.getParent() == null) {
+			double avgTime = tracker.getJobDuration() / itemCount;
+			logger.info(String.format(
+					"Run time: %.4f s. - avg. time per item: %.0f ms.",
+					tracker.getJobDuration() / 1000, avgTime));
+		} else {
+			logger.info(String.format("Run time: %.4f s.",
+					tracker.getJobDuration() / 1000));
+		}
+		flushTracker(tracker);
+	}
+
+	private void popContextTracker(JobTracker tracker) {
+		JobTracker current = getContextTracker();
+		if (current != tracker) {
+			System.out.format(
+					"warn -- popping wrong tracker %s, thread-current %s\n",
+					tracker, current);
+		} else {
+			JobTracker parent = tracker.getParent();
+			if (parent != null) {
+				List<JobTracker> newList = new ArrayList<JobTracker>(
+						parent.getChildren());
+				newList.remove(tracker);
+				parent.setChildren(newList);
+			}
+			LooseContext.set(CONTEXT_TRACKER, parent);
+		}
+	}
+
+	private void pushContextTracker(JobTracker tracker) {
+		JobTracker current = getContextTracker();
+		if (current != null) {
+			tracker.setParent(current);
+			List<JobTracker> newList = new ArrayList<JobTracker>(
+					current.getChildren());
+			current.getChildren().add(tracker);
+			current.setChildren(newList);
+		}
+		LooseContext.set(CONTEXT_TRACKER, tracker);
 	}
 }

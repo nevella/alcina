@@ -40,14 +40,6 @@ public class TransformPersister {
 	private static final String TOPIC_PERSISTING_TRANSFORMS = TransformPersister.class
 			.getName() + ".TOPIC_PERSISTING_TRANSFORMS";
 
-	private static final String PRECACHE_ENTITIES = "precache entities";
-
-	private static final String FLUSH_TRANSFORMS = "flush transforms";
-
-	private static final String PERSIST_TRANSFORMS = "persist transforms";
-
-	private static final String TRANSFORM_FIRE = "transform - fire";
-
 	private EntityManager entityManager;
 
 	private CommonPersistenceLocal commonPersistenceBase;
@@ -214,7 +206,7 @@ public class TransformPersister {
 			dtrs.addAll(request.getPriorRequestsWithoutResponse());
 			dtrs.add(request);
 			Integer highestPersistedRequestId = null;
-			//legacy - repair incorrect client behaviour
+			// legacy - repair incorrect client behaviour
 			boolean persistRequestsBeforeHightestPersisted = ResourceUtilities
 					.getBoolean(getClass(),
 							"persistRequestsBeforeHightestPersisted");
@@ -256,13 +248,10 @@ public class TransformPersister {
 				List<DomainTransformEvent> items = dtr.getEvents();
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
 				if (token.getPass() == Pass.TRY_COMMIT) {
-					MetricLogging.get().lowPriorityStart(PRECACHE_ENTITIES);
 					commonPersistenceBase.cacheEntities(items, token
 							.getTransformExceptionPolicy()
 							.precreateMissingEntities());
-					MetricLogging.get().lowPriorityEnd(PRECACHE_ENTITIES);
 				}
-				MetricLogging.get().lowPriorityStart(TRANSFORM_FIRE);
 				for (DomainTransformEvent event : items) {
 					if (request.getEventIdsToIgnore().contains(
 							event.getEventId())
@@ -355,8 +344,6 @@ public class TransformPersister {
 								break;
 							}
 							if (!actionForException.ignoreable()) {
-								MetricLogging.get().lowPriorityEnd(
-										TRANSFORM_FIRE);
 								// ve must rollback
 								putExceptionInWrapper(token,
 										transformException, wrapper);
@@ -365,10 +352,9 @@ public class TransformPersister {
 						}
 					}// commit/determine exception
 				}// dtes
-				MetricLogging.get().lowPriorityEnd(TRANSFORM_FIRE);
-				MetricLogging.get().lowPriorityStart(PERSIST_TRANSFORMS);
 				dtr.updateTransformCommitType(CommitType.ALL_COMMITTED, false);
 				if (token.getPass() == Pass.TRY_COMMIT) {
+					entityManager.flush();// any exceptions...here we are
 					CollectionFilter<DomainTransformEvent> filterByPolicy = new CollectionFilter<DomainTransformEvent>() {
 						@Override
 						public boolean allow(DomainTransformEvent event) {
@@ -427,16 +413,10 @@ public class TransformPersister {
 						}
 					}
 				}// dtes
-				MetricLogging.get().lowPriorityEnd(PERSIST_TRANSFORMS);
 			}// dtrs
 			switch (token.getPass()) {
 			case TRY_COMMIT:
-				MetricLogging.get().lowPriorityStart(FLUSH_TRANSFORMS);
-				try {
-					getEntityManager().flush();
-				} finally {
-					MetricLogging.get().lowPriorityEnd(FLUSH_TRANSFORMS);
-				}
+				getEntityManager().flush();
 				DomainTransformResponse dtr = new DomainTransformResponse();
 				dtr.getEventsToUseForClientUpdate().addAll(
 						token.getClientUpdateEvents());

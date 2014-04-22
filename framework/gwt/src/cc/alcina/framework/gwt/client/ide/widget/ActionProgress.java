@@ -148,6 +148,13 @@ public class ActionProgress extends Composite implements
 
 					public void onSuccess(JobTracker info) {
 						checking = false;
+						if(info==null){
+							info=new JobTrackerImpl();
+							info.setJobName("Unknown job");
+							info.setComplete(true);
+							info.setProgressMessage("---");
+							
+						}
 						if (info.isComplete()) {
 							stopTimer();
 							if (ActionProgress.this.completionCallback != null) {
@@ -320,6 +327,7 @@ public class ActionProgress extends Composite implements
 			cancelLink.setVisible(true);
 		}
 		message.setText(msg);
+		System.out.println(info.getPercentComplete());
 		progress.setWidth(Math.max(0,
 				((int) (bar.getOffsetWidth() - 2) * info.getPercentComplete()))
 				+ "px");

@@ -23,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -35,7 +36,7 @@ import cc.alcina.framework.common.client.util.Multimap;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class AnnotationUtils {
-	private static HashMap<Method, Set<Annotation>> superMethodAnnotationMap = new HashMap<Method, Set<Annotation>>();
+	private static Map<Method, Set<Annotation>> superMethodAnnotationMap = new ConcurrentHashMap<Method, Set<Annotation>>();
 
 	public static Set<Annotation> getSuperclassAnnotationsForMethod(Method m) {
 		if (superMethodAnnotationMap.containsKey(m)) {
@@ -60,7 +61,7 @@ public class AnnotationUtils {
 		return values;
 	}
 
-	private static HashMap<Class, Multimap<Class, List<Annotation>>> superAnnotationMap = new HashMap<Class, Multimap<Class, List<Annotation>>>();
+	private static Map<Class, Multimap<Class, List<Annotation>>> superAnnotationMap = new ConcurrentHashMap<Class, Multimap<Class, List<Annotation>>>();
 
 	public static Multimap<Class, List<Annotation>> getSuperclassAnnotations(
 			Class clazz) {

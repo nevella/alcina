@@ -103,12 +103,13 @@ public abstract class ExtensibleEnum {
 
 	private static UnsortedMultikeyMap<ExtensibleEnum> valueLookup = new UnsortedMultikeyMap<ExtensibleEnum>(
 			2);
-	//class - tag - exenum instance - exenum instance
+
+	// class - tag - exenum instance - exenum instance
 	private static UnsortedMultikeyMap<ExtensibleEnum> tagLookup = new UnsortedMultikeyMap<ExtensibleEnum>(
 			3);
 
 	private String key;
-	
+
 	private String[] tags;
 
 	public static <E extends ExtensibleEnum> E valueOf(Class<E> enumClass,
@@ -121,16 +122,18 @@ public abstract class ExtensibleEnum {
 	}
 
 	public ExtensibleEnum(String key) {
-		this.key = key;
-		Class<? extends ExtensibleEnum> registryPoint = getRegistryPoint();
-		ExtensibleEnum existing = valueLookup.get(registryPoint,
-				serializedForm());
-		if (existing != null) {
-			throw new RuntimeException("Duplicate xtensible enum - "
-					+ serializedForm());
+		synchronized (ExtensibleEnum.class) {
+			this.key = key;
+			Class<? extends ExtensibleEnum> registryPoint = getRegistryPoint();
+			ExtensibleEnum existing = valueLookup.get(registryPoint,
+					serializedForm());
+			if (existing != null) {
+				throw new RuntimeException("Duplicate xtensible enum - "
+						+ serializedForm());
+			}
+			valueLookup.put(registryPoint, serializedForm(), this);
+			superLookup.add(registryPoint, this);
 		}
-		valueLookup.put(registryPoint, serializedForm(), this);
-		superLookup.add(registryPoint, this);
 	}
 
 	private Class<? extends ExtensibleEnum> getRegistryPoint() {
@@ -141,16 +144,18 @@ public abstract class ExtensibleEnum {
 		}
 		return registryPoint;
 	}
-	
+
 	public ExtensibleEnum(String key, String... tags) {
 		this(key);
-		this.tags=tags;
-		for(String tag:tags){
-			tagLookup.put(getRegistryPoint(),tag,this,this);
+		this.tags = tags;
+		for (String tag : tags) {
+			tagLookup.put(getRegistryPoint(), tag, this, this);
 		}
 	}
-	public static Collection<ExtensibleEnum> forClassAndTag(Class<? extends ExtensibleEnum> clazz,String tag){
-		return tagLookup.asMap(clazz,tag).keySet();
+
+	public static Collection<ExtensibleEnum> forClassAndTag(
+			Class<? extends ExtensibleEnum> clazz, String tag) {
+		return tagLookup.asMap(clazz, tag).keySet();
 	}
 
 	protected ExtensibleEnum() {

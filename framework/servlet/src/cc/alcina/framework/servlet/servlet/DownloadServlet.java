@@ -17,6 +17,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -34,7 +35,8 @@ import cc.alcina.framework.entity.SEUtilities;
  * @author Nick Reddel
  */
 public class DownloadServlet extends HttpServlet {
-	private static Map<String, DownloadItem> items = new HashMap<String, DownloadItem>();
+	private static Map<String, DownloadItem> items = Collections
+			.synchronizedMap(new HashMap<String, DownloadItem>());
 
 	public static String add(DownloadItem item) {
 		String id = SEUtilities.generateId();

@@ -16,18 +16,22 @@ package cc.alcina.framework.common.client.csobjects;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.IdentityHashMap;
 import java.util.List;
 
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
+import com.totsp.gwittir.client.beans.Converter;
 
 /**
  * 
  * @author Nick Reddel
  */
-public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
+public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
+		Serializable, Cloneable, JobTracker {
 	static final transient long serialVersionUID = -3L;
 
 	private Date startTime;
@@ -59,18 +63,8 @@ public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
 	private boolean cancelled;
 
 	private long itemCount;
-	
+
 	private transient Object jobResultObject;
-
-	@Override
-	public long getItemCount() {
-		return this.itemCount;
-	}
-
-	@Override
-	public void setItemCount(long itemCount) {
-		this.itemCount = itemCount;
-	}
 
 	private long itemsCompleted;
 
@@ -105,6 +99,16 @@ public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
 	}
 
 	@Override
+	public long getItemCount() {
+		return this.itemCount;
+	}
+
+	@Override
+	public long getItemsCompleted() {
+		return this.itemsCompleted;
+	}
+
+	@Override
 	public double getJobDuration() {
 		if (startTime == null || endTime == null) {
 			return 0;
@@ -113,7 +117,7 @@ public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
 	}
 
 	@Override
-	public Exception getjobError() {
+	public Exception getJobException() {
 		return this.jobException;
 	}
 
@@ -133,13 +137,38 @@ public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
 	}
 
 	@Override
+	public Object getJobResultObject() {
+		return this.jobResultObject;
+	}
+
+	@Override
 	public JobResultType getJobResultType() {
 		return this.jobResultType;
 	}
 
 	@Override
+	public String getLog() {
+		return this.log;
+	}
+
+	@Override
+	public Object getLogger() {
+		return this.logger;
+	}
+
+	@Override
+	public LogLevel getLogLevel() {
+		return this.logLevel;
+	}
+
+	@Override
 	public JobTracker getParent() {
 		return this.parent;
+	}
+
+	@Override
+	public double getPercentComplete() {
+		return getJobResultType() != null ? 1.0 : percentComplete;
 	}
 
 	@Override
@@ -178,24 +207,35 @@ public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
 	@Override
 	public void setCancelled(boolean cancelled) {
 		if (provideIsRoot()) {
+			boolean old_cancelled = this.cancelled;
 			this.cancelled = cancelled;
+			propertyChangeSupport().firePropertyChange("cancelled",
+					old_cancelled, cancelled);
+		} else {
+			root().setCancelled(cancelled);
 		}
-		root().setCancelled(cancelled);
 	}
 
 	@Override
 	public void setChildren(List<JobTracker> children) {
 		this.children = children;
+		// not bound
 	}
 
 	@Override
 	public void setComplete(boolean complete) {
+		boolean old_complete = this.complete;
 		this.complete = complete;
+		propertyChangeSupport().firePropertyChange("complete", old_complete,
+				complete);
 	}
 
 	@Override
 	public void setEndTime(Date endTime) {
+		Date old_endTime = this.endTime;
 		this.endTime = endTime;
+		propertyChangeSupport().firePropertyChange("endTime", old_endTime,
+				endTime);
 	}
 
 	@Override
@@ -204,7 +244,24 @@ public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
 	}
 
 	@Override
-	public void setjobError(Exception jobException) {
+	public void setItemCount(long itemCount) {
+		long old_itemCount = this.itemCount;
+		this.itemCount = itemCount;
+		propertyChangeSupport().firePropertyChange("itemCount", old_itemCount,
+				itemCount);
+	}
+
+	@Override
+	public void setItemsCompleted(long itemsCompleted) {
+		long old_itemsCompleted = this.itemsCompleted;
+		this.itemsCompleted = itemsCompleted;
+		propertyChangeSupport().firePropertyChange("itemsCompleted",
+				old_itemsCompleted, itemsCompleted);
+		updatePercent();
+	}
+
+	@Override
+	public void setJobException(Exception jobException) {
 		this.jobException = jobException;
 	}
 
@@ -220,48 +277,30 @@ public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
 
 	@Override
 	public void setJobResult(String jobResult) {
+		String old_jobResult = this.jobResult;
 		this.jobResult = jobResult;
+		propertyChangeSupport().firePropertyChange("jobResult", old_jobResult,
+				jobResult);
+	}
+
+	@Override
+	public void setJobResultObject(Object jobResultObject) {
+		this.jobResultObject = jobResultObject;
 	}
 
 	@Override
 	public void setJobResultType(JobResultType jobResultType) {
+		JobResultType old_jobResultType = this.jobResultType;
 		this.jobResultType = jobResultType;
-	}
-
-	@Override
-	public void setParent(JobTracker parent) {
-		this.parent = parent;
-	}
-
-	@Override
-	public void setProgressMessage(String progressMessage) {
-		this.progressMessage = progressMessage;
-	}
-
-	@Override
-	public void setStartTime(Date startTime) {
-		this.startTime = startTime;
-	}
-
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ("JobTracker: %s %s %s", getJobName(),
-				getJobResult(), getId());
-	}
-
-	@Override
-	public String getLog() {
-		return this.log;
+		propertyChangeSupport().firePropertyChange("jobResultType",
+				old_jobResultType, jobResultType);
 	}
 
 	@Override
 	public void setLog(String log) {
+		String old_log = this.log;
 		this.log = log;
-	}
-
-	@Override
-	public Object getLogger() {
-		return this.logger;
+		propertyChangeSupport().firePropertyChange("log", old_log, log);
 	}
 
 	@Override
@@ -270,46 +309,40 @@ public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
 	}
 
 	@Override
-	public LogLevel getLogLevel() {
-		return this.logLevel;
-	}
-
-	@Override
 	public void setLogLevel(LogLevel logLevel) {
 		this.logLevel = logLevel;
 	}
 
 	@Override
-	public long getItemsCompleted() {
-		return this.itemsCompleted;
-	}
-
-	@Override
-	public void setItemsCompleted(long itemsCompleted) {
-		this.itemsCompleted = itemsCompleted;
-		updatePercent();
-	}
-
-	protected void updatePercent() {
-		percentComplete = (getItemCount() == 0 ? 0.0
-				: (getItemsCompleted() * 100.0) / getItemCount());
-	}
-
-	@Override
-	public double getPercentComplete() {
-		return getJobResultType() != null ? 1.0 : percentComplete;
+	public void setParent(JobTracker parent) {
+		// System.out.format("setpt: %s %s %s\n",
+		// Thread.currentThread().getId(),
+		// id, parent == null ? "null" : parent.getId());
+		this.parent = parent;
 	}
 
 	@Override
 	public void setPercentComplete(double percentComplete) {
+		double old_percentComplete = this.percentComplete;
 		this.percentComplete = percentComplete;
+		propertyChangeSupport().firePropertyChange("percentComplete",
+				old_percentComplete, percentComplete);
 	}
 
 	@Override
-	public void updateJob(int completedDelta) {
-		itemsCompleted += completedDelta;
-		updatePercent();
-		double progress = ((double) itemsCompleted) / ((double) itemCount);
+	public void setProgressMessage(String progressMessage) {
+		String old_progressMessage = this.progressMessage;
+		this.progressMessage = progressMessage;
+		propertyChangeSupport().firePropertyChange("progressMessage",
+				old_progressMessage, progressMessage);
+	}
+
+	@Override
+	public void setStartTime(Date startTime) {
+		Date old_startTime = this.startTime;
+		this.startTime = startTime;
+		propertyChangeSupport().firePropertyChange("startTime", old_startTime,
+				startTime);
 	}
 
 	public void startup(Class jobClass, String jobName, String message) {
@@ -318,15 +351,34 @@ public class JobTrackerImpl implements Serializable, Cloneable, JobTracker {
 				: jobName);
 		setPercentComplete(0);
 		setProgressMessage(message != null ? message : "Starting job...");
+		setStartTime(new Date());
 	}
 
 	@Override
-	public Object getJobResultObject() {
-		return this.jobResultObject;
+	public String toString() {
+		return CommonUtils.formatJ("JobTracker: %s %s %s", getJobName(),
+				CommonUtils.nullToEmpty(getJobResult()), getId());
 	}
 
 	@Override
-	public void setJobResultObject(Object jobResultObject) {
-		this.jobResultObject = jobResultObject;
+	public void updateJob(int completedDelta) {
+		itemsCompleted += completedDelta;
+		updatePercent();
+	}
+
+	protected void updatePercent() {
+		setPercentComplete((getItemCount() == 0 ? 0.0
+				: ((double) getItemsCompleted()) / ((double) getItemCount())));
+	}
+
+	@Override
+	public void childComplete(JobTracker tracker) {
+		if (parent != null) {
+			parent.childComplete(tracker);
+		}
+	}
+
+	public JobTracker exportableForm() {
+		return this;
 	}
 }

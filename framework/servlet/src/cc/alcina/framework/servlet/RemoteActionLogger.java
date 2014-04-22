@@ -103,7 +103,9 @@ public class RemoteActionLogger extends Logger {
 		writerAppender
 				.setName(WriterAccessWriterAppender.STRING_WRITER_APPENDER_KEY);
 		addAppender(writerAppender);
-		ConsoleAppender consoleAppender = new ConsoleAppender(RemoteActionLoggerProvider.layout);
+		setLevel(Level.DEBUG);
+		ConsoleAppender consoleAppender = new ConsoleAppender(
+				RemoteActionLoggerProvider.layout);
 		addAppender(consoleAppender);
 	}
 
@@ -124,7 +126,7 @@ public class RemoteActionLogger extends Logger {
 		return result;
 	}
 
-	public String closeLogger() {
+	public String flushLogger() {
 		return resetLogBuffer();
 	}
 
@@ -134,5 +136,9 @@ public class RemoteActionLogger extends Logger {
 
 	public String getLoggerBufferSubstring(int from, int to) {
 		return writerAppender.getWriterAccess().getBuffer().substring(from, to);
+	}
+
+	public String getLoggerBufferContents() {
+		return writerAppender.getWriterAccess().toString();
 	}
 }

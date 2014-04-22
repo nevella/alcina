@@ -33,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -44,6 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.entity.SEUtilities;
 
 @SuppressWarnings("unchecked")
@@ -118,15 +120,19 @@ public class GraphProjection {
 
 	Map<Class, Boolean> perObjectPermissionClasses = new HashMap<Class, Boolean>();
 
-	static Map<Field, Type> genericTypeLookup = new HashMap<Field, Type>();
+	static Map<Field, Type> genericTypeLookup = new NullWrappingMap<Field, Type>(
+			new ConcurrentHashMap());
 
-	static Map<Field, Boolean> genericHiliTypeLookup = new HashMap<Field, Boolean>();
+	static Map<Field, Boolean> genericHiliTypeLookup = new NullWrappingMap<Field, Boolean>(
+			new ConcurrentHashMap());
 
-	static Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>();
+	static Map<Class, Permission> perClassReadPermission = new NullWrappingMap<Class, Permission>(
+			new ConcurrentHashMap());
 
-	Map<Field, PropertyPermissions> perFieldPermission = new HashMap<Field, PropertyPermissions>();
+	static Map<Field, PropertyPermissions> propertyPermissionLookup = new NullWrappingMap<Field, PropertyPermissions>(
+			new ConcurrentHashMap());
 
-	static Map<Field, PropertyPermissions> propertyPermissionLookup = new LinkedHashMap<Field, PropertyPermissions>();
+	Map<Field, PropertyPermissions> perFieldPermission = new LinkedHashMap<Field, PropertyPermissions>();
 
 	public GraphProjection() {
 	}

@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -69,7 +70,7 @@ public class ResourceUtilities {
 		customProperties.clear();
 	}
 
-	private static Map<String, String> customProperties = new LinkedHashMap<String, String>();
+	private static Map<String, String> customProperties = new ConcurrentHashMap<String, String>();
 
 	public static void registerCustomProperties(InputStream ios) {
 		try {

@@ -53,15 +53,17 @@ public class JaxbUtils {
 	private JAXBContext getContext0(Collection<Class> classes)
 			throws JAXBException {
 		if (jc == null || !jcClasses.containsAll(classes)) {
-			Map<String, String> emptyProps = new HashMap<String, String>();
-			jcClasses.addAll(classes);
-			Class[] clazzez = (Class[]) jcClasses.toArray(new Class[jcClasses
-					.size()]);
-			try {
-				jc = JAXBContext.newInstance(clazzez, emptyProps);
-			} catch (RuntimeException e) {
-				jcClasses = new HashSet<Class>();
-				throw e;
+			synchronized (jcClasses) {
+				Map<String, String> emptyProps = new HashMap<String, String>();
+				jcClasses.addAll(classes);
+				Class[] clazzez = (Class[]) jcClasses
+						.toArray(new Class[jcClasses.size()]);
+				try {
+					jc = JAXBContext.newInstance(clazzez, emptyProps);
+				} catch (RuntimeException e) {
+					jcClasses = new HashSet<Class>();
+					throw e;
+				}
 			}
 		}
 		return jc;

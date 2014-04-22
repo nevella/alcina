@@ -11,22 +11,23 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.entity.entityaccess;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.collections.map.LRUMap;
+
 @SuppressWarnings("unchecked")
 /**
  *
  * @author Nick Reddel
  */
-
- public class NamedCache {
+public class NamedCache {
 	public static int cacheSize = 100;
-	public static final String ALL_CACHE="A_CACHE";
+
+	public static final String ALL_CACHE = "A_CACHE";
+
 	private static Map<String, Map> caches = new LinkedHashMap<String, Map>();
 
 	public static <T> T get(String mapName, Object key) {
@@ -34,38 +35,42 @@ import org.apache.commons.collections.map.LRUMap;
 		return (T) caches.get(mapName).get(key);
 	}
 
-	public static void put(String mapName, Object key, Object value) {
+	public static synchronized void put(String mapName, Object key, Object value) {
 		checkMap(mapName);
-		try {
-			caches.get(mapName).put(key, value);
-		} catch (Exception e) {
-			//weird stuff with LRUMap 
-			e.printStackTrace();
-			caches.remove(mapName);
-			checkMap(mapName);
-			caches.get(mapName).put(key, value);
+		synchronized (caches) {
+			try {
+				caches.get(mapName).put(key, value);
+			} catch (Exception e) {
+				// weird stuff with LRUMap
+				e.printStackTrace();
+				caches.remove(mapName);
+				checkMap(mapName);
+				caches.get(mapName).put(key, value);
+			}
 		}
 	}
 
 	public static boolean containsKey(String mapName, Object key) {
 		return get(mapName, key) != null;
 	}
+
 	public static boolean isEmpty(String mapName) {
 		checkMap(mapName);
 		return caches.get(mapName).isEmpty();
-		
 	}
-	private static synchronized void checkMap(String mapName){
+
+	private static synchronized void checkMap(String mapName) {
 		if (!caches.containsKey(mapName)) {
 			caches.put(mapName, new LRUMap(cacheSize));
 		}
 	}
 
-	public static void invalidate(String mapName) {
+	public static synchronized void invalidate(String mapName) {
 		checkMap(mapName);
 		caches.get(mapName).clear();
 	}
-	public static void invalidate(String mapName,Object key) {
+
+	public static synchronized void invalidate(String mapName, Object key) {
 		checkMap(mapName);
 		caches.get(mapName).remove(key);
 	}

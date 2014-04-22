@@ -5,10 +5,12 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public class JobId implements Serializable {
+public class JobId implements Serializable, Comparable<JobId> {
 	static final transient long serialVersionUID = -3L;
 
 	public String id;
@@ -25,8 +27,19 @@ public class JobId implements Serializable {
 	}
 
 	public JobId(JobId parent, String id) {
-		this.id = CommonUtils
-				.join(Arrays.asList(parent.toString(), id), "::");
+		this.id = CommonUtils.join(Arrays.asList(parent.toString(), id), "::");
+	}
+
+	static transient Pattern parentPattern = Pattern.compile("(.+)::(.+)");
+
+	static transient Pattern subJobPattern = Pattern.compile("(.+)::(\\d+)");
+
+	public JobId getParent() {
+		Matcher m = parentPattern.matcher(id);
+		if (m.matches()) {
+			return new JobId(m.group(1));
+		}
+		return null;
 	}
 
 	public JobId(String path) {
@@ -46,5 +59,20 @@ public class JobId implements Serializable {
 	@Override
 	public String toString() {
 		return id;
+	}
+
+	@Override
+	public int compareTo(JobId o) {
+		Matcher m1 = subJobPattern.matcher(id);
+		Matcher m2 = subJobPattern.matcher(o.id);
+		if (m1.matches() && m2.matches()) {
+			int i = m1.group(1).compareTo(m2.group(1));
+			if (i != 0) {
+				return i;
+			}
+			return CommonUtils.compareInts(Integer.parseInt(m1.group(2)),
+					Integer.parseInt(m2.group(2)));
+		}
+		return id.compareTo(o.id);
 	}
 }

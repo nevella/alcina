@@ -110,7 +110,9 @@ public class WrappedObjectPersistence {
 					}
 				}
 			}
-			wrapperDescriptors.put(clazz, descriptors);
+			synchronized (wrapperDescriptors) {
+				wrapperDescriptors.put(clazz, descriptors);
+			}
 		}
 		return wrapperDescriptors.get(clazz);
 	}
