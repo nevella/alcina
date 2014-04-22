@@ -41,7 +41,7 @@ public class ClientInstanceAuthenticationCache {
 	}
 
 	public String iidUserNameByKey(String iid) {
-		if (iid == null) {
+		if (iid == null || !iidUserNameByKeyMap.containsKey(iid)) {
 			return null;
 		}
 		return iidUserNameByKeyMap.get(iid);
