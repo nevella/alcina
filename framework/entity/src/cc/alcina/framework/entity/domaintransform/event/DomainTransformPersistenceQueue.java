@@ -394,7 +394,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 	}
 
-	private Object dbWaitMonitor;
+	private Object dbWaitMonitor=new Object();
 
 	public void waitUntilCurrentRequestsProcessed() {
 		forceDbCheck();
