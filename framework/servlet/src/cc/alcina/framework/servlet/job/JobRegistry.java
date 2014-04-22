@@ -208,7 +208,8 @@ public class JobRegistry {
 		Set<Entry<String, JobTracker>> entries = trackerMap.entrySet();
 		List<String> runningJobIds = new ArrayList<String>();
 		for (Entry<String, JobTracker> entry : entries) {
-			if (!entry.getValue().isComplete()) {
+			if (!entry.getValue().isComplete()
+					&& entry.getValue().getParent() == null) {
 				runningJobIds.add(entry.getKey());
 			}
 		}
