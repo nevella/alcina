@@ -137,6 +137,8 @@ public class AlcinaMemCache {
 
 	private UnsortedMultikeyMap<PropertyDescriptor> oneToOneRev;
 
+	private UnsortedMultikeyMap<PropertyDescriptor> memCacheColumnRev;
+
 	private Connection conn;
 
 	private Multimap<Class, List<ColumnDescriptor>> columnDescriptors;
@@ -632,6 +634,12 @@ public class AlcinaMemCache {
 		if (oneToOne != null && oneToOne.targetEntity() != void.class) {
 			return oneToOne.targetEntity();
 		}
+		AlcinaMemCacheColumn memCacheColumn = rm
+				.getAnnotation(AlcinaMemCacheColumn.class);
+		if (memCacheColumn != null
+				&& memCacheColumn.targetEntity() != void.class) {
+			return memCacheColumn.targetEntity();
+		}
 		return rm.getReturnType();
 	}
 
@@ -800,7 +808,8 @@ public class AlcinaMemCache {
 				continue;
 			}
 			Method rm = pd.getReadMethod();
-			if (rm.getAnnotation(Transient.class) != null
+			if ((rm.getAnnotation(Transient.class) != null && rm
+					.getAnnotation(AlcinaMemCacheColumn.class) == null)
 					|| rm.getAnnotation(AlcinaMemCacheTransient.class) != null) {
 				continue;
 			}
@@ -832,7 +841,9 @@ public class AlcinaMemCache {
 			}
 			ManyToOne manyToOne = rm.getAnnotation(ManyToOne.class);
 			OneToOne oneToOne = rm.getAnnotation(OneToOne.class);
-			if (manyToOne != null || oneToOne != null) {
+			AlcinaMemCacheColumn memCacheColumn = rm
+					.getAnnotation(AlcinaMemCacheColumn.class);
+			if (manyToOne != null || oneToOne != null || memCacheColumn != null) {
 				Class joinEntityType = getTargetEntityType(rm);
 				if (!cacheDescriptor.joinPropertyCached(joinEntityType)) {
 					System.out.format("  not loading: %s.%s -- %s\n", clazz
@@ -843,6 +854,11 @@ public class AlcinaMemCache {
 				if (oneToOne != null && !oneToOne.mappedBy().isEmpty()) {
 					oneToOneRev.put(pd.getPropertyType(), oneToOne.mappedBy(),
 							pd);
+					continue;
+				}
+				if (memCacheColumn != null) {
+					memCacheColumnRev.put(pd.getPropertyType(),
+							memCacheColumn.mappedBy(), pd);
 					continue;
 				}
 				addColumnName(clazz, pd,
@@ -896,6 +912,7 @@ public class AlcinaMemCache {
 		descriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
 		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
+		memCacheColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		laterLookup = new LaterLookup();
 		if (ResourceUtilities.getBoolean(AlcinaMemCache.class,
@@ -1531,6 +1548,12 @@ public class AlcinaMemCache {
 								set.add(item.source);
 							}
 							targetPd = oneToOneRev.get(item.source.getClass(),
+									pd.getName());
+							if (targetPd != null && target != null) {
+								targetPd.getWriteMethod().invoke(target,
+										new Object[] { item.source });
+							}
+							targetPd = memCacheColumnRev.get(item.source.getClass(),
 									pd.getName());
 							if (targetPd != null && target != null) {
 								targetPd.getWriteMethod().invoke(target,

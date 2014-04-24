@@ -66,7 +66,8 @@ public class ChildBeanCustomiser implements Customiser {
 		}
 	}
 
-	public static class ChildBeanWidget extends AbstractBoundWidget implements MultilineWidget,HasBinding{
+	public static class ChildBeanWidget extends AbstractBoundWidget implements
+			MultilineWidget, HasBinding {
 		private FlowPanel fp;
 
 		private GridForm gridForm;
@@ -96,7 +97,8 @@ public class ChildBeanCustomiser implements Customiser {
 			h.addClickHandler(new ClickHandler() {
 				public void onClick(ClickEvent event) {
 					Class clazz = ChildBeanWidget.this.objectClass;
-					boolean autoSave = ClientBase.getGeneralProperties().isAutoSave();
+					boolean autoSave = ClientBase.getGeneralProperties()
+							.isAutoSave();
 					HasIdAndLocalId obj = autoSave ? TransformManager.get()
 							.createDomainObject(clazz) : TransformManager.get()
 							.createProvisionalObject(clazz);
