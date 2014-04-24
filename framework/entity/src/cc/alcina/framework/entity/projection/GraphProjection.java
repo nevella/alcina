@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.projection;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -341,7 +342,7 @@ public class GraphProjection {
 	}
 
 	public static class GraphProjectionContext {
-		public GraphProjectionContext parent;
+		public WeakReference<GraphProjectionContext> parentRef;
 
 		public Object projectedOwner;
 
@@ -364,7 +365,8 @@ public class GraphProjection {
 			this.field = field;
 			this.sourceOwner = sourceOwner;
 			this.fieldName = field == null ? "" : field.getName();
-			this.parent = parent;
+			this.parentRef = parent == null ? null
+					: new WeakReference<GraphProjectionContext>(parent);
 			this.projectedOwner = projectedOwner;
 			this.depth = parent == null ? 0 : parent.depth + 1;
 			if (depth() > debugDepth) {
@@ -388,7 +390,7 @@ public class GraphProjection {
 
 		@Override
 		public String toString() {
-			return (parent == null ? "" : parent.toString() + "::")
+			return (parentRef == null ? "" : parentRef.get().toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
 		}
 

@@ -140,7 +140,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			ThreadedPermissionsManager.cast().popSystemUser();
 		}
 	}
-
+	
 	public synchronized void registerPersisting(
 			DomainTransformRequestPersistent dtrp) {
 		persistingRequestIds.add(dtrp.getId());
