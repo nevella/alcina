@@ -72,6 +72,7 @@ public class DomainTransformPersistenceEvents {
 			}
 		}
 		try {
+			queue.logFiring(event);
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 					listenerList)) {
 				// ex-machine transforms

@@ -2,8 +2,12 @@ package cc.alcina.framework.servlet.servlet.control;
 
 import java.util.Date;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
+@RegistryLocation(registryPoint = ControlServletState.class, implementationType = ImplementationType.INSTANCE)
 public class ControlServletState {
 	private Date startupTime;
 
@@ -14,6 +18,9 @@ public class ControlServletState {
 	private ControlServletModes modes = new ControlServletModes();
 
 	private String apiKey;
+
+	public ControlServletState() {
+	}
 
 	public String getApiKey() {
 		return this.apiKey;
@@ -66,13 +73,13 @@ public class ControlServletState {
 	}
 
 	public static ControlServletState standaloneModes() {
-		ControlServletState state = new ControlServletState();
+		ControlServletState state = Registry.impl(ControlServletState.class);
 		state.setModes(ControlServletModes.standaloneModes());
 		return state;
 	}
 
 	public static ControlServletState memberModes() {
-		ControlServletState state = new ControlServletState();
+		ControlServletState state = Registry.impl(ControlServletState.class);
 		state.setModes(ControlServletModes.memberModes());
 		return state;
 	}

@@ -140,7 +140,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			ThreadedPermissionsManager.cast().popSystemUser();
 		}
 	}
-	
+
 	public synchronized void registerPersisting(
 			DomainTransformRequestPersistent dtrp) {
 		persistingRequestIds.add(dtrp.getId());
@@ -155,12 +155,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 		LongPair firstGap = getFirstGapLessThan(
 				CollectionFilters.min(persistedRequestIds), false);
-		if (firstGap != null && maxDbPersistedRequestIdPublished > 0) {// &&false)
-																		// {//temp
-																		// fix
-																		// for
-																		// prod.
-																		// serv.
+		if (firstGap != null && maxDbPersistedRequestIdPublished > 0) {
 			logger.format("found gap (waiting) - rqid %s - gap %s", event
 					.getTransformPersistenceToken().getRequest().shortId(),
 					firstGap);
@@ -171,10 +166,6 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			}
 			return false;// let the queue sort this out
 		}
-		logger.format("firing - %s - range %s", event
-				.getTransformPersistenceToken().getRequest().shortId(),
-				new LongPair(CollectionFilters.min(persistedRequestIds),
-						CollectionFilters.max(persistedRequestIds)));
 		return true;
 	}
 
@@ -394,7 +385,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 	}
 
-	private Object dbWaitMonitor=new Object();
+	private Object dbWaitMonitor = new Object();
 
 	public void waitUntilCurrentRequestsProcessed() {
 		forceDbCheck();
@@ -408,5 +399,16 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				}
 			}
 		}
+	}
+
+	void logFiring(DomainTransformPersistenceEvent event) {
+		List<Long> persistedRequestIds = event.getPersistedRequestIds();
+		if (persistedRequestIds.isEmpty()) {
+			return;
+		}
+		logger.format("firing - %s - range %s", event
+				.getTransformPersistenceToken().getRequest().shortId(),
+				new LongPair(CollectionFilters.min(persistedRequestIds),
+						CollectionFilters.max(persistedRequestIds)));
 	}
 }
