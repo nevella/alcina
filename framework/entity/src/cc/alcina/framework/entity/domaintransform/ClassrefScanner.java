@@ -58,7 +58,8 @@ public class ClassrefScanner extends CachingScanner {
 	}
 
 	private void finish() throws Exception {
-		CommonPersistenceLocal cp = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+		CommonPersistenceLocal cp = Registry.impl(
+				CommonPersistenceProvider.class).getCommonPersistence();
 		Class<? extends ClassRef> crimpl = cp.getImplementation(ClassRef.class);
 		Set<? extends ClassRef> classrefs = cp.getAll(crimpl);
 		Set<? extends ClassRef> deleteClassrefs = new HashSet<ClassRef>();
@@ -67,20 +68,24 @@ public class ClassrefScanner extends CachingScanner {
 		classrefs.clear();
 		boolean delta = false;
 		for (Class clazz : persistableClasses) {
-			ClassRef cr = ClassRef.forClass(clazz);
-			if (cr == null) {
+			ClassRef ref = ClassRef.forClass(clazz);
+			if (ref == null) {
 				delta = true;
-				cr = crimpl.newInstance();
-				cr.setRefClass(clazz);
-				long id = cp.merge(cr);
-				cr.setId(id);
-				ClassRef.add(CommonUtils.wrapInCollection(cr));
+				ref = crimpl.newInstance();
+				ref.setRefClass(clazz);
+				long id = cp.merge(ref);
+				ref.setId(id);
+				ClassRef.add(CommonUtils.wrapInCollection(ref));
+				System.out.format("adding classref - %s %s\n", ref.getId(),
+						ref.getRefClassName());
 			} else {
-				deleteClassrefs.remove(cr);
+				deleteClassrefs.remove(ref);
 			}
 		}
 		for (ClassRef ref : deleteClassrefs) {
 			delta = true;
+			System.out.format("removing classref - %s %s\n", ref.getId(),
+					ref.getRefClassName());
 			cp.remove(ref);
 			ClassRef.remove(ref);
 		}

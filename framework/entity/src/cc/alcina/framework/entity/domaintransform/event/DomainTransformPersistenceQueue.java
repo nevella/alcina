@@ -197,7 +197,9 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void checkPersistedTransforms(LongPair checkRequestRange) {
+	// caller is synchronous, so this is redundant - but is extra doc
+	private synchronized void checkPersistedTransforms(
+			LongPair checkRequestRange) {
 		try {
 			checkingPersistedTransforms = true;
 			// check timeout
@@ -208,6 +210,12 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 							"Timed out waiting for  persisted transforms (probably a crash/exception)- gap %s",
 							checkRequestRange);
 					for (long l = lastRangeCheck.l1; l <= lastRangeCheck.l2; l++) {
+						if (lastRangeCheckFirstContiguousRange != null
+								&& lastRangeCheckFirstContiguousRange
+										.containsIncludingBoundaries(l)) {
+							// found end of gap
+							break;
+						}
 						timedOutRequestIds.add(l);
 					}
 					synchronized (this) {
@@ -229,7 +237,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			// nevertheless, let's do this properly - just fire the first
 			// contiguous range
 			if (!requests.isEmpty()) {
-				final LongPair contiguousRange = getFirstContiguousRange(
+				lastRangeCheckFirstContiguousRange = getFirstContiguousRange(
 						new LongPair(CommonUtils.first(requests).getId(),
 								CommonUtils.last(requests).getId()),
 						Collections.EMPTY_LIST,
@@ -237,8 +245,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				CollectionFilter<DomainTransformRequestPersistent> filter = new CollectionFilter<DomainTransformRequestPersistent>() {
 					@Override
 					public boolean allow(DomainTransformRequestPersistent o) {
-						return contiguousRange.containsIncludingBoundaries(o
-								.getId());
+						return lastRangeCheckFirstContiguousRange
+								.containsIncludingBoundaries(o.getId());
 					}
 				};
 				requests = CollectionFilters.filter(requests, filter);
@@ -246,7 +254,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				}
 				logger.format(
 						"enqueueing persisted transforms - dtrp %s => subrange %s",
-						checkRequestRange, contiguousRange);
+						checkRequestRange, lastRangeCheckFirstContiguousRange);
 				final TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 						CommonUtils.last(requests), null,
 						Registry.impl(TransformLoggingPolicy.class), false,
@@ -281,6 +289,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 										DomainTransformPersistenceEvents.class)
 										.fireDomainTransformPersistenceEvent(
 												event);
+							} else {
+								System.out.println("not firing - gap");
 							}
 						} finally {
 							firingPersistedEvents = false;
@@ -386,6 +396,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	private Object dbWaitMonitor = new Object();
+
+	private LongPair lastRangeCheckFirstContiguousRange;
 
 	public void waitUntilCurrentRequestsProcessed() {
 		forceDbCheck();
