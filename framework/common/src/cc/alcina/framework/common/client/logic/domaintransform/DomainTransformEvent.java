@@ -345,6 +345,9 @@ public class DomainTransformEvent implements Serializable,
 		this.objectClass = objectClass;
 		this.objectClassRef = (objectClass == null) ? null : ClassRef
 				.forClass(objectClass);
+		if (objectClass != null && objectClassRef == null) {
+			throw new UnrecognizedDomainClassException(objectClass);
+		}
 		this.objectClassName = objectClass == null ? null : objectClass
 				.getName();
 	}
@@ -393,6 +396,9 @@ public class DomainTransformEvent implements Serializable,
 		this.valueClass = valueClass;
 		this.valueClassRef = (valueClass == null) ? null : ClassRef
 				.forClass(valueClass);
+		if (valueClass != null && valueClassRef == null) {
+			throw new UnrecognizedDomainClassException(valueClass);
+		}
 		this.valueClassName = valueClass == null ? null : valueClass.getName();
 	}
 

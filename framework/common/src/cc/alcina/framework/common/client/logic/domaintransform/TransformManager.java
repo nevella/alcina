@@ -400,6 +400,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (value == null) {
 			return;
 		}
+		//this dte will never be used - it'll be converted to a series of add/remove refs
+		if(value instanceof Set){
+			return;
+		}
 		evt.setValueClass(value instanceof Enum ? ((Enum) value)
 				.getDeclaringClass() : value.getClass());
 		if (value.getClass() == Integer.class
