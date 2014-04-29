@@ -216,6 +216,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 							// found end of gap
 							break;
 						}
+						System.out.println("removed timeout rq id: "+l);
 						timedOutRequestIds.add(l);
 					}
 					synchronized (this) {
