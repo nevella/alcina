@@ -209,6 +209,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 					logger.format(
 							"Timed out waiting for  persisted transforms (probably a crash/exception)- gap %s",
 							checkRequestRange);
+					int removedCount = 0;
 					for (long l = lastRangeCheck.l1; l <= lastRangeCheck.l2; l++) {
 						if (lastRangeCheckFirstContiguousRange != null
 								&& lastRangeCheckFirstContiguousRange
@@ -216,8 +217,15 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 							// found end of gap
 							break;
 						}
-						System.out.println("removed timeout rq id: "+l);
+						System.out.println("removed timeout rq id: " + l);
 						timedOutRequestIds.add(l);
+						removedCount++;
+					}
+					if (removedCount == 0) {
+						lastRangeCheck = null;
+						// we actually have all the ids,
+						// try again
+						return;
 					}
 					synchronized (this) {
 						notifyAll();
@@ -251,8 +259,6 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 					}
 				};
 				requests = CollectionFilters.filter(requests, filter);
-				if (requests.isEmpty()) {
-				}
 				logger.format(
 						"enqueueing persisted transforms - dtrp %s => subrange %s",
 						checkRequestRange, lastRangeCheckFirstContiguousRange);
