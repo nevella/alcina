@@ -197,11 +197,16 @@ public class JobRegistry {
 	}
 
 	public JobId getNextJobId(Class jobClass) {
+		String launcherName = getLauncherName();
+		return new JobId(jobClass, launcherName);
+	}
+
+	public static String getLauncherName() {
 		String launcherName = ResourceUtilities.getBundledString(
 				JobRegistry.class, "launcherName");
 		launcherName = launcherName.isEmpty() ? ServletLayerUtils
 				.getLocalHostName() : launcherName;
-		return new JobId(jobClass, launcherName);
+		return launcherName;
 	}
 
 	public List<String> getRunningJobs() {
