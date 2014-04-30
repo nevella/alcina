@@ -90,7 +90,9 @@ import com.totsp.gwittir.client.ui.Renderer;
 		}
 		if (o instanceof Collection) {
 			ArrayList l = new ArrayList((Collection) o);
-			Collections.sort(l);
+			if(l.size()>0&&l.get(0) instanceof Comparable){
+				Collections.sort(l);
+			}
 			int strlen = 0;
 			for (Object object : l) {
 				InlineLabel comma = new InlineLabel(", ");
