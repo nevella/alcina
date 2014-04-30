@@ -63,9 +63,9 @@ public class ServletLayerUtils {
 			if (asRoot) {
 				tpm.pushSystemUser();
 			}
+			CascadingTransformSupport cascadingTransformSupport = CascadingTransformSupport
+					.get();
 			try {
-				CascadingTransformSupport cascadingTransformSupport = CascadingTransformSupport
-						.get();
 				cascadingTransformSupport.beforeTransform();
 				DomainTransformLayerWrapper wrapper = Registry
 						.impl(CommonRemoteServletProvider.class)
@@ -77,10 +77,11 @@ public class ServletLayerUtils {
 						cascadingTransformSupport.wait();
 					}
 				}
-				cascadingTransformSupport.afterTransform();
 				return wrapper;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
+			} finally {
+				cascadingTransformSupport.afterTransform();
 			}
 		} finally {
 			if (asRoot) {

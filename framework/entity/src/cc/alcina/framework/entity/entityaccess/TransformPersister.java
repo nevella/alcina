@@ -5,9 +5,11 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.OptimisticLockException;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -439,6 +441,15 @@ public class TransformPersister {
 		} catch (Exception e) {
 			if (e instanceof DeliberatelyThrownWrapperException) {
 				throw (DeliberatelyThrownWrapperException) e;
+			}
+			if (e instanceof OptimisticLockException) {
+				Object entity = ((OptimisticLockException) e).getEntity();
+				if (entity != null && entity instanceof HasIdAndLocalId) {
+					System.out
+							.format("Conflicting entity:\n\tobject: %s\n\tclass: %s\n\tid:\t%s\n\n",
+									entity, entity.getClass(),
+									((HasIdAndLocalId) entity).getId());
+				}
 			}
 			e.printStackTrace();
 			locatorMap.clear();
