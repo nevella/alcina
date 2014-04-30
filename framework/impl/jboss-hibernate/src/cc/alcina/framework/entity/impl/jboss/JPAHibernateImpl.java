@@ -15,6 +15,7 @@ package cc.alcina.framework.entity.impl.jboss;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -251,5 +252,20 @@ public class JPAHibernateImpl implements JPAImplementation {
 		} else {
 			return new HashSet();
 		}
+	}
+
+	@Override
+	public String entityDebugString(Object object) {
+		if (object instanceof HibernateProxy) {
+			LazyInitializer lazy = ((HibernateProxy) object)
+					.getHibernateLazyInitializer();
+			Serializable id = lazy.getIdentifier();
+			Class clazz = lazy.getPersistentClass();
+			return String.format("\tclass: %s\n\tid:\t%s\n\n", clazz, id);
+		}
+		if (object instanceof HasIdAndLocalId) {
+			return object.toString();
+		}
+		return null;
 	}
 }

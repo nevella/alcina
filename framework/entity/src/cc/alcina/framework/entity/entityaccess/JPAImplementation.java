@@ -66,4 +66,6 @@ public interface JPAImplementation {
 
 	Set createPersistentSetProjection(GraphProjectionContext context);
 
+	String entityDebugString(Object entity);
+
 }

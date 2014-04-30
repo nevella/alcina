@@ -445,10 +445,9 @@ public class TransformPersister {
 			if (e instanceof OptimisticLockException) {
 				Object entity = ((OptimisticLockException) e).getEntity();
 				if (entity != null && entity instanceof HasIdAndLocalId) {
-					System.out
-							.format("Conflicting entity:\n\tobject: %s\n\tclass: %s\n\tid:\t%s\n\n",
-									entity, entity.getClass(),
-									((HasIdAndLocalId) entity).getId());
+					System.out.format("Conflicting entity:\n\t%s\n",
+							Registry.impl(JPAImplementation.class)
+									.entityDebugString(entity));
 				}
 			}
 			e.printStackTrace();
