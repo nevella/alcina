@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 @MappedSuperclass
 /**
@@ -33,6 +34,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public class DomainTransformEvent implements Serializable,
 		Comparable<DomainTransformEvent>, Cloneable {
+	public static transient String CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES = DomainTransformEvent.class
+			.getName() + ".CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES";
+
 	private String propertyName;
 
 	private transient Object newValue;
@@ -345,7 +349,8 @@ public class DomainTransformEvent implements Serializable,
 		this.objectClass = objectClass;
 		this.objectClassRef = (objectClass == null) ? null : ClassRef
 				.forClass(objectClass);
-		if (objectClass != null && objectClassRef == null) {
+		if (objectClass != null && objectClassRef == null
+				&& !LooseContext.is(CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES)) {
 			throw new UnrecognizedDomainClassException(objectClass);
 		}
 		this.objectClassName = objectClass == null ? null : objectClass
@@ -396,7 +401,8 @@ public class DomainTransformEvent implements Serializable,
 		this.valueClass = valueClass;
 		this.valueClassRef = (valueClass == null) ? null : ClassRef
 				.forClass(valueClass);
-		if (valueClass != null && valueClassRef == null) {
+		if (valueClass != null && valueClassRef == null
+				&& !LooseContext.is(CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES)) {
 			throw new UnrecognizedDomainClassException(valueClass);
 		}
 		this.valueClassName = valueClass == null ? null : valueClass.getName();
