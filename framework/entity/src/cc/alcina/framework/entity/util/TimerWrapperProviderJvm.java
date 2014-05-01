@@ -26,7 +26,7 @@ public class TimerWrapperProviderJvm implements TimerWrapperProvider {
 		getTimer(runnable).scheduleSingle(1);
 	}
 
-	private Timer timer = new Timer();
+	private Timer timer = new Timer(true);
 
 	public class TimerWrapperJvm implements TimerWrapper {
 		private TimerTask task;

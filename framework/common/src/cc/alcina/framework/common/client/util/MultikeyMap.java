@@ -72,4 +72,6 @@ public interface MultikeyMap<V> {
 	void putMulti(MultikeyMap<V> multi);
 
 	void setDepth(int depth);
+
+	public abstract void stripNonDuplicates(int depth);
 }

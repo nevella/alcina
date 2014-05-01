@@ -141,7 +141,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		}
 		return result;
 	}
-
+	
 	@Override
 	public void remove(T t) {
 		Object[] values = project(t);

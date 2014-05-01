@@ -87,6 +87,12 @@ public class AlcinaMemCacheQuery {
 	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 		return AlcinaMemCache.get().list(clazz, this);
 	}
+	
+	public <T extends HasIdAndLocalId> List<T> allRaw(Class<T> clazz) {
+		raw=true;
+		ids=AlcinaMemCache.get().getIds(clazz);
+		return AlcinaMemCache.get().list(clazz, this);
+	}
 
 	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
 		return new LinkedHashSet<T>(AlcinaMemCache.get().list(clazz, this));

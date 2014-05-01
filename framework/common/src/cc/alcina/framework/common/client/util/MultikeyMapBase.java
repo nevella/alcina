@@ -24,8 +24,6 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 
 	protected transient ImmutableMap readonlyDelegate;
 
-	
-
 	@Override
 	public void setDepth(int depth) {
 		if (!delegate.keySet().isEmpty()) {
@@ -136,8 +134,12 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 	}
 
 	public V remove(Object... objects) {
+		return remove(false, objects);
+	}
+
+	private V remove(boolean allowNonValue, Object... objects) {
 		int trim = objects.length == getDepth() + 1 ? 1 : 0;
-		assert objects.length == getDepth() + trim;
+		assert objects.length == getDepth() + trim || allowNonValue;
 		// ignore last value (k/k/k/v) if it's there
 		Map m = getMapForObjects(false, 1 + trim, objects);
 		if (m == null) {
@@ -284,5 +286,22 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 	@Override
 	public void clear() {
 		delegate.clear();
+	}
+
+	@Override
+	public void stripNonDuplicates(int depth) {
+		List<List> keyTuples = asTuples(depth);
+		for (List list : keyTuples) {
+			MultikeyMap forTuple = asMap(list.toArray());
+			if (forTuple.size() == 1) {
+				remove(true, list.toArray());
+			}
+		}
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("mkm - depth %s - tuples: \n%s", depth,
+				CommonUtils.join(asTuples(depth), "\n"));
 	}
 }
