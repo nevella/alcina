@@ -14,18 +14,23 @@
 package cc.alcina.framework.entity.domaintransform;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
@@ -36,6 +41,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.CachingScanner;
 
 @SuppressWarnings("unchecked")
@@ -54,17 +60,81 @@ public class ClassrefScanner extends CachingScanner {
 				Double.class, Float.class, Integer.class, Short.class,
 				String.class, Date.class, Boolean.class }));
 		scan(classes, cachePath);
-		finish();
+		commit();
+		checkReachability();
 	}
 
-	private void finish() throws Exception {
-		if (!persistent) { 
+	private void checkReachability() {
+		Set<ClassRef> all = ClassRef.all();
+		Set<String> err = new TreeSet<String>();
+		Set<Class> reffed = new LinkedHashSet<Class>();
+		for (ClassRef ref : all) {
+			reffed.add(ref.getRefClass());
+		}
+		for (Class ref : reffed) {
+			if (!HasIdAndLocalId.class.isAssignableFrom(ref)) {
+				continue;
+			}
+			if (WrapperPersistable.class.isAssignableFrom(ref)) {
+				continue;
+			}
+			Class c = ref;
+			while (c != Object.class) {
+				Field[] fields = c.getDeclaredFields();
+				for (Field field : fields) {
+					int m = field.getModifiers();
+					if (Modifier.isFinal(m) || Modifier.isStatic(m)
+							|| Modifier.isTransient(m)) {
+						continue;
+					}
+					Class type = field.getType();
+					Class checkType = null;
+					if (GraphProjection.isPrimitiveOrDataClass(type)) {
+						if (GraphProjection.isEnumSubclass(type)
+								|| type.isEnum()) {
+							checkType = type;
+						}
+					} else if (HasIdAndLocalId.class.isAssignableFrom(type)) {
+						checkType = type;
+					} else if (GraphProjection.isGenericHiliType(field)) {
+						Type pt = GraphProjection.getGenericType(field);
+						if (pt instanceof ParameterizedType) {
+							Type genericType = ((ParameterizedType) pt)
+									.getActualTypeArguments()[0];
+							if (genericType instanceof Class) {
+								checkType = (Class) genericType;
+							}
+						}
+					}
+					if (checkType != null && !reffed.contains(checkType)) {
+						if (WrapperPersistable.class
+								.isAssignableFrom(checkType)) {
+						} else {
+							err.add(String.format("%-30s: %s.%s",
+									checkType.getSimpleName(),
+									ref.getSimpleName(), field.getName()));
+						}
+					}
+				}
+				c = c.getSuperclass();
+			}
+		}
+		if (!err.isEmpty()) {
+			System.out
+					.println("Problems with classref reachability:\n-------------------");
+			System.out.println(CommonUtils.join(err, "\n"));
+			throw new RuntimeException("Cancelling startup");
+		}
+	}
+
+	private void commit() throws Exception {
+		if (!persistent) {
 			CommonPersistenceLocal cp = Registry.impl(
 					CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
 			Class<? extends ClassRef> crimpl = cp
 					.getImplementation(ClassRef.class);
-			long idCtr=0;
+			long idCtr = 0;
 			for (Class clazz : persistableClasses) {
 				ClassRef ref = ClassRef.forClass(clazz);
 				ref = crimpl.newInstance();
@@ -72,38 +142,39 @@ public class ClassrefScanner extends CachingScanner {
 				ref.setId(++idCtr);
 				ClassRef.add(CommonUtils.wrapInCollection(ref));
 			}
-			return;
-		}
-		CommonPersistenceLocal cp = Registry.impl(
-				CommonPersistenceProvider.class).getCommonPersistence();
-		Class<? extends ClassRef> crimpl = cp.getImplementation(ClassRef.class);
-		Set<? extends ClassRef> classrefs = cp.getAll(crimpl);
-		Set<? extends ClassRef> deleteClassrefs = new HashSet<ClassRef>();
-		ClassRef.add(classrefs);
-		((Set) deleteClassrefs).addAll(classrefs);
-		classrefs.clear();
-		boolean delta = false;
-		for (Class clazz : persistableClasses) {
-			ClassRef ref = ClassRef.forClass(clazz);
-			if (ref == null) {
-				delta = true;
-				ref = crimpl.newInstance();
-				ref.setRefClass(clazz);
-				long id = cp.merge(ref);
-				ref.setId(id);
-				ClassRef.add(CommonUtils.wrapInCollection(ref));
-				System.out.format("adding classref - %s %s\n", ref.getId(),
-						ref.getRefClassName());
-			} else {
-				deleteClassrefs.remove(ref);
+		} else {
+			CommonPersistenceLocal cp = Registry.impl(
+					CommonPersistenceProvider.class).getCommonPersistence();
+			Class<? extends ClassRef> crimpl = cp
+					.getImplementation(ClassRef.class);
+			Set<? extends ClassRef> classrefs = cp.getAll(crimpl);
+			Set<? extends ClassRef> deleteClassrefs = new HashSet<ClassRef>();
+			ClassRef.add(classrefs);
+			((Set) deleteClassrefs).addAll(classrefs);
+			classrefs.clear();
+			boolean delta = false;
+			for (Class clazz : persistableClasses) {
+				ClassRef ref = ClassRef.forClass(clazz);
+				if (ref == null) {
+					delta = true;
+					ref = crimpl.newInstance();
+					ref.setRefClass(clazz);
+					long id = cp.merge(ref);
+					ref.setId(id);
+					ClassRef.add(CommonUtils.wrapInCollection(ref));
+					System.out.format("adding classref - %s %s\n", ref.getId(),
+							ref.getRefClassName());
+				} else {
+					deleteClassrefs.remove(ref);
+				}
 			}
-		}
-		for (ClassRef ref : deleteClassrefs) {
-			delta = true;
-			System.out.format("removing classref - %s %s\n", ref.getId(),
-					ref.getRefClassName());
-			cp.remove(ref);
-			ClassRef.remove(ref);
+			for (ClassRef ref : deleteClassrefs) {
+				delta = true;
+				System.out.format("removing classref - %s %s\n", ref.getId(),
+						ref.getRefClassName());
+				cp.remove(ref);
+				ClassRef.remove(ref);
+			}
 		}
 	}
 

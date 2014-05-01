@@ -330,12 +330,13 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 
 	@Override
 	public void onBlur(BlurEvent event) {
-		lastQueuedText = "";
 		changeListenerTimer.cancel();
 	}
 
 	protected void maybeCommit() {
-		if (!getTextBox().getText().equals(lastQueuedText)
+		String currentText = getTextBox().getText();
+		if (CommonUtils.isNotNullOrEmpty(currentText)
+				&& !currentText.equals(lastQueuedText)
 				&& !getTextBox().getStyleName().contains("alcina-FilterHint")) {
 			queueCommit();
 		}

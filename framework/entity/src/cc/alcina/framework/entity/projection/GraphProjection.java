@@ -63,7 +63,7 @@ public class GraphProjection {
 				|| Date.class.isAssignableFrom(c) || isEnumSubclass(c);
 	}
 
-	private static boolean isEnumSubclass(Class c) {
+	public static boolean isEnumSubclass(Class c) {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
 

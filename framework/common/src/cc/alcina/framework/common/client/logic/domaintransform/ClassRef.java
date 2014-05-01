@@ -142,4 +142,5 @@ public abstract class ClassRef implements Serializable, HasIdAndLocalId {
 					.getRefClass());
 		}
 	}
+	
 }
