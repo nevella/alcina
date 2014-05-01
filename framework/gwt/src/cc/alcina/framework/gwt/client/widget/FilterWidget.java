@@ -20,6 +20,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
@@ -109,7 +111,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	}
 
 	private class HintHandler implements FocusHandler, KeyDownHandler,
-			MouseDownHandler {
+			MouseDownHandler, ChangeHandler {
 		@Override
 		public void onMouseDown(MouseDownEvent event) {
 			clearHint();
@@ -133,12 +135,19 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		}
 
 		private void clearHint() {
-			if (!hintWasCleared && textBox.getText().equals(hint)) {
+			if (!hintWasCleared) {
 				hintWasCleared = true;
-				textBox.setText("");
+				if (textBox.getText().equals(hint)) {
+					textBox.setText("");
+					lastFilteredText = textBox.getText();
+				}
 				textBox.removeStyleName("alcina-FilterHint");
-				lastFilteredText = textBox.getText();
 			}
+		}
+
+		@Override
+		public void onChange(ChangeEvent event) {
+			clearHint();
 		}
 	}
 
@@ -151,6 +160,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 				textBox.addFocusHandler(handler);
 				textBox.addKeyDownHandler(handler);
 				textBox.addMouseDownHandler(handler);
+				textBox.addChangeHandler(handler);
 			}
 		}
 		this.hint = _hint;

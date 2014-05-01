@@ -58,6 +58,22 @@ public class ClassrefScanner extends CachingScanner {
 	}
 
 	private void finish() throws Exception {
+		if (!persistent) { 
+			CommonPersistenceLocal cp = Registry.impl(
+					CommonPersistenceProvider.class)
+					.getCommonPersistenceExTransaction();
+			Class<? extends ClassRef> crimpl = cp
+					.getImplementation(ClassRef.class);
+			long idCtr=0;
+			for (Class clazz : persistableClasses) {
+				ClassRef ref = ClassRef.forClass(clazz);
+				ref = crimpl.newInstance();
+				ref.setRefClass(clazz);
+				ref.setId(++idCtr);
+				ClassRef.add(CommonUtils.wrapInCollection(ref));
+			}
+			return;
+		}
 		CommonPersistenceLocal cp = Registry.impl(
 				CommonPersistenceProvider.class).getCommonPersistence();
 		Class<? extends ClassRef> crimpl = cp.getImplementation(ClassRef.class);
@@ -136,5 +152,12 @@ public class ClassrefScanner extends CachingScanner {
 			SEUtilities.setPropertyValue(o, crPropName, ref);
 		}
 		em.flush();
+	}
+
+	boolean persistent = true;
+
+	public ClassrefScanner noPersistence() {
+		persistent = false;
+		return this;
 	}
 }
