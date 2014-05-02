@@ -62,6 +62,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 
 	@Version
 	@Column(name = "OPTLOCK")
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
 	public int getVersionNumber() {
 		return versionNumber;
 	}
