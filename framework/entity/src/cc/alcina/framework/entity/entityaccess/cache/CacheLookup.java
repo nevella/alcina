@@ -38,7 +38,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	public void add(T k1, Long value) {
-		if(value==null){
+		if (value == null) {
 			System.err.println("Invalid value (null) for cache lookup put - "
 					+ k1);
 			return;
@@ -107,7 +107,11 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 			add((T) v1, hili.getId());
 		}
 		if (privateCache != null) {
-			privateCache.put(hili);
+			if (descriptor.clazz != hili.getClass()) {
+				privateCache.putForSuperClass(descriptor.clazz, hili);
+			} else {
+				privateCache.put(hili);
+			}
 		}
 	}
 

@@ -77,6 +77,12 @@ public class DetachedEntityCache implements Serializable {
 		detached.get(clazz).put(id, hili);
 	}
 
+	public void putForSuperClass(Class clazz, HasIdAndLocalId hili) {
+		ensureMaps(clazz);
+		long id = hili.getId();
+		detached.get(clazz).put(id, hili);
+	}
+
 	public void putAll(Class clazz, Collection<? extends HasIdAndLocalId> values) {
 		ensureMaps(clazz);
 		Map<Long, HasIdAndLocalId> m = detached.get(clazz);
