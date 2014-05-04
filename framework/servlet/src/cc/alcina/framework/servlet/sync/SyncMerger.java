@@ -158,11 +158,14 @@ public class SyncMerger<T> {
 		case CREATE_RIGHT:
 			KeyedObject newKo = new KeyedObject<T>();
 			try {
-				newKo.setObject(mergedClass.newInstance());
 				newKo.setKeyProvider(keyProvider);
 				if (syncType == SyncPairAction.CREATE_LEFT) {
+					newKo.setObject(pair.getRight().getObject().getClass()
+							.newInstance());
 					pair.setLeft(newKo);
 				} else {
+					newKo.setObject(pair.getLeft().getObject().getClass()
+							.newInstance());
 					pair.setRight(newKo);
 				}
 			} catch (Exception e) {
