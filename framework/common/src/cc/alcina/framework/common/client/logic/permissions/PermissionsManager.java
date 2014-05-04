@@ -749,4 +749,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public IUser popSystemUser() {
 		return popUser();
 	}
+
+	public boolean isAnonymousUser() {
+		return getAnonymousUserName().equals(getUserName());
+	}
 }

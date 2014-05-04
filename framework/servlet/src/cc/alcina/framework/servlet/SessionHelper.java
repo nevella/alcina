@@ -89,7 +89,7 @@ public class SessionHelper {
 		PermissionsManager.get().setUser(user);
 	}
 
-	private void resetPermissions() {
+	protected void resetPermissions(HttpServletRequest request) {
 		ThreadedPermissionsManager.cast().reset();
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
 		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistenceExTransaction();
@@ -102,7 +102,7 @@ public class SessionHelper {
 	}
 
 	public void reinitialiseUserState(HttpServletRequest request) {
-		resetPermissions();
+		resetPermissions(request);
 		String userName = (String) request.getAttribute(SESSION_ATTR_USERNAME);
 		if (userName != null) {
 			IUser user = getUser(userName);

@@ -30,7 +30,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 	public Boolean permitClass(Class clazz) {
 		ObjectPermissions op = (ObjectPermissions) clazz
 				.getAnnotation(ObjectPermissions.class);
-		return permit(clazz, op == null ? null : op.read());
+		return permit(clazz, op == null ? null : op.read(),null);
 	}
 
 	public boolean permitField(Field field,
@@ -63,7 +63,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 			}
 			PropertyPermissions pp = GraphProjection
 					.getPropertyPermission(field);
-			Boolean permit = permit(forClass, pp == null ? null : pp.read());
+			Boolean permit = permit(forClass, pp == null ? null : pp.read(),field);
 			if (permit == null) {
 				perObjectPermissionFields.add(field);
 				return true;
@@ -79,7 +79,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 		return false;
 	}
 
-	private Boolean permit(Class clazz, Permission permission) {
+	protected Boolean permit(Class clazz, Permission permission, Field field) {
 		if (permission != null) {
 			AnnotatedPermissible ap = new AnnotatedPermissible(permission);
 			if (disablePerObjectPermissions) {

@@ -79,8 +79,8 @@ public class HandshakeConsortModel {
 
 	private long maxPersistedTransformIdWhenGenerated;
 
-	
 	private boolean loadedWithLocalOnlyTransforms;
+
 	// fw4 - centralise documentation
 	public void ensureClientInstanceFromModelDeltas() {
 		if (getClientInstance() == null) {
@@ -125,8 +125,7 @@ public class HandshakeConsortModel {
 		if (clientInstance == null) {
 			return LoginState.NOT_LOGGED_IN;
 		}
-		return PermissionsManager.getAnonymousUserName().equals(
-				PermissionsManager.get().getUser().getUserName()) ? LoginState.NOT_LOGGED_IN
+		return PermissionsManager.get().isAnonymousUser() ? LoginState.NOT_LOGGED_IN
 				: LoginState.LOGGED_IN;
 	}
 
