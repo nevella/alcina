@@ -14,6 +14,8 @@ public class ClusterState {
 	private String httpProxyBalancerUrl;
 
 	private String httpsProxyBalancerUrl;
+	
+	private String httpsProxyBalancerUrl2;
 
 	private String proxyToHttpPort;
 
@@ -91,5 +93,13 @@ public class ClusterState {
 
 	public void setTestUrl(String testUrl) {
 		this.testUrl = testUrl;
+	}
+
+	public String getHttpsProxyBalancerUrl2() {
+		return this.httpsProxyBalancerUrl2;
+	}
+
+	public void setHttpsProxyBalancerUrl2(String httpsProxyBalancerUrl2) {
+		this.httpsProxyBalancerUrl2 = httpsProxyBalancerUrl2;
 	}
 }

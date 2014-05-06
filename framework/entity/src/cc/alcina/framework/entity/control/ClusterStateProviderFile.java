@@ -34,6 +34,7 @@ public class ClusterStateProviderFile implements ClusterStateProvider {
 				state.setAllHosts(hosts);
 				state.setHttpProxyBalancerUrl(props.get("httpProxyBalancerUrl"));
 				state.setHttpsProxyBalancerUrl(props.get("httpsProxyBalancerUrl"));
+				state.setHttpsProxyBalancerUrl2(props.get("httpsProxyBalancerUrl2"));
 				state.setProxyToHttpPort(props.get("proxyToHttpPort"));
 				state.setProxyToHttpsPort(props.get("proxyToHttpsPort"));
 				state.setTestUrl(props.get("testUrl"));
