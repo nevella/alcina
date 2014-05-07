@@ -459,7 +459,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 		};
 		try {
-			return new GraphProjection(null, filter).project(dtrps, null);
+			return new GraphProjection(allowSourceFilter, filter).project(dtrps, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
