@@ -117,7 +117,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return getConn(true, false);
 	}
 
-	protected Connection getConn(boolean forceNewLocal, boolean forceRemote)
+	public Connection getConn(boolean forceNewLocal, boolean forceRemote)
 			throws Exception {
 		boolean remote = forceRemote
 				|| (console.props.connection_useProduction && !forceNewLocal);

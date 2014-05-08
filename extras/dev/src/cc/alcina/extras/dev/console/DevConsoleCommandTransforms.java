@@ -51,6 +51,38 @@ import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 
 public class DevConsoleCommandTransforms {
+	public static class RsrowToDteConverter {
+		private boolean modColNames;
+
+		public RsrowToDteConverter(boolean modColNames) {
+			this.modColNames = modColNames;
+		}
+
+		public List<DomainTransformEvent> convert(ResultSet rs)
+				throws Exception {
+			List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
+			while (rs.next()) {
+				DomainTransformEvent dte = new DomainTransformEvent();
+				dtes.add(dte);
+				dte.setNewStringValue(rs.getString("newStringValue"));
+				dte.setObjectClassRef(ClassRef.forId(rs
+						.getLong(modColNames ? "dte_objref"
+								: "objectclassref_id")));
+				dte.setPropertyName(rs.getString("propertyname"));
+				dte.setUtcDate(rs.getTimestamp("utcdate"));
+				dte.setObjectId(rs.getLong(modColNames ? "object_id"
+						: "objectId"));
+				dte.setObjectLocalId(rs.getLong("objectlocalid"));
+				dte.setValueId(rs.getLong("valueid"));
+				int i = rs.getInt("transformtype");
+				TransformType tt = rs.wasNull() ? null : TransformType.class
+						.getEnumConstants()[i];
+				dte.setTransformType(tt);
+			}
+			return dtes;
+		}
+	}
+
 	public static class LogsToDtrs {
 		public LogsToDtrs() {
 		}
@@ -60,12 +92,12 @@ public class DevConsoleCommandTransforms {
 			Pattern lfPat = Pattern
 					.compile("\\s*(\\d{4}.+?)\\s+\\| transform\\s+\\| (\\d+)\\s+\\|(.+)");
 			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
-			List<String> strs= CommonUtils.split(logFile,"\n");
+			List<String> strs = CommonUtils.split(logFile, "\n");
 			Collections.reverse(strs);
 			for (int i = 0; i < strs.size(); i++) {
 				String line = strs.get(i);
-				if(line.contains("kXZ3")){
-					int j=3;
+				if (line.contains("kXZ3")) {
+					int j = 3;
 				}
 				int idx = line.length() - 1;// ignore terminating "|"
 				if (idx < 1) {
@@ -99,7 +131,8 @@ public class DevConsoleCommandTransforms {
 						.hasNext();) {
 					DomainTransformEvent current = itr.next();
 					if (last != null
-							&& last.toString().equals(current.toString())&&removeDuplicates) {
+							&& last.toString().equals(current.toString())
+							&& removeDuplicates) {
 						itr.remove();
 					}
 					last = current;
@@ -120,11 +153,11 @@ public class DevConsoleCommandTransforms {
 			})));
 			return dtrExpsToCliDteMap(files);
 		}
+
 		public Multimap<Long, List<DomainTransformEvent>> dtrExpsToCliDteMap(
 				List<File> files) throws Exception {
 			Multimap<Long, List<DomainTransformEvent>> result = new Multimap<Long, List<DomainTransformEvent>>();
 			List<DeltaApplicationRecord> wrappers = new ArrayList<DeltaApplicationRecord>();
-			
 			Collections.sort(files, new LongFnComparator());
 			int processedIndex = 0;
 			for (; processedIndex < files.size();) {
@@ -472,9 +505,10 @@ public class DevConsoleCommandTransforms {
 			};
 			String filter = DevConsoleFilter.getFilters(
 					CmdListTransformsFilter.class, argv, dteIdFilter);
-			if (!foundDteId||forceGetRqIds) {
+			if (!foundDteId || forceGetRqIds) {
 				filter = DevConsoleFilter.getFilters(
-						CmdListTransformsFilter.class, argv, CollectionFilters.inverse(dteIdFilter));
+						CmdListTransformsFilter.class, argv,
+						CollectionFilters.inverse(dteIdFilter));
 				sql1 = String.format(sql1, dtrName, filter);
 				Statement ps = conn.createStatement();
 				System.out.println(console.breakAndPad(1, 80, sql1, 0));
@@ -496,23 +530,8 @@ public class DevConsoleCommandTransforms {
 				System.out.println(console.breakAndPad(1, 80, sql2, 0));
 				ResultSet rs = ps.executeQuery();
 				if (outputTransforms) {
-					List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
-					while (rs.next()) {
-						DomainTransformEvent dte = new DomainTransformEvent();
-						dtes.add(dte);
-						dte.setNewStringValue(rs.getString("newStringValue"));
-						dte.setObjectClassRef(ClassRef.forId(rs
-								.getLong("dte_objref")));
-						dte.setPropertyName(rs.getString("propertyname"));
-						dte.setUtcDate(rs.getTimestamp("utcdate"));
-						dte.setObjectId(rs.getLong("object_id"));
-						dte.setObjectLocalId(rs.getLong("objectlocalid"));
-						dte.setValueId(rs.getLong("valueid"));
-						int i = rs.getInt("transformtype");
-						TransformType tt = rs.wasNull() ? null
-								: TransformType.class.getEnumConstants()[i];
-						dte.setTransformType(tt);
-					}
+					List<DomainTransformEvent> dtes = new RsrowToDteConverter(
+							true).convert(rs);
 					System.out.println(dtes);
 				} else {
 					Map<String, ColumnFormatter> formatters = new HashMap<String, SqlUtils.ColumnFormatter>();
