@@ -459,6 +459,7 @@ public class XmlUtils {
 		transformDoc(new DOMSource(n), null, w == null ? new StreamResult(s)
 				: new StreamResult(w));
 	}
+
 	private static void transformDoc(Source xmlSource, Source xsltSource,
 			StreamResult sr, String cacheMarker,
 			TransformerFactoryConfigurator configurator) throws Exception {
@@ -475,7 +476,10 @@ public class XmlUtils {
 		} else {
 			trans = transformerMap.get(cacheMarker);
 		}
-		trans.transform(xmlSource, sr);
+		// TODO - something a little better...
+		synchronized (trans) {
+			trans.transform(xmlSource, sr);
+		}
 	}
 
 	public static interface TransformerFactoryConfigurator {
