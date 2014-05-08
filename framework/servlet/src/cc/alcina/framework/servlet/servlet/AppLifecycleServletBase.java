@@ -44,6 +44,7 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.ServletLayerObjects;
+import cc.alcina.framework.servlet.ServletLayerUtils;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void createServletTransformClientInstance() {
@@ -55,7 +56,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			ClientInstance serverAsClientInstance = Registry
 					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().createClientInstance(null);
+					.getCommonPersistence()
+					.createClientInstance(
+							"servlet: " + ServletLayerUtils.getLocalHostName());
 			Registry.impl(CommonRemoteServiceServletSupport.class)
 					.setServerAsClientInstance(serverAsClientInstance);
 		} finally {

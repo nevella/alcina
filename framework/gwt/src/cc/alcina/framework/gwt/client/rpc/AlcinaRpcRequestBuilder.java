@@ -159,7 +159,7 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		// iOS 6
 		rb.setHeader("Cache-Control", "no-cache");
 		if (ClientBase.getClientInstance() != null
-				&& PermissionsManager.get().isLoggedIn()) {
+				) {
 			rb.setHeader(
 					CLIENT_INSTANCE_ID_KEY,
 					String.valueOf(ClientBase.getClientInstance()
