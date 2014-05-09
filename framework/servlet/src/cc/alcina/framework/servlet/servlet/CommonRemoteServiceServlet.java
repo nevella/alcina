@@ -405,18 +405,19 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	// TODO - well, lock sync
 	public void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted) throws WebException {
-		persistOfflineTransforms(uncommitted, null, true);
+		persistOfflineTransforms(uncommitted, null, true, false);
 	}
 
 	public int persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, Logger logger)
 			throws WebException {
-		return persistOfflineTransforms(uncommitted, logger, null);
+		return persistOfflineTransforms(uncommitted, logger, null, false);
 	}
 
 	public int persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, Logger logger,
-			Boolean useWrapperUser) throws WebException {
+			Boolean useWrapperUser, boolean throwPersistenceExceptions)
+			throws WebException {
 		CommonPersistenceLocal cp = Registry.impl(
 				CommonPersistenceProvider.class).getCommonPersistence();
 		try {
@@ -501,20 +502,28 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					long idCounter = 1;
 					for (DomainTransformEvent event : rq.getEvents()) {
 						event.setEventId(idCounter++);
+						event.setCommitType(CommitType.TO_STORAGE);
 					}
 					transformLayerWrapper = transform(rq, true, true, true);
+					if (logger != null) {
+						logger.info(CommonUtils
+								.formatJ(
+										"Request [%s/%s] : %s transforms written, %s ignored",
+										requestId, clientInstanceId,
+										transformLayerWrapper.persistentEvents
+												.size(),
+										transformLayerWrapper.ignored));
+					}
+					if (throwPersistenceExceptions
+							&& !transformLayerWrapper.response
+									.getTransformExceptions().isEmpty()) {
+						throw (transformLayerWrapper.response
+								.getTransformExceptions().get(0));
+					}
 				} finally {
 					if (useWrapperUser) {
 						PermissionsManager.get().popUser();
 					}
-				}
-				if (logger != null) {
-					logger.info(CommonUtils
-							.formatJ(
-									"Request [%s/%s] : %s transforms written, %s ignored",
-									requestId, clientInstanceId, rq.getEvents()
-											.size(),
-									transformLayerWrapper.ignored));
 				}
 				committed++;
 			}

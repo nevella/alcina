@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -22,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.prefs.Preferences;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -538,5 +541,17 @@ public abstract class DevHelper {
 
 	public DevHelper() {
 		super();
+	}
+
+	public Set<Long> getIds(String fileName) throws Exception {
+		String idStr = ResourceUtilities
+				.readFileToString("/Users/ouiji/may1-ids.txt");
+		Pattern p = Pattern.compile("\\d+");
+		Set<Long> ids = new LinkedHashSet<Long>();
+		Matcher m = p.matcher(idStr);
+		while (m.find()) {
+			ids.add(Long.parseLong(m.group()));
+		}
+		return ids;
 	}
 }

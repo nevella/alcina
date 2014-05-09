@@ -1,37 +1,70 @@
 package cc.alcina.framework.servlet.actionhandlers;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-import org.apache.log4j.Logger;
-
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
-import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.action.DtrSimpleAdminPersistenceAction;
 import cc.alcina.framework.servlet.CommonRemoteServletProvider;
-import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
-import cc.alcina.framework.servlet.job.JobRegistry;
 
 @RegistryLocation(registryPoint = RemoteActionPerformer.class, targetClass = DtrSimpleAdminPersistenceAction.class)
 public class DtrSimpleAdminPersistenceHandler extends
 		BaseRemoteActionPerformer<DtrSimpleAdminPersistenceAction> {
-	public void commit(DeltaApplicationRecord wrapper) {
+	public void commit(DeltaApplicationRecord dar) {
 		try {
 			jobStarted();
-			String t = wrapper.getText();
-			wrapper.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
-			Registry.impl(CommonRemoteServletProvider.class)
-					.getCommonRemoteServiceServlet()
-					.persistOfflineTransforms(
-							Arrays.asList(new DeltaApplicationRecord[] { wrapper }),
-							logger);
+			DomainTransformRequest rq = new DomainTransformRequest();
+			rq.fromString(dar.getText());
+			int chunkSize = ResourceUtilities.getInteger(
+					DtrSimpleAdminPersistenceHandler.class, "chunkSize",
+					99999999);
+			int size = rq.getEvents().size();
+			if (size > chunkSize) {
+				getJobTracker().setItemCount(size / chunkSize + 1);
+				int rqIdCounter = dar.getRequestId();
+				for (int idx = 0; idx < size; idx += chunkSize) {
+					DeltaApplicationRecord chunk = new DeltaApplicationRecord(
+							0,
+							"",
+							dar.getTimestamp(),
+							dar.getUserId(),
+							dar.getClientInstanceId(),
+							rqIdCounter++,
+							dar.getClientInstanceAuth(),
+							DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
+							dar.getProtocolVersion(), dar.getTag());
+					rq = new DomainTransformRequest();
+					rq.fromString(dar.getText());
+					List<DomainTransformEvent> subList = rq.getEvents()
+							.subList(idx, Math.min(idx + chunkSize, size));
+					rq.setRequestId(chunk.getRequestId());
+					rq.setEvents(new ArrayList<DomainTransformEvent>(subList));
+					chunk.setText(rq.toString());
+					Registry.impl(CommonRemoteServletProvider.class)
+							.getCommonRemoteServiceServlet()
+							.persistOfflineTransforms(
+									Arrays.asList(new DeltaApplicationRecord[] { chunk }),
+									logger, false, true);
+					updateJob("written chunk - writing chunk from "
+							+ (idx + chunkSize));
+				}
+			} else {
+				dar.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);
+				Registry.impl(CommonRemoteServletProvider.class)
+						.getCommonRemoteServiceServlet()
+						.persistOfflineTransforms(
+								Arrays.asList(new DeltaApplicationRecord[] { dar }),
+								logger);
+			}
 			jobOk("OK");
 		} catch (Exception ex) {
 			jobError(ex);

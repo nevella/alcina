@@ -425,6 +425,7 @@ public class DevConsoleCommandTransforms {
 			ClassRef.add(Collections.singleton(cr));
 		}
 		ps.close();
+		System.out.println("getting classrefs...got");
 		classRefsEnsured = true;
 	}
 
