@@ -545,7 +545,7 @@ public abstract class DevHelper {
 
 	public Set<Long> getIds(String fileName) throws Exception {
 		String idStr = ResourceUtilities
-				.readFileToString("/Users/ouiji/may1-ids.txt");
+				.readFileToString(fileName);
 		Pattern p = Pattern.compile("\\d+");
 		Set<Long> ids = new LinkedHashSet<Long>();
 		Matcher m = p.matcher(idStr);

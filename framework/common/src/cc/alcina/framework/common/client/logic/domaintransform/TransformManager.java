@@ -259,6 +259,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 		getUndoManager().prepareUndo(event);
 		checkVersion(obj, event);
 		switch (transformType) {
+		case CHANGE_PROPERTY_SIMPLE_VALUE:
+		case ADD_REF_TO_COLLECTION:
+		case REMOVE_REF_FROM_COLLECTION:
+		case CHANGE_PROPERTY_REF:
+			if (event.getValueClass() == null) {
+				throw new RuntimeException(
+						"null value class for modification requiring a class");
+			}
+		}
+		switch (transformType) {
 		// these cases will fire a new transform event (temp obj > domain obj),
 		// so should not be processed further
 		case NULL_PROPERTY_REF: {
@@ -400,8 +410,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (value == null) {
 			return;
 		}
-		//this dte will never be used - it'll be converted to a series of add/remove refs
-		if(value instanceof Set){
+		// this dte will never be used - it'll be converted to a series of
+		// add/remove refs
+		if (value instanceof Set) {
 			return;
 		}
 		evt.setValueClass(value instanceof Enum ? ((Enum) value)

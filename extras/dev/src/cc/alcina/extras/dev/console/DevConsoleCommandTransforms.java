@@ -74,6 +74,8 @@ public class DevConsoleCommandTransforms {
 						: "objectId"));
 				dte.setObjectLocalId(rs.getLong("objectlocalid"));
 				dte.setValueId(rs.getLong("valueid"));
+				dte.setValueClassRef(ClassRef.forId(rs
+						.getLong("valueclassref_id")));
 				int i = rs.getInt("transformtype");
 				TransformType tt = rs.wasNull() ? null : TransformType.class
 						.getEnumConstants()[i];
@@ -488,7 +490,9 @@ public class DevConsoleCommandTransforms {
 					+ "dte.propertyname as propertyname, "
 					+ " dte.newstringvalue as newstringvalue,dte.transformtype as transformtype, "
 					+ " dte.valueid,"
-					+ " dte.servercommitdate as servercommitdate,dte.utcDate as utcdate, dte.objectlocalid "
+					+ " dte.servercommitdate as servercommitdate,"
+					+ " dte.valueclassref_id, "
+					+ "dte.utcDate as utcdate, dte.objectlocalid "
 					+ "from client_instance ci "
 					+ "inner join users u on ci.user_id=u.id "
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
