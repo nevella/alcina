@@ -14,6 +14,7 @@
 package cc.alcina.framework.servlet;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -39,9 +40,10 @@ public class SessionHelper {
 
 	public static final String SESSION_ATTR_ONE_TIME_STRING = "SESSION_ATTR_ONE_TIME_STRING";
 
-	private void initaliseRequest(HttpServletRequest request) {
+	private void initaliseRequest(HttpServletRequest request,
+			HttpServletResponse resp) {
 		if (request.getAttribute(REQUEST_ATTR_INITIALISED) == null) {
-			HttpSession session = request.getSession();
+			HttpSession session = getSession(request, resp);
 			synchronized (session) {
 				request.setAttribute(SESSION_ATTR_USERNAME,
 						session.getAttribute(SESSION_ATTR_USERNAME));
@@ -50,8 +52,14 @@ public class SessionHelper {
 		}
 	}
 
-	public void initUserState(HttpServletRequest request) {
-		initaliseRequest(request);
+	private HttpSession getSession(HttpServletRequest request,
+			HttpServletResponse resp) {
+		return Registry.impl(SessionProvider.class).getSession(request, resp);
+	}
+
+	public void initUserState(HttpServletRequest request,
+			HttpServletResponse response) {
+		initaliseRequest(request, response);
 		String clientInstanceId = getClientInstanceId(request);
 		if (clientInstanceId != null) {
 			String clientInstanceAuth = request
@@ -61,28 +69,31 @@ public class SessionHelper {
 						Long.parseLong(clientInstanceId),
 						Integer.parseInt(clientInstanceAuth));
 				if (userName != null) {
-					request.getSession().setAttribute(SESSION_ATTR_USERNAME,
-							userName);
+					getSession(request, response).setAttribute(
+							SESSION_ATTR_USERNAME, userName);
 					request.setAttribute(SESSION_ATTR_USERNAME, userName);
 				}
 			} catch (NumberFormatException nfe) {
 				// squelch
 			}
 		}
-		reinitialiseUserState(request);
+		reinitialiseUserState(request, response);
 	}
 
-	public void invalidateSession(HttpServletRequest rq) {
-		rq.getSession().invalidate();
+	public void invalidateSession(HttpServletRequest request,
+			HttpServletResponse response) {
+		getSession(request, response).invalidate();
 	}
 
-	public void resetSession(HttpServletRequest request) {
+	public void resetSession(HttpServletRequest request,
+			HttpServletResponse response) {
 		request.setAttribute(SESSION_ATTR_USERNAME, null);
-		request.getSession().setAttribute(SESSION_ATTR_USERNAME, null);
+		getSession(request, response).setAttribute(SESSION_ATTR_USERNAME, null);
 	}
 
-	public void setupSessionForUser(HttpServletRequest request, IUser user) {
-		request.getSession().setAttribute(SESSION_ATTR_USERNAME,
+	public void setupSessionForUser(HttpServletRequest request,
+			HttpServletResponse response, IUser user) {
+		getSession(request, response).setAttribute(SESSION_ATTR_USERNAME,
 				user.getUserName());
 		request.setAttribute(SESSION_ATTR_USERNAME, user.getUserName());
 		PermissionsManager.get().setLoginState(LoginState.LOGGED_IN);
@@ -92,22 +103,26 @@ public class SessionHelper {
 	protected void resetPermissions(HttpServletRequest request) {
 		ThreadedPermissionsManager.cast().reset();
 		PermissionsManager.get().setLoginState(LoginState.NOT_LOGGED_IN);
-		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistenceExTransaction();
+		CommonPersistenceLocal up = Registry.impl(
+				CommonPersistenceProvider.class)
+				.getCommonPersistenceExTransaction();
 		PermissionsManager.get().setUser(getUser(up.getAnonymousUserName()));
 	}
 
 	protected IUser getUser(String userName) {
-		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+		CommonPersistenceLocal up = Registry.impl(
+				CommonPersistenceProvider.class).getCommonPersistence();
 		return up.getUserByName(userName, true);
 	}
 
-	public void reinitialiseUserState(HttpServletRequest request) {
+	public void reinitialiseUserState(HttpServletRequest request,
+			HttpServletResponse response) {
 		resetPermissions(request);
 		String userName = (String) request.getAttribute(SESSION_ATTR_USERNAME);
 		if (userName != null) {
 			IUser user = getUser(userName);
 			if (user != null) {
-				setupSessionForUser(request, user);
+				setupSessionForUser(request, response, user);
 			}
 		}
 	}
@@ -120,7 +135,8 @@ public class SessionHelper {
 
 	public String getValidatedClientInstanceUserName(long clientInstanceId,
 			int clientInstanceAuth) {
-		CommonPersistenceLocal up = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+		CommonPersistenceLocal up = Registry.impl(
+				CommonPersistenceProvider.class).getCommonPersistence();
 		if (up.validateClientInstance(clientInstanceId, clientInstanceAuth)) {
 			return up.getUserNameFor(clientInstanceId);
 		}

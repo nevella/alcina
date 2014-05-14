@@ -555,11 +555,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public String processCall(String payload) throws SerializationException {
 		RPCRequest rpcRequest = null;
 		try {
-			CookieHelper.get().getIid(getThreadLocalRequest(),
+			new CookieHelper().getIid(getThreadLocalRequest(),
 					getThreadLocalResponse());
 			Registry.impl(SessionHelper.class).initUserState(
-					getThreadLocalRequest());
-			String userName = CookieHelper.get().getRememberedUserName(
+					getThreadLocalRequest(), getThreadLocalResponse());
+			String userName = new CookieHelper().getRememberedUserName(
 					getThreadLocalRequest(), getThreadLocalResponse());
 			if (userName != null && !PermissionsManager.get().isLoggedIn()) {
 				try {

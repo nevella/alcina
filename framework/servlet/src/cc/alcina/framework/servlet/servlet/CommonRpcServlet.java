@@ -49,16 +49,15 @@ public abstract class CommonRpcServlet extends RpcServlet {
 	public CommonRpcServlet(CommonRemoteServiceServlet remoteServiceImpl) {
 		super(remoteServiceImpl);
 		this.remoteServiceImpl = remoteServiceImpl;
-		
 	}
-
 
 	@Override
 	protected void onAfterRequestDeserialized(RPCRequest rpcRequest) {
-		CookieHelper.get().getIid(getThreadLocalRequest(),
+		new CookieHelper().getIid(getThreadLocalRequest(),
 				getThreadLocalResponse());
-		Registry.impl(SessionHelper.class).initUserState(getThreadLocalRequest());
-		String userName = CookieHelper.get().getRememberedUserName(
+		Registry.impl(SessionHelper.class).initUserState(
+				getThreadLocalRequest(), getThreadLocalResponse());
+		String userName = new CookieHelper().getRememberedUserName(
 				getThreadLocalRequest(), getThreadLocalResponse());
 		if (userName != null && !PermissionsManager.get().isLoggedIn()) {
 			try {
@@ -80,8 +79,7 @@ public abstract class CommonRpcServlet extends RpcServlet {
 			method = this.getClass().getMethod(name,
 					rpcRequest.getMethod().getParameterTypes());
 			if (method.isAnnotationPresent(WebMethod.class)) {
-				WebMethod ar = method
-						.getAnnotation(WebMethod.class);
+				WebMethod ar = method.getAnnotation(WebMethod.class);
 				AnnotatedPermissible ap = new AnnotatedPermissible(
 						ar.customPermission());
 				if (!PermissionsManager.get().isPermissible(ap)) {

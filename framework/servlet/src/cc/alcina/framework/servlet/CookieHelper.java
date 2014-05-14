@@ -38,18 +38,6 @@ public class CookieHelper {
 
 	public static final String IID = "IID";
 
-	private CookieHelper() {
-		super();
-	}
-
-	public static CookieHelper get() {
-		CookieHelper singleton = Registry.checkSingleton(CookieHelper.class);
-		if (singleton == null) {
-			singleton = new CookieHelper();
-			Registry.registerSingleton(CookieHelper.class, singleton);
-		}
-		return singleton;
-	}
 
 	@SuppressWarnings("unchecked")
 	List<Cookie> getAddedCookies(HttpServletRequest req) {

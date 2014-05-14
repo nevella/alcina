@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.projection;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -10,6 +11,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
@@ -32,6 +34,8 @@ public class GraphProjections {
 
 	Set<Class> forbiddenClasses = new LinkedHashSet<Class>();
 
+	GraphProjection projector = new GraphProjection();
+
 	private GraphProjectionDataFilter dataFilter = Registry
 			.impl(CollectionProjectionFilter.class);
 
@@ -48,9 +52,13 @@ public class GraphProjections {
 	}
 
 	public GraphProjections forbid(Class... classes) {
-		GraphProjections instance = new GraphProjections();
-		instance.forbiddenClasses.addAll(Arrays.asList(classes));
-		return instance;
+		forbiddenClasses.addAll(Arrays.asList(classes));
+		return this;
+	}
+
+	public GraphProjections executor(GraphProjection projector) {
+		this.projector = projector;
+		return this;
 	}
 
 	public GraphProjections implCallback(InstantiateImplCallback callback) {
@@ -61,8 +69,8 @@ public class GraphProjections {
 
 	public <T> T project(T t) {
 		try {
-			return new GraphProjection(fieldFilter, dataFilter)
-					.project(t, null);
+			projector.setFilters(fieldFilter, dataFilter);
+			return projector.project(t, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -131,5 +139,16 @@ public class GraphProjections {
 				.impl(CollectionProjectionFilter.class);
 		defaultProjections().dataFilter(dataFilter).project(target);
 		return dataFilter.getObjectLookup();
+	}
+
+	public static class CountingProjector extends GraphProjection {
+
+		public CountingMap<Class> counts = new CountingMap<Class>();
+
+		@Override
+		protected <T> T newInstance(Class sourceClass) throws Exception {
+			counts.add(sourceClass);
+			return super.newInstance(sourceClass);
+		}
 	}
 }

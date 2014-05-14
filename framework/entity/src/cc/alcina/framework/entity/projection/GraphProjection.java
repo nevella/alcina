@@ -15,6 +15,7 @@ package cc.alcina.framework.entity.projection;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -133,12 +134,19 @@ public class GraphProjection {
 	static Map<Field, PropertyPermissions> propertyPermissionLookup = new NullWrappingMap<Field, PropertyPermissions>(
 			new ConcurrentHashMap());
 
+	static Map<Class, Constructor> constructorLookup = new ConcurrentHashMap<Class, Constructor>();
+
 	Map<Field, PropertyPermissions> perFieldPermission = new LinkedHashMap<Field, PropertyPermissions>();
 
 	public GraphProjection() {
 	}
 
 	public GraphProjection(GraphProjectionFieldFilter fieldFilter,
+			GraphProjectionDataFilter dataFilter) {
+		setFilters(fieldFilter, dataFilter);
+	}
+
+	public void setFilters(GraphProjectionFieldFilter fieldFilter,
 			GraphProjectionDataFilter dataFilter) {
 		this.fieldFilter = fieldFilter;
 		this.dataFilter = dataFilter;
@@ -185,7 +193,7 @@ public class GraphProjection {
 		}
 		T projected = sourceClass.isArray() ? (T) Array.newInstance(
 				sourceClass.getComponentType(), Array.getLength(source))
-				: (T) sourceClass.newInstance();
+				: (T) newInstance(sourceClass);
 		reached.put(source, projected);
 		if (alsoMapTo != null) {
 			reached.put(alsoMapTo, projected);
@@ -224,6 +232,15 @@ public class GraphProjection {
 			field.set(projected, cv);
 		}
 		return projected;
+	}
+
+	protected <T> T newInstance(Class sourceClass) throws Exception {
+		if (!constructorLookup.containsKey(sourceClass)) {
+			Constructor ctor = sourceClass.getConstructor(new Class[] {});
+			ctor.setAccessible(true);
+			constructorLookup.put(sourceClass, ctor);
+		}
+		return (T) constructorLookup.get(sourceClass).newInstance(new Object[] {});
 	}
 
 	// TODO - shouldn't this be package-private?

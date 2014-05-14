@@ -223,7 +223,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 					}
 					if (removedCount == 0) {
 						lastRangeCheck = null;
-						System.out.println("restarting gap check - gap was closed");
+						System.out
+								.println("restarting gap check - gap was closed");
 						// we actually have all the ids,
 						// try again
 						return;

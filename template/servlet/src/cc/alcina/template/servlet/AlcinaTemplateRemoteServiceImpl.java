@@ -41,8 +41,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 	}
 
 	@Override
-	public LoadObjectsResponse loadInitial(
-			LoadObjectsRequest request) {
+	public LoadObjectsResponse loadInitial(LoadObjectsRequest request) {
 		AlcinaTemplateObjects alcinaTemplateObjects = AlcinaTemplateServerManager
 				.get()
 				.loadInitial(
@@ -75,7 +74,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 				lrb.setClientInstance(AlcinaTemplateBeanProvider.get()
 						.getCommonPersistenceBean()
 						.createClientInstance(getUserAgent()));
-				CookieHelper.get().setRememberMeCookie(getThreadLocalRequest(),
+				new CookieHelper().setRememberMeCookie(getThreadLocalRequest(),
 						getThreadLocalResponse(), loginBean.isRememberMe());
 			}
 		} catch (AuthenticationException e) {
@@ -88,9 +87,8 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 			getLogger().warn("Login exception", e);
 		}
 		if (!lrb.isOk()) {
-			EntityLayerUtils.log(
-					LogMessageType.INVALID_AUTHENTICATION,
-					String.format("Invalid login: %s (password obscured)",
+			EntityLayerUtils.log(LogMessageType.INVALID_AUTHENTICATION, String
+					.format("Invalid login: %s (password obscured)",
 							loginBean.getUserName()));
 		} else {
 		}
@@ -103,7 +101,8 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		AlcinaTemplateUser user = new Authenticator()
 				.processAuthenticatedLogin(lrb, userName);
 		if (lrb.isOk()) {
-			Registry.impl(SessionHelper.class).setupSessionForUser(getThreadLocalRequest(), user);
+			Registry.impl(SessionHelper.class).setupSessionForUser(
+					getThreadLocalRequest(), getThreadLocalResponse(), user);
 			lrb.setFriendlyName(user.getFirstName() + " " + user.getLastName());
 		}
 	}
@@ -129,9 +128,10 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 	}
 
 	public void logout() {
-		CookieHelper.get().clearRemembermeCookie(getThreadLocalRequest(),
+		new CookieHelper().clearRemembermeCookie(getThreadLocalRequest(),
 				getThreadLocalResponse());
-		Registry.impl(SessionHelper.class).resetSession(getThreadLocalRequest());
+		Registry.impl(SessionHelper.class).resetSession(
+				getThreadLocalRequest(), getThreadLocalResponse());
 	}
 
 	@Override
@@ -144,11 +144,9 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 					String.format("Transform exception: %s %s",
 							PermissionsManager.get().getUserName(), request),
 					dte);
-			EntityLayerUtils.log(
-					LogMessageType.TRANSFORM_EXCEPTION,
-					String.format("Transform exception: %s %s",
-							PermissionsManager.get().getUserName(), request),
-					dte);
+			EntityLayerUtils.log(LogMessageType.TRANSFORM_EXCEPTION, String
+					.format("Transform exception: %s %s", PermissionsManager
+							.get().getUserName(), request), dte);
 			throw dte;
 		}
 	}
