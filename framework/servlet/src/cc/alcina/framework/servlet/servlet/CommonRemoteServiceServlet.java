@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.log4j.Logger;
 
@@ -86,7 +87,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.actions.RequiresHttpRequest;
+import cc.alcina.framework.entity.actions.RequiresHttpSession;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
@@ -111,6 +112,7 @@ import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
+import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.job.JobId;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -950,6 +952,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	protected HttpSession getSession() {
+		return Registry.impl(SessionProvider.class).getSession(
+				getThreadLocalRequest(), getThreadLocalResponse());
+	}
+
 	class ActionLauncherAsync extends Thread {
 		private PermissionsManager pm;
 
@@ -1037,9 +1044,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			RemoteActionPerformer performer = (RemoteActionPerformer) Registry
 					.get().instantiateSingle(RemoteActionPerformer.class,
 							action.getClass());
-			if (performer instanceof RequiresHttpRequest) {
-				RequiresHttpRequest req = (RequiresHttpRequest) performer;
-				req.setHttpServletRequest(getThreadLocalRequest());
+			if (performer instanceof RequiresHttpSession) {
+				RequiresHttpSession rhs = (RequiresHttpSession) performer;
+				rhs.setHttpSession(getSession());
 			}
 			boolean nonPersistent = LooseContext
 					.is(JobRegistry.CONTEXT_NON_PERSISTENT);

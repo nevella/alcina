@@ -23,6 +23,7 @@ import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.SessionHelper;
+import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 import cc.alcina.template.cs.constants.AlcinaTemplateAccessConstants;
@@ -50,7 +51,7 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 								.isMemberOfGroup(
 										AlcinaTemplateAccessConstants.ADMINISTRATORS_GROUP_NAME));
 		HttpServletRequest req = getThreadLocalRequest();
-		alcinaTemplateObjects.setOnetimeMessage((String) req.getSession()
+		alcinaTemplateObjects.setOnetimeMessage(req == null ? null :(String) getSession()
 				.getAttribute(SessionHelper.SESSION_ATTR_ONE_TIME_STRING));
 		LoadObjectsResponse results = new LoadObjectsResponse();
 		results.putDomainModelHolder(alcinaTemplateObjects);

@@ -14,13 +14,13 @@
 
 package cc.alcina.framework.entity.actions;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 /**
  *
  * @author Nick Reddel
  */
 
- public interface RequiresHttpRequest {
-	public void setHttpServletRequest(HttpServletRequest request);
+ public interface RequiresHttpSession {
+	public void setHttpSession(HttpSession session);
 }
