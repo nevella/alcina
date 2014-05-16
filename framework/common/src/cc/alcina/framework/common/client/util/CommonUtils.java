@@ -1071,7 +1071,7 @@ public class CommonUtils {
 	@SuppressWarnings("deprecation")
 	public static String dateStampMillis() {
 		Date d = new Date();
-		return formatJ("%s%s%s%s%s%s", padFour(d.getYear()),
+		return formatJ("%s%s%s%s%s%s", padFour(d.getYear()+1900),
 				padTwo(d.getMonth() + 1), padTwo(d.getDate()),
 				padTwo(d.getHours()), padTwo(d.getMinutes()),
 				padTwo(d.getSeconds()), padThree((int) (d.getTime() % 1000)));
