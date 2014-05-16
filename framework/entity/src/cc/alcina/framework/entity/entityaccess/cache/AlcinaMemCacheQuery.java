@@ -45,8 +45,10 @@ public class AlcinaMemCacheQuery {
 	public AlcinaMemCacheQuery filter(String key, Object value) {
 		return filter(new CacheFilter(key, value));
 	}
-	public AlcinaMemCacheQuery filter(String key, Object value,FilterOperator operator) {
-		return filter(new CacheFilter(key, value,operator));
+
+	public AlcinaMemCacheQuery filter(String key, Object value,
+			FilterOperator operator) {
+		return filter(new CacheFilter(key, value, operator));
 	}
 
 	public <T extends HasIdAndLocalId> T find(Class<T> clazz) {
@@ -87,10 +89,10 @@ public class AlcinaMemCacheQuery {
 	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 		return AlcinaMemCache.get().list(clazz, this);
 	}
-	
+
 	public <T extends HasIdAndLocalId> List<T> allRaw(Class<T> clazz) {
-		raw=true;
-		ids=AlcinaMemCache.get().getIds(clazz);
+		raw = true;
+		ids = AlcinaMemCache.get().getIds(clazz);
 		return AlcinaMemCache.get().list(clazz, this);
 	}
 
@@ -115,4 +117,7 @@ public class AlcinaMemCacheQuery {
 				CommonUtils.join(filters, ",\n"));
 	}
 
+	public <T extends HasIdAndLocalId> int count(Class<T> clazz) {
+		return raw().list(clazz).size();
+	}
 }
