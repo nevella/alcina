@@ -519,6 +519,14 @@ public class CommonUtils {
 		}
 	}
 
+	public static String padFour(int number) {
+		if (number < 1000) {
+			return "0" + padThree(number);
+		} else {
+			return String.valueOf(number);
+		}
+	}
+
 	public static String padTwo(int number) {
 		if (number < 10) {
 			return "0" + number;
@@ -1058,5 +1066,14 @@ public class CommonUtils {
 
 	public static Exception wrapThrowable(Throwable e) {
 		return (Exception) (e instanceof Exception ? e : new Exception(e));
+	}
+
+	@SuppressWarnings("deprecation")
+	public static String dateStampMillis() {
+		Date d = new Date();
+		return formatJ("%s%s%s%s%s%s", padFour(d.getYear()),
+				padTwo(d.getMonth() + 1), padTwo(d.getDate()),
+				padTwo(d.getHours()), padTwo(d.getMinutes()),
+				padTwo(d.getSeconds()), padThree((int) (d.getTime() % 1000)));
 	}
 }
