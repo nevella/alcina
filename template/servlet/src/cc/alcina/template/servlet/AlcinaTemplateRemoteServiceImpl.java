@@ -51,8 +51,9 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 								.isMemberOfGroup(
 										AlcinaTemplateAccessConstants.ADMINISTRATORS_GROUP_NAME));
 		HttpServletRequest req = getThreadLocalRequest();
-		alcinaTemplateObjects.setOnetimeMessage(req == null ? null :(String) getSession()
-				.getAttribute(SessionHelper.SESSION_ATTR_ONE_TIME_STRING));
+		alcinaTemplateObjects.setOnetimeMessage(req == null ? null
+				: (String) getSession().getAttribute(
+						SessionHelper.SESSION_ATTR_ONE_TIME_STRING));
 		LoadObjectsResponse results = new LoadObjectsResponse();
 		results.putDomainModelHolder(alcinaTemplateObjects);
 		return results;
