@@ -151,6 +151,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private TransformHistoryManager undoManager = new NullUndoManager();
 
+	private boolean ignoreUnrecognizedDomainClassException;
+
+	public boolean isIgnoreUnrecognizedDomainClassException() {
+		return this.ignoreUnrecognizedDomainClassException;
+	}
+
+	public void setIgnoreUnrecognizedDomainClassException(
+			boolean ignoreUnrecognizedDomainClassException) {
+		this.ignoreUnrecognizedDomainClassException = ignoreUnrecognizedDomainClassException;
+	}
+
 	protected TransformManager() {
 		this.transformListenerSupport = new DomainTransformSupport();
 		this.collectionModificationSupport = new CollectionModificationSupport();
@@ -385,18 +396,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			assert false : "Transform type not implemented: " + transformType;
 		}
 		currentEvent = null;
-	}
-
-	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
-		return getObject(event);
-	}
-
-	protected boolean alwaysFireObjectOwnerCollectionModifications() {
-		return false;
-	}
-
-	protected boolean updateAssociationsWithoutNoChangeCheck() {
-		return true;
 	}
 
 	public boolean containsObject(DomainTransformEvent dte) {
@@ -1073,10 +1072,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	protected void maybeFireCollectionModificationEvent(
-			Class<? extends Object> collectionClass, boolean fromPropertyChange) {
-	}
-
 	public <T extends HasIdAndLocalId> T registerDomainObject(T hili) {
 		if (getDomainObjects() != null) {
 			if (hili.getId() == 0) {
@@ -1236,6 +1231,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return false;
 	}
 
+	protected boolean alwaysFireObjectOwnerCollectionModifications() {
+		return false;
+	}
+
 	/**
 	 * For subclasses Transform manager (client) explicitly doesn't check -
 	 * that's handled by (what's) the presented UI note - problems are mostly
@@ -1303,6 +1302,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
+	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
+		return getObject(event);
+	}
+
 	protected ObjectLookup getObjectLookup() {
 		return Reflections.objectLookup();
 	}
@@ -1325,6 +1328,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			evt.setValueVersionNumber(((HasVersionNumber) tgt)
 					.getVersionNumber());
 		}
+	}
+
+	protected void maybeFireCollectionModificationEvent(
+			Class<? extends Object> collectionClass, boolean fromPropertyChange) {
 	}
 
 	/**
@@ -1489,6 +1496,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			// often not actually hit each other)
 			objectModified(hTgt, evt, true);
 		}
+	}
+
+	protected boolean updateAssociationsWithoutNoChangeCheck() {
+		return true;
 	}
 
 	public enum CollectionModificationType {
