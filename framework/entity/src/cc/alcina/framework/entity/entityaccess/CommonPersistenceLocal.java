@@ -168,7 +168,7 @@ public interface CommonPersistenceLocal {
 
 	public ClientInstance getClientInstance(String clientInstanceId);
 
-	public String getUserNameFor(long validatedClientInstanceId);
+	public String getUserNameForClientInstanceId(long validatedClientInstanceId);
 
 	public abstract String getAnonymousUserName();
 

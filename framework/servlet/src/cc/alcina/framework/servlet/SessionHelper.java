@@ -138,7 +138,7 @@ public class SessionHelper {
 		CommonPersistenceLocal up = Registry.impl(
 				CommonPersistenceProvider.class).getCommonPersistence();
 		if (up.validateClientInstance(clientInstanceId, clientInstanceAuth)) {
-			return up.getUserNameFor(clientInstanceId);
+			return up.getUserNameForClientInstanceId(clientInstanceId);
 		}
 		return null;
 	}

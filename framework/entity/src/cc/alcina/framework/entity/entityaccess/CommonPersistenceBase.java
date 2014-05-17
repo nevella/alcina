@@ -1131,7 +1131,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	@Override
-	public String getUserNameFor(long validatedClientInstanceId) {
+	public String getUserNameForClientInstanceId(long validatedClientInstanceId) {
 		String userName = Registry
 				.impl(ClientInstanceAuthenticationCache.class).getUserNameFor(
 						validatedClientInstanceId);

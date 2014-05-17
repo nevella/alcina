@@ -81,9 +81,11 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		cancelButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				OkCancelDialogBox.this.hide();
-				vetoableActionListener
-						.vetoableAction(new PermissibleActionEvent(this,
-								CancelAction.INSTANCE));
+				if (vetoableActionListener != null) {
+					vetoableActionListener
+							.vetoableAction(new PermissibleActionEvent(this,
+									CancelAction.INSTANCE));
+				}
 			}
 		});
 		okButton = new Button(getOKButtonName());
@@ -203,8 +205,8 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		}
 
 		protected void notifyProblem() {
-			Registry.impl(ClientNotifications.class)
-					.showWarning("Please correct the problems in the form");
+			Registry.impl(ClientNotifications.class).showWarning(
+					"Please correct the problems in the form");
 		}
 
 		@Override

@@ -370,8 +370,12 @@ public class AlcinaMemCache {
 	public void linkFromServletLayer() {
 	}
 
-	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
+	public <T extends HasIdAndLocalId> List<T> listRaw(Class<T> clazz) {
 		return new AlcinaMemCacheQuery().ids(getIds(clazz)).raw().list(clazz);
+	}
+
+	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
+		return new AlcinaMemCacheQuery().ids(getIds(clazz)).list(clazz);
 	}
 
 	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
@@ -1553,8 +1557,8 @@ public class AlcinaMemCache {
 								targetPd.getWriteMethod().invoke(target,
 										new Object[] { item.source });
 							}
-							targetPd = memCacheColumnRev.get(item.source.getClass(),
-									pd.getName());
+							targetPd = memCacheColumnRev.get(
+									item.source.getClass(), pd.getName());
 							if (targetPd != null && target != null) {
 								targetPd.getWriteMethod().invoke(target,
 										new Object[] { item.source });

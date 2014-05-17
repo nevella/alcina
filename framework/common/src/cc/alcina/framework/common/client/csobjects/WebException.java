@@ -55,4 +55,11 @@ public class WebException extends Exception implements Serializable {
 					.getMessage();
 		}
 	}
+
+	public static WebException maybeWrap(Exception e) {
+		if(e instanceof WebException){
+			return (WebException) e;
+		}
+		return new WebException(e);
+	}
 }
