@@ -423,7 +423,12 @@ public class DevConsoleCommandTransforms {
 			ClassRef cr = (ClassRef) clazz.newInstance();
 			cr.setId(id);
 			cr.setRefClassName(cn);
-			cr.setRefClass(Class.forName(cn));
+			
+			try {
+				cr.setRefClass(Class.forName(cn));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			ClassRef.add(Collections.singleton(cr));
 		}
 		ps.close();
