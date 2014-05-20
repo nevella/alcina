@@ -12,7 +12,7 @@ public abstract class LooseContext {
 	public static <T> T get(String key) {
 		return getContext().get(key);
 	}
-	
+
 	public static void remove(String key) {
 		getContext().remove(key);
 	}
@@ -105,5 +105,13 @@ public abstract class LooseContext {
 	}
 
 	public static class LooseContextStackException extends RuntimeException {
+	}
+
+	/**
+	 * For when copying from a launcher thread - note, no checks are made (since
+	 * the executor might be a thread pool)
+	 */
+	public static void putContext(LooseContextInstance snapshot) {
+		getInstance().context = snapshot;
 	}
 }
