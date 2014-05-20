@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.entityaccess.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 
 public class PublicationContext {
 	public static final String CONTEXT_PUBLICATION_CONTEXT = PublicationContext.class
@@ -37,6 +38,9 @@ public class PublicationContext {
 	public PublicationVisitor visitor;
 
 	public Logger logger;
+
+
+	public ContentRendererResults renderedContent;
 
 	public String getContextInfoForPublicationException() {
 		String xmlForm = "Unable to serialize publication request";

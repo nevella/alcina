@@ -109,6 +109,7 @@ public class Publisher {
 						publicationContent.getClass());
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
 				publicationId, publicationUserId);
+		ctx.renderedContent=crh.results;
 		if (crh.getResults().persist && publicationContentPersister != null
 				&& publicationId != 0) {
 			publicationContentPersister.persistContentRendererResults(
@@ -183,5 +184,9 @@ public class Publisher {
 
 		public ContentRendererResults getContentRendererResults(
 				long publicationId);
+	}
+
+	public PublicationContext getContext() {
+		return this.ctx;
 	}
 }
