@@ -3,7 +3,6 @@
  */
 package cc.alcina.framework.common.client.util;
 
-
 public class FloatPair implements Comparable<FloatPair> {
 	public float f1;
 
@@ -28,8 +27,13 @@ public class FloatPair implements Comparable<FloatPair> {
 
 	public FloatPair(float i1, float i2) {
 		super();
-		this.f1 = i1;
-		this.f2 = i2;
+		if (i1 <= i2) {
+			this.f1 = i1;
+			this.f2 = i2;
+		} else {
+			this.f1 = i2;
+			this.f2 = i1;
+		}
 	}
 
 	public void add(FloatPair fp) {
@@ -65,11 +69,23 @@ public class FloatPair implements Comparable<FloatPair> {
 	public boolean isZero() {
 		return f1 == 0 && f2 == 0;
 	}
-//top exclusive
+
+	// top exclusive
 	public boolean contains(float f) {
-		return f1==f2?f1==f:f1<=f&&f2>f;
+		return f1 == f2 ? f1 == f : f1 <= f && f2 > f;
 	}
-	public float average(){
-		return (f1+f2)/2;
+
+	public float average() {
+		return (f1 + f2) / 2;
+	}
+
+	public FloatPair intersection(FloatPair other) {
+		FloatPair result = new FloatPair(Math.max(f1, other.f1), Math.min(f2,
+				other.f2));
+		return result.f1 <= result.f2 ? result : null;
+	}
+
+	public boolean intersectsWith(FloatPair other) {
+		return intersection(other) != null;
 	}
 }

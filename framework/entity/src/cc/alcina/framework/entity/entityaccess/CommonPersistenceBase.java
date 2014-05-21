@@ -298,14 +298,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
 			boolean createIfNonexistent) {
 		return getItemByKeyValue(clazz, key, value, createIfNonexistent, null,
-				false);
+				false,true);
 	}
 
 	@Override
 	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
-			boolean createIfNonexistent, Long ignoreId, boolean caseInsensitive) {
+			boolean createIfNonexistent, Long ignoreId,
+			boolean caseInsensitive, boolean livePermissionsManager) {
 		try {
-			connectPermissionsManagerToLiveObjects();
+			if (livePermissionsManager) {
+				connectPermissionsManagerToLiveObjects();
+			}
 			String eql = String.format(
 					value == null ? "from %s where %s is null"
 							: caseInsensitive ? "from %s where lower(%s) = ?"
@@ -459,7 +462,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 		};
 		try {
-			return new GraphProjection(allowSourceFilter, filter).project(dtrps, null);
+			return new GraphProjection(allowSourceFilter, filter).project(
+					dtrps, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -580,7 +584,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
 				gwpo.getClass(), gwpo.getId());
 		wrapper.setObject(gwpo);
-		
 		return wrapper.getId();
 	}
 
@@ -725,7 +728,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				while (true) {
 					Object item = getItemByKeyValue(suv.getObjectClass(),
 							suv.getPropertyName(), value, false, suv.getOkId(),
-							suv.isCaseInsensitive());
+							suv.isCaseInsensitive(),true);
 					if (item == null) {
 						if (ctr != 0) {
 							suv.setSuggestedValue(value);

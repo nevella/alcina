@@ -165,4 +165,8 @@ public class IntPair implements Comparable<IntPair> {
 	public int length() {
 		return i2-i1;
 	}
+
+	public boolean intersectsWith(IntPair other) {
+		return intersection(other)!=null;
+	}
 }

@@ -42,7 +42,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -417,5 +416,9 @@ public class ResourceUtilities {
 
 	public static Map<String, String> getCustomProperties() {
 		return customProperties;
+	}
+
+	public static String get(Class clazz, String propertyName) {
+		return getBundledString(clazz, propertyName);
 	}
 }
