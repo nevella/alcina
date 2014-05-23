@@ -25,6 +25,7 @@ import java.util.Set;
 
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
+import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning.RelativePopupAxis;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -59,6 +60,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.FocusPanel;
@@ -325,7 +327,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		if (relativePopupPanel != null) {
 			onPopdownShowing(relativePopupPanel, false);
 			relativePopupPanel.removeFromParent();
-			relativePopupPanel=null;
+			relativePopupPanel = null;
 		}
 		lastClosingClickMillis = System.currentTimeMillis();
 		closingOnClick = false;
@@ -753,57 +755,67 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	// TODO:hcdim
-	protected void checkShowPopup(boolean filterTextBox) {
+	protected void checkShowPopup(final boolean filterTextBox) {
 		if ((this.relativePopupPanel == null || this.relativePopupPanel
 				.getParent() == null)
 				&& !closingOnClick
 				&& System.currentTimeMillis() - lastClosingClickMillis > DELAY_TO_CHECK_FOR_CLOSING
 				&& maybeShowDepdendentOnFilter()) {
 			if (lazyProvider != null) {
-				LazyData lazyData = lazyProvider.dataRequired();
-				if (lazyData != null) {
-					setKeys(lazyData.keys);
-					setItemMap(lazyData.data);
-				}
+				AsyncCallback<LazyData> callback = new AsyncCallbackStd<SelectWithSearch.LazyData>() {
+					@Override
+					public void onSuccess(LazyData lazyData) {
+						if (lazyData != null) {
+							setKeys(lazyData.keys);
+							setItemMap(lazyData.data);
+						}
+						showPopupWithData(filterTextBox);
+					}
+				};
+			} else {
+				showPopupWithData(filterTextBox);
 			}
-			if (popdownStyleName != null) {
-				panelForPopup.addStyleName(popdownStyleName);
-			}
-			if (filterTextBox && !filter.isQueueing()) {
-				filter(filter.getTextBox().getText());
-			}
-			this.relativePopupPanel = RelativePopupPositioning
-					.showPopup(
-							filter,
-							null,
-							RootPanel.get(),
-							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
-							RootPanel.get(), panelForPopup, shiftX(), shiftY());
-			onPopdownShowing(relativePopupPanel, true);
-			int border = 2;
-			if (itemHolder.getOffsetHeight() + border > panelForPopup
-					.getOffsetHeight() && !isAutoHolderHeight()) {
-				int hhInt = holderHeight != null && holderHeight.endsWith("px") ? Integer
-						.parseInt(holderHeight.replace("px", "")) : 0;
-				scroller.setHeight(Math.max(hhInt,
-						panelForPopup.getOffsetHeight() - border)
-						+ "px");
-			}
-			int minWidth = holder.getOffsetWidth();
-			if (minWidth == 0) {// probably inline
-				minWidth = filter.getOffsetWidth();
-			}
-			minWidth = adjustDropdownWidth(minWidth);
-			if (minWidth > 20) {
-				scroller.getElement().getStyle()
-						.setProperty("minWidth", minWidth + "px");
-				if (BrowserMod.isIEpre9()) {
-					relativePopupPanel.getElement().getStyle()
-							.setProperty("minWidth", (minWidth + 20) + "px");
-				}
-			}
-			afterUpdateItems(emptyItems);
 		}
+	}
+
+	public void showPopupWithData(boolean filterTextBox) {
+		if (popdownStyleName != null) {
+			panelForPopup.addStyleName(popdownStyleName);
+		}
+		if (filterTextBox && !filter.isQueueing()) {
+			filter(filter.getTextBox().getText());
+		}
+		this.relativePopupPanel = RelativePopupPositioning
+				.showPopup(
+						filter,
+						null,
+						RootPanel.get(),
+						new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
+						RootPanel.get(), panelForPopup, shiftX(), shiftY());
+		onPopdownShowing(relativePopupPanel, true);
+		int border = 2;
+		if (itemHolder.getOffsetHeight() + border > panelForPopup
+				.getOffsetHeight() && !isAutoHolderHeight()) {
+			int hhInt = holderHeight != null && holderHeight.endsWith("px") ? Integer
+					.parseInt(holderHeight.replace("px", "")) : 0;
+			scroller.setHeight(Math.max(hhInt, panelForPopup.getOffsetHeight()
+					- border)
+					+ "px");
+		}
+		int minWidth = holder.getOffsetWidth();
+		if (minWidth == 0) {// probably inline
+			minWidth = filter.getOffsetWidth();
+		}
+		minWidth = adjustDropdownWidth(minWidth);
+		if (minWidth > 20) {
+			scroller.getElement().getStyle()
+					.setProperty("minWidth", minWidth + "px");
+			if (BrowserMod.isIEpre9()) {
+				relativePopupPanel.getElement().getStyle()
+						.setProperty("minWidth", (minWidth + 20) + "px");
+			}
+		}
+		afterUpdateItems(emptyItems);
 	}
 
 	protected boolean isAutoHolderHeight() {
@@ -841,7 +853,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	}
 
 	public interface LazyDataProvider<G, T> {
-		LazyData dataRequired();
+		void getData(AsyncCallback<LazyData> callback);
 	}
 
 	public class SelectWithSearchItem extends Link implements VisualFilterable {

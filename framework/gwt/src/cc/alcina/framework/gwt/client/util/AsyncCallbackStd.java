@@ -17,4 +17,11 @@ public abstract class AsyncCallbackStd<T> implements AsyncCallback<T> {
 			Window.Location.reload();
 		}
 	}
+	public static class AsyncCallbackValue<T> extends AsyncCallbackStd<T> {
+		public T value;
+		@Override
+		public void onSuccess(T result) {
+			value=result;
+		}
+	}
 }

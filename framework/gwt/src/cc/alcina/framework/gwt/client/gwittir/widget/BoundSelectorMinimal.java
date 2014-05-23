@@ -15,6 +15,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -96,8 +97,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	private class LazyDataMinimal implements LazyDataProvider {
 		private boolean called = false;
 
-		@Override
-		public LazyData dataRequired() {
+		private LazyData dataRequired() {
 			if (!called) {
 				LazyData lazyData = new LazyData();
 				Map map = createObjectMap();
@@ -107,6 +107,11 @@ public class BoundSelectorMinimal extends BoundSelector {
 				return lazyData;
 			}
 			return null;
+		}
+
+		@Override
+		public void getData(AsyncCallback callback) {
+			callback.onSuccess(dataRequired());
 		}
 	}
 
