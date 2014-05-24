@@ -144,9 +144,9 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	}
 
 	private boolean maybeRegisterDomainModelObjects() {
-		if (currentDelta.getDomainModelObjects() != null) {
+		if (currentDelta.getDomainModelObject() != null) {
 			Registry.impl(DomainModelObjectsRegistrar.class).registerAsync(
-					currentDelta.getDomainModelObjects(), this);
+					currentDelta.getDomainModelObject(), this);
 			return true;
 		}
 		return false;

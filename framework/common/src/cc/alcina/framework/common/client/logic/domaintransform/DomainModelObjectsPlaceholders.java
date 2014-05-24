@@ -10,10 +10,15 @@ import cc.alcina.framework.gwt.client.data.GeneralProperties;
 //ensure that domainmodeldelta will serialize
 public class DomainModelObjectsPlaceholders {
 	public static class DomainModelObjectsPlaceholder implements
-			DomainModelObjects {
+			DomainModelObject {
 		@Override
 		public Collection registrableObjects() {
 			return null;
+		}
+
+		@Override
+		public void ensureLookups() {
+			
 		}
 	}
 
@@ -21,31 +26,26 @@ public class DomainModelObjectsPlaceholders {
 			DomainModelHolder {
 		@Override
 		public List registerableDomainObjects() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public Set<ClassRef> getClassRefs() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public IUser getCurrentUser() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public GeneralProperties getGeneralProperties() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public void registerSelfAsProvider() {
-			// TODO Auto-generated method stub
 		}
 	}
 }

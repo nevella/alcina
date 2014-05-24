@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaL
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObject;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTranche;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -182,6 +183,15 @@ public class DomainDeltaSequencer {
 	public long getReuseId(DomainModelDeltaMetadata metadata) {
 		return metadata == null ? 0 : CommonUtils.lv(metadata
 				.getMaxPersistedTransformIdWhenGenerated());
+	}
+
+	public static <T extends DomainModelObject> DomainTranche<T> modelObjectToTranche(
+			T modelObject, Class signatureClass) throws Exception {
+		DomainTranche tranche = new DomainTranche();
+		tranche.setDomainModelObject(modelObject);
+		tranche.setSignature(new DomainModelDeltaSignature().clazz(
+				signatureClass).requiresHash());
+		return tranche;
 	}
 
 	public static DomainTranche objectsToTranche(

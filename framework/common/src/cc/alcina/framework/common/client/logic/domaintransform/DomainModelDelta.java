@@ -9,7 +9,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 public interface DomainModelDelta {
 	public DomainModelHolder getDomainModelHolder();
 
-	public DomainModelObjects getDomainModelObjects();
+	public DomainModelObject getDomainModelObject();
 
 	public Collection<HasIdAndLocalId> getUnlinkedObjects();
 

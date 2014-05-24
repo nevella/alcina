@@ -8,7 +8,8 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class DomainTranche implements DomainModelDelta, Serializable {
+public class DomainTranche<T extends DomainModelObject> implements
+		DomainModelDelta, Serializable {
 	private DomainModelHolder domainModelHolder;
 
 	private Collection<HasIdAndLocalId> unlinkedObjects = new ArrayList<HasIdAndLocalId>();
@@ -20,8 +21,8 @@ public class DomainTranche implements DomainModelDelta, Serializable {
 	private DomainModelDeltaSignature signature;
 
 	private DomainModelDeltaMetadata metadata;
-	
-	private DomainModelObjects domainModelObjects;
+
+	private T domainModelObject;
 
 	public String getAppInstruction() {
 		return this.appInstruction;
@@ -90,11 +91,11 @@ public class DomainTranche implements DomainModelDelta, Serializable {
 		return false;
 	}
 
-	public DomainModelObjects getDomainModelObjects() {
-		return this.domainModelObjects;
+	public T getDomainModelObject() {
+		return this.domainModelObject;
 	}
 
-	public void setDomainModelObjects(DomainModelObjects domainModelObjects) {
-		this.domainModelObjects = domainModelObjects;
+	public void setDomainModelObject(T domainModelObject) {
+		this.domainModelObject = domainModelObject;
 	}
 }

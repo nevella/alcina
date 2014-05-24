@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObjects;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObject;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.HasRequestReplayId;
@@ -142,8 +142,8 @@ public class DtrWrapperBackedDomainModelDelta implements DomainModelDelta,
 	}
 
 	@Override
-	public DomainModelObjects getDomainModelObjects() {
+	public DomainModelObject getDomainModelObject() {
 		return referencedDelta == null ? null : referencedDelta
-				.getDomainModelObjects();
+				.getDomainModelObject();
 	}
 }

@@ -4,5 +4,5 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface DomainModelObjectsRegistrar {
 
-	void registerAsync(DomainModelObjects domainModelObjects,final AsyncCallback<Void> postRegisterCallback);
+	void registerAsync(DomainModelObject domainModelObjects,final AsyncCallback<Void> postRegisterCallback);
 }
