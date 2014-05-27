@@ -356,14 +356,14 @@ public class XmlUtils {
 		XmlUtils.useJAXP = useJAXP;
 	}
 
-	public synchronized static String streamNCleanForBrowserHtmlFragment(Node n) {
+	public static String streamNCleanForBrowserHtmlFragment(Node n) {
 		String s = streamXML(n);
 		s = expandEmptyElements(s);
 		s = cleanXmlHeaders(s);
 		return s;
 	}
 
-	public synchronized static String streamXML(Node n) {
+	public static String streamXML(Node n) {
 		DOMSource d = new DOMSource(n);
 		StringWriter w = new StringWriter();
 		try {
@@ -375,13 +375,11 @@ public class XmlUtils {
 		}
 	}
 
-	public synchronized static void streamXML(Node n, OutputStream os)
-			throws Exception {
+	public static void streamXML(Node n, OutputStream os) throws Exception {
 		_streamXML(n, null, os);
 	}
 
-	public synchronized static void streamXML(Node n, Writer w)
-			throws Exception {
+	public static void streamXML(Node n, Writer w) throws Exception {
 		_streamXML(n, w, null);
 	}
 
@@ -454,7 +452,11 @@ public class XmlUtils {
 		return wr.toString();
 	}
 
-	private synchronized static void _streamXML(Node n, Writer w, OutputStream s)
+	public static void sysXml(Node node) {
+		System.out.println(streamXML(node));
+	}
+
+	private static void _streamXML(Node n, Writer w, OutputStream s)
 			throws Exception {
 		transformDoc(new DOMSource(n), null, w == null ? new StreamResult(s)
 				: new StreamResult(w));
