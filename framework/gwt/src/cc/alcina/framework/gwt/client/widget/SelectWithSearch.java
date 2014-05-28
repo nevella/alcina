@@ -772,6 +772,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 						showPopupWithData(filterTextBox);
 					}
 				};
+				lazyProvider.getData(callback);
 			} else {
 				showPopupWithData(filterTextBox);
 			}
