@@ -432,4 +432,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
 	}
+
+	public long getMaxDbPersistedRequestId() {
+		return this.maxDbPersistedRequestId;
+	}
 }

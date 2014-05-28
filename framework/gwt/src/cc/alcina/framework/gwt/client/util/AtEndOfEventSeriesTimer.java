@@ -7,13 +7,21 @@ import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 public class AtEndOfEventSeriesTimer {
 	private long lastEventOccurred = 0;
 
+	private long firstEventOccurred = 0;
+
 	private Runnable checkCallback = new Runnable() {
 		@Override
 		public void run() {
-			if (System.currentTimeMillis() - lastEventOccurred >= waitToPerformAction) {
-				if (timer != null) {
-					timer.cancel();
-					timer = null;
+			long time = System.currentTimeMillis();
+			if (time - lastEventOccurred >= waitToPerformAction
+					|| (maxDelayFromFirstAction != 0 && (time
+							- firstEventOccurred >= maxDelayFromFirstAction))) {
+				synchronized (this) {
+					if (timer != null) {
+						timer.cancel();
+						timer = null;
+					}
+					firstEventOccurred = 0;
 				}
 				action.run();
 			}
@@ -26,8 +34,11 @@ public class AtEndOfEventSeriesTimer {
 
 	private final TimerWrapperProvider timerWrapperProvider;
 
+	private long maxDelayFromFirstAction;
+
 	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action) {
-		this(waitToPerformAction, action, Registry.impl(TimerWrapperProvider.class));
+		this(waitToPerformAction, action, Registry
+				.impl(TimerWrapperProvider.class));
 	}
 
 	public AtEndOfEventSeriesTimer(long waitToPerformAction, Runnable action,
@@ -37,13 +48,24 @@ public class AtEndOfEventSeriesTimer {
 		this.timerWrapperProvider = timerWrapperProvider;
 	}
 
+	public AtEndOfEventSeriesTimer maxDelayFromFirstAction(
+			long maxDelayFromFirstAction) {
+		this.maxDelayFromFirstAction = maxDelayFromFirstAction;
+		return this;
+	}
+
 	private TimerWrapper timer = null;
 
 	public void triggerEventOccurred() {
-		lastEventOccurred = System.currentTimeMillis();
-		if (timer == null && timerWrapperProvider != null) {
-			timer = timerWrapperProvider.getTimer(checkCallback);
-			timer.scheduleRepeating(waitToPerformAction / 2);
+		synchronized (this) {
+			lastEventOccurred = System.currentTimeMillis();
+			if (firstEventOccurred == 0) {
+				firstEventOccurred = lastEventOccurred;
+			}
+			if (timer == null && timerWrapperProvider != null) {
+				timer = timerWrapperProvider.getTimer(checkCallback);
+				timer.scheduleRepeating(waitToPerformAction / 2);
+			}
 		}
 	}
 

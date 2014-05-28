@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -43,6 +44,7 @@ import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
+import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
@@ -208,6 +210,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		ObjectPersistenceHelper.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
+		Registry.registerSingleton(TimerWrapperProvider.class,
+				new TimerWrapperProviderJvm());
 	}
 
 	protected void initRegistry() {
