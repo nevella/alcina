@@ -265,7 +265,9 @@ public class GraphProjection {
 			value = itr.next();
 			Object projected = project(value, context);
 			if (value == null || projected != null) {
+				if(dataFilter.projectIntoCollection(value,projected,context)){
 				c.add(projected);
+				}
 			}
 		}
 		return c;
@@ -438,6 +440,9 @@ public class GraphProjection {
 		<T> T filterData(T original, T projected,
 				GraphProjectionContext context, GraphProjection graphProjection)
 				throws Exception;
+
+		<T> boolean projectIntoCollection(T value, T projected,
+				GraphProjectionContext context);
 	}
 
 	public interface InstantiateImplCallback<T> {
