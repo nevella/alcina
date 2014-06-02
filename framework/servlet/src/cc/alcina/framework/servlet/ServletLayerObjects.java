@@ -46,6 +46,9 @@ public class ServletLayerObjects {
 	public File getDataFolder() {
 		return dataFolder;
 	}
+	
+	private File clusterDataFolder;
+
 
 	private Logger metricLogger;
 
@@ -55,5 +58,13 @@ public class ServletLayerObjects {
 
 	public Logger getMetricLogger() {
 		return metricLogger;
+	}
+
+	public File getClusterDataFolder() {
+		return this.clusterDataFolder;
+	}
+
+	public void setClusterDataFolder(File clusterDataFolder) {
+		this.clusterDataFolder = clusterDataFolder;
 	}
 }
