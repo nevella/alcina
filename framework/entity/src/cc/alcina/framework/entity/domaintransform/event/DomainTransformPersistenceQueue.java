@@ -349,7 +349,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 		if (forceDbCheck) {
 			List<DomainTransformRequestPersistent> persisted = getCommonPersistence()
-					.getPersistentTransformRequests(0, 0, null, true, false);
+					.getPersistentTransformRequests(maxDbPersistedRequestId, 0, null, true, false);
 			// check only fails if a new db
 			if (!persisted.isEmpty()) {
 				maxDbPersistedRequestId = persisted.get(0).getId();
