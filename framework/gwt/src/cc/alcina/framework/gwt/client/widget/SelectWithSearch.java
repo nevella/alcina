@@ -430,6 +430,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 		public void onKeyUp(KeyUpEvent event) {
 			Widget sender = (Widget) event.getSource();
+			if(event.getNativeEvent()==null){
+				//IE9 issue
+				return;
+			}
 			int keyCode = event.getNativeKeyCode();
 			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
 				WidgetUtils.squelchCurrentEvent();
