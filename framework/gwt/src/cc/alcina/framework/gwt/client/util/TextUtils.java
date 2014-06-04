@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.util;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -19,6 +20,9 @@ public class TextUtils {
 	}
 	
 	public static List<IntPair> match(String text,String regex) {
+		if(text==null||regex==null){
+			return new ArrayList<IntPair>();
+		}
 		return TextUtilsImpl.match(text,regex);
 		
 	}
