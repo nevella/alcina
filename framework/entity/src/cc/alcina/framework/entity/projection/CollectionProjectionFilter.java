@@ -53,4 +53,12 @@ public class CollectionProjectionFilter implements GraphProjectionDataFilter {
 		}
 		return m;
 	}
+
+
+
+	@Override
+	public <T> boolean projectIntoCollection(T value, T projected,
+			GraphProjectionContext context) {
+		return true;
+	}
 }

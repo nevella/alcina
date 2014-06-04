@@ -298,7 +298,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
 			boolean createIfNonexistent) {
 		return getItemByKeyValue(clazz, key, value, createIfNonexistent, null,
-				false,true);
+				false, true);
 	}
 
 	@Override
@@ -410,9 +410,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		Query query = null;
 		if (mostRecentOnly) {
 			String eql = String.format("select distinct dtrp "
-					+ "from %s dtrp " + "order by dtrp.id desc",
+					+ "from %s dtrp " + " where dtrp.id>= %s " + ""
+					+ "order by dtrp.id desc",
 					getImplementation(DomainTransformRequestPersistent.class)
-							.getSimpleName());
+							.getSimpleName(), fromId);
 			query = getEntityManager().createQuery(eql);
 			query.setMaxResults(1);
 		} else {
@@ -728,7 +729,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				while (true) {
 					Object item = getItemByKeyValue(suv.getObjectClass(),
 							suv.getPropertyName(), value, false, suv.getOkId(),
-							suv.isCaseInsensitive(),true);
+							suv.isCaseInsensitive(), true);
 					if (item == null) {
 						if (ctr != 0) {
 							suv.setSuggestedValue(value);

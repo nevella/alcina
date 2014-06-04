@@ -512,8 +512,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 								.formatJ(
 										"Request [%s/%s] : %s transforms written, %s ignored",
 										requestId, clientInstanceId,
-										transformLayerWrapper.persistentEvents
-												.size(),
+										transformLayerWrapper.response
+												.getTransformsProcessed(),
 										transformLayerWrapper.ignored));
 					}
 					if (throwPersistenceExceptions
