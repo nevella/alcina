@@ -26,6 +26,13 @@ public class HiliHelper {
 		}
 		return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
 	}
+	public static int compareNoLocals(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+		int i = o1.getClass().getName().compareTo(o2.getClass().getName());
+		if (i != 0) {
+			return i;
+		}
+		return CommonUtils.compareLongs(o1.getId(), o2.getId());
+	}
 
 	public static boolean equals(HasIdAndLocalId o1, Object o2) {
 		if (o1 == null) {

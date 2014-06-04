@@ -65,6 +65,16 @@ public interface HasIdAndLocalId extends HasId {
 		}
 	}
 
+	public static class HiliNoLocalComparator implements
+			Comparator<HasIdAndLocalId> {
+		public static final HiliNoLocalComparator INSTANCE = new HiliNoLocalComparator();
+
+		@Override
+		public int compare(HasIdAndLocalId o1, HasIdAndLocalId o2) {
+			return HiliHelper.compareNoLocals(o1, o2);
+		}
+	}
+
 	public static class HiliByIdFilter implements
 			CollectionFilter<HasIdAndLocalId> {
 		private final boolean allowAllExceptId;
