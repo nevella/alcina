@@ -5,6 +5,7 @@ import java.util.Collections;
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObject;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObjectsRegistrar;
 import cc.alcina.framework.common.client.logic.domaintransform.HasRequestReplayId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -172,17 +173,9 @@ public class UnwrapAndRegisterObjectsPlayer extends
 		domainModelHolder.registerSelfAsProvider();
 		GeneralProperties generalProperties = domainModelHolder
 				.getGeneralProperties();
-		if (generalProperties != null) {
-			Registry.registerSingleton(GeneralProperties.class,
-					generalProperties);
-		}
-		PermissionsManager.get().setUser(domainModelHolder.getCurrentUser());
-		PermissionsManager.get().setLoginState(
-				HandshakeConsortModel.get().getLoginState());
-		Registry.impl(ClientNotifications.class).log(
-				CommonUtils.formatJ("User: %s", domainModelHolder
-						.getCurrentUser() == null ? null : domainModelHolder
-						.getCurrentUser().getUserName()));
+		HandshakeConsortModel.get().registerInitialObjects(
+				domainModelHolder.getGeneralProperties(),
+				domainModelHolder.getCurrentUser());
 		TransformManager.get().registerDomainObjectsInHolderAsync(
 				domainModelHolder, this);
 	}

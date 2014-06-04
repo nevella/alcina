@@ -2,8 +2,10 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -16,6 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaL
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTranche;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -50,6 +53,8 @@ public class DeltaStore {
 		int offset = key.startsWith(META) ? META.length() : CONTENT.length();
 		return DomainModelDeltaSignature.parseSignature(key.substring(offset));
 	}
+
+	public Map<DomainModelDeltaSignature, DomainModelDelta> deltaCache = new LinkedHashMap<DomainModelDeltaSignature, DomainModelDelta>();
 
 	private DomainModelDeltaLookup cache = null;
 
@@ -126,9 +131,10 @@ public class DeltaStore {
 	}
 
 	public void mergeResponse(final LoadObjectsResponse response,
+			boolean deserializeTranches, boolean removeUnusedTranches,
 			final AsyncCallback<Void> callback) {
 		MergeResponseConsort mergeResponseConsort = new MergeResponseConsort(
-				response, callback);
+				response, deserializeTranches, removeUnusedTranches, callback);
 		new SubconsortSupport().maybeAttach(callback, mergeResponseConsort,
 				false);
 	}
@@ -154,12 +160,11 @@ public class DeltaStore {
 		StringMap out = new StringMap();
 		for (DomainModelDeltaTransport transport : deltaTransports) {
 			if (!transport.provideIsCacheReference()) {
-				out.put(getKey(DomainModelDeltaSignature
-						.parseSignature(transport.getSignature()), false),
-						transport.getMetadataJson());
-				out.put(getKey(DomainModelDeltaSignature
-						.parseSignature(transport.getSignature()), true),
-						transport.getSerializedDelta());
+				DomainModelDeltaSignature sig = DomainModelDeltaSignature
+						.parseSignature(transport.getSignature());
+				out.put(getKey(sig, false), transport.getMetadataJson());
+				out.put(getKey(sig, true), transport.getSerializedDelta());
+				deltaCache.put(sig, transport.getDelta());
 			}
 		}
 		objectStore.put(out, callback);
@@ -247,10 +252,18 @@ public class DeltaStore {
 	class MergeResponseConsort extends AllStatesConsort<MergeResponsePhase> {
 		private LoadObjectsResponse response;
 
+		// TODO j5 - implement deser phase
+		private boolean deserializeTranches;
+
+		private boolean removeUnusedTranches;
+
 		public MergeResponseConsort(LoadObjectsResponse response,
+				boolean deserializeTranches, boolean removeUnusedTranches,
 				AsyncCallback<Void> callback) {
 			super(MergeResponsePhase.class, callback);
 			this.response = response;
+			this.deserializeTranches = deserializeTranches;
+			this.removeUnusedTranches = removeUnusedTranches;
 		}
 
 		@Override
@@ -261,8 +274,12 @@ public class DeltaStore {
 						new EnsureCacheConsort(player), false);
 				break;
 			case REMOVE_UNUSED:
-				removeUnusedTranches(
-						response.getPreserveClientDeltaSignatures(), player);
+				if (removeUnusedTranches) {
+					removeUnusedTranches(
+							response.getPreserveClientDeltaSignatures(), player);
+				} else {
+					player.onSuccess(null);
+				}
 				break;
 			case PERSIST_TRANCHES:
 				persistTranches(response.getDeltaTransports(), player);
@@ -294,5 +311,9 @@ public class DeltaStore {
 			}
 		};
 		refreshCache(removeCallback);
+	}
+
+	public DomainModelDelta getDeltaSync(DomainModelDeltaSignature sig) {
+		return deltaCache.get(sig);
 	}
 }

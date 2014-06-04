@@ -7,8 +7,6 @@ import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 
 public class MergeObjectDeltasPlayer extends
 		RunnableAsyncCallbackPlayer<Void, LoadObjectDataState> {
-	
-
 	public MergeObjectDeltasPlayer() {
 		addRequires(LoadObjectDataState.OBJECT_DATA_LOADED);
 		addProvides(LoadObjectDataState.DELTA_STORE_MERGED_IF_NECESSARY);
@@ -17,6 +15,7 @@ public class MergeObjectDeltasPlayer extends
 	@Override
 	public void run() {
 		DeltaStore.get().mergeResponse(
-				HandshakeConsortModel.get().getLoadObjectsResponse(), this);
+				HandshakeConsortModel.get().getLoadObjectsResponse(), false,
+				true, this);
 	}
 }

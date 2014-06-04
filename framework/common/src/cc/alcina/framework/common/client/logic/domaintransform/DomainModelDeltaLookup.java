@@ -9,6 +9,8 @@ public class DomainModelDeltaLookup {
 	public Map<String, DomainModelDeltaSignature> nonVersionedSignatures = new LinkedHashMap<String, DomainModelDeltaSignature>();
 
 	public Map<DomainModelDeltaSignature, DomainModelDeltaMetadata> metadataCache = new LinkedHashMap<DomainModelDeltaSignature, DomainModelDeltaMetadata>();
+	
+	
 
 	public List<String> versionedSignatures = new ArrayList<String>();
 

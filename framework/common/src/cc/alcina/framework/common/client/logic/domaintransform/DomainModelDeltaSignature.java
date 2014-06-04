@@ -32,7 +32,7 @@ public class DomainModelDeltaSignature implements Serializable {
 	private String rpcSignature = "";
 
 	private long contentLength;
-	
+
 	private transient boolean requiresHash;
 
 	public DomainModelDeltaSignature() {
@@ -132,15 +132,27 @@ public class DomainModelDeltaSignature implements Serializable {
 	}
 
 	public DomainModelDeltaSignature checkValidUser() {
-		return userId==PermissionsManager.get().getUserId()?this:null;
+		return userId == PermissionsManager.get().getUserId() ? this : null;
 	}
 
 	public DomainModelDeltaSignature requiresHash() {
-		requiresHash=true;
+		requiresHash = true;
 		return this;
 	}
 
 	public boolean provideRequiresHash() {
 		return this.requiresHash;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof DomainModelDeltaSignature) {
+			return toString().equals(obj.toString());
+		}
+		return false;
+	}
+
+	public int hashCode() {
+		return toString().hashCode();
 	}
 }

@@ -22,8 +22,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
  * @author Nick Reddel
  */
 public class LoginResponse implements Serializable {
-	private String friendlyName;
-
 	private boolean ok;
 
 	private String errorMsg;
@@ -41,10 +39,6 @@ public class LoginResponse implements Serializable {
 		return this.errorMsg;
 	}
 
-	public String getFriendlyName() {
-		return this.friendlyName;
-	}
-
 	public boolean isOk() {
 		return this.ok;
 	}
@@ -55,10 +49,6 @@ public class LoginResponse implements Serializable {
 
 	public void setErrorMsg(String errorMsg) {
 		this.errorMsg = errorMsg;
-	}
-
-	public void setFriendlyName(String friendlyName) {
-		this.friendlyName = friendlyName;
 	}
 
 	public void setOk(boolean ok) {

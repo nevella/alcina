@@ -18,13 +18,16 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DomainTrancheProtocolHandler;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta;
@@ -232,5 +235,21 @@ public class HandshakeConsortModel {
 	public void setLoadedWithLocalOnlyTransforms(
 			boolean loadedWithLocalOnlyTransforms) {
 		this.loadedWithLocalOnlyTransforms = loadedWithLocalOnlyTransforms;
+	}
+
+	public void registerInitialObjects(GeneralProperties generalProperties,
+			IUser currentUser) {
+		if (generalProperties != null) {
+			Registry.registerSingleton(GeneralProperties.class,
+					generalProperties);
+		}
+		if (currentUser != null) {
+			PermissionsManager.get().setUser(currentUser);
+			PermissionsManager.get().setLoginState(
+					HandshakeConsortModel.get().getLoginState());
+			Registry.impl(ClientNotifications.class).log(
+					CommonUtils.formatJ("User: %s", currentUser == null ? null
+							: currentUser.getUserName()));
+		}
 	}
 }

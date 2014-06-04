@@ -105,7 +105,6 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		if (lrb.isOk()) {
 			Registry.impl(SessionHelper.class).setupSessionForUser(
 					getThreadLocalRequest(), getThreadLocalResponse(), user);
-			lrb.setFriendlyName(user.getFirstName() + " " + user.getLastName());
 		}
 	}
 

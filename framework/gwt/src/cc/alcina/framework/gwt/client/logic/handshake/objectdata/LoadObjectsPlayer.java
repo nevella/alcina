@@ -24,10 +24,8 @@ public class LoadObjectsPlayer extends RunnablePlayer<HandshakeState> implements
 
 	public static class LoadObjectsConsort extends Consort<LoadObjectDataState> {
 		public LoadObjectsConsort() {
-			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(Registry
-					.impl(LoadObjectsHelloPlayer.class));
-			LoadObjectsFromRemotePlayer fromRemotePlayer = addPlayer(Registry
-					.impl(LoadObjectsFromRemotePlayer.class));
+			addPlayer(Registry.impl(LoadObjectsHelloPlayer.class));
+			addPlayer(Registry.impl(LoadObjectsFromRemotePlayer.class));
 			addPlayer(new RetrieveLocalModelTransformDeltasPlayer());
 			addPlayer(Registry.impl(CheckSoleOfflineTabPlayer.class));
 			addPlayer(Registry.impl(CheckOfflineSufficentPlayer.class));

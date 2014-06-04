@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * For very large object loads (to Africa), localdb-serializing on the client
@@ -15,13 +17,15 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaM
  */
 public class LoadObjectsRequest implements Serializable {
 	private String moduleTypeSignature;
-	
+
 	private DomainModelDeltaMetadata clientPersistedDomainObjectsMetadata;
 
 	private Long userId;
-	
-	private List<String> clientDeltaSignatures=new ArrayList<String>();
-	
+
+	private List<String> clientDeltaSignatures = new ArrayList<String>();
+
+	private List<DomainModelDeltaSignature> requestedModels = new ArrayList<DomainModelDeltaSignature>();
+
 	public List<String> getClientDeltaSignatures() {
 		return this.clientDeltaSignatures;
 	}
@@ -53,5 +57,19 @@ public class LoadObjectsRequest implements Serializable {
 
 	public void setUserId(Long userId) {
 		this.userId = userId;
+	}
+
+	public List<DomainModelDeltaSignature> getRequestedModels() {
+		return this.requestedModels;
+	}
+
+	public void setRequestedModels(
+			List<DomainModelDeltaSignature> requestedModels) {
+		this.requestedModels = requestedModels;
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("Load models request - %s", requestedModels);
 	}
 }
