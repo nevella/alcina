@@ -127,10 +127,15 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	@Override
 	public void onFailure(Throwable caught) {
 		caught.printStackTrace();
-		consort.wasPlayed(
-				this,
-				Collections
-						.singletonList(HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION));
+		if (consort.containsState(HandshakeState.OBJECT_DATA_LOADED)) {
+			// code failure in post-ok handler
+			consort.onFailure(caught);
+		} else {
+			consort.wasPlayed(
+					this,
+					Collections
+							.singletonList(HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION));
+		}
 	}
 
 	@Override

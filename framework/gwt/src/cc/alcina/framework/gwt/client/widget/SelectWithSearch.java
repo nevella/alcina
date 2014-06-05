@@ -287,6 +287,18 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			}
 			holder.add(scroller);
 		}
+		if (!popdown && lazyProvider != null) {
+			AsyncCallback<LazyData> callback = new AsyncCallbackStd<SelectWithSearch.LazyData>() {
+				@Override
+				public void onSuccess(LazyData lazyData) {
+					if (lazyData != null) {
+						setKeys(lazyData.keys);
+						setItemMap(lazyData.data);
+					}
+				}
+			};
+			lazyProvider.getData(callback);
+		}
 		return holder;
 	}
 
@@ -430,8 +442,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 		public void onKeyUp(KeyUpEvent event) {
 			Widget sender = (Widget) event.getSource();
-			if(event.getNativeEvent()==null){
-				//IE9 issue
+			if (event.getNativeEvent() == null) {
+				// IE9 issue
 				return;
 			}
 			int keyCode = event.getNativeKeyCode();

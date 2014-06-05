@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -26,12 +27,12 @@ public class DomainModelObjectsPlaceholders {
 			DomainModelHolder {
 		@Override
 		public List registerableDomainObjects() {
-			return null;
+			return Collections.EMPTY_LIST;
 		}
 
 		@Override
 		public Set<ClassRef> getClassRefs() {
-			return null;
+			return Collections.EMPTY_SET;
 		}
 
 		@Override
