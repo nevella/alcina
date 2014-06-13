@@ -59,7 +59,12 @@ public class TopicPublisher {
 
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			listener.topicPublished(evt.getPropertyName(), evt.getNewValue());
+			try {
+				listener.topicPublished(evt.getPropertyName(),
+						evt.getNewValue());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -77,7 +82,8 @@ public class TopicPublisher {
 		}
 
 		public static TopicPublisher.GlobalTopicPublisher get() {
-			TopicPublisher.GlobalTopicPublisher singleton = Registry.checkSingleton(TopicPublisher.GlobalTopicPublisher.class);
+			TopicPublisher.GlobalTopicPublisher singleton = Registry
+					.checkSingleton(TopicPublisher.GlobalTopicPublisher.class);
 			if (singleton == null) {
 				singleton = new TopicPublisher.GlobalTopicPublisher();
 				Registry.registerSingleton(
