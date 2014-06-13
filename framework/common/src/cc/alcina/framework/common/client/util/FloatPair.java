@@ -80,12 +80,17 @@ public class FloatPair implements Comparable<FloatPair> {
 	}
 
 	public FloatPair intersection(FloatPair other) {
-		FloatPair result = new FloatPair(Math.max(f1, other.f1), Math.min(f2,
-				other.f2));
+		FloatPair result = new FloatPair();
+		result.f1 = Math.max(f1, other.f1);
+		result.f2 = Math.min(f2, other.f2);
 		return result.f1 <= result.f2 ? result : null;
 	}
 
 	public boolean intersectsWith(FloatPair other) {
 		return intersection(other) != null;
+	}
+
+	public float distance() {
+		return Math.abs(f1-f2);
 	}
 }
