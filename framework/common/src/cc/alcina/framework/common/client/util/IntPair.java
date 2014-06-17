@@ -4,6 +4,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class IntPair implements Comparable<IntPair> {
@@ -84,8 +85,8 @@ public class IntPair implements Comparable<IntPair> {
 				return new IntPair(Integer.parseInt(split[0]),
 						Integer.parseInt(split[1]));
 			}
-			int point=Integer.parseInt(string);
-			return new IntPair(point,point);
+			int point = Integer.parseInt(string);
+			return new IntPair(point, point);
 		} catch (NumberFormatException nfe) {
 			return null;
 		}
@@ -163,10 +164,27 @@ public class IntPair implements Comparable<IntPair> {
 	}
 
 	public int length() {
-		return i2-i1;
+		return i2 - i1;
 	}
 
 	public boolean intersectsWith(IntPair other) {
-		return intersection(other)!=null;
+		return intersection(other) != null;
+	}
+
+	public static class IntPairComparator implements Comparator<IntPair> {
+		private boolean xAxis;
+
+		public IntPairComparator(boolean xAxis) {
+			this.xAxis = xAxis;
+		}
+
+		@Override
+		public int compare(IntPair o1, IntPair o2) {
+			if (xAxis) {
+				return o1.i1 - o2.i1;
+			} else {
+				return o1.i2 - o2.i2;
+			}
+		}
 	}
 }

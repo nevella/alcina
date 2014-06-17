@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 	public int add(K key) {
@@ -49,6 +50,16 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 			result += v;
 		}
 		return result;
+	}
+
+	public int weightedAvg() {
+		Set<java.util.Map.Entry<K, Integer>> es = entrySet();
+		int weight = 0;
+		for (Map.Entry<K, Integer> e : es) {
+			weight += ((Number) e.getKey()).intValue() * e.getValue();
+		}
+		int sum = sum();
+		return sum == 0 ? 0 : weight / sum;
 	}
 
 	public SortedMultimap<Integer, List<K>> reverseMap(boolean descending) {
