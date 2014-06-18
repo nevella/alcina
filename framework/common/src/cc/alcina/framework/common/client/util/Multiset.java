@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -104,6 +105,11 @@ public class Multiset<K, V extends Set> implements Serializable {
 
 	public void addAll(Multiset<K, V> other) {
 		for (Entry<K, V> entry : other.entrySet()) {
+			addCollection(entry.getKey(), entry.getValue());
+		}
+	}
+	public void addAll(Multimap<K, List> other) {
+		for (Entry<K, List> entry : other.entrySet()) {
 			addCollection(entry.getKey(), entry.getValue());
 		}
 	}
