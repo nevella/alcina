@@ -2,6 +2,8 @@ package cc.alcina.framework.entity.util;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class Decl {
@@ -55,6 +57,11 @@ public class Decl {
 
 		public boolean firstSecondGtThird(double ratio) {
 			return cmp(1, 2, 0, ratio, true);
+		}
+
+		public Operation filter(CollectionFilter filter) {
+			list=CollectionFilters.filter(list,filter);
+			return this;
 		}
 	}
 

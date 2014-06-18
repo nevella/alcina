@@ -196,7 +196,7 @@ public class ImgUtilities {
 				-1 }, new byte[] { 0, -1 }, 1);
 	}
 
-	static void writePng(BufferedImage img, OutputStream os) throws IOException {
+	public static void writePng(BufferedImage img, OutputStream os) throws IOException {
 		ImageIO.write(img, "png", os);
 		os.close();
 	}

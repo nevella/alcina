@@ -3,11 +3,12 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class IntPair implements Comparable<IntPair> {
+public class IntPair implements Comparable<IntPair>, Serializable {
 	public int i1;
 
 	public int i2;
@@ -26,7 +27,7 @@ public class IntPair implements Comparable<IntPair> {
 
 	@Override
 	public int hashCode() {
-		return i1 ^ i2;
+		return i1 << 16 ^ i2;
 	}
 
 	public IntPair(int i1, int i2) {
