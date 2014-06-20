@@ -33,7 +33,6 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo.LayoutInfo;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
-import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.BodyElement;
@@ -41,6 +40,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Node;
+import com.google.gwt.dom.client.NodeList;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -929,6 +929,15 @@ public class WidgetUtils {
 		Element anchor = DomUtils.getAncestorWithTagName(target, "A");
 		return anchor;
 	}
+
+	public static native NodeList getElementsForSelector(Element elt,
+			String selector) /*-{
+		if (!($doc.querySelector)) {
+			return null;
+		}
+		var from = (elt) ? elt : $doc;
+		return from.querySelectorAll(selector);
+	}-*/;
 
 	public static native Element getElementForSelector(Element elt,
 			String selector) /*-{
