@@ -1129,6 +1129,23 @@ public abstract class TransformManager implements PropertyChangeListener,
 				});
 	}
 
+	public void registerDomainModelObjectAsync(final DomainModelObject h,
+			final AsyncCallback<Void> postRegisterCallback) {
+		((MapObjectLookupClient) getDomainObjects()).registerAsync(
+				h.registrableObjects(), new ScheduledCommand() {
+					@Override
+					public void execute() {
+						postRegisterCallback.onSuccess(null);
+					}
+				});
+	}
+
+	public void registerDomainModelObject(final DomainModelObject h,
+			final AsyncCallback<Void> postRegisterCallback) {
+		getDomainObjects().registerObjects(h.registrableObjects());
+		postRegisterCallback.onSuccess(null);
+	}
+
 	public <V extends HasIdAndLocalId> Set<V> registeredObjectsAsSet(
 			Class<V> clazz) {
 		return new LinkedHashSet<V>(getDomainObjects().getCollection(clazz));

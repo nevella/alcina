@@ -59,12 +59,7 @@ public class TopicPublisher {
 
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
-			try {
-				listener.topicPublished(evt.getPropertyName(),
-						evt.getNewValue());
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			listener.topicPublished(evt.getPropertyName(), evt.getNewValue());
 		}
 	}
 
