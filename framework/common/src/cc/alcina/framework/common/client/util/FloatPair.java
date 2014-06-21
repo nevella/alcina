@@ -26,14 +26,8 @@ public class FloatPair implements Comparable<FloatPair> {
 	}
 
 	public FloatPair(float i1, float i2) {
-		super();
-		if (i1 <= i2) {
 			this.f1 = i1;
 			this.f2 = i2;
-		} else {
-			this.f1 = i2;
-			this.f2 = i1;
-		}
 	}
 
 	public void add(FloatPair fp) {
@@ -72,20 +66,41 @@ public class FloatPair implements Comparable<FloatPair> {
 
 	// top exclusive
 	public boolean contains(float f) {
-		return f1 == f2 ? f1 == f : f1 <= f && f2 > f;
+		return f1 == f2 ? f1 == f : ordered().f1 <= f &&  ordered().f2 > f;
 	}
 
 	public float average() {
 		return (f1 + f2) / 2;
 	}
 
+	public FloatPair ordered(){
+		if(f1<=f2){
+			return this;
+		}
+		return new FloatPair(f2,f1);
+	}
 	public FloatPair intersection(FloatPair other) {
-		FloatPair result = new FloatPair(Math.max(f1, other.f1), Math.min(f2,
-				other.f2));
+		FloatPair o1=ordered();
+		FloatPair o2=other.ordered();
+		FloatPair result = new FloatPair();
+		result.f1 = Math.max(o1.f1, o2.f1);
+		result.f2 = Math.min(o1.f2, o2.f2);
 		return result.f1 <= result.f2 ? result : null;
 	}
 
 	public boolean intersectsWith(FloatPair other) {
 		return intersection(other) != null;
+	}
+
+	public float distance() {
+		return Math.abs(f1 - f2);
+	}
+
+	public float overlap(FloatPair fp2) {
+		FloatPair intersection = intersection(fp2);
+		if (intersection == null) {
+			return 0.0F;
+		}
+		return intersection.distance() * 2 / (distance() + fp2.distance());
 	}
 }

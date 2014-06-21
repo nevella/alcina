@@ -158,6 +158,13 @@ public abstract class DevHelper {
 		}
 	};
 
+	private TopicListener<Exception> devWarningListener=new TopicListener<Exception>() {
+		@Override
+		public void topicPublished(String key, Exception ex) {
+//			System.err.println(ex.getMessage());
+		}
+	};
+
 	public Set<DomainTransformEvent> dumpTransforms() {
 		Set<DomainTransformEvent> transforms = new LinkedHashSet<DomainTransformEvent>(
 				TransformManager.get().getTransforms());
@@ -199,6 +206,7 @@ public abstract class DevHelper {
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		XmlUtils.noTransformCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
+		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);
 		try {
 			Method m = GWT.class
 					.getDeclaredMethod("setBridge", GWTBridge.class);

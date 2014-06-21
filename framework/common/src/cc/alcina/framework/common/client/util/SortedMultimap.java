@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.util;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 
 @SuppressWarnings("unchecked")
@@ -69,5 +70,11 @@ public class SortedMultimap<K, V extends List> extends TreeMap<K, V> {
 	@Override
 	public String toString() {
 		return CommonUtils.join(entrySet(), "\n");
+	}
+
+	public Multimap<K, V> asMultimap() {
+		Multimap<K, V> result = new Multimap<K, V>();
+		result.putAll(this);
+		return result;
 	}
 }

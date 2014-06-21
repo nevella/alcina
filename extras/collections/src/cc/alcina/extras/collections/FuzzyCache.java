@@ -129,6 +129,14 @@ public class FuzzyCache<I, O> {
 		public String toString() {
 			return range + ":" + count;
 		}
+
+		public int getCount() {
+			return this.count;
+		}
+
+		public void setCount(int count) {
+			this.count = count;
+		}
 	}
 
 	public void sortRanges(int steps) {
