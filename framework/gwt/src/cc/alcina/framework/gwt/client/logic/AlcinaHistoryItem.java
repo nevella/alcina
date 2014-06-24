@@ -115,6 +115,9 @@ public class AlcinaHistoryItem {
 		params = AlcinaHistory.fromHash(s);
 		return params;
 	}
+	public String removeParameter(String key){
+		return params.remove(key);
+	}
 
 	public void setActionName(String actionName) {
 		setParameter(ACTION_KEY, actionName);
