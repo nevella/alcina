@@ -379,6 +379,7 @@ public class WidgetUtils {
 		body.setPropertyInt("scrollTop", y);
 		Element documentElement = Document.get().getDocumentElement();
 		documentElement.setPropertyInt("scrollTop", y);
+		Window.scrollTo(0, y);
 	}
 
 	private static List<Widget> hiddenWidgets;
