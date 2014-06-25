@@ -18,8 +18,11 @@ package cc.alcina.framework.gwt.client.widget.richtext;
 import java.util.Arrays;
 import java.util.List;
 
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.i18n.client.Constants;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.ChangeListener;
@@ -517,7 +520,7 @@ public class RichTextToolbar extends Composite {
 	/**
 	 * Updates the status of all the stateful buttons.
 	 */
-	private void updateStatus() {
+	public void updateStatus() {
 		if (basic != null) {
 			bold.setDown(basic.isBold());
 			italic.setDown(basic.isItalic());
