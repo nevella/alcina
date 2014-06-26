@@ -487,7 +487,9 @@ public class WidgetUtils {
 				}
 			} else {
 				// text
-				if (!isZeroOffsetDims(node.getParentElement())) {
+				if (!isZeroOffsetDims(node.getParentElement())
+				// we don't want the combined ancestor of everyone...
+						&& !node.getParentElement().isOrHasChild(from)) {
 					return node.getParentElement();
 				}
 			}
