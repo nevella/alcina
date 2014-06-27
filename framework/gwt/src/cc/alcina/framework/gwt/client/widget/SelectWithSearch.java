@@ -659,6 +659,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				Collections.sort((List) ttl);
 			}
 		}
+		if (keys == null) {
+			keys = new ArrayList();
+		}
 		if (isSortGroups()) {
 			keys = new ArrayList<G>(itemMap.keySet());
 			Collections.sort((List) keys);
@@ -1090,5 +1093,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
 							RootPanel.get(), panelForPopup, shiftX(), shiftY());
 		}
+	}
+
+	public LazyDataProvider<G, T> getLazyProvider() {
+		return this.lazyProvider;
 	}
 }

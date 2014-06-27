@@ -48,8 +48,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 	}
 
 	public void registerAsync(Collection registerableDomainObjects,
-			ScheduledCommand postRegisterCommand) {
-		this.postRegisterCommand = postRegisterCommand;
+			final ScheduledCommand postRegisterCommand) {
 		mappedObjects = new PerClassLookup();
 		for (Object o : registerableDomainObjects) {
 			addObjectOrCollectionToEndOfQueue(o);
@@ -66,9 +65,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 					throw new AsyncRegistrationException(e1);
 				}
 				try {
-					ScheduledCommand postRegisterCommandCopy = MapObjectLookupClient.this.postRegisterCommand;
-					MapObjectLookupClient.this.postRegisterCommand = null;
-					postRegisterCommandCopy.execute();
+					postRegisterCommand.execute();
 					return false;
 				} catch (Exception e) {
 					Registry.impl(ClientExceptionHandler.class)

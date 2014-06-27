@@ -91,7 +91,9 @@ public class BoundSelectorMinimal extends BoundSelector {
 
 	@Override
 	protected void initValues() {
-		search.setLazyProvider(new LazyDataMinimal());
+		if (search.getLazyProvider() == null) {
+			search.setLazyProvider(new LazyDataMinimal());
+		}
 	}
 
 	private class LazyDataMinimal implements LazyDataProvider {
@@ -148,6 +150,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	protected void customiseRightWidget() {
 		results.removeScroller();
 	}
+
 	@Override
 	protected void update(Set old) {
 		super.update(old);
