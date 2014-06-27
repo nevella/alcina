@@ -77,15 +77,6 @@ public class ContentProvider {
 				SuggestedAction.NOTIFY_ERROR);
 	}
 
-	public static void refresh() {
-		if (provider != null) {
-			provider.refresh();
-			return;
-		}
-		throw new WrappedRuntimeException("No content provider registered",
-				SuggestedAction.NOTIFY_ERROR);
-	}
-
 	public interface ContentProviderSource {
 		public String getContent(String key);
 
