@@ -379,6 +379,7 @@ public class WidgetUtils {
 		body.setPropertyInt("scrollTop", y);
 		Element documentElement = Document.get().getDocumentElement();
 		documentElement.setPropertyInt("scrollTop", y);
+		Window.scrollTo(0, y);
 	}
 
 	private static List<Widget> hiddenWidgets;
@@ -486,7 +487,9 @@ public class WidgetUtils {
 				}
 			} else {
 				// text
-				if (!isZeroOffsetDims(node.getParentElement())) {
+				if (!isZeroOffsetDims(node.getParentElement())
+				// we don't want the combined ancestor of everyone...
+						&& !node.getParentElement().isOrHasChild(from)) {
 					return node.getParentElement();
 				}
 			}

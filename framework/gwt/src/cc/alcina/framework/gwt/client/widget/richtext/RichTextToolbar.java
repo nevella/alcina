@@ -15,8 +15,14 @@
  */
 package cc.alcina.framework.gwt.client.widget.richtext;
 
+import java.util.Arrays;
+import java.util.List;
+
+import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.i18n.client.Constants;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.ChangeListener;
@@ -28,6 +34,8 @@ import com.google.gwt.user.client.ui.KeyboardListener;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.PushButton;
 import com.google.gwt.user.client.ui.RichTextArea;
+import com.google.gwt.user.client.ui.RichTextArea.BasicFormatter;
+import com.google.gwt.user.client.ui.RichTextArea.ExtendedFormatter;
 import com.google.gwt.user.client.ui.ToggleButton;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -268,7 +276,52 @@ public class RichTextToolbar extends Composite {
 
 	private EventListener listener;
 
-	private RichTextArea richText;
+	private RichTextAreaWrapper richText;
+
+	public interface RichTextAreaWrapper {
+		BasicFormatter getBasicFormatter();
+
+		ExtendedFormatter getExtendedFormatter();
+
+		void addStyleName(String string);
+
+		void addKeyboardListener(KeyboardListener listener);
+
+		void addClickListener(ClickListener listener);
+	}
+
+	public static class RichTextAreaWrapperStd implements RichTextAreaWrapper {
+		private RichTextArea area;
+
+		public RichTextAreaWrapperStd(RichTextArea area) {
+			this.area = area;
+		}
+
+		@Override
+		public BasicFormatter getBasicFormatter() {
+			return area.getBasicFormatter();
+		}
+
+		@Override
+		public ExtendedFormatter getExtendedFormatter() {
+			return area.getExtendedFormatter();
+		}
+
+		@Override
+		public void addStyleName(String style) {
+			area.addStyleName(style);
+		}
+
+		@Override
+		public void addKeyboardListener(KeyboardListener listener) {
+			area.addKeyboardListener(listener);
+		}
+
+		@Override
+		public void addClickListener(ClickListener listener) {
+			area.addClickListener(listener);
+		}
+	}
 
 	private RichTextArea.BasicFormatter basic;
 
@@ -327,12 +380,20 @@ public class RichTextToolbar extends Composite {
 	/**
 	 * Creates a new toolbar that drives the given rich text area.
 	 * 
-	 * @param richText
+	 * @param area
 	 *            the rich text area to be controlled
 	 */
-	public RichTextToolbar(RichTextArea richText) {
+	public RichTextToolbar(RichTextArea area) {
+		this(new RichTextAreaWrapperStd(area));
+	}
+
+	public RichTextToolbar(RichTextAreaWrapper wrapper) {
+		this.richText = wrapper;
+		init();
+	}
+
+	private void init() {
 		this.listener = createEventListener();
-		this.richText = richText;
 		this.basic = richText.getBasicFormatter();
 		this.extended = richText.getExtendedFormatter();
 		outer.add(topPanel);
@@ -343,10 +404,10 @@ public class RichTextToolbar extends Composite {
 		setStyleName("gwt-RichTextToolbar");
 		richText.addStyleName("hasRichTextToolbar");
 		if (basic != null) {
-			topPanel.add(bold = createToggleButton(images.bold(), strings
-					.bold()));
-			topPanel.add(italic = createToggleButton(images.italic(), strings
-					.italic()));
+			topPanel.add(bold = createToggleButton(images.bold(),
+					strings.bold()));
+			topPanel.add(italic = createToggleButton(images.italic(),
+					strings.italic()));
 			topPanel.add(underline = createToggleButton(images.underline(),
 					strings.underline()));
 			topPanel.add(subscript = createToggleButton(images.subscript(),
@@ -355,18 +416,18 @@ public class RichTextToolbar extends Composite {
 					strings.superscript()));
 			topPanel.add(justifyLeft = createPushButton(images.justifyLeft(),
 					strings.justifyLeft()));
-			topPanel.add(justifyCenter = createPushButton(images
-					.justifyCenter(), strings.justifyCenter()));
+			topPanel.add(justifyCenter = createPushButton(
+					images.justifyCenter(), strings.justifyCenter()));
 			topPanel.add(justifyRight = createPushButton(images.justifyRight(),
 					strings.justifyRight()));
 		}
 		if (extended != null) {
-			topPanel.add(strikethrough = createToggleButton(images
-					.strikeThrough(), strings.strikeThrough()));
-			topPanel.add(indent = createPushButton(images.indent(), strings
-					.indent()));
-			topPanel.add(outdent = createPushButton(images.outdent(), strings
-					.outdent()));
+			topPanel.add(strikethrough = createToggleButton(
+					images.strikeThrough(), strings.strikeThrough()));
+			topPanel.add(indent = createPushButton(images.indent(),
+					strings.indent()));
+			topPanel.add(outdent = createPushButton(images.outdent(),
+					strings.outdent()));
 			topPanel.add(hr = createPushButton(images.hr(), strings.hr()));
 			topPanel.add(ol = createPushButton(images.ol(), strings.ol()));
 			topPanel.add(ul = createPushButton(images.ul(), strings.ul()));
@@ -390,6 +451,7 @@ public class RichTextToolbar extends Composite {
 			richText.addKeyboardListener(listener);
 			richText.addClickListener(listener);
 		}
+		// TODO Auto-generated method stub
 	}
 
 	protected EventListener createEventListener() {
@@ -458,7 +520,7 @@ public class RichTextToolbar extends Composite {
 	/**
 	 * Updates the status of all the stateful buttons.
 	 */
-	private void updateStatus() {
+	public void updateStatus() {
 		if (basic != null) {
 			bold.setDown(basic.isBold());
 			italic.setDown(basic.isItalic());
@@ -468,6 +530,16 @@ public class RichTextToolbar extends Composite {
 		}
 		if (extended != null) {
 			strikethrough.setDown(extended.isStrikethrough());
+		}
+	}
+
+	public void stylesAndIndentsOnly() {
+		List<Widget> toHide = (List) Arrays.asList(subscript, superscript,
+				strikethrough, hr, ol, ul, insertImage, createLink,
+				removeFormat, removeLink, backColors, foreColors, fonts,
+				fontSizes, justifyCenter, justifyLeft, justifyRight);
+		for (Widget widget : toHide) {
+			widget.setVisible(false);
 		}
 	}
 }

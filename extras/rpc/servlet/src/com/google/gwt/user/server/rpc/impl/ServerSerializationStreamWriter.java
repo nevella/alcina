@@ -33,6 +33,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
+
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
@@ -49,6 +52,9 @@ import com.google.gwt.user.server.rpc.SerializationPolicy;
  */
 public final class ServerSerializationStreamWriter extends
 		AbstractSerializationStreamWriter {
+	public static final String CONTEXT_CALLING_UA_IE = ServerSerializationStreamWriter.class
+			.getName() + ".CONTEXT_CALLING_UA_IE";
+
 	/**
 	 * Builds a string that evaluates into an array containing the given
 	 * elements. This class exists to work around a bug in IE6/7 that limits the
@@ -104,6 +110,68 @@ public final class ServerSerializationStreamWriter extends
 		public String toString() {
 			if (total > MAXIMUM_ARRAY_LENGTH) {
 				return "[" + buffer.toString() + POSTLUDE;
+			} else {
+				return "[" + buffer.toString() + "]";
+			}
+		}
+	}
+
+	/**
+	 * Builds a string that evaluates into an array containing the given
+	 * elements. This class exists to work around a bug in IE6/7 that limits the
+	 * size of array literals.
+	 */
+	public static class LengthConstrainedArrayIE extends LengthConstrainedArray {
+		public static final int MAXIMUM_ARRAY_LENGTH = 1 << 15;
+
+		private StringBuffer buffer;
+
+		private int count = 0;
+
+		List<StringBuffer> buffers = new ArrayList<StringBuffer>();
+
+		public LengthConstrainedArrayIE() {
+			buffer = new StringBuffer();
+			buffers.add(buffer);
+		}
+
+		public LengthConstrainedArrayIE(int capacityGuess) {
+			buffer = new StringBuffer(capacityGuess);
+			buffers.add(buffer);
+		}
+
+		public void addToken(CharSequence token) {
+			if (count++ == MAXIMUM_ARRAY_LENGTH) {
+				buffer = new StringBuffer();
+				buffers.add(buffer);
+				count = 0;
+			}
+			if (buffer.length() > 0) {
+				buffer.append(",");
+			}
+			buffer.append(token);
+		}
+
+		public void addToken(int i) {
+			addToken(String.valueOf(i));
+		}
+
+		@Override
+		public String toString() {
+			if (buffers.size() > 1) {
+				StringBuilder b2 = new StringBuilder();
+				b2.append("(function(){");
+				List<String> arrIds = new ArrayList<String>();
+				int idx = 1;
+				for (StringBuffer buffer : buffers) {
+					String arrId = String.format("arr%s", idx++);
+						arrIds.add(arrId);
+					b2.append(String.format("var %s=[%s];", arrId,
+							buffer.toString()));
+				}
+				b2.append(String.format("return [].concat(%s);})()",
+						CommonUtils.join(arrIds, ",")));
+				return b2.toString();
 			} else {
 				return "[" + buffer.toString() + "]";
 			}
@@ -822,13 +890,13 @@ public final class ServerSerializationStreamWriter extends
 			int idx2 = 0;
 			for (Entry<Integer, List<String>> entry : entries) {
 				Object instance = objectReverseMap.get(entry.getKey());
-				boolean collectionOrMap= 
-						instance instanceof Collection || instance instanceof Map;
+				boolean collectionOrMap = instance instanceof Collection
+						|| instance instanceof Map;
 				if (collectionOrMap ^ i == 0) {
-//					System.out.println(instance.getClass().getSimpleName());
-//					for (String s : entry.getValue()) {
-//						System.out.println(s);
-//					}
+					// System.out.println(instance.getClass().getSimpleName());
+					// for (String s : entry.getValue()) {
+					// System.out.println(s);
+					// }
 					list.addAll(entry.getValue());
 				}
 			}
@@ -840,15 +908,20 @@ public final class ServerSerializationStreamWriter extends
 	}
 
 	private void writeStringTable(LengthConstrainedArray stream) {
-		LengthConstrainedArray tableStream = new LengthConstrainedArray();
+		LengthConstrainedArray tableStream = createLengthConstrainedArray();
 		for (String s : getStringTable()) {
 			tableStream.addToken(escapeString(s));
 		}
 		stream.addToken(tableStream.toString());
 	}
 
+	private LengthConstrainedArray createLengthConstrainedArray() {
+		return LooseContext.is(CONTEXT_CALLING_UA_IE) ? new LengthConstrainedArray()
+				: new LengthConstrainedArrayIE();
+	}
+
 	private void writeTypeTable(LengthConstrainedArray stream) {
-		LengthConstrainedArray tableStream = new LengthConstrainedArray();
+		LengthConstrainedArray tableStream = createLengthConstrainedArray();
 		for (Integer i : typeTable) {
 			tableStream.addToken(String.valueOf(i));
 		}

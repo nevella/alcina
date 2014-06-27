@@ -329,4 +329,14 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 			this.historyToken = historyToken;
 		}
 	}
+
+	public void maybeRemove(String key) {
+		I current = getCurrentEventOrEmpty();
+		String s1 = current.toTokenString();
+		current.removeParameter(key);
+		String s2 = current.toTokenString();
+		if(!s2.equals(s1)){
+			History.newItem(s2);
+		}
+	}
 }
