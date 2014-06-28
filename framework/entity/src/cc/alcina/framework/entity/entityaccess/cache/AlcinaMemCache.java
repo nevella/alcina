@@ -147,7 +147,7 @@ public class AlcinaMemCache {
 
 	private LaterLookup laterLookup;
 
-	SubgraphTransformManager transformManager;
+	SubgraphTransformManagerRemoteOnly transformManager;
 
 	private CacheDescriptor cacheDescriptor;
 
@@ -906,9 +906,15 @@ public class AlcinaMemCache {
 				.getSource()).getVersionNumber());
 	}
 
+	static class SubgraphTransformManagerRemoteOnly extends SubgraphTransformManager{
+		@Override
+		protected boolean isZeroCreatedObjectLocalId() {
+			return true;
+		}
+	}
 	private void warmup0() throws Exception {
 		initialising = true;
-		transformManager = new SubgraphTransformManager();
+		transformManager = new SubgraphTransformManagerRemoteOnly();
 		backupLazyLoader = new BackupLazyLoader();
 		cache = transformManager.getDetachedEntityCache();
 		transformManager.getStore().setLazyObjectLoader(backupLazyLoader);

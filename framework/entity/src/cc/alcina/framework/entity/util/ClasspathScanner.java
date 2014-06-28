@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.util;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -24,16 +25,17 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.entity.registry.ClassDataCache;
+import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
 
 /**
  * 
@@ -49,7 +51,8 @@ public class ClasspathScanner {
 			this.scanner = scanner;
 		}
 
-		protected void add(String fileName, long modificationDate) {
+		protected void add(String fileName, long modificationDate, URL url,
+				InputStream inputStream) {
 			if ((fileName.startsWith(scanner.getPkg()))
 					&& (fileName.endsWith(".class"))) {
 				boolean add = scanner.isRecur() ? true : fileName.substring(
@@ -57,7 +60,16 @@ public class ClasspathScanner {
 				if (add) {
 					String cName = fileName.substring(0, fileName.length() - 6)
 							.replace('/', '.');
-					scanner.classMap.put(cName, new Date(modificationDate));
+					ClassDataItem item = new ClassDataItem();
+					item.className = cName;
+					item.date = new Date(modificationDate);
+					if (url != null) {
+						item.url = url;
+					} else {
+						//ignore straight jars
+//						item.evalMd5(inputStream);
+					}
+					scanner.classDataCache.add(item);
 				}
 			}
 		}
@@ -111,7 +123,8 @@ public class ClasspathScanner {
 						if (f.getPath().endsWith(".class"))
 							try {
 								add(path.substring(root.length() + 1) + "/"
-										+ file, f.lastModified());
+										+ file, f.lastModified(), f.toURI()
+										.toURL(), null);
 							} catch (Exception e) {
 								e.printStackTrace();
 							}
@@ -130,15 +143,15 @@ public class ClasspathScanner {
 		@Override
 		public void enumerateClasses(URL url) throws Exception {
 			String jarPath = sanitizeFileURL(url);
-			JarInputStream jarFile = new JarInputStream(new FileInputStream(
-					jarPath));
-			JarEntry jarEntry;
-			do {
-				jarEntry = jarFile.getNextJarEntry();
+			JarFile jarFile = new JarFile(jarPath);
+			for (Enumeration<JarEntry> e = jarFile.entries(); e
+					.hasMoreElements();) {
+				JarEntry jarEntry = e.nextElement();
 				if (jarEntry != null) {
-					add(jarEntry.getName(), jarEntry.getTime());
+					add(jarEntry.getName(), jarEntry.getTime(), null,
+							jarFile.getInputStream(jarEntry));
 				}
-			} while (jarEntry != null);
+			}
 			jarFile.close();
 		}
 
@@ -190,11 +203,11 @@ public class ClasspathScanner {
 			pkg = getPkg().substring(0, getPkg().length() - 1);
 	}
 
-	public Map<String, Date> classMap = new LinkedHashMap<String, Date>();
+	public ClassDataCache classDataCache = new ClassDataCache();
 
-	public Map<String, Date> getClasses() throws Exception {
+	public ClassDataCache getClasses() throws Exception {
 		getClassNames();
-		return classMap;
+		return classDataCache;
 	}
 
 	public Set<String> getClassNames() throws IOException {
@@ -206,7 +219,7 @@ public class ClasspathScanner {
 				invokeHandler(url);
 			}
 		}
-		return classMap.keySet();
+		return classDataCache.classData.keySet();
 	}
 
 	protected void invokeHandler(URL url) {
@@ -269,12 +282,12 @@ public class ClasspathScanner {
 		}
 
 		@Override
-		public Map<String, Date> getClasses() throws Exception {
+		public ClassDataCache getClasses() throws Exception {
 			scanForRegProps(resourceName, Thread.currentThread()
 					.getContextClassLoader(), logger);
 			scanForRegProps("META-INF/" + resourceName, Thread.currentThread()
 					.getContextClassLoader(), logger);
-			return classMap;
+			return classDataCache;
 		}
 
 		// lifted from seam 1.21

@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
 /*
@@ -40,12 +41,12 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
 public class RegistryScanner extends CachingScanner {
 	private Registry toRegistry;
 
-	public void scan(Map<String, Date> classes, Collection<String> ignore,
+	public void scan(ClassDataCache classDataCache, Collection<String> ignore,
 			Registry toRegistry, String registryName) throws Exception {
 		String cachePath = CommonUtils.formatJ("%s/%s-registry-cache.ser",
 				getHomeDir().getPath(), registryName);
 		this.toRegistry = toRegistry;
-		scan(classes, cachePath);
+		scan(classDataCache, cachePath);
 	}
 
 	protected Class maybeNormaliseClass(Class c) {
@@ -53,11 +54,11 @@ public class RegistryScanner extends CachingScanner {
 	}
 
 	@Override
-	protected void process(Class c, String className, Date modDate,
-			Map<String, Date> outgoingIgnoreMap) {
+	protected void process(Class c, String className, 
+			ClassDataItem foundItem, ClassDataCache outgoing) {
 		if (!Modifier.isPublic(c.getModifiers())
 				|| Modifier.isAbstract(c.getModifiers()) || c.isInterface()) {
-			outgoingIgnoreMap.put(className, modDate);
+			outgoing.add(foundItem);
 			return;
 		}
 		c = maybeNormaliseClass(c);
@@ -69,7 +70,7 @@ public class RegistryScanner extends CachingScanner {
 		Set<RegistryLocation> uniques = Registry
 				.filterForRegistryPointUniqueness(sca);
 		if (uniques.isEmpty()) {
-			outgoingIgnoreMap.put(className, modDate);
+			outgoing.add(foundItem);
 			return;
 		}
 		for (RegistryLocation rl : uniques) {

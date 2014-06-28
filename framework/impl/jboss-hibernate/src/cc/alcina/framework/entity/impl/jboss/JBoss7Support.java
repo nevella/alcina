@@ -58,10 +58,7 @@ public class JBoss7Support {
 				String pathName = file.getPathName().substring(
 						root.getPathName().length() + 1);
 				if (pathName.endsWith(".class")) {
-					String cName = pathName.substring(0, pathName.length() - 6)
-							.replace('/', '.');
-					scanner.classMap.put(cName,
-							new Date(file.getLastModified()));
+					add(pathName, file.getLastModified(), file.toURL(), null);
 				}
 			}
 		}
