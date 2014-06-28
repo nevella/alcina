@@ -174,7 +174,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	DomainTransformEvent lastEvent = null;
 
 	private boolean initialised = false;
-//TODO - permissions check
+
+	// TODO - permissions check
 	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
 			throws Exception {
 		List<ObjectDeltaResult> result = new ArrayList<ObjectDeltaResult>();
@@ -524,7 +525,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			if (HasIdAndLocalId.class.isAssignableFrom(clazz)) {
 				HasIdAndLocalId newInstance = (HasIdAndLocalId) clazz
 						.newInstance();
-				newInstance.setLocalId(localId);
 				localIdToEntityMap.put(localId, newInstance);
 				if (entityManager != null) {
 					if (isUseObjectCreationId() && objectId != 0) {
@@ -538,6 +538,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 					} else {
 						entityManager.persist(newInstance);
 					}
+				} else {
+					newInstance.setLocalId(localId);
 				}
 				if (userSessionHiliMap != null) {
 					userSessionHiliMap.put(localId, new HiliLocator(
@@ -550,6 +552,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	protected boolean isZeroCreatedObjectLocalId() {
+		return entityManager != null;
 	}
 
 	@Override

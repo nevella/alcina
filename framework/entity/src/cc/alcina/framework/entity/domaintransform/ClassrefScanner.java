@@ -43,6 +43,8 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.CachingScanner;
+import cc.alcina.framework.entity.registry.ClassDataCache;
+import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
 
 @SuppressWarnings("unchecked")
 /**
@@ -52,14 +54,14 @@ import cc.alcina.framework.entity.registry.CachingScanner;
 public class ClassrefScanner extends CachingScanner {
 	private LinkedHashSet<Class> persistableClasses;
 
-	public void scan(Map<String, Date> classes) throws Exception {
+	public void scan(ClassDataCache cache) throws Exception {
 		String cachePath = getHomeDir().getPath() + File.separator
 				+ getClass().getSimpleName() + "-cache.ser";
 		persistableClasses = new LinkedHashSet<Class>();
 		persistableClasses.addAll(Arrays.asList(new Class[] { Long.class,
 				Double.class, Float.class, Integer.class, Short.class,
 				String.class, Date.class, Boolean.class }));
-		scan(classes, cachePath);
+		scan(cache, cachePath);
 		commit();
 		checkReachability();
 	}
@@ -179,11 +181,11 @@ public class ClassrefScanner extends CachingScanner {
 	}
 
 	@Override
-	protected void process(Class c, String className, Date modDate,
-			Map<String, Date> outgoingIgnoreMap) {
+	protected void process(Class c, String className, ClassDataItem foundItem,
+			ClassDataCache outgoing) {
 		if ((!Modifier.isPublic(c.getModifiers()))
 				|| (Modifier.isAbstract(c.getModifiers()) && !c.isEnum())) {
-			outgoingIgnoreMap.put(className, modDate);
+			outgoing.add(foundItem);
 			return;
 		}
 		/*
@@ -197,7 +199,7 @@ public class ClassrefScanner extends CachingScanner {
 				|| (c.isEnum() && (in || dtp))) {
 			persistableClasses.add(c);
 		} else {
-			outgoingIgnoreMap.put(className, modDate);
+			outgoing.add(foundItem);
 		}
 	}
 

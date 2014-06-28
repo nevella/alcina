@@ -374,10 +374,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 					break;
 				}
 			}
+			long creationLocalId = isZeroCreatedObjectLocalId() ? 0 : event
+					.getObjectLocalId();
 			HasIdAndLocalId hili = (HasIdAndLocalId) classLookup().newInstance(
 					event.getObjectClass(), event.getObjectId(),
 					event.getObjectLocalId());
-			hili.setLocalId(event.getObjectLocalId());
+			hili.setLocalId(creationLocalId);
 			if (hili.getId() == 0) {// replay from server -
 				// huh? unless newInstance does something weird, should never
 				// reach here
@@ -396,6 +398,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 			assert false : "Transform type not implemented: " + transformType;
 		}
 		currentEvent = null;
+	}
+
+	protected boolean isZeroCreatedObjectLocalId() {
+		return false;
 	}
 
 	public boolean containsObject(DomainTransformEvent dte) {

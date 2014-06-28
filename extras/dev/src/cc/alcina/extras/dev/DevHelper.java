@@ -57,6 +57,7 @@ import cc.alcina.framework.entity.domaintransform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.domaintransform.TestPersistenceHelper;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
@@ -243,7 +244,7 @@ public abstract class DevHelper {
 		try {
 			Logger logger = getTestLogger();
 			long t1 = System.currentTimeMillis();
-			Map<String, Date> classes = new ClasspathScanner("*", true, true)
+			ClassDataCache classes = new ClasspathScanner("*", true, true)
 					.getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					Registry.get(), "dev-helper");

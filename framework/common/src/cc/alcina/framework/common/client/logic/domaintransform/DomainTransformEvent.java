@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
  */
 public class DomainTransformEvent implements Serializable,
 		Comparable<DomainTransformEvent>, Cloneable {
-	public static transient String CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES = DomainTransformEvent.class
+	public static transient final String CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES = DomainTransformEvent.class
 			.getName() + ".CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES";
 
 	private String propertyName;

@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner;
@@ -44,7 +45,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		try {
 			ClasspathScanner classpathScanner = new ClasspathScanner("*", true,
 					true);
-			Map<String, Date> classes = classpathScanner.getClasses();
+			ClassDataCache classes = classpathScanner.getClasses();
 			String filterClassName = System.getProperty(PROP_FILTER_CLASSNAME);
 			/*
 			 * The reason for this is that gwt needs the compiled annotation
@@ -57,7 +58,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			 */
 			if (filterClassName != null) {
 				CollectionFilters.filterInPlace(
-						classes.keySet(),
+						classes.classData.keySet(),
 						(CollectionFilter<String>) Class.forName(
 								filterClassName).newInstance());
 			}
@@ -70,7 +71,7 @@ public class ClientReflectorJvm extends ClientReflector {
 					return true;
 				}
 			};
-			CollectionFilters.filterInPlace(classes.keySet(), defaultExcludes);
+			CollectionFilters.filterInPlace(classes.classData.keySet(), defaultExcludes);
 			new RegistryScanner() {
 				protected File getHomeDir() {
 					String testStr = "";

@@ -141,5 +141,7 @@ public class SubgraphTransformManager extends TransformManager {
 
 	protected HasIdAndLocalId getObjectForCreate(DomainTransformEvent event) {
 		return null;
+	
 	}
+
 }
