@@ -24,4 +24,6 @@ public interface ObjectStore extends ObjectLookup {
 			long localId);
 
 	public abstract Map<Class<? extends HasIdAndLocalId>, Collection<HasIdAndLocalId>> getCollectionMap();
+
+	public abstract void invalidate(Class<? extends HasIdAndLocalId> clazz);
 }

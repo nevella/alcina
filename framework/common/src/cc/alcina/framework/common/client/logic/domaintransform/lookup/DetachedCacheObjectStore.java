@@ -94,4 +94,10 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	public void setLazyObjectLoader(LazyObjectLoader lazyObjectLoader) {
 		this.lazyObjectLoader = lazyObjectLoader;
 	}
+
+	@Override
+	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
+		cache.invalidate(clazz);
+		
+	}
 }

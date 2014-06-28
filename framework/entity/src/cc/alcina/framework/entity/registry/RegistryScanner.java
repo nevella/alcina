@@ -54,19 +54,18 @@ public class RegistryScanner extends CachingScanner {
 	}
 
 	@Override
-	protected void process(Class c, String className, 
-			ClassDataItem foundItem, ClassDataCache outgoing) {
+	protected void process(Class c, String className, ClassDataItem foundItem,
+			ClassDataCache outgoing) {
+		c = maybeNormaliseClass(c);
 		if (!Modifier.isPublic(c.getModifiers())
 				|| Modifier.isAbstract(c.getModifiers()) || c.isInterface()) {
 			outgoing.add(foundItem);
 			return;
 		}
-		c = maybeNormaliseClass(c);
-		Multimap<Class,List<Annotation>> sca=
-		 AnnotationUtils
+		Multimap<Class, List<Annotation>> sca = AnnotationUtils
 				.getSuperclassAnnotations(c);
-		 AnnotationUtils.filterAnnotations(sca,
-				RegistryLocation.class, RegistryLocations.class);
+		AnnotationUtils.filterAnnotations(sca, RegistryLocation.class,
+				RegistryLocations.class);
 		Set<RegistryLocation> uniques = Registry
 				.filterForRegistryPointUniqueness(sca);
 		if (uniques.isEmpty()) {

@@ -170,4 +170,10 @@ public abstract class MapObjectLookup implements ObjectStore {
 		}
 		return result;
 	}
+
+	@Override
+	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
+		perClassLookups.lookups.remove(clazz);
+		perClassLookups.ensureLookup(clazz);
+	}
 }
