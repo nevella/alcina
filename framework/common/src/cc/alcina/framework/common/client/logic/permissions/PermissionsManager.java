@@ -29,12 +29,12 @@ import java.util.Stack;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.Vetoer;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
@@ -45,7 +45,6 @@ import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermi
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -440,8 +439,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 		IUser owner = hasOwner.getOwner();
 		if (owner == null) {
-			return hasOwner instanceof HasIdAndLocalId ? ((HasIdAndLocalId) hasOwner)
-					.getLocalId() != 0 : false;
+			return hasOwner instanceof HasIdAndLocalId ? TransformManager.get()
+					.isInCreationRequest((HasIdAndLocalId) hasOwner) : false;
 		} else {
 			return owner.equals(user) || owner.equals(instantiatedUser);
 		}
