@@ -2,7 +2,9 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
@@ -25,6 +27,8 @@ public class LoadObjectsRequest implements Serializable {
 	private List<String> clientDeltaSignatures = new ArrayList<String>();
 
 	private List<DomainModelDeltaSignature> requestedModels = new ArrayList<DomainModelDeltaSignature>();
+	
+	private Map<String,String> contextProperties=new LinkedHashMap<String, String>();
 
 	public List<String> getClientDeltaSignatures() {
 		return this.clientDeltaSignatures;
@@ -71,5 +75,13 @@ public class LoadObjectsRequest implements Serializable {
 	@Override
 	public String toString() {
 		return CommonUtils.formatJ("Load models request - %s", requestedModels);
+	}
+
+	public Map<String, String> getContextProperties() {
+		return this.contextProperties;
+	}
+
+	public void setContextProperties(Map<String, String> contextProperties) {
+		this.contextProperties = contextProperties;
 	}
 }

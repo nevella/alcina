@@ -106,18 +106,15 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	};
 
+	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();;
+
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
-	};
+	}
 
 	public static ThreadlocalTransformManager cast() {
 		return (ThreadlocalTransformManager) TransformManager.get();
-	}
-
-	@Override
-	protected boolean updateAssociationsWithoutNoChangeCheck() {
-		return getEntityManager() == null;
 	}
 
 	/**
@@ -149,8 +146,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	Set<HasIdAndLocalId> modifiedObjects = new HashSet<HasIdAndLocalId>();
 
-	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
-
 	List<DomainTransformEvent> modificationEvents = new ArrayList<DomainTransformEvent>();
 
 	private ClientInstance clientInstance;
@@ -175,36 +170,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	private boolean initialised = false;
 
-	// TODO - permissions check
-	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
-			throws Exception {
-		List<ObjectDeltaResult> result = new ArrayList<ObjectDeltaResult>();
-		for (ObjectDeltaSpec itemSpec : specs) {
-			ObjectRef ref = itemSpec.getObjectRef();
-			String propertyName = itemSpec.getPropertyName();
-			Association assoc = Reflections.propertyAccessor()
-					.getAnnotationForProperty(ref.getClassRef().getRefClass(),
-							Association.class, propertyName);
-			ObjectDeltaResult itemResult = new ObjectDeltaResult();
-			itemResult.setDeltaSpec(itemSpec);
-			String eql = buildEqlForSpec(itemSpec, assoc.implementationClass());
-			long t1 = System.currentTimeMillis();
-			List results = getEntityManager().createQuery(eql).getResultList();
-			EntityLayerObjects
-					.get()
-					.getMetricLogger()
-					.debug("cache eql - total (ms):"
-							+ (System.currentTimeMillis() - t1));
-			try {
-				itemResult.setTransforms(objectsToDtes(results,
-						assoc.implementationClass(), true));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			result.add(itemResult);
-		}
-		return result;
-	}
+	private Set<HiliLocator> createdObjectLocators = new LinkedHashSet<HiliLocator>();
 
 	@Override
 	public IndividualPropertyAccessor cachedAccessor(Class clazz,
@@ -394,23 +360,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return this.modificationEvents;
 	}
 
-	@Override
-	public <T extends HasIdAndLocalId> T getObject(T hili) {
-		if (hili == null) {
-			return null;
-		}
-		hili = ensureNonProxy(hili);
-		return super.getObject(hili);
-	}
-
-	protected <T extends HasIdAndLocalId> T ensureNonProxy(T hili) {
-		if (hili != null && hili.getId() != 0 && getEntityManager() != null) {
-			hili = Registry.impl(JPAImplementation.class)
-					.getInstantiatedObject(hili);
-		}
-		return hili;
-	}
-
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		if (!HasIdAndLocalId.class.isAssignableFrom(c)) {
@@ -460,6 +409,46 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		return null;
 	}
 
+	@Override
+	public <T extends HasIdAndLocalId> T getObject(T hili) {
+		if (hili == null) {
+			return null;
+		}
+		hili = ensureNonProxy(hili);
+		return super.getObject(hili);
+	}
+
+	// TODO - permissions check
+	public List<ObjectDeltaResult> getObjectDelta(List<ObjectDeltaSpec> specs)
+			throws Exception {
+		List<ObjectDeltaResult> result = new ArrayList<ObjectDeltaResult>();
+		for (ObjectDeltaSpec itemSpec : specs) {
+			ObjectRef ref = itemSpec.getObjectRef();
+			String propertyName = itemSpec.getPropertyName();
+			Association assoc = Reflections.propertyAccessor()
+					.getAnnotationForProperty(ref.getClassRef().getRefClass(),
+							Association.class, propertyName);
+			ObjectDeltaResult itemResult = new ObjectDeltaResult();
+			itemResult.setDeltaSpec(itemSpec);
+			String eql = buildEqlForSpec(itemSpec, assoc.implementationClass());
+			long t1 = System.currentTimeMillis();
+			List results = getEntityManager().createQuery(eql).getResultList();
+			EntityLayerObjects
+					.get()
+					.getMetricLogger()
+					.debug("cache eql - total (ms):"
+							+ (System.currentTimeMillis() - t1));
+			try {
+				itemResult.setTransforms(objectsToDtes(results,
+						assoc.implementationClass(), true));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			result.add(itemResult);
+		}
+		return result;
+	}
+
 	public Class getPropertyType(Class clazz, String propertyName) {
 		return ObjectPersistenceHelper.get().getPropertyType(clazz,
 				propertyName);
@@ -491,6 +480,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
 		return ObjectPersistenceHelper.get().getWritableProperties(clazz);
+	}
+
+	@Override
+	public boolean isInCreationRequest(HasIdAndLocalId hili) {
+		return createdObjectLocators.contains(new HiliLocator(hili));
 	}
 
 	public boolean isListenToFoundObjects() {
@@ -541,22 +535,19 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				} else {
 					newInstance.setLocalId(localId);
 				}
+				HiliLocator hiliLocator = new HiliLocator(
+						(Class<? extends HasIdAndLocalId>) clazz,
+						newInstance.getId());
 				if (userSessionHiliMap != null) {
-					userSessionHiliMap.put(localId, new HiliLocator(
-							(Class<? extends HasIdAndLocalId>) clazz,
-							newInstance.getId()));
+					userSessionHiliMap.put(localId, hiliLocator);
 				}
+				createdObjectLocators.add(hiliLocator);
 				return (T) newInstance;
 			}
 			throw new Exception("only construct hilis here");
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	@Override
-	protected boolean isZeroCreatedObjectLocalId() {
-		return entityManager != null;
 	}
 
 	@Override
@@ -647,6 +638,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		modificationEvents = new ArrayList<DomainTransformEvent>();
 		transformListenerSupport.clear();
 		deleted = new LinkedHashSet<HasIdAndLocalId>();
+		createdObjectLocators.clear();
 		this.lastEvent = null;
 		for (SourcesPropertyChangeEvents spce : listeningTo) {
 			spce.removePropertyChangeListener(this);
@@ -670,9 +662,6 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		} else {
 			initialised = true;
 		}
-	}
-
-	public static class UncomittedTransformsException extends Exception {
 	}
 
 	public void setClientInstance(ClientInstance clientInstance) {
@@ -945,6 +934,19 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
+	protected <T extends HasIdAndLocalId> T ensureNonProxy(T hili) {
+		if (hili != null && hili.getId() != 0 && getEntityManager() != null) {
+			hili = Registry.impl(JPAImplementation.class)
+					.getInstantiatedObject(hili);
+		}
+		return hili;
+	}
+
+	@Override
+	protected boolean isZeroCreatedObjectLocalId() {
+		return entityManager != null;
+	}
+
 	@Override
 	protected void objectModified(HasIdAndLocalId hili,
 			DomainTransformEvent evt, boolean targetObject) {
@@ -999,9 +1001,17 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 	}
 
+	@Override
+	protected boolean updateAssociationsWithoutNoChangeCheck() {
+		return getEntityManager() == null;
+	}
+
 	public static class ThreadlocalTransformManagerFactory {
 		public ThreadlocalTransformManager create() {
 			return new ThreadlocalTransformManager();
 		}
+	}
+
+	public static class UncomittedTransformsException extends Exception {
 	}
 }

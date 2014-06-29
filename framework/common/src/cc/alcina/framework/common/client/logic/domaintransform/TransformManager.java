@@ -1668,4 +1668,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 		}
 	}
+
+	public boolean isInCreationRequest(HasIdAndLocalId hasOwner) {
+		return false;
+	}
 }

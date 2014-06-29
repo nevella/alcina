@@ -144,7 +144,11 @@ public class LooseContextInstance {
 
 	public void addProperties(String contextProperties) {
 		StringMap sm = StringMap.fromPropertyString(contextProperties);
-		for (Entry<String, String> entry : sm.entrySet()) {
+		addProperties(sm);
+	}
+
+	public void addProperties(Map<String, String> propertyMap) {
+		for (Entry<String, String> entry : propertyMap.entrySet()) {
 			if (entry.getValue().equals("true")) {
 				setBoolean(entry.getKey());
 			} else {
@@ -157,7 +161,8 @@ public class LooseContextInstance {
 		StringMap sm = new StringMap();
 		Set<Entry<String, Object>> props = properties.entrySet();
 		for (Entry<String, Object> entry : props) {
-			if (CommonUtils.isStandardJavaClassOrEnum(entry.getValue().getClass())) {
+			if (CommonUtils.isStandardJavaClassOrEnum(entry.getValue()
+					.getClass())) {
 				sm.put(entry.getKey(),
 						CommonUtils.nullSafeToString(entry.getValue()));
 			}
