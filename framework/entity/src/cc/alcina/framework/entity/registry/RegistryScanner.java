@@ -62,6 +62,12 @@ public class RegistryScanner extends CachingScanner {
 			return;
 		}
 		c = maybeNormaliseClass(c);
+		//GWT, for instance, will replace a JavaScriptObject class with the synthetic interface
+		if (!Modifier.isPublic(c.getModifiers())
+				|| Modifier.isAbstract(c.getModifiers()) || c.isInterface()) {
+			outgoing.add(foundItem);
+			return;
+		}
 		Multimap<Class,List<Annotation>> sca=
 		 AnnotationUtils
 				.getSuperclassAnnotations(c);
