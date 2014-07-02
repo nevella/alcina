@@ -59,4 +59,12 @@ public class StringMap extends LinkedHashMap<String, String> {
 		}
 		return map;
 	}
+
+	public void setBooleanOrRemove(String key, boolean value) {
+		if (value) {
+			put(key, String.valueOf(true));
+		} else {
+			remove(key);
+		}
+	}
 }
