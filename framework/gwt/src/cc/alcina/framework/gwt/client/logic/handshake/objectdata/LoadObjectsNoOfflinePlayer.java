@@ -25,8 +25,11 @@ public class LoadObjectsNoOfflinePlayer extends RunnablePlayer<HandshakeState>
 		public LoadObjectsNoOfflineConsort() {
 			LoadObjectsHelloPlayer loadObjectsHelloPlayer = addPlayer(Registry
 					.impl(LoadObjectsHelloPlayer.class));
-			LoadObjectsFromRemotePlayer fromRemotePlayer = addPlayer(Registry
-					.impl(LoadObjectsFromRemotePlayer.class));
+			LoadObjectsFromRemotePlayer loadObjectsFromRemotePlayer = Registry
+					.implOrNull(LoadObjectsFromRemotePlayer.class);
+			if (loadObjectsFromRemotePlayer != null) {
+				addPlayer(loadObjectsFromRemotePlayer);
+			}
 			addPlayer(new EndpointPlayer(
 					LoadObjectDataState.OBJECT_DATA_LOADED, null, true));
 			addPlayer(new EndpointPlayer(
