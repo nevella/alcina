@@ -325,6 +325,7 @@ public class Toolbar extends Composite implements
 				}
 				if (action instanceof HasHref) {
 					setHref(((HasHref) action).getHref());
+					setTarget(((HasHref) action).getTarget());
 				}
 				if (action instanceof PermissibleActionWithDelegate) {
 					PermissibleAction delegate = ((HasPermissibleActionDelegate) action)

@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.state;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -133,6 +134,7 @@ public class Consort<D> {
 	public StateListenerWrapper addStateListener(TopicListener listener, D state) {
 		StateListenerWrapper wrapper = new StateListenerWrapper(listener, state);
 		topicPublisher.listenerDelta(STATES, wrapper, true);
+		wrapper.fireIfExisting();
 		return wrapper;
 	}
 
@@ -629,6 +631,18 @@ public class Consort<D> {
 		public StateListenerWrapper(TopicListener delegate, D state) {
 			this.delegate = delegate;
 			this.state = state;
+		}
+
+		public void fireIfExisting() {
+			Registry.impl(TimerWrapperProvider.class).scheduleDeferred(
+					new Runnable() {
+						@Override
+						public void run() {
+							StatesDelta delta = new StatesDelta(
+									Collections.EMPTY_SET, reachedStates);
+							topicPublished(null, delta);
+						}
+					});
 		}
 
 		@Override
