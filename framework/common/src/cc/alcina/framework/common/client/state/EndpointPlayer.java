@@ -30,11 +30,12 @@ public class EndpointPlayer<D> extends RunnablePlayer<D> {
 	@Override
 	protected void wasPlayed() {
 		consort.wasPlayed(this, getProvides(), !finishes);
-		if (finishes) {
-			consort.finished();
-		}
 		if (completionCallback != null) {
 			completionCallback.onSuccess(null);
 		}
+		if (finishes) {
+			consort.finished();
+		}
+		
 	}
 }

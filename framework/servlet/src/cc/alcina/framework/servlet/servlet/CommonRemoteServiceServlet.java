@@ -167,6 +167,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String CONTEXT_REUSE_IUSER_HOLDER = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
+	
+	public static final String CONTEXT_OVERRIDE_CONTEXT = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_OVERRIDE_CONTEXT";
 
 	private int actionCount = 0;
 

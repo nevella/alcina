@@ -14,8 +14,7 @@ public class LogoutWithReloadSignalHandler implements
 	@Override
 	public void signal(Consort consort, AsyncCallback signalHandledCallback) {
 		consort.addOneTimeFinishedCallback(signalHandledCallback);
-		ClientBase.getCommonRemoteServiceAsyncInstance()
-				.logout(this);
+		ClientBase.getCommonRemoteServiceAsyncInstance().logout(this);
 		CallManager.get().register(this, "Logging out");
 	}
 

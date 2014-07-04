@@ -2,12 +2,14 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+
 /*
  * Either delta will be null, or all the other fields
  *  - delta non-null if we know the client will use it 
  *  immediately, saves an unnecessary double eval()
  */
-public class DomainModelDeltaTransport implements Serializable {
+public class DomainModelDeltaTransport implements Serializable, Cloneable {
 	private String signature;
 
 	private String metadataJson;
@@ -17,6 +19,15 @@ public class DomainModelDeltaTransport implements Serializable {
 	private DomainModelDelta delta;
 
 	public DomainModelDeltaTransport() {
+	}
+
+	public DomainModelDeltaTransport clone() {
+		DomainModelDeltaTransport o = new DomainModelDeltaTransport();
+		o.signature = signature;
+		o.metadataJson = metadataJson;
+		o.serializedDelta = serializedDelta;
+		o.delta = delta;
+		return o;
 	}
 
 	public DomainModelDeltaTransport(String signature, String metadataJson,

@@ -9,8 +9,10 @@ public class DomainModelDeltaLookup {
 	public Map<String, DomainModelDeltaSignature> nonVersionedSignatures = new LinkedHashMap<String, DomainModelDeltaSignature>();
 
 	public Map<DomainModelDeltaSignature, DomainModelDeltaMetadata> metadataCache = new LinkedHashMap<DomainModelDeltaSignature, DomainModelDeltaMetadata>();
-	
-	
+
+	public Map<String, DomainModelDelta> deltaCache = new LinkedHashMap<String, DomainModelDelta>();
+
+	public Map<DomainModelDeltaSignature, String> contentCache = new LinkedHashMap<DomainModelDeltaSignature, String>();
 
 	public List<String> versionedSignatures = new ArrayList<String>();
 
@@ -22,5 +24,12 @@ public class DomainModelDeltaLookup {
 		nonVersionedSignatures
 				.put(signature.nonVersionedSignature(), signature);
 		versionedSignatures.add(signature.toString());
+	}
+
+	public boolean hasNoSerializedContent(String nonVersionedKey) {
+		DomainModelDeltaSignature sig = nonVersionedSignatures
+				.get(nonVersionedKey);
+		return sig != null && contentCache.containsKey(sig)
+				&& contentCache.get(sig) == null;
 	}
 }

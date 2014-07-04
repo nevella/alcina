@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -107,6 +109,14 @@ public class DomainDeltaSequencer {
 	public void addTranche(DomainTranche tranche,
 			DomainModelDeltaSignature signature, boolean inLoadSequence,
 			Long maxTransformId) throws Exception {
+		DomainModelDeltaTransport transport = createTransport(tranche,
+				signature, maxTransformId, true);
+		addTransport(signature, inLoadSequence, transport);
+	}
+
+	public DomainModelDeltaTransport createTransport(DomainTranche tranche,
+			DomainModelDeltaSignature signature, Long maxTransformId,
+			boolean logCache) throws Exception {
 		tranche.setSignature(signature);
 		DomainModelDeltaMetadata metadata = createMetadata(tranche,
 				maxTransformId);
@@ -119,16 +129,25 @@ public class DomainDeltaSequencer {
 				signature.setContentHash(contentSha1);
 				signature.setContentLength(trancheString.length());
 				if (incomingSignatures.contains(signature.toString())) {
-					System.out.println("cache hit! - " + signature);
+					if (logCache) {
+						System.out.println("cache hit! - " + signature);
+					}
 					trancheString = null;
 					metadataString = null;
 				} else {
-					System.out.println("cache miss! - " + signature);
+					if (logCache) {
+						System.out.println("cache miss! - " + signature);
+					}
 				}
 			}
 		}
 		DomainModelDeltaTransport transport = new DomainModelDeltaTransport(
 				signature.toString(), metadataString, trancheString, delta);
+		return transport;
+	}
+
+	public void addTransport(DomainModelDeltaSignature signature,
+			boolean inLoadSequence, DomainModelDeltaTransport transport) {
 		response.getDeltaTransports().add(transport);
 		response.getPreserveClientDeltaSignatures().add(signature.toString());
 		if (inLoadSequence) {
@@ -136,12 +155,12 @@ public class DomainDeltaSequencer {
 		}
 	}
 
-	private String gwtSerialize(DomainTranche tranche) throws Exception {
+	public String gwtSerialize(Object object) throws Exception {
 		Method method = RPC.class.getDeclaredMethod("encodeResponse",
 				Class.class, Object.class, boolean.class, int.class,
 				SerializationPolicy.class);
 		method.setAccessible(true);
-		return (String) method.invoke(null, tranche.getClass(), tranche, false,
+		return (String) method.invoke(null, object.getClass(), object, false,
 				AbstractSerializationStream.DEFAULT_FLAGS,
 				rpcRequest.getSerializationPolicy());
 	}

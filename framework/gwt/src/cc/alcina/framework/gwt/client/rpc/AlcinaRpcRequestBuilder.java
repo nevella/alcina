@@ -156,15 +156,19 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	}
 
 	public void addAlcinaHeaders(RequestBuilder rb) {
+		addAlcinaHeaders(rb, true);
+	}
+
+	public void addAlcinaHeaders(RequestBuilder rb, boolean noCache) {
 		// iOS 6
-		rb.setHeader("Cache-Control", "no-cache");
-		if (ClientBase.getClientInstance() != null
-				) {
-			rb.setHeader(
-					CLIENT_INSTANCE_ID_KEY,
-					String.valueOf(ClientBase.getClientInstance()
-							.getId()));
-			rb.setHeader(CLIENT_INSTANCE_AUTH_KEY, ClientBase.getClientInstance().getAuth().toString());
+		if (noCache) {
+			rb.setHeader("Cache-Control", "no-cache");
+		}
+		if (ClientBase.getClientInstance() != null) {
+			rb.setHeader(CLIENT_INSTANCE_ID_KEY,
+					String.valueOf(ClientBase.getClientInstance().getId()));
+			rb.setHeader(CLIENT_INSTANCE_AUTH_KEY, ClientBase
+					.getClientInstance().getAuth().toString());
 		}
 	}
 

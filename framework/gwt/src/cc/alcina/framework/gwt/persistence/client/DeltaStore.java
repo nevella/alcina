@@ -2,10 +2,8 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -13,12 +11,13 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
+import cc.alcina.framework.common.client.log.TaggedLogger;
+import cc.alcina.framework.common.client.log.TaggedLoggers;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTranche;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -54,7 +53,8 @@ public class DeltaStore {
 		return DomainModelDeltaSignature.parseSignature(key.substring(offset));
 	}
 
-	public Map<DomainModelDeltaSignature, DomainModelDelta> deltaCache = new LinkedHashMap<DomainModelDeltaSignature, DomainModelDelta>();
+	protected TaggedLogger infoLogger = Registry.impl(TaggedLoggers.class)
+			.getLogger(getClass(), TaggedLogger.INFO);
 
 	private DomainModelDeltaLookup cache = null;
 
@@ -63,6 +63,14 @@ public class DeltaStore {
 	public void getDelta(DomainModelDeltaSignature sig,
 			final AsyncCallback<DomainModelDelta> callback) {
 		final String key = getKey(sig, true);
+		final AsyncCallback<DomainModelDelta> assignCallback = new AsyncCallbackStd<DomainModelDelta>() {
+			@Override
+			public void onSuccess(DomainModelDelta result) {
+				cache.deltaCache.put(result.getSignature()
+						.nonVersionedSignature(), result);
+				callback.onSuccess(result);
+			}
+		};
 		AsyncCallback<String> valueCallback = new AsyncCallbackStd<String>() {
 			@Override
 			public void onSuccess(String result) {
@@ -72,7 +80,8 @@ public class DeltaStore {
 								+ key);
 					}
 					Registry.impl(RpcDeserialiser.class).deserialize(
-							DomainModelDelta.class, result, callback);
+							DomainModelDelta.class, result, assignCallback);
+					infoLogger.format("delta store: deserialized %s", key);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
@@ -164,14 +173,17 @@ public class DeltaStore {
 						.parseSignature(transport.getSignature());
 				out.put(getKey(sig, false), transport.getMetadataJson());
 				out.put(getKey(sig, true), transport.getSerializedDelta());
-				deltaCache.put(sig, transport.getDelta());
+				cache.deltaCache.put(sig.nonVersionedSignature(),
+						transport.getDelta());
+				cache.contentCache.put(sig, transport.getSerializedDelta());
+				cache.addSignature(sig.toString());
 			}
 		}
 		objectStore.put(out, callback);
 	}
 
 	void removeUnusedTranches(List<String> preserveClientDeltaSignatures,
-			AsyncCallback callback) {
+			final AsyncCallback callback) {
 		List<String> toRemove = cache.existingKeys;
 		cache = null;
 		Set<String> preserveKeys = new LinkedHashSet<String>();
@@ -184,7 +196,18 @@ public class DeltaStore {
 							false));
 		}
 		toRemove.removeAll(preserveKeys);
-		objectStore.remove(toRemove, callback);
+		AsyncCallback refreshAfterRemoveCallback = new AsyncCallback() {
+			@Override
+			public void onFailure(Throwable caught) {
+				callback.onFailure(caught);
+			}
+
+			@Override
+			public void onSuccess(Object result) {
+				refreshCache(callback);
+			}
+		};
+		objectStore.remove(toRemove, refreshAfterRemoveCallback);
 	}
 
 	class EnsureCacheConsort extends AllStatesConsort<EnsureCachePhase> {
@@ -284,6 +307,13 @@ public class DeltaStore {
 			case PERSIST_TRANCHES:
 				persistTranches(response.getDeltaTransports(), player);
 				break;
+			case DESERIALIZE_TRANCHES:
+				if (deserializeTranches) {
+					deserializeTranches(player, response.getDeltaTransports());
+				} else {
+					player.onSuccess(null);
+				}
+				break;
 			case RELOAD_CACHE:
 				player.stateConsort = new EnsureCacheConsort(player);
 				new SubconsortSupport().run(this, player.stateConsort, player);
@@ -295,7 +325,8 @@ public class DeltaStore {
 	}
 
 	enum MergeResponsePhase {
-		ENSURE_CACHE, REMOVE_UNUSED, PERSIST_TRANCHES, RELOAD_CACHE
+		ENSURE_CACHE, REMOVE_UNUSED, PERSIST_TRANCHES, DESERIALIZE_TRANCHES,
+		RELOAD_CACHE
 	}
 
 	public void clear(final AsyncCallback callback) {
@@ -313,7 +344,49 @@ public class DeltaStore {
 		refreshCache(removeCallback);
 	}
 
+	public void deserializeTranches(final AsyncCallback playerCallback,
+			final List<DomainModelDeltaTransport> transports) {
+		for (DomainModelDeltaTransport transport : transports) {
+			DomainModelDeltaSignature sig = DomainModelDeltaSignature
+					.parseSignature(transport.getSignature());
+			String nvs = sig.nonVersionedSignature();
+			DomainModelDeltaSignature versioned = cache.nonVersionedSignatures
+					.get(nvs);
+			if (cache.deltaCache.get(nvs) == null
+					&& !hasNoSerializedContent(nvs)) {
+				AsyncCallback<DomainModelDelta> loopCallback = new AsyncCallback<DomainModelDelta>() {
+					@Override
+					public void onSuccess(DomainModelDelta result) {
+						deserializeTranches(playerCallback, transports);
+					}
+
+					@Override
+					public void onFailure(Throwable caught) {
+						playerCallback.onFailure(caught);
+					}
+				};
+				getDelta(versioned, loopCallback);
+				return;
+			}
+		}
+		playerCallback.onSuccess(null);
+	}
+
+	private boolean hasNoSerializedContent(String nonVersionedKey) {
+		return cache.hasNoSerializedContent(nonVersionedKey);
+	}
+
 	public DomainModelDelta getDeltaSync(DomainModelDeltaSignature sig) {
-		return deltaCache.get(sig);
+		return cache.deltaCache.get(sig.nonVersionedSignature());
+	}
+
+	public DomainModelDeltaSignature getExistingVersionedSignature(
+			DomainModelDeltaSignature sig) {
+		return cache.nonVersionedSignatures.get(sig.nonVersionedSignature());
+	}
+
+	public boolean hasContentFor(DomainModelDeltaSignature sig) {
+		return getExistingVersionedSignature(sig) != null
+				&& cache.contentCache.get(getExistingVersionedSignature(sig)) != null;
 	}
 }

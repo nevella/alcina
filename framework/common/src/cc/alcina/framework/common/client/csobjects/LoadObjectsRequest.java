@@ -28,6 +28,8 @@ public class LoadObjectsRequest implements Serializable {
 
 	private List<DomainModelDeltaSignature> requestedModels = new ArrayList<DomainModelDeltaSignature>();
 	
+	private List<DomainModelDeltaSignature> requestedExactSignatures = new ArrayList<DomainModelDeltaSignature>();
+	
 	private Map<String,String> contextProperties=new LinkedHashMap<String, String>();
 
 	public List<String> getClientDeltaSignatures() {
@@ -83,5 +85,14 @@ public class LoadObjectsRequest implements Serializable {
 
 	public void setContextProperties(Map<String, String> contextProperties) {
 		this.contextProperties = contextProperties;
+	}
+
+	public List<DomainModelDeltaSignature> getRequestedExactSignatures() {
+		return this.requestedExactSignatures;
+	}
+
+	public void setRequestedExactSignatures(
+			List<DomainModelDeltaSignature> requestedExactSignatures) {
+		this.requestedExactSignatures = requestedExactSignatures;
 	}
 }
