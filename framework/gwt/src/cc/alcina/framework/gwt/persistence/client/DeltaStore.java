@@ -389,4 +389,8 @@ public class DeltaStore {
 		return getExistingVersionedSignature(sig) != null
 				&& cache.contentCache.get(getExistingVersionedSignature(sig)) != null;
 	}
+
+	public PersistenceObjectStore getObjectStore() {
+		return this.objectStore;
+	}
 }
