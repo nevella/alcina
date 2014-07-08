@@ -906,12 +906,14 @@ public class AlcinaMemCache {
 				.getSource()).getVersionNumber());
 	}
 
-	static class SubgraphTransformManagerRemoteOnly extends SubgraphTransformManager{
+	static class SubgraphTransformManagerRemoteOnly extends
+			SubgraphTransformManager {
 		@Override
 		protected boolean isZeroCreatedObjectLocalId() {
 			return true;
 		}
 	}
+
 	private void warmup0() throws Exception {
 		initialising = true;
 		transformManager = new SubgraphTransformManagerRemoteOnly();
@@ -1084,20 +1086,20 @@ public class AlcinaMemCache {
 					// TODO - check if necessary
 					// (note) also a check against trying to handle deletion of
 					// lazy objects
-					HasIdAndLocalId memCacheObj = transformManager
-							.getObject(dte);
+					HasIdAndLocalId memCacheObj = transformManager.getObject(
+							dte, true);
 					if (memCacheObj == null) {
 						continue;
 					}
 				}
 				if (dte.getTransformType() != TransformType.CREATE_OBJECT
 						&& first == dte) {
-					HasIdAndLocalId obj = transformManager.getObject(dte);
+					HasIdAndLocalId obj = transformManager.getObject(dte,true);
 					if (obj != null) {
 						index(obj, false);
 					} else {
 						warnLogger.format(
-								"Null memcacheObject for index - %s\n", dte);
+								"Null memcacheObject for index - %s\n", HiliLocator.fromDte(dte));
 					}
 				}
 				HasIdAndLocalId persistentLayerSource = dte.getSource();
@@ -1120,20 +1122,21 @@ public class AlcinaMemCache {
 						&& last == dte) {
 					HasIdAndLocalId dbObj = locatorOriginalSourceMap
 							.get(HiliLocator.fromDte(dte));
-					HasIdAndLocalId memCacheObj = transformManager
-							.getObject(dte);
-					if (dbObj instanceof HasVersionNumber) {
-						updateVersionNumber(memCacheObj, dte);
-					}
-					if (dbObj instanceof IVersionable) {
-						updateIVersionable(memCacheObj, persistentLayerSource);
-					}
-					ensureModificationChecker(memCacheObj);
+					HasIdAndLocalId memCacheObj = transformManager.getObject(
+							dte, true);
 					if (memCacheObj != null) {
+						if (dbObj instanceof HasVersionNumber) {
+							updateVersionNumber(memCacheObj, dte);
+						}
+						if (dbObj instanceof IVersionable) {
+							updateIVersionable(memCacheObj,
+									persistentLayerSource);
+						}
+						ensureModificationChecker(memCacheObj);
 						index(memCacheObj, true);
 					} else {
 						warnLogger.format(
-								"Null memcacheObject for index - %s\n", dte);
+								"Null memcacheObject for index - %s\n", HiliLocator.fromDte(dte));
 					}
 				}
 			}
