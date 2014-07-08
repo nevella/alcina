@@ -15,6 +15,8 @@ public class ClassDataCache implements Serializable {
 	static final transient long serialVersionUID = -1L;
 
 	public static class ClassDataItem implements Serializable {
+		public ClassDataItem() {
+		}
 		static final transient long serialVersionUID = -1L;
 
 		public Date date;
@@ -28,6 +30,9 @@ public class ClassDataCache implements Serializable {
 		public String ensureMd5() {
 			if (md5 == null) {
 				try {
+					if (url==null){
+						return String.valueOf(System.currentTimeMillis());
+					}
 					InputStream stream = url.openStream();
 					evalMd5(stream);
 				} catch (Exception e) {
