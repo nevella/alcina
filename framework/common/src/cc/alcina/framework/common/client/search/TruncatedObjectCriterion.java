@@ -13,6 +13,8 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 
 	private transient E value;
 
+	protected E forClientTrimmed;
+
 	public String getDisplayText() {
 		return this.displayText;
 	}
@@ -25,6 +27,9 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 	@AlcinaTransient
 	public E getValue() {
 		return value;
+	}
+
+	public void populateValue() {
 	}
 
 	public boolean equivalentTo(SearchCriterion other) {
@@ -69,7 +74,8 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		TruncatedObjectCriterion<E> copyFromCriterion = (TruncatedObjectCriterion) searchCriterion;
 		displayText = copyFromCriterion.displayText;
 		id = copyFromCriterion.id;
-		value =  copyFromCriterion.value;
+		value = copyFromCriterion.value;
+		forClientTrimmed=copyFromCriterion.forClientTrimmed;
 		return super.copyPropertiesFrom(copyFromCriterion);
 	}
 }
