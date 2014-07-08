@@ -389,4 +389,9 @@ public class DeltaStore {
 		return getExistingVersionedSignature(sig) != null
 				&& cache.contentCache.get(getExistingVersionedSignature(sig)) != null;
 	}
+
+	public void invalidate(Class<?> clazz) {
+		DomainModelDeltaSignature sig = new DomainModelDeltaSignature().clazz(clazz);
+		cache.invalidate(sig);
+	}
 }

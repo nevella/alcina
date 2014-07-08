@@ -32,4 +32,15 @@ public class DomainModelDeltaLookup {
 		return sig != null && contentCache.containsKey(sig)
 				&& contentCache.get(sig) == null;
 	}
+
+	public void invalidate(DomainModelDeltaSignature sig) {
+		String nonVersionedSignature = sig.nonVersionedSignature();
+		if (nonVersionedSignatures.containsKey(nonVersionedSignature)) {
+			DomainModelDeltaSignature sig2 = nonVersionedSignatures
+					.get(nonVersionedSignature);
+			contentCache.remove(sig2);
+			metadataCache.remove(sig2);
+			nonVersionedSignatures.remove(nonVersionedSignature);
+		}
+	}
 }

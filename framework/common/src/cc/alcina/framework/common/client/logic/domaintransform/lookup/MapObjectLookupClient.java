@@ -135,8 +135,8 @@ public class MapObjectLookupClient extends MapObjectLookup {
 				.get(clazz);
 		if (!childRegisterReflectors.isEmpty()) {
 			for (ClientPropertyReflector pr : childRegisterReflectors) {
-				Object value = Reflections.propertyAccessor()
-						.getPropertyValue(obj, pr.getPropertyName());
+				Object value = Reflections.propertyAccessor().getPropertyValue(
+						obj, pr.getPropertyName());
 				addObjectOrCollectionToEndOfQueue(value);
 			}
 		}
