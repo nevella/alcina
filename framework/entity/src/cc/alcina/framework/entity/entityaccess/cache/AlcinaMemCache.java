@@ -585,7 +585,7 @@ public class AlcinaMemCache {
 		if (lookup != null) {
 			Set<Long> set = lookup
 					.getMaybeCollectionKey(cacheFilter.propertyValue);
-			set = set != null ? set : new LinkedHashSet<Long>();
+			set = set != null ? new LinkedHashSet<Long>(set) : new LinkedHashSet<Long>();
 			return (Set<Long>) (existing == null ? set : CommonUtils
 					.intersection(existing, set));
 		}
