@@ -53,7 +53,7 @@ public class DomainDeltaSequencer {
 			RPCRequest threadRpcRequest, LoadObjectsRequest request,
 			boolean asGwtStreams) {
 		this.rpcRequest = threadRpcRequest;
-		this.asGwtStreams = asGwtStreams;
+		this.asGwtStreams = threadRpcRequest != null && asGwtStreams;
 		response.setRequest(request);
 		this.incomingSignatures = clientDeltaSignatures == null ? new ArrayList<String>()
 				: clientDeltaSignatures;
