@@ -65,6 +65,9 @@ public class JobRegistry {
 
 	public static final String CONTEXT_USE_LOGGER = JobRegistry.class.getName()
 			+ ".CONTEXT_USE_LOGGER";
+	
+	public static final String CONTEXT_PERFORMING_CLUSTERED_JOB = JobRegistry.class
+			.getName() + ".CONTEXT_PERFORMING_CLUSTERED_JOB";
 
 	public static JobTracker exportableForm(JobTracker in) {
 		Converter<JobTracker, JobTracker> converter = new Converter<JobTracker, JobTracker>() {
