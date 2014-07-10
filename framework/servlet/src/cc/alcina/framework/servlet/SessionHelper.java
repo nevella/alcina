@@ -96,10 +96,10 @@ public class SessionHelper {
 		getSession(request, response).setAttribute(SESSION_ATTR_USERNAME,
 				user.getUserName());
 		request.setAttribute(SESSION_ATTR_USERNAME, user.getUserName());
+		PermissionsManager.get().setUser(user);
 		if (!isAnonymousUser()) {
 			PermissionsManager.get().setLoginState(LoginState.LOGGED_IN);
 		}
-		PermissionsManager.get().setUser(user);
 	}
 
 	protected boolean isAnonymousUser() {
