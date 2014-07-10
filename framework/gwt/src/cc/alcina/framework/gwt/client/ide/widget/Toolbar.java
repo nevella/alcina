@@ -148,7 +148,9 @@ public class Toolbar extends Composite implements
 	@Override
 	protected void onDetach() {
 		super.onDetach();
-		if (removeListenersOnDetach && !LooseContext.getBoolean(CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH)) {
+		if (removeListenersOnDetach
+				&& !LooseContext
+						.getBoolean(CONTEXT_DO_NOT_REMOVE_LISTENERS_ON_DETACH)) {
 			vetoableActionSupport.removeAllListeners();
 		}
 	}
@@ -182,7 +184,7 @@ public class Toolbar extends Composite implements
 		if (hasActionGroups) {
 			actions.removeAll(actions);
 			for (ActionGroup g : actionGroups) {
-				if(g.actions.isEmpty()){
+				if (g.actions.isEmpty()) {
 					continue;
 				}
 				FlowPanel fp = new FlowPanel();
@@ -300,6 +302,13 @@ public class Toolbar extends Composite implements
 			this(action, null, asButton);
 		}
 
+		public void refreshHref() {
+			if (action instanceof HasHref) {
+				setHref(((HasHref) action).getHref());
+				setTarget(((HasHref) action).getTarget());
+			}
+		}
+
 		public ToolbarButton(PermissibleAction action, String buttonStyleName,
 				boolean asButton) {
 			this.asButton = asButton;
@@ -323,10 +332,7 @@ public class Toolbar extends Composite implements
 				if (action instanceof ClickHandler) {
 					aWidget.addClickHandler((ClickHandler) action);
 				}
-				if (action instanceof HasHref) {
-					setHref(((HasHref) action).getHref());
-					setTarget(((HasHref) action).getTarget());
-				}
+				refreshHref();
 				if (action instanceof PermissibleActionWithDelegate) {
 					PermissibleAction delegate = ((HasPermissibleActionDelegate) action)
 							.getDelegate();
