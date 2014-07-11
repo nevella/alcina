@@ -80,6 +80,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExt;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -167,7 +168,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String CONTEXT_REUSE_IUSER_HOLDER = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_REUSE_IUSER_HOLDER";
-	
+
 	public static final String CONTEXT_OVERRIDE_CONTEXT = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_OVERRIDE_CONTEXT";
 
@@ -1074,7 +1075,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					log = ire.getSuggestedAction() != SuggestedAction.EXPECTED_EXCEPTION;
 				}
 				if (log) {
-					logRpcException(e);
+					if (CommonUtils.extractCauseOfClass(e,
+							CancelledException.class) != null) {
+					} else {
+						logRpcException(e);
+					}
 				}
 				throw new WebException(e);
 			} finally {
