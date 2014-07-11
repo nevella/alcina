@@ -598,6 +598,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		UnwrapInfoContainer result = new UnwrapInfoContainer();
 		result.setHasId(wrapper);
 		try {
+			PermissionsManager.get().pushCurrentUser();
+			
 			PropertyDescriptor[] pds = Introspector.getBeanInfo(
 					wrapper.getClass()).getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
@@ -630,6 +632,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}finally{
+			PermissionsManager.get().popUser();
 		}
 	}
 
