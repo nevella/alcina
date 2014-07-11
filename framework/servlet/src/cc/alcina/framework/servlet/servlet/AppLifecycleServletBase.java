@@ -182,7 +182,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initEntityLayer();
 			createServletTransformClientInstance();
 			initCustom();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			throw new ServletException(e);
 		} finally {
 			initServletConfig = null;

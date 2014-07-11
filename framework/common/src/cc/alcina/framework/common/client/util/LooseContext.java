@@ -44,6 +44,9 @@ public abstract class LooseContext {
 	public static void pushWithKey(String key, Object value) {
 		getContext().pushWithKey(key, value);
 	}
+	public static void pushWithBoolean(String key) {
+		getContext().pushWithKey(key, Boolean.TRUE);
+	}
 
 	public static void register(LooseContext tm) {
 		factoryInstance = tm;

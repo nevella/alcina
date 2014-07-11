@@ -92,8 +92,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static List<Long> idListToLongs(String str) {
 		ArrayList<Long> result = new ArrayList<Long>();
-		String[] strs = CommonUtils.nullToEmpty(str).replace("(", "")
-				.replace(")", "").split(",\\s*");
+		if (CommonUtils.isNullOrEmpty(str)) {
+			return result;
+		}
+		String[] strs = str.replace("(", "").replace(")", "").split(",\\s*");
 		for (String s : strs) {
 			String t = s.trim();
 			if (t.length() > 0) {
