@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.state;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -169,7 +170,7 @@ public class Consort<D> {
 	}
 
 	public void clearReachedStates() {
-		reachedStates.clear();
+		modifyStates(new ArrayList<D>(reachedStates), false);
 	}
 
 	public boolean containsState(D state) {
@@ -236,7 +237,7 @@ public class Consort<D> {
 		infoLogger.log(CommonUtils.formatJ("%s rmv:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				CommonUtils.join(states, ", ")));
-		reachedStates.removeAll(states);
+		modifyStates(states, false);
 	}
 
 	public void replay(Player player) {
@@ -313,14 +314,7 @@ public class Consort<D> {
 		assert playing.contains(player);
 		playing.remove(player);
 		// TODO - warn if resultantstates >1 and a non-parallel consort?
-		LinkedHashSet<D> reachedCopy = new LinkedHashSet<D>(reachedStates);
-		if (reachedStates.addAll(resultantStates)) {
-			publishTopicWithBubble(STATES, new StatesDelta(reachedCopy,
-					reachedStates));
-			debugLogger.log(CommonUtils.formatJ("%s     [%s]",
-					CommonUtils.padStringLeft("", depth(), '\t'),
-					CommonUtils.join(resultantStates, ", ")));
-		}
+		modifyStates(resultantStates, true);
 		metricLogger.log(CommonUtils.formatJ("%s     %s: %s ms",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				player.shortName(),
@@ -328,6 +322,19 @@ public class Consort<D> {
 		publishTopicWithBubble(AFTER_PLAY, player);
 		if (keepGoing) {
 			consumeQueue();
+		}
+	}
+
+	private void modifyStates(Collection<D> states, boolean add) {
+		LinkedHashSet<D> reachedCopy = new LinkedHashSet<D>(reachedStates);
+		boolean mod = add ? reachedStates.addAll(states) : reachedStates
+				.removeAll(states);
+		if (mod) {
+			publishTopicWithBubble(STATES, new StatesDelta(reachedCopy,
+					reachedStates));
+			debugLogger.log(CommonUtils.formatJ("%s     [%s]",
+					CommonUtils.padStringLeft("", depth(), '\t'),
+					CommonUtils.join(states, ", ")));
 		}
 	}
 
