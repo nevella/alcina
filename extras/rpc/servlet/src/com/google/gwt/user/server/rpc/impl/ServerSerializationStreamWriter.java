@@ -916,8 +916,8 @@ public final class ServerSerializationStreamWriter extends
 	}
 
 	private LengthConstrainedArray createLengthConstrainedArray() {
-		return LooseContext.is(CONTEXT_CALLING_UA_IE) ? new LengthConstrainedArray()
-				: new LengthConstrainedArrayIE();
+		return LooseContext.is(CONTEXT_CALLING_UA_IE) ? new LengthConstrainedArrayIE()
+				: new LengthConstrainedArray();
 	}
 
 	private void writeTypeTable(LengthConstrainedArray stream) {

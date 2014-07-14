@@ -29,6 +29,8 @@ import com.google.gwt.user.client.Window;
  *         avoid jar dependency) fixed a few incorrectly-ordered arguments
  */
 public class BrowserMod {
+	
+
 	/**
 	 * Retrieves the window object for the current page.
 	 * 
@@ -89,35 +91,37 @@ public class BrowserMod {
 	return $wnd.screen.availHeight;
 	}-*/;
 
-	public static boolean isInternetExplorer() {
-		return getUserAgent().indexOf(Constants.INTERNET_EXPLORER_USER_AGENT) != -1
-				&& !isOpera() && !isSafari() && !isChrome();
-	}
-
 	public static boolean isIE8() {
-		return isInternetExplorer()
+		return BrowserMod.isInternetExplorer()
 				&& getUserAgent().indexOf(
 						Constants.INTERNET_EXPLORER_8_USER_AGENT) != -1;
 	}
 
 	public static boolean isIE9() {
-		return isInternetExplorer()
+		return BrowserMod.isInternetExplorer()
 				&& (getUserAgent().indexOf(
 						Constants.INTERNET_EXPLORER_9_USER_AGENT) != -1 || getUserAgent()
 						.indexOf(Constants.INTERNET_EXPLORER_9_USER_AGENT_ALT) != -1);
 	}
 
+	public static boolean isIE10() {
+		return BrowserMod.isInternetExplorer()
+				&& (getUserAgent().matches(".*MSIE ?[1-9][0-9].*"));
+	}
+	public static boolean isIE11plus() {
+		return getUserAgent()
+				.matches(".*Trident/[7-9]\\..+");
+	}
 	public static boolean isIE10Plus() {
-		return isInternetExplorer()
-				&& getUserAgent().matches(".*MSIE ?[1-9][0-9].*");
+		return  isIE10()||isIE11plus();
 	}
 
 	public static boolean isIEpre9() {
-		return isInternetExplorer() && !isIE9() && !isIE10Plus();
+		return BrowserMod.isInternetExplorer() && !isIE9() && !isIE10Plus();
 	}
 
 	public static boolean isIEpre10() {
-		return isInternetExplorer() && !isIE10Plus();
+		return BrowserMod.isInternetExplorer() && !isIE10Plus();
 	}
 
 	public static boolean isFireFox() {
@@ -228,13 +232,21 @@ public class BrowserMod {
 	}-*/;
 
 	public static boolean requiresExplicitClickForAsyncDownload() {
-		return isInternetExplorer();// ||isFireFox();
+		return BrowserMod.isInternetExplorer();// ||isFireFox();
 	}
 
 	public static boolean isIEpre8() {
-		return isInternetExplorer() && !isIE9() && !isIE10Plus() && !isIE8();
+		return BrowserMod.isInternetExplorer() && !isIE9() && !isIE10Plus() && !isIE8();
 	}
-	public static boolean mightSupportFlash(){
+
+	public static boolean mightSupportFlash() {
 		return !isMobile();
+	}
+
+	public static boolean isInternetExplorer() {
+		return (getUserAgent().indexOf(Constants.INTERNET_EXPLORER_USER_AGENT) != -1 || getUserAgent().indexOf(Constants.TRIDENT) != -1)
+				&& !isOpera()
+				&& !isSafari()
+				&& !isChrome();
 	}
 }

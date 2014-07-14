@@ -44,6 +44,8 @@ public class Constants {
 
 	final static String CHROME_USER_AGENT = "Chrome/";
 
+	static final String TRIDENT = "Trident";
+
 	final static String STRICT_DOCTYPE = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">";
 
 	final static String QUIRKS_MODE_WARNING = "This page does not have a strict doctype such as \""
