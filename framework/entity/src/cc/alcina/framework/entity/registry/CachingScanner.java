@@ -74,7 +74,7 @@ public abstract class CachingScanner {
 				.getContextClassLoader();
 		int cc = 0;
 		long loadClassnanos = 0;
-		boolean debug = true;
+		boolean debug = false;
 		ClassDataCache ignoreCache = getIgnoreMap(cachePath);
 		ClassDataCache outgoing = new ClassDataCache();
 		for (ClassDataItem foundItem : found.classData.values()) {

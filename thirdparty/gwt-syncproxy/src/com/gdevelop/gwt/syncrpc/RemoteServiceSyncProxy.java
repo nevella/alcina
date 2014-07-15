@@ -62,6 +62,8 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 
 	public static Map<String, String> headers = new LinkedHashMap<String, String>();
 
+	public static int socketTimeout = 60;
+
 	private String moduleBaseURL;
 
 	private String remoteServiceURL;
@@ -129,20 +131,26 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 
 	public AbstractSerializationStreamReader createStreamReader(String encoded)
 			throws SerializationException {
-		return streamReaderConstructor.createStreamReader(encoded, serializationPolicy);
+		return streamReaderConstructor.createStreamReader(encoded,
+				serializationPolicy);
 	}
-	private static StreamReaderConstructor streamReaderConstructor=new StreamReaderConstructor() {
+
+	private static StreamReaderConstructor streamReaderConstructor = new StreamReaderConstructor() {
 		@Override
-		public AbstractSerializationStreamReader createStreamReader(String encoded,
-				SerializationPolicy serializationPolicy) throws SerializationException {
+		public AbstractSerializationStreamReader createStreamReader(
+				String encoded, SerializationPolicy serializationPolicy)
+				throws SerializationException {
 			SyncClientSerializationStreamReader reader = new SyncClientSerializationStreamReader(
 					serializationPolicy);
 			reader.prepareToRead(encoded);
 			return reader;
 		}
 	};
-	public interface StreamReaderConstructor{
-		public AbstractSerializationStreamReader createStreamReader(String encoded,SerializationPolicy serializationPolicy) throws SerializationException;
+
+	public interface StreamReaderConstructor {
+		public AbstractSerializationStreamReader createStreamReader(
+				String encoded, SerializationPolicy serializationPolicy)
+				throws SerializationException;
 	}
 
 	public SyncClientSerializationStreamWriter createStreamWriter() {
@@ -211,8 +219,8 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 			connection.setRequestProperty("Content-Length",
 					"" + requestData.getBytes("UTF-8").length);
 			// Explicitly set these to override any system properties.
-			connection.setReadTimeout(60000);
-			connection.setConnectTimeout(60000);
+			connection.setReadTimeout(socketTimeout * 1000);
+			connection.setConnectTimeout(socketTimeout * 1000);
 			for (Entry<String, String> header : headersCopy.entrySet()) {
 				connection.setRequestProperty(header.getKey(),
 						header.getValue());
@@ -292,6 +300,4 @@ public class RemoteServiceSyncProxy implements SerializationStreamFactory {
 			StreamReaderConstructor streamReaderConstructor) {
 		RemoteServiceSyncProxy.streamReaderConstructor = streamReaderConstructor;
 	}
-
-	
 }
