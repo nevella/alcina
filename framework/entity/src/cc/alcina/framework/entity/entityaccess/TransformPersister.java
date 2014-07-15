@@ -193,11 +193,14 @@ public class TransformPersister {
 			}
 			if (persistentClientInstance.getUser().getId() != PermissionsManager
 					.get().getUserId() && !token.isIgnoreClientAuthMismatch()) {
-				DomainTransformException ex = new DomainTransformException(
-						"Browser login mismatch with transform request authentication");
-				ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
-				putExceptionInWrapper(token, ex, wrapper);
-				return;
+				if (!token.getTransformExceptionPolicy()
+						.ignoreClientAuthMismatch(persistentClientInstance,request)) {
+					DomainTransformException ex = new DomainTransformException(
+							"Browser login mismatch with transform request authentication");
+					ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
+					putExceptionInWrapper(token, ex, wrapper);
+					return;
+				}
 			}
 			tm.setClientInstance(persistentClientInstance);
 			if (locatorMap != null && token.isPossiblyReconstitueLocalIdMap()

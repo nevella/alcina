@@ -150,13 +150,13 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element elt,
 			String attributeName)/*-{
-		if (elt.currentStyle) {
-			return elt.currentStyle[attributeName];
-		}
-		if ($wnd.getComputedStyle) {
-			return $wnd.getComputedStyle(elt, null)[attributeName];
-		}
-	}-*/;
+									if (elt.currentStyle) {
+									return elt.currentStyle[attributeName];
+									}
+									if ($wnd.getComputedStyle) {
+									return $wnd.getComputedStyle(elt, null)[attributeName];
+									}
+									}-*/;
 
 	public static void clearChildren(TabPanel tp) {
 		for (int i = tp.getWidgetCount() - 1; i >= 0; i--) {
@@ -461,6 +461,12 @@ public class WidgetUtils {
 		if (kidCount != 0 && !hidden) {
 			return from;
 		}
+		Node parent = from.getParentNode();
+		if (parent != null && parent.getFirstChild() == from
+				&& parent.getNodeType() == Node.ELEMENT_NODE
+				&& !isZeroOffsetDims((Element) parent)) {
+			return (Element) parent;
+		}
 		ClientNodeIterator itr = new ClientNodeIterator(from,
 				ClientNodeIterator.SHOW_ALL);
 		Node node = from;
@@ -498,21 +504,21 @@ public class WidgetUtils {
 	}
 
 	public static native Element getFocussedDocumentElement()/*-{
-		if ($doc.activeElement) {
-			var tagName = $doc.activeElement.tagName.toLowerCase();
-			return tagName != "body" && tagName != "html" ? $doc.activeElement : null;
-		}
-		return null;
-	}-*/;
+																if ($doc.activeElement) {
+																var tagName = $doc.activeElement.tagName.toLowerCase();
+																return tagName != "body" && tagName != "html" ? $doc.activeElement : null;
+																}
+																return null;
+																}-*/;
 
 	public static native void clearFocussedDocumentElement()/*-{
-		if ($doc.activeElement) {
-			var tagName = $doc.activeElement.tagName.toLowerCase();
-			if (tagName != "body" && tagName != "html") {
-				$doc.activeElement.blur();
-			}
-		}
-	}-*/;
+															if ($doc.activeElement) {
+															var tagName = $doc.activeElement.tagName.toLowerCase();
+															if (tagName != "body" && tagName != "html") {
+															$doc.activeElement.blur();
+															}
+															}
+															}-*/;
 
 	// those values might be needed for non-webkit
 	@SuppressWarnings("unused")
@@ -740,8 +746,8 @@ public class WidgetUtils {
 	}
 
 	private static native void copy() /*-{
-		$doc.execCommand("Copy");
-	}-*/;
+										$doc.execCommand("Copy");
+										}-*/;
 
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
@@ -764,13 +770,13 @@ public class WidgetUtils {
 	}
 
 	public native static int getRelativeTopTo(Element elem, Element end) /*-{
-		var top = 0;
-		while (elem != end) {
-			top += elem.offsetTop;
-			elem = elem.offsetParent;
-		}
-		return top;
-	}-*/;
+																			var top = 0;
+																			while (elem != end) {
+																			top += elem.offsetTop;
+																			elem = elem.offsetParent;
+																			}
+																			return top;
+																			}-*/;
 
 	public static void scrollIntoView(Element e, int fromTop) {
 		scrollIntoView(e, fromTop, false);
@@ -858,68 +864,68 @@ public class WidgetUtils {
 	}
 
 	public static native int getScrollLeft(Element elem) /*-{
-		var left = 0;
-		var curr = elem;
-		// This intentionally excludes body which has a null offsetParent.    
-		while (curr.offsetParent) {
-			left -= curr.scrollLeft;
-			curr = curr.parentNode;
-		}
+															var left = 0;
+															var curr = elem;
+															// This intentionally excludes body which has a null offsetParent.    
+															while (curr.offsetParent) {
+															left -= curr.scrollLeft;
+															curr = curr.parentNode;
+															}
 
-		return left;
-	}-*/;
+															return left;
+															}-*/;
 
 	public static native int getScrollTop(Element elem) /*-{
-		var top = 0;
-		var curr = elem;
-		// This intentionally excludes body which has a null offsetParent.    
-		while (curr.offsetParent) {
-			top -= curr.scrollTop;
-			curr = curr.parentNode;
-		}
-		return top;
-	}-*/;
+														var top = 0;
+														var curr = elem;
+														// This intentionally excludes body which has a null offsetParent.    
+														while (curr.offsetParent) {
+														top -= curr.scrollTop;
+														curr = curr.parentNode;
+														}
+														return top;
+														}-*/;
 
 	public static native Element getElementByNameOrId(Document doc, String name) /*-{
 
-		var e = doc.getElementById(name);
-		if (!e) {
-			e = doc.getElementsByName(name) && doc.getElementsByName(name).length == 1 ? doc
-					.getElementsByName(name)[0]
-					: null;
-		}
-		return e;
-	}-*/;
+																					var e = doc.getElementById(name);
+																					if (!e) {
+																					e = doc.getElementsByName(name) && doc.getElementsByName(name).length == 1 ? doc
+																					.getElementsByName(name)[0]
+																					: null;
+																					}
+																					return e;
+																					}-*/;
 
 	public static native String getComputedStyleProperty(Element elem,
 			String strCssRule) /*-{
-		if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
-			strValue = $doc.defaultView.getComputedStyle(elem, "").getPropertyValue(
-					strCssRule);
-		} else if (oElm.currentStyle) {
-			strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
-				return p1.toUpperCase();
-			});
-			strValue = oElm.currentStyle[strCssRule];
-		}
-		return strValue;
-	}-*/;
+								if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
+								strValue = $doc.defaultView.getComputedStyle(elem, "").getPropertyValue(
+								strCssRule);
+								} else if (oElm.currentStyle) {
+								strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
+								return p1.toUpperCase();
+								});
+								strValue = oElm.currentStyle[strCssRule];
+								}
+								return strValue;
+								}-*/;
 
 	public static native int getOffsetHeightWithMargins(Element elem) /*-{
-		if (elem.style.display == 'none') {
-			return 0;
-		}
-		var h = elem.offsetHeight;
-		var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-		var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-		if (marginTop.indexOf("px") != -1) {
-			h += parseInt(marginTop.substring(0, marginTop.length - 2));
-		}
-		if (marginBottom.indexOf("px") != -1) {
-			h += parseInt(marginBottom.substring(0, marginBottom.length - 2));
-		}
-		return h;
-	}-*/;
+																		if (elem.style.display == 'none') {
+																		return 0;
+																		}
+																		var h = elem.offsetHeight;
+																		var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+																		var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+																		if (marginTop.indexOf("px") != -1) {
+																		h += parseInt(marginTop.substring(0, marginTop.length - 2));
+																		}
+																		if (marginBottom.indexOf("px") != -1) {
+																		h += parseInt(marginBottom.substring(0, marginBottom.length - 2));
+																		}
+																		return h;
+																		}-*/;
 
 	public static Element clickGetAnchorAncestor(ClickEvent clickEvent) {
 		Event event = Event.as(clickEvent.getNativeEvent());
@@ -935,54 +941,54 @@ public class WidgetUtils {
 
 	public static native NodeList getElementsForSelector(Element elt,
 			String selector) /*-{
-		if (!($doc.querySelector)) {
-			return null;
-		}
-		var from = (elt) ? elt : $doc;
-		return from.querySelectorAll(selector);
-	}-*/;
+								if (!($doc.querySelector)) {
+								return null;
+								}
+								var from = (elt) ? elt : $doc;
+								return from.querySelectorAll(selector);
+								}-*/;
 
 	public static native Element getElementForSelector(Element elt,
 			String selector) /*-{
-		if (!($doc.querySelector)) {
-			return null;
-		}
-		var from = (elt) ? elt : $doc;
-		var splits = selector.split("::");
-		for (var idx = 0; idx < splits.length; idx += 2) {
-			var selectorPart = splits[idx];
-			var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
-			if (textRegex == null) {
-				return from.querySelector(selectorPart);
-			}
-			var nl = from.querySelectorAll(splits[idx]);
-			var found = false;
-			for (var i = 0; i < nl.length; i++) {
-				var item = nl[i];
-				if (item.innerHTML.indexOf(textRegex) != -1
-						|| item.innerHTML.match(new RegExp(textRegex))) {
-					from = item;
-					found = true;
-					break;
-				}
-			}
-			if (!found) {
-				return null;
-			}
-		}
-		return from;
-	}-*/;
+								if (!($doc.querySelector)) {
+								return null;
+								}
+								var from = (elt) ? elt : $doc;
+								var splits = selector.split("::");
+								for (var idx = 0; idx < splits.length; idx += 2) {
+								var selectorPart = splits[idx];
+								var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
+								if (textRegex == null) {
+								return from.querySelector(selectorPart);
+								}
+								var nl = from.querySelectorAll(splits[idx]);
+								var found = false;
+								for (var i = 0; i < nl.length; i++) {
+								var item = nl[i];
+								if (item.innerHTML.indexOf(textRegex) != -1
+								|| item.innerHTML.match(new RegExp(textRegex))) {
+								from = item;
+								found = true;
+								break;
+								}
+								}
+								if (!found) {
+								return null;
+								}
+								}
+								return from;
+								}-*/;
 
 	public static native void focus(Element elem) /*-{
-		elem.focus();
-	}-*/;
+													elem.focus();
+													}-*/;
 
 	public static final native void click(Element elt) /*-{
-		elt.click();
-		try {
-			elt.focus();
-		} catch (e) {
+														elt.click();
+														try {
+														elt.focus();
+														} catch (e) {
 
-		}
-	}-*/;
+														}
+														}-*/;
 }
