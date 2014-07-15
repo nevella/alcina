@@ -456,9 +456,14 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	public Object getPropertyValue(Object bean, String propertyName) {
 		try {
-			return SEUtilities
-					.getPropertyDescriptorByName(bean.getClass(), propertyName)
-					.getReadMethod().invoke(bean);
+			PropertyDescriptor descriptor = SEUtilities
+					.getPropertyDescriptorByName(bean.getClass(), propertyName);
+			if (descriptor == null) {
+				throw new Exception(String.format(
+						"No property %s for class %s", propertyName, bean
+								.getClass().getName()));
+			}
+			return descriptor.getReadMethod().invoke(bean);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
