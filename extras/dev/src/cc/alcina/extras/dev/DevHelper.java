@@ -17,6 +17,7 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -62,6 +63,7 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
+import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
@@ -244,7 +246,8 @@ public abstract class DevHelper {
 		try {
 			Logger logger = getTestLogger();
 			long t1 = System.currentTimeMillis();
-			ClassDataCache classes = new ClasspathScanner("*", true, true)
+			ClassDataCache classes = new ServletClasspathScanner("*", true, true,
+					null, Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
 					.getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					Registry.get(), "dev-helper");

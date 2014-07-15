@@ -74,7 +74,7 @@ public abstract class CachingScanner {
 				.getContextClassLoader();
 		int cc = 0;
 		long loadClassnanos = 0;
-		boolean debug = false;
+		boolean debug = true;
 		ClassDataCache ignoreCache = getIgnoreMap(cachePath);
 		ClassDataCache outgoing = new ClassDataCache();
 		for (ClassDataItem foundItem : found.classData.values()) {
@@ -87,7 +87,8 @@ public abstract class CachingScanner {
 					outgoing.add(ignore);
 					continue;
 				}
-				if (ignore.md5!=null&&ignore.md5.equals(foundItem.ensureMd5())) {
+				if (ignore.md5 != null
+						&& ignore.md5.equals(foundItem.ensureMd5())) {
 					outgoing.add(foundItem);
 					continue;
 				}
@@ -111,11 +112,10 @@ public abstract class CachingScanner {
 			}
 		}
 		if (debug) {
-			System.out.println(CommonUtils.formatJ(
-					"Classes: %s -- loadClass: %s", cc,
-					loadClassnanos / 1000 / 1000));
+			System.out.format("Classes: %s -- checked: %s, loadClass: %s\n",
+					found.classData.size(), cc, loadClassnanos / 1000 / 1000);
 		}
-		for(ClassDataItem item:outgoing.classData.values()){
+		for (ClassDataItem item : outgoing.classData.values()) {
 			item.ensureMd5();
 		}
 		putIgnoreMap(outgoing, cachePath);

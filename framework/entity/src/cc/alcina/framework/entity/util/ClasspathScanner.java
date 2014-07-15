@@ -66,8 +66,8 @@ public class ClasspathScanner {
 					if (url != null) {
 						item.url = url;
 					} else {
-						//ignore straight jars
-//						item.evalMd5(inputStream);
+						// ignore straight jars
+						// item.evalMd5(inputStream);
 					}
 					scanner.classDataCache.add(item);
 				}
@@ -266,14 +266,14 @@ public class ClasspathScanner {
 	}
 
 	public static class ServletClasspathScanner extends ClasspathScanner {
-		private final Logger logger;
+		private final Object logger;
 
 		private final String resourceName;
 
 		private final List<String> ignorePathSegments;
 
 		public ServletClasspathScanner(String pkg, boolean subpackages,
-				boolean ignoreJars, Logger logger, String resourceName,
+				boolean ignoreJars, Object logger, String resourceName,
 				List<String> ignorePathSegments) {
 			super(pkg, subpackages, ignoreJars);
 			this.logger = logger;
@@ -284,15 +284,15 @@ public class ClasspathScanner {
 		@Override
 		public ClassDataCache getClasses() throws Exception {
 			scanForRegProps(resourceName, Thread.currentThread()
-					.getContextClassLoader(), logger);
+					.getContextClassLoader());
 			scanForRegProps("META-INF/" + resourceName, Thread.currentThread()
-					.getContextClassLoader(), logger);
+					.getContextClassLoader());
 			return classDataCache;
 		}
 
 		// lifted from seam 1.21
 		private void scanForRegProps(String resourceName,
-				ClassLoader classLoader, Logger log) throws Exception {
+				ClassLoader classLoader) throws Exception {
 			List<URL> urls = new ArrayList<URL>();
 			if (resourceName == null) {
 				for (URL url : ((URLClassLoader) classLoader).getURLs()) {
@@ -313,7 +313,7 @@ public class ClasspathScanner {
 						urls.add(newUrl);
 					}
 				} catch (IOException ioe) {
-					log.warn("could not read: " + resourceName, ioe);
+					warn("could not read: " + resourceName, ioe);
 					return;
 				}
 			}
@@ -322,7 +322,7 @@ public class ClasspathScanner {
 				boolean ignore = false;
 				for (String s : ignorePathSegments) {
 					if (urlPath.contains(s)) {
-						log.info("ignored: " + urlPath);
+						info("ignored: " + urlPath);
 						ignore = true;
 						break;
 					}
@@ -331,6 +331,23 @@ public class ClasspathScanner {
 					continue;
 				}
 				invokeHandler(url);
+			}
+		}
+
+		private void info(String message) {
+			if (logger instanceof Logger) {
+				((Logger) logger).info(message);
+			} else {
+				System.out.println(message);
+			}
+		}
+
+		private void warn(String message, Exception t) {
+			if (logger instanceof Logger) {
+				((Logger) logger).warn(message, t);
+			} else {
+				System.out.println(message);
+				t.printStackTrace();
 			}
 		}
 

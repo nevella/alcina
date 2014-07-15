@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner;
+import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
 import com.totsp.gwittir.client.beans.annotations.Omit;
 import com.totsp.gwittir.client.beans.internal.JVMIntrospector.MethodWrapper;
@@ -43,9 +45,9 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	public ClientReflectorJvm() {
 		try {
-			ClasspathScanner classpathScanner = new ClasspathScanner("*", true,
-					true);
-			ClassDataCache classes = classpathScanner.getClasses();
+			ClassDataCache classes = new ServletClasspathScanner("*", true,
+					false, null, Registry.MARKER_RESOURCE,
+					Arrays.asList(new String[] {})).getClasses();
 			String filterClassName = System.getProperty(PROP_FILTER_CLASSNAME);
 			/*
 			 * The reason for this is that gwt needs the compiled annotation
