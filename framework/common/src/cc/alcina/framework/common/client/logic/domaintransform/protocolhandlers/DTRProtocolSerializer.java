@@ -5,19 +5,36 @@ import java.util.List;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CachingMap;
 
+import com.totsp.gwittir.client.beans.Converter;
+
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class DTRProtocolSerializer {
 	public DTRProtocolHandler getHandler(String protocolVersion) {
-		List<Class> lookup = Registry.get().lookup(DTRProtocolHandler.class);
-		for (Class clazz : lookup) {
-			DTRProtocolHandler handler = (DTRProtocolHandler) Reflections.classLookup().newInstance(clazz);
-			if (handler.handlesVersion().equals(protocolVersion)) {
-				return handler;
-			}
-		}
-		return new PlaintextProtocolHandler();
+		return (DTRProtocolHandler) Reflections.classLookup().newInstance(
+				protocolHandlerLookup.get(protocolVersion));
 	}
+
+	static CachingMap<String, Class> protocolHandlerLookup = new CachingMap<String, Class>(
+			new Converter<String, Class>() {
+				@Override
+				public Class convert(String protocolVersion) {
+					List<Class> lookup = Registry.get().lookup(
+							DTRProtocolHandler.class);
+					for (Class clazz : lookup) {
+						DTRProtocolHandler handler = (DTRProtocolHandler) Reflections
+								.classLookup().newInstance(clazz);
+						if (handler.handlesVersion().equals(protocolVersion)) {
+							return clazz;
+						}
+					}
+					return PlaintextProtocolHandler.class;
+				}
+			});
 
 	public String serialize(DomainTransformRequest request,
 			String protocolVersion) {
@@ -29,6 +46,7 @@ public class DTRProtocolSerializer {
 		request.setEvents(getHandler(protocolVersion).deserialize(
 				serializedEvents));
 	}
+
 	public String serialize(DomainTransformEvent domainTransformEvent) {
 		StringBuffer sb = new StringBuffer();
 		getHandler(PlaintextProtocolHandler.VERSION).appendTo(

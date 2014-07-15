@@ -11,5 +11,7 @@ public interface TimerWrapper {
 		public TimerWrapper getTimer(Runnable runnable);
 		
 		public void scheduleDeferred(Runnable runnable);
+		
+		public void scheduleDeferredIfOnUIThread(Runnable runnable);
 	}
 }

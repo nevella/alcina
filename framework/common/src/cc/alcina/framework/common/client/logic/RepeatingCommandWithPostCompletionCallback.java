@@ -29,7 +29,7 @@ public class RepeatingCommandWithPostCompletionCallback implements
 		try {
 			shouldContinue = delegate.execute();
 		} catch (final Exception e) {
-			Registry.impl(TimerWrapperProvider.class).scheduleDeferred(
+			Registry.impl(TimerWrapperProvider.class).scheduleDeferredIfOnUIThread(
 					new Runnable() {
 						@Override
 						public void run() {
@@ -38,7 +38,7 @@ public class RepeatingCommandWithPostCompletionCallback implements
 					});
 		}
 		if (!shouldContinue) {
-			Registry.impl(TimerWrapperProvider.class).scheduleDeferred(
+			Registry.impl(TimerWrapperProvider.class).scheduleDeferredIfOnUIThread(
 					new Runnable() {
 						@Override
 						public void run() {

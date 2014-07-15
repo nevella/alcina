@@ -55,4 +55,10 @@ public class TimerWrapperProviderJvm implements TimerWrapperProvider {
 			timer.schedule(task, delayMillis);
 		}
 	}
+
+	@Override
+	public void scheduleDeferredIfOnUIThread(Runnable runnable) {
+		//assume we're not
+		runnable.run();
+	}
 }

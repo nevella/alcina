@@ -21,6 +21,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -33,6 +35,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
@@ -54,7 +57,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	public static TestPersistenceHelper get() {
-		TestPersistenceHelper singleton = Registry.checkSingleton(TestPersistenceHelper.class);
+		TestPersistenceHelper singleton = Registry
+				.checkSingleton(TestPersistenceHelper.class);
 		if (singleton == null) {
 			singleton = new TestPersistenceHelper();
 			Registry.registerSingleton(TestPersistenceHelper.class, singleton);
@@ -62,12 +66,20 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		return singleton;
 	}
 
+	CachingMap<String, Class> fqnLookup = new CachingMap<String, Class>(
+			new Converter<String, Class>() {
+				@Override
+				public Class convert(String fqn) {
+					try {
+						return Class.forName(fqn);
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			});
+
 	public Class getClassForName(String fqn) {
-		try {
-			return Class.forName(fqn);
-		} catch (ClassNotFoundException e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return fqnLookup.get(fqn);
 	}
 
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
@@ -92,12 +104,10 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(targetClass)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals(propertyName)) {
-					return pd.getReadMethod().getAnnotation(annotationClass);
-				}
+			PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(
+					targetClass, propertyName);
+			if (pd != null) {
+				return pd.getReadMethod().getAnnotation(annotationClass);
 			}
 			return null;
 		} catch (Exception e) {

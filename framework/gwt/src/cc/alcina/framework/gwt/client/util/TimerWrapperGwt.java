@@ -31,6 +31,11 @@ public class TimerWrapperGwt extends Timer implements TimerWrapper {
 		public void scheduleDeferred(Runnable runnable) {
 			getTimer(runnable).scheduleSingle(1);
 		}
+
+		@Override
+		public void scheduleDeferredIfOnUIThread(Runnable runnable) {
+			scheduleDeferred(runnable);
+		}
 	}
 
 	@Override

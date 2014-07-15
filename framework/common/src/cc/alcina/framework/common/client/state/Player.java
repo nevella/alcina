@@ -102,10 +102,10 @@ public abstract class Player<D> {
 
 	
 	public void play(boolean replaying) {
-		start = System.currentTimeMillis();
 		if (replaying) {
 			((LoopingPlayer) this).loop();
 		} else {
+			start = System.currentTimeMillis();
 			runnable.run();
 		}
 		if (!isAsynchronous() && getProvides().size() <= 1) {

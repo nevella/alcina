@@ -513,14 +513,21 @@ public class Consort<D> {
 		}
 	}
 
+	private String lastInfoLogMessage = null;
+
 	protected void executePlayer(Player<D> player, boolean replaying) {
-		infoLogger.log(CommonUtils.formatJ(
+		String message = CommonUtils.formatJ(
 				"%s%s%s -> %s",
 				(playing.size() == 1 ? "    " : CommonUtils.formatJ("[%s] ",
 						playing.size())), CommonUtils.padStringLeft("",
 						depth(), "    "), CommonUtils
 						.simpleClassName(getClass()), CommonUtils
-						.simpleClassName(player.getClass())));
+						.simpleClassName(player.getClass()));
+		if (!CommonUtils.equalsWithNullEmptyEquality(message,
+				lastInfoLogMessage)) {
+			infoLogger.log(message);
+			lastInfoLogMessage = message;
+		}
 		if (player instanceof ConsortPlayer) {
 			Consort stateConsort = ((ConsortPlayer) player).getStateConsort();
 			if (stateConsort != null) {
