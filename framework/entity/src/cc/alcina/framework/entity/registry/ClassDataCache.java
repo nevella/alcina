@@ -3,8 +3,10 @@ package cc.alcina.framework.entity.registry;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -17,6 +19,7 @@ public class ClassDataCache implements Serializable {
 	public static class ClassDataItem implements Serializable {
 		public ClassDataItem() {
 		}
+
 		static final transient long serialVersionUID = -1L;
 
 		public Date date;
@@ -30,7 +33,7 @@ public class ClassDataCache implements Serializable {
 		public String ensureMd5() {
 			if (md5 == null) {
 				try {
-					if (url==null){
+					if (url == null) {
 						return String.valueOf(System.currentTimeMillis());
 					}
 					InputStream stream = url.openStream();
@@ -55,7 +58,14 @@ public class ClassDataCache implements Serializable {
 
 	public Map<String, ClassDataItem> classData = new LinkedHashMap<String, ClassDataItem>();
 
+	public List<String> ignorePackageSegments = new ArrayList<String>();
+
 	public void add(ClassDataItem item) {
+		for (String segment : ignorePackageSegments) {
+			if (item.className.startsWith(segment)) {
+				return;
+			}
+		}
 		classData.put(item.className, item);
 	}
 }

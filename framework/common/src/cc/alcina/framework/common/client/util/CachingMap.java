@@ -14,9 +14,6 @@ public class CachingMap<I, O> {
 	public CachingMap(Converter<I, O> converter) {
 		this(converter, new LinkedHashMap<I, O>());
 	}
-	public CachingMap(Converter<I, O> converter, boolean concurrent) {
-		this(converter, Collections.synchronizedMap(new LinkedHashMap<I, O>()));
-	}
 
 	public CachingMap(Converter<I, O> converter, Map<I, O> map) {
 		this.converter = converter;

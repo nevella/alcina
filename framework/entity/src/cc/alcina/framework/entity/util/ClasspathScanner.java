@@ -270,15 +270,24 @@ public class ClasspathScanner {
 
 		private final String resourceName;
 
-		private final List<String> ignorePathSegments;
+		private List<String> ignorePathSegments;
 
 		public ServletClasspathScanner(String pkg, boolean subpackages,
 				boolean ignoreJars, Object logger, String resourceName,
 				List<String> ignorePathSegments) {
+			this(pkg, subpackages, ignoreJars, logger, resourceName,
+					ignorePathSegments, new ArrayList<String>());
+		}
+
+		public ServletClasspathScanner(String pkg, boolean subpackages,
+				boolean ignoreJars, Object logger, String resourceName,
+				List<String> ignorePathSegments,
+				List<String> ignorePackageSegments) {
 			super(pkg, subpackages, ignoreJars);
 			this.logger = logger;
 			this.resourceName = resourceName;
 			this.ignorePathSegments = ignorePathSegments;
+			classDataCache.ignorePackageSegments = ignorePackageSegments;
 		}
 
 		@Override
