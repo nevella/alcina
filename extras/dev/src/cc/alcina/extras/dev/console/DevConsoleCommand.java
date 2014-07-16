@@ -648,6 +648,43 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
+	public static class CmdExtractIdList extends DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "idle" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "extract an id list from clipboard text";
+		}
+
+		@Override
+		public String getUsage() {
+			return "idle (will prompt for text, or copy from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String idle = console
+					.getMultilineInput("Enter the id list text, or blank for clipboard: ");
+			idle = idle.isEmpty() ? console.getClipboardContents() : idle;
+			System.out.format("Creating list:\n%s\n\n",
+					console.padLeft(idle, 1, 0));
+			Pattern p1 = Pattern.compile("\\d+");
+			Matcher m1 = p1.matcher(idle);
+			Set<Long> ids = new LinkedHashSet<Long>();
+			while (m1.find()) {
+				ids.add(Long.parseLong(m1.group()));
+			}
+			String list = CommonUtils.join(ids, ", ");
+			System.out.println(list);
+			console.setClipboardContents(list);
+			System.out.println("\n");
+			return "";
+		}
+	}
+
 	public static class CmdReplicateWrappedObjects extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
