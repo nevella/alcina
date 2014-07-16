@@ -203,7 +203,13 @@ public class SyncMerger<T> {
 		}
 
 		public String allLocators(List<String> allKeys) {
-			return CommonUtils.join(allKeyLookup.getForKeys(allKeys), "\n");
+			Collection forKeys = allKeyLookup.getForKeys(allKeys);
+			if (forKeys.size() > 5) {
+				int size = forKeys.size();
+				forKeys = new ArrayList(forKeys).subList(0, 5);
+				forKeys.add(String.format("...and %s more", size));
+			}
+			return CommonUtils.join(forKeys, "\n");
 		}
 	}
 
