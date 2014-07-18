@@ -150,7 +150,7 @@ public class RelativePopupPositioning {
 				rpp.getElement()
 						.getStyle()
 						.setLeft(
-								Integer.parseInt(pxl.replace("px", ""))
+								Double.parseDouble(pxl.replace("px", ""))
 										- (rl + rw - x - bwW), Unit.PX);
 			}
 		}
