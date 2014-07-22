@@ -99,4 +99,9 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	public Map<ClassLoader, Registry> getPerClassLoader() {
+		return this.perClassLoader;
+	}
+
 }

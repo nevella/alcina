@@ -141,9 +141,14 @@ public class Registry {
 		return get().impls0(registryPoint, targetClass);
 	}
 
-	public static void registerSingleton(Class<?> clazz, Object object) {
-		get().singletons.put(clazz, void.class, object);
-		get().register(object.getClass(), clazz, void.class,
+	public static void registerSingleton(Class<?> registryPoint, Object object) {
+		get().registerSingleton(registryPoint, void.class, object);
+	}
+
+	public void registerSingleton(Class<?> registryPoint,
+			Class<?> targetClass, Object object) {
+		singletons.put(registryPoint, targetClass, object);
+		register(object.getClass(), registryPoint, targetClass,
 				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
 	}
 
@@ -264,9 +269,9 @@ public class Registry {
 				ImplementationType.MULTIPLE, 10);
 	}
 
-	public synchronized void register(Class registeringClass, Class registryPoint,
-			Class targetClass, ImplementationType implementationType,
-			int infoPriority) {
+	public synchronized void register(Class registeringClass,
+			Class registryPoint, Class targetClass,
+			ImplementationType implementationType, int infoPriority) {
 		MultikeyMap<Class> registered = registry.asMapEnsure(true,
 				registryPoint, targetClass);
 		UnsortedMultikeyMap<Class> pointMap = null;
