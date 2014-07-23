@@ -958,8 +958,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected HttpSession getSession() {
-		return Registry.impl(SessionProvider.class).getSession(
-				getThreadLocalRequest(), getThreadLocalResponse());
+		return getSession(getThreadLocalRequest());
+	}
+
+	protected HttpSession getSession(HttpServletRequest request) {
+		return Registry.impl(SessionProvider.class).getSession(request,
+				getThreadLocalResponse());
 	}
 
 	class ActionLauncherAsync extends Thread {
