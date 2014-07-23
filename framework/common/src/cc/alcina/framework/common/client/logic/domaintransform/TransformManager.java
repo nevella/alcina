@@ -95,7 +95,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (CommonUtils.isNullOrEmpty(str)) {
 			return result;
 		}
-		String[] strs = str.replace("(", "").replace(")", "").split(",\\s*");
+		String[] strs = str.replace("(", "").replace(")", "").replace("[", "")
+				.replace("]", "").split(",\\s*");
 		for (String s : strs) {
 			String t = s.trim();
 			if (t.length() > 0) {
