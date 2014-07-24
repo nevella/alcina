@@ -558,25 +558,31 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return JobRegistry.exportableForm(tracker);
 	}
 
+	public void initUserStateWithCookie(HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse) {
+		new CookieHelper().getIid(httpServletRequest, httpServletResponse);
+		Registry.impl(SessionHelper.class).initUserState(httpServletRequest,
+				httpServletResponse);
+		String userName = new CookieHelper().getRememberedUserName(
+				httpServletRequest, httpServletResponse);
+		if (userName != null && !PermissionsManager.get().isLoggedIn()) {
+			try {
+				LoginResponse lrb = new LoginResponse();
+				lrb.setOk(true);
+				processValidLogin(lrb, userName, httpServletRequest,
+						httpServletResponse);
+			} catch (AuthenticationException e) {
+				// ignore
+			}
+		}
+	}
+
 	@Override
 	public String processCall(String payload) throws SerializationException {
 		RPCRequest rpcRequest = null;
 		try {
-			new CookieHelper().getIid(getThreadLocalRequest(),
+			initUserStateWithCookie(getThreadLocalRequest(),
 					getThreadLocalResponse());
-			Registry.impl(SessionHelper.class).initUserState(
-					getThreadLocalRequest(), getThreadLocalResponse());
-			String userName = new CookieHelper().getRememberedUserName(
-					getThreadLocalRequest(), getThreadLocalResponse());
-			if (userName != null && !PermissionsManager.get().isLoggedIn()) {
-				try {
-					LoginResponse lrb = new LoginResponse();
-					lrb.setOk(true);
-					processValidLogin(lrb, userName);
-				} catch (AuthenticationException e) {
-					// ignore
-				}
-			}
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			if (rpcRequest.getSerializationPolicy() instanceof LegacySerializationPolicy) {
 				throw new IncompatibleRemoteServiceException();
@@ -888,7 +894,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	protected void onBeforeSpawnedThreadRun(Thread thread) {
 	}
 
-	protected abstract void processValidLogin(LoginResponse lrb, String userName)
+	protected abstract void processValidLogin(LoginResponse lrb,
+			String userName, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
 			throws AuthenticationException;
 
 	protected void setLogger(Logger logger) {
