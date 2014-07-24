@@ -1138,7 +1138,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				});
 	}
 
-	public void registerDomainModelObjectAsync(final DomainModelObject h,
+	public void registerModelObjectAsync(final DomainModelObject h,
 			final AsyncCallback<Void> postRegisterCallback) {
 		((MapObjectLookupClient) getDomainObjects()).registerAsync(
 				h.registrableObjects(), new ScheduledCommand() {
@@ -1149,7 +1149,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				});
 	}
 
-	public void registerDomainModelObject(final DomainModelObject h,
+	public void registerModelObject(final DomainModelObject h,
 			final AsyncCallback<Void> postRegisterCallback) {
 		getDomainObjects().registerObjects(h.registrableObjects());
 		postRegisterCallback.onSuccess(null);
