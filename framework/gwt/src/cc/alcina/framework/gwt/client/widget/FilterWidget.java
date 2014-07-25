@@ -13,7 +13,9 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.core.client.Scheduler;
@@ -22,6 +24,7 @@ import com.google.gwt.event.dom.client.BlurEvent;
 import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.FocusEvent;
 import com.google.gwt.event.dom.client.FocusHandler;
@@ -80,6 +83,21 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 
 	public static int defaultFilterDelayMs = 500;
 
+	private String hint;
+
+	private int filterDelayMs;
+
+	private long lastQueueAddMillis;
+
+	private Timer changeListenerTimer = new Timer() {
+		@Override
+		public void run() {
+			maybeCommit();
+		}
+	};
+
+	private int initialCursorPos;
+
 	public FilterWidget() {
 		this(null);
 	}
@@ -102,68 +120,9 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		filterDelayMs = defaultFilterDelayMs;
 	}
 
-	private String hint;
-
-	private int filterDelayMs;
-
-	public String getHint() {
-		return this.hint;
-	}
-
-	private class HintHandler implements FocusHandler, KeyDownHandler,
-			MouseDownHandler, ChangeHandler {
-		@Override
-		public void onMouseDown(MouseDownEvent event) {
-			clearHint();
-		}
-
-		@Override
-		public void onKeyDown(KeyDownEvent event) {
-			clearHint();
-		}
-
-		boolean wasFocussed = false;
-
-		@Override
-		public void onFocus(FocusEvent event) {
-			if (focusOnAttach && !wasFocussed) {
-				wasFocussed = true;
-				textBox.setCursorPos(0);
-				return;
-			}
-			clearHint();
-		}
-
-		private void clearHint() {
-			if (!hintWasCleared) {
-				hintWasCleared = true;
-				if (textBox.getText().equals(hint)) {
-					textBox.setText("");
-					lastFilteredText = textBox.getText();
-				}
-				textBox.removeStyleName("alcina-FilterHint");
-			}
-		}
-
-		@Override
-		public void onChange(ChangeEvent event) {
-			clearHint();
-		}
-	}
-
-	public void setHint(String _hint) {
-		if (_hint != null) {
-			textBox.addStyleName("alcina-FilterHint");
-			textBox.setText(_hint);
-			if (hint == null) {
-				HintHandler handler = new HintHandler();
-				textBox.addFocusHandler(handler);
-				textBox.addKeyDownHandler(handler);
-				textBox.addMouseDownHandler(handler);
-				textBox.addChangeHandler(handler);
-			}
-		}
-		this.hint = _hint;
+	public void clear() {
+		getTextBox().setText("");
+		maybeCommit();
 	}
 
 	public void filter() {
@@ -175,8 +134,20 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		return this.enterHandler;
 	}
 
+	public int getFilterDelayMs() {
+		return this.filterDelayMs;
+	}
+
+	public String getHint() {
+		return this.hint;
+	}
+
 	public FlowPanel getHolder() {
 		return this.holder;
+	}
+
+	public int getInitialCursorPos() {
+		return this.initialCursorPos;
 	}
 
 	public TextBox getTextBox() {
@@ -191,8 +162,31 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		return focusOnAttach;
 	}
 
+	public boolean isHinted() {
+		return hint != null && textBox.getText().equals(hint);
+	}
+
 	public boolean isHintWasCleared() {
 		return this.hintWasCleared;
+	}
+
+	public boolean isQueueing() {
+		return queueingFinishedTimer != null;
+	}
+
+	@Override
+	public void onBlur(BlurEvent event) {
+		changeListenerTimer.cancel();
+	}
+
+	@Override
+	public void onFocus(FocusEvent event) {
+		String filterText = getTextBox().getText();
+		if (!isFilterCurrent()
+				&& !getTextBox().getStyleName().contains("alcina-FilterHint")) {
+			commit();
+		}
+		changeListenerTimer.scheduleRepeating(100);
 	}
 
 	public void onKeyDown(KeyDownEvent event) {
@@ -223,6 +217,108 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		queueCommit();
 	}
 
+	public void registerFilterable(VisualFilterable vf) {
+		this.vf = vf;
+	}
+
+	public void setEnterHandler(ClickHandler enterListener) {
+		this.enterHandler = enterListener;
+	}
+
+	public void setFilterDelayMs(int filterDelayMs) {
+		this.filterDelayMs = filterDelayMs;
+	}
+
+	public void setFocusOnAttach(boolean focusOnAttach) {
+		this.focusOnAttach = focusOnAttach;
+	}
+
+	public void setHint(String _hint) {
+		if (_hint != null && CommonUtils.isNullOrEmpty(textBox.getText())) {
+			textBox.addStyleName("alcina-FilterHint");
+			textBox.setText(_hint);
+			if (hint == null) {
+				HintHandler handler = new HintHandler();
+				textBox.addFocusHandler(handler);
+				textBox.addKeyDownHandler(handler);
+				textBox.addMouseDownHandler(handler);
+				textBox.addChangeHandler(handler);
+			}
+		}
+		this.hint = _hint;
+	}
+
+	public void setInitialCursorPos(int initialCursorPos) {
+		this.initialCursorPos = initialCursorPos;
+	}
+
+	public void setValue(String value) {
+		textBox.setText(value);
+		textBox.setCursorPos(initialCursorPos);
+		new MaintainCursorPosHandler().registerWith(textBox);
+		clearHint();
+	}
+
+	private void clearHint() {
+		if (!hintWasCleared) {
+			hintWasCleared = true;
+			if (isHinted()) {
+				textBox.setText("");
+				lastFilteredText = textBox.getText();
+			}
+			textBox.removeStyleName("alcina-FilterHint");
+		}
+	}
+
+	private void commit() {
+		if (queueingFinishedTimer != null) {
+			queueingFinishedTimer.cancel();
+		}
+		queueingFinishedTimer = null;
+		filter();
+	}
+
+	protected void maybeCommit() {
+		String currentText = getTextBox().getText();
+		if (CommonUtils.isNotNullOrEmpty(currentText)
+				&& !currentText.equals(lastQueuedText)
+				&& !getTextBox().getStyleName().contains("alcina-FilterHint")) {
+			queueCommit();
+		}
+	}
+
+	@Override
+	protected void onAttach() {
+		super.onAttach();
+		if (isFocusOnAttach()
+				&& WidgetUtils.getParentWidget(this, "GridForm") == null) {
+			// just in case this widget is inside a popup panel e.g.
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				@Override
+				public void execute() {
+					String text = textBox.getText();
+					if (CommonUtils.isNotNullOrEmpty(text) && !isHinted()) {
+						textBox.setCursorPos(text.length());
+					}
+					textBox.setFocus(true);
+					if (!isHinted()) {
+						commit();
+					}
+				}
+			});
+		}
+	}
+
+	@Override
+	protected void onDetach() {
+		if (queueingFinishedTimer != null) {
+			queueingFinishedTimer.cancel();
+			queueingFinishedTimer = null;
+		}
+		changeListenerTimer.cancel();
+		super.onDetach();
+	}
+
 	protected void queueCommit() {
 		String filterText = getTextBox().getText();
 		if (CommonUtils.isNullOrEmpty(lastQueuedText)
@@ -247,98 +343,91 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		}
 	}
 
-	private long lastQueueAddMillis;
+	private class HintHandler implements FocusHandler, KeyDownHandler,
+			MouseDownHandler, ChangeHandler {
+		boolean wasFocussed = false;
 
-	public boolean isQueueing() {
-		return queueingFinishedTimer != null;
-	}
-
-	private void commit() {
-		if (queueingFinishedTimer != null) {
-			queueingFinishedTimer.cancel();
-		}
-		queueingFinishedTimer = null;
-		filter();
-	}
-
-	public void registerFilterable(VisualFilterable vf) {
-		this.vf = vf;
-	}
-
-	public void setEnterHandler(ClickHandler enterListener) {
-		this.enterHandler = enterListener;
-	}
-
-	public void setFocusOnAttach(boolean focusOnAttach) {
-		this.focusOnAttach = focusOnAttach;
-	}
-
-	@Override
-	protected void onAttach() {
-		super.onAttach();
-		if (isFocusOnAttach()
-				&& WidgetUtils.getParentWidget(this, "GridForm") == null) {
-			// just in case this widget is inside a popup panel e.g.
-			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-				@Override
-				public void execute() {
-					textBox.setFocus(true);
-				}
-			});
-		}
-	}
-
-	@Override
-	protected void onDetach() {
-		if (queueingFinishedTimer != null) {
-			queueingFinishedTimer.cancel();
-			queueingFinishedTimer = null;
-		}
-		changeListenerTimer.cancel();
-		super.onDetach();
-	}
-
-	public void clear() {
-		getTextBox().setText("");
-		maybeCommit();
-	}
-
-	public int getFilterDelayMs() {
-		return this.filterDelayMs;
-	}
-
-	public void setFilterDelayMs(int filterDelayMs) {
-		this.filterDelayMs = filterDelayMs;
-	}
-
-	private Timer changeListenerTimer = new Timer() {
 		@Override
-		public void run() {
-			maybeCommit();
+		public void onChange(ChangeEvent event) {
+			clearHint();
 		}
-	};
 
-	@Override
-	public void onFocus(FocusEvent event) {
-		String filterText = getTextBox().getText();
-		if (!isFilterCurrent()
-				&& !getTextBox().getStyleName().contains("alcina-FilterHint")) {
-			commit();
+		@Override
+		public void onFocus(FocusEvent event) {
+			if (focusOnAttach && !wasFocussed) {
+				wasFocussed = true;
+				textBox.setCursorPos(0);
+				return;
+			}
+			clearHint();
 		}
-		changeListenerTimer.scheduleRepeating(100);
+
+		@Override
+		public void onKeyDown(KeyDownEvent event) {
+			clearHint();
+		}
+
+		@Override
+		public void onMouseDown(MouseDownEvent event) {
+			clearHint();
+		}
 	}
 
-	@Override
-	public void onBlur(BlurEvent event) {
-		changeListenerTimer.cancel();
-	}
+	class MaintainCursorPosHandler implements KeyDownHandler, FocusHandler,
+			BlurHandler, ClickHandler {
+		private int initialCursorPos;
 
-	protected void maybeCommit() {
-		String currentText = getTextBox().getText();
-		if (CommonUtils.isNotNullOrEmpty(currentText)
-				&& !currentText.equals(lastQueuedText)
-				&& !getTextBox().getStyleName().contains("alcina-FilterHint")) {
-			queueCommit();
+		boolean registered = true;
+
+		@Override
+		public void onFocus(FocusEvent event) {
+			if (!registered) {
+				return;
+			}
+			fixPos();
+			// either we have keyevents enqueued...or we don't. either way, we
+			// fix the cursor position
+			new Timer() {
+				@Override
+				public void run() {
+					onKeyDown(null);
+				}
+			}.schedule(100);
+		}
+
+		public void fixPos() {
+			textBox.setCursorPos(initialCursorPos);
+		}
+
+		@Override
+		public void onKeyDown(KeyDownEvent event) {
+			if (!registered) {
+				return;
+			}
+			fixPos();
+			deregister();
+		}
+
+		void deregister() {
+			registered = false;
+		}
+
+		public void registerWith(TextBox textBox) {
+			textBox.addKeyDownHandler(this);
+			textBox.addFocusHandler(this);
+			textBox.addBlurHandler(this);
+			textBox.addClickHandler(this);
+			this.initialCursorPos = FilterWidget.this.initialCursorPos;
+		}
+
+		@Override
+		public void onBlur(BlurEvent event) {
+			deregister();
+		}
+
+		@Override
+		public void onClick(ClickEvent event) {
+			deregister();
 		}
 	}
 }

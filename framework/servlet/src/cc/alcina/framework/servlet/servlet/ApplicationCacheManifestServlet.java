@@ -53,7 +53,7 @@ public class ApplicationCacheManifestServlet extends HttpServlet {
 		// super.log(msg);
 	}
 
-	private String getCacheManifest(HttpServletRequest req)
+	protected String getCacheManifest(HttpServletRequest req)
 			throws ServletException {
 		String cacheManifest = null;
 		String cacheManifestName = req.getRequestURI();
