@@ -11,6 +11,7 @@ import java.util.HashMap;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -50,7 +51,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	}
 
 	public JVMIntrospector() {
-		Registry.registerSingleton( BeanDescriptorProvider.class,this);
+		Registry.registerSingleton(BeanDescriptorProvider.class, this);
 	}
 
 	private static class ReflectionBeanDescriptor implements BeanDescriptor {
@@ -62,6 +63,10 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 
 		ReflectionBeanDescriptor(Class clazz) {
 			try {
+				if (clazz.getName().contains(
+						"CitableWithReachableTypeEnumCriterion")) {
+					int debug = 3;
+				}
 				className = clazz.getName();
 				info = java.beans.Introspector.getBeanInfo(clazz);
 				props = new Property[info.getPropertyDescriptors().length - 1];
@@ -70,7 +75,9 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 				for (PropertyDescriptor d : info.getPropertyDescriptors()) {
 					Class<?> propertyType = d.getPropertyType();
 					if (propertyType != null && propertyType.isEnum()
-							&& propertyType.getSuperclass() == Enum.class) {
+							&& propertyType.getSuperclass() == Enum.class
+							&& propertyType != Direction.class) {
+						//hacky - but works
 						enumSubclass = propertyType;
 					}
 				}
@@ -111,6 +118,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 					+ " on class " + className);
 		}
 	}
+
 	public static class MethodWrapper implements Method {
 		private final java.lang.reflect.Method inner;
 
