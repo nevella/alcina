@@ -4,15 +4,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class DomainTranche<T extends DomainModelObject> implements
 		DomainModelDelta, Serializable {
 	private DomainModelHolder domainModelHolder;
 
-	private Collection<HasIdAndLocalId> unlinkedObjects = new ArrayList<HasIdAndLocalId>();
+	private Collection<DomainModelDeltaHili> unlinkedObjects = new ArrayList<DomainModelDeltaHili>();
 
 	private Collection<DomainTransformEvent> replayEvents = new ArrayList<DomainTransformEvent>();
 
@@ -46,7 +44,7 @@ public class DomainTranche<T extends DomainModelObject> implements
 		return signature;
 	}
 
-	public Collection<HasIdAndLocalId> getUnlinkedObjects() {
+	public Collection<DomainModelDeltaHili> getUnlinkedObjects() {
 		return this.unlinkedObjects;
 	}
 
@@ -70,7 +68,7 @@ public class DomainTranche<T extends DomainModelObject> implements
 		this.signature = signature;
 	}
 
-	public void setUnlinkedObjects(Collection<HasIdAndLocalId> unlinkedObjects) {
+	public void setUnlinkedObjects(Collection<DomainModelDeltaHili> unlinkedObjects) {
 		this.unlinkedObjects = unlinkedObjects;
 	}
 

@@ -242,7 +242,8 @@ public class ClientReflectionGenerator extends Generator {
 		List<JClassType> results = new ArrayList<JClassType>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jClassType : types) {
-			if (jClassType.isAnnotationPresent(ClientInstantiable.class)
+			if ((jClassType.isAnnotationPresent(ClientInstantiable.class)||jClassType
+					.isAnnotationPresent(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class))
 					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
 				crf.addImport(jClassType.getQualifiedSourceName());
@@ -258,7 +259,7 @@ public class ClientReflectionGenerator extends Generator {
 		for (JClassType jClassType : types) {
 			if (jClassType
 					.isAnnotationPresent(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class)
-					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
+					&& !ignore(jClassType, ReflectionAction.BEAN_INFO_DESCRIPTOR)) {
 				results.add(jClassType);
 				crf.addImport(jClassType.getQualifiedSourceName());
 			}
