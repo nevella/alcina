@@ -141,8 +141,13 @@ public class ModuleIntrospectionHelper {
 				}
 			} else {
 				if (modules.contains(ReflectionModule.INITIAL)) {
-					return !filter.getModuleName().equals(
-							ReflectionModule.INITIAL);
+					if (reflectionAction == ReflectionAction.BEAN_INFO_DESCRIPTOR) {
+						return !filter.getModuleName().equals(
+								ReflectionModule.LEFTOVER);
+					} else {
+						return !filter.getModuleName().equals(
+								ReflectionModule.INITIAL);
+					}
 				}
 				if (modules.size() > 1) {
 					return !filter.getModuleName().equals(
@@ -246,5 +251,9 @@ public class ModuleIntrospectionHelper {
 				return null;
 			}
 		}
+	}
+
+	public IntrospectorFilterBase getFilter() {
+		return this.filter;
 	}
 }
