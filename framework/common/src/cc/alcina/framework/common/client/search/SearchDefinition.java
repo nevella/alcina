@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -83,21 +85,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		return result;
 	}
 
-	public <V extends SearchCriterion> V firstCriterion(Class<V> clazz) {
-		for (CriteriaGroup cg : getCriteriaGroups()) {
-			for (SearchCriterion c : (Set<SearchCriterion>) (Set) cg
-					.getCriteria()) {
-				if (c.getClass() == clazz) {
-					return (V) c;
-				}
-			}
-		}
-		return null;
-	}
-
-	public <V extends SearchCriterion> V firstCriterion(V sub) {
-		V first = (V) firstCriterion(sub.getClass());
-		return first != null ? first : sub;
+	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
+		return CollectionFilters.filter(allCriteria(), new IsClassFilter(clazz));
 	}
 
 	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
@@ -105,6 +94,11 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		if (og != null) {
 			og.getCriteria().clear();
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public <C extends CriteriaGroup> C criteriaGroup(Class<C> clazz) {
+		return (C) cgs.get(clazz);
 	}
 
 	public <S extends SearchDefinition> S deepCopyFrom(SearchDefinition def)
@@ -125,11 +119,6 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		return (S) this;
 	}
 
-	@SuppressWarnings("unchecked")
-	public <C extends CriteriaGroup> C criteriaGroup(Class<C> clazz) {
-		return (C) cgs.get(clazz);
-	}
-
 	public void ensureCriteriaGroups(CriteriaGroup... criteriaGroups) {
 		resetLookups();
 		for (CriteriaGroup cg : criteriaGroups) {
@@ -139,6 +128,16 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 			}
 		}
 		resetLookups();
+	}
+
+	public <V extends OrderGroup> V ensureOrderGroup(V orderGroup) {
+		V og = (V) orderGroup(orderGroup.getClass());
+		if (og != null) {
+			return og;
+		}
+		putOrderGroup(orderGroup);
+		resetLookups();
+		return orderGroup;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -216,6 +215,23 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 		return (result.length() == 0) ? defaultFilterDescription : result
 				.toString();
+	}
+
+	public <V extends SearchCriterion> V firstCriterion(Class<V> clazz) {
+		for (CriteriaGroup cg : getCriteriaGroups()) {
+			for (SearchCriterion c : (Set<SearchCriterion>) (Set) cg
+					.getCriteria()) {
+				if (c.getClass() == clazz) {
+					return (V) c;
+				}
+			}
+		}
+		return null;
+	}
+
+	public <V extends SearchCriterion> V firstCriterion(V sub) {
+		V first = (V) firstCriterion(sub.getClass());
+		return first != null ? first : sub;
 	}
 
 	public int getCharWidth() {
@@ -404,15 +420,5 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	protected void putOrderGroup(OrderGroup og) {
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
-	}
-
-	public <V extends OrderGroup> V ensureOrderGroup(V orderGroup) {
-		V og = (V) orderGroup(orderGroup.getClass());
-		if (og != null) {
-			return og;
-		}
-		putOrderGroup(orderGroup);
-		resetLookups();
-		return orderGroup;
 	}
 }
