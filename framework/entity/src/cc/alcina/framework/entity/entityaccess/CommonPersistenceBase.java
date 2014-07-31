@@ -27,6 +27,8 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
+import javax.ejb.TransactionAttribute;
+import javax.ejb.TransactionAttributeType;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -599,7 +601,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		result.setHasId(wrapper);
 		try {
 			PermissionsManager.get().pushCurrentUser();
-			
 			PropertyDescriptor[] pds = Introspector.getBeanInfo(
 					wrapper.getClass()).getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
@@ -632,7 +633,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		}finally{
+		} finally {
 			PermissionsManager.get().popUser();
 		}
 	}
