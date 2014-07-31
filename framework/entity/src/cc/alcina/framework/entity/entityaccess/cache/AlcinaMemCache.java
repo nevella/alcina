@@ -1064,7 +1064,7 @@ public class AlcinaMemCache {
 					.multimap(filtered, new DteToLocatorMapper());
 			Map<HiliLocator, HasIdAndLocalId> locatorOriginalSourceMap = new LinkedHashMap<HiliLocator, HasIdAndLocalId>();
 			for (DomainTransformEvent dte : filtered) {
-				HiliLocator locator = HiliLocator.fromDte(dte);
+				HiliLocator locator = HiliLocator.objectLocator(dte);
 				locatorOriginalSourceMap.put(locator, dte.getSource());
 			}
 			cacheDescriptor.loadLazyPreApplyPersist(persistenceEvent);
@@ -1076,9 +1076,9 @@ public class AlcinaMemCache {
 				// remove from indicies before first change - and only if
 				// preexisting object
 				DomainTransformEvent first = CommonUtils
-						.first(perObjectTransforms.get(HiliLocator.fromDte(dte)));
+						.first(perObjectTransforms.get(HiliLocator.objectLocator(dte)));
 				DomainTransformEvent last = CommonUtils
-						.last(perObjectTransforms.get(HiliLocator.fromDte(dte)));
+						.last(perObjectTransforms.get(HiliLocator.objectLocator(dte)));
 				if (last.getTransformType() == TransformType.DELETE_OBJECT
 						&& first.getTransformType() != TransformType.CREATE_OBJECT) {
 					// this a check against deletion during cache warmup.
@@ -1099,7 +1099,7 @@ public class AlcinaMemCache {
 						index(obj, false);
 					} else {
 						warnLogger.format(
-								"Null memcacheObject for index - %s\n", HiliLocator.fromDte(dte));
+								"Null memcacheObject for index - %s\n", HiliLocator.objectLocator(dte));
 					}
 				}
 				HasIdAndLocalId persistentLayerSource = dte.getSource();
@@ -1121,7 +1121,7 @@ public class AlcinaMemCache {
 				if (dte.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == dte) {
 					HasIdAndLocalId dbObj = locatorOriginalSourceMap
-							.get(HiliLocator.fromDte(dte));
+							.get(HiliLocator.objectLocator(dte));
 					HasIdAndLocalId memCacheObj = transformManager.getObject(
 							dte, true);
 					if (memCacheObj != null) {
@@ -1136,7 +1136,7 @@ public class AlcinaMemCache {
 						index(memCacheObj, true);
 					} else {
 						warnLogger.format(
-								"Null memcacheObject for index - %s\n", HiliLocator.fromDte(dte));
+								"Null memcacheObject for index - %s\n", HiliLocator.objectLocator(dte));
 					}
 				}
 			}

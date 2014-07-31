@@ -8,7 +8,7 @@ public class DteToLocatorMapper implements
 		KeyValueMapper<HiliLocator, DomainTransformEvent, DomainTransformEvent> {
 	@Override
 	public HiliLocator getKey(DomainTransformEvent dte) {
-		return HiliLocator.fromDte(dte);
+		return HiliLocator.objectLocator(dte);
 	}
 
 	@Override
