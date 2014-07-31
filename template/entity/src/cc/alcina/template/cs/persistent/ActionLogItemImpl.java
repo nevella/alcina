@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @Entity
 @Table(name = "actionlog", schema = "public")
 @SequenceGenerator(allocationSize=1,name = "actionlog_sequence", sequenceName = "actionlog_id_seq")
-@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 @BeanInfo(displayNamePropertyName = "id")
 
 @RegistryLocation(registryPoint = AlcinaPersistentEntityImpl.class, targetClass = ActionLogItem.class)

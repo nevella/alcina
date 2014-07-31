@@ -117,7 +117,8 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (lastContainer != container) {
 				lastContainer = container;
 				xpathMap = new LinkedHashMap<String, Node>();
-				ClientNotifications notifications = Registry.implOrNull(ClientNotifications.class);
+				ClientNotifications notifications = Registry
+						.implOrNull(ClientNotifications.class);
 				if (notifications != null) {
 					notifications.metricLogStart(DOM_XPATH_MAP);
 				}
@@ -359,9 +360,8 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	public void generateMap(Element elt, String prefix,
 			Map<String, Node> xpathMap) {
-		walker = new ClientNodeIterator(elt,
-				ClientNodeIterator.SHOW_ELEMENT
-						| ClientNodeIterator.SHOW_TEXT);
+		walker = new ClientNodeIterator(elt, ClientNodeIterator.SHOW_ELEMENT
+				| ClientNodeIterator.SHOW_TEXT);
 		generateMap0(elt, prefix, xpathMap);
 	}
 
@@ -611,8 +611,10 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public static Element getParentElement(Element elt, String tagName) {
-		while (elt != null) {
-			if (elt.getTagName().equalsIgnoreCase(tagName)) {
+		// double-check it's really an element
+		while (elt != null && Element.is(elt)) {
+			String eltTagName = elt.getTagName();
+			if (eltTagName.equalsIgnoreCase(tagName)) {
 				return elt;
 			}
 			elt = elt.getParentElement();
@@ -694,6 +696,7 @@ public class DomUtils implements NodeFromXpathProvider {
 			}
 		}
 	}
+
 	public static class HighlightInfo {
 		public String cssClassName;
 
@@ -713,10 +716,12 @@ public class DomUtils implements NodeFromXpathProvider {
 			this.styleProperties = styleProperties;
 			this.properties = properties;
 		}
+
 		public HighlightInfo span() {
-			this.tag="span";
+			this.tag = "span";
 			return this;
 		}
+
 		public HighlightInfo tag(String tag) {
 			this.tag = tag;
 			return this;
@@ -728,7 +733,8 @@ public class DomUtils implements NodeFromXpathProvider {
 			if (lastContainer != container) {
 				lastContainer = container;
 				xpathMap = new LinkedHashMap<String, Node>();
-				ClientNotifications notifications = Registry.implOrNull(ClientNotifications.class);
+				ClientNotifications notifications = Registry
+						.implOrNull(ClientNotifications.class);
 				if (notifications != null) {
 					notifications.metricLogStart(DOM_XPATH_MAP);
 				}
@@ -756,7 +762,8 @@ public class DomUtils implements NodeFromXpathProvider {
 			generateMapItr(itrStack.pop());
 		}
 		if (itrStack.isEmpty()) {
-			ClientNotifications notifications = Registry.implOrNull(ClientNotifications.class);
+			ClientNotifications notifications = Registry
+					.implOrNull(ClientNotifications.class);
 			if (notifications != null) {
 				notifications.metricLogEnd(DOM_XPATH_MAP);
 			}
