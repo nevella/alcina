@@ -258,7 +258,11 @@ public class TransformPersister {
 							.getTransformExceptionPolicy()
 							.precreateMissingEntities());
 				}
+				int backupEventIdCounter = 0;
 				for (DomainTransformEvent event : items) {
+					if (event.getEventId() == 0) {
+						event.setEventId(++backupEventIdCounter);
+					}
 					if (request.getEventIdsToIgnore().contains(
 							event.getEventId())
 							|| token.getIgnoreInExceptionPass().contains(event)) {

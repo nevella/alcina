@@ -1182,7 +1182,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		Multiset<Class, Set<Long>> lkp = new Multiset<Class, Set<Long>>();
 		Multiset<Class, Set<Long>> creates = new Multiset<Class, Set<Long>>();
 		DetachedEntityCache cache = new DetachedEntityCache();
-		long maxEventId = 0;
 		Date precreDate = new Date();
 		for (DomainTransformEvent dte : items) {
 			if (dte.getObjectId() != 0) {
@@ -1194,7 +1193,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			if (dte.getValueId() != 0) {
 				lkp.add(dte.getValueClass(), dte.getValueId());
 			}
-			maxEventId = Math.max(dte.getEventId(), maxEventId);
 			if (CommonUtils.compareWithNullMinusOne(precreDate,
 					dte.getUtcDate()) > 0) {
 				precreDate = dte.getUtcDate();
