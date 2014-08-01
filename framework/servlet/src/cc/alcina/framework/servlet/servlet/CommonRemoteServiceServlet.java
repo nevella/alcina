@@ -581,6 +581,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public String processCall(String payload) throws SerializationException {
 		RPCRequest rpcRequest = null;
 		try {
+			LooseContext.push();
 			initUserStateWithCookie(getThreadLocalRequest(),
 					getThreadLocalResponse());
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
@@ -633,6 +634,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw rex;
 		} finally {
 			ThreadlocalTransformManager.cast().resetTltm(null);
+			LooseContext.pop();
 		}
 	}
 
