@@ -75,7 +75,8 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		displayText = copyFromCriterion.displayText;
 		id = copyFromCriterion.id;
 		value = copyFromCriterion.value;
-		forClientTrimmed=copyFromCriterion.forClientTrimmed;
+		forClientTrimmed = copyFromCriterion.forClientTrimmed;
 		return super.copyPropertiesFrom(copyFromCriterion);
 	}
+
 }
