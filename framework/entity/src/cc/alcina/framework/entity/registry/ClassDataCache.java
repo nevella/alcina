@@ -47,8 +47,7 @@ public class ClassDataCache implements Serializable {
 
 		public void evalMd5(InputStream stream) {
 			try {
-				byte[] bytes = ResourceUtilities.readStreamToByteArray(url
-						.openStream());
+				byte[] bytes = ResourceUtilities.readStreamToByteArray(stream);
 				md5 = EncryptionUtils.MD5(bytes);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
