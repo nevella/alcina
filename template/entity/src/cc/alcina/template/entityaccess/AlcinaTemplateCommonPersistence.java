@@ -86,7 +86,4 @@ public class AlcinaTemplateCommonPersistence
 		};
 	}
 
-	public boolean isValidIid(String iidKey) {
-		return false;
-	}
 }
