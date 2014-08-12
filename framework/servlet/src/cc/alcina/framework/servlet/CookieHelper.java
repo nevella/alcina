@@ -44,6 +44,7 @@ public class CookieHelper {
 				.getAttribute(ADDED_COOKIES_ATTR);
 		if (addedCookies == null) {
 			addedCookies = new ArrayList<Cookie>();
+			req.setAttribute(ADDED_COOKIES_ATTR, addedCookies);
 		}
 		return addedCookies;
 	}
@@ -51,10 +52,14 @@ public class CookieHelper {
 	String getCookieValueByName(HttpServletRequest req,
 			HttpServletResponse response, String n) {
 		Cookie[] cookies = req.getCookies();
-		if (cookies == null) {
-			cookies = getAddedCookies(req).toArray(new Cookie[0]);
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (cookie.getName().equals(n)) {
+					return cookie.getValue();
+				}
+			}
 		}
-		for (Cookie cookie : cookies) {
+		for (Cookie cookie : getAddedCookies(req)) {
 			if (cookie.getName().equals(n)) {
 				return cookie.getValue();
 			}

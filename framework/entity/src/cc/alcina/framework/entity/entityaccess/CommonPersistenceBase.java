@@ -1172,7 +1172,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 		return userName;
 	}
-	
+
 	@Override
 	public boolean isValidIid(String iidKey) {
 		String userName = Registry
@@ -1181,8 +1181,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		if (userName == null
 				&& !Registry.impl(ClientInstanceAuthenticationCache.class)
 						.containsIIdKey(iidKey)) {
-			Iid iid = getIidByKey(iidKey);
-			if (iid == null || iid.getId()==0) {
+			List list = getEntityManager()
+					.createQuery(
+							"from "
+									+ getImplementationSimpleClassName(Iid.class)
+									+ " i  where i.instanceId = ?")
+					.setParameter(1, iidKey).getResultList();
+			if (list.isEmpty()) {
 				return false;
 			}
 		}
