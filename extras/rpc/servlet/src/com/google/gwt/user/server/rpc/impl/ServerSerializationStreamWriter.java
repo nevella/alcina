@@ -33,8 +33,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
@@ -127,6 +129,8 @@ public final class ServerSerializationStreamWriter extends
 		private StringBuffer buffer;
 
 		private int count = 0;
+		
+		private int totalCount=0;
 
 		List<StringBuffer> buffers = new ArrayList<StringBuffer>();
 
@@ -141,6 +145,7 @@ public final class ServerSerializationStreamWriter extends
 		}
 
 		public void addToken(CharSequence token) {
+			totalCount++;
 			if (count++ == MAXIMUM_ARRAY_LENGTH) {
 				buffer = new StringBuffer();
 				buffers.add(buffer);
@@ -158,6 +163,9 @@ public final class ServerSerializationStreamWriter extends
 
 		@Override
 		public String toString() {
+			if(totalCount>100000){
+				AlcinaTopics.notifyDevWarning(new Exception("IE - writing large blob"));
+			}
 			if (buffers.size() > 1) {
 				StringBuilder b2 = new StringBuilder();
 				b2.append("(function(){");

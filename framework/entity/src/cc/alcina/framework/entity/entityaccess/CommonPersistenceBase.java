@@ -1172,6 +1172,22 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 		return userName;
 	}
+	
+	@Override
+	public boolean isValidIid(String iidKey) {
+		String userName = Registry
+				.impl(ClientInstanceAuthenticationCache.class)
+				.iidUserNameByKey(iidKey);
+		if (userName == null
+				&& !Registry.impl(ClientInstanceAuthenticationCache.class)
+						.containsIIdKey(iidKey)) {
+			Iid iid = getIidByKey(iidKey);
+			if (iid == null || iid.getId()==0) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	/**
 	 * Note - parameter <em>fixWithPrecreate</em> will only be used in db

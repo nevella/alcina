@@ -173,4 +173,6 @@ public interface CommonPersistenceLocal {
 	public abstract String getAnonymousUserName();
 
 	public String getRememberMeUserName(String iid);
+
+	public abstract boolean isValidIid(String iidKey);
 }

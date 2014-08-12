@@ -38,7 +38,6 @@ public class CookieHelper {
 
 	public static final String IID = "IID";
 
-
 	@SuppressWarnings("unchecked")
 	List<Cookie> getAddedCookies(HttpServletRequest req) {
 		List<Cookie> addedCookies = (List<Cookie>) req
@@ -79,9 +78,17 @@ public class CookieHelper {
 	public String getIid(HttpServletRequest request,
 			HttpServletResponse response) {
 		String iid = getCookieValueByName(request, response, IID);
+		if (iid != null) {
+			CommonPersistenceLocal up = Registry.impl(
+					CommonPersistenceProvider.class).getCommonPersistence();
+			if (!up.isValidIid(iid)) {
+				iid = null;
+			}
+		}
 		if (iid == null) {
 			iid = SEUtilities.generateId();
 			Cookie cookie = new Cookie(IID, iid);
+			cookie.setPath("/");
 			cookie.setMaxAge(86400 * 365 * 10);
 			addToRqAndRsp(request, response, cookie);
 			CommonPersistenceLocal up = Registry.impl(
@@ -106,6 +113,7 @@ public class CookieHelper {
 					.getUserName(), rememberMe);
 		}
 		Cookie cookie = new Cookie(REMEMBER_ME, String.valueOf(rememberMe));
+		cookie.setPath("/");
 		cookie.setMaxAge(86400 * 365 * 10);
 		addToRqAndRsp(request, response, cookie);
 	}
@@ -117,7 +125,7 @@ public class CookieHelper {
 		if (b) {
 			CommonPersistenceLocal up = Registry.impl(
 					CommonPersistenceProvider.class).getCommonPersistence();
-			return up.getRememberMeUserName(getIid(request, null));
+			return up.getRememberMeUserName(getIid(request, response));
 		}
 		return null;
 	}
