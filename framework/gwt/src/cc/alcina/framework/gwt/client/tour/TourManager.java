@@ -146,7 +146,7 @@ public abstract class TourManager implements NativePreviewHandler {
 					+ tourJson.substring(idx2 + 2);
 		}
 		this.tourJson = tourJson.replaceFirst("var sample = ", "");
-		currentTour = TourModel.fromJson(tourJson);
+		currentTour = TourModel.fromJson(this.tourJson);
 		refreshTourView();
 	}
 
@@ -423,23 +423,11 @@ public abstract class TourManager implements NativePreviewHandler {
 				break;
 			case SET_TEXT:
 				setPopupsModal(false);
-				WidgetUtils.clearFocussedDocumentElement();
 				WidgetUtils.click(target);
 				target.setPropertyString("value", step.getActionValue());
-				// weird focus lost issue - causes filter widget to stop
-				// checking for changes
-				new Timer() {
-					public void run() {
-						WidgetUtils.clearFocussedDocumentElement();
-					};
-				}.schedule(100);
-				new Timer() {
-					public void run() {
-						setPopupsModal(false);
-						WidgetUtils.click(target);
-						setPopupsModal(true);
-					};
-				}.schedule(400);
+				setPopupsModal(false);
+				WidgetUtils.click(target);
+				setPopupsModal(true);
 				break;
 			}
 			return true;

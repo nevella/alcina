@@ -50,7 +50,9 @@ import com.google.gwt.user.client.ui.TextBox;
  * 
  */
 public class FilterWidget extends Composite implements KeyUpHandler,
-		KeyDownHandler, FocusHandler, BlurHandler {
+		KeyDownHandler, FocusHandler, BlurHandler, ClickHandler {
+	private static final String ALCINA_FILTER_HINT = "alcina-FilterHint";
+
 	private static boolean isArrowDown(int code) {
 		switch (code) {
 		case OTHER_KEY_DOWN:
@@ -110,6 +112,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		textBox.addKeyDownHandler(this);
 		textBox.addFocusHandler(this);
 		textBox.addBlurHandler(this);
+		textBox.addClickHandler(this);
 		holder.setStyleName("alcina-FilterHolder");
 		FlowPanel holder2 = new FlowPanel();
 		holder2.add(textBox);
@@ -183,7 +186,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	public void onFocus(FocusEvent event) {
 		String filterText = getTextBox().getText();
 		if (!isFilterCurrent()
-				&& !getTextBox().getStyleName().contains("alcina-FilterHint")) {
+				&& !getTextBox().getStyleName().contains(ALCINA_FILTER_HINT)) {
 			commit();
 		}
 		changeListenerTimer.scheduleRepeating(100);
@@ -235,7 +238,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 
 	public void setHint(String _hint) {
 		if (_hint != null && CommonUtils.isNullOrEmpty(textBox.getText())) {
-			textBox.addStyleName("alcina-FilterHint");
+			textBox.addStyleName(ALCINA_FILTER_HINT);
 			textBox.setText(_hint);
 			if (hint == null) {
 				HintHandler handler = new HintHandler();
@@ -266,7 +269,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 				textBox.setText("");
 				lastFilteredText = textBox.getText();
 			}
-			textBox.removeStyleName("alcina-FilterHint");
+			textBox.removeStyleName(ALCINA_FILTER_HINT);
 		}
 	}
 
@@ -282,7 +285,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		String currentText = getTextBox().getText();
 		if (CommonUtils.isNotNullOrEmpty(currentText)
 				&& !currentText.equals(lastQueuedText)
-				&& !getTextBox().getStyleName().contains("alcina-FilterHint")) {
+				&& !getTextBox().getStyleName().contains(ALCINA_FILTER_HINT)) {
 			queueCommit();
 		}
 	}
@@ -429,5 +432,11 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		public void onClick(ClickEvent event) {
 			deregister();
 		}
+	}
+
+	@Override
+	public void onClick(ClickEvent event) {
+		clearHint();
+		onFocus(null);
 	}
 }
