@@ -132,7 +132,8 @@ public class ResourceUtilities {
 		}
 	}
 
-	public static synchronized String getBundledString(Class clazz, String propertyName) {
+	public static synchronized String getBundledString(Class clazz,
+			String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName : clazz
 				.getSimpleName() + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {
@@ -420,5 +421,13 @@ public class ResourceUtilities {
 
 	public static String get(Class clazz, String propertyName) {
 		return getBundledString(clazz, propertyName);
+	}
+
+	public static String readClassPathResourceAsString(Class clazz, String path) {
+		try {
+			return readStreamToString(clazz.getResourceAsStream(path));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }
