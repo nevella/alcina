@@ -30,7 +30,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 	public Boolean permitClass(Class clazz) {
 		ObjectPermissions op = (ObjectPermissions) clazz
 				.getAnnotation(ObjectPermissions.class);
-		return permit(clazz, op == null ? null : op.read(),null);
+		return permit(clazz, op == null ? null : op.read(), null);
 	}
 
 	public boolean permitField(Field field,
@@ -39,7 +39,7 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 			Class<?> type = field.getType();
 			Class<?> checkType = field.getType();
 			if (!GraphProjection.isPrimitiveOrDataClass(type)) {
-				if(shallow(forClass)){
+				if (shallow(forClass)) {
 					return false;
 				}
 				if (Collection.class.isAssignableFrom(type)) {
@@ -59,11 +59,11 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 						return false;
 					}
 				}
-				
 			}
 			PropertyPermissions pp = GraphProjection
 					.getPropertyPermission(field);
-			Boolean permit = permit(forClass, pp == null ? null : pp.read(),field);
+			Boolean permit = permit(forClass, pp == null ? null : pp.read(),
+					field);
 			if (permit == null) {
 				perObjectPermissionFields.add(field);
 				return true;
@@ -89,7 +89,10 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 			if (PermissionsManager.get().isPermissible(null, ap, true)) {
 				return true;
 			}
-			if (ap.accessLevel().ordinal() <= AccessLevel.GROUP.ordinal()) {
+			if (ap.accessLevel() == AccessLevel.GROUP) {
+				return null;
+			}
+			if (ap.accessLevel().ordinal() < AccessLevel.GROUP.ordinal()) {
 				return false;
 			}
 			if (ap.accessLevel() == AccessLevel.ADMIN_OR_OWNER) {
