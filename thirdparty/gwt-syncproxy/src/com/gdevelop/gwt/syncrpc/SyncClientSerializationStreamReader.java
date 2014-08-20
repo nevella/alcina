@@ -525,7 +525,6 @@ public class SyncClientSerializationStreamReader extends
 		for (int i = 0; i < encoded.length(); i++) {
 			char ch = encoded.charAt(i);
 			char chl1 = i > 0 ? encoded.charAt(i - 1) : 0;
-			String cont = encoded.substring(i);
 			if (inStr) {
 				if (ch == '"' && chl1 != '\\') {
 					inStr = false;
@@ -534,17 +533,17 @@ public class SyncClientSerializationStreamReader extends
 				if (ch == '"') {
 					inStr = true;
 				} else {
-					if (cont.startsWith(PRELUDE)) {
+					if (encoded.indexOf(PRELUDE, i) == 0) {
 						i += PRELUDE.length() - 1;
 						result.append(",");
 						continue;
 					}
-					if (cont.startsWith(POSTLUDE)) {
+					if (encoded.indexOf(POSTLUDE, i) == 0) {
 						i += PRELUDE.length() - 1;
 						result.append("]");
 						continue;
 					}
-					if (cont.startsWith(MIDDY)) {
+					if (encoded.indexOf(MIDDY, i) == 0) {
 						i += MIDDY.length() - 1;
 						result.append(",");
 						continue;
