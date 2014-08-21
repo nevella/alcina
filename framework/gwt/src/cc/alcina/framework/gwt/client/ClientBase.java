@@ -63,7 +63,11 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 					@Override
 					public void onValueChange(ValueChangeEvent<String> event) {
 						isFirstHistoryToken = false;
-						isFirstHistoryTokenHandlerRegistration.removeHandler();
+						if (isFirstHistoryTokenHandlerRegistration != null) {
+							isFirstHistoryTokenHandlerRegistration
+									.removeHandler();
+							isFirstHistoryTokenHandlerRegistration = null;
+						}
 					}
 				});
 	}
