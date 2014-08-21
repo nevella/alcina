@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -57,6 +58,8 @@ public class TransformPersister {
 		while (perform) {
 			perform = false;
 			try {
+				LooseContext
+						.pushWithBoolean(TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
 				Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence()
 						.transformInPersistenceContext(this, token, wrapper);
@@ -69,6 +72,8 @@ public class TransformPersister {
 				} else {
 					throw ex;
 				}
+			} finally {
+				LooseContext.pop();
 			}
 			if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
 				token.getRequest().updateTransformCommitType(
