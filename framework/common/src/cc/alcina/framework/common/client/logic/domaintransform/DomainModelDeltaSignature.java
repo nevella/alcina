@@ -155,4 +155,11 @@ public class DomainModelDeltaSignature implements Serializable {
 	public int hashCode() {
 		return toString().hashCode();
 	}
+
+	public DomainModelDeltaSignature nonVersionedSignatureObject() {
+		DomainModelDeltaSignature sig = new DomainModelDeltaSignature();
+		sig.classSimpleName = classSimpleName;
+		sig.id = id;
+		return sig;
+	}
 }
