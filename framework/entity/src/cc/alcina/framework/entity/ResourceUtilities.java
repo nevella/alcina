@@ -327,13 +327,19 @@ public class ResourceUtilities {
 		charsetName = charsetName == null ? "UTF-8" : charsetName;
 		BufferedReader in = new BufferedReader(new InputStreamReader(is,
 				charsetName));
+		String s = readerToString(in);
+		is.close();
+		return s;
+	}
+
+	public static String readerToString(BufferedReader in) throws IOException {
 		StringWriter sw = new StringWriter();
 		char[] cb = new char[4096];
 		int len = -1;
 		while ((len = in.read(cb, 0, 4096)) != -1) {
 			sw.write(cb, 0, len);
 		}
-		is.close();
+		in.close();
 		return sw.toString();
 	}
 
