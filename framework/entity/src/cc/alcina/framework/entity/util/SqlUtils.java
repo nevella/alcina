@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.util;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -167,6 +168,17 @@ public class SqlUtils {
 			return null;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static void closeConnection(Connection conn) {
+		if (conn == null) {
+			return;
+		}
+		try {
+			conn.close();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 }
