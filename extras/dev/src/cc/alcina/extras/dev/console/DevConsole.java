@@ -824,9 +824,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	public String padLeft(String str, int tabCount, int charCount) {
+	public  String padLeft(String str, int tabCount, int charCount) {
 		if (tabCount != 0) {
-			return "\t" + str.replace("\n", "\n\t");
+			String pad = CommonUtils.padStringLeft("", charCount, "\t");
+			return pad + str.replace("\n", "\n" + pad);
 		} else {
 			String pad = "\n" + CommonUtils.padStringLeft("", charCount, " ");
 			return str.replace("\n", pad);

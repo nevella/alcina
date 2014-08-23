@@ -585,7 +585,8 @@ public class AlcinaMemCache {
 		if (lookup != null) {
 			Set<Long> set = lookup
 					.getMaybeCollectionKey(cacheFilter.propertyValue);
-			set = set != null ? new LinkedHashSet<Long>(set) : new LinkedHashSet<Long>();
+			set = set != null ? new LinkedHashSet<Long>(set)
+					: new LinkedHashSet<Long>();
 			return (Set<Long>) (existing == null ? set : CommonUtils
 					.intersection(existing, set));
 		}
@@ -1032,7 +1033,11 @@ public class AlcinaMemCache {
 							.getFilters().get(i), (i == 0) ? null
 							: rawTransactional);
 				}
-				raw = new ArrayList<T>(rawTransactional);
+				if (rawTransactional == null) {
+					raw = new ArrayList<T>();
+				} else {
+					raw = new ArrayList<T>(rawTransactional);
+				}
 			}
 			try {
 				for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
@@ -1076,9 +1081,11 @@ public class AlcinaMemCache {
 				// remove from indicies before first change - and only if
 				// preexisting object
 				DomainTransformEvent first = CommonUtils
-						.first(perObjectTransforms.get(HiliLocator.objectLocator(dte)));
+						.first(perObjectTransforms.get(HiliLocator
+								.objectLocator(dte)));
 				DomainTransformEvent last = CommonUtils
-						.last(perObjectTransforms.get(HiliLocator.objectLocator(dte)));
+						.last(perObjectTransforms.get(HiliLocator
+								.objectLocator(dte)));
 				if (last.getTransformType() == TransformType.DELETE_OBJECT
 						&& first.getTransformType() != TransformType.CREATE_OBJECT) {
 					// this a check against deletion during cache warmup.
@@ -1094,12 +1101,13 @@ public class AlcinaMemCache {
 				}
 				if (dte.getTransformType() != TransformType.CREATE_OBJECT
 						&& first == dte) {
-					HasIdAndLocalId obj = transformManager.getObject(dte,true);
+					HasIdAndLocalId obj = transformManager.getObject(dte, true);
 					if (obj != null) {
 						index(obj, false);
 					} else {
 						warnLogger.format(
-								"Null memcacheObject for index - %s\n", HiliLocator.objectLocator(dte));
+								"Null memcacheObject for index - %s\n",
+								HiliLocator.objectLocator(dte));
 					}
 				}
 				HasIdAndLocalId persistentLayerSource = dte.getSource();
@@ -1136,7 +1144,8 @@ public class AlcinaMemCache {
 						index(memCacheObj, true);
 					} else {
 						warnLogger.format(
-								"Null memcacheObject for index - %s\n", HiliLocator.objectLocator(dte));
+								"Null memcacheObject for index - %s\n",
+								HiliLocator.objectLocator(dte));
 					}
 				}
 			}
