@@ -622,15 +622,24 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String pg = console
 					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			pg = pg.isEmpty() ? console.getClipboardContents() : pg;
+			pg=pg.replaceAll("\\n.+: \\[\\d+-\\d+\\]" , "\n");
 			System.out.format("Inserting into query:\n%s\n\n",
 					console.padLeft(pg, 1, 0));
 			Pattern p1 = Pattern
 					.compile("LOG:  execute <unnamed>: (.+)\nDETAIL:  parameters: (.+)");
+			Pattern p2 = Pattern.compile(
+					".+execute <unnamed>: (.+)\n.+DETAIL:  parameters: (.+)",
+					Pattern.DOTALL);
 			Pattern p3 = Pattern.compile("(\\$\\d+) = ('.+?')");
 			Matcher m1 = p1.matcher(pg);
-			m1.find();
+			if (!m1.find()) {
+				m1 = p2.matcher(pg);
+				m1.find();
+			}
 			String query = m1.group(1);
+			query=query.replace("\n", "");
 			String params = m1.group(2);
+			params=params.replace("\n", "");
 			Matcher m3 = p3.matcher(params);
 			StringMap pvs = new StringMap();
 			while (m3.find()) {
@@ -641,6 +650,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			for (String key : keys) {
 				query = query.replace(key, pvs.get(key));
 			}
+			query+=";\n";
 			System.out.println(query);
 			console.setClipboardContents(query);
 			System.out.println("\n");
