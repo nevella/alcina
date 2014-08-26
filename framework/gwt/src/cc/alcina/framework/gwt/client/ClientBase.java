@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.event.logical.shared.CloseEvent;
@@ -57,11 +58,17 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 
 	private static boolean isFirstHistoryToken = true;
 
+	private static String initialHistoryToken = "";
+
 	public ClientBase() {
+		initialHistoryToken = History.getToken();
 		isFirstHistoryTokenHandlerRegistration = History
 				.addValueChangeHandler(new ValueChangeHandler<String>() {
 					@Override
 					public void onValueChange(ValueChangeEvent<String> event) {
+						if (History.getToken().equals(initialHistoryToken)) {
+							return;
+						}
 						isFirstHistoryToken = false;
 						if (isFirstHistoryTokenHandlerRegistration != null) {
 							isFirstHistoryTokenHandlerRegistration
