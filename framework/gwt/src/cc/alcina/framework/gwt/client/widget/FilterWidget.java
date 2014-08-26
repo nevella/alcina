@@ -50,7 +50,7 @@ import com.google.gwt.user.client.ui.TextBox;
  * 
  */
 public class FilterWidget extends Composite implements KeyUpHandler,
-		KeyDownHandler, FocusHandler, BlurHandler, ClickHandler {
+		KeyDownHandler, BlurHandler, ClickHandler {
 	private static final String ALCINA_FILTER_HINT = "alcina-FilterHint";
 
 	private static boolean isArrowDown(int code) {
@@ -110,7 +110,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		textBox.setStyleName("alcina-Filter");
 		textBox.addKeyUpHandler(this);
 		textBox.addKeyDownHandler(this);
-		textBox.addFocusHandler(this);
+		// textBox.addFocusHandler(this);
 		textBox.addBlurHandler(this);
 		textBox.addClickHandler(this);
 		holder.setStyleName("alcina-FilterHolder");
@@ -182,7 +182,10 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		changeListenerTimer.cancel();
 	}
 
-	@Override
+	/*
+	 * Note - deliberately don't listen to (non-user-initiated) focus events -
+	 * capture ones we're into via click, keyup
+	 */
 	public void onFocus(FocusEvent event) {
 		String filterText = getTextBox().getText();
 		if (!isFilterCurrent()
