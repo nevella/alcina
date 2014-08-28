@@ -622,7 +622,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String pg = console
 					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			pg = pg.isEmpty() ? console.getClipboardContents() : pg;
-			pg=pg.replaceAll("\\n.+: \\[\\d+-\\d+\\]" , "\n");
+			pg = pg.replaceAll("\\n.+: \\[\\d+-\\d+\\]", "\n");
 			System.out.format("Inserting into query:\n%s\n\n",
 					console.padLeft(pg, 1, 0));
 			Pattern p1 = Pattern
@@ -637,9 +637,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				m1.find();
 			}
 			String query = m1.group(1);
-			query=query.replace("\n", "");
+			query = query.replace("\n", "");
 			String params = m1.group(2);
-			params=params.replace("\n", "");
+			params = params.replace("\n", "");
 			Matcher m3 = p3.matcher(params);
 			StringMap pvs = new StringMap();
 			while (m3.find()) {
@@ -650,7 +650,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			for (String key : keys) {
 				query = query.replace(key, pvs.get(key));
 			}
-			query+=";\n";
+			query += ";\n";
 			System.out.println(query);
 			console.setClipboardContents(query);
 			System.out.println("\n");
@@ -659,6 +659,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	}
 
 	public static class CmdExtractIdList extends DevConsoleCommand {
+		private LinkedHashSet<Long> ids;
+
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "idle" };
@@ -671,11 +673,12 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String getUsage() {
-			return "idle (will prompt for text, or copy from clipboard)";
+			return "idle {-r :: randomise} (from clipboard)";
 		}
 
 		@Override
 		public String run(String[] argv) throws Exception {
+			boolean random = argv.length == 1 && argv[0].equals("-r");
 			String idle = console
 					.getMultilineInput("Enter the id list text, or blank for clipboard: ");
 			idle = idle.isEmpty() ? console.getClipboardContents() : idle;
@@ -683,11 +686,15 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					console.padLeft(idle, 1, 0));
 			Pattern p1 = Pattern.compile("\\d+");
 			Matcher m1 = p1.matcher(idle);
-			Set<Long> ids = new LinkedHashSet<Long>();
+			ids = new LinkedHashSet<Long>();
 			while (m1.find()) {
 				ids.add(Long.parseLong(m1.group()));
 			}
-			String list = CommonUtils.join(ids, ", ");
+			List<Long> uids = new ArrayList<Long>(ids);
+			if (random) {
+				Collections.shuffle(uids);
+			}
+			String list = CommonUtils.join(uids, ", ");
 			System.out.println(list);
 			console.setClipboardContents(list);
 			System.out.println("\n");
