@@ -17,18 +17,32 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 import org.apache.log4j.WriterAppender;
+import org.apache.log4j.spi.LoggingEvent;
 
 /**
  * 
  * @author Nick Reddel
  */
 public class WriterAccessWriterAppender extends WriterAppender {
+	private static final int MAX_LENGTH = 5000000;
+
 	private StringWriter writerAccess;
 
 	public static final String STRING_WRITER_APPENDER_KEY = "stringWriterAppender";
 
 	public StringWriter getWriterAccess() {
 		return this.writerAccess;
+	}
+
+	@Override
+	protected void subAppend(LoggingEvent event) {
+		super.subAppend(event);
+		if (writerAccess.getBuffer().length() > MAX_LENGTH) {
+			//assume single-threaded
+			writerAccess.getBuffer().setLength(0);
+			super.subAppend(event);
+			writerAccess.getBuffer().append("...truncated\n");
+		}
 	}
 
 	public void resetWriter() throws Exception {
