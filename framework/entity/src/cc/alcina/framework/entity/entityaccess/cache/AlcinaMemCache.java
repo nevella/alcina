@@ -1750,4 +1750,12 @@ public class AlcinaMemCache {
 	public <T> T replaceWithRawValues(T t) {
 		return (T) new RawValueReplacer().read(t);
 	}
+
+	public <T extends HasIdAndLocalId> T findRaw(T t) {
+		return (T) findRaw(t.getClass(), t.getId());
+	}
+
+	public <T extends HasIdAndLocalId> T find(HiliLocator locator) {
+		return (T) find(locator.clazz, locator.id);
+	}
 }
