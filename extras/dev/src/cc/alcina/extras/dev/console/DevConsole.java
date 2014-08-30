@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -57,6 +58,7 @@ import cc.alcina.extras.dev.DevHelper;
 import cc.alcina.extras.dev.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -824,7 +826,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	public  String padLeft(String str, int tabCount, int charCount) {
+	public String padLeft(String str, int tabCount, int charCount) {
 		if (tabCount != 0) {
 			String pad = CommonUtils.padStringLeft("", charCount, "\t");
 			return pad + str.replace("\n", "\n" + pad);
@@ -894,5 +896,19 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		String result = new String(recordOut.toByteArray());
 		out.s2 = oldS2;
 		return result;
+	}
+
+	public void dumpTransforms() {
+		System.out.println("\n\n");
+		Set<DomainTransformEvent> transforms = devHelper.dumpTransforms();
+		System.out.println("\n\n");
+		setClipboardContents(transforms.toString());
+		File dumpFile = getDevFile("dumpTransforms.txt");
+		try {
+			ResourceUtilities
+					.writeStringToFile(transforms.toString(), dumpFile);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

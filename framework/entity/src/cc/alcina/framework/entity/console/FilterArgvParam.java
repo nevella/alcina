@@ -21,13 +21,19 @@ public class FilterArgvParam {
 		this.argv = (String[]) strs.toArray(new String[strs.size()]);
 	}
 
-	public FilterArgvParam(String[] argv, int index) {
+	public FilterArgvParam(String[] argv) {
+		this.argv = argv;
+		next();
+	}
+
+	public String next() {
 		List<String> strs = new ArrayList<String>(Arrays.asList(argv));
 		this.value = CommonUtils.first(strs);
 		if (value != null) {
 			strs.remove(0);
 		}
 		this.argv = (String[]) strs.toArray(new String[strs.size()]);
+		return this.value;
 	}
 
 	public String valueOrDefault(String defaultValue) {

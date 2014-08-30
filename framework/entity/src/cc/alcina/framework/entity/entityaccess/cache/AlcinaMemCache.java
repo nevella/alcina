@@ -1758,4 +1758,8 @@ public class AlcinaMemCache {
 	public <T extends HasIdAndLocalId> T find(HiliLocator locator) {
 		return (T) find(locator.clazz, locator.id);
 	}
+
+	public <T extends HasIdAndLocalId> T find(T t) {
+		return find(new HiliLocator(t));
+	}
 }
