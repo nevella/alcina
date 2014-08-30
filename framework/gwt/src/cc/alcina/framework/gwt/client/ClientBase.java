@@ -26,6 +26,7 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -61,22 +62,24 @@ public abstract class ClientBase implements EntryPoint, ClosingHandler,
 	private static String initialHistoryToken = "";
 
 	public ClientBase() {
-		initialHistoryToken = History.getToken();
-		isFirstHistoryTokenHandlerRegistration = History
-				.addValueChangeHandler(new ValueChangeHandler<String>() {
-					@Override
-					public void onValueChange(ValueChangeEvent<String> event) {
-						if (History.getToken().equals(initialHistoryToken)) {
-							return;
+		if (GWT.isClient()) {
+			initialHistoryToken = History.getToken();
+			isFirstHistoryTokenHandlerRegistration = History
+					.addValueChangeHandler(new ValueChangeHandler<String>() {
+						@Override
+						public void onValueChange(ValueChangeEvent<String> event) {
+							if (History.getToken().equals(initialHistoryToken)) {
+								return;
+							}
+							isFirstHistoryToken = false;
+							if (isFirstHistoryTokenHandlerRegistration != null) {
+								isFirstHistoryTokenHandlerRegistration
+										.removeHandler();
+								isFirstHistoryTokenHandlerRegistration = null;
+							}
 						}
-						isFirstHistoryToken = false;
-						if (isFirstHistoryTokenHandlerRegistration != null) {
-							isFirstHistoryTokenHandlerRegistration
-									.removeHandler();
-							isFirstHistoryTokenHandlerRegistration = null;
-						}
-					}
-				});
+					});
+		}
 	}
 
 	private boolean windowClosing;
