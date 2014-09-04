@@ -1143,4 +1143,8 @@ public class SEUtilities {
 		}
 		return null;
 	}
+
+	public static boolean notJustWhitespace(String text) {
+		return SEUtilities.normalizeWhitespaceAndTrim(text).length()>0;
+	}
 }
