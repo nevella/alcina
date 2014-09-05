@@ -60,7 +60,8 @@ public final class ServerSerializationStreamWriter extends
 	/**
 	 * Builds a string that evaluates into an array containing the given
 	 * elements. This class exists to work around a bug in IE6/7 that limits the
-	 * size of array literals.
+	 * size of array literals. NR - in fact, slightly better implementation used (LengthConstrainedArrayIE) for IE
+	 * but there are still issues with >100000 objects
 	 */
 	public static class LengthConstrainedArray {
 		public static final int MAXIMUM_ARRAY_LENGTH = 1 << 15;
