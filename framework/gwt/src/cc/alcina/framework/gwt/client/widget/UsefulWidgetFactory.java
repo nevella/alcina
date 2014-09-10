@@ -25,6 +25,8 @@ import com.google.gwt.user.client.ui.Widget;
  */
 public class UsefulWidgetFactory {
 	public static final String BULLET_SEPARATOR_HTML = "\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0";
+	
+	public static final String NARROW_BULLET_SEPARATOR_HTML = "\u00A0\u00A0\u2022\u00A0\u00A0";
 
 	public static FlowPanel mediumTitleWidget(String title) {
 		FlowPanel fp = new FlowPanel();
@@ -66,5 +68,8 @@ public class UsefulWidgetFactory {
 
 	public static Widget createBulletSeparator() {
 		return new InlineHTML(BULLET_SEPARATOR_HTML);
+	}
+	public static Widget createNarrowBulletSeparator() {
+		return new InlineHTML(NARROW_BULLET_SEPARATOR_HTML);
 	}
 }

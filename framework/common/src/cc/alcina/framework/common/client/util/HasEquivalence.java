@@ -10,6 +10,9 @@ public interface HasEquivalence<T> {
 	public boolean equivalentTo(T other);
 
 	public static class HasEquivalenceHelper {
+		/**
+		 * Returns the objects from the first collection which have an equivalent in the second
+		 */
 		public static <T extends HasEquivalence> List<? super HasEquivalence> intersection(
 				Collection<T> o1, Collection<T> o2) {
 			List<? super HasEquivalence> result = new ArrayList<HasEquivalence>();

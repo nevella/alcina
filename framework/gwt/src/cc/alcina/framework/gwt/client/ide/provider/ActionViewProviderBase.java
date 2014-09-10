@@ -287,8 +287,9 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 				}
 
 				public void onSuccess(List<ActionLogItem> result) {
+					int idx=0;
 					for (ActionLogItem actionLogItem : result) {
-						fp.add(new ActionLogItemVisualiser(actionLogItem));
+						fp.add(new ActionLogItemVisualiser(actionLogItem,idx++==0));
 					}
 					HorizontalPanel more = new HorizontalPanel();
 					more.setStyleName("pad-15");
@@ -335,7 +336,7 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 
 		private VerticalPanel vp;
 
-		ActionLogItemVisualiser(ActionLogItem item) {
+		ActionLogItemVisualiser(ActionLogItem item, boolean first) {
 			this.vp = new VerticalPanel();
 			this.link = new Link(CommonUtils.formatDate(item.getActionDate(),
 					DateStyle.AU_DATE_TIME)
@@ -343,7 +344,7 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 					+ item.getShortDescription());
 			link.addClickHandler(this);
 			this.html = new HTML("<pre>" + item.getActionLog() + "</pre>", true);
-			html.setVisible(false);
+			html.setVisible(first && item.getActionLog().length() < 2000);
 			html.setStyleName("logboxpre");
 			vp.add(link);
 			vp.add(html);
