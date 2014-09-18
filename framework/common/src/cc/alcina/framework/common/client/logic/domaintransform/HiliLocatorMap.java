@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.HashMap;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 import com.totsp.gwittir.client.beans.Converter;
@@ -43,5 +44,13 @@ public class HiliLocatorMap extends HashMap<Long, HiliLocator> {
 
 	public HiliLocator getFor(HasIdAndLocalId hili) {
 		return get(hili.getLocalId());
+	}
+
+	public HiliLocator getFor(ObjectRef ref) {
+		long id = ref.getId();
+		if (id != 0) {
+			return new HiliLocator(ref.getClassRef().getRefClass(), id);
+		}
+		return get(ref.getLocalId());
 	}
 }
