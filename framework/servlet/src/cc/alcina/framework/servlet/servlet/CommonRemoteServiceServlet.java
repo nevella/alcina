@@ -24,8 +24,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -883,7 +885,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		super.onAfterResponseSerialized(serializedResponse);
 	}
 
-	protected void onAfterSpawnedThreadRun(Thread thread) {
+	protected void onAfterSpawnedThreadRun(Map properties) {
 	}
 
 	@Override
@@ -893,11 +895,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
 	}
 
-	protected void onBeforeSpawnedThreadRun(Thread thread) {
+	protected void onBeforeSpawnedThreadRun(Map properties) {
 	}
 
 	protected abstract void processValidLogin(LoginResponse lrb,
-			String userName, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
+			String userName, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 			throws AuthenticationException;
 
 	protected void setLogger(Logger logger) {
@@ -975,22 +978,19 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				getThreadLocalResponse());
 	}
 
-	class ActionLauncherAsync extends Thread {
-		private PermissionsManager pm;
-
+	class ActionLauncherAsync extends AlcinaChildRunnable {
 		private CountDownLatch latch;
 
 		private RemoteAction action;
-
-		private int tLooseContextDepth;
 
 		private TopicListener startListener;
 
 		volatile JobTracker tracker;
 
+		private Map properties = new LinkedHashMap();
+
 		ActionLauncherAsync(String name, RemoteAction action) {
 			super(name);
-			this.pm = PermissionsManager.get();
 			this.latch = new CountDownLatch(2);
 			this.action = action;
 			this.startListener = new TopicListener<JobTracker>() {
@@ -1003,8 +1003,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 
 		public JobTracker launchAndWaitForTracker() {
-			start();
-			onBeforeSpawnedThreadRun(this);
+			Thread thread = new Thread(this);
+			onBeforeSpawnedThreadRun(properties);
+			thread.start();
 			latch.countDown();
 			try {
 				latch.await();
@@ -1015,28 +1016,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 
 		@Override
-		public void run() {
-			try {
-				LooseContext.push();
-				// different thread-local
-				tLooseContextDepth = LooseContext.depth();
-				this.pm.copyTo(PermissionsManager.get());
-				onAfterSpawnedThreadRun(this);
-				LooseContext.getContext().addTopicListener(
-						JobRegistry.TOPIC_JOB_STARTED, startListener);
-				performActionAndWait(this.action);
-			} catch (Exception e) {
-				if (e instanceof RuntimeException) {
-					throw ((RuntimeException) e);
-				}
-				throw new RuntimeException(e);
-			} catch (OutOfMemoryError e) {
-				handleOom("", e);
-				throw e;
-			} finally {
-				LooseContext.confirmDepth(tLooseContextDepth);
-				LooseContext.pop();
-			}
+		protected void run0() throws Exception {
+			onAfterSpawnedThreadRun(properties);
+			LooseContext.getContext().addTopicListener(
+					JobRegistry.TOPIC_JOB_STARTED, startListener);
+			performActionAndWait(this.action);
 		}
 	}
 
