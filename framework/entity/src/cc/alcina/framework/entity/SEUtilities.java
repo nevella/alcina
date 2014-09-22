@@ -627,7 +627,7 @@ public class SEUtilities {
 	}
 
 	public static PropertyDescriptor getPropertyDescriptorByName(Class clazz,
-			String propertyName) throws IntrospectionException {
+			String propertyName) {
 		ensureDescriptorLookup(clazz);
 		PropertyDescriptor cached = pdLookup.get(clazz, propertyName);
 		return cached;
@@ -651,7 +651,7 @@ public class SEUtilities {
 	}
 
 	public static List<PropertyDescriptor> getSortedPropertyDescriptors(
-			Class clazz) throws IntrospectionException {
+			Class clazz)  {
 		ensureDescriptorLookup(clazz);
 		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
 				pdLookup.asMap(clazz).allValues());
@@ -1048,14 +1048,17 @@ public class SEUtilities {
 		}
 	}
 
-	protected static void ensureDescriptorLookup(Class clazz)
-			throws IntrospectionException {
-		if (!pdLookup.containsKey(clazz)) {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				pdLookup.put(clazz, pd.getName(), pd);
+	protected static void ensureDescriptorLookup(Class clazz) {
+		try {
+			if (!pdLookup.containsKey(clazz)) {
+				PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
+						.getPropertyDescriptors();
+				for (PropertyDescriptor pd : pds) {
+					pdLookup.put(clazz, pd.getName(), pd);
+				}
 			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -1145,6 +1148,6 @@ public class SEUtilities {
 	}
 
 	public static boolean notJustWhitespace(String text) {
-		return SEUtilities.normalizeWhitespaceAndTrim(text).length()>0;
+		return SEUtilities.normalizeWhitespaceAndTrim(text).length() > 0;
 	}
 }

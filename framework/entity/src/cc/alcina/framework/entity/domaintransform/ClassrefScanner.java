@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.domaintransform;
 
+import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -22,7 +23,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
@@ -41,6 +42,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheColumn;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassDataCache;
@@ -68,7 +70,8 @@ public class ClassrefScanner extends CachingScanner {
 
 	private void checkReachability() {
 		Set<ClassRef> all = ClassRef.all();
-		Set<String> err = new TreeSet<String>();
+		Set<String> errClassRef = new TreeSet<String>();
+		Set<String> errAssociation = new TreeSet<String>();
 		Set<Class> reffed = new LinkedHashSet<Class>();
 		for (ClassRef ref : all) {
 			reffed.add(ref.getRefClass());
@@ -112,8 +115,51 @@ public class ClassrefScanner extends CachingScanner {
 						if (WrapperPersistable.class
 								.isAssignableFrom(checkType)) {
 						} else {
-							err.add(String.format("%-30s: %s.%s",
+							errClassRef.add(String.format("%-30s: %s.%s",
 									checkType.getSimpleName(),
+									ref.getSimpleName(), field.getName()));
+						}
+					}
+					PropertyDescriptor leftPd = SEUtilities
+							.getPropertyDescriptorByName(ref, field.getName());
+					if (leftPd != null
+							&& leftPd.getReadMethod() != null
+							&& leftPd.getReadMethod().getAnnotation(
+									Association.class) != null) {
+						Association left = leftPd.getReadMethod()
+								.getAnnotation(Association.class);
+						PropertyDescriptor rightPd = SEUtilities
+								.getPropertyDescriptorByName(
+										left.implementationClass(),
+										left.propertyName());
+						Association right = null;
+						AlcinaMemCacheColumn rightMcc = null;
+						if (rightPd != null
+								&& rightPd.getReadMethod() != null
+								&& rightPd.getReadMethod().getAnnotation(
+										Association.class) != null) {
+							right = rightPd.getReadMethod().getAnnotation(
+									Association.class);
+							if (right.implementationClass() != ref
+									|| !right.propertyName().equals(
+											field.getName())) {
+								right = null;
+							}
+						}
+						if (rightPd != null
+								&& rightPd.getReadMethod() != null
+								&& rightPd.getReadMethod().getAnnotation(
+										AlcinaMemCacheColumn.class) != null) {
+							rightMcc = rightPd.getReadMethod().getAnnotation(
+									AlcinaMemCacheColumn.class);
+							if (rightMcc.targetEntity() != ref
+									|| !rightMcc.mappedBy().equals(
+											field.getName())) {
+								rightMcc = null;
+							}
+						}
+						if (right == null && rightMcc == null) {
+							errAssociation.add(String.format("%s.%s",
 									ref.getSimpleName(), field.getName()));
 						}
 					}
@@ -121,10 +167,16 @@ public class ClassrefScanner extends CachingScanner {
 				c = c.getSuperclass();
 			}
 		}
-		if (!err.isEmpty()) {
+		if (!errClassRef.isEmpty()) {
 			System.out
 					.println("Problems with classref reachability:\n-------------------");
-			System.out.println(CommonUtils.join(err, "\n"));
+			System.out.println(CommonUtils.join(errClassRef, "\n"));
+			throw new RuntimeException("Cancelling startup");
+		}
+		if (!errAssociation.isEmpty()) {
+			System.out
+					.println("Problems with inverse associations:\n-------------------");
+			System.out.println(CommonUtils.join(errAssociation, "\n"));
 			throw new RuntimeException("Cancelling startup");
 		}
 	}
