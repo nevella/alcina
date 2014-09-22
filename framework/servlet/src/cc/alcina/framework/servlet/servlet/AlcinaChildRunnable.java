@@ -26,6 +26,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			// different thread-local
 			tLooseContextDepth = LooseContext.depth();
 			this.pm.copyTo(PermissionsManager.get());
+			run0();
 		} catch (Exception e) {
 			if (e instanceof RuntimeException) {
 				throw ((RuntimeException) e);
