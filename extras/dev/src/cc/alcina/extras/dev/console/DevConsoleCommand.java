@@ -251,7 +251,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public static class CmdClearBuffer extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "cls" };
+			return new String[] { "cls","c" };
 		}
 
 		@Override
