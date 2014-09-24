@@ -214,6 +214,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		newThreadInstance.loginState = loginState;
 		newThreadInstance.userId = userId;
 		newThreadInstance.onlineState = onlineState;
+		newThreadInstance.root=root;
 	}
 
 	public void domainTransform(DomainTransformEvent evt)
