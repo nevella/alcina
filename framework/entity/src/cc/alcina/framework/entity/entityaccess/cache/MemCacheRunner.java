@@ -17,5 +17,5 @@ public abstract class MemCacheRunner extends MemCacheReader<Void, Void> {
 		}
 	}
 
-	protected abstract void run();
+	protected abstract void run() throws Exception;
 }
