@@ -540,7 +540,7 @@ public class SyncClientSerializationStreamReader extends
 						continue;
 					}
 					if (cont.startsWith(POSTLUDE)) {
-						i += PRELUDE.length() - 1;
+						i += POSTLUDE.length() - 1;
 						result.append("]");
 						continue;
 					}
