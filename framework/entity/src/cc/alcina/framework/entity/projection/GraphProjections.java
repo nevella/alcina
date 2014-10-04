@@ -36,6 +36,13 @@ public class GraphProjections {
 
 	GraphProjection projector = new GraphProjection();
 
+	private int maxDepth = Integer.MAX_VALUE;
+
+	public GraphProjections maxDepth(int maxDepth) {
+		this.maxDepth = maxDepth;
+		return this;
+	}
+
 	private GraphProjectionDataFilter dataFilter = Registry
 			.impl(CollectionProjectionFilter.class);
 
@@ -70,6 +77,7 @@ public class GraphProjections {
 	public <T> T project(T t) {
 		try {
 			projector.setFilters(fieldFilter, dataFilter);
+			projector.setMaxDepth(maxDepth);
 			return projector.project(t, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -142,7 +150,6 @@ public class GraphProjections {
 	}
 
 	public static class CountingProjector extends GraphProjection {
-
 		public CountingMap<Class> counts = new CountingMap<Class>();
 
 		@Override

@@ -138,6 +138,8 @@ public class GraphProjection {
 
 	Map<Field, PropertyPermissions> perFieldPermission = new LinkedHashMap<Field, PropertyPermissions>();
 
+	private int maxDepth;
+
 	public GraphProjection() {
 	}
 
@@ -216,6 +218,9 @@ public class GraphProjection {
 		if (projected == null) {
 			return projected;
 		}
+		if (context != null && context.depth >= maxDepth) {
+			return projected;
+		}
 		Field[] fields = getFieldsForClass(projected);
 		Set<Field> checkFields = perObjectPermissionFields.get(projected
 				.getClass());
@@ -240,7 +245,8 @@ public class GraphProjection {
 			ctor.setAccessible(true);
 			constructorLookup.put(sourceClass, ctor);
 		}
-		return (T) constructorLookup.get(sourceClass).newInstance(new Object[] {});
+		return (T) constructorLookup.get(sourceClass).newInstance(
+				new Object[] {});
 	}
 
 	// TODO - shouldn't this be package-private?
@@ -265,8 +271,8 @@ public class GraphProjection {
 			value = itr.next();
 			Object projected = project(value, context);
 			if (value == null || projected != null) {
-				if(dataFilter.projectIntoCollection(value,projected,context)){
-				c.add(projected);
+				if (dataFilter.projectIntoCollection(value, projected, context)) {
+					c.add(projected);
 				}
 			}
 		}
@@ -457,5 +463,9 @@ public class GraphProjection {
 
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
+	}
+
+	public void setMaxDepth(int maxDepth) {
+		this.maxDepth = maxDepth;
 	}
 }
