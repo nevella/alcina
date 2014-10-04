@@ -1062,6 +1062,15 @@ public class SEUtilities {
 		}
 	}
 
+	public static Calendar getCalendarRoundedToDay() {
+		Calendar cal = Calendar.getInstance();
+		cal.clear(Calendar.MILLISECOND);
+		cal.clear(Calendar.SECOND);
+		cal.clear(Calendar.MINUTE);
+		cal.clear(Calendar.HOUR);
+		return cal;
+	}
+
 	public static class Bytes {
 		public static int indexOf(byte[] src, byte[] toFind) {
 			return indexOf(src, toFind, 0);
