@@ -138,7 +138,7 @@ public class GraphProjection {
 
 	Map<Field, PropertyPermissions> perFieldPermission = new LinkedHashMap<Field, PropertyPermissions>();
 
-	private int maxDepth;
+	private int maxDepth = Integer.MAX_VALUE;
 
 	public GraphProjection() {
 	}
