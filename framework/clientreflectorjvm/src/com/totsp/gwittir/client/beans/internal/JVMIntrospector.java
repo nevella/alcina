@@ -63,10 +63,6 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 
 		ReflectionBeanDescriptor(Class clazz) {
 			try {
-				if (clazz.getName().contains(
-						"CitableWithReachableTypeEnumCriterion")) {
-					int debug = 3;
-				}
 				className = clazz.getName();
 				info = java.beans.Introspector.getBeanInfo(clazz);
 				props = new Property[info.getPropertyDescriptors().length - 1];
