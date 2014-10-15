@@ -4,7 +4,7 @@
   {
     var ua = window.navigator.userAgent.toLowerCase();
     if (ua.indexOf('iphone') != -1 || ua.indexOf('ipad') !=-1) {
-	    if(ua.indexOf('cpu os 6_') !=-1 || ua.indexOf('cpu iphone os 6_') !=-1 ){
+	    if(ua.indexOf('cpu os 6_') !=-1 ||ua.indexOf('cpu os 8_') !=-1 || ua.indexOf('cpu iphone os 6_') !=-1 ){
 	     	return 'ios6'; 
 	     }
      }
