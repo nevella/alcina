@@ -151,6 +151,7 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		return result;
 	}
+
 	public <T extends Comparable> Map<K, T> minMap() {
 		Map<K, T> result = new LinkedHashMap<K, T>();
 		for (java.util.Map.Entry<K, V> e : entrySet()) {
@@ -158,8 +159,23 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		return result;
 	}
+
 	@Override
 	public String toString() {
-		return CommonUtils.join(entrySet(),"\n");
+		return CommonUtils.join(entrySet(), "\n");
+	}
+
+	public V allNonFirstItems() {
+		List result = new ArrayList();
+		for (V v : values()) {
+			for (int i = 1; i < v.size(); i++) {
+				result.add(v.get(i));
+			}
+		}
+		return (V) result;
+	}
+
+	public <T> T first(K key) {
+		return (T) CommonUtils.first(getAndEnsure(key));
 	}
 }

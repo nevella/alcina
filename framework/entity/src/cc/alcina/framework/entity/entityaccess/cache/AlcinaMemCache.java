@@ -560,6 +560,7 @@ public class AlcinaMemCache {
 			}
 			warmup0();
 			initialised = true;
+			releaseConnectionLocks();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
