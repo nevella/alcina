@@ -44,6 +44,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		BaseBindable implements TreeRenderable, Permissible,
 		HasPermissionsValidation, HasEquivalence<CriteriaGroup> {
 	static final transient long serialVersionUID = -1L;
+
 	private transient String displayName;
 
 	private FilterCombinator combinator = FilterCombinator.AND;
@@ -208,7 +209,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 
 	@SuppressWarnings("unchecked")
 	public <S extends SearchCriterion> S soleCriterion() {
-		return criteria.isEmpty()?null:(S) criteria.iterator().next();
+		return criteria.isEmpty() ? null : (S) criteria.iterator().next();
 	}
 
 	public void toSoleCriterion(SC criterion) {
@@ -269,10 +270,11 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		return "";
 	}
 
-	protected <T extends CriteriaGroup> T deepCopyFrom(T cg) throws CloneNotSupportedException{
-		combinator=cg.combinator ;
-		displayName=cg.displayName;
-		entityClass=cg.entityClass;
+	protected <T extends CriteriaGroup> T deepCopyFrom(T cg)
+			throws CloneNotSupportedException {
+		combinator = cg.getCombinator();
+		displayName = cg.getDisplayName();
+		entityClass = cg.getEntityClass();
 		criteria.clear();
 		Set<SC> cgCriteria = cg.getCriteria();
 		for (SC sc : cgCriteria) {

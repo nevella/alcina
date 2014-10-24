@@ -130,7 +130,7 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore,
 			AsyncCallback<Integer> idCallback, int id) {
 		keys.put(id, key);
 		values.put(id, value);
-		reverseKeys.remove(key, id);
+		reverseKeys.subtract(key, id);
 		reverseKeys.add(key, id);
 		idCallback.onSuccess(id);
 	}
@@ -139,7 +139,7 @@ public class ObjectStoreMemoryImpl implements PersistenceObjectStore,
 		String kv = keys.remove(id);
 		values.remove(id);
 		if (kv != null) {
-			reverseKeys.remove(kv, id);
+			reverseKeys.subtract(kv, id);
 		}
 	}
 

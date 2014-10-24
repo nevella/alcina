@@ -92,8 +92,8 @@ public abstract class SearchCriterion extends BaseBindable implements
 	}
 
 	protected <SC extends SearchCriterion> SC copyPropertiesFrom(SC copyFromCriterion) {
-		direction = copyFromCriterion.direction;
-		displayName = copyFromCriterion.displayName;
+		direction = copyFromCriterion.getDirection();
+		displayName = copyFromCriterion.getDisplayName();
 		return (SC) this;
 	}
 
