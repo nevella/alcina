@@ -117,7 +117,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return getConn(true, false);
 	}
 
-	@SuppressWarnings("resource")
 	public Connection getConn(boolean forceNewLocal, boolean forceRemote)
 			throws Exception {
 		boolean remote = forceRemote
