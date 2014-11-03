@@ -1201,7 +1201,7 @@ public class AlcinaMemCache {
 					for (DomainTransformEvent dte : localTransforms) {
 						if (cacheDescriptor.perClass.keySet().contains(
 								dte.getObjectClass())) {
-							throw new RuntimeException(
+							throw new MemcacheException(
 									String.format(
 											"Starting a memcache transaction with an existing transform of a graphed object - %s."
 													+ " In certain cases that might work -- but better practice to not do so",
