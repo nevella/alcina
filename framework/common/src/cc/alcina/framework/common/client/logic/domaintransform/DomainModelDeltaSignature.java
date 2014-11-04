@@ -13,9 +13,9 @@ public class DomainModelDeltaSignature implements Serializable {
 		try {
 			String[] szs = text.substring(3).split(",");
 			return new DomainModelDeltaSignature().classSimpleName(szs[0])
-					.id(Long.parseLong(szs[1])).userId(Long.parseLong(szs[2]))
-					.contentHash(szs[3]).rpcSignature(szs[4])
-					.contentLength(Long.parseLong(szs[5]));
+					.id(Long.parseLong(szs[1])).sid(szs[2])
+					.userId(Long.parseLong(szs[3])).contentHash(szs[4])
+					.rpcSignature(szs[5]).contentLength(Long.parseLong(szs[6]));
 		} catch (Exception e) {
 			return null;
 		}
@@ -26,6 +26,12 @@ public class DomainModelDeltaSignature implements Serializable {
 	private long id;
 
 	private long userId;
+
+	private String sid = "0";
+
+	public String getSid() {
+		return this.sid;
+	}
 
 	private String contentHash = "";
 
@@ -83,8 +89,13 @@ public class DomainModelDeltaSignature implements Serializable {
 		return this;
 	}
 
+	public DomainModelDeltaSignature sid(String sid) {
+		this.sid = sid;
+		return this;
+	}
+
 	public String nonVersionedSignature() {
-		return CommonUtils.formatJ("%s,%s", classSimpleName, id);
+		return CommonUtils.formatJ("%s,%s,%s", classSimpleName, id, sid);
 	}
 
 	public DomainModelDeltaSignature rpcSignature(String rpcSignature) {
@@ -114,8 +125,8 @@ public class DomainModelDeltaSignature implements Serializable {
 
 	@Override
 	public String toString() {
-		return CommonUtils.formatJ("ds:%s,%s,%s,%s,%s,%s", classSimpleName, id,
-				userId, contentHash, rpcSignature, contentLength);
+		return CommonUtils.formatJ("ds:%s,%s,%s,%s,%s,%s,%s", classSimpleName,
+				id, sid, userId, contentHash, rpcSignature, contentLength);
 	}
 
 	public DomainModelDeltaSignature userId(long userId) {
@@ -160,6 +171,7 @@ public class DomainModelDeltaSignature implements Serializable {
 		DomainModelDeltaSignature sig = new DomainModelDeltaSignature();
 		sig.classSimpleName = classSimpleName;
 		sig.id = id;
+		sig.sid = sid;
 		return sig;
 	}
 }
