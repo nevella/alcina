@@ -387,4 +387,8 @@ public class CollectionFilters {
 					.startsWith(lcPrefix);
 		}
 	}
+
+	public static <T extends PublicCloneable<T>> List<T> clone(List<T> source) {
+		return convert(source, new CloneProjector<T>());
+	}
 }
