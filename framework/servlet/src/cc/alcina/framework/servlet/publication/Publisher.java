@@ -138,6 +138,7 @@ public class Publisher {
 		fcm.bytes = cw.wrappedBytes;
 		fcm.custom = cw.custom;
 		InputStream convertedContent = fc.convert(ctx, fcm);
+		ctx.getVisitorOrNoop().beforeDelivery();
 		ContentDelivery deliverer = (ContentDelivery) Registry.get()
 				.instantiateSingle(ContentDeliveryType.class,
 						deliveryModel.provideContentDeliveryType().getClass());
