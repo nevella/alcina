@@ -175,6 +175,14 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		return (V) result;
 	}
 
+	public int itemSize() {
+		int iSize = 0;
+		for (V v : values()) {
+			iSize += v.size();
+		}
+		return iSize;
+	}
+
 	public <T> T first(K key) {
 		return (T) CommonUtils.first(getAndEnsure(key));
 	}
