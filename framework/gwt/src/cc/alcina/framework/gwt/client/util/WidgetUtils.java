@@ -469,6 +469,7 @@ public class WidgetUtils {
 		}
 		ClientNodeIterator itr = new ClientNodeIterator(from,
 				ClientNodeIterator.SHOW_ALL);
+		Element fromContainingBlock = DomUtils.getContainingBlock(from);
 		Node node = from;
 		int insertTextIfOffsetMoreThanXChars = 100;
 		while ((node = node.getPreviousSibling()) != null) {
@@ -494,8 +495,11 @@ public class WidgetUtils {
 			} else {
 				// text
 				if (!isZeroOffsetDims(node.getParentElement())
-				// we don't want the combined ancestor of everyone...
-						&& !node.getParentElement().isOrHasChild(from)) {
+						// we don't want the combined ancestor of everyone...
+						&& (!node.getParentElement().isOrHasChild(from) ||
+								//but we do want <p><a><b>*some-text*</b></p>
+								DomUtils
+								.getContainingBlock(node) == fromContainingBlock)) {
 					return node.getParentElement();
 				}
 			}
