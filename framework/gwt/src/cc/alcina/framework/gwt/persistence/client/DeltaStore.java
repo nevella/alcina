@@ -385,13 +385,19 @@ public class DeltaStore {
 		return cache.nonVersionedSignatures.get(sig.nonVersionedSignature());
 	}
 
-	public boolean hasContentFor(DomainModelDeltaSignature sig) {
+	public boolean hasInstantiatedContentFor(DomainModelDeltaSignature sig) {
 		return getExistingVersionedSignature(sig) != null
 				&& cache.contentCache.get(getExistingVersionedSignature(sig)) != null;
 	}
 
+	public boolean hasLoadedContentFor(DomainModelDeltaSignature sig) {
+		return getExistingVersionedSignature(sig) != null
+				|| cache.contentCache.get(getExistingVersionedSignature(sig)) != null;
+	}
+
 	public void invalidate(Class<?> clazz) {
-		DomainModelDeltaSignature sig = new DomainModelDeltaSignature().clazz(clazz);
+		DomainModelDeltaSignature sig = new DomainModelDeltaSignature()
+				.clazz(clazz);
 		cache.invalidate(sig);
 	}
 }

@@ -223,6 +223,14 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY = new BoundWidgetTypeFactorySimpleGenerator();
 
+	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
+			Object obj, BoundWidgetTypeFactory factory,
+			boolean editableWidgets, boolean multiple) {
+		return new ArrayList<Field>(
+				Arrays.asList(fieldsForReflectedObjectAndSetupWidgetFactory(
+						obj, factory, editableWidgets, multiple)));
+	}
+
 	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple) {
