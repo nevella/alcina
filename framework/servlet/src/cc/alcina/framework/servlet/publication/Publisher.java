@@ -47,11 +47,6 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
  * 
  */
 public class Publisher {
-	public static final transient String CONTEXT_ONLY_PREPARE = Publisher.class
-			.getName() + ".CONTEXT_ONLY_PREPARE";
-	
-	public static final transient String TOPIC_CONTENT_PREPARED = Publisher.class
-			.getName() + ".TOPIC_CONTENT_PREPARED";
 
 	private PublicationContext ctx;
 
@@ -110,10 +105,6 @@ public class Publisher {
 		}
 		PublicationContent publicationContent = cmh.getPublicationContent();
 		ctx.publicationContent = publicationContent;
-		if (LooseContext.is(CONTEXT_ONLY_PREPARE)) {
-			LooseContext.getContext().publishTopic(TOPIC_CONTENT_PREPARED, publicationContent);
-			return null;
-		}
 		ContentRenderer crh = (ContentRenderer) Registry.get()
 				.instantiateSingle(ContentRenderer.class,
 						publicationContent.getClass());

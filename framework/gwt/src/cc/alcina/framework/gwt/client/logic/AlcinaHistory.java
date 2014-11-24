@@ -33,8 +33,8 @@ import com.google.gwt.user.client.History;
  * @author Nick Reddel
  */
 public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
-	//for testing - FF dev mode does some weird double-unencoding
-	static final String BASE64_PREFIX = "__b64__";
+	// for testing - FF dev mode does some weird double-unencoding
+	public static final String BASE64_PREFIX = "__b64__";
 
 	private static final String DOUBLE_AMP = "%26%26";
 
@@ -214,7 +214,7 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		return sb.toString();
 	}
 
-	public static StringMap fromHash(String s) {
+	public static String maybeUnencode(String s) {
 		if (s.startsWith(BASE64_PREFIX)) {
 			try {
 				s = new String(Base64Utils.fromBase64(s.substring(BASE64_PREFIX
@@ -223,6 +223,11 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 				e.printStackTrace();
 			}
 		}
+		return s;
+	}
+
+	public static StringMap fromHash(String s) {
+		s = maybeUnencode(s);
 		StringMap map = new StringMap();
 		String key = null;
 		String value = null;
@@ -335,7 +340,7 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		String s1 = current.toTokenString();
 		current.removeParameter(key);
 		String s2 = current.toTokenString();
-		if(!s2.equals(s1)){
+		if (!s2.equals(s1)) {
 			History.newItem(s2);
 		}
 	}
