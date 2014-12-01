@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
  * @author Nick Reddel
  */
 public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
+    private static final long serialVersionUID = 1L;
 	public Multimap() {
 		super();
 	}
