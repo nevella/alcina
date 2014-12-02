@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.entity.entityaccess;
 
+import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.util.Collection;
 import java.util.Set;
@@ -22,6 +23,7 @@ import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.MemcacheJoinHandler;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -67,5 +69,7 @@ public interface JPAImplementation {
 	Set createPersistentSetProjection(GraphProjectionContext context);
 
 	String entityDebugString(Object entity);
+
+	MemcacheJoinHandler getMemcacheJoinHandler(PropertyDescriptor pd);
 
 }

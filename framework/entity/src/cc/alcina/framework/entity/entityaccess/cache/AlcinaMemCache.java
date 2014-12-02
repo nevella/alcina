@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
@@ -78,6 +80,7 @@ import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
@@ -669,6 +672,12 @@ public class AlcinaMemCache {
 		}
 	}
 
+	public static interface MemcacheJoinHandler {
+		public void injectValue(ResultSet rs, HasIdAndLocalId source);
+
+		public String getTargetSql();
+	}
+
 	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry) {
 		JoinTable joinTable = entry.getValue();
 		if (joinTable == null) {
@@ -682,12 +691,14 @@ public class AlcinaMemCache {
 				.entrySet()) {
 			ManyToMany m = entry2.getKey().getReadMethod()
 					.getAnnotation(ManyToMany.class);
-			if (entry2.getValue() == null && m.targetEntity() == declaringClass
+			if (m != null && entry2.getValue() == null
+					&& m.targetEntity() == declaringClass
 					&& pd.getName().equals(m.mappedBy())) {
 				rev = entry2.getKey();
 				break;
 			}
 		}
+		MemcacheJoinHandler joinHandler = null;
 		if (rev == null) {
 			Type genericReturnType = pd.getReadMethod().getGenericReturnType();
 			if (genericReturnType instanceof ParameterizedType) {
@@ -699,34 +710,38 @@ public class AlcinaMemCache {
 				}
 			}
 			if (rev == null) {
-				throw new RuntimeException("No reverse key for " + pd);
+				joinHandler = Registry.impl(JPAImplementation.class)
+						.getMemcacheJoinHandler(pd);
+				if (joinHandler != null) {
+				} else {
+					throw new RuntimeException("No reverse key for " + pd);
+				}
 			}
 		}
 		try {
 			String joinTableName = joinTable.name();
 			MetricLogging.get().start(joinTableName);
+			String targetFieldSql = joinHandler != null ? joinHandler
+					.getTargetSql() : joinTable.inverseJoinColumns()[0].name();
 			String sql = String.format("select %s, %s from %s;",
-					joinTable.joinColumns()[0].name(),
-					joinTable.inverseJoinColumns()[0].name(), joinTableName);
+					joinTable.joinColumns()[0].name(), targetFieldSql,
+					joinTableName);
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
 			while (rs.next()) {
 				HasIdAndLocalId src = (HasIdAndLocalId) cache.get(
 						declaringClass, rs.getLong(1));
-				HasIdAndLocalId tgt = (HasIdAndLocalId) cache.get(rev
-						.getReadMethod().getDeclaringClass(), rs.getLong(2));
-				// if (src == null || tgt == null) {
-				// int j = 3;
-				// {
-				// src = (HasIdAndLocalId) cache.get(pd.getReadMethod()
-				// .getDeclaringClass(), rs.getLong(1));
-				// tgt = (HasIdAndLocalId) cache.get(rev.getReadMethod()
-				// .getDeclaringClass(), rs.getLong(2));
-				// }
-				// }
-				assert src != null && tgt != null;
-				laterLookup.add(tgt, pd, src);
-				laterLookup.add(src, rev, tgt);
+				assert src != null;
+				if (joinHandler == null) {
+					HasIdAndLocalId tgt = (HasIdAndLocalId) cache
+							.get(rev.getReadMethod().getDeclaringClass(),
+									rs.getLong(2));
+					assert tgt != null;
+					laterLookup.add(tgt, pd, src);
+					laterLookup.add(src, rev, tgt);
+				} else {
+					joinHandler.injectValue(rs, src);
+				}
 			}
 			MetricLogging.get().end(joinTableName, metricLogger);
 		} catch (Exception e) {
@@ -836,7 +851,8 @@ public class AlcinaMemCache {
 			ManyToMany manyToMany = rm.getAnnotation(ManyToMany.class);
 			JoinTable joinTable = rm.getAnnotation(JoinTable.class);
 			if (manyToMany != null || joinTable != null) {
-				if (manyToMany.mappedBy().isEmpty() && joinTable == null) {
+				if ((manyToMany != null && manyToMany.mappedBy().isEmpty())
+						&& joinTable == null) {
 					System.out
 							.format("**warn - manytomany association with no join table: %s.%s\n",
 									rm.getDeclaringClass().getSimpleName(),
@@ -1322,10 +1338,17 @@ public class AlcinaMemCache {
 
 		private boolean hili;
 
+		private EnumType enumType = EnumType.ORDINAL;
+
 		public ColumnDescriptor(PropertyDescriptor pd, Class propertyType) {
 			this.pd = pd;
 			type = propertyType;
 			hili = HasIdAndLocalId.class.isAssignableFrom(type);
+			Enumerated enumerated = pd.getReadMethod().getAnnotation(
+					Enumerated.class);
+			if (enumerated != null) {
+				enumType = enumerated.value();
+			}
 		}
 
 		public String getColumnName() {
@@ -1385,14 +1408,30 @@ public class AlcinaMemCache {
 				return v == null ? null : new Date(v.getTime());
 			}
 			if (Enum.class.isAssignableFrom(type)) {
-				int eIdx = rs.getInt(idx);
-				Object[] enumConstants = type.getEnumConstants();
-				if (eIdx >= enumConstants.length) {
-					warnLogger.format("Invalid enum index : %s:%s\n",
-							type.getSimpleName(), eIdx);
-					return null;
+				switch (enumType) {
+				case ORDINAL:
+					int eIdx = rs.getInt(idx);
+					Object[] enumConstants = type.getEnumConstants();
+					if (eIdx >= enumConstants.length) {
+						warnLogger.format("Invalid enum index : %s:%s\n",
+								type.getSimpleName(), eIdx);
+						return null;
+					}
+					return rs.wasNull() ? null : enumConstants[eIdx];
+				case STRING:
+					String enumString = rs.getString(idx);
+					if (enumString == null) {
+						return null;
+					}
+					Enum enumValue = CommonUtils.getEnumValueOrNull(
+							(Class) type, enumString);
+					if (enumValue == null) {
+						warnLogger.format("Invalid enum value : %s:%s\n",
+								type.getSimpleName(), enumString);
+						return null;
+					}
+					return enumValue;
 				}
-				return rs.wasNull() ? null : enumConstants[eIdx];
 			}
 			throw new RuntimeException("Unhandled rs type: "
 					+ type.getSimpleName());
