@@ -231,7 +231,7 @@ public abstract class ToolBase {
 
       if (handler == null) {
     	  //handle eclipse tools update
-    	  if(arg.equals("-nosuperDevMode")){
+    	  if(arg.equals("-nosuperDevMode")||arg.equals("-superDevMode")){
     		  continue;
     	  }else{
 	        System.err.println("Unknown argument: " + arg);

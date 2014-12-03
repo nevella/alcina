@@ -403,6 +403,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		if (propertyType == Boolean.class) {
 			return BooleanEnsureNonNullCoverter.INSTANCE;
 		}
+		if (propertyType == Double.class) {
+			return Converter.DOUBLE_TO_STRING_CONVERTER;
+		}
 		if (bwp == BoundWidgetTypeFactory.TEXTBOX_PROVIDER
 				|| bwp == TEXTBOX_PROVIDER) {
 			return Converter.TO_STRING_CONVERTER;
@@ -672,11 +675,25 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		if (field.getConverter() != null) {
 			binding.getRight().converter = field.getConverter();
 		}
+		Converter inverseConverter = getInverseConverter(field.getConverter());
+		if (inverseConverter != null) {
+			binding.getLeft().converter = inverseConverter;
+		}
 		if (field.getComparator() != null) {
 			widget.setComparator(field.getComparator());
 		}
 		parent.getChildren().add(binding);
 		return widget;
+	}
+
+	public static Converter getInverseConverter(Converter c) {
+		if (c == null) {
+			return null;
+		}
+		if (c == Converter.DOUBLE_TO_STRING_CONVERTER) {
+			return Converter.STRING_TO_DOUBLE_CONVERTER;
+		}
+		return null;
 	}
 
 	@Override
