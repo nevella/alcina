@@ -331,7 +331,7 @@ public class ClasspathScanner {
 				boolean ignore = false;
 				for (String s : ignorePathSegments) {
 					if (urlPath.contains(s)) {
-						info("ignored: " + urlPath);
+//						info("ignored: " + urlPath);
 						ignore = true;
 						break;
 					}
