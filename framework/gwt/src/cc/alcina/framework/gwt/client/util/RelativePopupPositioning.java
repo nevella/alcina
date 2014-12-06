@@ -107,10 +107,12 @@ public class RelativePopupPositioning {
 		if (positioningParams.shiftToEventXY
 				&& positioningParams.nativeEvent != null) {
 			NativeEvent nativeEvent = Event.as(Event.getCurrentEvent());
-			shiftX = getRelativeX(elementContainer.getElement(),
-					positioningParams.nativeEvent);
-			shiftY = getRelativeY(elementContainer.getElement(),
-					positioningParams.nativeEvent);
+			// shiftX = getRelativeX(elementContainer.getElement(),
+			// positioningParams.nativeEvent);
+			// shiftY = getRelativeY(elementContainer.getElement(),
+			// positioningParams.nativeEvent);
+			shiftX = nativeEvent.getClientX() + Window.getScrollLeft();
+			shiftY = nativeEvent.getClientY() + Window.getScrollTop();
 		}
 		return showPopup(elementContainer.getElement(), widgetToShow,
 				boundingWidget, positioningParams, relativeContainer, rpp,
@@ -224,8 +226,10 @@ public class RelativePopupPositioning {
 
 		@Override
 		public void setPosition(int offsetWidth, int offsetHeight) {
-			int x = relativeToElement.getAbsoluteLeft();
-			int y = relativeToElement.getAbsoluteTop();
+			int x = positioningParams.ignoreRelativeToCoordinates ? 0 : relativeToElement
+					.getAbsoluteLeft();
+			int y = positioningParams.ignoreRelativeToCoordinates ? 0 : relativeToElement
+					.getAbsoluteTop();
 			int relW = relativeToElement.getOffsetWidth();
 			int relH = relativeToElement.getOffsetHeight();
 			x += shiftX;
@@ -325,7 +329,7 @@ public class RelativePopupPositioning {
 					}
 					break;
 				}
-				//guard against a double-add
+				// guard against a double-add
 				if (!positioningParams.shiftToEventXY) {
 					x += boundingWidget.getAbsoluteLeft();
 					y += boundingWidget.getAbsoluteTop();
@@ -451,6 +455,8 @@ public class RelativePopupPositioning {
 	}
 
 	public static class RelativePopupPositioningParams {
+		public boolean ignoreRelativeToCoordinates;
+
 		public boolean addRelativeWidgetHeight;
 
 		public Widget relativeContainer;
