@@ -16,7 +16,8 @@ public class TopicPublisher {
 		support.firePropertyChange(key, message == null ? "" : null, message);
 	}
 
-	private Map<TopicListener, TopicListenerAdapter> lookup = new HashMap<TopicPublisher.TopicListener, TopicPublisher.TopicListenerAdapter>();
+	// listener, key - there may be multiple refs
+	private UnsortedMultikeyMap<TopicListenerAdapter> lookup = new UnsortedMultikeyMap<TopicListenerAdapter>();
 
 	public void addTopicListener(String key, TopicListener listener) {
 		TopicListenerAdapter adapter = new TopicListenerAdapter(listener);
@@ -25,17 +26,17 @@ public class TopicPublisher {
 		} else {
 			support.addPropertyChangeListener(key, adapter);
 		}
-		lookup.put(listener, adapter);
+		lookup.put(listener, key, adapter);
 	}
 
 	public void removeTopicListener(String key, TopicListener listener) {
-		TopicListenerAdapter adapter = lookup.get(listener);
+		TopicListenerAdapter adapter = lookup.get(listener, key);
 		if (key == null) {
 			support.removePropertyChangeListener(adapter);
 		} else {
 			support.removePropertyChangeListener(key, adapter);
 		}
-		lookup.remove(listener);
+		lookup.remove(listener, key);
 	}
 
 	private static class TopicListenerAdapter<T> implements
