@@ -15,7 +15,6 @@ package cc.alcina.framework.entity;
 
 import java.awt.Component;
 import java.awt.Container;
-import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.BufferedReader;
@@ -28,9 +27,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.cert.X509Certificate;
@@ -651,7 +652,7 @@ public class SEUtilities {
 	}
 
 	public static List<PropertyDescriptor> getSortedPropertyDescriptors(
-			Class clazz)  {
+			Class clazz) {
 		ensureDescriptorLookup(clazz);
 		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
 				pdLookup.asMap(clazz).allValues());
@@ -1158,5 +1159,18 @@ public class SEUtilities {
 
 	public static boolean notJustWhitespace(String text) {
 		return SEUtilities.normalizeWhitespaceAndTrim(text).length() > 0;
+	}
+
+	public static Map<String, String> splitQuery(URL url)
+			throws UnsupportedEncodingException {
+		Map<String, String> query_pairs = new LinkedHashMap<String, String>();
+		String query = url.getQuery();
+		String[] pairs = query.split("&");
+		for (String pair : pairs) {
+			int idx = pair.indexOf("=");
+			query_pairs.put(URLDecoder.decode(pair.substring(0, idx), "UTF-8"),
+					URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
+		}
+		return query_pairs;
 	}
 }
