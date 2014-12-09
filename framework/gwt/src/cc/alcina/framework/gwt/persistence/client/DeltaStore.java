@@ -341,6 +341,7 @@ public class DeltaStore {
 				removeUnusedTranches(new ArrayList<String>(), callback);
 			}
 		};
+		cache = null;
 		refreshCache(removeCallback);
 	}
 
