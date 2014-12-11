@@ -405,6 +405,12 @@ public class CommonUtils {
 		public Set<T> secondOnly;
 
 		public Set<T> intersection;
+
+		@Override
+		public String toString() {
+			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
+					firstOnly, intersection, secondOnly);
+		}
 	}
 
 	public static boolean isNullOrEmpty(String string) {

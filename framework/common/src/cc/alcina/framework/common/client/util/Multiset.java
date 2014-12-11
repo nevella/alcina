@@ -108,6 +108,7 @@ public class Multiset<K, V extends Set> implements Serializable {
 			addCollection(entry.getKey(), entry.getValue());
 		}
 	}
+
 	public void addAll(Multimap<K, List> other) {
 		for (Entry<K, List> entry : other.entrySet()) {
 			addCollection(entry.getKey(), entry.getValue());
@@ -120,5 +121,10 @@ public class Multiset<K, V extends Set> implements Serializable {
 			set.addAll(v);
 		}
 		return (V) set;
+	}
+
+	@Override
+	public String toString() {
+		return isEmpty() ? "{}" : CommonUtils.join(entrySet(), "\n");
 	}
 }

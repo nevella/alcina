@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
  * @author Nick Reddel
  */
 public class Multimap<K, V extends List> implements Map<K, V>, Serializable {
-	private LinkedHashMap<K, V> map=new LinkedHashMap<K, V>();
+	private LinkedHashMap<K, V> map = new LinkedHashMap<K, V>();
 
 	private static final long serialVersionUID = 1L;
 
@@ -240,7 +240,7 @@ public class Multimap<K, V extends List> implements Map<K, V>, Serializable {
 
 	@Override
 	public String toString() {
-		return CommonUtils.join(entrySet(), "\n");
+		return isEmpty() ? "{}" : CommonUtils.join(entrySet(), "\n");
 	}
 
 	public Collection<V> values() {

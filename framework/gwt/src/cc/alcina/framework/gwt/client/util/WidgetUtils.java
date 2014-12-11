@@ -50,6 +50,7 @@ import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
@@ -495,11 +496,10 @@ public class WidgetUtils {
 			} else {
 				// text
 				if (!isZeroOffsetDims(node.getParentElement())
-						// we don't want the combined ancestor of everyone...
+				// we don't want the combined ancestor of everyone...
 						&& (!node.getParentElement().isOrHasChild(from) ||
-								//but we do want <p><a><b>*some-text*</b></p>
-								DomUtils
-								.getContainingBlock(node) == fromContainingBlock)) {
+						// but we do want <p><a><b>*some-text*</b></p>
+						DomUtils.getContainingBlock(node) == fromContainingBlock)) {
 					return node.getParentElement();
 				}
 			}
@@ -992,6 +992,19 @@ public class WidgetUtils {
 	elt.click();
 	try {
 	    elt.focus();
+	} catch (e) {
+
+	}
+	}-*/;
+
+	public static void hardCancelEvent(NativePreviewEvent event) {
+		event.cancel();
+		cancelPossibleIEShortcut();
+	}
+
+	private static native void cancelPossibleIEShortcut() /*-{
+	try {
+	    $wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
 	} catch (e) {
 
 	}
