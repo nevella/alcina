@@ -51,6 +51,13 @@ public class DomUtils implements NodeFromXpathProvider {
 		invalidateUnwrapOrIgnoreCache();
 	}
 
+	public static Node lastChildOf(Node node) {
+		if (node.getChildCount() == 0) {
+			return node;
+		}
+		return lastChildOf(node.getLastChild());
+	}
+
 	private static void addVisibleTextNodes(Element element, List<Text> texts) {
 		NodeList<Node> nl = element.getChildNodes();
 		int length = nl.getLength();
@@ -926,5 +933,18 @@ public class DomUtils implements NodeFromXpathProvider {
 			domRequiredSplitInfo.get(el).unsplit();
 			domRequiredSplitInfo.remove(el);
 		}
+	}
+
+	public static Text getLastTextChild(Node node) {
+		Node n = lastChildOf(node);
+		ClientNodeIterator itr = new ClientNodeIterator(n,
+				ClientNodeIterator.SHOW_ALL);
+		while (n != null) {
+			if (n.getNodeType() == Node.TEXT_NODE) {
+				return (Text) n;
+			}
+			n = itr.previousNode();
+		}
+		return null;
 	}
 }

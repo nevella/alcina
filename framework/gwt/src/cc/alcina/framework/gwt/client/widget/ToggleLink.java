@@ -1,17 +1,16 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -27,14 +26,15 @@ import com.google.gwt.user.client.ui.FlowPanel;
  *
  * @author Nick Reddel
  */
-
- public class ToggleLink extends Composite implements
+public class ToggleLink extends Composite implements
 		HasSelectionHandlers<Integer>, ClickHandler {
 	private FlowPanel fp;
 
 	private Link link1;
 
 	private Link link2;
+
+	private int selectedIndex;
 
 	public ToggleLink(String state1, String state2,
 			SelectionHandler<Integer> handler) {
@@ -43,14 +43,28 @@ import com.google.gwt.user.client.ui.FlowPanel;
 		this.link2 = new Link(state2, this);
 		fp.add(link1);
 		fp.add(link2);
-		updateVisibility(0);
+		setSelectedIndex(0);
 		addSelectionHandler(handler);
 		initWidget(fp);
 	}
 
-	private void updateVisibility(int i) {
-		link1.setVisible(i == 0);
-		link2.setVisible(i == 1);
+	public void addButtonStyleName(String style) {
+		link1.addStyleName(style);
+		link2.addStyleName(style);
+	}
+
+	private void updateVisibility() {
+		link1.setVisible(selectedIndex == 0);
+		link2.setVisible(selectedIndex == 1);
+	}
+
+	public int getSelectedIndex() {
+		return this.selectedIndex;
+	}
+
+	public void setSelectedIndex(int selectedIndex) {
+		this.selectedIndex = selectedIndex;
+		updateVisibility();
 	}
 
 	public HandlerRegistration addSelectionHandler(
@@ -59,8 +73,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 	}
 
 	public void onClick(ClickEvent event) {
-		int selectedValue = event.getSource() == link1 ? 0 : 1;
-		updateVisibility(Math.abs(selectedValue - 1));
-		SelectionEvent.fire(this, selectedValue);
+		setSelectedIndex(Math.abs((event.getSource() == link1 ? 0 : 1) - 1));
+		SelectionEvent.fire(this, selectedIndex);
 	}
 }
