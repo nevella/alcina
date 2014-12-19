@@ -37,6 +37,10 @@ public class CachingMap<I, O> {
 		return map.get(key);
 	}
 
+	public void remove(I key) {
+		map.remove(key);
+	}
+
 	public Map<I, O> getMap() {
 		return this.map;
 	}
