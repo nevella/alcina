@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import com.totsp.gwittir.client.beans.Converter;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class CollectionFilters {
@@ -390,5 +390,15 @@ public class CollectionFilters {
 
 	public static <T extends PublicCloneable<T>> List<T> clone(List<T> source) {
 		return convert(source, new CloneProjector<T>());
+	}
+
+	public static <K, V1, V2> Map<K, V2> transformMap(Map<K, V1> mapIn,
+			Converter<V1, V2> converter) {
+		Map<K, V2> result = new LinkedHashMap<K, V2>();
+		Set<Entry<K, V1>> entrySet = mapIn.entrySet();
+		for (Entry<K, V1> entry : entrySet) {
+			result.put(entry.getKey(), converter.convert(entry.getValue()));
+		}
+		return result;
 	}
 }
