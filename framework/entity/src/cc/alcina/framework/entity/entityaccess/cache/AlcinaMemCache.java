@@ -96,9 +96,9 @@ import com.google.gwt.event.shared.UmbrellaException;
  * (possibly write::main) to write (subgraph) - so we know we'll have a main
  * lock
  * </p>
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public class AlcinaMemCache {
 	public static final String TOPIC_UPDATE_EXCEPTION = AlcinaMemCache.class
@@ -594,9 +594,7 @@ public class AlcinaMemCache {
 			return (Set<Long>) (existing == null ? set : CommonUtils
 					.intersection(existing, set));
 		}
-		final CollectionFilter filter = cacheFilter.collectionFilter != null ? cacheFilter.collectionFilter
-				: new PropertyPathFilter(cacheFilter.propertyPath,
-						cacheFilter.propertyValue, cacheFilter.filterOperator);
+		final CollectionFilter filter = cacheFilter.asCollectionFilter();
 		if (existing == null) {
 			List filtered = CollectionFilters.filter(cache.rawValues(clazz),
 					filter);
@@ -616,9 +614,7 @@ public class AlcinaMemCache {
 
 	private Set getFilteredTransactional(final Class clazz,
 			CacheFilter cacheFilter, Set existing) {
-		final CollectionFilter filter = cacheFilter.collectionFilter != null ? cacheFilter.collectionFilter
-				: new PropertyPathFilter(cacheFilter.propertyPath,
-						cacheFilter.propertyValue);
+		CollectionFilter filter = cacheFilter.asCollectionFilter();
 		existing = existing != null ? existing : transactional.rawValues(clazz);
 		CollectionFilters.filterInPlace(existing, filter);
 		return existing;
