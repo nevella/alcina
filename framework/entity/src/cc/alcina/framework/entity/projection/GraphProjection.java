@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -134,6 +134,16 @@ public class GraphProjection {
 	static Map<Field, PropertyPermissions> propertyPermissionLookup = new NullWrappingMap<Field, PropertyPermissions>(
 			new ConcurrentHashMap());
 
+	static Map<Class, ConstructorMethod> constructorMethodsLookup = new LinkedHashMap<Class, GraphProjection.ConstructorMethod>();
+
+	public static synchronized void registerConstructorMethods(
+			List<? extends ConstructorMethod> methods) {
+		for (ConstructorMethod constructorMethod : methods) {
+			constructorMethodsLookup.put(constructorMethod.getReturnClass(),
+					constructorMethod);
+		}
+	}
+
 	static Map<Class, Constructor> constructorLookup = new ConcurrentHashMap<Class, Constructor>();
 
 	Map<Field, PropertyPermissions> perFieldPermission = new LinkedHashMap<Field, PropertyPermissions>();
@@ -157,7 +167,7 @@ public class GraphProjection {
 	/**
 	 * May want to pass the underlying field to filters, rather than accessor
 	 * for ++performance
-	 * 
+	 *
 	 * @return the current portion of the source graph that has already been
 	 *         reached in the traversal
 	 */
@@ -239,7 +249,16 @@ public class GraphProjection {
 		return projected;
 	}
 
+	public static interface ConstructorMethod<T> {
+		T newInstance();
+
+		Class<T> getReturnClass();
+	}
+
 	protected <T> T newInstance(Class sourceClass) throws Exception {
+		if (constructorMethodsLookup.containsKey(sourceClass)) {
+			return (T) constructorMethodsLookup.get(sourceClass).newInstance();
+		}
 		if (!constructorLookup.containsKey(sourceClass)) {
 			Constructor ctor = sourceClass.getConstructor(new Class[] {});
 			ctor.setAccessible(true);

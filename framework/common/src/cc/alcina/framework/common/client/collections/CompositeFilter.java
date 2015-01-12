@@ -16,12 +16,18 @@ package cc.alcina.framework.common.client.collections;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 /**
  *
  * @author Nick Reddel
  */
 public class CompositeFilter<T> implements CollectionFilter<T> {
 	private List<CollectionFilter<T>> filters = new ArrayList<CollectionFilter<T>>();
+
+	public List<CollectionFilter<T>> getFilters() {
+		return this.filters;
+	}
 
 	private boolean or;
 
@@ -44,6 +50,11 @@ public class CompositeFilter<T> implements CollectionFilter<T> {
 			}
 		}
 		return !or;
+	}
+
+	@Override
+	public String toString() {
+		return "("+CommonUtils.join(filters, (or ? " OR " : " AND "))+")";
 	}
 
 	public CompositeFilter<T> add(CollectionFilter<T> filter) {

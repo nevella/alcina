@@ -1,6 +1,8 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -18,9 +20,11 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 	private boolean enabled = true;
 
+	public List<String> propertyPathAlia=new ArrayList<String>();
+
 	public boolean handles(Class clazz2, String propertyPath) {
 		return clazz2 == clazz && propertyPath != null
-				&& propertyPath.equals(this.propertyPath);
+				&& (propertyPath.equals(this.propertyPath)||propertyPathAlia.contains(propertyPath));
 	}
 
 	private CollectionFilter<T> relevanceFilter;
@@ -30,6 +34,9 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 		this.propertyPath = propertyPath;
 	}
 
+	public void addAlias(String propertyPath){
+		propertyPathAlia.add(propertyPath);
+	}
 	public void populateWithPrivateCache(Collection<T> values) {
 		createLookup();
 		lookup.privateCache = new DetachedEntityCache();

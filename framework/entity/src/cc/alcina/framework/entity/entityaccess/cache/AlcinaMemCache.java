@@ -68,6 +68,7 @@ import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -103,6 +104,8 @@ import com.google.gwt.event.shared.UmbrellaException;
 public class AlcinaMemCache {
 	public static final String TOPIC_UPDATE_EXCEPTION = AlcinaMemCache.class
 			.getName() + ".TOPIC_UPDATE_EXCEPTION";
+	public static final String TOPIC_DEBUG_QUERY_METRICS = AlcinaMemCache.class
+			.getName() + ".TOPIC_DEBUG_QUERY_METRICS";
 
 	public static void ensureReferredPropertyIsTransactional(
 			HasIdAndLocalId hili, String propertyName) {
@@ -587,12 +590,19 @@ public class AlcinaMemCache {
 			Set<Long> existing) {
 		CacheLookup lookup = getLookupFor(clazz, cacheFilter.propertyPath);
 		if (lookup != null) {
-			Set<Long> set = lookup
-					.getMaybeCollectionKey(cacheFilter.propertyValue);
-			set = set != null ? new LinkedHashSet<Long>(set)
-					: new LinkedHashSet<Long>();
-			return (Set<Long>) (existing == null ? set : CommonUtils
-					.intersection(existing, set));
+			switch (cacheFilter.filterOperator) {
+			case EQ:
+			case IN:
+				Set<Long> set = lookup
+						.getMaybeCollectionKey(cacheFilter.propertyValue);
+				set = set != null ? new LinkedHashSet<Long>(set)
+						: new LinkedHashSet<Long>();
+				return (Set<Long>) (existing == null ? set : CommonUtils
+						.intersection(existing, set));
+				// all others non-optimised
+			default:
+				break;
+			}
 		}
 		final CollectionFilter filter = cacheFilter.asCollectionFilter();
 		if (existing == null) {
@@ -1027,10 +1037,26 @@ public class AlcinaMemCache {
 			Set<Long> ids = query.getIds();
 			boolean transaction = transactional
 					.transactionActiveInCurrentThread();
+			boolean debugMetrics = LooseContext.is(TOPIC_DEBUG_QUERY_METRICS);
+			StringBuilder debugMetricBuilder = new StringBuilder();
 			if (!transaction || !ids.isEmpty()) {
 				for (int i = 0; i < query.getFilters().size(); i++) {
-					ids = getFiltered(clazz, query.getFilters().get(i),
+					long start = System.currentTimeMillis();
+					CacheFilter cacheFilter = query.getFilters().get(i);
+					ids = getFiltered(clazz, cacheFilter,
 							(i == 0 && ids.isEmpty()) ? null : ids);
+					if (debugMetrics) {
+						debugMetricBuilder.append(String.format(
+								"\t%5s - %s ms\n",
+								(System.currentTimeMillis() - start),
+								CommonUtils.trimToWsChars(
+										cacheFilter.toString(), 100)));
+					}
+				}
+				if (debugMetrics) {
+					metricLogger.log(String.format(
+							"Query metrics:\n========\n%s\n%s", query,
+							debugMetricBuilder.toString()));
 				}
 				raw = new ArrayList<T>(ids.size());
 				for (Long id : ids) {
