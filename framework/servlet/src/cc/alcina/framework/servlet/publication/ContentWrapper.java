@@ -33,9 +33,9 @@ import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererRe
 /**
  * Base for 'wrapper' phase of pipeline - adds headers, footers, does any extra
  * end-of-rendering pipeline work.
- * 
+ *
  * @author nreddel@barnet.com.au
- * 
+ *
  * @param <D>
  * @param <M>
  * @param <V>
@@ -188,7 +188,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		public String description;
 
 		public boolean footer;
-		
+
 		public boolean narrow;
 
 		public boolean css31;
@@ -198,6 +198,8 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		public String headerContent;
 
 		public String linkBaseHref;
+
+		public int year;
 
 		public String siteBaseHref;
 
