@@ -513,23 +513,25 @@ public class DomUtils implements NodeFromXpathProvider {
 		return CommonUtils.join(parts, "/");
 	}
 
-	public void dumpMap(boolean regenerate) {
-		dumpMap0(regenerate, xpathMap);
+	public String dumpMap(boolean regenerate) {
+		return dumpMap0(regenerate, xpathMap);
 	}
 
-	private void dumpMap0(boolean regenerate, Map<String, Node> xpathMap) {
+	private String dumpMap0(boolean regenerate, Map<String, Node> xpathMap) {
+		StringBuilder builder = new StringBuilder();
 		if (regenerate) {
 			xpathMap = new LinkedHashMap<String, Node>();
 			generateMap((Element) lastContainer, "", xpathMap);
 		}
-		System.out.println("---dump xpath map");
+		builder.append("---dump xpath map\n");
 		for (String key : xpathMap.keySet()) {
 			Node node = xpathMap.get(key);
 			String tc = node.getNodeType() == Node.TEXT_NODE ? " - "
 					+ node.getNodeValue() : "";
-			System.out.println(key + tc);
+			builder.append(key + tc + "\n");
 		}
-		System.out.println("\n---\n\n");
+		builder.append("\n---\n\n");
+		return builder.toString();
 	}
 
 	boolean requiresSplit(Element ancestor, Element wrapper) {
