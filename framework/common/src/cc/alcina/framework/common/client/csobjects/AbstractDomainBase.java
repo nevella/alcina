@@ -87,7 +87,8 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 
 	@UnsafeNativeLong
 	private native int fastHash(long id, long localId, int classHashCode)/*-{
-		return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h ^ classHashCode;
+	return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h
+		^ classHashCode;
 	}-*/;
 
 	/**
@@ -98,15 +99,15 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	 * we check if a tm collection contains that object, it'll say "no" sad.
 	 * probably some concept of "remapping listener" wouldn't be bad in the tm
 	 * just in case of user sets/maps which need remapping
-	 * 
+	 *
 	 * hmm - wait - if we remap, we're making all sorts of problems for anything
 	 * in a set better to not - and use a set implementation in the tm which
 	 * maybe handles this sort of thing
-	 * 
+	 *
 	 * in fact...hmmm - used to be gethash/sethash, but _any way_ is really
 	 * wrong objects from db are different to client-created objects - use one
 	 * of the getobject(class,id,localid) methods if you want to look up
-	 * 
+	 *
 	 */
 	// public void clearHash() {
 	// hash = 0;
@@ -135,8 +136,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 		if (!GwittirUtils.isIntrospectable(getClass())) {
 			return super.toString();
 		}
-		String dn = Reflections.classLookup()
-				.displayNameForObject(this);
+		String dn = Reflections.classLookup().displayNameForObject(this);
 		dn = !CommonUtils.isNullOrEmpty(dn) ? dn : "[Object]";
 		return dn.substring(0, dn.length());
 	}
@@ -154,5 +154,9 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	protected String comparisonString() {
 		throw new RuntimeException(
 				"no display name available, and using comparator");
+	}
+
+	public  long provideIdOrLocalIdIfZero() {
+		return getId() != 0 ? getId() : getLocalId();
 	}
 }
