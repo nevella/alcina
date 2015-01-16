@@ -56,6 +56,13 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 		i2 = i2 == 0 ? value : Math.max(i2, value);
 	}
 
+	public IntPair union(IntPair other) {
+		if (!intersectsWith(other)) {
+			return null;
+		}
+		return new IntPair(Math.min(i1, other.i1), Math.max(i2, other.i2));
+	}
+
 	public int compareTo(IntPair ip) {
 		return i1 < ip.i1 ? -1 : i1 > ip.i1 ? 1 : i2 < ip.i2 ? -1
 				: i2 > ip.i2 ? 1 : 0;
