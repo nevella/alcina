@@ -1094,4 +1094,11 @@ public class CommonUtils {
 		}
 		return e.getDeclaringClass().getName() + "." + e.toString();
 	}
+
+	public static List<String> removeNullsAndEmpties(List<String> parts) {
+		List<String> dedupe = (List<String>) CommonUtils.dedupe(parts);
+		dedupe.remove(null);
+		dedupe.remove("");
+		return dedupe;
+	}
 }
