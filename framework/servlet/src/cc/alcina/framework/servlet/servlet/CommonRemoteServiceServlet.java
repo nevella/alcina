@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -130,17 +130,17 @@ import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 import com.totsp.gwittir.client.beans.Converter;
 
 /**
- * 
+ *
  * Tests (todo) for transform persistence: invalid clientauth multiple
  * simultaneous (identical clientinstance, non-) cross-server-restart
- * 
+ *
  * <p>
  * Readonly: most checks happen of simple methods happen at the persistence
  * layer so not needed here
  * </p>
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 @SuppressWarnings("unchecked")
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
@@ -363,6 +363,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n",
 							i++, object, xml);
 				}
+				enc.close();
 			}
 			msg += "Stacktrace:\t " + sw.toString();
 			System.out.println(msg);
@@ -786,6 +787,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				throw new WrappedRuntimeException(e2);
 			}
 		} else {
+			e.printStackTrace();
 			super.doUnexpectedFailure(e);
 		}
 	}
