@@ -1397,7 +1397,7 @@ public class AlcinaMemCache {
 			try {
 				CacheItemDescriptor itemDescriptor = cacheDescriptor.perClass
 						.get(c);
-				if (itemDescriptor.lazy && id != 0) {
+				if (itemDescriptor != null && itemDescriptor.lazy && id != 0) {
 					ClassIdLock lock = LockUtils.obtainClassIdLock(c, id);
 					System.out.format("Backup lazy load: %s - %s\n",
 							c.getSimpleName(), id);

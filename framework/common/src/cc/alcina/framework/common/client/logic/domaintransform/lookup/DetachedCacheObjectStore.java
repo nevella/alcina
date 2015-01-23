@@ -63,7 +63,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,
 			long id, long localId) {
 		T t = cache.get(c, id);
-		if (t == null && lazyObjectLoader != null) {
+		if (t == null && lazyObjectLoader != null ) {
 			lazyObjectLoader.loadObject(c, id, localId);
 			t = cache.get(c, id);
 		}
@@ -98,6 +98,6 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	@Override
 	public void invalidate(Class<? extends HasIdAndLocalId> clazz) {
 		cache.invalidate(clazz);
-		
+
 	}
 }
