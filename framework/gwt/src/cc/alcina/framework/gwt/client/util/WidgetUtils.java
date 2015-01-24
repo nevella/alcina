@@ -1012,4 +1012,8 @@ public class WidgetUtils {
 
 	}
 	}-*/;
+
+	public static int propertyPx(String propertyString) {
+		return Integer.parseInt(propertyString.replace("px", ""));
+	}
 }
