@@ -1014,6 +1014,9 @@ public class WidgetUtils {
 	}-*/;
 
 	public static int propertyPx(String propertyString) {
+		if (propertyString.indexOf("px") == -1) {
+			return 0;
+		}
 		return Integer.parseInt(propertyString.replace("px", ""));
 	}
 }
