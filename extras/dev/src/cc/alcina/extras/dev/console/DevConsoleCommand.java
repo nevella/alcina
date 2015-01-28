@@ -26,6 +26,7 @@ import java.util.SortedMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
 import cc.alcina.extras.dev.console.DevConsoleProperties.SetPropInfo;
@@ -251,7 +252,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public static class CmdClearBuffer extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "cls","c" };
+			return new String[] { "cls", "c" };
 		}
 
 		@Override
@@ -653,6 +654,37 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			query += ";\n";
 			System.out.println(query);
 			console.setClipboardContents(query);
+			System.out.println("\n");
+			return "";
+		}
+	}
+
+	public static class CmdUnescapeJson extends
+			DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "jsun" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "unescape json";
+		}
+
+		@Override
+		public String getUsage() {
+			return "jsun (will prompt for text, or copy from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String jsun = console
+					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
+			jsun = jsun.isEmpty() ? console.getClipboardContents() : jsun;
+			jsun = StringEscapeUtils.unescapeJavaScript(jsun);
+
+			System.out.println(jsun);
+			console.setClipboardContents(jsun);
 			System.out.println("\n");
 			return "";
 		}
