@@ -168,8 +168,10 @@
 
 	<!-- needed so gwt can see the compiled annotations, if any, from client source -->
 	<target name="compile-client" depends="compile">
+		<property name="project.compile-client.dirs" value="${project.client.src.dir}"/>
+
 		<mkdir dir="${project.client.bin.dir}" />
-		<javac includeantruntime="false" debug="on" srcdir="${project.client.src.dir}" destdir="${project.client.bin.dir}">
+		<javac includeantruntime="false" debug="on" srcdir="${project.compile-client.dirs}" destdir="${project.client.bin.dir}">
 			<classpath>
 				<path refid="project.classpath" />
 
