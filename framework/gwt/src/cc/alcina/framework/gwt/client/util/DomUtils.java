@@ -11,6 +11,7 @@ import java.util.Stack;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 
 import com.google.gwt.core.client.GWT;
@@ -289,7 +290,9 @@ public class DomUtils implements NodeFromXpathProvider {
 
 	private static final String DOM_XPATH_MAP = "dom-xpath-map";
 
-	private static final String TEXT_MARKER = "TEXT()";
+	public static final String TEXT_MARKER = "TEXT()";
+
+	public static final String COMMENT_MARKER = "#COMMENT";
 
 	private boolean useXpathMap = true;
 
@@ -314,6 +317,8 @@ public class DomUtils implements NodeFromXpathProvider {
 	Map<Element, DomRequiredSplitInfo> domRequiredSplitInfo = new LinkedHashMap<Element, DomRequiredSplitInfo>();
 
 	Stack<XpathMapPoint> itrStack = null;
+
+	private Map<Node, StringBuilder> exactTextMap;
 
 	public DomUtils() {
 		invalidateUnwrapOrIgnoreCache();
@@ -624,35 +629,39 @@ public class DomUtils implements NodeFromXpathProvider {
 	private String dumpMap0(boolean regenerate, Map<String, Node> xpathMap) {
 		StringBuilder builder = new StringBuilder();
 		if (regenerate) {
+			exactTextMap = new LinkedHashMap<Node, StringBuilder>();
 			xpathMap = new LinkedHashMap<String, Node>();
 			generateMap((Element) lastContainer, "", xpathMap);
+		} else {
+			exactTextMap = null;
 		}
 		builder.append("---dump xpath map\n");
 		for (String key : xpathMap.keySet()) {
 			Node node = xpathMap.get(key);
 			String tc = node.getNodeType() == Node.TEXT_NODE ? " - "
-					+ node.getNodeValue() : "";
+					+ (exactTextMap != null ? exactTextMap.get(node) : node
+							.getNodeValue()) : "";
 			builder.append(key + tc + "\n");
 		}
 		builder.append("\n---\n\n");
 		return builder.toString();
 	}
 
-	private void generateMap0(Element elt, String prefix,
+	private void generateMap0(Element container, String prefix,
 			Map<String, Node> xpathMap) {
-		if (elt == null) {
+		if (container == null) {
 			return;
 		}
 		Map<String, Integer> total = new HashMap<String, Integer>();
 		Map<String, Integer> current = new HashMap<String, Integer>();
-		NodeList<Node> nodes = elt.getChildNodes();
+		NodeList<Node> nodes = container.getChildNodes();
 		if (prefix.length() <= 1) {
-			xpathMap.put(prefix, elt);
+			xpathMap.put(prefix, container);
 		}
 		short lastNodeType = Node.DOCUMENT_NODE;
 		// ignore sequential texts (with wrapping), as per non-map version
 		WrappingAwareNodeIterator awareNodeIterator = new WrappingAwareNodeIterator(
-				elt);
+				container);
 		Node node = null;
 		while ((node = awareNodeIterator.next()) != null) {
 			short nodeType = node.getNodeType();
@@ -666,11 +675,15 @@ public class DomUtils implements NodeFromXpathProvider {
 			lastNodeType = nodeType;
 		}
 		lastNodeType = Node.DOCUMENT_NODE;
-		awareNodeIterator = new WrappingAwareNodeIterator(elt);
+		awareNodeIterator = new WrappingAwareNodeIterator(container);
+		StringBuilder cumulativeText = null;
 		while ((node = awareNodeIterator.next()) != null) {
 			short nodeType = node.getNodeType();
 			if ((nodeType == Node.TEXT_NODE && lastNodeType != Node.TEXT_NODE)
 					|| nodeType == Node.ELEMENT_NODE) {
+				// if (debug && !xp.contains("TBODY")) {
+				// System.out.println(xp);
+				// }
 				String marker = nodeType == Node.TEXT_NODE ? DomUtils.TEXT_MARKER
 						: node.getNodeName().toUpperCase();
 				String post = marker;
@@ -681,9 +694,6 @@ public class DomUtils implements NodeFromXpathProvider {
 					post += "[" + c + "]";
 				}
 				String xp = prefix + post;
-				if (debug && !xp.contains("TBODY")) {
-					System.out.println(xp);
-				}
 				xpathMap.put(xp, node);
 				if (nodeType == Node.ELEMENT_NODE) {
 					generateMap0((Element) node, xp + "/", xpathMap);
@@ -692,10 +702,18 @@ public class DomUtils implements NodeFromXpathProvider {
 						generateMap0((Element) node, prefix, xpathMap);
 					}
 				} else {
-					if (debug && !xp.contains("TBODY")) {
-						System.out.println("\t\t" + node.getNodeValue());
+					if (exactTextMap != null) {
+						cumulativeText = new StringBuilder();
+						exactTextMap.put(node, cumulativeText);
 					}
 				}
+			}
+			// if (debug && !xp.contains("TBODY") && nodeType == Node.TEXT_NODE)
+			// {
+			//
+			// }
+			if (exactTextMap != null && nodeType == Node.TEXT_NODE) {
+				cumulativeText.append(node.getNodeValue());
 			}
 			lastNodeType = nodeType;
 		}
@@ -876,11 +894,13 @@ public class DomUtils implements NodeFromXpathProvider {
 		List<Node> kids = new ArrayList<Node>();
 
 		public NodeWrapList(Element hasUnwrap) {
-			NodeList<Node> sibs = hasUnwrap.getParentNode().getChildNodes();
-			int length = sibs.getLength();
+			List<Node> sibs = nodeListToArrayList(hasUnwrap.getParentNode()
+					.getChildNodes());
+			int length = sibs.size();
 			boolean inWrap = false;
+			String expandoId = hasUnwrap.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
 			for (int i = 0; i < length; i++) {
-				Node n = sibs.getItem(i);
+				Node n = sibs.get(i);
 				boolean nHasUnwrap = false;
 				if (!inWrap) {
 					if (n == hasUnwrap) {
@@ -891,19 +911,23 @@ public class DomUtils implements NodeFromXpathProvider {
 				}
 				if (n.getNodeType() == Node.ELEMENT_NODE) {
 					Element e = (Element) n;
-					nHasUnwrap = e.getAttribute(ATTR_UNWRAP_EXPANDO_ID)
-							.length() > 0;
+					String currentEltExpandoId = e
+							.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
+					nHasUnwrap = currentEltExpandoId.length() > 0;
 					if (nHasUnwrap) {
-						kids.addAll(nodeListToArrayList(hasUnwrap
-								.getChildNodes()));
-						if (n != hasUnwrap) {
-							break;// reached second wrap, break (at the mo
-									// there's no distinct expando id)
+						kids.addAll(nodeListToArrayList(e.getChildNodes()));
+						if (n != hasUnwrap
+								&& expandoId.equals(currentEltExpandoId)) {
+							break;// finished expando
 						} else {
-							continue;
+							continue;// ignore this (different) expando id
 						}
-					}// normal node
-					kids.add(n);
+					}// normal elementnode
+					else {
+						kids.add(n);
+					}
+				} else {
+					kids.add(n);// text
 				}
 			}
 		}
@@ -969,6 +993,10 @@ public class DomUtils implements NodeFromXpathProvider {
 					} else {
 						// fallthrough, continue while
 					}
+				} else if (e.getAttribute(ATTR_UNWRAP_EXPANDO_ID).length() > 0
+						&& e.getChildCount() == 0) {
+					return e;
+					// empty unwrap node, ignore
 				} else {
 					return e;
 				}
