@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -83,6 +84,12 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
  */
 public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		HasLayoutInfo {
+	public static Map<String, List> emptyItems() {
+		HashMap<String, List> map = new HashMap<String, List>();
+		map.put("", new ArrayList());
+		return map;
+	}
+
 	public static final ClickHandler NOOP_CLICK_HANDLER = new ClickHandler() {
 		@Override
 		public void onClick(ClickEvent event) {
@@ -91,12 +98,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	};
 
 	private static final int DELAY_TO_CHECK_FOR_CLOSING = 400;
-
-	public static Map<String, List> emptyItems() {
-		HashMap<String, List> map = new HashMap<String, List>();
-		map.put("", new ArrayList());
-		return map;
-	}
 
 	private FlowPanel holder;
 
@@ -193,6 +194,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			}
 		}
 	};
+
 	SelectableNavigation selectableNavigation = new SelectableNavigation();
 
 	protected RelativePopupPanel relativePopupPanel;
@@ -200,6 +202,8 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	boolean emptyItems = false;
 
 	private Renderer renderer = ToStringRenderer.INSTANCE;
+
+	private VisualFilterableItemFilter<T> itemFilter = new VisualFilterableItemFilter<T>();
 
 	// additional problem with ff
 	public SelectWithSearch() {
@@ -376,6 +380,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return inPanelHint;
 	}
 
+	public VisualFilterableItemFilter<T> getItemFilter() {
+		return this.itemFilter;
+	}
+
 	public Map<G, List<T>> getItemMap() {
 		return itemMap;
 	}
@@ -538,6 +546,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.inPanelHint = inPanelHint;
 	}
 
+	public void setItemFilter(VisualFilterableItemFilter<T> itemFilter) {
+		this.itemFilter = itemFilter;
+	}
+
 	public void setItemMap(Map<G, List<T>> itemMap) {
 		selectableNavigation.clear();
 		this.itemMap = itemMap;
@@ -696,9 +708,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
 			String sep) {
 		HasClickHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
-				item, false, charWidth, itemsHaveLinefeeds, ownerLabel, sep)
-				: new SelectWithSearchItem(item, false, charWidth,
-						itemsHaveLinefeeds, ownerLabel, sep);
+				item, false, charWidth, itemsHaveLinefeeds, ownerLabel, sep,
+				itemFilter) : new SelectWithSearchItem(item, false, charWidth,
+				itemsHaveLinefeeds, ownerLabel, sep);
 		return hch;
 	}
 
@@ -913,11 +925,15 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 		private final Label ownerLabel;
 
+		private VisualFilterableItemFilter<T> filter;
+
 		public SelectWithSearchItemDiv(T item, boolean asHTML, int charWidth,
-				boolean withLfs, Label ownerLabel, String sep) {
+				boolean withLfs, Label ownerLabel, String sep,
+				VisualFilterableItemFilter<T> filter) {
 			super(item.toString(), asHTML);
 			this.item = item;
 			this.ownerLabel = ownerLabel;
+			this.filter = filter;
 			String text = (String) renderer.render(item);
 			filterableText = text.toLowerCase();
 			setHTML(text + sep);
@@ -925,7 +941,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		}
 
 		public boolean filter(String filterText) {
-			boolean b = filterableText.contains(filterText)
+			boolean b = filter.allow(item, filterableText, filterText)
 					&& !selectedItems.contains(item);
 			setVisible(b);
 			if (b && !ownerLabel.isVisible()) {
