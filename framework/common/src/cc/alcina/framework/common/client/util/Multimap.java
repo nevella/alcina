@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -29,7 +29,8 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
  *
  * @author Nick Reddel
  */
-public class Multimap<K, V extends List> implements Map<K, V>, Serializable {
+public class Multimap<K, V extends List> implements Map<K, V>, Serializable,
+		Cloneable {
 	private LinkedHashMap<K, V> map = new LinkedHashMap<K, V>();
 
 	private static final long serialVersionUID = 1L;
@@ -89,8 +90,12 @@ public class Multimap<K, V extends List> implements Map<K, V>, Serializable {
 		this.map.clear();
 	}
 
-	public Object clone() {
-		return this.map.clone();
+	public Multimap<K, V> copy() {
+		Multimap<K, V> copy = new Multimap<K, V>();
+		for (Entry<K, V> entry : entrySet()) {
+			copy.put(entry.getKey(), (V) new ArrayList((List) entry.getValue()));
+		}
+		return copy;
 	}
 
 	public boolean containsKey(Object key) {
@@ -214,6 +219,7 @@ public class Multimap<K, V extends List> implements Map<K, V>, Serializable {
 		return this.map.put(key, value);
 	}
 
+	// TODO - check usage - probably don't want this since lists aren't cloned
 	public void putAll(Map<? extends K, ? extends V> m) {
 		this.map.putAll(m);
 	}
