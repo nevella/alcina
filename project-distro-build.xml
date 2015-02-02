@@ -168,7 +168,7 @@
 
 	<!-- needed so gwt can see the compiled annotations, if any, from client source -->
 	<target name="compile-client" depends="compile">
-		<property name="project.compile-client.dirs" value="${project.client.src.dir}"/>
+		<property name="project.compile-client.dirs" value="${project.client.src.dir}" />
 
 		<mkdir dir="${project.client.bin.dir}" />
 		<javac includeantruntime="false" debug="on" srcdir="${project.compile-client.dirs}" destdir="${project.client.bin.dir}">
@@ -185,6 +185,9 @@
 	</target>
 	<target name="compile-gwt" description="Compile the GWT app" depends="compile-client,compile-gwt-nodeps" />
 	<target name="compile-gwt-nodeps" description="Compile the GWT app (no dependencies)" depends="">
+		<property name="project.gwt.compile.jvmarg1" value="-Dblank" />
+		<property name="project.gwt.compile.jvmarg2" value="-Dblank" />
+		<property name="project.gwt.compile.jvmarg3" value="-Dblank" />
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
@@ -199,6 +202,10 @@
 			<jvmarg value="-XX:MaxPermSize=${framework.gwt.jvm.maxPermSizeMb}m" />
 			<jvmarg value="-Xss2M" />
 			<jvmarg value="-Dgwt.usearchives=false" />
+
+			<jvmarg value="${project.gwt.compile.jvmarg1}" />
+			<jvmarg value="${project.gwt.compile.jvmarg2}" />
+			<jvmarg value="${project.gwt.compile.jvmarg3}" />
 			<arg line=" -style ${gwt.codestyle}" />
 			<arg line="${project.gwt.compile.flags}" />
 			<arg value="${project.gwt.module.name}" />

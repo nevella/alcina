@@ -1,4 +1,4 @@
 <module>
 	<inherits name='cc.alcina.framework.gwt.AlcinaGwtBase' />
-	<stylesheet src='Alcina-dep.css' />
+	<inherits name='cc.alcina.framework.gwt.AlcinaGwtStyles' />
 </module>
