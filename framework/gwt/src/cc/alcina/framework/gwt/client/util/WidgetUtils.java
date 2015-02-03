@@ -790,7 +790,6 @@ public class WidgetUtils {
 		scrollIntoView(e, fromTop, false);
 	}
 
-
 	public static void scrollIntoView(Element e, int fromTop,
 			boolean forceFromTop) {
 		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
@@ -1018,6 +1017,6 @@ public class WidgetUtils {
 		if (propertyString.indexOf("px") == -1) {
 			return 0;
 		}
-		return Integer.parseInt(propertyString.replace("px", ""));
+		return (int) Float.parseFloat(propertyString.replace("px", ""));
 	}
 }
