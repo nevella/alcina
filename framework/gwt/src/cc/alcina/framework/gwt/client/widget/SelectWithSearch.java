@@ -719,12 +719,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		panel.setStyleName("select-item-container");
 		if (popdown) {
 			panel.addMouseDownHandler(checkIgnoreHandler);
-			panel.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent event) {
-					int debug = 5;
-				}
-			});
 		}
 		itemHolder = panel;
 	}

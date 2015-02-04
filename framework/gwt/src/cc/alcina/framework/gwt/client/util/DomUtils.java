@@ -1023,4 +1023,11 @@ public class DomUtils implements NodeFromXpathProvider {
 		// * should't* be an issue since this is only used for overlay ext.
 		// hyperlink removal
 	}
+
+	public static boolean isAttachedToBody(Node node) {
+		if (node == null) {
+			return false;
+		}
+		return getAncestorWithTagName(node, "BODY") != null;
+	}
 }
