@@ -12,6 +12,8 @@ public abstract class AbstractTaskPerformer implements Runnable {
 
 	public String value;
 
+	public String result;
+
 	@Override
 	public void run() {
 		try {

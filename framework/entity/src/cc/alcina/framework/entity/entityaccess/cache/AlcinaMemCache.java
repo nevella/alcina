@@ -1734,12 +1734,6 @@ public class AlcinaMemCache {
 				this.pd = pd;
 				this.source = source;
 			}
-
-			@Override
-			public String toString() {
-				// TODO Auto-generated method stub
-				return super.toString();
-			}
 		}
 	}
 
