@@ -140,6 +140,9 @@ public class GraphProjection {
 	static Map<Class, Permission> perClassReadPermission = new NullWrappingMap<Class, Permission>(
 			new ConcurrentHashMap());
 
+	static Map<Class, List<Field>> perClassDeclaredFields = new NullWrappingMap<Class, List<Field>>(
+			new ConcurrentHashMap());
+
 	static Map<Field, PropertyPermissions> propertyPermissionLookup = new NullWrappingMap<Field, PropertyPermissions>(
 			new ConcurrentHashMap());
 
@@ -174,11 +177,8 @@ public class GraphProjection {
 			Set<Field> dynamicPermissionFields = new HashSet<Field>();
 			Class c = clazz;
 			while (c != Object.class) {
-				Field[] fields = c.getDeclaredFields();
+				List<Field> fields = ensureDeclaredNonStaticFields(c);
 				for (Field field : fields) {
-					if (Modifier.isStatic(field.getModifiers())) {
-						continue;
-					}
 					if (fieldFilter != null) {
 						if (Modifier.isTransient(field.getModifiers())
 								&& !fieldFilter.permitTransient(field)) {
@@ -193,7 +193,6 @@ public class GraphProjection {
 							continue;
 						}
 					}
-					field.setAccessible(true);
 					allFields.add(field);
 				}
 				c = c.getSuperclass();
@@ -207,6 +206,23 @@ public class GraphProjection {
 			}
 		}
 		return result;
+	}
+
+	private List<Field> ensureDeclaredNonStaticFields(Class c) {
+		if (!perClassDeclaredFields.containsKey(c)) {
+			Field[] fields = c.getDeclaredFields();
+			List<Field> nonStatic = new ArrayList<Field>();
+			for (Field field : fields) {
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				} else {
+					field.setAccessible(true);
+					nonStatic.add(field);
+				}
+			}
+			perClassDeclaredFields.put(c, nonStatic);
+		}
+		return perClassDeclaredFields.get(c);
 	}
 
 	/**
