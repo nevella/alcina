@@ -465,7 +465,6 @@ public class XmlUtils {
 	private static void transformDoc(Source xmlSource, Source xsltSource,
 			StreamResult sr, String cacheMarker,
 			TransformerFactoryConfigurator configurator) throws Exception {
-
 		Transformer trans = null;
 		if (cacheMarker == null || !transformerMap.containsKey(cacheMarker)
 				|| noTransformCaching) {
@@ -475,7 +474,9 @@ public class XmlUtils {
 			}
 			trans = xsltSource == null ? transFact.newTransformer() : transFact
 					.newTransformer(xsltSource);
-			transformerMap.put(cacheMarker, trans);
+			if (cacheMarker != null) {
+				transformerMap.put(cacheMarker, trans);
+			}
 		} else {
 			trans = transformerMap.get(cacheMarker);
 		}
