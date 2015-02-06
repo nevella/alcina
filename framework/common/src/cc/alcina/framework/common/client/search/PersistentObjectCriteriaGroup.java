@@ -12,8 +12,16 @@ public class PersistentObjectCriteriaGroup extends
 
 	public PersistentObjectCriteriaGroup() {
 		super();
-		setEntityClass(ClassRef.class);
-		setDisplayName("Object type");
+	}
+
+	@Override
+	public Class getEntityClass() {
+		return ClassRef.class;
+	}
+
+	@Override
+	public String getDisplayName() {
+		return "Object type";
 	}
 
 	@Override

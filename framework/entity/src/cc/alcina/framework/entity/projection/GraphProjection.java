@@ -154,7 +154,7 @@ public class GraphProjection {
 
 	private int maxDepth = Integer.MAX_VALUE;
 
-	private LinkedHashMap<Object, Object> replaceMap = null;
+	private LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap = null;
 
 	public GraphProjection() {
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
@@ -224,7 +224,7 @@ public class GraphProjection {
 	 * if we have: a.b .equals c - but not a.b==c and we want to project c, not
 	 * a.b - put c in this map
 	 */
-	public LinkedHashMap<Object, Object> getReplaceMap() {
+	public LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> getReplaceMap() {
 		return this.replaceMap;
 	}
 
@@ -238,9 +238,6 @@ public class GraphProjection {
 		if (source == null) {
 			return null;
 		}
-		if (replaceMap != null && replaceMap.containsKey(source)) {
-			source = (T) replaceMap.get(source);
-		}
 		Class c = source.getClass();
 		if (c == Timestamp.class && replaceTimestampsWithDates) {
 			// actually breaks the (T) contract here - naughty
@@ -251,6 +248,10 @@ public class GraphProjection {
 		}
 		if (isPrimitiveOrDataClass(c)) {
 			return source;
+		}
+		if (replaceMap != null && source instanceof HasIdAndLocalId
+				&& replaceMap.containsKey(source)) {
+			source = (T) replaceMap.get(source);
 		}
 		if (reached.containsKey(source)) {
 			return (T) reached.get(source);
@@ -349,7 +350,8 @@ public class GraphProjection {
 		this.reached = reached;
 	}
 
-	public void setReplaceMap(LinkedHashMap<Object, Object> replaceMap) {
+	public void setReplaceMap(
+			LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap) {
 		this.replaceMap = replaceMap;
 	}
 

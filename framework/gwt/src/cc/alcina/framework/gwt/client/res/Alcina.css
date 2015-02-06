@@ -1407,6 +1407,14 @@ table.gwittir-BoundTable.editable tr.odd td {
 	padding: 0px;
 }
 
+.alcina-ActionProgress .message {
+	white-space: pre;
+}
+
+.alcina-ActionProgress .action-logs a {
+	white-space: pre;
+}
+
 .alcina-ActionProgress .bar {
 	width: 200px;
 	height: 3px;
@@ -1481,11 +1489,11 @@ div.max .gwt-RichTextArea {
 }
 
 .dropdown-popup .popupTopLeft {
-	
+
 }
 
 .dropdown-popup .popupTopRight {
-	
+
 }
 
 .dropdown-popup .popupMiddleLeft {
@@ -1624,7 +1632,7 @@ div.popdown-select a:hover {
 }
 
 .gwt-SliderBar-shell-focused {
-	
+
 }
 
 .gwt-SliderBar-shell .gwt-SliderBar-line-sliding {
