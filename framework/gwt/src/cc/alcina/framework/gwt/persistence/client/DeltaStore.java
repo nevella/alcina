@@ -195,7 +195,6 @@ public class DeltaStore {
 							DomainModelDeltaSignature.parseSignature(signature),
 							false));
 		}
-		toRemove.removeAll(preserveKeys);
 		AsyncCallback refreshAfterRemoveCallback = new AsyncCallback() {
 			@Override
 			public void onFailure(Throwable caught) {
@@ -207,7 +206,12 @@ public class DeltaStore {
 				refreshCache(callback);
 			}
 		};
-		objectStore.remove(toRemove, refreshAfterRemoveCallback);
+		if (toRemove == null) {
+			refreshCache(callback);
+		} else {
+			toRemove.removeAll(preserveKeys);
+			objectStore.remove(toRemove, refreshAfterRemoveCallback);
+		}
 	}
 
 	class EnsureCacheConsort extends AllStatesConsort<EnsureCachePhase> {

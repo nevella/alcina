@@ -61,10 +61,10 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
  * don't care about GWT compiler optimisations (we do our own multi-pass
  * compilation), we can use native JSNI methods for much better obfuscated size
  * and improved performance
- * 
+ *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
- * 
+ *
  */
 @SuppressWarnings({ "deprecation" })
 public class IntrospectorGenerator extends Generator {
