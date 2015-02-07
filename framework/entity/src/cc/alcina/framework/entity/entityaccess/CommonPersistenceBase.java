@@ -559,13 +559,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public void logActionItem(ActionLogItem result) {
 		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects();
+		connectPermissionsManagerToLiveObjects(true);
 		getEntityManager().merge(result);
 	}
 
 	public long merge(HasId hi) {
 		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects();
+		connectPermissionsManagerToLiveObjects(true);
 		persistWrappables(hi);
 		HasId merge = getEntityManager().merge(hi);
 		return merge.getId();
@@ -582,7 +582,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public <WP extends WrapperPersistable> Long persist(WP gwpo)
 			throws Exception {
 		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects();
+		connectPermissionsManagerToLiveObjects(true);
 		WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
 				gwpo.getClass(), gwpo.getId());
 		wrapper.setObject(gwpo);
@@ -772,8 +772,19 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			return true;
 		}
 		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
-		CI ci = getItemById(clientInstanceImpl, id);
-		return ci != null && ci.getAuth() == auth;
+		List<CI> clientInstances = getEntityManager()
+				.createQuery(
+						String.format(
+								"select ci from %s ci inner join fetch ci.user where ci.id=%s",
+								clientInstanceImpl.getSimpleName(), id))
+				.getResultList();
+		CI ci = CommonUtils.first(clientInstances);
+		boolean authorised = ci != null && ci.getAuth() == auth;
+		if (authorised) {
+			Registry.impl(ClientInstanceAuthenticationCache.class)
+					.cacheAuthentication(ci);
+		}
+		return authorised;
 	}
 
 	/**

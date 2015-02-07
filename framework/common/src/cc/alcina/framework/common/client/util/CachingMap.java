@@ -44,4 +44,7 @@ public class CachingMap<I, O> {
 	public Map<I, O> getMap() {
 		return this.map;
 	}
+	public void clear(){
+		this.map.clear();
+	}
 }

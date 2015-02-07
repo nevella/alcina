@@ -16,6 +16,13 @@ public abstract class AlcinaChildRunnable implements Runnable {
 		this.pm = PermissionsManager.get();
 	}
 
+	private boolean logExceptions = false;
+
+	public AlcinaChildRunnable logExceptions() {
+		logExceptions = true;
+		return this;
+	}
+
 	protected abstract void run0() throws Exception;
 
 	@Override
@@ -27,14 +34,17 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			tLooseContextDepth = LooseContext.depth();
 			this.pm.copyTo(PermissionsManager.get());
 			run0();
-		} catch (Exception e) {
+		} catch (OutOfMemoryError e) {
+			SEUtilities.threadDump();
+			throw e;
+		} catch (Throwable e) {
+			if (logExceptions) {
+				e.printStackTrace();
+			}
 			if (e instanceof RuntimeException) {
 				throw ((RuntimeException) e);
 			}
 			throw new RuntimeException(e);
-		} catch (OutOfMemoryError e) {
-			SEUtilities.threadDump();
-			throw e;
 		} finally {
 			LooseContext.confirmDepth(tLooseContextDepth);
 			LooseContext.pop();
