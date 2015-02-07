@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -17,6 +17,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class Registry {
@@ -145,11 +146,22 @@ public class Registry {
 		get().registerSingleton(registryPoint, void.class, object);
 	}
 
-	public void registerSingleton(Class<?> registryPoint,
-			Class<?> targetClass, Object object) {
-		singletons.put(registryPoint, targetClass, object);
+	public void registerSingleton(Class<?> registryPoint, Class<?> targetClass,
+			Object object) {
+		registerSingletonInLookups(registryPoint, targetClass, object);
 		register(object.getClass(), registryPoint, targetClass,
 				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
+	}
+
+	private void registerSingletonInLookups(Class<?> registryPoint,
+			Class<?> targetClass, Object object) {
+		boolean voidTarget = targetClass == void.class;
+		singletons.put(registryPoint, targetClass, object);
+		if (voidTarget) {
+			// use className so we don't have to get class objects from
+			// different parts of memory
+			voidPointSingletons.put(registryPoint.getName(), object);
+		}
 	}
 
 	public static void setProvider(RegistryProvider provider) {
@@ -192,10 +204,13 @@ public class Registry {
 	// registrypoint/targetClass/singleton
 	protected UnsortedMultikeyMap<Object> singletons;
 
+	protected Map<String, Object> voidPointSingletons;
+
 	public Registry() {
 		registry = new UnsortedMultikeyMap<Class>(3);
 		targetPriority = new UnsortedMultikeyMap<Integer>(2);
 		singletons = new UnsortedMultikeyMap<Object>(2);
+		voidPointSingletons = new LinkedHashMap<String, Object>();
 		exactMap = new UnsortedMultikeyMap<Class>(2);
 		implementationTypeMap = new UnsortedMultikeyMap<ImplementationType>(2);
 	}
@@ -380,7 +395,13 @@ public class Registry {
 	protected <V> V impl0(Class<V> registryPoint, Class targetObjectClass,
 			boolean allowNull) {
 		// optimisation
-		Object singleton = singletons.get(registryPoint, targetObjectClass);
+		Object singleton = null;
+		boolean voidTarget = targetObjectClass == void.class;
+		if (voidTarget) {
+			singleton = voidPointSingletons.get(registryPoint.getName());
+		} else {
+			singleton = singletons.get(registryPoint, targetObjectClass);
+		}
 		if (singleton != null && !(singleton instanceof RegistryFactory)) {
 			return (V) singleton;
 		}
@@ -401,14 +422,16 @@ public class Registry {
 		switch (type) {
 		case FACTORY:
 			if (singleton == null) {
-				singletons.put(registryPoint, targetObjectClass, obj);
+				registerSingletonInLookups(registryPoint, targetObjectClass,
+						obj);
 				singleton = obj;
 			}
 			return (V) ((RegistryFactory) singleton).create(registryPoint,
 					targetObjectClass);
 		case SINGLETON:
 			if (singleton == null) {
-				singletons.put(registryPoint, targetObjectClass, obj);
+				registerSingletonInLookups(registryPoint, targetObjectClass,
+						obj);
 				singleton = obj;
 			}
 			return (V) singleton;
@@ -528,5 +551,6 @@ public class Registry {
 
 	public void shareSingletonMapTo(Registry otherRegistry) {
 		otherRegistry.singletons = singletons;
+		otherRegistry.voidPointSingletons = voidPointSingletons;
 	}
 }

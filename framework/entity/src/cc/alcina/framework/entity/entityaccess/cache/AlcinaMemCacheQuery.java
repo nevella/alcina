@@ -49,8 +49,6 @@ public class AlcinaMemCacheQuery {
 	}
 
 	public AlcinaMemCacheQuery() {
-		fieldFilter = Registry.impl(PermissibleFieldFilter.class);
-		dataFilter = Registry.impl(CollectionProjectionFilter.class);
 	}
 
 	public AlcinaMemCacheQuery filter(String key, Object value) {
@@ -67,6 +65,9 @@ public class AlcinaMemCacheQuery {
 	}
 
 	public GraphProjectionDataFilter getDataFilter() {
+		if (dataFilter == null) {
+			dataFilter = Registry.impl(CollectionProjectionFilter.class);
+		}
 		return this.dataFilter;
 	}
 
@@ -80,6 +81,9 @@ public class AlcinaMemCacheQuery {
 	}
 
 	public GraphProjectionFieldFilter getFieldFilter() {
+		if (fieldFilter == null) {
+			fieldFilter = Registry.impl(PermissibleFieldFilter.class);
+		}
 		return this.fieldFilter;
 	}
 

@@ -65,6 +65,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -101,7 +103,10 @@ import com.google.gwt.event.shared.UmbrellaException;
  * @author nick@alcina.cc
  *
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class AlcinaMemCache {
+	private static AlcinaMemCache singleton;
+
 	public static void checkActiveTransaction() {
 		if (!get().transactional.transactionActiveInCurrentThread()) {
 			throw new RuntimeException("requires transaction in current thread");
@@ -130,9 +135,8 @@ public class AlcinaMemCache {
 	}
 
 	public static AlcinaMemCache get() {
-		AlcinaMemCache singleton = Registry
-				.checkSingleton(AlcinaMemCache.class);
 		if (singleton == null) {
+			//not thread-safe, make sure it's initialised single-threaded on app startup
 			singleton = new AlcinaMemCache();
 			Registry.registerSingleton(AlcinaMemCache.class, singleton);
 		}
@@ -329,12 +333,6 @@ public class AlcinaMemCache {
 		}
 		if (key2 != null) {
 			query.filter(key2, value2);
-		}
-		if (raw) {
-			query.raw();
-		}
-		if (raw) {
-			query.raw();
 		}
 		T first = query.find(clazz);
 		if (first == null && createIfNonexistent) {
@@ -1058,6 +1056,14 @@ public class AlcinaMemCache {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+	private boolean debug;
+	public boolean isDebug() {
+		return this.debug;
+	}
+
+	public void setDebug(boolean debug) {
+		this.debug = debug;
+	}
 
 	<T extends HasIdAndLocalId> List<T> list(Class<T> clazz,
 			AlcinaMemCacheQuery query) {
@@ -1067,7 +1073,7 @@ public class AlcinaMemCache {
 			Set<Long> ids = query.getIds();
 			boolean transaction = transactional
 					.transactionActiveInCurrentThread();
-			boolean debugMetrics = LooseContext.is(TOPIC_DEBUG_QUERY_METRICS);
+			boolean debugMetrics = isDebug()&&LooseContext.is(TOPIC_DEBUG_QUERY_METRICS);
 			StringBuilder debugMetricBuilder = new StringBuilder();
 			if (!transaction || !ids.isEmpty()) {
 				for (int i = 0; i < query.getFilters().size(); i++) {

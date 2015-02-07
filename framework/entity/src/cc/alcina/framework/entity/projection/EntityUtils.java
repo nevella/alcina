@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionData
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class EntityUtils {
@@ -118,6 +118,11 @@ public class EntityUtils {
 		return detachedClone(source, false, callback);
 	}
 
+	public <T> T detachedCloneWithMemCache(T source,
+			InstantiateImplCallback callback) {
+		return detachedClone(source, callback, new DetachedEntityCache(), true);
+	}
+
 	public <T> T detachedClone(T source) {
 		return detachedClone(source, false, null);
 	}
@@ -132,31 +137,37 @@ public class EntityUtils {
 		return detachedClone(source, callback, cache);
 	}
 
-	
 	public <T> T detachedClone(T source, InstantiateImplCallback callback,
 			DetachedEntityCache cache) {
-		GraphProjectionDataFilter dataFilter = Registry.impl(JPAImplementation.class).getResolvingFilter(callback, cache);
+		return detachedClone(source, callback, cache, false);
+	}
+
+	public <T> T detachedClone(T source, InstantiateImplCallback callback,
+			DetachedEntityCache cache, boolean useMemCache) {
+		GraphProjectionDataFilter dataFilter = Registry.impl(
+				JPAImplementation.class).getResolvingFilter(callback, cache,
+				useMemCache);
 		try {
-			return new GraphProjection(Registry.impl(PermissibleFieldFilter.class), dataFilter)
+			return new GraphProjection(
+					Registry.impl(PermissibleFieldFilter.class), dataFilter)
 					.project(source, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-	
 
 	public <T> T detachedCloneIgnorePermissions(T source,
 			InstantiateImplCallback callback) {
 		DetachedEntityCache cache = new DetachedEntityCache();
-		GraphProjectionDataFilter dataFilter = Registry.impl(JPAImplementation.class).getResolvingFilter(callback, cache);
+		GraphProjectionDataFilter dataFilter = Registry.impl(
+				JPAImplementation.class).getResolvingFilter(callback, cache,
+				false);
 		try {
 			return new GraphProjection(null, dataFilter).project(source, null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-
-	
 
 	public static <T extends HasId> void order(List<T> incoming,
 			List<Long> orderValues) {
@@ -173,5 +184,4 @@ public class EntityUtils {
 		};
 		Collections.sort(incoming, cmp);
 	}
-	
 }

@@ -70,7 +70,7 @@ public class GraphProjections {
 
 	public GraphProjections implCallback(InstantiateImplCallback callback) {
 		dataFilter = Registry.impl(JPAImplementation.class).getResolvingFilter(
-				callback, new DetachedEntityCache());
+				callback, new DetachedEntityCache(), false);
 		return this;
 	}
 

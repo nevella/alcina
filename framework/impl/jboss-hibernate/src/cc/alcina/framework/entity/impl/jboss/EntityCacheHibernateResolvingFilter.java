@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -23,6 +23,7 @@ import org.hibernate.proxy.LazyInitializer;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -52,6 +53,16 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	}
 
 	private InstantiateImplCallback instantiateImplCallback;
+
+	private boolean useRawMemCache;
+
+	public boolean isUseRawMemCache() {
+		return this.useRawMemCache;
+	}
+
+	public void setUseRawMemCache(boolean useMemCache) {
+		this.useRawMemCache = useMemCache;
+	}
 
 	public EntityCacheHibernateResolvingFilter() {
 	}
@@ -93,6 +104,15 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				Serializable id = lazy.getIdentifier();
 				Object impl = getCache().get(lazy.getPersistentClass(),
 						(Long) id);
+				if (impl == null) {
+					if (useRawMemCache) {
+						if (AlcinaMemCache.get().isCached(
+								lazy.getPersistentClass())) {
+							impl = (T) AlcinaMemCache.get().findRaw(
+									lazy.getPersistentClass(), (Long) id);
+						}
+					}
+				}
 				if (impl == null && instantiateImplCallback != null) {
 					if (instantiateImplCallback.instantiateLazyInitializer(
 							lazy, context)) {
@@ -119,10 +139,17 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 					return null;
 				}
 			} else {
-				Object cached = getCache().get(value.getClass(), hili.getId());
+				Class<? extends HasIdAndLocalId> valueClass = hili.getClass();
+				Object cached = getCache().get(valueClass, hili.getId());
 				if (cached != null) {
 					return (T) cached;
 				} else {
+					if (useRawMemCache) {
+						if (AlcinaMemCache.get().isCached(valueClass)) {
+							return (T) AlcinaMemCache.get().findRaw(valueClass,
+									hili.getId());
+						}
+					}
 					HasIdAndLocalId clonedHili = (HasIdAndLocalId) cloned;
 					clonedHili.setId(hili.getId());
 					getCache().put(clonedHili);

@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -29,7 +29,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionData
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public interface JPAImplementation {
@@ -38,7 +38,7 @@ public interface JPAImplementation {
 	public <T> T getInstantiatedObject(T object);
 
 	public GraphProjectionDataFilter getResolvingFilter(InstantiateImplCallback callback,
-			DetachedEntityCache cache);
+			DetachedEntityCache cache, boolean useMemCache);
 
 	/**
 	 * return false if no optimisation
@@ -55,7 +55,7 @@ public interface JPAImplementation {
 	public void interpretException(DomainTransformException exception);
 
 	public File getConfigDirectory();
-	
+
 	public void afterSpecificSetId(Object fromBefore) throws Exception;
 
 	Object beforeSpecificSetId(EntityManager entityManager, Object toPersist) throws Exception;

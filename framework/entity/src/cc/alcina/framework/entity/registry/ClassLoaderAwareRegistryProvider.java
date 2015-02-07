@@ -15,10 +15,17 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	Map<ClassLoader, Registry> perClassLoader = new HashMap<ClassLoader, Registry>();
 
+	ClassLoader lastClassLoader;
+
+	Registry lastRegistry;
+
 	@Override
 	public Registry getRegistry() {
 		ClassLoader contextClassLoader = Thread.currentThread()
 				.getContextClassLoader();
+		if (contextClassLoader == lastClassLoader) {
+			return lastRegistry;
+		}
 		Registry registry = perClassLoader.get(contextClassLoader);
 		if (registry == null) {
 			if (perClassLoader.size() < 2) {
@@ -36,6 +43,8 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 						perClassLoader.keySet()));
 			}
 		}
+		lastClassLoader = contextClassLoader;
+		lastRegistry = registry;
 		return registry;
 	}
 
@@ -103,5 +112,4 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	public Map<ClassLoader, Registry> getPerClassLoader() {
 		return this.perClassLoader;
 	}
-
 }

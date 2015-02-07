@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -26,9 +26,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.ejb.TransactionAttribute;
-import javax.ejb.TransactionAttributeType;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -445,7 +444,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		GraphProjectionDataFilter filter = Registry.impl(
 				JPAImplementation.class).getResolvingFilter(
 				Registry.impl(JPAImplementation.class)
-						.getClassrefInstantiator(), cache);
+						.getClassrefInstantiator(), cache, false);
 		GraphProjectionFieldFilter allowSourceFilter = new GraphProjectionFieldFilter() {
 			@Override
 			public boolean permitField(Field field,
@@ -779,7 +778,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	/**
 	 * Used for supporting mixed rpc/transform domain loads
-	 * 
+	 *
 	 * @param userId
 	 */
 	public TransformCache warmupTransformCache() {
@@ -1168,19 +1167,23 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						.cacheIid(iid);
 				userName = iid.getRememberMeUser() == null ? null : iid
 						.getRememberMeUser().getUserName();
+			} else {
+				Iid nullHolder = getNewImplementationInstance(Iid.class);
+				nullHolder.setInstanceId(iidKey);
+				nullHolder.setId(nullIidCounter.getAndDecrement());
+				Registry.impl(ClientInstanceAuthenticationCache.class)
+						.cacheIid(iid);
 			}
 		}
 		return userName;
 	}
 
+	private AtomicInteger nullIidCounter = new AtomicInteger(1000000);
+
 	@Override
 	public boolean isValidIid(String iidKey) {
-		String userName = Registry
-				.impl(ClientInstanceAuthenticationCache.class)
-				.iidUserNameByKey(iidKey);
-		if (userName == null
-				&& !Registry.impl(ClientInstanceAuthenticationCache.class)
-						.containsIIdKey(iidKey)) {
+		if (!Registry.impl(ClientInstanceAuthenticationCache.class)
+				.containsIIdKey(iidKey)) {
 			List list = getEntityManager()
 					.createQuery(
 							"from "
@@ -1189,6 +1192,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.setParameter(1, iidKey).getResultList();
 			if (list.isEmpty()) {
 				return false;
+			} else {
+				Registry.impl(ClientInstanceAuthenticationCache.class)
+						.cacheIid((Iid) list.get(0));
 			}
 		}
 		return true;

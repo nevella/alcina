@@ -18,13 +18,25 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionCont
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
 public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
-	public static boolean disablePerObjectPermissions;
+	public static class AllFieldsFilter extends PermissibleFieldFilter {
+		@Override
+		public Boolean permitClass(Class clazz) {
+			return true;
+		}
 
-	public <T> T filterData(T original, T projected,
-			GraphProjectionContext context, GraphProjection graphProjection)
-			throws Exception {
-		return null;
+		@Override
+		public boolean permitField(Field field,
+				Set<Field> perObjectPermissionFields, Class forClass) {
+			return true;
+		}
+
+		@Override
+		public boolean permitTransient(Field field) {
+			return false;
+		}
 	}
+
+	public static boolean disablePerObjectPermissions;
 
 	@Override
 	public Boolean permitClass(Class clazz) {
