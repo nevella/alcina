@@ -1,0 +1,109 @@
+.tour {
+	width: 350px;
+	position: relative;
+	z-index: 2;
+	font-size: 14px;
+}
+
+.tour .popupTopCenterInner,.tour .popupBottomCenterInner {
+	text-align: center;
+	line-height: 5px;
+	position: relative;
+	width: 350px;
+	height: 5px;
+}
+
+.tour.arrow-left-up .popupTopCenterInner {
+	text-align: left;
+	margin-left: 5px;
+}
+
+.tour.arrow-right-up .popupTopCenterInner {
+	text-align: right;
+	margin-right: 5px;
+}
+
+.tour.arrow-right-down .popupBottomCenterInner {
+	text-align: right;
+	margin-right: 5px;
+}
+
+.tour .popupTopCenterInner1,.tour .popupTopCenterInner2,.tour .popupBottomCenterInner1,.tour .popupBottomCenterInner2
+	{
+	display: inline-block;
+	width: 0;
+	height: 0;
+	font-size: 0;
+	line-height: 0;
+	position: absolute;
+	z-index: 3;
+}
+
+.tour .popupTopCenterInner1 {
+	border-left: 8px solid transparent; /* left arrow slant */
+	border-right: 8px solid transparent; /* right arrow slant */
+	border-bottom: 8px solid #aad; /* bottom, add background color here */
+	bottom: -1px;
+}
+
+.tour .popupTopCenterInner2 {
+	border-left: 8px solid transparent; /* left arrow slant */
+	border-right: 8px solid transparent; /* right arrow slant */
+	border-bottom: 8px solid #e0e8f0;
+	/* bottom, add background color here */
+	bottom: -3px;
+}
+
+.tour .popupBottomCenterInner1 {
+	border-left: 8px solid transparent; /* left arrow slant */
+	border-right: 8px solid transparent; /* right arrow slant */
+	border-top: 8px solid #aad; /* bottom, add background color here */
+	top: -5px;
+}
+
+.tour .popupBottomCenterInner2 {
+	border-left: 8px solid transparent; /* left arrow slant */
+	border-right: 8px solid transparent; /* right arrow slant */
+	border-top: 8px solid #e0e8f0;
+	/* bottom, add background color here */
+	top: -7px;
+}
+
+.dropdown-popup.tour .popupContent {
+	border: 1px solid #aad;
+	background-color: #e0e8f0;
+}
+
+.tour .step .caption {
+	font-weight: bold;
+	color: #417890;
+	padding: 0.6em 1em 0.2em 1em;
+}
+
+.tour .step .contents {
+	padding: 0.2em 1em;
+	color: #0;
+}
+
+.tour .step .buttons {
+	text-align: right;
+	padding: 0.5em 1em;
+	font-size: 12px;
+}
+
+.tour .step .buttons a.button-grey {
+	margin-right: 0.5em;
+	padding: 3px 6px;
+	font-size: 11px;
+	background: #78a3b6 url(_pix/bg-button-blue.gif) left top repeat;
+	color: white;
+}
+
+.tour .step a.close-x {
+	position: absolute;
+	right: 8px;
+	top: 5px;
+	font-size: 9px;
+	font-weight: bold;
+	color: #555;
+}

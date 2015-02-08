@@ -56,6 +56,7 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
@@ -82,6 +83,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static final String VERSION_FIELD_NAME = "versionNumber";
 
+	public static final transient String CONTEXT_DO_NOT_POPULATE_SOURCE = TransformManager.class
+			.getName() + ".CONTEXT_DO_NOT_POPULATE_SOURCE";
+
 	protected static final Set<String> ignorePropertiesForCaching = new HashSet<String>(
 			Arrays.asList(new String[] { "class", "id", "localId",
 					"propertyChangeListeners" }));
@@ -95,7 +99,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (CommonUtils.isNullOrEmpty(str)) {
 			return result;
 		}
-		String[] strs = str.replace("(", "").replace(")", "").split(",\\s*");
+		String[] strs = str.replace("(", "").replace(")", "").replace("[", "")
+				.replace("]", "").split(",\\s*");
 		for (String s : strs) {
 			String t = s.trim();
 			if (t.length() > 0) {
@@ -660,10 +665,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 			boolean ignoreSource) {
 		HasIdAndLocalId obj = getObjectLookup().getObject(dte.getObjectClass(),
 				dte.getObjectId(), dte.getObjectLocalId());
-		if (obj == null && ignoreSource) {
+		if (obj == null
+				&& (ignoreSource || LooseContext
+						.is(CONTEXT_DO_NOT_POPULATE_SOURCE))) {
 			return null;
 		}
-		if (obj == null && dte.getSource() != null && !ignoreSource) {
+		if (obj == null && dte.getSource() != null) {
 			// if create, natural behaviour is return null, ignoring source
 			if (dte.getTransformType() != TransformType.CREATE_OBJECT
 					&& dte.getTransformType() != TransformType.DELETE_OBJECT) {
@@ -1137,7 +1144,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				});
 	}
 
-	public void registerDomainModelObjectAsync(final DomainModelObject h,
+	public void registerModelObjectAsync(final DomainModelObject h,
 			final AsyncCallback<Void> postRegisterCallback) {
 		((MapObjectLookupClient) getDomainObjects()).registerAsync(
 				h.registrableObjects(), new ScheduledCommand() {
@@ -1148,7 +1155,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				});
 	}
 
-	public void registerDomainModelObject(final DomainModelObject h,
+	public void registerModelObject(final DomainModelObject h,
 			final AsyncCallback<Void> postRegisterCallback) {
 		getDomainObjects().registerObjects(h.registrableObjects());
 		postRegisterCallback.onSuccess(null);

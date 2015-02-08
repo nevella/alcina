@@ -154,7 +154,8 @@ public class CommitToStorageTransformListener extends StateListenable implements
 
 		@Override
 		public void run() {
-			if (checkMillis == lastQueueAddMillis) {
+			if (checkMillis == lastQueueAddMillis
+					|| transformQueue.size() > getMaxTransformsPerRequest()) {
 				commit();
 			}
 			checkMillis = lastQueueAddMillis;
@@ -166,6 +167,10 @@ public class CommitToStorageTransformListener extends StateListenable implements
 			return;
 		}
 		commit();
+	}
+
+	protected int getMaxTransformsPerRequest() {
+		return Integer.MAX_VALUE;
 	}
 
 	private ClientInstance getClientInstance() {

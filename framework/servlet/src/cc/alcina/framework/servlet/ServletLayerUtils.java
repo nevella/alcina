@@ -1,8 +1,11 @@
 package cc.alcina.framework.servlet;
 
 import java.net.InetAddress;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+
+import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -76,6 +79,11 @@ public class ServletLayerUtils {
 					synchronized (cascadingTransformSupport) {
 						cascadingTransformSupport.wait();
 					}
+				}
+				UmbrellaException childException = cascadingTransformSupport
+						.getException();
+				if (childException != null) {
+					throw childException;
 				}
 				return wrapper;
 			} catch (Exception e) {

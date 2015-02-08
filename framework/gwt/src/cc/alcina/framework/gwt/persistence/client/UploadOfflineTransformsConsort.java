@@ -10,6 +10,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
@@ -19,9 +23,12 @@ import cc.alcina.framework.gwt.persistence.client.UploadOfflineTransformsConsort
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public class UploadOfflineTransformsConsort extends Consort<State> {
+	public static final String TOPIC_PERSIST_TRANSFORMS_FAILURE = UploadOfflineTransformsConsort.class
+			.getName() + ".PERSIST_TRANSFORMS_FAILURE";
+
 	static enum State {
-		GET_TRANSFORMS, PERSIST_TRANSFORMS, PERSIST_TRANSFORMS_SUCCESS,
-		PERSIST_TRANSFORMS_FAILURE, FINISHED
+		CHECK_OFFLINE, GET_TRANSFORMS, PERSIST_TRANSFORMS,
+		PERSIST_TRANSFORMS_SUCCESS, PERSIST_TRANSFORMS_FAILURE, FINISHED
 	}
 
 	String dbPrefix;
@@ -35,6 +42,28 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 	@Override
 	public void onFailure(Throwable throwable) {
 		completionCallback.onFailure(throwable);
+	}
+
+	class Player_CHECK_OFFLINE extends
+			EnumRunnableAsyncCallbackPlayer<Void, State> {
+		public Player_CHECK_OFFLINE() {
+			super(State.CHECK_OFFLINE);
+		}
+
+		@Override
+		public void run() {
+			ClientBase.getCommonRemoteServiceAsyncInstance().ping(this);
+		}
+
+		@Override
+		public void onFailure(Throwable caught) {
+			if (ClientUtils.maybeOffline(caught)) {
+				consort.onFailure(caught);
+				return;
+			}
+			remotePersistenceException = caught;
+			wasPlayed(State.PERSIST_TRANSFORMS_FAILURE);
+		}
 	}
 
 	class Player_GET_TRANSFORMS
@@ -117,6 +146,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 		@Override
 		public void run() {
+			notifyPersistTransformsFailure(remotePersistenceException);
 			Registry.impl(FromOfflineConflictResolver.class).resolve(
 					transformsToPersistOnServer, remotePersistenceException,
 					LocalTransformPersistence.get(), this);
@@ -145,6 +175,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 	public UploadOfflineTransformsConsort(AsyncCallback completionCallback) {
 		this.completionCallback = completionCallback;
+		addPlayer(new Player_CHECK_OFFLINE());
 		addPlayer(new Player_GET_TRANSFORMS());
 		addPlayer(new Player_PERSIST_TRANSFORMS());
 		addPlayer(new Player_PERSIST_TRANSFORMS_FAILURE());
@@ -155,5 +186,16 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 	public boolean isPersistenceFailed() {
 		return containsState(State.PERSIST_TRANSFORMS_FAILURE);
+	}
+
+	public static void notifyPersistTransformsFailure(Throwable ex) {
+		GlobalTopicPublisher.get().publishTopic(
+				TOPIC_PERSIST_TRANSFORMS_FAILURE, ex);
+	}
+
+	public static void notifyPersistTransformsFailureListenerDelta(
+			TopicListener<Throwable> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_PERSIST_TRANSFORMS_FAILURE, listener, add);
 	}
 }

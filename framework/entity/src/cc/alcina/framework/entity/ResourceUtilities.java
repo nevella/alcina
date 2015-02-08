@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -38,10 +38,13 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -55,13 +58,14 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * @author nick@alcina.cc
- * 
+ *
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ResourceUtilities {
@@ -132,7 +136,8 @@ public class ResourceUtilities {
 		}
 	}
 
-	public static synchronized String getBundledString(Class clazz, String propertyName) {
+	public static synchronized String getBundledString(Class clazz,
+			String propertyName) {
 		String namespacedKey = (clazz == null) ? propertyName : clazz
 				.getSimpleName() + "." + propertyName;
 		if (customProperties.containsKey(namespacedKey)) {
@@ -326,13 +331,19 @@ public class ResourceUtilities {
 		charsetName = charsetName == null ? "UTF-8" : charsetName;
 		BufferedReader in = new BufferedReader(new InputStreamReader(is,
 				charsetName));
+		String s = readerToString(in);
+		is.close();
+		return s;
+	}
+
+	public static String readerToString(BufferedReader in) throws IOException {
 		StringWriter sw = new StringWriter();
 		char[] cb = new char[4096];
 		int len = -1;
 		while ((len = in.read(cb, 0, 4096)) != -1) {
 			sw.write(cb, 0, len);
 		}
-		is.close();
+		in.close();
 		return sw.toString();
 	}
 
@@ -420,5 +431,37 @@ public class ResourceUtilities {
 
 	public static String get(Class clazz, String propertyName) {
 		return getBundledString(clazz, propertyName);
+	}
+
+	public static String readClassPathResourceAsString(Class clazz, String path) {
+		try {
+			return readStreamToString(clazz.getResourceAsStream(path));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static <T> T fieldwiseClone(T t) throws Exception {
+		List<Field> allFields = new ArrayList<Field>();
+		Class c = t.getClass();
+		while (c != Object.class) {
+			Field[] fields = c.getDeclaredFields();
+			for (Field field : fields) {
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isTransient(field.getModifiers())) {
+					continue;
+				}
+				field.setAccessible(true);
+				allFields.add(field);
+			}
+			c = c.getSuperclass();
+		}
+		T instance = (T) t.getClass().newInstance();
+		for (Field field : allFields) {
+			field.set(instance, field.get(t));
+		}
+		return instance;
 	}
 }

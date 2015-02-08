@@ -9,11 +9,11 @@ public class TaggedLogger {
 	public static final transient String METRIC = "metric";
 
 	public static final transient String DEBUG = "debug";
-	
+
 	public static final transient String WARN = "warn";
 
 	public static final transient String INFO = "info";
-	
+
 	int registrationCounter=0;
 
 	 List<TaggedLoggerRegistration> registrations=new ArrayList<TaggedLoggerRegistration>();
@@ -30,6 +30,10 @@ public class TaggedLogger {
 		this.tags = tags;
 	}
 
+	public boolean hasRegistrations(){
+		taggedLoggers.updateRegistrations(this);
+		return !registrations.isEmpty();
+	}
 	public void log(String message) {
 		taggedLoggers.updateRegistrations(this);
 		for (TaggedLoggerRegistration registration : registrations) {
@@ -44,6 +48,6 @@ public class TaggedLogger {
 
 	public void format(String string, Object...args) {
 		log(CommonUtils.formatJ(string,args));
-		
+
 	}
 }

@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -72,7 +72,7 @@ public class Window {
      * Get the message that will be presented to the user in a confirmation
      * dialog that asks the user whether or not she wishes to navigate away from
      * the page.
-     * 
+     *
      * @return the message to display to the user, or null
      */
     public String getMessage() {
@@ -84,7 +84,7 @@ public class Window {
      * confirmation dialog that asks the user whether or not she wishes to
      * navigate away from the page. If multiple handlers set the message, the
      * last message will be displayed; all others will be ignored.
-     * 
+     *
      * @param message the message to display to the user, or null
      */
     public void setMessage(String message) {
@@ -104,7 +104,7 @@ public class Window {
     /**
      * Fired just before the browser window closes or navigates to a different
      * site. No user-interface may be displayed during shutdown.
-     * 
+     *
      * @param event the event
      */
     void onWindowClosing(Window.ClosingEvent event);
@@ -115,7 +115,7 @@ public class Window {
    * object contains information about the current URL and methods to manipulate
    * it. <code>Location</code> is a very simple wrapper, so not all browser
    * quirks are hidden from the user.
-   * 
+   *
    */
   public static class Location {
     private static Map<String, String> paramMap;
@@ -123,7 +123,7 @@ public class Window {
 
     /**
      * Assigns the window to a new URL. All GWT state will be lost.
-     * 
+     *
      * @param newURL the new URL
      */
     public static native void assign(String newURL) /*-{
@@ -132,7 +132,7 @@ public class Window {
 
     /**
      * Create a {@link UrlBuilder} based on this {@link Location}.
-     * 
+     *
      * @return the new builder
      */
     public static UrlBuilder createUrlBuilder() {
@@ -166,7 +166,7 @@ public class Window {
 
     /**
      * Gets the string to the right of the URL's hash.
-     * 
+     *
      * @return the string to the right of the URL's hash.
      */
     public static String getHash() {
@@ -175,7 +175,7 @@ public class Window {
 
     /**
      * Gets the URL's host and port name.
-     * 
+     *
      * @return the host and port name
      */
     public static native String getHost() /*-{
@@ -184,7 +184,7 @@ public class Window {
 
     /**
      * Gets the URL's host name.
-     * 
+     *
      * @return the host name
      */
     public static native String getHostName() /*-{
@@ -193,7 +193,7 @@ public class Window {
 
     /**
      * Gets the entire URL.
-     * 
+     *
      * @return the URL
      */
     public static native String getHref() /*-{
@@ -204,7 +204,7 @@ public class Window {
      * Gets the URL's parameter of the specified name. Note that if multiple
      * parameters have been specified with the same name, the last one will be
      * returned.
-     * 
+     *
      * @param name the name of the URL's parameter
      * @return the value of the URL's parameter
      */
@@ -217,7 +217,7 @@ public class Window {
      * Returns a Map of the URL query parameters for the host page; since
      * changing the map would not change the window's location, the map returned
      * is immutable.
-     * 
+     *
      * @return a map from URL query parameter names to a list of values
      */
     public static Map<String, List<String>> getParameterMap() {
@@ -229,7 +229,7 @@ public class Window {
 
     /**
      * Gets the path to the URL.
-     * 
+     *
      * @return the path to the URL.
      */
     public static native String getPath() /*-{
@@ -238,7 +238,7 @@ public class Window {
 
     /**
      * Gets the URL's port.
-     * 
+     *
      * @return the URL's port
      */
     public static native String getPort() /*-{
@@ -247,7 +247,7 @@ public class Window {
 
     /**
      * Gets the URL's protocol.
-     * 
+     *
      * @return the URL's protocol.
      */
     public static native String getProtocol() /*-{
@@ -256,7 +256,7 @@ public class Window {
 
     /**
      * Gets the URL's query string.
-     * 
+     *
      * @return the URL's query string
      */
     public static String getQueryString() {
@@ -273,7 +273,7 @@ public class Window {
     /**
      * Replaces the current URL with a new one. All GWT state will be lost. In
      * the browser's history, the current URL will be replaced by the new URL.
-     * 
+     *
      * @param newURL the new URL
      */
     public static native void replace(String newURL) /*-{
@@ -283,7 +283,7 @@ public class Window {
     /**
      * Builds the immutable map from String to List<String> that we'll return in
      * getParameterMap(). Package-protected for testing.
-     * 
+     *
      * @return a map from the
      */
     static Map<String, List<String>> buildListParamMap(String queryString) {
@@ -433,7 +433,7 @@ public class Window {
 
     /**
      * Construct a new {@link Window.ScrollEvent}.
-     * 
+     *
      * @param scrollLeft the left scroll position
      * @param scrollTop the top scroll position
      */
@@ -449,7 +449,7 @@ public class Window {
 
     /**
      * Gets the window's scroll left.
-     * 
+     *
      * @return window's scroll left
      */
     public int getScrollLeft() {
@@ -458,7 +458,7 @@ public class Window {
 
     /**
      * Get the window's scroll top.
-     * 
+     *
      * @return the window's scroll top
      */
     public int getScrollTop() {
@@ -477,7 +477,7 @@ public class Window {
   public interface ScrollHandler extends EventHandler {
     /**
      * Fired when the browser window is scrolled.
-     * 
+     *
      * @param event the event
      */
     void onWindowScroll(Window.ScrollEvent event);
@@ -516,7 +516,7 @@ public class Window {
 
   /**
    * Adds a {@link CloseEvent} handler.
-   * 
+   *
    * @param handler the handler
    * @return returns the handler registration
    */
@@ -527,7 +527,7 @@ public class Window {
 
   /**
    * Adds a {@link ResizeEvent} handler.
-   * 
+   *
    * @param handler the handler
    * @return returns the handler registration
    */
@@ -539,7 +539,7 @@ public class Window {
 
   /**
    * Adds a listener to receive window closing events.
-   * 
+   *
    * @deprecated use {@link Window#addWindowClosingHandler(ClosingHandler)} and
    *             {@link Window#addCloseHandler(CloseHandler)} instead
    * @param listener the listener to be informed when the window is closing
@@ -551,7 +551,7 @@ public class Window {
 
   /**
    * Adds a {@link Window.ClosingEvent} handler.
-   * 
+   *
    * @param handler the handler
    * @return returns the handler registration
    */
@@ -563,7 +563,7 @@ public class Window {
 
   /**
    * Adds a listener to receive window resize events.
-   * 
+   *
    * @param listener the listener to be informed when the window is resized
    * @deprecated use {@link Window#addResizeHandler(ResizeHandler)} instead
    */
@@ -574,7 +574,7 @@ public class Window {
 
   /**
    * Adds a {@link Window.ScrollEvent} handler.
-   * 
+   *
    * @param handler the handler
    * @return returns the handler registration
    */
@@ -587,7 +587,7 @@ public class Window {
 
   /**
    * Adds a listener to receive window scroll events.
-   * 
+   *
    * @param listener the listener to be informed when the window is scrolled
    * @deprecated use {@link Window#addWindowScrollHandler(ScrollHandler)}
    *             instead
@@ -599,7 +599,7 @@ public class Window {
 
   /**
    * Displays a message in a modal dialog box.
-   * 
+   *
    * @param msg the message to be displayed.
    */
   public static native void alert(String msg) /*-{
@@ -609,7 +609,7 @@ public class Window {
   /**
    * Displays a message in a modal dialog box, along with the standard 'OK' and
    * 'Cancel' buttons.
-   * 
+   *
    * @param msg the message to be displayed.
    * @return <code>true</code> if 'OK' is clicked, <code>false</code> if
    *         'Cancel' is clicked.
@@ -622,7 +622,7 @@ public class Window {
    * Use this method to explicitly disable the window's scrollbars. Applications
    * that choose to resize their user-interfaces to fit within the window's
    * client area will normally want to disable window scrolling.
-   * 
+   *
    * @param enable <code>false</code> to disable window scrolling
    */
   public static void enableScrolling(boolean enable) {
@@ -632,7 +632,7 @@ public class Window {
   /**
    * Gets the height of the browser window's client area excluding the scroll
    * bar.
-   * 
+   *
    * @return the window's client height
    */
   public static int getClientHeight() {
@@ -642,7 +642,7 @@ public class Window {
   /**
    * Gets the width of the browser window's client area excluding the vertical
    * scroll bar.
-   * 
+   *
    * @return the window's client width
    */
   public static int getClientWidth() {
@@ -651,7 +651,7 @@ public class Window {
 
   /**
    * Gets the window's scroll left.
-   * 
+   *
    * @return window's scroll left
    */
   public static int getScrollLeft() {
@@ -660,7 +660,7 @@ public class Window {
 
   /**
    * Get the window's scroll top.
-   * 
+   *
    * @return the window's scroll top
    */
   public static int getScrollTop() {
@@ -669,7 +669,7 @@ public class Window {
 
   /**
    * Gets the browser window's current title.
-   * 
+   *
    * @return the window's title.
    */
   public static native String getTitle() /*-{
@@ -711,7 +711,7 @@ public class Window {
    * Opens a new browser window. The "name" and "features" arguments are
    * specified <a href=
    * 'http://developer.mozilla.org/en/docs/DOM:window.open'>here</a>.
-   * 
+   *
    * @param url the URL that the new window will display
    * @param name the name of the window (e.g. "_blank")
    * @param features the features to be enabled/disabled on this window
@@ -731,7 +731,7 @@ public class Window {
   /**
    * Displays a request for information in a modal dialog box, along with the
    * standard 'OK' and 'Cancel' buttons.
-   * 
+   *
    * @param msg the message to be displayed
    * @param initialValue the initial value in the dialog's text field
    * @return the value entered by the user if 'OK' was pressed, or
@@ -743,7 +743,7 @@ public class Window {
 
   /**
    * Removes a window closing listener.
-   * 
+   *
    * @param listener the listener to be removed
    */
   @Deprecated
@@ -753,7 +753,7 @@ public class Window {
 
   /**
    * Removes a window resize listener.
-   * 
+   *
    * @param listener the listener to be removed
    */
   @Deprecated
@@ -763,7 +763,7 @@ public class Window {
 
   /**
    * Removes a window scroll listener.
-   * 
+   *
    * @param listener the listener to be removed
    */
   @Deprecated
@@ -806,7 +806,7 @@ public class Window {
 
   /**
    * Scroll the window to the specified position.
-   * 
+   *
    * @param left the left scroll position
    * @param top the top scroll position
    */
@@ -819,7 +819,7 @@ public class Window {
    * sometimes necessary to do this because some browsers, such as Internet
    * Explorer, add margins by default, which can confound attempts to resize
    * panels to fit exactly within the window.
-   * 
+   *
    * @param size the window's new margin size, in CSS units.
    */
   public static native void setMargin(String size) /*-{
@@ -838,7 +838,7 @@ public class Window {
 
   /**
    * Sets the browser window's title.
-   * 
+   *
    * @param title the new window title.
    */
   public static native void setTitle(String title) /*-{
@@ -882,7 +882,7 @@ public class Window {
 
   /**
    * Adds this handler to the Window.
-   * 
+   *
    * @param <H> the type of handler to add
    * @param type the event type
    * @param handler the handler
@@ -895,7 +895,7 @@ public class Window {
 
   /**
    * Fires an event.
-   * 
+   *
    * @param event the event
    */
   private static void fireEvent(GwtEvent<?> event) {

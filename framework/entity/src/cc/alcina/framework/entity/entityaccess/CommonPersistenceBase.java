@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
@@ -443,7 +444,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		GraphProjectionDataFilter filter = Registry.impl(
 				JPAImplementation.class).getResolvingFilter(
 				Registry.impl(JPAImplementation.class)
-						.getClassrefInstantiator(), cache);
+						.getClassrefInstantiator(), cache, false);
 		GraphProjectionFieldFilter allowSourceFilter = new GraphProjectionFieldFilter() {
 			@Override
 			public boolean permitField(Field field,
@@ -558,13 +559,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public void logActionItem(ActionLogItem result) {
 		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects();
+		connectPermissionsManagerToLiveObjects(true);
 		getEntityManager().merge(result);
 	}
 
 	public long merge(HasId hi) {
 		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects();
+		connectPermissionsManagerToLiveObjects(true);
 		persistWrappables(hi);
 		HasId merge = getEntityManager().merge(hi);
 		return merge.getId();
@@ -581,7 +582,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public <WP extends WrapperPersistable> Long persist(WP gwpo)
 			throws Exception {
 		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects();
+		connectPermissionsManagerToLiveObjects(true);
 		WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
 				gwpo.getClass(), gwpo.getId());
 		wrapper.setObject(gwpo);
@@ -599,7 +600,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		result.setHasId(wrapper);
 		try {
 			PermissionsManager.get().pushCurrentUser();
-			
 			PropertyDescriptor[] pds = Introspector.getBeanInfo(
 					wrapper.getClass()).getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
@@ -632,7 +632,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					null);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		}finally{
+		} finally {
 			PermissionsManager.get().popUser();
 		}
 	}
@@ -772,13 +772,24 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			return true;
 		}
 		Class<? extends CI> clientInstanceImpl = (Class<? extends CI>) getImplementation(ClientInstance.class);
-		CI ci = getItemById(clientInstanceImpl, id);
-		return ci != null && ci.getAuth() == auth;
+		List<CI> clientInstances = getEntityManager()
+				.createQuery(
+						String.format(
+								"select ci from %s ci inner join fetch ci.user where ci.id=%s",
+								clientInstanceImpl.getSimpleName(), id))
+				.getResultList();
+		CI ci = CommonUtils.first(clientInstances);
+		boolean authorised = ci != null && ci.getAuth() == auth;
+		if (authorised) {
+			Registry.impl(ClientInstanceAuthenticationCache.class)
+					.cacheAuthentication(ci);
+		}
+		return authorised;
 	}
 
 	/**
 	 * Used for supporting mixed rpc/transform domain loads
-	 * 
+	 *
 	 * @param userId
 	 */
 	public TransformCache warmupTransformCache() {
@@ -1167,9 +1178,37 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 						.cacheIid(iid);
 				userName = iid.getRememberMeUser() == null ? null : iid
 						.getRememberMeUser().getUserName();
+			} else {
+				Iid nullHolder = getNewImplementationInstance(Iid.class);
+				nullHolder.setInstanceId(iidKey);
+				nullHolder.setId(nullIidCounter.getAndDecrement());
+				Registry.impl(ClientInstanceAuthenticationCache.class)
+						.cacheIid(iid);
 			}
 		}
 		return userName;
+	}
+
+	private AtomicInteger nullIidCounter = new AtomicInteger(1000000);
+
+	@Override
+	public boolean isValidIid(String iidKey) {
+		if (!Registry.impl(ClientInstanceAuthenticationCache.class)
+				.containsIIdKey(iidKey)) {
+			List list = getEntityManager()
+					.createQuery(
+							"from "
+									+ getImplementationSimpleClassName(Iid.class)
+									+ " i  where i.instanceId = ?")
+					.setParameter(1, iidKey).getResultList();
+			if (list.isEmpty()) {
+				return false;
+			} else {
+				Registry.impl(ClientInstanceAuthenticationCache.class)
+						.cacheIid((Iid) list.get(0));
+			}
+		}
+		return true;
 	}
 
 	/**
@@ -1181,7 +1220,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		Multiset<Class, Set<Long>> lkp = new Multiset<Class, Set<Long>>();
 		Multiset<Class, Set<Long>> creates = new Multiset<Class, Set<Long>>();
 		DetachedEntityCache cache = new DetachedEntityCache();
-		long maxEventId = 0;
 		Date precreDate = new Date();
 		for (DomainTransformEvent dte : items) {
 			if (dte.getObjectId() != 0) {
@@ -1193,7 +1231,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			if (dte.getValueId() != 0) {
 				lkp.add(dte.getValueClass(), dte.getValueId());
 			}
-			maxEventId = Math.max(dte.getEventId(), maxEventId);
 			if (CommonUtils.compareWithNullMinusOne(precreDate,
 					dte.getUtcDate()) > 0) {
 				precreDate = dte.getUtcDate();

@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermi
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -213,6 +214,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		newThreadInstance.loginState = loginState;
 		newThreadInstance.userId = userId;
 		newThreadInstance.onlineState = onlineState;
+		newThreadInstance.root=root;
 	}
 
 	public void domainTransform(DomainTransformEvent evt)
@@ -755,5 +757,9 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	public void pushCurrentUser() {
 		pushUser(getUser(), getLoginState());
+	}
+
+	public String getUserString() {
+		return CommonUtils.formatJ("%s/%s", getUserId(), getUserName());
 	}
 }

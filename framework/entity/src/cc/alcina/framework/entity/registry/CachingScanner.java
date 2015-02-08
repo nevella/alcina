@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -32,9 +32,10 @@ import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
+import cc.alcina.framework.entity.util.ClasspathScanner;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public abstract class CachingScanner {
@@ -70,8 +71,8 @@ public abstract class CachingScanner {
 	}
 
 	public void scan(ClassDataCache found, String cachePath) throws Exception {
-		ClassLoader classLoader = Thread.currentThread()
-				.getContextClassLoader();
+		List<ClassLoader> classLoaders = ClasspathScanner
+				.getScannerClassLoadersToTry();
 		int cc = 0;
 		long loadClassnanos = 0;
 		boolean debug = false;
@@ -83,7 +84,7 @@ public abstract class CachingScanner {
 			ClassDataItem ignore = ignoreCache.classData
 					.get(foundItem.className);
 			if (ignore != null) {
-				if (ignore.date.equals(foundItem.date)) {
+				if (ignore.date.after(foundItem.date)) {
 					outgoing.add(ignore);
 					continue;
 				}
@@ -96,7 +97,26 @@ public abstract class CachingScanner {
 			try {
 				cc++;
 				long nt = System.nanoTime();
-				c = classLoader.loadClass(className);
+				int idx = 0;
+				for (int i = 0; i < classLoaders.size(); i++) {
+					ClassLoader classLoader = classLoaders.get(i);
+					try {
+						c = classLoader.loadClass(className);
+						break;
+					} catch (ClassNotFoundException e) {
+						if (i < classLoaders.size() - 1) {
+							continue;
+						} else {
+							throw e;
+						}
+					} catch (Error eiie) {
+						if (i < classLoaders.size() - 1) {
+							continue;
+						} else {
+							throw eiie;
+						}
+					}
+				}
 				loadClassnanos += (System.nanoTime() - nt);
 				process(c, className, foundItem, outgoing);
 			} catch (RegistryException rre) {

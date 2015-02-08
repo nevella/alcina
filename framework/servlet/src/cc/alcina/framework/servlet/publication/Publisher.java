@@ -47,6 +47,7 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
  * 
  */
 public class Publisher {
+
 	private PublicationContext ctx;
 
 	public PublicationResult publish(ContentDefinition contentDefinition,
@@ -109,7 +110,7 @@ public class Publisher {
 						publicationContent.getClass());
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
 				publicationId, publicationUserId);
-		ctx.renderedContent=crh.results;
+		ctx.renderedContent = crh.results;
 		if (crh.getResults().persist && publicationContentPersister != null
 				&& publicationId != 0) {
 			publicationContentPersister.persistContentRendererResults(
@@ -138,6 +139,7 @@ public class Publisher {
 		fcm.bytes = cw.wrappedBytes;
 		fcm.custom = cw.custom;
 		InputStream convertedContent = fc.convert(ctx, fcm);
+		ctx.getVisitorOrNoop().beforeDelivery();
 		ContentDelivery deliverer = (ContentDelivery) Registry.get()
 				.instantiateSingle(ContentDeliveryType.class,
 						deliveryModel.provideContentDeliveryType().getClass());

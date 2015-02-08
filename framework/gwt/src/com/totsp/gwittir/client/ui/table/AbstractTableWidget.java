@@ -19,7 +19,10 @@
  */
 package com.totsp.gwittir.client.ui.table;
 
+import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+
 import com.totsp.gwittir.client.beans.Binding;
+import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.Introspector;
 import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -27,52 +30,47 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
-
 /**
  *
- * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet" Cooper</a>
+ * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
+ *         Cooper</a>
  */
 public abstract class AbstractTableWidget<T> extends AbstractBoundWidget<T> {
-    protected BoundWidgetTypeFactory factory;
+	protected BoundWidgetTypeFactory factory;
 
-    /** Creates a new instance of AbstractTableWidget */
-    public AbstractTableWidget() {
-    }
+	/** Creates a new instance of AbstractTableWidget */
+	public AbstractTableWidget() {
+	}
 
-    protected BoundWidget createWidget(Binding parent, Field field,
-        SourcesPropertyChangeEvents target) {
-        final BoundWidget widget;
-        Binding binding;
-
-        if(field.getCellProvider() != null) {
-            widget = field.getCellProvider().get();
-        } else {
-            final Property p = Introspector.INSTANCE.getDescriptor(target)
-                                                    .getProperty(field
-                    .getPropertyName());
-            widget = this.factory.getWidgetProvider(field.getPropertyName(),
-                    p.getType()).get();
-
-            // TODO Figure out some way to make this read only.
-        }
-
-        
-
-
-        binding = new Binding(widget, "value", field.getValidator(),
-                field.getFeedback(), target, field.getPropertyName(), null, null);
-        widget.setModel(this.getValue());
-
-        if(field.getConverter() != null) {
-            binding.getRight().converter = field.getConverter();
-        }
-
-        if(field.getComparator() != null) {
-            widget.setComparator(field.getComparator());
-        }
-
-        parent.getChildren().add(binding);
-
-        return widget;
-    }
+	protected BoundWidget createWidget(Binding parent, Field field,
+			SourcesPropertyChangeEvents target) {
+		final BoundWidget widget;
+		Binding binding;
+		if (field.getCellProvider() != null) {
+			widget = field.getCellProvider().get();
+		} else {
+			final Property p = Introspector.INSTANCE.getDescriptor(target)
+					.getProperty(field.getPropertyName());
+			widget = this.factory.getWidgetProvider(field.getPropertyName(),
+					p.getType()).get();
+			// TODO Figure out some way to make this read only.
+		}
+		binding = new Binding(widget, "value", field.getValidator(),
+				field.getFeedback(), target, field.getPropertyName(), null,
+				null);
+		widget.setModel(this.getValue());
+		if (field.getConverter() != null) {
+			binding.getRight().converter = field.getConverter();
+		}
+		Converter inverseConverter = GwittirBridge.getInverseConverter(field
+				.getConverter());
+		if (inverseConverter != null) {
+			binding.getLeft().converter = inverseConverter;
+		}
+		if (field.getComparator() != null) {
+			widget.setComparator(field.getComparator());
+		}
+		parent.getChildren().add(binding);
+		return widget;
+	}
 }

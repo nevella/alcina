@@ -213,6 +213,7 @@
 			<fileset dir="${framework.impl.base.dir}/src">
 				<include name="cc/*.*" />
 				<include name="**/*.java" />
+				<include name="**/*.properties" />
 				<exclude name="**/*.class" />
 			</fileset>
 		</jar>

@@ -2,6 +2,8 @@ package cc.alcina.framework.common.client.entity;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
+import cc.alcina.framework.gwt.client.util.DomUtils;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
@@ -118,8 +120,7 @@ public class ReplayInstruction {
 	public boolean changeTextSelector(String newText) {
 		ReplayLocator locator = parseReplayBody(param1);
 		if (locator.indexStr == null && !newText.equals(locator.text)) {
-			param1 = CommonUtils.formatJ("%s :: [%s]", locator.path,
-					newText);
+			param1 = CommonUtils.formatJ("%s :: [%s]", locator.path, newText);
 			return true;
 		}
 		return false;
@@ -136,11 +137,21 @@ public class ReplayInstruction {
 		public String indexStr;
 
 		public String text;
+
+		public String cssSelector;
 	}
+
+	private static final String CSS_SEL = "css-sel:";
 
 	public static ReplayLocator parseReplayBody(String param) {
 		// pattern is always $XPATH :: [$TEXT]
+		// or css-sel:[css-sel]
 		ReplayLocator result = new ReplayLocator();
+		if (param.startsWith(CSS_SEL)) {
+			result.cssSelector = param.substring(CSS_SEL.length());
+			result.text=REPLAY_TEXT_WILDCARD;
+			return result;
+		}
 		RegExp regex = RegExp.compile("(.+)(?:\\[idx:([0-9]+)\\])$");
 		MatchResult matchResult = regex.exec(param);
 		String locationish = param;

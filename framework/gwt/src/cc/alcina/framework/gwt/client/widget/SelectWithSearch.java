@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -83,6 +84,12 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
  */
 public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		HasLayoutInfo {
+	public static Map<String, List> emptyItems() {
+		HashMap<String, List> map = new HashMap<String, List>();
+		map.put("", new ArrayList());
+		return map;
+	}
+
 	public static final ClickHandler NOOP_CLICK_HANDLER = new ClickHandler() {
 		@Override
 		public void onClick(ClickEvent event) {
@@ -92,19 +99,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	private static final int DELAY_TO_CHECK_FOR_CLOSING = 400;
 
-	public static Map<String, List> emptyItems() {
-		HashMap<String, List> map = new HashMap<String, List>();
-		map.put("", new ArrayList());
-		return map;
-	}
-
 	private FlowPanel holder;
 
 	protected Widget itemHolder;
-
-	protected HasWidgets itemHolderAsHasWidgets() {
-		return (HasWidgets) itemHolder;
-	}
 
 	private Map<G, List<T>> itemMap;
 
@@ -153,10 +150,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	// for non-filtered items
 	private LazyDataProvider<G, T> lazyProvider;
 
-	public void setLazyProvider(LazyDataProvider<G, T> lazyProvider) {
-		this.lazyProvider = lazyProvider;
-	}
-
 	private int topAdjust = 0;
 
 	private String inPanelHint = null;
@@ -186,8 +179,40 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	protected long ignoreNextBlur = 0;
 
+	private String initialFilterValue = null;
+
+	private int initialFilterCursorPos = 0;
+
+	private MouseDownHandler checkIgnoreHandler = new MouseDownHandler() {
+		@Override
+		public void onMouseDown(MouseDownEvent event) {
+			if (WidgetUtils.isNewTabModifier() || event.isShiftKeyDown()) {
+				ignoreNextBlur = System.currentTimeMillis();
+				System.out.println("mouse shift - ignore:" + ignoreNextBlur);
+				// otherwise popup will be closed by blur
+				return;
+			}
+		}
+	};
+
+	SelectableNavigation selectableNavigation = new SelectableNavigation();
+
+	protected RelativePopupPanel relativePopupPanel;
+
+	boolean emptyItems = false;
+
+	private Renderer renderer = ToStringRenderer.INSTANCE;
+
+	private VisualFilterableItemFilter<T> itemFilter = new VisualFilterableItemFilter<T>();
+
 	// additional problem with ff
 	public SelectWithSearch() {
+	}
+
+	public void clearFilterText() {
+		getFilter().getTextBox().setText("");
+		selectableNavigation.clear();
+		filter("");
 	}
 
 	public Widget createWidget(Map<G, List<T>> itemMap,
@@ -206,6 +231,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		filter = new FilterWidget(hint);
 		filter.getTextBox().addKeyUpHandler(selectableNavigation);
 		filter.getTextBox().addKeyDownHandler(selectableNavigation);
+		if (getInitialFilterValue() != null) {
+			filter.setInitialCursorPos(getInitialFilterCursorPos());
+			filter.setValue(getInitialFilterValue());
+		}
 		filter.setFocusOnAttach(isFocusOnAttach());
 		filter.addAttachHandler(filterAttachHandler);
 		filter.registerFilterable(this);
@@ -302,213 +331,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return holder;
 	}
 
-	protected void handleFilterBlur() {
-		new Timer() {
-			@Override
-			public void run() {
-				// https://jira.barnet.com.au/browse/JAD-5053 - IE
-				// blur/scrollbar issue
-				if (BrowserMod.isInternetExplorer()) {
-					Element elt = WidgetUtils.getFocussedDocumentElement();
-					if (elt != null && elt.getClassName().contains("scroller")) {
-						return;
-					}
-				}
-				hidePopdown();
-			}
-		}.schedule(250);
-	}
-
-	protected void onPopdownShowing(RelativePopupPanel popup, boolean show) {
-	}
-
-	protected void maybeClosePopdown(ClickEvent event) {
-		if (event != null) {
-			try {
-				if (WidgetUtils.isNewTabModifier() || event.isShiftKeyDown()) {
-					event.preventDefault();
-					ignoreNextBlur = System.currentTimeMillis();
-					// otherwise popup will be closed by blur
-					return;
-				}
-			} catch (Exception e) {
-				// probably a synth click
-			}
-		}
-		closingOnClick = true;
-		if (relativePopupPanel != null) {
-			onPopdownShowing(relativePopupPanel, false);
-			relativePopupPanel.removeFromParent();
-			relativePopupPanel = null;
-		}
-		lastClosingClickMillis = System.currentTimeMillis();
-		closingOnClick = false;
-	}
-
-	protected void setPanelForPopupUI(DecoratedRelativePopupPanel panelForPopup) {
-		panelForPopup.setStyleName("dropdown-popup");
-		panelForPopup.addStyleName("alcina-Selector");
-		panelForPopup.getElement().getStyle()
-				.setProperty("maxHeight", holderHeight);
-	}
-
-	protected void createItemHolder() {
-		FlowPanelClickable panel = new FlowPanelClickable();
-		panel.setStyleName("select-item-container");
-		if (popdown) {
-			panel.addMouseDownHandler(checkIgnoreHandler);
-			panel.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent event) {
-					int debug = 5;
-				}
-			});
-		}
-		itemHolder = panel;
-	}
-
-	private MouseDownHandler checkIgnoreHandler = new MouseDownHandler() {
-		@Override
-		public void onMouseDown(MouseDownEvent event) {
-			if (WidgetUtils.isNewTabModifier() || event.isShiftKeyDown()) {
-				ignoreNextBlur = System.currentTimeMillis();
-				System.out.println("mouse shift - ignore:" + ignoreNextBlur);
-				// otherwise popup will be closed by blur
-				return;
-			}
-		}
-	};
-
-	public void hidePopdown() {
-		if (popdownHider != null) {
-			maybeClosePopdown(null);
-		}
-	}
-
-	SelectableNavigation selectableNavigation = new SelectableNavigation();
-
-	protected RelativePopupPanel relativePopupPanel;
-
-	class SelectableNavigation implements KeyUpHandler, KeyDownHandler {
-		private int selectedIndex = -1;
-
-		private Widget lastSelected = null;
-
-		private ClickHandler wrappedEnterListener;
-
-		public ClickHandler getWrappedEnterListener() {
-			return this.wrappedEnterListener;
-		}
-
-		public void setWrappedEnterListener(ClickHandler enterListener) {
-			this.wrappedEnterListener = enterListener;
-		}
-
-		public void clear() {
-			selectedIndex = -1;
-			updateSelection();
-		}
-
-		private void updateSelection() {
-			if (lastSelected != null) {
-				lastSelected.removeStyleName("selected");
-			}
-			lastSelected = null;
-			if (selectedIndex < -1) {
-				selectedIndex = -1;
-			}
-			if (selectedIndex != -1) {
-				Widget selectedWidget = getSelectedWidget();
-				if (selectedWidget != null) {
-					selectedWidget.addStyleName("selected");
-					DOM.scrollIntoView(selectedWidget.getElement());
-					lastSelected = selectedWidget;
-				} else {
-					int vfc = getVisibleFilterableCount();
-					if (selectedIndex > vfc) {
-						selectedIndex = vfc;
-						updateSelection();
-					}
-				}
-			}
-		}
-
-		public void onKeyDown(KeyDownEvent event) {
-			int keyCode = event.getNativeKeyCode();
-			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
-				WidgetUtils.squelchCurrentEvent();
-			}
-		}
-
-		public void onKeyUp(KeyUpEvent event) {
-			Widget sender = (Widget) event.getSource();
-			if (event.getNativeEvent() == null) {
-				// IE9 issue
-				return;
-			}
-			int keyCode = event.getNativeKeyCode();
-			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
-				WidgetUtils.squelchCurrentEvent();
-			}
-			if (keyCode == KeyCodes.KEY_UP) {
-				if (selectedIndex > 0) {
-					selectedIndex--;
-				}
-				updateSelection();
-			}
-			if (keyCode == KeyCodes.KEY_DOWN) {
-				selectedIndex++;
-				updateSelection();
-			}
-			boolean hidePopdown = false;
-			if (keyCode == KeyCodes.KEY_ENTER) {
-				if (selectedIndex != -1) {
-					DomEvent.fireNativeEvent(WidgetUtils.createZeroClick(),
-							getSelectedWidget());
-					hidePopdown = true;
-					selectedIndex = -1;
-				} else {
-					if (wrappedEnterListener != null) {
-						WidgetUtils.fireClickOnHandler(
-								(HasClickHandlers) event.getSource(),
-								wrappedEnterListener);
-						hidePopdown = true;
-					}
-				}
-			}
-			if (hidePopdown && popdown) {
-				maybeClosePopdown(null);
-			}
-		}
-
-		private int getVisibleFilterableCount() {
-			int visibleIndex = -1;
-			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
-			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
-				Widget widget = itemHolder.getWidget(i);
-				if (widget instanceof VisualFilterable && widget.isVisible()) {
-					visibleIndex++;
-				}
-			}
-			return visibleIndex;
-		}
-
-		private Widget getSelectedWidget() {
-			int visibleIndex = -1;
-			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
-			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
-				Widget widget = itemHolder.getWidget(i);
-				if (widget instanceof VisualFilterable && widget.isVisible()) {
-					visibleIndex++;
-					if (selectedIndex == visibleIndex) {
-						return widget;
-					}
-				}
-			}
-			return null;
-		}
-	}
-
 	public boolean filter(String filterText) {
 		selectableNavigation.clear();
 		if (filterText == null) {
@@ -534,10 +356,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return b;
 	}
 
-	public IndexedPanel itemHolderAsIndexedPanel() {
-		return (IndexedPanel) itemHolder;
-	}
-
 	public ClickHandler getEnterHandler() {
 		return enterHandler;
 	}
@@ -550,8 +368,20 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return hint;
 	}
 
+	public int getInitialFilterCursorPos() {
+		return this.initialFilterCursorPos;
+	}
+
+	public String getInitialFilterValue() {
+		return this.initialFilterValue;
+	}
+
 	public String getInPanelHint() {
 		return inPanelHint;
+	}
+
+	public VisualFilterableItemFilter<T> getItemFilter() {
+		return this.itemFilter;
 	}
 
 	public Map<G, List<T>> getItemMap() {
@@ -573,6 +403,22 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		};
 	}
 
+	public LazyDataProvider<G, T> getLazyProvider() {
+		return this.lazyProvider;
+	}
+
+	public String getPopdownStyleName() {
+		return popdownStyleName;
+	}
+
+	public String getPopupPanelCssClassName() {
+		return popupPanelCssClassName;
+	}
+
+	public Renderer getRenderer() {
+		return this.renderer;
+	}
+
 	public ScrollPanel getScroller() {
 		return this.scroller;
 	}
@@ -585,8 +431,22 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return separatorText;
 	}
 
+	public ShowHintStrategy getShowHintStrategy() {
+		return showHintStrategy;
+	}
+
 	public int getTopAdjust() {
 		return topAdjust;
+	}
+
+	public void hidePopdown() {
+		if (popdownHider != null) {
+			maybeClosePopdown(null);
+		}
+	}
+
+	public boolean isAutoselectFirst() {
+		return autoselectFirst;
 	}
 
 	public boolean isFlowLayout() {
@@ -609,6 +469,23 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return sortGroups;
 	}
 
+	public IndexedPanel itemHolderAsIndexedPanel() {
+		return (IndexedPanel) itemHolder;
+	}
+
+	public void maybeRepositionPopdown() {
+		if (relativePopupPanel != null
+				&& WidgetUtils.isVisibleAncestorChain(relativePopupPanel)) {
+			RelativePopupPositioning
+					.showPopup(
+							filter,
+							null,
+							RootPanel.get(),
+							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
+							RootPanel.get(), panelForPopup, shiftX(), shiftY());
+		}
+	}
+
 	public void onFocus(FocusEvent event) {
 		Widget sender = (Widget) event.getSource();
 		int i = 0;
@@ -619,6 +496,16 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				filter.getTextBox().setFocus(true);
 			}
 		});
+	}
+
+	public void removeScroller() {
+		Widget child = scroller.getWidget();
+		holder.remove(scroller);
+		holder.add(child);
+	}
+
+	public void setAutoselectFirst(boolean autoselectFirst) {
+		this.autoselectFirst = autoselectFirst;
 	}
 
 	public void setEnterHandler(ClickHandler enterHandler) {
@@ -647,8 +534,20 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.holderHeight = holderHeight;
 	}
 
+	public void setInitialFilterCursorPos(int initialFilterCursorPos) {
+		this.initialFilterCursorPos = initialFilterCursorPos;
+	}
+
+	public void setInitialFilterValue(String initialFilterValue) {
+		this.initialFilterValue = initialFilterValue;
+	}
+
 	public void setInPanelHint(String inPanelHint) {
 		this.inPanelHint = inPanelHint;
+	}
+
+	public void setItemFilter(VisualFilterableItemFilter<T> itemFilter) {
+		this.itemFilter = itemFilter;
 	}
 
 	public void setItemMap(Map<G, List<T>> itemMap) {
@@ -681,12 +580,32 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.keys = keys;
 	}
 
+	public void setLazyProvider(LazyDataProvider<G, T> lazyProvider) {
+		this.lazyProvider = lazyProvider;
+	}
+
 	public void setPopdown(boolean popdown) {
 		this.popdown = popdown;
 	}
 
+	public void setPopdownStyleName(String popdownStyleName) {
+		this.popdownStyleName = popdownStyleName;
+	}
+
+	public void setPopupPanelCssClassName(String popupPanelCssClassName) {
+		this.popupPanelCssClassName = popupPanelCssClassName;
+	}
+
+	public void setRenderer(Renderer renderer) {
+		this.renderer = renderer;
+	}
+
 	public void setSeparatorText(String separatorText) {
 		this.separatorText = separatorText;
+	}
+
+	public void setShowHintStrategy(ShowHintStrategy showHintStrategy) {
+		this.showHintStrategy = showHintStrategy;
 	}
 
 	public void setSortGroupContents(boolean sortGroupContents) {
@@ -699,6 +618,179 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	public void setTopAdjust(int topAdjust) {
 		this.topAdjust = topAdjust;
+	}
+
+	public void showPopupWithData(boolean filterTextBox) {
+		if (popdownStyleName != null) {
+			panelForPopup.addStyleName(popdownStyleName);
+		}
+		if (filterTextBox && !filter.isQueueing()) {
+			filter(filter.getTextBox().getText());
+		}
+		this.relativePopupPanel = RelativePopupPositioning
+				.showPopup(
+						filter,
+						null,
+						RootPanel.get(),
+						new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
+						RootPanel.get(), panelForPopup, shiftX(), shiftY());
+		onPopdownShowing(relativePopupPanel, true);
+		int border = 2;
+		if (itemHolder.getOffsetHeight() + border > panelForPopup
+				.getOffsetHeight() && !isAutoHolderHeight()) {
+			int hhInt = holderHeight != null && holderHeight.endsWith("px") ? Integer
+					.parseInt(holderHeight.replace("px", "")) : 0;
+			scroller.setHeight(Math.max(hhInt, panelForPopup.getOffsetHeight()
+					- border)
+					+ "px");
+		}
+		int minWidth = holder.getOffsetWidth();
+		if (minWidth == 0) {// probably inline
+			minWidth = filter.getOffsetWidth();
+		}
+		minWidth = adjustDropdownWidth(minWidth);
+		if (minWidth > 20) {
+			scroller.getElement().getStyle()
+					.setProperty("minWidth", minWidth + "px");
+			if (BrowserMod.isIEpre9()) {
+				relativePopupPanel.getElement().getStyle()
+						.setProperty("minWidth", (minWidth + 20) + "px");
+			}
+		}
+		afterUpdateItems(emptyItems);
+	}
+
+	protected void addDefaultSeparator(HasWidgets itemHolder) {
+		itemHolder.add(new InlineHTML(" "));
+	}
+
+	protected void addGroupHeading(HasWidgets itemHolder, Label l) {
+		itemHolder.add(l);
+	}
+
+	protected int adjustDropdownWidth(int minWidth) {
+		return minWidth;
+	}
+
+	protected void afterUpdateItems(boolean empty) {
+	}
+
+	protected void checkShowPopup() {
+		checkShowPopup(true);
+	}
+
+	// TODO:hcdim
+	protected void checkShowPopup(final boolean filterTextBox) {
+		if ((this.relativePopupPanel == null || this.relativePopupPanel
+				.getParent() == null)
+				&& !closingOnClick
+				&& System.currentTimeMillis() - lastClosingClickMillis > DELAY_TO_CHECK_FOR_CLOSING
+				&& maybeShowDepdendentOnFilter()) {
+			if (lazyProvider != null) {
+				AsyncCallback<LazyData> callback = new AsyncCallbackStd<SelectWithSearch.LazyData>() {
+					@Override
+					public void onSuccess(LazyData lazyData) {
+						if (lazyData != null) {
+							setKeys(lazyData.keys);
+							setItemMap(lazyData.data);
+						}
+						showPopupWithData(filterTextBox);
+					}
+				};
+				lazyProvider.getData(callback);
+			} else {
+				showPopupWithData(filterTextBox);
+			}
+		}
+	}
+
+	protected HasClickHandlers createItem(T item, boolean asHTML,
+			int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
+			String sep) {
+		HasClickHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
+				item, false, charWidth, itemsHaveLinefeeds, ownerLabel, sep,
+				itemFilter) : new SelectWithSearchItem(item, false, charWidth,
+				itemsHaveLinefeeds, ownerLabel, sep);
+		return hch;
+	}
+
+	protected void createItemHolder() {
+		FlowPanelClickable panel = new FlowPanelClickable();
+		panel.setStyleName("select-item-container");
+		if (popdown) {
+			panel.addMouseDownHandler(checkIgnoreHandler);
+		}
+		itemHolder = panel;
+	}
+
+	protected void handleFilterBlur() {
+		new Timer() {
+			@Override
+			public void run() {
+				// https://jira.barnet.com.au/browse/JAD-5053 - IE
+				// blur/scrollbar issue
+				if (BrowserMod.isInternetExplorer()) {
+					Element elt = WidgetUtils.getFocussedDocumentElement();
+					if (elt != null && elt.getClassName().contains("scroller")) {
+						return;
+					}
+				}
+				hidePopdown();
+			}
+		}.schedule(250);
+	}
+
+	protected boolean isAutoHolderHeight() {
+		return false;
+	}
+
+	protected HasWidgets itemHolderAsHasWidgets() {
+		return (HasWidgets) itemHolder;
+	}
+
+	protected void maybeClosePopdown(ClickEvent event) {
+		if (event != null) {
+			try {
+				if (WidgetUtils.isNewTabModifier() || event.isShiftKeyDown()) {
+					event.preventDefault();
+					ignoreNextBlur = System.currentTimeMillis();
+					// otherwise popup will be closed by blur
+					return;
+				}
+			} catch (Exception e) {
+				// probably a synth click
+			}
+		}
+		closingOnClick = true;
+		if (relativePopupPanel != null) {
+			onPopdownShowing(relativePopupPanel, false);
+			relativePopupPanel.removeFromParent();
+			relativePopupPanel = null;
+		}
+		lastClosingClickMillis = System.currentTimeMillis();
+		closingOnClick = false;
+	}
+
+	protected boolean maybeShowDepdendentOnFilter() {
+		return true;
+	}
+
+	protected void onPopdownShowing(RelativePopupPanel popup, boolean show) {
+	}
+
+	protected void setPanelForPopupUI(DecoratedRelativePopupPanel panelForPopup) {
+		panelForPopup.setStyleName("dropdown-popup");
+		panelForPopup.addStyleName("alcina-Selector");
+		panelForPopup.getElement().getStyle()
+				.setProperty("maxHeight", holderHeight);
+	}
+
+	protected int shiftX() {
+		return -2;
+	}
+
+	protected int shiftY() {
+		return 0;
 	}
 
 	protected void updateItems() {
@@ -742,128 +834,32 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		afterUpdateItems(emptyItems);
 	}
 
-	protected void addDefaultSeparator(HasWidgets itemHolder) {
-		itemHolder.add(new InlineHTML(" "));
-	}
-
-	protected void addGroupHeading(HasWidgets itemHolder, Label l) {
-		itemHolder.add(l);
-	}
-
-	boolean emptyItems = false;
-
-	protected void afterUpdateItems(boolean empty) {
-	}
-
-	protected HasClickHandlers createItem(T item, boolean asHTML,
-			int charWidth, boolean itemsHaveLinefeeds, Label ownerLabel,
-			String sep) {
-		HasClickHandlers hch = itemsHaveLinefeeds ? new SelectWithSearchItemDiv(
-				item, false, charWidth, itemsHaveLinefeeds, ownerLabel, sep)
-				: new SelectWithSearchItem(item, false, charWidth,
-						itemsHaveLinefeeds, ownerLabel, sep);
-		return hch;
-	}
-
-	protected int shiftY() {
-		return 0;
-	}
-
-	protected void checkShowPopup() {
-		checkShowPopup(true);
-	}
-
-	// TODO:hcdim
-	protected void checkShowPopup(final boolean filterTextBox) {
-		if ((this.relativePopupPanel == null || this.relativePopupPanel
-				.getParent() == null)
-				&& !closingOnClick
-				&& System.currentTimeMillis() - lastClosingClickMillis > DELAY_TO_CHECK_FOR_CLOSING
-				&& maybeShowDepdendentOnFilter()) {
-			if (lazyProvider != null) {
-				AsyncCallback<LazyData> callback = new AsyncCallbackStd<SelectWithSearch.LazyData>() {
-					@Override
-					public void onSuccess(LazyData lazyData) {
-						if (lazyData != null) {
-							setKeys(lazyData.keys);
-							setItemMap(lazyData.data);
-						}
-						showPopupWithData(filterTextBox);
-					}
-				};
-				lazyProvider.getData(callback);
-			} else {
-				showPopupWithData(filterTextBox);
-			}
-		}
-	}
-
-	public void showPopupWithData(boolean filterTextBox) {
-		if (popdownStyleName != null) {
-			panelForPopup.addStyleName(popdownStyleName);
-		}
-		if (filterTextBox && !filter.isQueueing()) {
-			filter(filter.getTextBox().getText());
-		}
-		this.relativePopupPanel = RelativePopupPositioning
-				.showPopup(
-						filter,
-						null,
-						RootPanel.get(),
-						new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
-						RootPanel.get(), panelForPopup, shiftX(), shiftY());
-		onPopdownShowing(relativePopupPanel, true);
-		int border = 2;
-		if (itemHolder.getOffsetHeight() + border > panelForPopup
-				.getOffsetHeight() && !isAutoHolderHeight()) {
-			int hhInt = holderHeight != null && holderHeight.endsWith("px") ? Integer
-					.parseInt(holderHeight.replace("px", "")) : 0;
-			scroller.setHeight(Math.max(hhInt, panelForPopup.getOffsetHeight()
-					- border)
-					+ "px");
-		}
-		int minWidth = holder.getOffsetWidth();
-		if (minWidth == 0) {// probably inline
-			minWidth = filter.getOffsetWidth();
-		}
-		minWidth = adjustDropdownWidth(minWidth);
-		if (minWidth > 20) {
-			scroller.getElement().getStyle()
-					.setProperty("minWidth", minWidth + "px");
-			if (BrowserMod.isIEpre9()) {
-				relativePopupPanel.getElement().getStyle()
-						.setProperty("minWidth", (minWidth + 20) + "px");
-			}
-		}
-		afterUpdateItems(emptyItems);
-	}
-
-	protected boolean isAutoHolderHeight() {
-		return false;
-	}
-
-	protected boolean maybeShowDepdendentOnFilter() {
-		return true;
-	}
-
-	protected int shiftX() {
-		return -2;
-	}
-
-	protected int adjustDropdownWidth(int minWidth) {
-		return minWidth;
-	}
-
-	public void setShowHintStrategy(ShowHintStrategy showHintStrategy) {
-		this.showHintStrategy = showHintStrategy;
-	}
-
-	public ShowHintStrategy getShowHintStrategy() {
-		return showHintStrategy;
-	}
-
 	public static interface HasItem<T> {
 		public T getItem();
+	}
+
+	public static class HideOnKeypressHintStrategy extends ShowHintStrategy
+			implements KeyDownHandler {
+		private boolean hintShown = false;
+
+		public void onKeyDown(KeyDownEvent event) {
+			hintShown = true;
+			hintWidget.setVisible(false);
+		}
+
+		@Override
+		public void registerFilter(FilterWidget filter) {
+			super.registerFilter(filter);
+			filter.getTextBox().addKeyDownHandler(this);
+		}
+
+		@Override
+		public void registerHintWidget(Widget hintWidget) {
+			super.registerHintWidget(hintWidget);
+			if (hintShown) {
+				hintWidget.setVisible(false);
+			}
+		}
 	}
 
 	public static class LazyData<G, T> {
@@ -915,6 +911,44 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		}
 	}
 
+	public class SelectWithSearchItemDiv extends BlockLink implements
+			VisualFilterable {
+		private String filterableText;
+
+		private final T item;
+
+		private final Label ownerLabel;
+
+		private VisualFilterableItemFilter<T> filter;
+
+		public SelectWithSearchItemDiv(T item, boolean asHTML, int charWidth,
+				boolean withLfs, Label ownerLabel, String sep,
+				VisualFilterableItemFilter<T> filter) {
+			super(item.toString(), asHTML);
+			this.item = item;
+			this.ownerLabel = ownerLabel;
+			this.filter = filter;
+			String text = (String) renderer.render(item);
+			filterableText = text.toLowerCase();
+			setHTML(text + sep);
+			setStyleName("chooser-item");
+		}
+
+		public boolean filter(String filterText) {
+			boolean b = filter.allow(item, filterableText, filterText)
+					&& !selectedItems.contains(item);
+			setVisible(b);
+			if (b && !ownerLabel.isVisible()) {
+				ownerLabel.setVisible(true);
+			}
+			return b;
+		}
+
+		public T getItem() {
+			return item;
+		}
+	}
+
 	public class SelectWithSearchItemX extends SpanPanel implements
 			VisualFilterable, HasItem<T>, HasClickHandlers {
 		private String filterableText;
@@ -944,53 +978,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			setStyleName("selectx");
 		}
 
-		public boolean filter(String filterText) {
-			boolean b = filterableText.contains(filterText)
-					&& !selectedItems.contains(item);
-			setVisible(b);
-			if (b && !ownerLabel.isVisible()) {
-				ownerLabel.setVisible(true);
-			}
-			return b;
-		}
-
-		public T getItem() {
-			return item;
-		}
-
 		@Override
 		public HandlerRegistration addClickHandler(ClickHandler handler) {
 			return hl.addClickHandler(handler);
-		}
-	}
-
-	private Renderer renderer = ToStringRenderer.INSTANCE;
-
-	public Renderer getRenderer() {
-		return this.renderer;
-	}
-
-	public void setRenderer(Renderer renderer) {
-		this.renderer = renderer;
-	}
-
-	public class SelectWithSearchItemDiv extends BlockLink implements
-			VisualFilterable {
-		private String filterableText;
-
-		private final T item;
-
-		private final Label ownerLabel;
-
-		public SelectWithSearchItemDiv(T item, boolean asHTML, int charWidth,
-				boolean withLfs, Label ownerLabel, String sep) {
-			super(item.toString(), asHTML);
-			this.item = item;
-			this.ownerLabel = ownerLabel;
-			String text = (String) renderer.render(item);
-			filterableText = text.toLowerCase();
-			setHTML(text + sep);
-			setStyleName("chooser-item");
 		}
 
 		public boolean filter(String filterText) {
@@ -1022,80 +1012,123 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		}
 	}
 
-	public static class HideOnKeypressHintStrategy extends ShowHintStrategy
-			implements KeyDownHandler {
-		private boolean hintShown = false;
+	class SelectableNavigation implements KeyUpHandler, KeyDownHandler {
+		private int selectedIndex = -1;
 
-		@Override
-		public void registerFilter(FilterWidget filter) {
-			super.registerFilter(filter);
-			filter.getTextBox().addKeyDownHandler(this);
+		private Widget lastSelected = null;
+
+		private ClickHandler wrappedEnterListener;
+
+		public void clear() {
+			selectedIndex = -1;
+			updateSelection();
 		}
 
-		@Override
-		public void registerHintWidget(Widget hintWidget) {
-			super.registerHintWidget(hintWidget);
-			if (hintShown) {
-				hintWidget.setVisible(false);
-			}
+		public ClickHandler getWrappedEnterListener() {
+			return this.wrappedEnterListener;
 		}
 
 		public void onKeyDown(KeyDownEvent event) {
-			hintShown = true;
-			hintWidget.setVisible(false);
+			int keyCode = event.getNativeKeyCode();
+			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
+				WidgetUtils.squelchCurrentEvent();
+			}
 		}
-	}
 
-	public void clearFilterText() {
-		getFilter().getTextBox().setText("");
-		selectableNavigation.clear();
-		filter("");
-	}
-
-	public void setPopdownStyleName(String popdownStyleName) {
-		this.popdownStyleName = popdownStyleName;
-	}
-
-	public String getPopdownStyleName() {
-		return popdownStyleName;
-	}
-
-	public void removeScroller() {
-		Widget child = scroller.getWidget();
-		holder.remove(scroller);
-		holder.add(child);
-	}
-
-	public void setPopupPanelCssClassName(String popupPanelCssClassName) {
-		this.popupPanelCssClassName = popupPanelCssClassName;
-	}
-
-	public String getPopupPanelCssClassName() {
-		return popupPanelCssClassName;
-	}
-
-	public void setAutoselectFirst(boolean autoselectFirst) {
-		this.autoselectFirst = autoselectFirst;
-	}
-
-	public boolean isAutoselectFirst() {
-		return autoselectFirst;
-	}
-
-	public void maybeRepositionPopdown() {
-		if (relativePopupPanel != null
-				&& WidgetUtils.isVisibleAncestorChain(relativePopupPanel)) {
-			RelativePopupPositioning
-					.showPopup(
-							filter,
-							null,
-							RootPanel.get(),
-							new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
-							RootPanel.get(), panelForPopup, shiftX(), shiftY());
+		public void onKeyUp(KeyUpEvent event) {
+			Widget sender = (Widget) event.getSource();
+			if (event.getNativeEvent() == null) {
+				// IE9 issue
+				return;
+			}
+			int keyCode = event.getNativeKeyCode();
+			if (keyCode == KeyCodes.KEY_UP || keyCode == KeyCodes.KEY_DOWN) {
+				WidgetUtils.squelchCurrentEvent();
+			}
+			if (keyCode == KeyCodes.KEY_UP) {
+				if (selectedIndex > 0) {
+					selectedIndex--;
+				}
+				updateSelection();
+			}
+			if (keyCode == KeyCodes.KEY_DOWN) {
+				selectedIndex++;
+				updateSelection();
+			}
+			boolean hidePopdown = false;
+			if (keyCode == KeyCodes.KEY_ENTER) {
+				if (selectedIndex != -1) {
+					DomEvent.fireNativeEvent(WidgetUtils.createZeroClick(),
+							getSelectedWidget());
+					hidePopdown = true;
+					selectedIndex = -1;
+				} else {
+					if (wrappedEnterListener != null) {
+						WidgetUtils.fireClickOnHandler(
+								(HasClickHandlers) event.getSource(),
+								wrappedEnterListener);
+						hidePopdown = true;
+					}
+				}
+			}
+			if (hidePopdown && popdown) {
+				maybeClosePopdown(null);
+			}
 		}
-	}
 
-	public LazyDataProvider<G, T> getLazyProvider() {
-		return this.lazyProvider;
+		public void setWrappedEnterListener(ClickHandler enterListener) {
+			this.wrappedEnterListener = enterListener;
+		}
+
+		private Widget getSelectedWidget() {
+			int visibleIndex = -1;
+			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
+			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
+				Widget widget = itemHolder.getWidget(i);
+				if (widget instanceof VisualFilterable && widget.isVisible()) {
+					visibleIndex++;
+					if (selectedIndex == visibleIndex) {
+						return widget;
+					}
+				}
+			}
+			return null;
+		}
+
+		private int getVisibleFilterableCount() {
+			int visibleIndex = -1;
+			IndexedPanel itemHolder = itemHolderAsIndexedPanel();
+			for (int i = 0; i < itemHolder.getWidgetCount(); i++) {
+				Widget widget = itemHolder.getWidget(i);
+				if (widget instanceof VisualFilterable && widget.isVisible()) {
+					visibleIndex++;
+				}
+			}
+			return visibleIndex;
+		}
+
+		private void updateSelection() {
+			if (lastSelected != null) {
+				lastSelected.removeStyleName("selected");
+			}
+			lastSelected = null;
+			if (selectedIndex < -1) {
+				selectedIndex = -1;
+			}
+			if (selectedIndex != -1) {
+				Widget selectedWidget = getSelectedWidget();
+				if (selectedWidget != null) {
+					selectedWidget.addStyleName("selected");
+					DOM.scrollIntoView(selectedWidget.getElement());
+					lastSelected = selectedWidget;
+				} else {
+					int vfc = getVisibleFilterableCount();
+					if (selectedIndex > vfc) {
+						selectedIndex = vfc;
+						updateSelection();
+					}
+				}
+			}
+		}
 	}
 }

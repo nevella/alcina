@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package cc.alcina.framework.common.client.util;
 
@@ -54,6 +54,13 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	public void expand(int value) {
 		i1 = i1 == 0 ? value : Math.min(i1, value);
 		i2 = i2 == 0 ? value : Math.max(i2, value);
+	}
+
+	public IntPair union(IntPair other) {
+		if (!intersectsWith(other)) {
+			return null;
+		}
+		return new IntPair(Math.min(i1, other.i1), Math.max(i2, other.i2));
 	}
 
 	public int compareTo(IntPair ip) {
@@ -187,5 +194,28 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 				return o1.i2 - o2.i2;
 			}
 		}
+	}
+
+	public IntPairRelation compareBounds(IntPair o) {
+		IntPair intersection = intersection(o);
+		if (intersection == null) {
+			return IntPairRelation.NO_INTERSECTION;
+		}
+		if (intersection.contains(this)) {
+			return IntPairRelation.CONTAINED_BY_ALL;
+		}
+		if (intersection.contains(o)) {
+			return IntPairRelation.CONTAINS_ALL;
+		}
+		if (intersection.contains(o.i1)) {
+			return IntPairRelation.CONTAINS_START;
+		} else {
+			return IntPairRelation.CONTAINS_END;
+		}
+	}
+
+	public static enum IntPairRelation {
+		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
+		CONTAINS_END;
 	}
 }

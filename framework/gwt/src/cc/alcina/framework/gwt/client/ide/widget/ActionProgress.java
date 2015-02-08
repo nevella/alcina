@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -44,7 +44,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class ActionProgress extends Composite implements
@@ -117,6 +117,7 @@ public class ActionProgress extends Composite implements
 		times = new HTML();
 		addToGrid("Time", times);
 		message = new Label();
+		message.setStyleName("message");
 		addToGrid("Status", message);
 		progress = new FlowPanel();
 		progress.setStyleName("progress");
@@ -317,9 +318,13 @@ public class ActionProgress extends Composite implements
 		}
 		times.setHTML(time);
 		String msg = info.getProgressMessage();
+		if (CommonUtils.isNotNullOrEmpty(info.getSubProgressMessage())
+				&& info.getEndTime() == null) {
+			msg += " - " + info.getSubProgressMessage();
+		}
 		if (info.getJobResultType() == JobResultType.FAIL) {
 			msg = info.getJobResult();
-			message.setStyleName("error");
+			message.addStyleName("error");
 		}
 		if (!info.isComplete()
 				&& cancellingStatusMessage.getText().equals(CANCELLED)) {

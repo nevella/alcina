@@ -522,10 +522,12 @@ public class SyncClientSerializationStreamReader extends
 	private static String removeConcats(String encoded) {
 		StringBuffer result = new StringBuffer();
 		boolean inStr = false;
+		int maxSub = PRELUDE.length();
 		for (int i = 0; i < encoded.length(); i++) {
 			char ch = encoded.charAt(i);
 			char chl1 = i > 0 ? encoded.charAt(i - 1) : 0;
-			String cont = encoded.substring(i);
+			int subStringLength = Math.min(maxSub, encoded.length() - i);
+			String cont = encoded.substring(i, i + subStringLength);
 			if (inStr) {
 				if (ch == '"' && chl1 != '\\') {
 					inStr = false;

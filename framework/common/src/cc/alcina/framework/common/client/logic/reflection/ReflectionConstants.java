@@ -11,5 +11,5 @@ public class ReflectionConstants {
 	public static boolean useGeneratedIntrospector() {
 		return GWT.isScript() || USE_NON_JVM_IN_HOSTED;
 	}
-	
+
 }

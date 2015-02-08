@@ -78,6 +78,7 @@ public class ClientMetricLogging {
 						+ extraInfo);
 		if (!isMuted()) {
 			Registry.impl(ClientNotifications.class).log(message);
+			System.out.println(message);
 		}
 		if (!averageCount.containsKey(key)) {
 			averageCount.put(key, 0L);

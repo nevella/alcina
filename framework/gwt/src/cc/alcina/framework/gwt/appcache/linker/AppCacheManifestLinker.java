@@ -44,243 +44,237 @@ import com.google.gwt.util.tools.shared.StringUtils;
  * Generates an appcache manifest file for use with the AppCache client class.
  * The generated manifest will have a partial path of
  * <code>moduleName.nocache.manifest</code>. If it exists, the
- * {@link EmittedArtifact} with a partial path of {@value #APPCACHE_MANIFEST} will
- * be used as a template for generating the final manifest.
+ * {@link EmittedArtifact} with a partial path of {@value #APPCACHE_MANIFEST}
+ * will be used as a template for generating the final manifest.
  * 
  * Zippily adapted from the Gears linker by Nick
  * 
  * 
  */
 @LinkerOrder(Order.POST)
-public  class AppCacheManifestLinker extends AbstractLinker {
+public class AppCacheManifestLinker extends AbstractLinker {
+	/**
+	 * The message digest; it's highly unlikely md5 is unsupported.
+	 */
+	private static final String DIGEST_ALGORITHM = "MD5";
 
-  /**
-   * The message digest; it's highly unlikely md5 is unsupported.
-   */
-  private static final String DIGEST_ALGORITHM = "MD5";
+	/**
+	 * Used to extract the filter pragmas.
+	 */
+	private static final Pattern FILTER_PATTERN = Pattern.compile(
+			"@filter (.*)$", Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
 
-  /**
-   * Used to extract the filter pragmas.
-   */
-  private static final Pattern FILTER_PATTERN = Pattern.compile(
-      "@filter (.*)$", Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
-  private static final String APPCACHE_MANIFEST = "AppCacheManifest.json";
-  private static final String[] BUILTIN_FILTERS = { 
-    ".*\\.gwt\\.rpc", // Causes problems with AppEngine, see issue 280 
-  };
+	private static final String APPCACHE_MANIFEST = "AppCacheManifest.json";
 
-  private static void replaceAll(StringBuffer buf, String search, String replace) {
-    int len = search.length();
-    for (int pos = buf.indexOf(search); pos >= 0; pos = buf.indexOf(search,
-        pos + 1)) {
-      buf.replace(pos, pos + len, replace);
-    }
-  }
+	private static final String[] BUILTIN_FILTERS = { ".*\\.gwt\\.rpc", // Causes
+																		// problems
+																		// with
+																		// AppEngine,
+																		// see
+																		// issue
+																		// 280
+	};
 
-  /**
-   * The user-provide manifest template is filtered before before resources are
-   * written to disk.
-   */
-  EmittedArtifact userManifest = null;
+	private static void replaceAll(StringBuffer buf, String search,
+			String replace) {
+		int len = search.length();
+		for (int pos = buf.indexOf(search); pos >= 0; pos = buf.indexOf(search,
+				pos + 1)) {
+			buf.replace(pos, pos + len, replace);
+		}
+	}
 
-  /**
-   * Use all bytes written to the output to determine the manifest's version.
-   * Gears don't really care about the value of the version field, just that it
-   * may change from time to time.
-   */
-  private final MessageDigest digester;
+	/**
+	 * The user-provide manifest template is filtered before before resources
+	 * are written to disk.
+	 */
+	EmittedArtifact userManifest = null;
 
-  public AppCacheManifestLinker() throws NoSuchAlgorithmException {
-    digester = MessageDigest.getInstance(DIGEST_ALGORITHM);
-  }
+	/**
+	 * Use all bytes written to the output to determine the manifest's version.
+	 * Gears don't really care about the value of the version field, just that
+	 * it may change from time to time.
+	 */
+	private final MessageDigest digester;
 
-  @Override
-  public String getDescription() {
-    return "App cache manifest linker";
-  }
+	public AppCacheManifestLinker() throws NoSuchAlgorithmException {
+		digester = MessageDigest.getInstance(DIGEST_ALGORITHM);
+	}
 
-  @Override
-  public ArtifactSet link(TreeLogger logger, LinkerContext context,
-      ArtifactSet artifacts) throws UnableToCompleteException {
-    ArtifactSet toReturn = new ArtifactSet(artifacts);
+	@Override
+	public String getDescription() {
+		return "App cache manifest linker";
+	}
 
-    SortedSet<EmittedArtifact> emitted = toReturn.find(EmittedArtifact.class);
+	@Override
+	public ArtifactSet link(TreeLogger logger, LinkerContext context,
+			ArtifactSet artifacts) throws UnableToCompleteException {
+		ArtifactSet toReturn = new ArtifactSet(artifacts);
+		SortedSet<EmittedArtifact> emitted = toReturn
+				.find(EmittedArtifact.class);
+		for (EmittedArtifact artifact : emitted) {
+			if (artifact.getPartialPath().equals(APPCACHE_MANIFEST)) {
+				userManifest = artifact;
+				toReturn.remove(artifact);
+				emitted.remove(artifact);
+				break;
+			}
+		}
+		toReturn.add(emitManifest(logger, context, userManifest, emitted));
+		return toReturn;
+	}
 
-    for (EmittedArtifact artifact : emitted) {
-      if (artifact.getPartialPath().equals(APPCACHE_MANIFEST)) {
-        userManifest = artifact;
-        toReturn.remove(artifact);
-        emitted.remove(artifact);
-        break;
-      }
-    }
+	private EmittedArtifact emitManifest(TreeLogger logger,
+			LinkerContext context, EmittedArtifact userManifest,
+			SortedSet<EmittedArtifact> artifacts)
+			throws UnableToCompleteException {
+		logger = logger.branch(TreeLogger.DEBUG, "Creating manifest artifact",
+				null);
+		// Try getting a user-defined manifest
+		StringBuffer out = readManifestTemplate(logger, userManifest);
+		// Use the template in the MD5 computation
+		digester.update(Util.getBytes(out.toString()));
+		// Look for @filter expressions in the manifest template
+		Set<Pattern> filters = extractFilters(logger, out);
+		// Append the builtin filters
+		for (String pattern : BUILTIN_FILTERS) {
+			filters.add(Pattern.compile(pattern));
+		}
+		filters.add(Pattern.compile(".*?(^|/)\\.[^/]+"));// ignore .-prefixed
+															// files (e.g.
+															// .cvsignore)
+		// Generate the manifest entries
+		String entries = generateEntries(logger, context, filters, artifacts);
+		replaceAll(out, "__VERSION__",
+				StringUtils.toHexString(digester.digest()));
+		replaceAll(out, "__ENTRIES__", entries.toString());
+		/*
+		 * NB: It's tempting to use LinkerContext.optimizeJavaScript here, but
+		 * the JSON standard requires that the keys in the object literal will
+		 * be enclosed in double-quotes. In our optimized JS form, the
+		 * double-quotes would normally be removed.
+		 */
+		return emitBytes(logger, Util.getBytes(out.toString()),
+				"appcache.nocache.manifest");
+	}
 
-    toReturn.add(emitManifest(logger, context, userManifest, emitted));
+	/**
+	 * Find all instances of the filter pragma in the manifest template and
+	 * return compiled regular expression Pattern objects.
+	 */
+	private Set<Pattern> extractFilters(TreeLogger logger, CharSequence source)
+			throws UnableToCompleteException {
+		logger.branch(TreeLogger.DEBUG, "Finding @filter expressions", null);
+		boolean filterError = false;
+		Matcher filterMatcher = FILTER_PATTERN.matcher(source);
+		Set<Pattern> filters = new HashSet<Pattern>();
+		while (filterMatcher.find()) {
+			String pattern = filterMatcher.group(1);
+			try {
+				filters.add(Pattern.compile(pattern));
+			} catch (PatternSyntaxException e) {
+				logger.log(TreeLogger.ERROR,
+						"Could not compile filter pattern at character offset "
+								+ filterMatcher.start(), e);
+				filterError = true;
+			}
+		}
+		if (filterError) {
+			throw new UnableToCompleteException();
+		}
+		return filters;
+	}
 
-    return toReturn;
-  }
+	/**
+	 * Generate a string containing object literals for each manifest entry.
+	 */
+	private String generateEntries(TreeLogger logger, LinkerContext context,
+			Set<Pattern> filters, SortedSet<EmittedArtifact> artifacts)
+			throws UnableToCompleteException {
+		logger = logger.branch(TreeLogger.DEBUG,
+				"Generating manifest contents", null);
+		StringBuffer entries = new StringBuffer();
+		paths: for (EmittedArtifact artifact : artifacts) {
+			if (artifact.getVisibility() != Visibility.Public) {
+				// These artifacts won't be in the module output directory
+				continue;
+			}
+			String path = artifact.getPartialPath();
+			for (Pattern p : filters) {
+				if (p.matcher(path).matches()) {
+					logger.log(TreeLogger.DEBUG, "Filtering resource " + path,
+							null);
+					continue paths;
+				}
+			}
+			entries.append("/" + context.getModuleName() + "/" + path);
+			entries.append("\n");
+			// Read the artifact into the digester
+			InputStream in = artifact.getContents(logger);
+			byte[] buffer = new byte[4096];
+			int read;
+			try {
+				while ((read = in.read(buffer)) != -1) {
+					digester.update(buffer, 0, read);
+				}
+			} catch (IOException e) {
+				logger.log(TreeLogger.ERROR, "Unable to read artifact "
+						+ artifact.getPartialPath(), e);
+				throw new UnableToCompleteException();
+			}
+		}
+		// Add an alias for Module.nocache.js?compiled to support hosted-mode
+		entries.append("/" + context.getModuleName() + "/"
+				+ context.getModuleName() + ".nocache.js?compiled\n");
+		entries.append("/" + context.getModuleName() + "/"
+				+ context.getModuleName() + ".nocache.js\n");
+		return entries.toString();
+	}
 
-  private EmittedArtifact emitManifest(TreeLogger logger,
-      LinkerContext context, EmittedArtifact userManifest,
-      SortedSet<EmittedArtifact> artifacts) throws UnableToCompleteException {
-    logger = logger.branch(TreeLogger.DEBUG, "Creating manifest artifact", null);
-
-    // Try getting a user-defined manifest
-    StringBuffer out = readManifestTemplate(logger, userManifest);
-
-    // Use the template in the MD5 computation
-    digester.update(Util.getBytes(out.toString()));
-
-    // Look for @filter expressions in the manifest template
-    Set<Pattern> filters = extractFilters(logger, out);
-
-    // Append the builtin filters
-    for (String pattern : BUILTIN_FILTERS) {
-      filters.add(Pattern.compile(pattern));
-    }
-    filters.add(Pattern.compile(".*?(^|/)\\.[^/]+"));//ignore .-prefixed files (e.g. .cvsignore)
-
-    // Generate the manifest entries
-    String entries = generateEntries(logger, context, filters, artifacts);
-
-    replaceAll(out, "__VERSION__", StringUtils.toHexString(digester.digest()));
-    replaceAll(out, "__ENTRIES__", entries.toString());
-
-    /*
-     * NB: It's tempting to use LinkerContext.optimizeJavaScript here, but the
-     * JSON standard requires that the keys in the object literal will be
-     * enclosed in double-quotes. In our optimized JS form, the double-quotes
-     * would normally be removed.
-     */
-    return emitBytes(logger, Util.getBytes(out.toString()),
-         "appcache.nocache.manifest");
-  }
-
-  /**
-   * Find all instances of the filter pragma in the manifest template and return
-   * compiled regular expression Pattern objects.
-   */
-  private Set<Pattern> extractFilters(TreeLogger logger, CharSequence source)
-      throws UnableToCompleteException {
-    logger.branch(TreeLogger.DEBUG, "Finding @filter expressions", null);
-
-    boolean filterError = false;
-    Matcher filterMatcher = FILTER_PATTERN.matcher(source);
-    Set<Pattern> filters = new HashSet<Pattern>();
-
-    while (filterMatcher.find()) {
-      String pattern = filterMatcher.group(1);
-      try {
-        filters.add(Pattern.compile(pattern));
-      } catch (PatternSyntaxException e) {
-        logger.log(TreeLogger.ERROR,
-            "Could not compile filter pattern at character offset "
-                + filterMatcher.start(), e);
-        filterError = true;
-      }
-    }
-
-    if (filterError) {
-      throw new UnableToCompleteException();
-    }
-
-    return filters;
-  }
-
-  /**
-   * Generate a string containing object literals for each manifest entry.
-   */
-  private String generateEntries(TreeLogger logger, LinkerContext context,
-      Set<Pattern> filters, SortedSet<EmittedArtifact> artifacts)
-      throws UnableToCompleteException {
-    logger = logger.branch(TreeLogger.DEBUG, "Generating manifest contents",
-        null);
-
-    StringBuffer entries = new StringBuffer();
-    paths : for (EmittedArtifact artifact : artifacts) {
-      if (artifact.getVisibility()!=Visibility.Public) {
-        // These artifacts won't be in the module output directory
-        continue;
-      }
-
-      String path = artifact.getPartialPath();
-      for (Pattern p : filters) {
-        if (p.matcher(path).matches()) {
-          logger.log(TreeLogger.DEBUG, "Filtering resource " + path, null);
-          continue paths;
-        }
-      }
-      entries.append("/"+context.getModuleName()+"/"+path);
-      entries.append("\n");
-
-      // Read the artifact into the digester
-      InputStream in = artifact.getContents(logger);
-      byte[] buffer = new byte[4096];
-      int read;
-      try {
-        while ((read = in.read(buffer)) != -1) {
-          digester.update(buffer, 0, read);
-        }
-      } catch (IOException e) {
-        logger.log(TreeLogger.ERROR, "Unable to read artifact "
-            + artifact.getPartialPath(), e);
-        throw new UnableToCompleteException();
-      }
-    }
-
-    // Add an alias for Module.nocache.js?compiled to support hosted-mode
-    entries.append("/"+context.getModuleName()+"/"+context.getModuleName()
-        + ".nocache.js?compiled\n");
-    entries.append("/"+context.getModuleName()+"/"+context.getModuleName()
-            + ".nocache.js\n");
-
-    return entries.toString();
-  }
-
-  /**
-   * Load the contents of the manifest template from a file named
-   * {@value #APPCACHE_MANIFEST} in the root of the public path. Failing that, use
-   * the built-in template.
-   */
-  private StringBuffer readManifestTemplate(TreeLogger logger,
-      EmittedArtifact userManifest) throws UnableToCompleteException {
-    logger = logger.branch(TreeLogger.DEBUG, "Reading manifest template", null);
-
-    InputStream in;
-
-    // See if we have a user-provided manifest to work with
-    if (userManifest != null) {
-      logger.log(TreeLogger.DEBUG, "Reading user-provided manifest", null);
-      in = userManifest.getContents(logger);
-      if (in == null) {
-        logger.log(TreeLogger.ERROR,
-            "Unable to read contents of user manifest", null);
-        throw new UnableToCompleteException();
-      }
-
-    } else {
-      // Fall back to the built-in manifest
-      String packagePath = getClass().getPackage().getName().replace('.', '/');
-      String resourceName = packagePath + "/" + APPCACHE_MANIFEST;
-      in = getClass().getClassLoader().getResourceAsStream(resourceName);
-      if (in == null) {
-        logger.log(TreeLogger.ERROR, "Could not load built-in manifest from "
-            + resourceName, null);
-        throw new UnableToCompleteException();
-      }
-    }
-
-    StringBuffer out = new StringBuffer();
-    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-    try {
-      for (String line = reader.readLine(); line != null; line = reader.readLine()) {
-        out.append(line).append("\n");
-      }
-    } catch (IOException e) {
-      logger.log(TreeLogger.ERROR, "Unable to read manifest template", e);
-      throw new UnableToCompleteException();
-    }
-
-    return out;
-  }
+	/**
+	 * Load the contents of the manifest template from a file named
+	 * {@value #APPCACHE_MANIFEST} in the root of the public path. Failing that,
+	 * use the built-in template.
+	 */
+	private StringBuffer readManifestTemplate(TreeLogger logger,
+			EmittedArtifact userManifest) throws UnableToCompleteException {
+		logger = logger.branch(TreeLogger.DEBUG, "Reading manifest template",
+				null);
+		InputStream in;
+		// See if we have a user-provided manifest to work with
+		if (userManifest != null) {
+			logger.log(TreeLogger.DEBUG, "Reading user-provided manifest", null);
+			in = userManifest.getContents(logger);
+			if (in == null) {
+				logger.log(TreeLogger.ERROR,
+						"Unable to read contents of user manifest", null);
+				throw new UnableToCompleteException();
+			}
+		} else {
+			// Fall back to the built-in manifest
+			String packagePath = getClass().getPackage().getName()
+					.replace('.', '/');
+			String resourceName = packagePath + "/" + APPCACHE_MANIFEST;
+			in = getClass().getClassLoader().getResourceAsStream(resourceName);
+			if (in == null) {
+				logger.log(
+						TreeLogger.ERROR,
+						"Could not load built-in manifest from " + resourceName,
+						null);
+				throw new UnableToCompleteException();
+			}
+		}
+		StringBuffer out = new StringBuffer();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+		try {
+			for (String line = reader.readLine(); line != null; line = reader
+					.readLine()) {
+				out.append(line).append("\n");
+			}
+		} catch (IOException e) {
+			logger.log(TreeLogger.ERROR, "Unable to read manifest template", e);
+			throw new UnableToCompleteException();
+		}
+		return out;
+	}
 }

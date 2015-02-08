@@ -4,8 +4,13 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class HiliLocator {
-	public static HiliLocator fromDte(DomainTransformEvent dte) {
+	public static HiliLocator objectLocator(DomainTransformEvent dte) {
 		return new HiliLocator(dte.getObjectClass(), dte.getObjectId());
+	}
+
+	public static HiliLocator valueLocator(DomainTransformEvent dte) {
+		return dte.getValueClass() != null && (dte.getValueId() != 0) ? new HiliLocator(
+				dte.getValueClass(), dte.getValueId()) : null;
 	}
 
 	public Class<? extends HasIdAndLocalId> clazz;

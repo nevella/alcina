@@ -688,7 +688,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		this.ignorePropertyChangesTo = null;
 		if (event != null
 				&& event.getTransformType() != TransformType.CREATE_OBJECT) {
-			this.ignorePropertyChangesTo = getObject(event);
+			this.ignorePropertyChangesTo = getObject(event, true);
 		}
 	}
 

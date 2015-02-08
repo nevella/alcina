@@ -6,16 +6,28 @@ import java.util.Collection;
 public class IsClassesFilter implements CollectionFilter {
 	private Collection<Class> classes;
 
-	public IsClassesFilter(Collection<Class> classes) {
-		this.classes = classes;
-	}
+	private boolean checkingClassObjects;
 
 	public IsClassesFilter(Class... classes) {
 		this.classes = Arrays.asList(classes);
 	}
 
+	public IsClassesFilter(Collection<Class> classes) {
+		this.classes = classes;
+	}
+
 	@Override
 	public boolean allow(Object o) {
-		return o != null && classes.contains(o.getClass());
+		return o != null
+				&& (checkingClassObjects ? classes.contains(o) : classes
+						.contains(o.getClass()));
+	}
+
+	public boolean isCheckingClassObjects() {
+		return this.checkingClassObjects;
+	}
+
+	public void setCheckingClassObjects(boolean checkingClassObjects) {
+		this.checkingClassObjects = checkingClassObjects;
 	}
 }

@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,9 +25,18 @@ import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 	static final transient long serialVersionUID = -1L;
 
+	private String displayName = "Text";
+
+	public String getDisplayName() {
+		return this.displayName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
 	public TxtCriteriaGroup() {
 		super();
-		setDisplayName("Text");
 	}
 
 	public TxtCriteriaGroup(String displayName) {
@@ -39,15 +48,20 @@ public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 	}
 
 	@Override
+	public Class getEntityClass() {
+		return null;
+	}
+
+	@Override
 	public CriteriaGroup clone() throws CloneNotSupportedException {
 		return new TxtCriteriaGroup().deepCopyFrom(this);
 	}
 
 	/**
 	 * for multiple tcgs, mapping to different properties
-	 * 
+	 *
 	 * @author nick@alcina.cc
-	 * 
+	 *
 	 */
 	public static class TxtCriteriaGroup2 extends TxtCriteriaGroup {
 		public TxtCriteriaGroup2() {

@@ -60,6 +60,19 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return map;
 	}
 
+	public static StringMap fromStringList(String list) {
+		StringMap map = new StringMap();
+		if (list == null) {
+			return map;
+		}
+		for (String line : list.split("\n")) {
+			if (!line.startsWith("#") && !line.trim().isEmpty()) {
+				map.put(line.trim(), "true");
+			}
+		}
+		return map;
+	}
+
 	public void setBooleanOrRemove(String key, boolean value) {
 		if (value) {
 			put(key, String.valueOf(true));

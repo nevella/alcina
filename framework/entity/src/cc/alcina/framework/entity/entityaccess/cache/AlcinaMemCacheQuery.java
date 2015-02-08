@@ -7,6 +7,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CompositeFilter;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -33,13 +35,20 @@ public class AlcinaMemCacheQuery {
 	}
 
 	public AlcinaMemCacheQuery filter(CacheFilter filter) {
+		if (filter instanceof CompositeCacheFilter) {
+			CompositeCacheFilter compositeFilter = (CompositeCacheFilter) filter;
+			if (compositeFilter.canFlatten()) {
+				for (CacheFilter sub : compositeFilter.getFilters()) {
+					this.filters.add(sub);
+				}
+				return this;
+			}
+		}
 		this.filters.add(filter);
 		return this;
 	}
 
 	public AlcinaMemCacheQuery() {
-		fieldFilter = Registry.impl(PermissibleFieldFilter.class);
-		dataFilter = Registry.impl(CollectionProjectionFilter.class);
 	}
 
 	public AlcinaMemCacheQuery filter(String key, Object value) {
@@ -56,6 +65,9 @@ public class AlcinaMemCacheQuery {
 	}
 
 	public GraphProjectionDataFilter getDataFilter() {
+		if (dataFilter == null) {
+			dataFilter = Registry.impl(CollectionProjectionFilter.class);
+		}
 		return this.dataFilter;
 	}
 
@@ -69,6 +81,9 @@ public class AlcinaMemCacheQuery {
 	}
 
 	public GraphProjectionFieldFilter getFieldFilter() {
+		if (fieldFilter == null) {
+			fieldFilter = Registry.impl(PermissibleFieldFilter.class);
+		}
 		return this.fieldFilter;
 	}
 

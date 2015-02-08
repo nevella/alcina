@@ -4,12 +4,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public interface HasEquivalence<T> {
 	public boolean equivalentTo(T other);
 
 	public static class HasEquivalenceHelper {
+		/**
+		 * Returns the objects from the first collection which have an
+		 * equivalent in the second
+		 */
 		public static <T extends HasEquivalence> List<? super HasEquivalence> intersection(
 				Collection<T> o1, Collection<T> o2) {
 			List<? super HasEquivalence> result = new ArrayList<HasEquivalence>();
@@ -43,6 +48,26 @@ public interface HasEquivalence<T> {
 				}
 			}
 			return result;
+		}
+
+		public static <T extends HasEquivalence> List<T> listDuplicates(
+				Collection<T> o1) {
+			List<T> passed = new ArrayList<T>();
+			List<T> duplicates = new ArrayList<T>();
+			for (T t : o1) {
+				boolean duplicate = false;
+				for (T pass : passed) {
+					if (pass.equivalentTo(t)) {
+						duplicates.add(t);
+						duplicate = true;
+						break;
+					}
+				}
+				if (!duplicate) {
+					passed.add(t);
+				}
+			}
+			return duplicates;
 		}
 
 		public static <T extends HasEquivalence> boolean equivalent(

@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -66,7 +66,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public abstract class ActionViewProviderBase implements ViewProvider,
@@ -287,11 +287,13 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 				}
 
 				public void onSuccess(List<ActionLogItem> result) {
+					int idx=0;
 					for (ActionLogItem actionLogItem : result) {
-						fp.add(new ActionLogItemVisualiser(actionLogItem));
+						fp.add(new ActionLogItemVisualiser(actionLogItem,idx++==0));
 					}
 					HorizontalPanel more = new HorizontalPanel();
-					more.setStyleName("pad-15");
+					more.setStyleName("pad-15 action-logs");
+
 					more.setSpacing(2);
 					more.add(new InlineLabel("Show more - "));
 					int[] counts = { 10, 20, 40, 80, 160, 320 };
@@ -335,7 +337,7 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 
 		private VerticalPanel vp;
 
-		ActionLogItemVisualiser(ActionLogItem item) {
+		ActionLogItemVisualiser(ActionLogItem item, boolean first) {
 			this.vp = new VerticalPanel();
 			this.link = new Link(CommonUtils.formatDate(item.getActionDate(),
 					DateStyle.AU_DATE_TIME)
@@ -343,7 +345,7 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 					+ item.getShortDescription());
 			link.addClickHandler(this);
 			this.html = new HTML("<pre>" + item.getActionLog() + "</pre>", true);
-			html.setVisible(false);
+			html.setVisible(first && item.getActionLog().length() < 2000);
 			html.setStyleName("logboxpre");
 			vp.add(link);
 			vp.add(html);

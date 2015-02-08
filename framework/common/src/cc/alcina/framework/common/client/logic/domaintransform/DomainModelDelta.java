@@ -2,8 +2,6 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.Collection;
 
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface DomainModelDelta {
@@ -11,7 +9,7 @@ public interface DomainModelDelta {
 
 	public DomainModelObject getDomainModelObject();
 
-	public Collection<HasIdAndLocalId> getUnlinkedObjects();
+	public Collection<DomainModelDeltaHili> getUnlinkedObjects();
 
 	public Collection<DomainTransformEvent> getReplayEvents();
 

@@ -146,6 +146,9 @@ public class WorkspaceView extends Composite implements HasName,
 		public static final String CONTEXT_IGNORE_TREE_SELECTION = DataTreeView.class
 				.getName() + ".CONTEXT_IGNORE_TREE_SELECTION";
 
+		public static final String CONTEXT_CLEAR_FILTER_IF_INVISIBLE = DataTreeView.class
+				.getName() + ".CONTEXT_CLEAR_FILTER_IF_INVISIBLE";
+
 		private boolean showCollapseButton;
 
 		private DataTree dataTree;
@@ -312,7 +315,13 @@ public class WorkspaceView extends Composite implements HasName,
 
 		protected void onTreeItemSelected(TreeItem item) {
 			if (!item.isVisible()) {
-				return;
+				if (LooseContext.is(CONTEXT_CLEAR_FILTER_IF_INVISIBLE)) {
+					filter.clear();
+					filter.filter();
+				}
+				if (!item.isVisible()) {
+					return;
+				}
 			}
 			List<Class<? extends PermissibleAction>> actions = getAvailableActions(item);
 			toolbar.processAvailableActions(actions);

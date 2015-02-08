@@ -37,6 +37,10 @@ public abstract class HibernateEJBSearcherBase {
 
 	protected SearchDefinition def;
 
+	protected boolean allowHandler(SearchCriterionHandler handler) {
+		return true;
+	}
+
 	protected void conditionalCreate(Class srcClass, Class tgtClass,
 			String propertyName, String alias) {
 		conditionalCreate(srcClass, tgtClass, propertyName, alias,
@@ -53,7 +57,7 @@ public abstract class HibernateEJBSearcherBase {
 				VTHandler vtHandler = (VTHandler) Registry.get()
 						.instantiateSingle(VTHandler.class, tgtClass);
 				DetachedCriteria detachedCriteria = vtHandler
-						.createDetachedCriteria();
+						.createDetachedCriteria(this);
 				detachedCriteriaMap.put(tgtClass, detachedCriteria);
 				vtHandlerMap.put(tgtClass, vtHandler);
 				vtHandler.prepareLink(criteria, detachedCriteria);
@@ -63,6 +67,23 @@ public abstract class HibernateEJBSearcherBase {
 				classCriteriaMap.put(tgtClass, criteria2);
 			}
 		}
+	}
+
+	protected SearchCriterionHandler getCriterionHandler(SearchCriterion sc) {
+		return handlerMap.get(sc.getClass());
+	}
+
+	protected Class getEntityClass(CriteriaGroup cg) {
+		Class ec = cg.getEntityClass();
+		if (ec == null) {
+			try {
+				// serialization wiping transient field??
+				ec = cg.getClass().newInstance().getEntityClass();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		return ec;
 	}
 
 	protected boolean hasCriterion(Set<CriteriaGroup> criteriaGroups,
@@ -107,19 +128,6 @@ public abstract class HibernateEJBSearcherBase {
 		}
 	}
 
-	protected Class getEntityClass(CriteriaGroup cg) {
-		Class ec = cg.getEntityClass();
-		if (ec == null) {
-			try {
-				// serialization wiping transient field??
-				ec = cg.getClass().newInstance().getEntityClass();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		return ec;
-	}
-
 	protected void processHandlers(SearchDefinition def) {
 		Set<CriteriaGroup> criteriaGroups = def.getCriteriaGroups();
 		for (CriteriaGroup cg : criteriaGroups) {
@@ -161,18 +169,12 @@ public abstract class HibernateEJBSearcherBase {
 		}
 	}
 
-	protected boolean allowHandler(SearchCriterionHandler handler) {
-		return true;
-	}
-
-	protected SearchCriterionHandler getCriterionHandler(SearchCriterion sc) {
-		return handlerMap.get(sc.getClass());
-	}
-
 	protected void register(Class<? extends SearchCriterion> clazz,
 			SearchCriterionHandler criterionHandler) {
 		handlerMap.put(clazz, criterionHandler);
 	}
 
-	
+
+
+
 }

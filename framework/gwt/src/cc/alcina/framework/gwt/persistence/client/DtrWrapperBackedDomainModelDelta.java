@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaHili;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
@@ -45,7 +46,7 @@ public class DtrWrapperBackedDomainModelDelta implements DomainModelDelta,
 	}
 
 	@Override
-	public Collection<HasIdAndLocalId> getUnlinkedObjects() {
+	public Collection<DomainModelDeltaHili> getUnlinkedObjects() {
 		return referencedDelta == null ? null : referencedDelta
 				.getUnlinkedObjects();
 	}

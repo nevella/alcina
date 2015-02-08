@@ -73,7 +73,8 @@ public class ClientReflectorJvm extends ClientReflector {
 					return true;
 				}
 			};
-			CollectionFilters.filterInPlace(classes.classData.keySet(), defaultExcludes);
+			CollectionFilters.filterInPlace(classes.classData.keySet(),
+					defaultExcludes);
 			new RegistryScanner() {
 				protected File getHomeDir() {
 					String testStr = "";
@@ -123,6 +124,9 @@ public class ClientReflectorJvm extends ClientReflector {
 					continue;
 				}
 				Method m = pd.getReadMethod();
+				if (m == null) {
+					continue;
+				}
 				Collection<Annotation> annotations = AnnotationUtils
 						.getSuperclassAnnotationsForMethod(m);
 				int aCount = 0;

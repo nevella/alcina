@@ -6,9 +6,18 @@ import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 
 public class DteToLocatorMapper implements
 		KeyValueMapper<HiliLocator, DomainTransformEvent, DomainTransformEvent> {
+	private boolean valueLocator;
+
+	public DteToLocatorMapper() {
+		this(false);
+	}
+	public DteToLocatorMapper(boolean valueLocator) {
+		this.valueLocator = valueLocator;
+		
+	}
 	@Override
 	public HiliLocator getKey(DomainTransformEvent dte) {
-		return HiliLocator.fromDte(dte);
+		return valueLocator?HiliLocator.valueLocator(dte):HiliLocator.objectLocator(dte);
 	}
 
 	@Override

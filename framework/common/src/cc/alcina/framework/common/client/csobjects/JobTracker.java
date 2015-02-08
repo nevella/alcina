@@ -97,4 +97,8 @@ public interface JobTracker {
 	public abstract void childComplete(JobTracker tracker);
 
 	public abstract JobTracker exportableForm();
+
+	public abstract void setSubProgressMessage(String subProgressMessage);
+
+	public abstract String getSubProgressMessage();
 }

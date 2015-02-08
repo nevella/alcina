@@ -223,6 +223,14 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	public static BoundWidgetTypeFactorySimpleGenerator SIMPLE_FACTORY = new BoundWidgetTypeFactorySimpleGenerator();
 
+	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
+			Object obj, BoundWidgetTypeFactory factory,
+			boolean editableWidgets, boolean multiple) {
+		return new ArrayList<Field>(
+				Arrays.asList(fieldsForReflectedObjectAndSetupWidgetFactory(
+						obj, factory, editableWidgets, multiple)));
+	}
+
 	public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj,
 			BoundWidgetTypeFactory factory, boolean editableWidgets,
 			boolean multiple) {
@@ -394,6 +402,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			Class propertyType) {
 		if (propertyType == Boolean.class) {
 			return BooleanEnsureNonNullCoverter.INSTANCE;
+		}
+		if (propertyType == Double.class) {
+			return Converter.DOUBLE_TO_STRING_CONVERTER;
 		}
 		if (bwp == BoundWidgetTypeFactory.TEXTBOX_PROVIDER
 				|| bwp == TEXTBOX_PROVIDER) {
@@ -664,11 +675,25 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		if (field.getConverter() != null) {
 			binding.getRight().converter = field.getConverter();
 		}
+		Converter inverseConverter = getInverseConverter(field.getConverter());
+		if (inverseConverter != null) {
+			binding.getLeft().converter = inverseConverter;
+		}
 		if (field.getComparator() != null) {
 			widget.setComparator(field.getComparator());
 		}
 		parent.getChildren().add(binding);
 		return widget;
+	}
+
+	public static Converter getInverseConverter(Converter c) {
+		if (c == null) {
+			return null;
+		}
+		if (c == Converter.DOUBLE_TO_STRING_CONVERTER) {
+			return Converter.STRING_TO_DOUBLE_CONVERTER;
+		}
+		return null;
 	}
 
 	@Override

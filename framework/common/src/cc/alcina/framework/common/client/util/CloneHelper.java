@@ -152,7 +152,7 @@ public class CloneHelper {
 		Property[] prs = beanDescriptorProvider.getDescriptor(target)
 				.getProperties();
 		for (Property pr : prs) {
-			if (pr.getMutatorMethod() == null) {
+			if (pr.getMutatorMethod() == null || pr.getAccessorMethod() == null) {
 				continue;
 			}
 			Object val = pr.getAccessorMethod().invoke(source,

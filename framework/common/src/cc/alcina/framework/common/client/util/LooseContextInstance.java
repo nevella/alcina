@@ -122,7 +122,7 @@ public class LooseContextInstance {
 	public void removeTopicListener(String key, TopicListener listener) {
 		TopicPublisher publisher = ensureTopicPublisher();
 		publisher.removeTopicListener(key, listener);
-		addedListeners.remove(listener, key);
+		addedListeners.subtract(listener, key);
 	}
 
 	public void addTopicListener(String key, TopicListener listener) {

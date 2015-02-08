@@ -156,7 +156,7 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		for (int i = 0; i < size; i += 2) {
 			JSONObject jv = (JSONObject) array.get(i);
 			Object o2 = array.get(i + 1);
-			Collection c = new ArrayList();
+			ArrayList c = new ArrayList();
 			deserializeCollection(o2, c);
 			m.put(deserializeObject(jv), c);
 		}

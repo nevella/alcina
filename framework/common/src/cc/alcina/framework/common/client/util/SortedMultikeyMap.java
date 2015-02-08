@@ -33,6 +33,7 @@ import com.totsp.gwittir.client.beans.Converter;
  */
 @SuppressWarnings("unchecked")
 public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
+	static final transient long serialVersionUID = -1L;
 	@Override
 	public MultikeyMap<V> createMap(int childDepth) {
 		return new SortedMultikeyMap(childDepth);

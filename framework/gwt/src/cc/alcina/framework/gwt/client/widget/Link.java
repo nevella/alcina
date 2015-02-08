@@ -97,6 +97,7 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 		return this;
 	}
 
+
 	public static Link createNoUnderline(String text, ClickHandler handler) {
 		Link link = new Link(text, handler);
 		link.noUnderline();
@@ -219,5 +220,4 @@ public class Link<T> extends Widget implements HasHTML, HasEnabled,
 	public void setPreventDefault(boolean preventDefault) {
 		this.preventDefault = preventDefault;
 	}
-
 }

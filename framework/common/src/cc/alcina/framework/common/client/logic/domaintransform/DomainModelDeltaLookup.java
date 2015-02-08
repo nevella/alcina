@@ -40,6 +40,7 @@ public class DomainModelDeltaLookup {
 					.get(nonVersionedSignature);
 			contentCache.remove(sig2);
 			metadataCache.remove(sig2);
+			deltaCache.remove(nonVersionedSignature);
 			nonVersionedSignatures.remove(nonVersionedSignature);
 		}
 	}

@@ -423,7 +423,6 @@ public class DevConsoleCommandTransforms {
 			ClassRef cr = (ClassRef) clazz.newInstance();
 			cr.setId(id);
 			cr.setRefClassName(cn);
-			
 			try {
 				cr.setRefClass(Class.forName(cn));
 			} catch (Exception e) {
@@ -471,8 +470,17 @@ public class DevConsoleCommandTransforms {
 			f = new FilterArgvFlag(argv, "-t");
 			boolean outputTransforms = f.contains;
 			argv = f.argv;
+			f = new FilterArgvFlag(argv, "-v");
+			boolean valuesOnly = f.contains;
+			argv = f.argv;
+			f = new FilterArgvFlag(argv, "-objIds");
+			boolean objIds = f.contains;
+			argv = f.argv;
 			f = new FilterArgvFlag(argv, "-rr");
 			boolean forceGetRqIds = f.contains;
+			argv = f.argv;
+			f = new FilterArgvFlag(argv, "-ndtr");
+			boolean noDtrQuery = f.contains;
 			argv = f.argv;
 			Connection conn = getConn();
 			ensureClassRefs(conn);
@@ -507,18 +515,24 @@ public class DevConsoleCommandTransforms {
 			CollectionFilter<String> dteIdFilter = new CollectionFilter<String>() {
 				@Override
 				public boolean allow(String o) {
-					if (o.contains("dte.")) {
+					if (o.contains("dte.id")) {
 						foundDteId = true;
 					}
+					return o.contains("dte.id");
+				}
+			};
+			CollectionFilter<String> dteFilter = new CollectionFilter<String>() {
+				@Override
+				public boolean allow(String o) {
 					return o.contains("dte.");
 				}
 			};
 			String filter = DevConsoleFilter.getFilters(
 					CmdListTransformsFilter.class, argv, dteIdFilter);
-			if (!foundDteId || forceGetRqIds) {
+			if (!noDtrQuery && (!foundDteId || forceGetRqIds)) {
 				filter = DevConsoleFilter.getFilters(
 						CmdListTransformsFilter.class, argv,
-						CollectionFilters.inverse(dteIdFilter));
+						CollectionFilters.inverse(dteFilter));
 				sql1 = String.format(sql1, dtrName, filter);
 				Statement ps = conn.createStatement();
 				System.out.println(console.breakAndPad(1, 80, sql1, 0));
@@ -543,6 +557,15 @@ public class DevConsoleCommandTransforms {
 					List<DomainTransformEvent> dtes = new RsrowToDteConverter(
 							true).convert(rs);
 					System.out.println(dtes);
+				} else if (valuesOnly) {
+					while (rs.next()) {
+						System.out.format("%s | %s\n", rs.getLong("object_id"),
+								rs.getString("newstringvalue"));
+					}
+				} else if (objIds) {
+					while (rs.next()) {
+						System.out.format("%s\n", rs.getLong("object_id"));
+					}
 				} else {
 					Map<String, ColumnFormatter> formatters = new HashMap<String, SqlUtils.ColumnFormatter>();
 					formatters.put("dte_objref", new ClassRefNameFormatter());
@@ -701,6 +724,9 @@ public class DevConsoleCommandTransforms {
 			@Override
 			public String getFilter(String value) {
 				value = value.isEmpty() ? "-1" : value;
+				if (value.contains(">")) {
+					return String.format("dte.id %s", value);
+				}
 				return String.format(value.contains(",") ? "dte.id in (%s)"
 						: "dte.id=%s", value);
 			}
@@ -757,7 +783,9 @@ public class DevConsoleCommandTransforms {
 				CmdListTransformsFilter {
 			@Override
 			public String getFilter(String value) {
-				return String.format("dte.objectid =%s", value);
+				return String.format(
+						value.contains(",") ? "dte.objectid in (%s)"
+								: "dte.objectid=%s", value);
 			}
 
 			@Override

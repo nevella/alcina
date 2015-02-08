@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.ejb.ApplicationException;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
@@ -19,13 +20,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
@@ -57,6 +58,8 @@ public class TransformPersister {
 		while (perform) {
 			perform = false;
 			try {
+				LooseContext
+						.pushWithBoolean(TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
 				Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence()
 						.transformInPersistenceContext(this, token, wrapper);
@@ -69,6 +72,8 @@ public class TransformPersister {
 				} else {
 					throw ex;
 				}
+			} finally {
+				LooseContext.pop();
 			}
 			if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
 				token.getRequest().updateTransformCommitType(
@@ -194,7 +199,8 @@ public class TransformPersister {
 			if (persistentClientInstance.getUser().getId() != PermissionsManager
 					.get().getUserId() && !token.isIgnoreClientAuthMismatch()) {
 				if (!token.getTransformExceptionPolicy()
-						.ignoreClientAuthMismatch(persistentClientInstance,request)) {
+						.ignoreClientAuthMismatch(persistentClientInstance,
+								request)) {
 					DomainTransformException ex = new DomainTransformException(
 							"Browser login mismatch with transform request authentication");
 					ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
@@ -257,7 +263,11 @@ public class TransformPersister {
 							.getTransformExceptionPolicy()
 							.precreateMissingEntities());
 				}
+				int backupEventIdCounter = 0;
 				for (DomainTransformEvent event : items) {
+					if (event.getEventId() == 0) {
+						event.setEventId(++backupEventIdCounter);
+					}
 					if (request.getEventIdsToIgnore().contains(
 							event.getEventId())
 							|| token.getIgnoreInExceptionPass().contains(event)) {
@@ -468,7 +478,8 @@ public class TransformPersister {
 				token.setPass(Pass.FAIL);
 			}
 			putExceptionInWrapper(token, e, wrapper);
-			return;
+			// necessary -- rollback
+			throw new DeliberatelyThrownWrapperException();
 		} finally {
 			PermissionsManager.get().setUser(incomingUser);
 		}

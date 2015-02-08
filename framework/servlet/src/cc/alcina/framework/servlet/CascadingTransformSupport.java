@@ -1,11 +1,15 @@
 package cc.alcina.framework.servlet;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+
+import com.google.gwt.event.shared.UmbrellaException;
 
 /**
  * <p>
@@ -14,7 +18,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
  * <ul>
  * <li>listeners l1, l2
  * <li>transfroms t1, t2
- * 
+ *
  * <li>thread td1 enqueues transforms t1
  * <li>t1 fires
  * <li>listener l1 launches a thread which will enqueue transforms t2 (different
@@ -27,63 +31,31 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
  * <b>now</b>, because of cascading support, td1 continues
  * </ul>
  * hwuh
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class CascadingTransformSupport {
+	public static CascadingTransformSupport get() {
+		return supports.get();
+	}
+
 	private static ThreadLocal<CascadingTransformSupport> supports = new ThreadLocal() {
 		protected synchronized CascadingTransformSupport initialValue() {
 			return new CascadingTransformSupport();
 		}
 	};
 
-	public static CascadingTransformSupport get() {
-		return supports.get();
-	}
-
 	private List<Thread> waitFor = new ArrayList<Thread>();
 
-	void addChildThread(Thread thread) {
-		waitFor.add(thread);
-	}
-
-	void releaseChildThread(Thread thread) {
-		waitFor.remove(thread);
-		synchronized (this) {
-			notifyAll();
-		}
-	}
-
-	public boolean hasChildren() {
-		return !waitFor.isEmpty();
-	}
-
-	public void runTransformingChild(Runnable runnable) {
-		new CascadingTransformWorker(runnable).start();
-	}
-
-	static class CascadingTransformWorker extends Thread {
-		private CascadingTransformSupport cascadingTransformSupport;
-
-		public CascadingTransformWorker(Runnable runnable) {
-			super(runnable);
-			cascadingTransformSupport = CascadingTransformSupport.get();
-			cascadingTransformSupport.addChildThread(this);
-		}
-
-		@Override
-		public final void run() {
-			try {
-				super.run();
-			} finally {
-				cascadingTransformSupport.releaseChildThread(this);
-			}
-		}
-	}
+	private Set<Throwable> throwables = new LinkedHashSet<Throwable>();
 
 	private Thread launchingThread;
+
+	public void afterTransform() {
+		launchingThread = null;
+	}
 
 	public void beforeTransform() {
 		if (launchingThread != null) {
@@ -95,7 +67,63 @@ public class CascadingTransformSupport {
 		launchingThread = Thread.currentThread();
 	}
 
-	public void afterTransform() {
-		launchingThread = null;
+	public UmbrellaException getException() {
+		if (throwables.isEmpty()) {
+			return null;
+		}
+		UmbrellaException ex = new UmbrellaException(throwables);
+		throwables.clear();
+		return ex;
+	}
+
+	public boolean hasChildren() {
+		return !waitFor.isEmpty();
+	}
+
+	public void runTransformingChild(Runnable runnable) {
+		new CascadingTransformWorker(runnable).start();
+	}
+
+	void addChildThread(CascadingTransformWorker thread) {
+		waitFor.add(thread);
+	}
+
+	void releaseChildThread(CascadingTransformWorker thread) {
+		if (thread.getThrowable() != null) {
+			throwables.add(thread.getThrowable());
+		}
+		waitFor.remove(thread);
+		synchronized (this) {
+			notifyAll();
+		}
+		//TODO - zeroex - notify exception via topic
+	}
+
+	static class CascadingTransformWorker extends Thread {
+		private CascadingTransformSupport cascadingTransformSupport;
+
+		private Throwable throwable;
+
+		public CascadingTransformWorker(Runnable runnable) {
+			super(runnable);
+			cascadingTransformSupport = CascadingTransformSupport.get();
+			cascadingTransformSupport.addChildThread(this);
+		}
+
+		public Throwable getThrowable() {
+			return this.throwable;
+		}
+
+		@Override
+		public final void run() {
+			try {
+				super.run();
+			} catch (Throwable t) {
+				t.printStackTrace();
+				throwable = t;
+			} finally {
+				cascadingTransformSupport.releaseChildThread(this);
+			}
+		}
 	}
 }

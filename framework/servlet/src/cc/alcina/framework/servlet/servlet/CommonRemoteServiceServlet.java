@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -24,8 +24,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -128,17 +130,17 @@ import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 import com.totsp.gwittir.client.beans.Converter;
 
 /**
- * 
+ *
  * Tests (todo) for transform persistence: invalid clientauth multiple
  * simultaneous (identical clientinstance, non-) cross-server-restart
- * 
+ *
  * <p>
  * Readonly: most checks happen of simple methods happen at the persistence
  * layer so not needed here
  * </p>
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 @SuppressWarnings("unchecked")
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
@@ -361,6 +363,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					msg += CommonUtils.formatJ("\t [%s] - %s\n\t   - %s\n",
 							i++, object, xml);
 				}
+				enc.close();
 			}
 			msg += "Stacktrace:\t " + sw.toString();
 			System.out.println(msg);
@@ -558,25 +561,32 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		return JobRegistry.exportableForm(tracker);
 	}
 
+	public void initUserStateWithCookie(HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse) {
+		new CookieHelper().getIid(httpServletRequest, httpServletResponse);
+		Registry.impl(SessionHelper.class).initUserState(httpServletRequest,
+				httpServletResponse);
+		String userName = new CookieHelper().getRememberedUserName(
+				httpServletRequest, httpServletResponse);
+		if (userName != null && !PermissionsManager.get().isLoggedIn()) {
+			try {
+				LoginResponse lrb = new LoginResponse();
+				lrb.setOk(true);
+				processValidLogin(lrb, userName, httpServletRequest,
+						httpServletResponse);
+			} catch (AuthenticationException e) {
+				// ignore
+			}
+		}
+	}
+
 	@Override
 	public String processCall(String payload) throws SerializationException {
 		RPCRequest rpcRequest = null;
 		try {
-			new CookieHelper().getIid(getThreadLocalRequest(),
+			LooseContext.push();
+			initUserStateWithCookie(getThreadLocalRequest(),
 					getThreadLocalResponse());
-			Registry.impl(SessionHelper.class).initUserState(
-					getThreadLocalRequest(), getThreadLocalResponse());
-			String userName = new CookieHelper().getRememberedUserName(
-					getThreadLocalRequest(), getThreadLocalResponse());
-			if (userName != null && !PermissionsManager.get().isLoggedIn()) {
-				try {
-					LoginResponse lrb = new LoginResponse();
-					lrb.setOk(true);
-					processValidLogin(lrb, userName);
-				} catch (AuthenticationException e) {
-					// ignore
-				}
-			}
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			if (rpcRequest.getSerializationPolicy() instanceof LegacySerializationPolicy) {
 				throw new IncompatibleRemoteServiceException();
@@ -627,6 +637,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throw rex;
 		} finally {
 			ThreadlocalTransformManager.cast().resetTltm(null);
+			LooseContext.pop();
 		}
 	}
 
@@ -776,6 +787,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				throw new WrappedRuntimeException(e2);
 			}
 		} else {
+			e.printStackTrace();
 			super.doUnexpectedFailure(e);
 		}
 	}
@@ -875,7 +887,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		super.onAfterResponseSerialized(serializedResponse);
 	}
 
-	protected void onAfterSpawnedThreadRun(Thread thread) {
+	protected void onAfterSpawnedThreadRun(Map properties) {
 	}
 
 	@Override
@@ -885,10 +897,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
 	}
 
-	protected void onBeforeSpawnedThreadRun(Thread thread) {
+	protected void onBeforeSpawnedThreadRun(Map properties) {
 	}
 
-	protected abstract void processValidLogin(LoginResponse lrb, String userName)
+	protected abstract void processValidLogin(LoginResponse lrb,
+			String userName, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 			throws AuthenticationException;
 
 	protected void setLogger(Logger logger) {
@@ -958,26 +972,27 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	protected HttpSession getSession() {
-		return Registry.impl(SessionProvider.class).getSession(
-				getThreadLocalRequest(), getThreadLocalResponse());
+		return getSession(getThreadLocalRequest());
 	}
 
-	class ActionLauncherAsync extends Thread {
-		private PermissionsManager pm;
+	protected HttpSession getSession(HttpServletRequest request) {
+		return Registry.impl(SessionProvider.class).getSession(request,
+				getThreadLocalResponse());
+	}
 
+	class ActionLauncherAsync extends AlcinaChildRunnable {
 		private CountDownLatch latch;
 
 		private RemoteAction action;
-
-		private int tLooseContextDepth;
 
 		private TopicListener startListener;
 
 		volatile JobTracker tracker;
 
+		private Map properties = new LinkedHashMap();
+
 		ActionLauncherAsync(String name, RemoteAction action) {
 			super(name);
-			this.pm = PermissionsManager.get();
 			this.latch = new CountDownLatch(2);
 			this.action = action;
 			this.startListener = new TopicListener<JobTracker>() {
@@ -990,8 +1005,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 
 		public JobTracker launchAndWaitForTracker() {
-			start();
-			onBeforeSpawnedThreadRun(this);
+			Thread thread = new Thread(this);
+			onBeforeSpawnedThreadRun(properties);
+			thread.start();
 			latch.countDown();
 			try {
 				latch.await();
@@ -1002,28 +1018,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 
 		@Override
-		public void run() {
-			try {
-				LooseContext.push();
-				// different thread-local
-				tLooseContextDepth = LooseContext.depth();
-				this.pm.copyTo(PermissionsManager.get());
-				onAfterSpawnedThreadRun(this);
-				LooseContext.getContext().addTopicListener(
-						JobRegistry.TOPIC_JOB_STARTED, startListener);
-				performActionAndWait(this.action);
-			} catch (Exception e) {
-				if (e instanceof RuntimeException) {
-					throw ((RuntimeException) e);
-				}
-				throw new RuntimeException(e);
-			} catch (OutOfMemoryError e) {
-				handleOom("", e);
-				throw e;
-			} finally {
-				LooseContext.confirmDepth(tLooseContextDepth);
-				LooseContext.pop();
-			}
+		protected void run0() throws Exception {
+			onAfterSpawnedThreadRun(properties);
+			LooseContext.getContext().addTopicListener(
+					JobRegistry.TOPIC_JOB_STARTED, startListener);
+			performActionAndWait(this.action);
 		}
 	}
 

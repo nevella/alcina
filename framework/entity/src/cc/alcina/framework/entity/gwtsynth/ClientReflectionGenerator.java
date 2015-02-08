@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -71,9 +71,9 @@ import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 @SuppressWarnings("unchecked")
 /**
  * Currently, it's a schemozzle - this was originally a standalone generator, so there's a mishmash
- * of usages of JVM vs GWT reflection - 
+ * of usages of JVM vs GWT reflection -
  * it does, however, work, it's acceptably fast, it can be beautified later
- * 
+ *
  * -- update, pretty sure all usages of class changed to jclasstype where appropriate...
  * @author Nick Reddel
  */
@@ -189,7 +189,7 @@ public class ClientReflectionGenerator extends Generator {
 	/**
 	 * Since overridden parent annotations are potentially useful, we don't use
 	 * standard overriding behaviour
-	 * 
+	 *
 	 * @throws ClassNotFoundException
 	 */
 	private Map<JClassType, Set<RegistryLocation>> getRegistryAnnotations(
@@ -242,7 +242,8 @@ public class ClientReflectionGenerator extends Generator {
 		List<JClassType> results = new ArrayList<JClassType>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jClassType : types) {
-			if (jClassType.isAnnotationPresent(ClientInstantiable.class)
+			if ((jClassType.isAnnotationPresent(ClientInstantiable.class) || jClassType
+					.isAnnotationPresent(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class))
 					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
 				crf.addImport(jClassType.getQualifiedSourceName());
@@ -258,7 +259,8 @@ public class ClientReflectionGenerator extends Generator {
 		for (JClassType jClassType : types) {
 			if (jClassType
 					.isAnnotationPresent(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class)
-					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
+					&& !ignore(jClassType,
+							ReflectionAction.BEAN_INFO_DESCRIPTOR)) {
 				results.add(jClassType);
 				crf.addImport(jClassType.getQualifiedSourceName());
 			}
@@ -427,6 +429,9 @@ public class ClientReflectionGenerator extends Generator {
 				String propertyName = getPropertyNameForReadMethod(method);
 				if (propertyName.equals("class")
 						|| propertyName.equals("propertyChangeListeners")) {
+					continue;
+				}
+				if (method.isStatic()) {
 					continue;
 				}
 				Collection<Annotation> annotations = getSuperclassAnnotationsForMethod(method);

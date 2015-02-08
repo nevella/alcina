@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -13,19 +13,23 @@
  */
 package cc.alcina.framework.entity.impl.jboss;
 
+import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.Column;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.hibernate.LazyInitializationException;
+import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -33,6 +37,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.IdentifierProperty;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -46,6 +51,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.MemcacheJoinHandler;
 import cc.alcina.framework.entity.projection.EntityUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
@@ -53,10 +59,11 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionData
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = JPAImplementation.class, implementationType = ImplementationType.SINGLETON)
+@SuppressWarnings("deprecation")
 public class JPAHibernateImpl implements JPAImplementation {
 	private boolean cacheDisabled;
 
@@ -84,9 +91,11 @@ public class JPAHibernateImpl implements JPAImplementation {
 	}
 
 	public GraphProjectionDataFilter getResolvingFilter(
-			InstantiateImplCallback callback, DetachedEntityCache cache) {
+			InstantiateImplCallback callback, DetachedEntityCache cache,
+			boolean useMemCache) {
 		EntityCacheHibernateResolvingFilter filter = new EntityCacheHibernateResolvingFilter(
 				callback);
+		filter.setUseRawMemCache(useMemCache);
 		if (cache != null) {
 			filter.setCache(cache);
 		}
@@ -267,5 +276,36 @@ public class JPAHibernateImpl implements JPAImplementation {
 			return object.toString();
 		}
 		return null;
+	}
+
+	@Override
+	public MemcacheJoinHandler getMemcacheJoinHandler(
+			final PropertyDescriptor pd) {
+		final CollectionOfElements collectionOfElements = pd.getReadMethod()
+				.getAnnotation(CollectionOfElements.class);
+		final Column column = pd.getReadMethod().getAnnotation(Column.class);
+		MemcacheJoinHandler handler = null;
+		if (collectionOfElements == null) {
+			return null;
+		}
+		return new MemcacheJoinHandler() {
+			@Override
+			public String getTargetSql() {
+				return column.name();
+			}
+
+			@Override
+			public void injectValue(ResultSet rs, HasIdAndLocalId source) {
+				try {
+					String string = rs.getString(getTargetSql());
+					Set enums = (Set) pd.getReadMethod().invoke(source,
+							new Object[0]);
+					enums.add(Enum.valueOf(
+							collectionOfElements.targetElement(), string));
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		};
 	}
 }

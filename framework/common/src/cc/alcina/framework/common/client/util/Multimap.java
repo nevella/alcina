@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -28,28 +29,13 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
  *
  * @author Nick Reddel
  */
-public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
+public class Multimap<K, V extends List> implements Map<K, V>, Serializable,
+		Cloneable {
+	private LinkedHashMap<K, V> map = new LinkedHashMap<K, V>();
+
+	private static final long serialVersionUID = 1L;
+
 	public Multimap() {
-		super();
-	}
-
-	public Multimap(int initialCapacity) {
-		super(initialCapacity);
-	}
-
-	public V allItems() {
-		List list = new ArrayList();
-		for (V v : values()) {
-			list.addAll(v);
-		}
-		return (V) list;
-	}
-
-	public V getAndEnsure(K key) {
-		if (!containsKey(key)) {
-			put(key, (V) new ArrayList());
-		}
-		return get(key);
 	}
 
 	public void add(K key, Object item) {
@@ -57,6 +43,12 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 			put(key, (V) new ArrayList());
 		}
 		get(key).add(item);
+	}
+
+	public void addAll(Map<K, V> otherMultimap) {
+		for (K k : otherMultimap.keySet()) {
+			getAndEnsure(k).addAll(otherMultimap.get(k));
+		}
 	}
 
 	public void addCollection(K key, Collection collection) {
@@ -76,42 +68,79 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 	}
 
-	public void remove(K key, Object item) {
-		if (containsKey(key)) {
-			get(key).remove(item);
-		}
-	}
-
-	public void addAll(Multimap<K, V> otherMultimap) {
-		for (K k : otherMultimap.keySet()) {
-			getAndEnsure(k).addAll(otherMultimap.get(k));
-		}
-	}
-
-	public K maxKey() {
-		K max = null;
-		for (K k : keySet()) {
-			if (max == null || get(k).size() > get(max).size()) {
-				max = k;
-			}
-		}
-		return max;
-	}
-
-	public K minKey() {
-		K min = null;
-		for (K k : keySet()) {
-			if (min == null || get(k).size() < get(min).size()) {
-				min = k;
-			}
-		}
-		return min;
-	}
-
-	public void removeValue(Object value) {
+	public V allItems() {
+		List list = new ArrayList();
 		for (V v : values()) {
-			v.remove(value);
+			list.addAll(v);
 		}
+		return (V) list;
+	}
+
+	public V allNonFirstItems() {
+		List result = new ArrayList();
+		for (V v : values()) {
+			for (int i = 1; i < v.size(); i++) {
+				result.add(v.get(i));
+			}
+		}
+		return (V) result;
+	}
+
+	public void clear() {
+		this.map.clear();
+	}
+
+	public Multimap<K, V> copy() {
+		Multimap<K, V> copy = new Multimap<K, V>();
+		for (Entry<K, V> entry : entrySet()) {
+			copy.put(entry.getKey(), (V) new ArrayList((List) entry.getValue()));
+		}
+		return copy;
+	}
+
+	public boolean containsKey(Object key) {
+		return this.map.containsKey(key);
+	}
+
+	public boolean containsValue(Object value) {
+		return this.map.containsValue(value);
+	}
+
+	public Set<java.util.Map.Entry<K, V>> entrySet() {
+		return this.map.entrySet();
+	}
+
+	public boolean equals(Object o) {
+		return this.map.equals(o);
+	}
+
+	public <T> T first(K key) {
+		return (T) CommonUtils.first(getAndEnsure(key));
+	}
+
+	public V get(Object key) {
+		return this.map.get(key);
+	}
+
+	public V getAndEnsure(K key) {
+		if (!containsKey(key)) {
+			put(key, (V) new ArrayList());
+		}
+		return get(key);
+	}
+
+	public Collection getForKeys(List keys) {
+		Set dedupe = new LinkedHashSet();
+		for (Object key : keys) {
+			if (containsKey(key)) {
+				dedupe.addAll(get(key));
+			}
+		}
+		return dedupe;
+	}
+
+	public int hashCode() {
+		return this.map.hashCode();
 	}
 
 	public Multimap invert() {
@@ -134,14 +163,30 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		return result;
 	}
 
-	public Collection getForKeys(List keys) {
-		Set dedupe = new LinkedHashSet();
-		for (Object key : keys) {
-			if (containsKey(key)) {
-				dedupe.addAll(get(key));
+	public boolean isEmpty() {
+		return this.map.isEmpty();
+	}
+
+	public int itemSize() {
+		int iSize = 0;
+		for (V v : values()) {
+			iSize += v.size();
+		}
+		return iSize;
+	}
+
+	public Set<K> keySet() {
+		return this.map.keySet();
+	}
+
+	public K maxKey() {
+		K max = null;
+		for (K k : keySet()) {
+			if (max == null || get(k).size() > get(max).size()) {
+				max = k;
 			}
 		}
-		return dedupe;
+		return max;
 	}
 
 	public <T extends Comparable> Map<K, T> maxMap() {
@@ -151,6 +196,17 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		return result;
 	}
+
+	public K minKey() {
+		K min = null;
+		for (K k : keySet()) {
+			if (min == null || get(k).size() < get(min).size()) {
+				min = k;
+			}
+		}
+		return min;
+	}
+
 	public <T extends Comparable> Map<K, T> minMap() {
 		Map<K, T> result = new LinkedHashMap<K, T>();
 		for (java.util.Map.Entry<K, V> e : entrySet()) {
@@ -158,8 +214,42 @@ public class Multimap<K, V extends List> extends LinkedHashMap<K, V> {
 		}
 		return result;
 	}
+
+	public V put(K key, V value) {
+		return this.map.put(key, value);
+	}
+
+	// TODO - check usage - probably don't want this since lists aren't cloned
+	public void putAll(Map<? extends K, ? extends V> m) {
+		this.map.putAll(m);
+	}
+
+	public V remove(Object key) {
+		return this.map.remove(key);
+	}
+
+	public void removeValue(Object value) {
+		for (V v : values()) {
+			v.remove(value);
+		}
+	}
+
+	public int size() {
+		return this.map.size();
+	}
+
+	public void subtract(K key, Object item) {
+		if (containsKey(key)) {
+			get(key).remove(item);
+		}
+	}
+
 	@Override
 	public String toString() {
-		return CommonUtils.join(entrySet(),"\n");
+		return isEmpty() ? "{}" : CommonUtils.join(entrySet(), "\n");
+	}
+
+	public Collection<V> values() {
+		return this.map.values();
 	}
 }

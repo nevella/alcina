@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,18 +16,18 @@ package cc.alcina.framework.common.client.csobjects;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.IdentityHashMap;
 import java.util.List;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.PublicCloneable;
+import cc.alcina.framework.common.client.search.GwtCloneable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
-import com.totsp.gwittir.client.beans.Converter;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
@@ -39,6 +39,8 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
 	private Date endTime;
 
 	private String progressMessage = "...pending";
+
+	private String subProgressMessage = "";
 
 	private String jobName;
 
@@ -81,6 +83,19 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
 
 	public JobTrackerImpl(String id) {
 		this.id = id;
+	}
+
+	@Override
+	public void childComplete(JobTracker tracker) {
+		if (parent != null) {
+			parent.childComplete(tracker);
+		}
+	}
+
+
+
+	public JobTracker exportableForm() {
+		return this;
 	}
 
 	@Override
@@ -179,6 +194,11 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
 	@Override
 	public Date getStartTime() {
 		return startTime;
+	}
+
+	@Override
+	public String getSubProgressMessage() {
+		return this.subProgressMessage;
 	}
 
 	@Override
@@ -345,6 +365,11 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
 				startTime);
 	}
 
+	@Override
+	public void setSubProgressMessage(String subProgressMessage) {
+		this.subProgressMessage = subProgressMessage;
+	}
+
 	public void startup(Class jobClass, String jobName, String message) {
 		setComplete(false);
 		setJobName(jobName == null ? CommonUtils.simpleClassName(jobClass)
@@ -369,16 +394,5 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents implements
 	protected void updatePercent() {
 		setPercentComplete((getItemCount() == 0 ? 0.0
 				: ((double) getItemsCompleted()) / ((double) getItemCount())));
-	}
-
-	@Override
-	public void childComplete(JobTracker tracker) {
-		if (parent != null) {
-			parent.childComplete(tracker);
-		}
-	}
-
-	public JobTracker exportableForm() {
-		return this;
 	}
 }

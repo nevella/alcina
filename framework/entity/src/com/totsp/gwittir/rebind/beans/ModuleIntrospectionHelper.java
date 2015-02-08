@@ -126,6 +126,9 @@ public class ModuleIntrospectionHelper {
 		case PER_CLASS_FORGIVING_LEFTOVER:
 			ModuleIntrospectionHelper.ModuleIntrospectionClassInfo classInfo = info
 					.getInfo(type.getQualifiedSourceName(), true);
+			if (classInfo.provenance == ModuleIntrospectionClassInfoProvenance.OMIT) {
+				return true;
+			}
 			Set<String> modules = classInfo.modules;
 			if (modules.isEmpty()) {
 				switch (info.mode) {
@@ -138,8 +141,13 @@ public class ModuleIntrospectionHelper {
 				}
 			} else {
 				if (modules.contains(ReflectionModule.INITIAL)) {
-					return !filter.getModuleName().equals(
-							ReflectionModule.INITIAL);
+					if (reflectionAction == ReflectionAction.BEAN_INFO_DESCRIPTOR) {
+						return !filter.getModuleName().equals(
+								ReflectionModule.LEFTOVER);
+					} else {
+						return !filter.getModuleName().equals(
+								ReflectionModule.INITIAL);
+					}
 				}
 				if (modules.size() > 1) {
 					return !filter.getModuleName().equals(
@@ -218,7 +226,7 @@ public class ModuleIntrospectionHelper {
 	}
 
 	public static enum ModuleIntrospectionClassInfoProvenance {
-		AUTO, HUMAN
+		AUTO, HUMAN, OMIT
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -226,7 +234,7 @@ public class ModuleIntrospectionHelper {
 		public String classSourceName;
 
 		public ModuleIntrospectionClassInfoProvenance provenance;
-		
+
 		public String note;
 
 		public Set<String> modules = new LinkedHashSet<String>();
@@ -243,5 +251,9 @@ public class ModuleIntrospectionHelper {
 				return null;
 			}
 		}
+	}
+
+	public IntrospectorFilterBase getFilter() {
+		return this.filter;
 	}
 }

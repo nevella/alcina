@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -34,14 +34,18 @@ import java.util.jar.JarInputStream;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class ClasspathScanner {
+	public static final String CONTEXT_EXTRA_CLASSLOADERS = ClasspathScanner.class
+			+ ".CONTEXT_EXTRA_CLASSLOADERS";
+
 	public abstract static class ClasspathVisitor {
 		protected static final Object PROTOCOL_FILE = "file";
 
@@ -173,6 +177,17 @@ public class ClasspathScanner {
 		visitors.add(visitor);
 	}
 
+	public static List<ClassLoader> getScannerClassLoadersToTry() {
+		List<ClassLoader> classLoaders = new ArrayList<ClassLoader>();
+		classLoaders.add(Thread.currentThread().getContextClassLoader());
+		List<ClassLoader> extraClassLoaders = LooseContext
+				.get(CONTEXT_EXTRA_CLASSLOADERS);
+		if (extraClassLoaders != null) {
+			classLoaders.addAll(extraClassLoaders);
+		}
+		return classLoaders;
+	}
+
 	private String pkg;
 
 	private boolean recur = false;
@@ -292,19 +307,27 @@ public class ClasspathScanner {
 
 		@Override
 		public ClassDataCache getClasses() throws Exception {
-			scanForRegProps(resourceName, Thread.currentThread()
-					.getContextClassLoader());
-			scanForRegProps("META-INF/" + resourceName, Thread.currentThread()
-					.getContextClassLoader());
+			List<URL> visitedUrls = new ArrayList<URL>();
+			List<ClassLoader> classLoaders = getScannerClassLoadersToTry();
+			for (ClassLoader classLoader : classLoaders) {
+				scanForRegProps(resourceName, classLoader, visitedUrls);
+				scanForRegProps("META-INF/" + resourceName, classLoader,
+						visitedUrls);
+			}
 			return classDataCache;
 		}
 
 		// lifted from seam 1.21
 		private void scanForRegProps(String resourceName,
-				ClassLoader classLoader) throws Exception {
+				ClassLoader classLoader, List<URL> visitedUrls)
+				throws Exception {
 			List<URL> urls = new ArrayList<URL>();
 			if (resourceName == null) {
 				for (URL url : ((URLClassLoader) classLoader).getURLs()) {
+					if (visitedUrls.contains(url)) {
+						continue;
+					}
+					visitedUrls.add(url);
 					String urlPath = url.getFile();
 					if (urlPath.endsWith("/")) {
 						urlPath = urlPath.substring(0, urlPath.length() - 1);
@@ -317,6 +340,10 @@ public class ClasspathScanner {
 							.getResources(resourceName);
 					while (urlEnum.hasMoreElements()) {
 						URL url = urlEnum.nextElement();
+						if (visitedUrls.contains(url)) {
+							continue;
+						}
+						visitedUrls.add(url);
 						url = invokeResolver(url);
 						URL newUrl = cleanUrl(resourceName, url);
 						urls.add(newUrl);
@@ -327,11 +354,15 @@ public class ClasspathScanner {
 				}
 			}
 			for (URL url : urls) {
+				if (visitedUrls.contains(url)) {
+					continue;
+				}
+				visitedUrls.add(url);
 				String urlPath = url.getFile();
 				boolean ignore = false;
 				for (String s : ignorePathSegments) {
 					if (urlPath.contains(s)) {
-						info("ignored: " + urlPath);
+						// info("ignored: " + urlPath);
 						ignore = true;
 						break;
 					}
@@ -343,6 +374,7 @@ public class ClasspathScanner {
 			}
 		}
 
+		@SuppressWarnings("unused")
 		private void info(String message) {
 			if (logger instanceof Logger) {
 				((Logger) logger).info(message);

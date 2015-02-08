@@ -38,30 +38,33 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
  * @author Nick Reddel
  */
 public class CollectionDataProvider implements SortableDataProvider {
-	private final Collection c;
 
 	private int pageSize = 50;
 
 	public CollectionDataProvider(Collection c) {
-		this.c = c;
 		sort = new ArrayList(c);
+	}
+	
+	public void putCollection(Collection c,HasChunks table){
+		sort = new ArrayList(c);
+		init(table);
 	}
 
 	public String[] getSortableProperties() {
-		if (!c.iterator().hasNext()) {
+		Object first = CommonUtils.first(sort);
+		if (first==null) {
 			return new String[0];
 		}
-		Object obj = c.iterator().next();
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
-				obj.getClass());
+				first.getClass());
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		List<String> fieldNames = new ArrayList<String>();
 		for (ClientPropertyReflector pr : prs) {
-			Property p = GwittirBridge.get().getProperty(obj,
+			Property p = GwittirBridge.get().getProperty(first,
 					pr.getPropertyName());
 			try {
-				Object o = p.getAccessorMethod().invoke(obj,
+				Object o = p.getAccessorMethod().invoke(first,
 						CommonUtils.EMPTY_OBJECT_ARRAY);
 				if (o instanceof Collection) {
 					// continue; //in fact, catch this in sortOnProperty
@@ -170,6 +173,6 @@ public class CollectionDataProvider implements SortableDataProvider {
 	}
 
 	public void showAllObjectsInCollection() {
-		setPageSize(c.size());
+		setPageSize(sort.size());
 	}
 }

@@ -84,7 +84,6 @@ public class HandshakeConsortModel {
 
 	private boolean loadedWithLocalOnlyTransforms;
 
-	// fw4 - centralise documentation
 	public void ensureClientInstanceFromModelDeltas() {
 		if (getClientInstance() == null) {
 			ClientInstance impl = Registry.impl(ClientInstance.class);

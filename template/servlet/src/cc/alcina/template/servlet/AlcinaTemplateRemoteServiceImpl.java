@@ -3,6 +3,7 @@ package cc.alcina.template.servlet;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 
@@ -72,7 +73,8 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		try {
 			lrb = new Authenticator().authenticate(loginBean);
 			if (lrb.isOk()) {
-				processValidLogin(lrb, loginBean.getUserName());
+				processValidLogin(lrb, loginBean.getUserName(),
+						getThreadLocalRequest(), getThreadLocalResponse());
 				lrb.setClientInstance(AlcinaTemplateBeanProvider.get()
 						.getCommonPersistenceBean()
 						.createClientInstance(getUserAgent()));
@@ -98,7 +100,9 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 	}
 
 	@Override
-	protected void processValidLogin(LoginResponse lrb, String userName)
+	protected void processValidLogin(LoginResponse lrb, String userName,
+			HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
 			throws AuthenticationException {
 		AlcinaTemplateUser user = new Authenticator()
 				.processAuthenticatedLogin(lrb, userName);
@@ -117,7 +121,8 @@ public class AlcinaTemplateRemoteServiceImpl extends CommonRemoteServiceServlet
 		if (userName != null) {
 			lrb.setOk(true);
 			try {
-				processValidLogin(lrb, userName);
+				processValidLogin(lrb, userName, getThreadLocalRequest(),
+						getThreadLocalResponse());
 			} catch (AuthenticationException e) {
 				getLogger().warn("Hello exception", e);
 			}

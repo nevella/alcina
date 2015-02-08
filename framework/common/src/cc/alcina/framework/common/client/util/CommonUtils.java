@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -405,6 +405,17 @@ public class CommonUtils {
 		public Set<T> secondOnly;
 
 		public Set<T> intersection;
+
+		@Override
+		public String toString() {
+			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
+					firstOnly, intersection, secondOnly);
+		}
+
+		public boolean isEmpty() {
+			return firstOnly.isEmpty() && secondOnly.isEmpty()
+					&& intersection.isEmpty();
+		}
 	}
 
 	public static boolean isNullOrEmpty(String string) {
@@ -1071,9 +1082,23 @@ public class CommonUtils {
 	@SuppressWarnings("deprecation")
 	public static String dateStampMillis() {
 		Date d = new Date();
-		return formatJ("%s%s%s%s%s%s", padFour(d.getYear()+1900),
+		return formatJ("%s%s%s%s%s%s", padFour(d.getYear() + 1900),
 				padTwo(d.getMonth() + 1), padTwo(d.getDate()),
 				padTwo(d.getHours()), padTwo(d.getMinutes()),
 				padTwo(d.getSeconds()), padThree((int) (d.getTime() % 1000)));
+	}
+
+	public static String enumStringRep(Enum e) {
+		if (e == null) {
+			return null;
+		}
+		return e.getDeclaringClass().getName() + "." + e.toString();
+	}
+
+	public static List<String> removeNullsAndEmpties(List<String> parts) {
+		List<String> dedupe = (List<String>) CommonUtils.dedupe(parts);
+		dedupe.remove(null);
+		dedupe.remove("");
+		return dedupe;
 	}
 }

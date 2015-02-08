@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.util;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -11,6 +12,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -152,5 +154,31 @@ public class SqlUtils {
 			columnNames.add(rs.getMetaData().getColumnName(i));
 		}
 		return columnNames;
+	}
+
+	public static <T> T getValue(Statement stmt, String sql, Class clazz) {
+		try {
+			ResultSet rs = stmt.executeQuery(sql);
+			rs.next();
+			if (clazz == String.class) {
+				return (T) rs.getString(1);
+			} else if (clazz == Long.class) {
+				return (T) Long.valueOf(rs.getLong(1));
+			}
+			return null;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static void closeConnection(Connection conn) {
+		if (conn == null) {
+			return;
+		}
+		try {
+			conn.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

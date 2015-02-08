@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 
 @RegistryLocation(registryPoint = PerThreadTransaction.class, implementationType = ImplementationType.INSTANCE)
 public class PerThreadTransaction {
-	TransactionalSubgraphTransformManager transactionTransformManager;
+	protected TransactionalSubgraphTransformManager transactionTransformManager;
 
 	private DomainTransformListener transformListener = new DomainTransformListener() {
 		@Override
@@ -23,13 +23,24 @@ public class PerThreadTransaction {
 			if (!AlcinaMemCache.get().isCached(evt.getObjectClass())) {
 				return;
 			}
+			beforeConsume(evt);
 			transactionTransformManager.consume(evt);
+			afterConsume(evt);
+			
 		}
 	};
 
 	private boolean running;
 
 	public PerThreadTransaction() {
+	}
+
+	protected void afterConsume(DomainTransformEvent evt) {
+		
+	}
+
+	protected void beforeConsume(DomainTransformEvent evt) {
+		
 	}
 
 	public void start() {

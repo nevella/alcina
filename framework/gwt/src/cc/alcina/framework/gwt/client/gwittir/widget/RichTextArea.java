@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -31,6 +31,8 @@ import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.KeyUpHandler;
+import com.google.gwt.event.logical.shared.InitializeEvent;
+import com.google.gwt.event.logical.shared.InitializeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -39,7 +41,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.SimpleComparator;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class RichTextArea extends AbstractBoundWidget<String> implements
@@ -110,6 +112,12 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 				}
 			}
 		});
+		this.base.addInitializeHandler(new InitializeHandler() {
+			@Override
+			public void onInitialize(InitializeEvent event) {
+				styleBody(base.getElement(), "12px");
+			}
+		});
 		FlowPanel fp = new FlowPanel();
 		if (withToolbar) {
 			FlowPanel tbHolder = new FlowPanel();
@@ -136,25 +144,18 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 	}
 
 	@Override
-	protected void onLoad() {
-		new Timer() {
-			@Override
-			public void run() {
-				styleBody(base.getElement(), defaultFontSize);
-			}
-		}.schedule(200);
-		super.onLoad();
-	}
-	@Override
 	protected void onDetach() {
 		changes.firePropertyChange("value", old, getValue());
 		super.onDetach();
 	}
+
 	protected native void styleBody(Element elem, String defaultFontSize) /*-{
-		if(elem.contentWindow&&elem.contentWindow.document){
-			elem.contentWindow.document.body.setAttribute("style",
-				"font-family: Arial; margin: 2px;font-size:" + defaultFontSize);
-		}
+	if (elem.contentWindow && elem.contentWindow.document
+		&& elem.contentWindow.document.documentElement) {
+		elem.contentWindow.document.documentElement.setAttribute("style",
+			"font-family: Arial; margin: 2px;font-size:"
+				+ defaultFontSize);
+	}
 	}-*/;
 
 	public int getTabIndex() {

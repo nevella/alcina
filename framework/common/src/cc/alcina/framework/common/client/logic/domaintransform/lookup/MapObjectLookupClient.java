@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 
 import com.google.gwt.core.client.Scheduler;
@@ -45,6 +46,11 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		public AsyncRegistrationException(Exception e1) {
 			super(e1);
 		}
+	}
+
+	public void clearReflectionCache() {
+		// because different code modules may have different reflection data
+		registerChildren.clear();
 	}
 
 	public void registerAsync(Collection registerableDomainObjects,

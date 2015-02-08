@@ -30,7 +30,7 @@ import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 /**
- * 
+ *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
@@ -78,6 +78,9 @@ public class BeanResolver {
 				+ " " + type.getMethods().length, null);
 		for (int i = 0; i < methods.length; i++) {
 			if (!methods[i].isPublic()) {
+				continue;
+			}
+			if (methods[i].isStatic()) {
 				continue;
 			}
 			MethodWrapper w = new MethodWrapper(type, methods[i]);

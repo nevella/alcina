@@ -26,6 +26,7 @@ import java.util.SortedMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
 import cc.alcina.extras.dev.console.DevConsoleProperties.SetPropInfo;
@@ -251,7 +252,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public static class CmdClearBuffer extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "cls" };
+			return new String[] { "cls", "c" };
 		}
 
 		@Override
@@ -622,15 +623,24 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String pg = console
 					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			pg = pg.isEmpty() ? console.getClipboardContents() : pg;
+			pg = pg.replaceAll("\\n.+: \\[\\d+-\\d+\\]", "\n");
 			System.out.format("Inserting into query:\n%s\n\n",
 					console.padLeft(pg, 1, 0));
 			Pattern p1 = Pattern
 					.compile("LOG:  execute <unnamed>: (.+)\nDETAIL:  parameters: (.+)");
+			Pattern p2 = Pattern.compile(
+					".+execute <unnamed>: (.+)\n.+DETAIL:  parameters: (.+)",
+					Pattern.DOTALL);
 			Pattern p3 = Pattern.compile("(\\$\\d+) = ('.+?')");
 			Matcher m1 = p1.matcher(pg);
-			m1.find();
+			if (!m1.find()) {
+				m1 = p2.matcher(pg);
+				m1.find();
+			}
 			String query = m1.group(1);
+			query = query.replace("\n", "");
 			String params = m1.group(2);
+			params = params.replace("\n", "");
 			Matcher m3 = p3.matcher(params);
 			StringMap pvs = new StringMap();
 			while (m3.find()) {
@@ -641,8 +651,84 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			for (String key : keys) {
 				query = query.replace(key, pvs.get(key));
 			}
+			query += ";\n";
 			System.out.println(query);
 			console.setClipboardContents(query);
+			System.out.println("\n");
+			return "";
+		}
+	}
+
+	public static class CmdUnescapeJson extends
+			DevConsoleCommand {
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "jsun" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "unescape json";
+		}
+
+		@Override
+		public String getUsage() {
+			return "jsun (will prompt for text, or copy from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			String jsun = console
+					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
+			jsun = jsun.isEmpty() ? console.getClipboardContents() : jsun;
+			jsun = StringEscapeUtils.unescapeJavaScript(jsun);
+
+			System.out.println(jsun);
+			console.setClipboardContents(jsun);
+			System.out.println("\n");
+			return "";
+		}
+	}
+
+	public static class CmdExtractIdList extends DevConsoleCommand {
+		private LinkedHashSet<Long> ids;
+
+		@Override
+		public String[] getCommandIds() {
+			return new String[] { "idle" };
+		}
+
+		@Override
+		public String getDescription() {
+			return "extract an id list from clipboard text";
+		}
+
+		@Override
+		public String getUsage() {
+			return "idle {-r :: randomise} (from clipboard)";
+		}
+
+		@Override
+		public String run(String[] argv) throws Exception {
+			boolean random = argv.length == 1 && argv[0].equals("-r");
+			String idle = console
+					.getMultilineInput("Enter the id list text, or blank for clipboard: ");
+			idle = idle.isEmpty() ? console.getClipboardContents() : idle;
+			System.out.format("Creating list:\n%s\n\n",
+					console.padLeft(idle, 1, 0));
+			Pattern p1 = Pattern.compile("\\d+");
+			Matcher m1 = p1.matcher(idle);
+			ids = new LinkedHashSet<Long>();
+			while (m1.find()) {
+				ids.add(Long.parseLong(m1.group()));
+			}
+			List<Long> uids = new ArrayList<Long>(ids);
+			if (random) {
+				Collections.shuffle(uids);
+			}
+			String list = CommonUtils.join(uids, ", ");
+			System.out.println(list);
+			console.setClipboardContents(list);
 			System.out.println("\n");
 			return "";
 		}

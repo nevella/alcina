@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -44,13 +44,10 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		BaseBindable implements TreeRenderable, Permissible,
 		HasPermissionsValidation, HasEquivalence<CriteriaGroup> {
 	static final transient long serialVersionUID = -1L;
-	private transient String displayName;
 
 	private FilterCombinator combinator = FilterCombinator.AND;
 
 	private Set<SC> criteria = new LinkedHashSet<SC>();
-
-	private transient Class entityClass;
 
 	public CriteriaGroup() {
 	}
@@ -174,14 +171,10 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		return this.criteria;
 	}
 
-	public String getDisplayName() {
-		return displayName;
-	}
+	public abstract String getDisplayName();
 
 	@XmlTransient
-	public Class getEntityClass() {
-		return this.entityClass;
-	}
+	public abstract Class getEntityClass();
 
 	public void setCombinator(FilterCombinator combinator) {
 		this.combinator = combinator;
@@ -194,21 +187,13 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 				criteria);
 	}
 
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
-	}
-
-	public void setEntityClass(Class entityClass) {
-		this.entityClass = entityClass;
-	}
-
 	public String toHtml() {
 		return asString(true, true);
 	}
 
 	@SuppressWarnings("unchecked")
 	public <S extends SearchCriterion> S soleCriterion() {
-		return criteria.isEmpty()?null:(S) criteria.iterator().next();
+		return criteria.isEmpty() ? null : (S) criteria.iterator().next();
 	}
 
 	public void toSoleCriterion(SC criterion) {
@@ -269,10 +254,9 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 		return "";
 	}
 
-	protected <T extends CriteriaGroup> T deepCopyFrom(T cg) throws CloneNotSupportedException{
-		combinator=cg.combinator ;
-		displayName=cg.displayName;
-		entityClass=cg.entityClass;
+	protected <T extends CriteriaGroup> T deepCopyFrom(T cg)
+			throws CloneNotSupportedException {
+		combinator = cg.getCombinator();
 		criteria.clear();
 		Set<SC> cgCriteria = cg.getCriteria();
 		for (SC sc : cgCriteria) {

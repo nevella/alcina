@@ -19,5 +19,7 @@
 
 	<define-linker name="appCacheManifest" class="cc.alcina.framework.gwt.appcache.linker.AppCacheManifestLinker" />
 	<add-linker name="appCacheManifest" />
+	<define-linker name="permutationInfo" class="cc.alcina.framework.gwt.appcache.linker.PermutationInfoLinker" />
+	<add-linker name="permutationInfo" />
 	<source path="client" />
 </module>

@@ -21,4 +21,7 @@ public class PublicationVisitor {
 	public void publicationFinished(PublicationResult result){
 		
 	}
+
+	public void beforeDelivery() {
+	}
 }

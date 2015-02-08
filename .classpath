@@ -14,7 +14,6 @@
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
 	<classpathentry excluding="cc/alcina/extras/misc/ie/override/" kind="src" path="extras/misc/src"/>
 	<classpathentry kind="src" path="extras/ios6/src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
@@ -24,7 +23,6 @@
 	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwittir-trunk.jar"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-javaee.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-html5-database.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs-3.0.1.GA.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA-sources.jar"/>
@@ -35,5 +33,7 @@
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/activation.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/javax.ejb-api-3.2.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

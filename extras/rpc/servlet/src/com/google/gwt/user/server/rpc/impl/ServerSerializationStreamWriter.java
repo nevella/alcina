@@ -33,8 +33,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.SerializationException;
@@ -58,7 +60,8 @@ public final class ServerSerializationStreamWriter extends
 	/**
 	 * Builds a string that evaluates into an array containing the given
 	 * elements. This class exists to work around a bug in IE6/7 that limits the
-	 * size of array literals.
+	 * size of array literals. NR - in fact, slightly better implementation used (LengthConstrainedArrayIE) for IE
+	 * but there are still issues with >100000 objects
 	 */
 	public static class LengthConstrainedArray {
 		public static final int MAXIMUM_ARRAY_LENGTH = 1 << 15;
@@ -127,6 +130,8 @@ public final class ServerSerializationStreamWriter extends
 		private StringBuffer buffer;
 
 		private int count = 0;
+		
+		private int totalCount=0;
 
 		List<StringBuffer> buffers = new ArrayList<StringBuffer>();
 
@@ -141,6 +146,7 @@ public final class ServerSerializationStreamWriter extends
 		}
 
 		public void addToken(CharSequence token) {
+			totalCount++;
 			if (count++ == MAXIMUM_ARRAY_LENGTH) {
 				buffer = new StringBuffer();
 				buffers.add(buffer);
@@ -158,6 +164,9 @@ public final class ServerSerializationStreamWriter extends
 
 		@Override
 		public String toString() {
+			if(totalCount>100000){
+				AlcinaTopics.notifyDevWarning(new Exception("IE - writing large blob"));
+			}
 			if (buffers.size() > 1) {
 				StringBuilder b2 = new StringBuilder();
 				b2.append("(function(){");
@@ -1039,7 +1048,7 @@ public final class ServerSerializationStreamWriter extends
 			}
 		}
 
-		public void remove(K key, Object item) {
+		public void subtract(K key, Object item) {
 			if (containsKey(key)) {
 				get(key).remove(item);
 			}

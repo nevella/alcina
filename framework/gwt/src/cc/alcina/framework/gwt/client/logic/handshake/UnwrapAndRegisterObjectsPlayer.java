@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
+import java.util.Collection;
 import java.util.Collections;
 
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
@@ -159,7 +160,7 @@ public class UnwrapAndRegisterObjectsPlayer extends
 	}
 
 	private void registerUnlinked() {
-		TransformManager.get().registerDomainObjectsAsync(
+		TransformManager.get().registerDomainObjectsAsync((Collection)
 				currentDelta.getUnlinkedObjects(), this);
 	}
 

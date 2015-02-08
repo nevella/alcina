@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -50,6 +50,7 @@ import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
@@ -70,7 +71,7 @@ import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class WidgetUtils {
@@ -150,13 +151,13 @@ public class WidgetUtils {
 
 	public static native String getComputedStyle(Element elt,
 			String attributeName)/*-{
-									if (elt.currentStyle) {
-									return elt.currentStyle[attributeName];
-									}
-									if ($wnd.getComputedStyle) {
-									return $wnd.getComputedStyle(elt, null)[attributeName];
-									}
-									}-*/;
+	if (elt.currentStyle) {
+		return elt.currentStyle[attributeName];
+	}
+	if ($wnd.getComputedStyle) {
+		return $wnd.getComputedStyle(elt, null)[attributeName];
+	}
+	}-*/;
 
 	public static void clearChildren(TabPanel tp) {
 		for (int i = tp.getWidgetCount() - 1; i >= 0; i--) {
@@ -456,6 +457,9 @@ public class WidgetUtils {
 
 	public static Element getElementForPositioning0(Element from) {
 		assert tempPositioningText == null;
+		if (!isVisibleAncestorChain(from)) {
+			return null;
+		}
 		boolean hidden = isZeroOffsetDims(from);
 		int kidCount = from.getChildCount();
 		if (kidCount != 0 && !hidden) {
@@ -469,6 +473,7 @@ public class WidgetUtils {
 		}
 		ClientNodeIterator itr = new ClientNodeIterator(from,
 				ClientNodeIterator.SHOW_ALL);
+		Element fromContainingBlock = DomUtils.getContainingBlock(from);
 		Node node = from;
 		int insertTextIfOffsetMoreThanXChars = 100;
 		while ((node = node.getPreviousSibling()) != null) {
@@ -495,7 +500,9 @@ public class WidgetUtils {
 				// text
 				if (!isZeroOffsetDims(node.getParentElement())
 				// we don't want the combined ancestor of everyone...
-						&& !node.getParentElement().isOrHasChild(from)) {
+						&& (!node.getParentElement().isOrHasChild(from) ||
+						// but we do want <p><a><b>*some-text*</b></p>
+						DomUtils.getContainingBlock(node) == fromContainingBlock)) {
 					return node.getParentElement();
 				}
 			}
@@ -504,21 +511,22 @@ public class WidgetUtils {
 	}
 
 	public static native Element getFocussedDocumentElement()/*-{
-																if ($doc.activeElement) {
-																var tagName = $doc.activeElement.tagName.toLowerCase();
-																return tagName != "body" && tagName != "html" ? $doc.activeElement : null;
-																}
-																return null;
-																}-*/;
+	if ($doc.activeElement) {
+		var tagName = $doc.activeElement.tagName.toLowerCase();
+		return tagName != "body" && tagName != "html" ? $doc.activeElement
+			: null;
+	}
+	return null;
+	}-*/;
 
 	public static native void clearFocussedDocumentElement()/*-{
-															if ($doc.activeElement) {
-															var tagName = $doc.activeElement.tagName.toLowerCase();
-															if (tagName != "body" && tagName != "html") {
-															$doc.activeElement.blur();
-															}
-															}
-															}-*/;
+	if ($doc.activeElement) {
+		var tagName = $doc.activeElement.tagName.toLowerCase();
+		if (tagName != "body" && tagName != "html") {
+		$doc.activeElement.blur();
+		}
+	}
+	}-*/;
 
 	// those values might be needed for non-webkit
 	@SuppressWarnings("unused")
@@ -746,8 +754,8 @@ public class WidgetUtils {
 	}
 
 	private static native void copy() /*-{
-										$doc.execCommand("Copy");
-										}-*/;
+	$doc.execCommand("Copy");
+	}-*/;
 
 	public static NativeEvent createZeroClick() {
 		return Document.get().createClickEvent(0, 0, 0, 0, 0, false, false,
@@ -770,13 +778,13 @@ public class WidgetUtils {
 	}
 
 	public native static int getRelativeTopTo(Element elem, Element end) /*-{
-																			var top = 0;
-																			while (elem != end) {
-																			top += elem.offsetTop;
-																			elem = elem.offsetParent;
-																			}
-																			return top;
-																			}-*/;
+	var top = 0;
+	while (elem != end) {
+		top += elem.offsetTop;
+		elem = elem.offsetParent;
+	}
+	return top;
+	}-*/;
 
 	public static void scrollIntoView(Element e, int fromTop) {
 		scrollIntoView(e, fromTop, false);
@@ -864,68 +872,68 @@ public class WidgetUtils {
 	}
 
 	public static native int getScrollLeft(Element elem) /*-{
-															var left = 0;
-															var curr = elem;
-															// This intentionally excludes body which has a null offsetParent.    
-															while (curr.offsetParent) {
-															left -= curr.scrollLeft;
-															curr = curr.parentNode;
-															}
+	var left = 0;
+	var curr = elem;
+	// This intentionally excludes body which has a null offsetParent.
+	while (curr.offsetParent) {
+		left -= curr.scrollLeft;
+		curr = curr.parentNode;
+	}
 
-															return left;
-															}-*/;
+	return left;
+	}-*/;
 
 	public static native int getScrollTop(Element elem) /*-{
-														var top = 0;
-														var curr = elem;
-														// This intentionally excludes body which has a null offsetParent.    
-														while (curr.offsetParent) {
-														top -= curr.scrollTop;
-														curr = curr.parentNode;
-														}
-														return top;
-														}-*/;
+	var top = 0;
+	var curr = elem;
+	// This intentionally excludes body which has a null offsetParent.
+	while (curr.offsetParent) {
+		top -= curr.scrollTop;
+		curr = curr.parentNode;
+	}
+	return top;
+	}-*/;
 
 	public static native Element getElementByNameOrId(Document doc, String name) /*-{
 
-																					var e = doc.getElementById(name);
-																					if (!e) {
-																					e = doc.getElementsByName(name) && doc.getElementsByName(name).length == 1 ? doc
-																					.getElementsByName(name)[0]
-																					: null;
-																					}
-																					return e;
-																					}-*/;
+	var e = doc.getElementById(name);
+	if (!e) {
+		e = doc.getElementsByName(name)
+			&& doc.getElementsByName(name).length == 1 ? doc
+			.getElementsByName(name)[0] : null;
+	}
+	return e;
+	}-*/;
 
 	public static native String getComputedStyleProperty(Element elem,
 			String strCssRule) /*-{
-								if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
-								strValue = $doc.defaultView.getComputedStyle(elem, "").getPropertyValue(
-								strCssRule);
-								} else if (oElm.currentStyle) {
-								strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
-								return p1.toUpperCase();
-								});
-								strValue = oElm.currentStyle[strCssRule];
-								}
-								return strValue;
-								}-*/;
+	if ($doc.defaultView && $doc.defaultView.getComputedStyle) {
+		strValue = $doc.defaultView.getComputedStyle(elem, "")
+			.getPropertyValue(strCssRule);
+	} else if (oElm.currentStyle) {
+		strCssRule = strCssRule.replace(/\-(\w)/g, function(strMatch, p1) {
+		return p1.toUpperCase();
+		});
+		strValue = oElm.currentStyle[strCssRule];
+	}
+	return strValue;
+	}-*/;
 
 	public static native int getOffsetHeightWithMargins(Element elem) /*-{
-																		if (elem.style.display == 'none') {
-																		return 0;
-																		}
-																		var h = elem.offsetHeight;
-																		var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-																		var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
-																		if (marginTop.indexOf("px") != -1) {
-																		h += parseInt(marginTop.substring(0, marginTop.length - 2));
-																		}
-																		if (marginBottom.indexOf("px") != -1) {
-																		h += parseInt(marginBottom.substring(0, marginBottom.length - 2));
-																		}
-																		return h;
-																		}-*/;
+	if (elem.style.display == 'none') {
+		return 0;
+	}
+	var h = elem.offsetHeight;
+	var marginTop = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+	var marginBottom = @cc.alcina.framework.gwt.client.util.WidgetUtils::getComputedStyle(Lcom/google/gwt/dom/client/Element;Ljava/lang/String;)(elem,"margin");
+	if (marginTop.indexOf("px") != -1) {
+		h += parseInt(marginTop.substring(0, marginTop.length - 2));
+	}
+	if (marginBottom.indexOf("px") != -1) {
+		h += parseInt(marginBottom.substring(0, marginBottom.length - 2));
+	}
+	return h;
+	}-*/;
 
 	public static Element clickGetAnchorAncestor(ClickEvent clickEvent) {
 		Event event = Event.as(clickEvent.getNativeEvent());
@@ -941,54 +949,74 @@ public class WidgetUtils {
 
 	public static native NodeList getElementsForSelector(Element elt,
 			String selector) /*-{
-								if (!($doc.querySelector)) {
-								return null;
-								}
-								var from = (elt) ? elt : $doc;
-								return from.querySelectorAll(selector);
-								}-*/;
+	if (!($doc.querySelector)) {
+		return null;
+	}
+	var from = (elt) ? elt : $doc;
+	return from.querySelectorAll(selector);
+	}-*/;
 
 	public static native Element getElementForSelector(Element elt,
 			String selector) /*-{
-								if (!($doc.querySelector)) {
-								return null;
-								}
-								var from = (elt) ? elt : $doc;
-								var splits = selector.split("::");
-								for (var idx = 0; idx < splits.length; idx += 2) {
-								var selectorPart = splits[idx];
-								var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
-								if (textRegex == null) {
-								return from.querySelector(selectorPart);
-								}
-								var nl = from.querySelectorAll(splits[idx]);
-								var found = false;
-								for (var i = 0; i < nl.length; i++) {
-								var item = nl[i];
-								if (item.innerHTML.indexOf(textRegex) != -1
-								|| item.innerHTML.match(new RegExp(textRegex))) {
-								from = item;
-								found = true;
-								break;
-								}
-								}
-								if (!found) {
-								return null;
-								}
-								}
-								return from;
-								}-*/;
+	if (!($doc.querySelector)) {
+		return null;
+	}
+	var from = (elt) ? elt : $doc;
+	var splits = selector.split("::");
+	for (var idx = 0; idx < splits.length; idx += 2) {
+		var selectorPart = splits[idx];
+		var textRegex = idx == splits.length - 1 ? null : splits[idx + 1];
+		if (textRegex == null) {
+		return from.querySelector(selectorPart);
+		}
+		var nl = from.querySelectorAll(splits[idx]);
+		var found = false;
+		for (var i = 0; i < nl.length; i++) {
+		var item = nl[i];
+		if (item.innerHTML.indexOf(textRegex) != -1
+			|| item.innerHTML.match(new RegExp(textRegex))) {
+			from = item;
+			found = true;
+			break;
+		}
+		}
+		if (!found) {
+		return null;
+		}
+	}
+	return from;
+	}-*/;
 
 	public static native void focus(Element elem) /*-{
-													elem.focus();
-													}-*/;
+	elem.focus();
+	}-*/;
 
 	public static final native void click(Element elt) /*-{
-														elt.click();
-														try {
-														elt.focus();
-														} catch (e) {
+	elt.click();
+	try {
+		elt.focus();
+	} catch (e) {
 
-														}
-														}-*/;
+	}
+	}-*/;
+
+	public static void hardCancelEvent(NativePreviewEvent event) {
+		event.cancel();
+		cancelPossibleIEShortcut();
+	}
+
+	private static native void cancelPossibleIEShortcut() /*-{
+	try {
+		$wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
+	} catch (e) {
+
+	}
+	}-*/;
+
+	public static int propertyPx(String propertyString) {
+		if (propertyString.indexOf("px") == -1) {
+			return 0;
+		}
+		return (int) Float.parseFloat(propertyString.replace("px", ""));
+	}
 }

@@ -104,8 +104,8 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		if (logString.length() < 30000) {
 			logString += CommonUtils.formatDate(new Date(),
 					DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
-			consoleLog(s);
 		}
+		consoleLog(s);
 		if (logToSysOut) {
 			System.out.println(s);
 		}

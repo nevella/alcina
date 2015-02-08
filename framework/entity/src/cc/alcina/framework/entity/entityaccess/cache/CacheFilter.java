@@ -5,6 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.FilterOperator;
+import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class CacheFilter {
@@ -41,10 +42,20 @@ public class CacheFilter {
 	@Override
 	public String toString() {
 		if (collectionFilter != null) {
-			return CommonUtils.formatJ("CacheFilter: %s ", collectionFilter
-					.getClass().getSimpleName());
+			return CommonUtils.formatJ("CacheFilter: %s - %s", collectionFilter
+					.getClass().getSimpleName(), collectionFilter);
 		}
-		return CommonUtils.formatJ("CacheFilter: %s = %s", propertyPath,
-				propertyValue);
+		return CommonUtils.formatJ("CacheFilter: %s %s %s", propertyPath,
+				filterOperator.operationText(), propertyValue);
+	}
+
+	public CollectionFilter asCollectionFilter() {
+		return collectionFilter != null ? collectionFilter
+				: new PropertyPathFilter(propertyPath, propertyValue,
+						filterOperator);
+	}
+
+	public boolean canFlatten() {
+		return collectionFilter==null;
 	}
 }

@@ -26,6 +26,7 @@ public class HiliHelper {
 		}
 		return CommonUtils.compareInts(o1.hashCode(), o2.hashCode());
 	}
+
 	public static int compareNoLocals(HasIdAndLocalId o1, HasIdAndLocalId o2) {
 		int i = o1.getClass().getName().compareTo(o2.getClass().getName());
 		if (i != 0) {
@@ -71,9 +72,11 @@ public class HiliHelper {
 		return CollectionFilters.map((Collection<HasIdAndLocalId>) hilis,
 				new HiliToIdMapper());
 	}
-	
 
 	public static String asDomainPoint(HasId hi) {
+		if (hi == null) {
+			return null;
+		}
 		if (hi instanceof HasIdAndLocalId) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) hi;
 			return CommonUtils.formatJ("%s : %s / %s",
