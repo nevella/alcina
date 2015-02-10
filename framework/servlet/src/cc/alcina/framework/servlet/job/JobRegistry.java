@@ -65,9 +65,11 @@ public class JobRegistry {
 
 	public static final String CONTEXT_USE_LOGGER = JobRegistry.class.getName()
 			+ ".CONTEXT_USE_LOGGER";
-	
+
 	public static final String CONTEXT_PERFORMING_CLUSTERED_JOB = JobRegistry.class
 			.getName() + ".CONTEXT_PERFORMING_CLUSTERED_JOB";
+
+	public static final String NO_LOG = "no-log";
 
 	public static JobTracker exportableForm(JobTracker in) {
 		Converter<JobTracker, JobTracker> converter = new Converter<JobTracker, JobTracker>() {
@@ -348,18 +350,22 @@ public class JobRegistry {
 	}
 
 	private void logComplete(JobTracker tracker, String message) {
-		Logger logger = (Logger) tracker.getLogger();
-		logger.info(message);
-		tracker.setJobResult(message);
-		long itemCount = tracker.getItemCount();
-		if (itemCount != 0 && tracker.getParent() == null) {
-			double avgTime = tracker.getJobDuration() / itemCount;
-			logger.info(String.format(
-					"Run time: %.4f s. - avg. time per item: %.0f ms.",
-					tracker.getJobDuration() / 1000, avgTime));
+		if (message == NO_LOG) {
+			tracker.setJobResult("");
 		} else {
-			logger.info(String.format("Run time: %.4f s.",
-					tracker.getJobDuration() / 1000));
+			tracker.setJobResult(message);
+			Logger logger = (Logger) tracker.getLogger();
+			logger.info(message);
+			long itemCount = tracker.getItemCount();
+			if (itemCount != 0 && tracker.getParent() == null) {
+				double avgTime = tracker.getJobDuration() / itemCount;
+				logger.info(String.format(
+						"Run time: %.4f s. - avg. time per item: %.0f ms.",
+						tracker.getJobDuration() / 1000, avgTime));
+			} else {
+				logger.info(String.format("Run time: %.4f s.",
+						tracker.getJobDuration() / 1000));
+			}
 		}
 		flushTracker(tracker);
 	}
