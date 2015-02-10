@@ -159,6 +159,8 @@ public class GraphProjection {
 
 	private LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap = null;
 
+	private List<GraphProjectionContext> contexts = new ArrayList<GraphProjectionContext>();
+
 	public GraphProjection() {
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 	}
@@ -285,8 +287,9 @@ public class GraphProjection {
 		}
 		if (dataFilter != null) {
 			if (context == null) {
-				context = new GraphProjectionContext(c, null, null, projected,
-						source);
+				context = new GraphProjectionContext();
+				context.adopt(c, null, null, projected, source);
+				contexts.add(context);
 			}
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
@@ -314,8 +317,14 @@ public class GraphProjection {
 					continue;
 				}
 			}
-			GraphProjectionContext childContext = new GraphProjectionContext(c,
-					field, context, projected, source);
+			GraphProjectionContext childContext = null;
+			if (context == null || context.depth() + 1 == contexts.size()) {
+				childContext = new GraphProjectionContext();
+				contexts.add(childContext);
+			} else {
+				childContext = contexts.get(context.depth() + 1);
+			}
+			childContext.adopt(c, field, context, projected, source);
 			Object cv = project(value, childContext);
 			field.set(projected, cv);
 		}
@@ -431,7 +440,7 @@ public class GraphProjection {
 	}
 
 	public static class GraphProjectionContext {
-		public WeakReference<GraphProjectionContext> parentRef;
+		public GraphProjectionContext parent;
 
 		public Object projectedOwner;
 
@@ -447,15 +456,17 @@ public class GraphProjection {
 
 		private int depth;
 
-		public GraphProjectionContext(Class clazz, Field field,
+		public GraphProjectionContext() {
+		}
+
+		public void adopt(Class clazz, Field field,
 				GraphProjectionContext parent, Object projectedOwner,
 				Object sourceOwner) {
 			this.clazz = clazz;
 			this.field = field;
 			this.sourceOwner = sourceOwner;
 			this.fieldName = field == null ? "" : field.getName();
-			this.parentRef = parent == null ? null
-					: new WeakReference<GraphProjectionContext>(parent);
+			this.parent = parent;
 			this.projectedOwner = projectedOwner;
 			this.depth = parent == null ? 0 : parent.depth + 1;
 			if (depth() > debugDepth) {
@@ -483,7 +494,7 @@ public class GraphProjection {
 
 		@Override
 		public String toString() {
-			return (parentRef == null ? "" : parentRef.get().toString() + "::")
+			return (parent == null ? "" : parent.toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
 		}
 	}
