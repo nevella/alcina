@@ -174,8 +174,13 @@ public class Publisher {
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);
 		publication.setPublicationType(contentDefinition.getPublicationType());
-		return Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence().merge(publication);
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			return Registry.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence().merge(publication);
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public interface PublicationContentPersister {
