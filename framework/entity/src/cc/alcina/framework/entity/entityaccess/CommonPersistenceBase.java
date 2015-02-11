@@ -409,28 +409,35 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			long fromId, long toId, String specificIds, boolean mostRecentOnly,
 			boolean populateTransformSourceObjects) {
 		Query query = null;
+		List<DomainTransformRequestPersistent> dtrps = null;
 		if (mostRecentOnly) {
-			String eql = String.format("select distinct dtrp "
-					+ "from %s dtrp " + " where dtrp.id>= %s " + ""
-					+ "order by dtrp.id desc",
-					getImplementation(DomainTransformRequestPersistent.class)
+			String eql = String.format(
+					"select dte.domainTransformRequestPersistent.id  "
+							+ "from %s dte " + "order by dte.id desc",
+					getImplementation(DomainTransformEventPersistent.class)
 							.getSimpleName(), fromId);
 			query = getEntityManager().createQuery(eql);
 			query.setMaxResults(1);
+			List<Long> ids = query.getResultList();
+			long id = ids.isEmpty() ? 0L : ids.get(0);
+			dtrps = new ArrayList<DomainTransformRequestPersistent>();
+			DomainTransformRequestPersistent instance = getNewImplementationInstance(DomainTransformRequestPersistent.class);
+			instance.setId(id);
+			dtrps.add(instance);
 		} else {
 			String idFilter = specificIds == null ? String.format(
 					"dtrp.id>=%s and dtrp.id<=%s", fromId, toId) : String
 					.format("dtrp.id in (%s)", specificIds);
 			String eql = String.format("select distinct dtrp "
-					+ "from %s dtrp " + "left join fetch dtrp.events "
+					+ "from %s dtrp " + "inner join fetch dtrp.events "
 					+ "inner join fetch dtrp.clientInstance " + " where %s "
 					+ "order by dtrp.id",
 					getImplementation(DomainTransformRequestPersistent.class)
 							.getSimpleName(), idFilter);
 			query = getEntityManager().createQuery(eql);
+			dtrps = new ArrayList<DomainTransformRequestPersistent>(
+					query.getResultList());
 		}
-		List<DomainTransformRequestPersistent> dtrps = new ArrayList<DomainTransformRequestPersistent>(
-				query.getResultList());
 		if (populateTransformSourceObjects) {
 			List<DomainTransformEvent> events = (List) DomainTransformRequest
 					.allEvents(dtrps);
