@@ -136,7 +136,8 @@ public class AlcinaMemCache {
 
 	public static AlcinaMemCache get() {
 		if (singleton == null) {
-			//not thread-safe, make sure it's initialised single-threaded on app startup
+			// not thread-safe, make sure it's initialised single-threaded on
+			// app startup
 			singleton = new AlcinaMemCache();
 			Registry.registerSingleton(AlcinaMemCache.class, singleton);
 		}
@@ -517,7 +518,7 @@ public class AlcinaMemCache {
 	}
 
 	public void reset() {
-		Registry.registerSingleton(AlcinaMemCache.class, new AlcinaMemCache());
+		singleton = new AlcinaMemCache();
 	}
 
 	public void resolveRefs() {
@@ -1056,7 +1057,9 @@ public class AlcinaMemCache {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
 	private boolean debug;
+
 	public boolean isDebug() {
 		return this.debug;
 	}
@@ -1073,7 +1076,8 @@ public class AlcinaMemCache {
 			Set<Long> ids = query.getIds();
 			boolean transaction = transactional
 					.transactionActiveInCurrentThread();
-			boolean debugMetrics = isDebug()&&LooseContext.is(TOPIC_DEBUG_QUERY_METRICS);
+			boolean debugMetrics = isDebug()
+					&& LooseContext.is(TOPIC_DEBUG_QUERY_METRICS);
 			StringBuilder debugMetricBuilder = new StringBuilder();
 			if (!transaction || !ids.isEmpty()) {
 				for (int i = 0; i < query.getFilters().size(); i++) {
