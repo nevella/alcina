@@ -1246,8 +1246,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		for (Entry<Class, Set<Long>> entry : lkp.entrySet()) {
 			Class storageClass = null;
 			Class clazz = entry.getKey();
-			if (clazz == null) {
-				continue; // early, incorrect data - can be removed
+			List<Long> ids = new ArrayList<Long>(entry.getValue());
+			if (clazz == null || ids.size() < 2) {
+				continue; // former means early, incorrect data - can be removed
 			}
 			if (clazz.getAnnotation(Entity.class) != null) {
 				storageClass = clazz;
@@ -1256,7 +1257,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				storageClass = getImplementation(WrappedObject.class);
 			}
 			if (storageClass != null) {
-				List<Long> ids = new ArrayList<Long>(entry.getValue());
 				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
 					List<Long> idsSlice = ids.subList(i,
 							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));
