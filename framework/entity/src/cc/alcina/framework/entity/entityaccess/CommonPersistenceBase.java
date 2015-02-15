@@ -566,16 +566,27 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public void logActionItem(ActionLogItem result) {
 		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects(true);
-		getEntityManager().merge(result);
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects(true);
+			getEntityManager().merge(result);
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public long merge(HasId hi) {
-		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects(true);
-		persistWrappables(hi);
-		HasId merge = getEntityManager().merge(hi);
-		return merge.getId();
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects(true);
+			AppPersistenceBase.checkNotReadOnly();
+			persistWrappables(hi);
+			HasId merge = getEntityManager().merge(hi);
+			return merge.getId();
+		} finally {
+			PermissionsManager.get().popUser();
+		}
+
 	}
 
 	public IUser mergeUser(IUser user) {
