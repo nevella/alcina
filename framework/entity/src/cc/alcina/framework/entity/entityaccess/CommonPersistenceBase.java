@@ -1081,7 +1081,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				}
 				newId = ++clientInstanceIdCounter;
 			}
-			cp.connectPermissionsManagerToLiveObjects(true);
 			Class<? extends ClientInstance> clientInstanceImpl = cp
 					.getImplementation(ClientInstance.class);
 			try {
