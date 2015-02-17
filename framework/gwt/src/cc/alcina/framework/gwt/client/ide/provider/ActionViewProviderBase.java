@@ -77,6 +77,10 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 
 	protected RemoteAction action;
 
+	protected boolean alwaysExpandFirst() {
+		return false;
+	}
+
 	public Widget getViewForObject(Object obj) {
 		action = (RemoteAction) obj;
 		wrapper = new PaneWrapper();
@@ -287,13 +291,13 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 				}
 
 				public void onSuccess(List<ActionLogItem> result) {
-					int idx=0;
+					int idx = 0;
 					for (ActionLogItem actionLogItem : result) {
-						fp.add(new ActionLogItemVisualiser(actionLogItem,idx++==0));
+						fp.add(new ActionLogItemVisualiser(actionLogItem,
+								idx++ == 0));
 					}
 					HorizontalPanel more = new HorizontalPanel();
 					more.setStyleName("pad-15 action-logs");
-
 					more.setSpacing(2);
 					more.add(new InlineLabel("Show more - "));
 					int[] counts = { 10, 20, 40, 80, 160, 320 };
@@ -329,8 +333,7 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 		}
 	}
 
-	static class ActionLogItemVisualiser extends Composite implements
-			ClickHandler {
+	class ActionLogItemVisualiser extends Composite implements ClickHandler {
 		private Link link;
 
 		private HTML html;
@@ -344,9 +347,15 @@ public abstract class ActionViewProviderBase implements ViewProvider,
 					+ " - "
 					+ item.getShortDescription());
 			link.addClickHandler(this);
-			this.html = new HTML("<pre>" + item.getActionLog() + "</pre>", true);
-			html.setVisible(first && item.getActionLog().length() < 2000);
-			html.setStyleName("logboxpre");
+			String actionLog = item.getActionLog();
+			boolean customHtml = actionLog.contains("div");
+			this.html = new HTML(customHtml ? actionLog : "<pre>" + actionLog
+					+ "</pre>", true);
+			html.setVisible(first
+					&& (actionLog.length() < 2000 || alwaysExpandFirst()));
+			if (!customHtml) {
+				html.setStyleName("logboxpre");
+			}
 			vp.add(link);
 			vp.add(html);
 			initWidget(vp);
