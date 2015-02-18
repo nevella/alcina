@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -66,9 +66,9 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * TODO - abstract parts out to ClientTransformManager
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 @SuppressWarnings("unchecked")
 // unchecked because reflection is always going to involve a lot of
@@ -973,13 +973,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * mm.wrapper.setSaved(true);
 	 * </code>
 	 * <p>
-	 * 
+	 *
 	 * Generally, though, you'll want to do all the modifications on the
 	 * provisional object so that CollectionModificationListeners on the
 	 * TransformManager will receive the domain object with all changes applied.
-	 * 
+	 *
 	 * </p>
-	 * 
+	 *
 	 * @param o
 	 *            - the object to be promoted
 	 * @return the newly promoted object, if it implements HasIdAndLocalId,
@@ -1272,7 +1272,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * that's handled by (what's) the presented UI note - problems are mostly
 	 * thrown as exceptions, exception being
 	 * DomainPropertyInfo.silentFailOnIllegalWrites
-	 * 
+	 *
 	 * @param propertyName
 	 * @param tgt
 	 * @return true if OK
@@ -1368,7 +1368,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	/**
 	 * for subclasses to handle version increments
-	 * 
+	 *
 	 * @param hili
 	 * @param evt
 	 */
@@ -1632,7 +1632,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		/**
 		 * Until 23/11/2010, case NULL_PROPERTY_REF: case CHANGE_PROPERTY_REF:
 		 * were not in the case
-		 * 
+		 *
 		 * I think that's in error - but checking. Basically, the transforms
 		 * will be ignored if they're a double-dip (the property won't change)
 		 */
@@ -1680,5 +1680,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public boolean isInCreationRequest(HasIdAndLocalId hasOwner) {
 		return false;
+	}
+
+	public void deleteObjects(Class<? extends HasIdAndLocalId> clazz,
+			Collection<Long> ids) {
+		for (Long id : ids) {
+			HasIdAndLocalId hili = Reflections.classLookup().newInstance(clazz);
+			hili.setId(id);
+			deleteObject(hili, true);
+		}
 	}
 }
