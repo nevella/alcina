@@ -586,25 +586,34 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		} finally {
 			PermissionsManager.get().popUser();
 		}
-
 	}
 
 	public IUser mergeUser(IUser user) {
-		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects();
-		IUser merge = getEntityManager().merge(user);
-		getEntityManager().flush();
-		return merge;
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			AppPersistenceBase.checkNotReadOnly();
+			connectPermissionsManagerToLiveObjects();
+			IUser merge = getEntityManager().merge(user);
+			getEntityManager().flush();
+			return merge;
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public <WP extends WrapperPersistable> Long persist(WP gwpo)
 			throws Exception {
-		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects(true);
-		WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
-				gwpo.getClass(), gwpo.getId());
-		wrapper.setObject(gwpo);
-		return wrapper.getId();
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			AppPersistenceBase.checkNotReadOnly();
+			connectPermissionsManagerToLiveObjects(true);
+			WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
+					gwpo.getClass(), gwpo.getId());
+			wrapper.setObject(gwpo);
+			return wrapper.getId();
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
