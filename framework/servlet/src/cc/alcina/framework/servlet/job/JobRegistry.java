@@ -137,13 +137,17 @@ public class JobRegistry implements RegistrableService {
 	private TimerTask jobReaperTask = new TimerTask() {
 		@Override
 		public void run() {
-			long cutoff = System.currentTimeMillis() - 3000 * 1000;
+			long cutoff = System.currentTimeMillis()
+					- TimeConstants.ONE_HOUR_MS * 2;
 			for (Iterator<Entry<String, Long>> itr = trackerTimeout.entrySet()
 					.iterator(); itr.hasNext();) {
 				Entry<String, Long> entry = itr.next();
 				if (entry.getValue() < cutoff) {
 					itr.remove();
 					trackerMap.remove(entry.getKey());
+					System.out.format(
+							"jobReaperTask - removed job with id %s\n",
+							entry.getKey());
 				}
 			}
 		}
@@ -152,7 +156,7 @@ public class JobRegistry implements RegistrableService {
 	private JobRegistry() {
 		jobReaperTimer = new Timer();
 		jobReaperTimer.scheduleAtFixedRate(jobReaperTask, 0,
-				TimeConstants.ONE_HOUR_MS);
+				15 * TimeConstants.ONE_MINUTE_MS);
 	}
 
 	@Override
