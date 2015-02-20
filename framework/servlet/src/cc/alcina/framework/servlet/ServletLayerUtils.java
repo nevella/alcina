@@ -65,6 +65,8 @@ public class ServletLayerUtils {
 			MetricLogging.get().setMuted(true);
 			if (asRoot) {
 				tpm.pushSystemUser();
+			}else{
+				tpm.pushCurrentUser();
 			}
 			CascadingTransformSupport cascadingTransformSupport = CascadingTransformSupport
 					.get();
@@ -92,9 +94,7 @@ public class ServletLayerUtils {
 				cascadingTransformSupport.afterTransform();
 			}
 		} finally {
-			if (asRoot) {
-				tpm.popSystemUser();
-			}
+			tpm.popUser();
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			MetricLogging.get().setMuted(muted);
 		}
