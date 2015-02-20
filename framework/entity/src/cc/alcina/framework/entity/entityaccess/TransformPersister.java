@@ -261,7 +261,7 @@ public class TransformPersister {
 				if (token.getPass() == Pass.TRY_COMMIT) {
 					commonPersistenceBase.cacheEntities(items, token
 							.getTransformExceptionPolicy()
-							.precreateMissingEntities());
+							.precreateMissingEntities(),true);
 				}
 				int backupEventIdCounter = 0;
 				for (DomainTransformEvent event : items) {

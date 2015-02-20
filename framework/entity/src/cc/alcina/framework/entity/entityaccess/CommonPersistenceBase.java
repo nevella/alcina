@@ -441,7 +441,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		if (populateTransformSourceObjects) {
 			List<DomainTransformEvent> events = (List) DomainTransformRequest
 					.allEvents(dtrps);
-			DetachedEntityCache cache = cacheEntities(events, false);
+			DetachedEntityCache cache = cacheEntities(events, false, false);
 			for (DomainTransformEvent event : events) {
 				event.setSource((HasIdAndLocalId) cache.get(
 						event.getObjectClass(), event.getObjectId()));
@@ -1240,9 +1240,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	/**
 	 * Note - parameter <em>fixWithPrecreate</em> will only be used in db
 	 * replays for dbs which are somehow missing transform events
+	 *
+	 * @param onlyIfOptimal
 	 */
 	DetachedEntityCache cacheEntities(List<DomainTransformEvent> items,
-			boolean fixWithPrecreate) {
+			boolean fixWithPrecreate, boolean onlyCacheIfWouldOptimiseCalls) {
 		Multiset<Class, Set<Long>> lkp = new Multiset<Class, Set<Long>>();
 		Multiset<Class, Set<Long>> creates = new Multiset<Class, Set<Long>>();
 		DetachedEntityCache cache = new DetachedEntityCache();
@@ -1266,8 +1268,13 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			Class storageClass = null;
 			Class clazz = entry.getKey();
 			List<Long> ids = new ArrayList<Long>(entry.getValue());
-			if (clazz == null || ids.size() < 2) {
+			if (clazz == null
+					|| (ids.size() < 2 && onlyCacheIfWouldOptimiseCalls)) {
 				continue; // former means early, incorrect data - can be removed
+				// re 'onlyCacheIfWouldOptimiseCalls': no point making a call if only
+				// one of class (for
+				// optimisation) - but must if we need the results for mixing
+				// back into memcache
 			}
 			if (clazz.getAnnotation(Entity.class) != null) {
 				storageClass = clazz;
