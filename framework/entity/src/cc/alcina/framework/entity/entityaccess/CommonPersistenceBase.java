@@ -261,7 +261,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.createQuery(
 						"from "
 								+ getImplementationSimpleClassName(Iid.class)
-								+ " i inner join fetch i.rememberMeUser where i.instanceId = ?")
+								+ " i left join fetch i.rememberMeUser where i.instanceId = ?")
 				.setParameter(1, iid).getResultList();
 		return (IID) ((l.size() == 0) ? getNewImplementationInstance(Iid.class)
 				: l.get(0));
@@ -1205,17 +1205,19 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				userName = iid.getRememberMeUser() == null ? null : iid
 						.getRememberMeUser().getUserName();
 			} else {
-				Iid nullHolder = getNewImplementationInstance(Iid.class);
-				nullHolder.setInstanceId(iidKey);
-				nullHolder.setId(nullIidCounter.getAndDecrement());
+				//this iid is not in the db, but ... do we care? possibly RO db. persist it
+
+				//TODO very outside chance of DOS here
+				Iid newIid = getNewImplementationInstance(Iid.class);
+				newIid.setInstanceId(iidKey);
+				getEntityManager().persist(newIid);
 				Registry.impl(ClientInstanceAuthenticationCache.class)
-						.cacheIid(iid);
+						.cacheIid(newIid);
 			}
 		}
 		return userName;
 	}
 
-	private AtomicInteger nullIidCounter = new AtomicInteger(1000000);
 
 	@Override
 	public boolean isValidIid(String iidKey) {
