@@ -291,7 +291,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			t = new EntityUtils().detachedClone(t);
 		}
 		if (unwrap) {
-			unwrap((HasId) t);
+			try {
+				PermissionsManager.get().pushCurrentUser();
+				unwrap((HasId) t);
+			} finally {
+				PermissionsManager.get().popUser();
+			}
 		}
 		return t;
 	}
@@ -676,15 +681,17 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
-		connectPermissionsManagerToLiveObjects();
-		String message = def.validatePermissions();
-		if (message != null) {
-			throw new WrappedRuntimeException(new PermissionsException(message));
-		}
-		Searcher searcher = (Searcher) Registry.get().instantiateSingle(
-				Searcher.class, def.getClass());
 		try {
 			LooseContext.push();
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects();
+			String message = def.validatePermissions();
+			if (message != null) {
+				throw new WrappedRuntimeException(new PermissionsException(
+						message));
+			}
+			Searcher searcher = (Searcher) Registry.get().instantiateSingle(
+					Searcher.class, def.getClass());
 			SearchResultsBase result = searcher.search(def, pageNumber,
 					getEntityManager());
 			if (LooseContext.getBoolean(Searcher.CONTEXT_RESULTS_ARE_DETACHED)) {
@@ -693,6 +700,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				return new EntityUtils().detachedClone(result);
 			}
 		} finally {
+			PermissionsManager.get().popUser();
 			LooseContext.pop();
 		}
 	}
@@ -717,25 +725,30 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
-		preloadWrappedObjects(wrappers);
-		RuntimeException lastException = null;
-		for (HasId wrapper : wrappers) {
-			try {
-				unwrap(wrapper);
-			} catch (RuntimeException e) {
-				System.out.println(e.getMessage());
-				lastException = e;
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects();
+			preloadWrappedObjects(wrappers);
+			RuntimeException lastException = null;
+			for (HasId wrapper : wrappers) {
+				try {
+					unwrap(wrapper);
+				} catch (RuntimeException e) {
+					System.out.println(e.getMessage());
+					lastException = e;
+				}
 			}
+			if (lastException != null) {
+				throw lastException;
+			}
+			return wrappers;
+		} finally {
+			PermissionsManager.get().popUser();
 		}
-		if (lastException != null) {
-			throw lastException;
-		}
-		return wrappers;
 	}
 
 	public HasId unwrap(HasId wrapper) {
 		try {
-			connectPermissionsManagerToLiveObjects();
 			new WrappedObjectPersistence().unwrap(wrapper, getEntityManager(),
 					Registry.impl(WrappedObjectProvider.class));
 		} catch (Exception e) {
@@ -749,48 +762,54 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public <T extends ServerValidator> List<T> validate(List<T> validators) {
-		connectPermissionsManagerToLiveObjects();
-		ArrayList<T> result = new ArrayList<T>();
-		for (T serverValidator : validators) {
-			if (serverValidator instanceof ServerUniquenessValidator) {
-				ServerUniquenessValidator suv = (ServerUniquenessValidator) serverValidator;
-				int ctr = 0;
-				String value = suv.getValue();
-				suv.setSuggestedValue(value);
-				while (true) {
-					Object item = getItemByKeyValue(suv.getObjectClass(),
-							suv.getPropertyName(), value, false, suv.getOkId(),
-							suv.isCaseInsensitive(), true);
-					if (item == null) {
-						if (ctr != 0) {
-							suv.setSuggestedValue(value);
-							suv.setMessage("Item exists. Suggested value: "
-									+ value);
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects();
+			ArrayList<T> result = new ArrayList<T>();
+			for (T serverValidator : validators) {
+				if (serverValidator instanceof ServerUniquenessValidator) {
+					ServerUniquenessValidator suv = (ServerUniquenessValidator) serverValidator;
+					int ctr = 0;
+					String value = suv.getValue();
+					suv.setSuggestedValue(value);
+					while (true) {
+						Object item = getItemByKeyValue(suv.getObjectClass(),
+								suv.getPropertyName(), value, false,
+								suv.getOkId(), suv.isCaseInsensitive(), true);
+						if (item == null) {
+							if (ctr != 0) {
+								suv.setSuggestedValue(value);
+								suv.setMessage("Item exists. Suggested value: "
+										+ value);
+							}
+							break;
 						}
-						break;
+						// no suggestions, just error
+						if (suv.getValueTemplate() == null) {
+							suv.setMessage("Item exists");
+							break;
+						}
+						ctr++;
+						value = String.format(suv.getValueTemplate(),
+								suv.getValue() == null ? "" : suv.getValue(),
+								ctr);
 					}
-					// no suggestions, just error
-					if (suv.getValueTemplate() == null) {
-						suv.setMessage("Item exists");
-						break;
+				} else {
+					Class c = Registry.get().lookupSingle(
+							ServerValidator.class, serverValidator.getClass());
+					if (c != null) {
+						ServerValidatorHandler handler = (ServerValidatorHandler) Registry
+								.get().instantiateSingle(ServerValidator.class,
+										serverValidator.getClass());
+						handler.handle(serverValidator, getEntityManager());
 					}
-					ctr++;
-					value = String.format(suv.getValueTemplate(),
-							suv.getValue() == null ? "" : suv.getValue(), ctr);
 				}
-			} else {
-				Class c = Registry.get().lookupSingle(ServerValidator.class,
-						serverValidator.getClass());
-				if (c != null) {
-					ServerValidatorHandler handler = (ServerValidatorHandler) Registry
-							.get().instantiateSingle(ServerValidator.class,
-									serverValidator.getClass());
-					handler.handle(serverValidator, getEntityManager());
-				}
+				result.add(serverValidator);
 			}
-			result.add(serverValidator);
+			return result;
+		} finally {
+			PermissionsManager.get().popUser();
 		}
-		return result;
 	}
 
 	public boolean validateClientInstance(long id, int auth) {
@@ -1205,9 +1224,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				userName = iid.getRememberMeUser() == null ? null : iid
 						.getRememberMeUser().getUserName();
 			} else {
-				//this iid is not in the db, but ... do we care? possibly RO db. persist it
-
-				//TODO very outside chance of DOS here
+				// this iid is not in the db, but ... do we care? possibly RO
+				// db. persist it
+				// TODO very outside chance of DOS here
 				Iid newIid = getNewImplementationInstance(Iid.class);
 				newIid.setInstanceId(iidKey);
 				getEntityManager().persist(newIid);
@@ -1217,7 +1236,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 		return userName;
 	}
-
 
 	@Override
 	public boolean isValidIid(String iidKey) {
@@ -1273,7 +1291,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			if (clazz == null
 					|| (ids.size() < 2 && onlyCacheIfWouldOptimiseCalls)) {
 				continue; // former means early, incorrect data - can be removed
-				// re 'onlyCacheIfWouldOptimiseCalls': no point making a call if only
+				// re 'onlyCacheIfWouldOptimiseCalls': no point making a call if
+				// only
 				// one of class (for
 				// optimisation) - but must if we need the results for mixing
 				// back into memcache
