@@ -582,6 +582,7 @@ public class AlcinaMemCache {
 		this.conn = conn;
 		this.cacheDescriptor = cacheDescriptor;
 		try {
+			conn.setReadOnly(true);
 			conn.setAutoCommit(false);
 			originalTransactionIsolation = conn.getTransactionIsolation();
 			try {
