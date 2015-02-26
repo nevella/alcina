@@ -1198,6 +1198,11 @@ div.alcina-MainContent div.workspaceViews.alcina-ContentLeft {
 	margin-top: 10px;
 }
 
+.alcina-BeanPanel .pvp-button-holder {
+	margin-left: 2em;
+	margin-bottom: 2em;
+}
+
 .alcina-BeanPanel .last5 {
 	padding: 5px 0 5px 0;
 }
@@ -1459,6 +1464,7 @@ table.gwittir-BoundTable.editable tr.odd td {
 .alcina-report {
 	border: 1px solid #CECECE;
 	padding: 5px;
+	background-color: #fff;
 }
 
 .alcina-expandableLabel a, .alcina-expandableLabel a:link,
