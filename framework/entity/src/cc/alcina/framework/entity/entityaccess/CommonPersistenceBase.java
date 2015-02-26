@@ -1068,6 +1068,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			} else {
 				iid.setRememberMeUser(null);
 			}
+			cp.iidUpdated(iid,false);
 			Registry.impl(ClientInstanceAuthenticationCache.class)
 					.cacheIid(iid);
 			cp.getEntityManager().merge(iid);
@@ -1166,6 +1167,10 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public static Class<? extends HandshakeObjectProvider> getHandshakeObjectProviderClass() {
 		return handshakeObjectProviderClass;
+	}
+
+	public void iidUpdated(Iid iid, boolean create) {
+
 	}
 
 	public static void setHandshakeObjectProviderClass(
