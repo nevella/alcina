@@ -627,9 +627,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			System.out.format("Inserting into query:\n%s\n\n",
 					console.padLeft(pg, 1, 0));
 			Pattern p1 = Pattern
-					.compile("LOG:  execute <unnamed>: (.+)\nDETAIL:  parameters: (.+)");
+					.compile("LOG:  execute .+?: (.+)\nDETAIL:  parameters: (.+)");
 			Pattern p2 = Pattern.compile(
-					".+execute <unnamed>: (.+)\n.+DETAIL:  parameters: (.+)",
+					".+execute .+?: (.+)\n.+DETAIL:  parameters: (.+)",
 					Pattern.DOTALL);
 			Pattern p3 = Pattern.compile("(\\$\\d+) = ('.+?')");
 			Matcher m1 = p1.matcher(pg);
@@ -1151,8 +1151,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		@Override
 		/**
 		 * LOG:  execute S_1: BEGIN
-		 LOG:  execute <unnamed>: select distinct article2_.id as id521_, article2_.OPTLOCK as OPTLOCK521_, article2_.before_ as before3_521_, article2_.checkedBy_id as checkedBy23_521_, article2_.checkedOn as checkedOn521_, article2_.detachedFromAutomaticUpdate as detached5_521_, article2_.disabled as disabled521_, article2_.documentTitle as document7_521_, article2_.effectiveDate as effectiv8_521_, article2_.ignoreForAlerts as ignoreFo9_521_, article2_.incomingCitationCount as incomin10_521_, article2_.incomingCitationRank as incomin11_521_, article2_.listOfAuthorities as listOfA12_521_, article2_.mediumNeutralCitationSortKey as mediumN13_521_, article2_.mediumNeutralId as mediumN14_521_, article2_.modificationDate as modific15_521_, article2_.outgoingCitationCount as outgoin16_521_, article2_.outgoingCitationRank as outgoin17_521_, article2_.overview_id as overview18_521_, article2_.restrictedToGroup_id as restric24_521_, article2_.restrictedToUser_id as restric25_521_, article2_.retrievedOn as retriev19_521_, article2_.standardCitationSortKey as standar20_521_, article2_.structuralPages as structu21_521_, article2_.url as url521_ from documentoverlaynode documentov0_ inner join articledocumentoverlay articledoc1_ on documentov0_.ownerDocument_id=articledoc1_.id inner join public.article article2_ on articledoc1_.article_id=article2_.id inner join citation citation3_ on documentov0_.citation_id=citation3_.id where citation3_.id=$1 limit $2
-		 DETAIL:  parameters: $1 = '57051626', $2 = '2'
+		LOG:  execute <unnamed>: select distinct article2_.id as id521_, article2_.OPTLOCK as OPTLOCK521_, article2_.before_ as before3_521_, article2_.checkedBy_id as checkedBy23_521_, article2_.checkedOn as checkedOn521_, article2_.detachedFromAutomaticUpdate as detached5_521_, article2_.disabled as disabled521_, article2_.documentTitle as document7_521_, article2_.effectiveDate as effectiv8_521_, article2_.ignoreForAlerts as ignoreFo9_521_, article2_.incomingCitationCount as incomin10_521_, article2_.incomingCitationRank as incomin11_521_, article2_.listOfAuthorities as listOfA12_521_, article2_.mediumNeutralCitationSortKey as mediumN13_521_, article2_.mediumNeutralId as mediumN14_521_, article2_.modificationDate as modific15_521_, article2_.outgoingCitationCount as outgoin16_521_, article2_.outgoingCitationRank as outgoin17_521_, article2_.overview_id as overview18_521_, article2_.restrictedToGroup_id as restric24_521_, article2_.restrictedToUser_id as restric25_521_, article2_.retrievedOn as retriev19_521_, article2_.standardCitationSortKey as standar20_521_, article2_.structuralPages as structu21_521_, article2_.url as url521_ from documentoverlaynode documentov0_ inner join articledocumentoverlay articledoc1_ on documentov0_.ownerDocument_id=articledoc1_.id inner join public.article article2_ on articledoc1_.article_id=article2_.id inner join citation citation3_ on documentov0_.citation_id=citation3_.id where citation3_.id=$1 limit $2
+		DETAIL:  parameters: $1 = '57051626', $2 = '2'
 		 * @see DevConsoleCommand#getDescription()
 		 */
 		public String getDescription() {
