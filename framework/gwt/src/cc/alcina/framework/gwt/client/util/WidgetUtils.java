@@ -826,7 +826,8 @@ public class WidgetUtils {
 	}
 
 	public static boolean isVisibleAncestorChain(Element e) {
-		while (e != null) {
+		Element documentElement = e.getOwnerDocument().getDocumentElement();
+		while (e != documentElement) {
 			if (!UIObject.isVisible(e)) {
 				return false;
 			}
@@ -834,6 +835,10 @@ public class WidgetUtils {
 				return false;
 			}
 			e = e.getParentElement();
+			// detached
+			if (e == null) {
+				return false;
+			}
 		}
 		return true;
 	}
