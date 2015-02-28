@@ -826,6 +826,9 @@ public class WidgetUtils {
 	}
 
 	public static boolean isVisibleAncestorChain(Element e) {
+		if (e == null || e.getOwnerDocument() == null) {
+			return false;
+		}
 		Element documentElement = e.getOwnerDocument().getDocumentElement();
 		while (e != documentElement) {
 			if (!UIObject.isVisible(e)) {
