@@ -10,10 +10,11 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -27,13 +28,12 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.util.AnnotationUtils;
-import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
-import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 import com.totsp.gwittir.client.beans.internal.JVMIntrospector.MethodWrapper;
@@ -240,20 +240,41 @@ public class ClientReflectorJvm extends ClientReflector {
 	protected <T> T newInstance0(Class<T> clazz, long objectId, long localId) {
 		return null;
 	}
+
+	static Set<Class> checkedClassAnnotationsForInstantiation = new LinkedHashSet<Class>();
+
+	static Set<Class> checkedClassAnnotations = new LinkedHashSet<Class>();
+
 	public static void checkClassAnnotationsForInstantiation(Class clazz) {
+		if (checkedClassAnnotationsForInstantiation.contains(clazz)) {
+			return;
+		}
 		checkClassAnnotations(clazz);
 		if (clazz.getAnnotation(ClientInstantiable.class) == null
-				&& clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) == null){
+				&& clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) == null) {
 			throw new RuntimeException(
 					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation");
 		}
+		checkedClassAnnotationsForInstantiation.add(clazz);
 	}
+
 	public static void checkClassAnnotations(Class clazz) {
+		if (checkedClassAnnotations.contains(clazz)) {
+			return;
+		}
 		int mod = clazz.getModifiers();
 		if (Modifier.isAbstract(mod)
 				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
 			throw new RuntimeException(
 					"not reflectable class - abstract or non-static");
+		}
+		if (!clazz.isEnum() && !GraphProjection.isEnumSubclass(clazz)) {
+			try {
+				clazz.getConstructor(new Class[0]);
+			} catch (Exception e) {
+				throw new RuntimeException(
+						"not reflectable class - no no-args constructor");
+			}
 		}
 		if (clazz.getAnnotation(ClientInstantiable.class) == null
 				&& clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) == null
@@ -261,5 +282,6 @@ public class ClientReflectorJvm extends ClientReflector {
 			throw new RuntimeException(
 					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation");
 		}
+		checkedClassAnnotations.add(clazz);
 	}
 }
