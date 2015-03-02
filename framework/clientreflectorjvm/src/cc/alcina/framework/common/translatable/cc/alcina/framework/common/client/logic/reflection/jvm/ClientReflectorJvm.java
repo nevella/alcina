@@ -53,6 +53,9 @@ public class ClientReflectorJvm extends ClientReflector {
 	public List<PropertyInfoLite> getWritableProperties(Class clazz) {
 		return null;
 	}
+	public static void checkClassAnnotations(Class clazz) {
+		return;
+	}
 
 	class MethodWrapper implements com.totsp.gwittir.client.beans.Method {
 

@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
@@ -32,6 +33,8 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
+import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 import com.totsp.gwittir.client.beans.internal.JVMIntrospector.MethodWrapper;
 
@@ -53,7 +56,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			 * The reason for this is that gwt needs the compiled annotation
 			 * classes (in say, /bin) - so we may be getting classes here that
 			 * shouldn't be visible via the registry
-			 * 
+			 *
 			 * It's a bit sad (duplicating the exclusion code of the gwt
 			 * module), but the performance gains the jvm reflector gives us
 			 * outweigh the (possible) crud IMO
@@ -200,6 +203,7 @@ public class ClientReflectorJvm extends ClientReflector {
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		try {
+			checkClassAnnotationsForInstantiation(clazz);
 			T newInstance = clazz.newInstance();
 			if (localId != 0) {
 				HasIdAndLocalId hili = (HasIdAndLocalId) newInstance;
@@ -234,7 +238,28 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	@Override
 	protected <T> T newInstance0(Class<T> clazz, long objectId, long localId) {
-		// not called
 		return null;
+	}
+	public static void checkClassAnnotationsForInstantiation(Class clazz) {
+		checkClassAnnotations(clazz);
+		if (clazz.getAnnotation(ClientInstantiable.class) == null
+				&& clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) == null){
+			throw new RuntimeException(
+					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation");
+		}
+	}
+	public static void checkClassAnnotations(Class clazz) {
+		int mod = clazz.getModifiers();
+		if (Modifier.isAbstract(mod)
+				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
+			throw new RuntimeException(
+					"not reflectable class - abstract or non-static");
+		}
+		if (clazz.getAnnotation(ClientInstantiable.class) == null
+				&& clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) == null
+				&& clazz.getAnnotation(Introspectable.class) == null) {
+			throw new RuntimeException(
+					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation");
+		}
 	}
 }
