@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonConstants;
@@ -730,18 +731,17 @@ public class DomUtils implements NodeFromXpathProvider {
 	public static class HighlightInfo {
 		public String cssClassName;
 
-		public Map<String, String> styleProperties;
+		public StringMap styleProperties = new StringMap();
 
-		public Map<String, String> properties;
+		public StringMap properties = new StringMap();
 
 		public String tag = "a";
 
 		public HighlightInfo() {
 		}
 
-		public HighlightInfo(String cssClassName,
-				Map<String, String> styleProperties,
-				Map<String, String> properties) {
+		public HighlightInfo(String cssClassName, StringMap styleProperties,
+				StringMap properties) {
 			this.cssClassName = cssClassName;
 			this.styleProperties = styleProperties;
 			this.properties = properties;
@@ -755,6 +755,22 @@ public class DomUtils implements NodeFromXpathProvider {
 		public HighlightInfo tag(String tag) {
 			this.tag = tag;
 			return this;
+		}
+
+		public HighlightInfo copy() {
+			return new HighlightInfo(cssClassName, new StringMap(
+					styleProperties), new StringMap(properties)).tag(tag);
+		}
+
+		public void applyTo(Element wrapper) {
+			wrapper.setClassName(cssClassName);
+			for (Entry<String, String> entry : styleProperties.entrySet()) {
+				wrapper.getStyle()
+						.setProperty(entry.getKey(), entry.getValue());
+			}
+			for (Entry<String, String> entry : properties.entrySet()) {
+				wrapper.setPropertyString(entry.getKey(), entry.getValue());
+			}
 		}
 	}
 
