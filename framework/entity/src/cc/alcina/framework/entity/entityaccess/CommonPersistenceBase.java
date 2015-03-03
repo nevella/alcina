@@ -697,12 +697,16 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			if (LooseContext.getBoolean(Searcher.CONTEXT_RESULTS_ARE_DETACHED)) {
 				return result;
 			} else {
-				return new EntityUtils().detachedClone(result);
+				return projectSearchResults(result);
 			}
 		} finally {
 			PermissionsManager.get().popUser();
 			LooseContext.pop();
 		}
+	}
+
+	protected SearchResultsBase projectSearchResults(SearchResultsBase result) {
+		return new EntityUtils().detachedClone(result);
 	}
 
 	public abstract void setEntityManager(EntityManager entityManager);
