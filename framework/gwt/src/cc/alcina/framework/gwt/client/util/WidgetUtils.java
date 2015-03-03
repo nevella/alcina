@@ -490,11 +490,16 @@ public class WidgetUtils {
 				}
 			}
 		}
-		while ((node = itr.nextNode()) != null) {
+		// give up after 50 node iterations (big tables maybe)
+		int max = 50;
+		while ((node = itr.nextNode()) != null && max-- > 0) {
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				if (!isZeroOffsetDims(node.getParentElement())
 						&& node.getNodeName().equalsIgnoreCase("img")) {
 					return (Element) node;
+				}
+				if (!UIObject.isVisible((Element) node)) {
+					itr.skipChildren();
 				}
 			} else {
 				// text

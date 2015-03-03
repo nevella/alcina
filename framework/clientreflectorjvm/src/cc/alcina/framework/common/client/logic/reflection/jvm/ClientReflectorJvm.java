@@ -268,14 +268,6 @@ public class ClientReflectorJvm extends ClientReflector {
 			throw new RuntimeException(
 					"not reflectable class - abstract or non-static");
 		}
-		if (!clazz.isEnum() && !GraphProjection.isEnumSubclass(clazz)) {
-			try {
-				clazz.getConstructor(new Class[0]);
-			} catch (Exception e) {
-				throw new RuntimeException(
-						"not reflectable class - no no-args constructor");
-			}
-		}
 		boolean introspectable = clazz.getAnnotation(ClientInstantiable.class) != null
 				|| clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) != null
 				|| clazz.getAnnotation(Introspectable.class) != null;

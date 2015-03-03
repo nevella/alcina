@@ -48,15 +48,12 @@ public class HiliHelper {
 		if (o1.getId() == 0 && o1.getLocalId() == 0) {
 			return o1 == o2;
 		}
-		if (o2 instanceof HasIdAndLocalId) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) o2;
-			if (o1.getId() != 0 && o1.getId() == hili.getId()) {
-				return true;
-			}
-			return (hili.getId() == o1.getId() && hili.getLocalId() == o1
-					.getLocalId());
+		HasIdAndLocalId hili = (HasIdAndLocalId) o2;
+		if (o1.getId() != 0 && o1.getId() == hili.getId()) {
+			return true;
 		}
-		return false;
+		return (hili.getId() == o1.getId() && hili.getLocalId() == o1
+				.getLocalId());
 	}
 
 	public static Set<Long> toIdSet(Collection<? extends HasIdAndLocalId> hilis) {
