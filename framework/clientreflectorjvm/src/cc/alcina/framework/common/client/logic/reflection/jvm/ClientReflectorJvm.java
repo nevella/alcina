@@ -276,12 +276,25 @@ public class ClientReflectorJvm extends ClientReflector {
 						"not reflectable class - no no-args constructor");
 			}
 		}
-		if (clazz.getAnnotation(ClientInstantiable.class) == null
-				&& clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) == null
-				&& clazz.getAnnotation(Introspectable.class) == null) {
+		boolean introspectable = clazz.getAnnotation(ClientInstantiable.class) != null
+				|| clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) != null
+				|| clazz.getAnnotation(Introspectable.class) != null;
+		for (Class iface : getAllImplementedInterfaces(clazz)) {
+			introspectable |= iface.getAnnotation(Introspectable.class) != null;
+		}
+		if (!introspectable) {
 			throw new RuntimeException(
 					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation");
 		}
 		checkedClassAnnotations.add(clazz);
+	}
+
+	private static List<Class> getAllImplementedInterfaces(Class clazz) {
+		List<Class> result = new ArrayList<Class>();
+		while (clazz != null) {
+			result.addAll(Arrays.asList(clazz.getInterfaces()));
+			clazz = clazz.getSuperclass();
+		}
+		return result;
 	}
 }

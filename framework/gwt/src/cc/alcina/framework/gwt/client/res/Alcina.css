@@ -1063,8 +1063,8 @@ div.alcina-FilterHolder.inlineFilter {
 }
 
 input.alcina-FilterHint {
-	color: #666666;
-	font-style: italic;
+	color: #aaa;
+	font-style: normal;
 }
 
 .alcina-Filter-collapse {
