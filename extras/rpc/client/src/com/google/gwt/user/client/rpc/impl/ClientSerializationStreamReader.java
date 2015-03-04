@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import cc.alcina.framework.common.client.util.MultikeyMap;
 
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
@@ -63,11 +65,11 @@ public final class ClientSerializationStreamReader extends
 	 * webmode version of ClientSerializationStreamReader into an array. The
 	 * array contains primitive values, followed by a nested array of strings,
 	 * followed by a couple of header primitive values. For example,
-	 * 
+	 *
 	 * <pre>
 	 * [ 1, 0, 3, -7, 13, [ "string one", "string two", "string three" ], 7, 0 ]
 	 * </pre>
-	 * 
+	 *
 	 * Long primitives are encoded as strings in the outer array, and strings in
 	 * the string table are referenced by index values in the outer array.
 	 * <p>
@@ -462,8 +464,10 @@ public final class ClientSerializationStreamReader extends
 			int sliceCount = sliceSize;
 			for (; sliceCount != 0 && idx2 < size; idx2++) {
 				Object instance = reader.getSeenArray().get(idx2);
+				//keep in sync with asyncdeserializer, clientserreader, serverserwriter
 				boolean collectionOrMap = instance instanceof Collection
-						|| instance instanceof Map;
+						|| instance instanceof Map
+						|| instance instanceof MultikeyMap;
 				if (collectionOrMap
 						^ (phase == PhaseDev.DESERIALIZE_COLLECTION_RUN)) {
 					continue;

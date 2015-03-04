@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -36,6 +36,7 @@ import java.util.Stack;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
@@ -47,10 +48,10 @@ import com.google.gwt.user.server.rpc.SerializationPolicy;
 /**
  * For internal use only. Used for server call serialization. This class is
  * carefully matched with the client-side version.
- * 
+ *
  * Nick changes: write type table, constructor args, non-collection deser data,
  * collection deser data (collections differently cos hashcodes are important )
- * 
+ *
  */
 public final class ServerSerializationStreamWriter extends
 		AbstractSerializationStreamWriter {
@@ -130,7 +131,7 @@ public final class ServerSerializationStreamWriter extends
 		private StringBuffer buffer;
 
 		private int count = 0;
-		
+
 		private int totalCount=0;
 
 		List<StringBuffer> buffers = new ArrayList<StringBuffer>();
@@ -447,7 +448,7 @@ public final class ServerSerializationStreamWriter extends
 	 * This method takes a string and outputs a JavaScript string literal. The
 	 * data is surrounded with quotes, and any contained characters that need to
 	 * be escaped are mapped onto their escape sequence.
-	 * 
+	 *
 	 * Assumptions: We are targeting a version of JavaScript that that is later
 	 * than 1.3 that supports unicode strings.
 	 */
@@ -519,7 +520,7 @@ public final class ServerSerializationStreamWriter extends
 	 * <li>Total Characters Escaped: 2082</li></li>
 	 * </ul> </li>
 	 * </ol>
-	 * 
+	 *
 	 * @param ch
 	 *            character to check
 	 * @return <code>true</code> if the character requires the \\uXXXX unicode
@@ -570,7 +571,7 @@ public final class ServerSerializationStreamWriter extends
 	 * Writes a safe escape sequence for a character. Some characters have a
 	 * short form, such as \n for U+000D, while others are represented as \\xNN
 	 * or \\uNNNN.
-	 * 
+	 *
 	 * @param ch
 	 *            character to unicode escape
 	 * @param charVector
@@ -646,7 +647,7 @@ public final class ServerSerializationStreamWriter extends
 	/**
 	 * Build an array of JavaScript string literals that can be decoded by the
 	 * client via the eval function.
-	 * 
+	 *
 	 * NOTE: We build the array in reverse so the client can simply use the pop
 	 * function to remove the next item from the list.
 	 */
@@ -740,7 +741,7 @@ public final class ServerSerializationStreamWriter extends
 	 * Serialize an instance that is an array. Will default to serializing the
 	 * instance as an Object vector if the instance is not a vector of
 	 * primitives, Strings or Object.
-	 * 
+	 *
 	 * @param instanceClass
 	 * @param instance
 	 * @throws SerializationException
@@ -899,8 +900,10 @@ public final class ServerSerializationStreamWriter extends
 			int idx2 = 0;
 			for (Entry<Integer, List<String>> entry : entries) {
 				Object instance = objectReverseMap.get(entry.getKey());
+				//keep in sync with asyncdeserializer, clientserreader, serverserwriter
 				boolean collectionOrMap = instance instanceof Collection
-						|| instance instanceof Map;
+						|| instance instanceof Map
+						|| instance instanceof MultikeyMap;
 				if (collectionOrMap ^ i == 0) {
 					// System.out.println(instance.getClass().getSimpleName());
 					// for (String s : entry.getValue()) {
