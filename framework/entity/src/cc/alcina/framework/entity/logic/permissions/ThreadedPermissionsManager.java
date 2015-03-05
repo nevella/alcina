@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -27,13 +27,11 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ThreadedPermissionsManager extends PermissionsManager {
-	public static GraphProjectionDataFilter INSTANTIATE_IMPL_FILTER;
-
 	@Override
 	public PermissionsManager getT() {
 		return (ThreadedPermissionsManager) getTTL.get();
@@ -60,10 +58,11 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 	@Override
 	public void setUser(IUser user) {
 		super.setUser(user);
-		if (INSTANTIATE_IMPL_FILTER != null) {
+		UserInstantiator userInstantiator = Registry
+				.implOrNull(UserInstantiator.class);
+		if (userInstantiator != null) {
 			try {
-				setInstantiatedUser(new GraphProjection(null,
-						INSTANTIATE_IMPL_FILTER).project(user, null));
+				setInstantiatedUser(userInstantiator.instantiate(user));
 			} catch (Exception e) {
 				if (Registry.impl(JPAImplementation.class)
 						.isLazyInitialisationException(e)) {
