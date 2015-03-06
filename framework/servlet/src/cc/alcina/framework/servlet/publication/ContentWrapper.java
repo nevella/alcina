@@ -1,8 +1,6 @@
 package cc.alcina.framework.servlet.publication;
 
 import java.io.InputStream;
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +13,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
@@ -72,34 +71,6 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		}
 		trans.close();
 		return wrappedContent;
-	}
-
-	public static class ExportableGrid implements Serializable {
-		static final transient long serialVersionUID = -1L;
-
-		public List<ExportableGridColumn> columns = new ArrayList<ExportableGridColumn>();
-
-		public List<ExportableGridRow> rows = new ArrayList<ExportableGridRow>();
-	}
-
-	public static class ExportableGridColumn {
-		static final transient long serialVersionUID = -1L;
-
-		public String name;
-
-		public String className;
-	}
-
-	public static class ExportableGridCell {
-		static final transient long serialVersionUID = -1L;
-
-		public String value;
-	}
-
-	public static class ExportableGridRow {
-		static final transient long serialVersionUID = -1L;
-
-		public List<ExportableGridCell> cells = new ArrayList<ExportableGridCell>();
 	}
 
 	protected D contentDefinition;
@@ -243,6 +214,9 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		public boolean ieCssHacks;
 
 		public boolean noSpecificHeaderContent;
+
+		@XmlTransient
+		public List gridRows = null;
 
 		public WrapperModel() {
 		}

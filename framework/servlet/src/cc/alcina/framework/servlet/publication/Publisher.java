@@ -40,14 +40,13 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
  * format - if html, can convert to Word, PDF etc
  * <li>ContentDelivery: deliver (email, download etc)
  * </ol>
- * 
- * 
- * 
+ *
+ *
+ *
  * @author nreddel@barnet.com.au
- * 
+ *
  */
 public class Publisher {
-
 	private PublicationContext ctx;
 
 	public PublicationResult publish(ContentDefinition contentDefinition,
@@ -137,6 +136,7 @@ public class Publisher {
 		fcm.html = cw.wrappedContent;
 		fcm.footer = cw.wrappedFooter;
 		fcm.bytes = cw.wrappedBytes;
+		fcm.rows = cw.wrapper.gridRows;
 		fcm.custom = cw.custom;
 		InputStream convertedContent = fc.convert(ctx, fcm);
 		ctx.getVisitorOrNoop().beforeDelivery();

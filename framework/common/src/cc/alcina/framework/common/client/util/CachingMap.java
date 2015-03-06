@@ -41,6 +41,9 @@ public class CachingMap<I, O> {
 		map.remove(key);
 	}
 
+	public void put(I key,O value){
+		map.put(key, value);
+	}
 	public Map<I, O> getMap() {
 		return this.map;
 	}
