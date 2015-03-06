@@ -16,11 +16,13 @@ public interface FormatConverter {
 
 	public static class FormatConversionModel implements Serializable{
 		public String html;
-		
+
 		public String footer;
 
 		public byte[] bytes;
 
 		public Object custom;
+
+
 	}
 }

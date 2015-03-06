@@ -1,9 +1,12 @@
 package cc.alcina.framework.servlet.publication;
 
 import java.io.InputStream;
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -71,6 +74,34 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		return wrappedContent;
 	}
 
+	public static class ExportableGrid implements Serializable {
+		static final transient long serialVersionUID = -1L;
+
+		public List<ExportableGridColumn> columns = new ArrayList<ExportableGridColumn>();
+
+		public List<ExportableGridRow> rows = new ArrayList<ExportableGridRow>();
+	}
+
+	public static class ExportableGridColumn {
+		static final transient long serialVersionUID = -1L;
+
+		public String name;
+
+		public String className;
+	}
+
+	public static class ExportableGridCell {
+		static final transient long serialVersionUID = -1L;
+
+		public String value;
+	}
+
+	public static class ExportableGridRow {
+		static final transient long serialVersionUID = -1L;
+
+		public List<ExportableGridCell> cells = new ArrayList<ExportableGridCell>();
+	}
+
 	protected D contentDefinition;
 
 	protected M publicationContent;
@@ -128,8 +159,8 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 	}
 
 	protected void marshallToDoc() throws Exception {
-		Set<Class> jaxbClasses = new HashSet<Class>(Registry.get()
-				.lookup(JaxbContextRegistration.class));
+		Set<Class> jaxbClasses = new HashSet<Class>(Registry.get().lookup(
+				JaxbContextRegistration.class));
 		JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
 		Marshaller m = jc.createMarshaller();
 		m.marshal(wrapper, wrappingDoc);
