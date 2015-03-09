@@ -117,6 +117,7 @@ public class Publisher {
 		}
 		ContentWrapper cw = (ContentWrapper) Registry.get().instantiateSingle(
 				ContentWrapper.class, publicationContent.getClass());
+		ctx.getVisitorOrNoop().beforeWrapContent();
 		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
 				crh.getResults(), publicationId, publicationUserId);
 		if (deliveryModel.provideContentDeliveryType().getClass() == null) {

@@ -287,6 +287,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		if (!isFlowLayout()) {
 			scroller.setSize("100%", "100%");
 		}
+		scroller.setStyleName("selector-scroller");
 		holder.setStyleName("alcina-Chooser");
 		holder.add(filter);
 		if (popdown) {
