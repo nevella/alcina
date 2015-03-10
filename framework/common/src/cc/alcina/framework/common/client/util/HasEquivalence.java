@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 public interface HasEquivalence<T> {
@@ -79,6 +78,12 @@ public interface HasEquivalence<T> {
 		public static <T extends HasEquivalence> boolean contains(
 				Collection<T> o1, T o2) {
 			return !intersection(o1, Collections.singletonList(o2)).isEmpty();
+		}
+
+		public static <T extends HasEquivalence> T getEquivalent(
+				Collection<T> o1, T o2) {
+			return (T) CommonUtils.first(intersection(o1,
+					Collections.singletonList(o2)));
 		}
 	}
 }
