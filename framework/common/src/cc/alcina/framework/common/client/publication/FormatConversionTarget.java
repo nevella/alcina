@@ -75,6 +75,10 @@ public abstract class FormatConversionTarget extends ExtensibleEnum implements
 		public boolean gridResult() {
 			return true;
 		}
+		@Override
+		public String displayName() {
+			return "Microsoft Excel (.xls)";
+		}
 	}
 
 	public static class FormatConversionTarget_CSV extends

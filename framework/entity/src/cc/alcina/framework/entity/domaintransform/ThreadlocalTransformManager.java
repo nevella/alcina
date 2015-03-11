@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -201,7 +201,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	/**
-	 * TODO - ignore collection mods to collection properties with 
+	 * TODO - ignore collection mods to collection properties with
 	 * the @OneToMany annotation (inefficient and unnecessary)
 	 * ...hmmm...wait-a-sec - might be necessary for the level 2 cache
 	 */
@@ -231,6 +231,16 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				newInstance.getLocalId());
 		// }
 		return newInstance;
+	}
+
+	@Override
+	/**
+	 * Probably don't call this - rather call  deleteObject(hili,true) - this will always be a noop on the server
+	 *
+	 */
+	@Deprecated
+	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
+		return super.deleteObject(hili);
 	}
 
 	@Override
