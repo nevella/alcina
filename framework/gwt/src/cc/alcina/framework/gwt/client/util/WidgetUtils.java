@@ -797,11 +797,6 @@ public class WidgetUtils {
 
 	public static void scrollIntoView(Element e, int fromTop,
 			boolean forceFromTop) {
-		// async scrolls can mean it got detached - better here than checking at
-		// all call sites
-		if (!isVisibleAncestorChain(e)) {
-			return;
-		}
 		int y1 = Document.get().getBodyOffsetTop() + Window.getScrollTop();
 		int y2 = y1 + Window.getClientHeight();
 		Element parent = e.getParentElement();
@@ -1006,17 +1001,17 @@ public class WidgetUtils {
 	}-*/;
 
 	public static native void focus(Element elem) /*-{
-													elem.focus();
-													}-*/;
+	elem.focus();
+	}-*/;
 
 	public static final native void click(Element elt) /*-{
-														elt.click();
-														try {
-														elt.focus();
-														} catch (e) {
+	elt.click();
+	try {
+		elt.focus();
+	} catch (e) {
 
-														}
-														}-*/;
+	}
+	}-*/;
 
 	public static void hardCancelEvent(NativePreviewEvent event) {
 		event.cancel();
@@ -1024,12 +1019,12 @@ public class WidgetUtils {
 	}
 
 	private static native void cancelPossibleIEShortcut() /*-{
-															try {
-															$wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
-															} catch (e) {
+	try {
+		$wnd.event.keyCode = 0; // this is a hack to capture ctrl+f ctrl+p etc
+	} catch (e) {
 
-															}
-															}-*/;
+	}
+	}-*/;
 
 	public static int propertyPx(String propertyString) {
 		if (propertyString.indexOf("px") == -1) {
