@@ -1104,7 +1104,8 @@ public class AlcinaMemCache {
 			collectLockAcquisitionPoints = true;
 		}
 		releaseConnectionLocks();
-
+		//don't close, but indicate that everything write-y from now shd be single-threaded
+		warmupExecutor = null;
 		MetricLogging.get().end("memcache-all");
 	}
 
