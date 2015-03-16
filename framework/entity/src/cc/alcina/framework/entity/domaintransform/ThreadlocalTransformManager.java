@@ -94,20 +94,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ThreadlocalTransformManager extends TransformManager implements
 		PropertyAccessor, ObjectLookup, ClassLookup {
-	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
-			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
-
-	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
-		protected synchronized Object initialValue() {
-			ThreadlocalTransformManager tm = ThreadlocalTransformManager
-					.ttmInstance();
-			tm.resetTltm(null);
-			return tm;
-		}
-	};
-
-	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();;
-
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
@@ -122,7 +108,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	 */
 	public static ThreadlocalTransformManager get() {
 		return ThreadlocalTransformManager.cast();
-	}
+	};
 
 	public static void threadTransformManagerWasReset() {
 		GlobalTopicPublisher.get().publishTopic(
@@ -139,6 +125,20 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		ThreadlocalTransformManager tltm = new ThreadlocalTransformManager();
 		return tltm;
 	}
+
+	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
+			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
+
+	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
+		protected synchronized Object initialValue() {
+			ThreadlocalTransformManager tm = ThreadlocalTransformManager
+					.ttmInstance();
+			tm.resetTltm(null);
+			return tm;
+		}
+	};
+
+	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
 
 	private PersistenceLayerTransformExceptionPolicy exceptionPolicy;
 
@@ -171,6 +171,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	private boolean initialised = false;
 
 	private Set<HiliLocator> createdObjectLocators = new LinkedHashSet<HiliLocator>();
+
+	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();
+
+	private boolean useTlIdGenerator = false;
 
 	@Override
 	public IndividualPropertyAccessor cachedAccessor(Class clazz,
@@ -566,6 +570,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
+	public synchronized long nextLocalIdCounter() {
+		return useTlIdGenerator ? tlIdGenerator.incrementAndGet()
+				: localIdGenerator.incrementAndGet();
+	}
+
+	@Override
 	public void performDeleteObject(HasIdAndLocalId hili) {
 		HasIdAndLocalId object = getObject(hili);
 		removeAssociations(hili);
@@ -636,6 +646,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			listenTo((SourcesPropertyChangeEvents) hili);
 		}
 		return hili;
+	}
+
+	public void resetLocalIdCounterForCurrentThread() {
+		useTlIdGenerator = true;
+		tlIdGenerator.reset();
 	}
 
 	public void resetTltm(HiliLocatorMap locatorMap) {
@@ -736,6 +751,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	public void setUseObjectCreationId(boolean useObjectCreationId) {
 		this.useObjectCreationId = useObjectCreationId;
+	}
+
+	public void useGlobalLocalIdCounter() {
+		useTlIdGenerator = false;
 	}
 
 	private String buildEqlForSpec(ObjectDeltaSpec itemSpec, Class assocClass)

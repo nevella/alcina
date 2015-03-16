@@ -89,7 +89,7 @@ public abstract class ClientTransformManager extends TransformManager {
 	/**
 	 * Useful series of actions when persisting a HasIdAndLocalId with
 	 * references to a WrappedObject
-	 * 
+	 *
 	 * @see TransformManager#promoteToDomainObject(Object) wrt what to do with
 	 *      promoted objects
 	 * @param referrer
@@ -257,8 +257,8 @@ public abstract class ClientTransformManager extends TransformManager {
 				if (dte.getTransformType() == TransformType.CREATE_OBJECT
 						&& dte.getObjectId() == 0
 						&& dte.getObjectLocalId() != 0) {
-					localIdCounter = Math.max(localIdCounter,
-							dte.getObjectLocalId());
+					localIdGenerator.set(Math.max(localIdGenerator.get(),
+							dte.getObjectLocalId()));
 				}
 				if (fireTransforms) {
 					fireDomainTransform(dte);

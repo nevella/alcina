@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.Map.Entry;
 
+import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -25,6 +28,7 @@ import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.RootPanel;
 
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class DomUtils implements NodeFromXpathProvider {
 	public static boolean containsBlocks(Element elt) {
 		elt.getChildNodes();
@@ -774,6 +778,8 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 	}
 
+	public static SequentialIdGenerator expandoIdProvider = new SequentialIdGenerator();
+
 	static class DomRequiredSplitInfo {
 		public static int expandoId;
 
@@ -794,14 +800,10 @@ public class DomUtils implements NodeFromXpathProvider {
 			this.splitAround = splitAround;
 		}
 
-		public synchronized int getExpandoIdAndIncrement() {
-			return ++expandoId;
-		}
-
 		public void split() {
 			if (!splitFrom.hasAttribute(ATTR_UNWRAP_EXPANDO_ID)) {
 				splitFrom.setAttribute(ATTR_UNWRAP_EXPANDO_ID,
-						String.valueOf(getExpandoIdAndIncrement()));
+						String.valueOf(expandoIdProvider.incrementAndGet()));
 			}
 			String expandoId = splitFrom.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
 			Element grand = splitFrom.getParentElement();

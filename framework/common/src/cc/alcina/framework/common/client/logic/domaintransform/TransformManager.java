@@ -121,7 +121,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private static long eventIdCounter = 0;
 
-	protected static long localIdCounter = 0;
+	protected static SequentialIdGenerator localIdGenerator =new SequentialIdGenerator();
 
 	final Set<DomainTransformEvent> transforms = new LinkedHashSet<DomainTransformEvent>();
 
@@ -835,7 +835,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public synchronized long nextLocalIdCounter() {
-		return ++localIdCounter;
+		return localIdGenerator.incrementAndGet();
 	}
 
 	public List<DomainTransformEvent> objectsToDtes(Collection objects,
