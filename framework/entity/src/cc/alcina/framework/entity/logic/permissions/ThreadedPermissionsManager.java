@@ -14,6 +14,7 @@
 package cc.alcina.framework.entity.logic.permissions;
 
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
@@ -23,8 +24,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
-import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 
 /**
  *
@@ -99,5 +98,18 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 
 	public static void clearThreadLocal() {
 		getTTL.remove();
+	}
+
+	public <T> T runWithPushedSystemUserIfNeeded(Callable<T> callable) throws Exception {
+		if (isRoot()) {
+			return callable.call();
+		} else {
+			try {
+				pushSystemUser();
+				return callable.call();
+			} finally {
+				popSystemUser();
+			}
+		}
 	}
 }

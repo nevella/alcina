@@ -741,10 +741,14 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	}
 
 	public IUser pushSystemUser() {
-		IUser systemUser = Registry.impl(UserlandProvider.class).getSystemUser(
-				true);
+		IUser systemUser = getSystemUser();
 		pushUser(systemUser, LoginState.LOGGED_IN, true);
 		return systemUser;
+	}
+
+	protected IUser getSystemUser() {
+		return Registry.impl(UserlandProvider.class).getSystemUser(
+				true);
 	}
 
 	public IUser popSystemUser() {
