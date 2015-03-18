@@ -1048,4 +1048,16 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 		return getAncestorWithTagName(node, "BODY") != null;
 	}
+
+	public static void stripNode(Node oldNode) {
+		Node parent = oldNode.getParentNode();
+		NodeList nl = oldNode.getChildNodes();
+		Node refChild = oldNode;
+		for (int i = nl.getLength() - 1; i >= 0; i--) {
+			Node child = nl.getItem(i);
+			parent.insertBefore(child, refChild);
+			refChild = child;
+		}
+		oldNode.getParentNode().removeChild(oldNode);
+	}
 }

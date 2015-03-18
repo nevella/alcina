@@ -921,6 +921,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	private void tryAddSourceObjectName(
 			DomainTransformException transformException) {
+		if (transformException.getEvent() == null) {
+			return;
+		}
 		try {
 			HasIdAndLocalId object = TransformManager.get().getObject(
 					transformException.getEvent(), true);
@@ -1072,7 +1075,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			} else {
 				iid.setRememberMeUser(null);
 			}
-			cp.iidUpdated(iid,false);
+			cp.iidUpdated(iid, false);
 			Registry.impl(ClientInstanceAuthenticationCache.class)
 					.cacheIid(iid);
 			cp.getEntityManager().merge(iid);
@@ -1174,7 +1177,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public void iidUpdated(Iid iid, boolean create) {
-
 	}
 
 	public static void setHandshakeObjectProviderClass(
