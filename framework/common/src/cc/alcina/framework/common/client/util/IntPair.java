@@ -218,4 +218,8 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
 		CONTAINS_END;
 	}
+
+	public IntPair shiftRight(int offset) {
+		return new IntPair(i1 + offset, i2 + offset);
+	}
 }
