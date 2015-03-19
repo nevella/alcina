@@ -29,6 +29,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -87,7 +88,6 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.LaterLookup.LaterItem;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -1021,8 +1021,7 @@ public class AlcinaMemCache {
 				});
 			}
 		}
-		warmupExecutor.invokeAll((List) calls);
-		calls.clear();
+		invokeAllWithThrow(calls);
 		for (Entry<PropertyDescriptor, JoinTable> entry : joinTables.entrySet()) {
 			final Entry<PropertyDescriptor, JoinTable> entryF = entry;
 			calls.add(new Callable<Void>() {
@@ -1033,8 +1032,7 @@ public class AlcinaMemCache {
 				}
 			});
 		}
-		warmupExecutor.invokeAll((List) calls);
-		calls.clear();
+		invokeAllWithThrow(calls);
 		MetricLogging.get().end("tables");
 		MetricLogging.get().start("xrefs");
 		resolveRefs();
@@ -1053,8 +1051,7 @@ public class AlcinaMemCache {
 				}
 			});
 		}
-		warmupExecutor.invokeAll((List) calls);
-		calls.clear();
+		invokeAllWithThrow(calls);
 		MetricLogging.get().end("postLoad");
 		MetricLogging.get().start("lookups");
 		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
@@ -1072,8 +1069,7 @@ public class AlcinaMemCache {
 				}
 			});
 		}
-		warmupExecutor.invokeAll((List) calls);
-		calls.clear();
+		invokeAllWithThrow(calls);
 		MetricLogging.get().end("lookups");
 		MetricLogging.get().start("projections");
 		// deliberately init projections after lookups
@@ -1091,8 +1087,7 @@ public class AlcinaMemCache {
 				}
 			});
 		}
-		warmupExecutor.invokeAll((List) calls);
-		calls.clear();
+		invokeAllWithThrow(calls);
 		MetricLogging.get().end("projections");
 		modificationChecker.ignoreModifications = false;
 		initialising = false;
@@ -1104,7 +1099,8 @@ public class AlcinaMemCache {
 			collectLockAcquisitionPoints = true;
 		}
 		releaseConnectionLocks();
-		//don't close, but indicate that everything write-y from now shd be single-threaded
+		// don't close, but indicate that everything write-y from now shd be
+		// single-threaded
 		warmupExecutor = null;
 		MetricLogging.get().end("memcache-all");
 	}
@@ -1740,10 +1736,7 @@ public class AlcinaMemCache {
 						task.call();
 					}
 				}
-				if (warmupExecutor != null) {
-					warmupExecutor.invokeAll((List) tasks);
-				}
-				//
+				invokeAllWithThrow((List) tasks);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -1944,6 +1937,18 @@ public class AlcinaMemCache {
 		@Override
 		protected boolean isZeroCreatedObjectLocalId() {
 			return true;
+		}
+	}
+
+	public void invokeAllWithThrow(List tasks) throws Exception {
+		if (warmupExecutor != null) {
+			List<Future> futures = (List) warmupExecutor
+					.invokeAll((List) tasks);
+			for (Future future : futures) {
+				// will throw if there was an exception
+				future.get();
+			}
+			tasks.clear();
 		}
 	}
 }
