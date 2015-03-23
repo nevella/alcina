@@ -47,7 +47,7 @@ import java.util.Map;
  * results are actually better (smaller change list, smaller total size of
  * changes), but it would be nice to know why. Perhaps there is a memory
  * overwrite bug in GNU diff 1.15.
- * 
+ *
  * @author Stuart D. Gathman, translated from GNU diff 1.15 Copyright (C) 2000
  *         Business Management Systems, Inc.
  *         <p>
@@ -125,23 +125,23 @@ public class Diff {
 	/**
 	 * Find the midpoint of the shortest edit script for a specified portion of
 	 * the two files.
-	 * 
+	 *
 	 * We scan from the beginnings of the files, and simultaneously from the
 	 * ends, doing a breadth-first search through the space of edit-sequence.
 	 * When the two searches meet, we have found the midpoint of the shortest
 	 * edit sequence.
-	 * 
+	 *
 	 * The value returned is the number of the diagonal on which the midpoint
 	 * lies. The diagonal number equals the number of inserted lines minus the
 	 * number of deleted lines (counting only lines before the midpoint). The
 	 * edit cost is stored into COST; this is the total number of lines inserted
 	 * or deleted (counting only lines before the midpoint).
-	 * 
+	 *
 	 * This function assumes that the first lines of the specified portions of
 	 * the two files do not match, and likewise that the last lines do not
 	 * match. The caller must trim matching lines from the beginning and end of
 	 * the portions it is going to specify.
-	 * 
+	 *
 	 * Note that if we return the "wrong" diagonal value, or if the value of
 	 * bdiag at that diagonal is "wrong", the worst this can do is cause
 	 * suboptimal diff output. It cannot cause incorrect diff output.
@@ -234,7 +234,7 @@ public class Diff {
 			 * of progress compared with the edit distance. If we have any such,
 			 * find the one that has made the most progress and return it as if
 			 * it had succeeded.
-			 * 
+			 *
 			 * With this heuristic, for files with a constant small density of
 			 * changes, the algorithm is linear in the file size.
 			 */
@@ -301,13 +301,13 @@ public class Diff {
 	/**
 	 * Compare in detail contiguous subsequences of the two files which are
 	 * known, as a whole, to match each other.
-	 * 
+	 *
 	 * The results are recorded in the vectors filevec[N].changed_flag, by
 	 * storing a 1 in the element for each line that is an insertion or
 	 * deletion.
-	 * 
+	 *
 	 * The subsequence of file 0 is [XOFF, XLIM) and likewise for file 1.
-	 * 
+	 *
 	 * Note that XLIM, YLIM are exclusive bounds. All line numbers are origin-0
 	 * and discarded lines are not counted.
 	 */
@@ -380,7 +380,7 @@ public class Diff {
 		/**
 		 * Scan the tables of which lines are inserted and deleted, producing an
 		 * edit script.
-		 * 
+		 *
 		 * @param changed0
 		 *            true for lines in first file which do not match 2nd
 		 * @param len0
@@ -469,7 +469,7 @@ public class Diff {
 	 * by a list of changes. The standard ScriptBuilder implementations provide
 	 * for forward and reverse edit scripts. Alternate implementations could,
 	 * for instance, list common elements instead of differences.
-	 * 
+	 *
 	 * @param bld
 	 *            an object to build the script from change flags
 	 * @return the head of a list of changes
@@ -515,11 +515,11 @@ public class Diff {
 	 * The result of comparison is an "edit script": a chain of change objects.
 	 * Each change represents one place where some lines are deleted and some
 	 * are inserted.
-	 * 
+	 *
 	 * LINE0 and LINE1 are the first affected lines in the two files (origin 0).
 	 * DELETED is the number of lines deleted here from file 0. INSERTED is the
 	 * number of lines inserted here in file 1.
-	 * 
+	 *
 	 * If DELETED is 0 then LINE0 is the number of the line before which the
 	 * insertion was done; vice versa for INSERTED and LINE1.
 	 */
@@ -528,23 +528,23 @@ public class Diff {
 		public Change link;
 
 		/** # lines of file 1 changed here. */
-		public final int inserted;
+		public  int inserted;
 
 		/** # lines of file 0 changed here. */
-		public final int deleted;
+		public int deleted;
 
 		/** Line number of 1st deleted line. */
-		public final int line0;
+		public int line0;
 
 		/** Line number of 1st inserted line. */
-		public final int line1;
+		public int line1;
 
 		/**
 		 * Cons an additional entry onto the front of an edit script OLD. LINE0
 		 * and LINE1 are the first affected lines in the two files (origin 0).
 		 * DELETED is the number of lines deleted here from file 0. INSERTED is
 		 * the number of lines inserted here in file 1.
-		 * 
+		 *
 		 * If DELETED is 0 then LINE0 is the number of the line before which the
 		 * insertion was done; vice versa for INSERTED and LINE1.
 		 */
@@ -576,7 +576,7 @@ public class Diff {
 		/**
 		 * Return equiv_count[I] as the number of lines in this file that fall
 		 * in equivalence class I.
-		 * 
+		 *
 		 * @return the array of equivalence class counts.
 		 */
 		int[] equivCount() {
@@ -588,7 +588,7 @@ public class Diff {
 
 		/**
 		 * Discard lines that have no matches in another file.
-		 * 
+		 *
 		 * A line which is discarded will not be considered by the actual
 		 * comparison algorithm; it will be as if that line were not in the
 		 * file. The file's `realindexes' table maps virtual line numbers (which
@@ -598,7 +598,7 @@ public class Diff {
 		 * <p>
 		 * When we discard a line, we also mark it as a deletion or insertion so
 		 * that it will be printed in the output.
-		 * 
+		 *
 		 * @param f
 		 *            the other file
 		 */
@@ -619,7 +619,7 @@ public class Diff {
 		/**
 		 * Mark to be discarded each line that matches no line of another file.
 		 * If a line matches many lines, mark it as provisionally discardable.
-		 * 
+		 *
 		 * @see equivCount()
 		 * @param counts
 		 *            The count of each equivalence number for the other file.
@@ -761,7 +761,7 @@ public class Diff {
 
 		/**
 		 * Actually discard the lines.
-		 * 
+		 *
 		 * @param discards
 		 *            flags lines to be discarded
 		 */
@@ -797,14 +797,14 @@ public class Diff {
 		/**
 		 * Adjust inserts/deletes of blank lines to join changes as much as
 		 * possible.
-		 * 
+		 *
 		 * We do something when a run of changed lines include a blank line at
 		 * one end and have an excluded blank line at the other. We are free to
 		 * choose which blank line is included. `compareseq' always chooses the
 		 * one at the beginning, but usually it is cleaner to consider the
 		 * following blank line to be the "change". The only exception is if the
 		 * preceding blank line would join this change to other changes.
-		 * 
+		 *
 		 * @param f
 		 *            the file being compared against
 		 */

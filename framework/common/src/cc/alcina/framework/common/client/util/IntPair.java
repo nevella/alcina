@@ -222,4 +222,10 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	public IntPair shiftRight(int offset) {
 		return new IntPair(i1 + offset, i2 + offset);
 	}
+
+	public void expandToInclude(IntPair mod) {
+		IntPair union = union(mod);
+		i1 = union.i1;
+		i2 = union.i2;
+	}
 }
