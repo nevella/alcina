@@ -537,14 +537,15 @@ public class WidgetUtils {
 	}
 	}-*/;
 
-	public static void scrollIntoViewWhileKeepingRect(Rect bounds, Widget widget) {
+	public static void scrollIntoViewWhileKeepingRect(Rect bounds,
+			Widget widget, int pad) {
 		// assume widget is below bounds
 		int scrollTop = Window.getScrollTop();
 		int clientHeight = Window.getClientHeight();
 		int widgetTop = widget.getAbsoluteTop();
 		int widgetHeight = widget.getOffsetHeight();
-		if (widgetTop + widgetHeight > scrollTop + clientHeight) {
-			int bestDeltaDown = widgetTop + widgetHeight
+		if (widgetTop + widgetHeight + pad > scrollTop + clientHeight) {
+			int bestDeltaDown = widgetTop + widgetHeight + pad
 					- (scrollTop + clientHeight);
 			int delta = Math.min(bounds.y1 - scrollTop, bestDeltaDown);
 			delta = Math.max(0, delta);
