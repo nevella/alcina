@@ -1492,6 +1492,7 @@ div.max .gwt-RichTextArea {
 .dropdown-popup .popupContent {
 	background-color: #fff;
 	border: 1px solid #bbb;
+	text-align:left;
 }
 
 .dropdown-popup .popupTopLeft {
