@@ -6,9 +6,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.Map.Entry;
+import java.util.Stack;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -1059,5 +1060,13 @@ public class DomUtils implements NodeFromXpathProvider {
 			refChild = child;
 		}
 		oldNode.getParentNode().removeChild(oldNode);
+	}
+
+	public static class IsBlockFilter implements CollectionFilter<Node> {
+		@Override
+		public boolean allow(Node o) {
+			return o.getNodeType() == Node.ELEMENT_NODE
+					&& isBlockHTMLElement((Element) o);
+		}
 	}
 }
