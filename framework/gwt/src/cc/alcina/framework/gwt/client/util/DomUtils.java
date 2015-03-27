@@ -168,8 +168,12 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public static boolean isInvisibleContentElement(Element elt) {
+		return isInvisibleContentElement(elt.getTagName());
+	}
+
+	public static boolean isInvisibleContentElement(String tagName) {
 		return HTML_INVISIBLE_CONTENT_ELEMENTS.contains(","
-				+ elt.getTagName().toUpperCase() + ",");
+				+ tagName.toUpperCase() + ",");
 	}
 
 	public static boolean isVisibleAncestorChain(Element e) {
@@ -280,17 +284,41 @@ public class DomUtils implements NodeFromXpathProvider {
 		return DOM.getInnerText((com.google.gwt.user.client.Element) elt);
 	}
 
-	private static void addVisibleTextNodes(Element element, List<Text> texts) {
-		NodeList<Node> nl = element.getChildNodes();
-		int length = nl.getLength();
-		for (int i = 0; i < length; i++) {
-			Node node = nl.getItem(i);
-			if (node.getNodeType() == Node.TEXT_NODE) {
-				texts.add((Text) node);
-			} else if (node.getNodeType() == Node.ELEMENT_NODE
-					&& !isInvisibleContentElement((Element) node)) {
-				addVisibleTextNodes((Element) node, texts);
+	private static void addVisibleTextNodes(Element elt, List<Text> texts) {
+		Element displayNone = null;
+		ClientNodeIterator itr = new ClientNodeIterator(elt,
+				ClientNodeIterator.SHOW_ALL);
+		Node n;
+		IgnoreTextObserver ignoreTextObserver = new IgnoreTextObserver();
+		// duplicates ArticleTextModel (Jade)
+		while ((n = itr.getCurrentNode()) != null) {
+			if (n.getNodeType() == Node.TEXT_NODE
+					&& !ignoreTextObserver.isIgnoreText()) {
+				boolean currentDisplayNoneIsAncestor = displayNone != null
+						&& DomUtils.isAncestorOf(displayNone, n);
+				if (!currentDisplayNoneIsAncestor) {
+					texts.add((Text) n);
+				}
+			} else if (n.getNodeType() == Node.ELEMENT_NODE) {
+				Element element = (Element) n;
+				String styleAttribute = element.getAttribute("style");
+				boolean thisDisplayNone = styleAttribute != null
+						&& (styleAttribute.contains("display: none") || styleAttribute
+								.contains("display:none"));
+				boolean currentDisplayNoneIsAncestor = displayNone != null
+						&& DomUtils.isAncestorOf(displayNone, element);
+				if (thisDisplayNone) {
+					if (!currentDisplayNoneIsAncestor) {
+						displayNone = element;
+					}
+				} else {
+					if (!currentDisplayNoneIsAncestor) {
+						displayNone = null;
+					}
+				}
+				ignoreTextObserver.update(element);
 			}
+			itr.nextNode();
 		}
 	}
 
@@ -1067,6 +1095,28 @@ public class DomUtils implements NodeFromXpathProvider {
 		public boolean allow(Node o) {
 			return o.getNodeType() == Node.ELEMENT_NODE
 					&& isBlockHTMLElement((Element) o);
+		}
+	}
+
+	/**
+	 * TODO - av2 - optimise the display-none check on the client
+	 *
+	 * @param maxNodes
+	 * @return true if finished
+	 */
+	public static class IgnoreTextObserver {
+		private boolean ignoreText = false;
+
+		public boolean isIgnoreText() {
+			return this.ignoreText;
+		}
+
+		public void update(Element element) {
+			ignoreText = isInvisibleContentElement(element);
+		}
+
+		public void update(String tagName) {
+			ignoreText = isInvisibleContentElement(tagName);
 		}
 	}
 }

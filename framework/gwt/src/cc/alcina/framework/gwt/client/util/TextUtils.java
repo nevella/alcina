@@ -18,13 +18,12 @@ public class TextUtils {
 	public static String normaliseAndTrim(String text) {
 		return TextUtilsImpl.normalise(text).trim();
 	}
-	
-	public static List<IntPair> match(String text,String regex) {
-		if(text==null||regex==null){
+
+	public static List<IntPair> match(String text, String regex) {
+		if (text == null || regex == null) {
 			return new ArrayList<IntPair>();
 		}
-		return TextUtilsImpl.match(text,regex);
-		
+		return TextUtilsImpl.match(text, regex);
 	}
 
 	public static boolean isWhitespaceOrEmpty(String text) {
@@ -37,11 +36,11 @@ public class TextUtils {
 	}
 
 	public static native void setElementStyle(Element e, String css) /*-{
-		if (e.style && typeof (e.style.cssText)=="string") {
-			e.style.cssText = css;
-		} else {
-			e.style = css;
-		}
+	if (e.style && typeof (e.style.cssText) == "string") {
+		e.style.cssText = css;
+	} else {
+		e.style = css;
+	}
 	}-*/;
 
 	public static String trimToWidth(String s, String style, int pxWidth,
@@ -81,5 +80,10 @@ public class TextUtils {
 				}
 			}
 		}
+	}
+
+	public static int getWordCount(String data) {
+		String normalised = normaliseAndTrim(data);
+		return normalised.length() == 0 ? 0 : normalised.split(" ").length;
 	}
 }
