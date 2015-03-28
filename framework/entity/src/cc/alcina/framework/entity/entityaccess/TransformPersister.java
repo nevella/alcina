@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.ejb.ApplicationException;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
@@ -37,7 +36,6 @@ import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken.Pass;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy.TransformExceptionAction;
-import cc.alcina.framework.entity.impl.jboss.JPAHibernateImpl;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 public class TransformPersister {
@@ -102,7 +100,8 @@ public class TransformPersister {
 				transformException = (DomainTransformException) e;
 			} else {
 				transformException = new DomainTransformException(e);
-				Registry.impl(JPAHibernateImpl.class).interpretException(transformException);
+				Registry.impl(JPAImplementation.class).interpretException(
+						transformException);
 			}
 			if (!token.getTransformExceptions().contains(transformException)) {
 				token.getTransformExceptions().add(transformException);
@@ -263,7 +262,7 @@ public class TransformPersister {
 				if (token.getPass() == Pass.TRY_COMMIT) {
 					commonPersistenceBase.cacheEntities(items, token
 							.getTransformExceptionPolicy()
-							.precreateMissingEntities(),true);
+							.precreateMissingEntities(), true);
 				}
 				int backupEventIdCounter = 0;
 				for (DomainTransformEvent event : items) {
