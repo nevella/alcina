@@ -186,6 +186,19 @@ public class AlcinaMemCache {
 			.getLogger(AlcinaMemCache.class, TaggedLogger.WARN,
 					TaggedLogger.INFO, TaggedLogger.DEBUG);
 
+	public static final String TOPIC_DEBUG_MAP = AlcinaMemCache.class.getName()
+			+ ".TOPIC_DEBUG_MAP";
+
+	public static void notifyDebugMap(Map map) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_DEBUG_MAP, map);
+	}
+
+	public static void notifyDebugMapListenerDelta(TopicListener<Map> listener,
+			boolean add) {
+		GlobalTopicPublisher.get()
+				.listenerDelta(TOPIC_DEBUG_MAP, listener, add);
+	}
+
 	private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
 	};
 
@@ -1711,8 +1724,10 @@ public class AlcinaMemCache {
 
 		void add(HasIdAndLocalId target, PropertyDescriptor pd,
 				HasIdAndLocalId source) {
-			lookups.get(source.getClass()).add(
-					new LaterItem(target, pd, source));
+			List<LaterItem> list = lookups.get(source.getClass());
+			synchronized (list) {
+				list.add(new LaterItem(target, pd, source));
+			}
 		}
 
 		synchronized void prepareClass(Class clazz) {
@@ -1722,20 +1737,26 @@ public class AlcinaMemCache {
 		}
 
 		void add(long id, PropertyDescriptor pd, HasIdAndLocalId source) {
-			lookups.get(source.getClass()).add(new LaterItem(id, pd, source));
+			List<LaterItem> list = lookups.get(source.getClass());
+			synchronized (list) {
+				list.add(new LaterItem(id, pd, source));
+			}
 		}
 
 		synchronized void resolve() {
 			try {
 				List<Callable> tasks = new ArrayList<Callable>();
+				Map<Class, Integer> resolveSizeLookup = new LinkedHashMap<Class, Integer>();
 				for (Class clazz : lookups.keySet()) {
 					List<LaterItem> items = lookups.get(clazz);
 					Callable task = new ResolveRefsTask(items);
+					resolveSizeLookup.put(clazz, items.size());
 					tasks.add(task);
 					if (warmupExecutor == null) {
 						task.call();
 					}
 				}
+				notifyDebugMap(resolveSizeLookup);
 				invokeAllWithThrow((List) tasks);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

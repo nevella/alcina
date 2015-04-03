@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,7 +18,10 @@ package cc.alcina.framework.gwt.client.widget.complex;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -30,6 +33,7 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.FocusPanel;
 import com.google.gwt.user.client.ui.Image;
@@ -37,7 +41,7 @@ import com.google.gwt.user.client.ui.Image;
 /**
  * A widget that allows the user to select a value within a range of possible
  * values using a sliding bar that responds to mouse events.
- * 
+ *
  * <h3>Keyboard Events</h3>
  * <p>
  * SliderBar listens for the following key events. Holding down a key will
@@ -52,7 +56,7 @@ import com.google.gwt.user.client.ui.Image;
  * <li>space - jump to middle value</li>
  * </ul>
  * </p>
- * 
+ *
  * <h3>CSS Style Rules</h3>
  * <ul class='css'>
  * <li>.gwt-SliderBar-shell { primary style }</li>
@@ -92,7 +96,7 @@ public class SliderBar extends FocusPanel implements
 		/**
 		 * A bit indicating whether we are shifting to a higher or lower value.
 		 */
-		private boolean shiftRight = false;
+		private boolean shiftHigher = false;
 
 		/**
 		 * The number of steps to shift with each press.
@@ -111,7 +115,7 @@ public class SliderBar extends FocusPanel implements
 				startSliding(true, false);
 			}
 			// Slide the slider bar
-			if (shiftRight) {
+			if (shiftHigher) {
 				setCurrentValue(curValue + multiplier * stepSize);
 			} else {
 				setCurrentValue(curValue - multiplier * stepSize);
@@ -122,17 +126,18 @@ public class SliderBar extends FocusPanel implements
 
 		/**
 		 * Schedules a timer to elapse in the future.
-		 * 
+		 *
 		 * @param delayMillis
 		 *            how long to wait before the timer elapses, in milliseconds
-		 * @param shiftRight
+		 * @param shiftHigher
 		 *            whether to shift up or not
 		 * @param multiplier
 		 *            the number of steps to shift
 		 */
-		public void schedule(int delayMillis, boolean shiftRight, int multiplier) {
+		public void schedule(int delayMillis, boolean shiftHigher,
+				int multiplier) {
 			firstRun = true;
-			this.shiftRight = shiftRight;
+			this.shiftHigher = shiftHigher;
 			this.multiplier = multiplier;
 			super.schedule(delayMillis);
 		}
@@ -145,10 +150,10 @@ public class SliderBar extends FocusPanel implements
 		/**
 		 * Generate the text to display in each label based on the label's
 		 * value.
-		 * 
+		 *
 		 * Override this method to change the text displayed within the
 		 * SliderBar.
-		 * 
+		 *
 		 * @param slider
 		 *            the Slider bar
 		 * @param value
@@ -163,21 +168,21 @@ public class SliderBar extends FocusPanel implements
 	public static interface SliderBarImages extends ClientBundle {
 		/**
 		 * An image used for the sliding knob.
-		 * 
+		 *
 		 * @return a prototype of this image
 		 */
 		ImageResource slider();
 
 		/**
 		 * An image used for the sliding knob.
-		 * 
+		 *
 		 * @return a prototype of this image
 		 */
 		ImageResource sliderDisabled();
 
 		/**
 		 * An image used for the sliding knob while sliding.
-		 * 
+		 *
 		 * @return a prototype of this image
 		 */
 		ImageResource sliderSliding();
@@ -217,7 +222,7 @@ public class SliderBar extends FocusPanel implements
 	/**
 	 * The offset between the edge of the shell and the line.
 	 */
-	private int lineLeftOffset = 0;
+	private int linePreOffset = 0;
 
 	/**
 	 * The maximum slider value.
@@ -272,11 +277,31 @@ public class SliderBar extends FocusPanel implements
 	 */
 	private List<Element> tickElements = new ArrayList<Element>();
 
-	private boolean lineAlignedLeft;
+	private boolean lineAlignedPre;
+
+	private boolean vertical;
+
+	private boolean absolutePositioning;
+
+	public boolean isAbsolutePositioning() {
+		return this.absolutePositioning;
+	}
+
+	public void setAbsolutePositioning(boolean absolutePositioning) {
+		this.absolutePositioning = absolutePositioning;
+	}
+
+	public boolean isVertical() {
+		return this.vertical;
+	}
+
+	public void setVertical(boolean vertical) {
+		this.vertical = vertical;
+	}
 
 	/**
 	 * Create a slider bar.
-	 * 
+	 *
 	 * @param minValue
 	 *            the minimum value in the range
 	 * @param maxValue
@@ -288,7 +313,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Create a slider bar.
-	 * 
+	 *
 	 * @param minValue
 	 *            the minimum value in the range
 	 * @param maxValue
@@ -304,7 +329,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Create a slider bar.
-	 * 
+	 *
 	 * @param minValue
 	 *            the minimum value in the range
 	 * @param maxValue
@@ -340,7 +365,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Return the current value.
-	 * 
+	 *
 	 * @return the current value
 	 */
 	public double getCurrentValue() {
@@ -349,7 +374,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Return the label formatter.
-	 * 
+	 *
 	 * @return the label formatter
 	 */
 	public LabelFormatter getLabelFormatter() {
@@ -358,7 +383,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Return the max value.
-	 * 
+	 *
 	 * @return the max value
 	 */
 	public double getMaxValue() {
@@ -367,7 +392,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Return the minimum value.
-	 * 
+	 *
 	 * @return the minimum value
 	 */
 	public double getMinValue() {
@@ -376,7 +401,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Return the number of labels.
-	 * 
+	 *
 	 * @return the number of labels
 	 */
 	public int getNumLabels() {
@@ -385,7 +410,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Return the number of ticks.
-	 * 
+	 *
 	 * @return the number of ticks
 	 */
 	public int getNumTicks() {
@@ -394,7 +419,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Return the step size.
-	 * 
+	 *
 	 * @return the step size
 	 */
 	public double getStepSize() {
@@ -403,7 +428,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Return the total range between the minimum and maximum values.
-	 * 
+	 *
 	 * @return the total range
 	 */
 	public double getTotalRange() {
@@ -423,7 +448,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Listen for events that will move the knob.
-	 * 
+	 *
 	 * @param event
 	 *            the event that occurred
 	 */
@@ -455,9 +480,9 @@ public class SliderBar extends FocusPanel implements
 				int velocityY = DOM.eventGetMouseWheelVelocityY(event);
 				DOM.eventPreventDefault(event);
 				if (velocityY > 0) {
-					shiftRight(1);
+					shiftUp(1);
 				} else {
-					shiftLeft(1);
+					shiftDown(1);
 				}
 				break;
 			// Shift left or right on key press
@@ -480,14 +505,14 @@ public class SliderBar extends FocusPanel implements
 						DOM.eventPreventDefault(event);
 						slidingKeyboard = true;
 						startSliding(false, true);
-						shiftLeft(multiplier);
+						shiftDown(multiplier);
 						keyTimer.schedule(400, false, multiplier);
 						break;
 					case KeyCodes.KEY_RIGHT:
 						DOM.eventPreventDefault(event);
 						slidingKeyboard = true;
 						startSliding(false, true);
-						shiftRight(multiplier);
+						shiftUp(multiplier);
 						keyTimer.schedule(400, true, multiplier);
 						break;
 					case 32:
@@ -534,7 +559,7 @@ public class SliderBar extends FocusPanel implements
 	/**
 	 * This method is called when the dimensions of the parent element change.
 	 * Subclasses should override this method as needed.
-	 * 
+	 *
 	 * @param width
 	 *            the new client width of the element
 	 * @param height
@@ -542,17 +567,27 @@ public class SliderBar extends FocusPanel implements
 	 */
 	public void onResize(int width, int height) {
 		// Center the line in the shell
-		int lineWidth = DOM.getElementPropertyInt(lineElement, "offsetWidth");
-		getLineLeftOffset(width, lineWidth);
-		DOM.setStyleAttribute(lineElement, "left", lineLeftOffset + "px");
+		getLinePreOffset(getMajorDimension(width, height),
+				getLineMajorDimension());
+		DOM.setStyleAttribute(lineElement, getMajorCssPreProperty(),
+				linePreOffset + "px");
 		// Draw the other components
 		drawLabels();
 		drawTicks();
 		drawKnob();
 	}
 
-	public void getLineLeftOffset(int width, int lineWidth) {
-		lineLeftOffset = lineAlignedLeft?0:(width / 2) - (lineWidth / 2);
+	private String getMajorCssPreProperty() {
+		return vertical ? "top" : "left";
+	}
+
+	private int getMajorDimension(int width, int height) {
+		return vertical ? height : width;
+	}
+
+	public void getLinePreOffset(int width, int lineMajorDimension) {
+		linePreOffset = lineAlignedPre ? 0 : (width / 2)
+				- (lineMajorDimension / 2);
 	}
 
 	/**
@@ -569,7 +604,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Set the current value and fire the onValueChange event.
-	 * 
+	 *
 	 * @param curValue
 	 *            the current value
 	 */
@@ -579,7 +614,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Set the current value and optionally fire the onValueChange event.
-	 * 
+	 *
 	 * @param curValue
 	 *            the current value
 	 * @param fireEvent
@@ -605,7 +640,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Sets whether this widget is enabled.
-	 * 
+	 *
 	 * @param enabled
 	 *            true to enable the widget, false to disable it
 	 */
@@ -626,7 +661,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Set the label formatter.
-	 * 
+	 *
 	 * @param labelFormatter
 	 *            the label formatter
 	 */
@@ -636,7 +671,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Set the max value.
-	 * 
+	 *
 	 * @param maxValue
 	 *            the current value
 	 */
@@ -648,7 +683,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Set the minimum value.
-	 * 
+	 *
 	 * @param minValue
 	 *            the current value
 	 */
@@ -661,18 +696,18 @@ public class SliderBar extends FocusPanel implements
 	/**
 	 * Set the number of labels to show on the line. Labels indicate the value
 	 * of the slider at that point. Use this method to enable labels.
-	 * 
+	 *
 	 * If you set the number of labels equal to the total range divided by the
 	 * step size, you will get a properly aligned "jumping" effect where the
 	 * knob jumps between labels.
-	 * 
+	 *
 	 * Note that the number of labels displayed will be one more than the number
 	 * you specify, so specify 1 labels to show labels on either end of the
 	 * line. In other words, numLabels is really the number of slots between the
 	 * labels.
-	 * 
+	 *
 	 * setNumLabels(0) will disable labels.
-	 * 
+	 *
 	 * @param numLabels
 	 *            the number of labels to show
 	 */
@@ -685,17 +720,17 @@ public class SliderBar extends FocusPanel implements
 	 * Set the number of ticks to show on the line. A tick is a vertical line
 	 * that represents a division of the overall line. Use this method to enable
 	 * ticks.
-	 * 
+	 *
 	 * If you set the number of ticks equal to the total range divided by the
 	 * step size, you will get a properly aligned "jumping" effect where the
 	 * knob jumps between ticks.
-	 * 
+	 *
 	 * Note that the number of ticks displayed will be one more than the number
 	 * you specify, so specify 1 tick to show ticks on either end of the line.
 	 * In other words, numTicks is really the number of slots between the ticks.
-	 * 
+	 *
 	 * setNumTicks(0) will disable ticks.
-	 * 
+	 *
 	 * @param numTicks
 	 *            the number of ticks to show
 	 */
@@ -706,7 +741,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Set the step size.
-	 * 
+	 *
 	 * @param stepSize
 	 *            the current value
 	 */
@@ -717,30 +752,30 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Shift to the left (smaller value).
-	 * 
+	 *
 	 * @param numSteps
 	 *            the number of steps to shift
 	 */
-	public void shiftLeft(int numSteps) {
+	public void shiftDown(int numSteps) {
 		setCurrentValue(getCurrentValue() - numSteps * stepSize);
 	}
 
 	/**
 	 * Shift to the right (greater value).
-	 * 
+	 *
 	 * @param numSteps
 	 *            the number of steps to shift
 	 */
-	public void shiftRight(int numSteps) {
+	public void shiftUp(int numSteps) {
 		setCurrentValue(getCurrentValue() + numSteps * stepSize);
 	}
 
 	/**
 	 * Format the label to display above the ticks
-	 * 
+	 *
 	 * Override this method in a subclass to customize the format. By default,
 	 * this method returns the integer portion of the value.
-	 * 
+	 *
 	 * @param value
 	 *            the value at the label
 	 * @return the text to put in the label
@@ -756,7 +791,7 @@ public class SliderBar extends FocusPanel implements
 	/**
 	 * Get the percentage of the knob's position relative to the size of the
 	 * line. The return value will be between 0.0 and 1.0.
-	 * 
+	 *
 	 * @return the current percent complete
 	 */
 	protected double getKnobPercent() {
@@ -776,8 +811,12 @@ public class SliderBar extends FocusPanel implements
 	@Override
 	protected void onLoad() {
 		// Reset the position attribute of the parent element
-		DOM.setStyleAttribute(getElement(), "position", "relative");
+		DOM.setStyleAttribute(getElement(), "position", getPositioning());
 		redraw();
+	}
+
+	private String getPositioning() {
+		return absolutePositioning ? "absolute" : "relative";
 	}
 
 	@Override
@@ -794,17 +833,28 @@ public class SliderBar extends FocusPanel implements
 		}
 		// Move the knob to the correct position
 		Element knobElement = knobImage.getElement();
-		int lineWidth = DOM.getElementPropertyInt(lineElement, "offsetWidth");
-		int knobWidth = DOM.getElementPropertyInt(knobElement, "offsetWidth");
-		int knobLeftOffset = (int) (lineLeftOffset
-				+ (getKnobPercent() * lineWidth) - (knobWidth / 2));
-		knobLeftOffset = Math.min(knobLeftOffset, lineLeftOffset + lineWidth
-				- (knobWidth / 2) - 1);
-		DOM.setStyleAttribute(knobElement, "left", knobLeftOffset + "px");
+		int lineMajorDimension = getLineMajorDimension();
+		int knobMajorDimension = getKnobMajorDimension();
+		int knobPreOffset = (int) (linePreOffset
+				+ (getKnobPercent() * lineMajorDimension) - (knobMajorDimension / 2));
+		knobPreOffset = Math.min(knobPreOffset, linePreOffset
+				+ lineMajorDimension - (knobMajorDimension / 2) - 1);
+		DOM.setStyleAttribute(knobElement, getMajorCssPreProperty(),
+				knobPreOffset + "px");
+	}
+
+	private int getLineMajorDimension() {
+		return DOM.getElementPropertyInt(lineElement, vertical ? "offsetHeight"
+				: "offsetWidth");
+	}
+
+	private int getKnobMajorDimension() {
+		return DOM.getElementPropertyInt(knobImage.getElement(),
+				vertical ? "offsetHeight" : "offsetWidth");
 	}
 
 	/**
-	 * Draw the labels along the line.
+	 * Draw the labels along the line. not dimension-sensitive yet
 	 */
 	private void drawLabels() {
 		// Abort if not attached
@@ -812,7 +862,7 @@ public class SliderBar extends FocusPanel implements
 			return;
 		}
 		// Draw the labels
-		int lineWidth = DOM.getElementPropertyInt(lineElement, "offsetWidth");
+		int lineMajorDimension = getLineMajorDimension();
 		if (numLabels > 0) {
 			// Create the labels or make them visible
 			for (int i = 0; i <= numLabels; i++) {
@@ -844,11 +894,12 @@ public class SliderBar extends FocusPanel implements
 				// Position the label and make it visible
 				int labelWidth = DOM
 						.getElementPropertyInt(label, "offsetWidth");
-				int labelLeftOffset = lineLeftOffset
-						+ (lineWidth * i / numLabels) - (labelWidth / 2);
-				labelLeftOffset = Math.min(labelLeftOffset, lineLeftOffset
-						+ lineWidth - labelWidth);
-				labelLeftOffset = Math.max(labelLeftOffset, lineLeftOffset);
+				int labelLeftOffset = linePreOffset
+						+ (lineMajorDimension * i / numLabels)
+						- (labelWidth / 2);
+				labelLeftOffset = Math.min(labelLeftOffset, linePreOffset
+						+ lineMajorDimension - labelWidth);
+				labelLeftOffset = Math.max(labelLeftOffset, linePreOffset);
 				DOM.setStyleAttribute(label, "left", labelLeftOffset + "px");
 				DOM.setStyleAttribute(label, "visibility", "visible");
 			}
@@ -872,7 +923,7 @@ public class SliderBar extends FocusPanel implements
 			return;
 		}
 		// Draw the ticks
-		int lineWidth = DOM.getElementPropertyInt(lineElement, "offsetWidth");
+		int lineMajorDimension = getLineMajorDimension();
 		if (numTicks > 0) {
 			// Create the ticks or make them visible
 			for (int i = 0; i <= numTicks; i++) {
@@ -897,10 +948,10 @@ public class SliderBar extends FocusPanel implements
 				DOM.setStyleAttribute(tick, "visibility", "hidden");
 				DOM.setStyleAttribute(tick, "display", "");
 				int tickWidth = DOM.getElementPropertyInt(tick, "offsetWidth");
-				int tickLeftOffset = lineLeftOffset
-						+ (lineWidth * i / numTicks) - (tickWidth / 2);
-				tickLeftOffset = Math.min(tickLeftOffset, lineLeftOffset
-						+ lineWidth - tickWidth);
+				int tickLeftOffset = linePreOffset
+						+ (lineMajorDimension * i / numTicks) - (tickWidth / 2);
+				tickLeftOffset = Math.min(tickLeftOffset, linePreOffset
+						+ lineMajorDimension - tickWidth);
 				DOM.setStyleAttribute(tick, "left", tickLeftOffset + "px");
 				DOM.setStyleAttribute(tick, "visibility", "visible");
 			}
@@ -922,8 +973,7 @@ public class SliderBar extends FocusPanel implements
 	 */
 	private void highlight() {
 		String styleName = getStylePrimaryName();
-		DOM.setElementProperty(getElement(), "className", styleName + " "
-				+ styleName + "-focused");
+		setStyleName(styleName + "-focused", true);
 	}
 
 	/**
@@ -936,24 +986,26 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Slide the knob to a new location.
-	 * 
+	 *
 	 * @param event
 	 *            the mouse event
 	 */
 	private void slideKnob(Event event) {
-		int x = DOM.eventGetClientX(event);
-		if (x > 0) {
-			int lineWidth = DOM.getElementPropertyInt(lineElement,
-					"offsetWidth");
-			int lineLeft = DOM.getAbsoluteLeft(lineElement);
-			double percent = (double) (x - lineLeft) / lineWidth * 1.0;
+		int d = vertical ? DOM.eventGetClientY(event) + Window.getScrollTop()
+				: DOM.eventGetClientX(event) + Window.getScrollLeft();
+		if (d > 0) {
+			int lineMajorDimension = getLineMajorDimension();
+			int linePreOffset = vertical ? DOM.getAbsoluteTop(lineElement)
+					: DOM.getAbsoluteLeft(lineElement);
+			double percent = (double) (d - linePreOffset) / lineMajorDimension
+					* 1.0;
 			setCurrentValue(getTotalRange() * percent + minValue, true);
 		}
 	}
 
 	/**
 	 * Start sliding the knob.
-	 * 
+	 *
 	 * @param highlight
 	 *            true to change the style
 	 * @param fireEvent
@@ -972,7 +1024,7 @@ public class SliderBar extends FocusPanel implements
 
 	/**
 	 * Stop sliding the knob.
-	 * 
+	 *
 	 * @param unhighlight
 	 *            true to change the style
 	 * @param fireEvent
@@ -992,7 +1044,7 @@ public class SliderBar extends FocusPanel implements
 	 * Unhighlight this widget.
 	 */
 	private void unhighlight() {
-		DOM.setElementProperty(getElement(), "className", getStylePrimaryName());
+		setStyleName(getStylePrimaryName() + "-focused", false);
 	}
 
 	@Override
@@ -1002,10 +1054,10 @@ public class SliderBar extends FocusPanel implements
 	}
 
 	public boolean isLineAlignedLeft() {
-		return this.lineAlignedLeft;
+		return this.lineAlignedPre;
 	}
 
 	public void setLineAlignedLeft(boolean lineAlignedLeft) {
-		this.lineAlignedLeft = lineAlignedLeft;
+		this.lineAlignedPre = lineAlignedLeft;
 	}
 }
