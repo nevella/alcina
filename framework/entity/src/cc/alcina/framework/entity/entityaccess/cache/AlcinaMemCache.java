@@ -1720,7 +1720,9 @@ public class AlcinaMemCache {
 	}
 
 	class LaterLookup {
-		Map<Class, List<LaterItem>> lookups = new LinkedHashMap<Class, List<LaterItem>>();
+		Multimap<Class, List<LaterItem>> lookups = new Multimap<Class, List<LaterItem>>();
+
+		Multimap<Class, List<LaterItem>> initialDebugCopy = null;
 
 		void add(HasIdAndLocalId target, PropertyDescriptor pd,
 				HasIdAndLocalId source) {
@@ -1745,6 +1747,12 @@ public class AlcinaMemCache {
 
 		synchronized void resolve() {
 			try {
+				if (initialDebugCopy == null) {
+					initialDebugCopy = new Multimap<Class, List<LaterItem>>();
+					if (lookups.itemSize() < 1000000) {
+						initialDebugCopy = lookups.copy();
+					}
+				}
 				List<Callable> tasks = new ArrayList<Callable>();
 				Map<Class, Integer> resolveSizeLookup = new LinkedHashMap<Class, Integer>();
 				for (Class clazz : lookups.keySet()) {

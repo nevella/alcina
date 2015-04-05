@@ -446,6 +446,15 @@ public class SliderBar extends FocusPanel implements
 		return enabled;
 	}
 
+	private boolean keyEventsEnabled=true;
+	public boolean isKeyEventsEnabled() {
+		return this.keyEventsEnabled;
+	}
+
+	public void setKeyEventsEnabled(boolean keyEventsEnabled) {
+		this.keyEventsEnabled = keyEventsEnabled;
+	}
+
 	/**
 	 * Listen for events that will move the knob.
 	 *
@@ -487,7 +496,7 @@ public class SliderBar extends FocusPanel implements
 				break;
 			// Shift left or right on key press
 			case Event.ONKEYDOWN:
-				if (!slidingKeyboard) {
+				if (!slidingKeyboard&&isKeyEventsEnabled()) {
 					int multiplier = 1;
 					if (DOM.eventGetCtrlKey(event)) {
 						multiplier = (int) (getTotalRange() / stepSize / 10);

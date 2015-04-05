@@ -1,6 +1,10 @@
 package cc.alcina.framework.jvmclient.persistence;
 
+import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -178,14 +182,28 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 				ResultSet rs = stmt.executeQuery(sql);
 				StringMap getResult = new StringMap();
 				while (rs.next()) {
-					getResult.put(rs.getString("key_"), rs.getString("value_"));
+					String value = getValueClob(rs);
+					getResult.put(rs.getString("key_"), value);
 				}
 				close(stmt);
 				valueCallback.onSuccess(getResult);
-			} catch (SQLException e) {
+			} catch (Exception e) {
 				valueCallback.onFailure(e);
 			}
 		}
+	}
+
+	protected String getValueClob(ResultSet rs) throws SQLException,
+			IOException {
+		String value = null;
+		Clob clob = rs.getClob("value_");
+		if (clob != null) {
+			Reader reader = clob.getCharacterStream();
+			char[] cbuf = new char[(int) clob.length()];
+			reader.read(cbuf);
+			value = String.valueOf(cbuf);
+		}
+		return value;
 	}
 
 	class GetIdRageHandler {
@@ -240,11 +258,11 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 				ResultSet rs = stmt.executeQuery(sql);
 				Map<Integer, String> result = new LinkedHashMap<Integer, String>();
 				while (rs.next()) {
-					result.put(rs.getInt("id"), rs.getString("value_"));
+					result.put(rs.getInt("id"), getValueClob(rs));
 				}
 				close(stmt);
 				valueCallback.onSuccess(result);
-			} catch (SQLException e) {
+			} catch (Exception e) {
 				valueCallback.onFailure(e);
 			}
 		}
@@ -279,7 +297,8 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 									"update %s set  value_=? where id=?",
 									tableName);
 							stmt = conn.prepareStatement(sql);
-							stmt.setCharacterStream(1, new StringReader(kv.getValue()));
+							stmt.setCharacterStream(1,
+									new StringReader(kv.getValue()));
 							stmt.setInt(2, id);
 							stmt.executeUpdate();
 						}
