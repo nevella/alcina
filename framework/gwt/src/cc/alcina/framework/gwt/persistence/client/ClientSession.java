@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -29,12 +29,12 @@ import com.google.gwt.user.client.Window.ClosingHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 /**
- * 
+ *
  * @author nick@alcina.cc
  *         <p>
  *         Basic session support for the (possibly offline) client
  *         </p>
- * 
+ *
  *         Logic:
  *         <ul>
  *         <li>Each client (browser "process", pace chrome) has a storage
@@ -46,7 +46,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
  *         per session - saves on wear'n'tear</li>
  *         <li>Tabs communicate via cookies n timers</li>
  *         </ul>
- * 
+ *
  */
 public class ClientSession implements ClosingHandler, RegistrableService {
 	public static final int KEEP_ALIVE_TIMER = 1000;
@@ -103,7 +103,7 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 			if (tabId == null) {
 				if (active) {
 					Map<Long, Long> m = parseCookie();
-					Long maxTabId = m.isEmpty() ? 0 : CommonUtils.last(m
+					Long maxTabId = m.isEmpty() ? 0l : CommonUtils.last(m
 							.keySet().iterator());
 					tabId = maxTabId + 1;
 				} else {
