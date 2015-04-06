@@ -201,16 +201,16 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		if (clob != null) {
 			Reader reader = clob.getCharacterStream();
 			char[] cbuf = new char[8192];
-			StringWriter sw=new StringWriter();
+			StringBuilder sb=new StringBuilder((int) clob.length());
 			while(true){
 				int read = reader.read(cbuf);
 				if(read==-1){
 					break;
 				}
-				sw.append(new String(cbuf,0,read));
+				sb.append(new String(cbuf,0,read));
 			}
 			reader.close();
-			value = sw.toString();
+			value = sb.toString();
 		}
 		return value;
 	}
@@ -319,9 +319,11 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 								tableName);
 						stmt = conn.prepareStatement(sql);
 						stmt.setString(1, kv.getKey());
-						Clob clob = conn.createClob();
-						clob.setString(1, kv.getValue());
-						stmt.setClob(2, clob);
+//						Clob clob = conn.createClob();
+//						clob.setString(1, kv.getValue());
+//						stmt.setClob(2, clob);
+						stmt.setCharacterStream(2,
+								new StringReader(kv.getValue()));
 						stmt.executeUpdate();
 					}
 				}

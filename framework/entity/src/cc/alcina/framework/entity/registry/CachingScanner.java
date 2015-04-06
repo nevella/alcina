@@ -84,7 +84,7 @@ public abstract class CachingScanner {
 			ClassDataItem ignore = ignoreCache.classData
 					.get(foundItem.className);
 			if (ignore != null) {
-				if (ignore.date.after(foundItem.date)) {
+				if (ignore.date.getTime() >= foundItem.date.getTime()) {
 					outgoing.add(ignore);
 					continue;
 				}
