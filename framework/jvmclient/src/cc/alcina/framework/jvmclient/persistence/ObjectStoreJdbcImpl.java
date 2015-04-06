@@ -209,6 +209,7 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 				}
 				sw.append(new String(cbuf,0,read));
 			}
+			reader.close();
 			value = sw.toString();
 		}
 		return value;
