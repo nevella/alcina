@@ -3,6 +3,7 @@ package cc.alcina.framework.jvmclient.persistence;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -199,9 +200,16 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		Clob clob = rs.getClob("value_");
 		if (clob != null) {
 			Reader reader = clob.getCharacterStream();
-			char[] cbuf = new char[(int) clob.length()];
-			reader.read(cbuf);
-			value = String.valueOf(cbuf);
+			char[] cbuf = new char[8192];
+			StringWriter sw=new StringWriter();
+			while(true){
+				int read = reader.read(cbuf);
+				if(read==-1){
+					break;
+				}
+				sw.append(new String(cbuf,0,read));
+			}
+			value = sw.toString();
 		}
 		return value;
 	}
