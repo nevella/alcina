@@ -34,10 +34,11 @@ public class ClassDataCache implements Serializable {
 			if (md5 == null) {
 				try {
 					if (url == null) {
-						return String.valueOf(System.currentTimeMillis());
+						md5 = String.valueOf(System.currentTimeMillis());
+					} else {
+						InputStream stream = url.openStream();
+						evalMd5(stream);
 					}
-					InputStream stream = url.openStream();
-					evalMd5(stream);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
