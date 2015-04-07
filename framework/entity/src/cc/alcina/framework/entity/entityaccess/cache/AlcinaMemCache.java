@@ -1719,7 +1719,10 @@ public class AlcinaMemCache {
 		}
 	}
 
-	class LaterLookup {
+	public ArrayList debugLaterLookup(){
+		return new ArrayList(laterLookup.initialDebugCopy.entrySet());
+	}
+	public class LaterLookup {
 		Multimap<Class, List<LaterItem>> lookups = new Multimap<Class, List<LaterItem>>();
 
 		Multimap<Class, List<LaterItem>> initialDebugCopy = null;
