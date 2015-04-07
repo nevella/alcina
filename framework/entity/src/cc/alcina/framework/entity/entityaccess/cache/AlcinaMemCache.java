@@ -1719,9 +1719,10 @@ public class AlcinaMemCache {
 		}
 	}
 
-	public ArrayList debugLaterLookup(){
+	public ArrayList debugLaterLookup() {
 		return new ArrayList(laterLookup.initialDebugCopy.entrySet());
 	}
+
 	public class LaterLookup {
 		Multimap<Class, List<LaterItem>> lookups = new Multimap<Class, List<LaterItem>>();
 
@@ -1760,7 +1761,7 @@ public class AlcinaMemCache {
 				Map<Class, Integer> resolveSizeLookup = new LinkedHashMap<Class, Integer>();
 				for (Class clazz : lookups.keySet()) {
 					List<LaterItem> items = lookups.get(clazz);
-					Callable task = new ResolveRefsTask(items);
+					Callable task = new ResolveRefsTask(items, clazz);
 					resolveSizeLookup.put(clazz, items.size());
 					tasks.add(task);
 					if (warmupExecutor == null) {
@@ -1777,8 +1778,11 @@ public class AlcinaMemCache {
 		private final class ResolveRefsTask implements Callable<Void> {
 			private List<LaterItem> items;
 
-			private ResolveRefsTask(List<LaterItem> items) {
+			private Class clazz;
+
+			private ResolveRefsTask(List<LaterItem> items, Class clazz) {
 				this.items = items;
+				this.clazz = clazz;
 			}
 
 			@Override
@@ -1841,6 +1845,8 @@ public class AlcinaMemCache {
 						e.printStackTrace();
 					}
 				}
+				System.out.format("resolverefs - %s - %s\n",
+						clazz.getSimpleName(), items.size());
 				// leave the class keys at the top
 				this.items.clear();
 				return null;
