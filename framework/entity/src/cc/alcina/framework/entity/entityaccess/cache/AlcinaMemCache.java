@@ -1720,6 +1720,8 @@ public class AlcinaMemCache {
 	}
 
 	public ArrayList debugLaterLookup() {
+		laterLookup.lookups=laterLookup.initialDebugCopy;
+
 		return new ArrayList(laterLookup.initialDebugCopy.entrySet());
 	}
 
@@ -1727,6 +1729,7 @@ public class AlcinaMemCache {
 		Multimap<Class, List<LaterItem>> lookups = new Multimap<Class, List<LaterItem>>();
 
 		Multimap<Class, List<LaterItem>> initialDebugCopy = null;
+
 
 		void add(HasIdAndLocalId target, PropertyDescriptor pd,
 				HasIdAndLocalId source) {
@@ -1763,10 +1766,11 @@ public class AlcinaMemCache {
 					List<LaterItem> items = lookups.get(clazz);
 					Callable task = new ResolveRefsTask(items, clazz);
 					resolveSizeLookup.put(clazz, items.size());
-					tasks.add(task);
-					if (warmupExecutor == null) {
+//					tasks.add(task);
+//					if (warmupExecutor == null) {
+					//disabled - trying synchronous to see if that fixes occasional issues
 						task.call();
-					}
+//					}
 				}
 				notifyDebugMap(resolveSizeLookup);
 				invokeAllWithThrow((List) tasks);
