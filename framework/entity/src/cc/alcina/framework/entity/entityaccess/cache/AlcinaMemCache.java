@@ -1846,8 +1846,8 @@ public class AlcinaMemCache {
 					}
 				}
 				if (initialising) {
-					System.out.format("resolverefs - %s - %s\n",
-							clazz.getSimpleName(), items.size());
+//					System.out.format("resolverefs - %s - %s\n",
+//							clazz.getSimpleName(), items.size());
 				}
 				// leave the class keys at the top
 				this.items.clear();
