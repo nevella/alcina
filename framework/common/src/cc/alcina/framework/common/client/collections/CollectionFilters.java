@@ -388,6 +388,19 @@ public class CollectionFilters {
 		}
 	}
 
+	public static class ContainsFilter<T> implements CollectionFilter<T> {
+		private Collection<T> collection;
+
+		public ContainsFilter(Collection<T> collection) {
+			this.collection = collection;
+		}
+
+		@Override
+		public boolean allow(T t) {
+			return collection.contains(t);
+		}
+	}
+
 	public static <T extends PublicCloneable<T>> List<T> clone(List<T> source) {
 		return convert(source, new CloneProjector<T>());
 	}
