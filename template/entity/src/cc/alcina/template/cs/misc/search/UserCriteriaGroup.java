@@ -7,26 +7,33 @@ import cc.alcina.framework.common.client.search.AbstractUserCriteriaGroup;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 @BeanInfo(displayNamePropertyName = "displayName")
-@PermissibleChildClasses({UserCriterion.class})
+@PermissibleChildClasses({ UserCriterion.class })
 public class UserCriteriaGroup extends AbstractUserCriteriaGroup<UserCriterion> {
-	private transient boolean restrictToCurrentUser;
+    private transient boolean restrictToCurrentUser;
 
-	public UserCriteriaGroup() {
-		super();
-		setDisplayName("User");
-	}
+    public UserCriteriaGroup() {
+        super();
+    }
 
-	public void setRestrictToCurrentUser(boolean restrictToCurrentUser) {
-		this.restrictToCurrentUser = restrictToCurrentUser;
-		if (restrictToCurrentUser) {
-			UserCriterion juc = (UserCriterion) getCriteria().iterator().next();
-			juc
-					.setUser((AlcinaTemplateUser) PermissionsManager.get()
-							.getUser());
-		}
-	}
+    @Override
+    public String getDisplayName() {
+        return "User";
+    }
 
-	public boolean isRestrictToCurrentUser() {
-		return restrictToCurrentUser;
-	}
+    public void setRestrictToCurrentUser(boolean restrictToCurrentUser) {
+        this.restrictToCurrentUser = restrictToCurrentUser;
+        if (restrictToCurrentUser) {
+            UserCriterion juc = (UserCriterion) getCriteria().iterator().next();
+            juc.setUser((AlcinaTemplateUser) PermissionsManager.get().getUser());
+        }
+    }
+
+    public boolean isRestrictToCurrentUser() {
+        return restrictToCurrentUser;
+    }
+
+    @Override
+    public Class getEntityClass() {
+        return AlcinaTemplateUser.class;
+    }
 }
