@@ -25,6 +25,7 @@
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/xercesImpl_2.9.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/entity/xercesImpl_2.9.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/jaxb-api.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/common/jaxb-api.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="common/persistence-api.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/common/persistence-api.jar" />
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="entity/javax.ejb-api-3.2.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/entity/javax.ejb-api-3.2.jar" />
 
 			</downloadable-file-list>
 		</download-libs>
