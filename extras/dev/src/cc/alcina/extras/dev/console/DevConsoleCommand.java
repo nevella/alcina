@@ -125,6 +125,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		if (forceNewLocal) {
 			connLocal = null;
 		}
+		@SuppressWarnings("resource")
 		Connection conn = remote ? connRemote : connLocal;
 		if (conn == null) {
 			Connection newConnection = null;

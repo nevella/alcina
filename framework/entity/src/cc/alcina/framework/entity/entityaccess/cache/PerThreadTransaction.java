@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
 
 @RegistryLocation(registryPoint = PerThreadTransaction.class, implementationType = ImplementationType.INSTANCE)
 public class PerThreadTransaction {
@@ -26,7 +27,6 @@ public class PerThreadTransaction {
 			beforeConsume(evt);
 			transactionTransformManager.consume(evt);
 			afterConsume(evt);
-			
 		}
 	};
 
@@ -36,11 +36,9 @@ public class PerThreadTransaction {
 	}
 
 	protected void afterConsume(DomainTransformEvent evt) {
-		
 	}
 
 	protected void beforeConsume(DomainTransformEvent evt) {
-		
 	}
 
 	public void start() {
@@ -58,9 +56,19 @@ public class PerThreadTransaction {
 			CacheListener listener, V value, Object[] path) {
 		Collection<? extends HasIdAndLocalId> perClassTransactional = (Collection<? extends HasIdAndLocalId>) transactionTransformManager.modified
 				.getCollection(listener.getListenedClass());
-		for (HasIdAndLocalId v : perClassTransactional) {
-			if (listener.matches(v, path)) {
-				return (V) v;// will always be transactional object
+		// FIXME - n^2 performance - use a per-listener threaded projection
+		// well - sorta fixed
+		if (listener instanceof BaseProjectionHasEquivalenceHash) {
+			V v = (V) ((BaseProjectionHasEquivalenceHash) listener)
+					.matchesTransactional(perClassTransactional, path);
+			if (v != null) {
+				return v;
+			}
+		} else {
+			for (HasIdAndLocalId v : perClassTransactional) {
+				if (listener.matches(v, path)) {
+					return (V) v;// will always be transactional object
+				}
 			}
 		}
 		if (value == null) {
@@ -87,7 +95,6 @@ public class PerThreadTransaction {
 		TransformManager.get().removeDomainTransformListener(transformListener);
 	}
 
-	
 	public Collection<? extends Object> rawValues(Class clazz,
 			DetachedEntityCache cache) {
 		Set values = cache.values(clazz);

@@ -15,10 +15,17 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class ServerTransformManagerSupport {
+	public static final String CONTEXT_NO_ASSOCIATION_CHECK = ServerTransformManagerSupport.class
+			.getName() + ".CONTEXT_NO_ASSOCIATION_CHECK";
+
 	public void removeAssociations(HasIdAndLocalId hili) {
+		if (LooseContext.is(CONTEXT_NO_ASSOCIATION_CHECK)) {
+			return;
+		}
 		try {
 			PropertyDescriptor[] pds = Introspector
 					.getBeanInfo(hili.getClass()).getPropertyDescriptors();
@@ -77,7 +84,8 @@ public class ServerTransformManagerSupport {
 					HasIdAndLocalId hiliTarget = (HasIdAndLocalId) pd
 							.getReadMethod().invoke(hili,
 									CommonUtils.EMPTY_OBJECT_ARRAY);
-					if (hiliTarget != null&&!(hiliTarget instanceof IUser)&&!(hiliTarget instanceof IGroup)) {
+					if (hiliTarget != null && !(hiliTarget instanceof IUser)
+							&& !(hiliTarget instanceof IGroup)) {
 						TransformManager.get().registerDomainObject(hiliTarget);
 						pd.getWriteMethod().invoke(hili, new Object[] { null });
 					}

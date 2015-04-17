@@ -14,21 +14,23 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
+import cc.alcina.framework.common.client.util.HasEquivalenceHashMap;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 
 /**
  * Note - these lookups should be (normally) of type x/y/z/z so we have
  * (effectively) a multikeymultiset:
- * 
+ *
  * e.g. map article by overview year - depth 3, overview/year/article/article.
  * otherwise we have no multiplesss
- * 
+ *
  * but -- if it's a one->many (e.g. just an existence map like
  * article.disabledatcourtrequest), use id->article
- * 
+ *
  * @author nreddel@barnet.com.au
- * 
+ *
  * @param <T>
  */
 public abstract class BaseProjection<T extends HasIdAndLocalId> implements
@@ -40,6 +42,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	public <V> V first(Object... objects) {
 		return (V) CommonUtils.first(items(objects));
 	}
+
+
 
 	public <V> V get(Object... objects) {
 		V nonTransactional = (V) lookup.get(objects);
@@ -124,6 +128,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		return true;
 	}
 
+
+
 	// count:=-1 --> all
 	public Collection<T> order(int count, CollectionFilter<T> filter,
 			boolean targetsOfFinalKey, boolean reverse, Object... objects) {
@@ -141,7 +147,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		}
 		return result;
 	}
-	
+
 	@Override
 	public void remove(T t) {
 		Object[] values = project(t);

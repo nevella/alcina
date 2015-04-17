@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -56,6 +57,31 @@ public class CommonUtils {
 		for (Class std : stds) {
 			stdClassMap.put(std.getName(), std);
 		}
+	}
+
+	public static int hash(Object... values) {
+		return Arrays.hashCode(values);
+	}
+
+	public static boolean equals(Object... objects) {
+		if (objects.length % 2 != 0) {
+			throw new RuntimeException("Array length must be divisible by two");
+		}
+		for (int i = 0; i < objects.length; i += 2) {
+			Object o1 = objects[i];
+			Object o2 = objects[i + 1];
+			if (o1 == null && o2 == null) {
+			} else {
+				if (o1 == null || o2 == null) {
+					return false;
+				} else {
+					if (!o1.equals(o2)) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
@@ -727,7 +753,8 @@ public class CommonUtils {
 		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
 		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
 		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
-		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH, AU_SHORT_MONTH_NO_DAY
+		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
+		AU_SHORT_MONTH_NO_DAY
 	}
 
 	public static String tabify(String value, int charsPerLine, int tabCount) {

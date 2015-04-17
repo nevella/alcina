@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.action.DtrSimpleAdminPersistenceAction;
 import cc.alcina.framework.servlet.CommonRemoteServletProvider;
@@ -20,14 +21,17 @@ import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 public class DtrSimpleAdminPersistenceHandler extends
 		BaseRemoteActionPerformer<DtrSimpleAdminPersistenceAction> {
 	public void commit(DeltaApplicationRecord dar) {
+		int chunkSize = ResourceUtilities.getInteger(
+				DtrSimpleAdminPersistenceHandler.class, "chunkSize", 9);
+		commit(dar, chunkSize);
+	}
+
+	public void commit(DeltaApplicationRecord dar, int chunkSize) {
 		try {
 			jobStarted();
-			DomainTransformRequest rq = new DomainTransformRequest();
-			rq.fromString(dar.getText());
-			int chunkSize = ResourceUtilities.getInteger(
-					DtrSimpleAdminPersistenceHandler.class, "chunkSize",
-					99999999);
-			int size = rq.getEvents().size();
+			DomainTransformRequest fullRq = new DomainTransformRequest();
+			fullRq.fromString(dar.getText());
+			int size = fullRq.getEvents().size();
 			if (size > chunkSize) {
 				getJobTracker().setItemCount(size / chunkSize + 1);
 				int rqIdCounter = dar.getRequestId();
@@ -42,10 +46,11 @@ public class DtrSimpleAdminPersistenceHandler extends
 							dar.getClientInstanceAuth(),
 							DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
 							dar.getProtocolVersion(), dar.getTag());
-					rq = new DomainTransformRequest();
-					rq.fromString(dar.getText());
-					List<DomainTransformEvent> subList = rq.getEvents()
-							.subList(idx, Math.min(idx + chunkSize, size));
+					DomainTransformRequest rq = new DomainTransformRequest();
+					IntPair range = new IntPair(idx, Math.min(idx + chunkSize,
+							size));
+					List<DomainTransformEvent> subList = fullRq.getEvents()
+							.subList(range.i1, range.i2);
 					rq.setRequestId(chunk.getRequestId());
 					rq.setEvents(new ArrayList<DomainTransformEvent>(subList));
 					chunk.setText(rq.toString());
@@ -54,8 +59,11 @@ public class DtrSimpleAdminPersistenceHandler extends
 							.persistOfflineTransforms(
 									Arrays.asList(new DeltaApplicationRecord[] { chunk }),
 									logger, false, true);
-					updateJob("written chunk - writing chunk from "
-							+ (idx + chunkSize));
+					String message = String.format(
+							"written chunk - writing chunk %s of %s", range,
+							size);
+					System.out.println(message);
+					updateJob(message);
 				}
 			} else {
 				dar.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);

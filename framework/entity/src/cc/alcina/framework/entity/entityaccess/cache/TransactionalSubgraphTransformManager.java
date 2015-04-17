@@ -131,8 +131,16 @@ public class TransactionalSubgraphTransformManager extends
 			}
 		} else {
 			modified.mapObject(obj);
+			mapObjectToCachingProjections(obj);
 		}
 		super.consume(event);
+	}
+
+	private void mapObjectToCachingProjections(HasIdAndLocalId obj) {
+		for (BaseProjectionHasEquivalenceHash listener : AlcinaMemCache.get().cachingProjections
+				.getAndEnsure(obj.getClass())) {
+			listener.projectHash(obj);
+		}
 	}
 
 	@Override
@@ -152,10 +160,13 @@ public class TransactionalSubgraphTransformManager extends
 		return object;
 	}
 
+	static boolean debugSetPropertyValueStackDepth = false;
+
 	@Override
 	public void setPropertyValue(Object bean, String propertyName, Object value) {
 		try {
-			if (Thread.currentThread().getStackTrace().length > 80) {
+			if (debugSetPropertyValueStackDepth
+					&& Thread.currentThread().getStackTrace().length > 80) {
 				int j = 3;
 			}
 			SEUtilities.setPropertyValue(bean, propertyName, value);

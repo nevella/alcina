@@ -75,6 +75,8 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
+import cc.alcina.framework.entity.entityaccess.CommonPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
@@ -675,7 +677,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 		listeningTo = new LinkedHashSet<SourcesPropertyChangeEvents>();
 		LinkedHashSet<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		if (!pendingTransforms.isEmpty()) {
+		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()) {
 			System.out
 					.println("**WARNING ** TLTM - cleared (but still pending) transforms:\n "
 							+ pendingTransforms);

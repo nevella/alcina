@@ -121,7 +121,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private static long eventIdCounter = 0;
 
-	protected static SequentialIdGenerator localIdGenerator =new SequentialIdGenerator();
+	protected static SequentialIdGenerator localIdGenerator = new SequentialIdGenerator();
 
 	final Set<DomainTransformEvent> transforms = new LinkedHashSet<DomainTransformEvent>();
 
@@ -1201,6 +1201,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void removeTransformsForObjects(Collection c) {
 		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN).clone();
+		if (!(c instanceof Set)) {
+			c = new HashSet(c);
+		}
 		for (DomainTransformEvent dte : trs) {
 			if (c.contains(dte.provideSourceOrMarker())
 					|| c.contains(dte.getNewValue())
@@ -1690,4 +1693,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			deleteObject(hili, true);
 		}
 	}
+
+
 }

@@ -44,6 +44,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.sql.DataSource;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -91,7 +92,6 @@ import cc.alcina.framework.entity.entityaccess.TransformPersister;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
 import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.util.SqlUtils;
 
 import com.google.gwt.event.shared.UmbrellaException;
 
@@ -155,7 +155,7 @@ public class AlcinaMemCache {
 
 	private Map<PropertyDescriptor, JoinTable> joinTables;
 
-	private Map<Class, List<PropertyDescriptor>> descriptors;
+	private Map<Class, List<PdOperator>> descriptors;
 
 	// class,pName
 	private UnsortedMultikeyMap<PropertyDescriptor> manyToOneRev;
@@ -164,7 +164,7 @@ public class AlcinaMemCache {
 
 	private UnsortedMultikeyMap<PropertyDescriptor> memCacheColumnRev;
 
-	private Connection conn;
+	private Connection postInitConn;
 
 	private Multimap<Class, List<ColumnDescriptor>> columnDescriptors;
 
@@ -268,6 +268,8 @@ public class AlcinaMemCache {
 			2);
 
 	private ExecutorService warmupExecutor;
+
+	private DataSource dataSource;
 
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager
@@ -375,8 +377,8 @@ public class AlcinaMemCache {
 		return (T) findRaw(t.getClass(), t.getId());
 	}
 
-	public Iterable<Object[]> getData(Class clazz, String sqlFilter)
-			throws SQLException {
+	public Iterable<Object[]> getData(Connection conn, Class clazz,
+			String sqlFilter) throws SQLException {
 		ConnResults result = new ConnResults(conn, clazz,
 				columnDescriptors.get(clazz), sqlFilter);
 		return result;
@@ -456,7 +458,6 @@ public class AlcinaMemCache {
 			if (sublock != null) {
 				sublock(sublock, false);
 			}
-			releaseConnectionLocks();
 		}
 	}
 
@@ -510,19 +511,6 @@ public class AlcinaMemCache {
 		return cache.notContained(ids, clazz);
 	}
 
-	public <H extends HasIdAndLocalId> List<H> rawForSql(Class<H> clazz,
-			String fieldName, String sqlFormatString, Object... objects)
-			throws SQLException {
-		String sql = String.format(sqlFormatString, objects);
-		Statement stmt = conn.createStatement();
-		List<H> result = new ArrayList<H>();
-		Set<Long> ids = SqlUtils.toIdList(stmt, sql, fieldName);
-		for (Long id : ids) {
-			result.add(cache.get(clazz, id));
-		}
-		return result;
-	}
-
 	public void registerForTesting(HasIdAndLocalId hili) {
 		if (!AppPersistenceBase.isTest()) {
 			throw new RuntimeException("Only when testing...");
@@ -546,7 +534,7 @@ public class AlcinaMemCache {
 	}
 
 	public void setConn(Connection conn) {
-		this.conn = conn;
+		this.postInitConn = conn;
 	}
 
 	/**
@@ -596,32 +584,33 @@ public class AlcinaMemCache {
 		maybeLogLock("unlock", write);
 	}
 
-	public void warmup(Connection conn, CacheDescriptor cacheDescriptor,
+	private Connection getWarmupConnection() throws Exception {
+		Connection conn = dataSource.getConnection();
+		conn.setReadOnly(true);
+		conn.setAutoCommit(false);
+		originalTransactionIsolation = conn.getTransactionIsolation();
+		try {
+			conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+		} catch (Exception e) {
+			// postgres patch
+			if (CommonUtils.nullToEmpty(e.getMessage()).toLowerCase()
+					.contains("cannot use serializable mode in a hot standby")) {
+				conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+			} else {
+				throw e;
+			}
+		}
+		return conn;
+	}
+
+	public void warmup(DataSource dataSource, CacheDescriptor cacheDescriptor,
 			ThreadPoolExecutor warmupExecutor) {
-		this.conn = conn;
+		this.dataSource = dataSource;
 		this.cacheDescriptor = cacheDescriptor;
 		this.warmupExecutor = warmupExecutor;
 		try {
-			conn.setReadOnly(true);
-			conn.setAutoCommit(false);
-			originalTransactionIsolation = conn.getTransactionIsolation();
-			try {
-				conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-			} catch (Exception e) {
-				// postgres patch
-				if (CommonUtils
-						.nullToEmpty(e.getMessage())
-						.toLowerCase()
-						.contains(
-								"cannot use serializable mode in a hot standby")) {
-					conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-				} else {
-					throw e;
-				}
-			}
-			warmup0();
+			this.warmup0();
 			initialised = true;
-			releaseConnectionLocks();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -781,8 +770,13 @@ public class AlcinaMemCache {
 			String sql = String.format("select %s, %s from %s;",
 					joinTable.joinColumns()[0].name(), targetFieldSql,
 					joinTableName);
+			Connection conn = getConn();
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
+			PdOperator pdFwd = ensurePdOperator(pd, pd.getReadMethod()
+					.getDeclaringClass());
+			PdOperator pdRev = ensurePdOperator(rev, rev.getReadMethod()
+					.getDeclaringClass());
 			while (rs.next()) {
 				HasIdAndLocalId src = (HasIdAndLocalId) cache.get(
 						declaringClass, rs.getLong(1));
@@ -792,24 +786,69 @@ public class AlcinaMemCache {
 							.get(rev.getReadMethod().getDeclaringClass(),
 									rs.getLong(2));
 					assert tgt != null;
-					laterLookup.add(tgt, pd, src);
-					laterLookup.add(src, rev, tgt);
+					laterLookup.add(tgt, pdFwd, src);
+					laterLookup.add(src, pdRev, tgt);
 				} else {
 					joinHandler.injectValue(rs, src);
 				}
 			}
+			stmt.close();
+			releaseConn(conn);
 			MetricLogging.get().end(joinTableName, metricLogger);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		} finally {
-			releaseConnectionLocks();
+		}
+	}
+
+	private void releaseConn(Connection conn) throws Exception {
+		if (initialising) {
+			releaseWarmupConnection(conn);
+		}
+	}
+
+	class PdOperator {
+		Method readMethod;
+
+		ManyToMany manyToMany;
+
+		ManyToOne manyToOne;
+
+		JoinTable joinTable;
+
+		OneToMany oneToMany;
+
+		OneToOne oneToOne;
+
+		Method writeMethod;
+
+		PropertyDescriptor pd;
+
+		String name;
+
+		Field field;
+
+		Class clazz;
+
+		public PdOperator(PropertyDescriptor pd, Class clazz) {
+			this.pd = pd;
+			this.clazz = clazz;
+			this.field = getDescriptorField(clazz, pd.getName());
+			this.name = pd.getName();
+			this.readMethod = pd.getReadMethod();
+			this.writeMethod = pd.getWriteMethod();
+			this.manyToMany = readMethod.getAnnotation(ManyToMany.class);
+			this.manyToOne = readMethod.getAnnotation(ManyToOne.class);
+			this.joinTable = readMethod.getAnnotation(JoinTable.class);
+			this.oneToMany = readMethod.getAnnotation(OneToMany.class);
+			this.oneToOne = readMethod.getAnnotation(OneToOne.class);
 		}
 	}
 
 	private List<HasIdAndLocalId> loadTable0(Class clazz, String sqlFilter,
 			ClassIdLock sublock) throws Exception {
-		Iterable<Object[]> results = getData(clazz, sqlFilter);
-		List<PropertyDescriptor> pds = descriptors.get(clazz);
+		Connection conn = getConn();
+		Iterable<Object[]> results = getData(conn, clazz, sqlFilter);
+		List<PdOperator> pds = descriptors.get(clazz);
 		List<HasIdAndLocalId> loaded = new ArrayList<HasIdAndLocalId>();
 		laterLookup.prepareClass(clazz);
 		for (Object[] objects : results) {
@@ -819,21 +858,20 @@ public class AlcinaMemCache {
 			}
 			ensureModificationChecker(hili);
 			for (int i = 0; i < objects.length; i++) {
-				PropertyDescriptor pd = pds.get(i);
-				Method rm = pd.getReadMethod();
-				ManyToOne manyToOne = rm.getAnnotation(ManyToOne.class);
-				OneToOne oneToOne = rm.getAnnotation(OneToOne.class);
-				if (manyToOne != null || oneToOne != null) {
+				PdOperator pdOperator = pds.get(i);
+				Method rm = pdOperator.readMethod;
+				if (pdOperator.manyToOne != null || pdOperator.oneToOne != null) {
 					Long id = (Long) objects[i];
 					if (id != null) {
-						laterLookup.add(id, pd, hili);
+						laterLookup.add(id, pdOperator, hili);
 					}
 				} else {
-					pd.getWriteMethod().invoke(hili, objects[i]);
+					pdOperator.field.set(hili, objects[i]);
 				}
 			}
 			cache.put(hili);
 		}
+		releaseConn(conn);
 		return loaded;
 	}
 
@@ -878,7 +916,7 @@ public class AlcinaMemCache {
 		pds.remove(id);
 		pds.add(0, id);
 		PropertyDescriptor result = null;
-		List<PropertyDescriptor> mapped = new ArrayList<PropertyDescriptor>();
+		List<PdOperator> mapped = new ArrayList<PdOperator>();
 		descriptors.put(clazz, mapped);
 		for (PropertyDescriptor pd : pds) {
 			if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
@@ -949,8 +987,34 @@ public class AlcinaMemCache {
 			} else {
 				addColumnName(clazz, pd, pd.getPropertyType());
 			}
-			mapped.add(pd);
+			mapped.add(ensurePdOperator(pd, clazz));
 		}
+	}
+
+	private synchronized PdOperator ensurePdOperator(PropertyDescriptor pd,
+			Class clazz) {
+		if (!operators.containsKey(pd)) {
+			PdOperator operator = new PdOperator(pd, clazz);
+			operators.put(pd, operator);
+		}
+		return operators.get(pd);
+	}
+
+	Map<PropertyDescriptor, PdOperator> operators = new LinkedHashMap<PropertyDescriptor, AlcinaMemCache.PdOperator>();
+
+	private Field getDescriptorField(Class<?> clazz, String name) {
+		Class original = clazz;
+		while (clazz != null) {
+			try {
+				Field f = clazz.getDeclaredField(name);
+				f.setAccessible(true);
+				return f;
+			} catch (Exception e) {
+			}
+			clazz = clazz.getSuperclass();
+		}
+		throw new RuntimeException(String.format("Field not available - %s.%s",
+				original.getSimpleName(), name));
 	}
 
 	public UnsortedMultikeyMap<Field> getMemcacheTransientFields() {
@@ -996,7 +1060,7 @@ public class AlcinaMemCache {
 		cache = transformManager.getDetachedEntityCache();
 		transformManager.getStore().setLazyObjectLoader(backupLazyLoader);
 		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
-		descriptors = new LinkedHashMap<Class, List<PropertyDescriptor>>();
+		descriptors = new LinkedHashMap<Class, List<PdOperator>>();
 		manyToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		memCacheColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
@@ -1095,6 +1159,10 @@ public class AlcinaMemCache {
 						if (projection.isEnabled()) {
 							addValues(projection);
 						}
+						if (projection instanceof BaseProjectionHasEquivalenceHash) {
+							cachingProjections.add(
+									projection.getListenedClass(), projection);
+						}
 					}
 					return null;
 				}
@@ -1111,21 +1179,20 @@ public class AlcinaMemCache {
 				"collectLockAcquisitionPoints")) {
 			collectLockAcquisitionPoints = true;
 		}
-		releaseConnectionLocks();
 		// don't close, but indicate that everything write-y from now shd be
 		// single-threaded
+		postInitConn = dataSource.getConnection();
 		warmupExecutor = null;
 		MetricLogging.get().end("memcache-all");
 	}
 
-	protected void releaseConnectionLocks() {
+	protected void releaseWarmupConnection(Connection conn) {
 		try {
-			if (initialised) {
-				if (!conn.getAutoCommit()) {
-					conn.commit();
-					conn.setTransactionIsolation(originalTransactionIsolation);
-					conn.setAutoCommit(true);
-				}
+			if (!conn.getAutoCommit()) {
+				conn.commit();
+				conn.setTransactionIsolation(originalTransactionIsolation);
+				conn.setAutoCommit(true);
+				conn.close();
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -1460,6 +1527,10 @@ public class AlcinaMemCache {
 			PerThreadTransaction transaction = transactions.get();
 			if (transaction != null) {
 				transaction.end();
+				for (BaseProjectionHasEquivalenceHash listener : AlcinaMemCache.get().cachingProjections
+						.allItems()) {
+					listener.onTransactionEnd();
+				}
 				transactions.remove();
 				synchronized (this) {
 					activeTransactionThreadIds.remove(Thread.currentThread()
@@ -1703,6 +1774,8 @@ public class AlcinaMemCache {
 		}
 	}
 
+	Multimap<Class, List<BaseProjectionHasEquivalenceHash>> cachingProjections = new Multimap<Class, List<BaseProjectionHasEquivalenceHash>>();
+
 	class InSubgraphFilter implements CollectionFilter<DomainTransformEvent> {
 		@Override
 		public boolean allow(DomainTransformEvent o) {
@@ -1720,8 +1793,7 @@ public class AlcinaMemCache {
 	}
 
 	public ArrayList debugLaterLookup() {
-		laterLookup.lookups=laterLookup.initialDebugCopy;
-
+		laterLookup.lookups = laterLookup.initialDebugCopy;
 		return new ArrayList(laterLookup.initialDebugCopy.entrySet());
 	}
 
@@ -1730,9 +1802,7 @@ public class AlcinaMemCache {
 
 		Multimap<Class, List<LaterItem>> initialDebugCopy = null;
 
-
-		void add(HasIdAndLocalId target, PropertyDescriptor pd,
-				HasIdAndLocalId source) {
+		void add(HasIdAndLocalId target, PdOperator pd, HasIdAndLocalId source) {
 			List<LaterItem> list = lookups.get(source.getClass());
 			synchronized (list) {
 				list.add(new LaterItem(target, pd, source));
@@ -1745,7 +1815,7 @@ public class AlcinaMemCache {
 			}
 		}
 
-		void add(long id, PropertyDescriptor pd, HasIdAndLocalId source) {
+		void add(long id, PdOperator pd, HasIdAndLocalId source) {
 			List<LaterItem> list = lookups.get(source.getClass());
 			synchronized (list) {
 				list.add(new LaterItem(id, pd, source));
@@ -1766,11 +1836,12 @@ public class AlcinaMemCache {
 					List<LaterItem> items = lookups.get(clazz);
 					Callable task = new ResolveRefsTask(items, clazz);
 					resolveSizeLookup.put(clazz, items.size());
-//					tasks.add(task);
-//					if (warmupExecutor == null) {
-					//disabled - trying synchronous to see if that fixes occasional issues
-						task.call();
-//					}
+					// tasks.add(task);
+					// if (warmupExecutor == null) {
+					// disabled - trying synchronous to see if that fixes
+					// occasional issues
+					task.call();
+					// }
 				}
 				notifyDebugMap(resolveSizeLookup);
 				invokeAllWithThrow((List) tasks);
@@ -1782,6 +1853,7 @@ public class AlcinaMemCache {
 		private final class ResolveRefsTask implements Callable<Void> {
 			private List<LaterItem> items;
 
+			@SuppressWarnings("unused")
 			private Class clazz;
 
 			private ResolveRefsTask(List<LaterItem> items, Class clazz) {
@@ -1793,33 +1865,34 @@ public class AlcinaMemCache {
 			public Void call() throws Exception {
 				for (LaterItem item : this.items) {
 					try {
-						PropertyDescriptor pd = item.pd;
-						Method rm = pd.getReadMethod();
+						PdOperator pdOperator = item.pdOperator;
+						Method rm = pdOperator.readMethod;
 						long id = item.id;
-						if (joinTables.containsKey(pd)) {
-							Set set = (Set) pd.getReadMethod().invoke(
+						if (joinTables.containsKey(pdOperator.pd)) {
+							Set set = (Set) pdOperator.readMethod.invoke(
 									item.source, new Object[0]);
 							if (set == null) {
 								set = new LinkedHashSet();
-								pd.getWriteMethod().invoke(item.source,
+								pdOperator.writeMethod.invoke(item.source,
 										new Object[] { set });
 							}
 							set.add(item.target);
 						} else {
 							Object target = cache.get(
-									propertyDescriptorFetchTypes.get(pd), id);
+									propertyDescriptorFetchTypes
+											.get(pdOperator.pd), id);
 							if (target == null) {
 								System.out
 										.format("later-lookup -- missing target: %s, %s for  %s.%s #%s",
 												propertyDescriptorFetchTypes
-														.get(pd), id,
-												item.source.getClass(), pd
-														.getName(), item.source
+														.get(pdOperator.pd),
+												id, item.source.getClass(),
+												pdOperator.name, item.source
 														.getId());
 							}
-							pd.getWriteMethod().invoke(item.source, target);
+							pdOperator.writeMethod.invoke(item.source, target);
 							PropertyDescriptor targetPd = manyToOneRev.get(
-									item.source.getClass(), pd.getName());
+									item.source.getClass(), pdOperator.name);
 							if (targetPd != null && target != null) {
 								Set set = (Set) targetPd.getReadMethod()
 										.invoke(target, new Object[0]);
@@ -1831,13 +1904,13 @@ public class AlcinaMemCache {
 								set.add(item.source);
 							}
 							targetPd = oneToOneRev.get(item.source.getClass(),
-									pd.getName());
+									pdOperator.name);
 							if (targetPd != null && target != null) {
 								targetPd.getWriteMethod().invoke(target,
 										new Object[] { item.source });
 							}
 							targetPd = memCacheColumnRev.get(
-									item.source.getClass(), pd.getName());
+									item.source.getClass(), pdOperator.name);
 							if (targetPd != null && target != null) {
 								targetPd.getWriteMethod().invoke(target,
 										new Object[] { item.source });
@@ -1850,8 +1923,8 @@ public class AlcinaMemCache {
 					}
 				}
 				if (initialising) {
-//					System.out.format("resolverefs - %s - %s\n",
-//							clazz.getSimpleName(), items.size());
+					// System.out.format("resolverefs - %s - %s\n",
+					// clazz.getSimpleName(), items.size());
 				}
 				// leave the class keys at the top
 				this.items.clear();
@@ -1862,23 +1935,22 @@ public class AlcinaMemCache {
 		class LaterItem {
 			long id;
 
-			PropertyDescriptor pd;
+			PdOperator pdOperator;
 
 			HasIdAndLocalId source;
 
 			HasIdAndLocalId target;
 
-			public LaterItem(HasIdAndLocalId target, PropertyDescriptor pd,
+			public LaterItem(HasIdAndLocalId target, PdOperator pd,
 					HasIdAndLocalId source) {
 				this.target = target;
-				this.pd = pd;
+				this.pdOperator = pd;
 				this.source = source;
 			}
 
-			public LaterItem(long id, PropertyDescriptor pd,
-					HasIdAndLocalId source) {
+			public LaterItem(long id, PdOperator pd, HasIdAndLocalId source) {
 				this.id = id;
-				this.pd = pd;
+				this.pdOperator = pd;
 				this.source = source;
 			}
 		}
@@ -1994,5 +2066,21 @@ public class AlcinaMemCache {
 			}
 			tasks.clear();
 		}
+	}
+
+	private Connection getConn() {
+		if (initialising) {
+			try {
+				return getWarmupConnection();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+		return postInitConn;
+	}
+
+	public static boolean isInTransaction() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }
