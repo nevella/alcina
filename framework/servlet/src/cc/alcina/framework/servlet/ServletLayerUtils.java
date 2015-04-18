@@ -75,7 +75,7 @@ public class ServletLayerUtils {
 			return null;
 		}
 		int maxTransformChunkSize = ResourceUtilities.getInteger(
-				ServletLayerUtils.class, "maxTransformChunkSize", 5000);
+				ServletLayerUtils.class, "maxTransformChunkSize", 6000);
 		if (pendingTransformCount > maxTransformChunkSize) {
 			commitLocalTransformsInChunks(maxTransformChunkSize);
 			return null;
