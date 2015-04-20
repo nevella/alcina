@@ -23,7 +23,6 @@ import java.util.regex.Pattern;
 
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
-import cc.alcina.framework.gwt.client.util.Base64Utils;
 
 import com.google.gwt.core.ext.BadPropertyValueException;
 import com.google.gwt.core.ext.ConfigurationProperty;
@@ -35,6 +34,7 @@ import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.dev.cfg.ModuleDef;
 import com.google.gwt.dev.javac.StandardGeneratorContext;
 import com.google.gwt.dev.resource.Resource;
+import com.google.gwt.dev.util.Empty;
 import com.google.gwt.dev.util.Util;
 import com.google.gwt.resources.ext.AbstractResourceGenerator;
 import com.google.gwt.resources.ext.ResourceContext;
@@ -42,7 +42,6 @@ import com.google.gwt.resources.ext.ResourceGeneratorUtil;
 import com.google.gwt.resources.ext.SupportsGeneratorResultCaching;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.google.gwt.user.rebind.StringSourceWriter;
-import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
 
 /**
  * Provides implementations of SimpleCssResource.
@@ -141,7 +140,8 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 					continue;
 				} else {
 					if (logMissingUrlResources) {
-						String[] pub = module.getAllPublicFiles();
+						
+						String[] pub = getAllPublicFiles(module);
 						System.out.println("missing url resource - " + url);
 						for (String path : pub) {
 							if (path.contains(url)) {
@@ -184,6 +184,11 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			}
 		}
 		return toWrite;
+	}
+
+	private String[] getAllPublicFiles(ModuleDef module) {
+		module.refresh();
+		return module.getPublicResourceOracle().getPathNames().toArray(Empty.STRINGS);
 	}
 
 	/**

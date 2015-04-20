@@ -51,7 +51,9 @@ public interface HasEquivalence<T> {
 
 		public static <T extends HasEquivalenceHash> ThreeWaySetResult<T> threeWaySplit(
 				Collection<T> c1, Collection<T> c2) {
-			ThreeWaySetResult<T> result = new ThreeWaySetResult<>();
+			//ThreeWaySetResult<T> result = new ThreeWaySetResult<>();
+			//TODO - gwt/jdk8
+			ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
 			Set intersection = new LinkedHashSet<T>((List) intersection(c1, c2));
 			result.intersection = intersection;
 			result.firstOnly = new LinkedHashSet<T>((List) removeAll(c1,
