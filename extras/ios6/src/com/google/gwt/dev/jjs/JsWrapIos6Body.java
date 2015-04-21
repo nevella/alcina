@@ -63,6 +63,7 @@ public class JsWrapIos6Body {
 			JsBlock functionBody = new JsBlock(sourceInfo);
 			functionBody.getStatements().add(tryNode);
 			x.setBody(functionBody);
+			didChange = true;
 		}
 	}
 

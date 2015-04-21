@@ -350,6 +350,10 @@ public final class ClientSerializationStreamReader extends
 					+ SERIALIZATION_STREAM_MIN_VERSION + " and "
 					+ SERIALIZATION_STREAM_MAX_VERSION);
 		}
+		if (((getFlags() & FLAG_INCREMENTAL_DESERIALIZABLE) == 0 || getVersion() != SERIALIZATION_STREAM_VERSION)) {
+			throw new IncompatibleRemoteServiceException(
+					"requires incremental deserializable rpc");
+		}
 		if (!areFlagsValid()) {
 			throw new IncompatibleRemoteServiceException(
 					"Got an unknown flag from " + "server: " + getFlags());
@@ -454,8 +458,6 @@ public final class ClientSerializationStreamReader extends
 	public ClientSerializationStreamReader(Serializer serializer) {
 		this.serializer = serializer;
 	}
-
-	private static final int SERIALIZATION_STREAM_VERSION = 1007;
 
 	public void doDeserialize(AsyncCallback postPrepareCallback) {
 		this.postPrepareCallback = postPrepareCallback;

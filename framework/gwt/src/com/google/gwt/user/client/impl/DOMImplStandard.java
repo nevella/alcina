@@ -378,6 +378,11 @@ public abstract class DOMImplStandard extends DOMImpl {
       keydown:    @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
       keyup:      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
       keypress:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+      
+      //Nick - focus
+      
+      blur:      @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
+      focus:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedEvent(*),
 
       // Touch events
       touchstart:   @com.google.gwt.user.client.impl.DOMImplStandard::dispatchCapturedMouseEvent(*),

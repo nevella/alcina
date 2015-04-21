@@ -677,7 +677,7 @@ public final class ServerSerializationStreamWriter extends
 	public ServerSerializationStreamWriter(
 			SerializationPolicy serializationPolicy) {
 		this.serializationPolicy = serializationPolicy;
-		setVersion(1007);
+		setVersion(SERIALIZATION_STREAM_VERSION);
 	}
 
 	public ServerSerializationStreamWriter(
@@ -689,6 +689,7 @@ public final class ServerSerializationStreamWriter extends
 	@Override
 	public void prepareToWrite() {
 		super.prepareToWrite();
+		addFlags(FLAG_INCREMENTAL_DESERIALIZABLE);
 		nonCollectionSerializationArgList.clear();
 		tokenListCharCount = 0;
 	}

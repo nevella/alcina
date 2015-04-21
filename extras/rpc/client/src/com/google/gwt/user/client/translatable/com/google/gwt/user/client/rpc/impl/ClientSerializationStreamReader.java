@@ -34,13 +34,12 @@ import com.google.gwt.core.client.GwtScriptOnly;
 @GwtScriptOnly
 public final class ClientSerializationStreamReader extends
 		AbstractSerializationStreamReader {
-	
 	private static native JavaScriptObject eval(String encoded) /*-{
-		return eval(encoded);
+	return eval(encoded);
 	}-*/;
 
 	private static native int getLength(JavaScriptObject array) /*-{
-		return array.length;
+	return array.length;
 	}-*/;
 
 	int index;
@@ -57,8 +56,6 @@ public final class ClientSerializationStreamReader extends
 		this.serializer = serializer;
 	}
 
-	private static final int SERIALIZATION_STREAM_VERSION = 1007;
-
 	@Override
 	public void prepareToRead(String encoded) throws SerializationException {
 		results = eval(encoded);
@@ -68,6 +65,10 @@ public final class ClientSerializationStreamReader extends
 			throw new IncompatibleRemoteServiceException("Expecting version "
 					+ SERIALIZATION_STREAM_VERSION + " from server, got "
 					+ getVersion() + ".");
+		}
+		if (((getFlags() & FLAG_INCREMENTAL_DESERIALIZABLE) == 0 || getVersion() != SERIALIZATION_STREAM_VERSION)) {
+			throw new IncompatibleRemoteServiceException(
+					"requires incremental deserializable rpc");
 		}
 		if (!areFlagsValid()) {
 			throw new IncompatibleRemoteServiceException(
@@ -94,37 +95,37 @@ public final class ClientSerializationStreamReader extends
 	}
 
 	public native boolean readBoolean() /*-{
-		return !!this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
+	return !!this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
 	}-*/;
 
 	public native byte readByte() /*-{
-		return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
+	return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
 	}-*/;
 
 	public native char readChar() /*-{
-		return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
+	return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
 	}-*/;
 
 	public native double readDouble() /*-{
-		return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
+	return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
 	}-*/;
 
 	public native float readFloat() /*-{
-		return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
+	return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
 	}-*/;
 
 	public native int readInt() /*-{
-		return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
+	return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
 	}-*/;
 
 	@UnsafeNativeLong
 	public native long readLong() /*-{
-		var s = this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
-		return @com.google.gwt.lang.LongLib::longFromBase64(Ljava/lang/String;)(s);
+	var s = this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
+	return @com.google.gwt.lang.LongLib::longFromBase64(Ljava/lang/String;)(s);
 	}-*/;
 
 	public native short readShort() /*-{
-		return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
+	return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
 	}-*/;
 
 	public String readString() {
@@ -143,13 +144,13 @@ public final class ClientSerializationStreamReader extends
 
 	@Override
 	protected native String getString(int index) /*-{
-		// index is 1-based
-		return index > 0 ? this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::stringTable[index - 1]
-				: null;
+	// index is 1-based
+	return index > 0 ? this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::stringTable[index - 1]
+		: null;
 	}-*/;
 
 	private native JavaScriptObject readJavaScriptObject() /*-{
-		return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
+	return this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::results[--this.@com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader::index];
 	}-*/;
 
 	public int getTypeId(int index) {

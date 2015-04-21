@@ -13,10 +13,16 @@
  */
 package cc.alcina.framework.common.client.collections;
 
+import java.util.function.Predicate;
+
 /**
  * 
  * @author Nick Reddel
  */
-public interface CollectionFilter<T> {
+public interface CollectionFilter<T> extends Predicate<T>{
 	public boolean allow(T o);
+	
+	default boolean test(T t){
+		return allow(t);
+	}
 }
