@@ -143,17 +143,17 @@ public class TreeItem extends UIObject implements IsTreeItem, HasTreeItems,
 		}
 	}
 
+	
 	/**
-	 * IE specific implementation class for {@link TreeItem}.
-	 */
-	public static class TreeItemImplIE6 extends TreeItemImpl {
-		@Override
-		void convertToFullNode(TreeItem item) {
-			super.convertToFullNode(item);
-			DOM.setStyleAttribute(item.getElement(), "marginBottom", "0px");
-		}
-	}
-
+	   * IE specific implementation class for {@link TreeItem}.
+	   */
+	  public static class TreeItemImplIE8ToIE10 extends TreeItemImpl {
+	    @Override
+	    void convertToFullNode(TreeItem item) {
+	      super.convertToFullNode(item);
+	      item.getElement().getStyle().setProperty("marginBottom", "0px");
+	    }
+	  }
 	/**
 	 * An {@link Animation} used to open the child elements. If a
 	 * {@link TreeItem} is in the process of opening, it will immediately be
