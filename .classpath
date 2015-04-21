@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry exported="true" kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" path="framework/common/src"/>
 	<classpathentry excluding="com/google/gwt/user/client/translatable/" kind="src" path="extras/rpc/client/src"/>
 	<classpathentry kind="src" path="extras/rpc/servlet/src"/>
@@ -35,5 +36,6 @@
 	<classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.ejb-api-3.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/requestfactory-server.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

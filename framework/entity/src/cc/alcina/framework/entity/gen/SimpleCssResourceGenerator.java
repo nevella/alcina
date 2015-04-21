@@ -31,6 +31,7 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JMethod;
+import com.google.gwt.dev.CompilerContext;
 import com.google.gwt.dev.cfg.ModuleDef;
 import com.google.gwt.dev.javac.StandardGeneratorContext;
 import com.google.gwt.dev.resource.Resource;
@@ -127,10 +128,15 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			url = url.replace("'", "").replace("\"", "");
 			StandardGeneratorContext generatorContext = (StandardGeneratorContext) context
 					.getGeneratorContext();
-			Field moduleField = StandardGeneratorContext.class
+			Field compilerContextField = StandardGeneratorContext.class
+					.getDeclaredField("compilerContext");
+			compilerContextField.setAccessible(true);
+			CompilerContext compilerContext = (CompilerContext) compilerContextField
+					.get(generatorContext);
+			Field moduleField = CompilerContext.class
 					.getDeclaredField("module");
 			moduleField.setAccessible(true);
-			ModuleDef module = (ModuleDef) moduleField.get(generatorContext);
+			ModuleDef module = (ModuleDef) moduleField.get(compilerContext);
 			Resource resource = module.findPublicFile(url);
 			if (resource == null) {
 				resource = module.findPublicFile("gwt/standard/" + url);
@@ -140,7 +146,6 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 					continue;
 				} else {
 					if (logMissingUrlResources) {
-						
 						String[] pub = getAllPublicFiles(module);
 						System.out.println("missing url resource - " + url);
 						for (String path : pub) {
@@ -188,7 +193,8 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 
 	private String[] getAllPublicFiles(ModuleDef module) {
 		module.refresh();
-		return module.getPublicResourceOracle().getPathNames().toArray(Empty.STRINGS);
+		return module.getPublicResourceOracle().getPathNames()
+				.toArray(Empty.STRINGS);
 	}
 
 	/**

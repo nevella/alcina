@@ -6,7 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -36,7 +35,6 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.StringKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -660,8 +658,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	public static class CmdUnescapeJson extends
-			DevConsoleCommand {
+	public static class CmdUnescapeJson extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "jsun" };
@@ -682,8 +679,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String jsun = console
 					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			jsun = jsun.isEmpty() ? console.getClipboardContents() : jsun;
+			if ("".isEmpty()) {
+				throw new RuntimeException("some eclipse build problem...");
+			}
 			jsun = StringEscapeUtils.unescapeJavaScript(jsun);
-
 			System.out.println(jsun);
 			console.setClipboardContents(jsun);
 			System.out.println("\n");

@@ -188,6 +188,18 @@
 		<property name="project.gwt.compile.jvmarg1" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg2" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg3" value="-Dblank" />
+		<path id="gwt.classpath">
+					<pathelement path="${project.gwt.classpath.bin}" />
+					<pathelement path="${framework.gwt.classpath.src}" />
+					<pathelement path="${project.gwt.classpath.lib}" />
+					<pathelement path="${framework.gwt.classpath.bin}" />
+					<pathelement path="${framework.gwt.classpath.lib}" />
+					<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
+				</path>
+
+				<property name="myclasspath" refid="gwt.classpath" />
+				<!-- Emit the property to the ant console -->
+				<echo message="Classpath = ${myclasspath}" />
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
@@ -199,7 +211,6 @@
 				<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
 			</classpath>
 			<jvmarg value="-Xmx${framework.gwt.jvm.maxHeapSizeMb}M" />
-			<jvmarg value="-XX:MaxPermSize=${framework.gwt.jvm.maxPermSizeMb}m" />
 			<jvmarg value="-Xss2M" />
 			<jvmarg value="-Dgwt.usearchives=false" />
 

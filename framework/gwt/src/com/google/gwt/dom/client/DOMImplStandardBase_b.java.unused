@@ -201,9 +201,8 @@ class DOMImplStandardBase extends DOMImplStandard {
   @Override
   public int getAbsoluteLeft(Element elem) {
     ClientRect rect = getBoundingClientRect(elem);
-    
     return rect != null ? rect.getLeft()
-        + getScrollLeft(elem.getOwnerDocument())
+        + elem.getOwnerDocument().getBody().getScrollLeft()
         : getAbsoluteLeftUsingOffsets(elem);
   }
 
@@ -211,7 +210,7 @@ class DOMImplStandardBase extends DOMImplStandard {
   public int getAbsoluteTop(Element elem) {
     ClientRect rect = getBoundingClientRect(elem);
     return rect != null ? rect.getTop()
-    		+ getScrollTop(elem.getOwnerDocument())
+        + elem.getOwnerDocument().getBody().getScrollTop()
         : getAbsoluteTopUsingOffsets(elem);
   }
 
@@ -219,8 +218,7 @@ class DOMImplStandardBase extends DOMImplStandard {
   public int getScrollLeft(Document doc) {
     // Safari always applies document scrolling to the body element, even in
     // strict mode.
-	  int scrollLeft = doc.getViewportElement().getScrollLeft();
-	  return scrollLeft!=0?scrollLeft: doc.getBody().getScrollLeft();
+    return doc.getBody().getScrollLeft();
   }
 
   @Override
@@ -235,10 +233,8 @@ class DOMImplStandardBase extends DOMImplStandard {
   @Override
   public int getScrollTop(Document doc) {
     // Safari always applies document scrolling to the body element, even in
-    // strict mode. -- mod reflecting gwt trunk was return doc.getBody().getScrollTop();
-	  //hack before full handling of blink/webkit split
-	int scrollTop = doc.getViewportElement().getScrollTop();
-    return scrollTop!=0?scrollTop: doc.getBody().getScrollTop();
+    // strict mode.
+    return doc.getBody().getScrollTop();
   }
 
   @Override
