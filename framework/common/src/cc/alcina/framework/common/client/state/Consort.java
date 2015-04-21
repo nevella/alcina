@@ -203,7 +203,7 @@ public class Consort<D> {
 	}
 
 	public <P extends Player> List<P> getTasksForClass(Class<P> clazz) {
-		return CollectionFilters.filter(players, new IsClassFilter(clazz));
+		return (List)CollectionFilters.filter(players, new IsClassFilter(clazz));
 	}
 
 	public boolean isRunning() {

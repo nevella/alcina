@@ -967,6 +967,7 @@ public final class ServerSerializationStreamWriter extends
 	 * just pop items out of the stream.
 	 */
 	private void writeHeader(LengthConstrainedArray stream) {
+		stream.addToken(getFlags());
 		if (stream.isJavaScript()
 				&& getVersion() >= SERIALIZATION_STREAM_JSON_VERSION) {
 			// Ensure we are not using the JSON supported version if stream is
@@ -974,7 +975,7 @@ public final class ServerSerializationStreamWriter extends
 			stream.addToken(SERIALIZATION_STREAM_JSON_VERSION - 1);
 		} else {
 			stream.addToken(getVersion());
-		}
+		} 
 	}
 
 	private void writePayload(LengthConstrainedArray stream) {

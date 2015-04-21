@@ -86,7 +86,8 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	}
 
 	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
-		return CollectionFilters.filter(allCriteria(), new IsClassFilter(clazz));
+		return (List) CollectionFilters.filter(allCriteria(),
+				new IsClassFilter(clazz));
 	}
 
 	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
