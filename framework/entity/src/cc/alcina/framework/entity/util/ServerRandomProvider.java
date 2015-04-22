@@ -15,6 +15,7 @@ package cc.alcina.framework.entity.util;
 
 import java.util.Random;
 
+import cc.alcina.framework.common.client.logic.reflection.IgnoreIntrospectionChecks;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.RandomProvider;
@@ -24,6 +25,8 @@ import cc.alcina.framework.common.client.util.RandomProvider;
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = RandomProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+@IgnoreIntrospectionChecks
+//annotation to make clientreflector check happy
 public class ServerRandomProvider implements RandomProvider {
 	Random random = new Random();
 

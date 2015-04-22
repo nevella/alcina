@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.IgnoreIntrospectionChecks;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -56,7 +57,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			 * The reason for this is that gwt needs the compiled annotation
 			 * classes (in say, /bin) - so we may be getting classes here that
 			 * shouldn't be visible via the registry
-			 *
+			 * 
 			 * It's a bit sad (duplicating the exclusion code of the gwt
 			 * module), but the performance gains the jvm reflector gives us
 			 * outweigh the (possible) crud IMO
@@ -251,6 +252,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		}
 		checkClassAnnotations(clazz);
 		if (clazz.getAnnotation(ClientInstantiable.class) == null
+				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null
 				&& clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) == null) {
 			throw new RuntimeException(
 					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation");
@@ -274,7 +276,8 @@ public class ClientReflectorJvm extends ClientReflector {
 		for (Class iface : getAllImplementedInterfaces(clazz)) {
 			introspectable |= iface.getAnnotation(Introspectable.class) != null;
 		}
-		if (!introspectable) {
+		if (!introspectable
+				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null) {
 			throw new RuntimeException(
 					"not reflectable class - no clientinstantiable/beandescriptor/introspectable annotation");
 		}
