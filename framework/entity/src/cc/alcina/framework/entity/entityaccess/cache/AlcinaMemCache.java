@@ -102,6 +102,10 @@ import com.google.gwt.event.shared.UmbrellaException;
  * (possibly write::main) to write (subgraph) - so we know we'll have a main
  * lock
  * </p>
+ * <p>
+ * TODO - the multithreaded warmup is still a little dodgy, thread-safety wise -
+ * probably a formal/synchronized datastore approach would be best - ConcurrentLinkedQueue??
+ * </p>
  *
  * @author nick@alcina.cc
  *
@@ -1152,6 +1156,15 @@ public class AlcinaMemCache {
 		// deliberately init projections after lookups
 		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
 				.values()) {
+			for (CacheProjection projection : descriptor.projections) {
+				if (projection instanceof BaseProjectionHasEquivalenceHash) {
+					cachingProjections.getAndEnsure(projection
+							.getListenedClass());
+				}
+			}
+		}
+		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
+				.values()) {
 			calls.add(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
@@ -1527,8 +1540,8 @@ public class AlcinaMemCache {
 			PerThreadTransaction transaction = transactions.get();
 			if (transaction != null) {
 				transaction.end();
-				for (BaseProjectionHasEquivalenceHash listener : AlcinaMemCache.get().cachingProjections
-						.allItems()) {
+				for (BaseProjectionHasEquivalenceHash listener : AlcinaMemCache
+						.get().cachingProjections.allItems()) {
 					listener.onTransactionEnd();
 				}
 				transactions.remove();
