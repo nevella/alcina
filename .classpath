@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
+	<classpathentry kind="lib" path="lib/extras/dev/httpclient-4.1.jar"/>
+	<classpathentry kind="lib" path="lib/extras/dev/httpcore-4.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" path="framework/common/src"/>
 	<classpathentry excluding="com/google/gwt/user/client/translatable/" kind="src" path="extras/rpc/client/src"/>
