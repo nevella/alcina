@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.entity.projection;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;

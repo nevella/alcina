@@ -15,6 +15,15 @@
  */
 package com.google.gwt.dev;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.net.BindException;
+import java.net.URL;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
+
 import com.google.gwt.core.ext.ServletContainer;
 import com.google.gwt.core.ext.ServletContainerLauncher;
 import com.google.gwt.core.ext.TreeLogger;
@@ -51,15 +60,6 @@ import com.google.gwt.dev.util.log.speedtracer.SpeedTracerLogger.Event;
 import com.google.gwt.util.tools.ArgHandlerFlag;
 import com.google.gwt.util.tools.ArgHandlerString;
 import com.google.gwt.util.tools.Utility;
-
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.net.BindException;
-import java.net.URL;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * The main executable class for the hosted mode shell. NOTE: the public API for
@@ -438,7 +438,6 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
   /**
    * Hiding super field because it's actually the same object, just with a stronger type.
    */
-  @SuppressWarnings("hiding")
   protected final HostedModeOptions options = (HostedModeOptionsImpl) super.options;
 
   /**

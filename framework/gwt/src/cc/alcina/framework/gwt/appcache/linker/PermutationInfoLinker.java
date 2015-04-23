@@ -15,25 +15,12 @@
  */
 package cc.alcina.framework.gwt.appcache.linker;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import com.google.gwt.core.ext.LinkerContext;
 import com.google.gwt.core.ext.TreeLogger;
@@ -43,19 +30,16 @@ import com.google.gwt.core.ext.linker.Artifact;
 import com.google.gwt.core.ext.linker.ArtifactSet;
 import com.google.gwt.core.ext.linker.CompilationResult;
 import com.google.gwt.core.ext.linker.EmittedArtifact;
-import com.google.gwt.core.ext.linker.SelectionProperty;
-import com.google.gwt.core.ext.linker.Shardable;
-import com.google.gwt.core.ext.linker.SoftPermutation;
 import com.google.gwt.core.ext.linker.EmittedArtifact.Visibility;
 import com.google.gwt.core.ext.linker.LinkerOrder;
 import com.google.gwt.core.ext.linker.LinkerOrder.Order;
+import com.google.gwt.core.ext.linker.SelectionProperty;
+import com.google.gwt.core.ext.linker.Shardable;
+import com.google.gwt.core.ext.linker.SoftPermutation;
 import com.google.gwt.core.ext.linker.impl.PermutationsUtil;
 import com.google.gwt.core.ext.linker.impl.PropertiesMappingArtifact;
 import com.google.gwt.core.ext.linker.impl.SelectionInformation;
 import com.google.gwt.core.linker.CrossSiteIframeLinker;
-import com.google.gwt.core.linker.SymbolMapsLinker;
-import com.google.gwt.dev.util.Util;
-import com.google.gwt.util.tools.shared.StringUtils;
 
 /**
  * List permutation info in a nice, digestible form

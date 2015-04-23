@@ -3,11 +3,9 @@ package cc.alcina.framework.entity.entityaccess;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -279,7 +277,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	@SuppressWarnings("unchecked")
 	public <A> Set<A> getAllForUser(Class<A> clazz) {
 		Query query = getEntityManager().createQuery(
-				String.format("from %s where user=? ", clazz.getSimpleName()))
+				String.format("from %s where user=?1 ", clazz.getSimpleName()))
 				.setParameter(1, PermissionsManager.get().getUser());
 		// seems to be throwing transactional cache errors
 		// Registry.impl(JPAImplementation.class).cache(query);
@@ -290,7 +288,7 @@ public abstract class AppPersistenceBase<CI extends ClientInstance, U extends IU
 	@SuppressWarnings("unchecked")
 	public <A> Set<A> getAllForCreationUser(Class<A> clazz) {
 		Query query = getEntityManager().createQuery(
-				String.format("from %s where creationUser=? ",
+				String.format("from %s where creationUser=?1 ",
 						clazz.getSimpleName())).setParameter(1,
 				PermissionsManager.get().getUser());
 		// seems to be throwing transactional cache errors

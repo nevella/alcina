@@ -15,6 +15,8 @@
  */
 package com.google.gwt.user.client.rpc.impl;
 
+import com.google.gwt.user.server.rpc.impl.ServerSerializationStreamWriter;
+
 /**
  * Base class for the client and server serialization streams. This class
  * handles the basic serialization and deserialization formatting for primitive

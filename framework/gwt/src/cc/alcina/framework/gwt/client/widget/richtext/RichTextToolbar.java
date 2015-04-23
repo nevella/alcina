@@ -18,11 +18,8 @@ package cc.alcina.framework.gwt.client.widget.richtext;
 import java.util.Arrays;
 import java.util.List;
 
-import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
-
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.i18n.client.Constants;
-import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.ChangeListener;

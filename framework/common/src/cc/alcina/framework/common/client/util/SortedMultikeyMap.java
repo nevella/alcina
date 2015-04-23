@@ -13,16 +13,8 @@
  */
 package cc.alcina.framework.common.client.util;
 
-import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-
-import cc.alcina.framework.common.client.collections.ImmutableMap;
-
-import com.totsp.gwittir.client.beans.Converter;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.

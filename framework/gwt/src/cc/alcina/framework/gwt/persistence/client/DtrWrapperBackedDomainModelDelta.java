@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;

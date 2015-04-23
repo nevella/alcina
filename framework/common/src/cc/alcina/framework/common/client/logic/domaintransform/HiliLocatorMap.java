@@ -15,7 +15,6 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.HashMap;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 import com.totsp.gwittir.client.beans.Converter;

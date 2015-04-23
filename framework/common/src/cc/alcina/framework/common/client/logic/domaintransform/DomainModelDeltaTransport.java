@@ -2,8 +2,6 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-
 /*
  * Either delta will be null, or all the other fields
  *  - delta non-null if we know the client will use it 

@@ -14,8 +14,6 @@
 
 package cc.alcina.framework.common.client.entity;
 
-import java.util.Date;
-
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 
 /**

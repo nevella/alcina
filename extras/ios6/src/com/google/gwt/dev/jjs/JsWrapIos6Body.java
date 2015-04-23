@@ -15,13 +15,8 @@
  */
 package com.google.gwt.dev.jjs;
 
-import com.google.gwt.core.ext.BadPropertyValueException;
-import com.google.gwt.core.ext.PropertyOracle;
-import com.google.gwt.core.ext.SelectionProperty;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.dev.cfg.BindingProperties;
-import com.google.gwt.dev.cfg.BindingProperty;
-import com.google.gwt.dev.cfg.ConfigurationProperties;
 import com.google.gwt.dev.cfg.PermutationProperties;
 import com.google.gwt.dev.js.ast.JsBlock;
 import com.google.gwt.dev.js.ast.JsCatch;
@@ -33,7 +28,6 @@ import com.google.gwt.dev.js.ast.JsParameter;
 import com.google.gwt.dev.js.ast.JsProgram;
 import com.google.gwt.dev.js.ast.JsThrow;
 import com.google.gwt.dev.js.ast.JsTry;
-import com.google.gwt.thirdparty.guava.common.collect.ImmutableList;
 
 /**
  */

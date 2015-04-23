@@ -18,10 +18,7 @@ package cc.alcina.framework.gwt.client.widget.complex;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;

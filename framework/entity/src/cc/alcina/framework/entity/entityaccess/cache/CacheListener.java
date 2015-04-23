@@ -1,7 +1,5 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import java.util.Collection;
-
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 public interface CacheListener<H extends HasIdAndLocalId> {

@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.util.HasEquivalenceHashMap;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
+import cc.alcina.framework.common.client.util.HasEquivalenceHashMap;
 
 /**
  * at some point in the transaction, the object's hash must have equalled the
