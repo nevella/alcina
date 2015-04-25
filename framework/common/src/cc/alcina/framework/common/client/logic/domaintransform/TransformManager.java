@@ -1694,5 +1694,24 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
+	public static String fromEnumValues(Object... objects) {
+		return CommonUtils.join(objects, ",");
+	}
 
+	public static <E extends Enum> Set<E> toEnumValues(String s, Class<E> clazz) {
+		Set<E> result = new LinkedHashSet<>();
+		if (s != null) {
+			for (String sPart : s.split(",")) {
+				E value = CommonUtils.getEnumValueOrNull(clazz, sPart);
+				if (value == null && sPart.length() > 0) {
+					System.out.println(CommonUtils.formatJ(
+							"Warning - can't deserialize %s for %s", sPart,
+							clazz));
+				}
+				result.add(value);
+			}
+			result.remove(null);
+		}
+		return result;
+	}
 }

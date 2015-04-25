@@ -66,13 +66,20 @@ public class DownloadLibs extends Task {
 							+ "/" + downloadFile.getName()));
 					clearTmpDir();
 					get.setDest(tmpFile);
-					String localPath = getProject().getProperty(
+					String libsLocalPath = getProject().getProperty(
 							(Constants.ALCINA_DOWNLOAD_LIBS_LOCAL));
 					String url = downloadableFile.getUrl();
-					if (localPath != null) {
+					if (libsLocalPath != null) {
 						url = url.replace(
 								"http://alcina.cc/files/framework/lib",
-								localPath);
+								libsLocalPath);
+					}
+					String deployLocalPath = getProject().getProperty(
+							(Constants.ALCINA_DOWNLOAD_DEPLOY_LOCAL));
+					if (deployLocalPath != null) {
+						url = url.replace(
+								"http://alcina.cc/files/framework/deploy",
+								deployLocalPath);
 					}
 					// get.setVerbose(true);
 					try {

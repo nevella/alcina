@@ -53,9 +53,9 @@
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" />
 				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-javaee.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/impl/jboss-hibernate/jboss-javaee.jar" />
 				<!--doubling up, but make sure we get a copy of the actual jboss zip-->
-				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-vfs-3.0.1.GA.jar" tocUrl="" url="http://alcina.cc/files/framework/lib/build/" containerPath="jboss-as-7.0.0.Final.zip" extractFileName="modules/org/jboss/vfs/main/jboss-vfs-3.0.1.GA.jar" />
-
-
+				<!--not working at the mo
+				<downloadable-file licenseType="NOT_SPECIFIED" targetPath="impl/jboss-hibernate/jboss-vfs-3.2.5.Final.jar" tocUrl=""  url="http://alcina.cc/files/framework/deploy/wildfly-8.2.0.Final.tar.gz" containerPath="wildfly-8.2.0.Final.tar.gz" extractFileName="modules/org/jboss/vfs/main/jboss-vfs-3.2.5.Final.jar" />
+				-->
 			</downloadable-file-list>
 		</download-libs>
 		<copy todir="${alcina.lib.framework.dir}">

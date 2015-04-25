@@ -504,7 +504,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 								+ " u " + "left join fetch u.primaryGroup "
 								+ "left join fetch u.secondaryGroups g "
 								+ "left join fetch g.memberOfGroups sg "
-								+ "where u.%s = ?", getUserNamePropertyName()))
+								+ "where u.%s = ?1", getUserNamePropertyName()))
 				.setParameter(1, userName).getResultList();
 		return (l.size() == 0) ? null : l.get(0);
 	}
@@ -1255,7 +1255,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.createQuery(
 							"from "
 									+ getImplementationSimpleClassName(Iid.class)
-									+ " i  where i.instanceId = ?")
+									+ " i  where i.instanceId = ?1")
 					.setParameter(1, iidKey).getResultList();
 			if (list.isEmpty()) {
 				return false;
