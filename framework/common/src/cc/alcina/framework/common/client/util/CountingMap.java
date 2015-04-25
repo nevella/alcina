@@ -43,6 +43,22 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		}
 		return max;
 	}
+	public K min() {
+		K min = null;
+		Integer minCount = Integer.MAX_VALUE;
+		for (K k : keySet()) {
+			if (min == null) {
+				min = k;
+				minCount = get(k);
+			} else {
+				if (get(k).compareTo(minCount) < 0) {
+					min = k;
+					minCount = get(k);
+				}
+			}
+		}
+		return min;
+	}
 
 	public int sum() {
 		int result = 0;

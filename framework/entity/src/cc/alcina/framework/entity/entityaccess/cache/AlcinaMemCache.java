@@ -28,10 +28,10 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.IntStream;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
@@ -74,6 +74,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -104,7 +105,8 @@ import com.google.gwt.event.shared.UmbrellaException;
  * </p>
  * <p>
  * TODO - the multithreaded warmup is still a little dodgy, thread-safety wise -
- * probably a formal/synchronized datastore approach would be best - ConcurrentLinkedQueue??
+ * probably a formal/synchronized datastore approach would be best -
+ * ConcurrentLinkedQueue??
  * </p>
  *
  * @author nick@alcina.cc
@@ -271,7 +273,7 @@ public class AlcinaMemCache {
 	private UnsortedMultikeyMap<Field> memcacheTransientFields = new UnsortedMultikeyMap<Field>(
 			2);
 
-	private ExecutorService warmupExecutor;
+	private ThreadPoolExecutor warmupExecutor;
 
 	private DataSource dataSource;
 
@@ -588,23 +590,37 @@ public class AlcinaMemCache {
 		maybeLogLock("unlock", write);
 	}
 
-	private Connection getWarmupConnection() throws Exception {
-		Connection conn = dataSource.getConnection();
-		conn.setReadOnly(true);
-		conn.setAutoCommit(false);
-		originalTransactionIsolation = conn.getTransactionIsolation();
-		try {
-			conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-		} catch (Exception e) {
-			// postgres patch
-			if (CommonUtils.nullToEmpty(e.getMessage()).toLowerCase()
-					.contains("cannot use serializable mode in a hot standby")) {
-				conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-			} else {
-				throw e;
+	// only access via synchronized code
+	CountingMap<Connection> warmupConnections = new CountingMap<>();
+
+	private synchronized Connection getWarmupConnection() throws Exception {
+		Connection min = warmupConnections.min();
+		warmupConnections.add(min);
+		return min;
+	}
+
+	private void createWarmupConnections() throws Exception {
+		for (int i = 0; i < warmupExecutor.getMaximumPoolSize(); i++) {
+			Connection conn = dataSource.getConnection();
+			conn.setAutoCommit(false);
+			conn.setReadOnly(true);
+			originalTransactionIsolation = conn.getTransactionIsolation();
+			try {
+				conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+			} catch (Exception e) {
+				// postgres patch
+				if (CommonUtils
+						.nullToEmpty(e.getMessage())
+						.toLowerCase()
+						.contains(
+								"cannot use serializable mode in a hot standby")) {
+					conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+				} else {
+					throw e;
+				}
 			}
+			warmupConnections.put(conn, 0);
 		}
-		return conn;
 	}
 
 	public void warmup(DataSource dataSource, CacheDescriptor cacheDescriptor,
@@ -613,6 +629,7 @@ public class AlcinaMemCache {
 		this.cacheDescriptor = cacheDescriptor;
 		this.warmupExecutor = warmupExecutor;
 		try {
+			createWarmupConnections();
 			this.warmup0();
 			initialised = true;
 		} catch (Exception e) {
@@ -1194,22 +1211,27 @@ public class AlcinaMemCache {
 		}
 		// don't close, but indicate that everything write-y from now shd be
 		// single-threaded
+		warmupConnections.keySet().forEach(conn -> closeWarmupConnection(conn));
 		postInitConn = dataSource.getConnection();
+		postInitConn.setReadOnly(true);
 		warmupExecutor = null;
 		MetricLogging.get().end("memcache-all");
 	}
 
-	protected void releaseWarmupConnection(Connection conn) {
+	protected void closeWarmupConnection(Connection conn) {
 		try {
-			if (!conn.getAutoCommit()) {
-				conn.commit();
-				conn.setTransactionIsolation(originalTransactionIsolation);
-				conn.setAutoCommit(true);
-				conn.close();
-			}
+			conn.commit();
+			conn.setAutoCommit(true);
+			conn.setReadOnly(false);
+			conn.setTransactionIsolation(originalTransactionIsolation);
+			conn.close();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	protected synchronized void releaseWarmupConnection(Connection conn) {
+		warmupConnections.add(conn, -1);
 	}
 
 	private boolean debug;
