@@ -316,8 +316,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 			String eql = String.format(
 					value == null ? "from %s where %s is null"
-							: caseInsensitive ? "from %s where lower(%s) = ?"
-									: "from %s where %s = ?", clazz
+							: caseInsensitive ? "from %s where lower(%s) = ?1"
+									: "from %s where %s = ?1", clazz
 							.getSimpleName(), key);
 			if (ignoreId != null) {
 				eql += " AND id != " + ignoreId;
