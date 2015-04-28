@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -53,9 +54,9 @@ public class DetachedEntityCache implements Serializable {
 				clazz).values());
 	}
 
-	public <T> Collection<T> rawValues(Class<T> clazz) {
+	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
 		ensureMaps(clazz);
-		return (Collection<T>) detached.get(clazz).values();
+		return (Collection<T>) Collections.unmodifiableCollection(detached.get(clazz).values());
 	}
 
 	public Set<HasIdAndLocalId> allValues() {

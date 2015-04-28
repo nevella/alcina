@@ -15,24 +15,25 @@
  */
 package java.util;
 
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-import java.util.stream.CollectionStream;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.ListIterator;
 
 /**
- * General-purpose interface for storing collections of objects. <a
- * href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/Collection.html">[Sun
- * docs]</a>
+ * Represents a sequence of objects. <a
+ * href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/List.html">[Sun docs]</a>
  * 
  * @param <E> element type
  */
-public interface Collection<E> extends Iterable<E> {
+public interface List<E> extends Collection<E> {
 
   boolean add(E o);
 
+  void add(int index, E element);
+
   boolean addAll(Collection<? extends E> c);
+
+  boolean addAll(int index, Collection<? extends E> c);
 
   void clear();
 
@@ -42,11 +43,23 @@ public interface Collection<E> extends Iterable<E> {
 
   boolean equals(Object o);
 
+  E get(int index);
+
   int hashCode();
+
+  int indexOf(Object o);
 
   boolean isEmpty();
 
   Iterator<E> iterator();
+
+  int lastIndexOf(Object o);
+
+  ListIterator<E> listIterator();
+
+  ListIterator<E> listIterator(int from);
+
+  E remove(int index);
 
   boolean remove(Object o);
 
@@ -54,26 +67,23 @@ public interface Collection<E> extends Iterable<E> {
 
   boolean retainAll(Collection<?> c);
 
+  E set(int index, E element);
+
   int size();
+
+  List<E> subList(int fromIndex, int toIndex);
 
   Object[] toArray();
 
-  <T> T[] toArray(T[] a);
-  
-  default Stream<E> stream() {
-      return new CollectionStream<E>(this);
-  }
- 
-  default boolean removeIf(Predicate<? super E> filter) {
-      Objects.requireNonNull(filter);
-      boolean removed = false;
-      final Iterator<E> each = iterator();
-      while (each.hasNext()) {
-          if (filter.test(each.next())) {
-              each.remove();
-              removed = true;
-          }
+  <T> T[] toArray(T[] array);
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  default void sort(Comparator<? super E> c) {
+      Object[] a = this.toArray();
+      Arrays.sort(a, (Comparator) c);
+      ListIterator<E> i = this.listIterator();
+      for (Object e : a) {
+          i.next();
+          i.set((E) e);
       }
-      return removed;
   }
 }

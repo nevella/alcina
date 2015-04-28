@@ -31,7 +31,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.IntStream;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
@@ -671,8 +670,8 @@ public class AlcinaMemCache {
 		}
 		final CollectionFilter filter = cacheFilter.asCollectionFilter();
 		if (existing == null) {
-			List filtered = CollectionFilters.filter(cache.rawValues(clazz),
-					filter);
+			List filtered = CollectionFilters.filter(
+					cache.immutableRawValues(clazz), filter);
 			return HiliHelper.toIdSet(filtered);
 		} else {
 			CollectionFilter withIdFilter = new CollectionFilter<Long>() {
@@ -690,9 +689,9 @@ public class AlcinaMemCache {
 	private Set getFilteredTransactional(final Class clazz,
 			CacheFilter cacheFilter, Set existing) {
 		CollectionFilter filter = cacheFilter.asCollectionFilter();
-		existing = existing != null ? existing : transactional.rawValues(clazz);
-		CollectionFilters.filterInPlace(existing, filter);
-		return existing;
+		existing = existing != null ? existing : transactional
+				.immutableRawValues(clazz);
+		return CollectionFilters.filterAsSet(existing, filter);
 	}
 
 	private CacheLookup getLookupFor(Class clazz, String propertyName) {
@@ -1528,13 +1527,13 @@ public class AlcinaMemCache {
 			return (Map<Long, T>) cache.getMap(clazz);
 		}
 
-		public Set rawValues(Class clazz) {
+		public Set immutableRawValues(Class clazz) {
 			PerThreadTransaction perThreadTransaction = transactions.get();
 			if (perThreadTransaction == null) {
-				return new LinkedHashSet(cache.rawValues(clazz));
+				return Collections.unmodifiableSet((Set) cache
+						.immutableRawValues(clazz));
 			}
-			return new LinkedHashSet(perThreadTransaction.rawValues(clazz,
-					cache));
+			return perThreadTransaction.immutableRawValues(clazz, cache);
 		}
 
 		public <V extends HasIdAndLocalId> V resolveTransactional(
