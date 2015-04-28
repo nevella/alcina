@@ -11,31 +11,43 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Element;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.Hyperlink;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
+
 /**
  *
  * @author Nick Reddel
  */
 @SuppressWarnings("deprecation")
- public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
+public class BoundHyperlink<T> extends AbstractBoundWidget<T> {
 	protected com.google.gwt.user.client.ui.Hyperlink base;
+
 	private Element anchorElem;
+
 	private boolean asHtml;
+
 	/** Creates a new instance of Label */
 	public BoundHyperlink() {
-		base = new Hyperlink();
+		base = new Hyperlink() {
+			@Override
+			public void onBrowserEvent(Event event) {
+				// DON'T use hyperlink history (so events can be cancelled by
+				// containers eg)
+				superOnBrowserEvent(event);
+			}
+		};
 		super.initWidget(base);
-		anchorElem=(Element) getElement().getFirstChild();
+		anchorElem = (Element) getElement().getFirstChild();
 	}
+
 	public void addClickListener(ClickListener listener) {
 		this.base.addClickListener(listener);
 	}
@@ -43,6 +55,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 	public void addStyleName(String style) {
 		this.base.addStyleName(style);
 	}
+
 	public int getAbsoluteLeft() {
 		int retValue;
 		retValue = this.base.getAbsoluteLeft();
@@ -142,19 +155,21 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 	public void setTitle(String title) {
 		this.base.setTitle(title);
 	}
+
 	private T value;
+
 	@SuppressWarnings("unchecked")
 	public void setValue(T value) {
 		// ("Setting value "+ value, null );
 		Object old = this.getValue();
-		this.value=value;
-		String renderedString = this.getRenderer() != null ? (String) this.getRenderer()
-				.render(value) : value == null ? "" : value.toString();
-		if (isAsHtml()){
+		this.value = value;
+		String renderedString = this.getRenderer() != null ? (String) this
+				.getRenderer().render(value) : value == null ? "" : value
+				.toString();
+		if (isAsHtml()) {
 			this.base.setHTML(renderedString);
-		}else{
+		} else {
 			this.setText(renderedString);
-			
 		}
 		if (this.getValue() != old && this.getValue() != null
 				&& this.getValue().equals(old)) {
@@ -177,12 +192,15 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
 	}
+
 	public void setAsHtml(boolean isHtml) {
 		this.asHtml = isHtml;
 	}
+
 	public boolean isAsHtml() {
 		return asHtml;
 	}
+
 	@SuppressWarnings("unchecked")
 	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
 
@@ -204,5 +222,4 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
 	public void setRenderer(Renderer<T, String> newrenderer) {
 		this.renderer = newrenderer;
 	}
-
 }

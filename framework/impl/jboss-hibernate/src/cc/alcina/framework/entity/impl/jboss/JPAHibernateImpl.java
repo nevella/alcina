@@ -38,7 +38,9 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.IdentifierProperty;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
@@ -265,15 +267,22 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 	@Override
 	public String entityDebugString(Object object) {
-		if (object instanceof HibernateProxy) {
-			LazyInitializer lazy = ((HibernateProxy) object)
-					.getHibernateLazyInitializer();
-			Serializable id = lazy.getIdentifier();
-			Class clazz = lazy.getPersistentClass();
-			return String.format("\tclass: %s\n\tid:\t%s\n\n", clazz, id);
-		}
-		if (object instanceof HasIdAndLocalId) {
-			return object.toString();
+		try {
+			if (object instanceof HibernateProxy) {
+				LazyInitializer lazy = ((HibernateProxy) object)
+						.getHibernateLazyInitializer();
+				Serializable id = lazy.getIdentifier();
+				Class clazz = lazy.getPersistentClass();
+				return String.format("\tclass: %s\n\tid:\t%s\n\n", clazz, id);
+			}
+			if (object instanceof HasIdAndLocalId) {
+				return object.toString();
+			}
+		} catch (Exception e) {
+			//stale transaction e.g.
+			if (object instanceof HasIdAndLocalId) {
+				HiliHelper.asDomainPoint((HasId) object);
+			}
 		}
 		return null;
 	}
