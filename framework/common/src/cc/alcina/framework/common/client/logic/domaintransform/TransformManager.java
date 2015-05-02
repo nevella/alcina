@@ -778,6 +778,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return this.transforms;
 	}
 
+	public void pushTransformsInCurrentThread(Collection<DomainTransformEvent> dtes){
+		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
+	}
 	public LinkedHashSet<DomainTransformEvent> getTransformsByCommitType(
 			CommitType ct) {
 		if (transformsByType.get(ct) == null) {
