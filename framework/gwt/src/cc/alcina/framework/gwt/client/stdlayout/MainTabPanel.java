@@ -92,6 +92,9 @@ public class MainTabPanel extends TabPanel {
 		dockPanel = new DockPanel();
 		dockPanel.setStyleName("alcina-MainMenu");
 		dockPanel.setWidth("100%");
+		mainMenuContainer = new FlowPanel();
+		mainMenuContainer.setStyleName("alcina-MainMenuContainer");
+		mainMenuContainer.add(dockPanel);
 		Widget w = vp.getWidget(0);
 		vp.remove(w);
 		dockPanel.add(w, DockPanel.CENTER);
@@ -99,7 +102,8 @@ public class MainTabPanel extends TabPanel {
 		refreshButtonPanelVis();
 		dockPanel.add(bp, DockPanel.EAST);
 		dockPanel.setCellHorizontalAlignment(bp, DockPanel.ALIGN_RIGHT);
-		vp.insert(dockPanel, 0);
+		vp.insert(mainMenuContainer, 0);
+		customizeDock();
 		vp.insert(toolbarHolder, 1);
 		vp.getWidget(1).setWidth("100%");
 		noTabContentHolder.setVisible(false);
@@ -114,6 +118,10 @@ public class MainTabPanel extends TabPanel {
 				noTabContentHolder.setVisible(tabIndex == -1);
 			}
 		});
+	}
+
+	protected void customizeDock() {
+		//subclassing
 	}
 
 	private TopicListener<LoginState> visListener = new TopicListener<LoginState>() {
@@ -156,7 +164,9 @@ public class MainTabPanel extends TabPanel {
 
 	private List<LoginStateVisibleWithWidget> buttons;
 
-	private DockPanel dockPanel;
+	protected DockPanel dockPanel;
+
+	private FlowPanel mainMenuContainer;
 
 	class BarSep extends Label {
 		BarSep() {
