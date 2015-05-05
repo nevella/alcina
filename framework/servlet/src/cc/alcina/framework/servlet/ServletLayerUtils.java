@@ -36,6 +36,9 @@ public class ServletLayerUtils {
 	public static final transient String CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH = ServletLayerUtils.class
 			.getName() + ".CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH";
 
+	public static final transient String CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK = ServletLayerUtils.class
+			.getName() + ".CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK";
+
 	public static int pushTransformsAsRoot() {
 		return pushTransforms(true);
 	}
@@ -70,7 +73,8 @@ public class ServletLayerUtils {
 		}
 		int maxTransformChunkSize = ResourceUtilities.getInteger(
 				ServletLayerUtils.class, "maxTransformChunkSize", 6000);
-		if (pendingTransformCount > maxTransformChunkSize) {
+		if (pendingTransformCount > maxTransformChunkSize
+				&& !LooseContext.is(CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK)) {
 			commitLocalTransformsInChunks(maxTransformChunkSize);
 			return new DomainTransformLayerWrapper();
 		}
