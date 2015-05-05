@@ -241,6 +241,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		if (_hint != null && CommonUtils.isNullOrEmpty(textBox.getText())) {
 			textBox.addStyleName(ALCINA_FILTER_HINT);
 			textBox.setText(_hint);
+			hintWasCleared = false;
 			if (hint == null) {
 				HintHandler handler = new HintHandler();
 				textBox.addFocusHandler(handler);
@@ -439,5 +440,6 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	public void onClick(ClickEvent event) {
 		clearHint();
 		onFocus(null);
+		textBox.setFocus(true);
 	}
 }
