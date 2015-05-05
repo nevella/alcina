@@ -72,7 +72,7 @@ public class ServletLayerUtils {
 				ServletLayerUtils.class, "maxTransformChunkSize", 6000);
 		if (pendingTransformCount > maxTransformChunkSize) {
 			commitLocalTransformsInChunks(maxTransformChunkSize);
-			return null;
+			return new DomainTransformLayerWrapper();
 		}
 		ThreadedPermissionsManager tpm = ThreadedPermissionsManager.cast();
 		boolean muted = MetricLogging.get().isMuted();
