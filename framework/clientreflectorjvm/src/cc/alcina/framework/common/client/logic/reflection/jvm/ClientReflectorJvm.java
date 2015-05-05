@@ -264,7 +264,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			return;
 		}
 		int mod = clazz.getModifiers();
-		if (Modifier.isAbstract(mod)
+		if (Modifier.isAbstract(mod) || clazz.isAnonymousClass()
 				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
 			throw new RuntimeException(
 					"not reflectable class - abstract or non-static");
