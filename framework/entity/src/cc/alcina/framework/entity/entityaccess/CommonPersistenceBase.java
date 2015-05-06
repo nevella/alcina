@@ -556,7 +556,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.createQuery(
 						"from "
 								+ getImplementationSimpleClassName(ActionLogItem.class)
-								+ " a where a.actionClassName=? order"
+								+ " a where a.actionClassName=?1 order"
 								+ " by a.actionDate DESC")
 				.setParameter(1, className).setMaxResults(count)
 				.getResultList();

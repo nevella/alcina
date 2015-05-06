@@ -618,14 +618,14 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			List<Long> dtrIds = getEntityManager()
 					.createQuery(
 							String.format(
-									"select dtr.id from %s dtr where dtr.clientInstance.id = ?",
+									"select dtr.id from %s dtr where dtr.clientInstance.id = ?1",
 									dtrName))
 					.setParameter(1, clientInstance.getId()).getResultList();
 			String eql = String
 					.format("select dte.objectId, dte.objectLocalId "
 							+ "from  %s dte  "
 							+ " where dte.domainTransformRequestPersistent.id in %s "
-							+ " and dte.objectLocalId!=0 and dte.transformType = ?",
+							+ " and dte.objectLocalId!=0 and dte.transformType = ?1",
 							dteName, EntityUtils.longsToIdClause(dtrIds));
 			List<Object[]> idTuples = getEntityManager().createQuery(eql)
 					.setParameter(1, TransformType.CREATE_OBJECT)

@@ -446,6 +446,10 @@ public class CommonUtils {
 			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
 					firstOnly, intersection, secondOnly);
 		}
+		public String toSizes() {
+			return CommonUtils.formatJ("First: %s\tBoth: %s\tSecond: %s",
+					firstOnly.size(), intersection.size(), secondOnly.size());
+		}
 
 		public boolean isEmpty() {
 			return firstOnly.isEmpty() && secondOnly.isEmpty()

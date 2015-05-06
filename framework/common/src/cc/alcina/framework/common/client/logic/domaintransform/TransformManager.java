@@ -778,9 +778,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return this.transforms;
 	}
 
-	public void pushTransformsInCurrentThread(Collection<DomainTransformEvent> dtes){
+	public void pushTransformsInCurrentThread(
+			Collection<DomainTransformEvent> dtes) {
 		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
 	}
+
 	public LinkedHashSet<DomainTransformEvent> getTransformsByCommitType(
 			CommitType ct) {
 		if (transformsByType.get(ct) == null) {
@@ -1716,5 +1718,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			result.remove(null);
 		}
 		return result;
+	}
+
+	public void deleteMultiple(Collection<? extends HasIdAndLocalId> secondOnly) {
+		secondOnly.forEach(hili -> deleteObject(hili, true));
 	}
 }

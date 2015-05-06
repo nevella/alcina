@@ -51,14 +51,12 @@ public interface HasEquivalence<T> {
 
 		public static <T extends HasEquivalenceHash> ThreeWaySetResult<T> threeWaySplit(
 				Collection<T> c1, Collection<T> c2) {
-			//ThreeWaySetResult<T> result = new ThreeWaySetResult<>();
-			//TODO - gwt/jdk8
-			ThreeWaySetResult<T> result = new ThreeWaySetResult<T>();
-			Set intersection = new LinkedHashSet<T>((List) intersection(c1, c2));
+			ThreeWaySetResult<T> result = new ThreeWaySetResult<>();
+			Set intersection = new LinkedHashSet<>((List) intersection(c1, c2));
 			result.intersection = intersection;
-			result.firstOnly = new LinkedHashSet<T>((List) removeAll(c1,
+			result.firstOnly = new LinkedHashSet<>((List) removeAll(c1,
 					intersection));
-			result.secondOnly = new LinkedHashSet<T>((List) removeAll(c2,
+			result.secondOnly = new LinkedHashSet<>((List) removeAll(c2,
 					intersection));
 			return result;
 		}
@@ -134,6 +132,26 @@ public interface HasEquivalence<T> {
 			for (T t : o1) {
 				boolean duplicate = false;
 				for (T pass : passed) {
+					if (pass.equivalentTo(t)) {
+						duplicates.add(t);
+						duplicate = true;
+						break;
+					}
+				}
+				if (!duplicate) {
+					passed.add(t);
+				}
+			}
+			return duplicates;
+		}
+
+		public static <T extends HasEquivalenceHash> List<T> listDuplicatesHashed(
+				Collection<T> o1) {
+			HasEquivalenceHashMap<T> passed = new HasEquivalenceHashMap<T>();
+			List<T> duplicates = new ArrayList<T>();
+			for (T t : o1) {
+				boolean duplicate = false;
+				for (T pass : passed.getAndEnsure(t.equivalenceHash())) {
 					if (pass.equivalentTo(t)) {
 						duplicates.add(t);
 						duplicate = true;
