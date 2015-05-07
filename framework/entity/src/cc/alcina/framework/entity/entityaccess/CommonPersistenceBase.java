@@ -348,7 +348,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
 			Object value1, String key2, Object value2) {
-		String eql = String.format("from %s where %s=? and %s=?",
+		String eql = String.format("from %s where %s=?1 and %s=?2",
 				clazz.getSimpleName(), key1, key2);
 		Query q = getEntityManager().createQuery(eql).setParameter(1, value1)
 				.setParameter(2, value2);
@@ -960,7 +960,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 		String eql = String
 				.format("select dtep from %s dtep "
-						+ "where  dtep.id>? and dtep.objectClassRef.id in %s "
+						+ "where  dtep.id>?1 and dtep.objectClassRef.id in %s "
 						+ "order by dtep.id desc",
 						getImplementationSimpleClassName(DomainTransformEventPersistent.class),
 						EntityUtils.longsToIdClause(classRefIds));
