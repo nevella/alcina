@@ -69,7 +69,7 @@ public class ServletLayerUtils {
 			return new DomainTransformLayerWrapper();
 		}
 		if (AppPersistenceBase.isTest()) {
-			return null;
+			return new DomainTransformLayerWrapper();
 		}
 		int maxTransformChunkSize = ResourceUtilities.getInteger(
 				ServletLayerUtils.class, "maxTransformChunkSize", 6000);
