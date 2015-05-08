@@ -53,6 +53,8 @@ public class EnumCustomiser implements Customiser {
 
 	public static final String FILTER_CLASS = "filterClass";
 
+	public static final String VISIBLE_ITEM_COUNT = "VISIBLE_ITEM_COUNT";
+
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, CustomiserInfo info) {
 		NamedParameter parameter = NamedParameter.Support.getParameter(
@@ -66,9 +68,12 @@ public class EnumCustomiser implements Customiser {
 		boolean withNull = parameter != null && parameter.booleanValue();
 		ListBoxEnumProvider provider = new ListBoxEnumProvider(clazz, withNull);
 		provider.setMultiple(multipleSelect);
+		provider.setVisibleItemCount(NamedParameter.Support.intValue(
+				info.parameters(), VISIBLE_ITEM_COUNT, 4));
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				RENDERER_CLASS);
-		final Renderer renderer = parameter != null ? (Renderer) Reflections.classLookup().newInstance(parameter.classValue()) : null;
+		final Renderer renderer = parameter != null ? (Renderer) Reflections
+				.classLookup().newInstance(parameter.classValue()) : null;
 		if (renderer != null) {
 			provider.setRenderer(renderer);
 		}
@@ -91,7 +96,8 @@ public class EnumCustomiser implements Customiser {
 				ENUM_PROVIDER_CLASS);
 		if (parameter != null) {
 			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
-			hiddenValues.removeAll(((HasValue<Collection>) Reflections.classLookup().newInstance(parameter.classValue()))
+			hiddenValues.removeAll(((HasValue<Collection>) Reflections
+					.classLookup().newInstance(parameter.classValue()))
 					.getValue());
 			provider.setHiddenValues(hiddenValues);
 		}
@@ -99,9 +105,10 @@ public class EnumCustomiser implements Customiser {
 				FILTER_CLASS);
 		if (parameter != null) {
 			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
-			hiddenValues.removeAll(CollectionFilters.filter(hiddenValues,
-					(CollectionFilter) Reflections.classLookup()
-							.newInstance(parameter.classValue())));
+			hiddenValues.removeAll(CollectionFilters.filter(
+					hiddenValues,
+					(CollectionFilter) Reflections.classLookup().newInstance(
+							parameter.classValue())));
 			provider.setHiddenValues(hiddenValues);
 		}
 		return editable ? provider : new BoundWidgetProvider() {
