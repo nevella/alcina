@@ -116,10 +116,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return getConn(true, false);
 	}
 
-	public Connection getConn(boolean forceNewLocal, boolean forceRemote)
-			throws Exception {
-		boolean remote = forceRemote
-				|| (console.props.connection_useProduction && !forceNewLocal);
+	public Connection getConn(boolean forceNewLocal, boolean forceRemote) throws Exception {
+		boolean remote = forceRemote || (console.props.connection_useProduction && !forceNewLocal);
 		if (forceNewLocal) {
 			connLocal = null;
 		}
@@ -128,27 +126,22 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		if (conn == null) {
 			Connection newConnection = null;
 			if (remote && !canUseProductionConn()) {
-				throw new Exception(String.format("Cmd %s is local only",
-						getClass().getSimpleName()));
+				throw new Exception(String.format("Cmd %s is local only", getClass()
+						.getSimpleName()));
 			}
 			Class.forName("org.postgresql.Driver");
 			String connStr = remote ? console.props.connection_production
 					: console.props.connection_local;
 			String[] parts = connStr.split(",");
 			try {
-				conn = DriverManager
-						.getConnection(parts[0], parts[1], parts[2]);
+				conn = DriverManager.getConnection(parts[0], parts[1], parts[2]);
 			} catch (Exception e) {
-				if (remote
-						&& !console.props.connectionProductionTunnelCmd
-								.isEmpty()) {
-					new ShellWrapper()
-							.runShell(console.props.connectionProductionTunnelCmd);
+				if (remote && !console.props.connectionProductionTunnelCmd.isEmpty()) {
+					new ShellWrapper().runShell(console.props.connectionProductionTunnelCmd);
 					for (int i = 1; i < 15; i++) {
 						try {
 							System.out.format("opening tunnel ... %s ...\n", i);
-							conn = DriverManager.getConnection(parts[0],
-									parts[1], parts[2]);
+							conn = DriverManager.getConnection(parts[0], parts[1], parts[2]);
 							break;
 						} catch (Exception e1) {
 							try {
@@ -158,8 +151,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 							}
 						}
 					}
-					conn = DriverManager.getConnection(parts[0], parts[1],
-							parts[2]);
+					conn = DriverManager.getConnection(parts[0], parts[1], parts[2]);
 				} else {
 					throw e;
 				}
@@ -174,24 +166,21 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	}
 
 	protected int getIntArg(String[] argv, int argIndex, int defaultValue) {
-		return argv.length <= argIndex ? defaultValue : Integer
-				.parseInt(argv[argIndex]);
+		return argv.length <= argIndex ? defaultValue : Integer.parseInt(argv[argIndex]);
 	}
 
-	protected String getStringArg(String[] argv, int argIndex,
-			String defaultValue) {
+	protected String getStringArg(String[] argv, int argIndex, String defaultValue) {
 		return argv.length <= argIndex ? defaultValue : argv[argIndex];
 	}
 
-	protected String runSubcommand(DevConsoleCommand sub, String[] argv)
-			throws Exception {
+	protected String runSubcommand(DevConsoleCommand sub, String[] argv) throws Exception {
 		console.prepareCommand(sub);
 		return sub.run(argv == null ? new String[0] : argv);
 	}
 
 	protected String simpleParserName(Object parser) {
-		return parser.getClass().getSimpleName().replace("Article", "")
-				.replace("Parser", "").replace("Marker", "");
+		return parser.getClass().getSimpleName().replace("Article", "").replace("Parser", "")
+				.replace("Marker", "");
 	}
 
 	public static class CmdBreak extends DevConsoleCommand {
@@ -300,8 +289,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			List<Class> classes = Registry.get().lookup(
-					DevConsoleRunnable.class);
+			List<Class> classes = Registry.get().lookup(DevConsoleRunnable.class);
 			String runnableName = argv.length == 0 ? "" : argv[0];
 			for (Class clazz : classes) {
 				if (clazz.getSimpleName().equals(runnableName)) {
@@ -312,34 +300,34 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					r.actionLogger = console.logger;
 					r.argv = argv;
 					try {
-						LooseContext.pushWithKey(
-								DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
+						LooseContext.pushWithKey(DevConsoleRunnable.CONTEXT_ACTION_RESULT, "");
 						r.run();
 						String msg = LooseContext
 								.getString(DevConsoleRunnable.CONTEXT_ACTION_RESULT);
 						msg = msg.isEmpty() ? msg : "\n\t" + msg;
-						return String.format("'%s' was run%s", runnableName,
-								msg);
+						return String.format("'%s' was run%s", runnableName, msg);
 					} finally {
 						LooseContext.pop();
 					}
 				}
 			}
-			listRunnables(classes);
-			return String.format("no runnable with classname '%s' found",
-					runnableName);
+			listRunnables(classes, runnableName);
+			return String.format("no runnable with classname '%s' found", runnableName);
 		}
 
-		static void listRunnables(List<Class> classes)
+		static void listRunnables(List<Class> classes, String runnableNamePart)
 				throws InstantiationException, IllegalAccessException {
 			SortedMap<String, Class> map = CollectionFilters.sortedMap(classes,
 					new ClassSimpleNameMapper());
+			if (CommonUtils.isNotNullOrEmpty(runnableNamePart)) {
+				map.entrySet().removeIf(
+						e -> !e.getKey().toLowerCase().contains(runnableNamePart.toLowerCase()));
+			}
 			System.out.format("%-45s%-20s\n", "Available runnables:", "Tags");
 			for (Entry<String, Class> entry : map.entrySet()) {
-				String[] tags = ((DevConsoleRunnable) entry.getValue()
-						.newInstance()).tagStrings();
-				System.out.format("%-45s%-20s\n", entry.getKey(), CommonUtils
-						.join(tags, ", ").toLowerCase());
+				String[] tags = ((DevConsoleRunnable) entry.getValue().newInstance()).tagStrings();
+				System.out.format("%-45s%-20s\n", entry.getKey(), CommonUtils.join(tags, ", ")
+						.toLowerCase());
 			}
 		}
 	}
@@ -366,18 +354,15 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(final String[] argv) throws Exception {
-			List<Class> classes = Registry.get().lookup(
-					DevConsoleRunnable.class);
+			List<Class> classes = Registry.get().lookup(DevConsoleRunnable.class);
 			CollectionFilter<Class> filter = new CollectionFilter<Class>() {
 				@Override
 				public boolean allow(Class o) {
 					try {
-						String[] tags = ((DevConsoleRunnable) o.newInstance())
-								.tagStrings();
+						String[] tags = ((DevConsoleRunnable) o.newInstance()).tagStrings();
 						for (String tag : tags) {
 							for (String arg : argv) {
-								if (tag.toLowerCase().startsWith(
-										arg.toLowerCase())) {
+								if (tag.toLowerCase().startsWith(arg.toLowerCase())) {
 									return true;
 								}
 							}
@@ -388,8 +373,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					}
 				}
 			};
-			CmdExecRunnable.listRunnables(CollectionFilters.filter(classes,
-					filter));
+			CmdExecRunnable.listRunnables(CollectionFilters.filter(classes, filter), null);
 			return "";
 		}
 	}
@@ -412,11 +396,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			List<String> keys = new ArrayList<String>(
-					console.commandsById.keySet());
+			List<String> keys = new ArrayList<String>(console.commandsById.keySet());
 			Collections.sort(keys);
-			System.out.format("%-20s%-50s%s\n", "Command", "Usage",
-					"Description");
+			System.out.format("%-20s%-50s%s\n", "Command", "Usage", "Description");
 			System.out.println(CommonUtils.padStringLeft("", 100, "-"));
 			Set<DevConsoleCommand> seen = new LinkedHashSet<DevConsoleCommand>();
 			String descPad = "\n" + CommonUtils.padStringLeft("", 73, " ");
@@ -425,15 +407,13 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				Map<String, DevConsoleCommand> commandsById = console.commandsById;
 				DevConsoleCommand cmd2 = commandsById.get(k);
 				if (seen.contains(cmd2)
-						|| (filter != null && !filter.equals(cmd2
-								.getCommandIds()[0]))) {
+						|| (filter != null && !filter.equals(cmd2.getCommandIds()[0]))) {
 					continue;
 				}
 				seen.add(cmd2);
 				String desc = cmd2.getDescription();
 				desc = desc.replace("\n", descPad);
-				System.out.format("%-20s%-50s%s\n",
-						CommonUtils.join(cmd2.getCommandIds(), ", "),
+				System.out.format("%-20s%-50s%s\n", CommonUtils.join(cmd2.getCommandIds(), ", "),
 						cmd2.getUsage(), desc);
 			}
 			return null;
@@ -528,8 +508,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			List<String> matches = new ArrayList<String>(
-					console.history.getMatches(argv[0]));
+			List<String> matches = new ArrayList<String>(console.history.getMatches(argv[0]));
 			Collections.reverse(matches);
 			CollectionFilter<String> filter = new CollectionFilter<String>() {
 				@Override
@@ -539,8 +518,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			};
 			CollectionFilters.filterInPlace(matches, filter);
 			if (matches.size() > 1) {
-				System.out.format("Matches:\n-------\n%s\n\n",
-						CommonUtils.join(matches, "\n"));
+				System.out.format("Matches:\n-------\n%s\n\n", CommonUtils.join(matches, "\n"));
 			}
 			if (matches.size() > 0) {
 				console.setCommandLineText(CommonUtils.last(matches.iterator()));
@@ -565,26 +543,24 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return "rsync  [get|put] local remote";
 		}
 
-		private void importViaRsync(String arg1, String remotePort,
-				String from, String to) throws Exception {
-			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
-					"--progress", "--partial", arg1, remotePort, from, to };
+		private void importViaRsync(String arg1, String remotePort, String from, String to)
+				throws Exception {
+			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz", "--progress",
+					"--partial", arg1, remotePort, from, to };
 			new ShellWrapper().runProcessCatchOutputAndWait(cmdAndArgs);
 		}
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String homeDir = (System.getenv("USERPROFILE") != null) ? System
-					.getenv("USERPROFILE") : System.getProperty("user.home");
+			String homeDir = (System.getenv("USERPROFILE") != null) ? System.getenv("USERPROFILE")
+					: System.getProperty("user.home");
 			String localPath = SEUtilities.combinePaths(homeDir + "/", argv[1]);
 			String remotePath = String.format(
 					"%s:%s",
 					console.props.remoteSsh,
-					(argv[2].startsWith("'") ? argv[2] : (SEUtilities
-							.combinePaths(console.props.remoteHomeDir + "/",
-									argv[2]))));
-			String remotePortStr = String.format(
-					"/usr/bin/ssh -o StrictHostKeychecking=no -p %s",
+					(argv[2].startsWith("'") ? argv[2] : (SEUtilities.combinePaths(
+							console.props.remoteHomeDir + "/", argv[2]))));
+			String remotePortStr = String.format("/usr/bin/ssh -o StrictHostKeychecking=no -p %s",
 					console.props.remoteSshPort);
 			boolean put = argv[0].equals("put");
 			String f1 = put ? localPath : remotePath;
@@ -594,8 +570,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		}
 	}
 
-	public static class CmdInterpolatePostgresParameterisedQuery extends
-			DevConsoleCommand {
+	public static class CmdInterpolatePostgresParameterisedQuery extends DevConsoleCommand {
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "pgpi" };
@@ -619,16 +594,12 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String pg = console
-					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
+			String pg = console.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			pg = pg.isEmpty() ? console.getClipboardContents() : pg;
 			pg = pg.replaceAll("\\n.+: \\[\\d+-\\d+\\]", "\n");
-			System.out.format("Inserting into query:\n%s\n\n",
-					console.padLeft(pg, 1, 0));
-			Pattern p1 = Pattern
-					.compile("LOG:  execute .+?: (.+)\nDETAIL:  parameters: (.+)");
-			Pattern p2 = Pattern.compile(
-					".+execute .+?: (.+)\n.+DETAIL:  parameters: (.+)",
+			System.out.format("Inserting into query:\n%s\n\n", console.padLeft(pg, 1, 0));
+			Pattern p1 = Pattern.compile("LOG:  execute .+?: (.+)\nDETAIL:  parameters: (.+)");
+			Pattern p2 = Pattern.compile(".+execute .+?: (.+)\n.+DETAIL:  parameters: (.+)",
 					Pattern.DOTALL);
 			Pattern p3 = Pattern.compile("(\\$\\d+) = ('.+?')");
 			Matcher m1 = p1.matcher(pg);
@@ -676,8 +647,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String jsun = console
-					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
+			String jsun = console.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			jsun = jsun.isEmpty() ? console.getClipboardContents() : jsun;
 			if ("".isEmpty()) {
 				throw new RuntimeException("some eclipse build problem...");
@@ -714,8 +684,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String idle = console
 					.getMultilineInput("Enter the id list text, or blank for clipboard: ");
 			idle = idle.isEmpty() ? console.getClipboardContents() : idle;
-			System.out.format("Creating list:\n%s\n\n",
-					console.padLeft(idle, 1, 0));
+			System.out.format("Creating list:\n%s\n\n", console.padLeft(idle, 1, 0));
 			Pattern p1 = Pattern.compile("\\d+");
 			Matcher m1 = p1.matcher(idle);
 			ids = new LinkedHashSet<Long>();
@@ -757,16 +726,13 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String idStr = console
-					.getMultilineInput("Enter the ids, or blank for clipboard: ");
+			String idStr = console.getMultilineInput("Enter the ids, or blank for clipboard: ");
 			idStr = idStr.isEmpty() ? console.getClipboardContents() : idStr;
-			String sql = String.format("select "
-					+ "id,optlock,creationdate,lastmodificationdate,"
-					+ "classname,serializedxml,creation_user_id,"
-					+ "modification_user_id,user_id"
+			String sql = String.format("select " + "id,optlock,creationdate,lastmodificationdate,"
+					+ "classname,serializedxml,creation_user_id," + "modification_user_id,user_id"
 					+ " from wrappedobject where id in (%s);\n", idStr);
-			String localDelete = String.format(
-					"delete  from wrappedobject where id in (%s);\n", idStr);
+			String localDelete = String.format("delete  from wrappedobject where id in (%s);\n",
+					idStr);
 			System.out.format("Local delete:\n========\n%s\n\n", localDelete);
 			Connection localConn = getConn(true);
 			if (!console.props.connection_useProduction) {
@@ -822,11 +788,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String xs = console
-					.getMultilineInput("Enter the pg text, or blank for clipboard: ");
+			String xs = console.getMultilineInput("Enter the pg text, or blank for clipboard: ");
 			xs = xs.isEmpty() ? console.getClipboardContents() : xs;
-			List<DomainTransformEvent> list = new PlaintextProtocolHandlerShort()
-					.deserialize(xs);
+			List<DomainTransformEvent> list = new PlaintextProtocolHandlerShort().deserialize(xs);
 			String out = CommonUtils.join(list, "\n");
 			System.out.println(out);
 			console.setClipboardContents(out);
@@ -885,8 +849,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		@Override
 		public String run(String[] argv) throws Exception {
 			Map<String, Field> fieldsByAnnName = CollectionFilters.sortedMap(
-					Arrays.asList(console.props.getClass().getFields()),
-					new FieldFilter());
+					Arrays.asList(console.props.getClass().getFields()), new FieldFilter());
 			if (argv.length == 0) {
 				System.out.println(ResourceUtilities
 						.readFileToString(console.consolePropertiesFile));
@@ -908,8 +871,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					field.set(console.props, argv.length == 1 ? null : argv[1]);
 				}
 				console.saveConfig();
-				return String.format("set %s to '%s'", argv[0],
-						argv.length == 1 ? null : argv[1]);
+				return String.format("set %s to '%s'", argv[0], argv.length == 1 ? null : argv[1]);
 			} else {
 				System.err.println("Property not found - valid names are:");
 				dumpProps(fieldsByAnnName);
@@ -917,10 +879,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			return "";
 		}
 
-		private void dumpProps(Map<String, Field> fieldsByAnnName)
-				throws Exception {
-			System.out.format("%-30s%-50s%s\n", "Property", "Value",
-					"Description");
+		private void dumpProps(Map<String, Field> fieldsByAnnName) throws Exception {
+			System.out.format("%-30s%-50s%s\n", "Property", "Value", "Description");
 			System.out.println(CommonUtils.padStringLeft("", 100, "-"));
 			String descPad = "\n" + CommonUtils.padStringLeft("", 83, " ");
 			for (String key : fieldsByAnnName.keySet()) {
@@ -928,13 +888,12 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				SetPropInfo ann = field.getAnnotation(SetPropInfo.class);
 				String desc = ann.description();
 				desc = desc.replace("\n", descPad);
-				System.out.format("%-30s%-50s%s\n", ann.key(),
-						field.get(console.props), desc);
+				System.out.format("%-30s%-50s%s\n", ann.key(), field.get(console.props), desc);
 			}
 		}
 
-		private static class FieldFilter extends StringKeyValueMapper<Field>
-				implements CollectionFilter<Field> {
+		private static class FieldFilter extends StringKeyValueMapper<Field> implements
+				CollectionFilter<Field> {
 			@Override
 			public boolean allow(Field o) {
 				return getKey(o) != null;
@@ -976,8 +935,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			}
 			boolean load = argv[0].equals("load");
 			String name = argv[1];
-			File profile = SEUtilities
-					.getChildFile(console.profileFolder, name);
+			File profile = SEUtilities.getChildFile(console.profileFolder, name);
 			File profileSer = SEUtilities.getChildFile(profile, "ser");
 			File testFolder = console.devHelper.getTestFolder();
 			if (load) {
@@ -987,27 +945,27 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					return "";
 				} else {
 					SEUtilities.copyFile(profileSer, testFolder);
-					SEUtilities.copyFile(SEUtilities.getChildFile(profile,
-							console.consolePropertiesFile.getName()),
+					SEUtilities.copyFile(
+							SEUtilities.getChildFile(profile,
+									console.consolePropertiesFile.getName()),
 							console.consolePropertiesFile);
-					SEUtilities.copyFile(SEUtilities.getChildFile(profile,
-							console.consoleHistoryFile.getName()),
-							console.consoleHistoryFile);
+					SEUtilities
+							.copyFile(
+									SEUtilities.getChildFile(profile,
+											console.consoleHistoryFile.getName()),
+									console.consoleHistoryFile);
 					console.loadConfig();
 					runSubcommand(new CmdReset(), new String[0]);
 				}
 			} else {
 				SEUtilities.copyFile(testFolder, profileSer);
-				SEUtilities.copyFile(console.consolePropertiesFile, SEUtilities
-						.getChildFile(profile,
-								console.consolePropertiesFile.getName()));
-				SEUtilities.copyFile(console.consoleHistoryFile, SEUtilities
-						.getChildFile(profile,
-								console.consoleHistoryFile.getName()));
+				SEUtilities.copyFile(console.consolePropertiesFile,
+						SEUtilities.getChildFile(profile, console.consolePropertiesFile.getName()));
+				SEUtilities.copyFile(console.consoleHistoryFile,
+						SEUtilities.getChildFile(profile, console.consoleHistoryFile.getName()));
 			}
-			return load ? String
-					.format("Loaded config from profile '%s'", name) : String
-					.format("Saved config to profile '%s'", name);
+			return load ? String.format("Loaded config from profile '%s'", name) : String.format(
+					"Saved config to profile '%s'", name);
 		}
 
 		private void listProfiles() {
@@ -1068,8 +1026,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String cmd = argv[0];
 			if (cmd.equals("a")) {
 				String name = argv[1];
-				List<String> tags = new ArrayList<String>(Arrays.asList(argv[2]
-						.split(",")));
+				List<String> tags = new ArrayList<String>(Arrays.asList(argv[2].split(",")));
 				String content = argv[3].replace("\\n", "\n");
 				console.strings.remove(name);
 				console.strings.add(name, tags, content);
@@ -1081,16 +1038,13 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				DevConsoleString cs = console.strings.get(name);
 				if (cs != null) {
 					console.setClipboardContents(cs.content);
-					System.out.format("Copied to clipboard: %s\n\t%s\n",
-							cs.name, cs.content);
+					System.out.format("Copied to clipboard: %s\n\t%s\n", cs.name, cs.content);
 				}
 			} else if (cmd.equals("l")) {
-				List<String> tags = new ArrayList<String>(
-						Arrays.asList((argv.length < 2 ? "" : argv[1])
-								.split(",")));
+				List<String> tags = new ArrayList<String>(Arrays.asList((argv.length < 2 ? ""
+						: argv[1]).split(",")));
 				List<DevConsoleString> list = console.strings.list(tags);
-				UnsortedMultikeyMap<String> tableData = new UnsortedMultikeyMap<String>(
-						2);
+				UnsortedMultikeyMap<String> tableData = new UnsortedMultikeyMap<String>(2);
 				int r = 0;
 				for (DevConsoleString s : list) {
 					tableData.put(r, 0, s.name);
@@ -1098,12 +1052,11 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					tableData.put(r, 2, s.content.replace("\n", "\\n"));
 					r++;
 				}
-				List<String> columnNames = Arrays.asList(new String[] { "name",
-						"tags", "content" });
+				List<String> columnNames = Arrays
+						.asList(new String[] { "name", "tags", "content" });
 				ReportUtils.dumpTable(tableData, columnNames);
 			} else if (cmd.equals("lt")) {
-				ArrayList<String> tags = new ArrayList<String>(
-						console.strings.listTags());
+				ArrayList<String> tags = new ArrayList<String>(console.strings.listTags());
 				Collections.sort(tags);
 				System.out.println(CommonUtils.join(tags, "\n"));
 			} else {
@@ -1130,8 +1083,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		return stringArg == null ? defaultValue : Integer.parseInt(stringArg);
 	}
 
-	protected String getStringArg(String[] argv, String argName,
-			String defaultValue) {
+	protected String getStringArg(String[] argv, String argName, String defaultValue) {
 		Pattern argMatcher = Pattern.compile(String.format("%s=(.+)", argName));
 		for (String arg : argv) {
 			Matcher m = argMatcher.matcher(arg);
@@ -1171,8 +1123,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String chrx = console
 					.getMultilineInput("Enter the chrome cache file text, or blank for clipboard: ");
 			chrx = chrx.isEmpty() ? console.getClipboardContents() : chrx;
-			lastFileName = console.getSingleLineInput("Save to file:",
-					lastFileName);
+			lastFileName = console.getSingleLineInput("Save to file:", lastFileName);
 			Pattern p = Pattern.compile("00000000:");
 			Matcher m1 = p.matcher(chrx);
 			m1.find();
@@ -1189,12 +1140,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				}
 			}
 			int size = baos.size();
-			BufferedOutputStream bos = new BufferedOutputStream(
-					new FileOutputStream(lastFileName));
-			ResourceUtilities.writeStreamToStream(
-					new ByteArrayInputStream(baos.toByteArray()), bos);
-			System.out.format("Wrote %s bytes to \n\t'%s'\n", size,
-					lastFileName);
+			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(lastFileName));
+			ResourceUtilities
+					.writeStreamToStream(new ByteArrayInputStream(baos.toByteArray()), bos);
+			System.out.format("Wrote %s bytes to \n\t'%s'\n", size, lastFileName);
 			return "";
 		}
 	}

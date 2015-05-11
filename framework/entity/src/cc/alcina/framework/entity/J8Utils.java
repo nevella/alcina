@@ -25,6 +25,11 @@ public class J8Utils {
 		return new ToMultimapCollector(keyMapper, valueMapper, Multimap::new);
 	}
 
+	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toKeyMultimap(
+			Function<? super T, ? extends K> keyMapper) {
+		return new ToMultimapCollector(keyMapper, t -> t, Multimap::new);
+	}
+
 	private static class ToMapCollector<T, K> implements
 			java.util.stream.Collector<T, Map<K, T>, Map<K, T>> {
 		private Function<? super T, ? extends K> keyMapper;

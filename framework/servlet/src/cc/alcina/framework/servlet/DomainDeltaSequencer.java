@@ -123,7 +123,7 @@ public class DomainDeltaSequencer {
 		String metadataString = new AlcinaBeanSerializerS().serialize(metadata);
 		if (asGwtStreams) {
 			if (signature.provideRequiresHash()) {
-				String contentSha1 = EncryptionUtils.SHA1(trancheString);
+				String contentSha1 = new EncryptionUtils().SHA1(trancheString);
 				signature.setContentHash(contentSha1);
 				signature.setContentLength(trancheString.length());
 				if (incomingSignatures.contains(signature.toString())) {

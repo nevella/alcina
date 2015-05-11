@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import com.totsp.gwittir.client.beans.Converter;
 
@@ -74,4 +75,6 @@ public interface MultikeyMap<V> {
 	void setDepth(int depth);
 
 	public abstract void stripNonDuplicates(int depth);
+
+	public abstract V ensure(Supplier<V> supplier, Object... objects);
 }

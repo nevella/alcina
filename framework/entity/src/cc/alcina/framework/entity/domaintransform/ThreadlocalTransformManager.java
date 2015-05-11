@@ -253,7 +253,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			boolean generateEventIfObjectNotFound) {
 		if (deleted.contains(hili)) {
 			RuntimeException ex = new RuntimeException(String.format(
-					"Double deletion - %s %s", new HiliLocator(hili), hili));
+					"Double deletion - %s %s", new HiliLocator(hili), CommonUtils.safeToString(hili)));
 			System.out.println(ex.getMessage());
 			ex.printStackTrace();
 			return null;

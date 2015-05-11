@@ -61,8 +61,7 @@ public class EncryptionUtils {
 			for (int i = 0; i < providers.length; i++) {
 				System.out.println("Provider: " + providers[i].getName() + ", "
 						+ providers[i].getInfo());
-				for (Iterator itr = providers[i].keySet().iterator(); itr
-						.hasNext();) {
+				for (Iterator itr = providers[i].keySet().iterator(); itr.hasNext();) {
 					String key = (String) itr.next();
 					String value = (String) providers[i].get(key);
 					System.out.println("\t" + key + " = " + value);
@@ -84,8 +83,7 @@ public class EncryptionUtils {
 	private PublicKey publicKey;
 
 	public static EncryptionUtils get() {
-		EncryptionUtils singleton = Registry
-				.checkSingleton(EncryptionUtils.class);
+		EncryptionUtils singleton = Registry.checkSingleton(EncryptionUtils.class);
 		if (singleton == null) {
 			singleton = new EncryptionUtils();
 			Registry.registerSingleton(EncryptionUtils.class, singleton);
@@ -98,8 +96,7 @@ public class EncryptionUtils {
 		try {
 			byte[] publicEncryptedSymKey = new byte[128];
 			System.arraycopy(source, 0, publicEncryptedSymKey, 0, 128);
-			byte[] desKeyDecoded = asymmetricDecrypt(publicEncryptedSymKey,
-					this.privateKey);
+			byte[] desKeyDecoded = asymmetricDecrypt(publicEncryptedSymKey, this.privateKey);
 			byte[] encData = new byte[source.length - 128];
 			DESedeKeySpec pass = new DESedeKeySpec(desKeyDecoded);
 			SecretKeyFactory skf = SecretKeyFactory.getInstance("DESede");
@@ -118,8 +115,7 @@ public class EncryptionUtils {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			KeyGenerator keygen = KeyGenerator.getInstance("DESede");
 			SecretKey desKey = keygen.generateKey();
-			byte[] publicEncryptedSymKey = asymmetricEncrypt(
-					desKey.getEncoded(), this.publicKey);
+			byte[] publicEncryptedSymKey = asymmetricEncrypt(desKey.getEncoded(), this.publicKey);
 			baos.write(publicEncryptedSymKey);
 			byte[] gzs = gzipBytes(source);
 			baos.write(symmetricEncrypt(gzs, desKey));
@@ -218,8 +214,7 @@ public class EncryptionUtils {
 		if (getPassphrase() != null) {
 			Key key = getSymmetricKey(getPassphrase());
 			byte[] unencPrivate = symmetricDecrypt(getPrivateKeyBytes(), key);
-			PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(
-					unencPrivate);
+			PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(unencPrivate);
 			privateKey = keyFactory.generatePrivate(privateKeySpec);
 		}
 	}
@@ -290,8 +285,7 @@ public class EncryptionUtils {
 			if (encodedInfo.length < keylen) {
 				byte[] newKey = new byte[keylen];
 				Arrays.fill(newKey, (byte) 0);
-				System.arraycopy(encodedInfo, 0, newKey, 0,
-						getPassphrase().length);
+				System.arraycopy(encodedInfo, 0, newKey, 0, getPassphrase().length);
 				encodedInfo = newKey;
 			} else {
 				byte[] newKey = new byte[keylen];
@@ -352,9 +346,9 @@ public class EncryptionUtils {
 		return convertToHex(md5hash);
 	}
 
-	private static MessageDigest sha1Digest;
+	private MessageDigest sha1Digest;
 
-	public static String SHA1(String text) {
+	public String SHA1(String text) {
 		try {
 			MessageDigest md = ensureSha1Digest();
 			byte[] sha1hash = new byte[32];
@@ -366,7 +360,7 @@ public class EncryptionUtils {
 		}
 	}
 
-	private static MessageDigest ensureSha1Digest() throws Exception {
+	private MessageDigest ensureSha1Digest() throws Exception {
 		if (sha1Digest == null) {
 			sha1Digest = MessageDigest.getInstance("SHA1");
 		}
@@ -383,8 +377,8 @@ public class EncryptionUtils {
 		return convertToHex(md5hash);
 	}
 
-	public static String MD5(List<byte[]> byties)
-			throws NoSuchAlgorithmException, UnsupportedEncodingException {
+	public static String MD5(List<byte[]> byties) throws NoSuchAlgorithmException,
+			UnsupportedEncodingException {
 		MessageDigest md;
 		md = MessageDigest.getInstance("MD5");
 		for (byte[] bytes : byties) {
@@ -396,14 +390,13 @@ public class EncryptionUtils {
 	}
 
 	public static final byte[] intToByteArray(int value) {
-		return new byte[] { (byte) (value >>> 24), (byte) (value >>> 16),
-				(byte) (value >>> 8), (byte) value };
+		return new byte[] { (byte) (value >>> 24), (byte) (value >>> 16), (byte) (value >>> 8),
+				(byte) value };
 	}
 
 	public static final byte[] longToByteArray(long value) {
-		return new byte[] { (byte) (value >>> 56), (byte) (value >>> 48),
-				(byte) (value >>> 40), (byte) (value >>> 32),
-				(byte) (value >>> 24), (byte) (value >>> 16),
+		return new byte[] { (byte) (value >>> 56), (byte) (value >>> 48), (byte) (value >>> 40),
+				(byte) (value >>> 32), (byte) (value >>> 24), (byte) (value >>> 16),
 				(byte) (value >>> 8), (byte) value };
 	}
 }

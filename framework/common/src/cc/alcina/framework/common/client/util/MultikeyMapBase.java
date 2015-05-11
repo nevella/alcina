@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.ImmutableMap;
@@ -131,6 +132,19 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 		Object withKeys = getWithKeys(ensure, length, objects);
 		MultikeyMap mkm = (MultikeyMap) withKeys;
 		return mkm != null ? mkm.writeableDelegate() : null;
+	}
+
+	@Override
+	public V ensure(Supplier<V> supplier, Object... objects) {
+		V v = get(objects);
+		if (v == null) {
+			Object[] arr = new Object[objects.length + 1];
+			System.arraycopy(objects, 0, arr, 0, objects.length);
+			v = supplier.get();
+			arr[objects.length] = v;
+			put(arr);
+		}
+		return v;
 	}
 
 	public V remove(Object... objects) {
