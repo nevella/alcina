@@ -26,7 +26,12 @@ import java.util.LinkedHashMap;
 @SuppressWarnings("unchecked")
 public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> {
 	private static final long serialVersionUID = 1L;
-
+	/**
+	 * Ensures that RPC will consider type parameter V to be exposed. It will be
+	 * pruned by dead code elimination.
+	 */
+	@SuppressWarnings("unused")
+	private V exposeValue;
 	public UnsortedMultikeyMap() {
 		this(2);
 	}

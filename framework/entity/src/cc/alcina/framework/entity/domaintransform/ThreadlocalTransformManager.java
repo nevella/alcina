@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
@@ -95,6 +96,9 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ThreadlocalTransformManager extends TransformManager implements
 		PropertyAccessor, ObjectLookup, ClassLookup {
+	public static final String CONTEXT_IGNORE_DOUBLE_DELETION = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_IGNORE_DOUBLE_DELETION";
+
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
 		threadLocalListeners.add(listener);
@@ -252,10 +256,13 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili,
 			boolean generateEventIfObjectNotFound) {
 		if (deleted.contains(hili)) {
-			RuntimeException ex = new RuntimeException(String.format(
-					"Double deletion - %s %s", new HiliLocator(hili), CommonUtils.safeToString(hili)));
-			System.out.println(ex.getMessage());
-			ex.printStackTrace();
+			if (!LooseContext.is(CONTEXT_IGNORE_DOUBLE_DELETION)) {
+				RuntimeException ex = new RuntimeException(String.format(
+						"Double deletion - %s %s", new HiliLocator(hili),
+						CommonUtils.safeToString(hili)));
+				System.out.println(ex.getMessage());
+				ex.printStackTrace();
+			}
 			return null;
 		}
 		hili = ensureNonProxy(hili);

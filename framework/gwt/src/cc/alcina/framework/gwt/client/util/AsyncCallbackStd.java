@@ -24,4 +24,5 @@ public abstract class AsyncCallbackStd<T> implements AsyncCallback<T> {
 			value=result;
 		}
 	}
+	
 }

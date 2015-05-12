@@ -78,12 +78,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 						}
 						T existing = lookup.get(keys);
 						if (existing != null) {
-							Registry.impl(TaggedLoggers.class)
-									.log(String.format(
-											"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
-											this, Arrays.asList(values),
-											existing), AlcinaMemCache.class,
-											TaggedLogger.WARN);
+							logDuplicateMapping(values, existing);
 							return;
 						}
 					}
@@ -97,6 +92,17 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 				}
 			}
 		}
+	}
+
+
+
+	protected void logDuplicateMapping(Object[] values, T existing) {
+		Registry.impl(TaggedLoggers.class)
+				.log(String.format(
+						"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
+						this, Arrays.asList(values),
+						existing), AlcinaMemCache.class,
+						TaggedLogger.WARN);
 	}
 
 	public boolean isEnabled() {
