@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.function.Supplier;
+
 /**
  * Beginnings of a general approach to decoupling hints - let's see if it works
  * 
@@ -11,6 +13,21 @@ public abstract class LooseContext {
 
 	public static <T> T get(String key) {
 		return getContext().get(key);
+	}
+
+	public static interface ThrowingSupplier<T> {
+		public T get() throws Exception;
+	}
+
+	public static <T> T runWithBoolean(String key, ThrowingSupplier<T> supplier) {
+		try {
+			pushWithBoolean(key);
+			return supplier.get();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			pop();
+		}
 	}
 
 	public static void remove(String key) {
@@ -44,6 +61,7 @@ public abstract class LooseContext {
 	public static void pushWithKey(String key, Object value) {
 		getContext().pushWithKey(key, value);
 	}
+
 	public static void pushWithBoolean(String key) {
 		getContext().pushWithKey(key, Boolean.TRUE);
 	}
