@@ -64,7 +64,8 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	}
 
 	public int compareTo(IntPair ip) {
-		return i1 < ip.i1 ? -1 : i1 > ip.i1 ? 1 : i2 < ip.i2 ? -1 : i2 > ip.i2 ? 1 : 0;
+		return i1 < ip.i1 ? -1 : i1 > ip.i1 ? 1 : i2 < ip.i2 ? -1
+				: i2 > ip.i2 ? 1 : 0;
 	}
 
 	@Override
@@ -89,7 +90,8 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 		try {
 			String[] split = string.replaceAll("[\\[\\]]", "").split(",");
 			if (split.length == 2) {
-				return new IntPair(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
+				return new IntPair(Integer.parseInt(split[0]),
+						Integer.parseInt(split[1]));
 			}
 			int point = Integer.parseInt(string);
 			return new IntPair(point, point);
@@ -103,7 +105,8 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	}
 
 	public IntPair intersection(IntPair other) {
-		IntPair result = new IntPair(Math.max(i1, other.i1), Math.min(i2, other.i2));
+		IntPair result = new IntPair(Math.max(i1, other.i1), Math.min(i2,
+				other.i2));
 		return result.i1 <= result.i2 ? result : null;
 	}
 
@@ -128,7 +131,8 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	 * say, to provide a model of string regions not matched by
 	 * regex.matcher().find()
 	 */
-	public static List<IntPair> provideUncovered(List<IntPair> covered, IntPair container) {
+	public static List<IntPair> provideUncovered(List<IntPair> covered,
+			IntPair container) {
 		List<IntPair> result = new ArrayList<IntPair>();
 		for (int i = 0; i <= covered.size(); i++) {
 			int from = i == 0 ? container.i1 : covered.get(i - 1).i2;
@@ -211,7 +215,8 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	}
 
 	public static enum IntPairRelation {
-		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START, CONTAINS_END;
+		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
+		CONTAINS_END;
 	}
 
 	public IntPair shiftRight(int offset) {
@@ -225,6 +230,21 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	}
 
 	public boolean continues(IntPair o) {
-		return o.i2 == i1;
+		return continues(o, 0);
+	}
+
+	public boolean continues(IntPair o, int tolerance) {
+		return o.i2 <= i1 && i1 - tolerance <= o.i2;
+	}
+
+	public boolean continues(IntPair o, List<IntPair> fillers, int tolerance) {
+		IntPair range = new IntPair(o.i1, o.i2);
+		fillers.sort(null);
+		for (IntPair filler : fillers) {
+			if (filler.continues(range, tolerance)) {
+				range.i2 = filler.i2;
+			}
+		}
+		return continues(range, tolerance);
 	}
 }
