@@ -19,21 +19,18 @@ public class DTRProtocolSerializer {
 				protocolHandlerLookup.get(protocolVersion));
 	}
 
-	static CachingMap<String, Class> protocolHandlerLookup = new CachingMap<String, Class>(
-			new Converter<String, Class>() {
-				@Override
-				public Class convert(String protocolVersion) {
-					List<Class> lookup = Registry.get().lookup(
-							DTRProtocolHandler.class);
-					for (Class clazz : lookup) {
-						DTRProtocolHandler handler = (DTRProtocolHandler) Reflections
-								.classLookup().newInstance(clazz);
-						if (handler.handlesVersion().equals(protocolVersion)) {
-							return clazz;
-						}
+	static CachingMap<String, Class> protocolHandlerLookup = new CachingMap<>(
+			protocolVersion -> {
+				List<Class> lookup = Registry.get().lookup(
+						DTRProtocolHandler.class);
+				for (Class clazz : lookup) {
+					DTRProtocolHandler handler = (DTRProtocolHandler) Reflections
+							.classLookup().newInstance(clazz);
+					if (handler.handlesVersion().equals(protocolVersion)) {
+						return clazz;
 					}
-					return PlaintextProtocolHandler.class;
 				}
+				return PlaintextProtocolHandler.class;
 			});
 
 	public String serialize(DomainTransformRequest request,

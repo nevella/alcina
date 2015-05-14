@@ -15,10 +15,6 @@ public abstract class LooseContext {
 		return getContext().get(key);
 	}
 
-	public static interface ThrowingSupplier<T> {
-		public T get() throws Exception;
-	}
-
 	public static <T> T runWithBoolean(String key, ThrowingSupplier<T> supplier) {
 		try {
 			pushWithBoolean(key);

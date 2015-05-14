@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationR
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -35,7 +36,7 @@ public class DtrSimpleAdminPersistenceHandler extends
 			if (size > chunkSize) {
 				getJobTracker().setItemCount(size / chunkSize + 1);
 				int rqIdCounter = dar.getRequestId();
-				for (int idx = 0; idx < size; idx += chunkSize) {
+				for (int idx = 0; idx < size;) {
 					DeltaApplicationRecord chunk = new DeltaApplicationRecord(
 							0,
 							"",
@@ -47,8 +48,27 @@ public class DtrSimpleAdminPersistenceHandler extends
 							DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED,
 							dar.getProtocolVersion(), dar.getTag());
 					DomainTransformRequest rq = new DomainTransformRequest();
-					IntPair range = new IntPair(idx, Math.min(idx + chunkSize,
-							size));
+					IntPair range = null;
+					if (idx + chunkSize > size) {
+						range = new IntPair(idx, size);
+					} else {
+						int createSearchIdx = idx + chunkSize;
+						int maxCreateIdxDelta = size / 2;
+						for (; createSearchIdx < size && maxCreateIdxDelta > 0;) {
+							DomainTransformEvent evt = fullRq.getEvents().get(
+									createSearchIdx);
+							if (evt.getTransformType() == TransformType.CREATE_OBJECT
+									|| evt.getTransformType() == TransformType.DELETE_OBJECT) {
+								range = new IntPair(idx, createSearchIdx);
+								break;
+							}
+							createSearchIdx++;
+							maxCreateIdxDelta--;
+						}
+						if (range == null) {
+							range = new IntPair(idx, idx + chunkSize);
+						}
+					}
 					List<DomainTransformEvent> subList = fullRq.getEvents()
 							.subList(range.i1, range.i2);
 					rq.setRequestId(chunk.getRequestId());
@@ -64,6 +84,7 @@ public class DtrSimpleAdminPersistenceHandler extends
 							size);
 					System.out.println(message);
 					updateJob(message);
+					idx = range.i2;
 				}
 			} else {
 				dar.setType(DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED);

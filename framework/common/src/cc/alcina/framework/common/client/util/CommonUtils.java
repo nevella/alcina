@@ -606,6 +606,9 @@ public class CommonUtils {
 		if (s.endsWith("y")) {
 			return s.substring(0, s.length() - 1) + "ies";
 		}
+		if (s.endsWith("ch")) {
+			return s + "es";
+		}
 		return s + "s";
 	}
 

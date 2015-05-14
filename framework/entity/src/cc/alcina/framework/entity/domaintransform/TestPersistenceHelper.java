@@ -67,16 +67,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	CachingMap<String, Class> fqnLookup = new CachingMap<String, Class>(
-			new Converter<String, Class>() {
-				@Override
-				public Class convert(String fqn) {
-					try {
-						return Class.forName(fqn);
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
-			});
+			fqn -> Class.forName(fqn));
 
 	public Class getClassForName(String fqn) {
 		return fqnLookup.get(fqn);
