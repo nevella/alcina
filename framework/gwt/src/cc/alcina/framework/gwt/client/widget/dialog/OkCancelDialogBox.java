@@ -24,6 +24,9 @@ import cc.alcina.framework.gwt.client.widget.HasFirstFocusable;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
@@ -78,16 +81,7 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		vp.setCellHorizontalAlignment(widget, widgetAlign);
 		buttonsPanel = new HorizontalPanel();
 		cancelButton = new Button("Cancel");
-		cancelButton.addClickHandler(new ClickHandler() {
-			public void onClick(ClickEvent event) {
-				OkCancelDialogBox.this.hide();
-				if (vetoableActionListener != null) {
-					vetoableActionListener
-							.vetoableAction(new PermissibleActionEvent(this,
-									CancelAction.INSTANCE));
-				}
-			}
-		});
+		cancelButton.addClickHandler(e -> cancel());
 		okButton = new Button(getOKButtonName());
 		okButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
@@ -105,6 +99,14 @@ public class OkCancelDialogBox extends GlassDialogBox {
 		setWidget(vp);
 		adjustDisplay();
 		center();
+	}
+
+	private void cancel() {
+		OkCancelDialogBox.this.hide();
+		if (vetoableActionListener != null) {
+			vetoableActionListener.vetoableAction(new PermissibleActionEvent(
+					this, CancelAction.INSTANCE));
+		}
 	}
 
 	protected void onOkButtonClicked() {
@@ -163,12 +165,22 @@ public class OkCancelDialogBox extends GlassDialogBox {
 			}
 		};
 		checkReCenterTimer.scheduleRepeating(200);
+		nativePreviewHandlerRegistration = Event.addNativePreviewHandler(e -> {
+			int evtCode = e.getTypeInt();
+			if (evtCode == Event.ONKEYDOWN
+					&& e.getNativeEvent().getKeyCode() == KeyCodes.KEY_ESCAPE) {
+				cancel();
+			}
+		});
 	}
+
+	private HandlerRegistration nativePreviewHandlerRegistration;
 
 	@Override
 	protected void onDetach() {
 		checkReCenterTimer.cancel();
 		super.onDetach();
+		nativePreviewHandlerRegistration.removeHandler();
 	}
 
 	protected boolean checkValid() {
