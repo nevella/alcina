@@ -5,7 +5,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 public interface Stream<T> {
 	Iterator<T> iterator();
@@ -21,5 +23,15 @@ public interface Stream<T> {
 
 	default <R, A> R collect(Collector<? super T, A, R> collector){
 		return collector.collect((Stream)this);
+	}
+	default Stream<T> filter(Predicate<? super T> predicate){
+		List<T> result = new ArrayList<T>();
+		for (Iterator<T> itr = iterator(); itr.hasNext();) {
+			T t =itr.next();
+			if(predicate.test(t)){
+				result.add(t);
+			}
+		}
+		return (Stream<T>) new CollectionStream<T>(result);
 	}
 }
