@@ -17,6 +17,7 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 import com.totsp.gwittir.client.beans.Converter;
 
 public abstract class MultikeyMapBase<V> implements MultikeyMap<V>, Serializable {
+	static final transient long serialVersionUID = -1L;
 	protected int depth;
 
 	@GwtTransient
