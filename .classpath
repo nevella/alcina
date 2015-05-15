@@ -22,7 +22,7 @@
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jsr173_api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/log4j-1.2.6.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar" sourcepath="/Users/ouiji/Documents/programmin/java/xerces-2_9_1/"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwittir-trunk.jar"/>
