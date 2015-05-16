@@ -25,11 +25,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import org.hibernate.LazyInitializationException;
-import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -290,11 +290,11 @@ public class JPAHibernateImpl implements JPAImplementation {
 	@Override
 	public MemcacheJoinHandler getMemcacheJoinHandler(
 			final PropertyDescriptor pd) {
-		final CollectionOfElements collectionOfElements = pd.getReadMethod()
-				.getAnnotation(CollectionOfElements.class);
+		final ElementCollection elementCollection = pd.getReadMethod()
+				.getAnnotation(ElementCollection.class);
 		final Column column = pd.getReadMethod().getAnnotation(Column.class);
 		MemcacheJoinHandler handler = null;
-		if (collectionOfElements == null) {
+		if (elementCollection == null) {
 			return null;
 		}
 		return new MemcacheJoinHandler() {
@@ -310,7 +310,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 					Set enums = (Set) pd.getReadMethod().invoke(source,
 							new Object[0]);
 					enums.add(Enum.valueOf(
-							collectionOfElements.targetElement(), string));
+							elementCollection.targetClass(), string));
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}

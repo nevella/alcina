@@ -795,8 +795,9 @@ public class AlcinaMemCache {
 			ResultSet rs = stmt.executeQuery(sql);
 			PdOperator pdFwd = ensurePdOperator(pd, pd.getReadMethod()
 					.getDeclaringClass());
-			PdOperator pdRev = ensurePdOperator(rev, rev.getReadMethod()
-					.getDeclaringClass());
+			// will be null if it's an enumerated type
+			PdOperator pdRev = joinHandler != null ? null : ensurePdOperator(
+					rev, rev.getReadMethod().getDeclaringClass());
 			while (rs.next()) {
 				HasIdAndLocalId src = (HasIdAndLocalId) cache.get(
 						declaringClass, rs.getLong(1));

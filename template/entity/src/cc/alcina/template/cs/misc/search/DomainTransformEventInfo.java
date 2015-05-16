@@ -56,7 +56,8 @@ public class DomainTransformEventInfo extends DomainTransformEvent implements
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Object", orderingHint = 10))
 	@CustomiserInfo(customiserClass = ClassSimpleNameCustomiser.class)
 	public String getObjectClassName() {
-		return super.getObjectClassName();
+		return super.getObjectClassRef() == null ? null : super
+				.getObjectClassRef().getRefClassName();
 	}
 
 	@Override
