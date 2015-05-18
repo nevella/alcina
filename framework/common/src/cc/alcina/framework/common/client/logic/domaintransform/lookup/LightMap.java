@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap.EntryIterator.LightMapEntry;
-
 /**
  * 
  * @author nick@alcina.cc Minimises memory usage for small size, falls through
@@ -20,8 +18,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap.E
  * @param <H>
  */
 public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
-	public class EntryIterator implements Iterator<Entry<K, V>> {
-		public final class LightMapEntry implements Entry<K, V> {
+	public class EntryIterator implements Iterator<Map.Entry<K, V>> {
+		public final class LightMapEntry implements Map.Entry<K, V> {
 			private int entryIdx;
 
 			public LightMapEntry(int idx) {
@@ -69,7 +67,7 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 		}
 	}
 
-	class EntrySet extends AbstractSet<Entry<K, V>> {
+	class EntrySet extends AbstractSet<Map.Entry<K, V>> {
 		@Override
 		public Iterator<java.util.Map.Entry<K, V>> iterator() {
 			return new EntryIterator();
