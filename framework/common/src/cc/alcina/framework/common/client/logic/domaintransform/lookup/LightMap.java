@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.io.Serializable;
 import java.util.AbstractCollection;
-import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
@@ -11,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap.EntryIterator.LightMapEntry;
 
@@ -133,28 +131,16 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 		if (degenerate != null) {
 			return degenerate.containsKey(key);
 		}
-		return getEntry(key) != null;
+		return getIndex(key) != -1;
 	}
 
-	private EntryIterator itrSearch;
-
-	private EntryIterator itrSearch() {
-		if (itrSearch == null) {
-			itrSearch = new EntryIterator();
-		}
-		itrSearch.reset();
-		return itrSearch;
-	}
-
-	private LightMapEntry getEntry(Object key) {
-		EntryIterator itr = itrSearch();
-		for (; itr.hasNext();) {
-			java.util.Map.Entry<K, V> entry = itr.next();
-			if (Objects.equals(key, entry.getKey())) {
-				return (LightMapEntry) entry;
+	private int getIndex(Object key) {
+		for (int idx = 0; idx < size; idx++) {
+			if (Objects.equals(key, elementData[idx * 2])) {
+				return idx;
 			}
 		}
-		return null;
+		return -1;
 	}
 
 	@Override
@@ -167,8 +153,8 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 		if (degenerate != null) {
 			return degenerate.get(key);
 		}
-		java.util.Map.Entry<K, V> entry = getEntry(key);
-		return entry != null ? entry.getValue() : null;
+		int idx = getIndex(key);
+		return idx == -1 ? null : (V) elementData[idx * 2 + 1];
 	}
 
 	@Override
@@ -176,9 +162,10 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 		if (degenerate != null) {
 			return degenerate.put(key, value);
 		}
-		java.util.Map.Entry<K, V> entry = getEntry(key);
-		if (entry != null) {
-			return entry.setValue(value);
+		int idx = getIndex(key);
+		if (idx != -1) {
+			elementData[idx * 2 + 1] = value;
+			return value;
 		} else {
 			if (size == DEGENERATE_THRESHOLD) {
 				degenerate = new LinkedHashMap<K, V>();
@@ -188,7 +175,7 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 			}
 			size++;
 			modCount++;
-			int idx = elementData.length;
+			idx = elementData.length;
 			Object[] newData = new Object[idx + 2];
 			System.arraycopy(elementData, 0, newData, 0, idx);
 			newData[idx] = key;
@@ -203,17 +190,17 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 		if (degenerate != null) {
 			return degenerate.remove(key);
 		}
-		LightMapEntry entry = getEntry(key);
-		if (entry != null) {
+		int idx = getIndex(key);
+		if (idx != -1) {
 			size--;
 			modCount++;
-			int idx = entry.entryIdx;
 			Object[] newData = new Object[size * 2];
+			V result = (V) elementData[idx * 2 + 1];
 			System.arraycopy(elementData, 0, newData, 0, idx * 2);
 			System.arraycopy(elementData, (idx + 1) * 2, newData, idx * 2,
 					(size - idx) * 2);
 			elementData = newData;
-			return (V) entry.getValue();
+			return result;
 		} else {
 			return null;
 		}
