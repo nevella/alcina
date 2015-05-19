@@ -33,7 +33,7 @@ public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 
 	@Override
 	public Set<Long> get(T k1) {
-		long id = (long) k1;
+		Long id = (Long) k1;
 		if (lookup.containsKey(id)) {
 			return convertArr(lookup.get(id));
 		}
