@@ -63,4 +63,5 @@ public abstract class CacheDescriptor {
 	public void loadLazyPreApplyPersist(
 			DomainTransformPersistenceEvent persistenceEvent) throws Exception {
 	}
+
 }

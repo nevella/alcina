@@ -100,7 +100,7 @@ public class DatabaseStatsObserver {
 
 	public void init(AsyncCallback<String> notifyOnInitCallback) {
 		initCallback.wrapped = notifyOnInitCallback;
-		PropertyStore.get().get(SERIALIZED_MAX_KEY, initCallback);
+		KeyValueStore.get().get(SERIALIZED_MAX_KEY, initCallback);
 	}
 
 	protected void checkMax() {
@@ -114,7 +114,7 @@ public class DatabaseStatsObserver {
 
 	protected void persistMax() {
 		String ser = new AlcinaBeanSerializerC().serialize(max);
-		PropertyStore.get().put(SERIALIZED_MAX_KEY, ser, persistedCallback);
+		KeyValueStore.get().put(SERIALIZED_MAX_KEY, ser, persistedCallback);
 	}
 
 	public void refreshCurrent() {

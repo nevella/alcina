@@ -372,6 +372,16 @@ public class CollectionFilters {
 		public boolean allow(Object o) {
 			return !invert.allow(o);
 		}
+
+		@Override
+		public String toString() {
+			return "NOT (" + invert + ")";
+		}
+
+		@Override
+		public void setContext(FilterContext context) {
+			invert.setContext(context);
+		}
 	}
 
 	public static class PrefixedFilter implements CollectionFilter<String> {

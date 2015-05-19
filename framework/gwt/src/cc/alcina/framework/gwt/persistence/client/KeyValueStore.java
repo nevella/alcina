@@ -6,26 +6,26 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-public class PropertyStore {
-	public static PropertyStore createNonStandardPropertyStore(
+public class KeyValueStore {
+	public static KeyValueStore createNonStandardKeyValueStore(
 			PersistenceObjectStore delegate) {
-		PropertyStore store = new PropertyStore();
+		KeyValueStore store = new KeyValueStore();
 		store.registerDelegate(delegate);
 		return store;
 	}
 
-	public static PropertyStore get() {
-		PropertyStore singleton = Registry.checkSingleton(PropertyStore.class);
+	public static KeyValueStore get() {
+		KeyValueStore singleton = Registry.checkSingleton(KeyValueStore.class);
 		if (singleton == null) {
-			singleton = new PropertyStore();
-			Registry.registerSingleton(PropertyStore.class, singleton);
+			singleton = new KeyValueStore();
+			Registry.registerSingleton(KeyValueStore.class, singleton);
 		}
 		return singleton;
 	}
 
 	protected PersistenceObjectStore objectStore;
 
-	protected PropertyStore() {
+	protected KeyValueStore() {
 		super();
 	}
 

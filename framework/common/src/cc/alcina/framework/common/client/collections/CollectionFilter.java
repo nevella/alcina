@@ -25,4 +25,7 @@ public interface CollectionFilter<T> extends Predicate<T>{
 	default boolean test(T t){
 		return allow(t);
 	}
+	default void setContext(FilterContext context){
+		
+	}
 }

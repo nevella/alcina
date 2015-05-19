@@ -2,10 +2,14 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -20,11 +24,13 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 
 	private boolean enabled = true;
 
-	public List<String> propertyPathAlia=new ArrayList<String>();
+	public List<String> propertyPathAlia = new ArrayList<String>();
 
 	public boolean handles(Class clazz2, String propertyPath) {
-		return clazz2 == clazz && propertyPath != null
-				&& (propertyPath.equals(this.propertyPath)||propertyPathAlia.contains(propertyPath));
+		return clazz2 == clazz
+				&& propertyPath != null
+				&& (propertyPath.equals(this.propertyPath) || propertyPathAlia
+						.contains(propertyPath));
 	}
 
 	private CollectionFilter<T> relevanceFilter;
@@ -34,9 +40,10 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 		this.propertyPath = propertyPath;
 	}
 
-	public void addAlias(String propertyPath){
+	public void addAlias(String propertyPath) {
 		propertyPathAlia.add(propertyPath);
 	}
+
 	public void populateWithPrivateCache(Collection<T> values) {
 		createLookup();
 		lookup.privateCache = new DetachedEntityCache();
@@ -98,4 +105,13 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
+	
+	public String getCanonicalPropertyPath(String propertyPath) {
+		if(propertyPathAlia.contains(propertyPath)){
+			return this.propertyPath;
+		}
+		return null;
+	}
+
+	
 }

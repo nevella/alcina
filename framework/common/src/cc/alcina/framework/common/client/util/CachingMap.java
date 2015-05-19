@@ -56,4 +56,8 @@ public class CachingMap<I, O> {
 	public void clear() {
 		this.map.clear();
 	}
+
+	public int size() {
+		return map.size();
+	}
 }

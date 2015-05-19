@@ -2,10 +2,13 @@ package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
@@ -77,7 +80,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		return descriptor.clazz;
 	}
 
-	public Set<Long> getMaybeCollectionKey(Object value) {
+	public Set<Long> getMaybeCollectionKey(Object value, Set<Long> existing) {
 		if (value instanceof Collection) {
 			Set<Long> result = new LinkedHashSet<Long>();
 			for (T t : (Collection<T>) value) {
@@ -179,4 +182,6 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		return CommonUtils.formatJ("Lookup: %s [%s]", getListenedClass()
 				.getSimpleName(), descriptor.propertyPath);
 	}
+
+	
 }

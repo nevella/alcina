@@ -133,4 +133,8 @@ public class AlcinaMemCacheQuery {
 	public <T extends HasIdAndLocalId> int count(Class<T> clazz) {
 		return raw().list(clazz).size();
 	}
+
+	public String getCanonicalPropertyPath(Class clazz, String propertyPath) {
+		return AlcinaMemCache.get().getCanonicalPropertyPath( clazz,  propertyPath);
+	}
 }
