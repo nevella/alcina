@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 
 @SuppressWarnings("unchecked")
@@ -367,15 +367,19 @@ public class CommonUtils {
 				+ (s.length() == 1 ? "" : s.substring(1));
 	}
 
+	public static Supplier<Set> setSupplier = () -> new LinkedHashSet();
+
 	public static Set intersection(Collection c1, Collection c2) {
-		LinkedHashSet result = new LinkedHashSet();
+		Set result = setSupplier.get();
 		if (c1.size() > c2.size()) {
 			Collection tmp = c1;
 			c1 = c2;
 			c2 = tmp;
 		}
 		if (c2.size() > 10) {
-			c2 = new HashSet(c2);
+			Set tmp = setSupplier.get();
+			tmp.addAll(c2);
+			c2 = tmp;
 		}
 		for (Object o : c1) {
 			if (c2.contains(o)) {

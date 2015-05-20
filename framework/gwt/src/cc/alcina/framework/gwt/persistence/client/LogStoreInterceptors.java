@@ -172,91 +172,96 @@ public class LogStoreInterceptors {
 		boolean focus = BrowserEvents.FOCUS.equals(type)
 				|| BrowserEvents.FOCUSIN.equals(type);
 		if (click || blur || focus) {
-			EventTarget eTarget = nativeEvent.getEventTarget();
-			if (Element.is(eTarget)) {
-				Element e = Element.as(eTarget);
-				if (blur || focus) {
-					String tag = e.getTagName().toLowerCase();
-					if (tag.equals("input")
-							&& e.getAttribute("type").equals("button")) {
-						return;
-					}
-					if (!(tag.equals("input") || tag.equals("select") || tag
-							.equals("textarea"))) {
-						return;
-					}
+			handleNativeEvent(nativeEvent, click, blur, focus);
+		}
+	}
+
+	public void handleNativeEvent(Event nativeEvent, boolean click,
+			boolean blur, boolean focus) {
+		EventTarget eTarget = nativeEvent.getEventTarget();
+		if (Element.is(eTarget)) {
+			Element e = Element.as(eTarget);
+			if (blur || focus) {
+				String tag = e.getTagName().toLowerCase();
+				if (tag.equals("input")
+						&& e.getAttribute("type").equals("button")) {
+					return;
 				}
-				List<String> tags = new ArrayList<String>();
-				String text = "";
-				ClientNodeIterator itr = new ClientNodeIterator(e,
-						ClientNodeIterator.SHOW_TEXT);
-				itr.nextNode();
-				while (text.length() < 50 && itr.getCurrentNode() != null) {
-					Text t = (Text) itr.getCurrentNode();
-					text += TextUtils.normaliseAndTrim(t.getData());
-					itr.nextNode();
+				if (!(tag.equals("input") || tag.equals("select") || tag
+						.equals("textarea"))) {
+					return;
 				}
-				while (e != null) {
-					List<String> parts = new ArrayList<String>();
-					parts.add(e.getTagName());
-					if (numberedElements) {
-						int sameTagCount = 0;
-						NodeList<Node> kids = e.getParentNode().getChildNodes();
-						for (int idn = 0; idn < kids.getLength(); idn++) {
-							Node node = kids.getItem(idn);
-							if (node == e) {
-								parts.add(CommonUtils.formatJ("[%s]",
-										sameTagCount));
-								break;
-							}
-							if (node.getNodeType() == Node.ELEMENT_NODE
-									&& ((Element) node).getTagName().equals(
-											e.getTagName())) {
-								sameTagCount++;
-							}
-						}
-					} else {
-						if (!e.getId().isEmpty()) {
-							parts.add("#" + e.getId());
-						}
-						String cn = getClassName(e);
-						if (!cn.isEmpty()) {
-							parts.add("." + cn);
-						}
-					}
-					tags.add(CommonUtils.join(parts, ""));
-					if (e.getParentElement() == null
-							&& !e.getTagName().equals("HTML")) {
-						// probably doing something drastic in a previous
-						// native handler - try to defer
-					}
-					e = e.getParentElement();
-				}
-				Collections.reverse(tags);
-				String path = CommonUtils.join(tags, "/");
-				String valueMessage = "";
-				if (blur || focus) {
-					String value = Element.as(eTarget).getPropertyString(
-							"value");
-					String ih = Element.as(eTarget).getInnerHTML();
-					valueMessage = CommonUtils.formatJ("%s%s",
-							ClientLogRecord.VALUE_SEPARATOR, value);
-					if (focus) {
-						lastFocussedValueMessage = valueMessage;
-						return;
-					} else {
-						if (valueMessage.equals(lastFocussedValueMessage)) {
-							lastFocussedValueMessage = null;
-							return;// no change
-						}
-					}
-				}
-				AlcinaTopics.logCategorisedMessage(new StringPair(
-						click ? AlcinaTopics.LOG_CATEGORY_CLICK
-								: AlcinaTopics.LOG_CATEGORY_CHANGE,
-						ReplayInstruction.createReplayBody(text, path,
-								valueMessage)));
 			}
+			List<String> tags = new ArrayList<String>();
+			String text = "";
+			ClientNodeIterator itr = new ClientNodeIterator(e,
+					ClientNodeIterator.SHOW_TEXT);
+			itr.nextNode();
+			while (text.length() < 50 && itr.getCurrentNode() != null) {
+				Text t = (Text) itr.getCurrentNode();
+				text += TextUtils.normaliseAndTrim(t.getData());
+				itr.nextNode();
+			}
+			while (e != null) {
+				List<String> parts = new ArrayList<String>();
+				parts.add(e.getTagName());
+				if (numberedElements) {
+					int sameTagCount = 0;
+					NodeList<Node> kids = e.getParentNode().getChildNodes();
+					for (int idn = 0; idn < kids.getLength(); idn++) {
+						Node node = kids.getItem(idn);
+						if (node == e) {
+							parts.add(CommonUtils.formatJ("[%s]",
+									sameTagCount));
+							break;
+						}
+						if (node.getNodeType() == Node.ELEMENT_NODE
+								&& ((Element) node).getTagName().equals(
+										e.getTagName())) {
+							sameTagCount++;
+						}
+					}
+				} else {
+					if (!e.getId().isEmpty()) {
+						parts.add("#" + e.getId());
+					}
+					String cn = getClassName(e);
+					if (!cn.isEmpty()) {
+						parts.add("." + cn);
+					}
+				}
+				tags.add(CommonUtils.join(parts, ""));
+				if (e.getParentElement() == null
+						&& !e.getTagName().equals("HTML")) {
+					// probably doing something drastic in a previous
+					// native handler - try to defer
+				}
+				e = e.getParentElement();
+			}
+			Collections.reverse(tags);
+			String path = CommonUtils.join(tags, "/");
+			String valueMessage = "";
+			if (blur || focus) {
+				String value = Element.as(eTarget).getPropertyString(
+						"value");
+				String ih = Element.as(eTarget).getInnerHTML();
+				valueMessage = CommonUtils.formatJ("%s%s",
+						ClientLogRecord.VALUE_SEPARATOR, value);
+				if (focus) {
+					lastFocussedValueMessage = valueMessage;
+					return;
+				} else {
+					if (valueMessage.equals(lastFocussedValueMessage)) {
+						lastFocussedValueMessage = null;
+						return;// no change
+					}
+				}
+			}
+			AlcinaTopics.logCategorisedMessage(new StringPair(
+					click ? AlcinaTopics.LOG_CATEGORY_CLICK
+							: AlcinaTopics.LOG_CATEGORY_CHANGE,
+					ReplayInstruction.createReplayBody(text, path,
+							valueMessage)));
 		}
 	}
 

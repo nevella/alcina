@@ -39,6 +39,8 @@ public class LayoutEvents {
 
 	private List<LayoutEventType> firingEvents = new ArrayList<LayoutEventType>();
 
+	private int globalRelayoutQueuedCount;
+
 	private LayoutEvents() {
 		super();
 		listeners = new ArrayList<LayoutEventListener>();
@@ -49,11 +51,19 @@ public class LayoutEvents {
 	}
 
 	public void fireDeferredGlobalRelayout() {
+		globalRelayoutQueuedCount++;
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			public void execute() {
+				globalRelayoutQueuedCount--;
 				fireRequiresGlobalRelayout();
 			}
 		});
+	}
+
+	public void fireDeferredGlobalRelayoutIfNoneQueued() {
+		if (globalRelayoutQueuedCount == 0) {
+			fireDeferredGlobalRelayout();
+		}
 	}
 
 	@SuppressWarnings("unchecked")
