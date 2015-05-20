@@ -262,10 +262,6 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		}
 	}
 
-	/**
-	 * Reconstitute the <tt>ArrayList</tt> instance from a stream (that is,
-	 * deserialize it).
-	 */
 	private void readObject(java.io.ObjectInputStream s)
 			throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();

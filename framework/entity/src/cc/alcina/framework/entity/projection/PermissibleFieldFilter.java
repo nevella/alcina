@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
 public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
@@ -37,10 +38,12 @@ public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 
 	public static boolean disablePerObjectPermissions;
 
+	CachingMap<Class, ObjectPermissions> objectPermissionLookup = new CachingMap<Class, ObjectPermissions>(
+			clazz -> (ObjectPermissions)clazz.getAnnotation(ObjectPermissions.class));
+
 	@Override
 	public Boolean permitClass(Class clazz) {
-		ObjectPermissions op = (ObjectPermissions) clazz
-				.getAnnotation(ObjectPermissions.class);
+		ObjectPermissions op = objectPermissionLookup.get(clazz);
 		return permit(clazz, op == null ? null : op.read(), null);
 	}
 

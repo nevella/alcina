@@ -127,7 +127,7 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	class PerClassLookup {
-		Map<Class<? extends HasIdAndLocalId>, FastIdLookup> lookups = new LinkedHashMap<Class<? extends HasIdAndLocalId>, FastIdLookup>();
+		Map<Class<? extends HasIdAndLocalId>, FastIdLookup> lookups = new LinkedHashMap<Class<? extends HasIdAndLocalId>, FastIdLookup>(100);
 
 		public boolean contains(HasIdAndLocalId obj) {
 			FastIdLookup lookup = ensureLookup(obj.getClass());

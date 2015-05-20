@@ -34,10 +34,10 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 	private Set<GraphProjectionContext> instantiateProps = new HashSet<GraphProjectionContext>();
 
 	protected JPAImplementation jpaImplementation;
+
 	public Hibernate4CloneFilter() {
 		this.jpaImplementation = Registry.impl(JPAImplementation.class);
 	}
-	
 
 	public Hibernate4CloneFilter(Set<GraphProjectionContext> instantiateProps) {
 		this.instantiateProps = instantiateProps;
@@ -55,7 +55,7 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 			if (instantiateProps.contains(context)) {
 				Object impl = ((HibernateProxy) value)
 						.getHibernateLazyInitializer().getImplementation();
-				value = (T) graphCloner.project(impl, value, context);
+				value = (T) graphCloner.project(impl, value, context, false);
 				return value;
 			} else {
 				return null;

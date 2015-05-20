@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -64,9 +65,9 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	private transient Map<Class<? extends OrderGroup>, OrderGroup> ogs = new HashMap<Class<? extends OrderGroup>, OrderGroup>();
 
-	private Set<CriteriaGroup> criteriaGroups = new LinkedHashSet<CriteriaGroup>();
+	private Set<CriteriaGroup> criteriaGroups = new LightSet<CriteriaGroup>();
 
-	private Set<OrderGroup> orderGroups = new LinkedHashSet<OrderGroup>();
+	private Set<OrderGroup> orderGroups = new LightSet<OrderGroup>();
 
 	protected transient String defaultFilterDescription = "";
 

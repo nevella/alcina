@@ -65,6 +65,11 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 			idx = 0;
 			itrModCount = modCount;
 		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException("remove");
+		}
 	}
 
 	class EntrySet extends AbstractSet<Map.Entry<K, V>> {

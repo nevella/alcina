@@ -125,6 +125,9 @@ public class AlcinaMemCache {
 	public static final String TOPIC_DEBUG_MAP = AlcinaMemCache.class.getName()
 			+ ".TOPIC_DEBUG_MAP";
 
+	public static final String CONTEXT_WILL_PROJECT_AFTER_READ_LOCK = AlcinaMemCache.class
+			.getName() + ".CONTEXT_WILL_PROJECT_AFTER_READ_LOCK";
+
 	public static final String WRAPPED_OBJECT_REF_INTEGRITY = "WRAPPED_OBJECT_REF_INTEGRITY";
 
 	public static void checkActiveTransaction() {
@@ -1285,7 +1288,8 @@ public class AlcinaMemCache {
 							"Query metrics:\n========\n%s\n%s", query,
 							debugMetricBuilder.toString()));
 				}
-				raw = cacheDescriptor.perClass.get(clazz).getRawValues(ids,cache);
+				raw = cacheDescriptor.perClass.get(clazz).getRawValues(ids,
+						cache);
 			} else {
 				Set<T> rawTransactional = null;
 				for (int i = 0; i < query.getFilters().size(); i++) {
@@ -2135,7 +2139,12 @@ public class AlcinaMemCache {
 		}
 	}
 
-	 String getCanonicalPropertyPath(Class clazz, String propertyPath) {
-		return cacheDescriptor.perClass.get(clazz).getCanonicalPropertyPath(propertyPath);
+	String getCanonicalPropertyPath(Class clazz, String propertyPath) {
+		return cacheDescriptor.perClass.get(clazz).getCanonicalPropertyPath(
+				propertyPath);
+	}
+
+	public boolean isWillProjectLater() {
+		return LooseContext.is(CONTEXT_WILL_PROJECT_AFTER_READ_LOCK);
 	}
 }
