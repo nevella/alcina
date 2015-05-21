@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
+import cc.alcina.framework.common.client.logic.permissions.HasReadPermission;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -458,6 +459,9 @@ public class GraphProjection {
 	}
 
 	boolean checkObjectPermissions(Object source) {
+		if(source instanceof HasReadPermission){
+			return ((HasReadPermission)source).canRead();
+		}
 		Class<? extends Object> sourceClass = source.getClass();
 		if (!perObjectPermissionClasses.containsKey(sourceClass)) {
 			Boolean result = fieldFilter == null ? new Boolean(true)

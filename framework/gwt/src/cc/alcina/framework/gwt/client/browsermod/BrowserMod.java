@@ -265,4 +265,11 @@ public class BrowserMod {
 				&& !isSafari()
 				&& !isChrome();
 	}
+
+	public static String getAnimationPrefix() {
+		if(getUserAgent().contains("WebKit")){
+			return "-webkit-animation";
+		}
+		return "animation";
+	}
 }
