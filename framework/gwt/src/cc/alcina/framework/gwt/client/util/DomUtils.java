@@ -288,6 +288,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		Element displayNone = null;
 		ClientNodeIterator itr = new ClientNodeIterator(elt,
 				ClientNodeIterator.SHOW_ALL);
+		itr.setRoot(elt);
 		Node n;
 		IgnoreTextObserver ignoreTextObserver = new IgnoreTextObserver();
 		// duplicates ArticleTextModel (Jade)
