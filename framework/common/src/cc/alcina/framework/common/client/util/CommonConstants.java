@@ -10,7 +10,7 @@ public class CommonConstants {
 
 	public static final String HTML_NO_CONTENT = ",BR,HR,INPUT,";
 
-	public static final String HTML_INVISIBLE_CONTENT_ELEMENTS = ",HEAD,STYLE,TEXTAREA,SCRIPT,INPUT,SELECT,";
+	public static final String HTML_INVISIBLE_CONTENT_ELEMENTS = ",HEAD,STYLE,TEXTAREA,SCRIPT,INPUT,SELECT,TITLE,";
 
 	/**
 	 * note - question is "is a child indented"...an element never indents
