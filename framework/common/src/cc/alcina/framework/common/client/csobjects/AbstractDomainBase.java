@@ -26,6 +26,7 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 @MappedSuperclass
 public abstract class AbstractDomainBase extends BaseBindable implements
 		HasIdAndLocalId, HasVersionNumber {
+	static final transient long serialVersionUID = 1L;
 	protected transient int hash = 0;
 
 	protected transient String comparisonString;

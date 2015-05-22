@@ -159,6 +159,8 @@ public class ServletLayerUtils {
 					looper);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		} finally {
+			ThreadlocalTransformManager.cast().resetTltm(null);
 		}
 	}
 
