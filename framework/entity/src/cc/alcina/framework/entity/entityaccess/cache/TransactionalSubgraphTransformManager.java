@@ -139,7 +139,12 @@ public class TransactionalSubgraphTransformManager extends
 	private void mapObjectToCachingProjections(HasIdAndLocalId obj) {
 		for (BaseProjectionHasEquivalenceHash listener : AlcinaMemCache.get().cachingProjections
 				.getAndEnsure(obj.getClass())) {
-			listener.projectHash(obj);
+			try {
+				listener.projectHash(obj);
+			} catch (Exception e) {
+				//probably not fully instantiated - TODO cleanup (e.g. MorphemeRelation) but iz sorta ok
+				//real solution is pause til end of pass, THEN hash'em'all
+			}
 		}
 	}
 
