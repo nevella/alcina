@@ -1,25 +1,74 @@
 package cc.alcina.framework.servlet.servlet;
 
+import java.util.concurrent.Callable;
+
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.SEUtilities;
 
 public abstract class AlcinaChildRunnable implements Runnable {
-	private int tLooseContextDepth;
-
 	private PermissionsManager pm;
 
 	private String threadName;
 
+	private ClassLoader contextClassLoader;
+
+	protected RunContext runContext = new RunContext();
+
+	class RunContext {
+		private int tLooseContextDepth;
+
+		private boolean logExceptions = false;
+
+		private Runnable runnable;
+	}
+
 	public AlcinaChildRunnable(String name) {
 		this.threadName = name;
 		this.pm = PermissionsManager.get();
+		this.contextClassLoader = Thread.currentThread()
+				.getContextClassLoader();
 	}
 
-	private boolean logExceptions = false;
+	public static class AlcinaChildContextRunner extends AlcinaChildRunnable {
+		public AlcinaChildContextRunner(String name) {
+			super(name);
+			launcherThreadId = Thread.currentThread().getId();
+		}
+
+		ThreadLocal<RunContext> contexts = new ThreadLocal<AlcinaChildRunnable.RunContext>() {
+			protected RunContext initialValue() {
+				return new RunContext();
+			}
+		};
+
+		private long launcherThreadId;
+
+		@Override
+		protected void run0() throws Exception {
+			getRunContext().runnable.run();
+		}
+
+		public Object call(Runnable runnable) {
+			if (Thread.currentThread().getId() == launcherThreadId) {
+				// don't do anything fancy to the context (e.g. fork/join pool)
+				runnable.run();
+				return null;
+			} else {
+				getRunContext().runnable = runnable;
+				run();
+				return null;
+			}
+		}
+	}
+
+	protected RunContext getRunContext() {
+		return runContext;
+	}
 
 	public AlcinaChildRunnable logExceptions() {
-		logExceptions = true;
+		getRunContext().logExceptions = true;
 		return this;
 	}
 
@@ -27,18 +76,21 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	@Override
 	public void run() {
-		Thread.currentThread().setName(threadName);
+		if (threadName != null) {
+			Thread.currentThread().setName(threadName);
+		}
 		try {
 			LooseContext.push();
 			// different thread-local
-			tLooseContextDepth = LooseContext.depth();
+			getRunContext().tLooseContextDepth = LooseContext.depth();
 			this.pm.copyTo(PermissionsManager.get());
+			Thread.currentThread().setContextClassLoader(contextClassLoader);
 			run0();
 		} catch (OutOfMemoryError e) {
 			SEUtilities.threadDump();
 			throw e;
 		} catch (Throwable e) {
-			if (logExceptions) {
+			if (getRunContext().logExceptions) {
 				e.printStackTrace();
 			}
 			if (e instanceof RuntimeException) {
@@ -46,7 +98,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			}
 			throw new RuntimeException(e);
 		} finally {
-			LooseContext.confirmDepth(tLooseContextDepth);
+			LooseContext.confirmDepth(getRunContext().tLooseContextDepth);
 			LooseContext.pop();
 		}
 	}

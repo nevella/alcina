@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client;
 
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.spi.LogWriter;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl.MessageType;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
@@ -53,4 +54,8 @@ public interface ClientNotifications extends LogWriter{
 	public abstract void notifyOfCompletedSaveFromOffline();
 
 	public abstract ModalNotifier getModalNotifier(String message);
+	
+	static ClientNotifications get(){
+		return Registry.impl(ClientNotifications.class);
+	}
 }
