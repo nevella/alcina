@@ -19,6 +19,12 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		return this.displayText;
 	}
 
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof SearchCriterion
+				&& equivalentTo((SearchCriterion) obj);
+	}
+
 	public long getId() {
 		return this.id;
 	}
@@ -78,5 +84,4 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		forClientTrimmed = copyFromCriterion.forClientTrimmed;
 		return super.copyPropertiesFrom(copyFromCriterion);
 	}
-
 }
