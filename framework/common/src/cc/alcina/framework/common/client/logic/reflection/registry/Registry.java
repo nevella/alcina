@@ -155,7 +155,7 @@ public class Registry {
 				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
 	}
 
-	private void registerSingletonInLookups(Class<?> registryPoint,
+	private synchronized void registerSingletonInLookups(Class<?> registryPoint,
 			Class<?> targetClass, Object object) {
 		boolean voidTarget = targetClass == void.class;
 		singletons.put(registryPoint, targetClass, object);
