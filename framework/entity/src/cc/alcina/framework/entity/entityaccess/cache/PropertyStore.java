@@ -1,6 +1,8 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.lang.reflect.Array;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -46,22 +48,22 @@ public class PropertyStore {
 	public PropertyStore() {
 	}
 
-	public void addRow(Object[] objects) {
-		long id = (long) objects[idIndex];
+	public void addRow(ResultSet rs) throws SQLException {
+		long id = (long) rs.getLong(idIndex+1);
 		int rowIdx = ensureRow(id);
 		for (int idx = 0; idx < pds.size(); idx++) {
 			PdOperator pd = pds.get(idx);
 			Object pStore = store.get(pd.idx);
-			Object value = objects[pd.idx];
-			if (value == null) {
-				if (pd.pd.getPropertyType() == Long.class) {
-					value = 0L;
-				}
+			if (pStore instanceof long[]) {
+				((long[]) pStore)[rowIdx] = (long) rs.getLong(idx+1);
+			} else if (pStore instanceof String[]) {
+				((String[]) pStore)[rowIdx] = (String) rs.getString(idx+1);
+			} else if (pStore instanceof boolean[]) {
+				((boolean[]) pStore)[rowIdx] = (boolean) rs.getBoolean(idx+1);
 			}
-			Array.set(pStore, rowIdx, value);
 		}
 		for (PropertyStoreLookup lookup : lookups) {
-			lookup.insert(objects, id);
+			lookup.insert(rs, id);
 		}
 	}
 

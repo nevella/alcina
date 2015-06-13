@@ -39,6 +39,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/requestfactory-server.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs-3.2.5.Final.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/hppc-0.8.0-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/hppc-0.8.0-SNAPSHOT.jar" sourcepath="/hppc"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

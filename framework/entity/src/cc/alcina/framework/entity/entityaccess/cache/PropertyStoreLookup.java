@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -52,10 +54,10 @@ public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 		this.pd = propertyStore.getDescriptor(descriptor.propertyPath);
 	}
 
-	public void insert(Object[] objects, long id) {
-		T obj = (T) objects[pd.idx];
-		if (obj != null) {
-			ensure((Long) obj).add(id);
+	public void insert(ResultSet rs, long id) throws SQLException {
+		long tgtIdx = rs.getLong(pd.idx + 1);
+		if (tgtIdx != 0) {
+			ensure(tgtIdx).add(id);
 		}
 	}
 
@@ -65,7 +67,6 @@ public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 		}
 		return lookup.get(id);
 	}
-
 
 	protected Object getValue(Long id) {
 		return propertyStore.getValue(pd, id);

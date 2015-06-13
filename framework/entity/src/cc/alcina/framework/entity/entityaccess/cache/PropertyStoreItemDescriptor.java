@@ -1,6 +1,8 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.lang.reflect.Proxy;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -48,8 +50,8 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 		propertyStore.init(pds);
 	}
 
-	public void addRow(Object[] objects) {
-		propertyStore.addRow(objects);
+	public void addRow(ResultSet rs) throws SQLException {
+		propertyStore.addRow(rs);
 	}
 
 	@Override
@@ -66,4 +68,6 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 	}
 
 	protected abstract Object createProxy(Object[] row, DetachedEntityCache cache, Long id);
+
+	protected abstract int getRoughCount();
 }
