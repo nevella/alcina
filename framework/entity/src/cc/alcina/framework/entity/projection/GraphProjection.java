@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 
 @SuppressWarnings("unchecked")
 /**
@@ -120,7 +121,6 @@ public class GraphProjection {
 		return propertyPermissionLookup.get(field);
 	}
 
-
 	private GraphProjectionDataFilter dataFilter;
 
 	private GraphProjectionFieldFilter fieldFilter;
@@ -155,8 +155,6 @@ public class GraphProjection {
 
 	static Map<Field, PropertyPermissions> propertyPermissionLookup = new NullWrappingMap<Field, PropertyPermissions>(
 			new ConcurrentHashMap(LOOKUP_SIZE));
-
-	
 
 	static Map<Class, ConstructorMethod> constructorMethodsLookup = new LinkedHashMap<Class, GraphProjection.ConstructorMethod>(
 			LOOKUP_SIZE);
@@ -295,7 +293,8 @@ public class GraphProjection {
 		}
 		T projected = sourceClass.isArray() ? (T) Array.newInstance(
 				sourceClass.getComponentType(), Array.getLength(source))
-				: (T) newInstance(sourceClass);
+				: (T) ((source instanceof MemCacheProxy) ? ((MemCacheProxy) source)
+						.nonProxy() : newInstance(sourceClass));
 		reached.put(source, projected);
 		if (alsoMapTo != null) {
 			reached.put(alsoMapTo, projected);
@@ -459,8 +458,8 @@ public class GraphProjection {
 	}
 
 	boolean checkObjectPermissions(Object source) {
-		if(source instanceof HasReadPermission){
-			return ((HasReadPermission)source).canRead();
+		if (source instanceof HasReadPermission) {
+			return ((HasReadPermission) source).canRead();
 		}
 		Class<? extends Object> sourceClass = source.getClass();
 		if (!perObjectPermissionClasses.containsKey(sourceClass)) {

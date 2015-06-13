@@ -42,7 +42,7 @@ public class SortedIdentityProjection<T extends HasIdAndLocalId> implements
 	}
 
 	@Override
-	public void remove(HasIdAndLocalId o) {
+	public void remove(T o) {
 		sorted.remove(o);
 	}
 

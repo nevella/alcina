@@ -120,6 +120,8 @@ public class PropertyStore {
 		} else if (propertyType == boolean.class
 				|| propertyType == Boolean.class) {
 			return new boolean[tableSize];
+		} else if (propertyType == String.class) {
+			return new String[tableSize];
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -199,9 +201,9 @@ public class PropertyStore {
 	public Object[] getRow(Long id) {
 		if (rowLookup.containsKey(id)) {
 			int rowOffset = rowLookup.get(id);
-			Object[] row=new Object[pds.size()];
-			for(PdOperator pd:pds){
-				row[pd.idx]=Array.get(store.get(pd.idx), rowOffset);
+			Object[] row = new Object[pds.size()];
+			for (PdOperator pd : pds) {
+				row[pd.idx] = Array.get(store.get(pd.idx), rowOffset);
 			}
 			return row;
 		}
