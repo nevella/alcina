@@ -39,9 +39,9 @@ public class PropertyStore {
 
 	private PdOperator idOperator;
 
-	private int emptyRowIdx;
+	protected int emptyRowIdx;
 
-	private int tableSize;
+	protected int tableSize;
 
 	private List<PropertyStoreLookup> lookups = new ArrayList<>();
 
@@ -49,17 +49,19 @@ public class PropertyStore {
 	}
 
 	public void addRow(ResultSet rs) throws SQLException {
-		long id = (long) rs.getLong(idIndex+1);
+		long id = (long) rs.getLong(idIndex + 1);
 		int rowIdx = ensureRow(id);
 		for (int idx = 0; idx < pds.size(); idx++) {
 			PdOperator pd = pds.get(idx);
 			Object pStore = store.get(pd.idx);
 			if (pStore instanceof long[]) {
-				((long[]) pStore)[rowIdx] = (long) rs.getLong(idx+1);
+				((long[]) pStore)[rowIdx] = (long) rs.getLong(idx + 1);
 			} else if (pStore instanceof String[]) {
-				((String[]) pStore)[rowIdx] = (String) rs.getString(idx+1);
+				((String[]) pStore)[rowIdx] = (String) rs.getString(idx + 1);
 			} else if (pStore instanceof boolean[]) {
-				((boolean[]) pStore)[rowIdx] = (boolean) rs.getBoolean(idx+1);
+				((boolean[]) pStore)[rowIdx] = (boolean) rs.getBoolean(idx + 1);
+			} else if (pStore instanceof int[]) {
+				((int[]) pStore)[rowIdx] = (int) rs.getLong(idx + 1);
 			}
 		}
 		for (PropertyStoreLookup lookup : lookups) {
@@ -86,7 +88,7 @@ public class PropertyStore {
 	public void init(List<PdOperator> pds) {
 		this.pds = pds;
 		store = new ArrayList();
-		rowLookup = new LongIntScatterMap(getInitialSize());
+		initRowLookup();
 		String propertyName = "id";
 		this.idOperator = getDescriptor(propertyName);
 		idIndex = pds.indexOf(idOperator);
@@ -97,28 +99,36 @@ public class PropertyStore {
 		lookups.forEach(lkp -> lkp.initPds());
 	}
 
-	private int ensureRow(long id) {
+	protected void initRowLookup() {
+		rowLookup = new LongIntScatterMap(getInitialSize());
+	}
+
+	protected int ensureRow(long id) {
 		if (!rowLookup.containsKey(id)) {
-			if (emptyRowIdx == tableSize) {
-				// double
-				List<Object> old = store;
-				store = new ArrayList<>();
-				tableSize *= 2;
-				pds.forEach(pd -> {
-					Object oldStore = old.get(pd.idx);
-					Object newStore = getArrayFor(pd.pd.getPropertyType());
-					System.arraycopy(oldStore, 0, newStore, 0, emptyRowIdx);
-					store.add(newStore);
-				});
-			}
+			checkFull();
 			rowLookup.put(id, emptyRowIdx++);
 		}
 		return rowLookup.get(id);
 	}
 
+	protected void checkFull() {
+		if (emptyRowIdx == tableSize) {
+			// incr by 1.5 - we're after memory, not perf
+			List<Object> old = store;
+			store = new ArrayList<>();
+			tableSize = (tableSize * 3) / 2;
+			pds.forEach(pd -> {
+				Object oldStore = old.get(pd.idx);
+				Object newStore = getArrayFor(pd.pd.getPropertyType());
+				System.arraycopy(oldStore, 0, newStore, 0, emptyRowIdx);
+				store.add(newStore);
+			});
+		}
+	}
+
 	private Object getArrayFor(Class<?> propertyType) {
 		if (propertyType == long.class || propertyType == Long.class) {
-			return new long[tableSize];
+			return getLongArray();
 		} else if (propertyType == boolean.class
 				|| propertyType == Boolean.class) {
 			return new boolean[tableSize];
@@ -126,6 +136,10 @@ public class PropertyStore {
 			return new String[tableSize];
 		}
 		throw new UnsupportedOperationException();
+	}
+
+	protected Object getLongArray() {
+		return new long[tableSize];
 	}
 
 	protected int getInitialSize() {
@@ -136,13 +150,39 @@ public class PropertyStore {
 		lookups.add(lookup);
 	}
 
-	public Object getValue(PdOperator pd, Long id) {
+	protected int getRowOffset(Long id) {
 		if (rowLookup.containsKey(id)) {
-			int rowOffset = rowLookup.get(id);
+			return rowLookup.get(id);
+		}
+		return -1;
+	}
+
+	public Object getValue(PdOperator pd, Long id) {
+		int rowOffset = getRowOffset(id);
+		if (rowOffset != -1) {
 			return Array.get(store.get(pd.idx), rowOffset);
 		}
 		return null;
 	}
+
+	public long getPrimitiveLongValue(PdOperator pd, int rowOffset) {
+		if (rowOffset != -1) {
+			return ((long[]) store.get(pd.idx))[rowOffset];
+		}
+		return 0;
+	}
+
+	public Long getLongValue(PdOperator pd, int rowOffset) {
+		long value = getPrimitiveLongValue(pd, rowOffset);
+		return value == 0 ? null : value;
+	}
+	public String getStringValue(PdOperator pd, int rowOffset) {
+		if (rowOffset != -1) {
+			return ((String[]) store.get(pd.idx))[rowOffset];
+		}
+		return null;
+	}
+
 
 	public FilterContext createContext(DetachedEntityCache cache) {
 		return new PsFilterContext(cache);
@@ -198,17 +238,5 @@ public class PropertyStore {
 				}
 			}
 		}
-	}
-
-	public Object[] getRow(Long id) {
-		if (rowLookup.containsKey(id)) {
-			int rowOffset = rowLookup.get(id);
-			Object[] row = new Object[pds.size()];
-			for (PdOperator pd : pds) {
-				row[pd.idx] = Array.get(store.get(pd.idx), rowOffset);
-			}
-			return row;
-		}
-		return null;
 	}
 }

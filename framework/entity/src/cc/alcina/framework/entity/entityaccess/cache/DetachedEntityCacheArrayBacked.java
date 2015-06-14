@@ -7,8 +7,12 @@ public class DetachedEntityCacheArrayBacked extends DetachedEntityCache {
 	@Override
 	protected void ensureMaps(Class clazz) {
 		if (!detached.containsKey(clazz)) {
-			System.out.println("Ensure map - " + clazz.getSimpleName());
-			detached.put(clazz, new ArrayBackedLongMap<HasIdAndLocalId>());
+			synchronized (this) {
+				if (!detached.containsKey(clazz)) {
+					detached.put(clazz,
+							new ArrayBackedLongMap<HasIdAndLocalId>());
+				}
+			}
 		}
 	}
 }

@@ -58,16 +58,16 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 	public <T> List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
 		ArrayList<T> raw = new ArrayList<T>(ids.size());
 		for (Long id : ids) {
-			Object[] row = propertyStore.getRow(id);
-			if (row != null) {
-				T proxy = (T) createProxy(row, cache,id);
+			int rowOffset = propertyStore.getRowOffset(id);
+			if (rowOffset != -1) {
+				T proxy = (T) createProxy(rowOffset, cache,id);
 				raw.add(proxy);
 			}
 		}
 		return raw;
 	}
 
-	protected abstract Object createProxy(Object[] row, DetachedEntityCache cache, Long id);
+	protected abstract Object createProxy(int rowOffset, DetachedEntityCache cache, Long id);
 
 	protected abstract int getRoughCount();
 }

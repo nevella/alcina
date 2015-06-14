@@ -20,11 +20,11 @@ import com.carrotsearch.hppc.cursors.LongCursor;
 
 public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 		CacheLookup<T, H> {
-	private PropertyStore propertyStore;
+	protected PropertyStore propertyStore;
 
 	private LongObjectScatterMap<LongArrayList> lookup = new LongObjectScatterMap<>();
 
-	private PdOperator pd;
+	protected PdOperator pd;
 
 	public PropertyStoreLookup(PropertyStoreLookupDescriptor descriptor,
 			PropertyStore store) {
