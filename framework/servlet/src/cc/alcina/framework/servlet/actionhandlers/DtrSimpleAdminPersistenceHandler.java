@@ -23,7 +23,7 @@ public class DtrSimpleAdminPersistenceHandler extends
 		BaseRemoteActionPerformer<DtrSimpleAdminPersistenceAction> {
 	public void commit(DeltaApplicationRecord dar) {
 		int chunkSize = ResourceUtilities.getInteger(
-				DtrSimpleAdminPersistenceHandler.class, "chunkSize", 9);
+				DtrSimpleAdminPersistenceHandler.class, "chunkSize", 5000);
 		commit(dar, chunkSize);
 	}
 
