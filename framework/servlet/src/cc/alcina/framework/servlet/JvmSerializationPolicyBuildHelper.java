@@ -40,8 +40,8 @@ public class JvmSerializationPolicyBuildHelper {
 		String filePath = buildPath + File.separator + nocachejs;
 		String responseText = readTextFile(new File(filePath));
 		List<String> findGwtNames = findGwtNames(responseText);
-		String firstCacheHtml = findGwtNames.iterator().next();
-		String cacheurl = firstCacheHtml + ".cache.js";
+		String firstCacheJS = findGwtNames.iterator().next();
+		String cacheurl = firstCacheJS + ".cache.js";
 		filePath = buildPath + File.separator + cacheurl;
 		String responseCache = readTextFile(new File(filePath));
 		List<String> findRpcNames = findGwtNames(responseCache);
