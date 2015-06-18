@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class JvmSerializationPolicyBuildHelper {
 	private static final String nocachejs = ".nocache.js";
-	
+
 	public static void main(String [] args) throws Exception
 	{
 		if (args.length != 2) {
@@ -22,12 +22,12 @@ public class JvmSerializationPolicyBuildHelper {
 		}
 		retrieveSerializationPolicies(args[0], args[1]);
 	}
-	
+
 	public static void retrieveSerializationPolicies(String buildPath, String moduleBase) {
 		String moduleNoCacheJs = moduleBase + nocachejs;
 		String moduleBuildPath = buildPath + File.separator + moduleBase;
 		List<String> guessAllGwtPolicyName = guessAllGwtPolicyName(moduleBuildPath, moduleNoCacheJs);
-		
+
 		String policyNames = "<html><head/>";
 		for (String policyName : guessAllGwtPolicyName) {
 			policyNames += policyName + ",";
@@ -41,7 +41,7 @@ public class JvmSerializationPolicyBuildHelper {
 		String responseText = readTextFile(new File(filePath));
 		List<String> findGwtNames = findGwtNames(responseText);
 		String firstCacheHtml = findGwtNames.iterator().next();
-		String cacheurl = firstCacheHtml + ".cache.html";
+		String cacheurl = firstCacheHtml + ".cache.js";
 		filePath = buildPath + File.separator + cacheurl;
 		String responseCache = readTextFile(new File(filePath));
 		List<String> findRpcNames = findGwtNames(responseCache);
@@ -52,7 +52,7 @@ public class JvmSerializationPolicyBuildHelper {
 		}
 		return gwtRpcValidatedList;
 	}
-	
+
 	private static List<String> findGwtNames(String responseText) {
 		List<String> result = new ArrayList<String>();
 		// 32 chars surrounded by apostrophe
@@ -66,7 +66,7 @@ public class JvmSerializationPolicyBuildHelper {
 		}
 		return result;
 	}
-	
+
 	static private String readTextFile(File aFile) {
 		StringBuilder contents = new StringBuilder();
 
@@ -97,15 +97,15 @@ public class JvmSerializationPolicyBuildHelper {
 
 		return contents.toString();
 	}
-	
+
 	public static void writeTextFile(String text, String filePath) {
 		try {
 			BufferedWriter out = new BufferedWriter(new FileWriter(filePath));
 			out.write(text);
 			out.close();
-		} 
-		catch (IOException ex) 
-		{ 
+		}
+		catch (IOException ex)
+		{
 			System.out.println(ex.toString());
 		}
 	}
