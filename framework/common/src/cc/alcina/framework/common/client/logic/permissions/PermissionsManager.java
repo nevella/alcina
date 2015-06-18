@@ -157,7 +157,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		super();
 		this.userListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
-				groupMap = null;
+				nullGroupMap();
 			}
 		};
 	}
@@ -220,7 +220,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	public void domainTransform(DomainTransformEvent evt)
 			throws DomainTransformException {
 		if (evt.getSource() instanceof IGroup) {
-			groupMap = null;
+			nullGroupMap();
 		}
 	}
 
@@ -276,7 +276,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	public Map<String, ? extends IGroup> getUserGroups(IUser user) {
 		if (user != this.user) {
-			groupMap = null;
+			nullGroupMap();
 		}
 		if (groupMap != null) {
 			return groupMap;
@@ -296,9 +296,13 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 		HashMap<String, IGroup> result = groupMap;
 		if (user != this.user) {
-			groupMap = null;
+			nullGroupMap();
 		}
 		return result;
+	}
+
+	protected void nullGroupMap() {
+		groupMap = null;
 	}
 
 	public long getUserId() {
@@ -546,7 +550,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	}
 
 	public void setUser(IUser user) {
-		groupMap = null;
+		nullGroupMap();
 		if (this.user != null
 				&& this.user instanceof SourcesPropertyChangeEvents) {
 			SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) this.user;
