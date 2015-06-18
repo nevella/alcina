@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import java.util.function.Supplier;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public abstract class MemCacheReader<I, O> {
@@ -15,4 +17,13 @@ public abstract class MemCacheReader<I, O> {
 	}
 
 	protected abstract O read0(I input) throws Exception;
+
+	public static <T> T get(Supplier<T> supplier) {
+		return new MemCacheReader<Void, T>() {
+			@Override
+			protected T read0(Void input) throws Exception {
+				return supplier.get();
+			}
+		}.read(null);
+	}
 }
