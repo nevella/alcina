@@ -1430,8 +1430,6 @@ public class AlcinaMemCache {
 	public class LaterLookup {
 		Multimap<Class, List<LaterItem>> lookups = new Multimap<Class, List<LaterItem>>();
 
-		Multimap<Class, List<LaterItem>> initialDebugCopy = null;
-
 		void add(HasIdAndLocalId target, PdOperator pd, HasIdAndLocalId source) {
 			List<LaterItem> list = lookups.get(source.getClass());
 			synchronized (list) {
@@ -1454,24 +1452,18 @@ public class AlcinaMemCache {
 
 		synchronized void resolve() {
 			try {
-				if (initialDebugCopy == null) {
-					initialDebugCopy = new Multimap<Class, List<LaterItem>>();
-					if (lookups.itemSize() < 1000000) {
-						initialDebugCopy = lookups.copy();
-					}
-				}
 				List<Callable> tasks = new ArrayList<Callable>();
 				Map<Class, Integer> resolveSizeLookup = new LinkedHashMap<Class, Integer>();
 				for (Class clazz : lookups.keySet()) {
 					List<LaterItem> items = lookups.get(clazz);
 					Callable task = new ResolveRefsTask(items, clazz);
 					resolveSizeLookup.put(clazz, items.size());
-//					 tasks.add(task);
-//					 if (warmupExecutor == null) {
-//					 disabled - trying synchronous to see if that fixes
-//					 occasional issues
+					// tasks.add(task);
+					// if (warmupExecutor == null) {
+					// disabled - trying synchronous to see if that fixes
+					// occasional issues
 					task.call();
-//					 }
+					// }
 				}
 				invokeAllWithThrow((List) tasks);
 			} catch (Exception e) {
