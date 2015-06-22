@@ -119,6 +119,7 @@ public class Publisher {
 		ctx.getVisitorOrNoop().beforeWrapContent();
 		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
 				crh.getResults(), publicationId, publicationUserId);
+		ctx.getVisitorOrNoop().afterWrapContent(cw);
 		if (deliveryModel.provideContentDeliveryType().getClass() == null) {
 			return null;
 		}

@@ -28,4 +28,8 @@ public class PublicationVisitor {
 	public void beforeWrapContent() {
 
 	}
+
+	public void afterWrapContent(ContentWrapper cw) {
+		
+	}
 }

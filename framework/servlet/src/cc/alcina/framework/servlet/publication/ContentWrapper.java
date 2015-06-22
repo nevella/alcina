@@ -81,6 +81,10 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	protected String wrappedContent;
 
+	public void setWrappedContent(String wrappedContent) {
+		this.wrappedContent = wrappedContent;
+	}
+
 	protected String wrappedFooter;
 
 	protected byte[] wrappedBytes;
