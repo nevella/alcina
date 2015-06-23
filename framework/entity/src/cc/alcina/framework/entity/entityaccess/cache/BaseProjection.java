@@ -41,8 +41,6 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		return (V) CommonUtils.first(items(objects));
 	}
 
-
-
 	public <V> V get(Object... objects) {
 		V nonTransactional = (V) lookup.get(objects);
 		return (V) AlcinaMemCache.get().transactional.resolveTransactional(
@@ -94,15 +92,12 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		}
 	}
 
-
-
 	protected void logDuplicateMapping(Object[] values, T existing) {
 		Registry.impl(TaggedLoggers.class)
 				.log(String.format(
 						"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
-						this, Arrays.asList(values),
-						existing), AlcinaMemCache.class,
-						TaggedLogger.WARN);
+						this, Arrays.asList(values), existing),
+						AlcinaMemCache.class, TaggedLogger.WARN);
 	}
 
 	public boolean isEnabled() {
@@ -125,14 +120,12 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 			return keys == tKeys;
 		}
 		for (int i = 0; i < keys.length && i < tKeys.length; i++) {
-			if (!keys[i].equals(tKeys[i])) {
+			if (!CommonUtils.equalsWithNullEquality(keys[i], tKeys[i])) {
 				return false;
 			}
 		}
 		return true;
 	}
-
-
 
 	// count:=-1 --> all
 	public Collection<T> order(int count, CollectionFilter<T> filter,
