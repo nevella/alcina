@@ -31,7 +31,7 @@
 	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" sourcepath="/Users/ouiji/git/minor/hibernate-orm"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" sourcepath="/hibernate-core"/>
+	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" sourcepath="/jboss-hibernate-orm"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/activation.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
