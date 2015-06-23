@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 public abstract class TruncatedObjectCriterion<E extends HasId> extends
 		SearchCriterion implements HasId {
 	static final transient long serialVersionUID = 1;
+
 	private long id;
 
 	private String displayText;
@@ -24,6 +25,11 @@ public abstract class TruncatedObjectCriterion<E extends HasId> extends
 	public boolean equals(Object obj) {
 		return obj instanceof SearchCriterion
 				&& equivalentTo((SearchCriterion) obj);
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode() ^ (int) getId();
 	}
 
 	public long getId() {
