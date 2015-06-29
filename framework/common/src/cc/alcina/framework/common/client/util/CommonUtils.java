@@ -64,6 +64,19 @@ public class CommonUtils {
 		return Arrays.hashCode(values);
 	}
 
+	public static class DurationCounter {
+		private long t1;
+
+		public DurationCounter() {
+			t1 = System.currentTimeMillis();
+		}
+
+		public void end(String message) {
+			System.out
+					.println(formatJ(message, System.currentTimeMillis() - t1));
+		}
+	}
+
 	public static boolean equals(Object... objects) {
 		if (objects.length % 2 != 0) {
 			throw new RuntimeException("Array length must be divisible by two");

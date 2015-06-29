@@ -50,6 +50,17 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			getRunContext().runnable.run();
 		}
 
+		public Object callNewThread(Runnable runnable) {
+			new Thread() {
+				@Override
+				public void run() {
+					getRunContext().runnable = runnable;
+					AlcinaChildContextRunner.this.run();
+				}
+			}.start();
+			return null;
+		}
+
 		public Object call(Runnable runnable) {
 			if (Thread.currentThread().getId() == launcherThreadId) {
 				// don't do anything fancy to the context (e.g. fork/join pool)

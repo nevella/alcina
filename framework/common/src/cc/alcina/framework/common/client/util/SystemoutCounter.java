@@ -5,9 +5,17 @@ public class SystemoutCounter {
 
 	private int ticks;
 
+
 	private int tickCtr;
 
 	private int dotCtr;
+	
+	private int allTicks;
+
+	public int getAllTicks() {
+		return this.allTicks;
+	}
+
 
 	private boolean showPercentAtEndOfLine;
 
@@ -39,6 +47,7 @@ public class SystemoutCounter {
 	}
 
 	public void tick(String message) {
+		++allTicks;
 		if (++tickCtr == ticks) {
 			tickCtr = 0;
 			System.out.print(".");
