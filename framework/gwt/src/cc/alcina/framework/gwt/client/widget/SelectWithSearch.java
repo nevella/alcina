@@ -33,7 +33,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
+import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight.ScrollPanel100pcHeight300px;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -282,7 +282,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			setItemMap(itemMap);
 		}
 		this.scroller = isFlowLayout() ? new ScrollPanel(itemHolder)
-				: new ScrollPanel100pcHeight(itemHolder);
+				: new ScrollPanel100pcHeight300px(itemHolder);
 		if (!isFlowLayout()) {
 			scroller.setSize("100%", "100%");
 		}
