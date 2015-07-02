@@ -56,7 +56,11 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 
 	public SortedMultikeyMap(int depth) {
 		this.depth = depth;
-		this.delegate = new TreeMap();
+		this.delegate = createMap();
+	}
+
+	protected TreeMap createMap() {
+		return new TreeMap();
 	}
 
 	@Override

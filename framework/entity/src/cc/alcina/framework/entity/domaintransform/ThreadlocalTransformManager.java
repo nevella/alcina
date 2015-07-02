@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -564,9 +565,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				}
 				HiliLocator hiliLocator = new HiliLocator(
 						(Class<? extends HasIdAndLocalId>) clazz,
-						newInstance.getId());
+						newInstance.getId(), localId);
 				if (userSessionHiliMap != null) {
-					userSessionHiliMap.put(localId, hiliLocator);
+					userSessionHiliMap.putToLookups(hiliLocator);
 				}
 				createdObjectLocators.add(hiliLocator);
 				return (T) newInstance;
@@ -629,7 +630,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 									dtrName))
 					.setParameter(1, clientInstance.getId()).getResultList();
 			String eql = String
-					.format("select dte.objectId, dte.objectLocalId "
+					.format("select dte.objectId, dte.objectLocalId, dte.objectClassRef.id "
 							+ "from  %s dte  "
 							+ " where dte.domainTransformRequestPersistent.id in %s "
 							+ " and dte.objectLocalId!=0 and dte.transformType = ?1",
@@ -638,10 +639,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 					.setParameter(1, TransformType.CREATE_OBJECT)
 					.getResultList();
 			// force non-empty
-			userSessionHiliMap.put((long) -1, null);
+			userSessionHiliMap.putToLookups(new HiliLocator(null, -1, 0));
 			for (Object[] obj : idTuples) {
-				userSessionHiliMap.put((Long) obj[1], new HiliLocator(null,
-						(Long) obj[0]));
+				ClassRef classRef = ClassRef.forId((long) obj[2]);
+				userSessionHiliMap.putToLookups(new HiliLocator(classRef.getRefClass(),
+						(Long) obj[0], (Long) obj[1]));
 			}
 			MetricLogging.get().end(message);
 		}
@@ -1055,5 +1057,14 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	public static class UncomittedTransformsException extends Exception {
+	}
+
+	@Override
+	public <H extends HasIdAndLocalId> long getLocalIdForClientInstance(H hili) {
+		if (userSessionHiliMap != null) {
+			return userSessionHiliMap.getLocalIdForClientInstance(hili);
+		} else {
+			return super.getLocalIdForClientInstance(hili);
+		}
 	}
 }

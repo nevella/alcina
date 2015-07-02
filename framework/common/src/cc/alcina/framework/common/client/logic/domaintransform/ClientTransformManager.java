@@ -67,6 +67,7 @@ public abstract class ClientTransformManager extends TransformManager {
 		cache = new ClientDomainSync();
 	}
 
+	
 	@Override
 	public void clearUserObjects() {
 		getCache().clearUserObjects();
@@ -77,6 +78,7 @@ public abstract class ClientTransformManager extends TransformManager {
 	public ClientDomainSync getCache() {
 		return cache;
 	}
+	
 
 	public DomainTransformExceptionFilter getDomainTransformExceptionFilter() {
 		return this.domainTransformExceptionFilter;

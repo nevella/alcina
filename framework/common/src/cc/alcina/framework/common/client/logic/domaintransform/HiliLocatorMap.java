@@ -13,19 +13,31 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 import com.totsp.gwittir.client.beans.Converter;
 
 /**
- * The key is the (client's) localid of the Hili
+ * The key is the (client's) localid of the Hili Most methods are
+ * "local to persistent" - except where marked
  * 
  * @author nick@alcina.cc
  * 
  */
-public class HiliLocatorMap extends HashMap<Long, HiliLocator> {
+public class HiliLocatorMap implements Cloneable, Serializable {
+	private HashMap<Long, HiliLocator> localToPersistent = new HashMap<>();
+
+	private UnsortedMultikeyMap<HiliLocator> persistentToLocal = new UnsortedMultikeyMap<>(
+			2);
+
+	public HiliLocatorMap() {
+	}
+
 	public static class ToCreatedIdConverter<H extends HasIdAndLocalId>
 			implements Converter<H, Long> {
 		private HiliLocatorMap map;
@@ -36,20 +48,68 @@ public class HiliLocatorMap extends HashMap<Long, HiliLocator> {
 
 		@Override
 		public Long convert(H original) {
-			return map.containsKey(original.getLocalId()) ? map.get(
-					original.getLocalId()).getId() : null;
+			return map.localToPersistent.containsKey(original.getLocalId()) ? map.localToPersistent
+					.get(original.getLocalId()).getId() : null;
 		}
 	}
 
+	public HiliLocatorMap clone() {
+		HiliLocatorMap clone = new HiliLocatorMap();
+		clone.localToPersistent = (HashMap<Long, HiliLocator>) localToPersistent
+				.clone();
+		clone.persistentToLocal = persistentToLocal.clone();
+		return clone;
+	}
+
 	public HiliLocator getFor(HasIdAndLocalId hili) {
-		return get(hili.getLocalId());
+		return localToPersistent.get(hili.getLocalId());
 	}
 
 	public HiliLocator getFor(ObjectRef ref) {
 		long id = ref.getId();
 		if (id != 0) {
-			return new HiliLocator(ref.getClassRef().getRefClass(), id);
+			return new HiliLocator(ref.getClassRef().getRefClass(), id,
+					ref.getLocalId());
 		}
-		return get(ref.getLocalId());
+		return localToPersistent.get(ref.getLocalId());
+	}
+
+	public void clear() {
+		localToPersistent.clear();
+		persistentToLocal.clear();
+	}
+
+	public void putAll(HiliLocatorMap other) {
+		localToPersistent.putAll(other.localToPersistent);
+		persistentToLocal.putMulti(other.persistentToLocal);
+	}
+
+	public boolean containsKey(Long localId) {
+		return localToPersistent.containsKey(localId);
+	}
+
+	public HiliLocator get(Long localId) {
+		return localToPersistent.get(localId);
+	}
+
+	public <H extends HasIdAndLocalId> long getLocalIdForClientInstance(H hili) {
+		if (hili.getLocalId() != 0) {
+			return hili.getLocalId();
+		}
+		HiliLocator hiliLocator = persistentToLocal.get(hili.getClass(),
+				hili.getId());
+		if (hiliLocator != null) {
+			return hiliLocator.localId;
+		}
+		return 0;
+	}
+
+	public void putToLookups(HiliLocator hiliLocator) {
+		localToPersistent.put(hiliLocator.localId, hiliLocator);
+		persistentToLocal.put(hiliLocator.clazz, hiliLocator.id, hiliLocator);
+	}
+
+	public boolean isEmpty() {
+		return localToPersistent.isEmpty();
 	}
 }

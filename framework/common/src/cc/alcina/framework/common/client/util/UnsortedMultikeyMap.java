@@ -15,6 +15,10 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.PublicCloneable;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
@@ -24,21 +28,41 @@ import java.util.LinkedHashMap;
  * 
  */
 @SuppressWarnings("unchecked")
-public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> {
+public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
+		PublicCloneable<UnsortedMultikeyMap> {
 	private static final long serialVersionUID = 1L;
+
+	@Override
+	public UnsortedMultikeyMap clone() {
+		try {
+			UnsortedMultikeyMap clone = new UnsortedMultikeyMap();
+			clone.delegate = createMap();
+			clone.delegate.putAll(delegate);
+			return clone;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	/**
 	 * Ensures that RPC will consider type parameter V to be exposed. It will be
 	 * pruned by dead code elimination.
 	 */
 	@SuppressWarnings("unused")
 	private V exposeValue;
+
 	public UnsortedMultikeyMap() {
 		this(2);
 	}
 
 	public UnsortedMultikeyMap(int depth) {
 		this.depth = depth;
-		this.delegate = new LinkedHashMap();
+		this.delegate = createMap();
+	}
+
+	@Override
+	protected Map createMap() {
+		return new LinkedHashMap<>();
 	}
 
 	@Override

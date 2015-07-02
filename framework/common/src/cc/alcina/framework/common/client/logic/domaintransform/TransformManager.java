@@ -1723,4 +1723,19 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void deleteMultiple(Collection<? extends HasIdAndLocalId> secondOnly) {
 		secondOnly.forEach(hili -> deleteObject(hili, true));
 	}
+
+	/**
+	 * useful support in TLTM, ThreadedClientTM
+	 */
+	public <H extends HasIdAndLocalId> long getLocalIdForClientInstance(H hili) {
+		return hili.getLocalId();
+	}
+
+	/**
+	 * @see getLocalIdForClientInstance
+	 */
+	public void registerHiliMappingPriorToLocalIdDeletion(Class clazz, long id,
+			long localId) {
+		return;
+	}
 }

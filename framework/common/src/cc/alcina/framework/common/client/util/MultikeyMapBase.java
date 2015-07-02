@@ -16,13 +16,14 @@ import cc.alcina.framework.common.client.collections.ImmutableMap;
 import com.google.gwt.user.client.rpc.GwtTransient;
 import com.totsp.gwittir.client.beans.Converter;
 
-public abstract class MultikeyMapBase<V> implements MultikeyMap<V>, Serializable {
+public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
+		Serializable {
 	static final transient long serialVersionUID = -1L;
+
 	protected int depth;
 
 	@GwtTransient
 	protected Map delegate;
-
 
 	protected transient ImmutableMap readonlyDelegate;
 
@@ -37,6 +38,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>, Serializable
 	public int size() {
 		return this.delegate.size();
 	}
+
+	protected abstract Map createMap();
 
 	@Override
 	public <T> Collection<T> values(Object... objects) {
@@ -121,8 +124,9 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>, Serializable
 		Map m = getMapForObjects(true, 2, objects);
 		Object key = objects[objects.length - 2];
 		if (m instanceof SortedMap && key == null) {
-			RuntimeException ex = new RuntimeException("Invalid keys for sorted multikey put - "
-					+ Arrays.asList(objects));
+			RuntimeException ex = new RuntimeException(
+					"Invalid keys for sorted multikey put - "
+							+ Arrays.asList(objects));
 			throw ex;
 		}
 		m.put(key, objects[objects.length - 1]);
@@ -161,7 +165,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>, Serializable
 		}
 		V result = (V) m.remove(objects[objects.length - 1 - trim]);
 		for (int keyIndex = objects.length - 2 - trim; keyIndex >= 0; keyIndex--) {
-			Map parent = getMapForObjects(false, objects.length - keyIndex, objects);
+			Map parent = getMapForObjects(false, objects.length - keyIndex,
+					objects);
 			if (m.isEmpty()) {
 				Object keyWithEmptyMap = objects[keyIndex];
 				parent.remove(keyWithEmptyMap);
@@ -186,7 +191,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>, Serializable
 			writeableDelegate().putAll(other.writeableDelegate());
 		} else {
 			for (Object key : other.writeableDelegate().keySet()) {
-				((MultikeyMap<V>) asMap(key)).putMulti((MultikeyMap<V>) other.asMap(key));
+				((MultikeyMap<V>) asMap(key)).putMulti((MultikeyMap<V>) other
+						.asMap(key));
 			}
 		}
 	}
@@ -202,7 +208,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>, Serializable
 					List nextK = new ArrayList(key);
 					nextK.add(k2);
 					if (depth == getDepth() - 1) {
-						Object[] kArr2 = (Object[]) nextK.toArray(new Object[nextK.size()]);
+						Object[] kArr2 = (Object[]) nextK
+								.toArray(new Object[nextK.size()]);
 						nextK.add(get(kArr2));
 					}
 					next.add(nextK);
@@ -220,7 +227,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>, Serializable
 		}
 	}
 
-	public <T> void addTupleObjects(List<T> tupleObjects, Converter<T, List> converter) {
+	public <T> void addTupleObjects(List<T> tupleObjects,
+			Converter<T, List> converter) {
 		for (T t : tupleObjects) {
 			put(converter.convert(t).toArray());
 		}
@@ -266,7 +274,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>, Serializable
 	@Override
 	public <T> Collection<T> items(Object... objects) {
 		if (objects.length >= depth) {
-			throw new IllegalArgumentException("items() must have fewer than <depth> keys");
+			throw new IllegalArgumentException(
+					"items() must have fewer than <depth> keys");
 		}
 		return keys(objects);
 	}

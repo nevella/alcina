@@ -237,7 +237,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 			LazyInitializer lazy = ((HibernateProxy) o)
 					.getHibernateLazyInitializer();
 			return new HiliLocator(lazy.getPersistentClass(),
-					(Long) lazy.getIdentifier());
+					(Long) lazy.getIdentifier(),0L);
 		}
 		return new HiliLocator((HasIdAndLocalId) o);
 	}
