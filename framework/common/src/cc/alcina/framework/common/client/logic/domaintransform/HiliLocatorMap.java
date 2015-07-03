@@ -17,7 +17,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 import com.totsp.gwittir.client.beans.Converter;
@@ -111,5 +110,13 @@ public class HiliLocatorMap implements Cloneable, Serializable {
 
 	public boolean isEmpty() {
 		return localToPersistent.isEmpty();
+	}
+
+	public HiliLocator getPersistentLocator(HasIdAndLocalId hili) {
+		if (hili.getId() != 0) {
+			return new HiliLocator(hili);
+		} else {
+			return localToPersistent.get(hili.getLocalId());
+		}
 	}
 }

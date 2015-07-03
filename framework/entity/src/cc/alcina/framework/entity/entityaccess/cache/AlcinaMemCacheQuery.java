@@ -135,6 +135,11 @@ public class AlcinaMemCacheQuery {
 	}
 
 	public String getCanonicalPropertyPath(Class clazz, String propertyPath) {
-		return AlcinaMemCache.get().getCanonicalPropertyPath( clazz,  propertyPath);
+		return AlcinaMemCache.get().getCanonicalPropertyPath(clazz,
+				propertyPath);
+	}
+
+	public <T extends HasIdAndLocalId> T first(Class<T> clazz) {
+		return CommonUtils.first(list(clazz));
 	}
 }

@@ -463,4 +463,13 @@ public class ResourceUtilities {
 		}
 		return instance;
 	}
+
+	public static byte[] readClassPathResourceAsByteArray(Class clazz,
+			String path) {
+		try {
+			return readStreamToByteArray(clazz.getResourceAsStream(path));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 }

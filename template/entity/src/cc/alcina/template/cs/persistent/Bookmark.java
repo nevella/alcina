@@ -39,16 +39,16 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.UrlCustomiser;
 
 @Entity
 @Table(name = "bookmark", schema = "public")
-@BeanInfo(displayNamePropertyName = "title", actions = @ObjectActions( {
+@BeanInfo(displayNamePropertyName = "title", actions = @ObjectActions({
 		@Action(actionClass = ViewAction.class),
 		@Action(actionClass = EditAction.class),
 		@Action(actionClass = CreateAction.class),
 		@Action(actionClass = DeleteAction.class) }))
-@SequenceGenerator(allocationSize=1,name = "bookmark_id_seq", sequenceName = "bookmark_id_seq")
+@SequenceGenerator(allocationSize = 1, name = "bookmark_id_seq", sequenceName = "bookmark_id_seq")
 @ObjectPermissions(create = @Permission(access = AccessLevel.LOGGED_IN), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 @Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
 public class Bookmark extends DomainBaseVersionable implements
-		Comparable<Bookmark> ,HasOwner{
+		Comparable<Bookmark>, HasOwner {
 	private long id;
 
 	private String title;
@@ -88,7 +88,7 @@ public class Bookmark extends DomainBaseVersionable implements
 		return this.id;
 	}
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Parent", orderingHint = 25))
 	@Association(implementationClass = Bookmark.class, propertyName = "children")
 	public Bookmark getParent() {
@@ -106,7 +106,7 @@ public class Bookmark extends DomainBaseVersionable implements
 		return url;
 	}
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	public AlcinaTemplateUser getUser() {
 		return user;
 	}
@@ -125,7 +125,8 @@ public class Bookmark extends DomainBaseVersionable implements
 	public void setParent(Bookmark parent) {
 		Bookmark old_parent = this.parent;
 		this.parent = parent;
-		propertyChangeSupport().firePropertyChange("parent", old_parent, parent);
+		propertyChangeSupport()
+				.firePropertyChange("parent", old_parent, parent);
 	}
 
 	public void setTitle(String title) {
