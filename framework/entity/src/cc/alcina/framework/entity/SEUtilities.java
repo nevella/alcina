@@ -1173,4 +1173,29 @@ public class SEUtilities {
 		}
 		return query_pairs;
 	}
+
+	public static boolean containsDodgyAscii(String text) {
+		for (int idx = 0; idx < text.length(); idx++) {
+			int codePoint = (int) text.charAt(idx);
+			if (codePoint >=0x80 && codePoint<=0x9f) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static String removeDodgyAscii(String text) {
+		if (!containsDodgyAscii(text)) {
+			return text;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int idx = 0; idx < text.length(); idx++) {
+			int codePoint = (int) text.charAt(idx);
+			if (codePoint >=0x80 && codePoint<=0x9f) {
+			} else {
+				sb.append((char) codePoint);
+			}
+		}
+		return sb.toString();
+	}
 }

@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class J8Utils {
 	public static <T, K> Collector<T, ?, Map<K, T>> toKeyMap(
@@ -28,6 +29,11 @@ public class J8Utils {
 	public static <T, K, U> Collector<T, ?, Multimap<K, List<U>>> toKeyMultimap(
 			Function<? super T, ? extends K> keyMapper) {
 		return new ToMultimapCollector(keyMapper, t -> t, Multimap::new);
+	}
+
+	public static <T, V> Collector<T, ?, UnsortedMultikeyMap<V>> toUnsortedMultikeyMapCollector(
+			Function<? super T, Object[]> mapper, int depth) {
+		return new ToUnsortedMultikeyMapCollector(mapper, depth);
 	}
 
 	private static class ToMapCollector<T, K> implements
@@ -116,6 +122,54 @@ public class J8Utils {
 
 		@Override
 		public Supplier<Multimap<K, List<U>>> supplier() {
+			return supplier;
+		}
+	}
+
+	private static class ToUnsortedMultikeyMapCollector<T, V>
+			implements
+			java.util.stream.Collector<T, UnsortedMultikeyMap<V>, UnsortedMultikeyMap<V>> {
+		private Function<? super T, Object[]> mapper;
+
+		private Supplier<UnsortedMultikeyMap<V>> supplier;
+
+		public ToUnsortedMultikeyMapCollector(
+				Function<? super T, Object[]> mapper, int depth) {
+			this.mapper = mapper;
+			this.supplier = new Supplier<UnsortedMultikeyMap<V>>() {
+				@Override
+				public UnsortedMultikeyMap<V> get() {
+					return new UnsortedMultikeyMap<V>(depth);
+				}
+			};
+		}
+
+		@Override
+		public BiConsumer<UnsortedMultikeyMap<V>, T> accumulator() {
+			return (map, value) -> map.put(mapper.apply(value));
+		}
+
+		@Override
+		public Set<java.util.stream.Collector.Characteristics> characteristics() {
+			return EnumSet.of(Characteristics.UNORDERED,
+					Characteristics.IDENTITY_FINISH);
+		}
+
+		@Override
+		public BinaryOperator<UnsortedMultikeyMap<V>> combiner() {
+			return (left, right) -> {
+				left.putMulti(right);
+				return left;
+			};
+		}
+
+		@Override
+		public Function<UnsortedMultikeyMap<V>, UnsortedMultikeyMap<V>> finisher() {
+			return null;
+		}
+
+		@Override
+		public Supplier<UnsortedMultikeyMap<V>> supplier() {
 			return supplier;
 		}
 	}
