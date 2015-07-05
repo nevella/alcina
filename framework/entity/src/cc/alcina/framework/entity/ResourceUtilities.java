@@ -43,6 +43,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -149,6 +150,27 @@ public class ResourceUtilities {
 			return b.getString(namespacedKey);
 		}
 		return b.getString(propertyName);
+	}
+
+	public static String writeObjectAsBase64(Object object) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(object);
+		oos.close();
+		String asB64 = Base64.getEncoder().encodeToString(baos.toByteArray());
+		return asB64;
+	}
+
+	public static <T> T readObjectFromBase64(String string) throws IOException {
+		byte[] bytes = Base64.getDecoder().decode(string);
+		try (ObjectInputStream in = new ObjectInputStream(
+				new ByteArrayInputStream(bytes))) {
+			try {
+				return (T) in.readObject();
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+		}
 	}
 
 	public static interface BeanInfoHelper {

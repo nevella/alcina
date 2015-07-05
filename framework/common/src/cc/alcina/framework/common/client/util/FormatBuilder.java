@@ -19,4 +19,9 @@ public class FormatBuilder{
 		sb.append("\n");
 		return this;
 	}
+	public void appendIfNonEmpty(String optional) {
+		if(sb.length()>0){
+			sb.append(optional);
+		}
+	}
 }
