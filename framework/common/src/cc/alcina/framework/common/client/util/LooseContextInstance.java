@@ -104,7 +104,9 @@ public class LooseContextInstance {
 
 	public void pushWithKey(String key, Object value) {
 		push();
-		set(key, value);
+		if (key != null) {
+			set(key, value);
+		}
 	}
 
 	public void remove(String key) {
