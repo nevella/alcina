@@ -1176,7 +1176,7 @@ public class CommonUtils {
 		if (sourceText.length() < charWidth) {
 			return sourceText;
 		}
-		String result = trimToWsChars(sourceText, charWidth * 2 / 3, true);
+		String result = trimToWsChars(sourceText, (charWidth * 2) / 3, true);
 		int from = sourceText.length() - result.length();
 		int spIdx = sourceText.substring(0, from).lastIndexOf(" ");
 		if (spIdx != -1) {
