@@ -204,7 +204,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 			List<List> next = new ArrayList<List>();
 			for (List key : result) {
 				Object[] kArr = (Object[]) key.toArray(new Object[key.size()]);
-				for (Object k2 : keys(kArr)) {
+				Collection<Object> keys = keys(kArr);
+				for (Object k2 : keys) {
 					List nextK = new ArrayList(key);
 					nextK.add(k2);
 					if (depth == getDepth() - 1) {

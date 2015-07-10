@@ -151,12 +151,13 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 			if (i != 0) {
 				return i;
 			}
-		}
-		if (s1 != null) {
-			return 1;
-		}
-		if (s2 != null) {
-			return -1;
+		} else {
+			if (s1 != null) {
+				return 1;
+			}
+			if (s2 != null) {
+				return -1;
+			}
 		}
 		return CommonUtils.compareLongs(getId(), o.getId());
 	}
