@@ -98,6 +98,12 @@ public class ExcelExporter {
 		addCollectionToBook(coll, book, sheetName, pdMultis);
 	}
 
+	private List<List> cellList = new ArrayList<>();
+
+	public List<List> getCellList() {
+		return this.cellList;
+	}
+
 	static class PdMultiplexer implements Comparable<PdMultiplexer> {
 		private ExcelFormatAnnotation xfa;
 
@@ -157,10 +163,12 @@ public class ExcelExporter {
 		table.setAttributeNS(SS_NS, "ss:ExpandedRowCount",
 				String.valueOf(coll.size() + 1));
 		Element row;
+		List dataRow;
 		Element cell;
 		Element data;
 		Text txt;
 		row = book.createElement("Row");
+		dataRow = new ArrayList<>();
 		row.setAttributeNS(SS_NS, "ss:StyleID", "sHeaderRow");
 		for (PdMultiplexer pdm : pds) {
 			Element col = book.createElement("Column");
@@ -183,14 +191,17 @@ public class ExcelExporter {
 			cell.appendChild(data);
 			data.setAttributeNS(SS_NS, "ss:Type", "String");
 			txt = book.createTextNode(colnameFromFieldname(pdm.name()));
+			dataRow.add(txt.getTextContent());
 			data.appendChild(txt);
 		}
 		table.appendChild(row);
+		cellList.add(dataRow);
 		// 1970-01-01T00:00:00.000
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 		for (Iterator it = coll.iterator(); it.hasNext();) {
 			o = it.next();
 			row = book.createElement("Row");
+			dataRow = new ArrayList<>();
 			int colIndex = 1;
 			for (PdMultiplexer pdm : pds) {
 				cell = book.createElement("Cell");
@@ -204,6 +215,7 @@ public class ExcelExporter {
 				if (value == null
 						|| (value instanceof String && value.toString()
 								.isEmpty())) {
+					dataRow.add(null);
 					continue;
 				}
 				if (pdm.pd.getPropertyType() == Date.class) {
@@ -217,9 +229,11 @@ public class ExcelExporter {
 				txt = book.createTextNode((value == null) ? "" : value
 						.toString());
 				data.appendChild(txt);
+				dataRow.add(txt.getTextContent());
 				row.appendChild(cell);
 			}
 			table.appendChild(row);
+			cellList.add(dataRow);
 		}
 	}
 

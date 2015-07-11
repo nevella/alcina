@@ -2,12 +2,14 @@ package cc.alcina.framework.servlet.excel;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.w3c.dom.Document;
 
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
@@ -21,6 +23,9 @@ import cc.alcina.framework.common.client.publication.excel.BasicExcelContentDefi
 import cc.alcina.framework.common.client.publication.excel.BasicExcelRequest;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.servlet.CommonRemoteServletProvider;
@@ -30,6 +35,10 @@ import cc.alcina.framework.servlet.publication.ContentRenderer.RenderTransformWr
 
 public class BasicExcelPublisher {
 	public static final int PUB_MAX_RESULTS = 100000;
+
+	// debug
+	public static final String CONTEXT_WRITE_HTML_TABLE = BasicExcelPublisher.class
+			.getName() + ".CONTEXT_WRITE_HTML_TABLE";
 
 	@RegistryLocation(registryPoint = ContentModelHandler.class, targetClass = BasicExcelContentDefinition.class)
 	public static class BasicExcelPublisherContentHandler
@@ -47,7 +56,8 @@ public class BasicExcelPublisher {
 			def.setResultsPerPage(PUB_MAX_RESULTS);
 			deliveryModel.setSuggestedFileName(SEUtilities.sanitiseFileName(def
 					.toString().replace(" ", "_")));
-			SearchResultsBase results = Registry.impl(CommonRemoteServletProvider.class)
+			SearchResultsBase results = Registry
+					.impl(CommonRemoteServletProvider.class)
 					.getCommonRemoteServiceServlet().search(def, 0);
 			publicationContent.searchResults = results;
 			hasResults = true;
@@ -108,7 +118,28 @@ public class BasicExcelPublisher {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			OutputStreamWriter writer = new OutputStreamWriter(baos, "UTF-8");
 			XmlUtils.streamXML(doc, writer);
-			results.bytes = baos.toByteArray();
+			if (LooseContext.is(CONTEXT_WRITE_HTML_TABLE)) {
+				List<List> cellList = ee.getCellList();
+				FormatBuilder fb = new FormatBuilder();
+				fb.format("<table>\n");
+				for (List tr : cellList) {
+					fb.format("<tr>\n");
+					for (Object td : tr) {
+						fb.format("<td valign='top'>\n");
+						String s = CommonUtils.nullSafeToString(td);
+						if (CommonUtils.isNullOrEmpty(s)) {
+							s = "&nbsp;";
+						}
+						fb.format(s);
+						fb.format("</td>\n");
+					}
+					fb.format("</tr>\n");
+				}
+				fb.format("</table>\n");
+				results.htmlContent = fb.toString();
+			} else {
+				results.bytes = baos.toByteArray();
+			}
 		}
 	}
 }
