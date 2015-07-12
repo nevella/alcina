@@ -162,7 +162,7 @@ public class ResourceUtilities {
 	}
 
 	public static <T> T readObjectFromBase64(String string) throws IOException {
-		byte[] bytes = Base64.getDecoder().decode(string);
+		byte[] bytes = Base64.getDecoder().decode(string.trim());
 		try (ObjectInputStream in = new ObjectInputStream(
 				new ByteArrayInputStream(bytes))) {
 			try {
