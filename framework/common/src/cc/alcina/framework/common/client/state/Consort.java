@@ -78,6 +78,17 @@ public class Consort<D> {
 
 	protected ParallelArbiter parallelArbiter;
 
+	private boolean throwOnUnableToResolveDependencies;
+
+	public boolean isThrowOnUnableToResolveDependencies() {
+		return this.throwOnUnableToResolveDependencies;
+	}
+
+	public void setThrowOnUnableToResolveDependencies(
+			boolean throwOnUnableToResolveDependencies) {
+		this.throwOnUnableToResolveDependencies = throwOnUnableToResolveDependencies;
+	}
+
 	protected TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(getClass(), TaggedLogger.METRIC);
 
@@ -170,7 +181,7 @@ public class Consort<D> {
 	}
 
 	public void clearReachedStates() {
-		modifyStates(new ArrayList<D>(reachedStates), false);
+		removeStates(new ArrayList<D>(reachedStates));
 	}
 
 	public boolean containsState(D state) {
@@ -439,9 +450,13 @@ public class Consort<D> {
 					if (players.size() > 0 && playing.isEmpty()) {
 						Player missed = lastAdded != null ? lastAdded : players
 								.iterator().next();
-						infoLogger.log(CommonUtils.formatJ(
+						String message = CommonUtils.formatJ(
 								"Unable to resolve dependencies: %s\n\t%s",
-								missed.getRequires(), missed));
+								missed.getRequires(), missed);
+						infoLogger.log(message);
+						if (isThrowOnUnableToResolveDependencies()) {
+							onFailure(new RuntimeException(message));
+						}
 					}
 				}
 				break;
