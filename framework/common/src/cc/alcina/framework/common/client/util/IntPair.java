@@ -247,4 +247,8 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 		}
 		return continues(range, tolerance);
 	}
+
+	public boolean isPositiveRange() {
+		return i2 - i1 > 0;
+	}
 }
