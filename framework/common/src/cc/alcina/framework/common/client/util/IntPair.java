@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class IntPair implements Comparable<IntPair>, Serializable {
+	static final transient long serialVersionUID = -1L;
 	public int i1;
 
 	public int i2;
