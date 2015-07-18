@@ -18,6 +18,9 @@ public class TextUtils {
 	public static String normaliseAndTrim(String text) {
 		return TextUtilsImpl.normalise(text).trim();
 	}
+	public static String normalise(String text) {
+		return TextUtilsImpl.normalise(text);
+	}
 
 	public static List<IntPair> match(String text, String regex) {
 		if (text == null || regex == null) {
