@@ -1,5 +1,10 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntListIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
@@ -7,14 +12,9 @@ import java.util.TreeSet;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
-import com.carrotsearch.hppc.IntArrayList;
-import com.carrotsearch.hppc.IntObjectScatterMap;
-import com.carrotsearch.hppc.LongArrayList;
-import com.carrotsearch.hppc.cursors.IntCursor;
-
 public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 		PropertyStoreLookup<T, H> {
-	private IntObjectScatterMap<IntArrayList> lookup = new IntObjectScatterMap<>();
+	private Int2ObjectOpenHashMap<IntArrayList> lookup = new Int2ObjectOpenHashMap<>();
 
 	public IntBackedPropertyStoreLookup(
 			PropertyStoreLookupDescriptor descriptor, PropertyStore store) {
@@ -34,9 +34,10 @@ public class IntBackedPropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 	}
 
 	private Set<Long> convertArr(IntArrayList intArrayList) {
-		Set<Long> res = new TreeSet<Long>();
-		for (IntCursor c : intArrayList) {
-			res.add((long) c.value);
+		LongOpenHashSet res = new LongOpenHashSet();
+		IntListIterator itr = intArrayList.listIterator();
+		while (itr.hasNext()) {
+			res.add((long) itr.nextInt());
 		}
 		return res;
 	}

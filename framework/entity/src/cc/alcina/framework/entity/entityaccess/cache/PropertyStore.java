@@ -1,11 +1,19 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+
 import java.lang.reflect.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -17,9 +25,6 @@ import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
 
-import com.carrotsearch.hppc.LongIntScatterMap;
-import com.carrotsearch.hppc.cursors.LongIntCursor;
-
 /**
  * Stores object properties as arrays
  * 
@@ -27,11 +32,11 @@ import com.carrotsearch.hppc.cursors.LongIntCursor;
  *
  */
 public class PropertyStore {
-	List<Object> store = new ArrayList();
+	List<FieldStore> store = new ArrayList<>();
 
 	int idIndex = 0;
 
-	LongIntScatterMap rowLookup;
+	Long2IntOpenHashMap rowLookup;
 
 	private List<PdOperator> pds;
 
@@ -53,20 +58,15 @@ public class PropertyStore {
 		int rowIdx = ensureRow(id);
 		for (int idx = 0; idx < pds.size(); idx++) {
 			PdOperator pd = pds.get(idx);
-			Object pStore = store.get(pd.idx);
-			if (pStore instanceof long[]) {
-				((long[]) pStore)[rowIdx] = (long) rs.getLong(idx + 1);
-			} else if (pStore instanceof String[]) {
-				((String[]) pStore)[rowIdx] = (String) rs.getString(idx + 1);
-			} else if (pStore instanceof boolean[]) {
-				((boolean[]) pStore)[rowIdx] = (boolean) rs.getBoolean(idx + 1);
-			} else if (pStore instanceof int[]) {
-				((int[]) pStore)[rowIdx] = (int) rs.getLong(idx + 1);
-			}
+			store.get(pd.idx).putRsField(rs, idx + 1, rowIdx);
 		}
 		for (PropertyStoreLookup lookup : lookups) {
 			lookup.insert(rs, id);
 		}
+	}
+
+	public FilterContext createContext(DetachedEntityCache cache) {
+		return new PsFilterContext(cache);
 	}
 
 	public PdOperator getDescriptor(String propertyPath) {
@@ -78,11 +78,39 @@ public class PropertyStore {
 	}
 
 	public Set<Long> getIds() {
-		Set<Long> result = new LinkedHashSet<Long>();
-		for (LongIntCursor cursor : rowLookup) {
-			result.add(cursor.key);
+		LongOpenHashSet res = new LongOpenHashSet();
+		LongIterator itr = rowLookup.keySet().iterator();
+		while (itr.hasNext()) {
+			res.add(itr.nextLong());
 		}
-		return result;
+		return res;
+	}
+
+	public Long getLongValue(PdOperator pd, int rowOffset) {
+		long value = getPrimitiveLongValue(pd, rowOffset);
+		return value == 0 ? null : value;
+	}
+
+	public long getPrimitiveLongValue(PdOperator pd, int rowOffset) {
+		if (rowOffset != -1) {
+			return ((LongStore) store.get(pd.idx)).get(rowOffset);
+		}
+		return 0;
+	}
+
+	public String getStringValue(PdOperator pd, int rowOffset) {
+		if (rowOffset != -1) {
+			return ((StringStore) store.get(pd.idx)).get(rowOffset);
+		}
+		return null;
+	}
+
+	public Object getValue(PdOperator pd, Long id) {
+		int rowOffset = getRowOffset(id);
+		if (rowOffset != -1) {
+			return store.get(pd.idx).getWrapped(rowOffset);
+		}
+		return null;
 	}
 
 	public void init(List<PdOperator> pds) {
@@ -94,60 +122,36 @@ public class PropertyStore {
 		idIndex = pds.indexOf(idOperator);
 		tableSize = getInitialSize();
 		pds.forEach(pd -> {
-			store.add(getArrayFor(pd.pd.getPropertyType()));
+			store.add(getFieldStoreFor(pd.pd.getPropertyType()));
 		});
 		lookups.forEach(lkp -> lkp.initPds());
 	}
 
-	protected void initRowLookup() {
-		rowLookup = new LongIntScatterMap(getInitialSize());
-	}
-
 	protected int ensureRow(long id) {
 		if (!rowLookup.containsKey(id)) {
-			checkFull();
 			rowLookup.put(id, emptyRowIdx++);
 		}
 		return rowLookup.get(id);
 	}
 
-	protected void checkFull() {
-		if (emptyRowIdx == tableSize) {
-			// incr by 1.5 - we're after memory, not perf
-			List<Object> old = store;
-			store = new ArrayList<>();
-			tableSize = (tableSize * 3) / 2;
-			pds.forEach(pd -> {
-				Object oldStore = old.get(pd.idx);
-				Object newStore = getArrayFor(pd.pd.getPropertyType());
-				System.arraycopy(oldStore, 0, newStore, 0, emptyRowIdx);
-				store.add(newStore);
-			});
-		}
-	}
-
-	private Object getArrayFor(Class<?> propertyType) {
+	protected FieldStore getFieldStoreFor(Class<?> propertyType) {
 		if (propertyType == long.class || propertyType == Long.class) {
-			return getLongArray();
+			return new LongStore(tableSize);
 		} else if (propertyType == boolean.class
 				|| propertyType == Boolean.class) {
-			return new boolean[tableSize];
+			return new BooleanStore(tableSize);
 		} else if (propertyType == String.class) {
-			return new String[tableSize];
+			return new DuplicateStringStore(tableSize);
 		}
 		throw new UnsupportedOperationException();
-	}
-
-	protected Object getLongArray() {
-		return new long[tableSize];
 	}
 
 	protected int getInitialSize() {
 		return 100;
 	}
 
-	void addLookup(PropertyStoreLookup lookup) {
-		lookups.add(lookup);
+	protected Object getLongArray() {
+		return new long[tableSize];
 	}
 
 	protected int getRowOffset(Long id) {
@@ -157,35 +161,124 @@ public class PropertyStore {
 		return -1;
 	}
 
-	public Object getValue(PdOperator pd, Long id) {
-		int rowOffset = getRowOffset(id);
-		if (rowOffset != -1) {
-			return Array.get(store.get(pd.idx), rowOffset);
+	protected void initRowLookup() {
+		rowLookup = new Long2IntOpenHashMap(getInitialSize());
+	}
+
+	void addLookup(PropertyStoreLookup lookup) {
+		lookups.add(lookup);
+	}
+
+	static class BooleanStore extends FieldStore<Boolean> {
+		BooleanArrayList list;
+
+		public BooleanStore(int size) {
+			super(size);
+			list = new BooleanArrayList(size);
 		}
-		return null;
-	}
 
-	public long getPrimitiveLongValue(PdOperator pd, int rowOffset) {
-		if (rowOffset != -1) {
-			return ((long[]) store.get(pd.idx))[rowOffset];
+		@Override
+		public void putRsField(ResultSet rs, int colIdx, int rowIdx) throws SQLException {
+			put(rs.getBoolean(colIdx), rowIdx);
 		}
-		return 0;
-	}
 
-	public Long getLongValue(PdOperator pd, int rowOffset) {
-		long value = getPrimitiveLongValue(pd, rowOffset);
-		return value == 0 ? null : value;
-	}
-	public String getStringValue(PdOperator pd, int rowOffset) {
-		if (rowOffset != -1) {
-			return ((String[]) store.get(pd.idx))[rowOffset];
+		@Override
+		protected Boolean getWrapped(int rowOffset) {
+			return get(rowOffset);
 		}
-		return null;
+
+		boolean get(int rowIdx) {
+			return list.getBoolean(rowIdx);
+		}
+
+		void put(boolean value, int rowIdx) {
+			if (list.size() == rowIdx) {
+				list.add(value);
+			} else {
+				list.set(rowIdx, value);
+			}
+		}
 	}
 
+	static class DuplicateStringStore extends StringStore {
+		Object2IntOpenHashMap<String> stringIdLookup;
 
-	public FilterContext createContext(DetachedEntityCache cache) {
-		return new PsFilterContext(cache);
+		Int2ObjectOpenHashMap<String> idStringLookup;
+
+		Int2IntOpenHashMap rowIdLookup;
+
+		public DuplicateStringStore(int size) {
+			super(size);
+			stringIdLookup = new Object2IntOpenHashMap<String>(size / 10);
+			idStringLookup = new Int2ObjectOpenHashMap<String>(size / 10);
+			rowIdLookup = new Int2IntOpenHashMap(size);
+		}
+
+		@Override
+		public void putRsField(ResultSet rs, int colIdx, int rowIdx) throws SQLException {
+			put(rs.getString(colIdx), rowIdx);
+		}
+
+		@Override
+		protected String getWrapped(int rowOffset) {
+			return get(rowOffset);
+		}
+		String get(int rowIdx) {
+			if (rowIdLookup.containsKey(rowIdx)) {
+				int stringId = rowIdLookup.get(rowIdx);
+				return idStringLookup.get(stringId);
+			}
+			return null;
+		}
+		// not synchronized
+		void put(String string, int rowIdx) {
+			if (!stringIdLookup.containsKey(string)) {
+				int stringId = stringIdLookup.size();
+				stringIdLookup.put(string, stringId);
+				idStringLookup.put(stringId, string);
+			}
+			int stringId = stringIdLookup.getInt(string);
+			rowIdLookup.put(rowIdx, stringId);
+		}
+	}
+
+	abstract static class FieldStore<T> {
+		public FieldStore(int size) {
+		}
+
+		public abstract void putRsField(ResultSet rs, int colIdx, int rowIdx) throws SQLException;
+
+		protected abstract T getWrapped(int rowOffset);
+	}
+
+	static class LongStore extends FieldStore<Long> {
+		LongArrayList list;
+
+		public LongStore(int size) {
+			super(size);
+			list = new LongArrayList(size);
+		}
+
+		@Override
+		public void putRsField(ResultSet rs, int colIdx, int rowIdx) throws SQLException {
+			put(rs.getLong(colIdx), rowIdx);
+		}
+
+		@Override
+		protected Long getWrapped(int rowOffset) {
+			return get(rowOffset);
+		}
+		long get(int rowIdx) {
+			return list.getLong(rowIdx);
+		}
+
+		void put(long value, int rowIdx) {
+			if (list.size() == rowIdx) {
+				list.add(value);
+			} else {
+				list.set(rowIdx, value);
+			}
+		}
 	}
 
 	class PsFilterContext implements FilterContext {
@@ -238,5 +331,13 @@ public class PropertyStore {
 				}
 			}
 		}
+	}
+
+	abstract static class StringStore extends FieldStore<String> {
+		public StringStore(int size) {
+			super(size);
+		}
+
+		abstract String get(int rowIdx);
 	}
 }

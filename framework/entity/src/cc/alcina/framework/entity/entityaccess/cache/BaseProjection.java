@@ -174,7 +174,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	}
 
 	protected MultikeyMap<T> createLookup() {
-		return new SortedMultikeyMap<T>(getDepth());
+		return new BaseProjectionLookupBuilder().sorted().depth(getDepth())
+				.createMultikeyMap();
 	}
 
 	protected abstract int getDepth();

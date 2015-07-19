@@ -1,28 +1,23 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongListIterator;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
-
-import com.carrotsearch.hppc.LongArrayList;
-import com.carrotsearch.hppc.LongObjectScatterMap;
-import com.carrotsearch.hppc.cursors.LongCursor;
 
 public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 		CacheLookup<T, H> {
 	protected PropertyStore propertyStore;
 
-	private LongObjectScatterMap<LongArrayList> lookup = new LongObjectScatterMap<>();
+	private Long2ObjectOpenHashMap<LongArrayList> lookup = new Long2ObjectOpenHashMap<>();
 
 	protected PdOperator pd;
 
@@ -44,8 +39,9 @@ public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 
 	private Set<Long> convertArr(LongArrayList longArrayList) {
 		Set<Long> res = new TreeSet<Long>();
-		for (LongCursor c : longArrayList) {
-			res.add(c.value);
+		LongListIterator itr = longArrayList.listIterator();
+		while (itr.hasNext()) {
+			res.add(itr.nextLong());
 		}
 		return res;
 	}

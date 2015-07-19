@@ -28,7 +28,6 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -185,8 +184,6 @@ public class AlcinaMemCache {
 	private Multimap<Class, List<ColumnDescriptor>> columnDescriptors;
 
 	private Map<PropertyDescriptor, Class> propertyDescriptorFetchTypes = new LinkedHashMap<PropertyDescriptor, Class>();
-
-	private LaterLookup laterLookup;
 
 	SubgraphTransformManagerRemoteOnly transformManager;
 
@@ -471,13 +468,20 @@ public class AlcinaMemCache {
 
 	public void loadTable(Class clazz, String sqlFilter, ClassIdLock sublock)
 			throws Exception {
+		assert sublock != null;
+		loadTable(clazz, sqlFilter, sublock, new LaterLookup());
+	}
+
+	private void loadTable(Class clazz, String sqlFilter, ClassIdLock sublock,
+			LaterLookup laterLookup) throws Exception {
 		if (sublock != null) {
 			sublock(sublock, true);
 		}
 		try {
-			List<HasIdAndLocalId> loaded = loadTable0(clazz, sqlFilter, sublock);
+			List<HasIdAndLocalId> loaded = loadTable0(clazz, sqlFilter,
+					sublock, laterLookup);
 			if (sublock != null) {
-				resolveRefs();
+				resolveRefs(laterLookup);
 				if (!initialising) {
 					for (HasIdAndLocalId hili : loaded) {
 						index(hili, true);
@@ -557,10 +561,8 @@ public class AlcinaMemCache {
 		singleton = new AlcinaMemCache();
 	}
 
-	public void resolveRefs() {
-		MetricLogging.get().start("resolve");
+	public void resolveRefs(LaterLookup laterLookup) throws Exception {
 		laterLookup.resolve();
-		MetricLogging.get().end("resolve", metricLogger);
 	}
 
 	public void setConn(Connection conn) {
@@ -791,7 +793,8 @@ public class AlcinaMemCache {
 		}
 	}
 
-	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry) {
+	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry,
+			LaterLookup laterLookup) {
 		JoinTable joinTable = entry.getValue();
 		if (joinTable == null) {
 			return;
@@ -881,7 +884,7 @@ public class AlcinaMemCache {
 		propertyStoreItemDescriptor.init(pds);
 		String simpleName = clazz.getSimpleName();
 		int count = propertyStoreItemDescriptor.getRoughCount();
-		SystemoutCounter ctr = new SystemoutCounter(2000, 10, count, true);
+		SystemoutCounter ctr = new SystemoutCounter(20000, 10, count, true);
 		ResultSet rs = connResults.ensureRs();
 		while (rs.next()) {
 			propertyStoreItemDescriptor.addRow(rs);
@@ -891,12 +894,11 @@ public class AlcinaMemCache {
 	}
 
 	private List<HasIdAndLocalId> loadTable0(Class clazz, String sqlFilter,
-			ClassIdLock sublock) throws Exception {
+			ClassIdLock sublock, LaterLookup laterLookup) throws Exception {
 		Connection conn = getConn();
 		Iterable<Object[]> results = getData(conn, clazz, sqlFilter);
 		List<PdOperator> pds = descriptors.get(clazz);
 		List<HasIdAndLocalId> loaded = new ArrayList<HasIdAndLocalId>();
-		laterLookup.prepareClass(clazz);
 		for (Object[] objects : results) {
 			HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
 			if (sublock != null) {
@@ -1078,6 +1080,14 @@ public class AlcinaMemCache {
 				.getSource()).getVersionNumber());
 	}
 
+	private List<LaterLookup> warmupLaterLookups = new ArrayList<>();
+
+	synchronized LaterLookup warmupLaterLookup() {
+		LaterLookup result = new LaterLookup();
+		warmupLaterLookups.add(result);
+		return result;
+	}
+
 	private void warmup0() throws Exception {
 		initialising = true;
 		transformManager = new SubgraphTransformManagerRemoteOnly();
@@ -1090,7 +1100,6 @@ public class AlcinaMemCache {
 		oneToOneRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		memCacheColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
-		laterLookup = new LaterLookup();
 		modificationCheckerField = BaseSourcesPropertyChangeEvents.class
 				.getDeclaredField("propertyChangeSupport");
 		modificationCheckerField.setAccessible(true);
@@ -1105,7 +1114,6 @@ public class AlcinaMemCache {
 			prepareTable(descriptor);
 			// warmup threadsafe
 			cache.getMap(clazz);
-			laterLookup.prepareClass(clazz);
 		}
 		List<Callable> calls = new ArrayList<Callable>();
 		for (CacheItemDescriptor descriptor : cacheDescriptor.perClass.values()) {
@@ -1120,7 +1128,7 @@ public class AlcinaMemCache {
 							loadPropertyStore(clazz,
 									propertyStoreItemDescriptor);
 						} else {
-							loadTable(clazz, "", null);
+							loadTable(clazz, "", null, warmupLaterLookup());
 						}
 						MetricLogging.get().end(clazz.getSimpleName(),
 								metricLogger);
@@ -1135,7 +1143,7 @@ public class AlcinaMemCache {
 			calls.add(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
-					loadJoinTable(entryF);
+					loadJoinTable(entryF, warmupLaterLookup());
 					return null;
 				}
 			});
@@ -1143,8 +1151,18 @@ public class AlcinaMemCache {
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("tables");
 		MetricLogging.get().start("xrefs");
-		resolveRefs();
+		for (LaterLookup ll : warmupLaterLookups) {
+			calls.add(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					resolveRefs(ll);
+					return null;
+				}
+			});
+		}
+		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
+		warmupLaterLookups.clear();
 		unlock(true);
 		MetricLogging.get().start("postLoad");
 		for (final CacheTask task : cacheDescriptor.postLoadTasks) {
@@ -1427,59 +1445,29 @@ public class AlcinaMemCache {
 		}
 	}
 
+	/*
+	 * Note - not synchronized - per-thread access only
+	 */
 	public class LaterLookup {
-		Multimap<Class, List<LaterItem>> lookups = new Multimap<Class, List<LaterItem>>();
+		List<LaterItem> list = new ArrayList<>();
 
 		void add(HasIdAndLocalId target, PdOperator pd, HasIdAndLocalId source) {
-			List<LaterItem> list = lookups.get(source.getClass());
-			synchronized (list) {
-				list.add(new LaterItem(target, pd, source));
-			}
+			list.add(new LaterItem(target, pd, source));
 		}
 
 		void add(long id, PdOperator pd, HasIdAndLocalId source) {
-			List<LaterItem> list = lookups.get(source.getClass());
-			synchronized (list) {
-				list.add(new LaterItem(id, pd, source));
-			}
+			list.add(new LaterItem(id, pd, source));
 		}
 
-		synchronized void prepareClass(Class clazz) {
-			if (!lookups.containsKey(clazz)) {
-				lookups.put(clazz, new ArrayList<LaterItem>());
-			}
-		}
-
-		synchronized void resolve() {
-			try {
-				List<Callable> tasks = new ArrayList<Callable>();
-				Map<Class, Integer> resolveSizeLookup = new LinkedHashMap<Class, Integer>();
-				for (Class clazz : lookups.keySet()) {
-					List<LaterItem> items = lookups.get(clazz);
-					Callable task = new ResolveRefsTask(items, clazz);
-					resolveSizeLookup.put(clazz, items.size());
-					// tasks.add(task);
-					// if (warmupExecutor == null) {
-					// disabled - trying synchronous to see if that fixes
-					// occasional issues
-					task.call();
-					// }
-				}
-				invokeAllWithThrow((List) tasks);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
+		void resolve() throws Exception {
+			new ResolveRefsTask(list).call();
 		}
 
 		private final class ResolveRefsTask implements Callable<Void> {
 			private List<LaterItem> items;
 
-			@SuppressWarnings("unused")
-			private Class clazz;
-
-			private ResolveRefsTask(List<LaterItem> items, Class clazz) {
+			private ResolveRefsTask(List<LaterItem> items) {
 				this.items = items;
-				this.clazz = clazz;
 			}
 
 			@Override

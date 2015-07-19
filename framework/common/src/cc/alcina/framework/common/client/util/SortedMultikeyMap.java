@@ -13,8 +13,14 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Function;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
@@ -25,17 +31,54 @@ import java.util.TreeMap;
  */
 @SuppressWarnings("unchecked")
 public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
+	public static class SortedMapCreator extends DelegateMapCreator {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Map createMap(int depth, int parentDepth) {
+			return new TreeMap();
+		}
+	}
+
 	static final transient long serialVersionUID = -1L;
+
 	/**
 	 * Ensures that RPC will consider type parameter V to be exposed. It will be
 	 * pruned by dead code elimination.
 	 */
 	@SuppressWarnings("unused")
 	private V exposeValue;
-	
+
+	public SortedMultikeyMap() {
+		this(2);
+	}
+
+	public SortedMultikeyMap(int depth) {
+		this(depth, 0);
+	}
+
+	public SortedMultikeyMap(int depth, int parentDepth) {
+		super(depth, parentDepth);
+	}
+
+	public SortedMultikeyMap(int depth, int parentDepth,
+			DelegateMapCreator delegateMapCreator) {
+		super(depth, parentDepth, delegateMapCreator);
+	}
+
+	@Override
+	public boolean checkKeys(Object[] keys) {
+		for (Object object : keys) {
+			if (object == null) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	@Override
 	public MultikeyMap<V> createMap(int childDepth) {
-		return new SortedMultikeyMap(childDepth);
+		return new SortedMultikeyMap(childDepth, depth + 1,delegateMapCreator);
 	}
 
 	@Override
@@ -50,26 +93,17 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 		return m == null ? null : m.descendingMap().values();
 	}
 
-	public SortedMultikeyMap() {
-		this(2);
-	}
-
-	public SortedMultikeyMap(int depth) {
-		this.depth = depth;
-		this.delegate = createMap();
-	}
-
-	protected TreeMap createMap() {
-		return new TreeMap();
+	private void readObject(ObjectInputStream in) throws IOException,
+			ClassNotFoundException {
+		in.defaultReadObject();
+		ensureDelegateMapCreator();
 	}
 
 	@Override
-	public boolean checkKeys(Object[] keys) {
-		for (Object object : keys) {
-			if (object == null) {
-				return false;
-			}
+	protected DelegateMapCreator ensureDelegateMapCreator() {
+		if (this.delegateMapCreator == null) {
+			this.delegateMapCreator = new SortedMapCreator();
 		}
-		return true;
+		return this.delegateMapCreator;
 	}
 }
