@@ -323,6 +323,9 @@ public class GraphProjection {
 		if (context != null && context.depth >= maxDepth) {
 			return projected;
 		}
+		if(source instanceof MemCacheProxy){
+			((MemCacheProxy) source).beforeProjection();
+		}
 		Field[] fields = getFieldsForClass(projected);
 		Set<Field> checkFields = perObjectPermissionFields.get(projected
 				.getClass().getName());

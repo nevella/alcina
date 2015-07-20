@@ -10,6 +10,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.criterion.AliasedProjection;
 import org.hibernate.criterion.Conjunction;
@@ -23,6 +25,7 @@ import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.PropertyProjection;
 import org.hibernate.criterion.SimpleExpression;
+import org.hibernate.transform.ResultTransformer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -70,7 +73,15 @@ public class MemCacheQueryTranslator {
 				handleProjections();
 			}
 		};
-		return groupedRows.asTuples();
+		ResultTransformer resultTransformer = criteria.getResultTransformer();
+		List results = groupedRows.asTuples();
+		if (resultTransformer != null) {
+			Stream stream = results.stream()
+					.map(tp -> resultTransformer.transformTuple((Object[]) tp,
+							null));
+			results = (List) stream.collect(Collectors.toList());
+		}
+		return results;
 	}
 
 	public String translatePropertyPath(Criterion criterion,
