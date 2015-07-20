@@ -104,7 +104,7 @@ public class DetachedEntityCache implements Serializable {
 		}
 	}
 
-	protected Map<Long, HasIdAndLocalId> createMap() {
+	public Map<Long, HasIdAndLocalId> createMap() {
 		return new TreeMap<Long, HasIdAndLocalId>();
 	}
 

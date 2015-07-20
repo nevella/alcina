@@ -128,7 +128,10 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	}
 
 	// count:=-1 --> all
-	public Collection<T> order(int count, CollectionFilter<T> filter,
+	/**
+	 * Expose if subclass is instance of OrderableProjection
+	 */
+	protected Collection<T> order0(int count, CollectionFilter<T> filter,
 			boolean targetsOfFinalKey, boolean reverse, Object... objects) {
 		Collection source = (Collection) (reverse ? reverseItems(objects)
 				: items(objects));
@@ -174,8 +177,13 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	}
 
 	protected MultikeyMap<T> createLookup() {
-		return new BaseProjectionLookupBuilder().sorted().depth(getDepth())
-				.createMultikeyMap();
+		if (this instanceof OrderableProjection) {
+			return new BaseProjectionLookupBuilder().navigable()
+					.depth(getDepth()).createMultikeyMap();
+		} else {
+			return new BaseProjectionLookupBuilder().sorted().depth(getDepth())
+					.createMultikeyMap();
+		}
 	}
 
 	protected abstract int getDepth();

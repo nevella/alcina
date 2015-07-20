@@ -15,12 +15,11 @@ package cc.alcina.framework.common.client.util;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.function.Function;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
@@ -35,7 +34,7 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Map createMap(int depth, int parentDepth) {
+		public Map createDelegateMap(int depthFromRoot) {
 			return new TreeMap();
 		}
 	}
@@ -57,13 +56,13 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 		this(depth, 0);
 	}
 
-	public SortedMultikeyMap(int depth, int parentDepth) {
-		super(depth, parentDepth);
+	public SortedMultikeyMap(int depth, int depthFromRoot) {
+		super(depth, depthFromRoot);
 	}
 
-	public SortedMultikeyMap(int depth, int parentDepth,
+	public SortedMultikeyMap(int depth, int depthFromRoot,
 			DelegateMapCreator delegateMapCreator) {
-		super(depth, parentDepth, delegateMapCreator);
+		super(depth, depthFromRoot, delegateMapCreator);
 	}
 
 	@Override
@@ -78,19 +77,22 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 
 	@Override
 	public MultikeyMap<V> createMap(int childDepth) {
-		return new SortedMultikeyMap(childDepth, depth + 1,delegateMapCreator);
+		return new SortedMultikeyMap(childDepth, depthFromRoot + 1,
+				delegateMapCreator);
 	}
 
 	@Override
 	public <T> Collection<T> reverseKeys(Object... objects) {
-		TreeMap m = (TreeMap) asMapEnsureDelegate(false, objects);
-		return m == null ? null : m.descendingMap().keySet();
+		NavigableMap nm = (NavigableMap) asMapEnsureDelegate(false, objects);
+		return nm.descendingKeySet();
 	}
 
 	@Override
 	public <T> Collection<T> reverseValues(Object... objects) {
-		TreeMap m = (TreeMap) asMapEnsureDelegate(false, objects);
-		return m == null ? null : m.descendingMap().values();
+		throw new RuntimeException("Values are not sorted");
+		// SortedMap m = (SortedMap) asMapEnsureDelegate(false, objects);
+		// NavigableMap nm=navigableMap(m);
+		// return nm == null ? null : nm.descendingMap().keySet();
 	}
 
 	private void readObject(ObjectInputStream in) throws IOException,

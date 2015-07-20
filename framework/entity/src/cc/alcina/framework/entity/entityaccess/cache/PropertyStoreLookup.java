@@ -11,8 +11,12 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
 
+/*
+ * Only indexes Longs!
+ */
 public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 		CacheLookup<T, H> {
 	protected PropertyStore propertyStore;
@@ -37,13 +41,15 @@ public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 		return null;
 	}
 
-	private Set<Long> convertArr(LongArrayList longArrayList) {
-		Set<Long> res = new TreeSet<Long>();
-		LongListIterator itr = longArrayList.listIterator();
-		while (itr.hasNext()) {
-			res.add(itr.nextLong());
+	public void index(HasIdAndLocalId obj, boolean add) {
+		long tgtIdx = CommonUtils.lv((Long) pd.read(obj));
+		if (tgtIdx != 0) {
+			if (add) {
+				ensure(tgtIdx).add(obj.getId());
+			} else {
+				ensure(tgtIdx).remove(obj.getId());
+			}
 		}
-		return res;
 	}
 
 	public void initPds() {
@@ -55,6 +61,15 @@ public class PropertyStoreLookup<T, H extends HasIdAndLocalId> extends
 		if (tgtIdx != 0) {
 			ensure(tgtIdx).add(id);
 		}
+	}
+
+	private Set<Long> convertArr(LongArrayList longArrayList) {
+		Set<Long> res = new TreeSet<Long>();
+		LongListIterator itr = longArrayList.listIterator();
+		while (itr.hasNext()) {
+			res.add(itr.nextLong());
+		}
+		return res;
 	}
 
 	private LongArrayList ensure(long id) {

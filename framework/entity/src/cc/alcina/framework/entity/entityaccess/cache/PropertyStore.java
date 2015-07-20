@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.FilterContext;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
 
@@ -32,7 +33,7 @@ import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
  *
  */
 public class PropertyStore {
-	List<FieldStore> store = new ArrayList<>();
+	List<FieldStore> stores = new ArrayList<>();
 
 	int idIndex = 0;
 
@@ -50,6 +51,8 @@ public class PropertyStore {
 
 	private List<PropertyStoreLookup> lookups = new ArrayList<>();
 
+	private List<PropertyStoreProjection> projections = new ArrayList<>();
+
 	public PropertyStore() {
 	}
 
@@ -58,10 +61,13 @@ public class PropertyStore {
 		int rowIdx = ensureRow(id);
 		for (int idx = 0; idx < pds.size(); idx++) {
 			PdOperator pd = pds.get(idx);
-			store.get(pd.idx).putRsField(rs, idx + 1, rowIdx);
+			stores.get(pd.idx).putRsField(rs, idx + 1, rowIdx);
 		}
 		for (PropertyStoreLookup lookup : lookups) {
 			lookup.insert(rs, id);
+		}
+		for (PropertyStoreProjection projection : projections) {
+			projection.insert(rs, id);
 		}
 	}
 
@@ -93,14 +99,14 @@ public class PropertyStore {
 
 	public long getPrimitiveLongValue(PdOperator pd, int rowOffset) {
 		if (rowOffset != -1) {
-			return ((LongStore) store.get(pd.idx)).get(rowOffset);
+			return ((LongStore) stores.get(pd.idx)).get(rowOffset);
 		}
 		return 0;
 	}
 
 	public String getStringValue(PdOperator pd, int rowOffset) {
 		if (rowOffset != -1) {
-			return ((StringStore) store.get(pd.idx)).get(rowOffset);
+			return ((StringStore) stores.get(pd.idx)).get(rowOffset);
 		}
 		return null;
 	}
@@ -108,21 +114,21 @@ public class PropertyStore {
 	public Object getValue(PdOperator pd, Long id) {
 		int rowOffset = getRowOffset(id);
 		if (rowOffset != -1) {
-			return store.get(pd.idx).getWrapped(rowOffset);
+			return stores.get(pd.idx).getWrapped(rowOffset);
 		}
 		return null;
 	}
 
 	public void init(List<PdOperator> pds) {
 		this.pds = pds;
-		store = new ArrayList();
+		stores = new ArrayList();
 		initRowLookup();
 		String propertyName = "id";
 		this.idOperator = getDescriptor(propertyName);
 		idIndex = pds.indexOf(idOperator);
 		tableSize = getInitialSize();
 		pds.forEach(pd -> {
-			store.add(getFieldStoreFor(pd.pd.getPropertyType()));
+			stores.add(getFieldStoreFor(pd.pd.getPropertyType()));
 		});
 		lookups.forEach(lkp -> lkp.initPds());
 	}
@@ -130,8 +136,15 @@ public class PropertyStore {
 	protected int ensureRow(long id) {
 		if (!rowLookup.containsKey(id)) {
 			rowLookup.put(id, emptyRowIdx++);
+			ensureStoreSizes(rowLookup.size());
 		}
 		return rowLookup.get(id);
+	}
+
+	protected void ensureStoreSizes(int size) {
+		for (FieldStore store : stores) {
+			store.ensureCapacity(size);
+		}
 	}
 
 	protected FieldStore getFieldStoreFor(Class<?> propertyType) {
@@ -169,6 +182,10 @@ public class PropertyStore {
 		lookups.add(lookup);
 	}
 
+	void addProjection(PropertyStoreProjection projection) {
+		projections.add(projection);
+	}
+
 	static class BooleanStore extends FieldStore<Boolean> {
 		BooleanArrayList list;
 
@@ -178,7 +195,8 @@ public class PropertyStore {
 		}
 
 		@Override
-		public void putRsField(ResultSet rs, int colIdx, int rowIdx) throws SQLException {
+		public void putRsField(ResultSet rs, int colIdx, int rowIdx)
+				throws SQLException {
 			put(rs.getBoolean(colIdx), rowIdx);
 		}
 
@@ -198,6 +216,13 @@ public class PropertyStore {
 				list.set(rowIdx, value);
 			}
 		}
+
+		@Override
+		public void ensureCapacity(int capacity) {
+			if (list.size() < capacity) {
+				list.add(false);
+			}
+		}
 	}
 
 	static class DuplicateStringStore extends StringStore {
@@ -215,7 +240,8 @@ public class PropertyStore {
 		}
 
 		@Override
-		public void putRsField(ResultSet rs, int colIdx, int rowIdx) throws SQLException {
+		public void putRsField(ResultSet rs, int colIdx, int rowIdx)
+				throws SQLException {
 			put(rs.getString(colIdx), rowIdx);
 		}
 
@@ -223,6 +249,7 @@ public class PropertyStore {
 		protected String getWrapped(int rowOffset) {
 			return get(rowOffset);
 		}
+
 		String get(int rowIdx) {
 			if (rowIdLookup.containsKey(rowIdx)) {
 				int stringId = rowIdLookup.get(rowIdx);
@@ -230,7 +257,9 @@ public class PropertyStore {
 			}
 			return null;
 		}
+
 		// not synchronized
+		@Override
 		void put(String string, int rowIdx) {
 			if (!stringIdLookup.containsKey(string)) {
 				int stringId = stringIdLookup.size();
@@ -240,13 +269,20 @@ public class PropertyStore {
 			int stringId = stringIdLookup.getInt(string);
 			rowIdLookup.put(rowIdx, stringId);
 		}
+		@Override
+		public void ensureCapacity(int size) {
+			//noop
+		}
 	}
 
 	abstract static class FieldStore<T> {
 		public FieldStore(int size) {
 		}
 
-		public abstract void putRsField(ResultSet rs, int colIdx, int rowIdx) throws SQLException;
+		public abstract void ensureCapacity(int size);
+
+		public abstract void putRsField(ResultSet rs, int colIdx, int rowIdx)
+				throws SQLException;
 
 		protected abstract T getWrapped(int rowOffset);
 	}
@@ -260,7 +296,8 @@ public class PropertyStore {
 		}
 
 		@Override
-		public void putRsField(ResultSet rs, int colIdx, int rowIdx) throws SQLException {
+		public void putRsField(ResultSet rs, int colIdx, int rowIdx)
+				throws SQLException {
 			put(rs.getLong(colIdx), rowIdx);
 		}
 
@@ -268,6 +305,7 @@ public class PropertyStore {
 		protected Long getWrapped(int rowOffset) {
 			return get(rowOffset);
 		}
+
 		long get(int rowIdx) {
 			return list.getLong(rowIdx);
 		}
@@ -277,6 +315,13 @@ public class PropertyStore {
 				list.add(value);
 			} else {
 				list.set(rowIdx, value);
+			}
+		}
+
+		@Override
+		public void ensureCapacity(int capacity) {
+			if (list.size() < capacity) {
+				list.add(0);
 			}
 		}
 	}
@@ -338,6 +383,29 @@ public class PropertyStore {
 			super(size);
 		}
 
+		abstract void put(String string, int rowIdx);
+
 		abstract String get(int rowIdx);
+	}
+
+	public void remove(long id) {
+		rowLookup.remove(id);
+	}
+
+	public void setLongValue(PdOperator pd, int rowIdx, Long value) {
+		((LongStore) stores.get(pd.idx)).put(value, rowIdx);
+	}
+
+	public void setStringValue(PdOperator pd, int rowIdx, String value) {
+		((StringStore) stores.get(pd.idx)).put(value, rowIdx);
+	}
+
+	public void index(HasIdAndLocalId obj, boolean add) {
+		for (PropertyStoreLookup lookup : lookups) {
+			lookup.index(obj, add);
+		}
+		for (PropertyStoreProjection projection : projections) {
+			projection.index(obj, add);
+		}
 	}
 }

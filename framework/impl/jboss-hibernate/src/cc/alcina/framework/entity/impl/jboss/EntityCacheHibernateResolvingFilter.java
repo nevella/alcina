@@ -24,7 +24,6 @@ import org.hibernate.proxy.LazyInitializer;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
-import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -107,7 +106,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				Object impl = getCache().get(persistentClass, (Long) id);
 				if (impl == null) {
 					if (useRawMemCache) {
-						if (AlcinaMemCache.get().isCached(persistentClass)) {
+						if (AlcinaMemCache.get().isCachedTransactional(persistentClass)) {
 							impl = (T) AlcinaMemCache.get().findRaw(
 									persistentClass, (Long) id);
 						}

@@ -24,7 +24,7 @@ public class PerThreadTransaction {
 		@Override
 		public void domainTransform(DomainTransformEvent evt)
 				throws DomainTransformException {
-			if (!AlcinaMemCache.get().isCached(evt.getObjectClass())) {
+			if (!AlcinaMemCache.get().isCachedTransactional(evt.getObjectClass())) {
 				return;
 			}
 			beforeConsume(evt);

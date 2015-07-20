@@ -32,6 +32,7 @@ public class IntBackedPropertyStore extends PropertyStore {
 		int iid = (int) id;
 		if (!rowLookup.containsKey(iid)) {
 			rowLookup.put(iid, emptyRowIdx++);
+			ensureStoreSizes(rowLookup.size());
 		}
 		return rowLookup.get(iid);
 	}
@@ -85,6 +86,13 @@ public class IntBackedPropertyStore extends PropertyStore {
 				list.set(rowIdx, (int) value);
 			}
 		}
+
+		@Override
+		public void ensureCapacity(int capacity) {
+			if (list.size() < capacity) {
+				list.add(0);
+			}
+		}
 	}
 
 	@Override
@@ -95,5 +103,10 @@ public class IntBackedPropertyStore extends PropertyStore {
 		} else {
 			return val;
 		}
+	}
+
+	@Override
+	public void remove(long id) {
+		rowLookup.remove((int) id);
 	}
 }

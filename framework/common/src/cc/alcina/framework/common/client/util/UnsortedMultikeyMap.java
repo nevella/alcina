@@ -38,7 +38,7 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
 		private static final long serialVersionUID = 1L;
 
 		@Override
-		public Map createMap(int depth, int parentDepth) {
+		public Map createDelegateMap(int depthFromRoot) {
 			return new LinkedHashMap<>();
 		}
 	}
@@ -49,7 +49,7 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
 	public UnsortedMultikeyMap clone() {
 		try {
 			UnsortedMultikeyMap clone = new UnsortedMultikeyMap();
-			clone.delegate = createDelegateMap(0);
+			clone.delegate = createDelegateMap();
 			clone.delegate.putAll(delegate);
 			return clone;
 		} catch (Exception e) {
@@ -72,13 +72,13 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
 		this(depth, 0);
 	}
 
-	public UnsortedMultikeyMap(int depth, int parentDepth) {
-		super(depth, parentDepth);
+	public UnsortedMultikeyMap(int depth, int depthFromRoot) {
+		super(depth, depthFromRoot);
 	}
 
-	public UnsortedMultikeyMap(int depth, int parentDepth,
+	public UnsortedMultikeyMap(int depth, int depthFromRoot,
 			DelegateMapCreator delegateMapCreator) {
-		super(depth, parentDepth, delegateMapCreator);
+		super(depth, depthFromRoot, delegateMapCreator);
 	}
 
 	@Override
@@ -103,7 +103,8 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
 
 	@Override
 	public MultikeyMap createMap(int childDepth) {
-		return new UnsortedMultikeyMap<V>(childDepth, depth + 1,delegateMapCreator);
+		return new UnsortedMultikeyMap<V>(childDepth, depthFromRoot + 1,
+				delegateMapCreator);
 	}
 
 	private void readObject(ObjectInputStream in) throws IOException,

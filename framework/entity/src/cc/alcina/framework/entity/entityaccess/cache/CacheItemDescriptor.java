@@ -7,6 +7,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -96,5 +97,27 @@ public class CacheItemDescriptor {
 			return propertyAlia.get(propertyPath);
 		}
 		return propertyPath;
+	}
+
+	public boolean isTransactional() {
+		return true;
+	}
+
+	public void index(HasIdAndLocalId obj, boolean add) {
+		for (CacheLookupDescriptor lookupDescriptor : lookupDescriptors) {
+			CacheLookup lookup = lookupDescriptor.getLookup();
+			if (add) {
+				lookup.insert(obj);
+			} else {
+				lookup.remove(obj);
+			}
+		}
+		for (CacheProjection projection : projections) {
+			if (add) {
+				projection.insert(obj);
+			} else {
+				projection.remove(obj);
+			}
+		}
 	}
 }

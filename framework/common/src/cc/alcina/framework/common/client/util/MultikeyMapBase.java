@@ -30,22 +30,22 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 
 	protected transient ImmutableMap readonlyDelegate;
 
-	protected int parentDepth;
+	protected int depthFromRoot;
 
 	@GwtTransient
 	protected DelegateMapCreator delegateMapCreator;
 
-	public MultikeyMapBase(int depth, int parentDepth) {
-		this(depth, parentDepth, null);
+	public MultikeyMapBase(int depth, int depthFromRoot) {
+		this(depth, depthFromRoot, null);
 	}
 
-	public MultikeyMapBase(int depth, int parentDepth,
+	public MultikeyMapBase(int depth, int depthFromRoot,
 			DelegateMapCreator delegateMapCreator) {
 		this.depth = depth;
-		this.parentDepth = parentDepth;
+		this.depthFromRoot = depthFromRoot;
 		this.delegateMapCreator = delegateMapCreator;
 		ensureDelegateMapCreator();
-		this.delegate = createDelegateMap(0);
+		this.delegate = createDelegateMap();
 	}
 
 	public <T> void addTupleObjects(List<T> tupleObjects,
@@ -312,8 +312,8 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 		return mkm == null ? null : mkm.delegate;
 	}
 
-	protected Map createDelegateMap(int depth) {
-		return delegateMapCreator.createMap(depth, parentDepth);
+	protected Map createDelegateMap() {
+		return delegateMapCreator.createDelegateMap(depthFromRoot);
 	}
 
 	protected abstract DelegateMapCreator ensureDelegateMapCreator();
@@ -352,7 +352,7 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 	public static abstract class DelegateMapCreator implements Serializable {
 		static final transient long serialVersionUID = -1L;
 
-		public abstract Map createMap(int depth, int parentDepth);
+		public abstract Map createDelegateMap(int depthFromRoot);
 
 		public boolean isSorted(Map m) {
 			return m instanceof SortedMap;

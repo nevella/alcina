@@ -9,6 +9,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
 
@@ -22,6 +23,11 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 
 	protected void createPropertyStore() {
 		this.propertyStore = new PropertyStore();
+	}
+
+	@Override
+	public void index(HasIdAndLocalId obj, boolean add) {
+		propertyStore.index(obj, add);
 	}
 
 	@Override
@@ -58,16 +64,41 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 	public <T> List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
 		ArrayList<T> raw = new ArrayList<T>(ids.size());
 		for (Long id : ids) {
-			int rowOffset = propertyStore.getRowOffset(id);
-			if (rowOffset != -1) {
-				T proxy = (T) createProxy(rowOffset, cache,id);
+			T proxy = createProxy(cache, id, false);
+			if (proxy != null) {
 				raw.add(proxy);
 			}
 		}
 		return raw;
 	}
 
-	protected abstract Object createProxy(int rowOffset, DetachedEntityCache cache, Long id);
+	<T> T createProxy(DetachedEntityCache cache, Long id, boolean create) {
+		int rowOffset = propertyStore.getRowOffset(id);
+		if (rowOffset == -1 && create) {
+			rowOffset = propertyStore.ensureRow(id);
+		}
+		if (rowOffset != -1) {
+			T proxy = (T) createProxy(rowOffset, cache, id);
+			return proxy;
+		} else {
+			return null;
+		}
+	}
+
+	protected abstract Object createProxy(int rowOffset,
+			DetachedEntityCache cache, Long id);
 
 	protected abstract int getRoughCount();
+
+	@Override
+	public boolean isTransactional() {
+		return false;
+	}
+
+	public void remove(long id) {
+		propertyStore.remove(id);
+	}
+
+	protected void ensureProxyModificationChecker(MemCacheProxy memCacheProxy) {
+	}
 }
