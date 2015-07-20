@@ -21,6 +21,8 @@ import java.util.NavigableMap;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.google.gwt.core.shared.GwtIncompatible;
+
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
  * class/id/instance would be depth 2
@@ -95,6 +97,7 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 		// return nm == null ? null : nm.descendingMap().keySet();
 	}
 
+	@GwtIncompatible
 	private void readObject(ObjectInputStream in) throws IOException,
 			ClassNotFoundException {
 		in.defaultReadObject();

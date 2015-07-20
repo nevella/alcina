@@ -21,6 +21,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.google.gwt.core.shared.GwtIncompatible;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PublicCloneable;
 
@@ -106,7 +108,7 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
 		return new UnsortedMultikeyMap<V>(childDepth, depthFromRoot + 1,
 				delegateMapCreator);
 	}
-
+	@GwtIncompatible
 	private void readObject(ObjectInputStream in) throws IOException,
 			ClassNotFoundException {
 		in.defaultReadObject();
