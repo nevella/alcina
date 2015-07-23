@@ -40,7 +40,7 @@ public class Multiset<K, V extends Set> extends LinkedHashMap<K, V> {
 		return new LinkedHashSet();
 	}
 
-	public void remove(K key, Object item) {
+	public void subtract(K key, Object item) {
 		if (containsKey(key)) {
 			get(key).remove(item);
 		}

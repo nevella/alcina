@@ -103,7 +103,7 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 			if (tabId == null) {
 				if (active) {
 					Map<Long, Long> m = parseCookie();
-					Long maxTabId = m.isEmpty() ? 0 : CommonUtils.last(m
+					Long maxTabId = m.isEmpty() ? 0L : CommonUtils.last(m
 							.keySet().iterator());
 					tabId = maxTabId + 1;
 				} else {
