@@ -10,6 +10,7 @@ import java.util.List;
 
 public class IntPair implements Comparable<IntPair>, Serializable {
 	static final transient long serialVersionUID = -1L;
+
 	public int i1;
 
 	public int i2;
@@ -251,5 +252,12 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 
 	public boolean isPositiveRange() {
 		return i2 - i1 > 0;
+	}
+
+	public int minDistance(IntPair other) {
+		if (intersectsWith(other)) {
+			return 0;
+		}
+		return Math.min(Math.abs(other.i1 - i2), Math.abs(other.i2 - i1));
 	}
 }

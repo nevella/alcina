@@ -43,7 +43,7 @@ public class AlcinaHistoryItem {
 
 	public AlcinaHistory.HistoryEventType type = HistoryEventType.NO_TAB_SPEC;
 
-	private Map<String, String> params = new HashMap<String, String>();
+	protected Map<String, String> params = new HashMap<String, String>();
 
 	public String getActionName() {
 		return getStringParameter(ACTION_KEY);
