@@ -966,6 +966,9 @@ public class CommonUtils {
 	public static int compareFloats(float f1, float f2) {
 		return (f1 < f2 ? -1 : (f1 == f2 ? 0 : 1));
 	}
+	public static int compareDoubles(double d1, double d2) {
+		return (d1 < d2 ? -1 : (d1 == d2 ? 0 : 1));
+	}
 
 	@SuppressWarnings("deprecation")
 	public static Date yearAsDate(Integer year) {
