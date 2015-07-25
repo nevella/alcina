@@ -632,19 +632,10 @@ public class AlcinaMemCache {
 			conn.setAutoCommit(false);
 			conn.setReadOnly(true);
 			originalTransactionIsolation = conn.getTransactionIsolation();
-			try {
+			if (ResourceUtilities.is(AlcinaMemCache.class, "warmStandbyDb")) {
+				conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+			} else {
 				conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-			} catch (Exception e) {
-				// postgres patch
-				if (CommonUtils
-						.nullToEmpty(e.getMessage())
-						.toLowerCase()
-						.contains(
-								"cannot use serializable mode in a hot standby")) {
-					conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
-				} else {
-					throw e;
-				}
 			}
 			warmupConnections.put(conn, 0);
 		}
