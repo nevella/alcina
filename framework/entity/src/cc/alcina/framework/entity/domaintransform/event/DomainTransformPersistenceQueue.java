@@ -31,6 +31,7 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.domaintransform.TransformPersistenceToken;
 import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -410,6 +411,9 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	private LongPair lastRangeCheckFirstContiguousRange;
 
 	public void waitUntilCurrentRequestsProcessed() {
+		if (AppPersistenceBase.isTest()) {
+			return;
+		}
 		forceDbCheck();
 		long max = maxDbPersistedRequestId;
 		while (max > maxDbPersistedRequestIdPublished) {
