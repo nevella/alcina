@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StackDebug;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
@@ -534,6 +535,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 	}
 
 	public IUser popUser() {
+		stackDebug.maybeDebugStack(userStack, false);
 		if (userStack.size() == 0) {
 			setLoginState(LoginState.NOT_LOGGED_IN);
 			return getUser();
@@ -570,7 +572,10 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		pushUser(user, loginState, false);
 	}
 
+	public static StackDebug stackDebug = new StackDebug("PermissionsManager");
+
 	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
+		stackDebug.maybeDebugStack(userStack, true);
 		if (getUser() != null) {
 			userStack.push(getUser());
 			stateStack.push(getLoginState());
