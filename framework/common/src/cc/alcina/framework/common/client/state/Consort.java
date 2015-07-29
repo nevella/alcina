@@ -703,4 +703,12 @@ public class Consort<D> {
 					Consort.FINISHED, Consort.NO_ACTIVE_PLAYERS), listener);
 		}
 	}
+
+	public void doOrDefer(TopicListener topicListener, D state) {
+		if (containsState(state)) {
+			topicListener.topicPublished(null, state);
+		} else {
+			addStateListener(topicListener, state);
+		}
+	}
 }

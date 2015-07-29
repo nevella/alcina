@@ -260,4 +260,13 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 		}
 		return Math.min(Math.abs(other.i1 - i2), Math.abs(other.i2 - i1));
 	}
+
+	public static IntPair unionOf(List<IntPair> matchedRanges) {
+		IntPair result = matchedRanges.get(0).shiftRight(0);
+		matchedRanges.forEach(ip -> {
+			result.i1 = Math.min(ip.i1, result.i1);
+			result.i2 = Math.min(ip.i2, result.i2);
+		});
+		return result;
+	}
 }
