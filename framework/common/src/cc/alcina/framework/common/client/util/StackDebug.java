@@ -53,7 +53,8 @@ public class StackDebug {
 				}
 			}
 			System.err.println(CommonUtils.formatJ("%s-%s-%s-%s - %s -: %s\n",
-					t.getId(), hashCode(), push, stack.size(), traces.length,
+					t.getId(), hashCode(), push,
+					stack == null ? 0 : stack.size(), traces.length,
 					CommonUtils.join(lines, "\n")));
 		}
 	}
