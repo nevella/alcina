@@ -1057,6 +1057,8 @@ public class CommonUtils {
 				if (withFriendlyNames) {
 					enumValueLookup.put(enumClass, friendlyConstant(ev, "-")
 							.toLowerCase(), ev);
+					enumValueLookup.put(enumClass, friendlyConstant(ev, "-")
+							, ev);
 				}
 			}
 		}
