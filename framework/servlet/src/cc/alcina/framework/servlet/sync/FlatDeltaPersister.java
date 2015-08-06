@@ -34,7 +34,7 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel, E extends Syn
 					result.noModificationCount++;
 					continue;
 				}
-				if (!shouldApply(clazz, pair,syncAction)) {
+				if (!shouldApply(clazz, pair, syncAction)) {
 					result.noModificationCount++;
 					continue;
 				}
@@ -66,4 +66,21 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel, E extends Syn
 
 	protected abstract boolean shouldApply(Class interchangeClass,
 			SyncPair pair, SyncAction syncAction);
+
+	public static class NullDeltaPersister extends FlatDeltaPersister {
+		public NullDeltaPersister(boolean applyLeft) {
+			super(applyLeft);
+		}
+
+		@Override
+		protected Class[] perClassDeltaOrder() {
+			return new Class[0];
+		}
+
+		@Override
+		protected boolean shouldApply(Class interchangeClass, SyncPair pair,
+				SyncAction syncAction) {
+			return false;
+		}
+	}
 }
