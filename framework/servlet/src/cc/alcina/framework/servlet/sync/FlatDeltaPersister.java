@@ -6,7 +6,7 @@ import java.util.Map;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 
-public abstract class FlatDeltaPersister<D extends SyncDeltaModel, E extends SyncEndpointModel> {
+public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 	public static interface DeltaItemPersister<C> {
 		FlatDeltaPersisterResultType performSyncAction(SyncAction syncAction,
 				C object) throws Exception;
@@ -31,10 +31,12 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel, E extends Syn
 				SyncAction syncAction = pair.getAction().getDirectedAction(
 						applyLeft);
 				if (syncAction == null) {
+					perClassResult.noModificationCount++;
 					result.noModificationCount++;
 					continue;
 				}
 				if (!shouldApply(clazz, pair, syncAction)) {
+					perClassResult.noModificationCount++;
 					result.noModificationCount++;
 					continue;
 				}

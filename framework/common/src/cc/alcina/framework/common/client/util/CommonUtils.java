@@ -64,17 +64,34 @@ public class CommonUtils {
 		return Arrays.hashCode(values);
 	}
 
-	public static class DurationCounter {
-		private long t1;
-
-		public DurationCounter() {
-			t1 = System.currentTimeMillis();
+	public static boolean equalsWithTrimAndLc(Object... objects) {
+		if (objects.length % 2 != 0) {
+			throw new RuntimeException("Array length must be divisible by two");
 		}
-
-		public void end(String message) {
-			System.out
-					.println(formatJ(message, System.currentTimeMillis() - t1));
+		for (int i = 0; i < objects.length; i += 2) {
+			Object o1 = objects[i];
+			Object o2 = objects[i + 1];
+			if (o1 == null && o2 == null) {
+			} else {
+				if (o1 == null || o2 == null) {
+					return false;
+				} else {
+					if (!o1.equals(o2)) {
+						if (o1 instanceof String
+								&& o2 instanceof String
+								&& o1.toString()
+										.trim()
+										.toLowerCase()
+										.equals(o2.toString().trim()
+												.toLowerCase())) {
+						} else {
+							return false;
+						}
+					}
+				}
+			}
 		}
+		return true;
 	}
 
 	public static boolean equals(Object... objects) {
@@ -966,6 +983,7 @@ public class CommonUtils {
 	public static int compareFloats(float f1, float f2) {
 		return (f1 < f2 ? -1 : (f1 == f2 ? 0 : 1));
 	}
+
 	public static int compareDoubles(double d1, double d2) {
 		return (d1 < d2 ? -1 : (d1 == d2 ? 0 : 1));
 	}
@@ -1057,8 +1075,8 @@ public class CommonUtils {
 				if (withFriendlyNames) {
 					enumValueLookup.put(enumClass, friendlyConstant(ev, "-")
 							.toLowerCase(), ev);
-					enumValueLookup.put(enumClass, friendlyConstant(ev, "-")
-							, ev);
+					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
+							ev);
 				}
 			}
 		}
