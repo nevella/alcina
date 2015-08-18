@@ -254,7 +254,12 @@ public class MemCacheCriteria implements Criteria {
 
 	public Criteria setResultTransformer(ResultTransformer resultTransformer) {
 		this.resultTransformer = resultTransformer;
-		return this.entityManagerCriteria.setResultTransformer(resultTransformer);
+		if (this.entityManagerCriteria != null) {
+			return this.entityManagerCriteria
+					.setResultTransformer(resultTransformer);
+		} else {
+			return null;
+		}
 	}
 
 	public ResultTransformer getResultTransformer() {

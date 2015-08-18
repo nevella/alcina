@@ -40,6 +40,7 @@ import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheQuery;
 import cc.alcina.framework.entity.entityaccess.cache.CacheFilter;
 import cc.alcina.framework.entity.entityaccess.cache.CompositeCacheFilter;
+import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheRunner;
 import cc.alcina.framework.entity.entityaccess.cache.NotCacheFilter;
 
@@ -193,7 +194,6 @@ public class MemCacheQueryTranslator {
 				groupedRows.handleProjection(null, projectionHelper, i++);
 			}
 		}
-		int debug = 3;
 	}
 
 	public static class ConjunctionTranslator extends
@@ -528,9 +528,7 @@ public class MemCacheQueryTranslator {
 					rows.add(currentRow);
 					currentRow.added = true;
 				}
-				if (groupCount != 0) {
-					currentRow = null;
-				}
+				currentRow = null;
 			}
 		}
 
