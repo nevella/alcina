@@ -20,9 +20,9 @@ public class Collectors {
 
 	private static class JoiningCollector<T> implements
 			java.util.stream.Collector<T, T, String> {
-		private String separator;
+		private CharSequence separator;
 
-		public JoiningCollector(String separator) {
+		public JoiningCollector(CharSequence separator) {
 			this.separator = separator;
 		}
 
@@ -49,7 +49,7 @@ public class Collectors {
 		return new JoiningCollector<T>("");
 	}
 
-	public static <T> Collector<T, T, String> joining(String separator) {
+	public static <T> Collector<T, T, String> joining(CharSequence separator) {
 		return new JoiningCollector<T>(separator);
 	}
 }

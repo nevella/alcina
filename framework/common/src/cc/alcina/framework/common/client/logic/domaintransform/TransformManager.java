@@ -1703,6 +1703,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return CommonUtils.join(objects, ",");
 	}
 
+	public static String fromEnumValueCollection(Collection objects) {
+		return CommonUtils.join(objects, ",");
+	}
+
 	public static <E extends Enum> Set<E> toEnumValues(String s, Class<E> clazz) {
 		Set<E> result = new LinkedHashSet<>();
 		if (s != null) {
