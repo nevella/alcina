@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
 
@@ -73,4 +74,7 @@ public interface CommonRemoteServiceAsync {
 
 	void uploadOfflineTransforms(PartialDtrUploadRequest request,
 			AsyncCallback<PartialDtrUploadResponse> callback);
+
+	void waitForTransforms(long lastTransformRequestId,
+			AsyncCallback<DomainUpdate> callback);
 }

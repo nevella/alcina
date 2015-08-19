@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,12 +63,32 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	private Map<Class, Boolean> requiresEditPrep = new HashMap<Class, Boolean>();
 
+	private boolean firePropertyChangesOnConsumedCollectionMods;
+
+	public boolean isFirePropertyChangesOnConsumedCollectionMods() {
+		return this.firePropertyChangesOnConsumedCollectionMods;
+	}
+
+	public void setFirePropertyChangesOnConsumedCollectionMods(
+			boolean firePropertyChangesOnConsumedCollectionMods) {
+		this.firePropertyChangesOnConsumedCollectionMods = firePropertyChangesOnConsumedCollectionMods;
+	}
+
+	@Override
+	protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
+			String propertyName, Object value,
+			CollectionModificationType collectionModificationType) {
+		if (isFirePropertyChangesOnConsumedCollectionMods()) {
+			modifyCollectionProperty(obj, propertyName,
+					Collections.singleton(value), collectionModificationType);
+		}
+	}
+
 	public ClientTransformManager() {
 		super();
 		cache = new ClientDomainSync();
 	}
 
-	
 	@Override
 	public void clearUserObjects() {
 		getCache().clearUserObjects();
@@ -78,7 +99,6 @@ public abstract class ClientTransformManager extends TransformManager {
 	public ClientDomainSync getCache() {
 		return cache;
 	}
-	
 
 	public DomainTransformExceptionFilter getDomainTransformExceptionFilter() {
 		return this.domainTransformExceptionFilter;

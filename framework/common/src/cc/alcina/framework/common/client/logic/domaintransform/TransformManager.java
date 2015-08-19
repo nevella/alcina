@@ -86,6 +86,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public static final transient String CONTEXT_DO_NOT_POPULATE_SOURCE = TransformManager.class
 			.getName() + ".CONTEXT_DO_NOT_POPULATE_SOURCE";
 
+	public static final transient String CONTEXT_CONSUME_COLLECTION_MODS_AS_PROPERTY_CHANGES = TransformManager.class
+			.getName() + ".CONTEXT_CONSUME_COLLECTION_MODS_AS_PROPERTY_CHANGES";
+
 	protected static final Set<String> ignorePropertiesForCaching = new HashSet<String>(
 			Arrays.asList(new String[] { "class", "id", "localId",
 					"propertyChangeListeners" }));
@@ -346,6 +349,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// add and removeref will not cause a property change, so no transform
 		// removal
 		case ADD_REF_TO_COLLECTION: {
+			maybeModifyAsPropertyChange(obj, event.getPropertyName(),
+					newTargetValue, CollectionModificationType.ADD);
 			Set set = (Set) propertyAccessor().getPropertyValue(obj,
 					event.getPropertyName());
 			if (!set.contains(newTargetValue)) {
@@ -357,6 +362,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 			break;
 		case REMOVE_REF_FROM_COLLECTION: {
+			maybeModifyAsPropertyChange(obj, event.getPropertyName(),
+					newTargetValue, CollectionModificationType.REMOVE);
 			Set set = (Set) propertyAccessor().getPropertyValue(obj,
 					event.getPropertyName());
 			boolean wasContained = set.remove(newTargetValue);
@@ -405,6 +412,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 			assert false : "Transform type not implemented: " + transformType;
 		}
 		currentEvent = null;
+	}
+
+	protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
+			String propertyName, Object newTargetValue,
+			CollectionModificationType collectionModificationType) {
+		// for clients to force collection modifications to publish as property
+		// changes (when replaying remote events)
 	}
 
 	protected boolean isZeroCreatedObjectLocalId() {

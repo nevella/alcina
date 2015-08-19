@@ -66,6 +66,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
@@ -73,6 +74,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
@@ -262,6 +264,25 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public Long logClientError(String exceptionToString) {
 		return logClientError(exceptionToString,
 				LogMessageType.CLIENT_EXCEPTION.toString());
+	}
+
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	public DomainUpdate waitForTransforms(long lastTransformRequestId)
+			throws PermissionsException {
+		if (!waitForTransformsEnabled()) {
+			throw new PermissionsException();
+		}
+		Long clientInstanceId = Registry.impl(SessionHelper.class)
+				.getAuthenticatedClientInstanceId(getThreadLocalRequest());
+		if (clientInstanceId == null) {
+			throw new PermissionsException();
+		}
+		return new TransformCollector().waitForTransforms(
+				lastTransformRequestId, (long) clientInstanceId);
+	}
+
+	protected boolean waitForTransformsEnabled() {
+		return false;
 	}
 
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))

@@ -146,6 +146,10 @@ public class SessionHelper {
 		}
 	}
 
+	public Long getAuthenticatedClientInstanceId(HttpServletRequest request) {
+		return (Long) request.getAttribute(SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID);
+	}
+
 	public String getClientInstanceId(HttpServletRequest request) {
 		String clientInstanceId = request
 				.getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_ID_KEY);
