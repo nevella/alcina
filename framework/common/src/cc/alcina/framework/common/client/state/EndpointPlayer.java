@@ -9,6 +9,8 @@ public class EndpointPlayer<D> extends RunnablePlayer<D> {
 
 	private boolean finishes;
 
+	private boolean continueWithNoExit;
+
 	protected EndpointPlayer(D requiresState) {
 		super();
 		addRequires(requiresState);
@@ -27,15 +29,20 @@ public class EndpointPlayer<D> extends RunnablePlayer<D> {
 	public void run() {
 	}
 
+	public void continueWithNoExit() {
+		continueWithNoExit = true;
+	}
+
 	@Override
 	protected void wasPlayed() {
-		consort.wasPlayed(this, getProvides(), !finishes);
+		boolean didFinish = finishes && !continueWithNoExit;
+		continueWithNoExit = false;
+		consort.wasPlayed(this, getProvides(), !didFinish);
 		if (completionCallback != null) {
 			completionCallback.onSuccess(null);
 		}
-		if (finishes) {
+		if (didFinish) {
 			consort.finished();
 		}
-		
 	}
 }

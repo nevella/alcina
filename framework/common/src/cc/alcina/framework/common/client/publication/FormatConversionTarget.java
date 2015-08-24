@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public abstract class FormatConversionTarget extends ExtensibleEnum implements
@@ -30,6 +30,8 @@ public abstract class FormatConversionTarget extends ExtensibleEnum implements
 	public static final FormatConversionTarget XLSX = new FormatConversionTarget_XLSX();
 
 	public static final FormatConversionTarget XLS = new FormatConversionTarget_XLS();
+
+	public static final FormatConversionTarget CSV = new FormatConversionTarget_CSV();
 
 	public static final FormatConversionTarget ZIP = new FormatConversionTarget_ZIP();
 
@@ -61,10 +63,30 @@ public abstract class FormatConversionTarget extends ExtensibleEnum implements
 
 	public static class FormatConversionTarget_XLSX extends
 			FormatConversionTarget {
+		@Override
+		public boolean gridResult() {
+			return true;
+		}
 	}
 
 	public static class FormatConversionTarget_XLS extends
 			FormatConversionTarget {
+		@Override
+		public boolean gridResult() {
+			return true;
+		}
+		@Override
+		public String displayName() {
+			return "Microsoft Excel (.xls)";
+		}
+	}
+
+	public static class FormatConversionTarget_CSV extends
+			FormatConversionTarget {
+		@Override
+		public boolean gridResult() {
+			return true;
+		}
 	}
 
 	public static class FormatConversionTarget_ZIP extends
@@ -109,6 +131,10 @@ public abstract class FormatConversionTarget extends ExtensibleEnum implements
 	}
 
 	public boolean requiresXml() {
+		return false;
+	}
+
+	public boolean gridResult() {
 		return false;
 	}
 

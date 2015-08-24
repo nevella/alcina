@@ -20,16 +20,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryException;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.EncryptionUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
 import cc.alcina.framework.entity.util.ClasspathScanner;

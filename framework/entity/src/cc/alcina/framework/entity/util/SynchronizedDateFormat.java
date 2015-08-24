@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.util;
 
-import java.text.AttributedCharacterIterator;
 import java.text.DateFormatSymbols;
 import java.text.FieldPosition;
 import java.text.ParseException;

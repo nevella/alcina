@@ -6,8 +6,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Stack;
 
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonConstants;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -24,6 +29,7 @@ import com.google.gwt.dom.client.Text;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.ui.RootPanel;
 
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class DomUtils implements NodeFromXpathProvider {
 	public static boolean containsBlocks(Element elt) {
 		elt.getChildNodes();
@@ -162,8 +168,12 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public static boolean isInvisibleContentElement(Element elt) {
+		return isInvisibleContentElement(elt.getTagName());
+	}
+
+	public static boolean isInvisibleContentElement(String tagName) {
 		return HTML_INVISIBLE_CONTENT_ELEMENTS.contains(","
-				+ elt.getTagName().toUpperCase() + ",");
+				+ tagName.toUpperCase() + ",");
 	}
 
 	public static boolean isVisibleAncestorChain(Element e) {
@@ -274,17 +284,42 @@ public class DomUtils implements NodeFromXpathProvider {
 		return DOM.getInnerText((com.google.gwt.user.client.Element) elt);
 	}
 
-	private static void addVisibleTextNodes(Element element, List<Text> texts) {
-		NodeList<Node> nl = element.getChildNodes();
-		int length = nl.getLength();
-		for (int i = 0; i < length; i++) {
-			Node node = nl.getItem(i);
-			if (node.getNodeType() == Node.TEXT_NODE) {
-				texts.add((Text) node);
-			} else if (node.getNodeType() == Node.ELEMENT_NODE
-					&& !isInvisibleContentElement((Element) node)) {
-				addVisibleTextNodes((Element) node, texts);
+	private static void addVisibleTextNodes(Element elt, List<Text> texts) {
+		Element displayNone = null;
+		ClientNodeIterator itr = new ClientNodeIterator(elt,
+				ClientNodeIterator.SHOW_ALL);
+		itr.setRoot(elt);
+		Node n;
+		IgnoreTextObserver ignoreTextObserver = new IgnoreTextObserver();
+		// duplicates ArticleTextModel (Jade)
+		while ((n = itr.getCurrentNode()) != null) {
+			if (n.getNodeType() == Node.TEXT_NODE
+					&& !ignoreTextObserver.isIgnoreText()) {
+				boolean currentDisplayNoneIsAncestor = displayNone != null
+						&& DomUtils.isAncestorOf(displayNone, n);
+				if (!currentDisplayNoneIsAncestor) {
+					texts.add((Text) n);
+				}
+			} else if (n.getNodeType() == Node.ELEMENT_NODE) {
+				Element element = (Element) n;
+				String styleAttribute = element.getAttribute("style");
+				boolean thisDisplayNone = styleAttribute != null
+						&& (styleAttribute.contains("display: none") || styleAttribute
+								.contains("display:none"));
+				boolean currentDisplayNoneIsAncestor = displayNone != null
+						&& DomUtils.isAncestorOf(displayNone, element);
+				if (thisDisplayNone) {
+					if (!currentDisplayNoneIsAncestor) {
+						displayNone = element;
+					}
+				} else {
+					if (!currentDisplayNoneIsAncestor) {
+						displayNone = null;
+					}
+				}
+				ignoreTextObserver.update(element);
 			}
+			itr.nextNode();
 		}
 	}
 
@@ -730,18 +765,17 @@ public class DomUtils implements NodeFromXpathProvider {
 	public static class HighlightInfo {
 		public String cssClassName;
 
-		public Map<String, String> styleProperties;
+		public StringMap styleProperties = new StringMap();
 
-		public Map<String, String> properties;
+		public StringMap properties = new StringMap();
 
 		public String tag = "a";
 
 		public HighlightInfo() {
 		}
 
-		public HighlightInfo(String cssClassName,
-				Map<String, String> styleProperties,
-				Map<String, String> properties) {
+		public HighlightInfo(String cssClassName, StringMap styleProperties,
+				StringMap properties) {
 			this.cssClassName = cssClassName;
 			this.styleProperties = styleProperties;
 			this.properties = properties;
@@ -756,7 +790,25 @@ public class DomUtils implements NodeFromXpathProvider {
 			this.tag = tag;
 			return this;
 		}
+
+		public HighlightInfo copy() {
+			return new HighlightInfo(cssClassName, new StringMap(
+					styleProperties), new StringMap(properties)).tag(tag);
+		}
+
+		public void applyTo(Element wrapper) {
+			wrapper.setClassName(cssClassName);
+			for (Entry<String, String> entry : styleProperties.entrySet()) {
+				wrapper.getStyle()
+						.setProperty(entry.getKey(), entry.getValue());
+			}
+			for (Entry<String, String> entry : properties.entrySet()) {
+				wrapper.setPropertyString(entry.getKey(), entry.getValue());
+			}
+		}
 	}
+
+	public static SequentialIdGenerator expandoIdProvider = new SequentialIdGenerator();
 
 	static class DomRequiredSplitInfo {
 		public static int expandoId;
@@ -778,14 +830,10 @@ public class DomUtils implements NodeFromXpathProvider {
 			this.splitAround = splitAround;
 		}
 
-		public synchronized int getExpandoIdAndIncrement() {
-			return ++expandoId;
-		}
-
 		public void split() {
 			if (!splitFrom.hasAttribute(ATTR_UNWRAP_EXPANDO_ID)) {
 				splitFrom.setAttribute(ATTR_UNWRAP_EXPANDO_ID,
-						String.valueOf(getExpandoIdAndIncrement()));
+						String.valueOf(expandoIdProvider.incrementAndGet()));
 			}
 			String expandoId = splitFrom.getAttribute(ATTR_UNWRAP_EXPANDO_ID);
 			Element grand = splitFrom.getParentElement();
@@ -1029,5 +1077,47 @@ public class DomUtils implements NodeFromXpathProvider {
 			return false;
 		}
 		return getAncestorWithTagName(node, "BODY") != null;
+	}
+
+	public static void stripNode(Node oldNode) {
+		Node parent = oldNode.getParentNode();
+		NodeList nl = oldNode.getChildNodes();
+		Node refChild = oldNode;
+		for (int i = nl.getLength() - 1; i >= 0; i--) {
+			Node child = nl.getItem(i);
+			parent.insertBefore(child, refChild);
+			refChild = child;
+		}
+		oldNode.getParentNode().removeChild(oldNode);
+	}
+
+	public static class IsBlockFilter implements CollectionFilter<Node> {
+		@Override
+		public boolean allow(Node o) {
+			return o.getNodeType() == Node.ELEMENT_NODE
+					&& isBlockHTMLElement((Element) o);
+		}
+	}
+
+	/**
+	 * TODO - av2 - optimise the display-none check on the client
+	 *
+	 * @param maxNodes
+	 * @return true if finished
+	 */
+	public static class IgnoreTextObserver {
+		private boolean ignoreText = false;
+
+		public boolean isIgnoreText() {
+			return this.ignoreText;
+		}
+
+		public void update(Element element) {
+			ignoreText = isInvisibleContentElement(element);
+		}
+
+		public void update(String tagName) {
+			ignoreText = isInvisibleContentElement(tagName);
+		}
 	}
 }

@@ -15,7 +15,14 @@
  */
 package com.google.gwt.user.client;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.core.client.JavaScriptException;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.logical.shared.CloseEvent;
 import com.google.gwt.event.logical.shared.CloseHandler;
@@ -30,12 +37,6 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.http.client.URL;
 import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.impl.WindowImpl;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * This class provides access to the browser window's methods, properties, and
@@ -115,10 +116,9 @@ public class Window {
    * object contains information about the current URL and methods to manipulate
    * it. <code>Location</code> is a very simple wrapper, so not all browser
    * quirks are hidden from the user.
-   *
    */
   public static class Location {
-    private static Map<String, String> paramMap;
+    private static String cachedQueryString = "";
     private static Map<String, List<String>> listParamMap;
 
     /**
@@ -206,24 +206,28 @@ public class Window {
      * returned.
      *
      * @param name the name of the URL's parameter
-     * @return the value of the URL's parameter
+     * @return the value of the URL's parameter, or null if missing
      */
     public static String getParameter(String name) {
-      ensureParameterMap();
-      return paramMap.get(name);
+      ensureListParameterMap();
+      List<String> paramsForName = listParamMap.get(name);
+      if (paramsForName == null) {
+        return null;
+      } else {
+        return paramsForName.get(paramsForName.size() - 1);
+      }
     }
 
     /**
-     * Returns a Map of the URL query parameters for the host page; since
-     * changing the map would not change the window's location, the map returned
-     * is immutable.
+     * Returns an immutable Map of the URL query parameters for the host page
+     * at the time this method was called.
+     * Any changes to the window's location will be reflected in the result
+     * of subsequent calls.
      *
      * @return a map from URL query parameter names to a list of values
      */
     public static Map<String, List<String>> getParameterMap() {
-      if (listParamMap == null) {
-        listParamMap = buildListParamMap(getQueryString());
-      }
+      ensureListParameterMap();
       return listParamMap;
     }
 
@@ -294,16 +298,26 @@ public class Window {
 
         for (String kvPair : qs.split("&")) {
           String[] kv = kvPair.split("=", 2);
-          if (kv[0].length() == 0) {
+
+          String key = kv[0];
+          if (key.isEmpty()) {
             continue;
           }
 
-          List<String> values = out.get(kv[0]);
+          String val = kv.length > 1 ? kv[1] : "";
+          try {
+            val = URL.decodeQueryString(val);
+          } catch (JavaScriptException e) {
+            GWT.log("Cannot decode a URL query string parameter=" + key +
+                " value=" + val, e);
+          }
+
+          List<String> values = out.get(key);
           if (values == null) {
             values = new ArrayList<String>();
-            out.put(kv[0], values);
+            out.put(key, values);
           }
-          values.add(kv.length > 1 ? URL.decodeQueryString(kv[1]) : "");
+          values.add(val);
         }
       }
 
@@ -316,21 +330,12 @@ public class Window {
       return out;
     }
 
-    private static void ensureParameterMap() {
-      if (paramMap == null) {
-        paramMap = new HashMap<String, String>();
-        String queryString = getQueryString();
-        if (queryString != null && queryString.length() > 1) {
-          String qs = queryString.substring(1);
-          for (String kvPair : qs.split("&")) {
-            String[] kv = kvPair.split("=", 2);
-            if (kv.length > 1) {
-              paramMap.put(kv[0], URL.decodeQueryString(kv[1]));
-            } else {
-              paramMap.put(kv[0], "");
-            }
-          }
-        }
+    private static void ensureListParameterMap() {
+      final String currentQueryString = getQueryString();
+      if (listParamMap == null ||
+          !cachedQueryString.equals(currentQueryString)) {
+        listParamMap = buildListParamMap(currentQueryString);
+        cachedQueryString = currentQueryString;
       }
     }
 
@@ -385,13 +390,13 @@ public class Window {
      * @return the window's navigator.userAgent.
      */
     public static native String getUserAgent() /*-{
-    	//see http://bugs.jquery.com/ticket/6450
-    	try{
-      		return $wnd.navigator.userAgent;
-    	}catch (e){
-    		return "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.2;";
-    	}
-    }-*/;
+	//see http://bugs.jquery.com/ticket/6450
+	try{
+		  return $wnd.navigator.userAgent;
+	}catch (e){
+		return "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.2;";
+	}
+}-*/;
 
     /**
      * Checks whether or not cookies are enabled or disabled.
@@ -435,7 +440,7 @@ public class Window {
      * Construct a new {@link Window.ScrollEvent}.
      *
      * @param scrollLeft the left scroll position
-     * @param scrollTop the top scroll position
+     * @param scrollTop  the top scroll position
      */
     private ScrollEvent(int scrollLeft, int scrollTop) {
       this.scrollLeft = scrollLeft;
@@ -497,9 +502,8 @@ public class Window {
     public HandlerRegistration addResizeHandler(ResizeHandler handler) {
       return addHandler(ResizeEvent.getType(), handler);
     }
-
     @SuppressWarnings("unused")
-	public HandlerManager getHandlers() {
+    public HandlerManager getHandlers() {
       return this;
     }
   }
@@ -540,9 +544,9 @@ public class Window {
   /**
    * Adds a listener to receive window closing events.
    *
+   * @param listener the listener to be informed when the window is closing
    * @deprecated use {@link Window#addWindowClosingHandler(ClosingHandler)} and
    *             {@link Window#addCloseHandler(CloseHandler)} instead
-   * @param listener the listener to be informed when the window is closing
    */
   @Deprecated
   public static void addWindowCloseListener(WindowCloseListener listener) {
@@ -685,9 +689,9 @@ public class Window {
    * </p>
    *
    * @param dx A positive or a negative number that specifies how many pixels
-   *          to move the left edge by
+   *           to move the left edge by
    * @param dy A positive or a negative number that specifies how many
-   *          pixels to move the top edge by
+   *           pixels to move the top edge by
    */
   public static native void moveBy(int dx, int dy) /*-{
     $wnd.moveBy(dx, dy);
@@ -710,10 +714,10 @@ public class Window {
   /**
    * Opens a new browser window. The "name" and "features" arguments are
    * specified <a href=
-   * 'http://developer.mozilla.org/en/docs/DOM:window.open'>here</a>.
+   * 'https://developer.mozilla.org/en-US/docs/Web/API/window.open'>here</a>.
    *
-   * @param url the URL that the new window will display
-   * @param name the name of the window (e.g. "_blank")
+   * @param url      the URL that the new window will display
+   * @param name     the name of the window (e.g. "_blank")
    * @param features the features to be enabled/disabled on this window
    */
   public static native void open(String url, String name, String features) /*-{
@@ -732,7 +736,7 @@ public class Window {
    * Displays a request for information in a modal dialog box, along with the
    * standard 'OK' and 'Cancel' buttons.
    *
-   * @param msg the message to be displayed
+   * @param msg          the message to be displayed
    * @param initialValue the initial value in the dialog's text field
    * @return the value entered by the user if 'OK' was pressed, or
    *         <code>null</code> if 'Cancel' was pressed
@@ -777,14 +781,14 @@ public class Window {
    * defined. The top left corner will not be moved (it stays in its original
    * coordinates).
    * <p>
-   * NOTE: In Chrome, this method only works with windows created by
-   * Window.open().
+   * NOTE: In most modern browsers, this method only works with windows created
+   * by Window.open() with a supplied width and height.
    * </p>
    *
-   * @param width A positive or a negative number that specifies how many pixels
-   *          to resize the width by
+   * @param width  A positive or a negative number that specifies how many pixels
+   *               to resize the width by
    * @param height A positive or a negative number that specifies how many
-   *          pixels to resize the height by
+   *               pixels to resize the height by
    */
   public static native void resizeBy(int width, int height) /*-{
     $wnd.resizeBy(width, height);
@@ -793,11 +797,11 @@ public class Window {
   /**
    * Resizes the window to the specified width and height.
    * <p>
-   * NOTE: In Chrome, this method only works with windows created by
-   * Window.open().
+   * NOTE: In most modern browsers, this method only works with windows created
+   * by Window.open() with a supplied width and height.
    * </p>
    *
-   * @param width The width of the window, in pixels
+   * @param width  The width of the window, in pixels
    * @param height The height of the window, in pixels
    */
   public static native void resizeTo(int width, int height) /*-{
@@ -808,7 +812,7 @@ public class Window {
    * Scroll the window to the specified position.
    *
    * @param left the left scroll position
-   * @param top the top scroll position
+   * @param top  the top scroll position
    */
   public static native void scrollTo(int left, int top) /*-{
     $wnd.scrollTo(left, top);
@@ -883,8 +887,8 @@ public class Window {
   /**
    * Adds this handler to the Window.
    *
-   * @param <H> the type of handler to add
-   * @param type the event type
+   * @param <H>     the type of handler to add
+   * @param type    the event type
    * @param handler the handler
    * @return {@link HandlerRegistration} used to remove the handler
    */

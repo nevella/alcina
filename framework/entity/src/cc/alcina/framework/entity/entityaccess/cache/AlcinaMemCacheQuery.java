@@ -7,8 +7,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CompositeFilter;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -134,5 +132,14 @@ public class AlcinaMemCacheQuery {
 
 	public <T extends HasIdAndLocalId> int count(Class<T> clazz) {
 		return raw().list(clazz).size();
+	}
+
+	public String getCanonicalPropertyPath(Class clazz, String propertyPath) {
+		return AlcinaMemCache.get().getCanonicalPropertyPath(clazz,
+				propertyPath);
+	}
+
+	public <T extends HasIdAndLocalId> T first(Class<T> clazz) {
+		return CommonUtils.first(list(clazz));
 	}
 }

@@ -15,17 +15,17 @@ public class UserCriteriaGroup extends AbstractUserCriteriaGroup<UserCriterion> 
 		super();
 	}
 
+	@Override
+	public String getDisplayName() {
+		return "User";
+	}
+
 	public void setRestrictToCurrentUser(boolean restrictToCurrentUser) {
 		this.restrictToCurrentUser = restrictToCurrentUser;
 		if (restrictToCurrentUser) {
 			UserCriterion juc = (UserCriterion) getCriteria().iterator().next();
 			juc.setUser((AlcinaTemplateUser) PermissionsManager.get().getUser());
 		}
-	}
-
-	@Override
-	public String getDisplayName() {
-		return "User";
 	}
 
 	public boolean isRestrictToCurrentUser() {

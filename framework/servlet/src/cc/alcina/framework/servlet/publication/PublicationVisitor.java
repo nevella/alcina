@@ -14,14 +14,22 @@ public class PublicationVisitor {
 
 	public void adjustWrapper(ContentWrapper mainWrapper, WrapperModel wrapper) { }
 
-	public String adjustWrapperXslPath(String suggested) { 
+	public String adjustWrapperXslPath(String suggested) {
 		return suggested;
 	}
-	
+
 	public void publicationFinished(PublicationResult result){
-		
+
 	}
 
 	public void beforeDelivery() {
+	}
+
+	public void beforeWrapContent() {
+
+	}
+
+	public void afterWrapContent(ContentWrapper cw) {
+		
 	}
 }

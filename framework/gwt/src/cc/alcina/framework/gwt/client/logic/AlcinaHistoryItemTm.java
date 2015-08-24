@@ -1,6 +1,8 @@
 package cc.alcina.framework.gwt.client.logic;
 
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.*;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.CLASS_NAME_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.ID_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.LOCAL_ID_KEY;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;

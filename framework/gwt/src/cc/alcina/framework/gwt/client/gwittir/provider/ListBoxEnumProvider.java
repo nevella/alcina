@@ -37,6 +37,16 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	private boolean withNull;
 
 	private boolean multiple;
+	
+	private int visibleItemCount=4;
+
+	public int getVisibleItemCount() {
+		return this.visibleItemCount;
+	}
+
+	public void setVisibleItemCount(int visibleItemCount) {
+		this.visibleItemCount = visibleItemCount;
+	}
 
 	private Renderer renderer = FriendlyEnumRenderer.INSTANCE;
 
@@ -64,6 +74,9 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 		listBox.setSortOptionsByToString(false);
 		listBox.setOptions(options);
 		listBox.setMultipleSelect(multiple);
+		if(multiple){
+			listBox.setVisibleItemCount(visibleItemCount);
+		}
 		return listBox;
 	}
 

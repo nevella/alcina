@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.ejb.ApplicationException;
 import javax.persistence.EntityManager;
 import javax.persistence.OptimisticLockException;
 
@@ -101,6 +100,8 @@ public class TransformPersister {
 				transformException = (DomainTransformException) e;
 			} else {
 				transformException = new DomainTransformException(e);
+				Registry.impl(JPAImplementation.class).interpretException(
+						transformException);
 			}
 			if (!token.getTransformExceptions().contains(transformException)) {
 				token.getTransformExceptions().add(transformException);
@@ -261,7 +262,7 @@ public class TransformPersister {
 				if (token.getPass() == Pass.TRY_COMMIT) {
 					commonPersistenceBase.cacheEntities(items, token
 							.getTransformExceptionPolicy()
-							.precreateMissingEntities());
+							.precreateMissingEntities(), true);
 				}
 				int backupEventIdCounter = 0;
 				for (DomainTransformEvent event : items) {

@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.state;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {

@@ -62,7 +62,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 	public static final String CONTEXT_NO_INITIAL_SEARCH = SearchViewProviderBase.class
 			.getName() + ".CONTEXT_NO_INITIAL_SEARCH";
 
-	private LocalActionWithParameters<SingleTableSearchDefinition> action;
+	protected LocalActionWithParameters<SingleTableSearchDefinition> action;
 
 	private boolean withoutCaption;
 

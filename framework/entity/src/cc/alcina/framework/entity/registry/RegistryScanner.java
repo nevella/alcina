@@ -16,9 +16,7 @@ package cc.alcina.framework.entity.registry;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;

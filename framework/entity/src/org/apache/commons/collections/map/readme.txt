@@ -4,3 +4,5 @@ Caused by: java.lang.NullPointerException
 	at org.apache.commons.collections.map.LRUMap.addMapping(LRUMap.java:243)
 	
 	which seems to crop up every so often 
+	
+was thread-safety of course

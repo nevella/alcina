@@ -44,6 +44,23 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		return max;
 	}
 
+	public K min() {
+		K min = null;
+		Integer minCount = Integer.MAX_VALUE;
+		for (K k : keySet()) {
+			if (min == null) {
+				min = k;
+				minCount = get(k);
+			} else {
+				if (get(k).compareTo(minCount) < 0) {
+					min = k;
+					minCount = get(k);
+				}
+			}
+		}
+		return min;
+	}
+
 	public int sum() {
 		int result = 0;
 		for (Integer v : values()) {
@@ -85,6 +102,12 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 	public void addMultimap(Multimap<K, List> mm) {
 		for (Map.Entry<K, List> entry : mm.entrySet()) {
 			add(entry.getKey(), entry.getValue().size());
+		}
+	}
+
+	public void addIntMap(Map<K, Integer> m) {
+		for (Map.Entry<K, Integer> entry : m.entrySet()) {
+			put(entry.getKey(), entry.getValue());
 		}
 	}
 

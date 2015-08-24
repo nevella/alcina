@@ -31,11 +31,16 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
  */
 public class Multimap<K, V extends List> implements Map<K, V>, Serializable,
 		Cloneable {
-	private LinkedHashMap<K, V> map = new LinkedHashMap<K, V>();
+	private Map<K, V> map;
 
 	private static final long serialVersionUID = 1L;
 
 	public Multimap() {
+		map = createMap();
+	}
+
+	private Map<K, V> createMap() {
+		return new LinkedHashMap<K, V>();
 	}
 
 	public void add(K key, Object item) {

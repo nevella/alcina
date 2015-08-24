@@ -100,7 +100,6 @@ public abstract class Player<D> {
 
 	private long start;
 
-	
 	public void play(boolean replaying) {
 		if (replaying) {
 			((LoopingPlayer) this).loop();
@@ -122,7 +121,8 @@ public abstract class Player<D> {
 	}
 
 	protected void wasPlayed(D dep) {
-		consort.wasPlayed(this, Collections.singletonList(dep));
+		consort.wasPlayed(this, dep == null ? Collections.EMPTY_LIST
+				: Collections.singletonList(dep));
 	}
 
 	public void onFailure(Throwable caught) {

@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.collections.CollectionFilters;
+import cc.alcina.framework.common.client.collections.PropertyKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -153,7 +155,7 @@ public class Registry {
 				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
 	}
 
-	private void registerSingletonInLookups(Class<?> registryPoint,
+	private synchronized void registerSingletonInLookups(Class<?> registryPoint,
 			Class<?> targetClass, Object object) {
 		boolean voidTarget = targetClass == void.class;
 		singletons.put(registryPoint, targetClass, object);
@@ -442,8 +444,7 @@ public class Registry {
 	}
 
 	protected <V> List<V> impls0(Class<V> registryPoint, Class targetClass) {
-		List<Class> impls = get().lookup(false, registryPoint, targetClass,
-				false);
+		List<Class> impls = lookup(false, registryPoint, targetClass, false);
 		List<V> result = new ArrayList<V>();
 		for (Class c : impls) {
 			result.add((V) classLookup.newInstance(c));
@@ -552,5 +553,13 @@ public class Registry {
 	public void shareSingletonMapTo(Registry otherRegistry) {
 		otherRegistry.singletons = singletons;
 		otherRegistry.voidPointSingletons = voidPointSingletons;
+	}
+
+	public <T> T lookupImplementation(Class<T> registryPoint, Enum value,
+			String propertyName) {
+		List<T> handlers = Registry.impls(registryPoint);
+		Map<Enum, T> byKey = CollectionFilters.map(handlers,
+				new PropertyKeyValueMapper(propertyName));
+		return byKey.get(value);
 	}
 }

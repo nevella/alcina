@@ -8,13 +8,31 @@ import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 public class PropertyPathFilter<T> implements CollectionFilter<T> {
 	private PropertyPathAccessor accessor;
 
+	public PropertyPathAccessor getAccessor() {
+		return this.accessor;
+	}
+
 	private Object targetValue;
+
+	public Object getTargetValue() {
+		return this.targetValue;
+	}
 
 	private boolean targetIsCollection;
 
 	private FilterOperator filterOperator;
 
+	public FilterOperator getFilterOperator() {
+		return this.filterOperator;
+	}
+
 	private PropertyFilter propertyFilter;
+
+	public PropertyFilter getPropertyFilter() {
+		return this.propertyFilter;
+	}
+
+	private CollectionFilter contextFilter;
 
 	public PropertyPathFilter() {
 	}
@@ -35,6 +53,9 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 
 	@Override
 	public boolean allow(T o) {
+		if (contextFilter != null) {
+			return contextFilter.allow(o);
+		}
 		Object propertyValue = accessor.getChainedProperty(o);
 		if (targetIsCollection && filterOperator == FilterOperator.EQ) {
 			return ((Collection) targetValue).contains(o);
@@ -50,6 +71,11 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public void setContext(FilterContext context) {
+		this.contextFilter = context.createContextFilter(this);
 	}
 
 	@Override

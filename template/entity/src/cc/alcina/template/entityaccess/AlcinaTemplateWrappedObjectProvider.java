@@ -38,13 +38,26 @@ public class AlcinaTemplateWrappedObjectProvider implements
 					.get(0));
 		}
 		if (wrappedObject == null) {
+			PermissionsManager.get().pushCurrentUser();
+			new AlcinaTemplateCommonPersistence(em)
+					.connectPermissionsManagerToLiveObjects(true);
 			wrappedObject = new WrappedObjectImpl();
 			em.persist(wrappedObject);
-			wrappedObject.setUser(user);
+			wrappedObject.setUser(getUser(c, em));
 			WrapperPersistable newInstance = c.newInstance();
 			wrappedObject.setObject((T) newInstance);
+			PermissionsManager.get().popUser();
 		}
 		return wrappedObject;
+	}
+
+	protected <T extends WrapperPersistable> AlcinaTemplateUser getUser(
+			Class<T> c, EntityManager em) {
+		AlcinaTemplateUser user = (PersistentSingleton.class
+				.isAssignableFrom(c)) ? new AlcinaTemplateCommonPersistence(em)
+				.getSystemUser() : (AlcinaTemplateUser) PermissionsManager
+				.get().getUser();
+		return user;
 	}
 
 	public <T extends WrapperPersistable> T getWrappedObjectForUser(Class<T> c,

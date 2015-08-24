@@ -372,6 +372,16 @@ public class CollectionFilters {
 		public boolean allow(Object o) {
 			return !invert.allow(o);
 		}
+
+		@Override
+		public String toString() {
+			return "NOT (" + invert + ")";
+		}
+
+		@Override
+		public void setContext(FilterContext context) {
+			invert.setContext(context);
+		}
 	}
 
 	public static class PrefixedFilter implements CollectionFilter<String> {
@@ -385,6 +395,19 @@ public class CollectionFilters {
 		public boolean allow(String o) {
 			return CommonUtils.nullToEmpty(o).toLowerCase()
 					.startsWith(lcPrefix);
+		}
+	}
+
+	public static class ContainsFilter<T> implements CollectionFilter<T> {
+		private Collection<T> collection;
+
+		public ContainsFilter(Collection<T> collection) {
+			this.collection = collection;
+		}
+
+		@Override
+		public boolean allow(T t) {
+			return collection.contains(t);
 		}
 	}
 

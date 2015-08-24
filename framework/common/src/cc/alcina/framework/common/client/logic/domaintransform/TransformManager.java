@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -66,9 +66,9 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 /**
  * TODO - abstract parts out to ClientTransformManager
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 @SuppressWarnings("unchecked")
 // unchecked because reflection is always going to involve a lot of
@@ -85,6 +85,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public static final transient String CONTEXT_DO_NOT_POPULATE_SOURCE = TransformManager.class
 			.getName() + ".CONTEXT_DO_NOT_POPULATE_SOURCE";
+
+	public static final transient String CONTEXT_CONSUME_COLLECTION_MODS_AS_PROPERTY_CHANGES = TransformManager.class
+			.getName() + ".CONTEXT_CONSUME_COLLECTION_MODS_AS_PROPERTY_CHANGES";
 
 	protected static final Set<String> ignorePropertiesForCaching = new HashSet<String>(
 			Arrays.asList(new String[] { "class", "id", "localId",
@@ -121,7 +124,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private static long eventIdCounter = 0;
 
-	protected static long localIdCounter = 0;
+	protected static SequentialIdGenerator localIdGenerator = new SequentialIdGenerator();
 
 	final Set<DomainTransformEvent> transforms = new LinkedHashSet<DomainTransformEvent>();
 
@@ -346,6 +349,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// add and removeref will not cause a property change, so no transform
 		// removal
 		case ADD_REF_TO_COLLECTION: {
+			maybeModifyAsPropertyChange(obj, event.getPropertyName(),
+					newTargetValue, CollectionModificationType.ADD);
 			Set set = (Set) propertyAccessor().getPropertyValue(obj,
 					event.getPropertyName());
 			if (!set.contains(newTargetValue)) {
@@ -357,6 +362,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 			break;
 		case REMOVE_REF_FROM_COLLECTION: {
+			maybeModifyAsPropertyChange(obj, event.getPropertyName(),
+					newTargetValue, CollectionModificationType.REMOVE);
 			Set set = (Set) propertyAccessor().getPropertyValue(obj,
 					event.getPropertyName());
 			boolean wasContained = set.remove(newTargetValue);
@@ -405,6 +412,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 			assert false : "Transform type not implemented: " + transformType;
 		}
 		currentEvent = null;
+	}
+
+	protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
+			String propertyName, Object newTargetValue,
+			CollectionModificationType collectionModificationType) {
+		// for clients to force collection modifications to publish as property
+		// changes (when replaying remote events)
 	}
 
 	protected boolean isZeroCreatedObjectLocalId() {
@@ -778,6 +792,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return this.transforms;
 	}
 
+	public void pushTransformsInCurrentThread(
+			Collection<DomainTransformEvent> dtes) {
+		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
+	}
+
 	public LinkedHashSet<DomainTransformEvent> getTransformsByCommitType(
 			CommitType ct) {
 		if (transformsByType.get(ct) == null) {
@@ -835,7 +854,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public synchronized long nextLocalIdCounter() {
-		return ++localIdCounter;
+		return localIdGenerator.incrementAndGet();
 	}
 
 	public List<DomainTransformEvent> objectsToDtes(Collection objects,
@@ -973,13 +992,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * mm.wrapper.setSaved(true);
 	 * </code>
 	 * <p>
-	 * 
+	 *
 	 * Generally, though, you'll want to do all the modifications on the
 	 * provisional object so that CollectionModificationListeners on the
 	 * TransformManager will receive the domain object with all changes applied.
-	 * 
+	 *
 	 * </p>
-	 * 
+	 *
 	 * @param o
 	 *            - the object to be promoted
 	 * @return the newly promoted object, if it implements HasIdAndLocalId,
@@ -1201,6 +1220,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void removeTransformsForObjects(Collection c) {
 		Set<DomainTransformEvent> trs = (Set<DomainTransformEvent>) getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN).clone();
+		if (!(c instanceof Set)) {
+			c = new HashSet(c);
+		}
 		for (DomainTransformEvent dte : trs) {
 			if (c.contains(dte.provideSourceOrMarker())
 					|| c.contains(dte.getNewValue())
@@ -1272,7 +1294,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * that's handled by (what's) the presented UI note - problems are mostly
 	 * thrown as exceptions, exception being
 	 * DomainPropertyInfo.silentFailOnIllegalWrites
-	 * 
+	 *
 	 * @param propertyName
 	 * @param tgt
 	 * @return true if OK
@@ -1368,7 +1390,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	/**
 	 * for subclasses to handle version increments
-	 * 
+	 *
 	 * @param hili
 	 * @param evt
 	 */
@@ -1632,7 +1654,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		/**
 		 * Until 23/11/2010, case NULL_PROPERTY_REF: case CHANGE_PROPERTY_REF:
 		 * were not in the case
-		 * 
+		 *
 		 * I think that's in error - but checking. Basically, the transforms
 		 * will be ignored if they're a double-dip (the property won't change)
 		 */
@@ -1680,5 +1702,58 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public boolean isInCreationRequest(HasIdAndLocalId hasOwner) {
 		return false;
+	}
+
+	public void deleteObjects(Class<? extends HasIdAndLocalId> clazz,
+			Collection<Long> ids) {
+		for (Long id : ids) {
+			HasIdAndLocalId hili = Reflections.classLookup().newInstance(clazz);
+			hili.setId(id);
+			deleteObject(hili, true);
+		}
+	}
+
+	public static String fromEnumValues(Object... objects) {
+		return CommonUtils.join(objects, ",");
+	}
+
+	public static String fromEnumValueCollection(Collection objects) {
+		return CommonUtils.join(objects, ",");
+	}
+
+	public static <E extends Enum> Set<E> toEnumValues(String s, Class<E> clazz) {
+		Set<E> result = new LinkedHashSet<>();
+		if (s != null) {
+			for (String sPart : s.split(",")) {
+				E value = CommonUtils.getEnumValueOrNull(clazz, sPart);
+				if (value == null && sPart.length() > 0) {
+					System.out.println(CommonUtils.formatJ(
+							"Warning - can't deserialize %s for %s", sPart,
+							clazz));
+				}
+				result.add(value);
+			}
+			result.remove(null);
+		}
+		return result;
+	}
+
+	public void deleteMultiple(Collection<? extends HasIdAndLocalId> secondOnly) {
+		secondOnly.forEach(hili -> deleteObject(hili, true));
+	}
+
+	/**
+	 * useful support in TLTM, ThreadedClientTM
+	 */
+	public <H extends HasIdAndLocalId> long getLocalIdForClientInstance(H hili) {
+		return hili.getLocalId();
+	}
+
+	/**
+	 * @see getLocalIdForClientInstance
+	 */
+	public void registerHiliMappingPriorToLocalIdDeletion(Class clazz, long id,
+			long localId) {
+		return;
 	}
 }

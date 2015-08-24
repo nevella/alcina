@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +14,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.log.TaggedLogger;
 import cc.alcina.framework.common.client.log.TaggedLoggers;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -68,7 +68,7 @@ public class Consort<D> {
 
 	private int playedCount = 0;
 
-	private Set<D> reachedStates = new LinkedHashSet<D>();
+	private Set<D> reachedStates = new LightSet<D>();
 
 	Player replayPlayer = null;
 
@@ -77,6 +77,17 @@ public class Consort<D> {
 	private boolean synchronous;
 
 	protected ParallelArbiter parallelArbiter;
+
+	private boolean throwOnUnableToResolveDependencies;
+
+	public boolean isThrowOnUnableToResolveDependencies() {
+		return this.throwOnUnableToResolveDependencies;
+	}
+
+	public void setThrowOnUnableToResolveDependencies(
+			boolean throwOnUnableToResolveDependencies) {
+		this.throwOnUnableToResolveDependencies = throwOnUnableToResolveDependencies;
+	}
 
 	protected TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
 			.getLogger(getClass(), TaggedLogger.METRIC);
@@ -170,7 +181,7 @@ public class Consort<D> {
 	}
 
 	public void clearReachedStates() {
-		modifyStates(new ArrayList<D>(reachedStates), false);
+		removeStates(new ArrayList<D>(reachedStates));
 	}
 
 	public boolean containsState(D state) {
@@ -203,7 +214,8 @@ public class Consort<D> {
 	}
 
 	public <P extends Player> List<P> getTasksForClass(Class<P> clazz) {
-		return CollectionFilters.filter(players, new IsClassFilter(clazz));
+		return (List) CollectionFilters.filter(players,
+				new IsClassFilter(clazz));
 	}
 
 	public boolean isRunning() {
@@ -326,7 +338,7 @@ public class Consort<D> {
 	}
 
 	private void modifyStates(Collection<D> states, boolean add) {
-		LinkedHashSet<D> reachedCopy = new LinkedHashSet<D>(reachedStates);
+		LightSet<D> reachedCopy = new LightSet<D>(reachedStates);
 		boolean mod = add ? reachedStates.addAll(states) : reachedStates
 				.removeAll(states);
 		if (mod) {
@@ -379,12 +391,12 @@ public class Consort<D> {
 			}
 		}
 		int lastCheckedCount = -1;
-		Set<D> providerDependencies = new LinkedHashSet<D>();
-		Set<Player> addedDependencies = new LinkedHashSet<Player>();
+		Set<D> providerDependencies = new LightSet<D>();
+		Set<Player> addedDependencies = new LightSet<Player>();
 		Player lastAdded = null;
 		boolean hasNonProviders = false;
 		while (true) {
-			Set<D> seenDependencies = new LinkedHashSet<D>();
+			Set<D> seenDependencies = new LightSet<D>();
 			for (Player<D> player : players) {
 				if (playing.contains(player)) {
 					continue;
@@ -438,9 +450,13 @@ public class Consort<D> {
 					if (players.size() > 0 && playing.isEmpty()) {
 						Player missed = lastAdded != null ? lastAdded : players
 								.iterator().next();
-						infoLogger.log(CommonUtils.formatJ(
+						String message = CommonUtils.formatJ(
 								"Unable to resolve dependencies: %s\n\t%s",
-								missed.getRequires(), missed));
+								missed.getRequires(), missed);
+						infoLogger.log(message);
+						if (isThrowOnUnableToResolveDependencies()) {
+							onFailure(new RuntimeException(message));
+						}
 					}
 				}
 				break;
@@ -685,6 +701,14 @@ public class Consort<D> {
 		} else {
 			deferredRemove(Arrays.asList(Consort.CANCELLED, Consort.ERROR,
 					Consort.FINISHED, Consort.NO_ACTIVE_PLAYERS), listener);
+		}
+	}
+
+	public void doOrDefer(TopicListener topicListener, D state) {
+		if (containsState(state)) {
+			topicListener.topicPublished(null, state);
+		} else {
+			addStateListener(topicListener, state);
 		}
 	}
 }

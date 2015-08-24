@@ -15,10 +15,9 @@
  */
 package com.google.gwt.dev.jjs;
 
-import com.google.gwt.core.ext.BadPropertyValueException;
-import com.google.gwt.core.ext.PropertyOracle;
-import com.google.gwt.core.ext.SelectionProperty;
 import com.google.gwt.core.ext.TreeLogger;
+import com.google.gwt.dev.cfg.BindingProperties;
+import com.google.gwt.dev.cfg.PermutationProperties;
 import com.google.gwt.dev.js.ast.JsBlock;
 import com.google.gwt.dev.js.ast.JsCatch;
 import com.google.gwt.dev.js.ast.JsContext;
@@ -33,72 +32,55 @@ import com.google.gwt.dev.js.ast.JsTry;
 /**
  */
 public class JsWrapIos6Body {
+	/**
+	 * wrap method body in try/catch
+	 */
+	private static class MyVisitor extends JsModVisitor {
+		@Override
+		public void endVisit(final JsFunction x, final JsContext ctx) {
+			SourceInfo sourceInfo = x.getSourceInfo();
+			// catch block
+			JsBlock catchBody = new JsBlock(sourceInfo);
+			JsCatch catchNode = new JsCatch(sourceInfo, x.getScope(), "e");
+			catchNode.setBody(catchBody);
+			// statement: throw e
+			JsParameter catchParam = catchNode.getParameter();
+			JsNameRef catchParamNameRef = new JsNameRef(sourceInfo,
+					catchParam.getName());
+			JsThrow throwNode = new JsThrow(sourceInfo, catchParamNameRef);
+			catchBody.getStatements().add(throwNode);
+			// try block with original method body and with catch added.
+			JsTry tryNode = new JsTry(sourceInfo);
+			tryNode.getCatches().add(catchNode);
+			tryNode.setTryBlock(x.getBody());
+			// new function body with try block added.
+			JsBlock functionBody = new JsBlock(sourceInfo);
+			functionBody.getStatements().add(tryNode);
+			x.setBody(functionBody);
+			didChange = true;
+		}
+	}
 
-  /**
-   * wrap method body in try/catch
-   */
-  private static class MyVisitor extends JsModVisitor {
-
-	  @Override
-	  public void endVisit(final JsFunction x, final JsContext ctx) {
-
-	    SourceInfo sourceInfo = x.getSourceInfo();
-
-	    //catch block
-	    JsBlock catchBody = new JsBlock(sourceInfo);
-	    JsCatch catchNode = new JsCatch(sourceInfo, x.getScope(), "e");
-	    catchNode.setBody(catchBody);
-
-	    //statement: throw e
-	    JsParameter catchParam = catchNode.getParameter();
-	    JsNameRef catchParamNameRef = new JsNameRef(sourceInfo, catchParam.getName());
-	    JsThrow throwNode = new JsThrow(sourceInfo, catchParamNameRef);
-	    catchBody.getStatements().add(throwNode);
-
-	    //try block with original method body and with catch added.
-	    JsTry tryNode = new JsTry(sourceInfo);
-	    tryNode.getCatches().add(catchNode);
-	    tryNode.setTryBlock(x.getBody());
-
-	    //new function body with try block added.
-	    JsBlock functionBody = new JsBlock(sourceInfo);
-	    functionBody.getStatements().add(tryNode);
-	    x.setBody(functionBody);
-
-	  }
-  }
-
-  /**
-   * If this permutation may be executed on WebKit, rewrite a >> b as ~~a >> b.
-   * 
-   * @param program
-   * @param logger
-   * @param propertyOracles
-   * @return true if any changes were made
-   */
-  public static boolean exec(JsProgram program, TreeLogger logger,
-      PropertyOracle[] propertyOracles) {
-    boolean seenWebKit = false;
-    for (PropertyOracle oracle : propertyOracles) {
-      try {
-        SelectionProperty prop = oracle.getSelectionProperty(logger,
-            "mobile.user.agent");
-        // TODO(jat): more checks if we split up the safari permutation
-        if ("ios6".equals(prop.getCurrentValue())) {
-          seenWebKit = true;
-          break;
-        }
-      } catch (BadPropertyValueException e) {
-        // if we couldn't get the property, assume this might be used on WebKit.
-        seenWebKit = true;
-        break;
-      }
-    }
-    if (!seenWebKit) {
-      return false;
-    }
-    MyVisitor v = new MyVisitor();
-    v.accept(program);
-    return v.didChange();
-  }
+	/**
+	 * If this permutation may be executed on WebKit, rewrite a >> b as ~~a >>
+	 * b.
+	 * 
+	 * @param program
+	 * @param logger
+	 * @param permutationProperties
+	 * @return true if any changes were made
+	 */
+	public static boolean exec(JsProgram program, TreeLogger logger,
+			PermutationProperties permutationProperties) {
+		boolean seenWebKit = false;
+		BindingProperties softProperties = permutationProperties
+				.getSoftProperties().get(0);
+		String propValue = softProperties.getString("mobile.user.agent", "--");
+		if (!propValue.equals("ios6")) {
+			return false;
+		}
+		MyVisitor v = new MyVisitor();
+		v.accept(program);
+		return v.didChange();
+	}
 }

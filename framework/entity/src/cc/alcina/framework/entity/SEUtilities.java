@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -81,7 +81,7 @@ import cc.alcina.framework.entity.util.JvmPropertyReflector;
 
 /**
  * @author nick@alcina.cc
- * 
+ *
  */
 public class SEUtilities {
 	public static int idCounter = 1;
@@ -1172,5 +1172,30 @@ public class SEUtilities {
 					URLDecoder.decode(pair.substring(idx + 1), "UTF-8"));
 		}
 		return query_pairs;
+	}
+
+	public static boolean containsDodgyAscii(String text) {
+		for (int idx = 0; idx < text.length(); idx++) {
+			int codePoint = (int) text.charAt(idx);
+			if (codePoint >=0x80 && codePoint<=0x9f) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static String removeDodgyAscii(String text) {
+		if (!containsDodgyAscii(text)) {
+			return text;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int idx = 0; idx < text.length(); idx++) {
+			int codePoint = (int) text.charAt(idx);
+			if (codePoint >=0x80 && codePoint<=0x9f) {
+			} else {
+				sb.append((char) codePoint);
+			}
+		}
+		return sb.toString();
 	}
 }

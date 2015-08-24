@@ -4,7 +4,11 @@ import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
+/**
+ * Important! Don't allow a signature part to contain a comma - that's the delimiter character
+ * @author nick@alcina.cc
+ *
+ */
 public class DomainModelDeltaSignature implements Serializable {
 	public static DomainModelDeltaSignature parseSignature(String text) {
 		if (text == null || !text.startsWith("ds:")) {

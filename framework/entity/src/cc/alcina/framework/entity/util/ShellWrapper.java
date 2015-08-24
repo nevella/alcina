@@ -26,8 +26,10 @@ public class ShellWrapper {
 
 	public void runBashScript(String script) throws Exception {
 		File tmp = File.createTempFile("shell", ".sh");
+		tmp.deleteOnExit();
 		ResourceUtilities.writeStringToFile(script, tmp);
 		runShell(tmp.getPath(), "/bin/bash");
+		tmp.delete();
 	}
 
 	public ShellOutputTuple runProcessCatchOutputAndWait(String... cmdAndArgs)

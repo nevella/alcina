@@ -199,17 +199,24 @@
 				<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
 			</classpath>
 			<jvmarg value="-Xmx${framework.gwt.jvm.maxHeapSizeMb}M" />
-			<jvmarg value="-XX:MaxPermSize=${framework.gwt.jvm.maxPermSizeMb}m" />
 			<jvmarg value="-Xss2M" />
 			<jvmarg value="-Dgwt.usearchives=false" />
 
 			<jvmarg value="${project.gwt.compile.jvmarg1}" />
 			<jvmarg value="${project.gwt.compile.jvmarg2}" />
 			<jvmarg value="${project.gwt.compile.jvmarg3}" />
-			<arg line=" -style ${gwt.codestyle}" />
+			<arg line="-style ${gwt.codestyle}" />
+			<arg value="-sourceLevel" />
+			<arg value="1.8" />
+
+
 			<arg line="${project.gwt.compile.flags}" />
 			<arg value="${project.gwt.module.name}" />
 		</java>
+		<!--gwt, for reasons of its own, has the timestamp of this file olllldddd-->
+		<touch file="${project.gwt.build.dir}/${project.gwt.module.name}/${project.gwt.module.name}.nocache.js">
+		</touch>
+
 	</target>
 	<target name="devmode" description="Run development mode" depends="compile,compile-client">
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.DevMode">

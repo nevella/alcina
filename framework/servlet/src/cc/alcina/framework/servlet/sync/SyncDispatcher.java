@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.sync;
 
-
 public abstract class SyncDispatcher<E extends SyncEndpointModel, I extends SyncInterchangeModel, D extends SyncDeltaModel> {
 	protected GraphTransformer<E, I> transformer;
 
@@ -8,7 +7,7 @@ public abstract class SyncDispatcher<E extends SyncEndpointModel, I extends Sync
 
 	protected MergeRequestDispatcher<I, D> mergeRequestDispatcher;
 
-	protected FlatDeltaPersister<D, E> deltaApplicator;
+	protected FlatDeltaPersister<D> deltaApplicator;
 
 	protected void prepareInterchangeModel() {
 		syncDispatchToken.setInterchangeModel(transformer

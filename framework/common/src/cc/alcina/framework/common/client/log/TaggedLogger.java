@@ -34,7 +34,7 @@ public class TaggedLogger {
 		taggedLoggers.updateRegistrations(this);
 		return !registrations.isEmpty();
 	}
-	public void log(String message) {
+	public synchronized void log(String message) {
 		taggedLoggers.updateRegistrations(this);
 		for (TaggedLoggerRegistration registration : registrations) {
 			registration.handler.log(message);

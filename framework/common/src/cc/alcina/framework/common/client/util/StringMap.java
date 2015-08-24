@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package cc.alcina.framework.common.client.util;
 
@@ -8,6 +8,13 @@ import java.util.Map;
 
 public class StringMap extends LinkedHashMap<String, String> {
 	public static final StringMap EMPTY_PROPS = new StringMap();
+
+	public StringMap() {
+	}
+
+	public StringMap(StringMap otherMap) {
+		super(otherMap);
+	}
 
 	public static StringMap property(String key, String value) {
 		StringMap map = new StringMap();

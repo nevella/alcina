@@ -6,6 +6,9 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.totsp.gwittir.client.ui.Renderer;
 
 public class CheckboxList<T> extends RadioButtonList<T> {
+	public CheckboxList() {
+	}
+
 	public CheckboxList(String groupName, Collection<T> values,
 			Renderer renderer, int columnCount) {
 		super(groupName, values, renderer, columnCount);

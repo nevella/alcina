@@ -61,7 +61,7 @@ public abstract class Scheduler {
 	  }
 	  return INSTANCE;
   }
-  
+
   public static Scheduler INSTANCE;
 
   /**

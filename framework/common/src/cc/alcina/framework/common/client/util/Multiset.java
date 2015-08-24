@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -30,7 +31,11 @@ import java.util.Set;
  */
 @SuppressWarnings("unchecked")
 public class Multiset<K, V extends Set> implements Serializable {
-	private LinkedHashMap<K, V> map = new LinkedHashMap<K, V>();
+	private Map<K, V> map = createTopMap();
+
+	protected Map<K, V> createTopMap() {
+		return new LinkedHashMap<K, V>();
+	}
 
 	public boolean add(K key, Object item) {
 		if (!map.containsKey(key)) {

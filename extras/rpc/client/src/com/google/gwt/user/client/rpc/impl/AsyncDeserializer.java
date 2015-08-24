@@ -3,6 +3,8 @@ package com.google.gwt.user.client.rpc.impl;
 import java.util.Collection;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.util.MultikeyMap;
+
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -95,8 +97,10 @@ class AsyncDeserializer implements RepeatingCommand {
 		int sliceCount = sliceSize;
 		for (; sliceCount != 0 && idx2 < size; idx2++) {
 			Object instance = reader.seenArray.get(idx2);
-			boolean collectionOrMap= 
-				instance instanceof Collection || instance instanceof Map;
+			//keep in sync with asyncdeserializer, clientserreader, serverserwriter
+			boolean collectionOrMap = instance instanceof Collection
+					|| instance instanceof Map
+					|| instance instanceof MultikeyMap;
 			if (collectionOrMap
 					^ (phase == Phase.DESERIALIZE_COLLECTION_RUN)) {
 				continue;

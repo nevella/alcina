@@ -1063,8 +1063,8 @@ div.alcina-FilterHolder.inlineFilter {
 }
 
 input.alcina-FilterHint {
-	color: #666666;
-	font-style: italic;
+	color: #aaa;
+	font-style: normal;
 }
 
 .alcina-Filter-collapse {
@@ -1196,6 +1196,11 @@ div.alcina-MainContent div.workspaceViews.alcina-ContentLeft {
 
 .alcina-BeanPanel .alcina-SavePanel {
 	margin-top: 10px;
+}
+
+.alcina-BeanPanel .pvp-button-holder {
+	margin-left: 2em;
+	margin-bottom: 2em;
 }
 
 .alcina-BeanPanel .last5 {
@@ -1459,6 +1464,7 @@ table.gwittir-BoundTable.editable tr.odd td {
 .alcina-report {
 	border: 1px solid #CECECE;
 	padding: 5px;
+	background-color: #fff;
 }
 
 .alcina-expandableLabel a, .alcina-expandableLabel a:link,
@@ -1486,6 +1492,7 @@ div.max .gwt-RichTextArea {
 .dropdown-popup .popupContent {
 	background-color: #fff;
 	border: 1px solid #bbb;
+	text-align:left;
 }
 
 .dropdown-popup .popupTopLeft {

@@ -1,8 +1,6 @@
 package com.totsp.gwittir.client.beans;
 
 import com.google.gwt.core.client.JavaScriptObject;
-import com.totsp.gwittir.client.beans.Method;
-import com.totsp.gwittir.client.beans.TreeIntrospector;
 
 public class NativeMethodWrapper implements Method {
 	private String name;

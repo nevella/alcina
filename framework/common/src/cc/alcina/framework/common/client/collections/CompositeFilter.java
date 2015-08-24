@@ -39,6 +39,11 @@ public class CompositeFilter<T> implements CollectionFilter<T> {
 		this.or = or;
 	}
 
+	@Override
+	public void setContext(FilterContext context) {
+		filters.forEach(f -> f.setContext(context));
+	}
+
 	public boolean allow(T o) {
 		for (CollectionFilter<T> filter : filters) {
 			boolean allow = filter.allow(o);
@@ -54,7 +59,7 @@ public class CompositeFilter<T> implements CollectionFilter<T> {
 
 	@Override
 	public String toString() {
-		return "("+CommonUtils.join(filters, (or ? " OR " : " AND "))+")";
+		return "(" + CommonUtils.join(filters, (or ? " OR " : " AND ")) + ")";
 	}
 
 	public CompositeFilter<T> add(CollectionFilter<T> filter) {

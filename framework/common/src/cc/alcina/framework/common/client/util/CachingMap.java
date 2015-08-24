@@ -4,35 +4,39 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.Reflections;
-
-import com.totsp.gwittir.client.beans.Converter;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class CachingMap<I, O> {
-	private final Converter<I, O> converter;
+	private final ThrowingFunction<I, O> function;
 
 	private Map<I, O> map;
 
-	public CachingMap(Converter<I, O> converter) {
-		this(converter, new LinkedHashMap<I, O>());
+	public CachingMap(ThrowingFunction<I, O> function) {
+		this(function, new LinkedHashMap<I, O>());
 	}
 
 	public CachingMap(final Class valueClass) {
-		this(new Converter<I, O>() {
+		this(new ThrowingFunction<I, O>() {
 			@Override
-			public O convert(I original) {
+			public O apply(I original) {
 				return (O) Reflections.classLookup().newInstance(valueClass);
 			}
 		}, new LinkedHashMap<I, O>());
 	}
 
-	public CachingMap(Converter<I, O> converter, Map<I, O> map) {
-		this.converter = converter;
+	public CachingMap(ThrowingFunction<I, O> function, Map<I, O> map) {
+		this.function = function;
 		this.map = map;
 	}
 
 	public O get(I key) {
 		if (!map.containsKey(key)) {
-			map.put(key, converter.convert(key));
+			try {
+				map.put(key, function.apply(key));
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			
 		}
 		return map.get(key);
 	}
@@ -41,10 +45,19 @@ public class CachingMap<I, O> {
 		map.remove(key);
 	}
 
+	public void put(I key, O value) {
+		map.put(key, value);
+	}
+
 	public Map<I, O> getMap() {
 		return this.map;
 	}
-	public void clear(){
+
+	public void clear() {
 		this.map.clear();
+	}
+
+	public int size() {
+		return map.size();
 	}
 }

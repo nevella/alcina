@@ -15,7 +15,6 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -23,6 +22,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
@@ -47,7 +47,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 
 	private FilterCombinator combinator = FilterCombinator.AND;
 
-	private Set<SC> criteria = new LinkedHashSet<SC>();
+	private Set<SC> criteria = new LightSet<SC>();
 
 	public CriteriaGroup() {
 	}

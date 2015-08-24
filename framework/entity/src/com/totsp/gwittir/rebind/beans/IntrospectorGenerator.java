@@ -94,6 +94,11 @@ public class IntrospectorGenerator extends Generator {
 			}
 			ReflectionModule module = intrType
 					.getAnnotation(ReflectionModule.class);
+			if(module==null){
+				logger.log(TreeLogger.INFO, "introspectorGen debug - no module name - intrType: "+intrType.getQualifiedSourceName());
+				return null;
+			}
+			
 			filter.setModuleName(module.value());
 			this.implementationName = String.format("Introspector_Impl_%s",
 					module.value());

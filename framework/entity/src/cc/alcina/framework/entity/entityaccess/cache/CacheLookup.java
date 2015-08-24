@@ -1,11 +1,18 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
@@ -31,10 +38,24 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	public CacheLookup(CacheLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
-		store = new SortedMultiset<T, Set<Long>>();
+		store = new SortedMultiset<T, Set<Long>>() {
+			@Override
+			protected Set createSet() {
+				return createLongSet();
+			}
+
+			@Override
+			protected Map<T, Set<Long>> createTopMap() {
+				return new Object2ObjectLinkedOpenHashMap<T, Set<Long>>();
+			}
+		};
 		this.propertyPathAccesor = new PropertyPathAccessor(
 				descriptor.propertyPath);
 		this.relevanceFilter = descriptor.getRelevanceFilter();
+	}
+
+	protected Set createLongSet() {
+		return new LongAVLTreeSet();
 	}
 
 	public void add(T k1, Long value) {
@@ -57,7 +78,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	public Set<Long> getAndEnsure(T k1) {
 		Set<Long> result = get(k1);
 		if (result == null) {
-			result = new LinkedHashSet<Long>();
+			result = createLongSet();
 			store.put(normalise(k1), result);
 		}
 		return result;
@@ -77,9 +98,9 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		return descriptor.clazz;
 	}
 
-	public Set<Long> getMaybeCollectionKey(Object value) {
+	public Set<Long> getMaybeCollectionKey(Object value, Set<Long> existing) {
 		if (value instanceof Collection) {
-			Set<Long> result = new LinkedHashSet<Long>();
+			Set<Long> result = createLongSet();
 			for (T t : (Collection<T>) value) {
 				Set<Long> ids = get(t);
 				if (ids != null) {

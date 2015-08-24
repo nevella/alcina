@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -34,10 +33,11 @@ import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight;
+import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight.ScrollPanel100pcHeight300px;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.core.shared.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.event.dom.client.BlurEvent;
@@ -283,10 +283,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			setItemMap(itemMap);
 		}
 		this.scroller = isFlowLayout() ? new ScrollPanel(itemHolder)
-				: new ScrollPanel100pcHeight(itemHolder);
+				: new ScrollPanel100pcHeight300px(itemHolder);
 		if (!isFlowLayout()) {
 			scroller.setSize("100%", "100%");
 		}
+		scroller.setStyleName("selector-scroller");
 		holder.setStyleName("alcina-Chooser");
 		holder.add(filter);
 		if (popdown) {
@@ -555,7 +556,31 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.itemMap = itemMap;
 		if (isSortGroupContents()) {
 			for (List<T> ttl : itemMap.values()) {
-				Collections.sort((List) ttl);
+				try {
+					Collections.sort((List) ttl);
+				} catch (RuntimeException e) {
+					if (!GWT.isProdMode()) {
+						for (int i = 0; i < 10000; i++) {
+							int size = ttl.size();
+							Comparable i1 = (Comparable) ttl
+									.get((int) (size * Math.random()));
+							Comparable i2 = (Comparable) ttl
+									.get((int) (size * Math.random()));
+							Comparable i3 = (Comparable) ttl
+									.get((int) (size * Math.random()));
+							int c1 = i1.compareTo(i2);
+							int c2 = i2.compareTo(i1);
+							if (c1 != -c2) {
+								int debug = 3;
+							}
+							if(i1.compareTo(i2)<0&&i2.compareTo(i3)<0 && i1.compareTo(i3)>=0){
+								int debug=3;
+							}
+						}
+					} else {
+						throw (e);
+					}
+				}
 			}
 		}
 		if (keys == null) {

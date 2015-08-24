@@ -1,12 +1,10 @@
 package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.Rect;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
-import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
 
@@ -127,7 +125,7 @@ public class RelativePopupPositioning {
 
 	/**
 	 * Gets the mouse y-position relative to a given element.
-	 * 
+	 *
 	 * @param target
 	 *            the element whose coordinate system is to be used
 	 * @return the relative y-position
@@ -565,7 +563,7 @@ public class RelativePopupPositioning {
 		 * popup-left aligned to relative-to-widget-left right same. If not
 		 * (fixed axis), in example bottom == popup-top aligned to
 		 * relative-bottom
-		 * 
+		 *
 		 */
 		int fit(int relX, int relY, int bw, int bh, int relW, int relH,
 				int ppW, int ppH, int bx, int by, AxisCoordinate favour,
@@ -627,10 +625,5 @@ public class RelativePopupPositioning {
 
 	enum AxisType {
 		NEG, CENTER, POS
-	}
-
-	public static void scrollIntoViewWhileKeepingRect(Rect bounds,
-			DecoratedRelativePopupPanel popup) {
-		// TODO Auto-generated method stub
 	}
 }

@@ -15,7 +15,6 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.Date;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;

@@ -3,9 +3,6 @@ package cc.alcina.framework.jvmclient.persistence;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -201,13 +198,13 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 		if (clob != null) {
 			Reader reader = clob.getCharacterStream();
 			char[] cbuf = new char[8192];
-			StringBuilder sb=new StringBuilder((int) clob.length());
-			while(true){
+			StringBuilder sb = new StringBuilder((int) clob.length());
+			while (true) {
 				int read = reader.read(cbuf);
-				if(read==-1){
+				if (read == -1) {
 					break;
 				}
-				sb.append(new String(cbuf,0,read));
+				sb.append(new String(cbuf, 0, read));
 			}
 			reader.close();
 			value = sb.toString();
@@ -319,9 +316,9 @@ public class ObjectStoreJdbcImpl implements PersistenceObjectStore {
 								tableName);
 						stmt = conn.prepareStatement(sql);
 						stmt.setString(1, kv.getKey());
-//						Clob clob = conn.createClob();
-//						clob.setString(1, kv.getValue());
-//						stmt.setClob(2, clob);
+						// Clob clob = conn.createClob();
+						// clob.setString(1, kv.getValue());
+						// stmt.setClob(2, clob);
 						stmt.setCharacterStream(2,
 								new StringReader(kv.getValue()));
 						stmt.executeUpdate();

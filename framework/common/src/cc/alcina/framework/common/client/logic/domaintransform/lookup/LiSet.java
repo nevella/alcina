@@ -43,12 +43,7 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		if (e == null) {
 			throw new IllegalArgumentException();
 		}
-		if (size == DEGENERATE_THRESHOLD && degenerate == null) {
-			LinkedHashSet degenerate = new LinkedHashSet<H>();
-			degenerate.addAll(this);
-			this.degenerate = degenerate;
-			elementData = null;
-		}
+		
 		if (degenerate != null) {
 			return degenerate.add(e);
 		}
@@ -64,6 +59,13 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 			elementData[idx] = e;
 			return false;
 		} else {
+			if (size == DEGENERATE_THRESHOLD) {
+				LinkedHashSet degenerate = new LinkedHashSet<H>();
+				degenerate.addAll(this);
+				this.degenerate = degenerate;
+				elementData = null;
+				return degenerate.add(e);
+			}
 			size++;
 			modCount++;
 			HasIdAndLocalId[] newData = new HasIdAndLocalId[size];
@@ -260,10 +262,6 @@ public class LiSet<H extends HasIdAndLocalId> extends AbstractSet<H> implements
 		}
 	}
 
-	/**
-	 * Reconstitute the <tt>ArrayList</tt> instance from a stream (that is,
-	 * deserialize it).
-	 */
 	private void readObject(java.io.ObjectInputStream s)
 			throws java.io.IOException, ClassNotFoundException {
 		s.defaultReadObject();

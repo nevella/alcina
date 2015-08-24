@@ -96,6 +96,7 @@ import com.google.gwt.user.client.ui.impl.PopupImpl;
  * <dd>the glass background behind the popup</dd>
  * </dl>
  */
+@SuppressWarnings("deprecation")
 public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		HasCloseHandlers<RelativePopupPanel> {
 	/**
@@ -208,7 +209,6 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 					impl.setClip(curPanel.getElement(),
 							getRectString(0, 0, 0, 0));
 					curPanel.getPositioningContainer().add(curPanel);
-					impl.onShow(curPanel.getElement());
 				}
 				// Wait for the popup panel to be attached before running the
 				// animation
@@ -227,7 +227,6 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 			if (!showing) {
 				maybeShowGlass();
 				curPanel.getPositioningContainer().remove(curPanel);
-				impl.onHide(curPanel.getElement());
 			}
 			impl.setClip(curPanel.getElement(), "rect(auto, auto, auto, auto)");
 			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
@@ -292,7 +291,6 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 			if (showing) {
 				if (curPanel.isGlassEnabled) {
 					Document.get().getBody().appendChild(curPanel.glass);
-					impl.onShow(curPanel.glass);
 					resizeRegistration = Window
 							.addResizeHandler(curPanel.glassResizer);
 					curPanel.glassResizer.onResize(null);
@@ -300,7 +298,6 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 				}
 			} else if (glassShowing) {
 				Document.get().getBody().removeChild(curPanel.glass);
-				impl.onHide(curPanel.glass);
 				resizeRegistration.removeHandler();
 				resizeRegistration = null;
 				glassShowing = false;
@@ -322,10 +319,8 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 							curPanel.topPosition);
 				}
 				curPanel.getPositioningContainer().add(curPanel);
-				impl.onShow(curPanel.getElement());
 			} else {
 				curPanel.getPositioningContainer().remove(curPanel);
-				impl.onHide(curPanel.getElement());
 			}
 			DOM.setStyleAttribute(curPanel.getElement(), "overflow", "visible");
 		}
@@ -945,13 +940,6 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 		// determined.
 		DOM.setStyleAttribute(getElement(), "visibility", visible ? "visible"
 				: "hidden");
-		// If the PopupImpl creates an iframe shim, it's also necessary to hide
-		// it
-		// as well.
-		impl.setVisible(getElement(), visible);
-		if (glass != null) {
-			impl.setVisible(glass, visible);
-		}
 	}
 
 	@Override
@@ -1117,10 +1105,10 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 	 *            The Element on which <code>blur()</code> will be invoked
 	 */
 	private native void blur(Element elt) /*-{
-		// Issue 2390: blurring the body causes IE to disappear to the background
-		if (elt.blur && elt != $doc.body) {
-			elt.blur();
-		}
+	// Issue 2390: blurring the body causes IE to disappear to the background
+	if (elt.blur && elt != $doc.body) {
+	    elt.blur();
+	}
 	}-*/;
 
 	/**
@@ -1451,6 +1439,4 @@ public class RelativePopupPanel extends SimplePanel implements HasAnimation,
 			return o instanceof RelativePopupPanel;
 		}
 	}
-
-	
 }

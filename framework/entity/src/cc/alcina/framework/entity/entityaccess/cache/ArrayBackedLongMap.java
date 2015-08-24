@@ -1,5 +1,8 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectArrayMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+
 import java.util.AbstractCollection;
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -15,7 +18,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class ArrayBackedLongMap<V> implements Map<Long, V> {
 	private transient Object[] elementData;
 
-	private LinkedHashMap<Long, V> failover;
+	private Long2ObjectLinkedOpenHashMap<V> failover;
 
 	public ArrayBackedLongMap() {
 		this(100);
@@ -89,12 +92,14 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 				return idx;
 			}
 		}
-		// System.out.println(CommonUtils.formatJ(
-		// "Creating failover - (id %s) - %s", key, this));
-		LinkedHashMap failover = new LinkedHashMap<Long, V>();
-		failover.putAll(this);
-		this.failover = failover;
-		elementData = null;
+		synchronized (this) {
+			if (this.failover == null) {
+				Long2ObjectLinkedOpenHashMap failover = new Long2ObjectLinkedOpenHashMap<V>();
+				failover.putAll(this);
+				this.failover = failover;
+				elementData = null;
+			}
+		}
 		return -1;
 	}
 

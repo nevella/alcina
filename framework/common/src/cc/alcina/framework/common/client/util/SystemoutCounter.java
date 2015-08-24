@@ -5,9 +5,17 @@ public class SystemoutCounter {
 
 	private int ticks;
 
+
 	private int tickCtr;
 
 	private int dotCtr;
+	
+	private int allTicks;
+
+	public int getAllTicks() {
+		return this.allTicks;
+	}
+
 
 	private boolean showPercentAtEndOfLine;
 
@@ -15,8 +23,15 @@ public class SystemoutCounter {
 
 	int lines = 0;
 
+	private String name;
+
 	public SystemoutCounter(int ticks, int dotsPerLine) {
 		this(ticks, dotsPerLine, 1, false);
+	}
+
+	public SystemoutCounter name(String name) {
+		this.name = name;
+		return this;
 	}
 
 	public SystemoutCounter(int ticks, int dotsPerLine, int size,
@@ -32,14 +47,18 @@ public class SystemoutCounter {
 	}
 
 	public void tick(String message) {
+		++allTicks;
 		if (++tickCtr == ticks) {
 			tickCtr = 0;
 			System.out.print(".");
 			if (++dotCtr == dotsPerLine) {
 				dotCtr = 0;
-				if ( showPercentAtEndOfLine) {
+				if (showPercentAtEndOfLine || name != null) {
 					message += CommonUtils.formatJ(" - %s%", (dotsPerLine
 							* (lines + 1) * ticks * 100 / size));
+				}
+				if (name != null) {
+					message += " - " + name;
 				}
 				System.out.println("  " + message);
 				lines++;

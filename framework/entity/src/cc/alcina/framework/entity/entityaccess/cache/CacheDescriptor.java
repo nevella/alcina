@@ -12,6 +12,49 @@ import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersisten
 public abstract class CacheDescriptor {
 	Map<Class, CacheItemDescriptor> perClass = new LinkedHashMap<Class, CacheItemDescriptor>();
 
+	public List<CacheTask> postLoadTasks = new ArrayList<CacheTask>();
+
+	public List<PreProvideTask> preProvideTasks = new ArrayList<PreProvideTask>();
+
+	public List<ComplexFilter> complexFilters = new ArrayList<>();
+
+	public CacheDescriptor() {
+	}
+
+	public void addClasses(Class[] classes) {
+		for (Class clazz : classes) {
+			perClass.put(clazz, new CacheItemDescriptor(clazz));
+		}
+	}
+
+	public void addComplexFilter(ComplexFilter complexFilter) {
+		complexFilters.add(complexFilter);
+	}
+
+	public void addItemDescriptor(CacheItemDescriptor itemDescriptor) {
+		perClass.put(itemDescriptor.clazz, itemDescriptor);
+	}
+
+	public void addItemDescriptor(Class clazz, String... indexProperties) {
+		CacheItemDescriptor itemDescriptor = new CacheItemDescriptor(clazz,
+				indexProperties);
+		addItemDescriptor(itemDescriptor);
+	}
+
+	public boolean cachePostTransform(Class clazz) {
+		return perClass.containsKey(clazz);
+	}
+
+	public abstract Class<? extends IUser> getIUserClass();
+
+	public boolean joinPropertyCached(Class clazz) {
+		return perClass.containsKey(clazz);
+	}
+
+	public void loadLazyPreApplyPersist(
+			DomainTransformPersistenceEvent persistenceEvent) throws Exception {
+	}
+
 	public static interface CacheTask {
 		/**
 		 * @return the lock object, if any
@@ -25,42 +68,5 @@ public abstract class CacheDescriptor {
 		 */
 		public void run(AlcinaMemCache alcinaMemCache, Class clazz,
 				Collection<T> objects) throws Exception;
-	}
-
-	public List<CacheTask> postLoadTasks = new ArrayList<CacheTask>();
-
-	public List<PreProvideTask> preProvideTasks = new ArrayList<PreProvideTask>();
-
-	public CacheDescriptor() {
-	}
-
-	public void addClasses(Class[] classes) {
-		for (Class clazz : classes) {
-			perClass.put(clazz, new CacheItemDescriptor(clazz));
-		}
-	}
-
-	public void addItemDescriptor(CacheItemDescriptor itemDescriptor) {
-		perClass.put(itemDescriptor.clazz, itemDescriptor);
-	}
-
-	public boolean cachePostTransform(Class clazz) {
-		return perClass.containsKey(clazz);
-	}
-
-	public boolean joinPropertyCached(Class clazz) {
-		return perClass.containsKey(clazz);
-	}
-
-	public void addItemDescriptor(Class clazz, String... indexProperties) {
-		CacheItemDescriptor itemDescriptor = new CacheItemDescriptor(clazz,
-				indexProperties);
-		addItemDescriptor(itemDescriptor);
-	}
-
-	public abstract Class<? extends IUser> getIUserClass();
-
-	public void loadLazyPreApplyPersist(
-			DomainTransformPersistenceEvent persistenceEvent) throws Exception {
 	}
 }

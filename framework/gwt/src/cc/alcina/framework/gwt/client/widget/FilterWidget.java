@@ -13,9 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.widget;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.core.client.Scheduler;
@@ -243,6 +241,7 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 		if (_hint != null && CommonUtils.isNullOrEmpty(textBox.getText())) {
 			textBox.addStyleName(ALCINA_FILTER_HINT);
 			textBox.setText(_hint);
+			hintWasCleared = false;
 			if (hint == null) {
 				HintHandler handler = new HintHandler();
 				textBox.addFocusHandler(handler);
@@ -441,5 +440,6 @@ public class FilterWidget extends Composite implements KeyUpHandler,
 	public void onClick(ClickEvent event) {
 		clearHint();
 		onFocus(null);
+		textBox.setFocus(true);
 	}
 }
