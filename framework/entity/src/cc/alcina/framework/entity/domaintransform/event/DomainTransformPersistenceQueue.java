@@ -302,6 +302,9 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 							} else {
 								System.out.println("not firing - gap");
 							}
+						} catch (Throwable t) {
+							t.printStackTrace();
+							throw new RuntimeException(t);
 						} finally {
 							firingPersistedEvents = false;
 							PermissibleFieldFilter.disablePerObjectPermissions = false;
