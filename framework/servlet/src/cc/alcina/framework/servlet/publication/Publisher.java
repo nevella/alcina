@@ -140,6 +140,7 @@ public class Publisher {
 		fcm.rows = cw.wrapper.gridRows;
 		fcm.custom = cw.custom;
 		InputStream convertedContent = fc.convert(ctx, fcm);
+		convertedContent=ctx.getVisitorOrNoop().transformConvertedContent(convertedContent);
 		ctx.getVisitorOrNoop().beforeDelivery();
 		ContentDelivery deliverer = (ContentDelivery) Registry.get()
 				.instantiateSingle(ContentDeliveryType.class,
