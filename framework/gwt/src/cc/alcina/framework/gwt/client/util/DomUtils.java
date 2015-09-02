@@ -290,11 +290,11 @@ public class DomUtils implements NodeFromXpathProvider {
 				ClientNodeIterator.SHOW_ALL);
 		itr.setRoot(elt);
 		Node n;
-		IgnoreTextObserver ignoreTextObserver = new IgnoreTextObserver();
+		TextVisibilityObserver textVisibilityObserver = new TextVisibilityObserver();
 		// duplicates ArticleTextModel (Jade)
 		while ((n = itr.getCurrentNode()) != null) {
 			if (n.getNodeType() == Node.TEXT_NODE
-					&& !ignoreTextObserver.isIgnoreText()) {
+					&& !textVisibilityObserver.isIgnoreText()) {
 				boolean currentDisplayNoneIsAncestor = displayNone != null
 						&& DomUtils.isAncestorOf(displayNone, n);
 				if (!currentDisplayNoneIsAncestor) {
@@ -317,7 +317,7 @@ public class DomUtils implements NodeFromXpathProvider {
 						displayNone = null;
 					}
 				}
-				ignoreTextObserver.update(element);
+				textVisibilityObserver.update(element);
 			}
 			itr.nextNode();
 		}
@@ -1105,11 +1105,19 @@ public class DomUtils implements NodeFromXpathProvider {
 	 * @param maxNodes
 	 * @return true if finished
 	 */
-	public static class IgnoreTextObserver {
+	public static class TextVisibilityObserver {
 		private boolean ignoreText = false;
+
+		// displaynone content (legislation TOC) has to stay in the DOM, for
+		// printing...but we need to know for search filtering
+		private Object displayNone;
 
 		public boolean isIgnoreText() {
 			return this.ignoreText;
+		}
+
+		public boolean isDisplayNoneText() {
+			return this.displayNone != null;
 		}
 
 		public void update(Element element) {
@@ -1118,6 +1126,10 @@ public class DomUtils implements NodeFromXpathProvider {
 
 		public void update(String tagName) {
 			ignoreText = isInvisibleContentElement(tagName);
+		}
+
+		public void updateDisplayNone(Object displayNone) {
+			this.displayNone = displayNone;
 		}
 	}
 }
