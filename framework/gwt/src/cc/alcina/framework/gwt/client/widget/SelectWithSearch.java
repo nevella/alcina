@@ -1156,4 +1156,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			}
 		}
 	}
+	public String provideFilterBoxText(){
+		return getFilter().getTextBox().getText();
+	}
 }

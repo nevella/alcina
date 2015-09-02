@@ -5,10 +5,12 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -23,7 +25,11 @@ import com.totsp.gwittir.client.ui.Renderer;
 public class BoundSelectorMinimal extends BoundSelector {
 	private ClickHandler maybeFocusResultsHandler;
 
+	protected boolean showUnselectedOnPopupClose = false;
+
 	private FlowPanelClickable cfp;
+
+	private Label unselectedLabel;
 
 	public BoundSelectorMinimal() {
 		super();
@@ -59,6 +65,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 		grid.setWidget(1, 0, searchWidget);
 		grid.setStyleName("alcina-SelectorFrame minimal");
 		cfp.add(grid);
+		cfp.setStyleName("alcina-SelectorContainer");
 		if (maybeFocusResultsHandler == null) {
 			maybeFocusResultsHandler = new ClickHandler() {
 				@Override
@@ -122,6 +129,36 @@ public class BoundSelectorMinimal extends BoundSelector {
 		super.addItem(item);
 		if (search.getFilter().isHintWasCleared()) {
 			search.getFilter().getTextBox().setText("");
+		}
+	}
+
+	@Override
+	protected void createSearch() {
+		search = new SelectWithSearch() {
+			@Override
+			protected void onPopdownShowing(RelativePopupPanel popup,
+					boolean show) {
+				super.onPopdownShowing(popup, show);
+				updateAfterPopdownChange(show);
+			}
+		};
+	}
+
+	protected void updateAfterPopdownChange(boolean show) {
+		if (showUnselectedOnPopupClose) {
+			String searchText = search.provideFilterBoxText();
+			if (!show && searchText.length() > 0) {
+				unselectedLabel = new Label(CommonUtils.formatJ(
+						"Nothing selected for '%s' -  please choose a match from the list",
+						searchText));
+				unselectedLabel.setStyleName("unselected-text");
+				cfp.add(unselectedLabel);
+			} else {
+				if (unselectedLabel != null) {
+					unselectedLabel.removeFromParent();
+					unselectedLabel = null;
+				}
+			}
 		}
 	}
 
