@@ -21,6 +21,7 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 /**
@@ -37,7 +38,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  * @author Nick Reddel
  */
 public interface TreeRenderer<T extends TreeRenderable> {
-	public static final String TOOLTIP_HINT="(Tooltip)";
+	public static final String TOOLTIP_HINT = "(Tooltip)";
+
 	public CollectionProvider collectionProvider();
 
 	public String emptyChildText();
@@ -45,7 +47,7 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	public T getRenderable();
 
 	public String hint();
-	
+
 	public boolean isAlwaysExpanded();
 
 	public boolean isSingleLineCustomiser();
@@ -66,9 +68,9 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	public String renderableText();
 
 	public BoundWidgetProvider renderCustomiser();
-	
+
 	public AbstractBoundWidget getBoundWidget();
-	
+
 	public void setBoundWidget(AbstractBoundWidget widget);
 
 	public RenderInstruction renderInstruction();
@@ -89,4 +91,8 @@ public interface TreeRenderer<T extends TreeRenderable> {
 	public void setContext(RenderContext context);
 
 	public String title();
+
+	public default Renderer<?,String> renderer() {
+		return null;
+	}
 }
