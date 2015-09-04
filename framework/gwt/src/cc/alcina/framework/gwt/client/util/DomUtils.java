@@ -44,7 +44,12 @@ public class DomUtils implements NodeFromXpathProvider {
 	}
 
 	public static Element getAncestorWithTagName(Node node, String tagName) {
-		while (node != null) {
+		return getAncestorWithTagName(node, tagName, null);
+	}
+
+	public static Element getAncestorWithTagName(Node node, String tagName,
+			Node stop) {
+		while (node != null && node != stop) {
 			if (node.getNodeType() == Node.ELEMENT_NODE
 					&& node.getNodeName().equalsIgnoreCase(tagName)) {
 				return (Element) node;
