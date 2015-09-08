@@ -991,7 +991,7 @@ public class WidgetUtils {
 			return null;
 		}
 		target = Element.as(event.getEventTarget());
-		Element anchor = DomUtils.getAncestorWithTagName(target, "A");
+		Element anchor = DomUtils.getSelfOrAncestorWithTagName(target, "A");
 		return anchor;
 	}
 

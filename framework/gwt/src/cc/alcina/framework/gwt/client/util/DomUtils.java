@@ -43,11 +43,11 @@ public class DomUtils implements NodeFromXpathProvider {
 		return false;
 	}
 
-	public static Element getAncestorWithTagName(Node node, String tagName) {
-		return getAncestorWithTagName(node, tagName, null);
+	public static Element getSelfOrAncestorWithTagName(Node node, String tagName) {
+		return getSelfOrAncestorWithTagName(node, tagName, null);
 	}
 
-	public static Element getAncestorWithTagName(Node node, String tagName,
+	public static Element getSelfOrAncestorWithTagName(Node node, String tagName,
 			Node stop) {
 		while (node != null && node != stop) {
 			if (node.getNodeType() == Node.ELEMENT_NODE
@@ -1081,7 +1081,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		if (node == null) {
 			return false;
 		}
-		return getAncestorWithTagName(node, "BODY") != null;
+		return getSelfOrAncestorWithTagName(node, "BODY") != null;
 	}
 
 	public static void stripNode(Node oldNode) {
