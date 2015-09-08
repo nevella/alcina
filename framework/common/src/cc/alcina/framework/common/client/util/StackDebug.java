@@ -13,49 +13,52 @@ public class StackDebug {
 		this.stackFilter = stackFilter;
 	}
 
-	public void debugCurrentThread() {
+	public synchronized void debugCurrentThread() {
 		debugThreadId = Thread.currentThread().getId();
 		debugLines = 5;
+		pushTraces.clear();
 	}
 
 	public void maybeDebugStack(Stack stack, boolean push) {
 		if (debugLines > 0) {
-			Thread t = Thread.currentThread();
-			if (debugThreadId != -1 && debugThreadId != t.getId()) {
-				return;
-			}
-			List<String> lines = new ArrayList<String>();
-			StackTraceElement[] traces = t.getStackTrace();
-			traces = filterTraces(traces);
-			for (int i = 3; i < 3 + debugLines && i < traces.length; i++) {
-				lines.add(traces[i].toString());
-			}
-			if (push) {
-				pushTraces.push(traces);
-			}
-			if (debugThreadId != -1 && !push) {
-				boolean debug = false;
-				StackTraceElement[] lastTraces = new StackTraceElement[0];
-				if (pushTraces.isEmpty()) {
-					debug = true;
-				} else {
-					lastTraces = pushTraces.pop();
-					if (lastTraces.length != traces.length) {
+			synchronized (this) {
+				Thread t = Thread.currentThread();
+				if (debugThreadId != -1 && debugThreadId != t.getId()) {
+					return;
+				}
+				List<String> lines = new ArrayList<String>();
+				StackTraceElement[] traces = t.getStackTrace();
+				traces = filterTraces(traces);
+				for (int i = 3; i < 3 + debugLines && i < traces.length; i++) {
+					lines.add(traces[i].toString());
+				}
+				if (push) {
+					pushTraces.push(traces);
+				}
+				if (debugThreadId != -1 && !push) {
+					boolean debug = false;
+					StackTraceElement[] lastTraces = new StackTraceElement[0];
+					if (pushTraces.isEmpty()) {
 						debug = true;
+					} else {
+						lastTraces = pushTraces.pop();
+						if (lastTraces.length != traces.length) {
+							debug = true;
+						}
+					}
+					if (debug == true) {
+						System.err.println(CommonUtils.formatJ(
+								"***unbalanced stack***"
+										+ "\npush:\n%s\n\n\npop:\n%s\n\n",
+								CommonUtils.join(lastTraces, "\n"),
+								CommonUtils.join(traces, "\n")));
 					}
 				}
-				if (debug == true) {
-					System.err.println(CommonUtils.formatJ(
-							"***unbalanced stack***"
-									+ "\npush:\n%s\n\n\npop:\n%s\n\n",
-							CommonUtils.join(lastTraces, "\n"),
-							CommonUtils.join(traces, "\n")));
-				}
+				System.err.println(CommonUtils.formatJ(
+						"%s-%s-%s-%s - %s -: %s\n", t.getId(), hashCode(),
+						push, stack == null ? 0 : stack.size(), traces.length,
+						CommonUtils.join(lines, "\n")));
 			}
-			System.err.println(CommonUtils.formatJ("%s-%s-%s-%s - %s -: %s\n",
-					t.getId(), hashCode(), push,
-					stack == null ? 0 : stack.size(), traces.length,
-					CommonUtils.join(lines, "\n")));
 		}
 	}
 
