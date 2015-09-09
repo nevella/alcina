@@ -160,9 +160,30 @@ public class ResourceUtilities {
 		String asB64 = Base64.getEncoder().encodeToString(baos.toByteArray());
 		return asB64;
 	}
+	public static String writeObjectAsBase64URL(Object object) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(object);
+		oos.close();
+		String asB64 = Base64.getUrlEncoder().encodeToString(baos.toByteArray());
+		return asB64;
+	}
 
 	public static <T> T readObjectFromBase64(String string) throws IOException {
 		byte[] bytes = Base64.getDecoder().decode(string.trim());
+		try (ObjectInputStream in = new ObjectInputStream(
+				new ByteArrayInputStream(bytes))) {
+			try {
+				return (T) in.readObject();
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+		}
+	}
+
+	public static <T> T readObjectFromBase64Url(String string)
+			throws IOException {
+		byte[] bytes = Base64.getUrlDecoder().decode(string.trim());
 		try (ObjectInputStream in = new ObjectInputStream(
 				new ByteArrayInputStream(bytes))) {
 			try {
