@@ -5,58 +5,70 @@ import java.util.List;
 import java.util.Stack;
 
 public class StackDebug {
-	private Stack<StackTraceElement[]> pushTraces = new Stack<StackTraceElement[]>();
+	private CachingMap<Long, Stack<StackTraceElement[]>> perThreadTraces = new CachingMap<Long, Stack<StackTraceElement[]>>(
+			tid -> new Stack<>());
 
 	private String stackFilter;
+
+	public int debugLines = 0;
 
 	public StackDebug(String stackFilter) {
 		this.stackFilter = stackFilter;
 	}
 
+	public void clearCurrentThread() {
+		long tId = Thread.currentThread().getId();
+		perThreadTraces.remove(tId);
+	}
+
 	public synchronized void debugCurrentThread() {
-		debugThreadId = Thread.currentThread().getId();
+		long tId = Thread.currentThread().getId();
+		perThreadTraces.get(tId).clear();
 		debugLines = 5;
-		pushTraces.clear();
 	}
 
 	public void maybeDebugStack(Stack stack, boolean push) {
 		if (debugLines > 0) {
 			synchronized (this) {
-				Thread t = Thread.currentThread();
-				if (debugThreadId != -1 && debugThreadId != t.getId()) {
+				Thread thread = Thread.currentThread();
+				long tId = thread.getId();
+				if (!perThreadTraces.getMap().containsKey(tId)) {
 					return;
 				}
 				List<String> lines = new ArrayList<String>();
-				StackTraceElement[] traces = t.getStackTrace();
+				StackTraceElement[] traces = thread.getStackTrace();
 				traces = filterTraces(traces);
 				for (int i = 3; i < 3 + debugLines && i < traces.length; i++) {
 					lines.add(traces[i].toString());
 				}
 				if (push) {
-					pushTraces.push(traces);
+					perThreadTraces.get(tId).push(traces);
 				}
-				if (debugThreadId != -1 && !push) {
+				if (!push) {
 					boolean debug = false;
 					StackTraceElement[] lastTraces = new StackTraceElement[0];
-					if (pushTraces.isEmpty()) {
+					if (perThreadTraces.get(tId).isEmpty()) {
 						debug = true;
 					} else {
-						lastTraces = pushTraces.pop();
+						lastTraces = perThreadTraces.get(tId).pop();
 						if (lastTraces.length != traces.length) {
 							debug = true;
 						}
 					}
 					if (debug == true) {
-						System.err.println(CommonUtils.formatJ(
-								"***unbalanced stack***"
-										+ "\npush:\n%s\n\n\npop:\n%s\n\n",
-								CommonUtils.join(lastTraces, "\n"),
-								CommonUtils.join(traces, "\n")));
+						System.err
+								.println(CommonUtils
+										.formatJ(
+												"***unbalanced stack***"
+														+ "\nThread - %s\npush:\n%s\n\n\npop:\n%s\n\n",
+												thread, CommonUtils.join(
+														lastTraces, "\n"),
+												CommonUtils.join(traces, "\n")));
 					}
 				}
 				System.err.println(CommonUtils.formatJ(
-						"%s-%s-%s-%s - %s -: %s\n", t.getId(), hashCode(),
-						push, stack == null ? 0 : stack.size(), traces.length,
+						"%s-%s-%s-%s - %s -: %s\n", tId, hashCode(), push,
+						stack == null ? 0 : stack.size(), traces.length,
 						CommonUtils.join(lines, "\n")));
 			}
 		}
@@ -81,8 +93,4 @@ public class StackDebug {
 		}
 		return traces;
 	}
-
-	public long debugThreadId = -1;
-
-	public int debugLines = 0;
 }
