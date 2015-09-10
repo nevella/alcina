@@ -224,10 +224,10 @@ public class RelativePopupPositioning {
 
 		@Override
 		public void setPosition(int offsetWidth, int offsetHeight) {
-			int x = positioningParams.ignoreRelativeToCoordinates ? 0 : relativeToElement
-					.getAbsoluteLeft();
-			int y = positioningParams.ignoreRelativeToCoordinates ? 0 : relativeToElement
-					.getAbsoluteTop();
+			int x = positioningParams.ignoreRelativeToCoordinates ? 0
+					: relativeToElement.getAbsoluteLeft();
+			int y = positioningParams.ignoreRelativeToCoordinates ? 0
+					: relativeToElement.getAbsoluteTop();
 			int relW = relativeToElement.getOffsetWidth();
 			int relH = relativeToElement.getOffsetHeight();
 			x += shiftX;
@@ -256,7 +256,8 @@ public class RelativePopupPositioning {
 					if (x < 0) {
 						x = 0;
 					}
-					if (x + rw > bw) {
+					if (x + rw > bw
+							&& !positioningParams.ignoreBoundingWidgetPopupConstraint) {
 						x = bw - rw;
 					}
 					y += positioningParams.shiftY;
@@ -482,6 +483,8 @@ public class RelativePopupPositioning {
 		public int preferredTop;
 
 		public int shiftX;
+
+		public boolean ignoreBoundingWidgetPopupConstraint;
 
 		public void show(RelativePopupPanel panel) {
 			RelativePopupPositioning.showPopup(this, panel);
