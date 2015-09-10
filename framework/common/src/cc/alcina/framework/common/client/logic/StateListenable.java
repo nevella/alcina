@@ -33,6 +33,9 @@ import java.util.ArrayList;
 	public void removeStateChangeListener(StateChangeListener l){
 		listeners.remove(l);
 	}
+	public void clearListeners(){
+		listeners.clear();
+	}
 	@SuppressWarnings("unchecked")
 	protected void fireStateChanged(String newState){
 		ArrayList<StateChangeListener> listenersCopy = (ArrayList<StateChangeListener>) listeners.clone();
