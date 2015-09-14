@@ -24,7 +24,7 @@ public class StackDebug {
 	public synchronized void debugCurrentThread() {
 		long tId = Thread.currentThread().getId();
 		perThreadTraces.get(tId).clear();
-		debugLines = 5;
+		debugLines = 25;
 	}
 
 	public void maybeDebugStack(Stack stack, boolean push) {
@@ -66,10 +66,10 @@ public class StackDebug {
 												CommonUtils.join(traces, "\n")));
 					}
 				}
-				System.err.println(CommonUtils.formatJ(
-						"%s-%s-%s-%s - %s -: %s\n", tId, hashCode(), push,
-						stack == null ? 0 : stack.size(), traces.length,
-						CommonUtils.join(lines, "\n")));
+				String template = "**stack-debug: %s-%s-%s-%s - %s -: \n\t%s\n\n***end-stack-debug\n\n";
+				System.err.println(CommonUtils.formatJ(template, tId,
+						hashCode(), push, stack == null ? 0 : stack.size(),
+						traces.length, CommonUtils.join(lines, "\n\t")));
 			}
 		}
 	}
