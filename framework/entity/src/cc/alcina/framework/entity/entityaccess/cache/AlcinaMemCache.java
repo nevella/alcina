@@ -1214,6 +1214,9 @@ public class AlcinaMemCache {
 					cachingProjections.getAndEnsure(projection
 							.getListenedClass());
 				}
+				if (projection instanceof BaseProjection){
+					((BaseProjection) projection).modificationChecker=modificationChecker;
+				}
 			}
 		}
 		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
@@ -2136,7 +2139,7 @@ public class AlcinaMemCache {
 			handle("remove");
 		}
 
-		private void handle(String key) {
+		void handle(String key) {
 			// add-remove - well, there's a bunch of automated adds (e.g.
 			// cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport
 			// .removeParentAssociations(HasIdAndLocalId)
