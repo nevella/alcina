@@ -155,7 +155,7 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 
 	@Override
 	public V get(Object... objects) {
-		return (V) getEnsure(true, objects);
+		return (V) getEnsure(false, objects);
 	}
 
 	@Override
