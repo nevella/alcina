@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -62,7 +63,7 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 				PropertyDescriptor pd = SEUtilities
 						.getPropertyDescriptorByName(clazz, propertyName);
 				if (pd == null) {
-					//ignore (we are graceful...)
+					// ignore (we are graceful...)
 				} else {
 					Object value2 = deserializeField(jsonValue,
 							pd.getPropertyType());
@@ -122,7 +123,8 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		if (type == Multimap.class) {
 			return deserializeMultimap(o, new Multimap());
 		}
-		if (type == Map.class || type == LinkedHashMap.class) {
+		if (type == Map.class || type == LinkedHashMap.class
+				|| type == ConcurrentHashMap.class) {
 			m = new LinkedHashMap();
 		}
 		if (type == HashMap.class) {
