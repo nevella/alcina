@@ -81,7 +81,13 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 			this.lookup = new CacheLookup(this);
 		}
 	}
-
+	@Deprecated
+	public void populateWithPrivateCache(Collection<T> values) {
+		ensureLookupWithPrivateCache();
+		for (T value : values) {
+			getLookup().insert(value);
+		}
+	}
 	public static class IdCacheLookupDescriptor<T extends HasIdAndLocalId>
 			extends CacheLookupDescriptor<T> {
 		private IdLookup idLookup;
