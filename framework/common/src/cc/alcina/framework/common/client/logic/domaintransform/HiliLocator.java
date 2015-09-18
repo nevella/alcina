@@ -1,11 +1,14 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import java.io.Serializable;
+
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
  */
-public class HiliLocator {
+public class HiliLocator implements Serializable{
+	static final transient long serialVersionUID = 1L;
 	public static HiliLocator objectLocator(DomainTransformEvent dte) {
 		return new HiliLocator(dte.getObjectClass(), dte.getObjectId(),
 				dte.getObjectLocalId());

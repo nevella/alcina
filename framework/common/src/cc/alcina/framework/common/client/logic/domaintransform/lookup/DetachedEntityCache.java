@@ -33,8 +33,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class DetachedEntityCache implements Serializable {
-	//have it distributed
-	protected Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>(128);
+	// have it distributed
+	protected Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>(
+			128);
 
 	public DetachedEntityCache() {
 	}
@@ -48,6 +49,10 @@ public class DetachedEntityCache implements Serializable {
 		return t;
 	}
 
+	public <T extends HasIdAndLocalId> T getExisting(T hili) {
+		return (T) get(hili.getClass(), hili.getId());
+	}
+
 	public <T> Set<T> values(Class<T> clazz) {
 		ensureMaps(clazz);
 		return new LinkedHashSet<T>((Collection<? extends T>) detached.get(
@@ -56,7 +61,8 @@ public class DetachedEntityCache implements Serializable {
 
 	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
 		ensureMaps(clazz);
-		return (Collection<T>) Collections.unmodifiableCollection(detached.get(clazz).values());
+		return (Collection<T>) Collections.unmodifiableCollection(detached.get(
+				clazz).values());
 	}
 
 	public Set<HasIdAndLocalId> allValues() {

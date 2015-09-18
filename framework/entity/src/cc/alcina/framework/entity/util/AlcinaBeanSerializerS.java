@@ -11,8 +11,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -115,6 +117,10 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		if (type == ArrayList.class || type == List.class) {
 			c = new ArrayList();
 		}
+		if (type == ConcurrentLinkedQueue.class || type == Queue.class) {
+			c = new ConcurrentLinkedQueue();
+		}
+		
 		if (c != null) {
 			deserializeCollection(o, c);
 			return c;
