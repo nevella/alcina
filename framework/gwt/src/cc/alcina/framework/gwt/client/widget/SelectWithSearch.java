@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
@@ -308,6 +309,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 						}
 					} else {
 						checkShowPopup();
+					}
+					if(CommonUtils.isNullOrEmpty(filter.getTextBox().getText())&&popdown){
+						maybeClosePopdown(null);
 					}
 				}
 			});

@@ -15,6 +15,8 @@ package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+
 /**
  *
  * @author Nick Reddel
@@ -22,6 +24,7 @@ import javax.xml.bind.annotation.XmlTransient;
 public abstract class OrderGroup extends CriteriaGroup<OrderCriterion>
 		implements GwtCloneable {
 	@XmlTransient
+	@AlcinaTransient
 	public OrderCriterion getSoleCriterion() {
 		if (getCriteria().iterator().hasNext()) {
 			return getCriteria().iterator().next();
