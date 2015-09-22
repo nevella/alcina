@@ -80,6 +80,9 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	public Set<Long> getAndEnsure(T k1) {
+		if (concurrent && k1 == null) {
+			return new LinkedHashSet<>();
+		}
 		Set<Long> result = get(k1);
 		if (result == null) {
 			result = createLongSet();
