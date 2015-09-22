@@ -440,6 +440,16 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
 	}
+	void logFired(DomainTransformPersistenceEvent event) {
+		List<Long> persistedRequestIds = event.getPersistedRequestIds();
+		if (persistedRequestIds.isEmpty()) {
+			return;
+		}
+		logger.format("fired - %s - range %s", event
+				.getTransformPersistenceToken().getRequest().shortId(),
+				new LongPair(CollectionFilters.min(persistedRequestIds),
+						CollectionFilters.max(persistedRequestIds)));
+	}
 
 	public long getMaxDbPersistedRequestId() {
 		return this.maxDbPersistedRequestId;
