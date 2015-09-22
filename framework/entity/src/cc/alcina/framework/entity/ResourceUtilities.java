@@ -160,12 +160,15 @@ public class ResourceUtilities {
 		String asB64 = Base64.getEncoder().encodeToString(baos.toByteArray());
 		return asB64;
 	}
-	public static String writeObjectAsBase64URL(Object object) throws IOException {
+
+	public static String writeObjectAsBase64URL(Object object)
+			throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
 		oos.writeObject(object);
 		oos.close();
-		String asB64 = Base64.getUrlEncoder().encodeToString(baos.toByteArray());
+		String asB64 = Base64.getUrlEncoder()
+				.encodeToString(baos.toByteArray());
 		return asB64;
 	}
 
@@ -204,15 +207,30 @@ public class ResourceUtilities {
 		helper = theHelper;
 	}
 
+	private static ConcurrentHashMap<Class, BeanInfo> beanInfoLookup = new ConcurrentHashMap<>();
+
 	/**
 	 * Retrieves the BeanInfo for a Class
 	 */
 	public static BeanInfo getBeanInfo(Class cls) {
+		if (beanInfoLookup.containsKey(cls)) {
+			return beanInfoLookup.get(cls);
+		}
 		BeanInfo beanInfo = null;
 		try {
 			beanInfo = Introspector.getBeanInfo(cls);
 			if (helper != null) {
 				beanInfo = helper.postProcessBeanInfo(beanInfo);
+			}
+			beanInfoLookup.put(cls, beanInfo);
+			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				if (pd.getReadMethod() != null) {
+					pd.getReadMethod().setAccessible(true);
+				}
+				if (pd.getWriteMethod() != null) {
+					pd.getWriteMethod().setAccessible(true);
+				}
 			}
 		} catch (IntrospectionException ex) {
 			ex.printStackTrace();

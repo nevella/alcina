@@ -1,9 +1,11 @@
 package cc.alcina.framework.entity;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.Base64;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
@@ -30,6 +32,32 @@ public class KryoUtils {
 			Output output = new Output(os);
 			kryo.writeObject(output, object);
 			output.flush();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static String serializeToBase64(Object object) {
+		try {
+			Kryo kryo = new Kryo();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			Output output = new Output(baos);
+			kryo.writeObject(output, object);
+			output.flush();
+			return Base64.getEncoder().encodeToString(baos.toByteArray());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static <T> T deserializeFromBase64(String string, Class<T> clazz) {
+		try {
+			Kryo kryo = new Kryo();
+			byte[] bytes = Base64.getDecoder().decode(string.trim());
+			Input input = new Input(bytes);
+			T someObject = kryo.readObject(input, clazz);
+			input.close();
+			return someObject;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

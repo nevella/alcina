@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -394,6 +395,8 @@ public class GraphProjection {
 			c = new LightSet();
 		} else if (coll instanceof Set) {
 			c = new LinkedHashSet();
+		}else if (coll instanceof ConcurrentLinkedQueue) {
+			c = new ConcurrentLinkedQueue();
 		}
 		reached.put(coll, c);
 		Iterator itr = coll.iterator();

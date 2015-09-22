@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.totsp.gwittir.client.beans.Converter;
 
@@ -36,6 +37,13 @@ public class PropertyMapper {
 		private boolean required;
 
 		PropertyMapper mapper = null;
+
+		@Override
+		public String toString() {
+			return CommonUtils.formatJ("propertyMapping: %s ->%s (custom: %s)", leftName,
+					rightName, leftToRightConverter != null
+							|| rightToLeftConverter != null);
+		}
 
 		public PropertyMapping() {
 		}
