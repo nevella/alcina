@@ -38,7 +38,7 @@ public class StackDebug {
 				List<String> lines = new ArrayList<String>();
 				StackTraceElement[] traces = thread.getStackTrace();
 				traces = filterTraces(traces);
-				for (int i = 3; i < 3 + debugLines && i < traces.length; i++) {
+				for (int i = 0; i < debugLines && i < traces.length; i++) {
 					lines.add(traces[i].toString());
 				}
 				if (push) {
