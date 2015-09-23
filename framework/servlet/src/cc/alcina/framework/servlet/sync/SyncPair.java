@@ -102,6 +102,12 @@ public class SyncPair<T> {
 			public SyncAction getDirectedAction(boolean left) {
 				return !left ? SyncAction.DELETE : null;
 			}
+		},
+		IGNORE {
+			@Override
+			public SyncAction getDirectedAction(boolean left) {
+				return  null;
+			}
 		};
 		public abstract SyncAction getDirectedAction(boolean left);
 	}
