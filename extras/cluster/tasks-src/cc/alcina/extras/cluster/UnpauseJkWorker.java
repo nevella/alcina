@@ -45,33 +45,10 @@ public class UnpauseJkWorker extends Task {
 				getJkStatusUrl(), getBalancedWorkerName(), getWorkerName());
 		try {
 			log("reading " + url);
-			readUrlAsString(url);
+			Utils.readUrlAsString(url);
 		} catch (Exception e) {
 			log(e.getMessage() + " reading " + url, Project.MSG_WARN);
 		}
-	}
-
-	public static String readUrlAsString(String strUrl) throws Exception {
-		URL url = new URL(strUrl);
-		InputStream is = null;
-		is = url.openConnection().getInputStream();
-		String input = readStreamToString(is, "UTF-8");
-		return input;
-	}
-
-	public static String readStreamToString(InputStream is, String charsetName)
-			throws IOException {
-		charsetName = charsetName == null ? "UTF-8" : charsetName;
-		BufferedReader in = new BufferedReader(new InputStreamReader(is,
-				charsetName));
-		StringWriter sw = new StringWriter();
-		char[] cb = new char[4096];
-		int len = -1;
-		while ((len = in.read(cb, 0, 4096)) != -1) {
-			sw.write(cb, 0, len);
-		}
-		is.close();
-		return sw.toString();
 	}
 
 	public String getJkStatusUrl() {

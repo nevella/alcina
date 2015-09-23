@@ -22,8 +22,6 @@ import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.resources.FileResource;
 
-import cc.alcina.framework.entity.SEUtilities;
-
 public class BackupFiles extends Task {
 	private Vector filesets = new Vector();
 
@@ -64,13 +62,13 @@ public class BackupFiles extends Task {
 			rotate(folder);
 		} else {
 			if (maxDays > 0) {
-				for (File file : SEUtilities.listFilesRecursive(backupPath,
+				for (File file : Utils.listFilesRecursive(backupPath,
 						greaterThanMaxDaysFilter, true)) {
 					file.delete();
 				}
 			}
 		}
-		File target = SEUtilities.getChildFile(folder, "contents.1");
+		File target = Utils.getChildFile(folder, "contents.1");
 		target.mkdirs();
 		int fc = 0;
 		try {
@@ -82,9 +80,9 @@ public class BackupFiles extends Task {
 				if (!greaterThanMaxDaysFilter.accept(resource.getFile())) {
 					String rel = resource.getFile().getPath()
 							.substring(root.getPath().length() + 1);
-					File targetChild = SEUtilities.getChildFile(target, rel);
+					File targetChild = Utils.getChildFile(target, rel);
 					targetChild.getParentFile().mkdirs();
-					fc += SEUtilities.copyFile(resource.getFile(), targetChild);
+					fc += Utils.copyFile(resource.getFile(), targetChild);
 				}
 			}
 			log(String.format("Backed up %s files", fc));
