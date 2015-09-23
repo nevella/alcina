@@ -41,6 +41,15 @@ public class BackupFiles extends Task {
 
 	@Override
 	public void execute() throws BuildException {
+		try {
+			execute0();
+		} catch (NoClassDefFoundError err) {
+			// ignore, is ok
+			System.out.println(err.getMessage());
+		}
+	}
+
+	public void execute0() throws BuildException {
 		File folder = new File(backupPath);
 		folder.mkdirs();
 		FileFilter greaterThanMaxDaysFilter = new FileFilter() {
