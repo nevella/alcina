@@ -18,12 +18,15 @@ public abstract class LooseContext {
 	public static <T> T runWithBoolean(String key, ThrowingSupplier<T> supplier) {
 		return runWithKeyValue(key, Boolean.TRUE, supplier);
 	}
-	public static <T> T run( ThrowingSupplier<T> supplier) {
+
+	public static <T> T run(ThrowingSupplier<T> supplier) {
 		return runWithKeyValue(null, Boolean.TRUE, supplier);
 	}
-	public static <T> T runWithKeyValue(String key,Object value, ThrowingSupplier<T> supplier) {
+
+	public static <T> T runWithKeyValue(String key, Object value,
+			ThrowingSupplier<T> supplier) {
 		try {
-			pushWithKey(key,value);
+			pushWithKey(key, value);
 			return supplier.get();
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -42,6 +45,10 @@ public abstract class LooseContext {
 
 	public static boolean is(String key) {
 		return getBoolean(key);
+	}
+
+	public static boolean containsKey(String key) {
+		return getContext().containsKey(key);
 	}
 
 	public static LooseContextInstance getContext() {

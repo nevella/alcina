@@ -42,7 +42,7 @@ public class ApplicationCacheManifestServlet extends HttpServlet {
 			throws ServletException, IOException {
 		resp.setContentType("text/cache-manifest");
 		PrintWriter out = resp.getWriter();
-		out.print(getCacheManifest(req));
+		out.print(getCacheManifest(req,resp));
 		out.flush();
 		resp.flushBuffer();
 		log("Hitting a cache manifest: " + req.getRequestURI());
@@ -53,7 +53,7 @@ public class ApplicationCacheManifestServlet extends HttpServlet {
 		// super.log(msg);
 	}
 
-	protected String getCacheManifest(HttpServletRequest req)
+	protected String getCacheManifest(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException {
 		String cacheManifest = null;
 		String cacheManifestName = req.getRequestURI();

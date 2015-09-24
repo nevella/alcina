@@ -278,6 +278,8 @@ public class AlcinaMemCache {
 
 	private List<LaterLookup> warmupLaterLookups = new ArrayList<>();
 
+	boolean checkModificationWriteLock = false;
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager
 				.threadTransformManagerWasResetListenerDelta(resetListener,
@@ -442,6 +444,10 @@ public class AlcinaMemCache {
 				&& cacheDescriptor.perClass.get(clazz).isTransactional();
 	}
 
+	public boolean isCheckModificationWriteLock() {
+		return this.checkModificationWriteLock;
+	}
+
 	public boolean isDebug() {
 		return this.debug;
 	}
@@ -551,6 +557,23 @@ public class AlcinaMemCache {
 		laterLookup.resolve();
 	}
 
+	public void runWithWriteLock(Runnable runnable) {
+		try {
+			lock(true);
+			runnable.run();
+		} finally {
+			unlock(true);
+		}
+	}
+
+	/**
+	 * Normally should be true, expect in warmup (where we know threads will be
+	 * non-colliding)
+	 */
+	public void setCheckModificationWriteLock(boolean checkModificationWriteLock) {
+		this.checkModificationWriteLock = checkModificationWriteLock;
+	}
+
 	public void setConn(Connection conn) {
 		this.postInitConn = conn;
 	}
@@ -643,13 +666,6 @@ public class AlcinaMemCache {
 
 	private void ensureModificationChecker(HasIdAndLocalId hili)
 			throws Exception {
-		if (modificationCheckerField != null
-				&& hili instanceof BaseSourcesPropertyChangeEvents) {
-			modificationCheckerField.set(hili, modificationChecker);
-		}
-	}
-
-	void ensureProxyModificationChecker(HasIdAndLocalId hili) throws Exception {
 		if (modificationCheckerField != null
 				&& hili instanceof BaseSourcesPropertyChangeEvents) {
 			modificationCheckerField.set(hili, modificationChecker);
@@ -1109,7 +1125,7 @@ public class AlcinaMemCache {
 				.getDeclaredField("propertyChangeSupport");
 		modificationCheckerField.setAccessible(true);
 		modificationChecker = new ModificationCheckerSupport(null);
-		modificationChecker.ignoreModifications = true;
+		checkModificationWriteLock = false;
 		MetricLogging.get().start("memcache-all");
 		// get non-many-many obj
 		lock(true);
@@ -1214,6 +1230,9 @@ public class AlcinaMemCache {
 					cachingProjections.getAndEnsure(projection
 							.getListenedClass());
 				}
+				if (projection instanceof BaseProjection) {
+					((BaseProjection) projection).modificationChecker = modificationChecker;
+				}
 			}
 		}
 		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
@@ -1236,7 +1255,7 @@ public class AlcinaMemCache {
 		}
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("projections");
-		modificationChecker.ignoreModifications = false;
+		checkModificationWriteLock = true;
 		initialising = false;
 		if (ResourceUtilities.getBoolean(AlcinaMemCache.class, "dumpLocks")) {
 			dumpLocks = true;
@@ -1268,6 +1287,13 @@ public class AlcinaMemCache {
 
 	protected synchronized void releaseWarmupConnection(Connection conn) {
 		warmupConnections.add(conn, -1);
+	}
+
+	void ensureProxyModificationChecker(HasIdAndLocalId hili) throws Exception {
+		if (modificationCheckerField != null
+				&& hili instanceof BaseSourcesPropertyChangeEvents) {
+			modificationCheckerField.set(hili, modificationChecker);
+		}
 	}
 
 	String getCanonicalPropertyPath(Class clazz, String propertyPath) {
@@ -2043,6 +2069,12 @@ public class AlcinaMemCache {
 		}
 	}
 
+	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
+		public DetachedCacheObjectStorePsAware() {
+			super(new PsAwareMultiplexingObjectCache());
+		}
+	}
+
 	static class FilterContext {
 		int idx = 0;
 
@@ -2083,8 +2115,6 @@ public class AlcinaMemCache {
 	}
 
 	class ModificationCheckerSupport extends MutablePropertyChangeSupport {
-		boolean ignoreModifications = false;
-
 		public ModificationCheckerSupport(Object sourceBean) {
 			super(sourceBean);
 		}
@@ -2136,13 +2166,13 @@ public class AlcinaMemCache {
 			handle("remove");
 		}
 
-		private void handle(String key) {
+		void handle(String key) {
 			// add-remove - well, there's a bunch of automated adds (e.g.
 			// cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport
 			// .removeParentAssociations(HasIdAndLocalId)
 			// that add em by default. fix them first
 			// TODO - memcache
-			if (ignoreModifications) {
+			if (!checkModificationWriteLock) {
 				return;
 			}
 			if (!lockingDisabled
@@ -2157,22 +2187,16 @@ public class AlcinaMemCache {
 		}
 	}
 
-	class DetachedCacheObjectStorePsAware extends DetachedCacheObjectStore {
-		public DetachedCacheObjectStorePsAware() {
-			super(new PsAwareMultiplexingObjectCache());
-		}
-	}
-
 	class SubgraphTransformManagerRemoteOnly extends SubgraphTransformManager {
+		public void addPropertyStore(CacheItemDescriptor descriptor) {
+			((PsAwareMultiplexingObjectCache) store.getCache())
+					.addPropertyStore(descriptor);
+		}
+
 		@Override
 		protected void createObjectLookup() {
 			store = new DetachedCacheObjectStorePsAware();
 			setDomainObjects(store);
-		}
-
-		public void addPropertyStore(CacheItemDescriptor descriptor) {
-			((PsAwareMultiplexingObjectCache) store.getCache())
-					.addPropertyStore(descriptor);
 		}
 
 		@Override
@@ -2180,12 +2204,12 @@ public class AlcinaMemCache {
 			return true;
 		}
 
-		void startCommit() {
-			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
-		}
-
 		void endCommit() {
 			((PsAwareMultiplexingObjectCache) store.getCache()).endCommit();
+		}
+
+		void startCommit() {
+			((PsAwareMultiplexingObjectCache) store.getCache()).startCommit();
 		}
 	}
 }

@@ -99,6 +99,7 @@ public class LooseContextInstance {
 		properties.remove(key);
 	}
 
+
 	public void set(String key, Object value) {
 		properties.put(key, value);
 	}

@@ -143,6 +143,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return fontOptions;
 	}
 
+	public String getMimeType() {
+		return this.mimeType;
+	}
+
 	public String getNote() {
 		return note;
 	}
@@ -150,6 +154,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	@VisualiserInfo(displayInfo = @DisplayInfo(name = "outputFormat"))
 	public String getOutputFormat() {
 		return this.outputFormat;
+	}
+
+	public String getPermalinkQuery() {
+		return permalinkQuery;
 	}
 
 	public Map<String, String> getProperties() {
@@ -198,6 +206,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return systemMessage;
 	}
 
+	public boolean hasProperty(String key){
+		return properties.containsKey(key);
+	}
+
 	public boolean isCoverPage() {
 		return coverPage;
 	}
@@ -223,14 +235,14 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return test;
 	}
 
-	public PublicationFontOptions providePublicationFontOptions() {
-		return ExtensibleEnum
-				.valueOf(PublicationFontOptions.class, fontOptions);
-	}
-
 	@Override
 	public ContentDeliveryType provideContentDeliveryType() {
 		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
+	}
+
+	public PublicationFontOptions providePublicationFontOptions() {
+		return ExtensibleEnum
+				.valueOf(PublicationFontOptions.class, fontOptions);
 	}
 
 	@Override
@@ -319,6 +331,13 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 				.firePropertyChange("footer", old_footer, footer);
 	}
 
+	public void setMimeType(String MimeType) {
+		String old_MimeType = this.mimeType;
+		propertyChangeSupport().firePropertyChange("MimeType", old_MimeType,
+				MimeType);
+		this.mimeType = MimeType;
+	}
+
 	public void setNoPersistence(boolean noPersistence) {
 		this.noPersistence = noPersistence;
 	}
@@ -342,6 +361,13 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		propertyChangeSupport().firePropertyChange(
 				"pageBreakAfterEachDocument", old_pageBreakAfterEachDocument,
 				pageBreakAfterEachDocument);
+	}
+
+	public void setPermalinkQuery(String permalinkQuery) {
+		String old_permalinkQuery = this.permalinkQuery;
+		propertyChangeSupport().firePropertyChange("permalinkQuery",
+				old_permalinkQuery, permalinkQuery);
+		this.permalinkQuery = permalinkQuery;
 	}
 
 	public void setProperties(Map<String, String> properties) {
@@ -395,7 +421,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	public void setTest(boolean test) {
 		this.test = test;
 	}
-
 	@Override
 	public String toString() {
 		if (publicDescription != null) {
@@ -406,27 +431,5 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return s + " Delivery mode: "
 				+ CommonUtils.friendlyConstant(getDeliveryMode()) + " - "
 				+ " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
-	}
-
-	public String getPermalinkQuery() {
-		return permalinkQuery;
-	}
-
-	public void setPermalinkQuery(String permalinkQuery) {
-		String old_permalinkQuery = this.permalinkQuery;
-		propertyChangeSupport().firePropertyChange("permalinkQuery",
-				old_permalinkQuery, permalinkQuery);
-		this.permalinkQuery = permalinkQuery;
-	}
-
-	public String getMimeType() {
-		return this.mimeType;
-	}
-
-	public void setMimeType(String MimeType) {
-		String old_MimeType = this.mimeType;
-		propertyChangeSupport().firePropertyChange("MimeType", old_MimeType,
-				MimeType);
-		this.mimeType = MimeType;
 	}
 }

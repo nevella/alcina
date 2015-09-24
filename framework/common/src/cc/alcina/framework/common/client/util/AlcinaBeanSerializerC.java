@@ -32,14 +32,33 @@ import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Property;
 
 @SuppressWarnings("unchecked")
-@RegistryLocation(registryPoint=AlcinaBeanSerializer.class,implementationType=ImplementationType.INSTANCE)
+@RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
-public class AlcinaBeanSerializerC implements AlcinaBeanSerializer{
+public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 	private static final String PROPERTIES = "props";
+
+	private static final String PROPERTIES_SHORT = "p";
 
 	private static final String CLASS_NAME = "cn";
 
 	private static final String LITERAL = "lit";
+
+	private Map<String, Class> abbrevLookup = new LinkedHashMap<>();
+
+	private Map<Class, String> reverseAbbrevLookup = new LinkedHashMap<>();
+
+	private String propertyFieldName;
+
+	public AlcinaBeanSerializerC() {
+		propertyFieldName = PROPERTIES;
+	}
+
+	public AlcinaBeanSerializerC(Map<String, Class> abbrevLookup,
+			Map<Class, String> reverseAbbrevLookup) {
+		this.abbrevLookup = abbrevLookup;
+		this.reverseAbbrevLookup = reverseAbbrevLookup;
+		propertyFieldName = PROPERTIES_SHORT;
+	}
 
 	public <T> T deserialize(String jsonString) throws Exception {
 		JSONObject obj = (JSONObject) JSONParser.parseStrict(jsonString);
@@ -59,9 +78,14 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer{
 			return null;
 		}
 		JSONString cn = (JSONString) jsonObj.get(CLASS_NAME);
-		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
-		Class clazz = Reflections.classLookup()
-				.getClassForName(cn.stringValue());
+		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
+		String cns = cn.stringValue();
+		Class clazz = null;
+		if (abbrevLookup.containsKey(cns)) {
+			clazz = abbrevLookup.get(cns);
+		} else {
+			clazz = Reflections.classLookup().getClassForName(cns);
+		}
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
@@ -215,19 +239,22 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer{
 				&& type.getSuperclass().isEnum()) {
 			type = type.getSuperclass();
 		}
-		jo.put(CLASS_NAME, new JSONString(type.getName()));
+		String typeName = type.getName();
+		if (reverseAbbrevLookup.containsKey(type)) {
+			typeName = reverseAbbrevLookup.get(type);
+		}
+		jo.put(CLASS_NAME, new JSONString(typeName));
 		Class<? extends Object> clazz = object.getClass();
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
 			jo.put(LITERAL, serializeField(object, clazz));
 			return jo;
 		}
 		GwittirBridge gb = GwittirBridge.get();
-		Object template = Reflections.classLookup()
-				.getTemplateInstance(clazz);
+		Object template = Reflections.classLookup().getTemplateInstance(clazz);
 		BeanDescriptor descriptor = gb.getDescriptor(object);
 		Property[] properties = descriptor.getProperties();
 		JSONObject props = new JSONObject();
-		jo.put(PROPERTIES, props);
+		jo.put(propertyFieldName, props);
 		for (Property property : properties) {
 			if (property.getMutatorMethod() == null) {
 				continue;

@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -81,6 +82,15 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	public Set<SearchCriterion> allCriteria() {
 		LinkedHashSet<SearchCriterion> result = new LinkedHashSet<SearchCriterion>();
 		for (CriteriaGroup cg : getCriteriaGroups()) {
+			result.addAll(cg.getCriteria());
+		}
+		return result;
+	}
+	
+
+	public Set<OrderCriterion> allOrderCriteria() {
+		LinkedHashSet<OrderCriterion> result = new LinkedHashSet<OrderCriterion>();
+		for (OrderGroup cg : getOrderGroups()) {
 			result.addAll(cg.getCriteria());
 		}
 		return result;
@@ -236,10 +246,12 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		return first != null ? first : sub;
 	}
 
+	@AlcinaTransient
 	public int getCharWidth() {
 		return this.charWidth;
 	}
 
+	@AlcinaTransient
 	public int getClientSearchIndex() {
 		return this.clientSearchIndex;
 	}

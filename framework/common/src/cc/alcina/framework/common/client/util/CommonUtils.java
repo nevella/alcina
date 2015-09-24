@@ -64,7 +64,7 @@ public class CommonUtils {
 		return Arrays.hashCode(values);
 	}
 
-	public static boolean equalsWithTrimAndLc(Object... objects) {
+	public static boolean equalsWithForgivingStrings(Object... objects) {
 		if (objects.length % 2 != 0) {
 			throw new RuntimeException("Array length must be divisible by two");
 		}
@@ -74,7 +74,13 @@ public class CommonUtils {
 			if (o1 == null && o2 == null) {
 			} else {
 				if (o1 == null || o2 == null) {
-					return false;
+					Object nonNull = o1 == null ? o2 : 01;
+					if (nonNull instanceof String
+							&& nonNull.toString().trim().length() == 0) {
+						//keep going
+					} else {
+						return false;
+					}
 				} else {
 					if (!o1.equals(o2)) {
 						if (o1 instanceof String

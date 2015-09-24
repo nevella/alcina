@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
@@ -36,26 +37,33 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	private Converter<T, T> normaliser;
 
-	public CacheLookup(CacheLookupDescriptor descriptor) {
-		this.descriptor = descriptor;
-		store = new SortedMultiset<T, Set<Long>>() {
-			@Override
-			protected Set createSet() {
-				return createLongSet();
-			}
+	protected boolean concurrent;
 
-			@Override
-			protected Map<T, Set<Long>> createTopMap() {
-				return new Object2ObjectLinkedOpenHashMap<T, Set<Long>>();
-			}
-		};
+	public CacheLookup(CacheLookupDescriptor descriptor) {
+		this(descriptor, false);
+	}
+
+	public CacheLookup(CacheLookupDescriptor descriptor, boolean concurrent) {
+		this.descriptor = descriptor;
+		this.concurrent = concurrent;
+		if (concurrent) {
+			store = new ConcurrentSortedMultiset<>();
+		} else {
+			store = new SortedMultiset<T, Set<Long>>() {
+				@Override
+				protected Set createSet() {
+					return createLongSet();
+				}
+
+				@Override
+				protected Map<T, Set<Long>> createTopMap() {
+					return new Object2ObjectLinkedOpenHashMap<T, Set<Long>>();
+				}
+			};
+		}
 		this.propertyPathAccesor = new PropertyPathAccessor(
 				descriptor.propertyPath);
 		this.relevanceFilter = descriptor.getRelevanceFilter();
-	}
-
-	protected Set createLongSet() {
-		return new LongAVLTreeSet();
 	}
 
 	public void add(T k1, Long value) {
@@ -71,24 +79,14 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		return store.get(normalise(k1));
 	}
 
-	private T normalise(T k1) {
-		return normaliser == null ? k1 : normaliser.convert(k1);
-	}
-
 	public Set<Long> getAndEnsure(T k1) {
+		if (concurrent && k1 == null) {
+			return new LinkedHashSet<>();
+		}
 		Set<Long> result = get(k1);
 		if (result == null) {
 			result = createLongSet();
 			store.put(normalise(k1), result);
-		}
-		return result;
-	}
-
-	public Set<H> getPrivateObjects(T k1) {
-		Set<H> result = new LinkedHashSet<H>();
-		Set<Long> ids = getAndEnsure(k1);
-		for (Long id : ids) {
-			result.add(getForResolvedId(id));
 		}
 		return result;
 	}
@@ -111,6 +109,19 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		} else {
 			return get((T) value);
 		}
+	}
+
+	public Converter<T, T> getNormaliser() {
+		return this.normaliser;
+	}
+
+	public Set<H> getPrivateObjects(T k1) {
+		Set<H> result = new LinkedHashSet<H>();
+		Set<Long> ids = getAndEnsure(k1);
+		for (Long id : ids) {
+			result.add(getForResolvedId(id));
+		}
+		return result;
 	}
 
 	@Override
@@ -136,16 +147,21 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		}
 	}
 
-	protected Object getChainedProperty(H hili) {
-		return propertyPathAccesor.getChainedProperty(hili);
-	}
-
 	public boolean isEnabled() {
 		return this.enabled;
 	}
 
 	public Set<T> keys() {
 		return store.keySet();
+	}
+
+	@Override
+	public boolean matches(H h, Object[] keys) {
+		if (keys.length != 1) {
+			throw new IllegalArgumentException("Keys length must equal one");
+		}
+		return CommonUtils.equalsWithNullEquality(getChainedProperty(h),
+				keys[0]);
 	}
 
 	@Override
@@ -158,8 +174,26 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		getAndEnsure(k1).remove(value);
 	}
 
+	public void removeExisting(H hili) {
+		H existing = privateCache.getExisting(hili);
+		if (existing != null) {
+			remove(existing);
+		}
+	}
+
+	public void removeExisting(HiliLocator locator) {
+		H existing = (H) privateCache.get(locator.clazz, locator.id);
+		if (existing != null) {
+			remove(existing);
+		}
+	}
+
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+
+	public void setNormaliser(Converter<T, T> normaliser) {
+		this.normaliser = normaliser;
 	}
 
 	public int size() {
@@ -171,12 +205,21 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	@Override
-	public boolean matches(H h, Object[] keys) {
-		if (keys.length != 1) {
-			throw new IllegalArgumentException("Keys length must equal one");
-		}
-		return CommonUtils.equalsWithNullEquality(getChainedProperty(h),
-				keys[0]);
+	public String toString() {
+		return CommonUtils.formatJ("Lookup: %s [%s]", getListenedClass()
+				.getSimpleName(), descriptor.propertyPath);
+	}
+
+	private T normalise(T k1) {
+		return normaliser == null ? k1 : normaliser.convert(k1);
+	}
+
+	protected Set createLongSet() {
+		return new LongAVLTreeSet();
+	}
+
+	protected Object getChainedProperty(H hili) {
+		return propertyPathAccesor.getChainedProperty(hili);
 	}
 
 	protected H getForResolvedId(long id) {
@@ -185,19 +228,5 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		}
 		return (H) AlcinaMemCache.get().transactional
 				.find(descriptor.clazz, id);
-	}
-
-	public Converter<T, T> getNormaliser() {
-		return this.normaliser;
-	}
-
-	public void setNormaliser(Converter<T, T> normaliser) {
-		this.normaliser = normaliser;
-	}
-
-	@Override
-	public String toString() {
-		return CommonUtils.formatJ("Lookup: %s [%s]", getListenedClass()
-				.getSimpleName(), descriptor.propertyPath);
 	}
 }

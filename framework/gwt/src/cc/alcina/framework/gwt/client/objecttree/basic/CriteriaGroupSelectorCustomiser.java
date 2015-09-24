@@ -52,6 +52,7 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 		super();
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
+		this.showUnselectedOnPopupClose=true;
 	}
 
 	@Override

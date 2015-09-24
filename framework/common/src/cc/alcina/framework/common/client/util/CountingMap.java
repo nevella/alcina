@@ -83,8 +83,8 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 		SortedMultimap<Integer, List<K>> result = descending ? new SortedMultimap<Integer, List<K>>(
 				Collections.reverseOrder())
 				: new SortedMultimap<Integer, List<K>>();
-		for (K key : keySet()) {
-			result.add(get(key), key);
+		for (Map.Entry<K, Integer> entry : entrySet()) {
+			result.add(entry.getValue(), entry.getKey());
 		}
 		return result;
 	}

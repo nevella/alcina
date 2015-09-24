@@ -269,4 +269,8 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 		});
 		return result;
 	}
+
+	public IntPair clone() {
+		return new IntPair(i1, i2);
+	}
 }

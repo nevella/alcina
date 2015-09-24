@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.ModificationCheckerSupport;
 
 /**
  * Note - these lookups should be (normally) of type x/y/z/z so we have
@@ -59,6 +60,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 
 	@Override
 	public void insert(T t) {
+		checkModification("insert");
 		Object[] values = project(t);
 		if (values != null) {
 			try {
@@ -89,6 +91,14 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 					System.out.println(new HiliLocator(t));
 				}
 			}
+		}
+	}
+
+	ModificationCheckerSupport modificationChecker;
+
+	protected void checkModification(String modificationType) {
+		if (modificationChecker != null) {
+			modificationChecker.handle("fire");
 		}
 	}
 
@@ -150,6 +160,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 
 	@Override
 	public void remove(T t) {
+		checkModification("remove");
 		Object[] values = project(t);
 		if (values != null) {
 			try {

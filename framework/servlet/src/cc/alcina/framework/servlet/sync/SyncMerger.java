@@ -140,13 +140,14 @@ public class SyncMerger<T> {
 			return SyncPairAction.DELETE_RIGHT;
 		} else if (pair.getRight() == null) {
 			return SyncPairAction.CREATE_RIGHT;
-		} else
+		} else {
 			return SyncPairAction.MERGE;
+		}
 	}
 
 	protected boolean mergePair(SyncPair<T> pair) {
 		SyncPairAction syncType = getSyncType(pair);
-		if (syncType == null) {
+		if (syncType == null||syncType==SyncPairAction.IGNORE) {
 			return false;
 		}
 		pair.setAction(syncType);

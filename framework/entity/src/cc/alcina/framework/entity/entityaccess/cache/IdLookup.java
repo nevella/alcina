@@ -10,8 +10,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
-	public IdLookup(CacheLookupDescriptor descriptor) {
-		super(descriptor);
+	public IdLookup(CacheLookupDescriptor descriptor, boolean concurrent) {
+		super(descriptor, concurrent);
 	}
 
 	private Set<T> duplicateKeys = new LinkedHashSet<T>();

@@ -84,6 +84,7 @@ public class DomainTransformPersistenceEvents {
 				listener.onDomainTransformRequestPersistence(event);
 			}
 		} finally {
+			queue.logFired(event);
 			queue.eventFired(event);
 		}
 	}

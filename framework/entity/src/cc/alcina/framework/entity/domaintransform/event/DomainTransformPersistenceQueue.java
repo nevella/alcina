@@ -302,6 +302,9 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 							} else {
 								System.out.println("not firing - gap");
 							}
+						} catch (Throwable t) {
+							t.printStackTrace();
+							throw new RuntimeException(t);
 						} finally {
 							firingPersistedEvents = false;
 							PermissibleFieldFilter.disablePerObjectPermissions = false;
@@ -433,6 +436,16 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			return;
 		}
 		logger.format("firing - %s - range %s", event
+				.getTransformPersistenceToken().getRequest().shortId(),
+				new LongPair(CollectionFilters.min(persistedRequestIds),
+						CollectionFilters.max(persistedRequestIds)));
+	}
+	void logFired(DomainTransformPersistenceEvent event) {
+		List<Long> persistedRequestIds = event.getPersistedRequestIds();
+		if (persistedRequestIds.isEmpty()) {
+			return;
+		}
+		logger.format("fired - %s - range %s", event
 				.getTransformPersistenceToken().getRequest().shortId(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
