@@ -77,7 +77,7 @@ public class CommonUtils {
 					Object nonNull = o1 == null ? o2 : 01;
 					if (nonNull instanceof String
 							&& nonNull.toString().trim().length() == 0) {
-						//keep going
+						// keep going
 					} else {
 						return false;
 					}
@@ -253,6 +253,9 @@ public class CommonUtils {
 		case AU_DATE_SLASH:
 			return formatJ("%s/%s/%s", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
+		case US_DATE_SLASH:
+			return formatJ("%s/%s/%s", padTwo(date.getMonth() + 1),
+					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
 		case AU_DATE_SLASH_MONTH:
 			return formatJ("%s/%s", padTwo(date.getMonth() + 1),
 					padTwo(date.getYear() + 1900));
@@ -808,7 +811,7 @@ public class CommonUtils {
 		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
 		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
 		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
-		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN
+		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH
 	}
 
 	public static String tabify(String value, int charsPerLine, int tabCount) {

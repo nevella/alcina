@@ -49,6 +49,7 @@ public @interface DisplayInfo {
 
 	int orderingHint() default 100;
 
+	//note, if you want a r-o property, don't use DISPLAY_RO, you need to set DISPLAY_AS_PROPERTY | DISPLAY_RO
 	int displayMask() default DISPLAY_AS_PROPERTY;
 	
 	Class filterClass() default Void.class;

@@ -3,6 +3,8 @@ package java.util.stream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -38,6 +40,22 @@ public interface Stream<T> {
 		return (Stream<T>) new CollectionStream<T>(result);
 	}
 
+	default Stream<T> distinct() {
+		Set<T> distinct = new LinkedHashSet<T>();
+		for (Iterator<T> itr = iterator(); itr.hasNext();) {
+			T t = itr.next();
+			distinct.add(t);
+		}
+		return (Stream<T>) new CollectionStream<T>(distinct);
+	}
+	default long count() {
+		long count=0;
+		for (Iterator<T> itr = iterator(); itr.hasNext();) {
+			count++;
+		}
+		return count;
+	}
+
 	default void forEach(Consumer<? super T> action) {
 		for (Iterator<T> itr = iterator(); itr.hasNext();) {
 			T t = itr.next();
@@ -48,5 +66,14 @@ public interface Stream<T> {
 	default Optional<T> findFirst() {
 		Iterator<T> itr = iterator();
 		return Optional.ofNullable(itr.hasNext() ? itr.next() : null);
+	}
+	default boolean anyMatch(Predicate<? super T> predicate) {
+		for (Iterator<T> itr = iterator(); itr.hasNext();) {
+			T t = itr.next();
+			if (predicate.test(t)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
