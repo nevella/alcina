@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.persistence.Column;
@@ -280,6 +281,8 @@ public class AlcinaMemCache {
 
 	boolean checkModificationWriteLock = false;
 
+	private AlcinaMemCacheHealth health = new AlcinaMemCacheHealth();
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager
 				.threadTransformManagerWasResetListenerDelta(resetListener,
@@ -391,6 +394,10 @@ public class AlcinaMemCache {
 		ConnResults result = new ConnResults(conn, clazz,
 				columnDescriptors.get(clazz), sqlFilter);
 		return result;
+	}
+
+	public AlcinaMemCacheHealth getHealth() {
+		return health;
 	}
 
 	public Collection<Long> getIds(Class<? extends HasIdAndLocalId> clazz) {
@@ -1206,6 +1213,14 @@ public class AlcinaMemCache {
 		MetricLogging.get().start("lookups");
 		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
 				.values()) {
+			for (CacheProjection projection : descriptor.projections) {
+				if (projection instanceof CacheLookup) {
+					((CacheLookup) projection).modificationChecker = modificationChecker;
+				}
+			}
+		}
+		for (final CacheItemDescriptor descriptor : cacheDescriptor.perClass
+				.values()) {
 			calls.add(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
@@ -1377,6 +1392,7 @@ public class AlcinaMemCache {
 		try {
 			MetricLogging.get().start("post-process");
 			lock(true);
+			health.memcachePostProcessStartTime = System.currentTimeMillis();
 			transformManager.startCommit();
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
 					.getDomainTransformLayerWrapper().persistentEvents;
@@ -1469,6 +1485,7 @@ public class AlcinaMemCache {
 			causes.add(e);
 		} finally {
 			transformManager.endCommit();
+			health.memcachePostProcessStartTime = 0;
 			unlock(true);
 			MetricLogging.get().end("post-process");
 			try {
@@ -1483,6 +1500,7 @@ public class AlcinaMemCache {
 					causes.iterator().next().printStackTrace();
 					GlobalTopicPublisher.get().publishTopic(
 							TOPIC_UPDATE_EXCEPTION, umby);
+					health.memcacheExceptionCount.incrementAndGet();
 					throw new MemcacheException(umby);
 				}
 			} catch (Throwable t) {
@@ -1495,6 +1513,21 @@ public class AlcinaMemCache {
 		LaterLookup result = new LaterLookup();
 		warmupLaterLookups.add(result);
 		return result;
+	}
+
+	public class AlcinaMemCacheHealth {
+		public long memcachePostProcessStartTime;
+
+		private AtomicInteger memcacheExceptionCount = new AtomicInteger();
+
+		public AtomicInteger getMemcacheExceptionCount() {
+			return this.memcacheExceptionCount;
+		}
+
+		public long getTimeInMemcacheWriter() {
+			return memcachePostProcessStartTime == 0 ? 0 : System
+					.currentTimeMillis() - memcachePostProcessStartTime;
+		}
 	}
 
 	/*

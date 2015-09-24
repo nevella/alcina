@@ -48,6 +48,15 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		@Override
 		public void run() {
 			try {
+				if (maxDbPersistedRequestIdPublished == maxDbPersistedRequestId
+						|| timedOutRequestIds.contains(maxDbPersistedRequestId)) {
+					nonPublishedTransformsFoundTime = 0;
+				} else {
+					if (nonPublishedTransformsFoundTime == 0) {
+						nonPublishedTransformsFoundTime = System
+								.currentTimeMillis();
+					}
+				}
 				if ((System.currentTimeMillis() - lastDbCheck) > PERIODIC_DB_CHECK_MS) {
 					lastDbCheck = System.currentTimeMillis();
 					int mins = Calendar.getInstance().get(Calendar.MINUTE);
@@ -94,6 +103,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	volatile long exMachineSourceIdCounter = -1;
 
 	protected boolean firingPersistedEvents;
+
+	private long nonPublishedTransformsFoundTime;
 
 	public DomainTransformPersistenceQueue() {
 		Registry.checkSingleton(this);
@@ -440,6 +451,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
 	}
+
 	void logFired(DomainTransformPersistenceEvent event) {
 		List<Long> persistedRequestIds = event.getPersistedRequestIds();
 		if (persistedRequestIds.isEmpty()) {
@@ -453,5 +465,10 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	public long getMaxDbPersistedRequestId() {
 		return this.maxDbPersistedRequestId;
+	}
+
+	public long getTimeWaitingForPersistenceQueue() {
+		return nonPublishedTransformsFoundTime == 0 ? 0 : System
+				.currentTimeMillis() - nonPublishedTransformsFoundTime;
 	}
 }

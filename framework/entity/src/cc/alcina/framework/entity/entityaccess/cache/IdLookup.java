@@ -16,7 +16,7 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 
 	private Set<T> duplicateKeys = new LinkedHashSet<T>();
 
-	public void add(T k1, Long value) {
+	protected void add(T k1, Long value) {
 		if (k1 == null) {
 			return;
 		}
