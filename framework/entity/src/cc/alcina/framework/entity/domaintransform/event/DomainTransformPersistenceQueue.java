@@ -376,7 +376,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			}
 			forceDbCheck = false;
 		}
-		return getFirstGapLessThan(maxDbPersistedRequestId, true);
+		// we want to include maxDbPersistedRequestId if that's unpublished
+		return getFirstGapLessThan(maxDbPersistedRequestId + 1, true);
 	}
 
 	protected CommonPersistenceLocal getCommonPersistence() {
