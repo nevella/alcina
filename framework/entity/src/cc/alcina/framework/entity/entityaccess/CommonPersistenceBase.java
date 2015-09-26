@@ -68,6 +68,7 @@ import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DurationCounter;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -412,9 +413,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
 			long fromId, long toId, String specificIds, boolean mostRecentOnly,
 			boolean populateTransformSourceObjects) {
+		boolean logTransformReadMetrics = ResourceUtilities.is(CommonPersistenceBase.class,"logTransformReadMetrics");
 		Query query = null;
 		List<DomainTransformRequestPersistent> dtrps = null;
 		if (mostRecentOnly) {
+			DurationCounter dc = new DurationCounter();
 			String eql = String.format(
 					"select dte.domainTransformRequestPersistent.id  "
 							+ "from %s dte " + "order by dte.id desc",
@@ -428,7 +431,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			DomainTransformRequestPersistent instance = getNewImplementationInstance(DomainTransformRequestPersistent.class);
 			instance.setId(id);
 			dtrps.add(instance);
+			if(logTransformReadMetrics){
+				dc.end("dtrp-get-most-recent - %s ms");
+			}
 		} else {
+			DurationCounter dc = new DurationCounter();
 			String idFilter = specificIds == null ? String.format(
 					"dtrp.id>=%s and dtrp.id<=%s", fromId, toId) : String
 					.format("dtrp.id in (%s)", specificIds);
@@ -441,14 +448,21 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			query = getEntityManager().createQuery(eql);
 			dtrps = new ArrayList<DomainTransformRequestPersistent>(
 					query.getResultList());
+			if(logTransformReadMetrics){
+				dc.end("dtrp-get-dtrps - %s ms");
+			}
 		}
 		if (populateTransformSourceObjects) {
+			DurationCounter dc = new DurationCounter();
 			List<DomainTransformEvent> events = (List) DomainTransformRequest
 					.allEvents(dtrps);
 			DetachedEntityCache cache = cacheEntities(events, false, false);
 			for (DomainTransformEvent event : events) {
 				event.setSource((HasIdAndLocalId) cache.get(
 						event.getObjectClass(), event.getObjectId()));
+			}
+			if(logTransformReadMetrics){
+				dc.end("populate transform source events - %s ms");
 			}
 		}
 		DetachedEntityCache cache = new DetachedEntityCache();

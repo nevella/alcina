@@ -241,7 +241,8 @@ public class AlcinaMemCache {
 	 */
 	volatile Object writeLockSubLock = null;
 
-	private ReentrantReadWriteLock mainLock = new ReentrantReadWriteLock(false);
+	private ReentrantReadWriteLockWithThreadAccess mainLock = new ReentrantReadWriteLockWithThreadAccess(
+			false);
 
 	private ReentrantReadWriteLock subgraphLock = new ReentrantReadWriteLock(
 			false);
@@ -507,6 +508,10 @@ public class AlcinaMemCache {
 			if (mainLock.getQueueLength() > maxLockQueueLength) {
 				System.out
 						.println("Disabling locking due to deadlock:\n***************\n");
+				mainLock.getQueuedThreads().forEach(
+						t -> System.out.println(t + "\n" + t.getStackTrace()));
+				System.out
+						.println("Recent lock acquisitions:\n***************\n");
 				System.out.println(CommonUtils.join(recentLockAcquisitions,
 						"\n"));
 				AlcinaTopics.notifyDevWarning(new MemcacheException(
@@ -966,9 +971,10 @@ public class AlcinaMemCache {
 			String message = String.format("Memcache lock - %s - %s\n",
 					write ? "write" : "read", action);
 			Thread t = Thread.currentThread();
-			String log = CommonUtils.formatJ("\tid:%s\n\treadHoldCount:"
-					+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
-					t.getId(), mainLock.getReadHoldCount(),
+			String log = CommonUtils.formatJ(
+					"\tid:%s\n\ttime: %s\n\treadHoldCount:"
+							+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
+					t.getId(), new Date(), mainLock.getReadHoldCount(),
 					mainLock.getWriteHoldCount(), subgraphLock);
 			StackTraceElement[] trace = t.getStackTrace();
 			for (int i = 2; i < trace.length && i < 10; i++) {
@@ -1515,6 +1521,17 @@ public class AlcinaMemCache {
 		return result;
 	}
 
+	private final class ReentrantReadWriteLockWithThreadAccess extends
+			ReentrantReadWriteLock {
+		private ReentrantReadWriteLockWithThreadAccess(boolean fair) {
+			super(fair);
+		}
+
+		public java.util.Collection<Thread> getQueuedThreads() {
+			return super.getQueuedThreads();
+		}
+	}
+
 	public class AlcinaMemCacheHealth {
 		public long memcachePostProcessStartTime;
 
@@ -1527,6 +1544,10 @@ public class AlcinaMemCache {
 		public long getTimeInMemcacheWriter() {
 			return memcachePostProcessStartTime == 0 ? 0 : System
 					.currentTimeMillis() - memcachePostProcessStartTime;
+		}
+
+		public boolean isLockingDisabled() {
+			return lockingDisabled;
 		}
 	}
 
