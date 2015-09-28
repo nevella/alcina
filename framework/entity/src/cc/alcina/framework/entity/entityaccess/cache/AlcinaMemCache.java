@@ -1549,6 +1549,10 @@ public class AlcinaMemCache {
 		public boolean isLockingDisabled() {
 			return lockingDisabled;
 		}
+
+		public int getMemcacheQueueLength() {
+			return mainLock.getQueueLength();
+		}
 	}
 
 	/*
