@@ -98,7 +98,9 @@ public class ServletLayerUtils {
 				// see preamble to cascading transform support
 				while (cascadingTransformSupport.hasChildren()) {
 					synchronized (cascadingTransformSupport) {
-						cascadingTransformSupport.wait();
+						if (cascadingTransformSupport.hasChildren()) {
+							cascadingTransformSupport.wait();
+						}
 					}
 				}
 				UmbrellaException childException = cascadingTransformSupport

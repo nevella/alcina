@@ -54,7 +54,7 @@ public class Consort<D> {
 
 	private TopicPublisher topicPublisher = new TopicPublisher();
 
-	LinkedList<Player<D>> players = new LinkedList<Player<D>>();
+	protected LinkedList<Player<D>> players = new LinkedList<Player<D>>();
 
 	LinkedList<Player<D>> removed = new LinkedList<Player<D>>();
 

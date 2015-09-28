@@ -22,6 +22,16 @@ public class ClusterState {
 	private String proxyToHttpsPort;
 
 	private String testUrl;
+	
+	private String zkHostPortUrl;
+
+	public String getZkHostPortUrl() {
+		return this.zkHostPortUrl;
+	}
+
+	public void setZkHostPortUrl(String zkHostPortUrl) {
+		this.zkHostPortUrl = zkHostPortUrl;
+	}
 
 	public List<String> getAllHosts() {
 		return this.allHosts;

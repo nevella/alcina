@@ -84,7 +84,7 @@ public class CascadingTransformSupport {
 		new CascadingTransformWorker(runnable).start();
 	}
 
-	void addChildThread(CascadingTransformWorker thread) {
+	synchronized void addChildThread(CascadingTransformWorker thread) {
 		waitFor.add(thread);
 	}
 
@@ -92,11 +92,11 @@ public class CascadingTransformSupport {
 		if (thread.getThrowable() != null) {
 			throwables.add(thread.getThrowable());
 		}
-		waitFor.remove(thread);
 		synchronized (this) {
+			waitFor.remove(thread);
 			notifyAll();
 		}
-		//TODO - zeroex - notify exception via topic
+		// TODO - zeroex - notify exception via topic
 	}
 
 	static class CascadingTransformWorker extends Thread {
