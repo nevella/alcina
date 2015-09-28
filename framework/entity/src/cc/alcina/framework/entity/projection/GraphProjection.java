@@ -97,7 +97,7 @@ public class GraphProjection {
 				|| c == Character.class || c.isEnum() || c == Class.class
 				|| Number.class.isAssignableFrom(c)
 				|| Date.class.isAssignableFrom(c) || isEnumSubclass(c)
-				||ProjectByValue.class.isAssignableFrom(c);
+				|| ProjectByValue.class.isAssignableFrom(c);
 	}
 
 	public static synchronized void registerConstructorMethods(
@@ -324,7 +324,7 @@ public class GraphProjection {
 		if (context != null && context.depth >= maxDepth) {
 			return projected;
 		}
-		if(source instanceof MemCacheProxy){
+		if (source instanceof MemCacheProxy) {
 			((MemCacheProxy) source).beforeProjection();
 		}
 		Field[] fields = getFieldsForClass(projected);
@@ -395,7 +395,7 @@ public class GraphProjection {
 			c = new LightSet();
 		} else if (coll instanceof Set) {
 			c = new LinkedHashSet();
-		}else if (coll instanceof ConcurrentLinkedQueue) {
+		} else if (coll instanceof ConcurrentLinkedQueue) {
 			c = new ConcurrentLinkedQueue();
 		}
 		reached.put(coll, c);
@@ -466,7 +466,8 @@ public class GraphProjection {
 	}
 
 	boolean checkObjectPermissions(Object source) {
-		if (source instanceof HasReadPermission) {
+		if (source instanceof HasReadPermission
+				&& !dataFilter.ignoreObjectHasReadPermissionCheck()) {
 			return ((HasReadPermission) source).canRead();
 		}
 		Class<? extends Object> sourceClass = source.getClass();
@@ -563,6 +564,10 @@ public class GraphProjection {
 		<T> T filterData(T original, T projected,
 				GraphProjectionContext context, GraphProjection graphProjection)
 				throws Exception;
+
+		default boolean ignoreObjectHasReadPermissionCheck() {
+			return false;
+		}
 
 		<T> boolean projectIntoCollection(T value, T projected,
 				GraphProjectionContext context);

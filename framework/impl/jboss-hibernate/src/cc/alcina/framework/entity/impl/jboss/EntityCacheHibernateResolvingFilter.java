@@ -52,6 +52,11 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 		this.cache = cache;
 	}
 
+	@Override
+	public boolean ignoreObjectHasReadPermissionCheck() {
+		return true;
+	}
+
 	private InstantiateImplCallback instantiateImplCallback;
 
 	private boolean useRawMemCache;
@@ -106,7 +111,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				Object impl = getCache().get(persistentClass, (Long) id);
 				if (impl == null) {
 					if (useRawMemCache) {
-						if (AlcinaMemCache.get().isCachedTransactional(persistentClass)) {
+						if (AlcinaMemCache.get().isCachedTransactional(
+								persistentClass)) {
 							impl = (T) AlcinaMemCache.get().findRaw(
 									persistentClass, (Long) id);
 						}

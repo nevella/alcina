@@ -284,6 +284,8 @@ public class AlcinaMemCache {
 
 	private AlcinaMemCacheHealth health = new AlcinaMemCacheHealth();
 
+	private Thread postProcessWriterThread;
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager
 				.threadTransformManagerWasResetListenerDelta(resetListener,
@@ -292,7 +294,7 @@ public class AlcinaMemCache {
 				persistingListener, true);
 		persistenceListener = new MemCachePersistenceListener();
 		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
-				"maxLockQueueLength", 40);
+				"maxLockQueueLength", 120);
 	}
 
 	public void addValues(CacheListener listener) {
@@ -965,24 +967,27 @@ public class AlcinaMemCache {
 	}
 
 	private void maybeLogLock(String action, boolean write) {
+		int queueLength = mainLock.getQueueLength();
 		if (dumpLocks
-				|| (collectLockAcquisitionPoints && (write || mainLock
-						.getQueueLength() > maxLockQueueLength / 3))) {
+				|| (collectLockAcquisitionPoints && (write || queueLength > 15))) {
 			String message = String.format("Memcache lock - %s - %s\n",
 					write ? "write" : "read", action);
 			Thread t = Thread.currentThread();
 			String log = CommonUtils.formatJ(
 					"\tid:%s\n\ttime: %s\n\treadHoldCount:"
 							+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
-					t.getId(), new Date(), mainLock.getReadHoldCount(),
-					mainLock.getWriteHoldCount(), subgraphLock);
-			StackTraceElement[] trace = t.getStackTrace();
-			for (int i = 2; i < trace.length && i < 10; i++) {
-				log += trace[i] + "\n";
-			}
-			log += "\n\n";
+					t.getId(), new Date(), mainLock.getQueuedReaderThreads()
+							.size(), mainLock.getQueuedWriterThreads().size(),
+					subgraphLock);
+			log += getStacktraceSlice(t);
 			message += log;
-			if (dumpLocks) {
+			if (dumpLocks || (queueLength > 15)) {
+				Thread writerThread = postProcessWriterThread;
+				if (writerThread != null) {
+					System.out.format("Memcache log debugging----------\n"
+							+ "Writer thread trace:----------\n" + "%s\n",
+							getStacktraceSlice(postProcessWriterThread));
+				}
 				System.out.println(message);
 			}
 			if (collectLockAcquisitionPoints) {
@@ -994,6 +999,16 @@ public class AlcinaMemCache {
 				}
 			}
 		}
+	}
+
+	private String getStacktraceSlice(Thread t) {
+		String log = "";
+		StackTraceElement[] trace = t.getStackTrace();
+		for (int i = 0; i < trace.length && i < 10; i++) {
+			log += trace[i] + "\n";
+		}
+		log += "\n\n";
+		return log;
 	}
 
 	private void prepareTable(CacheItemDescriptor descriptor) throws Exception {
@@ -1395,9 +1410,11 @@ public class AlcinaMemCache {
 	void postProcess(DomainTransformPersistenceEvent persistenceEvent) {
 		Set<Throwable> causes = new LinkedHashSet<Throwable>();
 		StringBuilder warnBuilder = new StringBuilder();
+		long postProcessStart=System.currentTimeMillis();
 		try {
 			MetricLogging.get().start("post-process");
 			lock(true);
+			postProcessWriterThread = Thread.currentThread();
 			health.memcachePostProcessStartTime = System.currentTimeMillis();
 			transformManager.startCommit();
 			List<DomainTransformEvent> dtes = (List) persistenceEvent
@@ -1492,7 +1509,10 @@ public class AlcinaMemCache {
 		} finally {
 			transformManager.endCommit();
 			health.memcachePostProcessStartTime = 0;
+			postProcessWriterThread = null;
 			unlock(true);
+			long postProcessTime=System.currentTimeMillis()-postProcessStart;
+			health.memcacheMaxPostProcessTime=Math.max(health.memcacheMaxPostProcessTime, postProcessTime);
 			MetricLogging.get().end("post-process");
 			try {
 				if (warnBuilder.length() > 0) {
@@ -1530,9 +1550,21 @@ public class AlcinaMemCache {
 		public java.util.Collection<Thread> getQueuedThreads() {
 			return super.getQueuedThreads();
 		}
+
+		@Override
+		public Collection<Thread> getQueuedReaderThreads() {
+			return super.getQueuedReaderThreads();
+		}
+
+		@Override
+		public Collection<Thread> getQueuedWriterThreads() {
+			return super.getQueuedWriterThreads();
+		}
 	}
 
 	public class AlcinaMemCacheHealth {
+		public long memcacheMaxPostProcessTime;
+
 		public long memcachePostProcessStartTime;
 
 		private AtomicInteger memcacheExceptionCount = new AtomicInteger();
