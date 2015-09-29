@@ -809,7 +809,7 @@ public class AlcinaMemCache implements RegistrableService {
 	private String getStacktraceSlice(Thread t) {
 		String log = "";
 		StackTraceElement[] trace = t.getStackTrace();
-		for (int i = 0; i < trace.length && i < 10; i++) {
+		for (int i = 0; i < trace.length && i < 20; i++) {
 			log += trace[i] + "\n";
 		}
 		log += "\n\n";

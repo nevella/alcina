@@ -175,6 +175,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 					CollectionFilters.min(persistedRequestIds), true);
 			if (withPublishingGap == null) {
 				logger.log("waiting on another in-jvm db transaction");
+			} else {
 			}
 			return false;// let the queue sort this out
 		}
@@ -215,8 +216,17 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		try {
 			checkingPersistedTransforms = true;
 			// check timeout
+			/*
+			 * say we see that we want to persist [3,4,5] but are missing [3,4]
+			 * 
+			 * later we want [3-7] but only have [5-7]
+			 * 
+			 * the checkRequestRange.contains clause means that eventually we'll
+			 * time out and hit lastRangeCheckFirstContiguousRange - i.e. [5-7]
+			 */
 			if (lastRangeCheck != null
-					&& checkRequestRange.equals(lastRangeCheck)) {
+					&& checkRequestRange.contains(lastRangeCheck)) {
+				//
 				if (System.currentTimeMillis() - lastRangeCheckFirstCheckTime > WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS) {
 					logger.format(
 							"Timed out waiting for  persisted transforms (probably a crash/exception)- gap %s",
