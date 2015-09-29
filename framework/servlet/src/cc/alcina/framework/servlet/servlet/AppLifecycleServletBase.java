@@ -191,8 +191,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void initBootstrapRegistry() {
+		AlcinaServerConfig config = new AlcinaServerConfig();
+		config.setStartDate(new Date());
 		Registry.registerSingleton(AlcinaServerConfig.class,
-				new AlcinaServerConfig());
+				config);
 	}
 
 	protected abstract void initCustom();

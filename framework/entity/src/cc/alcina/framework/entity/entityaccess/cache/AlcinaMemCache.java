@@ -805,11 +805,12 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 		return null;
 	}
+
 	private String getStacktraceSlice(Thread t) {
-		return getStacktraceSlice(t,20);
+		return getStacktraceSlice(t, 20);
 	}
 
-	private String getStacktraceSlice(Thread t,int size) {
+	private String getStacktraceSlice(Thread t, int size) {
 		String log = "";
 		StackTraceElement[] trace = t.getStackTrace();
 		for (int i = 0; i < trace.length && i < size; i++) {
@@ -1354,11 +1355,11 @@ public class AlcinaMemCache implements RegistrableService {
 		lockStartTime.entrySet().forEach(
 				e -> {
 					long duration = time - e.getValue();
-					if (duration > 50) {
+					if (duration > 250) {
 						System.out.format(
 								"Long lock holder - %s ms - %s\n%s\n\n",
 								duration, e.getKey(),
-								getStacktraceSlice(e.getKey(),40));
+								getStacktraceSlice(e.getKey(), 80));
 					}
 				});
 	}
@@ -1391,7 +1392,7 @@ public class AlcinaMemCache implements RegistrableService {
 					&& LooseContext.is(CONTEXT_DEBUG_QUERY_METRICS);
 			StringBuilder debugMetricBuilder = new StringBuilder();
 			int filterSize = query.getFilters().size();
-			if (!transaction || !ids.isEmpty()) {
+			if (!transaction || !ids.isEmpty() || query.isNonTransactional()) {
 				FilterContext ctx = new FilterContext();
 				for (; ctx.idx < filterSize; ctx.idx++) {
 					int i = ctx.idx;
