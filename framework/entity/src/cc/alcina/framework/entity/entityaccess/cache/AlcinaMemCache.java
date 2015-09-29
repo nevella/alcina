@@ -805,11 +805,14 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 		return null;
 	}
-
 	private String getStacktraceSlice(Thread t) {
+		return getStacktraceSlice(t,20);
+	}
+
+	private String getStacktraceSlice(Thread t,int size) {
 		String log = "";
 		StackTraceElement[] trace = t.getStackTrace();
-		for (int i = 0; i < trace.length && i < 20; i++) {
+		for (int i = 0; i < trace.length && i < size; i++) {
 			log += trace[i] + "\n";
 		}
 		log += "\n\n";
@@ -1355,7 +1358,7 @@ public class AlcinaMemCache implements RegistrableService {
 						System.out.format(
 								"Long lock holder - %s ms - %s\n%s\n\n",
 								duration, e.getKey(),
-								getStacktraceSlice(e.getKey()));
+								getStacktraceSlice(e.getKey(),40));
 					}
 				});
 	}
