@@ -27,7 +27,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -72,6 +75,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -116,7 +120,7 @@ import com.google.gwt.event.shared.UmbrellaException;
  *
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
-public class AlcinaMemCache {
+public class AlcinaMemCache implements RegistrableService {
 	private static AlcinaMemCache singleton;
 
 	public static final String TOPIC_UPDATE_EXCEPTION = AlcinaMemCache.class
@@ -200,6 +204,8 @@ public class AlcinaMemCache {
 
 	private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
 	};
+
+	private ConcurrentHashMap<Thread, Long> lockStartTime = new ConcurrentHashMap<>();
 
 	private TopicListener<Thread> resetListener = new TopicListener<Thread>() {
 		@Override
@@ -286,6 +292,8 @@ public class AlcinaMemCache {
 
 	private Thread postProcessWriterThread;
 
+	private Timer timer;
+
 	public AlcinaMemCache() {
 		ThreadlocalTransformManager
 				.threadTransformManagerWasResetListenerDelta(resetListener,
@@ -300,6 +308,13 @@ public class AlcinaMemCache {
 	public void addValues(CacheListener listener) {
 		for (Object o : cache.values(listener.getListenedClass())) {
 			listener.insert((HasIdAndLocalId) o);
+		}
+	}
+
+	@Override
+	public void appShutdown() {
+		if (timer != null) {
+			timer.cancel();
 		}
 	}
 
@@ -540,6 +555,8 @@ public class AlcinaMemCache {
 			} else {
 				mainLock.readLock().lock();
 			}
+			lockStartTime.put(Thread.currentThread(),
+					System.currentTimeMillis());
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			throw e;
@@ -636,6 +653,7 @@ public class AlcinaMemCache {
 			} else {
 				mainLock.readLock().unlock();
 			}
+			lockStartTime.remove(Thread.currentThread());
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 			throw e;
@@ -652,6 +670,13 @@ public class AlcinaMemCache {
 			createWarmupConnections();
 			this.warmup0();
 			initialised = true;
+			this.timer = new Timer("Timer-AlcinaMemCache-check-stats");
+			timer.schedule(new TimerTask() {
+				@Override
+				public void run() {
+					maybeDebugLongLockHolders();
+				}
+			}, 0, 100);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -779,6 +804,16 @@ public class AlcinaMemCache {
 			}
 		}
 		return null;
+	}
+
+	private String getStacktraceSlice(Thread t) {
+		String log = "";
+		StackTraceElement[] trace = t.getStackTrace();
+		for (int i = 0; i < trace.length && i < 10; i++) {
+			log += trace[i] + "\n";
+		}
+		log += "\n\n";
+		return log;
 	}
 
 	private Class getTargetEntityType(Method rm) {
@@ -999,16 +1034,6 @@ public class AlcinaMemCache {
 				}
 			}
 		}
-	}
-
-	private String getStacktraceSlice(Thread t) {
-		String log = "";
-		StackTraceElement[] trace = t.getStackTrace();
-		for (int i = 0; i < trace.length && i < 10; i++) {
-			log += trace[i] + "\n";
-		}
-		log += "\n\n";
-		return log;
 	}
 
 	private void prepareTable(CacheItemDescriptor descriptor) throws Exception {
@@ -1321,6 +1346,20 @@ public class AlcinaMemCache {
 		}
 	}
 
+	protected void maybeDebugLongLockHolders() {
+		long time = System.currentTimeMillis();
+		lockStartTime.entrySet().forEach(
+				e -> {
+					long duration = time - e.getValue();
+					if (duration > 50) {
+						System.out.format(
+								"Long lock holder - %s ms - %s\n%s\n\n",
+								duration, e.getKey(),
+								getStacktraceSlice(e.getKey()));
+					}
+				});
+	}
+
 	protected synchronized void releaseWarmupConnection(Connection conn) {
 		warmupConnections.add(conn, -1);
 	}
@@ -1547,27 +1586,6 @@ public class AlcinaMemCache {
 		return result;
 	}
 
-	private final class ReentrantReadWriteLockWithThreadAccess extends
-			ReentrantReadWriteLock {
-		private ReentrantReadWriteLockWithThreadAccess(boolean fair) {
-			super(fair);
-		}
-
-		public java.util.Collection<Thread> getQueuedThreads() {
-			return super.getQueuedThreads();
-		}
-
-		@Override
-		public Collection<Thread> getQueuedReaderThreads() {
-			return super.getQueuedReaderThreads();
-		}
-
-		@Override
-		public Collection<Thread> getQueuedWriterThreads() {
-			return super.getQueuedWriterThreads();
-		}
-	}
-
 	public class AlcinaMemCacheHealth {
 		public long memcacheMaxPostProcessTime;
 
@@ -1579,6 +1597,10 @@ public class AlcinaMemCache {
 			return this.memcacheExceptionCount;
 		}
 
+		public int getMemcacheQueueLength() {
+			return mainLock.getQueueLength();
+		}
+
 		public long getTimeInMemcacheWriter() {
 			return memcachePostProcessStartTime == 0 ? 0 : System
 					.currentTimeMillis() - memcachePostProcessStartTime;
@@ -1586,10 +1608,6 @@ public class AlcinaMemCache {
 
 		public boolean isLockingDisabled() {
 			return lockingDisabled;
-		}
-
-		public int getMemcacheQueueLength() {
-			return mainLock.getQueueLength();
 		}
 	}
 
@@ -1919,6 +1937,27 @@ public class AlcinaMemCache {
 
 		public boolean transactionsActive() {
 			return transactionCount != 0;
+		}
+	}
+
+	private final class ReentrantReadWriteLockWithThreadAccess extends
+			ReentrantReadWriteLock {
+		private ReentrantReadWriteLockWithThreadAccess(boolean fair) {
+			super(fair);
+		}
+
+		@Override
+		public Collection<Thread> getQueuedReaderThreads() {
+			return super.getQueuedReaderThreads();
+		}
+
+		public java.util.Collection<Thread> getQueuedThreads() {
+			return super.getQueuedThreads();
+		}
+
+		@Override
+		public Collection<Thread> getQueuedWriterThreads() {
+			return super.getQueuedWriterThreads();
 		}
 	}
 
