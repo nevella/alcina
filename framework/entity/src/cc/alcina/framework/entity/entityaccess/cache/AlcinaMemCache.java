@@ -242,10 +242,10 @@ public class AlcinaMemCache {
 	volatile Object writeLockSubLock = null;
 
 	private ReentrantReadWriteLockWithThreadAccess mainLock = new ReentrantReadWriteLockWithThreadAccess(
-			false);
+			true);
 
 	private ReentrantReadWriteLock subgraphLock = new ReentrantReadWriteLock(
-			false);
+			true);
 
 	private BackupLazyLoader backupLazyLoader;
 
@@ -1407,13 +1407,17 @@ public class AlcinaMemCache {
 		}
 	}
 
-	void postProcess(DomainTransformPersistenceEvent persistenceEvent) {
+	// we only have one thread allowed here - but they won't start blocking the
+	// reader thread
+	synchronized void postProcess(
+			DomainTransformPersistenceEvent persistenceEvent) {
 		Set<Throwable> causes = new LinkedHashSet<Throwable>();
 		StringBuilder warnBuilder = new StringBuilder();
-		long postProcessStart=System.currentTimeMillis();
+		long postProcessStart = 0;
 		try {
-			MetricLogging.get().start("post-process");
 			lock(true);
+			postProcessStart = System.currentTimeMillis();
+			MetricLogging.get().start("post-process");
 			postProcessWriterThread = Thread.currentThread();
 			health.memcachePostProcessStartTime = System.currentTimeMillis();
 			transformManager.startCommit();
@@ -1510,10 +1514,12 @@ public class AlcinaMemCache {
 			transformManager.endCommit();
 			health.memcachePostProcessStartTime = 0;
 			postProcessWriterThread = null;
-			unlock(true);
-			long postProcessTime=System.currentTimeMillis()-postProcessStart;
-			health.memcacheMaxPostProcessTime=Math.max(health.memcacheMaxPostProcessTime, postProcessTime);
+			long postProcessTime = System.currentTimeMillis()
+					- postProcessStart;
+			health.memcacheMaxPostProcessTime = Math.max(
+					health.memcacheMaxPostProcessTime, postProcessTime);
 			MetricLogging.get().end("post-process");
+			unlock(true);
 			try {
 				if (warnBuilder.length() > 0) {
 					Exception warn = new Exception(warnBuilder.toString());
