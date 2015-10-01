@@ -143,6 +143,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			pendingRequests().filter(rqq -> rqq.persistenceEvent == event)
 					.forEach(rqq -> rqq.modifyStatus(DtrpStatus.COMMITTED));
 		}
+		updateStatsForNonPublishedTransforms();
 		notifyAll();
 	}
 
@@ -492,15 +493,14 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				t.printStackTrace();
 			}
 		}
+	}
 
-		void updateStatsForNonPublishedTransforms() {
+	void updateStatsForNonPublishedTransforms() {
+		synchronized (requestQueue) {
 			if (allPersistedTransformsArePublished()) {
 				nonPublishedTransformsFoundTime = 0;
 			} else {
-				if (nonPublishedTransformsFoundTime == 0) {
-					nonPublishedTransformsFoundTime = System
-							.currentTimeMillis();
-				}
+				nonPublishedTransformsFoundTime = getFirstUnpublished().get().startTime;
 			}
 		}
 	}
