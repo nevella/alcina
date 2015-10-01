@@ -289,6 +289,8 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 
 			private int itrModCount;
 
+			private int nextCount = 0;
+
 			public ArrayBackedIterator() {
 				itrModCount = modCount;
 			}
@@ -330,13 +332,13 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			}
 
 			private boolean popNext() {
-				while (poppedNextObject == null && idx < size - 1) {
+				while (nextCount != size && poppedNextObject == null) {
 					if (modCount != itrModCount) {
 						throw new ConcurrentModificationException();
 					}
 					poppedNextObject = (V) elementData[++idx];
 				}
-				return poppedNextObject == null;
+				return ++nextCount >= size;
 			}
 		}
 

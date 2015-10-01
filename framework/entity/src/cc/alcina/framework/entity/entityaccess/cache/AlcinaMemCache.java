@@ -1372,9 +1372,12 @@ public class AlcinaMemCache implements RegistrableService {
 			long duration = time - e.getValue();
 			if (duration > 250
 					|| (duration > 50 && e.getKey() == postProcessWriterThread)) {
-				System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
-						duration, e.getKey(),
-						getStacktraceSlice(e.getKey(), 80));
+				if (ResourceUtilities
+						.is(AlcinaMemCache.class, "debugLongLocks")) {
+					System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
+							duration, e.getKey(),
+							getStacktraceSlice(e.getKey(), 80));
+				}
 			}
 		}
 	}
