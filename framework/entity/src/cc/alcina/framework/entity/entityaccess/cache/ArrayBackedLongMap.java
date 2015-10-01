@@ -332,13 +332,13 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			}
 
 			private boolean popNext() {
-				while (nextCount != size && poppedNextObject == null) {
+				while (nextCount < size && poppedNextObject == null) {
 					if (modCount != itrModCount) {
 						throw new ConcurrentModificationException();
 					}
 					poppedNextObject = (V) elementData[++idx];
 				}
-				return ++nextCount >= size;
+				return ++nextCount > size;
 			}
 		}
 
