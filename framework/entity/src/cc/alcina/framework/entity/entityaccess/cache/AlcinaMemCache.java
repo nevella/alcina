@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -121,6 +122,8 @@ import com.google.gwt.event.shared.UmbrellaException;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class AlcinaMemCache implements RegistrableService {
+	private static final int MAX_QUEUED_TIME = 500;
+
 	private static AlcinaMemCache singleton;
 
 	public static final String TOPIC_UPDATE_EXCEPTION = AlcinaMemCache.class
@@ -540,6 +543,7 @@ public class AlcinaMemCache implements RegistrableService {
 				waitingOnWriteLock.clear();
 				return;
 			}
+			maybeLogLock(LockAction.PRE_LOCK, write);
 			if (write) {
 				int readHoldCount = mainLock.getReadHoldCount();
 				if (readHoldCount > 0) {
@@ -561,7 +565,11 @@ public class AlcinaMemCache implements RegistrableService {
 			e.printStackTrace();
 			throw e;
 		}
-		maybeLogLock("lock", write);
+		maybeLogLock(LockAction.MAIN_LOCK_ACQUIRED, write);
+	}
+
+	enum LockAction {
+		PRE_LOCK, MAIN_LOCK_ACQUIRED, SUB_LOCK_ACQUIRED, UNLOCK
 	}
 
 	public List<Long> notInStore(Collection<Long> ids, Class clazz) {
@@ -622,6 +630,7 @@ public class AlcinaMemCache implements RegistrableService {
 			return;
 		}
 		if (lock) {
+			maybeLogLock(LockAction.PRE_LOCK, lock);
 			subgraphLock.writeLock().lock();
 			writeLockSubLock = sublock;
 		} else {
@@ -635,7 +644,8 @@ public class AlcinaMemCache implements RegistrableService {
 						writeLockSubLock));
 			}
 		}
-		maybeLogLock("sublock", lock);
+		maybeLogLock(lock ? LockAction.SUB_LOCK_ACQUIRED : LockAction.UNLOCK,
+				lock);
 	}
 
 	public void unlock(boolean write) {
@@ -658,7 +668,7 @@ public class AlcinaMemCache implements RegistrableService {
 			e.printStackTrace();
 			throw e;
 		}
-		maybeLogLock("unlock", write);
+		maybeLogLock(LockAction.UNLOCK, write);
 	}
 
 	public void warmup(DataSource dataSource, CacheDescriptor cacheDescriptor,
@@ -1007,10 +1017,18 @@ public class AlcinaMemCache implements RegistrableService {
 
 	long lastQueueDumpTime = 0;
 
-	private void maybeLogLock(String action, boolean write) {
-		int queueLength = mainLock.getQueueLength();
+	Map<Long, Long> threadQueueTimes = new ConcurrentHashMap<>();
+
+	private void maybeLogLock(LockAction action, boolean write) {
+		if (action == LockAction.PRE_LOCK) {
+			threadQueueTimes.put(Thread.currentThread().getId(),
+					System.currentTimeMillis());
+		} else {
+			threadQueueTimes.remove(Thread.currentThread().getId());
+		}
+		long queuedTime = health.getMaxQueuedTime();
 		if (dumpLocks
-				|| (collectLockAcquisitionPoints && (write || queueLength > 15))) {
+				|| (collectLockAcquisitionPoints && (write || queuedTime > MAX_QUEUED_TIME))) {
 			String message = String.format("Memcache lock - %s - %s\n",
 					write ? "write" : "read", action);
 			Thread t = Thread.currentThread();
@@ -1022,7 +1040,7 @@ public class AlcinaMemCache implements RegistrableService {
 					subgraphLock);
 			log += getStacktraceSlice(t);
 			message += log;
-			if (dumpLocks || (queueLength > 15)) {
+			if (dumpLocks || (queuedTime > MAX_QUEUED_TIME)) {
 				Thread writerThread = postProcessWriterThread;
 				if (writerThread != null) {
 					System.out.format("Memcache log debugging----------\n"
@@ -1630,6 +1648,12 @@ public class AlcinaMemCache implements RegistrableService {
 
 		public boolean isLockingDisabled() {
 			return lockingDisabled;
+		}
+
+		public long getMaxQueuedTime() {
+			return threadQueueTimes.values().stream()
+					.min(Comparator.naturalOrder())
+					.map(t -> System.currentTimeMillis() - t).orElse(0L);
 		}
 	}
 
