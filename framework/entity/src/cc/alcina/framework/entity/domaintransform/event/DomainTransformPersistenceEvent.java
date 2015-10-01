@@ -17,13 +17,27 @@ public class DomainTransformPersistenceEvent {
 
 	private final DomainTransformPersistenceEventType persistenceEventType;
 
-	private long sourceThreadId;
+	private boolean localToVm;
 
 	public DomainTransformPersistenceEvent(
 			TransformPersistenceToken transformPersistenceToken,
-			DomainTransformLayerWrapper domainTransformLayerWrapper) {
-		this(transformPersistenceToken, domainTransformLayerWrapper, Thread
-				.currentThread().getId());
+			DomainTransformLayerWrapper domainTransformLayerWrapper,
+			boolean localToVm) {
+		this.localToVm = localToVm;
+		this.transformPersistenceToken = transformPersistenceToken;
+		this.domainTransformLayerWrapper = domainTransformLayerWrapper;
+		persistenceEventType = domainTransformLayerWrapper == null ? DomainTransformPersistenceEventType.PRE_COMMIT
+				: domainTransformLayerWrapper.response.getResult() == DomainTransformResponseResult.OK ? DomainTransformPersistenceEventType.COMMIT_OK
+						: DomainTransformPersistenceEventType.COMMIT_ERROR;
+	}
+
+
+	public DomainTransformLayerWrapper getDomainTransformLayerWrapper() {
+		return this.domainTransformLayerWrapper;
+	}
+
+	public long getMaxPersistedRequestId() {
+		return CommonUtils.lv(CollectionFilters.max(getPersistedRequestIds()));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -34,35 +48,15 @@ public class DomainTransformPersistenceEvent {
 						.hasIdsToIdList(domainTransformLayerWrapper.persistentRequests);
 	}
 
-	public DomainTransformPersistenceEvent(
-			TransformPersistenceToken transformPersistenceToken,
-			DomainTransformLayerWrapper domainTransformLayerWrapper,
-			long sourceThreadId) {
-		this.sourceThreadId = sourceThreadId;
-		this.transformPersistenceToken = transformPersistenceToken;
-		this.domainTransformLayerWrapper = domainTransformLayerWrapper;
-		persistenceEventType = domainTransformLayerWrapper == null ? DomainTransformPersistenceEventType.PRE_COMMIT
-				: domainTransformLayerWrapper.response.getResult() == DomainTransformResponseResult.OK ? DomainTransformPersistenceEventType.COMMIT_OK
-						: DomainTransformPersistenceEventType.COMMIT_ERROR;
+	public DomainTransformPersistenceEventType getPersistenceEventType() {
+		return this.persistenceEventType;
 	}
 
 	public TransformPersistenceToken getTransformPersistenceToken() {
 		return this.transformPersistenceToken;
 	}
 
-	public DomainTransformLayerWrapper getDomainTransformLayerWrapper() {
-		return this.domainTransformLayerWrapper;
-	}
-
-	public DomainTransformPersistenceEventType getPersistenceEventType() {
-		return this.persistenceEventType;
-	}
-
-	public long getSourceThreadId() {
-		return this.sourceThreadId;
-	}
-
-	public long getMaxPersistedRequestId() {
-		return CommonUtils.lv(CollectionFilters.max(getPersistedRequestIds()));
+	public boolean isLocalToVm() {
+		return this.localToVm;
 	}
 }

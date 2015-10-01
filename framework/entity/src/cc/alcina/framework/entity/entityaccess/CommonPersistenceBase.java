@@ -411,7 +411,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, String specificIds, boolean mostRecentOnly,
+			long fromId, long toId, Collection<Long> specificIds, boolean mostRecentOnly,
 			boolean populateTransformSourceObjects) {
 		boolean logTransformReadMetrics = ResourceUtilities.is(CommonPersistenceBase.class,"logTransformReadMetrics");
 		Query query = null;
@@ -438,7 +438,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			DurationCounter dc = new DurationCounter();
 			String idFilter = specificIds == null ? String.format(
 					"dtrp.id>=%s and dtrp.id<=%s", fromId, toId) : String
-					.format("dtrp.id in (%s)", specificIds);
+					.format("dtrp.id in %s", EntityUtils.longsToIdClause(specificIds));
 			String eql = String.format("select distinct dtrp "
 					+ "from %s dtrp " + "inner join fetch dtrp.events "
 					+ "inner join fetch dtrp.clientInstance " + " where %s "

@@ -601,7 +601,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			Pattern p1 = Pattern.compile("LOG:  execute .+?: (.+)\nDETAIL:  parameters: (.+)");
 			Pattern p2 = Pattern.compile(".+execute .+?: (.+)\n.+DETAIL:  parameters: (.+)",
 					Pattern.DOTALL);
-			Pattern p3 = Pattern.compile("(\\$\\d+) = ('.+?')");
+			Pattern p3 = Pattern.compile("(\\$\\d+) = ((?:'.+?'|\\d+|NULL))");
 			Matcher m1 = p1.matcher(pg);
 			if (!m1.find()) {
 				m1 = p2.matcher(pg);

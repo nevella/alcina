@@ -119,9 +119,9 @@ public interface CommonPersistenceLocal {
 
 	public <T extends HasId> T ensurePersistent(T obj);
 
-	public void transformInPersistenceContext(
-			TransformPersister persister,
-			TransformPersistenceToken persistenceToken, DomainTransformLayerWrapper wrapper);
+	public void transformInPersistenceContext(TransformPersister persister,
+			TransformPersistenceToken persistenceToken,
+			DomainTransformLayerWrapper wrapper);
 
 	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
 
@@ -144,8 +144,8 @@ public interface CommonPersistenceLocal {
 			InstantiateImplCallback instantiateImplCallback);
 
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, String specificIds, boolean mostRecentOnly,
-			boolean populateTransformSourceObjects);
+			long fromId, long toId, Collection<Long> specificIds,
+			boolean mostRecentOnly, boolean populateTransformSourceObjects);
 
 	public <US extends IUser> US getCleanedUserById(long userId);
 
