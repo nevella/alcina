@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -50,6 +51,8 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.ProjectByValue;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.entity.SEUtilities;
@@ -168,13 +171,22 @@ public class GraphProjection {
 	public static final String CONTEXT_REPLACE_MAP = GraphProjection.class
 			+ ".CONTEXT_REPLACE_MAP";
 
+	public static final String CONTEXT_DUMP_PROJECTION_STATS = GraphProjection.class
+			+ ".CONTEXT_DUMP_PROJECTION_STATS";
+
 	private int maxDepth = Integer.MAX_VALUE;
 
 	private LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap = null;
 
 	private List<GraphProjectionContext> contexts = new ArrayList<GraphProjectionContext>();
 
+	private boolean dumpProjectionStats;
+
+	private CountingMap<String> contextStats = new CountingMap<String>();
+
 	public GraphProjection() {
+		this.dumpProjectionStats = LooseContext
+				.is(CONTEXT_DUMP_PROJECTION_STATS);
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 	}
 
@@ -262,7 +274,19 @@ public class GraphProjection {
 
 	public <T> T project(T source, GraphProjectionContext context)
 			throws Exception {
-		return project(source, null, context, false);
+		T result = project(source, null, context, false);
+		if (dumpProjectionStats && context == null) {
+			System.out.format(
+					"Projection stats:\n===========\n%s\n",
+					contextStats
+							.reverseMap(true)
+							.entrySet()
+							.stream()
+							.map(e -> e.getKey() + ":"
+									+ CommonUtils.join(e.getValue(), "\n\t: "))
+							.collect(Collectors.joining("\t\n")));
+		}
+		return result;
 	}
 
 	public <T> T project(T source, Object alsoMapTo,
@@ -293,6 +317,9 @@ public class GraphProjection {
 		}
 		if (!checkObjectPermissions(source)) {
 			return null;
+		}
+		if (dumpProjectionStats && context != null) {
+			contextStats.add(context.toPoint());
 		}
 		T projected = sourceClass.isArray() ? (T) Array.newInstance(
 				sourceClass.getComponentType(), Array.getLength(source))
@@ -552,6 +579,15 @@ public class GraphProjection {
 		public String toString() {
 			return (parent == null ? "" : parent.toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
+		}
+
+		public String toPoint() {
+			String point = field == null ? clazz.getSimpleName() : field
+					.getType().getSimpleName()
+					+ ": "
+					+ clazz.getSimpleName()
+					+ "." + fieldName;
+			return point;
 		}
 	}
 

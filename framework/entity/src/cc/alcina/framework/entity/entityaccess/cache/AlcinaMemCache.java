@@ -1005,6 +1005,8 @@ public class AlcinaMemCache implements RegistrableService {
 		return loaded;
 	}
 
+	long lastQueueDumpTime = 0;
+
 	private void maybeLogLock(String action, boolean write) {
 		int queueLength = mainLock.getQueueLength();
 		if (dumpLocks
@@ -1028,6 +1030,20 @@ public class AlcinaMemCache implements RegistrableService {
 							getStacktraceSlice(postProcessWriterThread));
 				}
 				System.out.println(message);
+				long time = System.currentTimeMillis();
+				if (time - lastQueueDumpTime > 5 * TimeConstants.ONE_MINUTE_MS) {
+					System.out
+							.println("Current locked thread dump:\n***************\n");
+					mainLock.getQueuedThreads().forEach(
+							t2 -> System.out.println(t2 + "\n"
+									+ t2.getStackTrace()));
+					System.out
+							.println("\n\nRecent lock acquisitions:\n***************\n");
+					System.out.println(CommonUtils.join(recentLockAcquisitions,
+							"\n"));
+					System.out.println("\n===========\n\n");
+					lastQueueDumpTime = time;
+				}
 			}
 			if (collectLockAcquisitionPoints) {
 				synchronized (recentLockAcquisitions) {
@@ -1352,16 +1368,15 @@ public class AlcinaMemCache implements RegistrableService {
 
 	protected void maybeDebugLongLockHolders() {
 		long time = System.currentTimeMillis();
-		lockStartTime.entrySet().forEach(
-				e -> {
-					long duration = time - e.getValue();
-					if (duration > 250) {
-						System.out.format(
-								"Long lock holder - %s ms - %s\n%s\n\n",
-								duration, e.getKey(),
-								getStacktraceSlice(e.getKey(), 80));
-					}
-				});
+		for (Entry<Thread, Long> e : lockStartTime.entrySet()) {
+			long duration = time - e.getValue();
+			if (duration > 250
+					|| (duration > 50 && e.getKey() == postProcessWriterThread)) {
+				System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
+						duration, e.getKey(),
+						getStacktraceSlice(e.getKey(), 80));
+			}
+		}
 	}
 
 	protected synchronized void releaseWarmupConnection(Connection conn) {

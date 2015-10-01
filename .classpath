@@ -39,7 +39,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/requestfactory-server.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs-3.2.5.Final.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/fastutil-7.0.6.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/fastutil-7.0.6.jar" sourcepath="/Users/ouiji/git/minor/fastutil"/>
 	<classpathentry kind="lib" path="lib/framework/entity/kryo/kryo-3.0.3-javadoc.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/kryo/kryo-3.0.3-sources.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/kryo/kryo-3.0.3.jar" sourcepath="lib/framework/entity/kryo/kryo-3.0.3-sources.jar"/>

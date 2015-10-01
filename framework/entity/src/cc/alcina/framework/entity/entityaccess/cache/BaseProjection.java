@@ -142,7 +142,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	 * Expose if subclass is instance of OrderableProjection
 	 */
 	protected Collection<T> order0(int count, CollectionFilter<T> filter,
-			boolean targetsOfFinalKey, boolean reverse, Object... objects) {
+			boolean targetsOfFinalKey, boolean reverse,
+			boolean finishAfterFirstFilterFail, Object... objects) {
 		Collection source = (Collection) (reverse ? reverseItems(objects)
 				: items(objects));
 		PossibleSubIterator sub = new PossibleSubIterator(source,
@@ -153,6 +154,10 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 			if (filter == null || filter.allow(next)) {
 				count--;
 				result.add(next);
+			} else {
+				if (finishAfterFirstFilterFail) {
+					break;
+				}
 			}
 		}
 		return result;

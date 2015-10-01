@@ -330,7 +330,7 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 			}
 
 			private boolean popNext() {
-				while (poppedNextObject == null && idx < elementData.length - 1) {
+				while (poppedNextObject == null && idx < size - 1) {
 					if (modCount != itrModCount) {
 						throw new ConcurrentModificationException();
 					}
