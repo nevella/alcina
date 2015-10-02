@@ -1,50 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="lib" path="lib/extras/dev/httpclient-4.1.jar"/>
-	<classpathentry kind="lib" path="lib/extras/dev/httpcore-4.1.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
-	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" path="framework/common/src"/>
-	<classpathentry excluding="com/google/gwt/user/client/translatable/" kind="src" output="framework/extras/rpc/client/build" path="extras/rpc/client/src"/>
-	<classpathentry kind="src" output="framework/extras/rpc/servlet/build" path="extras/rpc/servlet/src"/>
-	<classpathentry kind="src" output="framework/jvmclient/build" path="framework/jvmclient/src"/>
-	<classpathentry kind="src" path="extras/collections/src"/>
-	<classpathentry kind="src" path="framework/entity/src"/>
-	<classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>
-	<classpathentry kind="src" path="framework/gwt/src"/>
-	<classpathentry kind="src" path="framework/servlet/src"/>
-	<classpathentry kind="src" path="extras/cluster/tasks-src"/>
-	<classpathentry kind="src" path="extras/dev/src"/>
-	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
-	<classpathentry excluding="cc/alcina/extras/misc/ie/override/" kind="src" path="extras/misc/src"/>
-	<classpathentry kind="src" path="extras/ios6/src"/>
-	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar"/>
-	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
-	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/jsr173_api.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/log4j-1.2.6.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar" sourcepath="/Users/ouiji/Documents/programmin/java/xerces-2_9_1/"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/gwittir-trunk.jar"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/gwt-html5-database.jar"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA-sources.jar"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA.jar"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" sourcepath="/Users/ouiji/git/minor/hibernate-orm"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" sourcepath="/jboss-hibernate-orm"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
-	<classpathentry kind="lib" path="lib/framework/servlet/activation.jar"/>
-	<classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/javax.ejb-api-3.2.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/requestfactory-server.jar"/>
-	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs-3.2.5.Final.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/fastutil-7.0.6.jar" sourcepath="/Users/ouiji/git/minor/fastutil"/>
-	<classpathentry kind="lib" path="lib/framework/entity/kryo/kryo-3.0.3-javadoc.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/kryo/kryo-3.0.3-sources.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/kryo/kryo-3.0.3.jar" sourcepath="lib/framework/entity/kryo/kryo-3.0.3-sources.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/kryo/minlog-1.3.0.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/kryo/objenesis-2.1.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/kryo/reflectasm-1.10.1-shaded.jar"/>
-	<classpathentry kind="output" path="bin"/>
+    <classpathentry kind="lib" path="lib/extras/dev/httpclient-4.1.jar"/>
+    <classpathentry kind="lib" path="lib/extras/dev/httpcore-4.1.jar"/>
+    <classpathentry exported="true" kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
+    <classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" path="framework/common/src"/>
+    <classpathentry excluding="com/google/gwt/user/client/translatable/" kind="src" output="framework/extras/rpc/client/build" path="extras/rpc/client/src"/>
+    <classpathentry kind="src" output="framework/extras/rpc/servlet/build" path="extras/rpc/servlet/src"/>
+    <classpathentry kind="src" output="framework/jvmclient/build" path="framework/jvmclient/src"/>
+    <classpathentry kind="src" path="extras/collections/src"/>
+    <classpathentry kind="src" path="framework/entity/src"/>
+    <classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>
+    <classpathentry kind="src" path="framework/gwt/src"/>
+    <classpathentry kind="src" path="framework/servlet/src"/>
+    <classpathentry kind="src" path="extras/cluster/tasks-src"/>
+    <classpathentry kind="src" path="extras/dev/src"/>
+    <classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
+    <classpathentry excluding="cc/alcina/extras/misc/ie/override/" kind="src" path="extras/misc/src"/>
+    <classpathentry kind="src" path="extras/ios6/src"/>
+    <classpathentry kind="lib" path="lib/extras/cluster/ant.jar"/>
+    <classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
+    <classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/jsr173_api.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/log4j-1.2.6.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar" sourcepath="/Users/ouiji/Documents/programmin/java/xerces-2_9_1/"/>
+    <classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
+    <classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar"/>
+    <classpathentry kind="lib" path="lib/framework/gwt/gwittir-trunk.jar"/>
+    <classpathentry kind="lib" path="lib/framework/gwt/gwt-html5-database.jar"/>
+    <classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA-sources.jar"/>
+    <classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA.jar"/>
+    <classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-3.2.0.Final.jar"/>
+    <classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.0.0.Beta1.jar" sourcepath="/Users/ouiji/git/minor/hibernate-orm"/>
+    <classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.0.0.Beta1.jar" sourcepath="/jboss-hibernate-orm"/>
+    <classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
+    <classpathentry kind="lib" path="lib/framework/servlet/activation.jar"/>
+    <classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/javax.ejb-api-3.2.jar"/>
+    <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+    <classpathentry kind="lib" path="lib/framework/gwt/requestfactory-server.jar"/>
+    <classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs-3.2.5.Final.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/fastutil-7.0.6.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/kyro/kryo-3.0.3-javadoc.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/kyro/kryo-3.0.3-sources.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/kyro/kryo-3.0.3.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/kyro/minlog-1.3.0.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/kyro/objenesis-2.1.jar"/>
+    <classpathentry kind="lib" path="lib/framework/entity/kyro/reflectasm-1.10.1-shaded.jar"/>
+    <classpathentry kind="output" path="bin"/>
 </classpath>

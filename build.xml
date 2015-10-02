@@ -27,14 +27,14 @@
 	</target>
 	<target name="compile" description="Compiles all J2SE modules">
 		<mkdir dir="${framework.entity.build.dir}" />
-		<javac includeantruntime="false" debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
+		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.entity.src.dirs}" destdir="${framework.entity.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.impl.jboss-hibernate.build.dir}" />
-		<javac includeantruntime="false" debug="on" srcdir="${framework.impl.jboss-hibernate.src.dirs}" destdir="${framework.impl.jboss-hibernate.build.dir}">
+		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.impl.jboss-hibernate.src.dirs}" destdir="${framework.impl.jboss-hibernate.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.impl.jboss-hibernate.lib.path" />
@@ -43,7 +43,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.servlet.build.dir}" />
-		<javac includeantruntime="false" debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
+		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.servlet.lib.path" />
@@ -52,7 +52,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${extras.collections.build.dir}" />
-		<javac includeantruntime="false" debug="on" srcdir="${extras.collections.src.dir}" destdir="${extras.collections.build.dir}">
+		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${extras.collections.src.dir}" destdir="${extras.collections.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<pathelement path="${framework.entity.build.dir}" />
@@ -60,7 +60,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${extras.dev.build.dir}" />
-		<javac includeantruntime="false" debug="on" srcdir="${extras.dev.src.dir}" destdir="${extras.dev.build.dir}">
+		<javac target="8" source="8" includeantruntime="false" debug="on" srcdir="${extras.dev.src.dir}" destdir="${extras.dev.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<path refid="framework.servlet.lib.path" />
@@ -70,7 +70,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${extras.misc.build.dir}" />
-		<javac includeantruntime="false" debug="on" destdir="${extras.misc.build.dir}">
+		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${extras.misc.build.dir}">
 			<classpath>
 				<path refid="framework.common.lib.path" />
 				<pathelement path="${framework.entity.build.dir}" />
@@ -81,7 +81,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${extras.cluster.tasks.build.dir}" />
-		<javac includeantruntime="false" debug="on" destdir="${extras.cluster.tasks.build.dir}">
+		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${extras.cluster.tasks.build.dir}">
 			<classpath>
 				<path refid="extras.cluster.lib.path" />
 				<path refid="framework.common.lib.path" />
@@ -91,7 +91,7 @@
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 		<mkdir dir="${framework.jvmclient.build.dir}" />
-		<javac includeantruntime="false" debug="on" destdir="${framework.jvmclient.build.dir}">
+		<javac target="8" source="8" includeantruntime="false" debug="on" destdir="${framework.jvmclient.build.dir}">
 			<src path="${framework.jvmclient.src.dir}" />
 			<src path="${framework.jvmclient.src.dir.2}" />
 			<exclude name="cc/alcina/framework/common/translatable/**"/>
