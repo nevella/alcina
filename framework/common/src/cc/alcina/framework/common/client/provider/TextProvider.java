@@ -130,6 +130,9 @@ public class TextProvider {
 		}
 		String dnpn = ClientReflector.get().beanInfoForClass(
 				newObj.getClass()).getDisplayNamePropertyName();
+		if(dnpn.equals("id")){
+			return;
+		}
 		Reflections.propertyAccessor().setPropertyValue(newObj, dnpn,
 				name);
 	}

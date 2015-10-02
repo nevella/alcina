@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.rpc;
 
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;

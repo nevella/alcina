@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 @SuppressWarnings("unchecked")
 /**
@@ -37,6 +38,32 @@ import cc.alcina.framework.common.client.util.Multimap;
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class AnnotationUtils {
 	private static Map<Method, Set<Annotation>> superMethodAnnotationMap = new ConcurrentHashMap<Method, Set<Annotation>>();
+
+	// presence class, annotation simple name
+	private static UnsortedMultikeyMap<Annotation> classNameAnnotationMap = new UnsortedMultikeyMap<>(
+			2);
+
+	public static boolean hasAnnotationNamed(Class clazz,
+			Class<? extends Annotation> ann) {
+		String annClazzName = ann.getClass().getSimpleName();
+		if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
+			Class c = clazz;
+			Annotation found = null;
+			while (c != Object.class && found == null) {
+				for (Annotation a : c.getAnnotations()) {
+					if (a.annotationType().getSimpleName().equals(annClazzName)) {
+						found = a;
+						break;
+					}
+				}
+				c = c.getSuperclass();
+			}
+			classNameAnnotationMap.put(clazz, annClazzName, found);
+		}
+		return classNameAnnotationMap.get(clazz, annClazzName) != null;
+	}
+
+
 
 	public static Set<Annotation> getSuperclassAnnotationsForMethod(Method m) {
 		if (superMethodAnnotationMap.containsKey(m)) {

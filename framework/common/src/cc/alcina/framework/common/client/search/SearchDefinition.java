@@ -25,8 +25,10 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -64,9 +66,9 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	private transient Map<Class<? extends OrderGroup>, OrderGroup> ogs = new HashMap<Class<? extends OrderGroup>, OrderGroup>();
 
-	private Set<CriteriaGroup> criteriaGroups = new LinkedHashSet<CriteriaGroup>();
+	private Set<CriteriaGroup> criteriaGroups = new LightSet<CriteriaGroup>();
 
-	private Set<OrderGroup> orderGroups = new LinkedHashSet<OrderGroup>();
+	private Set<OrderGroup> orderGroups = new LightSet<OrderGroup>();
 
 	protected transient String defaultFilterDescription = "";
 
@@ -84,9 +86,19 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 		return result;
 	}
+	
+
+	public Set<OrderCriterion> allOrderCriteria() {
+		LinkedHashSet<OrderCriterion> result = new LinkedHashSet<OrderCriterion>();
+		for (OrderGroup cg : getOrderGroups()) {
+			result.addAll(cg.getCriteria());
+		}
+		return result;
+	}
 
 	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
-		return CollectionFilters.filter(allCriteria(), new IsClassFilter(clazz));
+		return (List) CollectionFilters.filter(allCriteria(),
+				new IsClassFilter(clazz));
 	}
 
 	public void clearOrderGroup(Class<? extends OrderGroup> clazz) {
@@ -234,10 +246,12 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		return first != null ? first : sub;
 	}
 
+	@AlcinaTransient
 	public int getCharWidth() {
 		return this.charWidth;
 	}
 
+	@AlcinaTransient
 	public int getClientSearchIndex() {
 		return this.clientSearchIndex;
 	}

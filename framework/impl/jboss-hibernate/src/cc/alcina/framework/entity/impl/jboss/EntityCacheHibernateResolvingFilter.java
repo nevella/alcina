@@ -52,6 +52,11 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 		this.cache = cache;
 	}
 
+	@Override
+	public boolean ignoreObjectHasReadPermissionCheck() {
+		return true;
+	}
+
 	private InstantiateImplCallback instantiateImplCallback;
 
 	private boolean useRawMemCache;
@@ -93,7 +98,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				// if it does, just proceed as normal (hili will already be the
 				// key in the reached map, so .project() wouldn't work)
 				if (hili != value) {
-					hili = graphCloner.project(hili, value, context);
+					hili = graphCloner.project(hili, value, context, false);
 					getCache().put((HasIdAndLocalId) hili);
 					return (T) hili;
 				}
@@ -102,14 +107,14 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				LazyInitializer lazy = ((HibernateProxy) value)
 						.getHibernateLazyInitializer();
 				Serializable id = lazy.getIdentifier();
-				Object impl = getCache().get(lazy.getPersistentClass(),
-						(Long) id);
+				Class persistentClass = lazy.getPersistentClass();
+				Object impl = getCache().get(persistentClass, (Long) id);
 				if (impl == null) {
 					if (useRawMemCache) {
-						if (AlcinaMemCache.get().isCached(
-								lazy.getPersistentClass())) {
+						if (AlcinaMemCache.get().isCachedTransactional(
+								persistentClass)) {
 							impl = (T) AlcinaMemCache.get().findRaw(
-									lazy.getPersistentClass(), (Long) id);
+									persistentClass, (Long) id);
 						}
 					}
 				}
@@ -119,7 +124,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 						impl = ((HibernateProxy) value)
 								.getHibernateLazyInitializer()
 								.getImplementation();
-						impl = graphCloner.project(impl, value, context);
+						impl = graphCloner.project(impl, value, context, false);
 						getCache().put((HasIdAndLocalId) impl);
 					} else if (shellInstantiator != null) {
 						impl = shellInstantiator.instantiateShellObject(lazy,
@@ -176,7 +181,8 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 							.getHibernateLazyInitializer();
 					Object impl = ((HibernateProxy) value)
 							.getHibernateLazyInitializer().getImplementation();
-					projected = graphCloner.project(impl, value, context);
+					projected = graphCloner
+							.project(impl, value, context, false);
 					getCache().put((HasIdAndLocalId) projected);
 				} else {
 					projected = graphCloner.project(value, context);

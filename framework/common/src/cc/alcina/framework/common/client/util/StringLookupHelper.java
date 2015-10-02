@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.KeyValueMapper.FromObjectConverterMapper;

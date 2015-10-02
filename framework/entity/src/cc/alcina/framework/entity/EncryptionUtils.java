@@ -42,6 +42,8 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*The "large" functions assume a byte structure of [first 128] public-key RSA encrypted 3DES key, byte 129 onwards 3dse encrypted data
@@ -51,6 +53,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * 
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class EncryptionUtils {
 	public static void showProviders() {
 		try {
@@ -80,8 +83,13 @@ public class EncryptionUtils {
 
 	private PublicKey publicKey;
 
+	/**
+	 * Don't use for SHA1
+	 * 
+	 */
 	public static EncryptionUtils get() {
-		EncryptionUtils singleton = Registry.checkSingleton(EncryptionUtils.class);
+		EncryptionUtils singleton = Registry
+				.checkSingleton(EncryptionUtils.class);
 		if (singleton == null) {
 			singleton = new EncryptionUtils();
 			Registry.registerSingleton(EncryptionUtils.class, singleton);
@@ -348,14 +356,25 @@ public class EncryptionUtils {
 		return convertToHex(md5hash);
 	}
 
-	public static String SHA1(String text) throws NoSuchAlgorithmException,
-			UnsupportedEncodingException {
-		MessageDigest md;
-		md = MessageDigest.getInstance("SHA1");
-		byte[] sha1hash = new byte[32];
-		md.update(text.getBytes("utf-8"), 0, text.length());
-		sha1hash = md.digest();
-		return convertToHex(sha1hash);
+	private MessageDigest sha1Digest;
+
+	public String SHA1(String text) {
+		try {
+			MessageDigest md = ensureSha1Digest();
+			byte[] sha1hash = new byte[32];
+			md.update(text.getBytes("utf-8"), 0, text.length());
+			sha1hash = md.digest();
+			return convertToHex(sha1hash);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private MessageDigest ensureSha1Digest() throws Exception {
+		if (sha1Digest == null) {
+			sha1Digest = MessageDigest.getInstance("SHA1");
+		}
+		return sha1Digest;
 	}
 
 	public static String MD5(byte[] bytes) throws NoSuchAlgorithmException,

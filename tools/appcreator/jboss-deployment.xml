@@ -11,7 +11,7 @@
 	</target>
 	<target name="create-jboss-deployment-call" depends="unpack-jboss" unless="deploy.jboss.dir.configured">
 		<property name="jboss.config.1" value="${deploy.jboss.dir}/bin/standalone.conf" />
-		<property name="jboss.config.2" value="${deploy.jboss.dir}/standalone/configuration/standalone-preview.xml" />
+		<property name="jboss.config.2" value="${deploy.jboss.dir}/standalone/configuration/standalone-full.xml" />
 
 		<replaceregexp file="${jboss.config.1}">
 			<regexp pattern="${cr.1.1.f}" />

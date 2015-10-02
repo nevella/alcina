@@ -21,8 +21,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import com.totsp.gwittir.client.beans.Converter;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -39,6 +37,8 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
+
+import com.totsp.gwittir.client.beans.Converter;
 
 /**
  * j2se, but no ref to tltm
@@ -67,16 +67,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	CachingMap<String, Class> fqnLookup = new CachingMap<String, Class>(
-			new Converter<String, Class>() {
-				@Override
-				public Class convert(String fqn) {
-					try {
-						return Class.forName(fqn);
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
-			});
+			fqn -> Class.forName(fqn));
 
 	public Class getClassForName(String fqn) {
 		return fqnLookup.get(fqn);

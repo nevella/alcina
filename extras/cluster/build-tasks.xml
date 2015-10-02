@@ -22,6 +22,7 @@
 		<copy todir="${project.build.dir}">
 			<fileset dir="${project.src.dir}">
 				<include name="cc/**/*.*" />
+				<include name="alcina-cluster-tasks.properties" />
 				<exclude name="**/*.class" />
 			</fileset>
 		</copy>

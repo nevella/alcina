@@ -1,12 +1,10 @@
 package cc.alcina.framework.gwt.client.util;
 
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.Rect;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
-import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel.PositionCallback;
 
@@ -127,7 +125,7 @@ public class RelativePopupPositioning {
 
 	/**
 	 * Gets the mouse y-position relative to a given element.
-	 * 
+	 *
 	 * @param target
 	 *            the element whose coordinate system is to be used
 	 * @return the relative y-position
@@ -226,10 +224,10 @@ public class RelativePopupPositioning {
 
 		@Override
 		public void setPosition(int offsetWidth, int offsetHeight) {
-			int x = positioningParams.ignoreRelativeToCoordinates ? 0 : relativeToElement
-					.getAbsoluteLeft();
-			int y = positioningParams.ignoreRelativeToCoordinates ? 0 : relativeToElement
-					.getAbsoluteTop();
+			int x = positioningParams.ignoreRelativeToCoordinates ? 0
+					: relativeToElement.getAbsoluteLeft();
+			int y = positioningParams.ignoreRelativeToCoordinates ? 0
+					: relativeToElement.getAbsoluteTop();
 			int relW = relativeToElement.getOffsetWidth();
 			int relH = relativeToElement.getOffsetHeight();
 			x += shiftX;
@@ -258,7 +256,8 @@ public class RelativePopupPositioning {
 					if (x < 0) {
 						x = 0;
 					}
-					if (x + rw > bw) {
+					if (x + rw > bw
+							&& !positioningParams.ignoreBoundingWidgetPopupConstraint) {
 						x = bw - rw;
 					}
 					y += positioningParams.shiftY;
@@ -485,6 +484,8 @@ public class RelativePopupPositioning {
 
 		public int shiftX;
 
+		public boolean ignoreBoundingWidgetPopupConstraint;
+
 		public void show(RelativePopupPanel panel) {
 			RelativePopupPositioning.showPopup(this, panel);
 		}
@@ -565,7 +566,7 @@ public class RelativePopupPositioning {
 		 * popup-left aligned to relative-to-widget-left right same. If not
 		 * (fixed axis), in example bottom == popup-top aligned to
 		 * relative-bottom
-		 * 
+		 *
 		 */
 		int fit(int relX, int relY, int bw, int bh, int relW, int relH,
 				int ppW, int ppH, int bx, int by, AxisCoordinate favour,
@@ -627,10 +628,5 @@ public class RelativePopupPositioning {
 
 	enum AxisType {
 		NEG, CENTER, POS
-	}
-
-	public static void scrollIntoViewWhileKeepingRect(Rect bounds,
-			DecoratedRelativePopupPanel popup) {
-		// TODO Auto-generated method stub
 	}
 }

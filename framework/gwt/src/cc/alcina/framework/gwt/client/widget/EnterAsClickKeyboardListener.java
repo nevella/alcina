@@ -11,10 +11,12 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyDownHandler;
+import com.google.gwt.event.dom.client.KeyEvent;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.user.client.ui.Button;
@@ -24,8 +26,8 @@ import com.google.gwt.user.client.ui.TextBoxBase;
  *
  * @author Nick Reddel
  */
-
- public class EnterAsClickKeyboardListener implements KeyPressHandler {
+public class EnterAsClickKeyboardListener implements KeyPressHandler,
+		KeyDownHandler {
 	private Button button;
 
 	private InputButton inputButton;
@@ -42,10 +44,18 @@ import com.google.gwt.user.client.ui.TextBoxBase;
 		this.button = button;
 	}
 
+	public boolean listenToDown = false;
+
 	public void onKeyPress(KeyPressEvent event) {
-		char charCode = event.getCharCode();
+		handleEvent(event);
+	}
+
+	private void handleEvent(KeyEvent event) {
+		char charCode = event instanceof KeyPressEvent ? ((KeyPressEvent) event)
+				.getCharCode() : '0';
 		int keyCode = event.getNativeEvent().getKeyCode();
-		if ((charCode == KeyCodes.KEY_ENTER||keyCode==KeyCodes.KEY_ENTER) && checkCanClick()) {
+		if ((charCode == KeyCodes.KEY_ENTER || keyCode == KeyCodes.KEY_ENTER)
+				&& checkCanClick()) {
 			if (button != null) {
 				button.click();
 			}
@@ -57,5 +67,12 @@ import com.google.gwt.user.client.ui.TextBoxBase;
 
 	protected boolean checkCanClick() {
 		return tb.getText().length() != 0;
+	}
+
+	@Override
+	public void onKeyDown(KeyDownEvent event) {
+		if (listenToDown) {
+			handleEvent(event);
+		}
 	}
 }

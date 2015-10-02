@@ -37,6 +37,9 @@ public class WrappedObjectPersistence {
 	public static final String CONTEXT_THROW_MISSING_WRAPPED_OBJECT = WrappedObjectPersistence.class
 			.getName() + ".CONTEXT_THROW_MISSING_WRAPPED_OBJECT";
 
+	public static final String CONTEXT_IGNORE_MISSING_WRAPPED_OBJECT = WrappedObjectPersistence.class
+			.getName() + ".CONTEXT_IGNORE_MISSING_WRAPPED_OBJECT";
+
 	public static class MissingWrappedObjectException extends Exception {
 	}
 
@@ -72,19 +75,22 @@ public class WrappedObjectPersistence {
 								entityManager);
 				Object unwrapped = null;
 				if (wrappedObject == null) {
-					TaggedLogger logger = Registry
-							.impl(TaggedLoggers.class)
-							.getLogger(
-									null,
-									AlcinaLoggingTags.WRAPPED_OBJECT_REF_INTEGRITY);
-					logger.format(
-							"Warning - ref integrity (wrapped object) - missing %s.%s #%s",
-							wrapper.getClass(), pd.getName(), wrapper.getId());
-					if (LooseContext
-							.getBoolean(CONTEXT_THROW_MISSING_WRAPPED_OBJECT)) {
-						throw new MissingWrappedObjectException();
-					} else {
-						unwrapped = pType.newInstance();
+					if (LooseContext.is(CONTEXT_IGNORE_MISSING_WRAPPED_OBJECT)) {
+						TaggedLogger logger = Registry
+								.impl(TaggedLoggers.class)
+								.getLogger(
+										null,
+										AlcinaLoggingTags.WRAPPED_OBJECT_REF_INTEGRITY);
+						logger.format(
+								"Warning - ref integrity (wrapped object) - missing %s.%s #%s",
+								wrapper.getClass(), pd.getName(),
+								wrapper.getId());
+						if (LooseContext
+								.getBoolean(CONTEXT_THROW_MISSING_WRAPPED_OBJECT)) {
+							throw new MissingWrappedObjectException();
+						} else {
+							unwrapped = pType.newInstance();
+						}
 					}
 				} else {
 					checkWrappedObjectAccess(wrapper, wrappedObject, pType);

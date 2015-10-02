@@ -43,6 +43,8 @@ public class MemCacheCriteria implements Criteria {
 
 	int firstResult;
 
+	private ResultTransformer resultTransformer;
+
 	public MemCacheCriteria(Class clazz, String alias,
 			Criteria entityManagerCriteria, MemCacheSession memCacheSession) {
 		this(clazz, alias, entityManagerCriteria, JoinType.NONE,
@@ -250,8 +252,18 @@ public class MemCacheCriteria implements Criteria {
 		return this.entityManagerCriteria.setReadOnly(arg0);
 	}
 
-	public Criteria setResultTransformer(ResultTransformer arg0) {
-		return this.entityManagerCriteria.setResultTransformer(arg0);
+	public Criteria setResultTransformer(ResultTransformer resultTransformer) {
+		this.resultTransformer = resultTransformer;
+		if (this.entityManagerCriteria != null) {
+			return this.entityManagerCriteria
+					.setResultTransformer(resultTransformer);
+		} else {
+			return null;
+		}
+	}
+
+	public ResultTransformer getResultTransformer() {
+		return this.resultTransformer;
 	}
 
 	public Criteria setTimeout(int arg0) {

@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.entity.projection;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -36,20 +35,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
+import cc.alcina.framework.common.client.logic.permissions.HasReadPermission;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.ProjectByValue;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 
 @SuppressWarnings("unchecked")
 /**
@@ -58,6 +65,8 @@ import cc.alcina.framework.entity.SEUtilities;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class GraphProjection {
+	private static final int LOOKUP_SIZE = 1000;
+
 	public static Type getGenericType(Field field) {
 		if (!genericTypeLookup.containsKey(field)) {
 			genericTypeLookup.put(field, field.getGenericType());
@@ -90,7 +99,8 @@ public class GraphProjection {
 		return c.isPrimitive() || c == String.class || c == Boolean.class
 				|| c == Character.class || c.isEnum() || c == Class.class
 				|| Number.class.isAssignableFrom(c)
-				|| Date.class.isAssignableFrom(c) || isEnumSubclass(c);
+				|| Date.class.isAssignableFrom(c) || isEnumSubclass(c)
+				|| ProjectByValue.class.isAssignableFrom(c);
 	}
 
 	public static synchronized void registerConstructorMethods(
@@ -123,43 +133,60 @@ public class GraphProjection {
 
 	public static boolean replaceTimestampsWithDates = true;
 
-	protected IdentityHashMap reached = new IdentityHashMap();
+	protected IdentityHashMap reached = new IdentityHashMap(LOOKUP_SIZE);
 
-	Map<Class, Field[]> projectableFields = new HashMap<Class, Field[]>();
+	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>(
+			LOOKUP_SIZE);
 
-	Map<Class, Set<Field>> perObjectPermissionFields = new HashMap<Class, Set<Field>>();
+	Map<Field, PropertyPermissions> perFieldPermission = new LinkedHashMap<Field, PropertyPermissions>(
+			LOOKUP_SIZE);
 
-	Map<Class, Boolean> perObjectPermissionClasses = new HashMap<Class, Boolean>();
+	Map<Class, Field[]> projectableFields = new HashMap<Class, Field[]>(
+			LOOKUP_SIZE);
+
+	Map<String, Set<Field>> perObjectPermissionFields = new HashMap<String, Set<Field>>(
+			LOOKUP_SIZE);
+
+	Map<Class, Boolean> perObjectPermissionClasses = new HashMap<Class, Boolean>(
+			LOOKUP_SIZE);
 
 	static Map<Field, Type> genericTypeLookup = new NullWrappingMap<Field, Type>(
-			new ConcurrentHashMap());
+			new ConcurrentHashMap(LOOKUP_SIZE));
 
 	static Map<Field, Boolean> genericHiliTypeLookup = new NullWrappingMap<Field, Boolean>(
-			new ConcurrentHashMap());
-
-	static Map<Class, Permission> perClassReadPermission = new NullWrappingMap<Class, Permission>(
-			new ConcurrentHashMap());
+			new ConcurrentHashMap(LOOKUP_SIZE));
 
 	static Map<Class, List<Field>> perClassDeclaredFields = new NullWrappingMap<Class, List<Field>>(
-			new ConcurrentHashMap());
+			new ConcurrentHashMap(LOOKUP_SIZE));
 
 	static Map<Field, PropertyPermissions> propertyPermissionLookup = new NullWrappingMap<Field, PropertyPermissions>(
-			new ConcurrentHashMap());
+			new ConcurrentHashMap(LOOKUP_SIZE));
 
-	static Map<Class, ConstructorMethod> constructorMethodsLookup = new LinkedHashMap<Class, GraphProjection.ConstructorMethod>();
+	static Map<Class, ConstructorMethod> constructorMethodsLookup = new LinkedHashMap<Class, GraphProjection.ConstructorMethod>(
+			LOOKUP_SIZE);
 
-	static Map<Class, Constructor> constructorLookup = new ConcurrentHashMap<Class, Constructor>();
+	static Map<Class, Constructor> constructorLookup = new ConcurrentHashMap<Class, Constructor>(
+			LOOKUP_SIZE);
 
 	public static final String CONTEXT_REPLACE_MAP = GraphProjection.class
 			+ ".CONTEXT_REPLACE_MAP";
 
-	Map<Field, PropertyPermissions> perFieldPermission = new LinkedHashMap<Field, PropertyPermissions>();
+	public static final String CONTEXT_DUMP_PROJECTION_STATS = GraphProjection.class
+			+ ".CONTEXT_DUMP_PROJECTION_STATS";
 
 	private int maxDepth = Integer.MAX_VALUE;
 
 	private LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap = null;
 
+	private List<GraphProjectionContext> contexts = new ArrayList<GraphProjectionContext>();
+
+	private boolean dumpProjectionStats;
+
+	private CountingMap<String> contextStats = new CountingMap<String>();
+
 	public GraphProjection() {
+		this.dumpProjectionStats = LooseContext
+				.is(CONTEXT_DUMP_PROJECTION_STATS);
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 	}
 
@@ -199,7 +226,8 @@ public class GraphProjection {
 			}
 			result = (Field[]) allFields.toArray(new Field[allFields.size()]);
 			projectableFields.put(clazz, result);
-			perObjectPermissionFields.put(clazz, dynamicPermissionFields);
+			perObjectPermissionFields.put(clazz.getName(),
+					dynamicPermissionFields);
 			for (Field field : dynamicPermissionFields) {
 				PropertyPermissions pp = getPropertyPermission(field);
 				perFieldPermission.put(field, pp);
@@ -246,47 +274,66 @@ public class GraphProjection {
 
 	public <T> T project(T source, GraphProjectionContext context)
 			throws Exception {
-		return project(source, null, context);
+		T result = project(source, null, context, false);
+		if (dumpProjectionStats && context == null) {
+			System.out.format(
+					"Projection stats:\n===========\n%s\n",
+					contextStats
+							.reverseMap(true)
+							.entrySet()
+							.stream()
+							.map(e -> e.getKey() + ":"
+									+ CommonUtils.join(e.getValue(), "\n\t: "))
+							.collect(Collectors.joining("\t\n")));
+		}
+		return result;
 	}
 
 	public <T> T project(T source, Object alsoMapTo,
-			GraphProjectionContext context) throws Exception {
+			GraphProjectionContext context, boolean easysChecked)
+			throws Exception {
 		if (source == null) {
 			return null;
 		}
-		Class c = source.getClass();
-		if (c == Timestamp.class && replaceTimestampsWithDates) {
-			// actually breaks the (T) contract here - naughty
-			// this is because the arithmetic involved in reconstructing
-			// timestamps in a gwt js client
-			// is expensive
-			return (T) new Date(((Timestamp) source).getTime());
+		Class sourceClass = source.getClass();
+		if (!easysChecked) {
+			if (sourceClass == Timestamp.class && replaceTimestampsWithDates) {
+				// actually breaks the (T) contract here - naughty
+				// this is because the arithmetic involved in reconstructing
+				// timestamps in a gwt js client
+				// is expensive
+				return (T) new Date(((Timestamp) source).getTime());
+			}
+			if (isPrimitiveOrDataClass(sourceClass)) {
+				return source;
+			}
+			if (replaceMap != null && source instanceof HasIdAndLocalId
+					&& replaceMap.containsKey(source)) {
+				source = (T) replaceMap.get(source);
+			}
+			if (reached.containsKey(source)) {
+				return (T) reached.get(source);
+			}
 		}
-		if (isPrimitiveOrDataClass(c)) {
-			return source;
-		}
-		if (replaceMap != null && source instanceof HasIdAndLocalId
-				&& replaceMap.containsKey(source)) {
-			source = (T) replaceMap.get(source);
-		}
-		if (reached.containsKey(source)) {
-			return (T) reached.get(source);
-		}
-		Class<? extends Object> sourceClass = source.getClass();
 		if (!checkObjectPermissions(source)) {
 			return null;
 		}
+		if (dumpProjectionStats && context != null) {
+			contextStats.add(context.toPoint());
+		}
 		T projected = sourceClass.isArray() ? (T) Array.newInstance(
 				sourceClass.getComponentType(), Array.getLength(source))
-				: (T) newInstance(sourceClass);
+				: (T) ((source instanceof MemCacheProxy) ? ((MemCacheProxy) source)
+						.nonProxy() : newInstance(sourceClass));
 		reached.put(source, projected);
 		if (alsoMapTo != null) {
 			reached.put(alsoMapTo, projected);
 		}
 		if (dataFilter != null) {
 			if (context == null) {
-				context = new GraphProjectionContext(c, null, null, projected,
-						source);
+				context = new GraphProjectionContext();
+				context.adopt(sourceClass, null, null, projected, source);
+				contexts.add(context);
 			}
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
@@ -304,20 +351,57 @@ public class GraphProjection {
 		if (context != null && context.depth >= maxDepth) {
 			return projected;
 		}
+		if (source instanceof MemCacheProxy) {
+			((MemCacheProxy) source).beforeProjection();
+		}
 		Field[] fields = getFieldsForClass(projected);
 		Set<Field> checkFields = perObjectPermissionFields.get(projected
-				.getClass());
+				.getClass().getName());
 		for (Field field : fields) {
-			Object value = field.get(source);
 			if (checkFields.contains(field)) {
 				if (!permitField(field, source)) {
 					continue;
 				}
 			}
-			GraphProjectionContext childContext = new GraphProjectionContext(c,
-					field, context, projected, source);
-			Object cv = project(value, childContext);
-			field.set(projected, cv);
+			Object value = field.get(source);
+			if (value == null) {
+				field.set(projected, null);
+			} else {
+				// the 10 or so lines are manual unwrapping trial
+				Class fc = field.getType();
+				if (fc == Timestamp.class && replaceTimestampsWithDates) {
+					// actually breaks the (T) contract here - naughty
+					// this is because the arithmetic involved in reconstructing
+					// timestamps in a gwt js client
+					// is expensive
+					field.set(projected,
+							(T) new Date(((Timestamp) value).getTime()));
+					continue;
+				}
+				if (isPrimitiveOrDataClass(fc)) {
+					field.set(projected, value);
+					continue;
+				}
+				if (replaceMap != null && value instanceof HasIdAndLocalId
+						&& replaceMap.containsKey(value)) {
+					value = (T) replaceMap.get(value);
+				}
+				if (reached.containsKey(value)) {
+					field.set(projected, reached.get(value));
+					continue;
+				}
+				GraphProjectionContext childContext = null;
+				if (context == null || context.depth() + 1 == contexts.size()) {
+					childContext = new GraphProjectionContext();
+					contexts.add(childContext);
+				} else {
+					childContext = contexts.get(context.depth() + 1);
+				}
+				childContext.adopt(sourceClass, field, context, projected,
+						source);
+				Object cv = project(value, null, childContext, true);
+				field.set(projected, cv);
+			}
 		}
 		return projected;
 	}
@@ -334,8 +418,12 @@ public class GraphProjection {
 			c = new ArrayList();
 		} else if (coll instanceof LiSet) {
 			c = new LiSet();
+		} else if (coll instanceof LightSet) {
+			c = new LightSet();
 		} else if (coll instanceof Set) {
 			c = new LinkedHashSet();
+		} else if (coll instanceof ConcurrentLinkedQueue) {
+			c = new ConcurrentLinkedQueue();
 		}
 		reached.put(coll, c);
 		Iterator itr = coll.iterator();
@@ -405,6 +493,10 @@ public class GraphProjection {
 	}
 
 	boolean checkObjectPermissions(Object source) {
+		if (source instanceof HasReadPermission
+				&& !dataFilter.ignoreObjectHasReadPermissionCheck()) {
+			return ((HasReadPermission) source).canRead();
+		}
 		Class<? extends Object> sourceClass = source.getClass();
 		if (!perObjectPermissionClasses.containsKey(sourceClass)) {
 			Boolean result = fieldFilter == null ? new Boolean(true)
@@ -431,7 +523,7 @@ public class GraphProjection {
 	}
 
 	public static class GraphProjectionContext {
-		public WeakReference<GraphProjectionContext> parentRef;
+		public GraphProjectionContext parent;
 
 		public Object projectedOwner;
 
@@ -447,15 +539,17 @@ public class GraphProjection {
 
 		private int depth;
 
-		public GraphProjectionContext(Class clazz, Field field,
+		public GraphProjectionContext() {
+		}
+
+		public void adopt(Class clazz, Field field,
 				GraphProjectionContext parent, Object projectedOwner,
 				Object sourceOwner) {
 			this.clazz = clazz;
 			this.field = field;
 			this.sourceOwner = sourceOwner;
 			this.fieldName = field == null ? "" : field.getName();
-			this.parentRef = parent == null ? null
-					: new WeakReference<GraphProjectionContext>(parent);
+			this.parent = parent;
 			this.projectedOwner = projectedOwner;
 			this.depth = parent == null ? 0 : parent.depth + 1;
 			if (depth() > debugDepth) {
@@ -483,8 +577,17 @@ public class GraphProjection {
 
 		@Override
 		public String toString() {
-			return (parentRef == null ? "" : parentRef.get().toString() + "::")
+			return (parent == null ? "" : parent.toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
+		}
+
+		public String toPoint() {
+			String point = field == null ? clazz.getSimpleName() : field
+					.getType().getSimpleName()
+					+ ": "
+					+ clazz.getSimpleName()
+					+ "." + fieldName;
+			return point;
 		}
 	}
 
@@ -497,6 +600,10 @@ public class GraphProjection {
 		<T> T filterData(T original, T projected,
 				GraphProjectionContext context, GraphProjection graphProjection)
 				throws Exception;
+
+		default boolean ignoreObjectHasReadPermissionCheck() {
+			return false;
+		}
 
 		<T> boolean projectIntoCollection(T value, T projected,
 				GraphProjectionContext context);

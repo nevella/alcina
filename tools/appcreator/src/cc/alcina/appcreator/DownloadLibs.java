@@ -29,8 +29,8 @@ public class DownloadLibs extends Task {
 	@Override
 	public void execute() throws BuildException {
 		try {
-			String tmpDir = getProject().getProperty(
-					Constants.TMP_DOWNLOAD_DIR);
+			String tmpDir = getProject()
+					.getProperty(Constants.TMP_DOWNLOAD_DIR);
 			File tmpDirFile = new File(PackageUtils.translatePath(tmpDir));
 			Mkdir mkdir;
 			for (DownloadableFile downloadableFile : downloadableFileList
@@ -41,7 +41,8 @@ public class DownloadLibs extends Task {
 				Get get = new Get();
 				get.setProject(getProject());
 				get.setTaskName("get");
-				File targetFile = new File(PackageUtils.translatePath(targetPath));
+				File targetFile = new File(
+						PackageUtils.translatePath(targetPath));
 				if (targetFile.exists()) {
 					continue;
 				}
@@ -51,12 +52,13 @@ public class DownloadLibs extends Task {
 				mkdir.setProject(getProject());
 				mkdir.setDir(dir);
 				mkdir.setTaskName("mkdir");
-				log(""+dir);
+				log("" + dir);
 				mkdir.execute();
 				if (downloadableFile.getContainerPath() != null) {
 					containerPath = containerDirectory + "/"
 							+ downloadableFile.getContainerPath();
-					downloadFile = new File(PackageUtils.translatePath(containerPath));
+					downloadFile = new File(
+							PackageUtils.translatePath(containerPath));
 				}
 				if (!downloadFile.exists()) {
 					log("Downloading " + PackageUtils.fileOf(targetPath));
@@ -64,9 +66,24 @@ public class DownloadLibs extends Task {
 							+ "/" + downloadFile.getName()));
 					clearTmpDir();
 					get.setDest(tmpFile);
+					String libsLocalPath = getProject().getProperty(
+							(Constants.ALCINA_DOWNLOAD_LIBS_LOCAL));
+					String url = downloadableFile.getUrl();
+					if (libsLocalPath != null) {
+						url = url.replace(
+								"http://alcina.cc/files/framework/lib",
+								libsLocalPath);
+					}
+					String deployLocalPath = getProject().getProperty(
+							(Constants.ALCINA_DOWNLOAD_DEPLOY_LOCAL));
+					if (deployLocalPath != null) {
+						url = url.replace(
+								"http://alcina.cc/files/framework/deploy",
+								deployLocalPath);
+					}
 					// get.setVerbose(true);
 					try {
-						get.setSrc(new URL(downloadableFile.getUrl()));
+						get.setSrc(new URL(url));
 						get.execute();
 						Move move = new Move();
 						move.setProject(getProject());

@@ -26,6 +26,8 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 @MappedSuperclass
 public abstract class AbstractDomainBase extends BaseBindable implements
 		HasIdAndLocalId, HasVersionNumber {
+	static final transient long serialVersionUID = 1L;
+
 	protected transient int hash = 0;
 
 	protected transient String comparisonString;
@@ -87,8 +89,8 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 
 	@UnsafeNativeLong
 	private native int fastHash(long id, long localId, int classHashCode)/*-{
-	return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h
-		^ classHashCode;
+        return id.l ^ id.m ^ id.h ^ localId.l ^ localId.m ^ localId.h
+                ^ classHashCode;
 	}-*/;
 
 	/**
@@ -142,13 +144,22 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 	}
 
 	protected int _compareTo(AbstractDomainBase o) {
-		if (comparisonString() != null && o.comparisonString() != null) {
-			int i = comparisonString().compareTo(o.comparisonString());
+		String s1 = comparisonString();
+		String s2 = o.comparisonString();
+		if (s1 != null && s2 != null) {
+			int i = s1.compareTo(s2);
 			if (i != 0) {
 				return i;
 			}
+		} else {
+			if (s1 != null) {
+				return 1;
+			}
+			if (s2 != null) {
+				return -1;
+			}
 		}
-		return new Long(getId()).compareTo(new Long(o.getId()));
+		return CommonUtils.compareLongs(getId(), o.getId());
 	}
 
 	protected String comparisonString() {
@@ -156,7 +167,7 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 				"no display name available, and using comparator");
 	}
 
-	public  long provideIdOrLocalIdIfZero() {
+	public long provideIdOrLocalIdIfZero() {
 		return getId() != 0 ? getId() : getLocalId();
 	}
 }

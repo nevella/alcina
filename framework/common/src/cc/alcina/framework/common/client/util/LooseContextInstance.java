@@ -66,24 +66,10 @@ public class LooseContextInstance {
 		return properties.get(key) != Boolean.FALSE;
 	}
 
-	private void maybeDebugStack(boolean push) {
-		if (debugLines > 0) {
-			Thread t = Thread.currentThread();
-			List<String> lines = new ArrayList<String>();
-			StackTraceElement[] trace = t.getStackTrace();
-			for (int i = 3; i < 3 + debugLines && i < trace.length; i++) {
-				lines.add(trace[i].toString());
-			}
-			System.err.println(CommonUtils.formatJ("%s-%s-%s-%s: %s\n",
-					t.getId(), hashCode(), push, stack.size(),
-					CommonUtils.join(lines, "\n")));
-		}
-	}
-
-	public static int debugLines = 0;
+	public static StackDebug stackDebug = new StackDebug("LooseContext");
 
 	public void pop() {
-		maybeDebugStack(false);
+		stackDebug.maybeDebugStack(stack, false);
 		TopicPublisher publisher = ensureTopicPublisher();
 		for (TopicListener listener : addedListeners.keySet()) {
 			for (String key : addedListeners.get(listener)) {
@@ -95,7 +81,7 @@ public class LooseContextInstance {
 	}
 
 	public void push() {
-		maybeDebugStack(true);
+		stackDebug.maybeDebugStack(stack, true);
 		stack.push(properties);
 		listenerStack.push(addedListeners);
 		addedListeners = new Multimap<TopicListener, List<String>>();
@@ -104,12 +90,15 @@ public class LooseContextInstance {
 
 	public void pushWithKey(String key, Object value) {
 		push();
-		set(key, value);
+		if (key != null) {
+			set(key, value);
+		}
 	}
 
 	public void remove(String key) {
 		properties.remove(key);
 	}
+
 
 	public void set(String key, Object value) {
 		properties.put(key, value);

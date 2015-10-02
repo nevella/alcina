@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
@@ -69,6 +68,7 @@ import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DurationCounter;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
@@ -261,7 +261,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.createQuery(
 						"from "
 								+ getImplementationSimpleClassName(Iid.class)
-								+ " i inner join fetch i.rememberMeUser where i.instanceId = ?")
+								+ " i left join fetch i.rememberMeUser where i.instanceId = ?")
 				.setParameter(1, iid).getResultList();
 		return (IID) ((l.size() == 0) ? getNewImplementationInstance(Iid.class)
 				: l.get(0));
@@ -291,7 +291,12 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			t = new EntityUtils().detachedClone(t);
 		}
 		if (unwrap) {
-			unwrap((HasId) t);
+			try {
+				PermissionsManager.get().pushCurrentUser();
+				unwrap((HasId) t);
+			} finally {
+				PermissionsManager.get().popUser();
+			}
 		}
 		return t;
 	}
@@ -312,8 +317,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			}
 			String eql = String.format(
 					value == null ? "from %s where %s is null"
-							: caseInsensitive ? "from %s where lower(%s) = ?"
-									: "from %s where %s = ?", clazz
+							: caseInsensitive ? "from %s where lower(%s) = ?1"
+									: "from %s where %s = ?1", clazz
 							.getSimpleName(), key);
 			if (ignoreId != null) {
 				eql += " AND id != " + ignoreId;
@@ -344,7 +349,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
 			Object value1, String key2, Object value2) {
-		String eql = String.format("from %s where %s=? and %s=?",
+		String eql = String.format("from %s where %s=?1 and %s=?2",
 				clazz.getSimpleName(), key1, key2);
 		Query q = getEntityManager().createQuery(eql).setParameter(1, value1)
 				.setParameter(2, value2);
@@ -406,38 +411,58 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	@Override
 	public List<DomainTransformRequestPersistent> getPersistentTransformRequests(
-			long fromId, long toId, String specificIds, boolean mostRecentOnly,
+			long fromId, long toId, Collection<Long> specificIds, boolean mostRecentOnly,
 			boolean populateTransformSourceObjects) {
+		boolean logTransformReadMetrics = ResourceUtilities.is(CommonPersistenceBase.class,"logTransformReadMetrics");
 		Query query = null;
+		List<DomainTransformRequestPersistent> dtrps = null;
 		if (mostRecentOnly) {
-			String eql = String.format("select distinct dtrp "
-					+ "from %s dtrp " + " where dtrp.id>= %s " + ""
-					+ "order by dtrp.id desc",
-					getImplementation(DomainTransformRequestPersistent.class)
+			DurationCounter dc = new DurationCounter();
+			String eql = String.format(
+					"select dte.domainTransformRequestPersistent.id  "
+							+ "from %s dte " + "order by dte.id desc",
+					getImplementation(DomainTransformEventPersistent.class)
 							.getSimpleName(), fromId);
 			query = getEntityManager().createQuery(eql);
 			query.setMaxResults(1);
+			List<Long> ids = query.getResultList();
+			long id = ids.isEmpty() ? 0L : ids.get(0);
+			dtrps = new ArrayList<DomainTransformRequestPersistent>();
+			DomainTransformRequestPersistent instance = getNewImplementationInstance(DomainTransformRequestPersistent.class);
+			instance.setId(id);
+			dtrps.add(instance);
+			if(logTransformReadMetrics){
+				dc.end("dtrp-get-most-recent - %s ms");
+			}
 		} else {
+			DurationCounter dc = new DurationCounter();
 			String idFilter = specificIds == null ? String.format(
 					"dtrp.id>=%s and dtrp.id<=%s", fromId, toId) : String
-					.format("dtrp.id in (%s)", specificIds);
+					.format("dtrp.id in %s", EntityUtils.longsToIdClause(specificIds));
 			String eql = String.format("select distinct dtrp "
-					+ "from %s dtrp " + "left join fetch dtrp.events "
+					+ "from %s dtrp " + "inner join fetch dtrp.events "
 					+ "inner join fetch dtrp.clientInstance " + " where %s "
 					+ "order by dtrp.id",
 					getImplementation(DomainTransformRequestPersistent.class)
 							.getSimpleName(), idFilter);
 			query = getEntityManager().createQuery(eql);
+			dtrps = new ArrayList<DomainTransformRequestPersistent>(
+					query.getResultList());
+			if(logTransformReadMetrics){
+				dc.end("dtrp-get-dtrps - %s ms");
+			}
 		}
-		List<DomainTransformRequestPersistent> dtrps = new ArrayList<DomainTransformRequestPersistent>(
-				query.getResultList());
 		if (populateTransformSourceObjects) {
+			DurationCounter dc = new DurationCounter();
 			List<DomainTransformEvent> events = (List) DomainTransformRequest
 					.allEvents(dtrps);
-			DetachedEntityCache cache = cacheEntities(events, false);
+			DetachedEntityCache cache = cacheEntities(events, false, false);
 			for (DomainTransformEvent event : events) {
 				event.setSource((HasIdAndLocalId) cache.get(
 						event.getObjectClass(), event.getObjectId()));
+			}
+			if(logTransformReadMetrics){
+				dc.end("populate transform source events - %s ms");
 			}
 		}
 		DetachedEntityCache cache = new DetachedEntityCache();
@@ -493,7 +518,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 								+ " u " + "left join fetch u.primaryGroup "
 								+ "left join fetch u.secondaryGroups g "
 								+ "left join fetch g.memberOfGroups sg "
-								+ "where u.%s = ?", getUserNamePropertyName()))
+								+ "where u.%s = ?1", getUserNamePropertyName()))
 				.setParameter(1, userName).getResultList();
 		return (l.size() == 0) ? null : l.get(0);
 	}
@@ -545,7 +570,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				.createQuery(
 						"from "
 								+ getImplementationSimpleClassName(ActionLogItem.class)
-								+ " a where a.actionClassName=? order"
+								+ " a where a.actionClassName=?1 order"
 								+ " by a.actionDate DESC")
 				.setParameter(1, className).setMaxResults(count)
 				.getResultList();
@@ -559,34 +584,54 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	public void logActionItem(ActionLogItem result) {
 		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects(true);
-		getEntityManager().merge(result);
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects(true);
+			getEntityManager().merge(result);
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public long merge(HasId hi) {
-		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects(true);
-		persistWrappables(hi);
-		HasId merge = getEntityManager().merge(hi);
-		return merge.getId();
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects(true);
+			AppPersistenceBase.checkNotReadOnly();
+			persistWrappables(hi);
+			HasId merge = getEntityManager().merge(hi);
+			return merge.getId();
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public IUser mergeUser(IUser user) {
-		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects();
-		IUser merge = getEntityManager().merge(user);
-		getEntityManager().flush();
-		return merge;
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			AppPersistenceBase.checkNotReadOnly();
+			connectPermissionsManagerToLiveObjects();
+			IUser merge = getEntityManager().merge(user);
+			getEntityManager().flush();
+			return merge;
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public <WP extends WrapperPersistable> Long persist(WP gwpo)
 			throws Exception {
-		AppPersistenceBase.checkNotReadOnly();
-		connectPermissionsManagerToLiveObjects(true);
-		WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
-				gwpo.getClass(), gwpo.getId());
-		wrapper.setObject(gwpo);
-		return wrapper.getId();
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			AppPersistenceBase.checkNotReadOnly();
+			connectPermissionsManagerToLiveObjects(true);
+			WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
+					gwpo.getClass(), gwpo.getId());
+			wrapper.setObject(gwpo);
+			return wrapper.getId();
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
@@ -649,25 +694,32 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
-		connectPermissionsManagerToLiveObjects();
-		String message = def.validatePermissions();
-		if (message != null) {
-			throw new WrappedRuntimeException(new PermissionsException(message));
-		}
-		Searcher searcher = (Searcher) Registry.get().instantiateSingle(
-				Searcher.class, def.getClass());
 		try {
 			LooseContext.push();
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects();
+			String message = def.validatePermissions();
+			if (message != null) {
+				throw new WrappedRuntimeException(new PermissionsException(
+						message));
+			}
+			Searcher searcher = (Searcher) Registry.get().instantiateSingle(
+					Searcher.class, def.getClass());
 			SearchResultsBase result = searcher.search(def, pageNumber,
 					getEntityManager());
 			if (LooseContext.getBoolean(Searcher.CONTEXT_RESULTS_ARE_DETACHED)) {
 				return result;
 			} else {
-				return new EntityUtils().detachedClone(result);
+				return projectSearchResults(result);
 			}
 		} finally {
+			PermissionsManager.get().popUser();
 			LooseContext.pop();
 		}
+	}
+
+	protected SearchResultsBase projectSearchResults(SearchResultsBase result) {
+		return new EntityUtils().detachedClone(result);
 	}
 
 	public abstract void setEntityManager(EntityManager entityManager);
@@ -690,25 +742,30 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
-		preloadWrappedObjects(wrappers);
-		RuntimeException lastException = null;
-		for (HasId wrapper : wrappers) {
-			try {
-				unwrap(wrapper);
-			} catch (RuntimeException e) {
-				System.out.println(e.getMessage());
-				lastException = e;
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects();
+			preloadWrappedObjects(wrappers);
+			RuntimeException lastException = null;
+			for (HasId wrapper : wrappers) {
+				try {
+					unwrap(wrapper);
+				} catch (RuntimeException e) {
+					System.out.println(e.getMessage());
+					lastException = e;
+				}
 			}
+			if (lastException != null) {
+				throw lastException;
+			}
+			return wrappers;
+		} finally {
+			PermissionsManager.get().popUser();
 		}
-		if (lastException != null) {
-			throw lastException;
-		}
-		return wrappers;
 	}
 
 	public HasId unwrap(HasId wrapper) {
 		try {
-			connectPermissionsManagerToLiveObjects();
 			new WrappedObjectPersistence().unwrap(wrapper, getEntityManager(),
 					Registry.impl(WrappedObjectProvider.class));
 		} catch (Exception e) {
@@ -722,48 +779,54 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	}
 
 	public <T extends ServerValidator> List<T> validate(List<T> validators) {
-		connectPermissionsManagerToLiveObjects();
-		ArrayList<T> result = new ArrayList<T>();
-		for (T serverValidator : validators) {
-			if (serverValidator instanceof ServerUniquenessValidator) {
-				ServerUniquenessValidator suv = (ServerUniquenessValidator) serverValidator;
-				int ctr = 0;
-				String value = suv.getValue();
-				suv.setSuggestedValue(value);
-				while (true) {
-					Object item = getItemByKeyValue(suv.getObjectClass(),
-							suv.getPropertyName(), value, false, suv.getOkId(),
-							suv.isCaseInsensitive(), true);
-					if (item == null) {
-						if (ctr != 0) {
-							suv.setSuggestedValue(value);
-							suv.setMessage("Item exists. Suggested value: "
-									+ value);
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			connectPermissionsManagerToLiveObjects();
+			ArrayList<T> result = new ArrayList<T>();
+			for (T serverValidator : validators) {
+				if (serverValidator instanceof ServerUniquenessValidator) {
+					ServerUniquenessValidator suv = (ServerUniquenessValidator) serverValidator;
+					int ctr = 0;
+					String value = suv.getValue();
+					suv.setSuggestedValue(value);
+					while (true) {
+						Object item = getItemByKeyValue(suv.getObjectClass(),
+								suv.getPropertyName(), value, false,
+								suv.getOkId(), suv.isCaseInsensitive(), true);
+						if (item == null) {
+							if (ctr != 0) {
+								suv.setSuggestedValue(value);
+								suv.setMessage("Item exists. Suggested value: "
+										+ value);
+							}
+							break;
 						}
-						break;
+						// no suggestions, just error
+						if (suv.getValueTemplate() == null) {
+							suv.setMessage("Item exists");
+							break;
+						}
+						ctr++;
+						value = String.format(suv.getValueTemplate(),
+								suv.getValue() == null ? "" : suv.getValue(),
+								ctr);
 					}
-					// no suggestions, just error
-					if (suv.getValueTemplate() == null) {
-						suv.setMessage("Item exists");
-						break;
+				} else {
+					Class c = Registry.get().lookupSingle(
+							ServerValidator.class, serverValidator.getClass());
+					if (c != null) {
+						ServerValidatorHandler handler = (ServerValidatorHandler) Registry
+								.get().instantiateSingle(ServerValidator.class,
+										serverValidator.getClass());
+						handler.handle(serverValidator, getEntityManager());
 					}
-					ctr++;
-					value = String.format(suv.getValueTemplate(),
-							suv.getValue() == null ? "" : suv.getValue(), ctr);
 				}
-			} else {
-				Class c = Registry.get().lookupSingle(ServerValidator.class,
-						serverValidator.getClass());
-				if (c != null) {
-					ServerValidatorHandler handler = (ServerValidatorHandler) Registry
-							.get().instantiateSingle(ServerValidator.class,
-									serverValidator.getClass());
-					handler.handle(serverValidator, getEntityManager());
-				}
+				result.add(serverValidator);
 			}
-			result.add(serverValidator);
+			return result;
+		} finally {
+			PermissionsManager.get().popUser();
 		}
-		return result;
 	}
 
 	public boolean validateClientInstance(long id, int auth) {
@@ -871,6 +934,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 
 	private void tryAddSourceObjectName(
 			DomainTransformException transformException) {
+		if (transformException.getEvent() == null) {
+			return;
+		}
 		try {
 			HasIdAndLocalId object = TransformManager.get().getObject(
 					transformException.getEvent(), true);
@@ -908,7 +974,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		}
 		String eql = String
 				.format("select dtep from %s dtep "
-						+ "where  dtep.id>? and dtep.objectClassRef.id in %s "
+						+ "where  dtep.id>?1 and dtep.objectClassRef.id in %s "
 						+ "order by dtep.id desc",
 						getImplementationSimpleClassName(DomainTransformEventPersistent.class),
 						EntityUtils.longsToIdClause(classRefIds));
@@ -1022,6 +1088,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 			} else {
 				iid.setRememberMeUser(null);
 			}
+			cp.iidUpdated(iid, false);
 			Registry.impl(ClientInstanceAuthenticationCache.class)
 					.cacheIid(iid);
 			cp.getEntityManager().merge(iid);
@@ -1063,7 +1130,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				}
 				newId = ++clientInstanceIdCounter;
 			}
-			cp.connectPermissionsManagerToLiveObjects(true);
 			Class<? extends ClientInstance> clientInstanceImpl = cp
 					.getImplementation(ClientInstance.class);
 			try {
@@ -1123,6 +1189,9 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		return handshakeObjectProviderClass;
 	}
 
+	public void iidUpdated(Iid iid, boolean create) {
+	}
+
 	public static void setHandshakeObjectProviderClass(
 			Class<? extends HandshakeObjectProvider> handshakeObjectProviderClass) {
 		CommonPersistenceBase.handshakeObjectProviderClass = handshakeObjectProviderClass;
@@ -1179,17 +1248,18 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				userName = iid.getRememberMeUser() == null ? null : iid
 						.getRememberMeUser().getUserName();
 			} else {
-				Iid nullHolder = getNewImplementationInstance(Iid.class);
-				nullHolder.setInstanceId(iidKey);
-				nullHolder.setId(nullIidCounter.getAndDecrement());
+				// this iid is not in the db, but ... do we care? possibly RO
+				// db. persist it
+				// TODO very outside chance of DOS here
+				Iid newIid = getNewImplementationInstance(Iid.class);
+				newIid.setInstanceId(iidKey);
+				getEntityManager().persist(newIid);
 				Registry.impl(ClientInstanceAuthenticationCache.class)
-						.cacheIid(iid);
+						.cacheIid(newIid);
 			}
 		}
 		return userName;
 	}
-
-	private AtomicInteger nullIidCounter = new AtomicInteger(1000000);
 
 	@Override
 	public boolean isValidIid(String iidKey) {
@@ -1199,7 +1269,7 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.createQuery(
 							"from "
 									+ getImplementationSimpleClassName(Iid.class)
-									+ " i  where i.instanceId = ?")
+									+ " i  where i.instanceId = ?1")
 					.setParameter(1, iidKey).getResultList();
 			if (list.isEmpty()) {
 				return false;
@@ -1214,9 +1284,11 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 	/**
 	 * Note - parameter <em>fixWithPrecreate</em> will only be used in db
 	 * replays for dbs which are somehow missing transform events
+	 *
+	 * @param onlyIfOptimal
 	 */
 	DetachedEntityCache cacheEntities(List<DomainTransformEvent> items,
-			boolean fixWithPrecreate) {
+			boolean fixWithPrecreate, boolean onlyCacheIfWouldOptimiseCalls) {
 		Multiset<Class, Set<Long>> lkp = new Multiset<Class, Set<Long>>();
 		Multiset<Class, Set<Long>> creates = new Multiset<Class, Set<Long>>();
 		DetachedEntityCache cache = new DetachedEntityCache();
@@ -1239,8 +1311,15 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 		for (Entry<Class, Set<Long>> entry : lkp.entrySet()) {
 			Class storageClass = null;
 			Class clazz = entry.getKey();
-			if (clazz == null) {
-				continue; // early, incorrect data - can be removed
+			List<Long> ids = new ArrayList<Long>(entry.getValue());
+			if (clazz == null
+					|| (ids.size() < 2 && onlyCacheIfWouldOptimiseCalls)) {
+				continue; // former means early, incorrect data - can be removed
+				// re 'onlyCacheIfWouldOptimiseCalls': no point making a call if
+				// only
+				// one of class (for
+				// optimisation) - but must if we need the results for mixing
+				// back into memcache
 			}
 			if (clazz.getAnnotation(Entity.class) != null) {
 				storageClass = clazz;
@@ -1249,7 +1328,6 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 				storageClass = getImplementation(WrappedObject.class);
 			}
 			if (storageClass != null) {
-				List<Long> ids = new ArrayList<Long>(entry.getValue());
 				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
 					List<Long> idsSlice = ids.subList(i,
 							Math.min(ids.size(), i + PRECACHE_RQ_SIZE));

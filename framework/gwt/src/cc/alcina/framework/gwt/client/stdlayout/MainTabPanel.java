@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
+import cc.alcina.framework.gwt.client.widget.SpanPanel;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
@@ -92,14 +93,24 @@ public class MainTabPanel extends TabPanel {
 		dockPanel = new DockPanel();
 		dockPanel.setStyleName("alcina-MainMenu");
 		dockPanel.setWidth("100%");
+		mainMenuContainer = new FlowPanel();
+		mainMenuContainer.setStyleName("alcina-MainMenuContainer");
+		mainMenuContainer.add(dockPanel);
 		Widget w = vp.getWidget(0);
 		vp.remove(w);
-		dockPanel.add(w, DockPanel.CENTER);
+		if (isWrapCenterContainer()) {
+			centerContainer = new SpanPanel();
+			centerContainer.add(w);
+			dockPanel.add(centerContainer, DockPanel.CENTER);
+		} else {
+			dockPanel.add(w, DockPanel.CENTER);
+		}
 		bp = createButtonsPanel();
 		refreshButtonPanelVis();
 		dockPanel.add(bp, DockPanel.EAST);
 		dockPanel.setCellHorizontalAlignment(bp, DockPanel.ALIGN_RIGHT);
-		vp.insert(dockPanel, 0);
+		vp.insert(mainMenuContainer, 0);
+		customizeDock();
 		vp.insert(toolbarHolder, 1);
 		vp.getWidget(1).setWidth("100%");
 		noTabContentHolder.setVisible(false);
@@ -114,6 +125,14 @@ public class MainTabPanel extends TabPanel {
 				noTabContentHolder.setVisible(tabIndex == -1);
 			}
 		});
+	}
+
+	protected boolean isWrapCenterContainer() {
+		return false;
+	}
+
+	protected void customizeDock() {
+		// subclassing
 	}
 
 	private TopicListener<LoginState> visListener = new TopicListener<LoginState>() {
@@ -156,7 +175,11 @@ public class MainTabPanel extends TabPanel {
 
 	private List<LoginStateVisibleWithWidget> buttons;
 
-	private DockPanel dockPanel;
+	protected DockPanel dockPanel;
+
+	private FlowPanel mainMenuContainer;
+
+	protected SpanPanel centerContainer;
 
 	class BarSep extends Label {
 		BarSep() {

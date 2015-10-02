@@ -29,7 +29,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -67,6 +66,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
@@ -74,6 +74,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
@@ -112,12 +113,10 @@ import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.servlet.CookieHelper;
 import cc.alcina.framework.servlet.ServletLayerObjects;
-import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionHelper;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationException;
-import cc.alcina.framework.servlet.job.JobId;
 import cc.alcina.framework.servlet.job.JobRegistry;
 
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
@@ -265,6 +264,25 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public Long logClientError(String exceptionToString) {
 		return logClientError(exceptionToString,
 				LogMessageType.CLIENT_EXCEPTION.toString());
+	}
+
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	public DomainUpdate waitForTransforms(long lastTransformRequestId)
+			throws PermissionsException {
+		if (!waitForTransformsEnabled()) {
+			throw new PermissionsException();
+		}
+		Long clientInstanceId = Registry.impl(SessionHelper.class)
+				.getAuthenticatedClientInstanceId(getThreadLocalRequest());
+		if (clientInstanceId == null) {
+			throw new PermissionsException();
+		}
+		return new TransformCollector().waitForTransforms(
+				lastTransformRequestId, (long) clientInstanceId);
+	}
+
+	protected boolean waitForTransformsEnabled() {
+		return false;
 	}
 
 	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
@@ -430,6 +448,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws WebException {
 		CommonPersistenceLocal cp = Registry.impl(
 				CommonPersistenceProvider.class).getCommonPersistence();
+		boolean persistAsOneTransaction = persistOfflineTransformsAsOneTransaction();
 		try {
 			Class<? extends ClientInstance> clientInstanceClass = cp
 					.getImplementation(ClientInstance.class);
@@ -444,9 +463,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					.get(CONTEXT_REUSE_IUSER_HOLDER);
 			IUser wrapperUser = reuseIUserHolder == null ? null
 					: reuseIUserHolder.iUser;
-			for (DeltaApplicationRecord wr : uncommitted) {
-				long clientInstanceId = wr.getClientInstanceId();
-				int requestId = (int) wr.getRequestId();
+			long idCounter = 1;
+			List<DomainTransformRequest> toCommit = new ArrayList<>();
+			for (int idx = 0; idx < uncommitted.size(); idx++) {
+				DeltaApplicationRecord deltaRecord = uncommitted.get(idx);
+				long clientInstanceId = deltaRecord.getClientInstanceId();
+				int requestId = (int) deltaRecord.getRequestId();
 				DomainTransformRequest alreadyWritten = cp
 						.getItemByKeyValueKeyValue(dtrClass,
 								"clientInstance.id", clientInstanceId,
@@ -462,8 +484,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				DomainTransformRequest rq = new DomainTransformRequest();
 				ClientInstance clientInstance = clientInstanceClass
 						.newInstance();
-				clientInstance.setAuth(wr.getClientInstanceAuth());
-				clientInstance.setId(wr.getClientInstanceId());
+				clientInstance.setAuth(deltaRecord.getClientInstanceAuth());
+				clientInstance.setId(deltaRecord.getClientInstanceId());
 				rq.setClientInstance(clientInstance);
 				if (useWrapperUser == null) {
 					useWrapperUser = PermissionsManager.get().isAdmin()
@@ -471,27 +493,41 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 									.getContext()
 									.getBoolean(
 											CONTEXT_USE_WRAPPER_USER_WHEN_PERSISTING_OFFLINE_TRANSFORMS)
-							&& wr.getUserId() != PermissionsManager.get()
-									.getUserId();
+							&& deltaRecord.getUserId() != PermissionsManager
+									.get().getUserId();
 				}
 				DomainTransformLayerWrapper transformLayerWrapper;
+				// TODO - perhaps allow facility to persist multi-user
+				// transforms. but...perhaps better not (keep as is)
+				// NOTE - at the mo, if all are pushed as transactional, just
+				// the last clientInstance is used
+				rq.setRequestId(deltaRecord.getRequestId());
+				rq.fromString(deltaRecord.getText());
+				// necessary because event id is used by transformpersister
+				// for
+				// pass control etc
+				for (DomainTransformEvent event : rq.getEvents()) {
+					event.setEventId(idCounter++);
+					event.setCommitType(CommitType.TO_STORAGE);
+				}
 				try {
 					if (useWrapperUser) {
 						if (!PermissionsManager.get().isAdmin()) {
 							if (!cp.validateClientInstance(
-									wr.getClientInstanceId(),
-									wr.getClientInstanceAuth())) {
+									deltaRecord.getClientInstanceId(),
+									deltaRecord.getClientInstanceAuth())) {
 								throw new RuntimeException(
 										"invalid wrapper authentication");
 							}
 						}
 						if (wrapperUser != null
-								&& wrapperUser.getId() == wr.getUserId()) {
+								&& wrapperUser.getId() == deltaRecord
+										.getUserId()) {
 						} else {
 							wrapperUser = Registry
 									.impl(CommonPersistenceProvider.class)
 									.getCommonPersistence()
-									.getCleanedUserById(wr.getUserId());
+									.getCleanedUserById(deltaRecord.getUserId());
 							if (reuseIUserHolder != null) {
 								reuseIUserHolder.iUser = wrapperUser;
 							}
@@ -502,33 +538,30 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						rq.getClientInstance().setUser(
 								PermissionsManager.get().getUser());
 					}
-					// TODO - perhaps allow facility to persist multi-user
-					// transforms. but...perhaps better not (keep as is)
-					rq.setRequestId(wr.getRequestId());
-					rq.fromString(wr.getText());
-					// necessary because event id is used by transformpersister
-					// for
-					// pass control etc
-					long idCounter = 1;
-					for (DomainTransformEvent event : rq.getEvents()) {
-						event.setEventId(idCounter++);
-						event.setCommitType(CommitType.TO_STORAGE);
-					}
-					transformLayerWrapper = transform(rq, true, true, true);
-					if (logger != null) {
-						logger.info(CommonUtils
-								.formatJ(
-										"Request [%s/%s] : %s transforms written, %s ignored",
-										requestId, clientInstanceId,
-										transformLayerWrapper.response
-												.getTransformsProcessed(),
-										transformLayerWrapper.ignored));
-					}
-					if (throwPersistenceExceptions
-							&& !transformLayerWrapper.response
-									.getTransformExceptions().isEmpty()) {
-						throw (transformLayerWrapper.response
-								.getTransformExceptions().get(0));
+					boolean last = idx == uncommitted.size() - 1;
+					if (!persistAsOneTransaction || last) {
+						if (last) {
+							rq.getPriorRequestsWithoutResponse().addAll(
+									toCommit);
+						}
+						transformLayerWrapper = transform(rq, true, true, true);
+						if (logger != null) {
+							logger.info(CommonUtils
+									.formatJ(
+											"Request [%s/%s] : %s transforms written, %s ignored",
+											requestId, clientInstanceId,
+											transformLayerWrapper.response
+													.getTransformsProcessed(),
+											transformLayerWrapper.ignored));
+						}
+						if (throwPersistenceExceptions
+								&& !transformLayerWrapper.response
+										.getTransformExceptions().isEmpty()) {
+							throw (transformLayerWrapper.response
+									.getTransformExceptions().get(0));
+						}
+					} else {
+						toCommit.add(rq);
 					}
 				} finally {
 					if (useWrapperUser) {
@@ -544,6 +577,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} finally {
 			LooseContext.getContext().pop();
 		}
+	}
+
+	protected boolean persistOfflineTransformsAsOneTransaction() {
+		return true;
 	}
 
 	@Override
@@ -919,7 +956,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Registry.impl(DomainTransformPersistenceEvents.class)
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
-									persistenceToken, null));
+									persistenceToken, null, true));
 			MetricLogging.get().start("transform-commit",
 					CommonRemoteServiceServlet.class);
 			DomainTransformLayerWrapper wrapper = Registry.impl(
@@ -930,7 +967,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Registry.impl(DomainTransformPersistenceEvents.class)
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
-									persistenceToken, wrapper));
+									persistenceToken, wrapper, true));
 			unexpectedException = false;
 			if (wrapper.response.getResult() == DomainTransformResponseResult.OK) {
 				return wrapper;

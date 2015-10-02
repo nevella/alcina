@@ -2,8 +2,6 @@ package cc.alcina.framework.common.client.util;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.HashMap;
-import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.MutablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;

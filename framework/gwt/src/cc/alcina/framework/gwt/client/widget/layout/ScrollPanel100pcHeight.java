@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget.layout;
 
 import java.util.Iterator;
@@ -23,14 +22,21 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public class ScrollPanel100pcHeight extends ScrollPanel implements
+public class ScrollPanel100pcHeight extends ScrollPanel implements
 		HasLayoutInfo {
+	public static class ScrollPanel100pcHeight300px extends ScrollPanel100pcHeight {
+		public ScrollPanel100pcHeight300px(Widget child) {
+			super(child);
+			setHeight("300px");
+		}
+	}
+
 	public ScrollPanel100pcHeight(Widget child) {
 		super(child);
-		setHeight("300px");
-		/*this averts overlong children forcing the parent to lengthen, which
-		 * means the scroll panel will never be laid out correctly 
+		// setHeight("300px");
+		/*
+		 * this averts overlong children forcing the parent to lengthen, which
+		 * means the scroll panel will never be laid out correctly
 		 */
 	}
 

@@ -43,7 +43,9 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.BindingBuilder;
+import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
@@ -262,6 +264,13 @@ public class ObjectTreeRenderer {
 				ListBoxCollectionProvider lbcp = (ListBoxCollectionProvider) f
 						.getCellProvider();
 				lbcp.setFilter(node.collectionFilter());
+			}
+			if (f.getCellProvider() instanceof ListBoxEnumProvider) {
+				Renderer renderer = node.renderer();
+				if (renderer != null) {
+					((ListBoxEnumProvider) f.getCellProvider())
+							.setRenderer(renderer);
+				}
 			}
 			AbstractBoundWidget bw = null;
 			try {

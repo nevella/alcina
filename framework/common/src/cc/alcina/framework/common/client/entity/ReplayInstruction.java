@@ -2,8 +2,6 @@ package cc.alcina.framework.common.client.entity;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.gwt.client.util.DomUtils;
-import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;

@@ -47,6 +47,10 @@ public class SyncClientSerializationStreamReader extends
     private static final String MIDDY = "],[";
 
     private static final char JS_ESCAPE_CHAR = '\\';
+    
+    private static final String STRINGCONCAT = "\"+\"";
+    
+    
 
     /**
      * Used to accumulate elements while deserializing array types. The generic
@@ -540,6 +544,10 @@ public class SyncClientSerializationStreamReader extends
             char ch = encoded.charAt(i);
             char chl1 = i > 0 ? encoded.charAt(i - 1) : 0;
             if (inStr) {
+            	if (encoded.startsWith(STRINGCONCAT, i)) {
+            		i += STRINGCONCAT.length() - 1;
+            		continue;
+            	}
                 if (ch == '"' && chl1 != '\\') {
                     inStr = false;
                 }

@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.remote.RemoteServiceProvider;
 import cc.alcina.framework.gwt.client.data.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
-import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;

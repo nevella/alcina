@@ -1,8 +1,6 @@
 package cc.alcina.framework.servlet;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -125,7 +123,7 @@ public class DomainDeltaSequencer {
 		String metadataString = new AlcinaBeanSerializerS().serialize(metadata);
 		if (asGwtStreams) {
 			if (signature.provideRequiresHash()) {
-				String contentSha1 = EncryptionUtils.SHA1(trancheString);
+				String contentSha1 = new EncryptionUtils().SHA1(trancheString);
 				signature.setContentHash(contentSha1);
 				signature.setContentLength(trancheString.length());
 				if (incomingSignatures.contains(signature.toString())) {

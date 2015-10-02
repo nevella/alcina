@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -28,7 +27,6 @@ import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
-import cc.alcina.framework.servlet.authentication.AuthenticationException;
 
 /**
  * 
@@ -37,6 +35,8 @@ import cc.alcina.framework.servlet.authentication.AuthenticationException;
 @RegistryLocation(registryPoint = SessionHelper.class, implementationType = ImplementationType.SINGLETON)
 public class SessionHelper {
 	public static final String SESSION_ATTR_USERNAME = "SESSION_ATTR_USERNAME";
+
+	public static final String SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID = "SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID";
 
 	public static final String REQUEST_ATTR_INITIALISED = "REQUEST_ATTR_INITIALISED";
 
@@ -52,6 +52,12 @@ public class SessionHelper {
 				request.setAttribute(REQUEST_ATTR_INITIALISED, true);
 			}
 		}
+	}
+
+	public static Long getAuthenticatedSessionClientInstanceId(
+			HttpServletRequest request) {
+		return (Long) request
+				.getAttribute("SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID");
 	}
 
 	private HttpSession getSession(HttpServletRequest request,
@@ -74,6 +80,9 @@ public class SessionHelper {
 					getSession(request, response).setAttribute(
 							SESSION_ATTR_USERNAME, userName);
 					request.setAttribute(SESSION_ATTR_USERNAME, userName);
+					request.setAttribute(
+							SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID,
+							Long.valueOf(clientInstanceId));
 				}
 			} catch (NumberFormatException nfe) {
 				// squelch
@@ -99,6 +108,8 @@ public class SessionHelper {
 				user.getUserName());
 		request.setAttribute(SESSION_ATTR_USERNAME, user.getUserName());
 		PermissionsManager.get().setUser(user);
+		PermissionsManager.get().setAuthenticatedClientInstanceId(
+				getAuthenticatedSessionClientInstanceId(request));
 		if (!isAnonymousUser()) {
 			PermissionsManager.get().setLoginState(LoginState.LOGGED_IN);
 		}
@@ -135,6 +146,10 @@ public class SessionHelper {
 		}
 	}
 
+	public Long getAuthenticatedClientInstanceId(HttpServletRequest request) {
+		return (Long) request.getAttribute(SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID);
+	}
+
 	public String getClientInstanceId(HttpServletRequest request) {
 		String clientInstanceId = request
 				.getHeader(AlcinaRpcRequestBuilder.CLIENT_INSTANCE_ID_KEY);
@@ -150,6 +165,4 @@ public class SessionHelper {
 		}
 		return null;
 	}
-
-	
 }

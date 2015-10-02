@@ -10,6 +10,7 @@ import java.util.HashMap;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
+import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
@@ -21,7 +22,7 @@ import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.beans.SelfDescribed;
 
 /**
- * 
+ *
  * @author nreddel NOTE: registery registration in the constructor - may want to
  *         bypass this for testing
  */
@@ -64,6 +65,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 		ReflectionBeanDescriptor(Class clazz) {
 			try {
 				className = clazz.getName();
+				ClientReflectorJvm.checkClassAnnotations(clazz);
 				info = java.beans.Introspector.getBeanInfo(clazz);
 				props = new Property[info.getPropertyDescriptors().length - 1];
 				int index = 0;
@@ -73,7 +75,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 					if (propertyType != null && propertyType.isEnum()
 							&& propertyType.getSuperclass() == Enum.class
 							&& propertyType != Direction.class) {
-						//hacky - but works
+						// hacky - but works
 						enumSubclass = propertyType;
 					}
 				}

@@ -16,19 +16,20 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.ModificationCheckerSupport;
 
 /**
  * Note - these lookups should be (normally) of type x/y/z/z so we have
  * (effectively) a multikeymultiset:
- * 
+ *
  * e.g. map article by overview year - depth 3, overview/year/article/article.
  * otherwise we have no multiplesss
- * 
+ *
  * but -- if it's a one->many (e.g. just an existence map like
  * article.disabledatcourtrequest), use id->article
- * 
+ *
  * @author nreddel@barnet.com.au
- * 
+ *
  * @param <T>
  */
 public abstract class BaseProjection<T extends HasIdAndLocalId> implements
@@ -59,6 +60,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 
 	@Override
 	public void insert(T t) {
+		checkModification("insert");
 		Object[] values = project(t);
 		if (values != null) {
 			try {
@@ -76,12 +78,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 						}
 						T existing = lookup.get(keys);
 						if (existing != null) {
-							Registry.impl(TaggedLoggers.class)
-									.log(String.format(
-											"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
-											this, Arrays.asList(values),
-											existing), AlcinaMemCache.class,
-											TaggedLogger.WARN);
+							logDuplicateMapping(values, existing);
 							return;
 						}
 					}
@@ -95,6 +92,22 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 				}
 			}
 		}
+	}
+
+	ModificationCheckerSupport modificationChecker;
+
+	protected void checkModification(String modificationType) {
+		if (modificationChecker != null) {
+			modificationChecker.handle("fire");
+		}
+	}
+
+	protected void logDuplicateMapping(Object[] values, T existing) {
+		Registry.impl(TaggedLoggers.class)
+				.log(String.format(
+						"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
+						this, Arrays.asList(values), existing),
+						AlcinaMemCache.class, TaggedLogger.WARN);
 	}
 
 	public boolean isEnabled() {
@@ -117,7 +130,7 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 			return keys == tKeys;
 		}
 		for (int i = 0; i < keys.length && i < tKeys.length; i++) {
-			if (!keys[i].equals(tKeys[i])) {
+			if (!CommonUtils.equalsWithNullEquality(keys[i], tKeys[i])) {
 				return false;
 			}
 		}
@@ -125,8 +138,12 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	}
 
 	// count:=-1 --> all
-	public Collection<T> order(int count, CollectionFilter<T> filter,
-			boolean targetsOfFinalKey, boolean reverse, Object... objects) {
+	/**
+	 * Expose if subclass is instance of OrderableProjection
+	 */
+	protected Collection<T> order0(int count, CollectionFilter<T> filter,
+			boolean targetsOfFinalKey, boolean reverse,
+			boolean finishAfterFirstFilterFail, Object... objects) {
 		Collection source = (Collection) (reverse ? reverseItems(objects)
 				: items(objects));
 		PossibleSubIterator sub = new PossibleSubIterator(source,
@@ -137,13 +154,18 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 			if (filter == null || filter.allow(next)) {
 				count--;
 				result.add(next);
+			} else {
+				if (finishAfterFirstFilterFail) {
+					break;
+				}
 			}
 		}
 		return result;
 	}
-	
+
 	@Override
 	public void remove(T t) {
+		checkModification("remove");
 		Object[] values = project(t);
 		if (values != null) {
 			try {
@@ -171,7 +193,13 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 	}
 
 	protected MultikeyMap<T> createLookup() {
-		return new SortedMultikeyMap<T>(getDepth());
+		if (this instanceof OrderableProjection) {
+			return new BaseProjectionLookupBuilder().navigable()
+					.depth(getDepth()).createMultikeyMap();
+		} else {
+			return new BaseProjectionLookupBuilder().sorted().depth(getDepth())
+					.createMultikeyMap();
+		}
 	}
 
 	protected abstract int getDepth();

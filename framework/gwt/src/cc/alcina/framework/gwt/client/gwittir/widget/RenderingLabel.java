@@ -19,6 +19,9 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
@@ -54,7 +57,9 @@ public class RenderingLabel<T> extends AbstractBoundWidget<T> {
 				: new com.google.gwt.user.client.ui.Label(text);
 		super.initWidget(base);
 	}
-
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
+	}
 	public void addMouseWheelListener(MouseWheelListener listener) {
 	}
 

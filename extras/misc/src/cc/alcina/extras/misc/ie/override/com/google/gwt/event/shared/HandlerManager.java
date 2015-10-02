@@ -135,22 +135,22 @@ public class HandlerManager implements HasHandlers {
 	        event.overrideSource(oldSource);
 	      }
     }else{
-	    try {
-	
-	      // May throw an UmbrellaException.
-	      eventBus.fireEvent(event);
-	    } catch (com.google.web.bindery.event.shared.UmbrellaException e) {
-	      throw new UmbrellaException(e.getCauses());
-	    } finally {
-	      if (oldSource == null) {
-	        // This was my event, so I should kill it now that I'm done.
-	        event.kill();
-	      } else {
-	        // Restoring the source for the next handler to use.
-	        event.overrideSource(oldSource);
-	      }
-	    }
+    try {
+
+      // May throw an UmbrellaException.
+      eventBus.fireEvent(event);
+    } catch (com.google.web.bindery.event.shared.UmbrellaException e) {
+      throw new UmbrellaException(e.getCauses());
+    } finally {
+      if (oldSource == null) {
+        // This was my event, so I should kill it now that I'm done.
+        event.kill();
+      } else {
+        // Restoring the source for the next handler to use.
+        event.overrideSource(oldSource);
+      }
     }
+  }
   }
 
   /**

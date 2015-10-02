@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 
 import com.google.gwt.core.client.Scheduler;

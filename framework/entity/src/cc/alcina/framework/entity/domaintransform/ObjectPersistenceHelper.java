@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableSe
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.CachingConcurrentMap;
 import cc.alcina.framework.gwt.client.gwittir.HasGeneratedDisplayName;
 
 /**
@@ -59,8 +60,12 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		Reflections.registerPropertyAccessor(this);
 	}
 
+	private CachingConcurrentMap<String, Class> classNameLookup = new CachingConcurrentMap<String, Class>(
+			cn -> Class.forName(cn), 100);
+
 	public static ObjectPersistenceHelper get() {
-		ObjectPersistenceHelper singleton = Registry.checkSingleton(ObjectPersistenceHelper.class);
+		ObjectPersistenceHelper singleton = Registry
+				.checkSingleton(ObjectPersistenceHelper.class);
 		if (singleton == null) {
 			singleton = new ObjectPersistenceHelper();
 			Registry.registerSingleton(ObjectPersistenceHelper.class, singleton);
@@ -129,11 +134,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	public Class getClassForName(String fqn) {
-		try {
-			return Class.forName(fqn);
-		} catch (ClassNotFoundException e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return classNameLookup.get(fqn);
 	}
 
 	public <T extends HasIdAndLocalId> T getObject(Class<? extends T> c,

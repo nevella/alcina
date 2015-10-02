@@ -30,7 +30,7 @@ import com.google.gwt.user.client.rpc.SerializationStreamWriter;
 @SuppressWarnings("rawtypes")
 public final class MultikeyMapBase_CustomFieldSerializer {
 	public static void deserialize(SerializationStreamReader streamReader,
-			MultikeyMapBase instance) throws SerializationException {
+			MultikeyMap instance) throws SerializationException {
 		instance.setDepth(streamReader.readInt());
 		int tupleCount = streamReader.readInt();
 		for (int idx0 = 0; idx0 < tupleCount; idx0++) {
@@ -44,7 +44,7 @@ public final class MultikeyMapBase_CustomFieldSerializer {
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,
-			MultikeyMapBase instance) throws SerializationException {
+			MultikeyMap instance) throws SerializationException {
 		streamWriter.writeInt(instance.getDepth());
 		List<List> tuples = instance.asTuples(instance.getDepth());
 		streamWriter.writeInt(tuples.size());

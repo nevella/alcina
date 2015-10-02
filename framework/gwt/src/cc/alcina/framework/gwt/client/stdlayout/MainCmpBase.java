@@ -57,13 +57,17 @@ public abstract class MainCmpBase extends Composite implements
 
 	public MainCmpBase() {
 		initButtons();
-		this.tabPanel = new MainTabPanel(buttons);
+		this.tabPanel = createTabPanel();
 		tabPanel.setStyleName("mainTabPanel");
 		tabPanel.getDeckPanel().setStyleName("alcina-MainContent");
 		tabPanel.addBeforeSelectionHandler(this);
 		tabPanel.addSelectionHandler(this);
 		this.resetTabs();
 		initWidget(tabPanel);
+	}
+
+	protected MainTabPanel createTabPanel() {
+		return new MainTabPanel(buttons);
 	}
 
 	public boolean showTab(String tabToken) {

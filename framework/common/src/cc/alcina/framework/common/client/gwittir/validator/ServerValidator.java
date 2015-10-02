@@ -144,13 +144,18 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 					psve.setSourceWidget(null);
 				}
 			};
-			ClientBase.getCommonRemoteServiceAsyncInstance()
-					.validateOnServer(
-							Arrays.asList(new ServerValidator[] { this }),
-							callback);
+			validateWithCallback(callback);
 			throw psve;
 		}
 		return value;
+	}
+
+	protected void validateWithCallback(
+			AsyncCallback<List<ServerValidator>> callback) {
+		ClientBase.getCommonRemoteServiceAsyncInstance()
+				.validateOnServer(
+						Arrays.asList(new ServerValidator[] { this }),
+						callback);
 	}
 
 	protected void handleServerValidationException(ServerValidator sv) {

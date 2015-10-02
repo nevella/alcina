@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +26,7 @@ public class SqlUtils {
 	public static Map<Long, Long> toIdMap(Statement stmt, String sql,
 			String fn1, String fn2) throws SQLException {
 		MetricLogging.get().start("query");
-		System.out.println("Query: " + sql);
+		maybeLogQuery(sql);
 		ResultSet rs = stmt.executeQuery(sql);
 		Map<Long, Long> result = toIdMap(rs, fn1, fn2);
 		rs.close();
@@ -33,14 +34,33 @@ public class SqlUtils {
 		return result;
 	}
 
+	private static void maybeLogQuery(String sql) {
+		System.out.println("Query: "
+				+ CommonUtils.trimToWsChars(sql, 2000, true));
+	}
+
 	public static Map<Long, String> toStringMap(Statement stmt, String sql,
 			String fn1, String fn2) throws SQLException {
 		MetricLogging.get().start("query");
-		System.out.println("Query: " + sql);
+		maybeLogQuery(sql);
 		ResultSet rs = stmt.executeQuery(sql);
 		Map<Long, String> result = new TreeMap<Long, String>();
 		while (rs.next()) {
 			result.put(rs.getLong(fn1), rs.getString(fn2));
+		}
+		rs.close();
+		MetricLogging.get().end("query");
+		return result;
+	}
+
+	public static Map<Long, Timestamp> toTimestampMap(Statement stmt,
+			String sql, String fn1, String fn2) throws SQLException {
+		MetricLogging.get().start("query");
+		maybeLogQuery(sql);
+		ResultSet rs = stmt.executeQuery(sql);
+		Map<Long, Timestamp> result = new TreeMap<Long, Timestamp>();
+		while (rs.next()) {
+			result.put(rs.getLong(fn1), rs.getTimestamp(fn2));
 		}
 		rs.close();
 		MetricLogging.get().end("query");

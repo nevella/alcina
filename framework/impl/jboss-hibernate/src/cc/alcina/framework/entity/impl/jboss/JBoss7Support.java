@@ -14,7 +14,6 @@
 package cc.alcina.framework.entity.impl.jboss;
 
 import java.net.URL;
-import java.util.Date;
 import java.util.List;
 
 import org.jboss.vfs.VFS;

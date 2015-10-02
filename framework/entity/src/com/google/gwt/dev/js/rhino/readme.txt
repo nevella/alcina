@@ -1,0 +1,1 @@
+this hack allowed large rpc-hosted mode to work, think fix in gwt trunk works so not needed (but harmless)

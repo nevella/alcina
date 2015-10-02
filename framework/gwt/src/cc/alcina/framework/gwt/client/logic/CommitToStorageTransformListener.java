@@ -315,6 +315,9 @@ public class CommitToStorageTransformListener extends StateListenable implements
 							idEvt.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 							synthesisedEvents.add(idEvt);
 							localToServerIds.put(dte.getObjectLocalId(), id);
+							tm.registerHiliMappingPriorToLocalIdDeletion(
+									dte.getObjectClass(), id,
+									dte.getObjectLocalId());
 						}
 						// if (dte.getObjectVersionNumber() != 0 && id != 0) {
 						// if we have zero id at this stage, we're probably in a

@@ -15,11 +15,15 @@
  */
 package java.lang;
 
-import java.io.PrintStream;
-import java.io.Serializable;
+import static com.google.gwt.core.shared.impl.InternalPreconditions.checkCriticalArgument;
+import static com.google.gwt.core.shared.impl.InternalPreconditions.checkNotNull;
+import static com.google.gwt.core.shared.impl.InternalPreconditions.checkState;
 
 import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.client.impl.StackTraceCreator;
+
+import java.io.PrintStream;
+import java.io.Serializable;
 
 /**
  * See <a
@@ -38,31 +42,73 @@ public class Throwable implements Serializable {
    * to ensure that only the detailMessage field is serialized. Changing the
    * field modifiers below may necessitate a change to the server's
    * SerializabilityUtil.fieldQualifiesForSerialization(Field) method.
+   *
+   * TODO(rluble): Add remaining functionality for suppressed Exceptions (e.g.
+   * printing). Also review the class for missing Java 7 compatibility.
    */
   private transient Throwable cause;
   private String detailMessage;
+  private transient Throwable[] suppressedExceptions;
   private transient StackTraceElement[] stackTrace;
-
-  
+  private transient boolean disableSuppression;
+  //alcina-delta
   {
-    fillInStackTrace();
-    Impl.maybeStoreThrowable(this);
-  }
+	    fillInStackTrace();
+	    Impl.maybeStoreThrowable(this);
+	  }
   public Throwable() {
+    fillInStackTrace();
   }
 
   public Throwable(String message) {
     this.detailMessage = message;
+    fillInStackTrace();
   }
 
   public Throwable(String message, Throwable cause) {
     this.cause = cause;
     this.detailMessage = message;
+    fillInStackTrace();
   }
 
   public Throwable(Throwable cause) {
     this.detailMessage = (cause == null) ? null : cause.toString();
     this.cause = cause;
+    fillInStackTrace();
+  }
+
+  /**
+   * Constructor that allows subclasses disabling exception suppression and stack traces.
+   * Those features should only be disabled in very specific cases.
+   */
+  protected Throwable(String message, Throwable cause, boolean enableSuppression,
+      boolean writetableStackTrace) {
+    this.cause = cause;
+    this.detailMessage = message;
+    this.disableSuppression = !enableSuppression;
+    if (writetableStackTrace) {
+      fillInStackTrace();
+    }
+  }
+
+  /**
+   * Call to add an exception that was suppressed. Used by try-with-resources.
+   */
+  public final void addSuppressed(Throwable exception) {
+    checkNotNull(exception, "Cannot suppress a null exception.");
+    checkCriticalArgument(exception != this, "Exception can not suppress itself.");
+
+    if (disableSuppression) {
+      return;
+    }
+
+    if (suppressedExceptions == null) {
+      suppressedExceptions = new Throwable[] { exception };
+    } else {
+      // TRICK: This is not correct Java (would give an OOBE, but it works in JS and
+      // this code will only be executed in JS.
+      suppressedExceptions[suppressedExceptions.length] = exception;
+    }
   }
 
   /**
@@ -71,7 +117,8 @@ public class Throwable implements Serializable {
    * @return this
    */
   public Throwable fillInStackTrace() {
-    StackTraceCreator.fillInStackTrace(this);
+    stackTrace = null; // Invalidate the cached trace
+    StackTraceCreator.captureStackTrace(this, detailMessage);
     return this;
   }
 
@@ -88,26 +135,31 @@ public class Throwable implements Serializable {
   }
 
   /**
-   * Stack traces are not currently populated by GWT. This method will return a
-   * zero-length array unless a stack trace has been explicitly set with
-   * {@link #setStackTrace(StackTraceElement[])}
-   * 
-   * @return the current stack trace
+   * Returns the stack trace for the Throwable if it is available.
+   * <p> Availability of stack traces in script mode depends on module properties and browser.
+   * See: https://code.google.com/p/google-web-toolkit/wiki/WebModeExceptions#Emulated_Stack_Data
    */
   public StackTraceElement[] getStackTrace() {
     if (stackTrace == null) {
-      return new StackTraceElement[0];
+      stackTrace = StackTraceCreator.constructJavaStackTrace(this);
     }
     return stackTrace;
   }
 
+  /**
+   * Returns the array of Exception that this one suppressedExceptions.
+   */
+  public final Throwable[] getSuppressed() {
+    if (suppressedExceptions == null) {
+      suppressedExceptions = new Throwable[0];
+    }
+
+    return suppressedExceptions;
+  }
+
   public Throwable initCause(Throwable cause) {
-    if (this.cause != null) {
-      throw new IllegalStateException("Can't overwrite cause");
-    }
-    if (cause == this) {
-      throw new IllegalArgumentException("Self-causation not permitted");
-    }
+    checkState(this.cause == null, "Can't overwrite cause");
+    checkCriticalArgument(cause != this, "Self-causation not permitted");
     this.cause = cause;
     return this;
   }
@@ -117,29 +169,22 @@ public class Throwable implements Serializable {
   }
 
   public void printStackTrace(PrintStream out) {
-    StringBuffer msg = new StringBuffer();
-    Throwable currentCause = this;
-    while (currentCause != null) {
-      String causeMessage = currentCause.getMessage();
-      if (currentCause != this) {
-        msg.append("Caused by: ");
+    for (Throwable t = this; t != null; t = t.getCause()) {
+      if (t != this) {
+        out.print("Caused by: ");
       }
-      msg.append(currentCause.getClass().getName());
-      msg.append(": ");
-      msg.append(causeMessage == null ? "(No exception detail)" : causeMessage);
-      msg.append("\n");
-      currentCause = currentCause.getCause();
+      out.println(t);
+      for (StackTraceElement element : t.getStackTrace()) {
+        out.println("\tat " + element);
+      }
     }
-    out.println(msg);
   }
 
   public void setStackTrace(StackTraceElement[] stackTrace) {
-    StackTraceElement[] copy = new StackTraceElement[stackTrace.length];
-    for (int i = 0, c = stackTrace.length; i < c; ++i) {
-      if (stackTrace[i] == null) {
-        throw new NullPointerException();
-      }
-      copy[i] = stackTrace[i];
+    int length = stackTrace.length;
+    StackTraceElement[] copy = new StackTraceElement[length];
+    for (int i = 0; i < length; ++i) {
+      copy[i] = checkNotNull(stackTrace[i]);
     }
     this.stackTrace = copy;
   }

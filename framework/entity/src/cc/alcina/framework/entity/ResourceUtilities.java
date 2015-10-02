@@ -43,6 +43,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -58,7 +59,6 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -152,6 +152,51 @@ public class ResourceUtilities {
 		return b.getString(propertyName);
 	}
 
+	public static String writeObjectAsBase64(Object object) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(object);
+		oos.close();
+		String asB64 = Base64.getEncoder().encodeToString(baos.toByteArray());
+		return asB64;
+	}
+
+	public static String writeObjectAsBase64URL(Object object)
+			throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(object);
+		oos.close();
+		String asB64 = Base64.getUrlEncoder()
+				.encodeToString(baos.toByteArray());
+		return asB64;
+	}
+
+	public static <T> T readObjectFromBase64(String string) throws IOException {
+		byte[] bytes = Base64.getDecoder().decode(string.trim());
+		try (ObjectInputStream in = new ObjectInputStream(
+				new ByteArrayInputStream(bytes))) {
+			try {
+				return (T) in.readObject();
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+		}
+	}
+
+	public static <T> T readObjectFromBase64Url(String string)
+			throws IOException {
+		byte[] bytes = Base64.getUrlDecoder().decode(string.trim());
+		try (ObjectInputStream in = new ObjectInputStream(
+				new ByteArrayInputStream(bytes))) {
+			try {
+				return (T) in.readObject();
+			} catch (Exception e) {
+				throw new IOException(e);
+			}
+		}
+	}
+
 	public static interface BeanInfoHelper {
 		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
 	}
@@ -162,15 +207,30 @@ public class ResourceUtilities {
 		helper = theHelper;
 	}
 
+	private static ConcurrentHashMap<Class, BeanInfo> beanInfoLookup = new ConcurrentHashMap<>();
+
 	/**
 	 * Retrieves the BeanInfo for a Class
 	 */
 	public static BeanInfo getBeanInfo(Class cls) {
+		if (beanInfoLookup.containsKey(cls)) {
+			return beanInfoLookup.get(cls);
+		}
 		BeanInfo beanInfo = null;
 		try {
 			beanInfo = Introspector.getBeanInfo(cls);
 			if (helper != null) {
 				beanInfo = helper.postProcessBeanInfo(beanInfo);
+			}
+			beanInfoLookup.put(cls, beanInfo);
+			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
+			for (PropertyDescriptor pd : pds) {
+				if (pd.getReadMethod() != null) {
+					pd.getReadMethod().setAccessible(true);
+				}
+				if (pd.getWriteMethod() != null) {
+					pd.getWriteMethod().setAccessible(true);
+				}
 			}
 		} catch (IntrospectionException ex) {
 			ex.printStackTrace();
@@ -463,5 +523,14 @@ public class ResourceUtilities {
 			field.set(instance, field.get(t));
 		}
 		return instance;
+	}
+
+	public static byte[] readClassPathResourceAsByteArray(Class clazz,
+			String path) {
+		try {
+			return readStreamToByteArray(clazz.getResourceAsStream(path));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

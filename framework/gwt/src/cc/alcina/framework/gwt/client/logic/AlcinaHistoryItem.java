@@ -13,7 +13,18 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.*;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.ACTION_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.CLASS_NAME_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.CONTENT_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.ID_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.LOCAL_ID_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.LOCATION_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.NO_HISTORY_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.PRE_HISTORY_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.SEARCH_INDEX;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.SEARCH_SERIALIZED;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.SEARCH_PAGE;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.Y_KEY;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +33,9 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.SearchDefinitionSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.HistoryEventType;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SearchHistoryInfo;
@@ -33,7 +47,7 @@ public class AlcinaHistoryItem {
 
 	public AlcinaHistory.HistoryEventType type = HistoryEventType.NO_TAB_SPEC;
 
-	private Map<String, String> params = new HashMap<String, String>();
+	protected Map<String, String> params = new HashMap<String, String>();
 
 	public String getActionName() {
 		return getStringParameter(ACTION_KEY);
@@ -79,12 +93,13 @@ public class AlcinaHistoryItem {
 		return getStringParameter(PRE_HISTORY_KEY);
 	}
 
-	public AlcinaHistory.SearchHistoryInfo getSearchHistoryInfo() {
-		if (!hasParameter(SEARCH_INDEX)) {
+	public SearchHistoryInfo getSearchHistoryInfo() {
+		if (!hasParameter(SEARCH_INDEX) && !hasParameter(SEARCH_SERIALIZED)) {
 			return null;
 		}
-		int pageNumber = getIntParameter(SEARCH_PAGE);
-		return new SearchHistoryInfo(getIntParameter(SEARCH_INDEX), pageNumber);
+		return new SearchHistoryInfo(getIntParameter(SEARCH_INDEX),
+				getIntParameter(SEARCH_PAGE),
+				getStringParameter(SEARCH_SERIALIZED));
 	}
 
 	public String getStringParameter(String key) {
@@ -115,7 +130,8 @@ public class AlcinaHistoryItem {
 		params = AlcinaHistory.fromHash(s);
 		return params;
 	}
-	public String removeParameter(String key){
+
+	public String removeParameter(String key) {
 		return params.remove(key);
 	}
 
@@ -169,12 +185,14 @@ public class AlcinaHistoryItem {
 		setParameter(PRE_HISTORY_KEY, preHistoryName);
 	}
 
-	public void setSearchHistoryInfo(
-			AlcinaHistory.SearchHistoryInfo searchHistoryInfo) {
-		if (searchHistoryInfo != null) {
+	public void setSearchHistoryInfo(SearchHistoryInfo searchHistoryInfo) {
+		if (searchHistoryInfo.searchDefinitionSerialized != null) {
+			setParameter(SEARCH_SERIALIZED,
+					searchHistoryInfo.searchDefinitionSerialized);
+		} else {
 			setParameter(SEARCH_INDEX, searchHistoryInfo.defId, true);
-			setParameter(SEARCH_PAGE, searchHistoryInfo.pageNumber);
 		}
+		setParameter(SEARCH_PAGE, searchHistoryInfo.pageNumber);
 	}
 
 	public void setSubTabName(String subTabName) {

@@ -13,8 +13,18 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+import com.google.gwt.core.shared.GwtIncompatible;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.PublicCloneable;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
@@ -24,21 +34,61 @@ import java.util.LinkedHashMap;
  * 
  */
 @SuppressWarnings("unchecked")
-public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> {
+public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> implements
+		PublicCloneable<UnsortedMultikeyMap> {
+	public static class UnsortedMapCreator extends DelegateMapCreator {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Map createDelegateMap(int depthFromRoot) {
+			return new LinkedHashMap<>();
+		}
+	}
+
 	private static final long serialVersionUID = 1L;
+
+	@Override
+	public UnsortedMultikeyMap clone() {
+		try {
+			UnsortedMultikeyMap clone = new UnsortedMultikeyMap();
+			clone.delegate = createDelegateMap();
+			clone.delegate.putAll(delegate);
+			return clone;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	/**
+	 * Ensures that RPC will consider type parameter V to be exposed. It will be
+	 * pruned by dead code elimination.
+	 */
+	@SuppressWarnings("unused")
+	private V exposeValue;
 
 	public UnsortedMultikeyMap() {
 		this(2);
 	}
 
 	public UnsortedMultikeyMap(int depth) {
-		this.depth = depth;
-		this.delegate = new LinkedHashMap();
+		this(depth, 0);
+	}
+
+	public UnsortedMultikeyMap(int depth, int depthFromRoot) {
+		super(depth, depthFromRoot);
+	}
+
+	public UnsortedMultikeyMap(int depth, int depthFromRoot,
+			DelegateMapCreator delegateMapCreator) {
+		super(depth, depthFromRoot, delegateMapCreator);
 	}
 
 	@Override
-	public MultikeyMap<V> createMap(int childDepth) {
-		return new UnsortedMultikeyMap<V>(childDepth);
+	protected DelegateMapCreator ensureDelegateMapCreator() {
+		if (this.delegateMapCreator == null) {
+			this.delegateMapCreator = new UnsortedMapCreator();
+		}
+		return delegateMapCreator;
 	}
 
 	@Override
@@ -51,5 +101,17 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V> {
 	public <T> Collection<T> reverseValues(Object... objects) {
 		throw new UnsupportedOperationException(
 				"Use a sorted multikey map, or reverse yourself");
+	}
+
+	@Override
+	public MultikeyMap createMap(int childDepth) {
+		return new UnsortedMultikeyMap<V>(childDepth, depthFromRoot + 1,
+				delegateMapCreator);
+	}
+	@GwtIncompatible
+	private void readObject(ObjectInputStream in) throws IOException,
+			ClassNotFoundException {
+		in.defaultReadObject();
+		ensureDelegateMapCreator();
 	}
 }

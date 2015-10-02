@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -56,6 +58,67 @@ public class CommonUtils {
 		for (Class std : stds) {
 			stdClassMap.put(std.getName(), std);
 		}
+	}
+
+	public static int hash(Object... values) {
+		return Arrays.hashCode(values);
+	}
+
+	public static boolean equalsWithForgivingStrings(Object... objects) {
+		if (objects.length % 2 != 0) {
+			throw new RuntimeException("Array length must be divisible by two");
+		}
+		for (int i = 0; i < objects.length; i += 2) {
+			Object o1 = objects[i];
+			Object o2 = objects[i + 1];
+			if (o1 == null && o2 == null) {
+			} else {
+				if (o1 == null || o2 == null) {
+					Object nonNull = o1 == null ? o2 : 01;
+					if (nonNull instanceof String
+							&& nonNull.toString().trim().length() == 0) {
+						// keep going
+					} else {
+						return false;
+					}
+				} else {
+					if (!o1.equals(o2)) {
+						if (o1 instanceof String
+								&& o2 instanceof String
+								&& o1.toString()
+										.trim()
+										.toLowerCase()
+										.equals(o2.toString().trim()
+												.toLowerCase())) {
+						} else {
+							return false;
+						}
+					}
+				}
+			}
+		}
+		return true;
+	}
+
+	public static boolean equals(Object... objects) {
+		if (objects.length % 2 != 0) {
+			throw new RuntimeException("Array length must be divisible by two");
+		}
+		for (int i = 0; i < objects.length; i += 2) {
+			Object o1 = objects[i];
+			Object o2 = objects[i + 1];
+			if (o1 == null && o2 == null) {
+			} else {
+				if (o1 == null || o2 == null) {
+					return false;
+				} else {
+					if (!o1.equals(o2)) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
@@ -190,6 +253,9 @@ public class CommonUtils {
 		case AU_DATE_SLASH:
 			return formatJ("%s/%s/%s", padTwo(date.getDate()),
 					padTwo(date.getMonth() + 1), padTwo(date.getYear() + 1900));
+		case US_DATE_SLASH:
+			return formatJ("%s/%s/%s", padTwo(date.getMonth() + 1),
+					padTwo(date.getDate()), padTwo(date.getYear() + 1900));
 		case AU_DATE_SLASH_MONTH:
 			return formatJ("%s/%s", padTwo(date.getMonth() + 1),
 					padTwo(date.getYear() + 1900));
@@ -251,6 +317,15 @@ public class CommonUtils {
 					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
 					padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()), date.getTime() % 1000);
+		case TIMESTAMP_HUMAN:
+			return formatJ("%s.%s.%s %s:%s:%s", padTwo(date.getYear() + 1900),
+					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
+					padTwo(date.getHours()), padTwo(date.getMinutes()),
+					padTwo(date.getSeconds()));
+		case AU_SHORT_MONTH_NO_DAY:
+			return formatJ("%s %s",
+					MONTH_NAMES[date.getMonth() + 1].substring(0, 3),
+					padTwo(date.getYear() + 1900));
 		}
 		return date.toString();
 	}
@@ -331,15 +406,19 @@ public class CommonUtils {
 				+ (s.length() == 1 ? "" : s.substring(1));
 	}
 
+	public static Supplier<Set> setSupplier = () -> new LinkedHashSet();
+
 	public static Set intersection(Collection c1, Collection c2) {
-		LinkedHashSet result = new LinkedHashSet();
+		Set result = setSupplier.get();
 		if (c1.size() > c2.size()) {
 			Collection tmp = c1;
 			c1 = c2;
 			c2 = tmp;
 		}
 		if (c2.size() > 10) {
-			c2 = new HashSet(c2);
+			Set tmp = setSupplier.get();
+			tmp.addAll(c2);
+			c2 = tmp;
 		}
 		for (Object o : c1) {
 			if (c2.contains(o)) {
@@ -410,6 +489,11 @@ public class CommonUtils {
 		public String toString() {
 			return CommonUtils.formatJ("First: %s\nBoth: %s\nSecond: %s",
 					firstOnly, intersection, secondOnly);
+		}
+
+		public String toSizes() {
+			return CommonUtils.formatJ("First: %s\tBoth: %s\tSecond: %s",
+					firstOnly.size(), intersection.size(), secondOnly.size());
 		}
 
 		public boolean isEmpty() {
@@ -564,6 +648,9 @@ public class CommonUtils {
 		}
 		if (s.endsWith("y")) {
 			return s.substring(0, s.length() - 1) + "ies";
+		}
+		if (s.endsWith("ch")) {
+			return s + "es";
 		}
 		return s + "s";
 	}
@@ -723,7 +810,8 @@ public class CommonUtils {
 		AU_DATE_SLASH, AU_DATE_MONTH, AU_DATE_MONTH_DAY, AU_DATE_TIME,
 		AU_DATE_TIME_HUMAN, AU_DATE_TIME_MS, AU_SHORT_DAY, AU_DATE_DOT,
 		AU_LONG_DAY, AU_SHORT_MONTH, AU_DATE_SLASH_MONTH, TIMESTAMP,
-		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH
+		NAMED_MONTH_DATE_TIME_HUMAN, NAMED_MONTH_DAY, AU_SHORT_MONTH_SLASH,
+		AU_SHORT_MONTH_NO_DAY, TIMESTAMP_HUMAN, US_DATE_SLASH
 	}
 
 	public static String tabify(String value, int charsPerLine, int tabCount) {
@@ -905,6 +993,10 @@ public class CommonUtils {
 		return (f1 < f2 ? -1 : (f1 == f2 ? 0 : 1));
 	}
 
+	public static int compareDoubles(double d1, double d2) {
+		return (d1 < d2 ? -1 : (d1 == d2 ? 0 : 1));
+	}
+
 	@SuppressWarnings("deprecation")
 	public static Date yearAsDate(Integer year) {
 		if (year == null) {
@@ -992,6 +1084,8 @@ public class CommonUtils {
 				if (withFriendlyNames) {
 					enumValueLookup.put(enumClass, friendlyConstant(ev, "-")
 							.toLowerCase(), ev);
+					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
+							ev);
 				}
 			}
 		}
@@ -1100,5 +1194,26 @@ public class CommonUtils {
 		dedupe.remove(null);
 		dedupe.remove("");
 		return dedupe;
+	}
+
+	public static String safeToString(Object obj) {
+		try {
+			return obj.toString();
+		} catch (Exception e) {
+			return "Exception in toString() - " + e.getMessage();
+		}
+	}
+
+	public static String ellipsisText(String sourceText, int charWidth) {
+		if (sourceText.length() < charWidth) {
+			return sourceText;
+		}
+		String result = trimToWsChars(sourceText, (charWidth * 2) / 3, true);
+		int from = sourceText.length() - result.length();
+		int spIdx = sourceText.substring(0, from).lastIndexOf(" ");
+		if (spIdx != -1) {
+			result += sourceText.substring(spIdx);
+		}
+		return result;
 	}
 }

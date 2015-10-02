@@ -7,8 +7,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CompositeFilter;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -28,9 +26,34 @@ public class AlcinaMemCacheQuery {
 	private GraphProjectionDataFilter dataFilter;
 
 	private boolean raw;
+	
+	private boolean nonTransactional;
+
+	public AlcinaMemCacheQuery() {
+	}
+
+	public <T extends HasIdAndLocalId> List<T> allRaw(Class<T> clazz) {
+		raw = true;
+		ids = AlcinaMemCache.get().getIds(clazz);
+		return AlcinaMemCache.get().list(clazz, this);
+	}
+
+	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
+		return new LinkedHashSet<T>(AlcinaMemCache.get().list(clazz, this));
+	}
+
+	public <T extends HasIdAndLocalId> int count(Class<T> clazz) {
+		return raw().list(clazz).size();
+	}
 
 	public AlcinaMemCacheQuery dataFilter(GraphProjectionDataFilter dataFilter) {
 		this.dataFilter = dataFilter;
+		return this;
+	}
+
+	public AlcinaMemCacheQuery fieldFilter(
+			GraphProjectionFieldFilter fieldFilter) {
+		this.fieldFilter = fieldFilter;
 		return this;
 	}
 
@@ -48,9 +71,6 @@ public class AlcinaMemCacheQuery {
 		return this;
 	}
 
-	public AlcinaMemCacheQuery() {
-	}
-
 	public AlcinaMemCacheQuery filter(String key, Object value) {
 		return filter(new CacheFilter(key, value));
 	}
@@ -64,11 +84,27 @@ public class AlcinaMemCacheQuery {
 		return CommonUtils.first(list(clazz));
 	}
 
+	public <T extends HasIdAndLocalId> T first(Class<T> clazz) {
+		return CommonUtils.first(list(clazz));
+	}
+
+	public String getCanonicalPropertyPath(Class clazz, String propertyPath) {
+		return AlcinaMemCache.get().getCanonicalPropertyPath(clazz,
+				propertyPath);
+	}
+
 	public GraphProjectionDataFilter getDataFilter() {
 		if (dataFilter == null) {
 			dataFilter = Registry.impl(CollectionProjectionFilter.class);
 		}
 		return this.dataFilter;
+	}
+
+	public GraphProjectionFieldFilter getFieldFilter() {
+		if (fieldFilter == null) {
+			fieldFilter = Registry.impl(PermissibleFieldFilter.class);
+		}
+		return this.fieldFilter;
 	}
 
 	public List<CacheFilter> getFilters() {
@@ -80,13 +116,6 @@ public class AlcinaMemCacheQuery {
 				: new LinkedHashSet<Long>(this.ids);
 	}
 
-	public GraphProjectionFieldFilter getFieldFilter() {
-		if (fieldFilter == null) {
-			fieldFilter = Registry.impl(PermissibleFieldFilter.class);
-		}
-		return this.fieldFilter;
-	}
-
 	public AlcinaMemCacheQuery id(long id) {
 		this.ids = Collections.singleton(id);
 		return this;
@@ -95,6 +124,10 @@ public class AlcinaMemCacheQuery {
 	public AlcinaMemCacheQuery ids(Collection<Long> ids) {
 		this.ids = ids;
 		return this;
+	}
+	
+	public boolean isNonTransactional() {
+		return this.nonTransactional;
 	}
 
 	public boolean isRaw() {
@@ -105,19 +138,8 @@ public class AlcinaMemCacheQuery {
 		return AlcinaMemCache.get().list(clazz, this);
 	}
 
-	public <T extends HasIdAndLocalId> List<T> allRaw(Class<T> clazz) {
-		raw = true;
-		ids = AlcinaMemCache.get().getIds(clazz);
-		return AlcinaMemCache.get().list(clazz, this);
-	}
-
-	public <T extends HasIdAndLocalId> Set<T> asSet(Class<T> clazz) {
-		return new LinkedHashSet<T>(AlcinaMemCache.get().list(clazz, this));
-	}
-
-	public AlcinaMemCacheQuery fieldFilter(
-			GraphProjectionFieldFilter fieldFilter) {
-		this.fieldFilter = fieldFilter;
+	public AlcinaMemCacheQuery nonTransactional() {
+		this.nonTransactional = true;
 		return this;
 	}
 
@@ -130,9 +152,5 @@ public class AlcinaMemCacheQuery {
 	public String toString() {
 		return CommonUtils.formatJ("MemCacheQuery:\n%s",
 				CommonUtils.join(filters, ",\n"));
-	}
-
-	public <T extends HasIdAndLocalId> int count(Class<T> clazz) {
-		return raw().list(clazz).size();
 	}
 }

@@ -22,13 +22,19 @@ import java.util.Set;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
+import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 
 /**
  * 
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class JaxbUtils {
+	private static JaxbUtils singleton;
+
 	private JAXBContext jc = null;
 
 	private JaxbUtils() {
@@ -37,7 +43,6 @@ public class JaxbUtils {
 	private Set<Class> jcClasses = new HashSet<Class>();
 
 	public static JaxbUtils get() {
-		JaxbUtils singleton = Registry.checkSingleton(JaxbUtils.class);
 		if (singleton == null) {
 			singleton = new JaxbUtils();
 			Registry.registerSingleton(JaxbUtils.class, singleton);

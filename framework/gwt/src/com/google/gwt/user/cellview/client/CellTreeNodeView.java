@@ -15,6 +15,13 @@
  */
 package com.google.gwt.user.cellview.client;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.core.client.GWT;
@@ -37,6 +44,7 @@ import com.google.gwt.i18n.client.LocaleInfo;
 import com.google.gwt.safecss.shared.SafeStyles;
 import com.google.gwt.safecss.shared.SafeStylesUtils;
 import com.google.gwt.safehtml.client.SafeHtmlTemplates;
+import com.google.gwt.safehtml.client.SafeHtmlTemplates.Template;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
@@ -54,13 +62,6 @@ import com.google.gwt.view.client.RowCountChangeEvent;
 import com.google.gwt.view.client.SelectionModel;
 import com.google.gwt.view.client.TreeViewModel;
 import com.google.gwt.view.client.TreeViewModel.NodeInfo;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * A view of a tree node.

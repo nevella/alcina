@@ -47,6 +47,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StackDebug;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
@@ -59,16 +60,10 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
  * @author Nick Reddel
  */
 public class PermissionsManager implements Vetoer, DomainTransformListener {
-	private LoginState loginState = LoginState.NOT_LOGGED_IN;
-
-	private OnlineState onlineState = OnlineState.ONLINE;
-
 	public static final String PROP_LOGIN_STATE = "loginState";
 
 	public static final String CONTEXT_OVERRIDE_AS_OWNED_OBJECT = PermissionsManager.class
 			.getName() + ".CONTEXT_OVERRIDE_AS_OWNED_OBJECT";
-
-	private long userId;
 
 	private static String administratorGroupName = "Administrators";
 
@@ -76,9 +71,35 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	private static String anonymousUserName = "anonymous";
 
-	private PropertyChangeListener userListener;
-
 	private static PermissionsManager theInstance;
+
+	private static PermissionsExtension permissionsExtension;
+
+	public static final Permissible ROOT_PERMISSIBLE = new Permissible() {
+		public AccessLevel accessLevel() {
+			return AccessLevel.ROOT;
+		}
+
+		public String rule() {
+			return null;
+		}
+	};
+
+	public static final Permissible ADMIN_PERMISSIBLE = new Permissible() {
+		public AccessLevel accessLevel() {
+			return AccessLevel.ADMIN;
+		}
+
+		public String rule() {
+			return null;
+		}
+	};
+
+	private static final String TOPIC_LOGIN_STATE = PermissionsManager.class
+			.getName() + ".TOPIC_LOGIN_STATE";
+
+	private static final String TOPIC_ONLINE_STATE = PermissionsManager.class
+			.getName() + ".TOPIC_ONLINE_STATE";
 
 	public static PermissionsManager get() {
 		if (theInstance == null) {
@@ -91,21 +112,82 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return theInstance;
 	}
 
+	public static String getAdministratorGroupName() {
+		return administratorGroupName;
+	}
+
+	public static String getAnonymousUserName() {
+		return anonymousUserName;
+	}
+
+	public static String getDeveloperGroupName() {
+		return developerGroupName;
+	}
+
+	public static PermissionsExtension getPermissionsExtension() {
+		return permissionsExtension;
+	}
+
+	public static boolean isOffline() {
+		return get().getOnlineState() == OnlineState.OFFLINE;
+	}
+
+	public static boolean isOnline() {
+		return !isOffline();
+	}
+
+	public static void notifyLoginState(LoginState state) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_LOGIN_STATE, state);
+	}
+
+	public static void notifyLoginStateListenerDelta(
+			TopicListener<LoginState> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_LOGIN_STATE, listener,
+				add);
+	}
+
+	public static void notifyOnlineState(OnlineState state) {
+		GlobalTopicPublisher.get().publishTopic(TOPIC_ONLINE_STATE, state);
+	}
+
+	public static void notifyOnlineStateListenerDelta(
+			TopicListener<OnlineState> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_ONLINE_STATE, listener,
+				add);
+	}
+
 	public static void register(PermissionsManager pm) {
 		theInstance = pm;
 	}
 
+	public static void setAdministratorGroupName(String administratorGroupName) {
+		PermissionsManager.administratorGroupName = administratorGroupName;
+	}
+
+	public static void setAnonymousUserName(String anonymousUserName) {
+		PermissionsManager.anonymousUserName = anonymousUserName;
+	}
+
+	public static void setDeveloperGroupName(String developerGroupName) {
+		PermissionsManager.developerGroupName = developerGroupName;
+	}
+
+	public static void setPermissionsExtension(
+			PermissionsExtension permissionsExtension) {
+		PermissionsManager.permissionsExtension = permissionsExtension;
+	}
+
+	private LoginState loginState = LoginState.NOT_LOGGED_IN;
+
+	private OnlineState onlineState = OnlineState.ONLINE;
+
+	private long userId;
+
+	private PropertyChangeListener userListener;
+
 	private IUser user;
 
 	private IUser instantiatedUser;
-
-	protected IUser getInstantiatedUser() {
-		return this.instantiatedUser;
-	}
-
-	protected void setInstantiatedUser(IUser instantiatedUser) {
-		this.instantiatedUser = instantiatedUser;
-	}
 
 	private HashMap<String, IGroup> groupMap;
 
@@ -151,13 +233,17 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	protected Stack<Boolean> rootStack = new Stack<Boolean>();
 
-	private static PermissionsExtension permissionsExtension;
+	private Long authenticatedClientInstanceId;
+
+	private boolean allPermissible = false;
+
+	private boolean root;
 
 	protected PermissionsManager() {
 		super();
 		this.userListener = new PropertyChangeListener() {
 			public void propertyChange(PropertyChangeEvent evt) {
-				groupMap = null;
+				nullGroupMap();
 			}
 		};
 	}
@@ -214,14 +300,18 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		newThreadInstance.loginState = loginState;
 		newThreadInstance.userId = userId;
 		newThreadInstance.onlineState = onlineState;
-		newThreadInstance.root=root;
+		newThreadInstance.root = root;
 	}
 
 	public void domainTransform(DomainTransformEvent evt)
 			throws DomainTransformException {
 		if (evt.getSource() instanceof IGroup) {
-			groupMap = null;
+			nullGroupMap();
 		}
+	}
+
+	public Long getAuthenticatedClientInstanceId() {
+		return this.authenticatedClientInstanceId;
 	}
 
 	public ObjectPermissions getDefaultObjectPermissions() {
@@ -257,10 +347,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return onlineState;
 	}
 
-	public static PermissionsExtension getPermissionsExtension() {
-		return permissionsExtension;
-	}
-
 	public PermissionsManager getT() {
 		return null;
 	}
@@ -276,7 +362,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 
 	public Map<String, ? extends IGroup> getUserGroups(IUser user) {
 		if (user != this.user) {
-			groupMap = null;
+			nullGroupMap();
 		}
 		if (groupMap != null) {
 			return groupMap;
@@ -296,7 +382,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 		HashMap<String, IGroup> result = groupMap;
 		if (user != this.user) {
-			groupMap = null;
+			nullGroupMap();
 		}
 		return result;
 	}
@@ -309,12 +395,24 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return (getUser() == null) ? null : getUser().getUserName();
 	}
 
+	public String getUserString() {
+		return CommonUtils.formatJ("%s/%s", getUserId(), getUserName());
+	}
+
 	public boolean isAdmin() {
 		if (getAdministratorGroupName() == null || !isLoggedIn()) {
 			return false;
 		} else {
 			return isMemberOfGroup(getAdministratorGroupName());
 		}
+	}
+
+	public boolean isAllPermissible() {
+		return allPermissible;
+	}
+
+	public boolean isAnonymousUser() {
+		return getAnonymousUserName().equals(getUserName());
 	}
 
 	public boolean isDeveloper() {
@@ -329,10 +427,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return getLoginState() != LoginState.NOT_LOGGED_IN;
 	}
 
-	public boolean isMemberOfGroup(String groupName) {
-		return getUserGroups().containsKey(groupName);
-	}
-
 	public boolean isMemberOfGroup(long groupId) {
 		for (IGroup group : getUserGroups().values()) {
 			if (group.getId() == groupId) {
@@ -340,6 +434,10 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 			}
 		}
 		return false;
+	}
+
+	public boolean isMemberOfGroup(String groupName) {
+		return getUserGroups().containsKey(groupName);
 	}
 
 	public boolean isMemberOfGroups(Collection<String> groupNames) {
@@ -350,34 +448,6 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 		return false;
 	}
-
-	private boolean allPermissible = false;
-
-	public static final Permissible ROOT_PERMISSIBLE = new Permissible() {
-		public AccessLevel accessLevel() {
-			return AccessLevel.ROOT;
-		}
-
-		public String rule() {
-			return null;
-		}
-	};
-
-	public static final Permissible ADMIN_PERMISSIBLE = new Permissible() {
-		public AccessLevel accessLevel() {
-			return AccessLevel.ADMIN;
-		}
-
-		public String rule() {
-			return null;
-		}
-	};
-
-	private static final String TOPIC_LOGIN_STATE = PermissionsManager.class
-			.getName() + ".TOPIC_LOGIN_STATE";
-
-	private static final String TOPIC_ONLINE_STATE = PermissionsManager.class
-			.getName() + ".TOPIC_ONLINE_STATE";
 
 	public boolean isPermissible(Object o, Permissible p) {
 		return isPermissible(o, p, false);
@@ -430,6 +500,18 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return permitted;
 	}
 
+	public boolean isPermissible(Object o, Permission p) {
+		return isPermissible(o, new AnnotatedPermissible(p));
+	}
+
+	public boolean isPermissible(Permissible p) {
+		return isPermissible(null, p);
+	}
+
+	public boolean isRoot() {
+		return root;
+	}
+
 	public boolean permitDueToOwnership(HasOwner hasOwner) {
 		boolean override = LooseContext
 				.getBoolean(CONTEXT_OVERRIDE_AS_OWNED_OBJECT);
@@ -448,15 +530,12 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 	}
 
-	public boolean isPermissible(Object o, Permission p) {
-		return isPermissible(o, new AnnotatedPermissible(p));
-	}
-
-	public boolean isPermissible(Permissible p) {
-		return isPermissible(null, p);
+	public IUser popSystemUser() {
+		return popUser();
 	}
 
 	public IUser popUser() {
+		stackDebug.maybeDebugStack(userStack, false);
 		if (userStack.size() == 0) {
 			setLoginState(LoginState.NOT_LOGGED_IN);
 			return getUser();
@@ -479,11 +558,24 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		u.setLastModificationDate(now);
 	}
 
+	public void pushCurrentUser() {
+		pushUser(getUser(), getLoginState());
+	}
+
+	public IUser pushSystemUser() {
+		IUser systemUser = getSystemUser();
+		pushUser(systemUser, LoginState.LOGGED_IN, true);
+		return systemUser;
+	}
+
 	public void pushUser(IUser user, LoginState loginState) {
 		pushUser(user, loginState, false);
 	}
 
+	public static StackDebug stackDebug = new StackDebug("PermissionsManager");
+
 	public void pushUser(IUser user, LoginState loginState, boolean asRoot) {
+		stackDebug.maybeDebugStack(userStack, true);
 		if (getUser() != null) {
 			userStack.push(getUser());
 			stateStack.push(getLoginState());
@@ -492,6 +584,15 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		setLoginState(loginState);
 		setUser(user);
 		setRoot(asRoot);
+	}
+
+	public void setAllPermissible(boolean allPermissible) {
+		this.allPermissible = allPermissible;
+	}
+
+	public void setAuthenticatedClientInstanceId(
+			Long authenticatedClientInstanceId) {
+		this.authenticatedClientInstanceId = authenticatedClientInstanceId;
 	}
 
 	public void setDefaultObjectPermissions(
@@ -520,33 +621,12 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 	}
 
-	public static void notifyLoginState(LoginState state) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_LOGIN_STATE, state);
-	}
-
-	public static void notifyLoginStateListenerDelta(
-			TopicListener<LoginState> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_LOGIN_STATE, listener,
-				add);
-	}
-
-	public static void notifyOnlineState(OnlineState state) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_ONLINE_STATE, state);
-	}
-
-	public static void notifyOnlineStateListenerDelta(
-			TopicListener<OnlineState> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_ONLINE_STATE, listener,
-				add);
-	}
-
-	public static void setPermissionsExtension(
-			PermissionsExtension permissionsExtension) {
-		PermissionsManager.permissionsExtension = permissionsExtension;
+	public void setRoot(boolean root) {
+		this.root = root;
 	}
 
 	public void setUser(IUser user) {
-		groupMap = null;
+		nullGroupMap();
 		if (this.user != null
 				&& this.user instanceof SourcesPropertyChangeEvents) {
 			SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) this.user;
@@ -589,15 +669,17 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		return !isPermissible((Permissible) object);
 	}
 
-	public boolean isRoot() {
-		return root;
+	protected IUser getInstantiatedUser() {
+		return this.instantiatedUser;
 	}
 
-	public void setRoot(boolean root) {
-		this.root = root;
+	protected IUser getSystemUser() {
+		return Registry.impl(UserlandProvider.class).getSystemUser(true);
 	}
 
-	private boolean root;
+	protected void nullGroupMap() {
+		groupMap = null;
+	}
 
 	protected void recursivePopulateGroupMemberships(Set<IGroup> members,
 			Set<IGroup> processed) {
@@ -620,28 +702,8 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		}
 	}
 
-	public void setAllPermissible(boolean allPermissible) {
-		this.allPermissible = allPermissible;
-	}
-
-	public boolean isAllPermissible() {
-		return allPermissible;
-	}
-
-	public static void setAdministratorGroupName(String administratorGroupName) {
-		PermissionsManager.administratorGroupName = administratorGroupName;
-	}
-
-	public static String getAdministratorGroupName() {
-		return administratorGroupName;
-	}
-
-	public static void setDeveloperGroupName(String developerGroupName) {
-		PermissionsManager.developerGroupName = developerGroupName;
-	}
-
-	public static String getDeveloperGroupName() {
-		return developerGroupName;
+	protected void setInstantiatedUser(IUser instantiatedUser) {
+		this.instantiatedUser = instantiatedUser;
 	}
 
 	@ClientInstantiable
@@ -722,44 +784,5 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 			}
 			return null;
 		}
-	}
-
-	public static boolean isOffline() {
-		return get().getOnlineState() == OnlineState.OFFLINE;
-	}
-
-	public static boolean isOnline() {
-		return !isOffline();
-	}
-
-	public static String getAnonymousUserName() {
-		return anonymousUserName;
-	}
-
-	public static void setAnonymousUserName(String anonymousUserName) {
-		PermissionsManager.anonymousUserName = anonymousUserName;
-	}
-
-	public IUser pushSystemUser() {
-		IUser systemUser = Registry.impl(UserlandProvider.class).getSystemUser(
-				true);
-		pushUser(systemUser, LoginState.LOGGED_IN, true);
-		return systemUser;
-	}
-
-	public IUser popSystemUser() {
-		return popUser();
-	}
-
-	public boolean isAnonymousUser() {
-		return getAnonymousUserName().equals(getUserName());
-	}
-
-	public void pushCurrentUser() {
-		pushUser(getUser(), getLoginState());
-	}
-
-	public String getUserString() {
-		return CommonUtils.formatJ("%s/%s", getUserId(), getUserName());
 	}
 }

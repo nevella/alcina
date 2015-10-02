@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -21,6 +21,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.util.MultikeyMap;
+
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -28,6 +30,8 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dev.jjs.SourceOrigin;
 import com.google.gwt.dev.js.JsParser;
 import com.google.gwt.dev.js.ast.JsArrayLiteral;
+import com.google.gwt.dev.js.ast.JsBinaryOperation;
+import com.google.gwt.dev.js.ast.JsBinaryOperator;
 import com.google.gwt.dev.js.ast.JsBooleanLiteral;
 import com.google.gwt.dev.js.ast.JsContext;
 import com.google.gwt.dev.js.ast.JsExpression;
@@ -63,11 +67,11 @@ public final class ClientSerializationStreamReader extends
 	 * webmode version of ClientSerializationStreamReader into an array. The
 	 * array contains primitive values, followed by a nested array of strings,
 	 * followed by a couple of header primitive values. For example,
-	 * 
+	 *
 	 * <pre>
 	 * [ 1, 0, 3, -7, 13, [ "string one", "string two", "string three" ], 7, 0 ]
 	 * </pre>
-	 * 
+	 *
 	 * Long primitives are encoded as strings in the outer array, and strings in
 	 * the string table are referenced by index values in the outer array.
 	 * <p>
@@ -211,7 +215,7 @@ public final class ClientSerializationStreamReader extends
 	 * This visitor reverses that transform by reducing all concat invocations
 	 * into a single array literal.
 	 */
-	private static class ConcatEvaler extends JsModVisitor {
+	private static class ArrayConcatEvaler extends JsModVisitor {
 		private List<Object> added = new ArrayList<Object>();
 
 		@Override
@@ -239,13 +243,99 @@ public final class ClientSerializationStreamReader extends
 		}
 	}
 
+	/**
+	 * The server splits up string literals into 64KB chunks using '+'
+	 * operators. For example ['chunk1chunk2'] is broken up into ['chunk1' +
+	 * 'chunk2'].
+	 * <p>
+	 * This visitor reverses that transform by reducing such strings into a
+	 * single string literal.
+	 */
+	private static class StringConcatEvaler extends JsModVisitor {
+		@Override
+		public boolean visit(JsBinaryOperation x, JsContext ctx) {
+			if (x.getOperator() != JsBinaryOperator.ADD) {
+				return super.visit(x, ctx);
+			}
+			// Do a first pass to get the total string length to avoid
+			// dynamically resizing the buffer.
+			int stringLength = getStringLength(x);
+			if (stringLength >= 0) {
+				StringBuilder builder = new StringBuilder(stringLength);
+				if (expressionToString(x, builder)) {
+					ctx.replaceMe(new JsStringLiteral(x.getSourceInfo(),
+							builder.toString()));
+				}
+			}
+			return true;
+		}
+
+		/**
+		 * Transforms an expression into a string. This will recurse into
+		 * JsBinaryOperations of type JsBinaryOperator.ADD, which may have other
+		 * ADD operations or JsStringLiterals as arguments.
+		 *
+		 * @param expression
+		 *            the expression to evaluate
+		 * @param builder
+		 *            a builder that the string will be appended to
+		 * @return true if the expression represents a valid string, or false
+		 *         otherwise
+		 */
+		private boolean expressionToString(JsExpression expression,
+				StringBuilder builder) {
+			if (expression instanceof JsStringLiteral) {
+				builder.append(((JsStringLiteral) expression).getValue());
+				return true;
+			}
+			if (expression instanceof JsBinaryOperation) {
+				JsBinaryOperation operation = (JsBinaryOperation) expression;
+				if (operation.getOperator() != JsBinaryOperator.ADD) {
+					return false;
+				}
+				return expressionToString(operation.getArg1(), builder)
+						&& expressionToString(operation.getArg2(), builder);
+			}
+			return false;
+		}
+
+		/**
+		 * Gets the total string length of the given expression. This will
+		 * recurse into JsBinaryOperations of type JsBinaryOperator.ADD, which
+		 * may have other ADD operations or JsStringLiterals as arguments.
+		 *
+		 * @param expression
+		 *            the expression to evaluate
+		 * @return the total string length, or -1 if the given expression does
+		 *         not represent a valid string
+		 */
+		private int getStringLength(JsExpression expression) {
+			if (expression instanceof JsStringLiteral) {
+				return ((JsStringLiteral) expression).getValue().length();
+			}
+			if (expression instanceof JsBinaryOperation) {
+				JsBinaryOperation operation = (JsBinaryOperation) expression;
+				if (operation.getOperator() != JsBinaryOperator.ADD) {
+					return -1;
+				}
+				int arg1Length = getStringLength(operation.getArg1());
+				int arg2Length = getStringLength(operation.getArg2());
+				return (arg1Length >= 0 && arg2Length >= 0) ? (arg1Length + arg2Length)
+						: -1;
+			}
+			return -1;
+		}
+	}
+
 	@Override
 	public void prepareToRead(String encoded) throws SerializationException {
 		try {
 			List<JsStatement> stmts = JsParser.parse(SourceOrigin.UNKNOWN,
 					JsRootScope.INSTANCE, new StringReader(encoded));
-			ConcatEvaler concatEvaler = new ConcatEvaler();
-			concatEvaler.acceptList(stmts);
+			ArrayConcatEvaler arrayConcatEvaler = new ArrayConcatEvaler();
+			arrayConcatEvaler.acceptList(stmts);
+			StringConcatEvaler stringConcatEvaler = new StringConcatEvaler();
+			stringConcatEvaler.acceptList(stmts);
 			decoder = new RpcDecoder();
 			decoder.acceptList(stmts);
 		} catch (Exception e) {
@@ -253,10 +343,16 @@ public final class ClientSerializationStreamReader extends
 		}
 		index = decoder.getValues().size();
 		super.prepareToRead(encoded);
-		if (getVersion() != SERIALIZATION_STREAM_VERSION) {
-			throw new IncompatibleRemoteServiceException("Expecting version "
-					+ SERIALIZATION_STREAM_VERSION + " from server, got "
-					+ getVersion() + ".");
+		if (getVersion() < SERIALIZATION_STREAM_MIN_VERSION
+				|| getVersion() > SERIALIZATION_STREAM_MAX_VERSION) {
+			throw new IncompatibleRemoteServiceException("Got version "
+					+ getVersion() + ", expected version between "
+					+ SERIALIZATION_STREAM_MIN_VERSION + " and "
+					+ SERIALIZATION_STREAM_MAX_VERSION);
+		}
+		if (((getFlags() & FLAG_INCREMENTAL_DESERIALIZABLE) == 0 || getVersion() != SERIALIZATION_STREAM_VERSION)) {
+			throw new IncompatibleRemoteServiceException(
+					"requires incremental deserializable rpc");
 		}
 		if (!areFlagsValid()) {
 			throw new IncompatibleRemoteServiceException(
@@ -286,16 +382,22 @@ public final class ClientSerializationStreamReader extends
 
 	@Override
 	public double readDouble() {
-		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues().get(
-				--index);
-		return literal.getValue();
+		JsValueLiteral valueLiteral = decoder.getValues().get(--index);
+		if (valueLiteral instanceof JsNumberLiteral) {
+			JsNumberLiteral literal = (JsNumberLiteral) valueLiteral;
+			return literal.getValue();
+		} else if (valueLiteral instanceof JsStringLiteral) {
+			JsStringLiteral literal = (JsStringLiteral) valueLiteral;
+			return Double.parseDouble(literal.getValue());
+		} else {
+			throw new RuntimeException("Can't read double from "
+					+ valueLiteral.getKind() + " literal");
+		}
 	}
 
 	@Override
 	public float readFloat() {
-		JsNumberLiteral literal = (JsNumberLiteral) decoder.getValues().get(
-				--index);
-		return (float) literal.getValue();
+		return (float) readDouble();
 	}
 
 	@Override
@@ -340,12 +442,12 @@ public final class ClientSerializationStreamReader extends
 	}
 
 	private static native JavaScriptObject eval(String encoded) /*-{
-																return eval(encoded);
-																}-*/;
+	return eval(encoded);
+	}-*/;
 
 	private static native int getLength(JavaScriptObject array) /*-{
-																return array.length;
-																}-*/;
+	return array.length;
+	}-*/;
 
 	int index;
 
@@ -356,8 +458,6 @@ public final class ClientSerializationStreamReader extends
 	public ClientSerializationStreamReader(Serializer serializer) {
 		this.serializer = serializer;
 	}
-
-	private static final int SERIALIZATION_STREAM_VERSION = 1007;
 
 	public void doDeserialize(AsyncCallback postPrepareCallback) {
 		this.postPrepareCallback = postPrepareCallback;
@@ -449,7 +549,6 @@ public final class ClientSerializationStreamReader extends
 			return true;
 		}
 
-
 		private int sliceSize = 500;
 
 		private int idx2;
@@ -462,8 +561,11 @@ public final class ClientSerializationStreamReader extends
 			int sliceCount = sliceSize;
 			for (; sliceCount != 0 && idx2 < size; idx2++) {
 				Object instance = reader.getSeenArray().get(idx2);
+				// keep in sync with asyncdeserializer, clientserreader,
+				// serverserwriter
 				boolean collectionOrMap = instance instanceof Collection
-						|| instance instanceof Map;
+						|| instance instanceof Map
+						|| instance instanceof MultikeyMap;
 				if (collectionOrMap
 						^ (phase == PhaseDev.DESERIALIZE_COLLECTION_RUN)) {
 					continue;

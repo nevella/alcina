@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.csobjects.ObjectDeltaSpec;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -69,12 +70,14 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransformExceptionPolicy;
+import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
@@ -94,19 +97,8 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class ThreadlocalTransformManager extends TransformManager implements
 		PropertyAccessor, ObjectLookup, ClassLookup {
-	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
-			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
-
-	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
-		protected synchronized Object initialValue() {
-			ThreadlocalTransformManager tm = ThreadlocalTransformManager
-					.ttmInstance();
-			tm.resetTltm(null);
-			return tm;
-		}
-	};
-
-	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();;
+	public static final String CONTEXT_IGNORE_DOUBLE_DELETION = ThreadlocalTransformManager.class
+			.getName() + ".CONTEXT_IGNORE_DOUBLE_DELETION";
 
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
@@ -122,7 +114,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	 */
 	public static ThreadlocalTransformManager get() {
 		return ThreadlocalTransformManager.cast();
-	}
+	};
 
 	public static void threadTransformManagerWasReset() {
 		GlobalTopicPublisher.get().publishTopic(
@@ -139,6 +131,20 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		ThreadlocalTransformManager tltm = new ThreadlocalTransformManager();
 		return tltm;
 	}
+
+	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
+			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
+
+	private static ThreadLocal threadLocalTLTMInstance = new ThreadLocal() {
+		protected synchronized Object initialValue() {
+			ThreadlocalTransformManager tm = ThreadlocalTransformManager
+					.ttmInstance();
+			tm.resetTltm(null);
+			return tm;
+		}
+	};
+
+	private static List<DomainTransformListener> threadLocalListeners = new ArrayList<DomainTransformListener>();
 
 	private PersistenceLayerTransformExceptionPolicy exceptionPolicy;
 
@@ -172,6 +178,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	private Set<HiliLocator> createdObjectLocators = new LinkedHashSet<HiliLocator>();
 
+	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();
+
+	private boolean useTlIdGenerator = false;
+
 	@Override
 	public IndividualPropertyAccessor cachedAccessor(Class clazz,
 			String propertyName) {
@@ -201,7 +211,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	@Override
 	/**
-	 * TODO - ignore collection mods to collection properties with 
+	 * TODO - ignore collection mods to collection properties with
 	 * the @OneToMany annotation (inefficient and unnecessary)
 	 * ...hmmm...wait-a-sec - might be necessary for the level 2 cache
 	 */
@@ -234,13 +244,26 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	@Override
+	/**
+	 * Probably don't call this - rather call  deleteObject(hili,true) - this will always be a noop on the server
+	 *
+	 */
+	@Deprecated
+	public DomainTransformEvent deleteObject(HasIdAndLocalId hili) {
+		return super.deleteObject(hili);
+	}
+
+	@Override
 	public DomainTransformEvent deleteObject(HasIdAndLocalId hili,
 			boolean generateEventIfObjectNotFound) {
 		if (deleted.contains(hili)) {
-			RuntimeException ex = new RuntimeException(String.format(
-					"Double deletion - %s %s", new HiliLocator(hili), hili));
-			System.out.println(ex.getMessage());
-			ex.printStackTrace();
+			if (!LooseContext.is(CONTEXT_IGNORE_DOUBLE_DELETION)) {
+				RuntimeException ex = new RuntimeException(String.format(
+						"Double deletion - %s %s", new HiliLocator(hili),
+						CommonUtils.safeToString(hili)));
+				System.out.println(ex.getMessage());
+				ex.printStackTrace();
+			}
 			return null;
 		}
 		hili = ensureNonProxy(hili);
@@ -542,9 +565,9 @@ public class ThreadlocalTransformManager extends TransformManager implements
 				}
 				HiliLocator hiliLocator = new HiliLocator(
 						(Class<? extends HasIdAndLocalId>) clazz,
-						newInstance.getId());
+						newInstance.getId(), localId);
 				if (userSessionHiliMap != null) {
-					userSessionHiliMap.put(localId, hiliLocator);
+					userSessionHiliMap.putToLookups(hiliLocator);
 				}
 				createdObjectLocators.add(hiliLocator);
 				return (T) newInstance;
@@ -553,6 +576,12 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public synchronized long nextLocalIdCounter() {
+		return useTlIdGenerator ? tlIdGenerator.incrementAndGet()
+				: localIdGenerator.incrementAndGet();
 	}
 
 	@Override
@@ -597,23 +626,24 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			List<Long> dtrIds = getEntityManager()
 					.createQuery(
 							String.format(
-									"select dtr.id from %s dtr where dtr.clientInstance.id = ?",
+									"select dtr.id from %s dtr where dtr.clientInstance.id = ?1",
 									dtrName))
 					.setParameter(1, clientInstance.getId()).getResultList();
 			String eql = String
-					.format("select dte.objectId, dte.objectLocalId "
+					.format("select dte.objectId, dte.objectLocalId, dte.objectClassRef.id "
 							+ "from  %s dte  "
 							+ " where dte.domainTransformRequestPersistent.id in %s "
-							+ " and dte.objectLocalId!=0 and dte.transformType = ?",
+							+ " and dte.objectLocalId!=0 and dte.transformType = ?1",
 							dteName, EntityUtils.longsToIdClause(dtrIds));
 			List<Object[]> idTuples = getEntityManager().createQuery(eql)
 					.setParameter(1, TransformType.CREATE_OBJECT)
 					.getResultList();
 			// force non-empty
-			userSessionHiliMap.put((long) -1, null);
+			userSessionHiliMap.putToLookups(new HiliLocator(null, -1, 0));
 			for (Object[] obj : idTuples) {
-				userSessionHiliMap.put((Long) obj[1], new HiliLocator(null,
-						(Long) obj[0]));
+				ClassRef classRef = ClassRef.forId((long) obj[2]);
+				userSessionHiliMap.putToLookups(new HiliLocator(classRef.getRefClass(),
+						(Long) obj[0], (Long) obj[1]));
 			}
 			MetricLogging.get().end(message);
 		}
@@ -626,6 +656,11 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			listenTo((SourcesPropertyChangeEvents) hili);
 		}
 		return hili;
+	}
+
+	public void resetLocalIdCounterForCurrentThread() {
+		useTlIdGenerator = true;
+		tlIdGenerator.reset();
 	}
 
 	public void resetTltm(HiliLocatorMap locatorMap) {
@@ -650,7 +685,7 @@ public class ThreadlocalTransformManager extends TransformManager implements
 		}
 		listeningTo = new LinkedHashSet<SourcesPropertyChangeEvents>();
 		LinkedHashSet<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		if (!pendingTransforms.isEmpty()) {
+		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()) {
 			System.out
 					.println("**WARNING ** TLTM - cleared (but still pending) transforms:\n "
 							+ pendingTransforms);
@@ -726,6 +761,10 @@ public class ThreadlocalTransformManager extends TransformManager implements
 
 	public void setUseObjectCreationId(boolean useObjectCreationId) {
 		this.useObjectCreationId = useObjectCreationId;
+	}
+
+	public void useGlobalLocalIdCounter() {
+		useTlIdGenerator = false;
 	}
 
 	private String buildEqlForSpec(ObjectDeltaSpec itemSpec, Class assocClass)
@@ -1018,5 +1057,14 @@ public class ThreadlocalTransformManager extends TransformManager implements
 	}
 
 	public static class UncomittedTransformsException extends Exception {
+	}
+
+	@Override
+	public <H extends HasIdAndLocalId> long getLocalIdForClientInstance(H hili) {
+		if (userSessionHiliMap != null) {
+			return userSessionHiliMap.getLocalIdForClientInstance(hili);
+		} else {
+			return super.getLocalIdForClientInstance(hili);
+		}
 	}
 }

@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,6 +13,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.transform.Source;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamSource;
@@ -79,6 +81,10 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	protected String wrappedContent;
 
+	public void setWrappedContent(String wrappedContent) {
+		this.wrappedContent = wrappedContent;
+	}
+
 	protected String wrappedFooter;
 
 	protected byte[] wrappedBytes;
@@ -128,8 +134,8 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 	}
 
 	protected void marshallToDoc() throws Exception {
-		Set<Class> jaxbClasses = new HashSet<Class>(Registry.get()
-				.lookup(JaxbContextRegistration.class));
+		Set<Class> jaxbClasses = new HashSet<Class>(Registry.get().lookup(
+				JaxbContextRegistration.class));
 		JAXBContext jc = JaxbUtils.getContext(jaxbClasses);
 		Marshaller m = jc.createMarshaller();
 		m.marshal(wrapper, wrappingDoc);
@@ -212,6 +218,9 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		public boolean ieCssHacks;
 
 		public boolean noSpecificHeaderContent;
+
+		@XmlTransient
+		public List gridRows = null;
 
 		public WrapperModel() {
 		}

@@ -5,8 +5,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
@@ -127,7 +127,7 @@ public abstract class MapObjectLookup implements ObjectStore {
 	}
 
 	class PerClassLookup {
-		Map<Class<? extends HasIdAndLocalId>, FastIdLookup> lookups = new LinkedHashMap<Class<? extends HasIdAndLocalId>, FastIdLookup>();
+		Map<Class<? extends HasIdAndLocalId>, FastIdLookup> lookups = new LinkedHashMap<Class<? extends HasIdAndLocalId>, FastIdLookup>(100);
 
 		public boolean contains(HasIdAndLocalId obj) {
 			FastIdLookup lookup = ensureLookup(obj.getClass());

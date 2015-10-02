@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,7 +33,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class DetachedEntityCache implements Serializable {
-	protected Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>();
+	// have it distributed
+	protected Map<Class, Map<Long, HasIdAndLocalId>> detached = new HashMap<Class, Map<Long, HasIdAndLocalId>>(
+			128);
 
 	public DetachedEntityCache() {
 	}
@@ -46,15 +49,20 @@ public class DetachedEntityCache implements Serializable {
 		return t;
 	}
 
+	public <T extends HasIdAndLocalId> T getExisting(T hili) {
+		return (T) get(hili.getClass(), hili.getId());
+	}
+
 	public <T> Set<T> values(Class<T> clazz) {
 		ensureMaps(clazz);
 		return new LinkedHashSet<T>((Collection<? extends T>) detached.get(
 				clazz).values());
 	}
 
-	public <T> Collection<T> rawValues(Class<T> clazz) {
+	public <T> Collection<T> immutableRawValues(Class<T> clazz) {
 		ensureMaps(clazz);
-		return (Collection<T>) detached.get(clazz).values();
+		return (Collection<T>) Collections.unmodifiableCollection(detached.get(
+				clazz).values());
 	}
 
 	public Set<HasIdAndLocalId> allValues() {
@@ -94,11 +102,15 @@ public class DetachedEntityCache implements Serializable {
 
 	protected void ensureMaps(Class clazz) {
 		if (!detached.containsKey(clazz)) {
-			detached.put(clazz, createMap());
+			synchronized (this) {
+				if (!detached.containsKey(clazz)) {
+					detached.put(clazz, createMap());
+				}
+			}
 		}
 	}
 
-	protected Map<Long, HasIdAndLocalId> createMap() {
+	public Map<Long, HasIdAndLocalId> createMap() {
 		return new TreeMap<Long, HasIdAndLocalId>();
 	}
 

@@ -63,4 +63,7 @@ public class DomainTransformLayerWrapper {
 		return getEventsByClass().getAndEnsure(clazz);
 	}
 
+	public HiliLocatorMap locatorMapOrEmpty() {
+		return locatorMap == null ? new HiliLocatorMap() : locatorMap;
+	}
 }

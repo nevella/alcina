@@ -585,7 +585,7 @@ public class DevConsoleCommandTransforms {
 
 		private void printFullUsage() {
 			System.out
-					.format("trt <-r:=rq ids only> <-t: as transforms> {[%s] value}+\n",
+					.format("trt <-r:=rq ids only> <-ndtr: no dtr prefilter> <-t: as transforms> {[%s] value}+\n",
 							DevConsoleFilter
 									.describeFilters(CmdListTransformsFilter.class));
 		}

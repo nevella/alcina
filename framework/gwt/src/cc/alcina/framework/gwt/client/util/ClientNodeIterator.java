@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package cc.alcina.framework.gwt.client.util;
 
@@ -49,7 +49,15 @@ public class ClientNodeIterator {
 		}
 		return current;
 	}
-
+	public void skipChildren() {
+		Node next = current.getNextSibling();
+		if (next != null) {
+			current=next;
+		}else{
+			current=current.getParentNode();
+		}
+		previousNode();
+	}
 	public Node nextNode() {
 		boolean filterOk = false;
 		while (current != null && !filterOk) {

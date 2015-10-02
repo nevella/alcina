@@ -50,6 +50,8 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	public static final String SEARCH_PAGE = "sdp";
 
+	public static final String SEARCH_SERIALIZED = "sds";
+
 	public static final String NO_HISTORY_KEY = "nh";
 
 	public static final String ACTION_KEY = "a";
@@ -278,9 +280,14 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public String tokenForSearch(SearchDefinition def, int pageNumber) {
+		return tokenForSearch(def, pageNumber, null);
+	}
+
+	public String tokenForSearch(SearchDefinition def, int pageNumber,
+			String searchDefinitionSerialized) {
 		AlcinaHistoryItem hib = createHistoryInfo();
 		hib.setSearchHistoryInfo(new SearchHistoryInfo(def
-				.getClientSearchIndex(), pageNumber));
+				.getClientSearchIndex(), pageNumber, searchDefinitionSerialized));
 		return hib.toTokenString();
 	}
 
@@ -311,9 +318,13 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 		public int pageNumber;
 
-		public SearchHistoryInfo(int defId, int pageNumber) {
+		public String searchDefinitionSerialized;
+
+		public SearchHistoryInfo(int defId, int pageNumber,
+				String searchDefinitionSerialized) {
 			this.defId = defId;
 			this.pageNumber = pageNumber;
+			this.searchDefinitionSerialized = searchDefinitionSerialized;
 		}
 	}
 

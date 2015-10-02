@@ -38,6 +38,7 @@ public class ClusterStateProviderFile implements ClusterStateProvider {
 				state.setProxyToHttpPort(props.get("proxyToHttpPort"));
 				state.setProxyToHttpsPort(props.get("proxyToHttpsPort"));
 				state.setTestUrl(props.get("testUrl"));
+				state.setZkHostPortUrl(props.get("zkHostPortUrl"));
 				return state;
 			}
 		}

@@ -1116,7 +1116,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget, HasWidgets
     // forcing the element that is positioned relatively to 'have layout'
     DOM.setStyleAttribute(getElement(), "zoom", "1");
 
-    focusable = FocusPanel.impl.createFocusable();
+    focusable = FocusPanel.impl.createFocusable().cast();
     DOM.setStyleAttribute(focusable, "fontSize", "0");
     DOM.setStyleAttribute(focusable, "position", "absolute");
 

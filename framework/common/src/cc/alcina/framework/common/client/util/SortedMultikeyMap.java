@@ -13,16 +13,15 @@
  */
 package cc.alcina.framework.common.client.util;
 
-import java.io.Serializable;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.NavigableMap;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
-import cc.alcina.framework.common.client.collections.ImmutableMap;
-
-import com.totsp.gwittir.client.beans.Converter;
+import com.google.gwt.core.shared.GwtIncompatible;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
@@ -33,31 +32,39 @@ import com.totsp.gwittir.client.beans.Converter;
  */
 @SuppressWarnings("unchecked")
 public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
+	public static class SortedMapCreator extends DelegateMapCreator {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Map createDelegateMap(int depthFromRoot) {
+			return new TreeMap();
+		}
+	}
+
 	static final transient long serialVersionUID = -1L;
-	@Override
-	public MultikeyMap<V> createMap(int childDepth) {
-		return new SortedMultikeyMap(childDepth);
-	}
 
-	@Override
-	public <T> Collection<T> reverseKeys(Object... objects) {
-		TreeMap m = (TreeMap) asMapEnsureDelegate(false, objects);
-		return m == null ? null : m.descendingMap().keySet();
-	}
-
-	@Override
-	public <T> Collection<T> reverseValues(Object... objects) {
-		TreeMap m = (TreeMap) asMapEnsureDelegate(false, objects);
-		return m == null ? null : m.descendingMap().values();
-	}
+	/**
+	 * Ensures that RPC will consider type parameter V to be exposed. It will be
+	 * pruned by dead code elimination.
+	 */
+	@SuppressWarnings("unused")
+	private V exposeValue;
 
 	public SortedMultikeyMap() {
 		this(2);
 	}
 
 	public SortedMultikeyMap(int depth) {
-		this.depth = depth;
-		this.delegate = new TreeMap();
+		this(depth, 0);
+	}
+
+	public SortedMultikeyMap(int depth, int depthFromRoot) {
+		super(depth, depthFromRoot);
+	}
+
+	public SortedMultikeyMap(int depth, int depthFromRoot,
+			DelegateMapCreator delegateMapCreator) {
+		super(depth, depthFromRoot, delegateMapCreator);
 	}
 
 	@Override
@@ -68,5 +75,40 @@ public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
 			}
 		}
 		return true;
+	}
+
+	@Override
+	public MultikeyMap<V> createMap(int childDepth) {
+		return new SortedMultikeyMap(childDepth, depthFromRoot + 1,
+				delegateMapCreator);
+	}
+
+	@Override
+	public <T> Collection<T> reverseKeys(Object... objects) {
+		NavigableMap nm = (NavigableMap) asMapEnsureDelegate(false, objects);
+		return nm.descendingKeySet();
+	}
+
+	@Override
+	public <T> Collection<T> reverseValues(Object... objects) {
+		throw new RuntimeException("Values are not sorted");
+		// SortedMap m = (SortedMap) asMapEnsureDelegate(false, objects);
+		// NavigableMap nm=navigableMap(m);
+		// return nm == null ? null : nm.descendingMap().keySet();
+	}
+
+	@GwtIncompatible
+	private void readObject(ObjectInputStream in) throws IOException,
+			ClassNotFoundException {
+		in.defaultReadObject();
+		ensureDelegateMapCreator();
+	}
+
+	@Override
+	protected DelegateMapCreator ensureDelegateMapCreator() {
+		if (this.delegateMapCreator == null) {
+			this.delegateMapCreator = new SortedMapCreator();
+		}
+		return this.delegateMapCreator;
 	}
 }

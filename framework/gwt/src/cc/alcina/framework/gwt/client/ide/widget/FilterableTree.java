@@ -112,6 +112,8 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 
 	private CollectionFilter shouldExpandCallback;
 
+	private String lastFilteredText = "";
+
 	public void expandAll(int depth) {
 		for (int i = 0; i < getItemCount(); i++) {
 			expandAll(getItem(i), depth - 1);
@@ -176,6 +178,7 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 	}
 
 	public boolean filter(String filterText) {
+		this.lastFilteredText = filterText;
 		boolean b = false;
 		filterText = filterText == null ? null : filterText.toLowerCase();
 		for (int i = 0; i < getItemCount(); i++) {
@@ -203,6 +206,10 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 			((ScrollPanel) getParent()).scrollToLeft();
 		}
 		return b;
+	}
+
+	public String getLastFilteredText() {
+		return this.lastFilteredText;
 	}
 
 	public void moveToFirst() {
@@ -315,7 +322,7 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 		if (item == null) {
 			return null;
 		}
-		TreeOrItem parent=TreeOrItemTree.create(item).getParent();
+		TreeOrItem parent = TreeOrItemTree.create(item).getParent();
 		if (direction == 1) {
 			if (!ignoreChildAxis && item.getState() && item.getChildCount() > 0) {
 				return item.getChild(0);
@@ -324,15 +331,14 @@ public class FilterableTree extends Tree implements SelectionHandler<TreeItem>,
 			if (childIndex < parent.getChildCount() - 1) {
 				return parent.getChild(childIndex + 1);
 			}
-			if(item.getParentItem()==null){
+			if (item.getParentItem() == null) {
 				return null;
 			}
 			return getNextNode(item.getParentItem(), true, direction);
 		} else {
 			int childIndex = parent.getChildIndex(item);
 			if (childIndex > 0) {
-				return findDeepestOpenChild(parent.getChild(
-						childIndex - 1));
+				return findDeepestOpenChild(parent.getChild(childIndex - 1));
 			}
 			return item.getParentItem();
 		}

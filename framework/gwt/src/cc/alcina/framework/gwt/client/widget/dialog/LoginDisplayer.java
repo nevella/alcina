@@ -119,6 +119,8 @@ public class LoginDisplayer {
 		table.setWidget(1, 1, pwdBox);
 		pwdBox.addKeyPressHandler(new EnterAsClickKeyboardListener(pwdBox,
 				okButton));
+		nameBox.addKeyPressHandler(new EnterAsClickKeyboardListener(nameBox,
+				okButton));
 		rememberMeBox = new CheckBox();
 		rememberMeBox.setValue(true);
 		table.setWidget(2, 0, rememberMeBox);

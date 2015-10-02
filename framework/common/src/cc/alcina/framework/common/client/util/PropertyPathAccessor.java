@@ -12,6 +12,10 @@ public class PropertyPathAccessor {
 
 	private String[] paths;
 
+	public String[] getPaths() {
+		return this.paths;
+	}
+
 	private IndividualPropertyAccessor[] accessors = new IndividualPropertyAccessor[0];
 
 	public PropertyPathAccessor(String propertyPath) {

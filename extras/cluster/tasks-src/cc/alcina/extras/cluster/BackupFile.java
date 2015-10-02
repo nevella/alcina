@@ -30,6 +30,12 @@ public class BackupFile extends Task {
 	public void execute() throws BuildException {
 		File file = new File(backupPath);
 		file.mkdirs();
+		File in = new File(filePath);
+		File out = new File(backupPath + File.separator + in.getName() + ".1");
+		if (in.exists() && out.exists() && in.length() == out.length()
+				&& in.lastModified() == out.lastModified()) {
+			log("no change in backup files");
+		}
 		final Pattern np = Pattern.compile("(.+)(\\.\\d+)");
 		ArrayList<File> backups = new ArrayList<File>(Arrays.asList(file
 				.listFiles(new FilenameFilter() {
@@ -60,11 +66,8 @@ public class BackupFile extends Task {
 			}
 		}
 		try {
-			File in = new File(filePath);
 			if (in.exists()) {
 				FileInputStream ins = new FileInputStream(in);
-				File out = new File(backupPath + File.separator + in.getName()
-						+ ".1");
 				FileOutputStream os = new FileOutputStream(out);
 				writeStreamToStream(ins, os);
 				out.setLastModified(in.lastModified());

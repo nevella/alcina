@@ -47,7 +47,7 @@ public class PersistencePropAndLogWebDbConsort extends
 
 		@Override
 		public void run() {
-			PropertyStore.get().registerDelegate(propImpl);
+			KeyValueStore.get().registerDelegate(propImpl);
 		}
 	}
 

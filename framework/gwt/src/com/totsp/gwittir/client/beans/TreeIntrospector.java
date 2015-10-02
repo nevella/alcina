@@ -25,7 +25,6 @@ public abstract class TreeIntrospector implements Introspector {
 
 	@Override
 	public BeanDescriptor getDescriptor(Object object) {
-		getDescriptorOrNull(object);
 		BeanDescriptor descriptor = getDescriptorOrNull(object);
 		if (descriptor != null) {
 			return descriptor;

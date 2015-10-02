@@ -1,8 +1,8 @@
 package cc.alcina.framework.common.client.logic.domain;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class HasIdByLongComparator implements Comparator<HasId> {
 	private Map<Long, Integer> orderIndex = new HashMap<Long, Integer>();
 
-	public HasIdByLongComparator(List<Long> orderBy) {
+	public HasIdByLongComparator(Collection<Long> orderBy) {
 		int i = 1;
 		for (Long l : orderBy) {
 			orderIndex.put(l, i++);

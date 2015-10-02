@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
@@ -40,14 +39,13 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
  * format - if html, can convert to Word, PDF etc
  * <li>ContentDelivery: deliver (email, download etc)
  * </ol>
- * 
- * 
- * 
+ *
+ *
+ *
  * @author nreddel@barnet.com.au
- * 
+ *
  */
 public class Publisher {
-
 	private PublicationContext ctx;
 
 	public PublicationResult publish(ContentDefinition contentDefinition,
@@ -118,8 +116,10 @@ public class Publisher {
 		}
 		ContentWrapper cw = (ContentWrapper) Registry.get().instantiateSingle(
 				ContentWrapper.class, publicationContent.getClass());
+		ctx.getVisitorOrNoop().beforeWrapContent();
 		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
 				crh.getResults(), publicationId, publicationUserId);
+		ctx.getVisitorOrNoop().afterWrapContent(cw);
 		if (deliveryModel.provideContentDeliveryType().getClass() == null) {
 			return null;
 		}
@@ -137,8 +137,10 @@ public class Publisher {
 		fcm.html = cw.wrappedContent;
 		fcm.footer = cw.wrappedFooter;
 		fcm.bytes = cw.wrappedBytes;
+		fcm.rows = cw.wrapper.gridRows;
 		fcm.custom = cw.custom;
 		InputStream convertedContent = fc.convert(ctx, fcm);
+		convertedContent=ctx.getVisitorOrNoop().transformConvertedContent(convertedContent);
 		ctx.getVisitorOrNoop().beforeDelivery();
 		ContentDelivery deliverer = (ContentDelivery) Registry.get()
 				.instantiateSingle(ContentDeliveryType.class,
@@ -174,8 +176,13 @@ public class Publisher {
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);
 		publication.setPublicationType(contentDefinition.getPublicationType());
-		return Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence().merge(publication);
+		try {
+			PermissionsManager.get().pushCurrentUser();
+			return Registry.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence().merge(publication);
+		} finally {
+			PermissionsManager.get().popUser();
+		}
 	}
 
 	public interface PublicationContentPersister {

@@ -9,6 +9,8 @@ import java.util.Comparator;
 import java.util.List;
 
 public class IntPair implements Comparable<IntPair>, Serializable {
+	static final transient long serialVersionUID = -1L;
+
 	public int i1;
 
 	public int i2;
@@ -217,5 +219,58 @@ public class IntPair implements Comparable<IntPair>, Serializable {
 	public static enum IntPairRelation {
 		NO_INTERSECTION, CONTAINS_ALL, CONTAINED_BY_ALL, CONTAINS_START,
 		CONTAINS_END;
+	}
+
+	public IntPair shiftRight(int offset) {
+		return new IntPair(i1 + offset, i2 + offset);
+	}
+
+	public void expandToInclude(IntPair mod) {
+		IntPair union = union(mod);
+		i1 = union.i1;
+		i2 = union.i2;
+	}
+
+	public boolean continues(IntPair o) {
+		return continues(o, 0);
+	}
+
+	public boolean continues(IntPair o, int tolerance) {
+		return o.i2 <= i1 && i1 - tolerance <= o.i2;
+	}
+
+	public boolean continues(IntPair o, List<IntPair> fillers, int tolerance) {
+		IntPair range = new IntPair(o.i1, o.i2);
+		fillers.sort(null);
+		for (IntPair filler : fillers) {
+			if (filler.continues(range, tolerance)) {
+				range.i2 = filler.i2;
+			}
+		}
+		return continues(range, tolerance);
+	}
+
+	public boolean isPositiveRange() {
+		return i2 - i1 > 0;
+	}
+
+	public int minDistance(IntPair other) {
+		if (intersectsWith(other)) {
+			return 0;
+		}
+		return Math.min(Math.abs(other.i1 - i2), Math.abs(other.i2 - i1));
+	}
+
+	public static IntPair unionOf(List<IntPair> matchedRanges) {
+		IntPair result = matchedRanges.get(0).shiftRight(0);
+		matchedRanges.forEach(ip -> {
+			result.i1 = Math.min(ip.i1, result.i1);
+			result.i2 = Math.min(ip.i2, result.i2);
+		});
+		return result;
+	}
+
+	public IntPair clone() {
+		return new IntPair(i1, i2);
 	}
 }

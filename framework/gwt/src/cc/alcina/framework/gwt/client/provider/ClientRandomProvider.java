@@ -17,9 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.RandomProvider;
-import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 
-import com.google.gwt.http.client.URL;
 import com.google.gwt.user.client.Random;
 
 /**

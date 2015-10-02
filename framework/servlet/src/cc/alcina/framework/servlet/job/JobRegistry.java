@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,26 +16,28 @@ package cc.alcina.framework.servlet.job;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
-import com.totsp.gwittir.client.beans.Converter;
-
-import cc.alcina.framework.common.client.actions.RemoteActionPerformer;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
+import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -43,32 +45,13 @@ import cc.alcina.framework.servlet.RemoteActionLogger;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 
+import com.totsp.gwittir.client.beans.Converter;
+
 /**
- * 
+ *
  * @author Nick Reddel
  */
-public class JobRegistry {
-	public static final String TOPIC_JOB_FAILURE = JobRegistry.class.getName()
-			+ ".TOPIC_JOB_FAILURE";
-
-	public static final String TOPIC_JOB_STARTED = JobRegistry.class.getName()
-			+ ".TOPIC_JOB_STARTED";
-
-	public static final String CONTEXT_TRACKER = JobRegistry.class.getName()
-			+ ".CONTEXT_TRACKER";
-
-	public static final String CONTEXT_NEXT_JOB_ID = JobRegistry.class
-			.getName() + ".CONTEXT_NEXT_JOB_ID";
-
-	public static final String CONTEXT_NON_PERSISTENT = JobRegistry.class
-			.getName() + ".CONTEXT_NON_PERSISTENT";
-
-	public static final String CONTEXT_USE_LOGGER = JobRegistry.class.getName()
-			+ ".CONTEXT_USE_LOGGER";
-	
-	public static final String CONTEXT_PERFORMING_CLUSTERED_JOB = JobRegistry.class
-			.getName() + ".CONTEXT_PERFORMING_CLUSTERED_JOB";
-
+public class JobRegistry implements RegistrableService {
 	public static JobTracker exportableForm(JobTracker in) {
 		Converter<JobTracker, JobTracker> converter = new Converter<JobTracker, JobTracker>() {
 			IdentityHashMap<JobTracker, JobTracker> seen = new IdentityHashMap<JobTracker, JobTracker>();
@@ -101,6 +84,14 @@ public class JobRegistry {
 		return singleton;
 	}
 
+	public static String getLauncherName() {
+		String launcherName = ResourceUtilities.getBundledString(
+				JobRegistry.class, "launcherName");
+		launcherName = launcherName.isEmpty() ? ServletLayerUtils
+				.getLocalHostName() : launcherName;
+		return launcherName;
+	}
+
 	public static void notifyJobFailure(JobTracker tracker) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_FAILURE, tracker);
 	}
@@ -111,11 +102,66 @@ public class JobRegistry {
 				add);
 	}
 
+	public static final String TOPIC_JOB_FAILURE = JobRegistry.class.getName()
+			+ ".TOPIC_JOB_FAILURE";
+
+	public static final String TOPIC_JOB_STARTED = JobRegistry.class.getName()
+			+ ".TOPIC_JOB_STARTED";
+
+	public static final String CONTEXT_TRACKER = JobRegistry.class.getName()
+			+ ".CONTEXT_TRACKER";
+
+	public static final String CONTEXT_NEXT_JOB_ID = JobRegistry.class
+			.getName() + ".CONTEXT_NEXT_JOB_ID";
+
+	public static final String CONTEXT_NON_PERSISTENT = JobRegistry.class
+			.getName() + ".CONTEXT_NON_PERSISTENT";
+
+	public static final String CONTEXT_USE_LOGGER = JobRegistry.class.getName()
+			+ ".CONTEXT_USE_LOGGER";
+
+	public static final String CONTEXT_PERFORMING_CLUSTERED_JOB = JobRegistry.class
+			.getName() + ".CONTEXT_PERFORMING_CLUSTERED_JOB";
+
+	public static final String NO_LOG = "no-log";
+
+	private Timer jobReaperTimer = new Timer();
+
 	private Map<String, JobTracker> trackerMap = new ConcurrentHashMap<String, JobTracker>();
+
+	private Map<String, Long> trackerTimeout = new ConcurrentHashMap<String, Long>();
 
 	boolean refuseJobs = false;
 
+	// hack til the top cluster tracker is solved
+	private TimerTask jobReaperTask = new TimerTask() {
+		@Override
+		public void run() {
+			long cutoff = System.currentTimeMillis()
+					- TimeConstants.ONE_HOUR_MS * 2;
+			for (Iterator<Entry<String, Long>> itr = trackerTimeout.entrySet()
+					.iterator(); itr.hasNext();) {
+				Entry<String, Long> entry = itr.next();
+				if (entry.getValue() < cutoff) {
+					itr.remove();
+					trackerMap.remove(entry.getKey());
+					System.out.format(
+							"jobReaperTask - removed job with id %s\n",
+							entry.getKey());
+				}
+			}
+		}
+	};
+
 	private JobRegistry() {
+		jobReaperTimer = new Timer();
+		jobReaperTimer.scheduleAtFixedRate(jobReaperTask, 0,
+				15 * TimeConstants.ONE_MINUTE_MS);
+	}
+
+	@Override
+	public void appShutdown() {
+		jobReaperTimer.cancel();
 	}
 
 	public void cancel(String id) {
@@ -156,10 +202,6 @@ public class JobRegistry {
 		flushTracker(getContextTracker());
 	}
 
-	private void flushTracker(JobTracker tracker) {
-		tracker.setLog(tracker.getLog() + getContextLogBuffer(tracker));
-	}
-
 	public RemoteActionLogger getAccessLogger() {
 		Logger contextLogger = getContextLogger();
 		if (contextLogger instanceof RemoteActionLogger) {
@@ -174,13 +216,6 @@ public class JobRegistry {
 		}
 		Logger contextLogger = (Logger) tracker.getLogger();
 		return flushLogger(contextLogger);
-	}
-
-	protected String flushLogger(Logger contextLogger) {
-		if (contextLogger instanceof RemoteActionLogger) {
-			return ((RemoteActionLogger) contextLogger).flushLogger();
-		}
-		return null;
 	}
 
 	public Logger getContextLogger() {
@@ -202,14 +237,6 @@ public class JobRegistry {
 	public JobId getNextJobId(Class jobClass) {
 		String launcherName = getLauncherName();
 		return new JobId(jobClass, launcherName);
-	}
-
-	public static String getLauncherName() {
-		String launcherName = ResourceUtilities.getBundledString(
-				JobRegistry.class, "launcherName");
-		launcherName = launcherName.isEmpty() ? ServletLayerUtils
-				.getLocalHostName() : launcherName;
-		return launcherName;
 	}
 
 	public List<String> getRunningJobs() {
@@ -250,6 +277,8 @@ public class JobRegistry {
 
 	public void putTracker(JobTracker jobTracker) {
 		trackerMap.put(jobTracker.getId(), jobTracker);
+		trackerTimeout.put(jobTracker.getId(), System.currentTimeMillis()
+				+ TimeConstants.ONE_HOUR_MS);
 	}
 
 	public void removeTracker(final JobTracker tracker) {
@@ -312,6 +341,10 @@ public class JobRegistry {
 				message), progress);
 	}
 
+	private void flushTracker(JobTracker tracker) {
+		tracker.setLog(tracker.getLog() + getContextLogBuffer(tracker));
+	}
+
 	private List<JobTracker> getRootTrackers() {
 		CollectionFilter<JobTracker> filter = new CollectionFilter<JobTracker>() {
 			@Override
@@ -348,18 +381,22 @@ public class JobRegistry {
 	}
 
 	private void logComplete(JobTracker tracker, String message) {
-		Logger logger = (Logger) tracker.getLogger();
-		logger.info(message);
-		tracker.setJobResult(message);
-		long itemCount = tracker.getItemCount();
-		if (itemCount != 0 && tracker.getParent() == null) {
-			double avgTime = tracker.getJobDuration() / itemCount;
-			logger.info(String.format(
-					"Run time: %.4f s. - avg. time per item: %.0f ms.",
-					tracker.getJobDuration() / 1000, avgTime));
+		if (message == NO_LOG) {
+			tracker.setJobResult("");
 		} else {
-			logger.info(String.format("Run time: %.4f s.",
-					tracker.getJobDuration() / 1000));
+			tracker.setJobResult(message);
+			Logger logger = (Logger) tracker.getLogger();
+			logger.info(message);
+			long itemCount = tracker.getItemCount();
+			if (itemCount != 0 && tracker.getParent() == null) {
+				double avgTime = tracker.getJobDuration() / itemCount;
+				logger.info(String.format(
+						"Run time: %.4f s. - avg. time per item: %.0f ms.",
+						tracker.getJobDuration() / 1000, avgTime));
+			} else {
+				logger.info(String.format("Run time: %.4f s.",
+						tracker.getJobDuration() / 1000));
+			}
 		}
 		flushTracker(tracker);
 	}
@@ -392,5 +429,12 @@ public class JobRegistry {
 			current.setChildren(newList);
 		}
 		LooseContext.set(CONTEXT_TRACKER, tracker);
+	}
+
+	protected String flushLogger(Logger contextLogger) {
+		if (contextLogger instanceof RemoteActionLogger) {
+			return ((RemoteActionLogger) contextLogger).flushLogger();
+		}
+		return null;
 	}
 }

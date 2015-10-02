@@ -34,7 +34,6 @@ import com.google.gwt.event.dom.client.KeyUpHandler;
 import com.google.gwt.event.logical.shared.InitializeEvent;
 import com.google.gwt.event.logical.shared.InitializeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Focusable;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;

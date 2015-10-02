@@ -27,8 +27,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PartialDtrUploadResponse;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 
 import com.google.gwt.user.client.rpc.RemoteService;
@@ -71,6 +73,10 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod
 	public DomainTransformResponse transform(DomainTransformRequest request)
 			throws DomainTransformException, DomainTransformRequestException;
+	
+	@WebMethod 
+	public DomainUpdate waitForTransforms(long lastTransformRequestId)
+			throws PermissionsException;
 
 	public List<ServerValidator> validateOnServer(
 			List<ServerValidator> validators) throws WebException;

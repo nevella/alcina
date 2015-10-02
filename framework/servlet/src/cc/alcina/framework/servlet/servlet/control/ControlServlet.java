@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.control.ClusterStateProvider;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
 public class ControlServlet extends HttpServlet {
@@ -64,6 +65,9 @@ public class ControlServlet extends HttpServlet {
 		} else if (cmd.equals("get-status")) {
 			csr.setCommand(ControlServletRequestCommand.GET_STATUS);
 			return csr;
+		} else if (cmd.equals("cluster-status")) {
+			csr.setCommand(ControlServletRequestCommand.CLUSTER_STATUS);
+			return csr;
 		}
 		writeAndClose(
 				"Usage:\n"
@@ -98,6 +102,10 @@ public class ControlServlet extends HttpServlet {
 						.getLifecycleServlet().dumpCustomProperties();
 				writeAndClose(status.toString(), resp);
 			}
+			break;
+		case CLUSTER_STATUS:
+			writeAndClose(Registry.impl(ClusterStateProvider.class)
+					.getMemberClusterState(), resp);
 			break;
 		}
 	}

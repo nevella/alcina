@@ -56,9 +56,15 @@ public class RangeParser {
 					}
 					startOfInt = -1;
 				} else {
-					String err = maybeHandleDelim(idx);
-					if (err != null) {
-						return err;
+					if (idx > 0
+							&& text.substring(idx - 1).matches(
+									"[a-zA-Z] [a-zA-Z].*")) {
+						//Qd R or similar
+					} else {
+						String err = maybeHandleDelim(idx);
+						if (err != null) {
+							return err;
+						}
 					}
 				}
 				continue;

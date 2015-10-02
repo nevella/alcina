@@ -3,11 +3,15 @@ package cc.alcina.framework.entity.impl.cache;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.hibernate.criterion.AliasedProjection;
 import org.hibernate.criterion.Conjunction;
@@ -15,25 +19,30 @@ import org.hibernate.criterion.CountProjection;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.InExpression;
+import org.hibernate.criterion.NotExpression;
+import org.hibernate.criterion.NullExpression;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.PropertyProjection;
 import org.hibernate.criterion.SimpleExpression;
+import org.hibernate.transform.ResultTransformer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheQuery;
 import cc.alcina.framework.entity.entityaccess.cache.CacheFilter;
 import cc.alcina.framework.entity.entityaccess.cache.CompositeCacheFilter;
+import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheRunner;
+import cc.alcina.framework.entity.entityaccess.cache.NotCacheFilter;
 
 import com.totsp.gwittir.client.beans.Converter;
 
@@ -48,6 +57,10 @@ public class MemCacheQueryTranslator {
 
 	Map<String, MemCacheCriteria> aliasLookup = new LinkedHashMap<String, MemCacheCriteria>();
 
+	List<ProjectionHelper> projectionHelpers = new ArrayList<MemCacheQueryTranslator.ProjectionHelper>();
+
+	private boolean aggregateQuery;
+
 	public List list(MemCacheCriteria criteria) throws NotHandledException {
 		this.root = criteria;
 		query = new AlcinaMemCacheQuery();
@@ -61,7 +74,15 @@ public class MemCacheQueryTranslator {
 				handleProjections();
 			}
 		};
-		return groupedRows.asTuples();
+		ResultTransformer resultTransformer = criteria.getResultTransformer();
+		List results = groupedRows.asTuples();
+		if (resultTransformer != null) {
+			Stream stream = results.stream()
+					.map(tp -> resultTransformer.transformTuple((Object[]) tp,
+							null));
+			results = (List) stream.collect(Collectors.toList());
+		}
+		return results;
 	}
 
 	public String translatePropertyPath(Criterion criterion,
@@ -82,6 +103,7 @@ public class MemCacheQueryTranslator {
 				}
 			}
 		}
+		propertyPath = query.getCanonicalPropertyPath(root.clazz, propertyPath);
 		return propertyPath;
 	}
 
@@ -129,6 +151,22 @@ public class MemCacheQueryTranslator {
 		}
 	}
 
+	private void setupProjectionHelpers() throws Exception {
+		ProjectionList projectionList = (ProjectionList) root.projection;
+		Field field = ProjectionList.class.getDeclaredField("elements");
+		field.setAccessible(true);
+		List<Projection> projections = (List) field.get(projectionList);
+		int groupCount = 0;
+		aggregateQuery = true;
+		for (Projection projection : projections) {
+			ProjectionHelper helper = new ProjectionHelper(projection);
+			projectionHelpers.add(helper);
+			aggregateQuery &= helper.isAggregate();
+			groupCount += helper.isGrouped() ? 1 : 0;
+		}
+		groupedRows = new GroupedRows(groupCount);
+	}
+
 	protected CacheFilter criterionToFilter(MemCacheCriteria memCacheCriteria,
 			Criterion criterion) throws NotHandledException {
 		boolean handled = false;
@@ -141,31 +179,21 @@ public class MemCacheQueryTranslator {
 		throw new NotHandledException(criterion);
 	}
 
-	List<ProjectionHelper> projectionHelpers = new ArrayList<MemCacheQueryTranslator.ProjectionHelper>();
-
 	protected void handleProjections() throws Exception {
 		setupProjectionHelpers();
-		for (Object obj : rawRows) {
+		if (rawRows.size() > 0 || !aggregateQuery) {
+			for (Object obj : rawRows) {
+				int i = 0;
+				for (ProjectionHelper projectionHelper : projectionHelpers) {
+					groupedRows.handleProjection(obj, projectionHelper, i++);
+				}
+			}
+		} else {
 			int i = 0;
 			for (ProjectionHelper projectionHelper : projectionHelpers) {
-				groupedRows.handleProjection(obj, projectionHelper, i++);
+				groupedRows.handleProjection(null, projectionHelper, i++);
 			}
 		}
-		int debug = 3;
-	}
-
-	private void setupProjectionHelpers() throws Exception {
-		ProjectionList projectionList = (ProjectionList) root.projection;
-		Field field = ProjectionList.class.getDeclaredField("elements");
-		field.setAccessible(true);
-		List<Projection> projections = (List) field.get(projectionList);
-		int groupCount = 0;
-		for (Projection projection : projections) {
-			ProjectionHelper helper = new ProjectionHelper(projection);
-			projectionHelpers.add(helper);
-			groupCount += helper.isGrouped() ? 1 : 0;
-		}
-		groupedRows = new GroupedRows(groupCount);
 	}
 
 	public static class ConjunctionTranslator extends
@@ -195,15 +223,10 @@ public class MemCacheQueryTranslator {
 
 	@RegistryLocation(registryPoint = CriterionTranslator.class)
 	public abstract static class CriterionTranslator<C extends Criterion> {
+		FieldHelper fieldHelper = new FieldHelper();
+
 		public String getStringFieldValue(Criterion criterion, String fieldName) {
-			try {
-				Field pnField = criterion.getClass()
-						.getDeclaredField(fieldName);
-				pnField.setAccessible(true);
-				return (String) pnField.get(criterion);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
+			return fieldHelper.getValue(criterion, fieldName);
 		}
 
 		public boolean handles(Class<C> clazz) {
@@ -212,32 +235,8 @@ public class MemCacheQueryTranslator {
 
 		protected abstract Class<C> getHandledClass();
 
-		Field field = null;
-
 		protected Object getValue(Criterion criterion, String... fieldNames) {
-			try {
-				if (field == null) {
-					Class clazz = criterion.getClass();
-					while (clazz != Object.class) {
-						for (String fieldName : fieldNames) {
-							try {
-								field = clazz.getDeclaredField(fieldName);
-								break;
-							} catch (Exception e) {
-							}
-						}
-						if (field != null) {
-							break;
-						} else {
-							clazz = clazz.getSuperclass();
-						}
-					}
-					field.setAccessible(true);
-				}
-				return field.get(criterion);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
+			return fieldHelper.getValue(criterion, fieldNames);
 		}
 
 		protected abstract CacheFilter handle(C criterion,
@@ -299,6 +298,42 @@ public class MemCacheQueryTranslator {
 		}
 	}
 
+	public static class NotTranslator extends
+			CriterionTranslator<NotExpression> {
+		@Override
+		protected Class<NotExpression> getHandledClass() {
+			return NotExpression.class;
+		}
+
+		@Override
+		protected CacheFilter handle(NotExpression criterion,
+				MemCacheCriteria memCacheCriteria,
+				MemCacheQueryTranslator translator) throws NotHandledException {
+			Criterion sub = (Criterion) getValue(criterion, "criterion");
+			NotCacheFilter filter = new NotCacheFilter(
+					translator.criterionToFilter(memCacheCriteria, sub));
+			return filter;
+		}
+	}
+
+	public static class NullTranslator extends
+			CriterionTranslator<NullExpression> {
+		@Override
+		protected Class<NullExpression> getHandledClass() {
+			return NullExpression.class;
+		}
+
+		@Override
+		protected CacheFilter handle(NullExpression criterion,
+				MemCacheCriteria memCacheCriteria,
+				MemCacheQueryTranslator translator) throws NotHandledException {
+			String propertyName = translator.translatePropertyPath(criterion,
+					memCacheCriteria,
+					getStringFieldValue(criterion, "propertyName"));
+			return new CacheFilter(propertyName, null, FilterOperator.EQ);
+		}
+	}
+
 	public static class SimpleExpressionTranslator extends
 			CriterionTranslator<SimpleExpression> {
 		@Override
@@ -339,7 +374,57 @@ public class MemCacheQueryTranslator {
 		}
 	}
 
+	static class FieldHelper {
+		Field field = null;
+
+		Object lastFrom = null;
+
+		String[] lastFieldNames = null;
+
+		protected <T> T getValue(Object from, String... fieldNames) {
+			try {
+				if (field != null) {
+					if (from != lastFrom
+							|| !Arrays.equals(lastFieldNames, fieldNames)) {
+						field = null;
+					}
+				}
+				if (field == null) {
+					Class clazz = from.getClass();
+					while (clazz != Object.class) {
+						for (String fieldName : fieldNames) {
+							try {
+								field = clazz.getDeclaredField(fieldName);
+								break;
+							} catch (Exception e) {
+							}
+						}
+						if (field != null) {
+							break;
+						} else {
+							clazz = clazz.getSuperclass();
+						}
+					}
+					field.setAccessible(true);
+					lastFrom = from;
+					lastFieldNames = fieldNames;
+				}
+				return (T) field.get(from);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	class GroupedRow {
+		List<GroupedValue> groupedValues;
+
+		public int handledCount;
+
+		public boolean added;
+
+		Multiset<Integer, Set> seen = new Multiset<Integer, Set>();
+
 		public GroupedRow() {
 			groupedValues = new ArrayList<GroupedValue>(
 					projectionHelpers.size());
@@ -348,20 +433,12 @@ public class MemCacheQueryTranslator {
 			}
 		}
 
-		List<GroupedValue> groupedValues;
-
-		public int handledCount;
-
-		public boolean added;
-
-		public void handleProjection(Object obj,
-				ProjectionHelper projectionHelper, int index) {
-			if (projectionHelper.isCount()) {
-				groupedValues.get(index).incrementCount();
-			} else {
-				groupedValues.get(index).value = projectionHelper.getValue(obj);
-				handledCount++;
+		public Object[] asTuple() {
+			Object[] tuple = new Object[groupedValues.size()];
+			for (int i = 0; i < tuple.length; i++) {
+				tuple[i] = groupedValues.get(i).getValue();
 			}
+			return tuple;
 		}
 
 		public Object[] groupKeys() {
@@ -372,71 +449,29 @@ public class MemCacheQueryTranslator {
 			return keys;
 		}
 
+		public void handleProjection(Object obj,
+				ProjectionHelper projectionHelper, int index) {
+			if (projectionHelper.isCount()) {
+				if (obj != null) {
+					boolean ignore = false;
+					if (projectionHelper.isCountDistinct()) {
+						Object value = projectionHelper.getValue(obj);
+						ignore = !seen.add(index, value);
+					}
+					if (!ignore) {
+						groupedValues.get(index).incrementCount();
+					}
+				}
+			} else {
+				groupedValues.get(index).value = projectionHelper.getValue(obj);
+				handledCount++;
+			}
+		}
+
 		@Override
 		public String toString() {
 			return groupedValues.toString();
 		}
-
-		public Object[] asTuple() {
-			Object[] tuple = new Object[groupedValues.size()];
-			for (int i = 0; i < tuple.length; i++) {
-				tuple[i] = groupedValues.get(i).getValue();
-			}
-			return tuple;
-		}
-	}
-
-	class ProjectionHelper {
-		public ProjectionHelper(Projection projection) {
-			try {
-				if (projection instanceof AliasedProjection) {
-					Field field = projection.getClass().getDeclaredField(
-							"projection");
-					field.setAccessible(true);
-					projection = (Projection) field.get(projection);
-				}
-				this.projection = projection;
-				if (!isCount()) {
-					setupAccessor();
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		@Override
-		public String toString() {
-			return projection.toString();
-		}
-
-		private void setupAccessor() throws Exception {
-			if (projection instanceof PropertyProjection) {
-				Field field = projection.getClass().getDeclaredField(
-						"propertyName");
-				field.setAccessible(true);
-				String propertyPath = (String) field.get(projection);
-				propertyPath = translatePropertyPath(null, null, propertyPath);
-				accessor = new PropertyPathAccessor(propertyPath);
-			} else {
-				throw new NotHandledException(projection.toString());
-			}
-		}
-
-		PropertyPathAccessor accessor = null;
-
-		public Object getValue(Object obj) {
-			return accessor.getChainedProperty(obj);
-		}
-
-		public boolean isCount() {
-			return projection instanceof CountProjection;
-		}
-
-		boolean isGrouped() {
-			return projection.isGrouped();
-		}
-
-		Projection projection;
 	}
 
 	class GroupedRows {
@@ -473,6 +508,7 @@ public class MemCacheQueryTranslator {
 				currentRow = new GroupedRow();
 			}
 			currentRow.handleProjection(obj, projectionHelper, i);
+			// we've set all the keys for this row, put in lookup (or get)
 			if (groupCount != 0 && currentRow.handledCount == groupCount) {
 				Object[] groupKeys = currentRow.groupKeys();
 				GroupedRow existing = existingRows.get(groupKeys);
@@ -532,6 +568,11 @@ public class MemCacheQueryTranslator {
 			count++;
 		}
 
+		@Override
+		public String toString() {
+			return CommonUtils.nullSafeToString(getValue());
+		}
+
 		Object getValue() {
 			if (projectionHelper.isCount()) {
 				return count;
@@ -539,10 +580,72 @@ public class MemCacheQueryTranslator {
 				return value;
 			}
 		}
+	}
+
+	class ProjectionHelper {
+		boolean count;
+
+		boolean distinct;
+
+		FieldHelper fieldHelper = new FieldHelper();
+
+		PropertyPathAccessor accessor = null;
+
+		Projection projection;
+
+		public ProjectionHelper(Projection projection) {
+			try {
+				if (projection instanceof AliasedProjection) {
+					projection = fieldHelper.getValue(projection, "projection");
+				}
+				this.projection = projection;
+				if (projection instanceof CountProjection) {
+					count = true;
+					distinct = fieldHelper.getValue(projection, "distinct");
+				}
+				if (!isCount() || isCountDistinct()) {
+					setupAccessor();
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		public Object getValue(Object obj) {
+			return accessor.getChainedProperty(obj);
+		}
+
+		public boolean isAggregate() {
+			return isCount();
+		}
+
+		public boolean isCount() {
+			return count;
+		}
+
+		public boolean isCountDistinct() {
+			return count && distinct;
+		}
 
 		@Override
 		public String toString() {
-			return CommonUtils.nullSafeToString(getValue());
+			return projection.toString();
+		}
+
+		private void setupAccessor() throws Exception {
+			if (projection instanceof PropertyProjection
+					|| projection instanceof CountProjection) {
+				String propertyPath = fieldHelper.getValue(projection,
+						"propertyName");
+				propertyPath = translatePropertyPath(null, null, propertyPath);
+				accessor = new PropertyPathAccessor(propertyPath);
+			} else {
+				throw new NotHandledException(projection.toString());
+			}
+		}
+
+		boolean isGrouped() {
+			return projection.isGrouped();
 		}
 	}
 }

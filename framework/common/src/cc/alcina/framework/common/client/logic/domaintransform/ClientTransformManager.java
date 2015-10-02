@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,6 +63,27 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	private Map<Class, Boolean> requiresEditPrep = new HashMap<Class, Boolean>();
 
+	private boolean firePropertyChangesOnConsumedCollectionMods;
+
+	public boolean isFirePropertyChangesOnConsumedCollectionMods() {
+		return this.firePropertyChangesOnConsumedCollectionMods;
+	}
+
+	public void setFirePropertyChangesOnConsumedCollectionMods(
+			boolean firePropertyChangesOnConsumedCollectionMods) {
+		this.firePropertyChangesOnConsumedCollectionMods = firePropertyChangesOnConsumedCollectionMods;
+	}
+
+	@Override
+	protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
+			String propertyName, Object value,
+			CollectionModificationType collectionModificationType) {
+		if (isFirePropertyChangesOnConsumedCollectionMods()) {
+			modifyCollectionProperty(obj, propertyName,
+					Collections.singleton(value), collectionModificationType);
+		}
+	}
+
 	public ClientTransformManager() {
 		super();
 		cache = new ClientDomainSync();
@@ -89,7 +111,7 @@ public abstract class ClientTransformManager extends TransformManager {
 	/**
 	 * Useful series of actions when persisting a HasIdAndLocalId with
 	 * references to a WrappedObject
-	 * 
+	 *
 	 * @see TransformManager#promoteToDomainObject(Object) wrt what to do with
 	 *      promoted objects
 	 * @param referrer
@@ -257,8 +279,8 @@ public abstract class ClientTransformManager extends TransformManager {
 				if (dte.getTransformType() == TransformType.CREATE_OBJECT
 						&& dte.getObjectId() == 0
 						&& dte.getObjectLocalId() != 0) {
-					localIdCounter = Math.max(localIdCounter,
-							dte.getObjectLocalId());
+					localIdGenerator.set(Math.max(localIdGenerator.get(),
+							dte.getObjectLocalId()));
 				}
 				if (fireTransforms) {
 					fireDomainTransform(dte);

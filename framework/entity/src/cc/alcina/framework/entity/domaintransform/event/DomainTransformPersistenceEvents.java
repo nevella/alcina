@@ -75,15 +75,14 @@ public class DomainTransformPersistenceEvents {
 			queue.logFiring(event);
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
 					listenerList)) {
-				// ex-machine transforms
-				if (event.getSourceThreadId() != Thread.currentThread().getId()) {
-					if (!nonThreadListenerList.contains(listener)) {
-						continue;
-					}
+				// only fire ex-machine transforms to certain general listeners
+				if (event.isLocalToVm()
+						|| nonThreadListenerList.contains(listener)) {
+					listener.onDomainTransformRequestPersistence(event);
 				}
-				listener.onDomainTransformRequestPersistence(event);
 			}
 		} finally {
+			queue.logFired(event);
 			queue.eventFired(event);
 		}
 	}
