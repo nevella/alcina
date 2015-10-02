@@ -1054,7 +1054,11 @@ public class AlcinaMemCache implements RegistrableService {
 							.println("Current locked thread dump:\n***************\n");
 					mainLock.getQueuedThreads().forEach(
 							t2 -> System.out.println(t2 + "\n"
-									+ t2.getStackTrace()));
+									+ getStacktraceSlice(t2, 80)));
+					System.out
+							.println("\n\nThread pause times:\n***************\n");
+					threadQueueTimes.forEach((id, t2) -> System.out.format(
+							"id: %s - time: %s\n", id, time - t2));
 					System.out
 							.println("\n\nRecent lock acquisitions:\n***************\n");
 					System.out.println(CommonUtils.join(recentLockAcquisitions,
