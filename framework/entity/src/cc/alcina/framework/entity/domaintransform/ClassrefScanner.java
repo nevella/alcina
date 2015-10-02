@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -47,6 +47,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.ClassDataCache.ClassDataItem;
+import cc.alcina.framework.entity.util.AnnotationUtils;
 
 @SuppressWarnings("unchecked")
 /**
@@ -245,7 +246,7 @@ public class ClassrefScanner extends CachingScanner {
 		 * otherwise could be sending classes not compiled into client code)
 		 */
 		boolean bi = c.isAnnotationPresent(BeanInfo.class);
-		boolean in = c.isAnnotationPresent(ClientInstantiable.class);
+		boolean in = AnnotationUtils.hasAnnotationNamed(c, ClientInstantiable.class);
 		boolean dtp = c.isAnnotationPresent(DomainTransformPersistable.class);
 		if ((HasIdAndLocalId.class.isAssignableFrom(c) && (in || bi || dtp))
 				|| (c.isEnum() && (in || dtp))) {

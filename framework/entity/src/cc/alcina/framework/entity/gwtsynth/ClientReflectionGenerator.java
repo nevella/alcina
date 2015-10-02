@@ -241,7 +241,7 @@ public class ClientReflectionGenerator extends Generator {
 		List<JClassType> results = new ArrayList<JClassType>();
 		JClassType[] types = typeOracle.getTypes();
 		for (JClassType jClassType : types) {
-			if ((jClassType.isAnnotationPresent(ClientInstantiable.class) || jClassType
+			if ((hasAnnotationNamed(jClassType, ClientInstantiable.class) || jClassType
 					.isAnnotationPresent(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class))
 					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
@@ -249,6 +249,31 @@ public class ClientReflectionGenerator extends Generator {
 			}
 		}
 		return results;
+	}
+
+	// Annotation utils for gwt
+	// presence class, annotation simple name
+	private static UnsortedMultikeyMap<Annotation> classNameAnnotationMap = new UnsortedMultikeyMap<>(
+			2);
+
+	public static boolean hasAnnotationNamed(JClassType clazz,
+			Class<? extends Annotation> ann) {
+		String annClazzName = ann.getClass().getSimpleName();
+		if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
+			JClassType c = clazz;
+			Annotation found = null;
+			while (c != null && found == null) {
+				for (Annotation a : c.getAnnotations()) {
+					if (a.annotationType().getSimpleName().equals(annClazzName)) {
+						found = a;
+						break;
+					}
+				}
+				c = c.getSuperclass();
+			}
+			classNameAnnotationMap.put(clazz, annClazzName, found);
+		}
+		return classNameAnnotationMap.get(clazz, annClazzName) != null;
 	}
 
 	private List<JClassType> getBeanInfoTypes(TreeLogger logger,

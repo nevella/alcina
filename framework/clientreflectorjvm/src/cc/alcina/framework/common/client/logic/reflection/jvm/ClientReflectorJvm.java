@@ -56,7 +56,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			 * The reason for this is that gwt needs the compiled annotation
 			 * classes (in say, /bin) - so we may be getting classes here that
 			 * shouldn't be visible via the registry
-			 * 
+			 *
 			 * It's a bit sad (duplicating the exclusion code of the gwt
 			 * module), but the performance gains the jvm reflector gives us
 			 * outweigh the (possible) crud IMO
@@ -250,7 +250,8 @@ public class ClientReflectorJvm extends ClientReflector {
 			return;
 		}
 		checkClassAnnotations(clazz);
-		if (clazz.getAnnotation(ClientInstantiable.class) == null
+		if (!AnnotationUtils
+				.hasAnnotationNamed(clazz, ClientInstantiable.class)
 				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null
 				&& clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) == null) {
 			throw new RuntimeException(
@@ -269,7 +270,8 @@ public class ClientReflectorJvm extends ClientReflector {
 			throw new RuntimeException(
 					"not reflectable class - abstract or non-static");
 		}
-		boolean introspectable = clazz.getAnnotation(ClientInstantiable.class) != null
+		boolean introspectable = AnnotationUtils.hasAnnotationNamed(clazz,
+				ClientInstantiable.class)
 				|| clazz.getAnnotation(cc.alcina.framework.common.client.logic.reflection.BeanInfo.class) != null
 				|| clazz.getAnnotation(Introspectable.class) != null;
 		for (Class iface : getAllImplementedInterfaces(clazz)) {
