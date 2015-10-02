@@ -1,5 +1,9 @@
 package cc.alcina.template.cs.misc.search;
 
+import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.search.AbstractUserCriteriaGroup;
 import cc.alcina.template.cs.persistent.AlcinaTemplateUser;
 
 @BeanInfo(displayNamePropertyName = "displayName")
