@@ -133,6 +133,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				}
 			}
 		}
+		notifyAll();
 	}
 
 	public synchronized void eventFired(DomainTransformPersistenceEvent event) {
@@ -274,9 +275,19 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	private Optional<DtrpQueued> getFirstUnpublished() {
-		return requestQueueUnpublishedIndex == requestQueue.size() ? Optional
-				.empty() : Optional.of(requestQueue
-				.get(requestQueueUnpublishedIndex));
+		synchronized (requestQueue) {
+			while (true) {
+				if (requestQueueUnpublishedIndex == requestQueue.size()) {
+					return Optional.empty();
+				}
+				Optional<DtrpQueued> ret = Optional.of(requestQueue
+						.get(requestQueueUnpublishedIndex));
+				if (ret.get().status == DtrpStatus.PENDING) {
+					return ret;
+				}
+				requestQueueUnpublishedIndex++;
+			}
+		}
 	}
 
 	protected CommonPersistenceLocal getCommonPersistence() {
@@ -457,10 +468,10 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		boolean firing = false;
 
 		void modifyStatus(DtrpStatus newStatus) {
-			status = newStatus;
-			firing = false;
-			if (requestQueueUnpublishedIndex == index) {
-				requestQueueUnpublishedIndex++;
+			synchronized (requestQueue) {
+				status = newStatus;
+				firing = false;
+				getFirstUnpublished();
 			}
 			synchronized (DomainTransformPersistenceQueue.this) {
 				DomainTransformPersistenceQueue.this.notifyAll();
