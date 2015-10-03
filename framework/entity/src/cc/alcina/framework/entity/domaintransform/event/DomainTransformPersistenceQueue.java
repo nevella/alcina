@@ -471,6 +471,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			synchronized (requestQueue) {
 				status = newStatus;
 				firing = false;
+				//remove ref
+				persistenceEvent=null;
 				getFirstUnpublished();
 			}
 			synchronized (DomainTransformPersistenceQueue.this) {
