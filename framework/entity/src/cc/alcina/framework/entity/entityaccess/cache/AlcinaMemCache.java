@@ -135,6 +135,9 @@ public class AlcinaMemCache implements RegistrableService {
 	public static final String CONTEXT_WILL_PROJECT_AFTER_READ_LOCK = AlcinaMemCache.class
 			.getName() + ".CONTEXT_WILL_PROJECT_AFTER_READ_LOCK";
 
+	public static final String CONTEXT_NO_LOCKS = AlcinaMemCache.class
+			.getName() + ".CONTEXT_NO_LOCKS";
+
 	public static final String WRAPPED_OBJECT_REF_INTEGRITY = "WRAPPED_OBJECT_REF_INTEGRITY";
 
 	public static void checkActiveTransaction() {
@@ -1477,7 +1480,7 @@ public class AlcinaMemCache implements RegistrableService {
 				for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
 					task.run(this, clazz, raw);
 				}
-				if (query.isRaw()) {
+				if (query.isRaw() || isWillProjectLater()) {
 					return raw;
 				}
 				return new GraphProjection(query.getFieldFilter(),

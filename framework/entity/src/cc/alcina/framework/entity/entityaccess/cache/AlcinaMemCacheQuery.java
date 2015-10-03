@@ -26,7 +26,7 @@ public class AlcinaMemCacheQuery {
 	private GraphProjectionDataFilter dataFilter;
 
 	private boolean raw;
-	
+
 	private boolean nonTransactional;
 
 	public AlcinaMemCacheQuery() {
@@ -125,7 +125,7 @@ public class AlcinaMemCacheQuery {
 		this.ids = ids;
 		return this;
 	}
-	
+
 	public boolean isNonTransactional() {
 		return this.nonTransactional;
 	}
