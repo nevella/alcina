@@ -258,7 +258,7 @@ public class ClientReflectionGenerator extends Generator {
 
 	public static boolean hasAnnotationNamed(JClassType clazz,
 			Class<? extends Annotation> ann) {
-		String annClazzName = ann.getClass().getSimpleName();
+		String annClazzName = ann.getSimpleName();
 		if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
 			JClassType c = clazz;
 			Annotation found = null;

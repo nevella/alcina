@@ -45,7 +45,7 @@ public class AnnotationUtils {
 
 	public static boolean hasAnnotationNamed(Class clazz,
 			Class<? extends Annotation> ann) {
-		String annClazzName = ann.getClass().getSimpleName();
+		String annClazzName = ann.getSimpleName();
 		if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
 			Class c = clazz;
 			Annotation found = null;
@@ -62,8 +62,6 @@ public class AnnotationUtils {
 		}
 		return classNameAnnotationMap.get(clazz, annClazzName) != null;
 	}
-
-
 
 	public static Set<Annotation> getSuperclassAnnotationsForMethod(Method m) {
 		if (superMethodAnnotationMap.containsKey(m)) {
