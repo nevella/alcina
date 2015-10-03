@@ -38,21 +38,22 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
  * @author Nick Reddel
  */
 public class CollectionDataProvider implements SortableDataProvider {
-
 	private int pageSize = 50;
 
 	public CollectionDataProvider(Collection c) {
 		sort = new ArrayList(c);
 	}
-	
-	public void putCollection(Collection c,HasChunks table){
+
+	public void putCollection(Collection c, HasChunks table) {
 		sort = new ArrayList(c);
-		init(table);
+		if (table != null) {
+			init(table);
+		}
 	}
 
 	public String[] getSortableProperties() {
 		Object first = CommonUtils.first(sort);
-		if (first==null) {
+		if (first == null) {
 			return new String[0];
 		}
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
