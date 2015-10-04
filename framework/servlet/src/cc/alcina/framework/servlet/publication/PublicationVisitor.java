@@ -38,4 +38,7 @@ public class PublicationVisitor {
 	public InputStream transformConvertedContent(InputStream convertedContent) {
 		return convertedContent;
 	}
+
+	public void afterPublicationPersistence(long publicationId) throws Exception {
+	}
 }

@@ -92,6 +92,8 @@ public class Publisher {
 				&& deliveryModel.provideContentDeliveryType().isRepublishable();
 		PublicationContentPersister publicationContentPersister = Registry
 				.implOrNull(PublicationContentPersister.class);
+		PublicationContent publicationContent = cmh.getPublicationContent();
+		ctx.publicationContent = publicationContent;
 		if (forPublication && publicationContentPersister != null
 				&& !AppPersistenceBase.isInstanceReadOnly()) {
 			publicationUserId = Registry.impl(PublicationPersistence.class)
@@ -100,9 +102,8 @@ public class Publisher {
 			publicationId = persist(contentDefinition, deliveryModel,
 					publicationUserId, original, publicationContentPersister);
 			result.publicationId = publicationId;
+			ctx.getVisitorOrNoop().afterPublicationPersistence(publicationId);
 		}
-		PublicationContent publicationContent = cmh.getPublicationContent();
-		ctx.publicationContent = publicationContent;
 		ContentRenderer crh = (ContentRenderer) Registry.get()
 				.instantiateSingle(ContentRenderer.class,
 						publicationContent.getClass());
@@ -140,7 +141,8 @@ public class Publisher {
 		fcm.rows = cw.wrapper.gridRows;
 		fcm.custom = cw.custom;
 		InputStream convertedContent = fc.convert(ctx, fcm);
-		convertedContent=ctx.getVisitorOrNoop().transformConvertedContent(convertedContent);
+		convertedContent = ctx.getVisitorOrNoop().transformConvertedContent(
+				convertedContent);
 		ctx.getVisitorOrNoop().beforeDelivery();
 		ContentDelivery deliverer = (ContentDelivery) Registry.get()
 				.instantiateSingle(ContentDeliveryType.class,

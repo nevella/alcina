@@ -50,6 +50,8 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.sql.DataSource;
 
+import org.eclipse.jetty.util.ConcurrentHashSet;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -81,6 +83,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -122,6 +125,8 @@ import com.google.gwt.event.shared.UmbrellaException;
  */
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class AlcinaMemCache implements RegistrableService {
+	private static final int LONG_LOCK_TRACE_LENGTH = 160;
+
 	private static final int MAX_QUEUED_TIME = 500;
 
 	private static AlcinaMemCache singleton;
@@ -1022,63 +1027,95 @@ public class AlcinaMemCache implements RegistrableService {
 
 	Map<Long, Long> threadQueueTimes = new ConcurrentHashMap<>();
 
+	CountingMap<Thread> activeThreads = new CountingMap<>();
+
 	private void maybeLogLock(LockAction action, boolean write) {
+		long time = System.currentTimeMillis();
+		Thread currentThread = Thread.currentThread();
 		if (action == LockAction.PRE_LOCK) {
-			threadQueueTimes.put(Thread.currentThread().getId(),
-					System.currentTimeMillis());
+			threadQueueTimes.put(currentThread.getId(), time);
 		} else {
-			threadQueueTimes.remove(Thread.currentThread().getId());
+			synchronized (activeThreads) {
+				switch (action) {
+				case MAIN_LOCK_ACQUIRED:
+				case SUB_LOCK_ACQUIRED:
+					activeThreads.add(currentThread);
+					break;
+				case UNLOCK:
+					activeThreads.add(currentThread, -1);
+					if (activeThreads.get(currentThread) == 0) {
+						activeThreads.remove(currentThread);
+					}
+					break;
+				}
+			}
+			threadQueueTimes.remove(currentThread.getId());
 		}
 		long queuedTime = health.getMaxQueuedTime();
 		if (dumpLocks
 				|| (collectLockAcquisitionPoints && (write || queuedTime > MAX_QUEUED_TIME))) {
-			String message = String.format("Memcache lock - %s - %s\n",
+			String lockDumpCause = String.format("Memcache lock - %s - %s\n",
 					write ? "write" : "read", action);
-			Thread t = Thread.currentThread();
-			String log = CommonUtils.formatJ(
-					"\tid:%s\n\ttime: %s\n\treadHoldCount:"
-							+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ",
-					t.getId(), new Date(), mainLock.getQueuedReaderThreads()
-							.size(), mainLock.getQueuedWriterThreads().size(),
-					subgraphLock);
-			log += getStacktraceSlice(t);
-			message += log;
+			String log = getLockStats();
+			lockDumpCause += log;
 			if (dumpLocks || (queuedTime > MAX_QUEUED_TIME)) {
-				Thread writerThread = postProcessWriterThread;
-				if (writerThread != null) {
-					System.out.format("Memcache log debugging----------\n"
-							+ "Writer thread trace:----------\n" + "%s\n",
-							getStacktraceSlice(postProcessWriterThread));
-				}
-				System.out.println(message);
-				long time = System.currentTimeMillis();
-				if (time - lastQueueDumpTime > 5 * TimeConstants.ONE_MINUTE_MS) {
-					System.out
-							.println("Current locked thread dump:\n***************\n");
-					mainLock.getQueuedThreads().forEach(
-							t2 -> System.out.println(t2 + "\n"
-									+ getStacktraceSlice(t2, 80)));
-					System.out
-							.println("\n\nThread pause times:\n***************\n");
-					threadQueueTimes.forEach((id, t2) -> System.out.format(
-							"id: %s - time: %s\n", id, time - t2));
-					System.out
-							.println("\n\nRecent lock acquisitions:\n***************\n");
-					System.out.println(CommonUtils.join(recentLockAcquisitions,
-							"\n"));
-					System.out.println("\n===========\n\n");
-					lastQueueDumpTime = time;
-				}
+				System.out.println(getLockDumpString(lockDumpCause, time
+						- lastQueueDumpTime > 5 * TimeConstants.ONE_MINUTE_MS));
 			}
 			if (collectLockAcquisitionPoints) {
 				synchronized (recentLockAcquisitions) {
-					recentLockAcquisitions.add(message);
+					recentLockAcquisitions.add(lockDumpCause);
 					if (recentLockAcquisitions.size() > 100) {
 						recentLockAcquisitions.removeFirst();
 					}
 				}
 			}
 		}
+	}
+
+	public String getLockDumpString(String lockDumpCause, boolean full) {
+		FormatBuilder fullLockDump = new FormatBuilder();
+		Thread writerThread = postProcessWriterThread;
+		if (writerThread != null) {
+			fullLockDump.format("Memcache log debugging----------\n"
+					+ "Writer thread trace:----------\n" + "%s\n",
+					getStacktraceSlice(postProcessWriterThread, 200));
+		}
+		fullLockDump.line(lockDumpCause);
+		long time = System.currentTimeMillis();
+		if (full) {
+			fullLockDump.line("Current locked thread dump:\n***************\n");
+			mainLock.getQueuedThreads().forEach(
+					t2 -> fullLockDump.line(t2 + "\n"
+							+ getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
+			fullLockDump.line("\n\nThread pause times:\n***************\n");
+			threadQueueTimes.forEach((id, t2) -> fullLockDump.format(
+					"id: %s - time: %s\n", id, time - t2));
+			synchronized (activeThreads) {
+				fullLockDump.line("\n\nActive threads:\n***************\n");
+				activeThreads.keySet().forEach(
+						t2 -> fullLockDump.line(t2 + "\n"
+								+ getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
+			}
+			fullLockDump
+					.line("\n\nRecent lock acquisitions:\n***************\n");
+			fullLockDump.line(CommonUtils.join(recentLockAcquisitions, "\n"));
+			fullLockDump.line("\n===========\n\n");
+			lastQueueDumpTime = time;
+		}
+		return fullLockDump.toString();
+	}
+
+	String getLockStats() {
+		Thread t = Thread.currentThread();
+		String log = CommonUtils.formatJ(
+				"\tid:%s\n\ttime: %s\n\treadHoldCount:"
+						+ " %s\n\twriteHoldcount: %s\n\tsublock: %s\n\n ", t
+						.getId(), new Date(), mainLock.getQueuedReaderThreads()
+						.size(), mainLock.getQueuedWriterThreads().size(),
+				subgraphLock);
+		log += getStacktraceSlice(t);
+		return log;
 	}
 
 	private void prepareTable(CacheItemDescriptor descriptor) throws Exception {
@@ -1401,7 +1438,7 @@ public class AlcinaMemCache implements RegistrableService {
 						.is(AlcinaMemCache.class, "debugLongLocks")) {
 					System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
 							duration, e.getKey(),
-							getStacktraceSlice(e.getKey(), 80));
+							getStacktraceSlice(e.getKey(), LONG_LOCK_TRACE_LENGTH));
 				}
 			}
 		}
