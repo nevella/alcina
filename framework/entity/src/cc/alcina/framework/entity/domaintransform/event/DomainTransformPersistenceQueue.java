@@ -82,7 +82,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	public synchronized void checkPersistedTransforms(boolean forceDbCheck) {
 		boolean dbCheck = forceDbCheck;
 		synchronized (requestQueue) {
-			dbCheck |= getFirstUnpublished().isPresent();
+			dbCheck |= (getFirstUnpublished().isPresent() && getFirstUnpublished()
+					.get().persistenceEvent == null);
 		}
 		if (dbCheck) {
 			List<DomainTransformRequestPersistent> persisted = getCommonPersistence()
@@ -146,6 +147,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 		updateStatsForNonPublishedTransforms();
 		notifyAll();
+		checkPersistedTransforms(false);
 	}
 
 	public long getMaxDbPersistedRequestId() {
@@ -471,8 +473,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			synchronized (requestQueue) {
 				status = newStatus;
 				firing = false;
-				//remove ref
-				persistenceEvent=null;
+				// remove ref
+				persistenceEvent = null;
 				getFirstUnpublished();
 			}
 			synchronized (DomainTransformPersistenceQueue.this) {

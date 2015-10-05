@@ -388,12 +388,15 @@ public class ResourceUtilities {
 
 	public static String readStreamToString(InputStream is, String charsetName)
 			throws IOException {
-		charsetName = charsetName == null ? "UTF-8" : charsetName;
-		BufferedReader in = new BufferedReader(new InputStreamReader(is,
-				charsetName));
-		String s = readerToString(in);
-		is.close();
-		return s;
+		try {
+			charsetName = charsetName == null ? "UTF-8" : charsetName;
+			BufferedReader in = new BufferedReader(new InputStreamReader(is,
+					charsetName));
+			String s = readerToString(in);
+			return s;
+		} finally {
+			is.close();
+		}
 	}
 
 	public static String readerToString(BufferedReader in) throws IOException {
