@@ -140,6 +140,7 @@ public class AlcinaMemCache implements RegistrableService {
 	public static final String CONTEXT_WILL_PROJECT_AFTER_READ_LOCK = AlcinaMemCache.class
 			.getName() + ".CONTEXT_WILL_PROJECT_AFTER_READ_LOCK";
 
+	// while debugging, prevent reentrant locks
 	public static final String CONTEXT_NO_LOCKS = AlcinaMemCache.class
 			.getName() + ".CONTEXT_NO_LOCKS";
 
@@ -524,6 +525,9 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	public void lock(boolean write) {
+		if (!LooseContext.is(CONTEXT_NO_LOCKS)) {
+			return;
+		}
 		if (lockingDisabled) {
 			if (System.currentTimeMillis() - lastLockingDisabledMessage > TimeConstants.ONE_MINUTE_MS) {
 				System.out.format("memcache - lock %s - locking disabled\n",
@@ -634,7 +638,7 @@ public class AlcinaMemCache implements RegistrableService {
 	 * as the sublock objects are different), will rework this
 	 */
 	public void sublock(Object sublock, boolean lock) {
-		if (lockingDisabled) {
+		if (lockingDisabled || LooseContext.is(CONTEXT_NO_LOCKS)) {
 			return;
 		}
 		if (lock) {
@@ -657,7 +661,7 @@ public class AlcinaMemCache implements RegistrableService {
 	}
 
 	public void unlock(boolean write) {
-		if (lockingDisabled) {
+		if (lockingDisabled || LooseContext.is(CONTEXT_NO_LOCKS)) {
 			return;
 		}
 		try {
@@ -1086,16 +1090,21 @@ public class AlcinaMemCache implements RegistrableService {
 		if (full) {
 			fullLockDump.line("Current locked thread dump:\n***************\n");
 			mainLock.getQueuedThreads().forEach(
-					t2 -> fullLockDump.line(t2 + "\n"
-							+ getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
+					t2 -> fullLockDump.line("id:%s %s\n%s", t2.getId(), t2,
+							getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
 			fullLockDump.line("\n\nThread pause times:\n***************\n");
 			threadQueueTimes.forEach((id, t2) -> fullLockDump.format(
 					"id: %s - time: %s\n", id, time - t2));
 			synchronized (activeThreads) {
 				fullLockDump.line("\n\nActive threads:\n***************\n");
-				activeThreads.keySet().forEach(
-						t2 -> fullLockDump.line(t2 + "\n"
-								+ getStacktraceSlice(t2, LONG_LOCK_TRACE_LENGTH)));
+				activeThreads.keySet()
+						.forEach(
+								t2 -> fullLockDump.line(
+										"id:%s %s\n%s",
+										t2.getId(),
+										t2,
+										getStacktraceSlice(t2,
+												LONG_LOCK_TRACE_LENGTH)));
 			}
 			fullLockDump
 					.line("\n\nRecent lock acquisitions:\n***************\n");
@@ -1436,9 +1445,12 @@ public class AlcinaMemCache implements RegistrableService {
 					|| (duration > 50 && e.getKey() == postProcessWriterThread)) {
 				if (ResourceUtilities
 						.is(AlcinaMemCache.class, "debugLongLocks")) {
-					System.out.format("Long lock holder - %s ms - %s\n%s\n\n",
-							duration, e.getKey(),
-							getStacktraceSlice(e.getKey(), LONG_LOCK_TRACE_LENGTH));
+					System.out.format(
+							"Long lock holder - %s ms - %s\n%s\n\n",
+							duration,
+							e.getKey(),
+							getStacktraceSlice(e.getKey(),
+									LONG_LOCK_TRACE_LENGTH));
 				}
 			}
 		}
