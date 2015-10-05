@@ -50,8 +50,6 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.sql.DataSource;
 
-import org.eclipse.jetty.util.ConcurrentHashSet;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -521,11 +519,18 @@ public class AlcinaMemCache implements RegistrableService {
 	public void loadTable(Class clazz, String sqlFilter, ClassIdLock sublock)
 			throws Exception {
 		assert sublock != null;
-		loadTable(clazz, sqlFilter, sublock, new LaterLookup());
+		try {
+			LooseContext.push();
+			LooseContext
+					.remove(AlcinaMemCache.CONTEXT_WILL_PROJECT_AFTER_READ_LOCK);
+			loadTable(clazz, sqlFilter, sublock, new LaterLookup());
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	public void lock(boolean write) {
-		if (!LooseContext.is(CONTEXT_NO_LOCKS)) {
+		if (LooseContext.is(CONTEXT_NO_LOCKS)) {
 			return;
 		}
 		if (lockingDisabled) {
