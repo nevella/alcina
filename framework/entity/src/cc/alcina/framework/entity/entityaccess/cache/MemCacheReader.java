@@ -12,14 +12,25 @@ import cc.alcina.framework.entity.projection.GraphProjections;
 
 public abstract class MemCacheReader<I, O> {
 	public O read(I input) {
+		int initialDepth = LooseContext.depth();
+		boolean noLocksWasSet = LooseContext
+				.is(AlcinaMemCache.CONTEXT_NO_LOCKS);
 		try {
 			AlcinaMemCache.get().lock(false);
-			LooseContext.pushWithBoolean(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			if (initialDepth == 0) {
+				LooseContext.push();
+			}
+			LooseContext.setBoolean(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			return read0(input);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		} finally {
-			LooseContext.pop();
+			if (!noLocksWasSet) {
+				LooseContext.remove(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			}
+			if (initialDepth == 0) {
+				LooseContext.pop();
+			}
 			AlcinaMemCache.get().unlock(false);
 		}
 	}
