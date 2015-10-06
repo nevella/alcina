@@ -294,13 +294,38 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 				true);
 	}
 
-	public void copyTo(PermissionsManager newThreadInstance) {
-		newThreadInstance.user = user;
-		newThreadInstance.groupMap = groupMap;
-		newThreadInstance.loginState = loginState;
-		newThreadInstance.userId = userId;
-		newThreadInstance.onlineState = onlineState;
-		newThreadInstance.root = root;
+	public static class PermissionsManagerState {
+		public IUser user;
+
+		public HashMap<String, IGroup> groupMap;
+
+		public LoginState loginState;
+
+		public long userId;
+
+		public OnlineState onlineState;
+
+		public boolean root;
+
+		public void copyTo(PermissionsManager pm) {
+			pm.user = user;
+			pm.groupMap = groupMap;
+			pm.loginState = loginState;
+			pm.userId = userId;
+			pm.onlineState = onlineState;
+			pm.root = root;
+		}
+	}
+
+	public synchronized PermissionsManagerState snapshotState() {
+		PermissionsManagerState state = new PermissionsManagerState();
+		state.user = user;
+		state.groupMap = groupMap == null ? null : new HashMap<>(groupMap);
+		state.loginState = loginState;
+		state.userId = userId;
+		state.onlineState = onlineState;
+		state.root = root;
+		return state;
 	}
 
 	public void domainTransform(DomainTransformEvent evt)
@@ -367,24 +392,26 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		if (groupMap != null) {
 			return groupMap;
 		}
-		Set<IGroup> groups = new HashSet<IGroup>();
-		if (user != null) {
-			if (user.getPrimaryGroup() != null) {
-				groups.add(user.getPrimaryGroup());
+		synchronized (this) {
+			Set<IGroup> groups = new HashSet<IGroup>();
+			if (user != null) {
+				if (user.getPrimaryGroup() != null) {
+					groups.add(user.getPrimaryGroup());
+				}
+				groups.addAll(user.getSecondaryGroups());
+				recursivePopulateGroupMemberships(groups, new HashSet<IGroup>());
 			}
-			groups.addAll(user.getSecondaryGroups());
-			recursivePopulateGroupMemberships(groups, new HashSet<IGroup>());
+			groupMap = new HashMap<String, IGroup>();
+			for (Iterator<IGroup> itr = groups.iterator(); itr.hasNext();) {
+				IGroup group = itr.next();
+				groupMap.put(group.getName(), group);
+			}
+			HashMap<String, IGroup> result = groupMap;
+			if (user != this.user) {
+				nullGroupMap();
+			}
+			return result;
 		}
-		groupMap = new HashMap<String, IGroup>();
-		for (Iterator<IGroup> itr = groups.iterator(); itr.hasNext();) {
-			IGroup group = itr.next();
-			groupMap.put(group.getName(), group);
-		}
-		HashMap<String, IGroup> result = groupMap;
-		if (user != this.user) {
-			nullGroupMap();
-		}
-		return result;
 	}
 
 	public long getUserId() {
@@ -625,7 +652,7 @@ public class PermissionsManager implements Vetoer, DomainTransformListener {
 		this.root = root;
 	}
 
-	public void setUser(IUser user) {
+	public synchronized void setUser(IUser user) {
 		nullGroupMap();
 		if (this.user != null
 				&& this.user instanceof SourcesPropertyChangeEvents) {

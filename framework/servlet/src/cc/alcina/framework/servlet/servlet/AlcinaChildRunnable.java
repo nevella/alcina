@@ -2,13 +2,15 @@ package cc.alcina.framework.servlet.servlet;
 
 import java.util.concurrent.Callable;
 
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.SEUtilities;
 
 public abstract class AlcinaChildRunnable implements Runnable {
-	private PermissionsManager pm;
+	private PermissionsManagerState permissionsManagerState;
 
 	private String threadName;
 
@@ -26,7 +28,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 
 	public AlcinaChildRunnable(String name) {
 		this.threadName = name;
-		this.pm = PermissionsManager.get();
+		this.permissionsManagerState = PermissionsManager.get().snapshotState();
 		this.contextClassLoader = Thread.currentThread()
 				.getContextClassLoader();
 	}
@@ -94,7 +96,7 @@ public abstract class AlcinaChildRunnable implements Runnable {
 			LooseContext.push();
 			// different thread-local
 			getRunContext().tLooseContextDepth = LooseContext.depth();
-			this.pm.copyTo(PermissionsManager.get());
+			this.permissionsManagerState.copyTo(PermissionsManager.get());
 			Thread.currentThread().setContextClassLoader(contextClassLoader);
 			run0();
 		} catch (OutOfMemoryError e) {

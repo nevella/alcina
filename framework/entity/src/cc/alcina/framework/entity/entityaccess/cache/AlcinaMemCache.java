@@ -522,7 +522,7 @@ public class AlcinaMemCache implements RegistrableService {
 		try {
 			LooseContext.push();
 			LooseContext
-					.remove(AlcinaMemCache.CONTEXT_WILL_PROJECT_AFTER_READ_LOCK);
+					.remove(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			loadTable(clazz, sqlFilter, sublock, new LaterLookup());
 		} finally {
 			LooseContext.pop();
