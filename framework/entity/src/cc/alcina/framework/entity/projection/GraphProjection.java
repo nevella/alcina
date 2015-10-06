@@ -174,6 +174,9 @@ public class GraphProjection {
 	public static final String CONTEXT_DUMP_PROJECTION_STATS = GraphProjection.class
 			+ ".CONTEXT_DUMP_PROJECTION_STATS";
 
+	public static final String CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS = GraphProjection.class
+			+ ".CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS";
+
 	private int maxDepth = Integer.MAX_VALUE;
 
 	private LinkedHashMap<HasIdAndLocalId, HasIdAndLocalId> replaceMap = null;
@@ -184,10 +187,14 @@ public class GraphProjection {
 
 	private CountingMap<String> contextStats = new CountingMap<String>();
 
+	private boolean disablePerObjectPermissions;
+
 	public GraphProjection() {
 		this.dumpProjectionStats = LooseContext
 				.is(CONTEXT_DUMP_PROJECTION_STATS);
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
+		this.disablePerObjectPermissions = LooseContext
+				.is(CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS);
 	}
 
 	public GraphProjection(GraphProjectionFieldFilter fieldFilter,
@@ -502,6 +509,9 @@ public class GraphProjection {
 			Boolean result = fieldFilter == null ? new Boolean(true)
 					: fieldFilter.permitClass(sourceClass);
 			perObjectPermissionClasses.put(sourceClass, result);
+		}
+		if (disablePerObjectPermissions) {
+			return true;
 		}
 		Boolean valid = perObjectPermissionClasses.get(sourceClass);
 		if (valid == null) {// per-objected

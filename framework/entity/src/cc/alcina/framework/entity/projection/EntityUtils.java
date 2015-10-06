@@ -142,15 +142,20 @@ public class EntityUtils {
 		return detachedClone(source, callback, cache, false);
 	}
 
-	public <T> T detachedClone(T source, InstantiateImplCallback callback,
+	public GraphProjections projections(InstantiateImplCallback callback,
 			DetachedEntityCache cache, boolean useMemCache) {
 		GraphProjectionDataFilter dataFilter = Registry.impl(
 				JPAImplementation.class).getResolvingFilter(callback, cache,
 				useMemCache);
+		return GraphProjections.defaultProjections()
+				.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
+				.dataFilter(dataFilter);
+	}
+
+	public <T> T detachedClone(T source, InstantiateImplCallback callback,
+			DetachedEntityCache cache, boolean useMemCache) {
 		try {
-			return new GraphProjection(
-					Registry.impl(PermissibleFieldFilter.class), dataFilter)
-					.project(source, null);
+			return projections(callback, cache, useMemCache).project(source);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
