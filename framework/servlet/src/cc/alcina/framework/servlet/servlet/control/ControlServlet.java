@@ -69,10 +69,14 @@ public class ControlServlet extends HttpServlet {
 			csr.setCommand(ControlServletRequestCommand.CLUSTER_STATUS);
 			return csr;
 		}
+		 else if (cmd.equals("vm-health")) {
+				csr.setCommand(ControlServletRequestCommand.VM_HEALTH);
+				return csr;
+			}
 		writeAndClose(
 				"Usage:\n"
 						+ "control.do?apiKey=xxx&"
-						+ "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status]}",
+						+ "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health]}",
 				resp);
 		return null;
 	}
