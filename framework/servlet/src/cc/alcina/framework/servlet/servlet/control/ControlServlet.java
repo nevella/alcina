@@ -107,6 +107,10 @@ public class ControlServlet extends HttpServlet {
 			writeAndClose(Registry.impl(ClusterStateProvider.class)
 					.getMemberClusterState(), resp);
 			break;
+		case VM_HEALTH:
+			writeAndClose(Registry.impl(ClusterStateProvider.class)
+					.getVmHealth(), resp);
+			break;
 		}
 	}
 

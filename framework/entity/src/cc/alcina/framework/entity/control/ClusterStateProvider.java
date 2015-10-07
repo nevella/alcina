@@ -6,4 +6,7 @@ public interface ClusterStateProvider {
 	default String getMemberClusterState(){
 		throw new UnsupportedOperationException();
 	}
+	default String getVmHealth(){
+		throw new UnsupportedOperationException();
+	}
 }
