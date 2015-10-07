@@ -1682,6 +1682,18 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
+	protected <T extends HasIdAndLocalId> boolean isProvisionalObject(
+			final T object) {
+		if (getProvisionalObjects().contains(object)) {
+			for (Object o : getProvisionalObjects()) {
+				if (o == object) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	static class RecordTransformListener implements DomainTransformListener {
 		private CurrentUtcDateProvider utcDateProvider = Registry
 				.impl(CurrentUtcDateProvider.class);
@@ -1689,7 +1701,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		public void domainTransform(DomainTransformEvent evt) {
 			if (evt.getCommitType() == CommitType.TO_LOCAL_BEAN) {
 				TransformManager tm = TransformManager.get();
-				if (tm.getProvisionalObjects().contains(evt.getSource())) {
+				if (tm.isProvisionalObject(evt.getSource())) {
 					return;
 				}
 				evt.setUtcDate(utcDateProvider.currentUtcDate());

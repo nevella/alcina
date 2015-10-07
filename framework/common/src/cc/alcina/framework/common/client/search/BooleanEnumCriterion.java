@@ -61,6 +61,8 @@ public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 		this.booleanEnum = booleanEnum;
 		propertyChangeSupport().firePropertyChange("booleanEnum",
 				old_booleanEnum, booleanEnum);
+		propertyChangeSupport().firePropertyChange("value",
+				old_booleanEnum, booleanEnum);
 	}
 
 	@Override

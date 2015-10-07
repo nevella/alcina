@@ -132,7 +132,7 @@ public abstract class ClientTransformManager extends TransformManager {
 					}
 				});
 		T target = referrer;
-		if (getProvisionalObjects().contains(referrer)) {
+		if (isProvisionalObject(referrer)) {
 			try {
 				CollectionModificationSupport.queue(true);
 				final T promoted = promoteToDomainObject(referrer);
@@ -178,6 +178,8 @@ public abstract class ClientTransformManager extends TransformManager {
 		}
 		return target;
 	}
+
+	
 
 	public Collection prepareObject(HasIdAndLocalId domainObject,
 			boolean autoSave, boolean afterCreation, boolean forEditing) {
