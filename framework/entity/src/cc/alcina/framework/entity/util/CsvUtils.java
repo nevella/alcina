@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import cc.alcina.framework.entity.util.CsvUtils.CsvCols.CsvRow;
-
 public class CsvUtils {
 	public static List<List<String>> parseCsv(String txt) {
 		txt = txt.replaceAll("[\\r\\n]+[\\r\\n]*", "\n");
@@ -86,6 +84,21 @@ public class CsvUtils {
 		return sb.toString();
 	}
 
+	public static class CsvRow {
+		private int rowIdx;
+
+		private CsvCols csvCols;
+
+		public CsvRow(CsvCols csvCols, int idx) {
+			this.csvCols = csvCols;
+			this.rowIdx = idx;
+		}
+
+		public String get(String key) {
+			return csvCols.grid.get(rowIdx).get(csvCols.colLookup.get(key));
+		}
+	}
+
 	public static class CsvCols implements Iterable<CsvRow>, Iterator<CsvRow> {
 		Map<String, Integer> colLookup = new LinkedHashMap<>();
 
@@ -97,18 +110,6 @@ public class CsvUtils {
 			this.grid = grid;
 			grid.get(0).forEach(s -> colLookup.put(s.trim(), idx++));
 			idx = 1;
-		}
-
-		public class CsvRow {
-			private int rowIdx;
-
-			public CsvRow(int idx) {
-				this.rowIdx = idx;
-			}
-
-			public String get(String key) {
-				return grid.get(rowIdx).get(colLookup.get(key));
-			}
 		}
 
 		@Override
@@ -123,7 +124,7 @@ public class CsvUtils {
 
 		@Override
 		public CsvRow next() {
-			return new CsvRow(idx++);
+			return new CsvRow(this, idx++);
 		}
 	}
 }
