@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 import com.google.gwt.json.client.JSONArray;
@@ -39,7 +40,7 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 
 	private static final String PROPERTIES_SHORT = "p";
 
-	private static final String CLASS_NAME = "cn";
+	public static final String CLASS_NAME = "cn";
 
 	private static final String LITERAL = "lit";
 
@@ -78,7 +79,6 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 			return null;
 		}
 		JSONString cn = (JSONString) jsonObj.get(CLASS_NAME);
-		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
 		String cns = cn.stringValue();
 		Class clazz = null;
 		if (abbrevLookup.containsKey(cns)) {
@@ -86,6 +86,12 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 		} else {
 			clazz = Reflections.classLookup().getClassForName(cns);
 		}
+		AlcinaBeanSerializerCCustom customSerializer = customSerializers
+				.get(clazz);
+		if (customSerializer != null) {
+			return customSerializer.fromJson(jsonObj);
+		}
+		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
@@ -229,6 +235,10 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 		return serializeObject(value);
 	}
 
+	CachingMap<Class, AlcinaBeanSerializerCCustom> customSerializers = new CachingMap<Class, AlcinaBeanSerializerCCustom>(
+			clazz -> Registry.implOrNull(AlcinaBeanSerializerCCustom.class,
+					clazz));
+
 	private JSONObject serializeObject(Object object) {
 		if (object == null) {
 			return null;
@@ -248,6 +258,11 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
 			jo.put(LITERAL, serializeField(object, clazz));
 			return jo;
+		}
+		AlcinaBeanSerializerCCustom customSerializer = customSerializers
+				.get(clazz);
+		if (customSerializer != null) {
+			return customSerializer.toJson(object);
 		}
 		GwittirBridge gb = GwittirBridge.get();
 		Object template = Reflections.classLookup().getTemplateInstance(clazz);

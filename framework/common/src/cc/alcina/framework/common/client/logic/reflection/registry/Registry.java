@@ -133,7 +133,11 @@ public class Registry {
 	}
 
 	public static <V> V implOrNull(Class<V> registryPoint) {
-		return get().impl0(registryPoint, void.class, true);
+		return implOrNull(registryPoint,void.class);
+	}
+
+	public static <V> V implOrNull(Class<V> registryPoint, Class targetClass) {
+		return get().impl0(registryPoint, targetClass, true);
 	}
 
 	public static <V> List<V> impls(Class<V> registryPoint) {
@@ -155,8 +159,8 @@ public class Registry {
 				ImplementationType.SINGLETON, RegistryLocation.MANUAL_PRIORITY);
 	}
 
-	private synchronized void registerSingletonInLookups(Class<?> registryPoint,
-			Class<?> targetClass, Object object) {
+	private synchronized void registerSingletonInLookups(
+			Class<?> registryPoint, Class<?> targetClass, Object object) {
 		boolean voidTarget = targetClass == void.class;
 		singletons.put(registryPoint, targetClass, object);
 		if (voidTarget) {
