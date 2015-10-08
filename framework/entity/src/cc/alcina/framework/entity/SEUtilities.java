@@ -1052,10 +1052,12 @@ public class SEUtilities {
 	protected static void ensureDescriptorLookup(Class clazz) {
 		try {
 			if (!pdLookup.containsKey(clazz)) {
-				PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-						.getPropertyDescriptors();
-				for (PropertyDescriptor pd : pds) {
-					pdLookup.put(clazz, pd.getName(), pd);
+				synchronized (pdLookup) {
+					PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
+							.getPropertyDescriptors();
+					for (PropertyDescriptor pd : pds) {
+						pdLookup.put(clazz, pd.getName(), pd);
+					}
 				}
 			}
 		} catch (Exception e) {
@@ -1177,7 +1179,7 @@ public class SEUtilities {
 	public static boolean containsDodgyAscii(String text) {
 		for (int idx = 0; idx < text.length(); idx++) {
 			int codePoint = (int) text.charAt(idx);
-			if (codePoint >=0x80 && codePoint<=0x9f) {
+			if (codePoint >= 0x80 && codePoint <= 0x9f) {
 				return true;
 			}
 		}
@@ -1191,7 +1193,7 @@ public class SEUtilities {
 		StringBuilder sb = new StringBuilder();
 		for (int idx = 0; idx < text.length(); idx++) {
 			int codePoint = (int) text.charAt(idx);
-			if (codePoint >=0x80 && codePoint<=0x9f) {
+			if (codePoint >= 0x80 && codePoint <= 0x9f) {
 			} else {
 				sb.append((char) codePoint);
 			}
