@@ -2,8 +2,13 @@ package cc.alcina.framework.entity.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
+
+import cc.alcina.framework.entity.util.CsvUtils.CsvCols.CsvRow;
 
 public class CsvUtils {
 	public static List<List<String>> parseCsv(String txt) {
@@ -21,16 +26,16 @@ public class CsvUtils {
 			int end = -1;
 			String value = null;
 			if (c == '"') {
-				end=i+1;
+				end = i + 1;
 				while (true) {
 					end = txt.indexOf('"', end);
 					if (end < txt.length() && txt.charAt(end + 1) == '"') {
-						end+=2;
+						end += 2;
 					} else {
 						break;
 					}
 				}
-				value = txt.substring(i+1, end).replace("\"\"", "\"");
+				value = txt.substring(i + 1, end).replace("\"\"", "\"");
 				i = end + 1;
 			}
 			int i1 = txt.indexOf(',', i);
@@ -79,5 +84,46 @@ public class CsvUtils {
 					+ "\"" : value);
 		}
 		return sb.toString();
+	}
+
+	public static class CsvCols implements Iterable<CsvRow>, Iterator<CsvRow> {
+		Map<String, Integer> colLookup = new LinkedHashMap<>();
+
+		int idx = 0;
+
+		private List<List<String>> grid;
+
+		public CsvCols(List<List<String>> grid) {
+			this.grid = grid;
+			grid.get(0).forEach(s -> colLookup.put(s.trim(), idx++));
+			idx = 1;
+		}
+
+		public class CsvRow {
+			private int rowIdx;
+
+			public CsvRow(int idx) {
+				this.rowIdx = idx;
+			}
+
+			public String get(String key) {
+				return grid.get(rowIdx).get(colLookup.get(key));
+			}
+		}
+
+		@Override
+		public Iterator<CsvRow> iterator() {
+			return this;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return idx < grid.size();
+		}
+
+		@Override
+		public CsvRow next() {
+			return new CsvRow(idx++);
+		}
 	}
 }
