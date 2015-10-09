@@ -169,7 +169,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 		@Override
 		public <T> T get(Class<T> clazz, Long id) {
 			if (!commitLookup.containsKey(id)) {
-				commitLookup.put(id, descriptor.createProxy(main, id, false));
+				commitLookup.put(id, descriptor.getProxy(main, id, false));
 			}
 			return (T) commitLookup.get(id);
 		}
@@ -177,7 +177,7 @@ class PsAwareMultiplexingObjectCache extends DetachedEntityCache {
 		@Override
 		public void put(HasIdAndLocalId hili) {
 			long id = hili.getId();
-			commitLookup.put(id, descriptor.createProxy(main, id, true));
+			commitLookup.put(id, descriptor.getProxy(main, id, true));
 		}
 
 		@Override

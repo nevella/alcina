@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -23,6 +24,7 @@ import cc.alcina.framework.common.client.collections.FilterContext;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
 
@@ -80,7 +82,7 @@ public class PropertyStore {
 				.stream()
 				.filter(pd -> pd.pd.getName().equals(propertyPath)
 						|| pd.pd.getName().equals(propertyPath + "Id"))
-				.findFirst().get();
+				.findFirst().orElse(null);
 	}
 
 	public Set<Long> getIds() {
@@ -269,9 +271,10 @@ public class PropertyStore {
 			int stringId = stringIdLookup.getInt(string);
 			rowIdLookup.put(rowIdx, stringId);
 		}
+
 		@Override
 		public void ensureCapacity(int size) {
-			//noop
+			// noop
 		}
 	}
 

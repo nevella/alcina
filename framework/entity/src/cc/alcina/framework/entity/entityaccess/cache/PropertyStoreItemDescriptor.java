@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
-import java.lang.reflect.Proxy;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -10,8 +9,12 @@ import java.util.Set;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
+import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy.MemcacheProxyContext;
+import cc.alcina.framework.entity.projection.GraphProjection;
 
 public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 	public PropertyStoreItemDescriptor(Class clazz) {
@@ -20,6 +23,8 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 	}
 
 	protected PropertyStore propertyStore;
+
+	protected DetachedEntityCache cache;
 
 	protected void createPropertyStore() {
 		this.propertyStore = new PropertyStore();
@@ -52,7 +57,8 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 		return null;
 	}
 
-	public void init(List<PdOperator> pds) {
+	public void init(DetachedEntityCache cache, List<PdOperator> pds) {
+		this.cache = cache;
 		propertyStore.init(pds);
 	}
 
@@ -64,7 +70,7 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 	public <T> List<T> getRawValues(Set<Long> ids, DetachedEntityCache cache) {
 		ArrayList<T> raw = new ArrayList<T>(ids.size());
 		for (Long id : ids) {
-			T proxy = createProxy(cache, id, false);
+			T proxy = getProxy(cache, id, false);
 			if (proxy != null) {
 				raw.add(proxy);
 			}
@@ -72,14 +78,28 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 		return raw;
 	}
 
-	<T> T createProxy(DetachedEntityCache cache, Long id, boolean create) {
+	<T> T getProxy(DetachedEntityCache cache, Long id, boolean create) {
 		int rowOffset = propertyStore.getRowOffset(id);
 		if (rowOffset == -1 && create) {
 			rowOffset = propertyStore.ensureRow(id);
 		}
 		if (rowOffset != -1) {
-			T proxy = (T) createProxy(rowOffset, cache, id);
-			return proxy;
+			MemcacheProxyContext ctx = GraphProjection.getContextObject(
+					MemCacheProxy.CONTEXT_MEMCACHE_PROXY_CONTEXT,
+					MemcacheProxyContext.SUPPLIER);
+			if (ctx == null) {
+				return (T) createProxy(rowOffset, cache, id);
+			} else {
+				HiliLocator locator = new HiliLocator(clazz, id, 0);
+				T proxy = (T) ctx.projectionProxies.get(locator);
+				if (proxy == null) {
+					proxy = (T) createProxy(rowOffset, cache, id);
+					ctx.projectionProxies.put(locator, (MemCacheProxy) proxy);
+				} else {
+					int debug = 3;
+				}
+				return proxy;
+			}
 		} else {
 			return null;
 		}

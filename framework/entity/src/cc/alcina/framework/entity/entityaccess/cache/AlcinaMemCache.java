@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -36,6 +37,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.EnumType;
@@ -93,6 +95,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
@@ -281,6 +284,9 @@ public class AlcinaMemCache implements RegistrableService {
 	private UnsortedMultikeyMap<Field> memcacheTransientFields = new UnsortedMultikeyMap<Field>(
 			2);
 
+	private UnsortedMultikeyMap<AlcinaMemCacheTransient> memcacheTransientProperties = new UnsortedMultikeyMap<>(
+			2);
+
 	private ThreadPoolExecutor warmupExecutor;
 
 	private DataSource dataSource;
@@ -356,9 +362,29 @@ public class AlcinaMemCache implements RegistrableService {
 
 	public List<DomainTransformEvent> filterInterestedTransforms(
 			Collection<DomainTransformEvent> dtes) {
-		List<DomainTransformEvent> filtered = CollectionFilters.filter(dtes,
-				new InSubgraphFilter());
-		return filtered;
+		return dtes.stream().filter(new InSubgraphFilter())
+				.map(dte -> filterForMemcacheTransient(dte))
+				.filter(Objects::nonNull).collect(Collectors.toList());
+	}
+
+	private DomainTransformEvent filterForMemcacheTransient(
+			DomainTransformEvent dte) {
+		switch (dte.getTransformType()) {
+		case CREATE_OBJECT:
+		case DELETE_OBJECT:
+		case ADD_REF_TO_COLLECTION:
+		case REMOVE_REF_FROM_COLLECTION:
+			return dte;
+		}
+		AlcinaMemCacheTransient ann = memcacheTransientProperties.get(
+				dte.getObjectClass(), dte.getPropertyName());
+		if (ann == null) {
+			return dte;
+		}
+		if (!ann.translatePropertyStoreWrites()) {
+			return null;
+		}
+		return dte;
 	}
 
 	public <T extends HasIdAndLocalId> T find(Class<T> clazz, long id) {
@@ -521,8 +547,7 @@ public class AlcinaMemCache implements RegistrableService {
 		assert sublock != null;
 		try {
 			LooseContext.push();
-			LooseContext
-					.remove(AlcinaMemCache.CONTEXT_NO_LOCKS);
+			LooseContext.remove(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			loadTable(clazz, sqlFilter, sublock, new LaterLookup());
 		} finally {
 			LooseContext.pop();
@@ -967,7 +992,7 @@ public class AlcinaMemCache implements RegistrableService {
 				columnDescriptors.get(clazz),
 				propertyStoreItemDescriptor.getSqlFilter());
 		List<PdOperator> pds = descriptors.get(clazz);
-		propertyStoreItemDescriptor.init(pds);
+		propertyStoreItemDescriptor.init(cache, pds);
 		String simpleName = clazz.getSimpleName();
 		int count = propertyStoreItemDescriptor.getRoughCount();
 		SystemoutCounter ctr = new SystemoutCounter(20000, 10, count, true);
@@ -1152,10 +1177,14 @@ public class AlcinaMemCache implements RegistrableService {
 			if ((rm.getAnnotation(Transient.class) != null && rm
 					.getAnnotation(AlcinaMemCacheColumn.class) == null)
 					|| rm.getAnnotation(AlcinaMemCacheTransient.class) != null) {
-				if (rm.getAnnotation(AlcinaMemCacheTransient.class) != null) {
+				AlcinaMemCacheTransient transientAnn = rm
+						.getAnnotation(AlcinaMemCacheTransient.class);
+				if (transientAnn != null) {
 					Field field = clazz.getDeclaredField(pd.getName());
 					field.setAccessible(true);
 					memcacheTransientFields.put(clazz, field, field);
+					memcacheTransientProperties.put(clazz, field.getName(),
+							transientAnn);
 				}
 				continue;
 			}

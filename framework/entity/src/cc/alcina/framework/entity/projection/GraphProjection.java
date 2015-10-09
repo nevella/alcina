@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -57,6 +58,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
+import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy.MemcacheProxyContext;
 
 @SuppressWarnings("unchecked")
 /**
@@ -279,21 +281,35 @@ public class GraphProjection {
 		return this.replaceMap;
 	}
 
+	public static final String CONTEXT_PROJECTION_CONTEXT = GraphProjection.class
+			.getName() + ".CONTEXT_PROJECTION_CONTEXT";
+
 	public <T> T project(T source, GraphProjectionContext context)
 			throws Exception {
-		T result = project(source, null, context, false);
-		if (dumpProjectionStats && context == null) {
-			System.out.format(
-					"Projection stats:\n===========\n%s\n",
-					contextStats
-							.reverseMap(true)
-							.entrySet()
-							.stream()
-							.map(e -> e.getKey() + ":"
-									+ CommonUtils.join(e.getValue(), "\n\t: "))
-							.collect(Collectors.joining("\t\n")));
+		if (context != null) {
+			return project(source, null, context, false);
+		} else {
+			try {
+				LooseContext.pushWithKey(CONTEXT_PROJECTION_CONTEXT,
+						new LinkedHashMap<>());
+				return project(source, null, context, false);
+			} finally {
+				LooseContext.pop();
+				if (dumpProjectionStats && context == null) {
+					System.out.format(
+							"Projection stats:\n===========\n%s\n",
+							contextStats
+									.reverseMap(true)
+									.entrySet()
+									.stream()
+									.map(e -> e.getKey()
+											+ ":"
+											+ CommonUtils.join(e.getValue(),
+													"\n\t: "))
+									.collect(Collectors.joining("\t\n")));
+				}
+			}
 		}
-		return result;
 	}
 
 	public <T> T project(T source, Object alsoMapTo,
@@ -644,5 +660,19 @@ public class GraphProjection {
 
 		Object instantiateShellObject(T initializer,
 				GraphProjectionContext context);
+	}
+
+	public static <T> T getContextObject(String key, Supplier<T> supplier) {
+		Map ctx = LooseContext.get(CONTEXT_PROJECTION_CONTEXT);
+		if (ctx == null) {
+			return null;
+		} else {
+			T result = (T) ctx.get(key);
+			if (result == null) {
+				result = supplier.get();
+				ctx.put(key, result);
+			}
+			return result;
+		}
 	}
 }
