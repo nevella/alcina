@@ -16,7 +16,7 @@ import com.esotericsoftware.kryo.io.Output;
 public class KryoUtils {
 	public static <T> T deserializeFromFile(File file, Class<T> clazz) {
 		try {
-			Kryo kryo = new Kryo();
+			Kryo kryo = newKryo();
 			Input input = new Input(new FileInputStream(file));
 			T someObject = kryo.readObject(input, clazz);
 			input.close();
@@ -28,7 +28,7 @@ public class KryoUtils {
 
 	public static void serializeToFile(Object object, File file) {
 		try (OutputStream os = new FileOutputStream(file)) {
-			Kryo kryo = new Kryo();
+			Kryo kryo = newKryo();
 			Output output = new Output(os);
 			kryo.writeObject(output, object);
 			output.flush();
@@ -37,9 +37,15 @@ public class KryoUtils {
 		}
 	}
 
+	protected static Kryo newKryo() {
+		Kryo kryo = new Kryo();
+		kryo.setClassLoader(Thread.currentThread().getContextClassLoader());
+		return kryo;
+	}
+
 	public static String serializeToBase64(Object object) {
 		try {
-			Kryo kryo = new Kryo();
+			Kryo kryo = newKryo();
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			Output output = new Output(baos);
 			kryo.writeObject(output, object);
@@ -52,7 +58,7 @@ public class KryoUtils {
 
 	public static <T> T deserializeFromBase64(String string, Class<T> clazz) {
 		try {
-			Kryo kryo = new Kryo();
+			Kryo kryo = newKryo();
 			byte[] bytes = Base64.getDecoder().decode(string.trim());
 			Input input = new Input(bytes);
 			T someObject = kryo.readObject(input, clazz);
