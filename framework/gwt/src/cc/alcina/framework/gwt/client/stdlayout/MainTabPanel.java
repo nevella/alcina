@@ -47,7 +47,7 @@ import com.google.gwt.user.client.ui.Widget;
  *         complete reimplementation)
  */
 public class MainTabPanel extends TabPanel {
-	private HorizontalPanel bp;
+	protected HorizontalPanel bp;
 
 	private FlowPanel toolbarHolder = new FlowPanel();
 
@@ -96,14 +96,14 @@ public class MainTabPanel extends TabPanel {
 		mainMenuContainer = new FlowPanel();
 		mainMenuContainer.setStyleName("alcina-MainMenuContainer");
 		mainMenuContainer.add(dockPanel);
-		Widget w = vp.getWidget(0);
-		vp.remove(w);
+		tabBarProt = vp.getWidget(0);
+		vp.remove(tabBarProt);
 		if (isWrapCenterContainer()) {
 			centerContainer = new SpanPanel();
-			centerContainer.add(w);
+			centerContainer.add(tabBarProt);
 			dockPanel.add(centerContainer, DockPanel.CENTER);
 		} else {
-			dockPanel.add(w, DockPanel.CENTER);
+			dockPanel.add(tabBarProt, DockPanel.CENTER);
 		}
 		bp = createButtonsPanel();
 		refreshButtonPanelVis();
@@ -177,9 +177,11 @@ public class MainTabPanel extends TabPanel {
 
 	protected DockPanel dockPanel;
 
-	private FlowPanel mainMenuContainer;
+	protected FlowPanel mainMenuContainer;
 
 	protected SpanPanel centerContainer;
+
+	protected Widget tabBarProt;
 
 	class BarSep extends Label {
 		BarSep() {

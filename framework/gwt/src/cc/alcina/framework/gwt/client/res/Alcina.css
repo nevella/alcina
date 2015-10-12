@@ -104,9 +104,9 @@ div.alcina-MainContent.content-100pc-lhs {
 	margin-bottom: 0px;
 }
 /* Main menu */
-table.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a, table.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:active,
-	table.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a:visited,
-	table.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:hover {
+.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a, .alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:active,
+	.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a:visited,
+	.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:hover {
 	background-color: #104860;
 	font-weight: bold;
 	white-space: nowrap;

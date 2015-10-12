@@ -28,6 +28,7 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
@@ -60,6 +61,8 @@ public class SimpleWorkspaceVisualiser extends Composite implements
 
 	public static double defaultSplitterPosition = 280;
 
+	public static int defaultSplitterSize=8;
+
 	/**
 	 * Uses horizontal panels because they're tables - i.e. 100% height works
 	 * ahh...correction - layout manager. but nice idea
@@ -70,7 +73,7 @@ public class SimpleWorkspaceVisualiser extends Composite implements
 			PermissibleActionListener actionListener) {
 		this.model = model;
 		this.verticalPanel = new Resize100Vp();
-		this.hsp = new SplitLayoutPanel();
+		this.hsp = new SplitLayoutPanel(getSplitterSize());
 		this.viewHolder = new StackPanel100pcHeight();
 		// viewHolder.setHeight("100%");
 		viewHolder.setWidth("100%");
@@ -97,6 +100,10 @@ public class SimpleWorkspaceVisualiser extends Composite implements
 		verticalPanel.add(hsp);
 		initWidget(verticalPanel);
 		resetHsbPos();
+	}
+
+	protected int getSplitterSize() {
+		return defaultSplitterSize;
 	}
 
 	@Override
