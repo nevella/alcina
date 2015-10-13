@@ -57,7 +57,7 @@ public class SessionHelper {
 	public static Long getAuthenticatedSessionClientInstanceId(
 			HttpServletRequest request) {
 		return (Long) request
-				.getAttribute("SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID");
+				.getAttribute(SESSION_AUTHENTICATED_CLIENT_INSTANCE_ID);
 	}
 
 	private HttpSession getSession(HttpServletRequest request,
