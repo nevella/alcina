@@ -54,6 +54,20 @@ import javax.sql.DataSource;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.cache.BaseProjection;
+import cc.alcina.framework.common.client.cache.CacheDescriptor;
+import cc.alcina.framework.common.client.cache.CacheDescriptor.CacheTask;
+import cc.alcina.framework.common.client.cache.CacheDescriptor.PreProvideTask;
+import cc.alcina.framework.common.client.cache.CacheFilter;
+import cc.alcina.framework.common.client.cache.CacheItemDescriptor;
+import cc.alcina.framework.common.client.cache.CacheListener;
+import cc.alcina.framework.common.client.cache.CacheLookup;
+import cc.alcina.framework.common.client.cache.CacheLookupDescriptor;
+import cc.alcina.framework.common.client.cache.CacheProjection;
+import cc.alcina.framework.common.client.cache.ComplexFilter;
+import cc.alcina.framework.common.client.cache.Domain;
+import cc.alcina.framework.common.client.cache.ModificationChecker;
+import cc.alcina.framework.common.client.cache.Domain.DomainHandler;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
@@ -95,15 +109,12 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.domaintransform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.entityaccess.TransformPersister;
-import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.CacheTask;
-import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 import com.google.gwt.event.shared.UmbrellaException;
@@ -206,14 +217,14 @@ public class AlcinaMemCache implements RegistrableService {
 	private CacheDescriptor cacheDescriptor;
 
 	private TaggedLogger sqlLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(AlcinaMemCache.class, TaggedLogger.DEBUG);
+			.getLogger(Domain.class, TaggedLogger.DEBUG);
 
 	private TaggedLogger metricLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(AlcinaMemCache.class, TaggedLogger.METRIC);
+			.getLogger(Domain.class, TaggedLogger.METRIC);
 
 	private TaggedLogger warnLogger = Registry.impl(TaggedLoggers.class)
-			.getLogger(AlcinaMemCache.class, TaggedLogger.WARN,
-					TaggedLogger.INFO, TaggedLogger.DEBUG);
+			.getLogger(Domain.class, TaggedLogger.WARN, TaggedLogger.INFO,
+					TaggedLogger.DEBUG);
 
 	private ThreadLocal<PerThreadTransaction> transactions = new ThreadLocal() {
 	};
@@ -319,6 +330,21 @@ public class AlcinaMemCache implements RegistrableService {
 		persistenceListener = new MemCachePersistenceListener();
 		maxLockQueueLength = ResourceUtilities.getInteger(AlcinaMemCache.class,
 				"maxLockQueueLength", 120);
+		Domain.registerHandler(new AlcinaMemCacheDomainHandler());
+	}
+
+	class AlcinaMemCacheDomainHandler implements DomainHandler {
+		@Override
+		public <V extends HasIdAndLocalId> V resolveTransactional(
+				CacheListener listener, V value, Object[] path) {
+			return transactional.resolveTransactional(listener, value, path);
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
+				long id) {
+			return (V) transactional.find(clazz, id);
+		}
 	}
 
 	public void addValues(CacheListener listener) {
@@ -1372,7 +1398,7 @@ public class AlcinaMemCache implements RegistrableService {
 				@Override
 				public Void call() throws Exception {
 					MetricLogging.get().start(task.getClass().getSimpleName());
-					task.run(AlcinaMemCache.this);
+					task.run();
 					MetricLogging.get().end(task.getClass().getSimpleName(),
 							metricLogger);
 					return null;
@@ -1386,7 +1412,8 @@ public class AlcinaMemCache implements RegistrableService {
 				.values()) {
 			for (CacheProjection projection : descriptor.projections) {
 				if (projection instanceof CacheLookup) {
-					((CacheLookup) projection).modificationChecker = modificationChecker;
+					((CacheLookup) projection)
+							.setModificationChecker(modificationChecker);
 				}
 			}
 		}
@@ -1417,7 +1444,8 @@ public class AlcinaMemCache implements RegistrableService {
 							.getListenedClass());
 				}
 				if (projection instanceof BaseProjection) {
-					((BaseProjection) projection).modificationChecker = modificationChecker;
+					((BaseProjection) projection)
+							.setModificationChecker(modificationChecker);
 				}
 			}
 		}
@@ -1561,7 +1589,7 @@ public class AlcinaMemCache implements RegistrableService {
 			}
 			try {
 				for (PreProvideTask task : cacheDescriptor.preProvideTasks) {
-					task.run(this, clazz, raw);
+					task.run(clazz, raw);
 				}
 				if (query.isRaw() || isWillProjectLater()) {
 					return raw;
@@ -1600,7 +1628,10 @@ public class AlcinaMemCache implements RegistrableService {
 				HiliLocator locator = HiliLocator.objectLocator(dte);
 				locatorOriginalSourceMap.put(locator, dte.getSource());
 			}
-			cacheDescriptor.loadLazyPreApplyPersist(persistenceEvent);
+			if (cacheDescriptor instanceof PreApplyPersistListener) {
+				((PreApplyPersistListener) cacheDescriptor)
+						.loadLazyPreApplyPersist(persistenceEvent);
+			}
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
 			for (DomainTransformEvent dte : filtered) {
 				dte.setNewValue(null);// force a lookup from the subgraph
@@ -2385,7 +2416,8 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
-	class ModificationCheckerSupport extends MutablePropertyChangeSupport {
+	class ModificationCheckerSupport extends MutablePropertyChangeSupport
+			implements ModificationChecker {
 		public ModificationCheckerSupport(Object sourceBean) {
 			super(sourceBean);
 		}
@@ -2393,51 +2425,51 @@ public class AlcinaMemCache implements RegistrableService {
 		@Override
 		public synchronized void addPropertyChangeListener(
 				PropertyChangeListener listener) {
-			handle("add");
+			check("add");
 		}
 
 		@Override
 		public synchronized void addPropertyChangeListener(String propertyName,
 				PropertyChangeListener listener) {
-			handle("add");
+			check("add");
 		}
 
 		@Override
 		public void fireNullPropertyChange(String name) {
-			handle("fire");
+			check("fire");
 		}
 
 		@Override
 		public void firePropertyChange(PropertyChangeEvent evt) {
-			handle("fire");
+			check("fire");
 		}
 
 		@Override
 		public void firePropertyChange(String propertyName, Object oldValue,
 				Object newValue) {
 			if (!(CommonUtils.equalsWithNullEquality(oldValue, newValue))) {
-				handle("fire");
+				check("fire");
 			}
 		}
 
 		@Override
 		public PropertyChangeListener[] getPropertyChangeListeners() {
-			handle("get");
+			check("get");
 			return null;
 		}
 
 		@Override
 		public void removePropertyChangeListener(PropertyChangeListener listener) {
-			handle("remove");
+			check("remove");
 		}
 
 		@Override
 		public void removePropertyChangeListener(String propertyName,
 				PropertyChangeListener listener) {
-			handle("remove");
+			check("remove");
 		}
 
-		void handle(String key) {
+		public void check(String key) {
 			// add-remove - well, there's a bunch of automated adds (e.g.
 			// cc.alcina.framework.entity.domaintransform.ServerTransformManagerSupport
 			// .removeParentAssociations(HasIdAndLocalId)

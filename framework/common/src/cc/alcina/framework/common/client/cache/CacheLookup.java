@@ -1,23 +1,22 @@
-package cc.alcina.framework.entity.entityaccess.cache;
-
-import it.unimi.dsi.fastutil.longs.LongAVLTreeSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
+package cc.alcina.framework.common.client.cache;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.cache.CacheCreators.CacheLongSetCreator;
+import cc.alcina.framework.common.client.cache.CacheCreators.CacheMultisetCreator;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.SortedMultiset;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.ModificationCheckerSupport;
 
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.Converter;
 
 public class CacheLookup<T, H extends HasIdAndLocalId> implements
@@ -38,7 +37,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	protected boolean concurrent;
 
-	ModificationCheckerSupport modificationChecker;
+	private ModificationChecker modificationChecker;
 
 	public CacheLookup(CacheLookupDescriptor descriptor) {
 		this(descriptor, false);
@@ -47,21 +46,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	public CacheLookup(CacheLookupDescriptor descriptor, boolean concurrent) {
 		this.descriptor = descriptor;
 		this.concurrent = concurrent;
-		if (concurrent) {
-			store = new ConcurrentSortedMultiset<>();
-		} else {
-			store = new SortedMultiset<T, Set<Long>>() {
-				@Override
-				protected Set createSet() {
-					return createLongSet();
-				}
-
-				@Override
-				protected Map<T, Set<Long>> createTopMap() {
-					return new Object2ObjectLinkedOpenHashMap<T, Set<Long>>();
-				}
-			};
-		}
+		this.store = Registry.impl(CacheMultisetCreator.class).get(concurrent);
 		this.propertyPathAccesor = new PropertyPathAccessor(
 				descriptor.propertyPath);
 		this.relevanceFilter = descriptor.getRelevanceFilter();
@@ -204,8 +189,9 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 
 	private <V> Set<V> wrapWithModificationChecker(Set<V> set) {
 		return set == null ? null
-				: set instanceof CacheLookup.ModificationCheckedSet ? set
-						: new ModificationCheckedSet(set);
+				: set instanceof CacheLookup.ModificationCheckedSet
+						|| GWT.isClient() ? set : new ModificationCheckedSet(
+						set);
 	}
 
 	protected void add(T k1, Long value) {
@@ -218,13 +204,13 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	protected void checkModification(String modificationType) {
-		if (modificationChecker != null) {
-			modificationChecker.handle("fire");
+		if (getModificationChecker() != null) {
+			getModificationChecker().check("fire");
 		}
 	}
 
 	protected Set createLongSet() {
-		return new LongAVLTreeSet();
+		return Registry.impl(CacheLongSetCreator.class).get();
 	}
 
 	// write thread only!!
@@ -248,8 +234,16 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		if (privateCache != null) {
 			return (H) privateCache.get(descriptor.clazz, id);
 		}
-		return (H) AlcinaMemCache.get().transactional
-				.find(descriptor.clazz, id);
+		return (H) Domain.transactionalFind
+				(descriptor.clazz, id);
+	}
+
+	public ModificationChecker getModificationChecker() {
+		return modificationChecker;
+	}
+
+	public void setModificationChecker(ModificationChecker modificationChecker) {
+		this.modificationChecker = modificationChecker;
 	}
 
 	class ModificationCheckedIterator implements Iterator {

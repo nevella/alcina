@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.cache;
+package cc.alcina.framework.common.client.cache;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -25,10 +25,9 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 		if (set.size() > 1) {
 			// throw new IllegalArgumentException("");
 			Registry.impl(TaggedLoggers.class)
-					.log(String.format(
+					.log(CommonUtils.formatJ(
 							"Warning - duplicate mapping of an id lookup - %s: %s : %s\n",
-							this, k1, set), AlcinaMemCache.class,
-							TaggedLogger.WARN);
+							this, k1, set), Domain.class, TaggedLogger.WARN);
 			duplicateKeys.add(k1);
 		}
 	}
@@ -44,7 +43,6 @@ public class IdLookup<T, H extends HasIdAndLocalId> extends CacheLookup<T, H> {
 			Long id = CommonUtils.first(ids);
 			value = getForResolvedId(id);
 		}
-		return AlcinaMemCache.get().transactional.resolveTransactional(this,
-				value, new Object[] { key });
+		return Domain.resolveTransactional(this, value, new Object[] { key });
 	}
 }

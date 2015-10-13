@@ -1,17 +1,17 @@
-package cc.alcina.framework.entity.entityaccess.cache;
+package cc.alcina.framework.common.client.cache;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.cache.CacheLookupDescriptor.IdCacheLookupDescriptor;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.entity.entityaccess.cache.CacheLookupDescriptor.IdCacheLookupDescriptor;
 
 public class CacheItemDescriptor {
 	public Class clazz;

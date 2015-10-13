@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.cache;
+package cc.alcina.framework.common.client.cache;
 
 import java.util.ArrayList;
 import java.util.List;

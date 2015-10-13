@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
+
 
 public abstract class MergeHandler<I extends SyncInterchangeModel, D extends SyncDeltaModel> {
 	protected I leftInterchangeModel;

@@ -7,9 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
+import cc.alcina.framework.common.client.cache.CacheDescriptor.PreProvideTask;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.entity.entityaccess.cache.CacheDescriptor.PreProvideTask;
 
 public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 		PreProvideTask<T> {
@@ -40,8 +40,9 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 	}
 
 	@Override
-	public void run(AlcinaMemCache alcinaMemCache, Class clazz,
+	public void run( Class clazz,
 			Collection<T> objects) throws Exception {
+		AlcinaMemCache cache = AlcinaMemCache.get();
 		if (clazz != this.clazz) {
 			return;
 		}
@@ -53,9 +54,9 @@ public abstract class LazyLoadProvideTask<T extends HasIdAndLocalId> implements
 			synchronized (getLockObject()) {
 				// reget, just in case of interim eviction
 				requireLoad = requireLazyLoad(objects);
-				lazyLoad(alcinaMemCache, requireLoad);
-				registerLoaded(alcinaMemCache, requireLoad);
-				loadDependents(alcinaMemCache, requireLoad);
+				lazyLoad(cache, requireLoad);
+				registerLoaded(cache, requireLoad);
+				loadDependents(cache, requireLoad);
 			}
 		}
 	}

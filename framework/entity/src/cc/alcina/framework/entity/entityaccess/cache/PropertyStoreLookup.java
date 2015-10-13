@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.util.Set;
 import java.util.TreeSet;
 
+import cc.alcina.framework.common.client.cache.CacheLookup;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;

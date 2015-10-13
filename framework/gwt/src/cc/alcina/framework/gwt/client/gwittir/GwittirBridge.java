@@ -699,6 +699,27 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	@Override
 	public IndividualPropertyAccessor cachedAccessor(Class clazz,
 			String propertyName) {
-		throw new UnsupportedOperationException();
+		Property property = getPropertyForClass(clazz, propertyName);
+		return new IndividualPropertyAccessor() {
+			@Override
+			public void setPropertyValue(Object bean, Object value) {
+				try {
+					property.getMutatorMethod().invoke(bean,
+							new Object[] { value });
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			@Override
+			public Object getPropertyValue(Object value) {
+				try {
+					return property.getAccessorMethod().invoke(value,
+							new Object[0]);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		};
 	}
 }

@@ -2,6 +2,8 @@ package java.util.stream;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collector;
@@ -12,6 +14,16 @@ public class Collectors {
 			java.util.stream.Collector<T, T, List<T>> {
 		public List<T> collect(Stream<T> stream) {
 			List<T> result = new ArrayList<T>();
+			for (Iterator<T> itr = stream.iterator(); itr.hasNext();) {
+				result.add(itr.next());
+			}
+			return result;
+		}
+	}
+	private static class ToSetCollector<T> implements
+	java.util.stream.Collector<T, T, Set<T>> {
+		public Set<T> collect(Stream<T> stream) {
+			Set<T> result = new LinkedHashSet<T>();
 			for (Iterator<T> itr = stream.iterator(); itr.hasNext();) {
 				result.add(itr.next());
 			}
@@ -61,6 +73,9 @@ public class Collectors {
 
 	public static <T> Collector<T, ?, List<T>> toList() {
 		return new ToListCollector<T>();
+	}
+	public static <T> Collector<T, ?, Set<T>> toSet() {
+		return new ToSetCollector<T>();
 	}
 
 	public static <T> Collector<T, T, String> joining() {

@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.collections.CompositeFilter;
 
 public class CompositeCacheFilter extends CacheFilter {

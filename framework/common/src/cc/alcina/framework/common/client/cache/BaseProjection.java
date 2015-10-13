@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.cache;
+package cc.alcina.framework.common.client.cache;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,8 +15,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.SortedMultikeyMap;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.ModificationCheckerSupport;
 
 /**
  * Note - these lookups should be (normally) of type x/y/z/z so we have
@@ -44,8 +42,8 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 
 	public <V> V get(Object... objects) {
 		V nonTransactional = (V) lookup.get(objects);
-		return (V) AlcinaMemCache.get().transactional.resolveTransactional(
-				this, (HasIdAndLocalId) nonTransactional, objects);
+		return (V) Domain.resolveTransactional(this,
+				(HasIdAndLocalId) nonTransactional, objects);
 	}
 
 	public void populateWithPrivateCache(Collection<T> values) {
@@ -94,20 +92,20 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 		}
 	}
 
-	ModificationCheckerSupport modificationChecker;
+	private ModificationChecker modificationChecker;
 
 	protected void checkModification(String modificationType) {
-		if (modificationChecker != null) {
-			modificationChecker.handle("fire");
+		if (getModificationChecker() != null) {
+			getModificationChecker().check("fire");
 		}
 	}
 
 	protected void logDuplicateMapping(Object[] values, T existing) {
 		Registry.impl(TaggedLoggers.class)
-				.log(String.format(
+				.log(CommonUtils.formatJ(
 						"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
-						this, Arrays.asList(values), existing),
-						AlcinaMemCache.class, TaggedLogger.WARN);
+						this, Arrays.asList(values), existing), Domain.class,
+						TaggedLogger.WARN);
 	}
 
 	public boolean isEnabled() {
@@ -257,5 +255,13 @@ public abstract class BaseProjection<T extends HasIdAndLocalId> implements
 
 	public MultikeyMap<T> getLookup() {
 		return this.lookup;
+	}
+
+	public ModificationChecker getModificationChecker() {
+		return modificationChecker;
+	}
+
+	public void setModificationChecker(ModificationChecker modificationChecker) {
+		this.modificationChecker = modificationChecker;
 	}
 }

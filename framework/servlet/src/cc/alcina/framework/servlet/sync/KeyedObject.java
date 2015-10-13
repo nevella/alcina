@@ -2,6 +2,8 @@ package cc.alcina.framework.servlet.sync;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.sync.StringKeyProvider;
+
 public class KeyedObject<T> implements Serializable {
 	public KeyedObject() {
 	}

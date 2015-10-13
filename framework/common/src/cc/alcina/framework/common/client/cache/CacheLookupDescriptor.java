@@ -1,18 +1,15 @@
-package cc.alcina.framework.entity.entityaccess.cache;
+package cc.alcina.framework.common.client.cache;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentSkipListMap;
 
+import cc.alcina.framework.common.client.cache.CacheCreators.CacheIdMapCreator;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
@@ -58,9 +55,12 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 		if (lookup == null) {
 			createLookup();
 			lookup.privateCache = new DetachedEntityCache() {
+				private CacheIdMapCreator idMapCreator = Registry
+						.impl(CacheIdMapCreator.class);
+
 				@Override
 				public Map<Long, HasIdAndLocalId> createMap() {
-					return new ConcurrentSkipListMap<Long, HasIdAndLocalId>();
+					return idMapCreator.get();
 				}
 			};
 		}
@@ -81,13 +81,7 @@ public class CacheLookupDescriptor<T extends HasIdAndLocalId> {
 			this.lookup = new CacheLookup(this);
 		}
 	}
-	@Deprecated
-	public void populateWithPrivateCache(Collection<T> values) {
-		ensureLookupWithPrivateCache();
-		for (T value : values) {
-			getLookup().insert(value);
-		}
-	}
+
 	public static class IdCacheLookupDescriptor<T extends HasIdAndLocalId>
 			extends CacheLookupDescriptor<T> {
 		private IdLookup idLookup;

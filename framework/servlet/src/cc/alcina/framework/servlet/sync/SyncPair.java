@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.sync;
 
+import cc.alcina.framework.common.client.sync.StringKeyProvider;
+
 public class SyncPair<T> {
 	private KeyedObject<T> left;
 

@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.sync;
+package cc.alcina.framework.common.client.sync;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;

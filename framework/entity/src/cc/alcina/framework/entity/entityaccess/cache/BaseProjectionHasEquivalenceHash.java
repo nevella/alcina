@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.util.Collection;
 import java.util.List;
 
+import cc.alcina.framework.common.client.cache.BaseProjection;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
 import cc.alcina.framework.common.client.util.HasEquivalenceHashMap;

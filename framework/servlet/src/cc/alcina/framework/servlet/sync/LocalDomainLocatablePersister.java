@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.sync;
 
+import cc.alcina.framework.common.client.sync.AbstractLocalDomainLocatable;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersister.DeltaItemPersister;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;

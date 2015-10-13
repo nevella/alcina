@@ -1,5 +1,7 @@
 package cc.alcina.framework.servlet.sync;
 
+import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
+
 public abstract class SyncDispatcher<E extends SyncEndpointModel, I extends SyncInterchangeModel, D extends SyncDeltaModel> {
 	protected GraphTransformer<E, I> transformer;
 

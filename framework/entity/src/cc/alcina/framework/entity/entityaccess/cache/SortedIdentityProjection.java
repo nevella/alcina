@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.entityaccess.cache;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import cc.alcina.framework.common.client.cache.CacheProjection;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 
 public class SortedIdentityProjection<T extends HasIdAndLocalId> implements

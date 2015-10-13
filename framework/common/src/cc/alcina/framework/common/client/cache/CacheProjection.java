@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.entityaccess.cache;
+package cc.alcina.framework.common.client.cache;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 

@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.sync;
+package cc.alcina.framework.common.client.sync;
 
 import java.util.Collection;
 
