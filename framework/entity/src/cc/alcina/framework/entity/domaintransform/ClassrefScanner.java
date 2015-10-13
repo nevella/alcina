@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
+import cc.alcina.framework.common.client.logic.reflection.NonDomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
@@ -246,9 +247,13 @@ public class ClassrefScanner extends CachingScanner {
 		 * otherwise could be sending classes not compiled into client code)
 		 */
 		boolean bi = c.isAnnotationPresent(BeanInfo.class);
-		boolean in = AnnotationUtils.hasAnnotationNamed(c, ClientInstantiable.class);
+		boolean in = AnnotationUtils.hasAnnotationNamed(c,
+				ClientInstantiable.class);
 		boolean dtp = c.isAnnotationPresent(DomainTransformPersistable.class);
-		if ((HasIdAndLocalId.class.isAssignableFrom(c) && (in || bi || dtp))
+		boolean nonPersistent = c
+				.isAnnotationPresent(NonDomainTransformPersistable.class);
+		if (!nonPersistent
+				&& (HasIdAndLocalId.class.isAssignableFrom(c) && (in || bi || dtp))
 				|| (c.isEnum() && (in || dtp))) {
 			persistableClasses.add(c);
 		} else {
