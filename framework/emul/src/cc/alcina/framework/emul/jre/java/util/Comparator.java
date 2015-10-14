@@ -16,6 +16,7 @@
 package java.util;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.function.Function;
@@ -52,4 +53,7 @@ public interface Comparator<T> {
 			return (res != 0) ? res : other.compare(c1, c2);
 		};
 	}
+	default Comparator<T> reversed() {
+        return Collections.reverseOrder(this);
+    }
 }

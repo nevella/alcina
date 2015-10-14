@@ -34,6 +34,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.SimplePanel;
+import com.google.gwt.user.client.ui.TabBar;
 import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -96,7 +97,7 @@ public class MainTabPanel extends TabPanel {
 		mainMenuContainer = new FlowPanel();
 		mainMenuContainer.setStyleName("alcina-MainMenuContainer");
 		mainMenuContainer.add(dockPanel);
-		tabBarProt = vp.getWidget(0);
+		tabBarProt = (TabBar) vp.getWidget(0);
 		vp.remove(tabBarProt);
 		if (isWrapCenterContainer()) {
 			centerContainer = new SpanPanel();
@@ -181,7 +182,7 @@ public class MainTabPanel extends TabPanel {
 
 	protected SpanPanel centerContainer;
 
-	protected Widget tabBarProt;
+	protected TabBar tabBarProt;
 
 	class BarSep extends Label {
 		BarSep() {

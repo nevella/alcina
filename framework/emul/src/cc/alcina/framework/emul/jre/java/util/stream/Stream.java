@@ -1,6 +1,7 @@
 package java.util.stream;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -48,8 +49,9 @@ public interface Stream<T> {
 		}
 		return (Stream<T>) new CollectionStream<T>(distinct);
 	}
+
 	default long count() {
-		long count=0;
+		long count = 0;
 		for (Iterator<T> itr = iterator(); itr.hasNext();) {
 			count++;
 		}
@@ -63,10 +65,17 @@ public interface Stream<T> {
 		}
 	}
 
+	default Stream<T> sorted(Comparator<? super T> comparator) {
+		List<T> list = ((CollectionStream<T>) this).asList();
+		list.sort(comparator);
+		return new CollectionStream(list);
+	}
+
 	default Optional<T> findFirst() {
 		Iterator<T> itr = iterator();
 		return Optional.ofNullable(itr.hasNext() ? itr.next() : null);
 	}
+
 	default boolean anyMatch(Predicate<? super T> predicate) {
 		for (Iterator<T> itr = iterator(); itr.hasNext();) {
 			T t = itr.next();

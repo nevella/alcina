@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -199,6 +200,29 @@ public interface HasEquivalence<T> {
 				}
 			}
 			return result;
+		}
+
+		public static boolean argwiseEquivalent(Object... args) {
+			if (args.length % 2 != 0) {
+				throw new RuntimeException(
+						"Array length must be divisible by two");
+			}
+			for (int i = 0; i < args.length; i += 2) {
+				Object o1 = args[i];
+				Object o2 = args[i + 1];
+				if (o1 instanceof HasEquivalence
+						&& o2 instanceof HasEquivalence) {
+					if (!((HasEquivalence) o1)
+							.equivalentTo((HasEquivalence) o2)) {
+						return false;
+					}
+				} else {
+					if (!Objects.equals(o1, o2)) {
+						return false;
+					}
+				}
+			}
+			return true;
 		}
 	}
 }
