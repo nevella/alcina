@@ -114,7 +114,7 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		if (type == HashSet.class) {
 			c = new HashSet();
 		}
-		if (type == ArrayList.class || type == List.class) {
+		if (type == ArrayList.class || type == List.class || type==Collection.class) {
 			c = new ArrayList();
 		}
 		if (type == ConcurrentLinkedQueue.class || type == Queue.class) {

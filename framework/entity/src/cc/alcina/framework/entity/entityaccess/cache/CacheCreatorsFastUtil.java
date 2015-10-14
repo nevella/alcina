@@ -17,7 +17,8 @@ import cc.alcina.framework.common.client.util.SortedMultiset;
 
 public class CacheCreatorsFastUtil {
 	@RegistryLocation(registryPoint = CacheLongSetCreator.class)
-	public class CacheLongSetCreatorFastutil implements CacheLongSetCreator {
+	public static class CacheLongSetCreatorFastutil implements
+			CacheLongSetCreator {
 		@Override
 		public Set<Long> get() {
 			return new LongAVLTreeSet();
@@ -25,7 +26,7 @@ public class CacheCreatorsFastUtil {
 	}
 
 	@RegistryLocation(registryPoint = CacheMultisetCreator.class)
-	public class CacheMultisetCreatorFastUtil<T> implements
+	public static class CacheMultisetCreatorFastUtil<T> implements
 			CacheMultisetCreator<T> {
 		CacheLongSetCreator longSetCreator = Registry
 				.impl(CacheLongSetCreator.class);
@@ -35,6 +36,7 @@ public class CacheCreatorsFastUtil {
 			if (concurrent) {
 				return new ConcurrentSortedMultiset<>();
 			} else {
+				
 				return new SortedMultiset<T, Set<Long>>() {
 					@Override
 					protected Set<Long> createSet() {
@@ -51,7 +53,7 @@ public class CacheCreatorsFastUtil {
 	}
 
 	@RegistryLocation(registryPoint = CacheIdMapCreator.class)
-	public class CacheIdMapCreatorJ2SE implements CacheIdMapCreator {
+	public static class CacheIdMapCreatorJ2SE implements CacheIdMapCreator {
 		@Override
 		public Map<Long, HasIdAndLocalId> get() {
 			return new ConcurrentSkipListMap<Long, HasIdAndLocalId>();

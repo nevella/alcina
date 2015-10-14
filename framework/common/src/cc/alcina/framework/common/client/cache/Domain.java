@@ -11,7 +11,7 @@ public class Domain {
 				long id);
 	}
 
-	private static DomainHandler handler;
+	private static DomainHandler handler = new DomainHandlerNonTransactional();
 
 	public static void registerHandler(DomainHandler singleton) {
 		Domain.handler = singleton;
@@ -25,5 +25,19 @@ public class Domain {
 	public static <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
 			long id) {
 		return handler.transactionalFind(clazz, id);
+	}
+
+	public static class DomainHandlerNonTransactional implements DomainHandler {
+		@Override
+		public <V extends HasIdAndLocalId> V resolveTransactional(
+				CacheListener listener, V value, Object[] path) {
+			return value;
+		}
+
+		@Override
+		public <V extends HasIdAndLocalId> V transactionalFind(Class clazz,
+				long id) {
+			throw new UnsupportedOperationException();
+		}
 	}
 }

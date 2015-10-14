@@ -36,7 +36,6 @@ public class CachingMap<I, O> {
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-			
 		}
 		return map.get(key);
 	}
