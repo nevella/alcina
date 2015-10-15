@@ -299,19 +299,17 @@ public class SyncMerger<T> {
 					pair = new SyncPair(left, right, keyProvider,
 							SyncPairAction.MERGE);
 				}
-				if (mergePair(pair)) {
-					deltaModel.getDeltas().add(mergedClass, pair);
-					unmatchedRight.remove(right);
-				}
+				mergePair(pair);
+				deltaModel.getDeltas().add(mergedClass, pair);
+				unmatchedRight.remove(right);
 			}
 		}
 		unmatchedRight.removeAll(ambiguousRight.keySet());
 		for (T right : unmatchedRight) {
 			SyncPair pair = new SyncPair(null, right, keyProvider,
 					SyncPairAction.CREATE_LEFT);
-			if (mergePair(pair)) {
-				deltaModel.getDeltas().add(mergedClass, pair);
-			}
+			mergePair(pair);
+			deltaModel.getDeltas().add(mergedClass, pair);
 		}
 		CollectionFilters.filterInPlace(ambiguousLeft.keySet(),
 				getIgnoreAmbiguityForReportingFilter());
