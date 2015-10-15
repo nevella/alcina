@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.sync;
 
+import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -17,6 +19,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.JvmPropertyAccessor;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
@@ -43,6 +46,17 @@ public class SyncMerger<T> {
 	private PropertyAccessor propertyAccessor;
 
 	private List<SyncMapping> syncMappings = new ArrayList<SyncMapping>();
+
+	protected void defineRightExcluding(String... ignores) {
+		List<String> list = new ArrayList<>(Arrays.asList(ignores));
+		list.addAll(Arrays.asList("id", "localId", "propertyChangeListeners",
+				"class"));
+		List<PropertyDescriptor> sortedPropertyDescriptors = SEUtilities
+				.getSortedPropertyDescriptors(mergedClass);
+		sortedPropertyDescriptors.stream()
+				.filter(pd -> !list.contains(pd.getName()))
+				.forEach(pd -> defineRight(pd.getName()));
+	}
 
 	public static interface MergeFilter {
 		public boolean allowLeftToRight(Object left, Object right,
@@ -148,7 +162,7 @@ public class SyncMerger<T> {
 
 	protected boolean mergePair(SyncPair<T> pair) {
 		SyncPairAction syncType = getSyncType(pair);
-		if (syncType == null||syncType==SyncPairAction.IGNORE) {
+		if (syncType == null || syncType == SyncPairAction.IGNORE) {
 			return false;
 		}
 		pair.setAction(syncType);
@@ -285,17 +299,19 @@ public class SyncMerger<T> {
 					pair = new SyncPair(left, right, keyProvider,
 							SyncPairAction.MERGE);
 				}
-				mergePair(pair);
-				deltaModel.getDeltas().add(mergedClass, pair);
-				unmatchedRight.remove(right);
+				if (mergePair(pair)) {
+					deltaModel.getDeltas().add(mergedClass, pair);
+					unmatchedRight.remove(right);
+				}
 			}
 		}
 		unmatchedRight.removeAll(ambiguousRight.keySet());
 		for (T right : unmatchedRight) {
 			SyncPair pair = new SyncPair(null, right, keyProvider,
 					SyncPairAction.CREATE_LEFT);
-			mergePair(pair);
-			deltaModel.getDeltas().add(mergedClass, pair);
+			if (mergePair(pair)) {
+				deltaModel.getDeltas().add(mergedClass, pair);
+			}
 		}
 		CollectionFilters.filterInPlace(ambiguousLeft.keySet(),
 				getIgnoreAmbiguityForReportingFilter());

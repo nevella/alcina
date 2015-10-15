@@ -53,6 +53,9 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 	}
 
 	public Set<Long> get(T k1) {
+		if (k1 == null) {
+			return null;
+		}
 		return wrapWithModificationChecker(store.get(normalise(k1)));
 	}
 
@@ -234,8 +237,7 @@ public class CacheLookup<T, H extends HasIdAndLocalId> implements
 		if (privateCache != null) {
 			return (H) privateCache.get(descriptor.clazz, id);
 		}
-		return (H) Domain.transactionalFind
-				(descriptor.clazz, id);
+		return (H) Domain.transactionalFind(descriptor.clazz, id);
 	}
 
 	public ModificationChecker getModificationChecker() {

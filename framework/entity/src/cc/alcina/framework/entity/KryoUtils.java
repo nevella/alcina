@@ -68,4 +68,9 @@ public class KryoUtils {
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	public static <T> T clone(T t) {
+		Kryo kryo = newKryo();
+		return kryo.copy(t);
+	}
 }
