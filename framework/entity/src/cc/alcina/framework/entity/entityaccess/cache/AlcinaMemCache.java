@@ -1482,6 +1482,7 @@ public class AlcinaMemCache implements RegistrableService {
 		// single-threaded
 		warmupConnections.keySet().forEach(conn -> closeWarmupConnection(conn));
 		postInitConn = dataSource.getConnection();
+		postInitConn.setAutoCommit(true);
 		postInitConn.setReadOnly(true);
 		warmupExecutor = null;
 		MetricLogging.get().end("memcache-all");
