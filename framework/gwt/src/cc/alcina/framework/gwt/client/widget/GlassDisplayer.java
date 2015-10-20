@@ -16,9 +16,11 @@ package cc.alcina.framework.gwt.client.widget;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.PopupPanel;
+import com.google.gwt.user.client.ui.RootPanel;
 
 /**
  * 
@@ -36,6 +38,7 @@ public class GlassDisplayer {
 	
 
 	public void show(boolean show) {
+		RootPanel.get().setStyleName("glass-showing", show);
 		if (!show) {
 			if (glass != null) {
 				glass.hide();
@@ -49,7 +52,8 @@ public class GlassDisplayer {
 			fp.setWidth(Window.getClientWidth() + "px");
 			fp.setHeight(Math.max(Document.get().getBody().getOffsetHeight(),
 					Window.getClientHeight()) + "px");
-			DOM.setStyleAttribute(fp.getElement(), "backgroundColor", "#000");
+			Style style = fp.getElement().getStyle();
+			style.setBackgroundColor("#000");
 			updateOpacity();
 			glass.setStyleName("");
 			glass.add(fp);
