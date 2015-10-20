@@ -9,9 +9,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Base64;
 
+import org.objenesis.strategy.SerializingInstantiatorStrategy;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.Kryo.DefaultInstantiatorStrategy;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -94,6 +97,8 @@ public class KryoUtils {
 	protected static Kryo newKryo() {
 		Kryo kryo = new Kryo();
 		kryo.setClassLoader(Thread.currentThread().getContextClassLoader());
+		kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
+				new SerializingInstantiatorStrategy()));
 		return kryo;
 	}
 }

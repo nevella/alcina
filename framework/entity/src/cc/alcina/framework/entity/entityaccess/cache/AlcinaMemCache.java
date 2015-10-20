@@ -206,8 +206,6 @@ public class AlcinaMemCache implements RegistrableService {
 
 	private UnsortedMultikeyMap<PropertyDescriptor> memCacheColumnRev;
 
-	private Connection postInitConn;
-
 	private Multimap<Class, List<ColumnDescriptor>> columnDescriptors;
 
 	private Map<PropertyDescriptor, Class> propertyDescriptorFetchTypes = new LinkedHashMap<PropertyDescriptor, Class>();
@@ -681,10 +679,6 @@ public class AlcinaMemCache implements RegistrableService {
 		this.checkModificationWriteLock = checkModificationWriteLock;
 	}
 
-	public void setConn(Connection conn) {
-		this.postInitConn = conn;
-	}
-
 	public void setDebug(boolean debug) {
 		this.debug = debug;
 	}
@@ -814,7 +808,14 @@ public class AlcinaMemCache implements RegistrableService {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-		return postInitConn;
+		try {
+			Connection postInitConn = dataSource.getConnection();
+			postInitConn.setAutoCommit(true);
+			postInitConn.setReadOnly(true);
+			return postInitConn;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	private Field getDescriptorField(Class<?> clazz, String name) {
@@ -971,6 +972,7 @@ public class AlcinaMemCache implements RegistrableService {
 				}
 			}
 		}
+		Connection conn = getConn();
 		try {
 			String joinTableName = joinTable.name();
 			MetricLogging.get().start(joinTableName);
@@ -979,7 +981,6 @@ public class AlcinaMemCache implements RegistrableService {
 			String sql = String.format("select %s, %s from %s;",
 					joinTable.joinColumns()[0].name(), targetFieldSql,
 					joinTableName);
-			Connection conn = getConn();
 			Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
 			PdOperator pdFwd = ensurePdOperator(pd, pd.getReadMethod()
@@ -1003,10 +1004,11 @@ public class AlcinaMemCache implements RegistrableService {
 				}
 			}
 			stmt.close();
-			releaseConn(conn);
 			MetricLogging.get().end(joinTableName, metricLogger);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		} finally {
+			releaseConn(conn);
 		}
 	}
 
@@ -1014,20 +1016,24 @@ public class AlcinaMemCache implements RegistrableService {
 			PropertyStoreItemDescriptor propertyStoreItemDescriptor)
 			throws SQLException {
 		Connection conn = getConn();
-		ConnResults connResults = new ConnResults(conn, clazz,
-				columnDescriptors.get(clazz),
-				propertyStoreItemDescriptor.getSqlFilter());
-		List<PdOperator> pds = descriptors.get(clazz);
-		propertyStoreItemDescriptor.init(cache, pds);
-		String simpleName = clazz.getSimpleName();
-		int count = propertyStoreItemDescriptor.getRoughCount();
-		SystemoutCounter ctr = new SystemoutCounter(20000, 10, count, true);
-		ResultSet rs = connResults.ensureRs();
-		while (rs.next()) {
-			propertyStoreItemDescriptor.addRow(rs);
-			ctr.tick(simpleName);
+		try {
+			ConnResults connResults = new ConnResults(conn, clazz,
+					columnDescriptors.get(clazz),
+					propertyStoreItemDescriptor.getSqlFilter());
+			List<PdOperator> pds = descriptors.get(clazz);
+			propertyStoreItemDescriptor.init(cache, pds);
+			String simpleName = clazz.getSimpleName();
+			int count = propertyStoreItemDescriptor.getRoughCount();
+			SystemoutCounter ctr = new SystemoutCounter(20000, 10, count, true);
+			ResultSet rs = connResults.ensureRs();
+			while (rs.next()) {
+				propertyStoreItemDescriptor.addRow(rs);
+				ctr.tick(simpleName);
+			}
+			rs.close();
+		} finally {
+			releaseConn(conn);
 		}
-		rs.close();
 	}
 
 	private void loadTable(Class clazz, String sqlFilter, ClassIdLock sublock,
@@ -1056,30 +1062,35 @@ public class AlcinaMemCache implements RegistrableService {
 	private List<HasIdAndLocalId> loadTable0(Class clazz, String sqlFilter,
 			ClassIdLock sublock, LaterLookup laterLookup) throws Exception {
 		Connection conn = getConn();
-		Iterable<Object[]> results = getData(conn, clazz, sqlFilter);
-		List<PdOperator> pds = descriptors.get(clazz);
-		List<HasIdAndLocalId> loaded = new ArrayList<HasIdAndLocalId>();
-		for (Object[] objects : results) {
-			HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
-			if (sublock != null) {
-				loaded.add(hili);
-			}
-			ensureModificationChecker(hili);
-			for (int i = 0; i < objects.length; i++) {
-				PdOperator pdOperator = pds.get(i);
-				Method rm = pdOperator.readMethod;
-				if (pdOperator.manyToOne != null || pdOperator.oneToOne != null) {
-					Long id = (Long) objects[i];
-					if (id != null) {
-						laterLookup.add(id, pdOperator, hili);
-					}
-				} else {
-					pdOperator.field.set(hili, objects[i]);
+		List<HasIdAndLocalId> loaded;
+		try {
+			Iterable<Object[]> results = getData(conn, clazz, sqlFilter);
+			List<PdOperator> pds = descriptors.get(clazz);
+			loaded = new ArrayList<HasIdAndLocalId>();
+			for (Object[] objects : results) {
+				HasIdAndLocalId hili = (HasIdAndLocalId) clazz.newInstance();
+				if (sublock != null) {
+					loaded.add(hili);
 				}
+				ensureModificationChecker(hili);
+				for (int i = 0; i < objects.length; i++) {
+					PdOperator pdOperator = pds.get(i);
+					Method rm = pdOperator.readMethod;
+					if (pdOperator.manyToOne != null
+							|| pdOperator.oneToOne != null) {
+						Long id = (Long) objects[i];
+						if (id != null) {
+							laterLookup.add(id, pdOperator, hili);
+						}
+					} else {
+						pdOperator.field.set(hili, objects[i]);
+					}
+				}
+				cache.put(hili);
 			}
-			cache.put(hili);
+		} finally {
+			releaseConn(conn);
 		}
-		releaseConn(conn);
 		return loaded;
 	}
 
@@ -1275,9 +1286,18 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 	}
 
-	private void releaseConn(Connection conn) throws Exception {
-		if (initialising) {
-			releaseWarmupConnection(conn);
+	private void releaseConn(Connection conn) {
+		if (conn == null) {
+			return;
+		}
+		try {
+			if (initialising) {
+				releaseWarmupConnection(conn);
+			} else {
+				conn.close();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -1481,9 +1501,6 @@ public class AlcinaMemCache implements RegistrableService {
 		// don't close, but indicate that everything write-y from now shd be
 		// single-threaded
 		warmupConnections.keySet().forEach(conn -> closeWarmupConnection(conn));
-		postInitConn = dataSource.getConnection();
-		postInitConn.setAutoCommit(true);
-		postInitConn.setReadOnly(true);
 		warmupExecutor = null;
 		MetricLogging.get().end("memcache-all");
 	}
