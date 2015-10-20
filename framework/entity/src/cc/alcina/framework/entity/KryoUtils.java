@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Base64;
 
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
@@ -35,10 +37,23 @@ public class KryoUtils {
 			Input input = new Input(bytes);
 			T someObject = kryo.readObject(input, clazz);
 			input.close();
+			someObject = resolve(clazz, someObject);
 			return someObject;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private static <T> T resolve(Class<T> clazz, T someObject)
+			throws IllegalAccessException, InvocationTargetException {
+		try {
+			Method readResolve = clazz.getDeclaredMethod("readResolve",
+					new Class[0]);
+			readResolve.setAccessible(true);
+			someObject = (T) readResolve.invoke(someObject);
+		} catch (NoSuchMethodException e) {
+		}
+		return someObject;
 	}
 
 	public static <T> T deserializeFromFile(File file, Class<T> clazz) {
@@ -55,6 +70,7 @@ public class KryoUtils {
 			Input input = new Input(stream);
 			T someObject = kryo.readObject(input, clazz);
 			input.close();
+			someObject = resolve(clazz, someObject);
 			return someObject;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -75,6 +91,7 @@ public class KryoUtils {
 			Kryo kryo = newKryo();
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			Output output = new Output(baos);
+			object = writeReplace(object);
 			kryo.writeObject(output, object);
 			output.flush();
 			return baos.toByteArray();
@@ -87,11 +104,24 @@ public class KryoUtils {
 		try (OutputStream os = new FileOutputStream(file)) {
 			Kryo kryo = newKryo();
 			Output output = new Output(os);
+			object = writeReplace(object);
 			kryo.writeObject(output, object);
 			output.flush();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private static Object writeReplace(Object object) throws Exception {
+		try {
+			Class<? extends Object> clazz = object.getClass();
+			Method writeReplace = clazz.getDeclaredMethod("writeReplace",
+					new Class[0]);
+			writeReplace.setAccessible(true);
+			return writeReplace.invoke(object);
+		} catch (NoSuchMethodException e) {
+		}
+		return object;
 	}
 
 	protected static Kryo newKryo() {
