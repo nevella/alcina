@@ -39,6 +39,7 @@ import cc.alcina.framework.entity.entityaccess.DbAppender;
 import cc.alcina.framework.entity.entityaccess.JPAImplementation;
 import cc.alcina.framework.entity.logic.AlcinaServerConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.registry.ClassDataCache;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
@@ -47,7 +48,6 @@ import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
-import cc.alcina.framework.servlet.ServletLayerUtils;
 
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void createServletTransformClientInstance() {
@@ -61,7 +61,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					.impl(CommonPersistenceProvider.class)
 					.getCommonPersistence()
 					.createClientInstance(
-							"servlet: " + ServletLayerUtils.getLocalHostName());
+							"servlet: " + EntityLayerUtils.getLocalHostName());
 			Registry.impl(CommonRemoteServiceServletSupport.class)
 					.setServerAsClientInstance(serverAsClientInstance);
 		} finally {

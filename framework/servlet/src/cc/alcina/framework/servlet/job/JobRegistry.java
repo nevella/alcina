@@ -41,9 +41,9 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.RemoteActionLogger;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
-import cc.alcina.framework.servlet.ServletLayerUtils;
 
 import com.totsp.gwittir.client.beans.Converter;
 
@@ -87,7 +87,7 @@ public class JobRegistry implements RegistrableService {
 	public static String getLauncherName() {
 		String launcherName = ResourceUtilities.getBundledString(
 				JobRegistry.class, "launcherName");
-		launcherName = launcherName.isEmpty() ? ServletLayerUtils
+		launcherName = launcherName.isEmpty() ? EntityLayerUtils
 				.getLocalHostName() : launcherName;
 		return launcherName;
 	}

@@ -1,5 +1,8 @@
 package cc.alcina.framework.entity.logic;
 
+import java.net.InetAddress;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
@@ -22,5 +25,13 @@ public class EntityLayerUtils {
 	public static void persistentLog(String message, String componentKey) {
 		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
 				.log(message, componentKey);
+	}
+
+	public static String getLocalHostName() {
+		try {
+			return java.net.InetAddress.getLocalHost().getHostName();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

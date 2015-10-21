@@ -26,6 +26,7 @@ import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 import cc.alcina.framework.servlet.actionhandlers.DtrSimpleAdminPersistenceHandler;
@@ -132,7 +133,7 @@ public class ServletLayerUtils {
 							.getCommonPersistence()
 							.createClientInstance(
 									"servlet-bulk: "
-											+ ServletLayerUtils
+											+ EntityLayerUtils
 													.getLocalHostName());
 					List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>(
 							TransformManager.get().getTransformsByCommitType(
@@ -195,13 +196,5 @@ public class ServletLayerUtils {
 				"\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
 				req.getRequestURI(), req.getQueryString(),
 				req.getHeader("referer"), remoteAddr);
-	}
-
-	public static String getLocalHostName() {
-		try {
-			return java.net.InetAddress.getLocalHost().getHostName();
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 }
