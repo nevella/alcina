@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.domaintransform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.domaintransform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
@@ -196,5 +197,9 @@ public class ServletLayerUtils {
 				"\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
 				req.getRequestURI(), req.getQueryString(),
 				req.getHeader("referer"), remoteAddr);
+	}
+
+	public static boolean checkForBrokenClientPipe(Exception e) {
+		return SEUtilities.getFullExceptionMessage(e).contains("Broken pipe");
 	}
 }
