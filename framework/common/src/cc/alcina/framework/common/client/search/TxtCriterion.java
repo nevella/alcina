@@ -40,7 +40,9 @@ public class TxtCriterion extends SearchCriterion {
 	}
 
 	public void setText(String text) {
+		String old_text = this.text;
 		this.text = text;
+		propertyChangeSupport().firePropertyChange("text", old_text, text);
 	}
 
 	public String getText() {
@@ -101,10 +103,11 @@ public class TxtCriterion extends SearchCriterion {
 	@Override
 	protected TxtCriterion copyPropertiesFrom(SearchCriterion searchCriterion) {
 		TxtCriterion copyFromCriterion = (TxtCriterion) searchCriterion;
-		text=copyFromCriterion.text;
-		txtCriterionType=copyFromCriterion.txtCriterionType;
+		text = copyFromCriterion.text;
+		txtCriterionType = copyFromCriterion.txtCriterionType;
 		return super.copyPropertiesFrom(copyFromCriterion);
 	}
+
 	@Override
 	public TxtCriterion clone() throws CloneNotSupportedException {
 		TxtCriterion copy = new TxtCriterion();

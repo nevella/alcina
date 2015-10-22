@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import java.beans.PropertyChangeListener;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +21,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -86,7 +89,6 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 		}
 		return result;
 	}
-	
 
 	public Set<OrderCriterion> allOrderCriteria() {
 		LinkedHashSet<OrderCriterion> result = new LinkedHashSet<OrderCriterion>();
@@ -434,5 +436,19 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 	protected void putOrderGroup(OrderGroup og) {
 		ogs.put(og.getClass(), og);
 		orderGroups.add(og);
+	}
+
+	public void globalPropertyChangeListener(PropertyChangeListener listener,
+			boolean add) {
+		allCriteria().forEach(c -> propertyChangeDelta(c, listener, add));
+	}
+
+	private void propertyChangeDelta(SourcesPropertyChangeEvents o,
+			PropertyChangeListener listener, boolean add) {
+		if (add) {
+			o.addPropertyChangeListener(listener);
+		} else {
+			o.removePropertyChangeListener(listener);
+		}
 	}
 }

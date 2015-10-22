@@ -11,16 +11,16 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.gwt.client.widget;
-
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.LoginStateVisible;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar;
+import cc.alcina.framework.gwt.client.widget.VisibilityChangeEvent.Handler;
 
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -29,9 +29,8 @@ import com.google.gwt.user.client.ui.Widget;
  *
  * @author Nick Reddel
  */
-
- public class BaseTab extends Composite implements Permissible,
-		LoginStateVisible {
+public class BaseTab extends Composite implements Permissible,
+		LoginStateVisible, HasVisibilityChangeHandlers {
 	protected AccessLevel minimumAccessLevel = AccessLevel.EVERYONE;
 
 	protected ScrollPanel scroller;
@@ -39,16 +38,20 @@ import com.google.gwt.user.client.ui.Widget;
 	protected boolean wasSelected;
 
 	protected String name;
+
 	protected String displayName;
-	protected void ensureWidget() {
-	}
 
 	public AccessLevel accessLevel() {
 		return this.minimumAccessLevel;
 	}
 
-	public String rule() {
-		return "";
+	@Override
+	public HandlerRegistration addVisibilityChangeHandler(Handler handler) {
+		return addHandler(handler, VisibilityChangeEvent.TYPE);
+	}
+
+	public String getDisplayName() {
+		return this.displayName != null ? this.displayName : this.name;
 	}
 
 	public String getHistoryToken() {
@@ -58,8 +61,9 @@ import com.google.gwt.user.client.ui.Widget;
 	public String getName() {
 		return this.name;
 	}
-	public String getDisplayName(){
-		return this.displayName!=null?this.displayName:this.name;
+
+	public Widget getPageWidget() {
+		return super.getWidget();
 	}
 
 	public ScrollPanel getScroller() {
@@ -70,10 +74,9 @@ import com.google.gwt.user.client.ui.Widget;
 		return null;
 	}
 
-	public Widget getPageWidget() {
-		return super.getWidget();
+	public String rule() {
+		return "";
 	}
-
 
 	@Override
 	public void setVisible(boolean visible) {
@@ -81,6 +84,7 @@ import com.google.gwt.user.client.ui.Widget;
 		if (visible) {
 			tabSelected();
 		}
+		fireEvent(new VisibilityChangeEvent(visible));
 	}
 
 	public void tabSelected() {
@@ -92,5 +96,8 @@ import com.google.gwt.user.client.ui.Widget;
 
 	public boolean visibleForLoginState(LoginState state) {
 		return true;
+	}
+
+	protected void ensureWidget() {
 	}
 }

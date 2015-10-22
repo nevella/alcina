@@ -29,6 +29,7 @@ import org.hibernate.transform.ResultTransformer;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.cache.CacheFilter;
+import cc.alcina.framework.common.client.cache.CompositeCacheFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -39,7 +40,6 @@ import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheQuery;
-import cc.alcina.framework.entity.entityaccess.cache.CompositeCacheFilter;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheRunner;
 import cc.alcina.framework.entity.entityaccess.cache.NotCacheFilter;
