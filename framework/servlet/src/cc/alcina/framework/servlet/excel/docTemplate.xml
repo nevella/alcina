@@ -55,8 +55,12 @@
   </Table>
   <WorksheetOptions 
      xmlns="urn:schemas-microsoft-com:office:excel">
+      <PageSetup>
+    <PageMargins x:Left="0.751968503937008" x:Right="0.751968503937008"/>
+   </PageSetup>
   <Print>
   <ValidPrinterInfo/>
+  <PaperSizeIndex>0</PaperSizeIndex>
   <HorizontalResolution>300</HorizontalResolution>
   <VerticalResolution>300</VerticalResolution>
   </Print>
