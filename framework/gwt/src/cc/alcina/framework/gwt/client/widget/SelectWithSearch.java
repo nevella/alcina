@@ -36,6 +36,8 @@ import cc.alcina.framework.gwt.client.widget.layout.FlowPanel100pcHeight;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 import cc.alcina.framework.gwt.client.widget.layout.ScrollPanel100pcHeight.ScrollPanel100pcHeight300px;
 
+import com.google.gwt.cell.client.AbstractCell;
+import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.core.shared.GWT;
@@ -58,7 +60,17 @@ import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
+import com.google.gwt.event.logical.shared.HasSelectionHandlers;
+import com.google.gwt.event.logical.shared.SelectionEvent;
+import com.google.gwt.event.logical.shared.SelectionHandler;
+import com.google.gwt.event.shared.GwtEvent;
+import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.thirdparty.common.css.compiler.gssfunctions.GssFunctions.AddHsbToCssColor;
+import com.google.gwt.user.cellview.client.CellList;
+import com.google.gwt.user.cellview.client.HasKeyboardPagingPolicy.KeyboardPagingPolicy;
+import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Timer;
@@ -75,6 +87,10 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.ListDataProvider;
+import com.google.gwt.view.client.SelectionChangeEvent;
+import com.google.gwt.view.client.SimpleKeyProvider;
+import com.google.gwt.view.client.SingleSelectionModel;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
@@ -84,13 +100,7 @@ import com.totsp.gwittir.client.ui.ToStringRenderer;
  * @author Nick Reddel
  */
 public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
-		HasLayoutInfo {
-	public static Map<String, List> emptyItems() {
-		HashMap<String, List> map = new HashMap<String, List>();
-		map.put("", new ArrayList());
-		return map;
-	}
-
+		HasLayoutInfo, HasSelectionHandlers<T> {
 	public static final ClickHandler NOOP_CLICK_HANDLER = new ClickHandler() {
 		@Override
 		public void onClick(ClickEvent event) {
@@ -99,6 +109,12 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	};
 
 	private static final int DELAY_TO_CHECK_FOR_CLOSING = 400;
+
+	public static Map<String, List> emptyItems() {
+		HashMap<String, List> map = new HashMap<String, List>();
+		map.put("", new ArrayList());
+		return map;
+	}
 
 	private FlowPanel holder;
 
@@ -206,8 +222,17 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	private VisualFilterableItemFilter<T> itemFilter = new VisualFilterableItemFilter<T>();
 
+	private boolean useCellList = false;
+
+	HandlerManager handlerManager = new HandlerManager(this);
+
 	// additional problem with ff
 	public SelectWithSearch() {
+	}
+
+	@Override
+	public HandlerRegistration addSelectionHandler(SelectionHandler<T> handler) {
+		return handlerManager.addHandler(SelectionEvent.getType(), handler);
 	}
 
 	public void clearFilterText() {
@@ -310,7 +335,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 					} else {
 						checkShowPopup();
 					}
-					if(CommonUtils.isNullOrEmpty(filter.getTextBox().getText())&&popdown){
+					if (CommonUtils
+							.isNullOrEmpty(filter.getTextBox().getText())
+							&& popdown) {
 						maybeClosePopdown(null);
 					}
 				}
@@ -343,6 +370,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		} else {
 			lastFilterText = filterText;
 		}
+		if (isUseCellList()) {
+			updateItemsCellList(filterText, (HasWidgets) itemHolder);
+			return false;
+		}
 		filterText = filterText.toLowerCase();
 		HashSet okChar = new HashSet<String>();
 		boolean b = false;
@@ -359,6 +390,11 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 			}
 		}
 		return b;
+	}
+
+	@Override
+	public void fireEvent(GwtEvent<?> event) {
+		handlerManager.fireEvent(event);
 	}
 
 	public ClickHandler getEnterHandler() {
@@ -474,6 +510,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return sortGroups;
 	}
 
+	public boolean isUseCellList() {
+		return this.useCellList;
+	}
+
 	public IndexedPanel itemHolderAsIndexedPanel() {
 		return (IndexedPanel) itemHolder;
 	}
@@ -501,6 +541,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				filter.getTextBox().setFocus(true);
 			}
 		});
+	}
+
+	public String provideFilterBoxText() {
+		return getFilter().getTextBox().getText();
 	}
 
 	public void removeScroller() {
@@ -577,8 +621,9 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 							if (c1 != -c2) {
 								int debug = 3;
 							}
-							if(i1.compareTo(i2)<0&&i2.compareTo(i3)<0 && i1.compareTo(i3)>=0){
-								int debug=3;
+							if (i1.compareTo(i2) < 0 && i2.compareTo(i3) < 0
+									&& i1.compareTo(i3) >= 0) {
+								int debug = 3;
 							}
 						}
 					} else {
@@ -649,6 +694,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.topAdjust = topAdjust;
 	}
 
+	public void setUseCellList(boolean useCellList) {
+		this.useCellList = useCellList;
+	}
+
 	public void showPopupWithData(boolean filterTextBox) {
 		if (popdownStyleName != null) {
 			panelForPopup.addStyleName(popdownStyleName);
@@ -686,6 +735,52 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 						.setProperty("minWidth", (minWidth + 20) + "px");
 			}
 		}
+		afterUpdateItems(emptyItems);
+	}
+
+	private void updateItemsCellList(String filterText, HasWidgets itemHolder) {
+		emptyItems = true;
+		Cell<T> cell = new AbstractCell<T>() {
+			@Override
+			public void render(com.google.gwt.cell.client.Cell.Context context,
+					T value, SafeHtmlBuilder sb) {
+				sb.appendEscaped((String) renderer.render(value));
+			}
+		};
+		CellList<T> cellList = new CellList<T>(cell);
+		cellList.setPageSize(9999);
+		cellList.setKeyboardPagingPolicy(KeyboardPagingPolicy.INCREASE_RANGE);
+		cellList.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.DISABLED);
+		// Add a selection model so we can select cells.
+		final SingleSelectionModel<T> selectionModel = new SingleSelectionModel<T>(
+				new SimpleKeyProvider<T>());
+		cellList.setSelectionModel(selectionModel);
+		selectionModel
+				.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+					public void onSelectionChange(SelectionChangeEvent event) {
+						itemSelected(selectionModel.getSelectedObject());
+					}
+				});
+		List<T> items = new ArrayList<>();
+		for (G c : keys) {
+			if (!itemMap.containsKey(c)) {
+				continue;
+			}
+			for (T item : itemMap.get(c)) {
+				String filterable = CommonUtils.nullToEmpty(
+						((String) renderer.render(item))).toLowerCase();
+				if (itemFilter.allow(item, filterable, filterText)
+						&& !selectedItems.contains(item)) {
+					items.add(item);
+				}
+			}
+		}
+		ListDataProvider<T> dataProvider = new ListDataProvider<T>();
+		dataProvider.getList().addAll(items);
+		dataProvider.addDataDisplay(cellList);
+		emptyItems = items.isEmpty();
+		itemHolder.clear();
+		itemHolder.add(cellList);
 		afterUpdateItems(emptyItems);
 	}
 
@@ -777,6 +872,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return (HasWidgets) itemHolder;
 	}
 
+	protected void itemSelected(T item) {
+		SelectionEvent.fire(this, item);
+	}
+
 	protected void maybeClosePopdown(ClickEvent event) {
 		if (event != null) {
 			try {
@@ -825,6 +924,10 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	protected void updateItems() {
 		HasWidgets itemHolder = itemHolderAsHasWidgets();
 		itemHolder.clear();
+		if (isUseCellList()) {
+			updateItemsCellList("", itemHolder);
+			return;
+		}
 		emptyItems = true;
 		if (hintLabel != null) {
 			itemHolder.add(hintLabel);
@@ -1159,8 +1262,5 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				}
 			}
 		}
-	}
-	public String provideFilterBoxText(){
-		return getFilter().getTextBox().getText();
 	}
 }

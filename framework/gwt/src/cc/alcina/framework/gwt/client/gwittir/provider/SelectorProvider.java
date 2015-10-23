@@ -31,16 +31,19 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	private final CollectionFilter filter;
 	private final int maxSelectedItems;
 	private final Renderer renderer;
+	private boolean useCellList;
 
 	public SelectorProvider(Class selectionObjectClass,
-			CollectionFilter filter, int maxSelectedItems, Renderer renderer) {
+			CollectionFilter filter, int maxSelectedItems, Renderer renderer,
+			boolean useCellList) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
 		this.renderer = renderer;
+		this.useCellList = useCellList;
 	}
 
 	public BoundSelector get() {
-		return new BoundSelector(selectionObjectClass, filter,maxSelectedItems,renderer);
+		return new BoundSelector(selectionObjectClass, filter,maxSelectedItems,renderer,useCellList);
 	}
 }

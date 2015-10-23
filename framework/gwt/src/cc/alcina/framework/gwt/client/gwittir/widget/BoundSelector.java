@@ -21,6 +21,8 @@ import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.logical.shared.SelectionEvent;
+import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
@@ -31,7 +33,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
-		MultilineWidget {
+		MultilineWidget, SelectionHandler {
 	public static final int MAX_SINGLE_LINE_CHARS = 42;
 
 	public static final String VALUE_PROPERTY_NAME = "value";
@@ -56,16 +58,7 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 
 	protected FlowPanel container;
 
-	protected boolean isMultipleSelect() {
-		return maxSelectedItems != 1;
-	}
-
-	private Widget createHeader(String text, String secondaryStyle) {
-		Label widget = new Label(text);
-		widget.setStyleName("header");
-		widget.addStyleName(secondaryStyle);
-		return widget;
-	}
+	private boolean useCellList;
 
 	/*
 	 * Allows for subclasses which need a model before rendering
@@ -78,26 +71,21 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		this(selectionObjectClass, null);
 	}
 
-	protected void customiseLeftWidget() {
-	}
-
-	protected void customiseRightWidget() {
-	}
-
 	public BoundSelector(Class selectionObjectClass, CollectionFilter filter) {
 		this(selectionObjectClass, filter, 0);
 	}
 
 	public BoundSelector(Class selectionObjectClass, CollectionFilter filter,
 			int maxSelectedItems) {
-		this(selectionObjectClass, filter, maxSelectedItems, null);
+		this(selectionObjectClass, filter, maxSelectedItems, null, false);
 	}
 
 	public BoundSelector(Class selectionObjectClass, CollectionFilter filter,
-			int maxSelectedItems, Renderer renderer) {
+			int maxSelectedItems, Renderer renderer, boolean useCellList) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
+		this.useCellList = useCellList;
 		if (renderer != null) {
 			this.renderer = renderer;
 		}
@@ -110,9 +98,28 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		return null;
 	}
 
-	private void initContainer() {
-		container = new FlowPanel();
-		initWidget(container);
+	public Object getValue() {
+		Set items = search.getSelectedItems();
+		if (items.size() == 0) {
+			return null;
+		}
+		if (!isMultipleSelect()) {
+			return items.iterator().next();
+		}
+		return new HashSet(items);
+	}
+
+	public boolean isMultiline() {
+		return true;
+	}
+
+	public void onClick(ClickEvent event) {
+		itemSelected(((HasItem) event.getSource()).getItem());
+	}
+
+	@Override
+	public void onSelection(SelectionEvent event) {
+		itemSelected(event.getSelectedItem());
 	}
 
 	public void redrawGrid() {
@@ -140,9 +147,11 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		search.setHolderHeight("");
 		search.setRenderer(renderer);
 		search.setHint(getHint());
+		search.setUseCellList(useCellList);
 		customiseLeftWidget();
 		searchWidget = search.createWidget(SelectWithSearch.emptyItems(), this,
 				MAX_SINGLE_LINE_CHARS);
+		search.addSelectionHandler(evt -> itemSelected(evt.getSelectedItem()));
 		search.getScroller().setHeight("");
 		search.getScroller().setStyleName("scroller");
 		createResults();
@@ -151,8 +160,12 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		results.setPopdown(false);
 		results.setHolderHeight("");
 		results.setRenderer(renderer);
+		results.setUseCellList(useCellList);
 		resultsWidget = results.createWidget(SelectWithSearch.emptyItems(),
-				resultsClickListener, MAX_SINGLE_LINE_CHARS);
+				click -> resultItemSelected(((HasItem) click.getSource())
+						.getItem()), MAX_SINGLE_LINE_CHARS);
+		results.addSelectionHandler(evt -> resultItemSelected(evt
+				.getSelectedItem()));
 		if (shouldHideResultFilter()) {
 			results.getFilter().addStyleName("invisible");
 		}
@@ -163,18 +176,6 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		resultsWidget.setStyleName("alcina-Selector selected");
 	}
 
-	protected boolean shouldHideResultFilter() {
-		return !isMultipleSelect();
-	}
-
-	protected void createResults() {
-		this.results = new SelectWithSearch();
-	}
-
-	protected void createSearch() {
-		this.search = new SelectWithSearch();
-	}
-
 	@Override
 	public void setModel(Object model) {
 		super.setModel(model);
@@ -182,60 +183,6 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 			RequiresContextBindable rcb = (RequiresContextBindable) filter;
 			rcb.setBindable((SourcesPropertyChangeEvents) model);
 		}
-	}
-
-	private ClickHandler resultsClickListener = new ClickHandler() {
-		public void onClick(ClickEvent event) {
-			Widget sender = (Widget) event.getSource();
-			Object item = ((HasItem) sender).getItem();
-			Set old = new HashSet(search.getSelectedItems());
-			removeItem(item);
-			update(old);
-			search.filter(null);
-		}
-	};
-
-	protected List<HasId> filterAvailableObjects(Collection<HasId> collection) {
-		ArrayList<HasId> l = new ArrayList();
-		if (filter == null) {
-			l.addAll(collection);
-			return l;
-		}
-		Iterator<HasId> itr = collection.iterator();
-		while (itr.hasNext()) {
-			HasId obj = itr.next();
-			if (!filter.allow(obj)) {
-				continue;
-			}
-			l.add(obj);
-		}
-		return l;
-	}
-
-	protected Map createObjectMap() {
-		Map result = new HashMap();
-		Collection<HasId> collection = TransformManager.get().getCollection(
-				selectionObjectClass);
-		result.put("", filterAvailableObjects(collection));
-		return result;
-	}
-
-	protected void removeItem(Object item) {
-		if (search.getSelectedItems().remove(item)) {
-			((List) results.getItemMap().get("")).remove(item);
-			results.setItemMap(results.getItemMap());
-		}
-	}
-
-	public Object getValue() {
-		Set items = search.getSelectedItems();
-		if (items.size() == 0) {
-			return null;
-		}
-		if (!isMultipleSelect()) {
-			return items.iterator().next();
-		}
-		return new HashSet(items);
 	}
 
 	public void setValue(Object value) {
@@ -274,8 +221,105 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		update(old);
 	}
 
+	private void clearItems() {
+		search.getSelectedItems().clear();
+		((List) results.getItemMap().get("")).clear();
+		results.setItemMap(results.getItemMap());
+	}
+
+	private Widget createHeader(String text, String secondaryStyle) {
+		Label widget = new Label(text);
+		widget.setStyleName("header");
+		widget.addStyleName(secondaryStyle);
+		return widget;
+	}
+
+	private void initContainer() {
+		container = new FlowPanel();
+		initWidget(container);
+	}
+
+	private void itemSelected(Object item) {
+		if (maxSelectedItems != 0
+				&& search.getSelectedItems().size() >= maxSelectedItems) {
+			removeItem(search.getSelectedItems().iterator().next());
+		}
+		Set old = new HashSet(search.getSelectedItems());
+		addItem(item);
+		update(old);
+	}
+
+	private void resultItemSelected(Object item) {
+		Set old = new HashSet(search.getSelectedItems());
+		removeItem(item);
+		update(old);
+		search.filter(null);
+	}
+
+	protected void addItem(Object item) {
+		if (search.getSelectedItems().add(item)) {
+			((List) results.getItemMap().get("")).add(item);
+			results.setItemMap(results.getItemMap());
+			search.getFilter().clear();
+		}
+	}
+
+	protected Map createObjectMap() {
+		Map result = new HashMap();
+		Collection<HasId> collection = TransformManager.get().getCollection(
+				selectionObjectClass);
+		result.put("", filterAvailableObjects(collection));
+		return result;
+	}
+
+	protected void createResults() {
+		this.results = new SelectWithSearch();
+	}
+
+	protected void createSearch() {
+		this.search = new SelectWithSearch();
+	}
+
+	protected void customiseLeftWidget() {
+	}
+
+	protected void customiseRightWidget() {
+	}
+
+	protected List<HasId> filterAvailableObjects(Collection<HasId> collection) {
+		ArrayList<HasId> l = new ArrayList();
+		if (filter == null) {
+			l.addAll(collection);
+			return l;
+		}
+		Iterator<HasId> itr = collection.iterator();
+		while (itr.hasNext()) {
+			HasId obj = itr.next();
+			if (!filter.allow(obj)) {
+				continue;
+			}
+			l.add(obj);
+		}
+		return l;
+	}
+
 	protected void initValues() {
 		search.setItemMap(createObjectMap());
+	}
+
+	protected boolean isMultipleSelect() {
+		return maxSelectedItems != 1;
+	}
+
+	protected void removeItem(Object item) {
+		if (search.getSelectedItems().remove(item)) {
+			((List) results.getItemMap().get("")).remove(item);
+			results.setItemMap(results.getItemMap());
+		}
+	}
+
+	protected boolean shouldHideResultFilter() {
+		return !isMultipleSelect();
 	}
 
 	protected void update(Set old) {
@@ -290,34 +334,5 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 			changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);
 		}
 		search.filter(null);
-	}
-
-	protected void addItem(Object item) {
-		if (search.getSelectedItems().add(item)) {
-			((List) results.getItemMap().get("")).add(item);
-			results.setItemMap(results.getItemMap());
-			search.getFilter().clear();
-		}
-	}
-
-	private void clearItems() {
-		search.getSelectedItems().clear();
-		((List) results.getItemMap().get("")).clear();
-		results.setItemMap(results.getItemMap());
-	}
-
-	public boolean isMultiline() {
-		return true;
-	}
-
-	public void onClick(ClickEvent event) {
-		if (maxSelectedItems != 0
-				&& search.getSelectedItems().size() >= maxSelectedItems) {
-			removeItem(search.getSelectedItems().iterator().next());
-		}
-		Object item = ((HasItem) event.getSource()).getItem();
-		Set old = new HashSet(search.getSelectedItems());
-		addItem(item);
-		update(old);
 	}
 }

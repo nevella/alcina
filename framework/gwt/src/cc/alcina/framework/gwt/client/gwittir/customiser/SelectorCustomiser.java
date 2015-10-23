@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -47,6 +46,8 @@ public class SelectorCustomiser implements Customiser {
 
 	public static final String RENDERER_CLASS = "rendererClass";
 
+	public static final String USE_CELL_LIST = "useCellList";
+
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, CustomiserInfo info) {
 		if (editable) {
@@ -56,7 +57,7 @@ public class SelectorCustomiser implements Customiser {
 					info.parameters(), FILTER_CLASS);
 			if (parameter != null) {
 				filter = (CollectionFilter) Reflections.classLookup()
-						.newInstance(parameter.classValue(),0, 0);
+						.newInstance(parameter.classValue(), 0, 0);
 			}
 			Renderer renderer = NamedParameter.Support.instantiateClass(
 					info.parameters(), RENDERER_CLASS);
@@ -65,8 +66,10 @@ public class SelectorCustomiser implements Customiser {
 			if (parameter != null) {
 				maxSelectedItems = parameter.intValue();
 			}
+			boolean useCellList = NamedParameter.Support.booleanValue(
+					info.parameters(), USE_CELL_LIST);
 			return new SelectorProvider(clazz, filter, maxSelectedItems,
-					renderer);
+					renderer, useCellList);
 		} else {
 			if (multiple) {
 				NamedParameter p = NamedParameter.Support.getParameter(

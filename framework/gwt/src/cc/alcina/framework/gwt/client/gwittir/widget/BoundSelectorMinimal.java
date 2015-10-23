@@ -51,7 +51,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 
 	public BoundSelectorMinimal(Class selectionObjectClass,
 			CollectionFilter filter, int maxSelectedItems, Renderer renderer) {
-		super(selectionObjectClass, filter, maxSelectedItems, renderer);
+		super(selectionObjectClass, filter, maxSelectedItems, renderer, false);
 	}
 
 	@Override
@@ -148,9 +148,11 @@ public class BoundSelectorMinimal extends BoundSelector {
 		if (showUnselectedOnPopupClose) {
 			String searchText = search.provideFilterBoxText();
 			if (!show && searchText.length() > 0) {
-				unselectedLabel = new Label(CommonUtils.formatJ(
-						"Nothing selected for '%s' -  please choose a match from the list",
-						searchText));
+				unselectedLabel = new Label(
+						CommonUtils
+								.formatJ(
+										"Nothing selected for '%s' -  please choose a match from the list",
+										searchText));
 				unselectedLabel.setStyleName("unselected-text");
 				cfp.add(unselectedLabel);
 			} else {
