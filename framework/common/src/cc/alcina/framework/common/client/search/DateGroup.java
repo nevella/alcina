@@ -16,11 +16,11 @@ package cc.alcina.framework.common.client.search;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.FilterCombinator;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-@BeanInfo(displayNamePropertyName = "displayName")
+@Bean(displayNamePropertyName = "displayName")
 /**
  *
  * @author Nick Reddel

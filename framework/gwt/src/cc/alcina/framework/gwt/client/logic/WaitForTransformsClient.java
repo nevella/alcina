@@ -1,22 +1,16 @@
 package cc.alcina.framework.gwt.client.logic;
 
-import java.util.List;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.ClientBase;

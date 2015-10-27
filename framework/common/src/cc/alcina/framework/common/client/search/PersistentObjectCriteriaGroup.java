@@ -2,9 +2,9 @@ package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 
-@BeanInfo(displayNamePropertyName = "displayName")
+@Bean(displayNamePropertyName = "displayName")
 @PermissibleChildClasses({ PersistentObjectCriterion.class })
 public class PersistentObjectCriteriaGroup extends
 		CriteriaGroup<PersistentObjectCriterion> {

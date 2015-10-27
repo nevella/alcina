@@ -89,18 +89,18 @@ public class Bookmark extends DomainBaseVersionable implements
 	}
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Parent", orderingHint = 25))
+	@DisplayInfo(name = "Parent", orderingHint = 25)
 	@Association(implementationClass = Bookmark.class, propertyName = "children")
 	public Bookmark getParent() {
 		return this.parent;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Title", orderingHint = 15))
+	@DisplayInfo(name = "Title", orderingHint = 15)
 	public String getTitle() {
 		return title;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "URL", orderingHint = 20))
+	@DisplayInfo(name = "URL", orderingHint = 20)
 	@CustomiserInfo(customiserClass = UrlCustomiser.class, parameters = { @NamedParameter(name = UrlCustomiser.TARGET, stringValue = "_blank") })
 	public String getUrl() {
 		return url;

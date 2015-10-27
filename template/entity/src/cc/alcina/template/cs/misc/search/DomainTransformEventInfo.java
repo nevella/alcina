@@ -40,20 +40,20 @@ public class DomainTransformEventInfo extends DomainTransformEvent implements
 			PropertyChangeListener l) {
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Id", orderingHint = 1))
+	@DisplayInfo(name = "Id", orderingHint = 1)
 	@Transient
 	public long getId() {
 		return id;
 	}
 
 	@Override
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "New Value", orderingHint = 30))
+	@DisplayInfo(name = "New Value", orderingHint = 30)
 	public String getNewStringValue() {
 		return super.getNewStringValue();
 	}
 
 	@Override
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Object", orderingHint = 10))
+	@DisplayInfo(name = "Object", orderingHint = 10)
 	@CustomiserInfo(customiserClass = ClassSimpleNameCustomiser.class)
 	public String getObjectClassName() {
 		return super.getObjectClassRef() == null ? null : super
@@ -61,7 +61,7 @@ public class DomainTransformEventInfo extends DomainTransformEvent implements
 	}
 
 	@Override
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Object id", orderingHint = 15))
+	@DisplayInfo(name = "Object id", orderingHint = 15)
 	public long getObjectId() {
 		return super.getObjectId();
 	}
@@ -71,24 +71,24 @@ public class DomainTransformEventInfo extends DomainTransformEvent implements
 	}
 
 	@Override
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Property", orderingHint = 20))
+	@DisplayInfo(name = "Property", orderingHint = 20)
 	public String getPropertyName() {
 		return super.getPropertyName();
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Date", orderingHint = 35))
+	@DisplayInfo(name = "Date", orderingHint = 35)
 	public Date getServerCommitDate() {
 		return serverCommitDate;
 	}
 
 	@Override
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Transform", orderingHint = 25))
+	@DisplayInfo(name = "Transform", orderingHint = 25)
 	public TransformType getTransformType() {
 		return super.getTransformType();
 	}
 
 	@Transient
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "User", orderingHint = 5))
+	@DisplayInfo(name = "User", orderingHint = 5)
 	@CustomiserInfo(customiserClass = DomainObjectIdRefCustomiser.class, parameters = { @NamedParameter(name = DomainObjectIdRefCustomiser.TARGET_CLASS, classValue = AlcinaTemplateUser.class) })
 	public long getUserId() {
 		return userId;

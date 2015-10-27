@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
@@ -129,8 +129,8 @@ public class MapObjectLookupClient extends MapObjectLookup {
 			List<ClientPropertyReflector> target = new ArrayList<ClientPropertyReflector>();
 			registerChildren.put(clazz, target);
 			for (ClientPropertyReflector pr : prs) {
-				DomainPropertyInfo dpi = pr
-						.getAnnotation(DomainPropertyInfo.class);
+				DomainProperty dpi = pr
+						.getAnnotation(DomainProperty.class);
 				if (dpi != null && dpi.registerChildren()) {
 					target.add(pr);
 				}

@@ -15,16 +15,14 @@ package cc.alcina.framework.common.client.util;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Function;
-
-import com.google.gwt.core.shared.GwtIncompatible;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PublicCloneable;
+
+import com.google.gwt.core.shared.GwtIncompatible;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.

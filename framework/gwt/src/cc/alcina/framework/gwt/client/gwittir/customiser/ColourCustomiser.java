@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 
 import com.google.gwt.user.client.ui.FlowPanel;
@@ -34,7 +34,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	public static final String DEFAULT_COLOUR = "defaultColour";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		NamedParameter p = NamedParameter.Support.getParameter(
 				info.parameters(), DEFAULT_COLOUR);
 		return new ColourRenderer(p==null?null:p.stringValue());

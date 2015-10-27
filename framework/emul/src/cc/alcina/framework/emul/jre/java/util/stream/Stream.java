@@ -1,6 +1,7 @@
 package java.util.stream;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -68,6 +69,11 @@ public interface Stream<T> {
 	default Stream<T> sorted(Comparator<? super T> comparator) {
 		List<T> list = ((CollectionStream<T>) this).asList();
 		list.sort(comparator);
+		return new CollectionStream(list);
+	}
+	default Stream<T> sorted() {
+		List<T> list = ((CollectionStream<T>) this).asList();
+		Collections.sort(list);
 		return new CollectionStream(list);
 	}
 

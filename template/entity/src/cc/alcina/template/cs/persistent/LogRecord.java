@@ -78,7 +78,7 @@ public class LogRecord extends DomainBase implements SearchResult {
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "created_on", length = 29)
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Date", orderingHint = 10))
+	@DisplayInfo(name = "Date", orderingHint = 10)
 	public Date getCreatedOn() {
 		return this.createdOn;
 	}
@@ -88,7 +88,7 @@ public class LogRecord extends DomainBase implements SearchResult {
 	}
 
 	@Column(name = "text")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Text"))
+	@DisplayInfo(name = "Text")
 	@CustomiserInfo(customiserClass = ExpandableLabelCustomiser.class)
 	@Lob
 	@Type(type="org.hibernate.type.StringClobType")
@@ -101,7 +101,7 @@ public class LogRecord extends DomainBase implements SearchResult {
 	}
 
 	@Column(name = "user_id")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "User", orderingHint = 30))
+	@DisplayInfo(name = "User", orderingHint = 30)
 	@CustomiserInfo(customiserClass = DomainObjectIdRefCustomiser.class, parameters = { @NamedParameter(name = DomainObjectIdRefCustomiser.TARGET_CLASS, classValue = AlcinaTemplateUser.class) })
 	public Long getUserId() {
 		return this.userId;
@@ -112,7 +112,7 @@ public class LogRecord extends DomainBase implements SearchResult {
 	}
 
 	@Column(name = "component_key")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Key", orderingHint = 20))
+	@DisplayInfo(name = "Key", orderingHint = 20)
 	public String getComponentKey() {
 		return this.componentKey;
 	}

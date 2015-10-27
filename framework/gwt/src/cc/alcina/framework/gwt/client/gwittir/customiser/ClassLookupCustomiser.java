@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -41,7 +41,7 @@ public class ClassLookupCustomiser implements Customiser {
 	
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		NamedParameter[] parameters = info.parameters();
 		Renderer renderer = NamedParameter.Support.instantiateClass(
 				parameters, RENDERER_CLASS);

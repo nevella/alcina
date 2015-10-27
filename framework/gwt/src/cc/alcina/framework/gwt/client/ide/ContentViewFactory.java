@@ -18,7 +18,10 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -38,8 +41,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CloneHelper;
@@ -105,64 +108,11 @@ import com.totsp.gwittir.client.validator.Validator;
  * @author Nick Reddel
  */
 public class ContentViewFactory {
-	public static final String CONTEXT_OVERRIDE_AUTOSAVE=ContentViewFactory.class.getName()+".CONTEXT_OVERRIDE_AUTOSAVE";
-	public static class RecheckVisibilityHandler implements Handler {
-		private final GridForm grid;
-
-		public RecheckVisibilityHandler(GridForm grid) {
-			this.grid = grid;
-		}
-
-		@Override
-		public void onAttachOrDetach(AttachEvent event) {
-			if (event.isAttached()) {
-				try {
-					PropertyAccessor pa = Reflections.propertyAccessor();
-					int r = 0;
-					for (Binding b : grid.getBinding().getChildren()) {
-						BindingInstance right = b.getRight();
-						VisualiserInfo visualiserInfo = pa
-								.getAnnotationForProperty(
-										right.object.getClass(),
-										VisualiserInfo.class,
-										right.property.getName());
-						if (visualiserInfo != null) {
-							if (!PermissionsManager.get().isPermissible(
-									right.object, visualiserInfo.visible())) {
-								grid.setRowVisibility(r, false);
-							}
-						}
-						PropertyPermissions pp = pa.getAnnotationForProperty(
-								right.object.getClass(),
-								PropertyPermissions.class,
-								right.property.getName());
-						if (pp != null) {
-							if (!PermissionsManager.get().isPermissible(
-									right.object, pp.write())) {
-								SourcesPropertyChangeEvents left = b.getLeft().object;
-								if (left instanceof HasEnabled
-										&& !(left instanceof Link)) {
-									((HasEnabled) left).setEnabled(false);
-								}
-							}
-						}
-						r++;
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
+	public static final String CONTEXT_OVERRIDE_AUTOSAVE = ContentViewFactory.class
+			.getName() + ".CONTEXT_OVERRIDE_AUTOSAVE";
 
 	public static final String CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS = ContentViewFactory.class
 			+ ".CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS";
-
-	private boolean noButtons;
-
-	private boolean cancelButton;
-
-	private boolean noCaption;
 
 	public static void registerAdditionalProvisionalObjects(Object o) {
 		if (o == null) {
@@ -172,37 +122,15 @@ public class ContentViewFactory {
 				.set(CONTEXT_ADDITIONAL_PROVISIONAL_OBJECTS, o);
 	}
 
-	public PaneWrapperWithObjects createActionTableWithCaption(
-			Collection beans, Class beanClass, Converter converter,
-			Collection<PermissibleAction> actions,
-			PermissibleActionListener listener, boolean withObjectActions,
-			boolean multiple) {
-		PaneWrapperWithObjects cp = createPaneWrapper(listener);
-		cp.add(createMultiCaption(beanClass, cp));
-		cp.addActionTable(createActionTable(beans, beanClass, converter,
-				actions, listener, withObjectActions, multiple));
-		return cp;
-	}
+	private boolean noButtons;
 
-	public static class WidgetList<T> extends Composite {
-		private FlowPanel fp;
+	private boolean cancelButton;
 
-		public WidgetList(Collection<T> beans, Converter<T, Widget> converter,
-				String emptyMessage) {
-			this.fp = new FlowPanel();
-			initWidget(fp);
-			fp.setStyleName("alcina-widgetList");
-			if (beans.isEmpty()) {
-				Label l = new Label(emptyMessage);
-				l.setStyleName("no-content");
-				fp.add(l);
-			} else {
-				for (T t : beans) {
-					fp.add(converter.convert(t));
-				}
-			}
-		}
-	}
+	private boolean noCaption;
+	
+	private Comparator<Field> fieldOrder;
+
+	private Predicate<Field> fieldFilter;
 
 	public ActionTableHolder createActionTable(Collection beans,
 			Class beanClass, Converter converter,
@@ -243,6 +171,18 @@ public class ContentViewFactory {
 		return holder;
 	}
 
+	public PaneWrapperWithObjects createActionTableWithCaption(
+			Collection beans, Class beanClass, Converter converter,
+			Collection<PermissibleAction> actions,
+			PermissibleActionListener listener, boolean withObjectActions,
+			boolean multiple) {
+		PaneWrapperWithObjects cp = createPaneWrapper(listener);
+		cp.add(createMultiCaption(beanClass, cp));
+		cp.addActionTable(createActionTable(beans, beanClass, converter,
+				actions, listener, withObjectActions, multiple));
+		return cp;
+	}
+
 	public PaneWrapperWithObjects createBeanView(Object bean, boolean editable,
 			PermissibleActionListener actionListener, boolean autoSave,
 			boolean doNotClone) {
@@ -263,15 +203,16 @@ public class ContentViewFactory {
 			boolean doNotPrepare) {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(
 				bean.getClass());
-		Boolean overrideAutoSave= LooseContext.get(CONTEXT_OVERRIDE_AUTOSAVE);
-		if(overrideAutoSave!=null){
-			autoSave=overrideAutoSave.booleanValue();
+		Boolean overrideAutoSave = LooseContext.get(CONTEXT_OVERRIDE_AUTOSAVE);
+		if (overrideAutoSave != null) {
+			autoSave = overrideAutoSave.booleanValue();
 		}
 		boolean cloned = false;
 		Collection supportingObjects = new ArrayList();
 		if (!doNotClone
 				&& !autoSave
-				&& (!(bean instanceof HasIdAndLocalId) || Reflections.objectLookup().getObject((HasIdAndLocalId) bean) != null)) {
+				&& (!(bean instanceof HasIdAndLocalId) || Reflections
+						.objectLookup().getObject((HasIdAndLocalId) bean) != null)) {
 			bean = new CloneHelper().shallowishBeanClone(bean);
 			cloned = true;
 		}
@@ -285,9 +226,18 @@ public class ContentViewFactory {
 			cp.add(createCaption(bean, cp));
 		}
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
-						editable, false);
+		List<Field> fieldList = new ArrayList<>(Arrays.asList(GwittirBridge
+				.get().fieldsForReflectedObjectAndSetupWidgetFactory(bean,
+						factory, editable, false)));
+		if (fieldFilter != null) {
+			fieldList.removeIf(f -> !fieldFilter.test(f));
+		}
+		if (fieldOrder != null) {
+			Collections.sort(fieldList, fieldOrder);
+		}
+		Field[] fields = (Field[]) fieldList
+				.toArray(new Field[fieldList.size()]);
+		fieldList.toArray();
 		GridForm f = new GridForm(fields, 1, factory);
 		f.addAttachHandler(new RecheckVisibilityHandler(f));
 		f.setAutofocusField(GwittirBridge.get().getFieldToFocus(bean, fields));
@@ -408,8 +358,7 @@ public class ContentViewFactory {
 					+ beanClass, SuggestedAction.NOTIFY_WARNING);
 		}
 		Object bean = beans.iterator().hasNext() ? beans.iterator().next()
-				: Reflections.classLookup()
-						.getTemplateInstance(beanClass);
+				: Reflections.classLookup().getTemplateInstance(beanClass);
 		PaneWrapperWithObjects cp = createPaneWrapper(actionListener);
 		if (!noCaption) {
 			cp.add(createMultiCaption(beanClass, cp));
@@ -453,6 +402,16 @@ public class ContentViewFactory {
 		return tb;
 	}
 
+	public ContentViewFactory fieldFilter(Predicate<Field> fieldFilter) {
+		this.fieldFilter = fieldFilter;
+		return this;
+	}
+
+	public ContentViewFactory fieldOrder(Comparator<Field> fieldOrder) {
+		this.fieldOrder = fieldOrder;
+		return this;
+	}
+
 	public boolean isCancelButton() {
 		return cancelButton;
 	}
@@ -463,6 +422,11 @@ public class ContentViewFactory {
 
 	public boolean isNoCaption() {
 		return noCaption;
+	}
+
+	public ContentViewFactory noCaption(){
+		noCaption=true;
+		return this;
 	}
 
 	public void popupEdit(Object bean, String title,
@@ -574,6 +538,15 @@ public class ContentViewFactory {
 		}
 
 		@Override
+		/**
+		 * handles beautification of incrementally rendered tables
+		 */
+		public void renderBottom() {
+			super.renderBottom();
+			beautify();
+		}
+
+		@Override
 		public void setValue(Object value) {
 			super.setValue(value);
 		}
@@ -621,7 +594,7 @@ public class ContentViewFactory {
 						}
 					}
 					String strw = hmw.getColumnWidthString();
-					if(strw!=null){
+					if (strw != null) {
 						getCellFormatter().setWidth(0, i, strw);
 					}
 				}
@@ -633,18 +606,38 @@ public class ContentViewFactory {
 		}
 
 		@Override
-		/**
-		 * handles beautification of incrementally rendered tables
-		 */
-		public void renderBottom() {
-			super.renderBottom();
-			beautify();
-		}
-
-		@Override
 		protected void onAttach() {
 			super.onAttach();
 			beautify();
+		}
+	}
+
+	public static class OkCancelPanel extends FlowPanel {
+		private Button okButton;
+
+		private Button cancelButton;
+
+		public OkCancelPanel(String okButtonName, ClickHandler clickHandler,
+				boolean hasCancel) {
+			FlowPanel fp = this;
+			fp.setStyleName("alcina-SavePanel");
+			this.okButton = new Button(okButtonName);
+			okButton.addClickHandler(clickHandler);
+			fp.add(okButton);
+			if (hasCancel) {
+				fp.add(UsefulWidgetFactory.createSpacer(2));
+				this.cancelButton = new Button("Cancel");
+				cancelButton.addClickHandler(clickHandler);
+				fp.add(cancelButton);
+			}
+		}
+
+		public Button getCancelButton() {
+			return this.cancelButton;
+		}
+
+		public Button getOkButton() {
+			return this.okButton;
 		}
 	}
 
@@ -700,33 +693,6 @@ public class ContentViewFactory {
 			add(preDetachFocus);
 		}
 
-		@Override
-		protected void onLoad() {
-			super.onLoad();
-			if (propertyChangeBeanValidator != null) {
-				propertyChangeValidatorResultPanel = new FlowPanel();
-				propertyChangeValidatorResultPanel
-						.setStyleName("property-change-validation-result");
-				propertyChangeValidatorResultPanel.setVisible(false);
-				add(propertyChangeValidatorResultPanel);
-				getModelSpce().addPropertyChangeListener(validationListener);
-			}
-		}
-
-		protected SourcesPropertyChangeEvents getModelSpce() {
-			return (SourcesPropertyChangeEvents) ((AbstractBoundWidget) boundWidget)
-					.getModel();
-		}
-
-		@Override
-		protected void onUnload() {
-			if (propertyChangeBeanValidator != null) {
-				getModelSpce().removePropertyChangeListener(validationListener);
-				remove(propertyChangeValidatorResultPanel);
-			}
-			super.onUnload();
-		}
-
 		public void addActionTable(ActionTableHolder actionTableHolder) {
 			add(actionTableHolder);
 			this.actionTableHolder = actionTableHolder;
@@ -742,6 +708,10 @@ public class ContentViewFactory {
 
 		public void fireVetoableActionEvent(PermissibleActionEvent event) {
 			this.support.fireVetoableActionEvent(event);
+		}
+
+		public ActionTableHolder getActionTableHolder() {
+			return this.actionTableHolder;
 		}
 
 		public HasBinding getBoundWidget() {
@@ -830,44 +800,12 @@ public class ContentViewFactory {
 			}
 		}
 
-		public void setProvisionalObjects(boolean promote) {
-			this.provisionalObjects = promote;
-		}
-
 		public void setOkButton(Button okButton) {
 			this.okButton = okButton;
 		}
 
-		public boolean validateBean() {
-			if (beanValidator == null) {
-				return true;
-			}
-			try {
-				beanValidator.validate(bean);
-				return true;
-			} catch (ValidationException e) {
-				Registry.impl(ClientNotifications.class)
-						.showWarning(e.getMessage());
-				return false;
-			}
-		}
-
-		private void commitChanges(boolean fireViewEvent) {
-			if (isProvisionalObjects()) {
-				TransformManager.get().promoteToDomainObject(objects);
-				objects.clear();
-			}
-			if (!fireViewEvent) {
-				return;
-			}
-			final PermissibleActionEvent action = new PermissibleActionEvent(
-					initialObjects, ClientReflector.get().newInstance(
-							ViewAction.class));
-			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-				public void execute() {
-					fireVetoableActionEvent(action);
-				}
-			});
+		public void setProvisionalObjects(boolean promote) {
+			this.provisionalObjects = promote;
 		}
 
 		public boolean validateAndCommit(final Widget sender,
@@ -928,9 +866,8 @@ public class ContentViewFactory {
 					}
 				}
 				if (sender != null) {
-					Registry.impl(ClientNotifications.class)
-							.showWarning(
-									"Please correct the problems in the form");
+					Registry.impl(ClientNotifications.class).showWarning(
+							"Please correct the problems in the form");
 				} else {
 				}
 				return false;
@@ -945,6 +882,43 @@ public class ContentViewFactory {
 			}
 			commitChanges(sender != null);
 			return true;
+		}
+
+		public boolean validateBean() {
+			if (beanValidator == null) {
+				return true;
+			}
+			try {
+				beanValidator.validate(bean);
+				return true;
+			} catch (ValidationException e) {
+				Registry.impl(ClientNotifications.class).showWarning(
+						e.getMessage());
+				return false;
+			}
+		}
+
+		private void commitChanges(boolean fireViewEvent) {
+			if (isProvisionalObjects()) {
+				TransformManager.get().promoteToDomainObject(objects);
+				objects.clear();
+			}
+			if (!fireViewEvent) {
+				return;
+			}
+			final PermissibleActionEvent action = new PermissibleActionEvent(
+					initialObjects, ClientReflector.get().newInstance(
+							ViewAction.class));
+			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+				public void execute() {
+					fireVetoableActionEvent(action);
+				}
+			});
+		}
+
+		protected SourcesPropertyChangeEvents getModelSpce() {
+			return (SourcesPropertyChangeEvents) ((AbstractBoundWidget) boundWidget)
+					.getModel();
 		}
 
 		@Override
@@ -976,37 +950,95 @@ public class ContentViewFactory {
 			}
 		}
 
-		public ActionTableHolder getActionTableHolder() {
-			return this.actionTableHolder;
-		}
-	}
-
-	public static class OkCancelPanel extends FlowPanel {
-		private Button okButton;
-
-		private Button cancelButton;
-
-		public OkCancelPanel(String okButtonName, ClickHandler clickHandler,
-				boolean hasCancel) {
-			FlowPanel fp = this;
-			fp.setStyleName("alcina-SavePanel");
-			this.okButton = new Button(okButtonName);
-			okButton.addClickHandler(clickHandler);
-			fp.add(okButton);
-			if (hasCancel) {
-				fp.add(UsefulWidgetFactory.createSpacer(2));
-				this.cancelButton = new Button("Cancel");
-				cancelButton.addClickHandler(clickHandler);
-				fp.add(cancelButton);
+		@Override
+		protected void onLoad() {
+			super.onLoad();
+			if (propertyChangeBeanValidator != null) {
+				propertyChangeValidatorResultPanel = new FlowPanel();
+				propertyChangeValidatorResultPanel
+						.setStyleName("property-change-validation-result");
+				propertyChangeValidatorResultPanel.setVisible(false);
+				add(propertyChangeValidatorResultPanel);
+				getModelSpce().addPropertyChangeListener(validationListener);
 			}
 		}
 
-		public Button getCancelButton() {
-			return this.cancelButton;
+		@Override
+		protected void onUnload() {
+			if (propertyChangeBeanValidator != null) {
+				getModelSpce().removePropertyChangeListener(validationListener);
+				remove(propertyChangeValidatorResultPanel);
+			}
+			super.onUnload();
+		}
+	}
+
+	public static class RecheckVisibilityHandler implements Handler {
+		private final GridForm grid;
+
+		public RecheckVisibilityHandler(GridForm grid) {
+			this.grid = grid;
 		}
 
-		public Button getOkButton() {
-			return this.okButton;
+		@Override
+		public void onAttachOrDetach(AttachEvent event) {
+			if (event.isAttached()) {
+				try {
+					PropertyAccessor pa = Reflections.propertyAccessor();
+					int r = 0;
+					for (Binding b : grid.getBinding().getChildren()) {
+						BindingInstance right = b.getRight();
+						Display displayInfo = pa
+								.getAnnotationForProperty(
+										right.object.getClass(),
+										Display.class,
+										right.property.getName());
+						if (displayInfo != null) {
+							if (!PermissionsManager.get().isPermissible(
+									right.object, displayInfo.visible())) {
+								grid.setRowVisibility(r, false);
+							}
+						}
+						PropertyPermissions pp = pa.getAnnotationForProperty(
+								right.object.getClass(),
+								PropertyPermissions.class,
+								right.property.getName());
+						if (pp != null) {
+							if (!PermissionsManager.get().isPermissible(
+									right.object, pp.write())) {
+								SourcesPropertyChangeEvents left = b.getLeft().object;
+								if (left instanceof HasEnabled
+										&& !(left instanceof Link)) {
+									((HasEnabled) left).setEnabled(false);
+								}
+							}
+						}
+						r++;
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	public static class WidgetList<T> extends Composite {
+		private FlowPanel fp;
+
+		public WidgetList(Collection<T> beans, Converter<T, Widget> converter,
+				String emptyMessage) {
+			this.fp = new FlowPanel();
+			initWidget(fp);
+			fp.setStyleName("alcina-widgetList");
+			if (beans.isEmpty()) {
+				Label l = new Label(emptyMessage);
+				l.setStyleName("no-content");
+				fp.add(l);
+			} else {
+				for (T t : beans) {
+					fp.add(converter.convert(t));
+				}
+			}
 		}
 	}
 }

@@ -19,16 +19,15 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -63,7 +62,6 @@ public class NodeFactory {
 		return singleton;
 	}
 
-
 	private Set<SourcesPropertyChangeEvents> childlessBindables = new HashSet<SourcesPropertyChangeEvents>();
 
 	private Class lastDomainObjectClass;
@@ -86,7 +84,7 @@ public class NodeFactory {
 				SourcesPropertyChangeEvents domainObject, NodeFactory factory);
 	}
 
-	@RegistryLocation( registryPoint = NodeCreator.class)
+	@RegistryLocation(registryPoint = NodeCreator.class)
 	@ClientInstantiable
 	public static class DefaultNodeCreator implements NodeCreator {
 		@Override
@@ -126,33 +124,31 @@ public class NodeFactory {
 				.values();
 		Class<? extends Object> c = domainObject.getClass();
 		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		BeanInfo beanInfo = bi.getAnnotation(BeanInfo.class);
+		Bean beanInfo = bi.getAnnotation(Bean.class);
 		SortedMultimap<Integer, List<TreeItem>> createdNodes = new SortedMultimap<Integer, List<TreeItem>>();
 		if (!subCollectionFolders.containsKey(c)) {
 			subCollectionFolders.getAndEnsure(c);
 			for (ClientPropertyReflector pr : prs) {
 				PropertyPermissions pp = pr
 						.getAnnotation(PropertyPermissions.class);
-				VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
-				boolean fieldVisible = visualiserInfo != null
-						&& ((visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_AS_TREE_NODE) != 0)
+				Display displayInfo = pr.getDisplayInfo();
+				boolean fieldVisible = displayInfo != null
+						&& ((displayInfo.displayMask() & Display.DISPLAY_AS_TREE_NODE) != 0)
 						&& PermissionsManager.get()
 								.checkEffectivePropertyPermission(op, pp,
 										domainObject, true)
 						&& PermissionsManager.get().isPermissible(domainObject,
-								visualiserInfo.visible());
+								displayInfo.visible());
 				if (fieldVisible) {
 					subCollectionFolders.add(c, pr);
 				}
 			}
 		}
 		for (ClientPropertyReflector pr : subCollectionFolders.get(c)) {
-			VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
+			Display displayInfo = pr.getDisplayInfo();
 			isChildlessPoorThing = false;
-			boolean withoutContainer = (visualiserInfo.displayInfo()
-					.displayMask() & DisplayInfo.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER) != 0;
-			boolean lazyCollectionNode = (visualiserInfo.displayInfo()
-					.displayMask() & DisplayInfo.DISPLAY_LAZY_COLLECTION_NODE) != 0;
+			boolean withoutContainer = (displayInfo.displayMask() & Display.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER) != 0;
+			boolean lazyCollectionNode = (displayInfo.displayMask() & Display.DISPLAY_LAZY_COLLECTION_NODE) != 0;
 			// this is not implemented - it'd be sort of hard (but possible)
 			// main thing is, we'd need a parallel (tree) structure of
 			// collections
@@ -173,8 +169,7 @@ public class NodeFactory {
 				ContainerNode node = new CollectionProviderNode(provider,
 						TextProvider.get().getLabelText(c, pr),
 						images.folder(), false, this);
-				createdNodes.add(visualiserInfo.displayInfo().orderingHint(),
-						node);
+				createdNodes.add(displayInfo.orderingHint(), node);
 			}
 		}
 		for (TreeItem item : createdNodes.allItems()) {

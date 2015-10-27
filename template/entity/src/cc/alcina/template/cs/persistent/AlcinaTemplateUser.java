@@ -131,7 +131,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	}
 
 	@Column(name = "deleted")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Deleted", orderingHint = 210))
+	@DisplayInfo(name = "Deleted", orderingHint = 210)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
 	public Boolean getDeleted() {
 		return this.deleted;
@@ -152,7 +152,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	}
 
 	@Column(name = "first_name")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "First name", orderingHint = 40))
+	@DisplayInfo(name = "First name", orderingHint = 40)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 	public String getFirstName() {
 		return this.firstName;
@@ -174,14 +174,14 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "last_login", length = 29)
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Last login", orderingHint = 710))
+	@DisplayInfo(name = "Last login", orderingHint = 710)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ROOT))
 	public Date getLastLogin() {
 		return this.lastLogin;
 	}
 
 	@Column(name = "last_name")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Last name", orderingHint = 50))
+	@DisplayInfo(name = "Last name", orderingHint = 50)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 	public String getLastName() {
 		return this.lastName;
@@ -201,7 +201,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	}
 
 	@Column(name = "password")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Password"))
+	@DisplayInfo(name = "Password")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT))
 	public String getPassword() {
 		return this.password;
@@ -236,7 +236,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	}
 
 	@ManyToMany(mappedBy = "memberUsers", targetEntity = AlcinaTemplateGroup.class)
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Groups", orderingHint = 96))
+	@DisplayInfo(name = "Groups", orderingHint = 96)
 	@Association(implementationClass = AlcinaTemplateGroup.class, propertyName = "memberUsers")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 	@CustomiserInfo(customiserClass = SelectorCustomiser.class)
@@ -247,7 +247,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 	}
 
 	@Column(name = "username")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "User name (Email)", orderingHint = 1))
+	@DisplayInfo(name = "User name (Email)", orderingHint = 1)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 	@Validators(validators = {
 			@ValidatorInfo(validator = EmailAddressValidator.class),
@@ -345,7 +345,7 @@ public class AlcinaTemplateUser extends DomainBaseVersionable implements IUser,
 		propertyChangeSupport().firePropertyChange("system", old_system, system);
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "System", orderingHint = 1010))
+	@DisplayInfo(name = "System", orderingHint = 1010)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.DEVELOPER))
 	public Boolean getSystem() {
 		return system;

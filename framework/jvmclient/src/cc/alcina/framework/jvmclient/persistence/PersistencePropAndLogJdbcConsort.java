@@ -5,9 +5,9 @@ import java.sql.Connection;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
+import cc.alcina.framework.gwt.persistence.client.KeyValueStore;
 import cc.alcina.framework.gwt.persistence.client.LogStore;
 import cc.alcina.framework.gwt.persistence.client.PersistencePropAndLogInitState;
-import cc.alcina.framework.gwt.persistence.client.KeyValueStore;
 import cc.alcina.framework.gwt.persistence.client.RemoteLogPersister;
 
 public class PersistencePropAndLogJdbcConsort extends

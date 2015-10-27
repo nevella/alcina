@@ -40,7 +40,6 @@ import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCacheQuery;
-import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheRunner;
 import cc.alcina.framework.entity.entityaccess.cache.NotCacheFilter;
 

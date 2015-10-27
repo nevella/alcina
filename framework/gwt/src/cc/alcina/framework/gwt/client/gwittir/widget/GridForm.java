@@ -335,4 +335,12 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 	public Field[] getFields() {
 		return this.fields;
 	}
+
+	public int getCaptionColumnWidth() {
+		return base.getFlexCellFormatter().getElement(0, 0).getOffsetWidth();
+	}
+
+	public void setCaptionColumnWidth(int pixelWidth) {
+		 base.getFlexCellFormatter().setWidth(0, 0, pixelWidth+"px");		
+	}
 }

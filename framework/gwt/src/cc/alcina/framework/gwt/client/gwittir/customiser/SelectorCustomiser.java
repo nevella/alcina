@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
@@ -49,7 +49,7 @@ public class SelectorCustomiser implements Customiser {
 	public static final String USE_CELL_LIST = "useCellList";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		if (editable) {
 			CollectionFilter filter = null;
 			int maxSelectedItems = 0;

@@ -1,9 +1,9 @@
 package cc.alcina.framework.jvmclient.domaintransform;
 
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocatorMap;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 
 @SuppressWarnings("unchecked")
 public class ThreadedClientTransformManager extends

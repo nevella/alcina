@@ -25,7 +25,6 @@ import cc.alcina.framework.gwt.client.logic.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
-import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 

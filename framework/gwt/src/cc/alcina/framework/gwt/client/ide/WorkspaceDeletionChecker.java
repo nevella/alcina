@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -74,9 +74,9 @@ public class WorkspaceDeletionChecker {
 				Property[] properties = descriptor.getProperties();
 				for (Property p : properties) {
 					if (p.getType() == clazz) {
-						DomainPropertyInfo dpi = Reflections.propertyAccessor()
+						DomainProperty dpi = Reflections.propertyAccessor()
 								.getAnnotationForProperty(c,
-										DomainPropertyInfo.class, p.getName());
+										DomainProperty.class, p.getName());
 						if (dpi == null || !dpi.ignoreForDeletionChecking()) {
 							checkProperties.add(p);
 						}
@@ -87,9 +87,9 @@ public class WorkspaceDeletionChecker {
 						Object pValue = p.getAccessorMethod().invoke(o,
 								CommonUtils.EMPTY_OBJECT_ARRAY);
 						if (pValue != null && pValue.equals(singleObj)) {
-							DomainPropertyInfo dpi = Reflections.propertyAccessor()
+							DomainProperty dpi = Reflections.propertyAccessor()
 									.getAnnotationForProperty(c,
-											DomainPropertyInfo.class,
+											DomainProperty.class,
 											p.getName());
 							if (dpi != null && dpi.cascadeDeletionFromRef()) {
 								cascadedDeletions.add(o);

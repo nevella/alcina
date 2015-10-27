@@ -11,7 +11,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
@@ -21,20 +20,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
-/**
- * To be applied at the class or field level
- * 
- * @author nick@alcina.cc
- * 
- */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.METHOD })
+@Target({ ElementType.METHOD, ElementType.TYPE })
 @ClientVisible
-public @interface CustomiserInfo {
-	Class customiserClass();
+/**
+ *
+ * @author Nick Reddel
+ */
+public @interface Validator {
+	public static final String FEEDBACK_MESSAGE = "feedbackMessage";
+
+	Class<? extends com.totsp.gwittir.client.validator.Validator> validator();
 
 	NamedParameter[] parameters() default {};
 }

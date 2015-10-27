@@ -1,12 +1,8 @@
 package cc.alcina.framework.servlet.servlet;
 
-import java.util.concurrent.Callable;
-
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.PermissionsManagerState;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.SEUtilities;
 
 public abstract class AlcinaChildRunnable implements Runnable {

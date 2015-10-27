@@ -20,19 +20,18 @@ import javax.xml.bind.annotation.XmlTransient;
 import cc.alcina.framework.common.client.entity.FromClientWrapperPersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
-import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
-@BeanInfo(displayInfo = @DisplayInfo(name = "Developer"), displayNamePropertyName = "id")
+@Bean(displayInfo = @Display(name = "Developer"), displayNamePropertyName = "id")
 @XmlRootElement
 @RegistryLocations(value = {
 		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
@@ -62,34 +61,34 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 	public GeneralProperties() {
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "ui.filterComponentActuationDelay"))
+	@Display(name = "ui.filterComponentActuationDelay")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
 	public int getFilterDelayMs() {
 		return filterDelayMs;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(helpText = "CSS which will be saved on the server, and reapplied each time you log in", name = "designer.persistentCss"))
+	@Display(helpText = "CSS which will be saved on the server, and reapplied each time you log in", name = "designer.persistentCss")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
-	@CustomiserInfo(customiserClass = TextAreaCustomiser.class)
+	@Custom(customiserClass = TextAreaCustomiser.class)
 	public String getPersistentCss() {
 		return this.persistentCss;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(helpText = "CSS which will be applied in this session, but not saved on the server", name = "designer.transientCss",focus=true))
+	@Display(helpText = "CSS which will be applied in this session, but not saved on the server", name = "designer.transientCss",focus=true)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
-	@CustomiserInfo(customiserClass = TextAreaCustomiser.class)
+	@Custom(customiserClass = TextAreaCustomiser.class)
 	@XmlTransient
 	public String getTransientCss() {
 		return this.transientCss;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "admin.allowAdminInvalidObjectWrite"))
+	@Display(name = "admin.allowAdminInvalidObjectWrite")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
 	public boolean isAllowAdminInvalidObjectWrite() {
 		return allowAdminInvalidObjectWrite;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "domain.autoSaveChanges"))
+	@Display(name = "domain.autoSaveChanges")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
 	public boolean isAutoSave() {
 		return autoSave;

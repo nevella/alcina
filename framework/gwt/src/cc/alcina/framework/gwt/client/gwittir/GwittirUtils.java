@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
@@ -296,7 +296,7 @@ public class GwittirUtils {
 		ClassLookup cl = Reflections.classLookup();
 		while (clazz != null && clazz != Object.class) {
 			if (cl.getAnnotationForClass(clazz, Introspectable.class) != null
-					|| cl.getAnnotationForClass(clazz, BeanInfo.class) != null) {
+					|| cl.getAnnotationForClass(clazz, Bean.class) != null) {
 				return true;
 			}
 			clazz = clazz.getSuperclass();

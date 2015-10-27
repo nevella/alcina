@@ -65,8 +65,8 @@ public class ClientBeanReflector {
 		return result;
 	}
 
-	public BeanInfo getGwBeanInfo() {
-		return (BeanInfo) annotations.get(BeanInfo.class);
+	public Bean getGwBeanInfo() {
+		return (Bean) annotations.get(Bean.class);
 	}
 
 	@SuppressWarnings("unchecked")

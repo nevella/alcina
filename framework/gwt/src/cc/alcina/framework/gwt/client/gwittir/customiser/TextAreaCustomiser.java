@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.widget.MultilineLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextArea;
@@ -37,7 +37,7 @@ public class TextAreaCustomiser implements Customiser {
 	public static final String NON_EDITABLE_AS_LABEL = "non-editable-as-label";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		NamedParameter param = NamedParameter.Support.getParameter(
 				info.parameters(), WIDTH);
 		int width = param == null ? 0 : param.intValue();

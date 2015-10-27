@@ -9,7 +9,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.w3c.dom.Document;
 
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;

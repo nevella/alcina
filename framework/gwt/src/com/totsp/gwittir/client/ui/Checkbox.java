@@ -25,7 +25,6 @@ import com.google.gwt.user.client.ui.HasFocus;
 import com.google.gwt.user.client.ui.KeyboardListener;
 import com.google.gwt.user.client.ui.SourcesClickEvents;
 import com.google.gwt.user.client.ui.SourcesKeyboardEvents;
-import com.google.gwt.user.client.ui.Widget;
 
 /**
  *

@@ -96,7 +96,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	}
 
 	@Column(name = "group_name")
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Name", orderingHint = 1))
+	@DisplayInfo(name = "Name", orderingHint = 1)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
 	public String getGroupName() {
 		return this.groupName;
@@ -112,7 +112,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	@ManyToMany( targetEntity = AlcinaTemplateGroup.class)
 	@JoinTable(name = "group_group", joinColumns = @JoinColumn(name = "src_group_id"), inverseJoinColumns = @JoinColumn(name = "tgt_group_id"))
 	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Member groups", orderingHint = 91) )
+	@DisplayInfo(name = "Member groups", orderingHint = 91) 
 	@Association(implementationClass = AlcinaTemplateGroup.class, propertyName="memberOfGroups")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
 	@CustomiserInfo(customiserClass = SelectorCustomiser.class )
@@ -121,7 +121,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	}
 
 	@ManyToMany( mappedBy = "memberGroups", targetEntity = AlcinaTemplateGroup.class)
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Member of groups", orderingHint = 92))
+	@DisplayInfo(name = "Member of groups", orderingHint = 92)
 @Association(implementationClass=AlcinaTemplateGroup.class,propertyName="memberGroups")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
 	@CustomiserInfo(customiserClass = SelectorCustomiser.class )
@@ -132,7 +132,7 @@ public class AlcinaTemplateGroup extends DomainBaseVersionable implements IGroup
 	@ManyToMany( targetEntity = AlcinaTemplateUser.class)
 	@JoinTable(name = "user_group", joinColumns = @JoinColumn(name = "group_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
 	@Cache(usage = CacheConcurrencyStrategy.TRANSACTIONAL)
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Member users", orderingHint = 90))
+	@DisplayInfo(name = "Member users", orderingHint = 90)
 @Association(implementationClass=AlcinaTemplateUser.class,propertyName="secondaryGroups")
 	@CustomiserInfo(customiserClass = SelectorCustomiser.class)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))

@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
@@ -47,7 +47,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
  */
 public class ChildBeanCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		return new ChildBeanRenderer(editable, objectClass);
 	}
 

@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.util;
 
-import java.util.function.Supplier;
 
 /**
  * Beginnings of a general approach to decoupling hints - let's see if it works

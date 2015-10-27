@@ -17,7 +17,7 @@ import java.util.Comparator;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.provider.ExpandableDomainNodeCollectionLabelProvider;
@@ -51,7 +51,7 @@ public class ListCustomiser implements Customiser {
 	
 	@SuppressWarnings("unchecked")
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		NamedParameter[] parameters = info.parameters();
 		if (editable) {
 			CollectionFilter filter = NamedParameter.Support.instantiateClass(

@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
@@ -18,7 +18,7 @@ public class RegistryLookupCustomiser implements Customiser {
 	public static final String MARKER_CLASS = "marker-class";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo params) {
+			boolean multiple, Custom params) {
 		Class markerClass = NamedParameter.Support.classValue(params.parameters(), MARKER_CLASS,
 				null);
 		return ((Customiser) Registry.get().instantiateSingle(

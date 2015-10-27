@@ -35,7 +35,7 @@ import org.w3c.dom.Text;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.CollectionFilters.ConverterFilter;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.publication.excel.ExcelFormatAnnotation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -107,7 +107,7 @@ public class ExcelExporter {
 	static class PdMultiplexer implements Comparable<PdMultiplexer> {
 		private ExcelFormatAnnotation xfa;
 
-		private VisualiserInfo via;
+		private Display dia;
 
 		PropertyDescriptor pd;
 
@@ -115,18 +115,17 @@ public class ExcelExporter {
 			this.pd = pd;
 			Method readMethod = pd.getReadMethod();
 			this.xfa = readMethod.getAnnotation(ExcelFormatAnnotation.class);
-			this.via = readMethod.getAnnotation(VisualiserInfo.class);
+			this.dia = readMethod.getAnnotation(Display.class);
 		}
 
 		public int order() {
-			return xfa != null ? xfa.order() : via != null ? via.displayInfo()
-					.orderingHint() : ExcelFormatAnnotation.DEFAULT_ORDER_POS;
+			return xfa != null ? xfa.order() : dia != null ? dia.orderingHint()
+					: ExcelFormatAnnotation.DEFAULT_ORDER_POS;
 		}
 
 		public String name() {
 			return xfa != null && !xfa.displayName().isEmpty() ? xfa
-					.displayName() : via != null ? via.displayInfo().name()
-					: pd.getName();
+					.displayName() : dia != null ? dia.name() : pd.getName();
 		}
 
 		@Override

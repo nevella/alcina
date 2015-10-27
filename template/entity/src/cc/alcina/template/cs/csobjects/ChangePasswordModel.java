@@ -26,7 +26,7 @@ public class ChangePasswordModel extends BaseBindable implements RemoteParameter
 
 	private Long userId;
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "New password", orderingHint = 2))
+	@DisplayInfo(name = "New password", orderingHint = 2)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.LOGGED_IN), write = @Permission(access = AccessLevel.LOGGED_IN))
 	@CustomiserInfo(customiserClass = PasswordCustomiser.class)
 	@Validators(validators = { @ValidatorInfo(validator = ParameterisedStringLengthValidator.class, parameters = {
@@ -36,7 +36,7 @@ public class ChangePasswordModel extends BaseBindable implements RemoteParameter
 		return this.newPassword;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "New password (confirm)", orderingHint = 3))
+	@DisplayInfo(name = "New password (confirm)", orderingHint = 3)
 	@PropertyPermissions(read = @Permission(access = AccessLevel.LOGGED_IN), write = @Permission(access = AccessLevel.LOGGED_IN))
 	@CustomiserInfo(customiserClass = PasswordCustomiser.class)
 	@Validators(validators = { @ValidatorInfo(validator = StringHasLengthValidator.class) })

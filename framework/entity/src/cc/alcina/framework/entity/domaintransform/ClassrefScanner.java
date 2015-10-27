@@ -34,7 +34,7 @@ import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.reflection.NonDomainTransformPersistable;
@@ -246,7 +246,7 @@ public class ClassrefScanner extends CachingScanner {
 		 * why are these required? (answer: makes sure they're in the gwt code -
 		 * otherwise could be sending classes not compiled into client code)
 		 */
-		boolean bi = c.isAnnotationPresent(BeanInfo.class);
+		boolean bi = c.isAnnotationPresent(Bean.class);
 		boolean in = AnnotationUtils.hasAnnotationNamed(c,
 				ClientInstantiable.class);
 		boolean dtp = c.isAnnotationPresent(DomainTransformPersistable.class);

@@ -10,7 +10,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.StringPair;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
-@BeanInfo(displayNamePropertyName = "time")
+@Bean(displayNamePropertyName = "time")
 @Introspectable
 @MappedSuperclass
 public class ClientLogRecord implements Serializable {
@@ -129,7 +129,7 @@ public class ClientLogRecord implements Serializable {
 		this.topic = topic;
 	}
 
-	@BeanInfo(displayNamePropertyName = "size")
+	@Bean(displayNamePropertyName = "size")
 	@Introspectable
 	public static class ClientLogRecords implements Serializable {
 		static final transient long serialVersionUID = -3L;

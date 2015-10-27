@@ -58,7 +58,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy;
-import cc.alcina.framework.entity.entityaccess.cache.MemCacheProxy.MemcacheProxyContext;
 
 @SuppressWarnings("unchecked")
 /**

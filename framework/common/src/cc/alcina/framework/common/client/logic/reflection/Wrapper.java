@@ -21,29 +21,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * To be applied at the class level Also functions as an GwtClientInstantiable
- * annotation
- * 
- * @author nick@alcina.cc
- * 
- */
+
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.TYPE })
+@Target( { ElementType.METHOD })
 @ClientVisible
-public @interface BeanInfo {
-	ObjectActions actions() default @ObjectActions( {});
+/**
+ *
+ * @author Nick Reddel
+ */
 
-	DisplayInfo displayInfo() default @DisplayInfo(name = "");
-
-	Class customizerClass() default void.class;
-
-	String description() default "";
-
-	String displayNamePropertyName();
-
-
-	boolean allPropertiesVisualisable() default false;
+ public @interface Wrapper {
+	 String idPropertyName();
+	 String toStringPropertyName() default "";
+	 //TODO - currently not implemented. Question is: should it be?
+	 boolean cascadeDelete() default true;
+	 Class defaultImplementationType() default Void.class;
 }

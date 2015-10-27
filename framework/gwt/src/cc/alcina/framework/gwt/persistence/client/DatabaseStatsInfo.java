@@ -3,13 +3,13 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.io.Serializable;
 import java.util.Map.Entry;
 
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
-@BeanInfo(displayNamePropertyName = "null")
+@Bean(displayNamePropertyName = "null")
 @Introspectable
 public class DatabaseStatsInfo implements Serializable {
 	private CountingMap<String> transformTexts = new CountingMap<String>();

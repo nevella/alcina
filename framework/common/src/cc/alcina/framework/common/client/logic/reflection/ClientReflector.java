@@ -93,7 +93,7 @@ public abstract class ClientReflector implements ClassLookup {
 				.values();
 		ArrayList<String> result = new ArrayList<String>();
 		for (ClientPropertyReflector pr : prs) {
-			if (pr.getGwPropertyInfo() != null) {
+			if (pr.getDisplayInfo() != null) {
 				result.add(pr.getPropertyName());
 			}
 		}

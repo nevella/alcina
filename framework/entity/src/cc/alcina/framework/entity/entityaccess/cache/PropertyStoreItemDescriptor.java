@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.cache.CacheItemDescriptor;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;

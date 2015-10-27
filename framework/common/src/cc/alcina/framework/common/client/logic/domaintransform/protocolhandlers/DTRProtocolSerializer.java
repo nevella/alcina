@@ -10,8 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
 
-import com.totsp.gwittir.client.beans.Converter;
-
 @RegistryLocation(registryPoint = ClearOnAppRestartLoc.class)
 public class DTRProtocolSerializer {
 	public DTRProtocolHandler getHandler(String protocolVersion) {

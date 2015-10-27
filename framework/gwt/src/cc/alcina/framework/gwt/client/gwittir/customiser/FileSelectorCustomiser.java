@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.widget.FileSelector;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
@@ -27,7 +27,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
  */
 public class FileSelectorCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		return new FileSelectorProvider(editable);
 	}
 

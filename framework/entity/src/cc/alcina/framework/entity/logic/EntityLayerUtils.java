@@ -1,7 +1,5 @@
 package cc.alcina.framework.entity.logic;
 
-import java.net.InetAddress;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;

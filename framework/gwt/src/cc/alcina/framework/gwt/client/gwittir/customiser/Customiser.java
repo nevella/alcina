@@ -15,7 +15,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
@@ -26,7 +26,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
  public interface Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo params);
+			boolean multiple, Custom params);
 
 	
 }

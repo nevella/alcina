@@ -2,9 +2,7 @@ package com.gdevelop.gwt.syncrpc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
 import java.io.InputStream;
-
 import java.net.HttpURLConnection;
 
 public class Utils {

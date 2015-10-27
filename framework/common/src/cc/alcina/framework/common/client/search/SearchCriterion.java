@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
-@BeanInfo(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
+@Bean(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class SearchCriterion extends BaseBindable implements

@@ -21,22 +21,29 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.totsp.gwittir.client.validator.Validator;
-
+/**
+ * To be applied at the class level Also functions as an GwtClientInstantiable
+ * annotation
+ * 
+ * @author nick@alcina.cc
+ * 
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
-@Target( { ElementType.METHOD,ElementType.TYPE })
+@Target( { ElementType.TYPE })
 @ClientVisible
-/**
- *
- * @author Nick Reddel
- */
+public @interface Bean {
+	ObjectActions actions() default @ObjectActions( {});
 
- public @interface ValidatorInfo {
-	public static final String FEEDBACK_MESSAGE = "feedbackMessage";
+	Display displayInfo() default @Display(name = "");
 
-	Class<? extends Validator> validator();
+	Class customizerClass() default void.class;
 
-	NamedParameter[] parameters() default {};
+	String description() default "";
+
+	String displayNamePropertyName();
+
+
+	boolean allPropertiesVisualisable() default false;
 }

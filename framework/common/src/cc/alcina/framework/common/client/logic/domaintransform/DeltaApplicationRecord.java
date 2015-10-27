@@ -20,12 +20,11 @@ import javax.xml.bind.annotation.XmlRootElement;
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
-import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -33,7 +32,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 import com.google.gwt.core.client.GWT;
 
-@BeanInfo(displayNamePropertyName = "id")
+@Bean(displayNamePropertyName = "id")
 @XmlRootElement
 /**
  *TODO - this can either be a wrapper for a DomainTransformRequest, *or* a gwt-rpc payload
@@ -115,12 +114,12 @@ public class DeltaApplicationRecord extends BaseBindable implements
 				type, protocolVersion, tag);
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance auth", orderingHint = 30))
+	@Display(name = "Client instance auth", orderingHint = 30)
 	public int getClientInstanceAuth() {
 		return clientInstanceAuth;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Client instance id", orderingHint = 20))
+	@Display(name = "Client instance id", orderingHint = 20)
 	public long getClientInstanceId() {
 		return this.clientInstanceId;
 	}
@@ -133,18 +132,18 @@ public class DeltaApplicationRecord extends BaseBindable implements
 		return protocolVersion;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Request id", orderingHint = 10))
+	@Display(name = "Request id", orderingHint = 10)
 	public int getRequestId() {
 		return this.requestId;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Tag", orderingHint = 35))
+	@Display(name = "Tag", orderingHint = 35)
 	public String getTag() {
 		return tag;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Transforms", orderingHint = 40))
-	@CustomiserInfo(customiserClass = TextAreaCustomiser.class, parameters = {
+	@Display(name = "Transforms", orderingHint = 40)
+	@Custom(customiserClass = TextAreaCustomiser.class, parameters = {
 			@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 10),
 			@NamedParameter(name = TextAreaCustomiser.WIDTH, intValue = 400) })
 	public String getText() {

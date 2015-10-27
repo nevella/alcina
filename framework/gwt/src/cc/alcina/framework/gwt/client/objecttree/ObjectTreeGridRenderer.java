@@ -18,8 +18,6 @@ import java.util.Map;
 
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 
-import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
-import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FlexTable.FlexCellFormatter;

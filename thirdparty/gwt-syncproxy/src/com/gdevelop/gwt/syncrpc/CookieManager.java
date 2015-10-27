@@ -1,14 +1,10 @@
 package com.gdevelop.gwt.syncrpc;
 
 import java.io.IOException;
-
 import java.net.URL;
 import java.net.URLConnection;
-
 import java.text.DateFormat;
-
 import java.text.SimpleDateFormat;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;

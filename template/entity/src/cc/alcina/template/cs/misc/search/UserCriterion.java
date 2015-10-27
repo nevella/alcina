@@ -53,7 +53,7 @@ public class UserCriterion extends AbstractUserCriterion {
 						otherImpl.getUserId());
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "AlcinaTemplate user", orderingHint = 10))
+	@DisplayInfo(name = "AlcinaTemplate user", orderingHint = 10)
 	@Association(implementationClass = AlcinaTemplateUser.class, propertyName = "")
 	public AlcinaTemplateUser getUser() {
 		return user;

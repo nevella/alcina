@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.provider.FixedWidthLabelProvider;
@@ -35,7 +35,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	public static final String SHOW_NEWLINES_AS_HTML_BREAKS = "showNewlinesAsBreaks";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		NamedParameter p = NamedParameter.Support.getParameter(info
 				.parameters(), MAX_WIDTH);
 		int maxLength = p == null ? GwittirBridge.MAX_EXPANDABLE_LABEL_LENGTH

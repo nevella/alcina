@@ -11,32 +11,54 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 
-
-/**
- * To be applied at the class or field level
- * 
- * @author nick@alcina.cc
- * 
- */
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
 @Documented
-@Target( { ElementType.METHOD })
 @ClientVisible
-public @interface VisualiserInfo {
-	DisplayInfo displayInfo();
+@Target( { ElementType.METHOD })
+/**
+ *
+ * @author Nick Reddel
+ */
+public @interface Display {
+	public static final int DISPLAY_AS_PROPERTY = 1;
 
+	public static final int DISPLAY_AS_TREE_NODE = 2;
+
+	public static final int DISPLAY_RO = 4;
+
+	public static final int DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER = 8;
+
+	public static final int DISPLAY_WRAP = 16;
+	
+	public static final int DISPLAY_LAZY_COLLECTION_NODE = 32;
+
+	public static final int DISPLAY_WRAP_PROPERTY = DISPLAY_WRAP|DISPLAY_AS_PROPERTY;
+
+	String helpText() default "";
+	
+	String styleName() default "";
+
+	String iconName() default "";// indicates no icon
+
+	String name();
+
+	int orderingHint() default 100;
+
+	//note, if you want a r-o property, don't use DISPLAY_RO, you need to set DISPLAY_AS_PROPERTY | DISPLAY_RO
+	int displayMask() default DISPLAY_AS_PROPERTY;
+	
+	Class filterClass() default Void.class;
+	
+	boolean focus() default false;
 	Permission visible() default @Permission(access = AccessLevel.EVERYONE);
 }

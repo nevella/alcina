@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
 
@@ -31,7 +31,7 @@ public class WidthColumnCustomiser implements Customiser {
 	public static final String COLUMN_WIDTH = "columnWidth";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		String columnWidth = NamedParameter.Support.getParameter(
 				info.parameters(), COLUMN_WIDTH).stringValue();
 		return new StringLabelProvider(columnWidth);

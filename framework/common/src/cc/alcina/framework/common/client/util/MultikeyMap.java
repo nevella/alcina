@@ -44,7 +44,7 @@ public interface MultikeyMap<V> {
 
 	public abstract <T> Collection<T> items(Object... objects);
 
-	public Set keySet();
+	public <T> Set<T> keySet();
 
 	public abstract void put(Object... objects);
 

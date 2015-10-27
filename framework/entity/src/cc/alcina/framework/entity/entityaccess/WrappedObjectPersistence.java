@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
+import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaLoggingTags;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -50,8 +50,8 @@ public class WrappedObjectPersistence {
 			Set<Long> invalidatedWrapperIds) throws Exception {
 		for (PropertyDescriptor pd : ensureWrapperDescriptors(wrapper
 				.getClass())) {
-			WrapperInfo info = pd.getReadMethod().getAnnotation(
-					WrapperInfo.class);
+			Wrapper info = pd.getReadMethod().getAnnotation(
+					Wrapper.class);
 			PropertyDescriptor idpd = SEUtilities.getPropertyDescriptorByName(
 					wrapper.getClass(), info.idPropertyName());
 			Long wrapperId = (Long) idpd.getReadMethod().invoke(wrapper,
@@ -109,8 +109,8 @@ public class WrappedObjectPersistence {
 					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (pd.getReadMethod() != null) {
-					WrapperInfo info = pd.getReadMethod().getAnnotation(
-							WrapperInfo.class);
+					Wrapper info = pd.getReadMethod().getAnnotation(
+							Wrapper.class);
 					if (info != null) {
 						descriptors.add(pd);
 					}
@@ -183,8 +183,8 @@ public class WrappedObjectPersistence {
 						wrapper.getClass()).getPropertyDescriptors();
 				for (PropertyDescriptor pd : pds) {
 					if (pd.getReadMethod() != null) {
-						WrapperInfo info = pd.getReadMethod().getAnnotation(
-								WrapperInfo.class);
+						Wrapper info = pd.getReadMethod().getAnnotation(
+								Wrapper.class);
 						if (info != null) {
 							PropertyDescriptor idpd = SEUtilities
 									.getPropertyDescriptorByName(

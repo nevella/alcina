@@ -15,33 +15,7 @@
  */
 package com.google.gwt.user.cellview.client;
 
-import com.google.gwt.core.client.GWT;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.Element;
-import com.google.gwt.dom.client.Style.Display;
-import com.google.gwt.dom.client.Style.Overflow;
-import com.google.gwt.dom.client.Style.TableLayout;
-import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.dom.client.TableColElement;
-import com.google.gwt.dom.client.TableElement;
-import com.google.gwt.dom.client.TableSectionElement;
-import com.google.gwt.event.dom.client.ScrollEvent;
-import com.google.gwt.event.dom.client.ScrollHandler;
-import com.google.gwt.resources.client.ClientBundle;
-import com.google.gwt.resources.client.CssResource;
-import com.google.gwt.resources.client.CssResource.ImportedWithPrefix;
-import com.google.gwt.resources.client.ImageResource;
-import com.google.gwt.resources.client.ImageResource.ImageOptions;
-import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
-import com.google.gwt.user.client.ui.CustomScrollPanel;
-import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.HeaderPanel;
-import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.RequiresResize;
 import com.google.gwt.user.client.ui.ScrollPanel;
-import com.google.gwt.user.client.ui.SimplePanel;
-import com.google.gwt.user.client.ui.Widget;
-import com.google.gwt.view.client.ProvidesKey;
 
 /**
  * A tabular view with a fixed header and footer section and a scrollable data

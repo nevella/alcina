@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
@@ -56,7 +56,7 @@ public class EnumCustomiser implements Customiser {
 	public static final String VISIBLE_ITEM_COUNT = "VISIBLE_ITEM_COUNT";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		NamedParameter parameter = NamedParameter.Support.getParameter(
 				info.parameters(), ENUM_CLASS);
 		Class<? extends Enum> clazz = parameter.classValue();

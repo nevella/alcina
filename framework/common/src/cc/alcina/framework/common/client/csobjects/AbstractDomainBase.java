@@ -12,10 +12,9 @@ import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.HiliHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.HiliLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
@@ -50,12 +49,12 @@ public abstract class AbstractDomainBase extends BaseBindable implements
 				.fireNullPropertyChange(name);
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Id", orderingHint = 900), visible = @Permission(access = AccessLevel.ADMIN))
+	@Display(name = "Id", orderingHint = 900, visible = @Permission(access = AccessLevel.ADMIN))
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
 	public abstract long getId();
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "Local id"))
+	@Display(name = "Local id")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT))
 	@Transient
 	public long getLocalId() {

@@ -43,7 +43,6 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.BindingBuilder;
-import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.table.Field;

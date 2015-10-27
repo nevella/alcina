@@ -15,7 +15,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
@@ -35,7 +35,7 @@ public class RenderedLabelCustomiser implements Customiser {
 	public static final String WIDGET_CSS_CLASS = "WIDGET_CSS_CLASS";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		Class rendererClass = NamedParameter.Support.classValue(
 				info.parameters(), RENDERER_CLASS, null);
 		String widgetCssClass = NamedParameter.Support.stringValue(

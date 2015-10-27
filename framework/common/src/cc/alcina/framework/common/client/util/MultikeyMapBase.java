@@ -1,7 +1,5 @@
 package cc.alcina.framework.common.client.util;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
@@ -187,7 +184,7 @@ public abstract class MultikeyMapBase<V> implements MultikeyMap<V>,
 		return m == null ? null : m.keySet();
 	}
 
-	public Set keySet() {
+	public <T> Set keySet() {
 		return this.delegate.keySet();
 	}
 

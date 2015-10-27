@@ -1,7 +1,6 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import cc.alcina.framework.common.client.cache.CacheFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters.InverseFilter;
 
 public class NotCacheFilter extends CacheFilter {

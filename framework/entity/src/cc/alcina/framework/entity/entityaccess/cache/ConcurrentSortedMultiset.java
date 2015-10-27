@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 
-import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultiset;
 
 public class ConcurrentSortedMultiset<K, V extends Set> extends

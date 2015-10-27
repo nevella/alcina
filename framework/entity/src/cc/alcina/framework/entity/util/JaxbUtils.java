@@ -25,7 +25,6 @@ import javax.xml.bind.JAXBException;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 
 /**
  * 

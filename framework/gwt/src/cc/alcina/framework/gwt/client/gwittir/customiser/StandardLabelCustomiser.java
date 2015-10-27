@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
@@ -29,7 +29,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
  public class StandardLabelCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		return BoundWidgetTypeFactory.LABEL_PROVIDER;
 	}
 }

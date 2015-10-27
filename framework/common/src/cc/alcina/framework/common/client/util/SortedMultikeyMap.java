@@ -18,7 +18,6 @@ import java.io.ObjectInputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.google.gwt.core.shared.GwtIncompatible;

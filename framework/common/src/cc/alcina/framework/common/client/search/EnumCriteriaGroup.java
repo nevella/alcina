@@ -13,9 +13,9 @@
  */
 package cc.alcina.framework.common.client.search;
 
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 
-@BeanInfo(displayNamePropertyName = "displayName")
+@Bean(displayNamePropertyName = "displayName")
 /**
  *
  * @author Nick Reddel

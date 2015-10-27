@@ -24,8 +24,7 @@ import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
@@ -117,7 +116,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return this.contentPageRange;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "deliveryMode"))
+	@Display(name = "deliveryMode")
 	public String getDeliveryMode() {
 		return this.deliveryMode;
 	}
@@ -151,7 +150,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return note;
 	}
 
-	@VisualiserInfo(displayInfo = @DisplayInfo(name = "outputFormat"))
+	@Display(name = "outputFormat")
 	public String getOutputFormat() {
 		return this.outputFormat;
 	}

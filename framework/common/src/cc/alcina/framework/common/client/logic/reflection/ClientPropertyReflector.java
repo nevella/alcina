@@ -33,11 +33,6 @@ public class ClientPropertyReflector implements
 
 	private Class propertyType;
 
-	@Override
-	public String getPropertyName() {
-		return this.propertyName;
-	}
-
 	public ClientPropertyReflector(String propertyName, Class propertyType,
 			Annotation[] anns) {
 		this.propertyName = propertyName;
@@ -48,8 +43,11 @@ public class ClientPropertyReflector implements
 		}
 	}
 
-	public VisualiserInfo getGwPropertyInfo() {
-		return (VisualiserInfo) annotations.get(VisualiserInfo.class);
+	public int compareTo(ClientPropertyReflector o) {
+		if (getOrderingHint() != o.getOrderingHint()) {
+			return (getOrderingHint() < o.getOrderingHint()) ? -1 : 1;
+		}
+		return getDisplayName().compareToIgnoreCase(o.getDisplayName());
 	}
 
 	@Override
@@ -58,36 +56,33 @@ public class ClientPropertyReflector implements
 		return (A) annotations.get(annotationClass);
 	}
 
-	public String getDisplayName() {
-		return getGwPropertyInfo() == null ? getPropertyName()
-				: getGwPropertyInfo().displayInfo().name();
-	}
-
 	public CollectionFilter getCollectionFilter() {
-		if (getGwPropertyInfo() == null
-				|| getGwPropertyInfo().displayInfo() == null) {
+		if (getDisplayInfo() == null || getDisplayInfo() == null) {
 			return null;
 		}
-		DisplayInfo displayInfo = getGwPropertyInfo().displayInfo();
+		Display displayInfo = getDisplayInfo();
 		Class clazz = displayInfo.filterClass();
-		return (CollectionFilter) (clazz == null||clazz==Void.class ? null : Reflections.classLookup()
-				.newInstance(clazz));
+		return (CollectionFilter) (clazz == null || clazz == Void.class ? null
+				: Reflections.classLookup().newInstance(clazz));
+	}
+
+	public Display getDisplayInfo() {
+		return (Display) annotations.get(Display.class);
+	}
+
+	public String getDisplayName() {
+		return getDisplayInfo() == null ? getPropertyName() : getDisplayInfo()
+				.name();
 	}
 
 	public int getOrderingHint() {
-		return (getGwPropertyInfo() == null) ? 1000 : getGwPropertyInfo()
-				.displayInfo().orderingHint();
+		return (getDisplayInfo() == null) ? 1000 : getDisplayInfo()
+				.orderingHint();
 	}
 
-	public int compareTo(ClientPropertyReflector o) {
-		if (getOrderingHint() != o.getOrderingHint()) {
-			return (getOrderingHint() < o.getOrderingHint()) ? -1 : 1;
-		}
-		return getDisplayName().compareToIgnoreCase(o.getDisplayName());
-	}
-
-	public void setPropertyType(Class propertyType) {
-		this.propertyType = propertyType;
+	@Override
+	public String getPropertyName() {
+		return this.propertyName;
 	}
 
 	@Override
@@ -98,14 +93,16 @@ public class ClientPropertyReflector implements
 	@Override
 	public Object getPropertyValue(Object bean) {
 		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
-		return propertyAccessor
-				.getPropertyValue(bean, getPropertyName());
+		return propertyAccessor.getPropertyValue(bean, getPropertyName());
+	}
+
+	public void setPropertyType(Class propertyType) {
+		this.propertyType = propertyType;
 	}
 
 	@Override
 	public void setPropertyValue(Object bean, Object newValue) {
-		Reflections.propertyAccessor()
-				.setPropertyValue(bean, getPropertyName(), newValue);
+		Reflections.propertyAccessor().setPropertyValue(bean,
+				getPropertyName(), newValue);
 	}
-	
 }

@@ -17,7 +17,7 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 import com.totsp.gwittir.client.beans.Method;
@@ -68,9 +68,9 @@ public interface ClassLookup {
 			this.beanType = beanType;
 			this.propertyType = CommonUtils.getWrapperType(propertyType);
 			this.propertyName = propertyName;
-			DomainPropertyInfo ann = Reflections.propertyAccessor()
+			DomainProperty ann = Reflections.propertyAccessor()
 					.getAnnotationForProperty(beanType,
-							DomainPropertyInfo.class, propertyName);
+							DomainProperty.class, propertyName);
 			serializeCollectionOnClient = ann != null
 					&& ann.serializeOnClient();
 		}

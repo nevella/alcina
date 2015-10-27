@@ -13,18 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.ACTION_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.CLASS_NAME_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.CONTENT_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.ID_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.LOCAL_ID_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.LOCATION_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.NO_HISTORY_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.PRE_HISTORY_KEY;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.SEARCH_INDEX;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.SEARCH_SERIALIZED;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.SEARCH_PAGE;
-import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.Y_KEY;
+import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,9 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.search.SearchDefinitionSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.HistoryEventType;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SearchHistoryInfo;

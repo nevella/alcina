@@ -18,7 +18,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundHyperlink;
@@ -48,7 +48,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 	public static final String AS_HTML = "asHtml";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		NamedParameter param = NamedParameter.Support.getParameter(info
 				.parameters(), TARGET_CLASS);
 		Class targetClass = param == null ? null : param.classValue();

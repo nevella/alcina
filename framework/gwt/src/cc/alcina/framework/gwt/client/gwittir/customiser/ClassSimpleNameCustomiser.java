@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ClassSimpleNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 
@@ -31,7 +31,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
  public class ClassSimpleNameCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		return CLASS_SIMPLE_NAME_PROVIDER;
 	}
 

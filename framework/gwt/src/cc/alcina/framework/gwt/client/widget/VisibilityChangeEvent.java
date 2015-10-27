@@ -17,6 +17,9 @@ package cc.alcina.framework.gwt.client.widget;
 
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
+import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.gwt.event.shared.HasHandlers;
+import com.google.gwt.place.shared.Place;
 
 /**
  * Event thrown when the widget's visibility changes
@@ -31,10 +34,6 @@ public class VisibilityChangeEvent extends
 	private boolean visible;
 
 	/**
-	 * Constructs a PlaceChangeEvent for the given {@link Place}.
-	 *
-	 * @param newPlace
-	 *            a {@link Place} instance
 	 */
 	public VisibilityChangeEvent(boolean visible) {
 		this.visible = visible;
@@ -47,10 +46,6 @@ public class VisibilityChangeEvent extends
 
 	public boolean isVisible() {
 		return this.visible;
-	}
-
-	public void setVisible(boolean visible) {
-		this.visible = visible;
 	}
 
 	@Override
@@ -66,5 +61,10 @@ public class VisibilityChangeEvent extends
 		 *            the {@link VisibilityChangeEvent}
 		 */
 		void onVisiblityChange(VisibilityChangeEvent event);
+	}
+
+	public interface HasVisibilityChangeHandlers extends HasHandlers {
+		HandlerRegistration addVisibilityChangeHandler(
+				VisibilityChangeEvent.Handler handler);
 	}
 }

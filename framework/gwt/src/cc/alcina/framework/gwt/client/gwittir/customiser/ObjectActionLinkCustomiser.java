@@ -20,7 +20,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.ide.provider.LooseActionRegistry;
 import cc.alcina.framework.gwt.client.widget.Link;
@@ -44,7 +44,7 @@ public class ObjectActionLinkCustomiser implements Customiser {
 	public static final String ACTION_CLASS = "actionClass";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		List<PermissibleAction> actions = new ArrayList<PermissibleAction>();
 		for (NamedParameter p : info.parameters()) {
 			if (p.name().equals(ACTION_CLASS)) {

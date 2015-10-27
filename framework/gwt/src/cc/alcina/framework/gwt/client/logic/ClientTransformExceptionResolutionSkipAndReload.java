@@ -16,17 +16,16 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
-import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -190,7 +189,7 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 		}
 	}
 
-	@BeanInfo(displayNamePropertyName = "recommendedAction")
+	@Bean(displayNamePropertyName = "recommendedAction")
 	public static class DTEView extends BaseBindable {
 		boolean reloadRequired = false;
 
@@ -230,8 +229,8 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 			}
 		}
 
-		@VisualiserInfo(displayInfo = @DisplayInfo(name = "Exception text", orderingHint = 50))
-		@CustomiserInfo(customiserClass = ExpandableLabelCustomiser.class, parameters = {
+		@Display(name = "Exception text", orderingHint = 50)
+		@Custom(customiserClass = ExpandableLabelCustomiser.class, parameters = {
 				@NamedParameter(name = ExpandableLabelCustomiser.FORCE_COLUMN_WIDTH, booleanValue = true),
 				@NamedParameter(name = ExpandableLabelCustomiser.MAX_WIDTH, intValue = 30) })
 		@PropertyPermissions(read = @Permission(access = AccessLevel.ADMIN))
@@ -239,16 +238,16 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 			return exception.getMessage();
 		}
 
-		@VisualiserInfo(displayInfo = @DisplayInfo(name = "New Value", orderingHint = 30))
-		@CustomiserInfo(customiserClass = ExpandableLabelCustomiser.class, parameters = {
+		@Display(name = "New Value", orderingHint = 30)
+		@Custom(customiserClass = ExpandableLabelCustomiser.class, parameters = {
 				@NamedParameter(name = ExpandableLabelCustomiser.FORCE_COLUMN_WIDTH, booleanValue = true),
 				@NamedParameter(name = ExpandableLabelCustomiser.MAX_WIDTH, intValue = 30) })
 		public String getNewStringValue() {
 			return event.getNewStringValue();
 		}
 
-		@VisualiserInfo(displayInfo = @DisplayInfo(name = "Object", orderingHint = 10))
-		@CustomiserInfo(customiserClass = ClassSimpleNameCustomiser.class)
+		@Display(name = "Object", orderingHint = 10)
+		@Custom(customiserClass = ClassSimpleNameCustomiser.class)
 		public String getObjectClassName() {
 			String objectClassName = event.getObjectClassName();
 			if (objectClassName != null) {
@@ -261,32 +260,32 @@ public class ClientTransformExceptionResolutionSkipAndReload implements
 			return null;
 		}
 
-		@VisualiserInfo(displayInfo = @DisplayInfo(name = "Object id", orderingHint = 15))
+		@Display(name = "Object id", orderingHint = 15)
 		public long getObjectId() {
 			return event.getObjectId();
 		}
 
-		@VisualiserInfo(displayInfo = @DisplayInfo(name = "Object name", orderingHint = 17))
+		@Display(name = "Object name", orderingHint = 17)
 		public String getObjectName() {
 			return exception.getSourceObjectName();
 		}
 
-		@VisualiserInfo(displayInfo = @DisplayInfo(name = "Property", orderingHint = 20))
+		@Display(name = "Property", orderingHint = 20)
 		public String getPropertyName() {
 			return event.getPropertyName();
 		}
 
-		@VisualiserInfo(displayInfo = @DisplayInfo(name = "Action", orderingHint = 40))
+		@Display(name = "Action", orderingHint = 40)
 		public RecommendedAction getRecommendedAction() {
 			return this.recommendedAction;
 		}
 
-		@VisualiserInfo(displayInfo = @DisplayInfo(name = "Transform", orderingHint = 25))
+		@Display(name = "Transform", orderingHint = 25)
 		public TransformType getTransformType() {
 			return event.getTransformType();
 		}
 
-		@VisualiserInfo(displayInfo = @DisplayInfo(name = "Problem", orderingHint = 40))
+		@Display(name = "Problem", orderingHint = 40)
 		public DomainTransformExceptionType getTransformExceptionType() {
 			return exception.getType();
 		}

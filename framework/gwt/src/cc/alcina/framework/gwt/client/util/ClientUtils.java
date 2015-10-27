@@ -130,16 +130,20 @@ public class ClientUtils {
 		return styleElement;
 	}
 
+	public static native String stringify(JavaScriptObject jso) /*-{
+        return JSON.stringify(jso);
+	}-*/;
+
 	public static native boolean setCssTextViaCssTextProperty(Element styleTag,
 			String css) /*-{
-		var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+        var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
 
-		if ('cssText' in sheet) { // Internet Explorer
-			sheet.cssText = css;
-			return true;
-		}
+        if ('cssText' in sheet) { // Internet Explorer
+            sheet.cssText = css;
+            return true;
+        }
 
-		return false;//do innerText
+        return false;//do innerText
 	}-*/;
 
 	private static void addHidden(Panel p, String key, String value) {
@@ -177,7 +181,7 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger() /*-{
-		debugger;
+        debugger;
 	}-*/;
 
 	public static void fireHistoryToken(String token) {
@@ -338,8 +342,8 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger(Element e) /*-{
-		var v = e;
-		debugger;
+        var v = e;
+        debugger;
 	}-*/;
 
 	public static String getHashIfSelfrefUrl(Element anchor) {
@@ -372,4 +376,12 @@ public class ClientUtils {
 		return result;
 	}
 
+	public static <T extends JavaScriptObject> JsArray<T> toTypedJsArray(
+			List<T> value) {
+		JsArray<T> array = JavaScriptObject.createArray().cast();
+		for (T t : value) {
+			array.push(t);
+		}
+		return array;
+	}
 }

@@ -26,17 +26,17 @@ import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.HasAnnotationCallback;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.SyntheticGetter;
-import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
+import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceExtAsync;
@@ -120,9 +120,9 @@ public abstract class ClientTransformManager extends TransformManager {
 			final T referrer, boolean onlyLocalGraph) {
 		final ClientBeanReflector beanReflector = ClientReflector.get()
 				.beanInfoForClass(referrer.getClass());
-		beanReflector.iterateForPropertyWithAnnotation(WrapperInfo.class,
-				new HasAnnotationCallback<WrapperInfo>() {
-					public void apply(WrapperInfo annotation,
+		beanReflector.iterateForPropertyWithAnnotation(Wrapper.class,
+				new HasAnnotationCallback<Wrapper>() {
+					public void apply(Wrapper annotation,
 							PropertyReflector propertyReflector) {
 						WrapperPersistable obj = (WrapperPersistable) propertyReflector
 								.getPropertyValue(referrer);
@@ -139,22 +139,22 @@ public abstract class ClientTransformManager extends TransformManager {
 				target = promoted;
 				// copy, because at the moment wrapped refs don't get handled by
 				// the TM
-				HasAnnotationCallback<WrapperInfo> callback = new HasAnnotationCallback<WrapperInfo>() {
-					public void apply(WrapperInfo annotation,
+				HasAnnotationCallback<Wrapper> callback = new HasAnnotationCallback<Wrapper>() {
+					public void apply(Wrapper annotation,
 							PropertyReflector propertyReflector) {
 						propertyReflector.setPropertyValue(promoted,
 								propertyReflector.getPropertyValue(referrer));
 					}
 				};
 				beanReflector.iterateForPropertyWithAnnotation(
-						WrapperInfo.class, callback);
+						Wrapper.class, callback);
 			} finally {
 				CollectionModificationSupport.queue(false);
 			}
 		}
 		final HasIdAndLocalId finalTarget = target;
-		HasAnnotationCallback<WrapperInfo> callback = new HasAnnotationCallback<WrapperInfo>() {
-			public void apply(final WrapperInfo annotation,
+		HasAnnotationCallback<Wrapper> callback = new HasAnnotationCallback<Wrapper>() {
+			public void apply(final Wrapper annotation,
 					final PropertyReflector propertyReflector) {
 				WrapperPersistable persistableObject = (WrapperPersistable) propertyReflector
 						.getPropertyValue(finalTarget);
@@ -173,7 +173,7 @@ public abstract class ClientTransformManager extends TransformManager {
 			}
 		};
 		if (!onlyLocalGraph) {
-			beanReflector.iterateForPropertyWithAnnotation(WrapperInfo.class,
+			beanReflector.iterateForPropertyWithAnnotation(Wrapper.class,
 					callback);
 		}
 		return target;
@@ -201,12 +201,12 @@ public abstract class ClientTransformManager extends TransformManager {
 			requiresEditPrep.put(c, false);
 		}
 		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		BeanInfo beanInfo = bi.getAnnotation(BeanInfo.class);
+		Bean beanInfo = bi.getAnnotation(Bean.class);
 		for (ClientPropertyReflector pr : prs) {
 			PropertyPermissions pp = pr
 					.getAnnotation(PropertyPermissions.class);
-			DomainPropertyInfo instructions = pr
-					.getAnnotation(DomainPropertyInfo.class);
+			DomainProperty instructions = pr
+					.getAnnotation(DomainProperty.class);
 			if (!PermissionsManager.get().checkEffectivePropertyPermission(op,
 					pp, domainObject, false)) {
 				continue;

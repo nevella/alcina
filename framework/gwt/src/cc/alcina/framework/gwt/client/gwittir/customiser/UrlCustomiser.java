@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundLink;
 
@@ -13,7 +13,7 @@ public class UrlCustomiser implements Customiser {
 	public static final String TARGET = "target";
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo params) {
+			boolean multiple, Custom params) {
 		NamedParameter parameter = NamedParameter.Support.getParameter(params
 				.parameters(), TARGET);
 		String target = parameter == null ? null : parameter.stringValue();

@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domain.ObjectWrapper;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Action;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -33,7 +33,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 @Introspectable
 public class BaseBindable extends BaseSourcesPropertyChangeEvents implements
 		Serializable {
-	@BeanInfo(displayNamePropertyName = "id", actions = @ObjectActions({ @Action(actionClass = ViewAction.class) }))
+	@Bean(displayNamePropertyName = "id", actions = @ObjectActions({ @Action(actionClass = ViewAction.class) }))
 	@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
 	public static class BaseBindableAdapter extends BaseBindable {
 	}
@@ -44,7 +44,7 @@ public class BaseBindable extends BaseSourcesPropertyChangeEvents implements
 		public abstract T _getContext();
 	}
 
-	@BeanInfo(displayNamePropertyName = "null")
+	@Bean(displayNamePropertyName = "null")
 	public static class BaseBindableWrapper<T> extends BaseBindable implements
 			ObjectWrapper<T> {
 		protected  T wrapee;

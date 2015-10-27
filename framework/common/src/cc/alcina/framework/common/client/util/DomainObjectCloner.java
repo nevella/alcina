@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 
@@ -47,7 +47,7 @@ public class DomainObjectCloner extends CloneHelper {
 		if (pr == null) {
 			return false;
 		}
-		DomainPropertyInfo dpi = pr.getAnnotation(DomainPropertyInfo.class);
+		DomainProperty dpi = pr.getAnnotation(DomainProperty.class);
 		return dpi == null ? false : dpi.cloneForDuplication();
 	}
 

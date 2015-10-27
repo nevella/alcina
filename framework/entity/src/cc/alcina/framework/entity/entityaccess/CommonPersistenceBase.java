@@ -64,7 +64,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.WrapperInfo;
+import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -649,8 +649,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					wrapper.getClass()).getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (pd.getReadMethod() != null) {
-					WrapperInfo info = pd.getReadMethod().getAnnotation(
-							WrapperInfo.class);
+					Wrapper info = pd.getReadMethod().getAnnotation(
+							Wrapper.class);
 					if (info != null) {
 						PropertyDescriptor idpd = SEUtilities
 								.getPropertyDescriptorByName(
@@ -879,8 +879,8 @@ public abstract class CommonPersistenceBase<CI extends ClientInstance, U extends
 					.getPropertyDescriptors();
 			for (PropertyDescriptor pd : pds) {
 				if (pd.getReadMethod() != null) {
-					WrapperInfo info = pd.getReadMethod().getAnnotation(
-							WrapperInfo.class);
+					Wrapper info = pd.getReadMethod().getAnnotation(
+							Wrapper.class);
 					if (info != null) {
 						Object obj = pd.getReadMethod().invoke(hi,
 								CommonUtils.EMPTY_OBJECT_ARRAY);

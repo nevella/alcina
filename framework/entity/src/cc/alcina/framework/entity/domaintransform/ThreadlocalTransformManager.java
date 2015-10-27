@@ -63,7 +63,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AssignmentPermission;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearOnAppRestartLoc;
-import cc.alcina.framework.common.client.logic.reflection.DomainPropertyInfo;
+import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -814,8 +814,8 @@ public class ThreadlocalTransformManager extends TransformManager implements
 			String propertyName, DomainTransformEvent evt)
 			throws DomainTransformException, IntrospectionException {
 		if (!checkPropertyAccess(hili, propertyName, false)) {
-			DomainPropertyInfo ann = getAnnotationForProperty(hili.getClass(),
-					DomainPropertyInfo.class, propertyName);
+			DomainProperty ann = getAnnotationForProperty(hili.getClass(),
+					DomainProperty.class, propertyName);
 			if (ann != null && ann.silentFailOnIllegalWrites()) {
 				return false;
 			}

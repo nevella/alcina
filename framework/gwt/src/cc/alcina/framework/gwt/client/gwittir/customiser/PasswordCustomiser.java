@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
 
@@ -38,7 +38,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		return (editable) ? EDITABLE_PASSWORD_PROVIDER
 				: GwittirBridge.NOWRAP_LABEL_PROVIDER;
 	}

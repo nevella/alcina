@@ -9,8 +9,6 @@ import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -24,7 +22,6 @@ import cc.alcina.framework.common.client.collections.FilterContext;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache.PdOperator;
 

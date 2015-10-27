@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.provider.DomainObjectIdRefProvider;
 
@@ -30,7 +30,7 @@ public class DomainObjectIdRefCustomiser implements Customiser {
 
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		Class classValue = NamedParameter.Support
 						.getParameter(info.parameters(), TARGET_CLASS).classValue();
 		return new DomainObjectIdRefProvider(classValue);

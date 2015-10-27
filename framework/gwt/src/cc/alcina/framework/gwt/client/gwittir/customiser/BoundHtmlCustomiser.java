@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundHTML;
 
@@ -32,7 +32,7 @@ public class BoundHtmlCustomiser implements Customiser,
 	private String widgetCssClass;
 
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, CustomiserInfo info) {
+			boolean multiple, Custom info) {
 		widgetCssClass = NamedParameter.Support.stringValue(info.parameters(),
 				WIDGET_CSS_CLASS, null);
 		return this;

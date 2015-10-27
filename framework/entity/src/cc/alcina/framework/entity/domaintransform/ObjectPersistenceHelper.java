@@ -30,10 +30,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ImplementationLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
@@ -89,7 +89,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 			return ((HasGeneratedDisplayName) o).generatedDisplayName();
 		}
 		String dnpn = "id";
-		BeanInfo info = o.getClass().getAnnotation(BeanInfo.class);
+		Bean info = o.getClass().getAnnotation(Bean.class);
 		if (info != null) {
 			dnpn = info.displayNamePropertyName();
 		}
@@ -105,8 +105,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 			for (PropertyDescriptor pd : pds) {
 				if (pd.getReadMethod() != null
 						&& pd.getWriteMethod() != null
-						&& pd.getReadMethod().getAnnotation(
-								VisualiserInfo.class) != null) {
+						&& pd.getReadMethod().getAnnotation(Display.class) != null) {
 					result.add(pd.getName());
 				}
 			}

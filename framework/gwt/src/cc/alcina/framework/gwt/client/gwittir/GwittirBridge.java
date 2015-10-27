@@ -40,21 +40,19 @@ import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.BeanInfo;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
-import cc.alcina.framework.common.client.logic.reflection.CustomiserInfo;
-import cc.alcina.framework.common.client.logic.reflection.DisplayInfo;
+import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.ValidatorInfo;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
-import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -251,28 +249,28 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
-		BeanInfo beanInfo = bi.getAnnotation(BeanInfo.class);
+		Bean beanInfo = bi.getAnnotation(Bean.class);
 		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
 		ClientPropertyReflector pr = bi.getPropertyReflectors().get(
 				propertyName);
 		Property p = getProperty(obj, pr.getPropertyName());
-		if (pr != null && pr.getGwPropertyInfo() != null) {
+		if (pr != null && pr.getDisplayInfo() != null) {
 			PropertyPermissions pp = pr
 					.getAnnotation(PropertyPermissions.class);
-			VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
+			Display displayInfo = pr.getDisplayInfo();
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
-					&& visualiserInfo != null
+					&& displayInfo != null
 					&& PermissionsManager.get().isPermissible(obj,
-							visualiserInfo.visible())
-					&& ((visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_AS_PROPERTY) != 0);
+							displayInfo.visible())
+					&& ((displayInfo.displayMask() & Display.DISPLAY_AS_PROPERTY) != 0);
 			if (!fieldVisible) {
 				return false;
 			}
 			boolean propertyIsCollection = (p.getType() == Set.class);
 			return PermissionsManager.get().checkEffectivePropertyPermission(
 					op, pp, obj, false)
-					&& ((visualiserInfo.displayInfo().displayMask() & DisplayInfo.DISPLAY_RO) == 0);
+					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
 		}
 		return false;
 	}
@@ -283,7 +281,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
-		BeanInfo beanInfo = bi.getAnnotation(BeanInfo.class);
+		Bean beanInfo = bi.getAnnotation(Bean.class);
 		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
 		obj = obj != null ? obj : ClientReflector.get().getTemplateInstance(c);
 		ClientPropertyReflector pr = bi.getPropertyReflectors().get(
@@ -297,18 +295,17 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		if (contextPosition != -1) {
 			position = contextPosition;
 		}
-		if (pr != null && pr.getGwPropertyInfo() != null) {
+		if (pr != null && pr.getDisplayInfo() != null) {
 			PropertyPermissions pp = pr
 					.getAnnotation(PropertyPermissions.class);
-			VisualiserInfo visualiserInfo = pr.getGwPropertyInfo();
+			Display displayInfo = pr.getDisplayInfo();
 			Association association = pr.getAnnotation(Association.class);
-			DisplayInfo displayInfo = visualiserInfo.displayInfo();
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
-					&& visualiserInfo != null
+					&& displayInfo != null
 					&& PermissionsManager.get().isPermissible(obj,
-							visualiserInfo.visible())
-					&& ((displayInfo.displayMask() & DisplayInfo.DISPLAY_AS_PROPERTY) != 0);
+							displayInfo.visible())
+					&& ((displayInfo.displayMask() & Display.DISPLAY_AS_PROPERTY) != 0);
 			if (!fieldVisible) {
 				return null;
 			}
@@ -318,7 +315,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					&& PermissionsManager.get()
 							.checkEffectivePropertyPermission(op, pp, obj,
 									false)
-					&& ((displayInfo.displayMask() & DisplayInfo.DISPLAY_RO) == 0);
+					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
 			;
 			Class domainType = p.getType();
 			domainType = (association == null || !propertyIsCollection || association
@@ -331,7 +328,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 						propertyIsCollection);
 			}
 			boolean isEnum = domainType.isEnum();
-			boolean displayWrap = (displayInfo.displayMask() & DisplayInfo.DISPLAY_WRAP) > 0;
+			boolean displayWrap = (displayInfo.displayMask() & Display.DISPLAY_WRAP) > 0;
 			if (bwp == null && isEnum) {
 				bwp = fieldEditable ? new ListBoxEnumProvider(domainType, true)
 						: NOWRAP_LABEL_PROVIDER;
@@ -355,8 +352,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					}
 				}
 			}
-			CustomiserInfo customiserInfo = pr
-					.getAnnotation(CustomiserInfo.class);
+			Custom customiserInfo = pr.getAnnotation(Custom.class);
 			if (customiserInfo != null) {
 				Customiser customiser = (Customiser) ClientReflector.get()
 						.newInstance(customiserInfo.customiserClass(), 0, 0);
@@ -428,7 +424,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				.values();
 		Class<? extends Object> c = obj.getClass();
 		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		BeanInfo beanInfo = bi.getAnnotation(BeanInfo.class);
+		Bean beanInfo = bi.getAnnotation(Bean.class);
 		for (ClientPropertyReflector pr : prs) {
 			String pn = pr.getPropertyName();
 			if (propertyName != null && !(propertyName.equals(pn))) {
@@ -453,14 +449,15 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				obj.getClass());
 		ClientPropertyReflector pr = bi == null ? null : bi
 				.getPropertyReflectors().get(propertyName);
-		List<ValidatorInfo> validators = new ArrayList<ValidatorInfo>();
-		Validators validatorsAnn = pr == null ? null : pr
-				.getAnnotation(Validators.class);
-		ValidatorInfo info = pr == null ? null : pr
-				.getAnnotation(ValidatorInfo.class);
+		List<cc.alcina.framework.common.client.logic.reflection.Validator> validators = new ArrayList<>();
+		cc.alcina.framework.common.client.logic.reflection.Validators validatorsAnn = pr == null ? null
+				: pr.getAnnotation(Validators.class);
+		cc.alcina.framework.common.client.logic.reflection.Validator info = pr == null ? null
+				: pr.getAnnotation(cc.alcina.framework.common.client.logic.reflection.Validator.class);
 		if (propertyName == null) {
 			validatorsAnn = bi.getAnnotation(Validators.class);
-			info = bi.getAnnotation(ValidatorInfo.class);
+			info = bi
+					.getAnnotation(cc.alcina.framework.common.client.logic.reflection.Validator.class);
 		}
 		if (validatorsAnn != null) {
 			validators.addAll(Arrays.asList(validatorsAnn.validators()));
@@ -470,12 +467,12 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 		if (!validators.isEmpty()) {
 			CompositeValidator cv = new CompositeValidator();
-			for (ValidatorInfo vi : validators) {
+			for (cc.alcina.framework.common.client.logic.reflection.Validator validatorAnnotation : validators) {
 				Validator v = Reflections.classLookup().newInstance(
-						vi.validator());
+						validatorAnnotation.validator());
 				if (v instanceof ParameterisedValidator) {
 					ParameterisedValidator pv = (ParameterisedValidator) v;
-					pv.setParameters(vi.parameters());
+					pv.setParameters(validatorAnnotation.parameters());
 				}
 				if (v instanceof ServerUniquenessValidator
 						&& obj instanceof HasId) {
@@ -487,10 +484,13 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					RequiresSourceValidator rsv = (RequiresSourceValidator) v;
 					rsv.setSourceObject((HasIdAndLocalId) obj);
 				}
-				NamedParameter msg = NamedParameter.Support.getParameter(
-						vi.parameters(), ValidatorInfo.FEEDBACK_MESSAGE);
+				NamedParameter msg = NamedParameter.Support
+						.getParameter(
+								validatorAnnotation.parameters(),
+								cc.alcina.framework.common.client.logic.reflection.Validator.FEEDBACK_MESSAGE);
 				if (msg != null) {
-					vf.addMessage(vi.validator(), msg.stringValue());
+					vf.addMessage(validatorAnnotation.validator(),
+							msg.stringValue());
 				}
 				cv.add(v);
 			}
@@ -648,8 +648,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		Map<String, ClientPropertyReflector> prs = bi.getPropertyReflectors();
 		for (Field field : fields) {
 			ClientPropertyReflector pr = prs.get(field.getPropertyName());
-			if (pr != null && pr.getGwPropertyInfo() != null
-					&& pr.getGwPropertyInfo().displayInfo().focus()) {
+			if (pr != null && pr.getDisplayInfo() != null
+					&& pr.getDisplayInfo().focus()) {
 				return field;
 			}
 		}

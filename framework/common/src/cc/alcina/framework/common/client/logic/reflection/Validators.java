@@ -34,7 +34,7 @@ import cc.alcina.framework.gwt.client.gwittir.ValidationProvider;
  */
 
  public @interface Validators {
-	ValidatorInfo[] validators();
+	Validator[] validators();
 
 	Class<? extends ValidationProvider> provider() default ValidationProvider.class;
 }
