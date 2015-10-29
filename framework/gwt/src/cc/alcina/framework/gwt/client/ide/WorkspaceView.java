@@ -231,7 +231,11 @@ public class WorkspaceView extends Composite implements HasName,
 			if (w != null) {
 				fp.add(w);
 			}
-			this.scroller = new ScrollPanel100pcHeight(dataTree);
+			this.scroller = new ScrollPanel100pcHeight(dataTree){@Override
+			public void setHeight(String height) {
+				// TODO Auto-generated method stub
+				super.setHeight(height);
+			}};
 			fp.add(scroller);
 			fp.setWidth("100%");
 			dataTree.addSelectionHandler(this);

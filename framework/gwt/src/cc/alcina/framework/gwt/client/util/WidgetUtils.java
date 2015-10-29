@@ -191,12 +191,20 @@ public class WidgetUtils {
 	}
 
 	private static int getBestOffsetHeight(Element e, boolean parentPass) {
+		return getBestOffsetHeight(e, parentPass, true);
+	}
+
+	private static int getBestOffsetHeight(Element e, boolean parentPass,
+			boolean allowParentPass) {
 		int h = e.getPropertyInt("offsetHeight");
 		if (h != 0 || e.getParentElement() == null) {
 			return h;
 		}
 		if (e.getFirstChildElement() == null && !parentPass) {
 			return getBestOffsetHeight(e, true);
+		}
+		if (!allowParentPass) {
+			return 0;
 		}
 		return getBestOffsetHeight(
 				parentPass ? e.getParentElement() : e.getFirstChildElement(),
@@ -270,10 +278,11 @@ public class WidgetUtils {
 					if (childIterator != null) {
 						while (childIterator.hasNext()) {
 							Widget cw = childIterator.next();
-							if (cw != widget && cw.isVisible()) {
+							if (cw != widget && cw.isVisible()
+									&& cw.isAttached()) {
 								if (!ignoreChildrenForHeight) {
-									usedHeight += getBestOffsetHeight(cw
-											.getElement());
+									usedHeight += getBestOffsetHeight(
+											cw.getElement(), true, false);
 								}
 								if (!ignoreChildrenForWidth) {
 									usedWidth += getBestOffsetWidth(cw

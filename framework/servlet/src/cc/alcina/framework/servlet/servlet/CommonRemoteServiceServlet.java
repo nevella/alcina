@@ -1147,7 +1147,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					.getNewImplementationInstance(ActionLogItem.class);
 			logItem.setActionClass(action.getClass());
 			logItem.setActionDate(new Date());
-			logItem.setShortDescription(actionTracker.getJobResult());
+			logItem.setShortDescription(CommonUtils.trimToWsChars(
+					actionTracker.getJobResult(), 220));
 			logItem.setActionLog(actionTracker.getLog());
 			return logItem;
 		}

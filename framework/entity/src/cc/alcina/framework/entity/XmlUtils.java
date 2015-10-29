@@ -486,6 +486,17 @@ public class XmlUtils {
 		}
 	}
 
+	public static Document ownerDocumentOrSelf(Node item) {
+		return (Document) (item.getNodeType() == Node.DOCUMENT_NODE ? item
+				: item.getOwnerDocument());
+	}
+
+	public static void removeNode(Node node) {
+		if (node != null) {
+			node.getParentNode().removeChild(node);
+		}
+	}
+
 	public static interface TransformerFactoryConfigurator {
 		public void configure(TransformerFactory transformerFactory);
 	}
