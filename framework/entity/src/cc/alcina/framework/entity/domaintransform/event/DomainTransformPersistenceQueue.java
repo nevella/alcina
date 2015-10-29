@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LongPair;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingSupplier;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.domaintransform.DomainTransformEventPersistent;
@@ -34,6 +35,7 @@ import cc.alcina.framework.entity.domaintransform.policy.TransformLoggingPolicy;
 import cc.alcina.framework.entity.entityaccess.AppPersistenceBase;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceLocal;
 import cc.alcina.framework.entity.entityaccess.CommonPersistenceProvider;
+import cc.alcina.framework.entity.entityaccess.cache.AlcinaMemCache;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
@@ -391,6 +393,9 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	private <T> T runWithDisabledObjectPermissions(ThrowingSupplier<T> supplier) {
 		try {
+			// this prevents a deadlock where we might have a waiting write
+			// preventing us from getting the lock
+			LooseContext.pushWithBoolean(AlcinaMemCache.CONTEXT_NO_LOCKS);
 			ThreadedPermissionsManager.cast().pushSystemUser();
 			PermissibleFieldFilter.disablePerObjectPermissions = true;
 			return supplier.get();
@@ -399,6 +404,7 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		} finally {
 			PermissibleFieldFilter.disablePerObjectPermissions = false;
 			ThreadedPermissionsManager.cast().popSystemUser();
+			LooseContext.pop();
 		}
 	}
 
