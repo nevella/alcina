@@ -14,12 +14,16 @@
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 
  * @author Nick Reddel
  */
+@SearchDefinitionSerializationInfo("tx")
+@RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
 public class TxtCriterion extends SearchCriterion {
 	static final transient long serialVersionUID = -2L;
 

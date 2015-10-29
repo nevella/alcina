@@ -31,9 +31,10 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 
 	private boolean asHtml;
 
-	public HandlerRegistration addClickHandler(ClickHandler handler) {
-		return this.base.addClickHandler(handler);
-	}
+	private T value;
+
+	@SuppressWarnings("unchecked")
+	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
 
 	/** Creates a new instance of Label */
 	public BoundLink() {
@@ -41,8 +42,16 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		super.initWidget(base);
 	}
 
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return this.base.addClickHandler(handler);
+	}
+
 	public void addStyleName(String style) {
 		this.base.addStyleName(style);
+	}
+
+	public void enableDefault() {
+		base.setPreventDefault(false);
 	}
 
 	public int getAbsoluteLeft() {
@@ -57,6 +66,10 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		return retValue;
 	}
 
+	public String getHref() {
+		return DOM.getElementProperty(base.getElement(), "href");
+	}
+
 	public int getOffsetHeight() {
 		int retValue;
 		retValue = this.base.getOffsetHeight();
@@ -69,6 +82,15 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		return retValue;
 	}
 
+	/**
+	 * Get the value of renderer
+	 * 
+	 * @return the value of renderer
+	 */
+	public Renderer<T, String> getRenderer() {
+		return this.renderer;
+	}
+
 	public String getStyleName() {
 		String retValue;
 		retValue = this.base.getStyleName();
@@ -77,10 +99,6 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 
 	public String getTarget() {
 		return DOM.getElementProperty(base.getElement(), "target");
-	}
-
-	public String getHref() {
-		return DOM.getElementProperty(base.getElement(), "href");
 	}
 
 	public String getText() {
@@ -99,6 +117,10 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		return value;
 	}
 
+	public boolean isAsHtml() {
+		return asHtml;
+	}
+
 	public boolean isVisible() {
 		boolean retValue;
 		retValue = this.base.isVisible();
@@ -109,12 +131,30 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		this.base.removeStyleName(style);
 	}
 
+	public void setAsHtml(boolean isHtml) {
+		this.asHtml = isHtml;
+	}
+
 	public void setHeight(String height) {
 		this.base.setHeight(height);
 	}
 
+	public void setHref(String href) {
+		DOM.setElementProperty(base.getElement(), "href", href);
+	}
+
 	public void setPixelSize(int width, int height) {
 		this.base.setPixelSize(width, height);
+	}
+
+	/**
+	 * Set the value of renderer
+	 * 
+	 * @param newrenderer
+	 *            new value of renderer
+	 */
+	public void setRenderer(Renderer<T, String> newrenderer) {
+		this.renderer = newrenderer;
 	}
 
 	public void setSize(String width, String height) {
@@ -129,10 +169,6 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 		DOM.setElementProperty(base.getElement(), "target", target);
 	}
 
-	public void setHref(String href) {
-		DOM.setElementProperty(base.getElement(), "href", href);
-	}
-
 	public void setText(String text) {
 		this.base.setText(text);
 	}
@@ -140,8 +176,6 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 	public void setTitle(String title) {
 		this.base.setTitle(title);
 	}
-
-	private T value;
 
 	@SuppressWarnings("unchecked")
 	public void setValue(T value) {
@@ -176,35 +210,5 @@ public class BoundLink<T> extends AbstractBoundWidget<T> {
 
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
-	}
-
-	public void setAsHtml(boolean isHtml) {
-		this.asHtml = isHtml;
-	}
-
-	public boolean isAsHtml() {
-		return asHtml;
-	}
-
-	@SuppressWarnings("unchecked")
-	private Renderer<T, String> renderer = (Renderer) ToStringRenderer.INSTANCE;
-
-	/**
-	 * Get the value of renderer
-	 * 
-	 * @return the value of renderer
-	 */
-	public Renderer<T, String> getRenderer() {
-		return this.renderer;
-	}
-
-	/**
-	 * Set the value of renderer
-	 * 
-	 * @param newrenderer
-	 *            new value of renderer
-	 */
-	public void setRenderer(Renderer<T, String> newrenderer) {
-		this.renderer = newrenderer;
 	}
 }
