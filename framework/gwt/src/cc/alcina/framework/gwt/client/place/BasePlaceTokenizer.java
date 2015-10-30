@@ -15,53 +15,16 @@ import com.google.gwt.place.shared.PlaceTokenizer;
 @RegistryLocation(registryPoint = BasePlaceTokenizer.class)
 public abstract class BasePlaceTokenizer<P extends Place> implements
 		PlaceTokenizer<P> {
-	public String getPrefix() {
-		String s = getTokenizedClass().getSimpleName().replaceFirst(
-				"(.+)Place", "$1");
-		return s.toLowerCase();
-	}
-
-	public abstract Class<P> getTokenizedClass();
-
-	@Override
-	public P getPlace(String token) {
-		parts = token.split("/");
-		try {
-			return getPlace0(token);
-		} catch (Exception e) {
-			e.printStackTrace();
-			return getPlace(getPrefix());
-		}
-	}
-
-	protected abstract P getPlace0(String token);
-
 	protected StringBuilder tokenBuilder;
 
 	protected String[] parts;
 
-	@Override
-	public String getToken(P place) {
-		tokenBuilder = new StringBuilder();
-		addTokenPart(getPrefix());
-		getToken0(place);
-		if (params != null && !params.isEmpty()) {
-			addTokenPart(AlcinaHistory.toHash(params));
-		}
-		return tokenBuilder.toString();
-	}
-
-	protected void addTokenPart(String part) {
-		if (tokenBuilder.length() > 0) {
-			tokenBuilder.append("/");
-		}
-		tokenBuilder.append(part);
-	}
-
 	private StringMap params;
 
-	protected void parseMap(String s) {
-		params = AlcinaHistory.fromHash(s);
+	public boolean getBooleanParameter(String key) {
+		String value = params.get(key);
+		return value == null ? false : value.equals("t")
+				|| Boolean.parseBoolean(value);
 	}
 
 	public int getIntParameter(String key) {
@@ -74,29 +37,40 @@ public abstract class BasePlaceTokenizer<P extends Place> implements
 		return value == null ? 0 : CommonUtils.friendlyParseLong(value);
 	}
 
-	protected void initOutParams() {
-		params = new StringMap();
+	@Override
+	public P getPlace(String token) {
+		parts = token.split("/");
+		try {
+			return getPlace0(token);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return getPlace(getPrefix());
+		}
 	}
 
-	public boolean getBooleanParameter(String key) {
-		String value = params.get(key);
-		return value == null ? false : value.equals("t")
-				|| Boolean.parseBoolean(value);
+	public String getPrefix() {
+		String s = getTokenizedClass().getSimpleName().replaceFirst(
+				"(.+)Place", "$1");
+		return s.toLowerCase();
 	}
 
 	public String getStringParameter(String key) {
 		return params.get(key);
 	}
 
-	protected abstract void getToken0(P place);
-
-	protected SearchDefinitionSerializer searchDefinitionSerializer() {
-		return Registry.impl(SearchDefinitionSerializer.class);
+	@Override
+	public String getToken(P place) {
+		tokenBuilder = new StringBuilder();
+		params = null;
+		addTokenPart(getPrefix());
+		getToken0(place);
+		if (params != null && !params.isEmpty()) {
+			addTokenPart(AlcinaHistory.toHash(params));
+		}
+		return tokenBuilder.toString();
 	}
 
-	protected <E extends Enum> E enumValue(Class<E> clazz, String value) {
-		return CommonUtils.getEnumValueOrNull(clazz, value, true, null);
-	}
+	public abstract Class<P> getTokenizedClass();
 
 	public void setParameter(String key, Object value) {
 		if (value instanceof Number) {
@@ -114,5 +88,32 @@ public abstract class BasePlaceTokenizer<P extends Place> implements
 
 	public void setParameter(String key, Object value, boolean explicitBlanks) {
 		params.put(key, value == null ? null : value.toString());
+	}
+
+	protected void addTokenPart(String part) {
+		if (tokenBuilder.length() > 0) {
+			tokenBuilder.append("/");
+		}
+		tokenBuilder.append(part);
+	}
+
+	protected <E extends Enum> E enumValue(Class<E> clazz, String value) {
+		return CommonUtils.getEnumValueOrNull(clazz, value, true, null);
+	}
+
+	protected abstract P getPlace0(String token);
+
+	protected abstract void getToken0(P place);
+
+	protected void initOutParams() {
+		params = new StringMap();
+	}
+
+	protected void parseMap(String s) {
+		params = AlcinaHistory.fromHash(s);
+	}
+
+	protected SearchDefinitionSerializer searchDefinitionSerializer() {
+		return Registry.impl(SearchDefinitionSerializer.class);
 	}
 }
