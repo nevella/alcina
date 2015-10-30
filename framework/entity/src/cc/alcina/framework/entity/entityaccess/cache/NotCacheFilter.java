@@ -9,7 +9,7 @@ public class NotCacheFilter extends CacheFilter {
 	public NotCacheFilter(CacheFilter filter) {
 		super(null);
 		this.filter = filter;
-		this.collectionFilter = new InverseFilter(filter.asCollectionFilter());
+		this.predicate = new InverseFilter(filter.asCollectionFilter());
 	}
 
 	@Override

@@ -1,7 +1,9 @@
 package cc.alcina.framework.entity.entityaccess.cache;
 
 import java.util.List;
+import java.util.function.Predicate;
 
+import cc.alcina.framework.common.client.cache.CacheFilter;
 import cc.alcina.framework.common.client.cache.CacheQuery;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -58,4 +60,6 @@ public class AlcinaMemCacheQuery extends CacheQuery<AlcinaMemCacheQuery> {
 	public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 		return AlcinaMemCache.get().list(clazz, this);
 	}
+
+	
 }

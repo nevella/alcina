@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.cache;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.FilterOperator;
@@ -13,7 +14,7 @@ public class CacheFilter {
 
 	public Object propertyValue;
 
-	public CollectionFilter collectionFilter;
+	public Predicate predicate;
 
 	public FilterOperator filterOperator;
 
@@ -21,8 +22,8 @@ public class CacheFilter {
 		this(propertyPath, propertyValue, FilterOperator.EQ);
 	}
 
-	public CacheFilter(CollectionFilter collectionFilter) {
-		this.collectionFilter = collectionFilter;
+	public CacheFilter(Predicate predicate) {
+		this.predicate = predicate;
 	}
 
 	public CacheFilter(String key, Object value, FilterOperator operator) {
@@ -41,21 +42,23 @@ public class CacheFilter {
 
 	@Override
 	public String toString() {
-		if (collectionFilter != null) {
-			return CommonUtils.formatJ("CacheFilter: %s - %s", collectionFilter
-					.getClass().getSimpleName(), collectionFilter);
+		if (predicate != null) {
+			return CommonUtils.formatJ("CacheFilter: %s - %s", predicate
+					.getClass().getSimpleName(), predicate);
 		}
 		return CommonUtils.formatJ("CacheFilter: %s %s %s", propertyPath,
 				filterOperator.operationText(), propertyValue);
 	}
 
 	public CollectionFilter asCollectionFilter() {
-		return collectionFilter != null ? collectionFilter
-				: new PropertyPathFilter(propertyPath, propertyValue,
-						filterOperator);
+		return predicate != null ? new CollectionFilter() {
+			public boolean allow(Object o) {
+				return predicate.test(o);
+			}
+		} : new PropertyPathFilter(propertyPath, propertyValue, filterOperator);
 	}
 
 	public boolean canFlatten() {
-		return collectionFilter==null;
+		return predicate == null;
 	}
 }

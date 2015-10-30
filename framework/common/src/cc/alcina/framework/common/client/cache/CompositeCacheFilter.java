@@ -15,7 +15,7 @@ public class CompositeCacheFilter extends CacheFilter {
 	public CompositeCacheFilter(boolean or) {
 		super(null);
 		this.or = or;
-		this.collectionFilter = new CompositeFilter(or);
+		this.predicate = new CompositeFilter(or);
 	}
 
 	private List<CacheFilter> filters = new ArrayList<CacheFilter>();
@@ -26,7 +26,7 @@ public class CompositeCacheFilter extends CacheFilter {
 
 	public void add(CacheFilter filter) {
 		filters.add(filter);
-		((CompositeFilter) collectionFilter).add(filter.asCollectionFilter());
+		((CompositeFilter) predicate).add(filter.asCollectionFilter());
 	}
 
 	@Override
