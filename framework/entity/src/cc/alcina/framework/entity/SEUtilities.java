@@ -37,11 +37,14 @@ import java.net.URLEncoder;
 import java.security.cert.X509Certificate;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -1199,5 +1202,10 @@ public class SEUtilities {
 			}
 		}
 		return sb.toString();
+	}
+
+	public static Date toOldDate(LocalDate ldt) {
+		return Date.from(ldt.atStartOfDay(ZoneId.systemDefault())
+				.toInstant());
 	}
 }
