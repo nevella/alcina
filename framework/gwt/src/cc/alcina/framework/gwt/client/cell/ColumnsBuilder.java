@@ -24,7 +24,9 @@ public class ColumnsBuilder<T> {
 	public ColumnBuilder col(String name) {
 		return new ColumnBuilder(name);
 	}
+
 	private Header<String> footer;
+
 	public ColumnsBuilder footer(Header<String> footer) {
 		this.footer = footer;
 		return this;
@@ -47,6 +49,7 @@ public class ColumnsBuilder<T> {
 
 		private String style;
 
+		private DirectedComparator nativeComparator;
 
 		public ColumnBuilder(String name) {
 			this.name = name;
@@ -54,7 +57,7 @@ public class ColumnsBuilder<T> {
 
 		public TextColumn<T> build() {
 			SortableTextColumn<T> col = new SortableTextColumn<T>(function,
-					sortFunction);
+					sortFunction, nativeComparator);
 			if (footer == null) {
 				table.addColumn(col, name);
 			} else {
@@ -87,8 +90,6 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
-		
-
 		public ColumnBuilder sortable() {
 			this.sortable = true;
 			return this;
@@ -97,6 +98,12 @@ public class ColumnsBuilder<T> {
 		public ColumnBuilder sortFunction(Function<T, Comparable> sortFunction) {
 			this.sortFunction = sortFunction;
 			return sortable();
+		}
+
+		public ColumnBuilder nativeComparator(
+				DirectedComparator nativeComparator) {
+			this.nativeComparator = nativeComparator;
+			return this;
 		}
 
 		public ColumnBuilder width(double width, Unit unit) {
@@ -116,10 +123,18 @@ public class ColumnsBuilder<T> {
 
 		private Function<T, Object> function;
 
+		private DirectedComparator nativeComparator;
+
+		public DirectedComparator getNativeComparator() {
+			return this.nativeComparator;
+		}
+
 		public SortableTextColumn(Function<T, Object> function,
-				Function<T, Comparable> sortFunction) {
+				Function<T, Comparable> sortFunction,
+				DirectedComparator nativeComparator) {
 			this.function = function;
 			this.sortFunction = sortFunction;
+			this.nativeComparator = nativeComparator;
 		}
 
 		@Override
