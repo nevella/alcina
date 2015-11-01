@@ -1205,7 +1205,10 @@ public class SEUtilities {
 	}
 
 	public static Date toOldDate(LocalDate ldt) {
-		return Date.from(ldt.atStartOfDay(ZoneId.systemDefault())
-				.toInstant());
+		return Date.from(ldt.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	}
+
+	public static boolean hasFractional(double d) {
+		return Math.abs(Math.round(d) - d) > 0.0001;
 	}
 }

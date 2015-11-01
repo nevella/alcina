@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
 
+import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
@@ -92,7 +93,10 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public String title();
 
-	public default Renderer<?,String> renderer() {
+	public default Renderer<?, String> renderer() {
 		return null;
+	}
+
+	default void parentBinding(Binding binding) {
 	}
 }

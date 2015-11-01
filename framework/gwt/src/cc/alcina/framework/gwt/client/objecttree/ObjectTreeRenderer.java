@@ -102,6 +102,7 @@ public class ObjectTreeRenderer {
 		if (depth == 0 && node.renderCss() != null) {
 			cp.setStyleName(node.renderCss());
 		}
+		node.parentBinding(op.binding);
 		boolean widgetsAdded = false;
 		Collection<? extends TreeRenderer> children = node.renderableChildren();
 		// title

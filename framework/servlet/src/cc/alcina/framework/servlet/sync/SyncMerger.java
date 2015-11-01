@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -16,6 +17,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -53,9 +55,12 @@ public class SyncMerger<T> {
 				"class"));
 		List<PropertyDescriptor> sortedPropertyDescriptors = SEUtilities
 				.getSortedPropertyDescriptors(mergedClass);
-		sortedPropertyDescriptors.stream()
+		Stream<PropertyDescriptor> stream = sortedPropertyDescriptors
+				.stream()
 				.filter(pd -> !list.contains(pd.getName()))
-				.forEach(pd -> defineRight(pd.getName()));
+				.filter(pd -> pd.getReadMethod().getAnnotation(
+						AlcinaTransient.class) == null);
+		stream.forEach(pd -> defineRight(pd.getName()));
 	}
 
 	public static interface MergeFilter {
