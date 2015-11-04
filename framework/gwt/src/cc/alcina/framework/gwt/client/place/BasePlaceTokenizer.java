@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinitionSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 
 import com.google.gwt.place.shared.Place;
@@ -39,6 +40,7 @@ public abstract class BasePlaceTokenizer<P extends Place> implements
 
 	@Override
 	public P getPlace(String token) {
+		ClientNotifications.get().log("to place: " + token);
 		parts = token.split("/");
 		try {
 			return getPlace0(token);
@@ -115,5 +117,9 @@ public abstract class BasePlaceTokenizer<P extends Place> implements
 
 	protected SearchDefinitionSerializer searchDefinitionSerializer() {
 		return Registry.impl(SearchDefinitionSerializer.class);
+	}
+	public P copyPlace(P place){
+		String token = getToken(place);
+		return getPlace(token);
 	}
 }
