@@ -2,7 +2,10 @@ package cc.alcina.framework.gwt.client.cell;
 
 import java.util.function.Function;
 
+import cc.alcina.framework.common.client.util.CommonUtils;
+
 import com.google.gwt.cell.client.TextCell;
+import com.google.gwt.cell.client.Cell.Context;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
@@ -51,13 +54,15 @@ public class ColumnsBuilder<T> {
 
 		private DirectedComparator nativeComparator;
 
+		private Function<T, String> styleFunction;
+
 		public ColumnBuilder(String name) {
 			this.name = name;
 		}
 
 		public TextColumn<T> build() {
 			SortableTextColumn<T> col = new SortableTextColumn<T>(function,
-					sortFunction, nativeComparator);
+					sortFunction, nativeComparator, styleFunction);
 			if (footer == null) {
 				table.addColumn(col, name);
 			} else {
@@ -100,6 +105,11 @@ public class ColumnsBuilder<T> {
 			return sortable();
 		}
 
+		public ColumnBuilder styleFunction(Function<T, String> styleFunction) {
+			this.styleFunction = styleFunction;
+			return this;
+		}
+
 		public ColumnBuilder nativeComparator(
 				DirectedComparator nativeComparator) {
 			this.nativeComparator = nativeComparator;
@@ -123,6 +133,8 @@ public class ColumnsBuilder<T> {
 
 		private Function<T, Object> function;
 
+		private Function<T, String> styleFunction;
+
 		private DirectedComparator nativeComparator;
 
 		public DirectedComparator getNativeComparator() {
@@ -131,10 +143,12 @@ public class ColumnsBuilder<T> {
 
 		public SortableTextColumn(Function<T, Object> function,
 				Function<T, Comparable> sortFunction,
-				DirectedComparator nativeComparator) {
+				DirectedComparator nativeComparator,
+				Function<T, String> styleFunction) {
 			this.function = function;
 			this.sortFunction = sortFunction;
 			this.nativeComparator = nativeComparator;
+			this.styleFunction = styleFunction;
 		}
 
 		@Override
@@ -145,6 +159,23 @@ public class ColumnsBuilder<T> {
 
 		public Function<T, Comparable> sortFunction() {
 			return sortFunction != null ? sortFunction : (Function) function;
+		}
+
+		@Override
+		public String getCellStyleNames(Context context, T object) {
+			if (styleFunction != null) {
+				String custom = styleFunction.apply(object);
+				if (custom != null) {
+					String superStyles = super.getCellStyleNames(context,
+							object);
+					if (CommonUtils.isNullOrEmpty(superStyles)) {
+						return custom;
+					} else {
+						return superStyles + " " + custom;
+					}
+				}
+			}
+			return super.getCellStyleNames(context, object);
 		}
 	}
 }
