@@ -2,6 +2,7 @@
 	<!-- Inherit the core Web Toolkit stuff.                        -->
 	<inherits name='com.google.gwt.user.User' />
 	<inherits name='com.googlecode.gwtx.Java' />
+	<inherits name='com.google.gwt.activity.Activity' />
 	<inherits name='com.totsp.gwittir.Gwittir' />
 	<inherits name='com.totsp.gwittir.LoggingWarn' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
