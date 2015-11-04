@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="project-distro-build" basedir="." default="">
 	<import file="project-build.xml" />
-
+	<property name="distributable.name" value="${ant.project.name}"/>
 	<target name="make-war" description="Create the project WAR" depends="compile">
 		<mkdir dir="${project.dist.dir}" />
-		<delete file="${project.dist.dir}/${ant.project.name}.war" />
+		<delete file="${project.dist.dir}/${distributable.name}.war" />
 		<antcall target="prepare-war">
 		</antcall>
-		<war destfile="${project.dist.dir}/${ant.project.name}.war" manifest="${project.web-inf.dir}/MANIFEST.MF" webxml="${project.web-inf.dir}/web.xml">
+		<war destfile="${project.dist.dir}/${distributable.name}.war" manifest="${project.web-inf.dir}/MANIFEST.MF" webxml="${project.web-inf.dir}/web.xml">
 			<!--<fileset dir="${project.web-inf.dir}"> <exclude name="WEB-INF/web.xml" /> </fileset> -->
 			<!-- dump this too -->
 			<!--to change in a sec -->
@@ -37,8 +37,8 @@
 	</target>
 
 	<target name="make-ear" description="Create the project EAR" depends="make-war">
-		<delete file="${project.dist.dir}/${ant.project.name}.ear" />
-		<ear destfile="${project.dist.dir}/${ant.project.name}.ear" appxml="${project.ear-inf.dir}/application.xml">
+		<delete file="${project.dist.dir}/${distributable.name}.ear" />
+		<ear destfile="${project.dist.dir}/${distributable.name}.ear" appxml="${project.ear-inf.dir}/application.xml">
 			<fileset dir="dist">
 				<include name="**/*.war" />
 			</fileset>
@@ -53,16 +53,16 @@
 		</ear>
 	</target>
 	<target name="deploy" description="Deploy the ear to the j2ee server" depends="make-ear">
-		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
+		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${distributable.name}.ear">
 		</copy>
 	</target>
 	<target name="deploy-only" description="Deploy the ear to the j2ee server">
-		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
+		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${distributable.name}.ear">
 		</copy>
 	</target>
 	<target name="undeploy" description="Undeploy ear from server">
-		<delete file="${deploy.j2ee-server.deploy.dir}/${ant.project.name}.ear" />
-		<delete dir="${deploy.j2ee-server.deploy.dir}/${ant.project.name}.ear" />
+		<delete file="${deploy.j2ee-server.deploy.dir}/${distributable.name}.ear" />
+		<delete dir="${deploy.j2ee-server.deploy.dir}/${distributable.name}.ear" />
 		<delete file="${j2ee-server.unear.target}.deployed" />
 		<delete dir="${j2ee-server.unear.target}" />
 	</target>
@@ -232,7 +232,7 @@
 		</java>
 	</target>
 	<target name="deployAndGwt" description="JARs the Task" depends="compile,compile-gwt,make-ear">
-		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${ant.project.name}.ear">
+		<copy todir="${deploy.j2ee-server.deploy.dir}" file="${project.dist.dir}/${distributable.name}.ear">
 		</copy>
 	</target>
 	<target name="hot-deploy-and-gwt-and-restart" description="dev :: compile GWT js, then hot-deploy and restart WAR" depends="compile-gwt,hot-deploy-restart">
