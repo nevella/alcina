@@ -1,8 +1,11 @@
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -19,6 +22,7 @@ import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Grid;
+import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
 
@@ -52,6 +56,13 @@ public class BoundSelectorMinimal extends BoundSelector {
 	public BoundSelectorMinimal(Class selectionObjectClass,
 			CollectionFilter filter, int maxSelectedItems, Renderer renderer) {
 		super(selectionObjectClass, filter, maxSelectedItems, renderer, false);
+	}
+
+	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
+			int maxSelectedItems, Renderer renderer, boolean useCellList,
+			Supplier<Collection> supplier) {
+		super(selectionObjectClass, filter, maxSelectedItems, renderer,
+				useCellList, supplier);
 	}
 
 	@Override
@@ -182,6 +193,8 @@ public class BoundSelectorMinimal extends BoundSelector {
 				return new SelectWithSearchItemX(item, asHTML, charWidth,
 						itemsHaveLinefeeds, ownerLabel, sep);
 			};
+
+			
 		};
 	}
 

@@ -104,7 +104,8 @@ div.alcina-MainContent.content-100pc-lhs {
 	margin-bottom: 0px;
 }
 /* Main menu */
-.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a, .alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:active,
+.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a,
+	.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:active,
 	.alcina-MainMenu .gwt-TabBar .gwt-TabBarItem-selected a:visited,
 	.alcina-MainMenu .gwt-TabBar  .gwt-TabBarItem-selected a:hover {
 	background-color: #104860;
@@ -1797,4 +1798,45 @@ div.gwt-PopupPanel.bubble {
 div.gwt-PopupPanel.bubble .bubble-up {
 	position: absolute;
 	top: -12px;
+}
+
+.flat-search-row>div {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.flat-search-row .alcina-SelectorContainer {
+	margin-right: 1.2em;
+	min-width: 200px;
+}
+
+.flat-search-row table.alcina-SelectorFrame.minimal div.alcina-Selector input.alcina-Filter[type="text"]
+	{
+	min-width: 200px;
+	width: 200px;
+}
+
+.flat-search-row table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	min-width: 190px;
+	padding-left: 8px;
+	background-image: url('_pix/arrow-selector-down.gif');
+	background-repeat: no-repeat;
+	background-position: right center;
+}
+
+.flat-search-row .operator table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	min-width: 100px;
+}
+
+.flat-search-row table.alcina-SelectorFrame.minimal .select-item-container
+	{
+	line-height: 20px;
+	display: inline-block;
+	padding-top: 4px;
+}
+
+.flat-search-row .operator .alcina-SelectorContainer {
+	min-width: 100px;
 }

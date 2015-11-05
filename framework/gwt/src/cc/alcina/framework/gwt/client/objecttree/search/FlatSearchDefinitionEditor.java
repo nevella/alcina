@@ -1,0 +1,151 @@
+package cc.alcina.framework.gwt.client.objecttree.search;
+
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
+import cc.alcina.framework.gwt.client.logic.RenderContext;
+import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
+
+import com.google.gwt.user.client.ui.FlowPanel;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+import com.totsp.gwittir.client.ui.BoundWidget;
+
+public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
+	private FlowPanel fp;
+
+	private Map<SearchCriterion, FlatSearchRow> rows = new LinkedHashMap<SearchCriterion, FlatSearchRow>();
+
+	SearchDefinition def;
+
+	List<FlatSearchable> searchables;
+
+	public FlatSearchDefinitionEditor() {
+		super();
+		render();
+	}
+
+	public void checkDisableFirstRowRemove() {
+		int count = 0;
+		for (FlatSearchRow row : rows.values()) {
+			row.disableMinus(count++ == 0);
+		}
+	}
+
+	public List<FlatSearchable> getSearchables() {
+		return this.searchables;
+	}
+
+	@Override
+	public Object getValue() {
+		return def;
+	}
+
+	public void refreshRows() {
+		if (!isAttached() || def == null) {
+			return;
+		}
+		fp.clear();
+		rows.clear();
+		// render criteria w values
+		for (SearchCriterion sc : def.allCriteria()) {
+			Optional<FlatSearchable> searchable = searchableForCriterion(sc);
+			if (searchable.isPresent() && !rows.containsKey(sc)
+					&& searchable.get().hasValue(sc)) {
+				addRow(searchable.get(), sc);
+			}
+		}
+		if (rows.size() > 0) {
+			return;
+		}
+		// or first searchable criteria w/out value
+		for (SearchCriterion sc : def.allCriteria()) {
+			Optional<FlatSearchable> searchable = searchableForCriterion(sc);
+			if (searchable.isPresent()
+					&& searchables.get(0) == searchable.get()) {
+				addRow(searchable.get(), sc);
+				break;
+			}
+		}
+		// or create a criteria
+		if (rows.size() == 0) {
+			addRow(searchables.get(0), null);
+		}
+	}
+
+	public Optional<FlatSearchable> searchableForCriterion(SearchCriterion sc) {
+		return searchables.stream()
+				.filter(s -> s.getCriterionClass() == sc.getClass())
+				.findFirst();
+	}
+
+	@SuppressWarnings("unchecked")
+	public void setModel(Object model) {
+		this.def = (SearchDefinition) model;
+		super.setModel(model);
+		refreshRows();
+	}
+
+	public void setSearchables(List<FlatSearchable> searchables) {
+		this.searchables = searchables;
+	}
+
+	@Override
+	public void setValue(Object value) {
+	}
+
+	private void render() {
+		this.fp = new FlowPanel();
+		setAction(new FlatSearchDefinitionEditorAction());
+		initWidget(fp);
+	}
+
+	@Override
+	protected void onDetach() {
+		super.onDetach();
+	}
+
+	void addRow(FlatSearchable flatSearchable, SearchCriterion sc) {
+		FlatSearchRow row = new FlatSearchRow(this);
+		row.setSearchable(flatSearchable);
+		if (sc == null) {
+			sc = flatSearchable.createCriterionInstance();
+			def.addCriterionToSoleCriteriaGroup(sc);
+		}
+		row.setValue(sc);
+		row.setModel(def);
+		fp.add(row);
+		rows.put(sc, row);
+		checkDisableFirstRowRemove();
+	}
+
+	void removeRow(FlatSearchRow row, boolean hadValue) {
+		def.removeCriterion(row.getValue(), hadValue);
+		rows.remove(row.getValue());
+		fp.remove(row);
+		checkDisableFirstRowRemove();
+	}
+
+	class FlatSearchDefinitionEditorAction extends BasicBindingAction {
+		@Override
+		protected void set0(BoundWidget widget) {
+			refreshRows();
+		}
+	}
+
+	public void setupForNewCriterion(FlatSearchRow row, boolean hadValue) {
+		def.removeCriterion(row.getValue(), !hadValue);
+		row.setValue(null);
+		row.setOperator(null);
+		SearchCriterion sc = row.getSearchable().createCriterionInstance();
+		def.addCriterionToSoleCriteriaGroup(sc);
+		row.setValue(sc);
+		row.bind();
+	}
+}

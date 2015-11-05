@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -440,8 +441,15 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 
 	public void globalPropertyChangeListener(PropertyChangeListener listener,
 			boolean add) {
+		if (add) {
+			globalListeners.add(listener);
+		} else {
+			globalListeners.remove(listener);
+		}
 		allCriteria().forEach(c -> propertyChangeDelta(c, listener, add));
 	}
+
+	private transient List<PropertyChangeListener> globalListeners = new ArrayList<>();
 
 	private void propertyChangeDelta(SourcesPropertyChangeEvents o,
 			PropertyChangeListener listener, boolean add) {
@@ -449,6 +457,29 @@ public abstract class SearchDefinition extends WrapperPersistable implements
 			o.addPropertyChangeListener(listener);
 		} else {
 			o.removePropertyChangeListener(listener);
+		}
+	}
+
+	public void removeCriterion(SearchCriterion criterion,
+			boolean doNotFireBecauseCriterionEmpty) {
+		for (CriteriaGroup cg : getCriteriaGroups()) {
+			cg.removeCriterion(criterion);
+		}
+		if (doNotFireBecauseCriterionEmpty) {
+			return;
+		}
+		PropertyChangeEvent event = new PropertyChangeEvent(this, null, null,
+				null);
+		for (PropertyChangeListener listener : globalListeners) {
+			listener.propertyChange(event);
+		}
+	}
+
+	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc) {
+		assert criteriaGroups.size() == 1;
+		criteriaGroups.iterator().next().addCriterion(sc);
+		for (PropertyChangeListener listener : globalListeners) {
+			sc.addPropertyChangeListener(listener);
 		}
 	}
 }

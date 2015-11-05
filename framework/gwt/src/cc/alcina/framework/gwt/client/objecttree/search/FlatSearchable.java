@@ -1,0 +1,71 @@
+package cc.alcina.framework.gwt.client.objecttree.search;
+
+import java.util.List;
+
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
+
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.CommonUtils;
+
+public abstract class FlatSearchable<SC extends SearchCriterion> {
+	private Class<SC> clazz;
+
+	private String category;
+
+	private String name;
+
+	private SearchDefinition def;
+
+	private SC criterion;
+
+	private List<? extends SearchOperator> operators;
+
+	public FlatSearchable(Class<SC> clazz, String category, String name,
+			List<StandardSearchOperator> operators) {
+		this.clazz = clazz;
+		this.category = category;
+		this.name = name;
+		this.operators = operators;
+	}
+
+	public SC createCriterionInstance() {
+		return Reflections.classLookup().newInstance(clazz);
+	}
+
+	public abstract AbstractBoundWidget createEditor();
+
+	public SC getCriterion() {
+		return this.criterion;
+	}
+
+	public Class<SC> getCriterionClass() {
+		return this.clazz;
+	}
+
+	public abstract String getCriterionPropertyName();
+
+	public SearchOperator getOperator(SC value) {
+		return listOperators().get(0);
+	}
+
+	public abstract boolean hasValue(SC sc);
+
+	public List<? extends SearchOperator> listOperators() {
+		return operators;
+	}
+
+	public void setCriterion(SC criterion) {
+		this.criterion = criterion;
+	}
+
+	public void setDef(SearchDefinition def) {
+		this.def = def;
+	}
+
+	@Override
+	public String toString() {
+		return CommonUtils.formatJ("%s : %s", category, name);
+	}
+}

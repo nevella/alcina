@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
@@ -187,7 +188,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 	private Handler filterAttachHandler = new Handler() {
 		@Override
 		public void onAttachOrDetach(AttachEvent event) {
-			if (!event.isAttached()) {
+			if (!event.isAttached() && !showFilterInPopup) {
 				hidePopdown();
 			}
 		}
@@ -225,13 +226,55 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	HandlerManager handlerManager = new HandlerManager(this);
 
-	// additional problem with ff
+	private boolean showFilterInPopup = false;
+
+	private boolean showSelectedItemsInSearch;
+
+	// use when showing filter in popup (ie totally hidden)
+	private Supplier<Widget> showFilterRelativeTo;
+
+	public Supplier<Widget> getShowFilterRelativeTo() {
+		return this.showFilterRelativeTo;
+	}
+
+	public void setShowFilterRelativeTo(Supplier<Widget> showFilterRelativeTo) {
+		this.showFilterRelativeTo = showFilterRelativeTo;
+	}
+
 	public SelectWithSearch() {
 	}
 
 	@Override
 	public HandlerRegistration addSelectionHandler(SelectionHandler<T> handler) {
 		return handlerManager.addHandler(SelectionEvent.getType(), handler);
+	}
+
+	public HandlerRegistration addWidgetClickHandler(ClickHandler handler) {
+		return ((HasClickHandlers) holder).addClickHandler(handler);
+	}
+
+	public void checkShowPopup(final boolean filterTextBox) {
+		if ((this.relativePopupPanel == null || this.relativePopupPanel
+				.getParent() == null)
+				&& !closingOnClick
+				&& System.currentTimeMillis() - lastClosingClickMillis > DELAY_TO_CHECK_FOR_CLOSING
+				&& maybeShowDepdendentOnFilter()) {
+			if (lazyProvider != null) {
+				AsyncCallback<LazyData> callback = new AsyncCallbackStd<SelectWithSearch.LazyData>() {
+					@Override
+					public void onSuccess(LazyData lazyData) {
+						if (lazyData != null) {
+							setKeys(lazyData.keys);
+							setItemMap(lazyData.data);
+						}
+						showPopupWithData(filterTextBox);
+					}
+				};
+				lazyProvider.getData(callback);
+			} else {
+				showPopupWithData(filterTextBox);
+			}
+		}
 	}
 
 	public void clearFilterText() {
@@ -251,7 +294,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.clickHandler = clickHandler;
 		this.charWidth = charWidth;
 		this.lazyProvider = lazyProvider;
-		this.holder = isFlowLayout() ? new FlowPanel()
+		this.holder = isFlowLayout() ? new FlowPanelClickable()
 				: new FlowPanel100pcHeight();
 		filter = new FilterWidget(hint);
 		filter.getTextBox().addKeyUpHandler(selectableNavigation);
@@ -501,6 +544,14 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		return popdown;
 	}
 
+	public boolean isShowFilterInPopup() {
+		return this.showFilterInPopup;
+	}
+
+	public boolean isShowSelectedItemsInSearch() {
+		return this.showSelectedItemsInSearch;
+	}
+
 	public boolean isSortGroupContents() {
 		return sortGroupContents;
 	}
@@ -606,6 +657,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				try {
 					Collections.sort((List) ttl);
 				} catch (RuntimeException e) {
+					// TimSort issue
 					if (!GWT.isProdMode()) {
 						for (int i = 0; i < 10000; i++) {
 							int size = ttl.size();
@@ -677,8 +729,16 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		this.separatorText = separatorText;
 	}
 
+	public void setShowFilterInPopup(boolean showFilterInPopup) {
+		this.showFilterInPopup = showFilterInPopup;
+	}
+
 	public void setShowHintStrategy(ShowHintStrategy showHintStrategy) {
 		this.showHintStrategy = showHintStrategy;
+	}
+
+	public void setShowSelectedItemsInSearch(boolean showSelectedItemsInSearch) {
+		this.showSelectedItemsInSearch = showSelectedItemsInSearch;
 	}
 
 	public void setSortGroupContents(boolean sortGroupContents) {
@@ -704,13 +764,26 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 		if (filterTextBox && !filter.isQueueing()) {
 			filter(filter.getTextBox().getText());
 		}
+		if (isShowFilterInPopup()
+				&& !panelForPopup.getElement()
+						.isOrHasChild(filter.getElement())) {
+			FlowPanel fp = new FlowPanel();
+			fp.add(filter);
+			fp.add(panelForPopup.getWidget());
+			panelForPopup.setWidget(fp);
+		}
 		this.relativePopupPanel = RelativePopupPositioning
 				.showPopup(
-						filter,
+						isShowFilterInPopup() ? showFilterRelativeTo.get()
+								: filter,
 						null,
 						RootPanel.get(),
 						new RelativePopupAxis[] { RelativePopupPositioning.BOTTOM_LTR },
 						RootPanel.get(), panelForPopup, shiftX(), shiftY());
+		if (isShowFilterInPopup()) {
+			filter.setValue("");
+			filter.getTextBox().setFocus(true);
+		}
 		onPopdownShowing(relativePopupPanel, true);
 		int border = 2;
 		if (itemHolder.getOffsetHeight() + border > panelForPopup
@@ -800,31 +873,6 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 	protected void checkShowPopup() {
 		checkShowPopup(true);
-	}
-
-	// TODO:hcdim
-	protected void checkShowPopup(final boolean filterTextBox) {
-		if ((this.relativePopupPanel == null || this.relativePopupPanel
-				.getParent() == null)
-				&& !closingOnClick
-				&& System.currentTimeMillis() - lastClosingClickMillis > DELAY_TO_CHECK_FOR_CLOSING
-				&& maybeShowDepdendentOnFilter()) {
-			if (lazyProvider != null) {
-				AsyncCallback<LazyData> callback = new AsyncCallbackStd<SelectWithSearch.LazyData>() {
-					@Override
-					public void onSuccess(LazyData lazyData) {
-						if (lazyData != null) {
-							setKeys(lazyData.keys);
-							setItemMap(lazyData.data);
-						}
-						showPopupWithData(filterTextBox);
-					}
-				};
-				lazyProvider.getData(callback);
-			} else {
-				showPopupWithData(filterTextBox);
-			}
-		}
 	}
 
 	protected HasClickHandlers createItem(T item, boolean asHTML,
@@ -1067,7 +1115,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 		public boolean filter(String filterText) {
 			boolean b = filter.allow(item, filterableText, filterText)
-					&& !selectedItems.contains(item);
+					&& (!selectedItems.contains(item) || showSelectedItemsInSearch);
 			setVisible(b);
 			if (b && !ownerLabel.isVisible()) {
 				ownerLabel.setVisible(true);

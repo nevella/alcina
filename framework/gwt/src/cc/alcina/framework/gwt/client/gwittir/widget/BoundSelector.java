@@ -10,9 +10,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
@@ -46,9 +46,9 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 
 	protected SelectWithSearch results;
 
-	protected CollectionFilter filter;
+	protected Predicate filter;
 
-	private int maxSelectedItems;
+	protected int maxSelectedItems;
 
 	private Renderer renderer = ToStringRenderer.INSTANCE;
 
@@ -59,6 +59,8 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 	protected FlowPanel container;
 
 	private boolean useCellList;
+
+	private Supplier<? extends Collection> supplier;
 
 	/*
 	 * Allows for subclasses which need a model before rendering
@@ -71,21 +73,30 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		this(selectionObjectClass, null);
 	}
 
-	public BoundSelector(Class selectionObjectClass, CollectionFilter filter) {
+	public BoundSelector(Class selectionObjectClass, Predicate filter) {
 		this(selectionObjectClass, filter, 0);
 	}
 
-	public BoundSelector(Class selectionObjectClass, CollectionFilter filter,
+	public BoundSelector(Class selectionObjectClass, Predicate filter,
 			int maxSelectedItems) {
 		this(selectionObjectClass, filter, maxSelectedItems, null, false);
 	}
 
-	public BoundSelector(Class selectionObjectClass, CollectionFilter filter,
+	public BoundSelector(Class selectionObjectClass, Predicate filter,
 			int maxSelectedItems, Renderer renderer, boolean useCellList) {
+		this(selectionObjectClass, filter, maxSelectedItems, renderer,
+				useCellList, () -> TransformManager.get().getCollection(
+						selectionObjectClass));
+	}
+
+	public BoundSelector(Class selectionObjectClass, Predicate filter,
+			int maxSelectedItems, Renderer renderer, boolean useCellList,
+			Supplier<Collection> supplier) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
 		this.maxSelectedItems = maxSelectedItems;
 		this.useCellList = useCellList;
+		this.supplier = supplier;
 		if (renderer != null) {
 			this.renderer = renderer;
 		}
@@ -239,7 +250,7 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		initWidget(container);
 	}
 
-	private void itemSelected(Object item) {
+	protected void itemSelected(Object item) {
 		if (maxSelectedItems != 0
 				&& search.getSelectedItems().size() >= maxSelectedItems) {
 			removeItem(search.getSelectedItems().iterator().next());
@@ -249,7 +260,7 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		update(old);
 	}
 
-	private void resultItemSelected(Object item) {
+	protected void resultItemSelected(Object item) {
 		Set old = new HashSet(search.getSelectedItems());
 		removeItem(item);
 		update(old);
@@ -266,9 +277,7 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 
 	protected Map createObjectMap() {
 		Map result = new HashMap();
-		Collection<HasId> collection = TransformManager.get().getCollection(
-				selectionObjectClass);
-		result.put("", filterAvailableObjects(collection));
+		result.put("", filterAvailableObjects(supplier.get()));
 		return result;
 	}
 
@@ -286,16 +295,16 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 	protected void customiseRightWidget() {
 	}
 
-	protected List<HasId> filterAvailableObjects(Collection<HasId> collection) {
-		ArrayList<HasId> l = new ArrayList();
+	protected List filterAvailableObjects(Collection collection) {
+		ArrayList l = new ArrayList();
 		if (filter == null) {
 			l.addAll(collection);
 			return l;
 		}
-		Iterator<HasId> itr = collection.iterator();
+		Iterator itr = collection.iterator();
 		while (itr.hasNext()) {
-			HasId obj = itr.next();
-			if (!filter.allow(obj)) {
+			Object obj = itr.next();
+			if (!filter.test(obj)) {
 				continue;
 			}
 			l.add(obj);

@@ -16,6 +16,10 @@ package cc.alcina.framework.gwt.client.widget.layout;
 
 import java.util.Iterator;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -24,7 +28,7 @@ import com.google.gwt.user.client.ui.Widget;
  * @author Nick Reddel
  */
 
- public class FlowPanel100pcHeight extends FlowPanel implements HasLayoutInfo {
+ public class FlowPanel100pcHeight extends FlowPanel implements HasLayoutInfo, HasClickHandlers {
 	public LayoutInfo getLayoutInfo() {
 		return new LayoutInfo() {
 			@Override
@@ -42,6 +46,10 @@ import com.google.gwt.user.client.ui.Widget;
 		};
 	}
 
+	@Override
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
+	}
 	protected int getClientAdjustHeightFp() {
 		return 0;
 	}

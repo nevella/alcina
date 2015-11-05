@@ -288,4 +288,8 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends
 			}
 		}
 	}
+
+	public void removeCriterion(SearchCriterion criterion) {
+		criteria.remove(criterion);
+	}
 }
