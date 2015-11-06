@@ -32,9 +32,8 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 	}
 
 	public void checkDisableFirstRowRemove() {
-		int count = 0;
 		for (FlatSearchRow row : rows.values()) {
-			row.disableMinus(count++ == 0);
+			row.disableMinus(rows.size() == 1);
 		}
 	}
 

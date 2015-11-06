@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FromObjectKeyValueMapper;
@@ -30,6 +32,24 @@ public interface HasEquivalence<T> {
 			this.left = left;
 			this.right = right;
 		}
+	}
+
+	public abstract static class HasEquivalenceAdapter<T> implements
+			HasEquivalence<T> {
+		protected T o;
+
+		public HasEquivalenceAdapter(T referent) {
+			this.o = referent;
+		}
+	}
+
+	public static <T, V extends HasEquivalenceAdapter<T>> T getEquivalent(
+			Collection<T> o1, T o2, Function<T, V> mapper) {
+		List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
+		List<V> l2 = Collections.singletonList(o2).stream().map(mapper)
+				.collect(Collectors.toList());
+		Collection intersection = HasEquivalenceHelper.intersection(l1, l2);
+		return (T) CommonUtils.first(intersection);
 	}
 
 	public static class HasEquivalenceHelper {

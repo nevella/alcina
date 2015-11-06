@@ -94,7 +94,7 @@ import com.google.gwt.view.client.SingleSelectionModel;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked","deprecation"})
 /**
  *
  * @author Nick Reddel

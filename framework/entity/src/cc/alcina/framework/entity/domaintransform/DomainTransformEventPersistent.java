@@ -91,7 +91,24 @@ public abstract class DomainTransformEventPersistent extends
 		// this is purely decorative, so client reflection can show the server
 		// id of the transform (since raw DTE has no id field)
 		event.setEventId(getId());
+		if (event.getUtcDate() == null) {
+			event.setUtcDate(serverCommitDate);
+		}
 		return event;
+	}
+
+	public void clearForSimplePersistence() {
+		setDomainTransformRequestPersistent(null);
+		setUser(null);
+		setSource(null);
+		getObjectClass();
+		getValueClass();
+		setObjectClassRef(null);
+		setValueClassRef(null);
+	}
+
+	public Date provideBestDate() {
+		return serverCommitDate != null ? serverCommitDate : getUtcDate();
 	}
 
 	public void copyFromNonPersistentEvent(DomainTransformEvent event) {

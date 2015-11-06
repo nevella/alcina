@@ -35,6 +35,9 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 			Renderer renderer, Supplier<Collection> supplier) {
 		super(selectionObjectClass, null, maxSelectedItems, renderer, false,
 				supplier);
+		if (maxSelectedItems == 1) {
+			addStyleName("single-item");
+		}
 	}
 
 	@Override

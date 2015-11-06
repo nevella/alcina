@@ -7,7 +7,15 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
 
-
+/**
+ * Handle merge - 
+ * run the mergers (generally per-interchange-model member class)
+ * persist the generated delta model
+ * @author nick@alcina.cc
+ *
+ * @param <I>
+ * @param <D>
+ */
 public abstract class MergeHandler<I extends SyncInterchangeModel, D extends SyncDeltaModel> {
 	protected I leftInterchangeModel;
 

@@ -13,11 +13,11 @@ sync really involves five phases:
 * __apply deltas__: (C, B' delta) >> C :: (A, B delta) >> A
 
 
-get the models
-transform to common format,
-merge common formats
-generate deltas 
-apply deltas
+get the models (domain specific code)
+transform to common format (maybe use a 'GraphTransformer')
+merge common formats (MergeRequestDispatcher or SyncDispatcher)
+generate deltas (done as part of above, SyncMerger)
+apply deltas (done as part of above, FlatDeltaPersister)
 
 
 ### SyncDispatchToken:
