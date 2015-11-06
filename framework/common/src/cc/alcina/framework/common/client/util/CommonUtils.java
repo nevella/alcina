@@ -74,7 +74,7 @@ public class CommonUtils {
 			if (o1 == null && o2 == null) {
 			} else {
 				if (o1 == null || o2 == null) {
-					Object nonNull = o1 == null ? o2 : 01;
+					Object nonNull = o1 == null ? o2 : o1;
 					if (nonNull instanceof String
 							&& nonNull.toString().trim().length() == 0) {
 						// keep going
