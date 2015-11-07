@@ -71,6 +71,18 @@ public interface Stream<T> {
 		list.sort(comparator);
 		return new CollectionStream(list);
 	}
+
+	default Optional<T> max(Comparator<? super T> comparator) {
+		T max = null;
+		for (Iterator<T> itr = iterator(); itr.hasNext();) {
+			T t = itr.next();
+			if (max == null || comparator.compare(max, t) < 0) {
+				max = t;
+			}
+		}
+		return Optional.ofNullable(max);
+	}
+
 	default Stream<T> sorted() {
 		List<T> list = ((CollectionStream<T>) this).asList();
 		Collections.sort(list);
