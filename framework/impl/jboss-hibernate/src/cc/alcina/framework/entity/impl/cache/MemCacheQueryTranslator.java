@@ -92,7 +92,6 @@ public class MemCacheQueryTranslator {
 			if (prefix.equals(root.alias)) {
 				propertyPath = propertyPath.substring(idx + 1);
 			} else {
-				int debug = 3;
 				MemCacheCriteria sub = aliasLookup.get(prefix);
 				if (sub == null) {
 					// no alias to root, just use original path

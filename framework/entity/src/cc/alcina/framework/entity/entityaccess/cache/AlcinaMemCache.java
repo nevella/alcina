@@ -2254,9 +2254,6 @@ public class AlcinaMemCache implements RegistrableService {
 			}
 			if (type == Date.class) {
 				long utcTime = rs.getLong(idx);
-				if (utcTime != 0) {
-					int debug = 3;
-				}
 				if (rs.wasNull()) {
 					return null;
 				}

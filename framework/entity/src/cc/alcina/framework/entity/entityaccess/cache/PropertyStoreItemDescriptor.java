@@ -95,8 +95,6 @@ public abstract class PropertyStoreItemDescriptor extends CacheItemDescriptor {
 				if (proxy == null) {
 					proxy = (T) createProxy(rowOffset, cache, id);
 					ctx.projectionProxies.put(locator, (MemCacheProxy) proxy);
-				} else {
-					int debug = 3;
 				}
 				return proxy;
 			}
