@@ -1840,3 +1840,7 @@ div.gwt-PopupPanel.bubble .bubble-up {
 .flat-search-row .operator .alcina-SelectorContainer {
 	min-width: 100px;
 }
+
+input.alcina-Filter {
+	width: calc(100% - 15px);
+}

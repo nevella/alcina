@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -34,8 +35,8 @@ public interface HasEquivalence<T> {
 		}
 	}
 
-	public abstract static class HasEquivalenceAdapter<T> implements
-			HasEquivalence<T> {
+	public abstract static class HasEquivalenceAdapter<T, E extends HasEquivalenceAdapter>
+			implements HasEquivalence<E> {
 		protected T o;
 
 		public HasEquivalenceAdapter(T referent) {
@@ -43,16 +44,18 @@ public interface HasEquivalence<T> {
 		}
 	}
 
-	public static <T, V extends HasEquivalenceAdapter<T>> T getEquivalent(
-			Collection<T> o1, T o2, Function<T, V> mapper) {
-		List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
-		List<V> l2 = Collections.singletonList(o2).stream().map(mapper)
-				.collect(Collectors.toList());
-		Collection intersection = HasEquivalenceHelper.intersection(l1, l2);
-		return (T) CommonUtils.first(intersection);
-	}
-
 	public static class HasEquivalenceHelper {
+		public static <T, V extends HasEquivalenceAdapter<T, ?>> T getEquivalent(
+				Collection<T> o1, T o2, Function<T, V> mapper) {
+			List<V> l1 = o1.stream().map(mapper).collect(Collectors.toList());
+			List<V> l2 = Collections.singletonList(o2).stream().map(mapper)
+					.collect(Collectors.toList());
+			List<V> intersection = (List) HasEquivalenceHelper.intersection(l1,
+					l2);
+			return intersection.isEmpty() ? null : CommonUtils
+					.first(intersection).o;
+		}
+
 		public static <T extends HasEquivalence> boolean contains(
 				Collection<T> o1, T o2) {
 			return !intersection(o1, Collections.singletonList(o2)).isEmpty();

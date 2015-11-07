@@ -15,6 +15,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
@@ -2251,8 +2253,21 @@ public class AlcinaMemCache implements RegistrableService {
 				return v;
 			}
 			if (type == Date.class) {
-				long lTime = rs.getLong(idx);
-				return rs.wasNull() ? null : new Date(lTime);
+				long utcTime = rs.getLong(idx);
+				if (utcTime != 0) {
+					int debug = 3;
+				}
+				if (rs.wasNull()) {
+					return null;
+				}
+				// was persisted by hibernate to utc, need to convert to local
+				// tz
+				// assume same tz for persist/retrieve
+				// int currentOffset =
+				// startupTz.getOffset(System.currentTimeMillis());
+				int persistOffset = startupTz.getOffset(utcTime);
+				long timeLocal = utcTime - persistOffset;
+				return rs.wasNull() ? null : new Date(timeLocal);
 				// Timestamp v = rs.getTimestamp(idx);
 				// return v == null ? null : new Date(v.getTime());
 			}
@@ -2286,6 +2301,12 @@ public class AlcinaMemCache implements RegistrableService {
 					+ type.getSimpleName());
 		}
 	}
+
+	long timzoneOffset = -1;
+
+	Calendar startupCal = Calendar.getInstance();
+
+	TimeZone startupTz = (TimeZone) startupCal.getTimeZone().clone();
 
 	class ConnResults implements Iterable<Object[]> {
 		ConnResultsIterator itr = new ConnResultsIterator();

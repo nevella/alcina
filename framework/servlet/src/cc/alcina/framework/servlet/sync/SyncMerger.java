@@ -244,6 +244,7 @@ public class SyncMerger<T> {
 		Map<T, String> ambiguousRight = new LinkedHashMap<T, String>();
 		// keys must match uniquely -- if not, fix manually
 		for (T left : leftItems) {
+			debugLeft(left);
 			List<String> ambiguous = new ArrayList();
 			T right = null;
 			String key = keyProvider.firstKey(left);
@@ -332,6 +333,9 @@ public class SyncMerger<T> {
 										.flattenMap(ambiguousLeft)),
 						CommonUtils.joinWithNewlineTab(CommonUtils
 								.flattenMap(ambiguousRight))));
+	}
+
+	protected void debugLeft(T left) {
 	}
 
 	protected CollectionFilter<T> getIgnoreAmbiguityForReportingFilter() {
