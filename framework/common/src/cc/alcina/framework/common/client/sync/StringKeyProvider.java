@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.sync;
 
+import java.util.Collections;
 import java.util.List;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -9,7 +10,9 @@ import com.totsp.gwittir.client.beans.Converter;
 public interface StringKeyProvider<T> {
 	public String firstKey(T object);
 
-	public List<String> allKeys(T object);
+	default List<String> allKeys(T object) {
+		return Collections.singletonList(firstKey(object));
+	}
 
 	public static class StringKeyProviderAllKeysConverter<T> implements
 			Converter<T, String> {
