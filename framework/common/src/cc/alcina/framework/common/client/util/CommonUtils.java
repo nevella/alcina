@@ -622,6 +622,15 @@ public class CommonUtils {
 		}
 	}
 
+	public static String padFive(int number) {
+		if (number < 10000) {
+			String s = String.valueOf(number);
+			return "00000".substring(5 - s.length()) + s;
+		} else {
+			return String.valueOf(number);
+		}
+	}
+
 	public static String padTwo(int number) {
 		if (number < 10) {
 			return "0" + number;
