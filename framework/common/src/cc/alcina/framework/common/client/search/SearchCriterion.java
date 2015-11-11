@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
@@ -65,6 +66,9 @@ public abstract class SearchCriterion extends BaseBindable implements
 	}
 
 	public String getDisplayName() {
+		if (CommonUtils.isNullOrEmpty(displayName)) {
+			return CommonUtils.simpleClassName(getClass());
+		}
 		return this.displayName;
 	}
 
@@ -91,7 +95,8 @@ public abstract class SearchCriterion extends BaseBindable implements
 		return toString();
 	}
 
-	protected <SC extends SearchCriterion> SC copyPropertiesFrom(SC copyFromCriterion) {
+	protected <SC extends SearchCriterion> SC copyPropertiesFrom(
+			SC copyFromCriterion) {
 		direction = copyFromCriterion.getDirection();
 		displayName = copyFromCriterion.getDisplayName();
 		return (SC) this;

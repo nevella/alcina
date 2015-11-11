@@ -54,6 +54,7 @@ public interface Stream<T> {
 	default long count() {
 		long count = 0;
 		for (Iterator<T> itr = iterator(); itr.hasNext();) {
+			itr.next();
 			count++;
 		}
 		return count;
