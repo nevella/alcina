@@ -642,6 +642,9 @@ public class CommonUtils {
 	public static String pluralise(String s, Collection c) {
 		return pluralise(s, c == null ? 0 : c.size(), false);
 	}
+	public static String pluraliseWithCount(String s, Collection c) {
+		return pluralise(s, c == null ? 0 : c.size(), true);
+	}
 
 	public static String pluralise(String s, int size, boolean withCount) {
 		if (withCount) {

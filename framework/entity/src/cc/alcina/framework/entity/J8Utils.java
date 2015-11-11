@@ -101,7 +101,6 @@ public class J8Utils {
 					valueMapper.apply(value));
 		}
 
-		@Override
 		public Set<java.util.stream.Collector.Characteristics> characteristics() {
 			return EnumSet.of(Characteristics.UNORDERED,
 					Characteristics.IDENTITY_FINISH);

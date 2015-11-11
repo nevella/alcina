@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.logic.RenderContext;
@@ -146,5 +147,22 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 		def.addCriterionToSoleCriteriaGroup(sc);
 		row.setValue(sc);
 		row.bind();
+	}
+
+	public boolean isNotTextOnly(SearchDefinition def) {
+		if (def == null) {
+			return false;
+		}
+		for (SearchCriterion sc : def.allCriteria()) {
+			if (sc instanceof TxtCriterion) {
+				continue;
+			}
+			Optional<FlatSearchable> searchable = searchableForCriterion(sc);
+			if (searchable.isPresent()
+					&& searchable.get().isNonDefaultValue(sc)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
