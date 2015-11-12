@@ -200,8 +200,14 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			ensureEventRequestsQueued(persistenceEvent);
 			DtrpQueued queuedEvent = ensureQueued(min);
 			DtrpQueued unpublished = getFirstUnpublished().orElse(null);
+			// if requests time out, the request is regarded as "published" - so
+			// we may hit
+			// queuedEvent.id is < unpublished.id
 			if (queuedEvent != unpublished) {
-				firstGap = new LongPair(unpublished.id, queuedEvent.id - 1);
+				if (queuedEvent != null && unpublished != null
+						&& queuedEvent.id > unpublished.id) {
+					firstGap = new LongPair(unpublished.id, queuedEvent.id - 1);
+				}
 			}
 			if (firstGap != null) {
 				logger.format("found gap (waiting) - rqid %s - gap %s",
@@ -471,8 +477,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			synchronized (requestQueue) {
 				status = newStatus;
 				firing = false;
-				//remove ref
-				persistenceEvent=null;
+				// remove ref
+				persistenceEvent = null;
 				getFirstUnpublished();
 			}
 			synchronized (DomainTransformPersistenceQueue.this) {
