@@ -42,7 +42,7 @@ public @interface Bean {
 
 	String description() default "";
 
-	String displayNamePropertyName();
+	String displayNamePropertyName() default "";
 
 
 	boolean allPropertiesVisualisable() default false;
