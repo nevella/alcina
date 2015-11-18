@@ -1,5 +1,8 @@
 package cc.alcina.framework.common.client.collections;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PropertyMapper.PropertyMapping;
@@ -28,6 +31,11 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 		result.rightAuxiliary = leftAuxiliary;
 		result.mapper = mapper.reverseMapper();
 		return result;
+	}
+
+	public List<String> getLeftPropertyNames() {
+		return mapper.getMappings().stream().map(m -> m.getLeftName())
+				.collect(Collectors.toList());
 	}
 
 	@Override

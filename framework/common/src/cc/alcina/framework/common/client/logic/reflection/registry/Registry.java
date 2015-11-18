@@ -566,4 +566,5 @@ public class Registry {
 				new PropertyKeyValueMapper(propertyName));
 		return byKey.get(value);
 	}
+	
 }

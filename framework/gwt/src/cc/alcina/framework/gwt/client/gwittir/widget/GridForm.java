@@ -308,7 +308,6 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 	@Override
 	protected void onLoad() {
 		super.onLoad();
-		
 		if (autofocusWidget instanceof Focusable
 				&& !RenderContext.get().getBoolean(
 						RenderContext.CONTEXT_IGNORE_AUTOFOCUS)) {
@@ -328,7 +327,8 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 	public Field getAutofocusField() {
 		return this.autofocusField;
 	}
-	public void setRowVisibility(int row, boolean visible){
+
+	public void setRowVisibility(int row, boolean visible) {
 		base.getRowFormatter().setVisible(row, visible);
 	}
 
@@ -337,10 +337,13 @@ public class GridForm extends AbstractTableWidget implements HasDefaultBinding,
 	}
 
 	public int getCaptionColumnWidth() {
+		if (this.fields.length == 0) {
+			return 0;
+		}
 		return base.getFlexCellFormatter().getElement(0, 0).getOffsetWidth();
 	}
 
 	public void setCaptionColumnWidth(int pixelWidth) {
-		 base.getFlexCellFormatter().setWidth(0, 0, pixelWidth+"px");		
+		base.getFlexCellFormatter().setWidth(0, 0, pixelWidth + "px");
 	}
 }

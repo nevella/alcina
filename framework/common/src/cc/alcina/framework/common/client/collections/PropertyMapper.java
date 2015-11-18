@@ -176,4 +176,5 @@ public class PropertyMapper {
 	public List<PropertyMapping> getMappings() {
 		return this.mappings;
 	}
+
 }

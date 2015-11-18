@@ -1,8 +1,12 @@
 package cc.alcina.framework.common.client.cache;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.MultikeyMapBase.DelegateMapCreator;
@@ -68,6 +72,22 @@ public class BaseProjectionLookupBuilder {
 
 		public void setBuilder(BaseProjectionLookupBuilder builder) {
 			this.builder = builder;
+		}
+	}
+
+	public static class BplDelegateMapCreatorStd extends
+			BaseProjectionLookupBuilder.BplDelegateMapCreator {
+		@Override
+		public Map createDelegateMap(int depthFromRoot) {
+			if (getBuilder().getCreators() != null) {
+				return getBuilder().getCreators()[depthFromRoot].get();
+			}
+			if (getBuilder().isNavigable()) {
+				return new TreeMap();
+			} else {
+				return getBuilder().isSorted() ? new TreeMap()
+						: new LinkedHashMap();
+			}
 		}
 	}
 
