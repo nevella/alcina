@@ -13,9 +13,15 @@
  */
 package cc.alcina.framework.common.client.gwittir.validator;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.gwt.client.util.TextUtils;
 
 import com.totsp.gwittir.client.validator.ValidationException;
 
@@ -64,6 +70,14 @@ public class EmailAddressValidator implements ParameterisedValidator {
 			}
 		}
 		return value;
+	}
+
+	public static List<String> provideAddressesForDefaultSeparator(
+			String addresses) {
+		addresses = TextUtils.normaliseAndTrim(addresses);
+		return Arrays.asList(addresses.split(STANDARD_MULTIPLE_SEPARATOR))
+				.stream().map(s -> TextUtils.normaliseAndTrim(s))
+				.collect(Collectors.toList());
 	}
 
 	public void setIgnoreEmpties(boolean ignoreEmpties) {

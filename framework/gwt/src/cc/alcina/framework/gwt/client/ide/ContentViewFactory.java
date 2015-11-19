@@ -127,7 +127,7 @@ public class ContentViewFactory {
 	private boolean cancelButton;
 
 	private boolean noCaption;
-	
+
 	private Comparator<Field> fieldOrder;
 
 	private Predicate<Field> fieldFilter;
@@ -424,8 +424,8 @@ public class ContentViewFactory {
 		return noCaption;
 	}
 
-	public ContentViewFactory noCaption(){
-		noCaption=true;
+	public ContentViewFactory noCaption() {
+		noCaption = true;
 		return this;
 	}
 
@@ -808,6 +808,10 @@ public class ContentViewFactory {
 			this.provisionalObjects = promote;
 		}
 
+		public boolean validateFields() {
+			return getBoundWidget().getBinding().validate();
+		}
+
 		public boolean validateAndCommit(final Widget sender,
 				final AsyncCallback<Void> serverValidationCallback) {
 			if (!validateBean()) {
@@ -988,11 +992,9 @@ public class ContentViewFactory {
 					int r = 0;
 					for (Binding b : grid.getBinding().getChildren()) {
 						BindingInstance right = b.getRight();
-						Display displayInfo = pa
-								.getAnnotationForProperty(
-										right.object.getClass(),
-										Display.class,
-										right.property.getName());
+						Display displayInfo = pa.getAnnotationForProperty(
+								right.object.getClass(), Display.class,
+								right.property.getName());
 						if (displayInfo != null) {
 							if (!PermissionsManager.get().isPermissible(
 									right.object, displayInfo.visible())) {
