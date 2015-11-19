@@ -19,6 +19,8 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientBase;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
@@ -31,7 +33,28 @@ import com.totsp.gwittir.client.validator.ValidationException;
  * 
  * @author Nick Reddel
  */
-public class ServerValidator implements ParameterisedValidator, Serializable {
+public class ServerValidator<V extends ServerValidationResult> implements
+		ParameterisedValidator, Serializable {
+	public static final transient String TOPIC_SERVER_VALIDATION_RESULT = ServerValidator.class
+			.getName() + ".TOPIC_SERVER_VALIDATION_RESULT";
+
+	public static boolean performingBeanValidation = false;
+
+	public static boolean listIsValid(List<ServerValidator> svs) {
+		for (ServerValidator sv : svs) {
+			if (sv.message != null) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static void notifyServerValidationResultListenerDelta(
+			TopicListener<ServerValidator> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(
+				TOPIC_SERVER_VALIDATION_RESULT, listener, add);
+	}
+
 	private String message;
 
 	private transient boolean validating;
@@ -44,14 +67,41 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 
 	private transient boolean ignoreValidation = false;
 
-	public static boolean performingBeanValidation = false;
+	private V serverValidationResult;
+
+	public String getMessage() {
+		return message;
+	}
+
+	public V getServerValidationResult() {
+		return this.serverValidationResult;
+	}
+
+	public String getValidatingMessage() {
+		return " validating";
+	}
+
+	public boolean isValidated() {
+		return this.validated;
+	}
 
 	public boolean isValidating() {
 		return this.validating;
 	}
 
-	public boolean isValidated() {
-		return this.validated;
+	public void reset() {
+		message = null;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public void setParameters(NamedParameter[] params) {
+	}
+
+	public void setServerValidationResult(V serverValidationResult) {
+		this.serverValidationResult = serverValidationResult;
 	}
 
 	public Object validate(final Object value) throws ValidationException {
@@ -64,16 +114,16 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 		}
 		if (GWT.isClient()) {
 			if (validating) {
-				validateAfterServerReturns=value;
+				validateAfterServerReturns = value;
 				final ProcessingServerValidationException psve = new ProcessingServerValidationException(
 						getValidatingMessage(), null);
-				throw(psve);
+				throw (psve);
 			}
 		}
 		if ((value == null && lastValidated == null)
 				|| (value != null && value.equals(lastValidated))) {
 			if (getMessage() != null) {
-				throw new ValidationException(getMessage(), getClass());
+				throw provideTypedException(getMessage());
 			} else {
 				return value;
 			}
@@ -88,45 +138,24 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 			AsyncCallback<List<ServerValidator>> callback = new AsyncCallback<List<ServerValidator>>() {
 				public void onFailure(Throwable caught) {
 					setMessage("Validator error");
-					resolveFeedback();
+					resolveFeedback(null);
 					cleanUp();
 					throw new WrappedRuntimeException("Validator error", caught);
 				}
 
 				public void onSuccess(List<ServerValidator> result) {
 					setMessage(null);
+					ServerValidator lastValidatorWithException = null;
 					for (ServerValidator sv : result) {
 						if (sv.getMessage() != null) {
+							lastValidatorWithException = sv;
 							handleServerValidationException(sv);
 						}
+						GlobalTopicPublisher.get().publishTopic(
+								TOPIC_SERVER_VALIDATION_RESULT, sv);
 					}
-					resolveFeedback();
+					resolveFeedback(lastValidatorWithException);
 					cleanUp();
-				}
-
-				@SuppressWarnings("unchecked")
-				void resolveFeedback() {
-					if (psve.feedback == null) {
-						return;
-					}
-					psve.feedback.resolve(psve.sourceWidget);
-					if (getMessage() != null) {
-						psve.feedback.handleException(psve.getSourceWidget(),
-								new ValidationException(getMessage(),
-										ServerValidator.this.getClass()));
-					} else {
-						AbstractBoundWidget bw = (AbstractBoundWidget) psve.sourceWidget;
-						// jiggery-pokery to tell the binding the value's ok
-						// ignore validation because otherwise we'll overwrite
-						// the last "real" validation request
-						ignoreValidation = true;
-						try {
-							bw.setValue(valueForPropChange);
-							bw.setValue(value);
-						} finally {
-							ignoreValidation = false;
-						}
-					}
 				}
 
 				@SuppressWarnings("unchecked")
@@ -143,6 +172,39 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 					}
 					psve.setSourceWidget(null);
 				}
+
+				@SuppressWarnings("unchecked")
+				void resolveFeedback(ServerValidator lastValidatorWithException) {
+					if (psve.feedback == null) {
+						return;
+					}
+					psve.feedback.resolve(psve.sourceWidget);
+					if (getMessage() != null) {
+						ValidationException validationException = null;
+						if (lastValidatorWithException == null) {
+							validationException = new ValidationException(
+									getMessage(),
+									ServerValidator.this.getClass());
+						} else {
+							validationException = lastValidatorWithException
+									.provideTypedException(getMessage());
+						}
+						psve.feedback.handleException(psve.getSourceWidget(),
+								validationException);
+					} else {
+						AbstractBoundWidget bw = (AbstractBoundWidget) psve.sourceWidget;
+						// jiggery-pokery to tell the binding the value's ok
+						// ignore validation because otherwise we'll overwrite
+						// the last "real" validation request
+						ignoreValidation = true;
+						try {
+							bw.setValue(valueForPropChange);
+							bw.setValue(value);
+						} finally {
+							ignoreValidation = false;
+						}
+					}
+				}
 			};
 			validateWithCallback(callback);
 			throw psve;
@@ -150,59 +212,37 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 		return value;
 	}
 
-	protected void validateWithCallback(
-			AsyncCallback<List<ServerValidator>> callback) {
-		ClientBase.getCommonRemoteServiceAsyncInstance()
-				.validateOnServer(
-						Arrays.asList(new ServerValidator[] { this }),
-						callback);
+	protected ValidationException provideTypedException(String sMessage) {
+		return new ValidationException(sMessage, getClass());
 	}
 
 	protected void handleServerValidationException(ServerValidator sv) {
 		setMessage(sv.getMessage());
 	}
 
-	public String getValidatingMessage() {
-		return " validating";
-	}
-
-	public void setMessage(String message) {
-		this.message = message;
-	}
-
-	public String getMessage() {
-		return message;
-	}
-
-	public void reset() {
-		message = null;
-	}
-
-	public static boolean listIsValid(List<ServerValidator> svs) {
-		for (ServerValidator sv : svs) {
-			if (sv.message != null) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	public void setParameters(NamedParameter[] params) {
+	protected void validateWithCallback(
+			AsyncCallback<List<ServerValidator>> callback) {
+		ClientBase.getCommonRemoteServiceAsyncInstance().validateOnServer(
+				Arrays.asList(new ServerValidator[] { this }), callback);
 	}
 
 	public static class ProcessingServerValidationException extends
 			ValidationException {
+		private Object sourceWidget;
+
+		private RelativePopupValidationFeedback feedback;
+
 		public ProcessingServerValidationException(String message,
 				Class validatorClass) {
 			super(message, validatorClass);
 		}
 
-		private Object sourceWidget;
-
-		private RelativePopupValidationFeedback feedback;
-
 		public RelativePopupValidationFeedback getFeedback() {
 			return this.feedback;
+		}
+
+		public Object getSourceWidget() {
+			return sourceWidget;
 		}
 
 		public void setFeedback(RelativePopupValidationFeedback feedback) {
@@ -211,10 +251,6 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 
 		public void setSourceWidget(Object sourceWidget) {
 			this.sourceWidget = sourceWidget;
-		}
-
-		public Object getSourceWidget() {
-			return sourceWidget;
 		}
 	}
 }

@@ -642,6 +642,7 @@ public class CommonUtils {
 	public static String pluralise(String s, Collection c) {
 		return pluralise(s, c == null ? 0 : c.size(), false);
 	}
+
 	public static String pluraliseWithCount(String s, Collection c) {
 		return pluralise(s, c == null ? 0 : c.size(), true);
 	}
@@ -1227,5 +1228,15 @@ public class CommonUtils {
 			result += sourceText.substring(spIdx);
 		}
 		return result;
+	}
+
+	public static boolean equalsIgnoreCase(String s1, String s2) {
+		if (s1 == s2) {
+			return true;
+		}
+		if (s1 == null || s2 == null) {
+			return false;
+		}
+		return s1.toLowerCase().equals(s2.toLowerCase());
 	}
 }

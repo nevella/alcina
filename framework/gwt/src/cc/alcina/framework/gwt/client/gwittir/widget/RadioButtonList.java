@@ -49,9 +49,9 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 
 	private Collection<T> values;
 
-	private  Renderer<T, String> renderer;
+	private Renderer<T, String> renderer;
 
-	private  String groupName;
+	private String groupName;
 
 	private Renderer<T, ImageResource> iconRenderer;
 
@@ -62,8 +62,10 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 	private Object nonMatchedValue;
 
 	private FlexTable table;
+
 	public RadioButtonList() {
 	}
+
 	public RadioButtonList(String groupName, Collection<T> values,
 			Renderer<T, String> renderer) {
 		this.groupName = groupName;
@@ -102,7 +104,13 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 			}
 		}
 		if (results.isEmpty() && singleResult()) {
-			results.add(nonMatchedValue);
+			if (nonMatchedValue instanceof Collection
+					&& ((Collection) nonMatchedValue).isEmpty()) {
+			} else {
+				if (nonMatchedValue != null) {
+					results.add(nonMatchedValue);
+				}
+			}
 		}
 		return singleResult() ? singleValue(results) : results;
 	}
