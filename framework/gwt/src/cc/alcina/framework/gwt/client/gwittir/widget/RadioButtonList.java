@@ -153,7 +153,7 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget implements
 		 * i.e. a value not in the // checkbox list - keep it // as a return
 		 * value for // getValue (rather than null)
 		 */
-		if (!CommonUtils.equalsWithNullEquality(value, lastValues)) {
+		if (!CommonUtils.equalsWithNullEmptyEquality(value, lastValues)) {
 			this.changes.firePropertyChange("value",
 					singleResult() ? singleValue((Collection<T>) lastValues)
 							: lastValues, getValue());
