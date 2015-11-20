@@ -33,7 +33,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
  * 
  * @author Nick Reddel
  */
-public class ServerValidator<V extends ServerValidationResult> implements
+public class ServerValidator implements
 		ParameterisedValidator, Serializable {
 	public static final transient String TOPIC_SERVER_VALIDATION_RESULT = ServerValidator.class
 			.getName() + ".TOPIC_SERVER_VALIDATION_RESULT";
@@ -67,13 +67,13 @@ public class ServerValidator<V extends ServerValidationResult> implements
 
 	private transient boolean ignoreValidation = false;
 
-	private V serverValidationResult;
+	private ServerValidationResult serverValidationResult;
 
 	public String getMessage() {
 		return message;
 	}
 
-	public V getServerValidationResult() {
+	public ServerValidationResult getServerValidationResult() {
 		return this.serverValidationResult;
 	}
 
@@ -100,7 +100,7 @@ public class ServerValidator<V extends ServerValidationResult> implements
 	public void setParameters(NamedParameter[] params) {
 	}
 
-	public void setServerValidationResult(V serverValidationResult) {
+	public void setServerValidationResult(ServerValidationResult serverValidationResult) {
 		this.serverValidationResult = serverValidationResult;
 	}
 
