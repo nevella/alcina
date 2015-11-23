@@ -44,7 +44,7 @@ public class BaseBindable extends BaseSourcesPropertyChangeEvents implements
 		public abstract T _getContext();
 	}
 
-	@Bean(displayNamePropertyName = "null")
+	@Bean
 	public static class BaseBindableWrapper<T> extends BaseBindable implements
 			ObjectWrapper<T> {
 		protected  T wrapee;

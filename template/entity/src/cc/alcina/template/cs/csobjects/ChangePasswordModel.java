@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.VisualiserInfo;
 import cc.alcina.framework.gwt.client.gwittir.customiser.PasswordCustomiser;
 
-@BeanInfo(displayNamePropertyName = "null")
+@BeanInfo
 @ObjectPermissions(read = @Permission(access = AccessLevel.LOGGED_IN), write = @Permission(access = AccessLevel.LOGGED_IN))
 public class ChangePasswordModel extends BaseBindable implements RemoteParameters{
 	private String newPassword;

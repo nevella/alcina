@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.util.CountingMap;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
-@Bean(displayNamePropertyName = "null")
+@Bean
 @Introspectable
 public class DatabaseStatsInfo implements Serializable {
 	private CountingMap<String> transformTexts = new CountingMap<String>();

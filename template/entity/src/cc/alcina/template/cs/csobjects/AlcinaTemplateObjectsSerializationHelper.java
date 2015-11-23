@@ -16,7 +16,7 @@ import cc.alcina.template.cs.persistent.ClassRefImpl;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
-@BeanInfo(displayNamePropertyName = "null")
+@BeanInfo
 @Introspectable
 /**
  * TODO - abstract
