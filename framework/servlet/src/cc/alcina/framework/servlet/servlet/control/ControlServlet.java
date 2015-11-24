@@ -104,7 +104,7 @@ public class ControlServlet extends HttpServlet {
 				msg += "\n";
 				msg += Registry.impl(AppLifecycleManager.class)
 						.getLifecycleServlet().dumpCustomProperties();
-				writeAndClose(status.toString(), resp);
+				writeAndClose(msg, resp);
 			}
 			break;
 		case CLUSTER_STATUS:
