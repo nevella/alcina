@@ -4,11 +4,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
+@RegistryLocation(registryPoint=RegistryHistoryMapper.class,implementationType=ImplementationType.SINGLETON)
 public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	Map<String, BasePlaceTokenizer> tokenizersByPrefix = new LinkedHashMap<>();
 

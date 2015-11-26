@@ -38,6 +38,7 @@ import java.security.cert.X509Certificate;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -1204,8 +1205,12 @@ public class SEUtilities {
 		return sb.toString();
 	}
 
-	public static Date toOldDate(LocalDate ldt) {
-		return Date.from(ldt.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	public static Date toOldDate(LocalDate ld) {
+		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	}
+
+	public static Date toOldDate(LocalDateTime ldt) {
+		return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
 	}
 
 	public static boolean hasFractional(double d) {
