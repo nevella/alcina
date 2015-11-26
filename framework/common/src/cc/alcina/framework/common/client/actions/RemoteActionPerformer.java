@@ -18,5 +18,5 @@ package cc.alcina.framework.common.client.actions;
  * @author Nick Reddel
  */
 public interface RemoteActionPerformer<T extends RemoteAction> {
-	void performAction(T action);
+	void performAction(T action) throws Exception;
 }

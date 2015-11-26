@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -47,6 +48,9 @@ public abstract class CacheQuery<Q extends CacheQuery> {
 
 	public Q filter(String key, Object value) {
 		return filter(new CacheFilter(key, value));
+	}
+	public Q filter(Predicate p) {
+		return filter(new CacheFilter(p));
 	}
 
 	public Q filter(String key, Object value, FilterOperator operator) {

@@ -437,4 +437,13 @@ public class JobRegistry implements RegistrableService {
 		}
 		return null;
 	}
+
+	public void log(String message) {
+		Logger logger = getContextLogger();
+		if (logger == null) {
+			System.out.println(message);
+		} else {
+			logger.info(message);
+		}
+	}
 }
