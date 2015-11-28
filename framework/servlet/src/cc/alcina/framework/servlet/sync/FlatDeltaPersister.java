@@ -70,6 +70,9 @@ public abstract class FlatDeltaPersister<D extends SyncDeltaModel> {
 		case MERGED:
 			System.out.println("updated -> " + object);
 			break;
+		case DELETED:
+			System.out.println("deleted -> " + object);
+			break;
 		}
 	}
 
