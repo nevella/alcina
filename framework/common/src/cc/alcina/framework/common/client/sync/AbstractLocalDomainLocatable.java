@@ -42,6 +42,9 @@ public abstract class AbstractLocalDomainLocatable<T extends LocalDomainLocatabl
 			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
 			T local = findLocalEquivalent();
 			if (local != null && local.equivalentTo(this)) {
+				if (local == this) {
+					throw new RuntimeException("comparing to identical object");
+				}
 				return null;
 			}
 		} finally {
