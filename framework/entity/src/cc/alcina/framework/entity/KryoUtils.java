@@ -25,6 +25,10 @@ public class KryoUtils {
 		Kryo kryo = newKryo();
 		return kryo.copy(t);
 	}
+	public static <T> T copyShallow(T t) {
+		Kryo kryo = newKryo();
+		return kryo.copyShallow(t);
+	}
 
 	public static <T> T deserializeFromBase64(String string, Class<T> clazz) {
 		return deserializeFromByteArray(
