@@ -203,9 +203,11 @@ public class GraphProjection {
 		this();
 		setFilters(fieldFilter, dataFilter);
 	}
-
 	public Field[] getFieldsForClass(Object projected) throws Exception {
 		Class<? extends Object> clazz = projected.getClass();
+		return getFieldsForClass(clazz);
+	}
+	public Field[] getFieldsForClass(Class clazz) throws Exception {
 		Field[] result = projectableFields.get(clazz);
 		if (result == null) {
 			List<Field> allFields = new ArrayList<Field>();

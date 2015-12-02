@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class CsvUtils {
 	public static List<List<String>> parseCsv(String txt) {
@@ -84,6 +85,27 @@ public class CsvUtils {
 		return sb.toString();
 	}
 
+	public static StringBuilder headerValuesToCsv(List<String> headers,
+			List<List<String>> values) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < headers.size(); i++) {
+			String header = headers.get(i);
+			headers.set(i, header.replace(" ", "_"));
+		}
+		sb.append(asCsvRow(headers));
+		sb.append("\n");
+		for (int j = 0; j < values.size(); j++) {
+			List<String> row = values.get(j);
+			for (int i = 0; i < row.size(); i++) {
+				String cell = row.get(i);
+				row.set(i, cell == null ? "" : cell.replace("\n", "\\n"));
+			}
+			sb.append(asCsvRow(row));
+			sb.append("\n");
+		}
+		return sb;
+	}
+
 	public static class CsvRow {
 		private int rowIdx;
 
@@ -105,6 +127,10 @@ public class CsvUtils {
 		int idx = 0;
 
 		private List<List<String>> grid;
+
+		public List<String> headers() {
+			return colLookup.keySet().stream().collect(Collectors.toList());
+		}
 
 		public CsvCols(List<List<String>> grid) {
 			this.grid = grid;
