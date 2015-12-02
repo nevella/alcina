@@ -28,14 +28,14 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 	class Mapping {
 		String propertyPath;
 
-		Function<T, String> function;
+		Function<T, Object> function;
 
 		String alias;
 
 		PropertyPathAccessor accessor;
 
 		public Mapping(String propertyPath, String alias,
-				Function<T, String> function) {
+				Function<T, Object> function) {
 			this.propertyPath = propertyPath;
 			this.alias = alias;
 			this.function = function;
@@ -58,7 +58,7 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 	}
 
 	protected void define(String propertyPath, String alias,
-			Function<T, String> function) {
+			Function<T, Object> function) {
 		mappings.add(new Mapping(propertyPath, alias, function));
 	}
 
@@ -67,7 +67,8 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 		List<String> result = new ArrayList<>();
 		for (Mapping mapping : mappings) {
 			if (mapping.function != null) {
-				result.add(mapping.function.apply(t));
+				result.add(CommonUtils.nullSafeToString(mapping.function
+						.apply(t)));
 			} else {
 				Object value = mapping.accessor.getChainedProperty(t);
 				result.add(CommonUtils.nullSafeToString(value));
