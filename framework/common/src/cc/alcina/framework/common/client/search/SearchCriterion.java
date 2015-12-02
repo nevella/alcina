@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.csobjects.BaseBindable;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -22,6 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
@@ -30,6 +32,9 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class SearchCriterion extends BaseBindable implements
 		TreeRenderable, HasEquivalence<SearchCriterion>, GwtCloneable {
+	public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
+			+ ".CONTEXT_ENSURE_DISPLAY_NAME";
+
 	// TODO: great big injection hole here - should be checked server-side
 	// FIXED: - transient, and set in the server validation phase
 	private transient String targetPropertyName;
@@ -66,7 +71,8 @@ public abstract class SearchCriterion extends BaseBindable implements
 	}
 
 	public String getDisplayName() {
-		if (CommonUtils.isNullOrEmpty(displayName)) {
+		if (CommonUtils.isNullOrEmpty(displayName)
+				&& LooseContext.is(CONTEXT_ENSURE_DISPLAY_NAME)) {
 			return CommonUtils.simpleClassName(getClass());
 		}
 		return this.displayName;
