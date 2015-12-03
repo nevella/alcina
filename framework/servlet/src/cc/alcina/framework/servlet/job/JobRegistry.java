@@ -439,7 +439,11 @@ public class JobRegistry implements RegistrableService {
 	}
 
 	public void log(String message) {
+	}
+
+	public void log(String message, Object... params) {
 		Logger logger = getContextLogger();
+		message = String.format(message, params);
 		if (logger == null) {
 			System.out.println(message);
 		} else {
