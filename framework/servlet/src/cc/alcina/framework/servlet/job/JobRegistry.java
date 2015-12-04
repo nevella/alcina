@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.RemoteActionLogger;
 import cc.alcina.framework.servlet.RemoteActionLoggerProvider;
@@ -67,8 +68,7 @@ public class JobRegistry implements RegistrableService {
 				JobTracker result = o.exportableForm();
 				seen.put(o, result);
 				result.setParent(convert(result.getParent()));
-				result.setChildren(CollectionFilters.convert(
-						result.getChildren(), this));
+				result.setChildren(CollectionFilters.convert(result.getChildren(), this));
 				return result;
 			}
 		};
@@ -85,10 +85,8 @@ public class JobRegistry implements RegistrableService {
 	}
 
 	public static String getLauncherName() {
-		String launcherName = ResourceUtilities.getBundledString(
-				JobRegistry.class, "launcherName");
-		launcherName = launcherName.isEmpty() ? EntityLayerUtils
-				.getLocalHostName() : launcherName;
+		String launcherName = ResourceUtilities.getBundledString(JobRegistry.class, "launcherName");
+		launcherName = launcherName.isEmpty() ? EntityLayerUtils.getLocalHostName() : launcherName;
 		return launcherName;
 	}
 
@@ -96,32 +94,24 @@ public class JobRegistry implements RegistrableService {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_FAILURE, tracker);
 	}
 
-	public static void notifyJobFailureListenerDelta(
-			TopicListener<JobTracker> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_JOB_FAILURE, listener,
-				add);
+	public static void notifyJobFailureListenerDelta(TopicListener<JobTracker> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_JOB_FAILURE, listener, add);
 	}
 
-	public static final String TOPIC_JOB_FAILURE = JobRegistry.class.getName()
-			+ ".TOPIC_JOB_FAILURE";
+	public static final String TOPIC_JOB_FAILURE = JobRegistry.class.getName() + ".TOPIC_JOB_FAILURE";
 
-	public static final String TOPIC_JOB_STARTED = JobRegistry.class.getName()
-			+ ".TOPIC_JOB_STARTED";
+	public static final String TOPIC_JOB_STARTED = JobRegistry.class.getName() + ".TOPIC_JOB_STARTED";
 
-	public static final String CONTEXT_TRACKER = JobRegistry.class.getName()
-			+ ".CONTEXT_TRACKER";
+	public static final String CONTEXT_TRACKER = JobRegistry.class.getName() + ".CONTEXT_TRACKER";
 
-	public static final String CONTEXT_NEXT_JOB_ID = JobRegistry.class
-			.getName() + ".CONTEXT_NEXT_JOB_ID";
+	public static final String CONTEXT_NEXT_JOB_ID = JobRegistry.class.getName() + ".CONTEXT_NEXT_JOB_ID";
 
-	public static final String CONTEXT_NON_PERSISTENT = JobRegistry.class
-			.getName() + ".CONTEXT_NON_PERSISTENT";
+	public static final String CONTEXT_NON_PERSISTENT = JobRegistry.class.getName() + ".CONTEXT_NON_PERSISTENT";
 
-	public static final String CONTEXT_USE_LOGGER = JobRegistry.class.getName()
-			+ ".CONTEXT_USE_LOGGER";
+	public static final String CONTEXT_USE_LOGGER = JobRegistry.class.getName() + ".CONTEXT_USE_LOGGER";
 
-	public static final String CONTEXT_PERFORMING_CLUSTERED_JOB = JobRegistry.class
-			.getName() + ".CONTEXT_PERFORMING_CLUSTERED_JOB";
+	public static final String CONTEXT_PERFORMING_CLUSTERED_JOB = JobRegistry.class.getName()
+			+ ".CONTEXT_PERFORMING_CLUSTERED_JOB";
 
 	public static final String NO_LOG = "no-log";
 
@@ -137,17 +127,13 @@ public class JobRegistry implements RegistrableService {
 	private TimerTask jobReaperTask = new TimerTask() {
 		@Override
 		public void run() {
-			long cutoff = System.currentTimeMillis()
-					- TimeConstants.ONE_HOUR_MS * 2;
-			for (Iterator<Entry<String, Long>> itr = trackerTimeout.entrySet()
-					.iterator(); itr.hasNext();) {
+			long cutoff = System.currentTimeMillis() - TimeConstants.ONE_HOUR_MS * 2;
+			for (Iterator<Entry<String, Long>> itr = trackerTimeout.entrySet().iterator(); itr.hasNext();) {
 				Entry<String, Long> entry = itr.next();
 				if (entry.getValue() < cutoff) {
 					itr.remove();
 					trackerMap.remove(entry.getKey());
-					System.out.format(
-							"jobReaperTask - removed job with id %s\n",
-							entry.getKey());
+					System.out.format("jobReaperTask - removed job with id %s\n", entry.getKey());
 				}
 			}
 		}
@@ -155,8 +141,7 @@ public class JobRegistry implements RegistrableService {
 
 	private JobRegistry() {
 		jobReaperTimer = new Timer();
-		jobReaperTimer.scheduleAtFixedRate(jobReaperTask, 0,
-				15 * TimeConstants.ONE_MINUTE_MS);
+		jobReaperTimer.scheduleAtFixedRate(jobReaperTask, 0, 15 * TimeConstants.ONE_MINUTE_MS);
 	}
 
 	@Override
@@ -243,8 +228,7 @@ public class JobRegistry implements RegistrableService {
 		Set<Entry<String, JobTracker>> entries = trackerMap.entrySet();
 		List<String> runningJobIds = new ArrayList<String>();
 		for (Entry<String, JobTracker> entry : entries) {
-			if (!entry.getValue().isComplete()
-					&& entry.getValue().getParent() == null) {
+			if (!entry.getValue().isComplete() && entry.getValue().getParent() == null) {
 				runningJobIds.add(entry.getKey());
 			}
 		}
@@ -277,8 +261,7 @@ public class JobRegistry implements RegistrableService {
 
 	public void putTracker(JobTracker jobTracker) {
 		trackerMap.put(jobTracker.getId(), jobTracker);
-		trackerTimeout.put(jobTracker.getId(), System.currentTimeMillis()
-				+ TimeConstants.ONE_HOUR_MS);
+		trackerTimeout.put(jobTracker.getId(), System.currentTimeMillis() + TimeConstants.ONE_HOUR_MS);
 	}
 
 	public void removeTracker(final JobTracker tracker) {
@@ -319,8 +302,8 @@ public class JobRegistry implements RegistrableService {
 		}
 		if (tracker.getLogger() == null) {
 			Logger custom = LooseContext.get(CONTEXT_USE_LOGGER);
-			tracker.setLogger(custom != null ? custom : Registry.impl(
-					RemoteActionLoggerProvider.class).createLogger(jobClass));
+			tracker.setLogger(
+					custom != null ? custom : Registry.impl(RemoteActionLoggerProvider.class).createLogger(jobClass));
 		}
 		pushContextTracker(tracker);
 		LooseContext.getContext().publishTopic(TOPIC_JOB_STARTED, tracker);
@@ -337,8 +320,7 @@ public class JobRegistry implements RegistrableService {
 		long itemsCompleted = contextTracker.getItemsCompleted();
 		long itemCount = contextTracker.getItemCount();
 		double progress = ((double) itemsCompleted) / ((double) itemCount);
-		jobProgress(String.format("(%s/%s) -  %s", itemsCompleted, itemCount,
-				message), progress);
+		jobProgress(String.format("(%s/%s) -  %s", itemsCompleted, itemCount, message), progress);
 	}
 
 	private void flushTracker(JobTracker tracker) {
@@ -355,8 +337,7 @@ public class JobRegistry implements RegistrableService {
 		return CollectionFilters.filter(trackerMap.values(), filter);
 	}
 
-	private void jobComplete(JobTracker tracker, JobResultType resultType,
-			String message) {
+	private void jobComplete(JobTracker tracker, JobResultType resultType, String message) {
 		tracker.setComplete(true);
 		tracker.setProgressMessage(message);
 		tracker.setEndTime(new Date());
@@ -390,12 +371,10 @@ public class JobRegistry implements RegistrableService {
 			long itemCount = tracker.getItemCount();
 			if (itemCount != 0 && tracker.getParent() == null) {
 				double avgTime = tracker.getJobDuration() / itemCount;
-				logger.info(String.format(
-						"Run time: %.4f s. - avg. time per item: %.0f ms.",
+				logger.info(String.format("Run time: %.4f s. - avg. time per item: %.0f ms.",
 						tracker.getJobDuration() / 1000, avgTime));
 			} else {
-				logger.info(String.format("Run time: %.4f s.",
-						tracker.getJobDuration() / 1000));
+				logger.info(String.format("Run time: %.4f s.", tracker.getJobDuration() / 1000));
 			}
 		}
 		flushTracker(tracker);
@@ -404,14 +383,11 @@ public class JobRegistry implements RegistrableService {
 	private void popContextTracker(JobTracker tracker) {
 		JobTracker current = getContextTracker();
 		if (current != tracker) {
-			System.out.format(
-					"warn -- popping wrong tracker %s, thread-current %s\n",
-					tracker, current);
+			System.out.format("warn -- popping wrong tracker %s, thread-current %s\n", tracker, current);
 		} else {
 			JobTracker parent = tracker.getParent();
 			if (parent != null) {
-				List<JobTracker> newList = new ArrayList<JobTracker>(
-						parent.getChildren());
+				List<JobTracker> newList = new ArrayList<JobTracker>(parent.getChildren());
 				newList.remove(tracker);
 				parent.setChildren(newList);
 			}
@@ -423,8 +399,7 @@ public class JobRegistry implements RegistrableService {
 		JobTracker current = getContextTracker();
 		if (current != null) {
 			tracker.setParent(current);
-			List<JobTracker> newList = new ArrayList<JobTracker>(
-					current.getChildren());
+			List<JobTracker> newList = new ArrayList<JobTracker>(current.getChildren());
 			current.getChildren().add(tracker);
 			current.setChildren(newList);
 		}
@@ -448,6 +423,15 @@ public class JobRegistry implements RegistrableService {
 			System.out.println(message);
 		} else {
 			logger.info(message);
+		}
+	}
+
+	public void warn(Exception e) {
+		Logger logger = getContextLogger();
+		if (logger == null) {
+			e.printStackTrace();
+		} else {
+			logger.warn(e);
 		}
 	}
 }
