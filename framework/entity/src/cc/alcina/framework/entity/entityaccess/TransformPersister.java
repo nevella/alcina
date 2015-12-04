@@ -39,8 +39,8 @@ import cc.alcina.framework.entity.domaintransform.policy.PersistenceLayerTransfo
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
 public class TransformPersister {
-	private static final String TOPIC_PERSISTING_TRANSFORMS = TransformPersister.class
-			.getName() + ".TOPIC_PERSISTING_TRANSFORMS";
+	private static final String TOPIC_PERSISTING_TRANSFORMS = TransformPersister.class.getName()
+			+ ".TOPIC_PERSISTING_TRANSFORMS";
 
 	private EntityManager entityManager;
 
@@ -50,17 +50,14 @@ public class TransformPersister {
 		return this.entityManager;
 	}
 
-	public DomainTransformLayerWrapper transformExPersistenceContext(
-			TransformPersistenceToken token) {
+	public DomainTransformLayerWrapper transformExPersistenceContext(TransformPersistenceToken token) {
 		DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper();
 		boolean perform = true;
 		while (perform) {
 			perform = false;
 			try {
-				LooseContext
-						.pushWithBoolean(TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
-				Registry.impl(CommonPersistenceProvider.class)
-						.getCommonPersistence()
+				LooseContext.pushWithBoolean(TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
+				Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
 						.transformInPersistenceContext(this, token, wrapper);
 			} catch (RuntimeException ex) {
 				DeliberatelyThrownWrapperException dtwe = null;
@@ -75,10 +72,8 @@ public class TransformPersister {
 				LooseContext.pop();
 			}
 			if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
-				token.getRequest().updateTransformCommitType(
-						CommitType.TO_STORAGE, true);
-				DomainTransformException firstException = token
-						.getTransformExceptions().get(0);
+				token.getRequest().updateTransformCommitType(CommitType.TO_STORAGE, true);
+				DomainTransformException firstException = token.getTransformExceptions().get(0);
 				perform = !firstException.irresolvable();
 			} else if (token.getPass() == Pass.RETRY_WITH_IGNORES) {
 				token.setPass(Pass.TRY_COMMIT);
@@ -86,22 +81,20 @@ public class TransformPersister {
 			}
 		}
 		if (wrapper.response.getResult() == DomainTransformResponseResult.FAILURE) {
-			Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().expandExceptionInfo(wrapper);
+			Registry.impl(CommonPersistenceProvider.class).getCommonPersistence().expandExceptionInfo(wrapper);
 		}
 		return wrapper;
 	}
 
-	private void putExceptionInWrapper(TransformPersistenceToken token,
-			Exception e, DomainTransformLayerWrapper wrapper) {
+	private void putExceptionInWrapper(TransformPersistenceToken token, Exception e,
+			DomainTransformLayerWrapper wrapper) {
 		if (e != null) {
 			DomainTransformException transformException;
 			if (e instanceof DomainTransformException) {
 				transformException = (DomainTransformException) e;
 			} else {
 				transformException = new DomainTransformException(e);
-				Registry.impl(JPAImplementation.class).interpretException(
-						transformException);
+				Registry.impl(JPAImplementation.class).interpretException(transformException);
 			}
 			if (!token.getTransformExceptions().contains(transformException)) {
 				token.getTransformExceptions().add(transformException);
@@ -113,16 +106,13 @@ public class TransformPersister {
 		response.setRequest(request);
 		response.setRequestId(request.getRequestId());
 		response.getTransformExceptions().clear();
-		response.getTransformExceptions()
-				.addAll(token.getTransformExceptions());
+		response.getTransformExceptions().addAll(token.getTransformExceptions());
 		wrapper.response = response;
 	}
 
-	private void possiblyAddSilentSkips(TransformPersistenceToken token,
-			DomainTransformException transformException) {
+	private void possiblyAddSilentSkips(TransformPersistenceToken token, DomainTransformException transformException) {
 		DomainTransformEvent event = transformException.getEvent();
-		List<DomainTransformEvent> allTransforms = token.getRequest()
-				.allTransforms();
+		List<DomainTransformEvent> allTransforms = token.getRequest().allTransforms();
 		int i = allTransforms.indexOf(event) - 1;
 		int addPos = token.getTransformExceptions().size() - 1;
 		for (; i >= 0; i--) {
@@ -131,24 +121,20 @@ public class TransformPersister {
 				break;
 			} else {
 				token.getIgnoreInExceptionPass().add(itrEvent);
-				DomainTransformException silentSkip = new DomainTransformException(
-						itrEvent, transformException.getType());
+				DomainTransformException silentSkip = new DomainTransformException(itrEvent,
+						transformException.getType());
 				silentSkip.setSilent(true);
 				token.getTransformExceptions().add(addPos, silentSkip);
 			}
 		}
 	}
 
-	private Integer getHighestPersistedRequestIdForClientInstance(
-			long clientInstanceId) {
-		String eql = String
-				.format("select max(dtrq.requestId) as maxId "
-						+ "from %s dtrq where dtrq.clientInstance.id=%s ",
-						commonPersistenceBase.getImplementation(
-								DomainTransformRequestPersistent.class)
-								.getSimpleName(), clientInstanceId);
-		Integer result = (Integer) getEntityManager().createQuery(eql)
-				.getSingleResult();
+	private Integer getHighestPersistedRequestIdForClientInstance(long clientInstanceId) {
+		String eql = String.format(
+				"select max(dtrq.requestId) as maxId " + "from %s dtrq where dtrq.clientInstance.id=%s ",
+				commonPersistenceBase.getImplementation(DomainTransformRequestPersistent.class).getSimpleName(),
+				clientInstanceId);
+		Integer result = (Integer) getEntityManager().createQuery(eql).getSingleResult();
 		return result;
 	}
 
@@ -156,17 +142,16 @@ public class TransformPersister {
 
 	private int determinedExceptionCount;
 
-	public static final String CONTEXT_REPLAYING_FOR_LOGS = ThreadlocalTransformManager.class
-			.getName() + ".CONTEXT_REPLAYING_FOR_LOGS";
+	public static final String CONTEXT_REPLAYING_FOR_LOGS = ThreadlocalTransformManager.class.getName()
+			+ ".CONTEXT_REPLAYING_FOR_LOGS";
 
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS = 20 * 1000;
 
 	private static final long MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS = 40 * 1000;
 
-	public void transformInPersistenceContext(
-			final TransformPersistenceToken token,
-			CommonPersistenceBase commonPersistenceBase,
-			EntityManager entityManager, DomainTransformLayerWrapper wrapper) {
+	public void transformInPersistenceContext(final TransformPersistenceToken token,
+			CommonPersistenceBase commonPersistenceBase, EntityManager entityManager,
+			DomainTransformLayerWrapper wrapper) {
 		this.entityManager = entityManager;
 		this.commonPersistenceBase = commonPersistenceBase;
 		IUser incomingUser = PermissionsManager.get().getUser();
@@ -185,23 +170,17 @@ public class TransformPersister {
 			tm.resetTltm(locatorMap, token.getTransformExceptionPolicy());
 			tm.setEntityManager(getEntityManager());
 			ClientInstance persistentClientInstance = (ClientInstance) commonPersistenceBase
-					.findImplInstance(ClientInstance.class, request
-							.getClientInstance().getId());
-			if (persistentClientInstance == null
-					|| (persistentClientInstance.getAuth() != null && !(persistentClientInstance
-							.getAuth().equals(request.getClientInstance()
-							.getAuth())))) {
-				DomainTransformException ex = new DomainTransformException(
-						"Invalid client instance authentication");
+					.findImplInstance(ClientInstance.class, request.getClientInstance().getId());
+			if (persistentClientInstance == null || (persistentClientInstance.getAuth() != null
+					&& !(persistentClientInstance.getAuth().equals(request.getClientInstance().getAuth())))) {
+				DomainTransformException ex = new DomainTransformException("Invalid client instance authentication");
 				ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
 				putExceptionInWrapper(token, ex, wrapper);
 				return;
 			}
-			if (persistentClientInstance.getUser().getId() != PermissionsManager
-					.get().getUserId() && !token.isIgnoreClientAuthMismatch()) {
-				if (!token.getTransformExceptionPolicy()
-						.ignoreClientAuthMismatch(persistentClientInstance,
-								request)) {
+			if (persistentClientInstance.getUser().getId() != PermissionsManager.get().getUserId()
+					&& !token.isIgnoreClientAuthMismatch()) {
+				if (!token.getTransformExceptionPolicy().ignoreClientAuthMismatch(persistentClientInstance, request)) {
 					DomainTransformException ex = new DomainTransformException(
 							"Browser login mismatch with transform request authentication");
 					ex.setType(DomainTransformExceptionType.INVALID_AUTHENTICATION);
@@ -210,8 +189,7 @@ public class TransformPersister {
 				}
 			}
 			tm.setClientInstance(persistentClientInstance);
-			if (locatorMap != null && token.isPossiblyReconstitueLocalIdMap()
-					&& locatorMap.isEmpty()) {
+			if (locatorMap != null && token.isPossiblyReconstitueLocalIdMap() && locatorMap.isEmpty()) {
 				tm.reconstituteHiliMap();
 			}
 			List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
@@ -219,58 +197,44 @@ public class TransformPersister {
 			dtrs.add(request);
 			Integer highestPersistedRequestId = null;
 			// legacy - repair incorrect client behaviour
-			boolean persistRequestsBeforeHightestPersisted = ResourceUtilities
-					.getBoolean(getClass(),
-							"persistRequestsBeforeHightestPersisted");
-			if (!persistRequestsBeforeHightestPersisted
-					&& token.isPossiblyReconstitueLocalIdMap()) {
-				highestPersistedRequestId = getHighestPersistedRequestIdForClientInstance(request
-						.getClientInstance().getId());
+			boolean persistRequestsBeforeHightestPersisted = ResourceUtilities.getBoolean(getClass(),
+					"persistRequestsBeforeHightestPersisted");
+			if (!persistRequestsBeforeHightestPersisted && token.isPossiblyReconstitueLocalIdMap()) {
+				highestPersistedRequestId = getHighestPersistedRequestIdForClientInstance(
+						request.getClientInstance().getId());
 				for (int i = dtrs.size() - 1; i >= 0; i--) {
 					DomainTransformRequest dtr = dtrs.get(i);
-					if (highestPersistedRequestId != null
-							&& dtr.getRequestId() <= highestPersistedRequestId) {
+					if (highestPersistedRequestId != null && dtr.getRequestId() <= highestPersistedRequestId) {
 						dtrs.remove(i);
 					}
 				}
 			}
 			if (token.getPass() == Pass.TRY_COMMIT) {
-				EntityLayerObjects
-						.get()
-						.getMetricLogger()
-						.info(String
-								.format("domain transform - %s - clid:"
-										+ "%s - rqid:%s - highestPersistedRequestId:%s",
-										persistentClientInstance.getUser()
-												.getUserName(),
-										request.getClientInstance().getId(),
-										request.getRequestId(),
-										(highestPersistedRequestId == null ? "(servlet layer)"
-												: "highestPersistedRequestId:"
-														+ highestPersistedRequestId)));
+				EntityLayerObjects.get().getMetricLogger()
+						.info(String.format(
+								"domain transform - %s - clid:" + "%s - rqid:%s - highestPersistedRequestId:%s",
+								persistentClientInstance.getUser().getUserName(), request.getClientInstance().getId(),
+								request.getRequestId(), (highestPersistedRequestId == null ? "(servlet layer)"
+										: "highestPersistedRequestId:" + highestPersistedRequestId)));
 			}
 			int transformCount = 0;
-			boolean replaying = LooseContext
-					.getBoolean(CONTEXT_REPLAYING_FOR_LOGS);
+			boolean replaying = LooseContext.getBoolean(CONTEXT_REPLAYING_FOR_LOGS);
 			loop_dtrs: for (DomainTransformRequest dtr : dtrs) {
 				if (dtr.checkForDuplicateEvents()) {
-					System.out.println("*** duplicate create events in rqId: "
-							+ dtr.getRequestId());
+					System.out.println("*** duplicate create events in rqId: " + dtr.getRequestId());
 				}
 				List<DomainTransformEvent> items = dtr.getEvents();
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();
 				if (token.getPass() == Pass.TRY_COMMIT) {
-					commonPersistenceBase.cacheEntities(items, token
-							.getTransformExceptionPolicy()
-							.precreateMissingEntities(), true);
+					commonPersistenceBase.cacheEntities(items,
+							token.getTransformExceptionPolicy().precreateMissingEntities(), true);
 				}
 				int backupEventIdCounter = 0;
 				for (DomainTransformEvent event : items) {
 					if (event.getEventId() == 0) {
 						event.setEventId(++backupEventIdCounter);
 					}
-					if (request.getEventIdsToIgnore().contains(
-							event.getEventId())
+					if (request.getEventIdsToIgnore().contains(event.getEventId())
 							|| token.getIgnoreInExceptionPass().contains(event)) {
 						continue;
 					}
@@ -286,67 +250,51 @@ public class TransformPersister {
 								transformCount++;
 							}
 						} catch (Exception e) {
-							DomainTransformException transformException = DomainTransformException
-									.wrap(e, event);
-							Registry.impl(JPAImplementation.class)
-									.interpretException(transformException);
-							TransformExceptionAction actionForException = token
-									.getTransformExceptionPolicy()
-									.getActionForException(transformException,
-											token);
+							DomainTransformException transformException = DomainTransformException.wrap(e, event);
+							Registry.impl(JPAImplementation.class).interpretException(transformException);
+							TransformExceptionAction actionForException = token.getTransformExceptionPolicy()
+									.getActionForException(transformException, token);
 							if (!actionForException.ignoreable()) {
 								throw e;
 							} else {
-								EntityLayerObjects
-										.get()
-										.getMetricLogger()
-										.info(String.format(
-												">>>Event ignored :%s\n",
-												e.getMessage()));
-								request.getEventIdsToIgnore().add(
-										event.getEventId());
+								EntityLayerObjects.get().getMetricLogger()
+										.info(String.format(">>>Event ignored :%s\n", e.getMessage()));
+								request.getEventIdsToIgnore().add(event.getEventId());
 								token.ignored++;
 							}
 						}
 					} else if (token.getPass() == Pass.DETERMINE_EXCEPTION_DETAIL) {
 						try {
 							if (System.currentTimeMillis()
-									- determineExceptionDetailPassStartTime > (determinedExceptionCount == 0 ? MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS
-										: MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS)) {
+									- determineExceptionDetailPassStartTime > (determinedExceptionCount == 0
+											? MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITHOUT_EXCEPTIONS
+											: MAX_DURATION_DETERMINE_EXCEPTION_PASS_WITH_DET_EXCEPTIONS)) {
 								break loop_dtrs;
 							}
 							tm.fireDomainTransform(event);
-							int dontFlushTilNthTransform = token
-									.getDontFlushTilNthTransform();
+							int dontFlushTilNthTransform = token.getDontFlushTilNthTransform();
 							if (transformCount >= dontFlushTilNthTransform) {
-								getEntityManager().flush();
+								tm.flush();
 								token.setDontFlushTilNthTransform(dontFlushTilNthTransform + 1);
 							}
 							transformCount++;
 						} catch (Exception e) {
 							determinedExceptionCount++;
-							DomainTransformException transformException = DomainTransformException
-									.wrap(e, event);
-							Registry.impl(JPAImplementation.class)
-									.interpretException(transformException);
-							token.getTransformExceptions().add(
-									transformException);
+							DomainTransformException transformException = DomainTransformException.wrap(e, event);
+							Registry.impl(JPAImplementation.class).interpretException(transformException);
+							token.getTransformExceptions().add(transformException);
 							possiblyAddSilentSkips(token, transformException);
 							token.getIgnoreInExceptionPass().add(event);
 							locatorMap.clear();
 							locatorMap.putAll(locatorMapClone);
-							TransformExceptionAction actionForException = token
-									.getTransformExceptionPolicy()
-									.getActionForException(transformException,
-											token);
+							TransformExceptionAction actionForException = token.getTransformExceptionPolicy()
+									.getActionForException(transformException, token);
 							switch (actionForException) {
 							case IGNORE_AND_WARN:
 								System.out.println("Ignoring: ");
 								System.out.println(transformException);
-								if (transformException.getType()
-										.isOnlyDiscoverableStepping()) {
-									request.getEventIdsToIgnore().add(
-											event.getEventId());
+								if (transformException.getType().isOnlyDiscoverableStepping()) {
+									request.getEventIdsToIgnore().add(event.getEventId());
 									token.ignored++;
 									token.setPass(Pass.RETRY_WITH_IGNORES);
 								}
@@ -361,37 +309,31 @@ public class TransformPersister {
 							}
 							if (!actionForException.ignoreable()) {
 								// ve must rollback
-								putExceptionInWrapper(token,
-										transformException, wrapper);
+								putExceptionInWrapper(token, transformException, wrapper);
 								throw new DeliberatelyThrownWrapperException();
 							}
 						}
-					}// commit/determine exception
-				}// dtes
+					} // commit/determine exception
+				} // dtes
 				dtr.updateTransformCommitType(CommitType.ALL_COMMITTED, false);
 				if (token.getPass() == Pass.TRY_COMMIT) {
 					entityManager.flush();// any exceptions...here we are
 					CollectionFilter<DomainTransformEvent> filterByPolicy = new CollectionFilter<DomainTransformEvent>() {
 						@Override
 						public boolean allow(DomainTransformEvent event) {
-							return token.getTransformLoggingPolicy()
-									.shouldPersist(event)
-									&& !request.getEventIdsToIgnore().contains(
-											event.getEventId());
+							return token.getTransformLoggingPolicy().shouldPersist(event)
+									&& !request.getEventIdsToIgnore().contains(event.getEventId());
 						}
 					};
-					eventsPersisted = CollectionFilters.filter(eventsPersisted,
-							filterByPolicy);
+					eventsPersisted = CollectionFilters.filter(eventsPersisted, filterByPolicy);
 					if (!eventsPersisted.isEmpty()) {
 						Class<? extends DomainTransformRequestPersistent> dtrqImpl = commonPersistenceBase
 								.getImplementation(DomainTransformRequestPersistent.class);
 						Class<? extends DomainTransformEventPersistent> dtrEvtImpl = commonPersistenceBase
 								.getImplementation(DomainTransformEventPersistent.class);
-						DomainTransformRequestPersistent dtrp = dtrqImpl
-								.newInstance();
-						getEntityManager().persist(dtrp);
-						Registry.impl(DomainTransformPersistenceEvents.class)
-								.registerPersisting(dtrp);
+						DomainTransformRequestPersistent dtrp = dtrqImpl.newInstance();
+						tm.persist(dtrp);
+						Registry.impl(DomainTransformPersistenceEvents.class).registerPersisting(dtrp);
 						dtr.setEvents(null);
 						dtrp.wrap(dtr);
 						dtrp.setEvents(new ArrayList<DomainTransformEvent>());
@@ -400,27 +342,19 @@ public class TransformPersister {
 						dtrps.add(dtrp);
 						boolean missingClassRefWarned = false;
 						for (DomainTransformEvent event : eventsPersisted) {
-							DomainTransformEventPersistent dtep = dtrEvtImpl
-									.newInstance();
-							getEntityManager().persist(dtep);
+							DomainTransformEventPersistent dtep = dtrEvtImpl.newInstance();
+							tm.persist(dtep);
 							dtep.wrap(event);
-							if (dtep.getObjectClassRef() == null
-									&& !missingClassRefWarned) {
+							if (dtep.getObjectClassRef() == null && !missingClassRefWarned) {
 								missingClassRefWarned = true;
-								System.out
-										.println("Warning - persisting transform without a classRef - "
-												+ dtep);
+								System.out.println("Warning - persisting transform without a classRef - " + dtep);
 							}
 							if (dtep.getObjectId() == 0) {
-								dtep.setObjectId(tm.getObject(
-										dtep.getObjectClass(), 0,
-										dtep.getObjectLocalId()).getId());
+								dtep.setObjectId(
+										tm.getObject(dtep.getObjectClass(), 0, dtep.getObjectLocalId()).getId());
 							}
-							if (dtep.getValueId() == 0
-									&& dtep.getValueLocalId() != 0) {
-								dtep.setValueId(tm.getObject(
-										dtep.getValueClass(), 0,
-										dtep.getValueLocalId()).getId());
+							if (dtep.getValueId() == 0 && dtep.getValueLocalId() != 0) {
+								dtep.setValueId(tm.getObject(dtep.getValueClass(), 0, dtep.getValueLocalId()).getId());
 							}
 							dtep.setServerCommitDate(new Date());
 							dtep.setDomainTransformRequestPersistent(dtrp);
@@ -428,16 +362,14 @@ public class TransformPersister {
 							dtreps.add(dtep);
 						}
 					}
-				}// dtes
-			}// dtrs
+				} // dtes
+			} // dtrs
 			switch (token.getPass()) {
 			case TRY_COMMIT:
-				getEntityManager().flush();
+				tm.flush();
 				DomainTransformResponse dtr = new DomainTransformResponse();
-				dtr.getEventsToUseForClientUpdate().addAll(
-						token.getClientUpdateEvents());
-				dtr.getEventsToUseForClientUpdate().addAll(
-						tm.getModificationEvents());
+				dtr.getEventsToUseForClientUpdate().addAll(token.getClientUpdateEvents());
+				dtr.getEventsToUseForClientUpdate().addAll(tm.getModificationEvents());
 				dtr.setRequestId(request.getRequestId());
 				dtr.setTransformsProcessed(transformCount);
 				wrapper.response = dtr;
@@ -460,8 +392,7 @@ public class TransformPersister {
 				Object entity = ((OptimisticLockException) e).getEntity();
 				if (entity != null && entity instanceof HasIdAndLocalId) {
 					System.out.format("Conflicting entity:\n\t%s\n",
-							Registry.impl(JPAImplementation.class)
-									.entityDebugString(entity));
+							Registry.impl(JPAImplementation.class).entityDebugString(entity));
 				}
 			}
 			e.printStackTrace();
@@ -469,12 +400,8 @@ public class TransformPersister {
 			locatorMap.putAll(locatorMapClone);
 			if (token.getPass() == Pass.TRY_COMMIT) {
 				token.setPass(Pass.DETERMINE_EXCEPTION_DETAIL);
-				determineExceptionDetailPassStartTime = System
-						.currentTimeMillis();
-				EntityLayerObjects
-						.get()
-						.getMetricLogger()
-						.warn("TransformPersister: determining exception detail");
+				determineExceptionDetailPassStartTime = System.currentTimeMillis();
+				EntityLayerObjects.get().getMetricLogger().warn("TransformPersister: determining exception detail");
 			} else {
 				token.setPass(Pass.FAIL);
 			}
@@ -490,13 +417,10 @@ public class TransformPersister {
 	}
 
 	public static void persistingTransforms() {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTING_TRANSFORMS,
-				Thread.currentThread());
+		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTING_TRANSFORMS, Thread.currentThread());
 	}
 
-	public static void persistingTransformsListenerDelta(
-			TopicListener<Thread> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTING_TRANSFORMS,
-				listener, add);
+	public static void persistingTransformsListenerDelta(TopicListener<Thread> listener, boolean add) {
+		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTING_TRANSFORMS, listener, add);
 	}
 }

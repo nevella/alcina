@@ -220,6 +220,9 @@ public class ContentViewFactory {
 			throw new WrappedRuntimeException("Unviewable bean type: "
 					+ bean.getClass(), SuggestedAction.NOTIFY_WARNING);
 		}
+		if(autoSave && bean instanceof HasIdAndLocalId){
+			TransformManager.get().registerDomainObject((HasIdAndLocalId) bean);
+		}
 		PaneWrapperWithObjects cp = createPaneWrapper(actionListener);
 		cp.editable = editable;
 		if (!noCaption) {
