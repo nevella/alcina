@@ -5,19 +5,21 @@ import cc.alcina.framework.servlet.sync.FlatDeltaPersister.DeltaItemPersister;
 import cc.alcina.framework.servlet.sync.FlatDeltaPersisterResult.FlatDeltaPersisterResultType;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncAction;
 
-public class LocalDomainLocatablePersister<T extends AbstractLocalDomainLocatable>
-		implements DeltaItemPersister<T> {
+public class LocalDomainLocatablePersister<T extends AbstractLocalDomainLocatable> implements DeltaItemPersister<T> {
 	public LocalDomainLocatablePersister() {
 	}
 
 	@Override
-	public FlatDeltaPersisterResultType performSyncAction(
-			SyncAction syncAction, T object) throws Exception {
+	public FlatDeltaPersisterResultType performSyncAction(SyncAction syncAction, T object) throws Exception {
 		switch (syncAction) {
 		case DELETE:
 			object.deleteLocalEquivalent();
 			return FlatDeltaPersisterResultType.DELETED;
 		case CREATE:
+			if (object == null) {
+				System.err.println("Create with null object");
+				return FlatDeltaPersisterResultType.UNMATCHED;
+			}
 			return object.ensureLocalEquivalent() == null ? FlatDeltaPersisterResultType.UNMATCHED
 					: FlatDeltaPersisterResultType.CREATED;
 		case UPDATE:
