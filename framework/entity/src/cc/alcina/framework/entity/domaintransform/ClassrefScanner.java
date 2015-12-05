@@ -66,7 +66,9 @@ public class ClassrefScanner extends CachingScanner {
 				Short.class, String.class, Date.class, Boolean.class }));
 		scan(cache, cachePath);
 		commit();
-		checkReachability();
+		if (reachabilityCheck) {
+			checkReachability();
+		}
 	}
 
 	private void checkReachability() {
@@ -256,8 +258,15 @@ public class ClassrefScanner extends CachingScanner {
 
 	boolean persistent = true;
 
+	boolean reachabilityCheck = true;
+
 	public ClassrefScanner noPersistence() {
 		persistent = false;
+		return this;
+	}
+
+	public ClassrefScanner noReachabilityCheck() {
+		reachabilityCheck = false;
 		return this;
 	}
 }
