@@ -619,8 +619,8 @@ public class GraphProjection {
 		}
 	}
 
-	public static <T> T shallowishClone(T original) {
-		GraphProjections projections = GraphProjections.defaultProjections().maxDepth(1);
+	public static <T> T shallowProjection(T original, int depth) {
+		GraphProjections projections = GraphProjections.defaultProjections().maxDepth(depth);
 		return projections.project(original);
 	}
 }

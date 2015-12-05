@@ -19,6 +19,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -59,12 +60,10 @@ public class ClassrefScanner extends CachingScanner {
 	private LinkedHashSet<Class> persistableClasses;
 
 	public void scan(ClassDataCache cache) throws Exception {
-		String cachePath = getHomeDir().getPath() + File.separator
-				+ getClass().getSimpleName() + "-cache.ser";
+		String cachePath = getHomeDir().getPath() + File.separator + getClass().getSimpleName() + "-cache.ser";
 		persistableClasses = new LinkedHashSet<Class>();
-		persistableClasses.addAll(Arrays.asList(new Class[] { Long.class,
-				Double.class, Float.class, Integer.class, Short.class,
-				String.class, Date.class, Boolean.class }));
+		persistableClasses.addAll(Arrays.asList(new Class[] { Long.class, Double.class, Float.class, Integer.class,
+				Short.class, String.class, Date.class, Boolean.class }));
 		scan(cache, cachePath);
 		commit();
 		checkReachability();
@@ -78,7 +77,7 @@ public class ClassrefScanner extends CachingScanner {
 		for (ClassRef ref : all) {
 			reffed.add(ref.getRefClass());
 		}
-		for (Class ref : reffed) {
+		for (Class ref : new ArrayList<Class>(reffed)) {
 			if (!HasIdAndLocalId.class.isAssignableFrom(ref)) {
 				continue;
 			}
@@ -90,15 +89,13 @@ public class ClassrefScanner extends CachingScanner {
 				Field[] fields = c.getDeclaredFields();
 				for (Field field : fields) {
 					int m = field.getModifiers();
-					if (Modifier.isFinal(m) || Modifier.isStatic(m)
-							|| Modifier.isTransient(m)) {
+					if (Modifier.isFinal(m) || Modifier.isStatic(m) || Modifier.isTransient(m)) {
 						continue;
 					}
 					Class type = field.getType();
 					Class checkType = null;
 					if (GraphProjection.isPrimitiveOrDataClass(type)) {
-						if (GraphProjection.isEnumSubclass(type)
-								|| type.isEnum()) {
+						if (GraphProjection.isEnumSubclass(type) || type.isEnum()) {
 							checkType = type;
 						}
 					} else if (HasIdAndLocalId.class.isAssignableFrom(type)) {
@@ -106,63 +103,52 @@ public class ClassrefScanner extends CachingScanner {
 					} else if (GraphProjection.isGenericHiliType(field)) {
 						Type pt = GraphProjection.getGenericType(field);
 						if (pt instanceof ParameterizedType) {
-							Type genericType = ((ParameterizedType) pt)
-									.getActualTypeArguments()[0];
+							Type genericType = ((ParameterizedType) pt).getActualTypeArguments()[0];
 							if (genericType instanceof Class) {
 								checkType = (Class) genericType;
 							}
 						}
 					}
 					if (checkType != null && !reffed.contains(checkType)) {
-						if (WrapperPersistable.class
-								.isAssignableFrom(checkType)) {
+						if (Modifier.isAbstract(checkType.getModifiers())) {
+							for (Class clazz : new ArrayList<Class>(reffed)) {
+								if (checkType.isAssignableFrom(clazz)) {
+									reffed.add(checkType);
+								}
+							}
+						}
+					}
+					if (checkType != null && !reffed.contains(checkType)) {
+						if (WrapperPersistable.class.isAssignableFrom(checkType)) {
 						} else {
-							errClassRef.add(String.format("%-30s: %s.%s",
-									checkType.getSimpleName(),
+							errClassRef.add(String.format("%-30s: %s.%s", checkType.getSimpleName(),
 									ref.getSimpleName(), field.getName()));
 						}
 					}
-					PropertyDescriptor leftPd = SEUtilities
-							.getPropertyDescriptorByName(ref, field.getName());
-					if (leftPd != null
-							&& leftPd.getReadMethod() != null
-							&& leftPd.getReadMethod().getAnnotation(
-									Association.class) != null) {
-						Association left = leftPd.getReadMethod()
-								.getAnnotation(Association.class);
-						PropertyDescriptor rightPd = SEUtilities
-								.getPropertyDescriptorByName(
-										left.implementationClass(),
-										left.propertyName());
+					PropertyDescriptor leftPd = SEUtilities.getPropertyDescriptorByName(ref, field.getName());
+					if (leftPd != null && leftPd.getReadMethod() != null
+							&& leftPd.getReadMethod().getAnnotation(Association.class) != null) {
+						Association left = leftPd.getReadMethod().getAnnotation(Association.class);
+						PropertyDescriptor rightPd = SEUtilities.getPropertyDescriptorByName(left.implementationClass(),
+								left.propertyName());
 						Association right = null;
 						AlcinaMemCacheColumn rightMcc = null;
-						if (rightPd != null
-								&& rightPd.getReadMethod() != null
-								&& rightPd.getReadMethod().getAnnotation(
-										Association.class) != null) {
-							right = rightPd.getReadMethod().getAnnotation(
-									Association.class);
-							if (right.implementationClass() != ref
-									|| !right.propertyName().equals(
-											field.getName())) {
+						if (rightPd != null && rightPd.getReadMethod() != null
+								&& rightPd.getReadMethod().getAnnotation(Association.class) != null) {
+							right = rightPd.getReadMethod().getAnnotation(Association.class);
+							if (right.implementationClass() != ref || !right.propertyName().equals(field.getName())) {
 								right = null;
 							}
 						}
-						if (rightPd != null
-								&& rightPd.getReadMethod() != null
-								&& rightPd.getReadMethod().getAnnotation(
-										AlcinaMemCacheColumn.class) != null) {
-							rightMcc = rightPd.getReadMethod().getAnnotation(
-									AlcinaMemCacheColumn.class);
-							if (rightMcc.targetEntity() != ref
-									|| !rightMcc.mappedBy().equals(
-											field.getName())) {
+						if (rightPd != null && rightPd.getReadMethod() != null
+								&& rightPd.getReadMethod().getAnnotation(AlcinaMemCacheColumn.class) != null) {
+							rightMcc = rightPd.getReadMethod().getAnnotation(AlcinaMemCacheColumn.class);
+							if (rightMcc.targetEntity() != ref || !rightMcc.mappedBy().equals(field.getName())) {
 								rightMcc = null;
 							}
 						}
 						if (right == null && rightMcc == null) {
-							errAssociation.add(String.format("%s.%s",
-									ref.getSimpleName(), field.getName()));
+							errAssociation.add(String.format("%s.%s", ref.getSimpleName(), field.getName()));
 						}
 					}
 				}
@@ -170,14 +156,12 @@ public class ClassrefScanner extends CachingScanner {
 			}
 		}
 		if (!errClassRef.isEmpty()) {
-			System.out
-					.println("Problems with classref reachability:\n-------------------");
+			System.out.println("Problems with classref reachability:\n-------------------");
 			System.out.println(CommonUtils.join(errClassRef, "\n"));
 			throw new RuntimeException("Cancelling startup");
 		}
 		if (!errAssociation.isEmpty()) {
-			System.out
-					.println("Problems with inverse associations:\n-------------------");
+			System.out.println("Problems with inverse associations:\n-------------------");
 			System.out.println(CommonUtils.join(errAssociation, "\n"));
 			throw new RuntimeException("Cancelling startup");
 		}
@@ -185,11 +169,9 @@ public class ClassrefScanner extends CachingScanner {
 
 	private void commit() throws Exception {
 		if (!persistent) {
-			CommonPersistenceLocal cp = Registry.impl(
-					CommonPersistenceProvider.class)
+			CommonPersistenceLocal cp = Registry.impl(CommonPersistenceProvider.class)
 					.getCommonPersistenceExTransaction();
-			Class<? extends ClassRef> crimpl = cp
-					.getImplementation(ClassRef.class);
+			Class<? extends ClassRef> crimpl = cp.getImplementation(ClassRef.class);
 			long idCtr = 0;
 			for (Class clazz : persistableClasses) {
 				ClassRef ref = ClassRef.forClass(clazz);
@@ -199,10 +181,8 @@ public class ClassrefScanner extends CachingScanner {
 				ClassRef.add(CommonUtils.wrapInCollection(ref));
 			}
 		} else {
-			CommonPersistenceLocal cp = Registry.impl(
-					CommonPersistenceProvider.class).getCommonPersistence();
-			Class<? extends ClassRef> crimpl = cp
-					.getImplementation(ClassRef.class);
+			CommonPersistenceLocal cp = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+			Class<? extends ClassRef> crimpl = cp.getImplementation(ClassRef.class);
 			Set<? extends ClassRef> classrefs = cp.getAll(crimpl);
 			Set<? extends ClassRef> deleteClassrefs = new HashSet<ClassRef>();
 			ClassRef.add(classrefs);
@@ -218,16 +198,14 @@ public class ClassrefScanner extends CachingScanner {
 					long id = cp.merge(ref);
 					ref.setId(id);
 					ClassRef.add(CommonUtils.wrapInCollection(ref));
-					System.out.format("adding classref - %s %s\n", ref.getId(),
-							ref.getRefClassName());
+					System.out.format("adding classref - %s %s\n", ref.getId(), ref.getRefClassName());
 				} else {
 					deleteClassrefs.remove(ref);
 				}
 			}
 			for (ClassRef ref : deleteClassrefs) {
 				delta = true;
-				System.out.format("removing classref - %s %s\n", ref.getId(),
-						ref.getRefClassName());
+				System.out.format("removing classref - %s %s\n", ref.getId(), ref.getRefClassName());
 				cp.remove(ref);
 				ClassRef.remove(ref);
 			}
@@ -235,10 +213,8 @@ public class ClassrefScanner extends CachingScanner {
 	}
 
 	@Override
-	protected void process(Class c, String className, ClassDataItem foundItem,
-			ClassDataCache outgoing) {
-		if ((!Modifier.isPublic(c.getModifiers()))
-				|| (Modifier.isAbstract(c.getModifiers()) && !c.isEnum())) {
+	protected void process(Class c, String className, ClassDataItem foundItem, ClassDataCache outgoing) {
+		if ((!Modifier.isPublic(c.getModifiers())) || (Modifier.isAbstract(c.getModifiers()) && !c.isEnum())) {
 			outgoing.add(foundItem);
 			return;
 		}
@@ -247,13 +223,10 @@ public class ClassrefScanner extends CachingScanner {
 		 * otherwise could be sending classes not compiled into client code)
 		 */
 		boolean bi = c.isAnnotationPresent(Bean.class);
-		boolean in = AnnotationUtils.hasAnnotationNamed(c,
-				ClientInstantiable.class);
+		boolean in = AnnotationUtils.hasAnnotationNamed(c, ClientInstantiable.class);
 		boolean dtp = c.isAnnotationPresent(DomainTransformPersistable.class);
-		boolean nonPersistent = c
-				.isAnnotationPresent(NonDomainTransformPersistable.class);
-		if (!nonPersistent
-				&& (HasIdAndLocalId.class.isAssignableFrom(c) && (in || bi || dtp))
+		boolean nonPersistent = c.isAnnotationPresent(NonDomainTransformPersistable.class);
+		if (!nonPersistent && (HasIdAndLocalId.class.isAssignableFrom(c) && (in || bi || dtp))
 				|| (c.isEnum() && (in || dtp))) {
 			persistableClasses.add(c);
 		} else {
@@ -264,21 +237,17 @@ public class ClassrefScanner extends CachingScanner {
 	// persistableClasses.addAll(Arrays.asList(new Class[] { long.class,
 	// double.class, float.class, int.class, short.class,
 	// boolean.class }));
-	public void fixEntities(Class entityClass, String strPropName,
-			String crPropName, EntityManager em,
+	public void fixEntities(Class entityClass, String strPropName, String crPropName, EntityManager em,
 			CommonPersistenceLocal persister) {
 		Set all = persister.getAll(entityClass);
 		for (Object o : all) {
-			String cName = (String) SEUtilities
-					.getPropertyValue(o, strPropName);
+			String cName = (String) SEUtilities.getPropertyValue(o, strPropName);
 			if (cName == null) {
 				continue;
 			}
 			ClassRef ref = ClassRef.forName(cName);
 			if (ref == null) {
-				throw new WrappedRuntimeException(
-						"Classref not found:" + cName,
-						SuggestedAction.NOTIFY_WARNING);
+				throw new WrappedRuntimeException("Classref not found:" + cName, SuggestedAction.NOTIFY_WARNING);
 			}
 			SEUtilities.setPropertyValue(o, crPropName, ref);
 		}

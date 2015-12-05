@@ -2,12 +2,10 @@ package cc.alcina.framework.gwt.client.ide;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
-
-import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
-import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 
 import com.google.gwt.event.logical.shared.AttachEvent;
 import com.google.gwt.event.logical.shared.AttachEvent.Handler;
@@ -15,6 +13,9 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.table.Field;
+
+import cc.alcina.framework.gwt.client.gwittir.widget.GridForm;
+import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 
 public class ContentViewSections {
 	public List<ContentViewSection> sections = new ArrayList<>();
@@ -27,14 +28,11 @@ public class ContentViewSections {
 			if (event.isAttached()) {
 				int maxLeft = 0;
 				for (PaneWrapperWithObjects beanView : beanViews) {
-					maxLeft = Math.max(maxLeft, ((GridForm) beanView
-							.getBoundWidget()).getCaptionColumnWidth());
+					maxLeft = Math.max(maxLeft, ((GridForm) beanView.getBoundWidget()).getCaptionColumnWidth());
 				}
 				for (PaneWrapperWithObjects beanView : beanViews) {
-					((GridForm) beanView.getBoundWidget())
-							.setCaptionColumnWidth(maxLeft);
-					((GridForm) beanView.getBoundWidget())
-							.addStyleName("section-table");
+					((GridForm) beanView.getBoundWidget()).setCaptionColumnWidth(maxLeft);
+					((GridForm) beanView.getBoundWidget()).addStyleName("section-table");
 				}
 			}
 		}
@@ -52,12 +50,8 @@ public class ContentViewSections {
 			Label sectionLabel = new Label(section.name);
 			sectionLabel.setStyleName("section-label");
 			fp.add(sectionLabel);
-			PaneWrapperWithObjects beanView = new ContentViewFactory()
-					.fieldFilter(section)
-					.fieldOrder(section)
-					.noCaption()
-					.createBeanView(bean, editable, null, autoSave, true, null,
-							false);
+			PaneWrapperWithObjects beanView = new ContentViewFactory().fieldFilter(section).fieldOrder(section)
+					.noCaption().createBeanView(bean, editable, null, autoSave, true, null, false);
 			beanViews.add(beanView);
 			fp.add(beanView);
 		}
@@ -75,8 +69,7 @@ public class ContentViewSections {
 		return section;
 	}
 
-	public class ContentViewSection implements Comparator<Field>,
-			Predicate<Field> {
+	public class ContentViewSection implements Comparator<Field>, Predicate<Field> {
 		public List<String> fieldNames;
 
 		public String name;
@@ -87,12 +80,16 @@ public class ContentViewSections {
 
 		@Override
 		public int compare(Field o1, Field o2) {
-			return fieldNames.indexOf(o1.getPropertyName())
-					- fieldNames.indexOf(o2.getPropertyName());
+			return fieldNames.indexOf(o1.getPropertyName()) - fieldNames.indexOf(o2.getPropertyName());
 		}
 
 		public ContentViewSection fields(String... fieldNames) {
 			this.fieldNames = Arrays.asList(fieldNames);
+			return this;
+		}
+
+		public ContentViewSection fields(List<String> fieldNames) {
+			this.fieldNames = fieldNames;
 			return this;
 		}
 

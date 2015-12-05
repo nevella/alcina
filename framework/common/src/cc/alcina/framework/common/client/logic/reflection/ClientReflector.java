@@ -19,6 +19,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import com.totsp.gwittir.client.beans.BeanDescriptor;
+import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -26,9 +30,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
-
-import com.totsp.gwittir.client.beans.BeanDescriptor;
-import com.totsp.gwittir.client.beans.Property;
 
 /**
  * 
@@ -180,5 +181,9 @@ public abstract class ClientReflector implements ClassLookup {
 					.getAccessorMethod(), clazz));
 		}
 		return infos;
+	}
+	public List<String> allInterestingAlcinaBeanProperties(Object bean) {
+		return getWritableProperties(bean.getClass()).stream().map(p -> p.getPropertyName()).sorted()
+				.collect(Collectors.toList());
 	}
 }

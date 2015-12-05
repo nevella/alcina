@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CurrentUtcDateProvider;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
@@ -97,7 +98,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup, Prope
 		if (info != null) {
 			dnpn = info.displayNamePropertyName();
 		}
-		Object pv = Reflections.propertyAccessor().getPropertyValue(o, dnpn);
+		Object pv = CommonUtils.isNullOrEmpty(dnpn) ? null : Reflections.propertyAccessor().getPropertyValue(o, dnpn);
 		return (pv == null) ? "---" : pv.toString();
 	}
 
