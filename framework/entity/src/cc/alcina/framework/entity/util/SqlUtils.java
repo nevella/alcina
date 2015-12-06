@@ -16,6 +16,7 @@ import java.util.TreeSet;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 
@@ -35,8 +36,8 @@ public class SqlUtils {
 	}
 
 	private static void maybeLogQuery(String sql) {
-		System.out.println("Query: "
-				+ CommonUtils.trimToWsChars(sql, 2000, true));
+		System.out.println(
+				"Query: " + CommonUtils.trimToWsChars(sql, 2000, true));
 	}
 
 	public static Map<Long, String> toStringMap(Statement stmt, String sql,
@@ -47,6 +48,20 @@ public class SqlUtils {
 		Map<Long, String> result = new TreeMap<Long, String>();
 		while (rs.next()) {
 			result.put(rs.getLong(fn1), rs.getString(fn2));
+		}
+		rs.close();
+		MetricLogging.get().end("query");
+		return result;
+	}
+
+	public static StringMap toStringStringMap(Statement stmt, String sql,
+			String fn1, String fn2) throws SQLException {
+		MetricLogging.get().start("query");
+		maybeLogQuery(sql);
+		ResultSet rs = stmt.executeQuery(sql);
+		StringMap result = new StringMap();
+		while (rs.next()) {
+			result.put(rs.getString(fn1), rs.getString(fn2));
 		}
 		rs.close();
 		MetricLogging.get().end("query");
@@ -69,8 +84,8 @@ public class SqlUtils {
 
 	private static Map<Long, Long> toIdMap(ResultSet rs, String fn1, String fn2)
 			throws SQLException {
-		int log = CommonUtils.iv(LooseContext
-				.getInteger(CONTEXT_LOG_EVERY_X_RECORDS));
+		int log = CommonUtils
+				.iv(LooseContext.getInteger(CONTEXT_LOG_EVERY_X_RECORDS));
 		Map<Long, Long> result = new TreeMap<Long, Long>();
 		while (rs.next()) {
 			result.put(rs.getLong(fn1), rs.getLong(fn2));
@@ -101,8 +116,8 @@ public class SqlUtils {
 
 	private static Set<Long> toIdList(ResultSet rs, String fieldName)
 			throws SQLException {
-		int log = CommonUtils.iv(LooseContext
-				.getInteger(CONTEXT_LOG_EVERY_X_RECORDS));
+		int log = CommonUtils
+				.iv(LooseContext.getInteger(CONTEXT_LOG_EVERY_X_RECORDS));
 		Set<Long> result = new TreeSet<Long>();
 		while (rs.next()) {
 			result.add(rs.getLong(fieldName));

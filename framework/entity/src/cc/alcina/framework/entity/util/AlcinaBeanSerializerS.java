@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -118,13 +119,13 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		if (type == HashSet.class) {
 			c = new HashSet();
 		}
-		if (type == ArrayList.class || type == List.class || type==Collection.class) {
+		if (type == ArrayList.class || type == List.class
+				|| type == Collection.class) {
 			c = new ArrayList();
 		}
 		if (type == ConcurrentLinkedQueue.class || type == Queue.class) {
 			c = new ConcurrentLinkedQueue();
 		}
-		
 		if (c != null) {
 			deserializeCollection(o, c);
 			return c;
@@ -149,8 +150,8 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		return deserializeObject((JSONObject) o);
 	}
 
-	protected Object deserializeMap(Object o, Map m) throws JSONException,
-			Exception {
+	protected Object deserializeMap(Object o, Map m)
+			throws JSONException, Exception {
 		JSONArray array = (JSONArray) o;
 		int size = array.length();
 		for (int i = 0; i < size; i += 2) {
@@ -207,12 +208,9 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		if (type == Object.class) {
 			type = value.getClass();
 		}
-		if (type == Long.class
-				|| type == long.class
-				|| type == String.class
-				|| type.isEnum()
-				|| (type.getSuperclass() != null && type.getSuperclass()
-						.isEnum())) {
+		if (type == Long.class || type == long.class || type == String.class
+				|| type.isEnum() || (type.getSuperclass() != null
+						&& type.getSuperclass().isEnum())) {
 			return value.toString();
 		}
 		if (type == Double.class || type == double.class
@@ -243,8 +241,8 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		return serializeObject(value);
 	}
 
-	protected Object serializeCollection(Collection c) throws JSONException,
-			Exception {
+	protected Object serializeCollection(Collection c)
+			throws JSONException, Exception {
 		JSONArray arr = new JSONArray();
 		int i = 0;
 		for (Object o : c) {
@@ -264,8 +262,8 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		return arr;
 	}
 
-	protected Object serializeMultimap(Multimap m) throws JSONException,
-			Exception {
+	protected Object serializeMultimap(Multimap m)
+			throws JSONException, Exception {
 		JSONArray arr = new JSONArray();
 		int i = 0;
 		for (Object o : m.entrySet()) {
@@ -275,6 +273,8 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		}
 		return arr;
 	}
+
+	IdentityHashMap seen = new IdentityHashMap();
 
 	private JSONObject serializeObject(Object object) throws Exception {
 		if (object == null) {
@@ -303,6 +303,11 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 			jo.put(LITERAL, serializeField(object, clazz));
 			return jo;
 		}
+		if (seen.containsKey(object)) {
+			throw new RuntimeException("Cycle in jso graph");
+		} else {
+			seen.put(object, object);
+		}
 		List<PropertyDescriptor> pds = SEUtilities
 				.getSortedPropertyDescriptors(clazz);
 		JSONObject props = new JSONObject();
@@ -313,16 +318,19 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 				continue;
 			}
 			String name = pd.getName();
-			if (pd.getPropertyType().getAnnotation(AlcinaTransient.class) != null
-					|| pd.getReadMethod().getAnnotation(AlcinaTransient.class) != null) {
+			if (pd.getPropertyType()
+					.getAnnotation(AlcinaTransient.class) != null
+					|| pd.getReadMethod()
+							.getAnnotation(AlcinaTransient.class) != null) {
 				continue;
 			}
 			Object value = pd.getReadMethod().invoke(object);
-			if (!CommonUtils.equalsWithNullEquality(value, pd.getReadMethod()
-					.invoke(template))) {
+			if (!CommonUtils.equalsWithNullEquality(value,
+					pd.getReadMethod().invoke(template))) {
 				props.put(name, serializeField(value, pd.getPropertyType()));
 			}
 		}
+		seen.remove(object);
 		return jo;
 	}
 }

@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasIdAndLocalId;
@@ -63,7 +64,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 	@Override
 	public <T> T filterData(T original, T projected,
 			GraphProjectionContext context, GraphProjection graphProjection)
-			throws Exception {
+					throws Exception {
 		T filtered = super.filterData(original, projected, context,
 				graphProjection);
 		if (bypass(context.field)) {
@@ -130,6 +131,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 				c = new LiSet();
 			} else if (coll instanceof Set) {
 				c = new LinkedHashSet();
+			} else if (coll instanceof ConcurrentLinkedQueue) {
+				c = new ConcurrentLinkedQueue();
 			}
 			reached.put(coll, c);
 			Iterator itr = coll.iterator();
@@ -178,10 +181,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 			Set<Object> owned = new LinkedHashSet<Object>();
 			for (Object o : visited.keySet()) {
 				Class<? extends Object> clazz = o.getClass();
-				if (clazz.getSimpleName().equals("ArticleVersion")) {
-					long id = ((HasIdAndLocalId) o).getId();
-					System.out.println(id);
-				}
 				StatsItem item = new StatsItem(o);
 				statsClassLookup.add(clazz, item);
 				statsItemLookup.put(o, item);
@@ -308,8 +307,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 		System.out.println("Graph stats dump\n----------");
 		System.out.format(
-				"%30s -- %10s -- %10s self -- %10s retained -- %10s \n",
-				"Name", "Instances", "Size", "Retained", "Nulls");
+				"%30s -- %10s -- %10s self -- %10s retained -- %10s \n", "Name",
+				"Instances", "Size", "Retained", "Nulls");
 		System.out.println(CommonUtils.padStringLeft("", 70, '-'));
 		for (Class clazz : keys) {
 			System.out.format(
@@ -427,8 +426,9 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 
 		public SortedMultimap<Integer, List<K>> reverseMap(boolean descending) {
-			SortedMultimap<Integer, List<K>> result = descending ? new SortedMultimap<Integer, List<K>>(
-					Collections.reverseOrder())
+			SortedMultimap<Integer, List<K>> result = descending
+					? new SortedMultimap<Integer, List<K>>(
+							Collections.reverseOrder())
 					: new SortedMultimap<Integer, List<K>>();
 			for (K key : keySet()) {
 				result.add(get(key), key);
