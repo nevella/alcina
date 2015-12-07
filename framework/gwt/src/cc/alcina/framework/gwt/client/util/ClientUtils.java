@@ -72,14 +72,12 @@ public class ClientUtils {
 			}
 			t = t.getCause();
 		}
-		if (t.getMessage() != null
-				&& t.getMessage().contains(
-						"IOException while sending RPC request")) {
+		if (t.getMessage() != null && t.getMessage()
+				.contains("IOException while sending RPC request")) {
 			return true;
 		}
-		if (t.getMessage() != null
-				&& t.getMessage().contains(
-						"IOException while receiving RPC response")) {
+		if (t.getMessage() != null && t.getMessage()
+				.contains("IOException while receiving RPC response")) {
 			return true;
 		}
 		if (t instanceof StatusCodeException) {
@@ -87,13 +85,13 @@ public class ClientUtils {
 				return true;
 			}
 			StatusCodeException sce = (StatusCodeException) t;
-			Registry.impl(ClientNotifications.class).log(
-					"** Status code exception: " + sce.getStatusCode());
+			Registry.impl(ClientNotifications.class)
+					.log("** Status code exception: " + sce.getStatusCode());
 			if (sce.getStatusCode() == 0) {
 				return true;
 			}
-			boolean internetExplorerErrOffline = BrowserMod
-					.isInternetExplorer() && sce.getStatusCode() > 600;
+			boolean internetExplorerErrOffline = BrowserMod.isInternetExplorer()
+					&& sce.getStatusCode() > 600;
 			if (internetExplorerErrOffline) {
 				return true;
 			}
@@ -108,12 +106,13 @@ public class ClientUtils {
 	public static Element updateCss(Element styleElement, String css) {
 		if (styleElement == null) {
 			styleElement = Document.get().createStyleElement();
-			NodeList<Element> headList = Document.get().getElementsByTagName(
-					HEAD);
+			NodeList<Element> headList = Document.get()
+					.getElementsByTagName(HEAD);
 			if (headList == null || headList.getLength() == 0) {
 				// something wrong with the client here -- bail
-				AlcinaTopics.notifyDevWarning(new Exception("headList - "
-						+ headList == null ? "null" : "length 0"));
+				AlcinaTopics.notifyDevWarning(
+						new Exception("headList - " + headList == null ? "null"
+								: "length 0"));
 				return null;
 			}
 			headList.getItem(0).appendChild(styleElement);
@@ -132,6 +131,20 @@ public class ClientUtils {
 
 	public static native String stringify(JavaScriptObject jso) /*-{
         return JSON.stringify(jso);
+	}-*/;
+
+	public static native JavaScriptObject jsonParse(String json) /*-{
+        var dateTimeReviver = function(key, value) {
+            var a;
+            if (typeof value === 'string') {
+                a = /__JsDate\((\d*)\)/.exec(value);
+                if (a) {
+                    return new Date(+a[1]);
+                }
+            }
+            return value;
+        }
+        return JSON.parse(json,dateTimeReviver);
 	}-*/;
 
 	public static native boolean setCssTextViaCssTextProperty(Element styleTag,
@@ -165,8 +178,8 @@ public class ClientUtils {
 	}
 
 	public static void notImplemented() {
-		Registry.impl(ClientNotifications.class).showWarning(
-				"Not yet implemented");
+		Registry.impl(ClientNotifications.class)
+				.showWarning("Not yet implemented");
 	}
 
 	public static UrlBuilder getBaseUrlBuilder() {
@@ -358,8 +371,8 @@ public class ClientUtils {
 				: null;
 	}
 
-	public static List<String> jsStringArrayAsStringList(
-			JsArrayString arrayString) {
+	public static List<String>
+			jsStringArrayAsStringList(JsArrayString arrayString) {
 		List<String> result = new ArrayList<String>();
 		for (int i = 0; i < arrayString.length(); i++) {
 			result.add(arrayString.get(i));
@@ -367,8 +380,8 @@ public class ClientUtils {
 		return result;
 	}
 
-	public static <T extends JavaScriptObject> List<T> jsArrayToTypedArray(
-			JsArray<T> typedArray) {
+	public static <T extends JavaScriptObject> List<T>
+			jsArrayToTypedArray(JsArray<T> typedArray) {
 		List<T> result = new ArrayList<T>();
 		for (int i = 0; i < typedArray.length(); i++) {
 			result.add(typedArray.get(i));
@@ -376,8 +389,8 @@ public class ClientUtils {
 		return result;
 	}
 
-	public static <T extends JavaScriptObject> JsArray<T> toTypedJsArray(
-			List<T> value) {
+	public static <T extends JavaScriptObject> JsArray<T>
+			toTypedJsArray(List<T> value) {
 		JsArray<T> array = JavaScriptObject.createArray().cast();
 		for (T t : value) {
 			array.push(t);
