@@ -41,7 +41,8 @@ import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 
 @RegistryLocation(registryPoint = DomainTransformPersistenceQueue.class, implementationType = ImplementationType.SINGLETON)
 public class DomainTransformPersistenceQueue implements RegistrableService {
-	private static final long PERIODIC_DB_CHECK_MS = 5 * TimeConstants.ONE_MINUTE_MS;
+	private static final long PERIODIC_DB_CHECK_MS = 5
+			* TimeConstants.ONE_MINUTE_MS;
 
 	public static int WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS = 30 * 1000;
 
@@ -84,8 +85,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	public synchronized void checkPersistedTransforms(boolean forceDbCheck) {
 		boolean dbCheck = forceDbCheck;
 		synchronized (requestQueue) {
-			dbCheck |= (getFirstUnpublished().isPresent() && getFirstUnpublished()
-					.get().persistenceEvent == null);
+			dbCheck |= (getFirstUnpublished().isPresent()
+					&& getFirstUnpublished().get().persistenceEvent == null);
 		}
 		if (dbCheck) {
 			List<DomainTransformRequestPersistent> persisted = getCommonPersistence()
@@ -113,12 +114,13 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (!requestsToCheckFromDb.isEmpty()) {
 			logger.format("Checking persisted transforms - gap %s",
 					requestsToCheckFromDb);
-			List<DomainTransformRequestPersistent> requests = runWithDisabledObjectPermissions(() -> getCommonPersistence()
-					.getPersistentTransformRequests(0, 0,
-							requestsToCheckFromDb, false, true));
+			List<DomainTransformRequestPersistent> requests = runWithDisabledObjectPermissions(
+					() -> getCommonPersistence().getPersistentTransformRequests(
+							0, 0, requestsToCheckFromDb, false, true));
 			// these - from db - won't have sub requests
 			for (DomainTransformRequestPersistent dtrp : requests) {
-				DomainTransformPersistenceEvent persistenceEvent = createPersistenceEventFromPersistedRequest(dtrp);
+				DomainTransformPersistenceEvent persistenceEvent = createPersistenceEventFromPersistedRequest(
+						dtrp);
 				ensureQueued(dtrp.getId()).persistenceEvent = persistenceEvent;
 			}
 			synchronized (requestQueue) {
@@ -159,12 +161,14 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	public void getMaxPersistentRequestBaseline() {
-		List<DomainTransformRequestPersistent> persisted = runWithDisabledObjectPermissions(() -> getCommonPersistence()
-				.getPersistentTransformRequests(0, 0, null, true, false));
+		List<DomainTransformRequestPersistent> persisted = runWithDisabledObjectPermissions(
+				() -> getCommonPersistence().getPersistentTransformRequests(0,
+						0, null, true, false));
 		if (!persisted.isEmpty()) {
 			long maxDbPersistedRequestIdPublished = persisted.get(0).getId();
 			synchronized (requestQueue) {
-				DtrpQueued queued = ensureQueued(maxDbPersistedRequestIdPublished);
+				DtrpQueued queued = ensureQueued(
+						maxDbPersistedRequestIdPublished);
 				queued.setLocalToVm(false);
 				queued.modifyStatus(DtrpStatus.BASELINE);
 			}
@@ -174,18 +178,19 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	public long getTimeWaitingForPersistenceQueue() {
-		return nonPublishedTransformsFoundTime == 0 ? 0 : System
-				.currentTimeMillis() - nonPublishedTransformsFoundTime;
+		return nonPublishedTransformsFoundTime == 0 ? 0
+				: System.currentTimeMillis() - nonPublishedTransformsFoundTime;
 	}
 
-	public synchronized void registerPersisting(
-			DomainTransformRequestPersistent dtrp) {
+	public synchronized void
+			registerPersisting(DomainTransformRequestPersistent dtrp) {
 		synchronized (requestQueue) {
 			ensureQueued(dtrp.getId()).setLocalToVm(true);
 		}
 	}
 
-	public boolean shouldFire(DomainTransformPersistenceEvent persistenceEvent) {
+	public boolean
+			shouldFire(DomainTransformPersistenceEvent persistenceEvent) {
 		if (persistenceEvent.getPersistedRequestIds().isEmpty()) {
 			return true;
 		}
@@ -204,13 +209,15 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			ensureEventRequestsQueued(persistenceEvent);
 			DtrpQueued queuedEvent = ensureQueued(min);
 			DtrpQueued unpublished = getFirstUnpublished().orElse(null);
-			if (queuedEvent != unpublished) {
+			//could be that unpublished is null, if queuedEvent timedout
+			if (queuedEvent != unpublished && unpublished != null) {
 				firstGap = new LongPair(unpublished.id, queuedEvent.id - 1);
 			}
 			if (firstGap != null) {
 				logger.format("found gap (waiting) - rqid %s - gap %s",
 						persistenceEvent.getTransformPersistenceToken()
-								.getRequest().shortId(), firstGap);
+								.getRequest().shortId(),
+						firstGap);
 				if (unpublished.isLocalToVm()) {
 					logger.log("waiting on another in-jvm db transaction");
 				}
@@ -237,7 +244,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 	}
 
 	public synchronized void submit(DomainTransformPersistenceEvent event) {
-		if (event.getPersistenceEventType() != DomainTransformPersistenceEventType.COMMIT_OK) {
+		if (event
+				.getPersistenceEventType() != DomainTransformPersistenceEventType.COMMIT_OK) {
 			return;
 		}
 		synchronized (requestQueue) {
@@ -271,11 +279,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 	private void ensureEventRequestsQueued(
 			DomainTransformPersistenceEvent persistenceEvent) {
-		persistenceEvent
-				.getPersistedRequestIds()
-				.stream()
-				.forEach(
-						id -> ensureQueued(id).persistenceEvent = persistenceEvent);
+		persistenceEvent.getPersistedRequestIds().stream().forEach(
+				id -> ensureQueued(id).persistenceEvent = persistenceEvent);
 	}
 
 	private Optional<DtrpQueued> getFirstUnpublished() {
@@ -284,8 +289,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				if (requestQueueUnpublishedIndex == requestQueue.size()) {
 					return Optional.empty();
 				}
-				Optional<DtrpQueued> ret = Optional.of(requestQueue
-						.get(requestQueueUnpublishedIndex));
+				Optional<DtrpQueued> ret = Optional
+						.of(requestQueue.get(requestQueueUnpublishedIndex));
 				if (ret.get().status == DtrpStatus.PENDING) {
 					return ret;
 				}
@@ -327,8 +332,9 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 	}
 
-	private DomainTransformPersistenceEvent createPersistenceEventFromPersistedRequest(
-			DomainTransformRequestPersistent dtrp) {
+	private DomainTransformPersistenceEvent
+			createPersistenceEventFromPersistedRequest(
+					DomainTransformRequestPersistent dtrp) {
 		// create an "event" to publish in the queue
 		TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 				dtrp, null, Registry.impl(TransformLoggingPolicy.class), false,
@@ -356,7 +362,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 				new DtrpQueued(dtrpId);
 			} else {
 				// create placeholder requests
-				for (long id = requestQueue.getLast().id + 1; id <= dtrpId; id++) {
+				for (long id = requestQueue.getLast().id
+						+ 1; id <= dtrpId; id++) {
 					new DtrpQueued(id);
 				}
 			}
@@ -369,8 +376,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		logger.format("fired - %s - range %s", event
-				.getTransformPersistenceToken().getRequest().shortId(),
+		logger.format("fired - %s - range %s",
+				event.getTransformPersistenceToken().getRequest().shortId(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
 	}
@@ -380,18 +387,20 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		if (persistedRequestIds.isEmpty()) {
 			return;
 		}
-		logger.format("firing - %s - range %s", event
-				.getTransformPersistenceToken().getRequest().shortId(),
+		logger.format("firing - %s - range %s",
+				event.getTransformPersistenceToken().getRequest().shortId(),
 				new LongPair(CollectionFilters.min(persistedRequestIds),
 						CollectionFilters.max(persistedRequestIds)));
 	}
 
 	private Stream<DtrpQueued> pendingRequests() {
-		return requestQueue.subList(requestQueueUnpublishedIndex,
-				requestQueue.size()).stream();
+		return requestQueue
+				.subList(requestQueueUnpublishedIndex, requestQueue.size())
+				.stream();
 	}
 
-	private <T> T runWithDisabledObjectPermissions(ThrowingSupplier<T> supplier) {
+	private <T> T
+			runWithDisabledObjectPermissions(ThrowingSupplier<T> supplier) {
 		try {
 			// this prevents a deadlock where we might have a waiting write
 			// preventing us from getting the lock
@@ -458,8 +467,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 
 		public void checkTimeout() {
 			long time = System.currentTimeMillis();
-			if (persistenceEvent == null
-					&& time - startTime > WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS) {
+			if (persistenceEvent == null && time
+					- startTime > WAIT_FOR_PERSISTED_REQUEST_TIMEOUT_MS) {
 				logger.format(
 						"Timed out waiting for  persisted transforms (probably a crash/exception)- gap %s",
 						id);
@@ -468,9 +477,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		}
 
 		boolean isLocalToVm() {
-			return localToVm
-					|| (persistenceEvent != null && persistenceEvent
-							.isLocalToVm());
+			return localToVm || (persistenceEvent != null
+					&& persistenceEvent.isLocalToVm());
 		}
 
 		boolean firing = false;
@@ -502,7 +510,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 		public void run() {
 			try {
 				updateStatsForNonPublishedTransforms();
-				if ((System.currentTimeMillis() - lastDbCheck) > PERIODIC_DB_CHECK_MS) {
+				if ((System.currentTimeMillis()
+						- lastDbCheck) > PERIODIC_DB_CHECK_MS) {
 					lastDbCheck = System.currentTimeMillis();
 					int mins = Calendar.getInstance().get(Calendar.MINUTE);
 					logDbEventCheck = mins <= 5;
@@ -521,7 +530,8 @@ public class DomainTransformPersistenceQueue implements RegistrableService {
 			if (allPersistedTransformsArePublished()) {
 				nonPublishedTransformsFoundTime = 0;
 			} else {
-				nonPublishedTransformsFoundTime = getFirstUnpublished().get().startTime;
+				nonPublishedTransformsFoundTime = getFirstUnpublished()
+						.get().startTime;
 			}
 		}
 	}
