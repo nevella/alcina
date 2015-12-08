@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class MemcacheSearcher {
@@ -38,9 +39,8 @@ public class MemcacheSearcher {
 		@Override
 		public <T extends HasIdAndLocalId> List<T> list(Class<T> clazz) {
 			List<T> result = new ArrayList<>();
-			Collection<T> values = Registry
-					.impl(SearcherCollectionSource.class).getCollectionFor(
-							clazz);
+			Collection<T> values = Registry.impl(SearcherCollectionSource.class)
+					.getCollectionFor(clazz);
 			for (T value : values) {
 				boolean allow = true;
 				for (CacheFilter filter : getFilters()) {
@@ -84,8 +84,10 @@ public class MemcacheSearcher {
 						.getCriteria()) {
 					MemcacheCriterionHandler handler = getCriterionHandler(sc);
 					if (handler == null) {
-						System.err.println("No handler for class "
-								+ sc.getClass());
+						System.err.println(CommonUtils.formatJ(
+								"No handler for def/class %s - %s\n",
+								def.getClass().getSimpleName(),
+								sc.getClass().getSimpleName()));
 						continue;
 					}
 					CacheFilter filter = handler.getFilter(sc);

@@ -2,13 +2,14 @@ package cc.alcina.framework.gwt.client.objecttree.search;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
-
-import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 public abstract class FlatSearchable<SC extends SearchCriterion> {
 	private Class<SC> clazz;
@@ -17,6 +18,7 @@ public abstract class FlatSearchable<SC extends SearchCriterion> {
 
 	private String name;
 
+	@SuppressWarnings("unused")
 	private SearchDefinition def;
 
 	private SC criterion;
@@ -46,6 +48,10 @@ public abstract class FlatSearchable<SC extends SearchCriterion> {
 	}
 
 	public abstract String getCriterionPropertyName();
+
+	public Optional<String> getOperatorPropertyName() {
+		return Optional.empty();
+	}
 
 	public SearchOperator getOperator(SC value) {
 		return listOperators().get(0);

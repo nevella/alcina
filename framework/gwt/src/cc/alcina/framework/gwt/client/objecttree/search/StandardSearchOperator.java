@@ -1,11 +1,18 @@
 package cc.alcina.framework.gwt.client.objecttree.search;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
+@ClientInstantiable
 public enum StandardSearchOperator implements SearchOperator {
 	CONTAINS, DOES_NOT_CONTAIN, EQUALS, LESS_THAN, GREATER_THAN;
+	public static transient List LINEAR = Arrays.asList(EQUALS, LESS_THAN,
+			GREATER_THAN);
+
 	private String displayName;
 
 	private StandardSearchOperator() {
@@ -17,7 +24,7 @@ public enum StandardSearchOperator implements SearchOperator {
 
 	@Override
 	public String getName() {
-		return Optional.ofNullable(displayName).orElse(
-				CommonUtils.friendlyConstant(this));
+		return Optional.ofNullable(displayName)
+				.orElse(CommonUtils.friendlyConstant(this));
 	}
 }

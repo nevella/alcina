@@ -17,6 +17,7 @@ import java.util.Date;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
  * 
@@ -24,12 +25,28 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
  */
 public class DateCriterion extends AbstractDateCriterion {
 	static final transient long serialVersionUID = -1L;
+
+	private StandardSearchOperator operator = StandardSearchOperator.EQUALS;
+
 	public DateCriterion() {
 	}
 
 	public DateCriterion(String displayName, Direction direction) {
 		super(displayName);
 		setDirection(direction);
+	}
+
+	@Override
+	public SearchCriterion clone() throws CloneNotSupportedException {
+		return new DateCriterion().copyPropertiesFrom(this);
+	}
+
+	@Override
+	protected <SC extends SearchCriterion> SC
+			copyPropertiesFrom(SC copyFromCriterion) {
+		StandardSearchOperator copyFromOp = ((DateCriterion) copyFromCriterion).operator;
+		operator = copyFromOp;
+		return super.copyPropertiesFrom(copyFromCriterion);
 	}
 
 	@Override
@@ -50,14 +67,34 @@ public class DateCriterion extends AbstractDateCriterion {
 	}
 
 	@Override
+	public boolean equivalentTo(SearchCriterion other) {
+		if (other == null || other.getClass() != getClass()) {
+			return false;
+		}
+		DateCriterion otherImpl = (DateCriterion) other;
+		return super.equivalentTo(other) && operator == otherImpl.operator;
+	}
+
+	public StandardSearchOperator getOperator() {
+		return this.operator;
+	}
+
+	public boolean rangeControlledByDirection() {
+		return false;
+	}
+
+	public void setOperator(StandardSearchOperator operator) {
+		StandardSearchOperator old_operator = this.operator;
+		this.operator = operator;
+		propertyChangeSupport().firePropertyChange("operator", old_operator,
+				operator);
+	}
+
+	@Override
 	public String toString() {
 		return getDate() == null ? null
 				: (getDirection() == Direction.ASCENDING ? " from " : " to ")
 						+ CommonUtils.formatDate(getDate(),
 								DateStyle.AU_DATE_SLASH);
-	}
-	@Override
-	public SearchCriterion clone() throws CloneNotSupportedException {
-		return new DateCriterion().copyPropertiesFrom(this);
 	}
 }

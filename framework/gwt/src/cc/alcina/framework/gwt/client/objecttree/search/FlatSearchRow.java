@@ -122,7 +122,8 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 		searchableSelector = new FlatSearchSelector(FlatSearchable.class, 1,
 				null, () -> controller.searchables);
 		operatorSelector = new FlatSearchSelector(SearchOperator.class, 1,
-				FriendlyEnumRenderer.INSTANCE, () -> searchable.listOperators());
+				FriendlyEnumRenderer.INSTANCE,
+				() -> searchable.listOperators());
 		operatorSelector.addStyleName("operator");
 		valueEditor = searchable.createEditor();
 		valueEditor.addStyleName("editor");
@@ -163,15 +164,17 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 				binding.unbind();
 			}
 			binding.getChildren().clear();
-			binding.getChildren().add(
-					new Binding(valueEditor, "value", value, searchable
-							.getCriterionPropertyName()));
-			binding.getChildren().add(
-					new Binding(searchableSelector, "value",
-							FlatSearchRow.this, "searchable"));
-			binding.getChildren().add(
-					new Binding(operatorSelector, "value", FlatSearchRow.this,
-							"operator"));
+			binding.getChildren().add(new Binding(valueEditor, "value", value,
+					searchable.getCriterionPropertyName()));
+			binding.getChildren().add(new Binding(searchableSelector, "value",
+					FlatSearchRow.this, "searchable"));
+			if (searchable.getOperatorPropertyName().isPresent()) {
+				binding.getChildren().add(new Binding(operatorSelector, "value",
+						value,
+						(String)searchable.getOperatorPropertyName().get()));
+			}
+			binding.getChildren().add(new Binding(operatorSelector, "value",
+					FlatSearchRow.this, "operator"));
 			binding.setLeft();
 		}
 	}
