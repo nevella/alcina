@@ -163,7 +163,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private DetachedEntityCache detachedEntityCache;
 
-	private Set<HasIdAndLocalId> deleted;
+	protected Set<HasIdAndLocalId> deleted;
 
 	private HasIdAndLocalId ignorePropertyChangesTo;
 
