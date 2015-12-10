@@ -95,6 +95,7 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 			controller.setupForNewCriterion(this,
 					old_searchable.hasValue(value));
 		} else {
+			operator = null;
 			renderAndBind();
 		}
 	}
@@ -160,9 +161,11 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 		}
 
 		void refreshBindings() {
+			boolean wasBound = binding.isBound();
 			if (binding.isBound()) {
 				binding.unbind();
 			}
+			wasSet = false;
 			binding.getChildren().clear();
 			binding.getChildren().add(new Binding(valueEditor, "value", value,
 					searchable.getCriterionPropertyName()));
@@ -171,11 +174,14 @@ public class FlatSearchRow extends AbstractBoundWidget<SearchCriterion>
 			if (searchable.getOperatorPropertyName().isPresent()) {
 				binding.getChildren().add(new Binding(operatorSelector, "value",
 						value,
-						(String)searchable.getOperatorPropertyName().get()));
+						(String) searchable.getOperatorPropertyName().get()));
 			}
 			binding.getChildren().add(new Binding(operatorSelector, "value",
 					FlatSearchRow.this, "operator"));
 			binding.setLeft();
+			if (wasBound) {
+				binding.bind();
+			}
 		}
 	}
 

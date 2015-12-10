@@ -32,7 +32,7 @@ public abstract class BasicBindingAction<T extends BoundWidget<?>> implements Bi
 		binding.bind();
 	}
 
-	boolean wasSet = false;
+	protected boolean wasSet = false;
 
 	public void execute(T model) {
 	}
