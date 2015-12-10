@@ -47,7 +47,7 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 
 	private int offsetX = 0;
 
-	private int offsetY = 0;
+	private int offsetY = -4;
 
 	private Object lastKey;
 
@@ -173,7 +173,7 @@ public class PropertySelectorCell<T extends HasIdAndLocalId>
 				panel.setPopupPosition(lastParent.getAbsoluteLeft() + offsetX,
 						lastParent.getAbsoluteTop() + offsetY);
 				selector.clearFilter();
-				Scheduler.get().scheduleDeferred(() -> selector.showOptions());
+				selector.showOptions();
 			}
 		});
 	}
