@@ -1,10 +1,10 @@
 package cc.alcina.framework.gwt.client.cell;
 
+import java.util.Optional;
 import java.util.function.Function;
 
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.Cell.Context;
-import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
@@ -62,15 +62,25 @@ public class ColumnsBuilder<T> {
 
 		private String editablePropertyName;
 
+		private Cell editableCell;
+
 		public ColumnBuilder(String name) {
 			this.name = name;
+		}
+
+		public ColumnBuilder editableCell(Cell editableCell) {
+			this.editableCell = editableCell;
+			return this;
 		}
 
 		public SortableColumn<T> build() {
 			EditInfo editInfo = new EditInfo();
 			editInfo.propertyName = editablePropertyName;
 			if (edit && editablePropertyName != null) {
-				editInfo.cell = new EditTextCell();
+				editInfo.cell = Optional.ofNullable(editableCell)
+						.orElse(new PropertyTextCell());
+				editInfo.fieldUpdater = new PropertyFieldUpdater(
+						editablePropertyName);
 			}
 			SortableColumn<T> col = new SortableColumn<T>(function,
 					sortFunction, nativeComparator, styleFunction, editInfo);
@@ -146,6 +156,8 @@ public class ColumnsBuilder<T> {
 	}
 
 	static class EditInfo {
+		public PropertyFieldUpdater fieldUpdater;
+
 		public String propertyName;
 
 		public Cell cell = new TextCell();
@@ -160,6 +172,8 @@ public class ColumnsBuilder<T> {
 
 		private DirectedComparator nativeComparator;
 
+		private EditInfo editInfo;
+
 		public DirectedComparator getNativeComparator() {
 			return this.nativeComparator;
 		}
@@ -173,12 +187,19 @@ public class ColumnsBuilder<T> {
 			this.sortFunction = sortFunction;
 			this.nativeComparator = nativeComparator;
 			this.styleFunction = styleFunction;
+			this.editInfo = editInfo;
+			if (editInfo.fieldUpdater != null) {
+				setFieldUpdater(editInfo.fieldUpdater);
+			}
 		}
 
 		@Override
-		public String getValue(T t) {
+		public Object getValue(T t) {
 			Object value = function.apply(t);
-			return value == null ? null : value.toString();
+			if (editInfo.cell.getClass() == TextCell.class) {
+				value = value == null ? null : value.toString();
+			}
+			return value;
 		}
 
 		public Function<T, Comparable> sortFunction() {

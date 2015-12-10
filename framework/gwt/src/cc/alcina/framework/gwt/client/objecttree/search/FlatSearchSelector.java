@@ -81,4 +81,12 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 		grid.getRowFormatter().getElement(1).getStyle()
 				.setDisplay(Display.NONE);
 	}
+
+	public void showOptions() {
+		search.checkShowPopup(false);
+	}
+
+	public void clearFilter() {
+		search.getFilter().clear();
+	}
 }
