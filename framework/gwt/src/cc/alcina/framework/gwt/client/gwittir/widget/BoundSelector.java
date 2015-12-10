@@ -10,14 +10,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
-import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
-import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
-import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -32,8 +27,14 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
-public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
-		MultilineWidget, SelectionHandler {
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
+import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch.HasItem;
+
+public class BoundSelector extends AbstractBoundWidget
+		implements ClickHandler, MultilineWidget, SelectionHandler {
 	public static final int MAX_SINGLE_LINE_CHARS = 42;
 
 	public static final String VALUE_PROPERTY_NAME = "value";
@@ -50,7 +51,7 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 
 	protected int maxSelectedItems;
 
-	private Renderer renderer = ToStringRenderer.INSTANCE;
+	private Function renderer = ToStringRenderer.INSTANCE;
 
 	protected Widget resultsWidget;
 
@@ -83,14 +84,14 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 	}
 
 	public BoundSelector(Class selectionObjectClass, Predicate filter,
-			int maxSelectedItems, Renderer renderer, boolean useCellList) {
+			int maxSelectedItems, Function renderer, boolean useCellList) {
 		this(selectionObjectClass, filter, maxSelectedItems, renderer,
-				useCellList, () -> TransformManager.get().getCollection(
-						selectionObjectClass));
+				useCellList, () -> TransformManager.get()
+						.getCollection(selectionObjectClass));
 	}
 
 	public BoundSelector(Class selectionObjectClass, Predicate filter,
-			int maxSelectedItems, Renderer renderer, boolean useCellList,
+			int maxSelectedItems, Function renderer, boolean useCellList,
 			Supplier<Collection> supplier) {
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;
@@ -139,11 +140,10 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		grid.setCellPadding(0);
 		grid.setCellSpacing(0);
 		grid.setWidget(0, 0, createHeader("Available items", "available"));
-		grid.setWidget(
-				0,
-				1,
-				createHeader(isMultipleSelect() ? "Selected items"
-						: "Selected item", "selected"));
+		grid.setWidget(0, 1,
+				createHeader(
+						isMultipleSelect() ? "Selected items" : "Selected item",
+						"selected"));
 		grid.setWidget(1, 0, searchWidget);
 		grid.setWidget(1, 1, resultsWidget);
 		grid.setStyleName("alcina-SelectorFrame");
@@ -173,10 +173,11 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 		results.setRenderer(renderer);
 		results.setUseCellList(useCellList);
 		resultsWidget = results.createWidget(SelectWithSearch.emptyItems(),
-				click -> resultItemSelected(((HasItem) click.getSource())
-						.getItem()), MAX_SINGLE_LINE_CHARS);
-		results.addSelectionHandler(evt -> resultItemSelected(evt
-				.getSelectedItem()));
+				click -> resultItemSelected(
+						((HasItem) click.getSource()).getItem()),
+				MAX_SINGLE_LINE_CHARS);
+		results.addSelectionHandler(
+				evt -> resultItemSelected(evt.getSelectedItem()));
 		if (shouldHideResultFilter()) {
 			results.getFilter().addStyleName("invisible");
 		}
@@ -333,11 +334,11 @@ public class BoundSelector extends AbstractBoundWidget implements ClickHandler,
 
 	protected void update(Set old) {
 		if (this.isMultipleSelect()) {
-			changes.firePropertyChange(VALUE_PROPERTY_NAME, old, new HashSet(
-					new HashSet(search.getSelectedItems())));
+			changes.firePropertyChange(VALUE_PROPERTY_NAME, old,
+					new HashSet(new HashSet(search.getSelectedItems())));
 		} else {
-			Object prev = ((old == null) || (old.size() == 0)) ? null : old
-					.iterator().next();
+			Object prev = ((old == null) || (old.size() == 0)) ? null
+					: old.iterator().next();
 			Object curr = (search.getSelectedItems().size() == 0) ? null
 					: search.getSelectedItems().iterator().next();
 			changes.firePropertyChange(VALUE_PROPERTY_NAME, prev, curr);

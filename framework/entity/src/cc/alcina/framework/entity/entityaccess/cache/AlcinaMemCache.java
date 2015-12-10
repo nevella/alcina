@@ -2539,7 +2539,7 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 
 		@Override
-		protected boolean isZeroCreatedObjectLocalId() {
+		protected boolean isZeroCreatedObjectLocalId(Class clazz) {
 			return true;
 		}
 

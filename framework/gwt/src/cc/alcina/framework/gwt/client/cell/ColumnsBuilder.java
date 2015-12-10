@@ -2,15 +2,17 @@ package cc.alcina.framework.gwt.client.cell;
 
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
-import com.google.gwt.cell.client.TextCell;
+import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.Cell.Context;
+import com.google.gwt.cell.client.EditTextCell;
+import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.user.cellview.client.AbstractCellTable;
+import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy.KeyboardSelectionPolicy;
 import com.google.gwt.user.cellview.client.Header;
-import com.google.gwt.user.cellview.client.TextColumn;
+
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class ColumnsBuilder<T> {
 	private AbstractCellTable<T> table;
@@ -29,6 +31,8 @@ public class ColumnsBuilder<T> {
 	}
 
 	private Header<String> footer;
+
+	private boolean edit;
 
 	public ColumnsBuilder footer(Header<String> footer) {
 		this.footer = footer;
@@ -56,13 +60,20 @@ public class ColumnsBuilder<T> {
 
 		private Function<T, String> styleFunction;
 
+		private String editablePropertyName;
+
 		public ColumnBuilder(String name) {
 			this.name = name;
 		}
 
-		public TextColumn<T> build() {
-			SortableTextColumn<T> col = new SortableTextColumn<T>(function,
-					sortFunction, nativeComparator, styleFunction);
+		public SortableColumn<T> build() {
+			EditInfo editInfo = new EditInfo();
+			editInfo.propertyName = editablePropertyName;
+			if (edit && editablePropertyName != null) {
+				editInfo.cell = new EditTextCell();
+			}
+			SortableColumn<T> col = new SortableColumn<T>(function,
+					sortFunction, nativeComparator, styleFunction, editInfo);
 			if (footer == null) {
 				table.addColumn(col, name);
 			} else {
@@ -100,7 +111,8 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
-		public ColumnBuilder sortFunction(Function<T, Comparable> sortFunction) {
+		public ColumnBuilder
+				sortFunction(Function<T, Comparable> sortFunction) {
 			this.sortFunction = sortFunction;
 			return sortable();
 		}
@@ -110,8 +122,8 @@ public class ColumnsBuilder<T> {
 			return this;
 		}
 
-		public ColumnBuilder nativeComparator(
-				DirectedComparator nativeComparator) {
+		public ColumnBuilder
+				nativeComparator(DirectedComparator nativeComparator) {
 			this.nativeComparator = nativeComparator;
 			return this;
 		}
@@ -126,9 +138,20 @@ public class ColumnsBuilder<T> {
 			this.style = style;
 			return this;
 		}
+
+		public ColumnBuilder editableProperty(String editablePropertyName) {
+			this.editablePropertyName = editablePropertyName;
+			return this;
+		}
 	}
 
-	public static class SortableTextColumn<T> extends TextColumn<T> {
+	static class EditInfo {
+		public String propertyName;
+
+		public Cell cell = new TextCell();
+	}
+
+	public static class SortableColumn<T> extends Column<T, Object> {
 		private Function<T, Comparable> sortFunction;
 
 		private Function<T, Object> function;
@@ -141,10 +164,11 @@ public class ColumnsBuilder<T> {
 			return this.nativeComparator;
 		}
 
-		public SortableTextColumn(Function<T, Object> function,
+		public SortableColumn(Function<T, Object> function,
 				Function<T, Comparable> sortFunction,
 				DirectedComparator nativeComparator,
-				Function<T, String> styleFunction) {
+				Function<T, String> styleFunction, EditInfo editInfo) {
+			super(editInfo.cell);
 			this.function = function;
 			this.sortFunction = sortFunction;
 			this.nativeComparator = nativeComparator;
@@ -177,5 +201,10 @@ public class ColumnsBuilder<T> {
 			}
 			return super.getCellStyleNames(context, object);
 		}
+	}
+
+	public ColumnsBuilder editable(boolean edit) {
+		this.edit = edit;
+		return this;
 	}
 }

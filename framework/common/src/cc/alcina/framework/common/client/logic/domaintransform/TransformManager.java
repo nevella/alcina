@@ -185,8 +185,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public void addCollectionModificationListener(
 			CollectionModificationListener listener, Class listenedClass) {
-		this.collectionModificationSupport.addCollectionModificationListener(
-				listener, listenedClass);
+		this.collectionModificationSupport
+				.addCollectionModificationListener(listener, listenedClass);
 	}
 
 	public void addCollectionModificationListener(
@@ -261,14 +261,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Object existingTargetValue = null;
 		if (event.isInImmediatePropertyChangeCommit()) {
 			existingTargetValue = event.getOldValue();
-		} else if (event.getSource() == null || event.getPropertyName() == null) {
+		} else if (event.getSource() == null
+				|| event.getPropertyName() == null) {
 		} else {
 			existingTargetValue = propertyAccessor().getPropertyValue(
 					event.getSource(), event.getPropertyName());
 		}
-		existingTargetValue = ensureEndpointInTransformGraph(existingTargetValue);
-		Object newTargetValue = transformType == null ? null : getTargetObject(
-				event, false);
+		existingTargetValue = ensureEndpointInTransformGraph(
+				existingTargetValue);
+		Object newTargetValue = transformType == null ? null
+				: getTargetObject(event, false);
 		if (!checkPermissions(obj, event, event.getPropertyName(),
 				existingTargetValue)) {
 			return;
@@ -321,8 +323,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				boolean equivalentValues = CommonUtils.equalsWithNullEquality(
 						existingTargetValue, newTargetValue);
 				boolean equalValues = existingTargetValue == newTargetValue;
-				if (!equalValues
-						&& (updateAssociationsWithoutNoChangeCheck() || !equivalentValues)) {
+				if (!equalValues && (updateAssociationsWithoutNoChangeCheck()
+						|| !equivalentValues)) {
 					if (existingTargetValue instanceof Collection) {
 						throw new RuntimeException(
 								"Should not null a collection property:\n "
@@ -388,13 +390,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 					break;
 				}
 			}
-			long creationLocalId = isZeroCreatedObjectLocalId() ? 0 : event
-					.getObjectLocalId();
+			long creationLocalId = isZeroCreatedObjectLocalId(event.getObjectClass()) ? 0
+					: event.getObjectLocalId();
 			HasIdAndLocalId hili = (HasIdAndLocalId) classLookup().newInstance(
 					event.getObjectClass(), event.getObjectId(),
 					event.getObjectLocalId());
 			hili.setLocalId(creationLocalId);
-			if (hili.getId() == 0) {// replay from server -
+			if (hili.getId() == 0 && event.getObjectId() != 0) {// replay from
+																// server -
 				// huh? unless newInstance does something weird, should never
 				// reach here
 				hili.setId(event.getObjectId());
@@ -403,6 +406,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (event.getCommitType() == CommitType.TO_STORAGE) {
 				objectModified(hili, event, false);
 			}
+			objectCreated(hili);
 			if (getDomainObjects() != null) {
 				getDomainObjects().mapObject(hili);
 				maybeFireCollectionModificationEvent(hili.getClass(), false);
@@ -414,6 +418,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		currentEvent = null;
 	}
 
+	protected void objectCreated(HasIdAndLocalId hili) {
+	}
+
 	protected void maybeModifyAsPropertyChange(HasIdAndLocalId obj,
 			String propertyName, Object newTargetValue,
 			CollectionModificationType collectionModificationType) {
@@ -421,7 +428,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// changes (when replaying remote events)
 	}
 
-	protected boolean isZeroCreatedObjectLocalId() {
+	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
 		return false;
 	}
 
@@ -441,8 +448,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (value instanceof Set) {
 			return;
 		}
-		evt.setValueClass(value instanceof Enum ? ((Enum) value)
-				.getDeclaringClass() : value.getClass());
+		evt.setValueClass(value instanceof Enum
+				? ((Enum) value).getDeclaringClass() : value.getClass());
 		if (value.getClass() == Integer.class
 				|| value.getClass() == String.class
 				|| value.getClass() == Double.class
@@ -453,8 +460,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} else if (value.getClass() == Long.class) {
 			evt.setNewStringValue(SimpleStringParser.toString((Long) value));
 		} else if (value.getClass() == Date.class) {
-			evt.setNewStringValue(SimpleStringParser.toString((((Date) value)
-					.getTime())));
+			evt.setNewStringValue(
+					SimpleStringParser.toString((((Date) value).getTime())));
 		} else if (value instanceof Enum) {
 			// make sure the enum is reflect-instantiable (although not strictly
 			// necessary here, it's a common dev problem to miss this
@@ -469,7 +476,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public <T extends HasIdAndLocalId> T createDomainObject(Class<T> objectClass) {
+	public <T extends HasIdAndLocalId> T
+			createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = classLookup().newInstance(objectClass, 0, localId);
 		newInstance.setLocalId(localId);
@@ -481,8 +489,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return newInstance;
 	}
 
-	public <T extends HasIdAndLocalId> T createProvisionalObject(
-			Class<T> objectClass) {
+	public <T extends HasIdAndLocalId> T
+			createProvisionalObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
 		T newInstance = classLookup().newInstance(objectClass, 0, localId);
 		newInstance.setLocalId(localId);
@@ -490,8 +498,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return newInstance;
 	}
 
-	public DomainTransformEvent createTransformFromPropertyChange(
-			PropertyChangeEvent evt) {
+	public DomainTransformEvent
+			createTransformFromPropertyChange(PropertyChangeEvent evt) {
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setSource((HasIdAndLocalId) evt.getSource());
 		dte.setNewValue(evt.getNewValue());
@@ -550,7 +558,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return;
 		}
 		Set<DomainTransformEvent> toRemove = new LinkedHashSet<DomainTransformEvent>();
-		LinkedHashSet<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		LinkedHashSet<DomainTransformEvent> trs = getTransformsByCommitType(
+				CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent dte : trs) {
 			HasIdAndLocalId source = dte.getSource() != null ? dte.getSource()
 					: getObject(dte);
@@ -588,7 +597,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public boolean dirty(Collection provisionalObjects) {
-		Collection<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		Collection<DomainTransformEvent> trs = getTransformsByCommitType(
+				CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent dte : trs) {
 			if (provisionalObjects.contains(dte.getSource())) {
 				return true;
@@ -616,8 +626,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public <V extends HasIdAndLocalId> List<V> filter(Class<V> clazz,
 			CollectionFilter<V> filter) {
-		List<V> result = new ArrayList<V>(getDomainObjects().getCollection(
-				clazz));
+		List<V> result = new ArrayList<V>(
+				getDomainObjects().getCollection(clazz));
 		if (filter != null) {
 			result = CollectionFilters.filter(result, filter);
 		}
@@ -629,12 +639,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public <V extends HasIdAndLocalId> V find(Class<V> clazz, String key,
 			Object value) {
-		return CommonUtils.first(filter(clazz,
-				new PropertyFilter<V>(key, value)));
+		return CommonUtils
+				.first(filter(clazz, new PropertyFilter<V>(key, value)));
 	}
 
-	public void fireCollectionModificationEvent(
-			CollectionModificationEvent event) {
+	public void
+			fireCollectionModificationEvent(CollectionModificationEvent event) {
 		this.collectionModificationSupport
 				.fireCollectionModificationEvent(event);
 	}
@@ -677,22 +687,20 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public HasIdAndLocalId getObject(DomainTransformEvent dte,
 			boolean ignoreSource) {
-		HasIdAndLocalId obj = getObjectLookup().getObject(dte.getObjectClass(),
-				dte.getObjectId(), dte.getObjectLocalId());
-		if (obj == null
-				&& (ignoreSource || LooseContext
-						.is(CONTEXT_DO_NOT_POPULATE_SOURCE))) {
+		HasIdAndLocalId obj = getObject(dte.getObjectClass(), dte.getObjectId(),
+				dte.getObjectLocalId());
+		if (obj == null && (ignoreSource
+				|| LooseContext.is(CONTEXT_DO_NOT_POPULATE_SOURCE))) {
 			return null;
 		}
 		if (obj == null && dte.getSource() != null) {
 			// if create, natural behaviour is return null, ignoring source
 			if (dte.getTransformType() != TransformType.CREATE_OBJECT
 					&& dte.getTransformType() != TransformType.DELETE_OBJECT) {
-				String message = CommonUtils
-						.formatJ(
-								"calling getobject() on a provisional/deregistered object transform "
-										+ "- will harm the transform. use getsource() - \n%s\n",
-								dte);
+				String message = CommonUtils.formatJ(
+						"calling getobject() on a provisional/deregistered object transform "
+								+ "- will harm the transform. use getsource() - \n%s\n",
+						dte);
 				throw new RuntimeException(message);
 			}
 		}
@@ -734,8 +742,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Class valueClass = evt.getValueClass();
 		if (evt.getNewValue() != null || valueClass == null) {
 			if (evt.getNewValue() instanceof HasIdAndLocalId) {
-				HasIdAndLocalId hili = getObjectLookup().getObject(
-						(HasIdAndLocalId) evt.getNewValue());
+				HasIdAndLocalId hili = getObjectLookup()
+						.getObject((HasIdAndLocalId) evt.getNewValue());
 				if (hili != null) {
 					return hili;
 				} else {
@@ -797,8 +805,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
 	}
 
-	public LinkedHashSet<DomainTransformEvent> getTransformsByCommitType(
-			CommitType ct) {
+	public LinkedHashSet<DomainTransformEvent>
+			getTransformsByCommitType(CommitType ct) {
 		if (transformsByType.get(ct) == null) {
 			transformsByType.put(ct, new LinkedHashSet<DomainTransformEvent>());
 		}
@@ -811,7 +819,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public boolean hasUnsavedChanges(Object object) {
 		Collection objects = CommonUtils.wrapInCollection(object);
-		Collection<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+		Collection<DomainTransformEvent> trs = getTransformsByCommitType(
+				CommitType.TO_LOCAL_BEAN);
 		for (DomainTransformEvent dte : trs) {
 			if (objects.contains(dte.getSource())) {
 				return true;
@@ -832,8 +841,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			String collectionPropertyName, Object delta,
 			CollectionModificationType modificationType) {
 		Collection deltaC = CommonUtils.wrapInCollection(delta);
-		Collection old = (Collection) propertyAccessor().getPropertyValue(
-				objectWithCollection, collectionPropertyName);
+		Collection old = (Collection) propertyAccessor()
+				.getPropertyValue(objectWithCollection, collectionPropertyName);
 		Collection c = CommonUtils.shallowCollectionClone(old);
 		if (c == null) {
 			// handles the case when we're working within a transaction and try
@@ -872,18 +881,18 @@ public abstract class TransformManager implements PropertyChangeListener,
 					propertyName)) {
 				itr.remove();
 			} else {
-				Object defaultValue = accessor.getPropertyValue(
-						templateInstance, propertyName);
+				Object defaultValue = accessor
+						.getPropertyValue(templateInstance, propertyName);
 				defaultValues.put(propertyName, defaultValue);
 				try {
 					if (info.getPropertyType() == Set.class
 							|| info.getPropertyType() == List.class
-							|| CommonUtils.isStandardJavaClassOrEnum(info
-									.getPropertyType())) {
+							|| CommonUtils.isStandardJavaClassOrEnum(
+									info.getPropertyType())) {
 						continue;
 					}
-					Object template = classLookup.getTemplateInstance(info
-							.getPropertyType());
+					Object template = classLookup
+							.getTemplateInstance(info.getPropertyType());
 					if (template instanceof HasIdAndLocalId) {
 						implementsHili.add(info.getPropertyType());
 					}
@@ -909,8 +918,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				String propertyName = pd.getPropertyName();
 				Class propertyType = pd.getPropertyType();
 				Object defaultValue = defaultValues.get(propertyName);
-				Object value = asObjectSpec ? arr[i++] : propertyAccessor()
-						.getPropertyValue(o, propertyName);
+				Object value = asObjectSpec ? arr[i++]
+						: propertyAccessor().getPropertyValue(o, propertyName);
 				if (value == null && defaultValue == null) {
 					continue;
 				}
@@ -929,7 +938,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 							dte.setObjectId(id);
 							dte.setObjectClass(clazz);
 							dte.setPropertyName(propertyName);
-							dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
+							dte.setTransformType(
+									TransformType.ADD_REF_TO_COLLECTION);
 							if (o2 instanceof HasIdAndLocalId) {
 								HasIdAndLocalId h2 = (HasIdAndLocalId) o2;
 								dte.setNewValue(null);
@@ -957,7 +967,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 					dte.setPropertyName(propertyName);
 					if (!implementsHili.contains(propertyType)) {
 						convertToTargetObject(dte);
-						dte.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+						dte.setTransformType(
+								TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
 					} else {
 						dte.setValueClass(propertyType);
 						dte.setValueId(asObjectSpec ? (Long) value
@@ -1029,8 +1040,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		if (dte.getNewValue() instanceof Set) {
 			Set typeCheck = (Set) evt.getNewValue();
-			typeCheck = (Set) (typeCheck.isEmpty() && evt.getOldValue() != null ? evt
-					.getOldValue() : typeCheck);
+			typeCheck = (Set) (typeCheck.isEmpty() && evt.getOldValue() != null
+					? evt.getOldValue() : typeCheck);
 			// Note, we explicitly clear nulls here - it would require an
 			// expansion of the protocols to implement them
 			if (typeCheck.iterator().hasNext()) {
@@ -1046,7 +1057,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 							dte.setValueId(hili.getId());
 							dte.setValueLocalId(hili.getLocalId());
 							dte.setValueClass(hili.getClass());
-							dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
+							dte.setTransformType(
+									TransformType.ADD_REF_TO_COLLECTION);
 							transforms.add(dte);
 						}
 					}
@@ -1057,7 +1069,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 							dte.setValueId(hili.getId());
 							dte.setValueLocalId(hili.getLocalId());
 							dte.setValueClass(hili.getClass());
-							dte.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
+							dte.setTransformType(
+									TransformType.REMOVE_REF_FROM_COLLECTION);
 							transforms.add(dte);
 						}
 					}
@@ -1072,7 +1085,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 							dte.setNewValue(null);
 							dte.setNewStringValue(e.name());
 							dte.setValueClass(e.getDeclaringClass());
-							dte.setTransformType(TransformType.ADD_REF_TO_COLLECTION);
+							dte.setTransformType(
+									TransformType.ADD_REF_TO_COLLECTION);
 							transforms.add(dte);
 						}
 					}
@@ -1082,7 +1096,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 							dte.setNewValue(null);
 							dte.setNewStringValue(e.name());
 							dte.setValueClass(e.getDeclaringClass());
-							dte.setTransformType(TransformType.REMOVE_REF_FROM_COLLECTION);
+							dte.setTransformType(
+									TransformType.REMOVE_REF_FROM_COLLECTION);
 							transforms.add(dte);
 						}
 					}
@@ -1109,8 +1124,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public <T extends HasIdAndLocalId> T registerDomainObject(T hili) {
 		if (getDomainObjects() != null) {
 			if (hili.getId() == 0) {
-				HasIdAndLocalId createdObject = getDomainObjects().getObject(
-						hili);
+				HasIdAndLocalId createdObject = getDomainObjects()
+						.getObject(hili);
 				getDomainObjects().deregisterObject(createdObject);
 			}
 			getDomainObjects().mapObject(hili);
@@ -1165,8 +1180,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public void registerModelObjectAsync(final DomainModelObject h,
 			final AsyncCallback<Void> postRegisterCallback) {
-		((MapObjectLookupClient) getDomainObjects()).registerAsync(
-				h.registrableObjects(), new ScheduledCommand() {
+		((MapObjectLookupClient) getDomainObjects())
+				.registerAsync(h.registrableObjects(), new ScheduledCommand() {
 					@Override
 					public void execute() {
 						postRegisterCallback.onSuccess(null);
@@ -1180,8 +1195,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		postRegisterCallback.onSuccess(null);
 	}
 
-	public <V extends HasIdAndLocalId> Set<V> registeredObjectsAsSet(
-			Class<V> clazz) {
+	public <V extends HasIdAndLocalId> Set<V>
+			registeredObjectsAsSet(Class<V> clazz) {
 		return new LinkedHashSet<V>(getDomainObjects().getCollection(clazz));
 	}
 
@@ -1208,7 +1223,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				.removeCollectionModificationListener(listener);
 	}
 
-	public void removeDomainTransformListener(DomainTransformListener listener) {
+	public void
+			removeDomainTransformListener(DomainTransformListener listener) {
 		this.transformListenerSupport.removeDomainTransformListener(listener);
 	}
 
@@ -1250,7 +1266,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		this.replayingRemoteEvent = replayingRemoteEvent;
 	}
 
-	public void setTransformCommitType(DomainTransformEvent evt, CommitType ct) {
+	public void setTransformCommitType(DomainTransformEvent evt,
+			CommitType ct) {
 		getTransformsByCommitType(evt.getCommitType()).remove(evt);
 		evt.setCommitType(ct);
 		getTransformsByCommitType(evt.getCommitType()).add(evt);
@@ -1367,25 +1384,25 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected boolean ignorePropertyForCaching(Class objectType,
 			Class propertyType, String propertyName) {
 		return ignorePropertiesForCaching.contains(propertyName)
-				|| propertyType == Class.class
-				|| !PermissionsManager.get().checkReadable(objectType,
-						propertyName, null);
+				|| propertyType == Class.class || !PermissionsManager.get()
+						.checkReadable(objectType, propertyName, null);
 	}
 
 	protected void maybeAddVersionNumbers(DomainTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt) {
 		if (obj instanceof HasVersionNumber) {
-			evt.setObjectVersionNumber(((HasVersionNumber) obj)
-					.getVersionNumber());
+			evt.setObjectVersionNumber(
+					((HasVersionNumber) obj).getVersionNumber());
 		}
 		if (tgt instanceof HasVersionNumber) {
-			evt.setValueVersionNumber(((HasVersionNumber) tgt)
-					.getVersionNumber());
+			evt.setValueVersionNumber(
+					((HasVersionNumber) tgt).getVersionNumber());
 		}
 	}
 
 	protected void maybeFireCollectionModificationEvent(
-			Class<? extends Object> collectionClass, boolean fromPropertyChange) {
+			Class<? extends Object> collectionClass,
+			boolean fromPropertyChange) {
 	}
 
 	/**
@@ -1410,8 +1427,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		try {
 			CollectionModificationSupport.queue(true);
 			for (Object o : objects) {
-				if (o instanceof HasIdAndLocalId
-						&& getObjectLookup().getObject((HasIdAndLocalId) o) == null) {
+				if (o instanceof HasIdAndLocalId && getObjectLookup()
+						.getObject((HasIdAndLocalId) o) == null) {
 					HasIdAndLocalId hili = (HasIdAndLocalId) o;
 					// if this is a new object, we want to register a blank
 					// object,
@@ -1428,10 +1445,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 					// doesn't generate a "create" event...no, in fact current
 					// way
 					// is better. so ignore all this. it works, it's fine
-					fireCreateObjectEvent(hili.getClass(), 0, hili.getLocalId());
+					fireCreateObjectEvent(hili.getClass(), 0,
+							hili.getLocalId());
 				}
 			}
-			Collection<DomainTransformEvent> trs = getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
+			Collection<DomainTransformEvent> trs = getTransformsByCommitType(
+					CommitType.TO_LOCAL_BEAN);
 			trs = (Set) ((LinkedHashSet) trs).clone();
 			deregisterProvisionalObjects(objects);
 			for (DomainTransformEvent dte : trs) {
@@ -1482,10 +1501,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void updateAssociation(DomainTransformEvent evt,
 			HasIdAndLocalId obj, Object tgt, boolean remove,
 			boolean collectionPropertyChange) {
-		Association assoc = obj == null ? null : propertyAccessor()
-				.getAnnotationForProperty(obj.getClass(), Association.class,
-						evt.getPropertyName());
-		if (tgt == null || assoc == null || assoc.propertyName().length() == 0) {
+		Association assoc = obj == null ? null
+				: propertyAccessor().getAnnotationForProperty(obj.getClass(),
+						Association.class, evt.getPropertyName());
+		if (tgt == null || assoc == null
+				|| assoc.propertyName().length() == 0) {
 			return;
 		}
 		HasIdAndLocalId hTgt = (HasIdAndLocalId) tgt;
@@ -1494,8 +1514,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 				assoc.propertyName());
 		associatedObject = ensureEndpointInTransformGraph(associatedObject);
 		boolean assocObjIsCollection = associatedObject instanceof Collection;
-		TransformType tt = assocObjIsCollection ? (remove ? TransformType.REMOVE_REF_FROM_COLLECTION
-				: TransformType.ADD_REF_TO_COLLECTION)
+		TransformType tt = assocObjIsCollection
+				? (remove ? TransformType.REMOVE_REF_FROM_COLLECTION
+						: TransformType.ADD_REF_TO_COLLECTION)
 				: remove ? TransformType.NULL_PROPERTY_REF
 						: TransformType.CHANGE_PROPERTY_REF;
 		evt = new DomainTransformEvent();
@@ -1587,8 +1608,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			if (lookup != null) {
 				if (evt.getTransformType() == TransformType.NULL_PROPERTY_REF
 						|| evt.getTransformType() == TransformType.CHANGE_PROPERTY_REF) {
-					if (pils.contains(new PropertyInfoLite(
-							evt.getObjectClass(), evt.getPropertyName()))) {
+					if (pils.contains(new PropertyInfoLite(evt.getObjectClass(),
+							evt.getPropertyName()))) {
 						lookup = null;
 					}
 				}
@@ -1649,8 +1670,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	static class CommitToLocalDomainTransformListener implements
-			DomainTransformListener {
+	public static class CommitToLocalDomainTransformListener
+			implements DomainTransformListener {
 		/**
 		 * Until 23/11/2010, case NULL_PROPERTY_REF: case CHANGE_PROPERTY_REF:
 		 * were not in the case
@@ -1682,8 +1703,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	protected <T extends HasIdAndLocalId> boolean isProvisionalObject(
-			final T object) {
+	protected <T extends HasIdAndLocalId> boolean
+			isProvisionalObject(final T object) {
 		if (getProvisionalObjects().contains(object)) {
 			for (Object o : getProvisionalObjects()) {
 				if (o == object) {
@@ -1694,7 +1715,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return false;
 	}
 
-	static class RecordTransformListener implements DomainTransformListener {
+	public static class RecordTransformListener
+			implements DomainTransformListener {
 		private CurrentUtcDateProvider utcDateProvider = Registry
 				.impl(CurrentUtcDateProvider.class);
 
@@ -1733,7 +1755,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return CommonUtils.join(objects, ",");
 	}
 
-	public static <E extends Enum> Set<E> toEnumValues(String s, Class<E> clazz) {
+	public static <E extends Enum> Set<E> toEnumValues(String s,
+			Class<E> clazz) {
 		Set<E> result = new LinkedHashSet<>();
 		if (s != null) {
 			for (String sPart : s.split(",")) {
@@ -1750,14 +1773,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return result;
 	}
 
-	public void deleteMultiple(Collection<? extends HasIdAndLocalId> collection) {
+	public void
+			deleteMultiple(Collection<? extends HasIdAndLocalId> collection) {
 		collection.forEach(hili -> deleteObject(hili, true));
 	}
 
 	/**
 	 * useful support in TLTM, ThreadedClientTM
 	 */
-	public <H extends HasIdAndLocalId> long getLocalIdForClientInstance(H hili) {
+	public <H extends HasIdAndLocalId> long
+			getLocalIdForClientInstance(H hili) {
 		return hili.getLocalId();
 	}
 

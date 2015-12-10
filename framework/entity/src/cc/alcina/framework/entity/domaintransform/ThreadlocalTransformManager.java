@@ -153,7 +153,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	protected Map<Long, HasIdAndLocalId> localIdToEntityMap;
 
-	HiliLocatorMap userSessionHiliMap;
+	protected HiliLocatorMap userSessionHiliMap;
 
 	private EntityManager entityManager;
 
@@ -171,7 +171,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private boolean initialised = false;
 
-	private Set<HiliLocator> createdObjectLocators = new LinkedHashSet<HiliLocator>();
+	protected Set<HiliLocator> createdObjectLocators = new LinkedHashSet<HiliLocator>();
 
 	private static ThreadLocalSequentialIdGenerator tlIdGenerator = new ThreadLocalSequentialIdGenerator();
 
@@ -677,7 +677,7 @@ public class ThreadlocalTransformManager extends TransformManager
 					SuggestedAction.NOTIFY_WARNING);
 		}
 		HasIdAndLocalId hili = (HasIdAndLocalId) bean;
-		if (hili.getId() != 0 || (localIdToEntityMap.get(hili.getLocalId()) != null && getEntityManager() == null)) {
+		if (checkHasSufficientInfoForPropertyPersist(hili)) {
 			try {
 				PropertyDescriptor[] pds = Introspector.getBeanInfo(bean.getClass()).getPropertyDescriptors();
 				for (PropertyDescriptor pd : pds) {
@@ -693,6 +693,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		throw new WrappedRuntimeException("Attempting to alter property of non-persistent bean: " + bean,
 				SuggestedAction.NOTIFY_WARNING);
+	}
+
+	protected boolean
+			checkHasSufficientInfoForPropertyPersist(HasIdAndLocalId hili) {
+		return hili.getId() != 0 || (localIdToEntityMap.get(hili.getLocalId()) != null && getEntityManager() == null);
 	}
 
 	public void setUseObjectCreationId(boolean useObjectCreationId) {
@@ -890,7 +895,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	protected boolean isZeroCreatedObjectLocalId() {
+	protected boolean isZeroCreatedObjectLocalId(Class clazz) {
 		return entityManager != null;
 	}
 

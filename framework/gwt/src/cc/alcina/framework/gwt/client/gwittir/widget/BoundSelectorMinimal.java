@@ -4,16 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
-import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
-import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
-import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
-import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -22,9 +15,16 @@ import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Grid;
-import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
+
+import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyData;
+import cc.alcina.framework.gwt.client.widget.SelectWithSearch.LazyDataProvider;
+import cc.alcina.framework.gwt.client.widget.dialog.RelativePopupPanel;
 
 public class BoundSelectorMinimal extends BoundSelector {
 	private ClickHandler maybeFocusResultsHandler;
@@ -59,7 +59,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
-			int maxSelectedItems, Renderer renderer, boolean useCellList,
+			int maxSelectedItems, Function renderer, boolean useCellList,
 			Supplier<Collection> supplier) {
 		super(selectionObjectClass, filter, maxSelectedItems, renderer,
 				useCellList, supplier);
