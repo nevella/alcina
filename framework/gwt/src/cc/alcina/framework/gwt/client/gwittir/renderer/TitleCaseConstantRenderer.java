@@ -13,14 +13,15 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  *
  * @author Nick Reddel
  */
-
- public class TitleCaseConstantRenderer extends FlexibleToStringRenderer {
+@ClientInstantiable
+public class TitleCaseConstantRenderer extends FlexibleToStringRenderer {
 	public static final TitleCaseConstantRenderer INSTANCE = new TitleCaseConstantRenderer();
 
 	@Override

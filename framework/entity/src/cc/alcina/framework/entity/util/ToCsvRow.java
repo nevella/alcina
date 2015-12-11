@@ -67,8 +67,8 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 		List<String> result = new ArrayList<>();
 		for (Mapping mapping : mappings) {
 			if (mapping.function != null) {
-				result.add(CommonUtils.nullSafeToString(mapping.function
-						.apply(t)));
+				result.add(CommonUtils
+						.nullSafeToString(mapping.function.apply(t)));
 			} else {
 				Object value = mapping.accessor.getChainedProperty(t);
 				result.add(CommonUtils.nullSafeToString(value));
@@ -79,19 +79,21 @@ public abstract class ToCsvRow<T> implements IToCsvRow<T> {
 
 	@Override
 	public List<String> headers() {
-		return mappings
-				.stream()
+		return mappings.stream()
 				.map(m -> prefix + (m.alias != null ? m.alias : m.propertyPath))
 				.collect(Collectors.toList());
 	}
 
 	protected void defineChildWithPrefix(Class clazz, String prefix,
-			String fieldName) {
+			String fieldName, List<String> ignores) {
 		try {
 			Field field = clazz.getDeclaredField(fieldName);
 			Class<?> type = field.getType();
 			for (Field child : new GraphProjection().getFieldsForClass(type)) {
 				if (Modifier.isTransient(child.getModifiers())) {
+					continue;
+				}
+				if (ignores.contains(child.getName())) {
 					continue;
 				}
 				define(String.format("%s.%s", fieldName, child.getName()));
