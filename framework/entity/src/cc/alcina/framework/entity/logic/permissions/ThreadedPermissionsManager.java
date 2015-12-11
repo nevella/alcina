@@ -100,7 +100,8 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		getTTL.remove();
 	}
 
-	public <T> T runWithPushedSystemUserIfNeeded(Callable<T> callable) throws Exception {
+	public <T> T callWithPushedSystemUserIfNeeded(Callable<T> callable)
+			throws Exception {
 		if (isRoot()) {
 			return callable.call();
 		} else {
@@ -110,6 +111,23 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 			} finally {
 				popSystemUser();
 			}
+		}
+	}
+
+	public void runWithPushedSystemUserIfNeeded(Runnable runnable) {
+		try {
+			if (isRoot()) {
+				runnable.run();
+			} else {
+				try {
+					pushSystemUser();
+					runnable.run();
+				} finally {
+					popSystemUser();
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

@@ -159,7 +159,7 @@ public class ServletLayerUtils {
 					return null;
 				}
 			};
-			ThreadedPermissionsManager.cast().runWithPushedSystemUserIfNeeded(
+			ThreadedPermissionsManager.cast().callWithPushedSystemUserIfNeeded(
 					looper);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
