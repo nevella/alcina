@@ -161,6 +161,10 @@ public class ColumnsBuilder<T> {
 		public String propertyName;
 
 		public Cell cell = new TextCell();
+
+		public boolean isEditable() {
+			return propertyName != null;
+		}
 	}
 
 	public static class SortableColumn<T> extends Column<T, Object> {
@@ -208,19 +212,20 @@ public class ColumnsBuilder<T> {
 
 		@Override
 		public String getCellStyleNames(Context context, T object) {
+			String editable = editInfo.isEditable() ? " editable" : "";
 			if (styleFunction != null) {
 				String custom = styleFunction.apply(object);
 				if (custom != null) {
 					String superStyles = super.getCellStyleNames(context,
 							object);
 					if (CommonUtils.isNullOrEmpty(superStyles)) {
-						return custom;
+						return custom + editable;
 					} else {
-						return superStyles + " " + custom;
+						return superStyles + " " + custom + editable;
 					}
 				}
 			}
-			return super.getCellStyleNames(context, object);
+			return super.getCellStyleNames(context, object) + editable;
 		}
 	}
 

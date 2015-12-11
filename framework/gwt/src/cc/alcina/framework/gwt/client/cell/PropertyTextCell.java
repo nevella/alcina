@@ -232,6 +232,9 @@ public class PropertyTextCell
 		String toRender = value;
 		if (viewData != null) {
 			String text = viewData.getText();
+			if (text == null) {
+				text = "";
+			}
 			if (viewData.isEditing()) {
 				/*
 				 * Do not use the renderer in edit mode because the value of a
@@ -245,6 +248,7 @@ public class PropertyTextCell
 				toRender = text;
 			}
 		}
+		sb.appendHtmlConstant("<span class='property-text-cell'>");
 		if (toRender != null && toRender.trim().length() > 0) {
 			sb.append(renderer.render(toRender));
 		} else {
@@ -254,6 +258,7 @@ public class PropertyTextCell
 			 */
 			sb.appendHtmlConstant("\u00A0");
 		}
+		sb.appendHtmlConstant("</span>");
 	}
 
 	@Override
