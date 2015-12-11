@@ -26,27 +26,19 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 public class DateCriterion extends AbstractDateCriterion {
 	static final transient long serialVersionUID = -1L;
 
-	private StandardSearchOperator operator = StandardSearchOperator.EQUALS;
-
 	public DateCriterion() {
+		setOperator(StandardSearchOperator.EQUALS);
 	}
 
 	public DateCriterion(String displayName, Direction direction) {
 		super(displayName);
 		setDirection(direction);
+		setOperator(StandardSearchOperator.EQUALS);
 	}
 
 	@Override
 	public SearchCriterion clone() throws CloneNotSupportedException {
 		return new DateCriterion().copyPropertiesFrom(this);
-	}
-
-	@Override
-	protected <SC extends SearchCriterion> SC
-			copyPropertiesFrom(SC copyFromCriterion) {
-		StandardSearchOperator copyFromOp = ((DateCriterion) copyFromCriterion).operator;
-		operator = copyFromOp;
-		return super.copyPropertiesFrom(copyFromCriterion);
 	}
 
 	@Override
@@ -72,22 +64,12 @@ public class DateCriterion extends AbstractDateCriterion {
 			return false;
 		}
 		DateCriterion otherImpl = (DateCriterion) other;
-		return super.equivalentTo(other) && operator == otherImpl.operator;
-	}
-
-	public StandardSearchOperator getOperator() {
-		return this.operator;
+		return super.equivalentTo(other)
+				&& getOperator() == other.getOperator();
 	}
 
 	public boolean rangeControlledByDirection() {
 		return false;
-	}
-
-	public void setOperator(StandardSearchOperator operator) {
-		StandardSearchOperator old_operator = this.operator;
-		this.operator = operator;
-		propertyChangeSupport().firePropertyChange("operator", old_operator,
-				operator);
 	}
 
 	@Override

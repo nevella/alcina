@@ -61,8 +61,8 @@ public class StatusDisplayer {
 		HTML exceptionLabel = new HTML();
 		exceptionTuple = new FaderTuple(exceptionLabel,
 				"alcina-Status-Exception");
-		GlobalTopicPublisher.get().addTopicListener(
-				CallManager.TOPIC_CALL_MADE, topicListener);
+		GlobalTopicPublisher.get().addTopicListener(CallManager.TOPIC_CALL_MADE,
+				topicListener);
 		GlobalTopicPublisher.get().addTopicListener(
 				MessageManager.TOPIC_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().addTopicListener(
@@ -71,10 +71,9 @@ public class StatusDisplayer {
 				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().addTopicListener(
 				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get()
-				.addTopicListener(
-						MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
-						topicListener);
+		GlobalTopicPublisher.get().addTopicListener(
+				MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
+				topicListener);
 		RootPanel.get().add(appTuple.holder);
 		RootPanel.get().add(statusTuple.holder);
 		RootPanel.get().add(centerTuple.holder);
@@ -92,10 +91,9 @@ public class StatusDisplayer {
 				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
 		GlobalTopicPublisher.get().removeTopicListener(
 				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get()
-				.removeTopicListener(
-						MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
-						topicListener);
+		GlobalTopicPublisher.get().removeTopicListener(
+				MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
+				topicListener);
 	}
 
 	private StringMap stylePrefixes;
@@ -116,14 +114,13 @@ public class StatusDisplayer {
 			this.defaultStyle = defaultStyle;
 		}
 
-
 		FaderAnimation fader;
 
 		Label label;
 	}
 
 	static class SimplePanelWClick extends SimplePanel {
-		private ClickHandler hideHandler=new ClickHandler() {
+		private ClickHandler hideHandler = new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				setVisible(false);
@@ -134,15 +131,11 @@ public class StatusDisplayer {
 			super(label);
 			addDomHandler(hideHandler, ClickEvent.getType());
 		}
-
-		
 	}
 
 	FaderTuple statusTuple;
 
 	FaderTuple centerTuple;
-
-	
 
 	private void showMessage(String message, String channel) {
 		boolean center = false;
@@ -164,13 +157,14 @@ public class StatusDisplayer {
 		Label label = ft.label;
 		FaderAnimation fader = ft.fader;
 		label.setStyleName("");
-		if (stylePrefixes.containsKey(channel)) {
-			label.addStyleName(stylePrefixes.get(channel));
-		}
 		if (fader != null) {
 			fader.cancel();
 		}
 		SimplePanelWClick holder = ft.holder;
+		if (stylePrefixes.containsKey(channel)) {
+			label.addStyleName(stylePrefixes.get(channel));
+			holder.addStyleName(stylePrefixes.get(channel));
+		}
 		WidgetUtils.setOpacity(holder, 0);
 		message = CommonUtils.nullToEmpty(message);
 		if (label instanceof HTML) {
@@ -193,7 +187,6 @@ public class StatusDisplayer {
 			ft.fader = fader;
 			fader.run(duration);
 		}
-		
 	}
 
 	private class FaderAnimation extends Animation {
@@ -213,8 +206,8 @@ public class StatusDisplayer {
 		@Override
 		protected void onUpdate(double progress) {
 			if (progress > preFade) {
-				int opacityPercent = (int) (100 * (1 - (progress - preFade)
-						/ (1 - preFade)));
+				int opacityPercent = (int) (100
+						* (1 - (progress - preFade) / (1 - preFade)));
 				WidgetUtils.setOpacity(holder, opacityPercent);
 			}
 		}

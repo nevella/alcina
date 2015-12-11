@@ -59,7 +59,7 @@ public abstract class FlatSearchable<SC extends SearchCriterion> {
 
 	public abstract boolean hasValue(SC sc);
 
-	public boolean isNonDefaultValue(SearchCriterion sc) {
+	public boolean isNonDefaultValue(SC sc) {
 		Object value = Reflections.propertyAccessor().getPropertyValue(sc,
 				getCriterionPropertyName());
 		if (value instanceof Collection) {
@@ -85,4 +85,5 @@ public abstract class FlatSearchable<SC extends SearchCriterion> {
 	public String toString() {
 		return CommonUtils.formatJ("%s : %s", category, name);
 	}
+
 }

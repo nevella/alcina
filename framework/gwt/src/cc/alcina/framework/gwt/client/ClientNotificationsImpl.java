@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.widget.Link;
@@ -113,11 +114,11 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	}
 
 	protected native void consoleLog(String s) /*-{
-		try {
-			$wnd.console.log(s);
-		} catch (e) {
+        try {
+            $wnd.console.log(s);
+        } catch (e) {
 
-		}
+        }
 	}-*/;
 
 	private Map<String, Long> metricStartTimes = new HashMap<String, Long>();
@@ -139,17 +140,18 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		this.dialogAnimationEnabled = dialogAnimationEnabled;
 	}
 
-	public void showDialog(String captionHTML, Widget captionWidget,
-			String msg, MessageType messageType, List<Button> extraButtons) {
+	public void showDialog(String captionHTML, Widget captionWidget, String msg,
+			MessageType messageType, List<Button> extraButtons) {
 		showDialog(captionHTML, captionWidget, msg, messageType, extraButtons,
 				null);
 	}
 
-	public void showDialog(String captionHTML, Widget captionWidget,
-			String msg, MessageType messageType, List<Button> extraButtons,
+	public void showDialog(String captionHTML, Widget captionWidget, String msg,
+			MessageType messageType, List<Button> extraButtons,
 			String containerStyle) {
 		ensureImages();
-		HorizontalAlignmentConstant align = messageType == MessageType.ERROR ? HasHorizontalAlignment.ALIGN_LEFT
+		HorizontalAlignmentConstant align = messageType == MessageType.ERROR
+				? HasHorizontalAlignment.ALIGN_LEFT
 				: HasHorizontalAlignment.ALIGN_CENTER;
 		if (dialogBox != null) {
 			dialogBox.hide();
@@ -176,8 +178,9 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		dialogBox.setText(text);
 		FlexTable ft = new FlexTable();
 		containerStyle = containerStyle != null ? containerStyle
-				: (messageType == MessageType.ERROR || !CommonUtils
-						.isNullOrEmpty(msg)) ? "medium" : "narrow";
+				: (messageType == MessageType.ERROR
+						|| !CommonUtils.isNullOrEmpty(msg)) ? "medium"
+								: "narrow";
 		ft.setCellSpacing(4);
 		ft.setStyleName("alcina-Notification");
 		ft.addStyleName(containerStyle);
@@ -206,8 +209,8 @@ public class ClientNotificationsImpl implements ClientNotifications {
 					sp.setVisible(!sp.isVisible());
 				}
 			});
-			if (LooseContext
-					.getBoolean(ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL)) {
+			if (LooseContext.getBoolean(
+					ClientNotifications.CONTEXT_AUTOSHOW_DIALOG_DETAIL)) {
 				sp.setVisible(true);
 			}
 			fp.add(nh);
@@ -245,7 +248,8 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	}
 
 	public void showError(String msg, Throwable throwable) {
-		log("error: " + msg.replace("<br>", "\n") + "\n" + throwable.toString());
+		log("error: " + msg.replace("<br>", "\n") + "\n"
+				+ throwable.toString());
 		msg += CommonUtils.isNullOrEmpty(msg) ? "" : "<br><br>";
 		msg += getStandardErrorText();
 		msg = "<div class='errorOops'>Ooops - an error has occurred</div>"
@@ -259,42 +263,44 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	}
 
 	public native String statsString() /*-{
-		if (!($wnd.__stats)) {
-			return "";
-		}
-		var result = "";
-		var lastEvtGroup = -1;
-		var lastMillis = 0;
-		for ( var k in $wnd.__stats) {
-			var stat = $wnd.__stats[k];
-			var deltaStr = '';
-			for ( var j in stat) {
-				var v = stat[j];
-				result += j + ": " + v + "  ";
+        if (!($wnd.__stats)) {
+            return "";
+        }
+        var result = "";
+        var lastEvtGroup = -1;
+        var lastMillis = 0;
+        for ( var k in $wnd.__stats) {
+            var stat = $wnd.__stats[k];
+            var deltaStr = '';
+            for ( var j in stat) {
+                var v = stat[j];
+                result += j + ": " + v + "  ";
 
-			}
+            }
 
-			var v = stat.evtGroup;
-			if (lastEvtGroup == v) {
-				if (lastMillis != 0) {
-					result += "\ndelta - " + v + " - " + stat.type + ' - '
-							+ (stat.millis - lastMillis) + 'ms\n';
-				}
-				lastMillis = stat.millis;
-			} else {
-				lastMillis = 0;
-				lastEvtGroup = v;
-			}
-			result += "\n\n";
-		}
-		return result;
+            var v = stat.evtGroup;
+            if (lastEvtGroup == v) {
+                if (lastMillis != 0) {
+                    result += "\ndelta - " + v + " - " + stat.type + ' - '
+                            + (stat.millis - lastMillis) + 'ms\n';
+                }
+                lastMillis = stat.millis;
+            } else {
+                lastMillis = 0;
+                lastEvtGroup = v;
+            }
+            result += "\n\n";
+        }
+        return result;
 	}-*/;
 
 	public void showLog() {
-		showDialog(CommonUtils.formatJ("<div>Client log</div><hr>"
-				+ "<div class='logboxpre' style='width:850px'>%s </div>",
-				(logString + statsString()).replace("\n", "<br>")), null, null,
-				MessageType.INFO, null, "wide");
+		showDialog(
+				CommonUtils.formatJ(
+						"<div>Client log</div><hr>"
+								+ "<div class='logboxpre' style='width:850px'>%s </div>",
+						(logString + statsString()).replace("\n", "<br>")),
+				null, null, MessageType.INFO, null, "wide");
 		dialogBox.setModal(false);
 		dialogBox.setAutoHideEnabled(true);
 	}
@@ -337,8 +343,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	public void ensureLocalisedMessages() {
 		if (localisedMessages == null) {
 			localisedMessages = new HashMap<String, String>();
-			localisedMessages.put(
-					LT_NOTIFY_COMPLETED_SAVE,
+			localisedMessages.put(LT_NOTIFY_COMPLETED_SAVE,
 					TextProvider.get().getUiObjectText(
 							ClientNotificationsImpl.class,
 							LT_NOTIFY_COMPLETED_SAVE,
@@ -382,5 +387,10 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	public ClientNotificationsImpl() {
 		AlcinaTopics.logListenerDelta(logListener, true);
+	}
+
+	@Override
+	public void showDevError(Throwable e) {
+		MessageManager.get().icyMessage("GWT exception - " + e.getMessage());
 	}
 }

@@ -58,4 +58,8 @@ public interface ClientNotifications extends LogWriter{
 	static ClientNotifications get(){
 		return Registry.impl(ClientNotifications.class);
 	}
+
+	default void showDevError(Throwable e){
+		
+	}
 }

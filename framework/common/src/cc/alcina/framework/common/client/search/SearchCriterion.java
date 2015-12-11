@@ -26,9 +26,10 @@ import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
+import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 @Bean(displayNamePropertyName = "displayName", allPropertiesVisualisable = true)
-@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
+@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE) , write = @Permission(access = AccessLevel.EVERYONE) )
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class SearchCriterion extends BaseBindable implements
 		TreeRenderable, HasEquivalence<SearchCriterion>, GwtCloneable {
@@ -42,6 +43,19 @@ public abstract class SearchCriterion extends BaseBindable implements
 	private Direction direction = Direction.ASCENDING;
 
 	private String displayName;
+
+	private StandardSearchOperator operator;
+
+	public StandardSearchOperator getOperator() {
+		return this.operator;
+	}
+
+	public void setOperator(StandardSearchOperator operator) {
+		StandardSearchOperator old_operator = this.operator;
+		this.operator = operator;
+		propertyChangeSupport().firePropertyChange("operator", old_operator,
+				operator);
+	}
 
 	public SearchCriterion() {
 	}
@@ -101,10 +115,11 @@ public abstract class SearchCriterion extends BaseBindable implements
 		return toString();
 	}
 
-	protected <SC extends SearchCriterion> SC copyPropertiesFrom(
-			SC copyFromCriterion) {
+	protected <SC extends SearchCriterion> SC
+			copyPropertiesFrom(SC copyFromCriterion) {
 		direction = copyFromCriterion.getDirection();
 		displayName = copyFromCriterion.getDisplayName();
+		operator = copyFromCriterion.getOperator();
 		return (SC) this;
 	}
 

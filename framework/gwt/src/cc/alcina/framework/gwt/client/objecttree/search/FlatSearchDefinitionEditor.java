@@ -27,6 +27,8 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 
 	List<FlatSearchable> searchables;
 
+	private FlatSearchable lastDefEmptySearchable;
+
 	public FlatSearchDefinitionEditor() {
 		super();
 		render();
@@ -61,6 +63,27 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 				addRow(searchable.get(), sc);
 			}
 		}
+		// use last if we can
+		if (lastDefEmptySearchable != null) {
+			Optional<FlatSearchable> searchable = searchables.stream().filter(
+					s -> s.getClass() == lastDefEmptySearchable.getClass())
+					.findFirst();
+			if (searchable.isPresent()) {
+				for (SearchCriterion sc : def.allCriteria()) {
+					Optional<FlatSearchable> searchableReCriterion = searchableForCriterion(
+							sc);
+					if (searchableReCriterion.isPresent()
+							&& searchableReCriterion.get()
+									.getClass() == searchable.get()
+											.getClass()) {
+						sc.setOperator(lastDefEmptySearchable.getCriterion()
+								.getOperator());
+						addRow(searchable.get(), sc);
+						return;
+					}
+				}
+			}
+		}
 		if (rows.size() > 0) {
 			return;
 		}
@@ -70,7 +93,7 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 			if (searchable.isPresent()
 					&& searchables.get(0) == searchable.get()) {
 				addRow(searchable.get(), sc);
-				break;
+				return;
 			}
 		}
 		// or create a criteria
@@ -87,6 +110,19 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 
 	@SuppressWarnings("unchecked")
 	public void setModel(Object model) {
+		lastDefEmptySearchable = null;
+		if (searchables != null && def != null) {
+			for (SearchCriterion sc : def.allCriteria()) {
+				Optional<FlatSearchable> searchable = searchableForCriterion(
+						sc);
+				if (searchable.isPresent() && rows.containsKey(sc)
+						&& !searchable.get().hasValue(sc)) {
+					lastDefEmptySearchable = searchable.get();
+					lastDefEmptySearchable.setCriterion(sc);
+					break;
+				}
+			}
+		}
 		this.def = (SearchDefinition) model;
 		super.setModel(model);
 		refreshRows();

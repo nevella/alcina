@@ -1164,7 +1164,7 @@ div.alcina-Status {
 	border-style: solid;
 }
 
-div.alcina-Status.icy {
+div.alcina-Status.icy, div.alcina-Status .icy {
 	color: #FFFFFF;
 	background-color: #9999FF;
 }
