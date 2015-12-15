@@ -131,6 +131,9 @@ public class CsvUtils {
 		public List<String> headers() {
 			return colLookup.keySet().stream().collect(Collectors.toList());
 		}
+		public CsvCols(String csv){
+			this(parseCsv(csv));
+		}
 
 		public CsvCols(List<List<String>> grid) {
 			this.grid = grid;
