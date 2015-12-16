@@ -144,7 +144,7 @@ public class ClientUtils {
             }
             return value;
         }
-        return JSON.parse(json,dateTimeReviver);
+        return JSON.parse(json, dateTimeReviver);
 	}-*/;
 
 	public static native boolean setCssTextViaCssTextProperty(Element styleTag,
@@ -225,6 +225,13 @@ public class ClientUtils {
 				true);
 	}
 
+	public static EditContentViewWidgets makeContentViewWithButtons(
+			final Object model, boolean editable,
+			PermissibleActionListener pal) {
+		return makeContentView(model, pal, null, null, false, editable, false,
+				false);
+	}
+
 	public static EditContentViewWidgets popupContentView(final Object model,
 			final PermissibleActionListener pal, String caption,
 			String messageHtml, final boolean hideOnClick, boolean editable) {
@@ -254,7 +261,7 @@ public class ClientUtils {
 			}
 		};
 		PaneWrapperWithObjects view = cvf.createBeanView(model, editable,
-				inDialog ? closeWrapper : null, false, true);
+				inDialog ? closeWrapper : pal, false, true);
 		view.addStyleName("pwo-center-buttons");
 		if (!editable && inDialog) {
 			OkCancelPanel sp = new OkCancelPanel("OK", view, false);
