@@ -15,7 +15,12 @@
  */
 package com.google.gwt.user.cellview.client;
 
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.cellview.client.DataGrid.Resources;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 /**
  * A tabular view with a fixed header and footer section and a scrollable data
@@ -44,23 +49,35 @@ import com.google.gwt.user.client.ui.ScrollPanel;
  * <dt>Trivial example</dt>
  * <dd>{@example com.google.gwt.examples.cellview.CellTableExample}</dd>
  * <dt>FieldUpdater example</dt>
- * <dd>{@example com.google.gwt.examples.cellview.CellTableFieldUpdaterExample}</dd>
+ * <dd>{@example com.google.gwt.examples.cellview.CellTableFieldUpdaterExample}
+ * </dd>
  * <dt>Key provider example</dt>
  * <dd>{@example com.google.gwt.examples.view.KeyProviderExample}</dd>
  * </dl>
  * </p>
  * 
- * @param <T> the data type of each row
+ * @param <T>
+ *            the data type of each row
  */
-public class DataGridWithScrollAccess<T> extends DataGrid<T>  {
-
+public class DataGridWithScrollAccess<T> extends DataGrid<T> {
 	public DataGridWithScrollAccess(int pageSize,
 			com.google.gwt.user.cellview.client.DataGrid.Resources resources) {
-		super(pageSize, resources);
+		super(pageSize, resources, null,
+				createDefaultLoadingIndicator(resources));
+	}
+
+	private static Widget createDefaultLoadingIndicator(Resources resources) {
+		ImageResource loadingImg = resources.dataGridLoading();
+		if (loadingImg == null) {
+			return null;
+		}
+		Image image = new Image(loadingImg);
+		image.getElement().getStyle().setMarginTop(30.0, Unit.PX);
+		image.setStyleName("dg-loading-image");
+		return image;
 	}
 
 	public ScrollPanel getBodyScrollPanel() {
 		return (ScrollPanel) tableData.getParent();
 	}
-	
 }
