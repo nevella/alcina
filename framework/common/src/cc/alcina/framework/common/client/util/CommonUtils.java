@@ -51,6 +51,7 @@ public class CommonUtils {
 			"Wednesday", "Thursday", "Friday", "Saturday" };
 
 	private static final Map<String, Class> stdClassMap = new HashMap<String, Class>();
+
 	static {
 		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
 				Byte.class, Integer.class, Boolean.class, Character.class,
@@ -83,13 +84,9 @@ public class CommonUtils {
 					}
 				} else {
 					if (!o1.equals(o2)) {
-						if (o1 instanceof String
-								&& o2 instanceof String
-								&& o1.toString()
-										.trim()
-										.toLowerCase()
-										.equals(o2.toString().trim()
-												.toLowerCase())) {
+						if (o1 instanceof String && o2 instanceof String
+								&& o1.toString().trim().toLowerCase().equals(
+										o2.toString().trim().toLowerCase())) {
 						} else {
 							return false;
 						}
@@ -122,6 +119,7 @@ public class CommonUtils {
 	}
 
 	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
+
 	static {
 		Class[] prims = { long.class, int.class, short.class, char.class,
 				byte.class, boolean.class, double.class, float.class };
@@ -131,6 +129,7 @@ public class CommonUtils {
 	}
 
 	public static final Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
+
 	static {
 		stdAndPrimitivesMap.putAll(stdClassMap);
 		stdAndPrimitivesMap.putAll(primitiveClassMap);
@@ -274,17 +273,15 @@ public class CommonUtils {
 					padTwo(date.getHours()), padTwo(date.getMinutes()),
 					padTwo(date.getSeconds()));
 		case AU_DATE_TIME_HUMAN:
-			return formatDate(date, DateStyle.AU_LONG_DAY)
-					+ formatJ(" at %s:%s %s",
-							padTwo((date.getHours() - 1) % 12 + 1),
-							padTwo(date.getMinutes()),
-							date.getHours() < 12 ? "AM" : "PM");
+			return formatDate(date, DateStyle.AU_LONG_DAY) + formatJ(
+					" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1),
+					padTwo(date.getMinutes()),
+					date.getHours() < 12 ? "AM" : "PM");
 		case NAMED_MONTH_DATE_TIME_HUMAN:
-			return formatDate(date, DateStyle.NAMED_MONTH_DAY)
-					+ formatJ(" at %s:%s %s",
-							padTwo((date.getHours() - 1) % 12 + 1),
-							padTwo(date.getMinutes()),
-							date.getHours() < 12 ? "AM" : "PM");
+			return formatDate(date, DateStyle.NAMED_MONTH_DAY) + formatJ(
+					" at %s:%s %s", padTwo((date.getHours() - 1) % 12 + 1),
+					padTwo(date.getMinutes()),
+					date.getHours() < 12 ? "AM" : "PM");
 		case NAMED_MONTH_DAY:
 			return formatJ("%s, %s %s %s", DAY_NAMES[date.getDay()],
 					MONTH_NAMES[date.getMonth() + 1], padTwo(date.getDate()),
@@ -365,8 +362,8 @@ public class CommonUtils {
 	}
 
 	public static String getSimpleTimeBefore(Date d, Date currentDate) {
-		long timeDiff = (long) Math.ceil((double) (currentDate.getTime() - d
-				.getTime()) / (60 * 1000));
+		long timeDiff = (long) Math.ceil(
+				(double) (currentDate.getTime() - d.getTime()) / (60 * 1000));
 		if (timeDiff < 60) {
 			return timeDiff + " minutes ago";
 		}
@@ -408,8 +405,9 @@ public class CommonUtils {
 	}
 
 	public static String infix(String s) {
-		return isNullOrEmpty(s) ? null : s.substring(0, 1).toLowerCase()
-				+ (s.length() == 1 ? "" : s.substring(1));
+		return isNullOrEmpty(s) ? null
+				: s.substring(0, 1).toLowerCase()
+						+ (s.length() == 1 ? "" : s.substring(1));
 	}
 
 	public static Supplier<Set> setSupplier = () -> new LinkedHashSet();
@@ -567,8 +565,8 @@ public class CommonUtils {
 			if (i > 0) {
 				result.append((i == phrases.size() - 1) ? " and " : ", ");
 			}
-			result.append(phraseTemplate == null ? phrase : CommonUtils
-					.formatJ(phraseTemplate, phrase));
+			result.append(phraseTemplate == null ? phrase
+					: CommonUtils.formatJ(phraseTemplate, phrase));
 		}
 		return result.toString();
 	}
@@ -602,7 +600,8 @@ public class CommonUtils {
 		return sb.toString();
 	}
 
-	public static String padStringRight(String input, int length, char padChar) {
+	public static String padStringRight(String input, int length,
+			char padChar) {
 		input = input == null ? "(null)" : input;
 		StringBuffer sb = new StringBuffer();
 		sb.append(input);
@@ -759,7 +758,8 @@ public class CommonUtils {
 		return trimToWsChars(s, maxChars, "...");
 	}
 
-	public static String trimToWsChars(String s, int maxChars, String ellipsis) {
+	public static String trimToWsChars(String s, int maxChars,
+			String ellipsis) {
 		if (maxChars < 0) {
 			maxChars = 100;
 		}
@@ -994,8 +994,8 @@ public class CommonUtils {
 		return false;
 	}
 
-	public static <T extends Throwable> T extractCauseOfClass(
-			Throwable throwable, Class<T> throwableClass) {
+	public static <T extends Throwable> T
+			extractCauseOfClass(Throwable throwable, Class<T> throwableClass) {
 		while (true) {
 			if (isDerivedFrom(throwable, throwableClass)) {
 				return (T) throwable;
@@ -1059,8 +1059,8 @@ public class CommonUtils {
 		return result;
 	}
 
-	public static <T extends Comparable> List<T> order(
-			Collection<T> comparableCollection) {
+	public static <T extends Comparable> List<T>
+			order(Collection<T> comparableCollection) {
 		List<T> items = new ArrayList<T>(comparableCollection);
 		Collections.sort(items);
 		return items;
@@ -1101,8 +1101,8 @@ public class CommonUtils {
 				enumValueLookup.put(enumClass, ev.toString(), ev);
 				enumValueLookup.put(enumClass, ev.toString().toLowerCase(), ev);
 				if (withFriendlyNames) {
-					enumValueLookup.put(enumClass, friendlyConstant(ev, "-")
-							.toLowerCase(), ev);
+					enumValueLookup.put(enumClass,
+							friendlyConstant(ev, "-").toLowerCase(), ev);
 					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
 							ev);
 				}
@@ -1244,5 +1244,9 @@ public class CommonUtils {
 			return false;
 		}
 		return s1.toLowerCase().equals(s2.toLowerCase());
+	}
+
+	public static <T> Set<T> setOf(T... values) {
+		return new LinkedHashSet<T>(Arrays.asList(values));
 	}
 }

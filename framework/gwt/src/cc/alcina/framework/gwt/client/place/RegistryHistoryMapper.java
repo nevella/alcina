@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-@RegistryLocation(registryPoint=RegistryHistoryMapper.class,implementationType=ImplementationType.SINGLETON)
+@RegistryLocation(registryPoint = RegistryHistoryMapper.class, implementationType = ImplementationType.SINGLETON)
 public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	Map<String, BasePlaceTokenizer> tokenizersByPrefix = new LinkedHashMap<>();
 
@@ -43,7 +43,11 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	public <T extends Place> T copyPlace(T place) {
-		String token=getToken(place);
+		String token = getToken(place);
 		return (T) getPlace(token);
+	}
+
+	public boolean equalPlaces(Place place1, Place place2) {
+		return getToken(place1).equals(getToken(place2));
 	}
 }
