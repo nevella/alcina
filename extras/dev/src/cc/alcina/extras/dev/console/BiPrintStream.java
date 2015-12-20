@@ -5,6 +5,9 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Locale;
 
+import cc.alcina.framework.common.client.util.AlcinaConstants;
+import cc.alcina.framework.common.client.util.LooseContext;
+
 class BiPrintStream extends PrintStream {
 	public BiPrintStream(OutputStream ignore) {
 		super(ignore);
@@ -82,8 +85,11 @@ class BiPrintStream extends PrintStream {
 
 	@Override
 	public void print(String s) {
-		s1.print(s);
-		s2.print(s);
+		if (!LooseContext
+				.is(AlcinaConstants.CONTEXT_ALCINA_DEBUG_DEV_LOGGING)) {
+			s1.print(s);
+			s2.print(s);
+		}
 	}
 
 	@Override
@@ -148,8 +154,11 @@ class BiPrintStream extends PrintStream {
 
 	@Override
 	public void println(Object x) {
-		s1.println(x);
-		s2.println(x);
+		if (!LooseContext
+				.is(AlcinaConstants.CONTEXT_ALCINA_DEBUG_DEV_LOGGING)) {
+			s1.println(x);
+			s2.println(x);
+		}
 	}
 
 	@Override
