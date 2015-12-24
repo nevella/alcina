@@ -38,8 +38,8 @@ public class StringMap extends LinkedHashMap<String, String> {
 			}
 			sb.append(entry.getKey());
 			sb.append('=');
-			sb.append(entry.getValue().replace("\\", "\\\\")
-					.replace("=", "\\=").replace("\n", "\\n"));
+			sb.append(entry.getValue().replace("\\", "\\\\").replace("=", "\\=")
+					.replace("\n", "\\n"));
 		}
 		return sb.toString();
 	}
@@ -86,5 +86,17 @@ public class StringMap extends LinkedHashMap<String, String> {
 		} else {
 			remove(key);
 		}
+	}
+
+	public static StringMap fromKvStringList(String list) {
+		StringMap map = new StringMap();
+		if (list == null) {
+			return map;
+		}
+		String[] lines = list.split("\n");
+		for (int i = 0; i < lines.length; i += 2) {
+			map.put(lines[i].trim(), lines[i + 1].trim());
+		}
+		return map;
 	}
 }
