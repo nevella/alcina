@@ -18,6 +18,7 @@ package com.google.gwt.user.cellview.client;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.cellview.client.DataGrid.Resources;
+import com.google.gwt.user.cellview.client.LoadingStateChangeEvent.LoadingState;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -79,5 +80,9 @@ public class DataGridWithScrollAccess<T> extends DataGrid<T> {
 
 	public ScrollPanel getBodyScrollPanel() {
 		return (ScrollPanel) tableData.getParent();
+	}
+	@Override
+	public void onLoadingStateChanged(LoadingState state) {
+		super.onLoadingStateChanged(state);
 	}
 }
