@@ -413,6 +413,9 @@ public class ResourceUtilities {
 	public static void writeStringToFile(String s, File f) throws IOException {
 		writeStringToOutputStream(s, new FileOutputStream(f));
 	}
+	public static void writeStringToFile(String s, String filename) throws IOException {
+		writeStringToOutputStream(s, new FileOutputStream(filename));
+	}
 
 	public static void writeStringToOutputStream(String s, OutputStream os)
 			throws IOException {
