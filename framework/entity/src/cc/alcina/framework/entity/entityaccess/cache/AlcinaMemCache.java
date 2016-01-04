@@ -852,22 +852,23 @@ public class AlcinaMemCache implements RegistrableService {
 		}
 		ctr.lastFilterString = cacheFilter.toString();
 		CacheLookup lookup = getLookupFor(clazz, cacheFilter.propertyPath);
-		if (lookup != null && existing != null
-				&& lookup.size() > existing.size() * 1000) {
-			// heuristic - faster to just filter existing
-			lookup = null;
-		}
 		if (lookup != null) {
 			switch (cacheFilter.filterOperator) {
 			case EQ:
 			case IN:
 				Set<Long> set = lookup.getMaybeCollectionKey(
 						cacheFilter.propertyValue, existing);
-				set = set != null ? new LinkedHashSet<Long>(set)
-						: new LinkedHashSet<Long>();
-				return (Set<Long>) (existing == null ? set
-						: CommonUtils.intersection(existing, set));
-			// all others non-optimised
+				if (set != null && existing != null
+						&& set.size() > existing.size() * 1000) {
+					// heuristic - faster to just filter existing
+					break;
+				} else {
+					set = set != null ? new LinkedHashSet<Long>(set)
+							: new LinkedHashSet<Long>();
+					return (Set<Long>) (existing == null ? set
+							: CommonUtils.intersection(existing, set));
+				}
+				// all others non-optimised
 			default:
 				break;
 			}
