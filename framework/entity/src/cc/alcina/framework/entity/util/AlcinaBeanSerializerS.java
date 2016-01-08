@@ -22,6 +22,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
@@ -35,20 +36,36 @@ import cc.alcina.framework.entity.SEUtilities;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
-public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
-	private static final String PROPERTIES = "props";
-
-	private static final String CLASS_NAME = "cn";
-
-	private static final String LITERAL = "lit";
-
+public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	private ClassLoader cl;
 
+	public AlcinaBeanSerializerS() {
+		propertyFieldName = PROPERTIES;
+	}
+
 	@Override
-	public <T> T deserialize(String jsonString) throws Exception {
-		JSONObject obj = new JSONObject(jsonString);
-		cl = Thread.currentThread().getContextClassLoader();
-		return (T) deserializeObject(obj);
+	public <T> T deserialize(String jsonString) {
+		try {
+			JSONObject obj = new JSONObject(jsonString);
+			cl = Thread.currentThread().getContextClassLoader();
+			return (T) deserializeObject(obj);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	protected Class getClassMaybeAbbreviated(String cns) {
+		try {
+			Class clazz;
+			if (abbrevLookup.containsKey(cns)) {
+				clazz = abbrevLookup.get(cns);
+			} else {
+				clazz = cl.loadClass(cns);
+			}
+			return clazz;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	private Object deserializeObject(JSONObject jsonObj) throws Exception {
@@ -56,12 +73,12 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 			return null;
 		}
 		String cn = (String) jsonObj.get(CLASS_NAME);
-		Class clazz = cl.loadClass(cn);
+		Class clazz = getClassMaybeAbbreviated(cn);
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
 				|| clazz == Class.class) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
-		JSONObject props = (JSONObject) jsonObj.get(PROPERTIES);
+		JSONObject props = (JSONObject) jsonObj.get(propertyFieldName);
 		Object obj = Reflections.classLookup().newInstance(clazz);
 		String[] names = JSONObject.getNames(props);
 		if (names != null) {
@@ -189,8 +206,12 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 	}
 
 	@Override
-	public String serialize(Object bean) throws Exception {
-		return serializeObject(bean).toString();
+	public String serialize(Object bean) {
+		try {
+			return serializeObject(bean).toString();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	/**
@@ -296,7 +317,9 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 				&& type.getSuperclass().isEnum()) {
 			type = type.getSuperclass();
 		}
-		jo.put(CLASS_NAME, type.getName());
+		String typeName = type.getName();
+		typeName = normaliseReverseAbbreviation(type, typeName);
+		jo.put(CLASS_NAME, typeName);
 		Class<? extends Object> clazz = type;
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
 				|| clazz == Class.class) {
@@ -311,7 +334,7 @@ public class AlcinaBeanSerializerS implements AlcinaBeanSerializer {
 		List<PropertyDescriptor> pds = SEUtilities
 				.getSortedPropertyDescriptors(clazz);
 		JSONObject props = new JSONObject();
-		jo.put(PROPERTIES, props);
+		jo.put(propertyFieldName, props);
 		Object template = clazz.newInstance();
 		for (PropertyDescriptor pd : pds) {
 			if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {

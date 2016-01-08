@@ -35,33 +35,12 @@ import com.totsp.gwittir.client.beans.Property;
 @SuppressWarnings("unchecked")
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
-public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
-	private static final String PROPERTIES = "props";
-
-	private static final String PROPERTIES_SHORT = "p";
-
-	public static final String CLASS_NAME = "cn";
-
-	private static final String LITERAL = "lit";
-
-	private Map<String, Class> abbrevLookup = new LinkedHashMap<>();
-
-	private Map<Class, String> reverseAbbrevLookup = new LinkedHashMap<>();
-
-	private String propertyFieldName;
-
+public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 	public AlcinaBeanSerializerC() {
 		propertyFieldName = PROPERTIES;
 	}
 
-	public AlcinaBeanSerializerC(Map<String, Class> abbrevLookup,
-			Map<Class, String> reverseAbbrevLookup) {
-		this.abbrevLookup = abbrevLookup;
-		this.reverseAbbrevLookup = reverseAbbrevLookup;
-		propertyFieldName = PROPERTIES_SHORT;
-	}
-
-	public <T> T deserialize(String jsonString) throws Exception {
+	public <T> T deserialize(String jsonString) {
 		JSONObject obj = (JSONObject) JSONParser.parseStrict(jsonString);
 		return (T) deserializeObject(obj);
 	}
@@ -80,12 +59,7 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 		}
 		JSONString cn = (JSONString) jsonObj.get(CLASS_NAME);
 		String cns = cn.stringValue();
-		Class clazz = null;
-		if (abbrevLookup.containsKey(cns)) {
-			clazz = abbrevLookup.get(cns);
-		} else {
-			clazz = Reflections.classLookup().getClassForName(cns);
-		}
+		Class clazz = getClassMaybeAbbreviated(cns);
 		AlcinaBeanSerializerCCustom customSerializer = customSerializers
 				.get(clazz);
 		if (customSerializer != null) {
@@ -108,6 +82,8 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 		}
 		return obj;
 	}
+
+	
 
 	private Object deserializeField(JSONValue jsonValue, Class type) {
 		if (jsonValue == null || jsonValue.isNull() != null) {
@@ -194,12 +170,9 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 		if (type == Object.class) {
 			type = value.getClass();
 		}
-		if (type == Long.class
-				|| type == long.class
-				|| type == String.class
-				|| type.isEnum()
-				|| (type.getSuperclass() != null && type.getSuperclass()
-						.isEnum())) {
+		if (type == Long.class || type == long.class || type == String.class
+				|| type.isEnum() || (type.getSuperclass() != null
+						&& type.getSuperclass().isEnum())) {
 			return new JSONString(value.toString());
 		}
 		if (type == Double.class || type == double.class
@@ -250,9 +223,7 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 			type = type.getSuperclass();
 		}
 		String typeName = type.getName();
-		if (reverseAbbrevLookup.containsKey(type)) {
-			typeName = reverseAbbrevLookup.get(type);
-		}
+		typeName = normaliseReverseAbbreviation(type, typeName);
 		jo.put(CLASS_NAME, new JSONString(typeName));
 		Class<? extends Object> clazz = object.getClass();
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
@@ -275,7 +246,8 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 				continue;
 			}
 			String name = property.getName();
-			if (gb.getAnnotationForProperty(clazz, AlcinaTransient.class, name) != null) {
+			if (gb.getAnnotationForProperty(clazz, AlcinaTransient.class,
+					name) != null) {
 				continue;
 			}
 			Object value = gb.getPropertyValue(object, name);
@@ -286,4 +258,6 @@ public class AlcinaBeanSerializerC implements AlcinaBeanSerializer {
 		}
 		return jo;
 	}
+
+	
 }
